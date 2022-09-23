@@ -12,9 +12,14 @@
 
 
 int main(int argc, char* argv[]) {
-    char* filename = argv[1];
-    std::string search_method = argv[2];
-    int num_active_paths = atoi(argv[3]);
+    char* encoder_path = argv[1];
+    char* decoder_path = argv[2];
+    char* joiner_path = argv[3];
+    char* joiner_encoder_proj_path = argv[4];
+    char* joiner_decoder_proj_path = argv[5];
+    char* token_path = argv[6];
+    std::string search_method = argv[7];
+    char* filename = argv[8];
 
     // General parameters
     int numberOfThreads = 16;
@@ -44,17 +49,16 @@ int main(int argc, char* argv[]) {
 
     // Define model
     auto model = get_model(
-        "/mnt/local4/sr/k2_sherpa/models/exp_en2/encoder_simp.onnx",
-        "/mnt/local4/sr/k2_sherpa/models/exp_en2/decoder_simp.onnx",
-        "/mnt/local4/sr/k2_sherpa/models/exp_en2/joiner_simp.onnx",
-        "/mnt/local4/sr/k2_sherpa/models/exp_en2/joiner_encoder_proj_simp.onnx",
-        "/mnt/local4/sr/k2_sherpa/models/exp_en2/joiner_decoder_proj_simp.onnx",
-        "/mnt/local4/sr/k2_sherpa/models/exp_en2/enUS_tokens.txt"
+        encoder_path,
+        decoder_path,
+        joiner_path,
+        joiner_encoder_proj_path,
+        joiner_decoder_proj_path,
+        token_path
     );
     
     std::vector<std::string> filename_list {
-        "/mnt/local4/sr/k2_sherpa/test_wavs/cnn_15sec.wav",
-        //"/mnt/local4/sr/k2_sherpa/test_wavs/1089-134686-0001.wav"
+        filename
     };
 
     for (auto filename : filename_list){
