@@ -9,5 +9,5 @@ include_directories(
 include_directories(
     ${KALDINATIVEIO}
 )
-add_executable(capi_test main.cpp)
-target_link_libraries(capi_test onnxruntime kaldi-native-fbank-core kaldi_native_io_core)
+add_executable(sherpa-onnx main.cpp)
+target_link_libraries(sherpa-onnx onnxruntime kaldi-native-fbank-core kaldi_native_io_core)
