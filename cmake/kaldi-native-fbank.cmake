@@ -3,7 +3,7 @@ function(download_kaldi_native_fbank)
     # FetchContent is available since 3.11,
     # we've copied it to ${CMAKE_SOURCE_DIR}/cmake/Modules
     # so that it can be used in lower CMake versions.
-    message(STATUS "Use FetchContent provided by sherpa-ncnn")
+    message(STATUS "Use FetchContent provided by sherpa-onnx")
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
   endif()
 
