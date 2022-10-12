@@ -18,7 +18,6 @@
 #include "sherpa-onnx/csrc/rnnt-model.h"
 
 #include <array>
-#include <iostream>
 
 namespace sherpa_onnx {
 
@@ -91,14 +90,6 @@ void RnntModel::InitEncoder(const std::string &filename) {
 
   GetOutputNames(encoder_sess_.get(), &encoder_output_names_,
                  &encoder_output_names_ptr_);
-
-  for (const auto &s : encoder_input_names_) {
-    std::cout << s << "\n";
-  }
-
-  for (const auto &s : encoder_output_names_) {
-    std::cout << s << "\n";
-  }
 }
 
 void RnntModel::InitDecoder(const std::string &filename) {
@@ -110,14 +101,6 @@ void RnntModel::InitDecoder(const std::string &filename) {
 
   GetOutputNames(decoder_sess_.get(), &decoder_output_names_,
                  &decoder_output_names_ptr_);
-
-  for (const auto &s : decoder_input_names_) {
-    std::cout << s << "\n";
-  }
-
-  for (const auto &s : decoder_output_names_) {
-    std::cout << s << "\n";
-  }
 }
 
 void RnntModel::InitJoiner(const std::string &filename) {
@@ -129,14 +112,6 @@ void RnntModel::InitJoiner(const std::string &filename) {
 
   GetOutputNames(joiner_sess_.get(), &joiner_output_names_,
                  &joiner_output_names_ptr_);
-
-  for (const auto &s : joiner_input_names_) {
-    std::cout << s << "\n";
-  }
-
-  for (const auto &s : joiner_output_names_) {
-    std::cout << s << "\n";
-  }
 }
 
 void RnntModel::InitJoinerEncoderProj(const std::string &filename) {
@@ -150,14 +125,6 @@ void RnntModel::InitJoinerEncoderProj(const std::string &filename) {
   GetOutputNames(joiner_encoder_proj_sess_.get(),
                  &joiner_encoder_proj_output_names_,
                  &joiner_encoder_proj_output_names_ptr_);
-
-  for (const auto &s : joiner_encoder_proj_input_names_) {
-    std::cout << s << "\n";
-  }
-
-  for (const auto &s : joiner_encoder_proj_output_names_) {
-    std::cout << s << "\n";
-  }
 }
 
 void RnntModel::InitJoinerDecoderProj(const std::string &filename) {
@@ -171,14 +138,6 @@ void RnntModel::InitJoinerDecoderProj(const std::string &filename) {
   GetOutputNames(joiner_decoder_proj_sess_.get(),
                  &joiner_decoder_proj_output_names_,
                  &joiner_decoder_proj_output_names_ptr_);
-
-  for (const auto &s : joiner_decoder_proj_input_names_) {
-    std::cout << s << "\n";
-  }
-
-  for (const auto &s : joiner_decoder_proj_output_names_) {
-    std::cout << s << "\n";
-  }
 }
 
 Ort::Value RnntModel::RunEncoder(const float *features, int32_t T,
