@@ -10,7 +10,7 @@ function(download_onnxruntime)
   include(FetchContent)
 
   if(UNIX AND NOT APPLE)
-    set(onnxruntime_URL  "http://github.com/microsoft/onnxruntime/releases/download/v1.12.1/onnxruntime-linux-x64-1.12.1.tgz")
+    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.12.1/onnxruntime-linux-x64-1.12.1.tgz")
 
     # If you don't have access to the internet, you can first download onnxruntime to some directory, and the use
     # set(onnxruntime_URL  "file:///ceph-fj/fangjun/open-source/sherpa-onnx/onnxruntime-linux-x64-1.12.1.tgz")
