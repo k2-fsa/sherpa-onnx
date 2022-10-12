@@ -22,8 +22,17 @@ function(download_onnxruntime)
     #
     # ./include
     #    It contains all the needed header files
+  elseif(APPLE)
+    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.12.1/onnxruntime-osx-x86_64-1.12.1.tgz")
+    set(onnxruntime_HASH "SHA256=10921c2e75817edcbfc8b29882612be07e25dd33c8449d5892a9d45588898099")
+    # After downloading, it contains:
+    #  ./lib/libonnxruntime.1.12.1.dylib
+    #  ./lib/libonnxruntime.dylib, which is a symlink to lib/libonnxruntime.1.12.1.dylib
+    #
+    # ./include
+    #    It contains all the needed header files
   else()
-    message(FATAL_ERROR "Only support Linux at present. Will support other OSes later")
+    message(FATAL_ERROR "Only support Linux and macOS at present. Will support other OSes later")
   endif()
 
   FetchContent_Declare(onnxruntime
