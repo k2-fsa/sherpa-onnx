@@ -21,8 +21,9 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
-#include "onnxruntime_cxx_api.h"
+#include "onnxruntime_cxx_api.h"  // NOLINT
 
 namespace sherpa_onnx {
 

@@ -32,7 +32,7 @@ namespace sherpa_onnx {
  * @param model  The RnntModel
  * @param encoder_out  Its shape is (1, num_frames, encoder_out_dim).
  */
-std::vector<int32_t> GreedySearch(RnntModel &model,
+std::vector<int32_t> GreedySearch(RnntModel &model,  // NOLINT
                                   const Ort::Value &encoder_out);
 
 }  // namespace sherpa_onnx

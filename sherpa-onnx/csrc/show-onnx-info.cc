@@ -18,7 +18,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "onnxruntime_cxx_api.h"
+#include "onnxruntime_cxx_api.h"  // NOLINT
 
 int main() {
   std::cout << "ORT_API_VERSION: " << ORT_API_VERSION << "\n";

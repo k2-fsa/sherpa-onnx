@@ -25,7 +25,7 @@
 
 namespace sherpa_onnx {
 
-std::vector<int32_t> GreedySearch(RnntModel &model,
+std::vector<int32_t> GreedySearch(RnntModel &model,  // NOLINT
                                   const Ort::Value &encoder_out) {
   std::vector<int64_t> encoder_out_shape =
       encoder_out.GetTensorTypeAndShapeInfo().GetShape();
