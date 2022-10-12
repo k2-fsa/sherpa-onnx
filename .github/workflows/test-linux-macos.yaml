@@ -1,11 +1,11 @@
-name: test-linux
+name: test-linux-macos
 
 on:
   push:
     branches:
       - master
     paths:
-      - '.github/workflows/test-linux.yaml'
+      - '.github/workflows/test-linux-macos.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -13,13 +13,13 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/test-linux.yaml'
+      - '.github/workflows/test-linux-macos.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
 
 concurrency:
-  group: test-linux-${{ github.ref }}
+  group: test-linux-macos-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -31,7 +31,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -51,12 +51,12 @@ jobs:
           cd build
           cmake -D CMAKE_BUILD_TYPE=Release ..
 
-      - name: Build sherpa-onnx for ubuntu
+      - name: Build sherpa-onnx for ubuntu/macos
         run: |
           cd build
           make VERBOSE=1 -j3
 
-      - name: Run tests for ubuntu (English)
+      - name: Run tests for ubuntu/macos (English)
         run: |
           time ./build/bin/sherpa-onnx \
             ./icefall-asr-librispeech-pruned-transducer-stateless3-2022-05-13/exp/onnx/encoder.onnx \
