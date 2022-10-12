@@ -18,6 +18,8 @@
 #include "sherpa-onnx/csrc/rnnt-model.h"
 
 #include <array>
+#include <utility>
+#include <vector>
 
 namespace sherpa_onnx {
 
