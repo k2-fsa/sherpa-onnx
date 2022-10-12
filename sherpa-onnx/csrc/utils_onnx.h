@@ -1,5 +1,5 @@
 #include <iostream>
-#include <onnxruntime_cxx_api.h>
+#include "onnxruntime_cxx_api.h"
 
 Ort::Env env(ORT_LOGGING_LEVEL_WARNING, "test");
 const auto& api = Ort::GetApi();
