@@ -47,13 +47,20 @@ jobs:
         shell: bash
         run: |
           git lfs install
-          git clone https://huggingface.co/csukuangfj/icefall-asr-librispeech-pruned-transducer-stateless3-2022-05-13
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/icefall-asr-librispeech-pruned-transducer-stateless3-2022-05-13
+          cd icefall-asr-librispeech-pruned-transducer-stateless3-2022-05-13
+          ls -lh exp/onnx/*.onnx
+          git lfs pull --include "exp/onnx/*.onnx"
+          ls -lh exp/onnx/*.onnx
 
       - name: Download pretrained model and test-data (Chinese)
         shell: bash
         run: |
-          git lfs install
-          git clone https://huggingface.co/luomingshuang/icefall_asr_wenetspeech_pruned_transducer_stateless2
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/luomingshuang/icefall_asr_wenetspeech_pruned_transducer_stateless2
+          cd icefall_asr_wenetspeech_pruned_transducer_stateless2
+          ls -lh exp/*.onnx
+          git lfs pull --include "exp/*.onnx"
+          ls -lh exp/*.onnx
 
       - name: Configure CMake
         shell: bash
