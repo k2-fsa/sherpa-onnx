@@ -31,6 +31,15 @@ function(download_onnxruntime)
     #
     # ./include
     #    It contains all the needed header files
+  elseif(WIN32)
+    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.12.1/onnxruntime-win-x64-1.12.1.zip")
+    set(onnxruntime_HASH "SHA256=c69650ba14aeae5903b05256a82e77164fff2de992072bc695a3838c1830b85a")
+    # After downloading, it contains:
+    #  ./lib/onnxruntime.{dll,lib,pdb}
+    #  ./lib/onnxruntime_providers_shared.{dll,lib,pdb}
+    #
+    # ./include
+    #    It contains all the needed header files
   else()
     message(FATAL_ERROR "Only support Linux and macOS at present. Will support other OSes later")
   endif()
