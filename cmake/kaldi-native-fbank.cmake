@@ -9,8 +9,8 @@ function(download_kaldi_native_fbank)
 
   include(FetchContent)
 
-  set(kaldi_native_fbank_URL  "https://github.com/csukuangfj/kaldi-native-fbank/archive/refs/tags/v1.4.tar.gz")
-  set(kaldi_native_fbank_HASH "SHA256=771e08cb7edf512c828f4577d0d071a7993991d7e5415b11a843975dcf3e4d2d")
+  set(kaldi_native_fbank_URL  "https://github.com/csukuangfj/kaldi-native-fbank/archive/refs/tags/v1.5.tar.gz")
+  set(kaldi_native_fbank_HASH "SHA256=632c68adf8f6de831198a2a0e4c1920b31d5a1de263dcac5105be9da99f40bd5")
 
   set(KALDI_NATIVE_FBANK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
   set(KALDI_NATIVE_FBANK_BUILD_PYTHON OFF CACHE BOOL "" FORCE)

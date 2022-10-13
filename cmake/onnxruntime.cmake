@@ -68,6 +68,11 @@ function(download_onnxruntime)
     IMPORTED_LOCATION ${location_onnxruntime}
     INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
   )
+  if(WIN32)
+    set_property(TARGET onnxruntime PROPERTY
+      IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib")
+    file(COPY ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll DESTINATION ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE})
+  endif()
 endfunction()
 
 download_onnxruntime()
