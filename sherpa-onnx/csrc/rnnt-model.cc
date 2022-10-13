@@ -32,7 +32,7 @@ namespace sherpa_onnx {
 #ifdef _MSC_VER
 // See
 // https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
-std::wstring ToWide(const std::string &s) {
+static std::wstring ToWide(const std::string &s) {
   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
   return converter.from_bytes(s);
 }

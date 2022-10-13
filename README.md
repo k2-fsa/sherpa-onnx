@@ -20,15 +20,27 @@ the following links:
 **HINT**: The script for exporting the Chinese model can be found at
 <https://github.com/k2-fsa/icefall/blob/master/egs/wenetspeech/ASR/pruned_transducer_stateless2/export.py>
 
-# Usage
+## Build for Linux/macOS
 
 ```bash
 git clone https://github.com/k2-fsa/sherpa-onnx
 cd sherpa-onnx
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 make -j6
+cd ..
+```
+
+## Build for Windows
+
+```bash
+git clone https://github.com/k2-fsa/sherpa-onnx
+cd sherpa-onnx
+mkdir build
+cd build
+cmake -DCMAKE_BUILD_TYPE=Release ..
+cmake --build . --config Release
 cd ..
 ```
 
