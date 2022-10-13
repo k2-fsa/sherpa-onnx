@@ -23,8 +23,8 @@
 
 #ifdef _MSC_VER
 // For ToWide() below
-#include <locale>
 #include <codecvt>
+#include <locale>
 #endif
 
 namespace sherpa_onnx {
@@ -32,7 +32,7 @@ namespace sherpa_onnx {
 #ifdef _MSC_VER
 // See
 // https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
-std::wstring ToWide(const std::string& s) {
+std::wstring ToWide(const std::string &s) {
   std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
   return converter.from_bytes(s);
 }
@@ -103,8 +103,8 @@ RnntModel::RnntModel(const std::string &encoder_filename,
 }
 
 void RnntModel::InitEncoder(const std::string &filename) {
-  encoder_sess_ =
-      std::make_unique<Ort::Session>(env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
+  encoder_sess_ = std::make_unique<Ort::Session>(
+      env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
   GetInputNames(encoder_sess_.get(), &encoder_input_names_,
                 &encoder_input_names_ptr_);
 
@@ -113,8 +113,8 @@ void RnntModel::InitEncoder(const std::string &filename) {
 }
 
 void RnntModel::InitDecoder(const std::string &filename) {
-  decoder_sess_ =
-      std::make_unique<Ort::Session>(env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
+  decoder_sess_ = std::make_unique<Ort::Session>(
+      env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
 
   GetInputNames(decoder_sess_.get(), &decoder_input_names_,
                 &decoder_input_names_ptr_);
@@ -124,8 +124,8 @@ void RnntModel::InitDecoder(const std::string &filename) {
 }
 
 void RnntModel::InitJoiner(const std::string &filename) {
-  joiner_sess_ =
-      std::make_unique<Ort::Session>(env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
+  joiner_sess_ = std::make_unique<Ort::Session>(
+      env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
 
   GetInputNames(joiner_sess_.get(), &joiner_input_names_,
                 &joiner_input_names_ptr_);
@@ -135,8 +135,8 @@ void RnntModel::InitJoiner(const std::string &filename) {
 }
 
 void RnntModel::InitJoinerEncoderProj(const std::string &filename) {
-  joiner_encoder_proj_sess_ =
-      std::make_unique<Ort::Session>(env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
+  joiner_encoder_proj_sess_ = std::make_unique<Ort::Session>(
+      env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
 
   GetInputNames(joiner_encoder_proj_sess_.get(),
                 &joiner_encoder_proj_input_names_,
@@ -148,8 +148,8 @@ void RnntModel::InitJoinerEncoderProj(const std::string &filename) {
 }
 
 void RnntModel::InitJoinerDecoderProj(const std::string &filename) {
-  joiner_decoder_proj_sess_ =
-      std::make_unique<Ort::Session>(env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
+  joiner_decoder_proj_sess_ = std::make_unique<Ort::Session>(
+      env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
 
   GetInputNames(joiner_decoder_proj_sess_.get(),
                 &joiner_decoder_proj_input_names_,
@@ -189,7 +189,6 @@ Ort::Value RnntModel::RunJoinerEncoderProj(const float *encoder_out, int32_t T,
                                            int32_t encoder_out_dim) {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
 
   std::array<int64_t, 2> in_shape{T, encoder_out_dim};
   Ort::Value in = Ort::Value::CreateTensor(
