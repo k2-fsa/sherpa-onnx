@@ -80,7 +80,7 @@ jobs:
         if: startsWith(matrix.os, 'windows')
         shell: bash
         run: |
-          cmake --build .\build --config Release
+          cmake --build ./build --config Release
 
       - name: Run tests for ubuntu/macos (English)
         if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
