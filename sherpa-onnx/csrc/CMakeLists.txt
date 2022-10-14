@@ -13,5 +13,5 @@ target_link_libraries(sherpa-onnx
   kaldi-native-fbank-core
 )
 
-add_executable(sherpa-show-onnx-info show-onnx-info.cc)
-target_link_libraries(sherpa-show-onnx-info onnxruntime)
+# add_executable(sherpa-show-onnx-info show-onnx-info.cc)
+# target_link_libraries(sherpa-show-onnx-info onnxruntime)

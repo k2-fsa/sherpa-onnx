@@ -80,8 +80,8 @@ Usage:
     /path/to/encoder.onnx \
     /path/to/decoder.onnx \
     /path/to/joiner.onnx \
-    /path/to/joiner_encoder_proj.ncnn.param \
-    /path/to/joiner_decoder_proj.ncnn.param \
+    /path/to/joiner_encoder_proj.onnx \
+    /path/to/joiner_decoder_proj.onnx \
     /path/to/foo.wav [num_threads]
 
 You can download pre-trained models from the following repository:
