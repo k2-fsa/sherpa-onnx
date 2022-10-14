@@ -2,6 +2,9 @@
 
 Documentation: <https://k2-fsa.github.io/sherpa/onnx/index.html>
 
+Try it in colab:
+[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/drive/1tmQbdlYeTl_klmtaGiUb7a7ZPz-AkBSH?usp=sharing)
+
 See <https://github.com/k2-fsa/sherpa>
 
 This repo uses [onnxruntime](https://github.com/microsoft/onnxruntime) and
