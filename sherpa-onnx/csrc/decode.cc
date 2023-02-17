@@ -26,13 +26,11 @@
 namespace sherpa_onnx {
 
 std::vector<int32_t> GreedySearch(RnntModel &model,  // NOLINT
-                                  const Ort::Value &encoder_out) {
+                                  const Ort::Value &projected_encoder_out) {
   std::vector<int64_t> encoder_out_shape =
-      encoder_out.GetTensorTypeAndShapeInfo().GetShape();
+      projected_encoder_out.GetTensorTypeAndShapeInfo().GetShape();
   assert(encoder_out_shape[0] == 1 && "Only batch_size=1 is implemented");
-  Ort::Value projected_encoder_out =
-      model.RunJoinerEncoderProj(encoder_out.GetTensorData<float>(),
-                                 encoder_out_shape[1], encoder_out_shape[2]);
+  fprintf(stderr, "here1\n");
 
   const float *p_projected_encoder_out =
       projected_encoder_out.GetTensorData<float>();
@@ -42,23 +40,24 @@ std::vector<int32_t> GreedySearch(RnntModel &model,  // NOLINT
   std::vector<int32_t> hyp(context_size, blank_id);
   std::array<int64_t, 2> decoder_input{blank_id, blank_id};
 
-  Ort::Value decoder_out = model.RunDecoder(decoder_input.data(), context_size);
+  fprintf(stderr, "here2\n");
+  Ort::Value projected_decoder_out =
+      model.RunDecoder(decoder_input.data(), context_size);
 
   std::vector<int64_t> decoder_out_shape =
-      decoder_out.GetTensorTypeAndShapeInfo().GetShape();
-
-  Ort::Value projected_decoder_out = model.RunJoinerDecoderProj(
-      decoder_out.GetTensorData<float>(), decoder_out_shape[2]);
+      projected_decoder_out.GetTensorTypeAndShapeInfo().GetShape();
 
   int32_t joiner_dim =
       projected_decoder_out.GetTensorTypeAndShapeInfo().GetShape()[1];
 
   int32_t T = encoder_out_shape[1];
   for (int32_t t = 0; t != T; ++t) {
+    fprintf(stderr, "here3\n");
     Ort::Value logit = model.RunJoiner(
         p_projected_encoder_out + t * joiner_dim,
         projected_decoder_out.GetTensorData<float>(), joiner_dim);
 
+    fprintf(stderr, "here4\n");
     int32_t vocab_size = logit.GetTensorTypeAndShapeInfo().GetShape()[1];
 
     const float *p_logit = logit.GetTensorData<float>();
@@ -72,9 +71,8 @@ std::vector<int32_t> GreedySearch(RnntModel &model,  // NOLINT
       decoder_input[0] = hyp.back();
       decoder_input[1] = y;
       hyp.push_back(y);
-      decoder_out = model.RunDecoder(decoder_input.data(), context_size);
-      projected_decoder_out = model.RunJoinerDecoderProj(
-          decoder_out.GetTensorData<float>(), decoder_out_shape[2]);
+      projected_decoder_out =
+          model.RunDecoder(decoder_input.data(), context_size);
     }
   }
 

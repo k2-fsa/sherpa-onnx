@@ -1,20 +1,6 @@
-/**
- * Copyright (c)  2022  Xiaomi Corporation (authors: Fangjun Kuang)
- *
- * See LICENSE for clarification regarding multiple authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// sherpa-onnx/csrc/sherpa-onnx.cc
+//
+// Copyright (c)  2022-2023  Xiaomi Corporation
 
 #include <iostream>
 #include <string>
@@ -72,7 +58,7 @@ static std::vector<float> ComputeFeatures(const std::string &wav_filename,
 }
 
 int main(int32_t argc, char *argv[]) {
-  if (argc < 8 || argc > 9) {
+  if (argc < 6 || argc > 7) {
     const char *usage = R"usage(
 Usage:
   ./bin/sherpa-onnx \
@@ -80,12 +66,11 @@ Usage:
     /path/to/encoder.onnx \
     /path/to/decoder.onnx \
     /path/to/joiner.onnx \
-    /path/to/joiner_encoder_proj.onnx \
-    /path/to/joiner_decoder_proj.onnx \
     /path/to/foo.wav [num_threads]
 
-You can download pre-trained models from the following repository:
-https://huggingface.co/csukuangfj/icefall-asr-librispeech-pruned-transducer-stateless3-2022-05-13
+Please refer to
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+for a list of pre-trained models to download.
 )usage";
     std::cerr << usage << "\n";
 
@@ -96,13 +81,12 @@ https://huggingface.co/csukuangfj/icefall-asr-librispeech-pruned-transducer-stat
   std::string encoder = argv[2];
   std::string decoder = argv[3];
   std::string joiner = argv[4];
-  std::string joiner_encoder_proj = argv[5];
-  std::string joiner_decoder_proj = argv[6];
-  std::string wav_filename = argv[7];
+  std::string wav_filename = argv[5];
   int32_t num_threads = 4;
-  if (argc == 9) {
+  if (argc == 6) {
     num_threads = atoi(argv[8]);
   }
+  fprintf(stderr, "num_threads: %d\n", num_threads);
 
   sherpa_onnx::SymbolTable sym(tokens);
 
@@ -110,10 +94,11 @@ https://huggingface.co/csukuangfj/icefall-asr-librispeech-pruned-transducer-stat
   auto features = ComputeFeatures(wav_filename, 16000, &num_frames);
   int32_t feature_dim = features.size() / num_frames;
 
-  sherpa_onnx::RnntModel model(encoder, decoder, joiner, joiner_encoder_proj,
-                               joiner_decoder_proj, num_threads);
+  sherpa_onnx::RnntModel model(encoder, decoder, joiner, num_threads);
+  fprintf(stderr, "here0\n");
   Ort::Value encoder_out =
       model.RunEncoder(features.data(), num_frames, feature_dim);
+  fprintf(stderr, "here00\n");
 
   auto hyp = sherpa_onnx::GreedySearch(model, encoder_out);
 
