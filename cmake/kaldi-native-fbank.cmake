@@ -12,6 +12,9 @@ function(download_kaldi_native_fbank)
   # please pre-download kaldi-native-fbank
   set(possible_file_locations
     $ENV{HOME}/Downloads/kaldi-native-fbank-1.11.tar.gz
+    ${PROJECT_SOURCE_DIR}/kaldi-native-fbank-1.11.tar.gz
+    ${PROJECT_BINARY_DIR}/kaldi-native-fbank-1.11.tar.gz
+    /tmp/kaldi-native-fbank-1.11.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)

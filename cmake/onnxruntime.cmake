@@ -7,6 +7,7 @@ function(download_onnxruntime)
     set(possible_file_locations
       $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.14.0.tgz
       ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.14.0.tgz
+      ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-1.14.0.tgz
       /tmp/onnxruntime-linux-x64-1.14.0.tgz
     )
 
@@ -24,6 +25,7 @@ function(download_onnxruntime)
     set(possible_file_locations
       $ENV{HOME}/Downloads/onnxruntime-osx-x86_64-1.14.0.tgz
       ${PROJECT_SOURCE_DIR}/onnxruntime-osx-x86_64-1.14.0.tgz
+      ${PROJECT_BINARY_DIR}/onnxruntime-osx-x86_64-1.14.0.tgz
       /tmp/onnxruntime-osx-x86_64-1.14.0.tgz
     )
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-osx-x86_64-1.14.0.tgz")
@@ -40,6 +42,7 @@ function(download_onnxruntime)
     set(possible_file_locations
       $ENV{HOME}/Downloads/onnxruntime-win-x64-1.14.0.zip
       ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-1.14.0.zip
+      ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-1.14.0.zip
       /tmp/onnxruntime-win-x64-1.14.0.zip
     )
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x64-1.14.0.zip")
