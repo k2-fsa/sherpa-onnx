@@ -1,1 +1,6 @@
 build
+*.zip
+*.tgz
+onnxruntime-*
+icefall-*
+run.sh

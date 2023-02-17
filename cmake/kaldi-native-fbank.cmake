@@ -1,19 +1,28 @@
 function(download_kaldi_native_fbank)
-  if(CMAKE_VERSION VERSION_LESS 3.11)
-    # FetchContent is available since 3.11,
-    # we've copied it to ${CMAKE_SOURCE_DIR}/cmake/Modules
-    # so that it can be used in lower CMake versions.
-    message(STATUS "Use FetchContent provided by sherpa-onnx")
-    list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
-  endif()
-
   include(FetchContent)
 
-  set(kaldi_native_fbank_URL  "https://github.com/csukuangfj/kaldi-native-fbank/archive/refs/tags/v1.5.tar.gz")
-  set(kaldi_native_fbank_HASH "SHA256=632c68adf8f6de831198a2a0e4c1920b31d5a1de263dcac5105be9da99f40bd5")
+  set(kaldi_native_fbank_URL  "https://github.com/csukuangfj/kaldi-native-fbank/archive/refs/tags/v1.11.tar.gz")
+  set(kaldi_native_fbank_HASH "SHA256=e69ae25ef6f30566ef31ca949dd1b0b8ec3a827caeba93a61d82bb848dac5d69")
 
   set(KALDI_NATIVE_FBANK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
   set(KALDI_NATIVE_FBANK_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
+  set(KALDI_NATIVE_FBANK_ENABLE_CHECK OFF CACHE BOOL "" FORCE)
+
+  # If you don't have access to the Internet,
+  # please pre-download kaldi-native-fbank
+  set(possible_file_locations
+    $ENV{HOME}/Downloads/kaldi-native-fbank-1.11.tar.gz
+    ${PROJECT_SOURCE_DIR}/kaldi-native-fbank-1.11.tar.gz
+    ${PROJECT_BINARY_DIR}/kaldi-native-fbank-1.11.tar.gz
+    /tmp/kaldi-native-fbank-1.11.tar.gz
+  )
+
+  foreach(f IN LISTS possible_file_locations)
+    if(EXISTS ${f})
+      set(kaldi_native_fbank_URL  "file://${f}")
+      break()
+    endif()
+  endforeach()
 
   FetchContent_Declare(kaldi_native_fbank
     URL               ${kaldi_native_fbank_URL}
@@ -22,7 +31,7 @@ function(download_kaldi_native_fbank)
 
   FetchContent_GetProperties(kaldi_native_fbank)
   if(NOT kaldi_native_fbank_POPULATED)
-    message(STATUS "Downloading kaldi-native-fbank ${kaldi_native_fbank_URL}")
+    message(STATUS "Downloading kaldi-native-fbank from ${kaldi_native_fbank_URL}")
     FetchContent_Populate(kaldi_native_fbank)
   endif()
   message(STATUS "kaldi-native-fbank is downloaded to ${kaldi_native_fbank_SOURCE_DIR}")
