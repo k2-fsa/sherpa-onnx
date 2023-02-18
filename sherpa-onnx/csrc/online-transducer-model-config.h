@@ -13,6 +13,7 @@ struct OnlineTransducerModelConfig {
   std::string decoder_filename;
   std::string joiner_filename;
   int32_t num_threads;
+  bool debug = false;
 
   std::string ToString() const;
 };

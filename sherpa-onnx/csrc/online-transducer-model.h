@@ -4,13 +4,20 @@
 #ifndef SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_MODEL_H_
 #define SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_MODEL_H_
 
+#include <memory>
+#include <utility>
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/online-transducer-model-config.h"
 
 namespace sherpa_onnx {
 
 class OnlineTransducerModel {
  public:
   virtual ~OnlineTransducerModel() = default;
+
+  static std::unique_ptr<OnlineTransducerModel> Create(
+      const OnlineTransducerModelConfig &config);
 
   /** Stack a list of individual states into a batch.
    *
@@ -35,19 +42,22 @@ class OnlineTransducerModel {
    *
    * @return Return the initial encoder state.
    */
-  virtual Ort::Value GetEncoderInitStates() = 0;
+  virtual std::vector<Ort::Value> GetEncoderInitStates() = 0;
 
   /** Run the encoder.
    *
-   * @param features  A tensor of shape (N, T, C).
-   * @param states  Encoder state of the previous chunk.
+   * @param features  A tensor of shape (N, T, C). It is changed in-place.
+   * @param states  Encoder state of the previous chunk. It is changed in-place.
    *
    * @return Return a tuple containing:
    *           - encoder_out, a tensor of shape (N, T', encoder_out_dim)
    *           - next_states  Encoder state for the next chunk.
    */
   virtual std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
-      const Ort::Value &features, const std::vector<Ort::Value> &states) = 0;
+      Ort::Value features,
+      std::vector<Ort::Value> &states) = 0;  // NOLINT
+
+  virtual Ort::Value BuildDecoderInput(const std::vector<int64_t> &hyp) = 0;
 
   /** Run the decoder network.
    *
@@ -59,7 +69,7 @@ class OnlineTransducerModel {
    * @param decoder_input It is usually of shape (N, context_size)
    * @return Return a tensor of shape (N, decoder_dim).
    */
-  virtual Ort::Value RunDecoder(const Ort::Value &decoder_input) = 0;
+  virtual Ort::Value RunDecoder(Ort::Value decoder_input) = 0;
 
   /** Run the joint network.
    *
@@ -71,8 +81,8 @@ class OnlineTransducerModel {
    *         last layer of the joint network is `nn.Linear`,
    *         not `nn.LogSoftmax`.
    */
-  virtual Ort::Value RunJoiner(const Ort::Value &encoder_out,
-                               const Ort::Value &decoder_out) = 0;
+  virtual Ort::Value RunJoiner(Ort::Value encoder_out,
+                               Ort::Value decoder_out) = 0;
 
   /** If we are using a stateless decoder and if it contains a
    *  Conv1D, this function returns the kernel size of the convolution layer.

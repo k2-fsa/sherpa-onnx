@@ -8,6 +8,8 @@
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
 #include "sherpa-onnx/csrc/decode.h"
+#include "sherpa-onnx/csrc/online-transducer-model-config.h"
+#include "sherpa-onnx/csrc/online-transducer-model.h"
 #include "sherpa-onnx/csrc/rnnt-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
@@ -78,21 +80,58 @@ for a list of pre-trained models to download.
   }
 
   std::string tokens = argv[1];
-  std::string encoder = argv[2];
-  std::string decoder = argv[3];
-  std::string joiner = argv[4];
+  sherpa_onnx::OnlineTransducerModelConfig config;
+  config.debug = true;
+  config.encoder_filename = argv[2];
+  config.decoder_filename = argv[3];
+  config.joiner_filename = argv[4];
   std::string wav_filename = argv[5];
-  int32_t num_threads = 4;
-  if (argc == 6) {
-    num_threads = atoi(argv[8]);
+
+  config.num_threads = 2;
+  if (argc == 7) {
+    config.num_threads = atoi(argv[6]);
   }
-  fprintf(stderr, "num_threads: %d\n", num_threads);
+  fprintf(stderr, "%s\n", config.ToString().c_str());
+
+  auto model = sherpa_onnx::OnlineTransducerModel::Create(config);
 
   sherpa_onnx::SymbolTable sym(tokens);
 
   int32_t num_frames;
   auto features = ComputeFeatures(wav_filename, 16000, &num_frames);
   int32_t feature_dim = features.size() / num_frames;
+  fprintf(stderr, "num frames: %d, feature_dim: %d\n", num_frames, feature_dim);
+  Ort::AllocatorWithDefaultOptions allocator;
+
+  int32_t chunk_size = model->ChunkSize();
+  int32_t chunk_shift = model->ChunkShift();
+  fprintf(stderr, "chunk_size: %d, chunk_shift: %d\n", chunk_size, chunk_shift);
+
+  auto memory_info =
+      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+  std::array<int64_t, 3> x_shape{1, chunk_size, feature_dim};
+
+  std::vector<Ort::Value> states = model->GetEncoderInitStates();
+
+  std::vector<int64_t> hyp(model->ContextSize(), 0);
+
+  for (int32_t start = 0; start + chunk_size < num_frames;
+       start += chunk_shift) {
+    Ort::Value x = Ort::Value::CreateTensor(
+        memory_info, features.data() + start * feature_dim,
+        chunk_size * feature_dim, x_shape.data(), x_shape.size());
+    auto pair = model->RunEncoder(std::move(x), states);
+    states = std::move(pair.second);
+    sherpa_onnx::GreedySearch(model.get(), std::move(pair.first), &hyp);
+    // fprintf(stderr, "start: %d/%d\n", start, num_frames);
+  }
+  std::string text;
+  for (size_t i = model->ContextSize(); i != hyp.size(); ++i) {
+    text += sym[hyp[i]];
+  }
+  fprintf(stderr, "results: %s\n", text.c_str());
+
+#if 0
 
   sherpa_onnx::RnntModel model(encoder, decoder, joiner, num_threads);
   fprintf(stderr, "here0\n");
@@ -110,5 +149,6 @@ for a list of pre-trained models to download.
   std::cout << "Recognition result for " << wav_filename << "\n"
             << text << "\n";
 
+#endif
   return 0;
 }

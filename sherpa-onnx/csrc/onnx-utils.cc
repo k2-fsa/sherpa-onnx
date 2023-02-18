@@ -3,6 +3,9 @@
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
+#include <string>
+#include <vector>
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 
 namespace sherpa_onnx {
@@ -30,6 +33,16 @@ void GetOutputNames(Ort::Session *sess, std::vector<std::string> *output_names,
     auto tmp = sess->GetOutputNameAllocated(i, allocator);
     (*output_names)[i] = tmp.get();
     (*output_names_ptr)[i] = (*output_names)[i].c_str();
+  }
+}
+
+void PrintModelMetadata(std::ostream &os, const Ort::ModelMetadata &meta_data) {
+  Ort::AllocatorWithDefaultOptions allocator;
+  std::vector<Ort::AllocatedStringPtr> v =
+      meta_data.GetCustomMetadataMapKeysAllocated(allocator);
+  for (const auto &key : v) {
+    auto p = meta_data.LookupCustomMetadataMapAllocated(key.get(), allocator);
+    os << key.get() << "=" << p.get() << "\n";
   }
 }
 

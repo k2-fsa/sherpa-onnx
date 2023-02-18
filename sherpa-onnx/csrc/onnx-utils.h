@@ -10,6 +10,10 @@
 #include <locale>
 #endif
 
+#include <ostream>
+#include <string>
+#include <vector>
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 
 namespace sherpa_onnx {
@@ -47,6 +51,9 @@ void GetInputNames(Ort::Session *sess, std::vector<std::string> *input_names,
  */
 void GetOutputNames(Ort::Session *sess, std::vector<std::string> *output_names,
                     std::vector<const char *> *output_names_ptr);
+
+void PrintModelMetadata(std::ostream &os,
+                        const Ort::ModelMetadata &meta_data);  // NOLINT
 
 }  // namespace sherpa_onnx
 

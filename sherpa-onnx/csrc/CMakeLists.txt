@@ -9,6 +9,7 @@ add_executable(sherpa-onnx
 
   online-lstm-transducer-model.cc
   online-transducer-model-config.cc
+  online-transducer-model.cc
   onnx-utils.cc
 )
 

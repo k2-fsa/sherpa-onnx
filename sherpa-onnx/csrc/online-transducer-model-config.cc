@@ -14,7 +14,8 @@ std::string OnlineTransducerModelConfig::ToString() const {
   os << "encoder_filename=\"" << encoder_filename << "\", ";
   os << "decoder_filename=\"" << decoder_filename << "\", ";
   os << "joiner_filename=\"" << joiner_filename << "\", ";
-  os << "num_threads=" << num_threads << ")";
+  os << "num_threads=" << num_threads << ", ";
+  os << "debug=" << (debug ? "True" : "False") << ")";
 
   return os.str();
 }
