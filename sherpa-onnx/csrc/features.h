@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <mutex>  // NOLINT
+#include <vector>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
 
@@ -14,6 +15,7 @@ namespace sherpa_onnx {
 
 class FeatureExtractor {
  public:
+  FeatureExtractor();
   explicit FeatureExtractor(const knf::FbankOptions &fbank_opts);
 
   /**
@@ -46,6 +48,7 @@ class FeatureExtractor {
   std::vector<float> GetFrames(int32_t frame_index, int32_t n) const;
 
   void Reset();
+  int32_t FeatureDim() const { return opts_.mel_opts.num_bins; }
 
  private:
   std::unique_ptr<knf::OnlineFbank> fbank_;

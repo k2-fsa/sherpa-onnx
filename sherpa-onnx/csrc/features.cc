@@ -6,10 +6,23 @@
 
 #include <algorithm>
 #include <memory>
+#include <vector>
 
-#include "mat.h"  // NOLINT
+namespace sherpa_onnx {
 
-namespace sherpa_ncnn {
+FeatureExtractor::FeatureExtractor() {
+  opts_.frame_opts.dither = 0;
+  opts_.frame_opts.snip_edges = false;
+  opts_.frame_opts.samp_freq = 16000;
+
+  // cache 100 seconds of feature frames, which is more than enough
+  // for real needs
+  opts_.frame_opts.max_feature_vectors = 100 * 100;
+
+  opts_.mel_opts.num_bins = 80;  // feature dim
+
+  fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
+}
 
 FeatureExtractor::FeatureExtractor(const knf::FbankOptions &opts)
     : opts_(opts) {
@@ -48,7 +61,7 @@ std::vector<float> FeatureExtractor::GetFrames(int32_t frame_index,
   int32_t feature_dim = fbank_->Dim();
   std::vector<float> features(feature_dim * n);
 
-  float *p = features.begin();
+  float *p = features.data();
 
   for (int32_t i = 0; i != n; ++i) {
     const float *f = fbank_->GetFrame(i + frame_index);
@@ -63,4 +76,4 @@ void FeatureExtractor::Reset() {
   fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
 }
 
-}  // namespace sherpa_ncnn
+}  // namespace sherpa_onnx

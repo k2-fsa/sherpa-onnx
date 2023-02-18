@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <sstream>
+#include <string>
 
 #include "sherpa-onnx/csrc/online-lstm-transducer-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
