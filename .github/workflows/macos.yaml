@@ -61,8 +61,8 @@ jobs:
         shell: bash
         run: |
           file bin/sherpa-onnx
-          otool -L bin/sherpa-onnx
-          otool -l bin/sherpa-onnx
+          otool -L build/bin/sherpa-onnx
+          otool -l build/bin/sherpa-onnx
 
       - name: Test online transducer
         shell: bash

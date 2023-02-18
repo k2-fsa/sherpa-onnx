@@ -59,8 +59,8 @@ jobs:
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
         run: |
-          file bin/sherpa-onnx
-          readelf -d bin/sherpa-onnx
+          file build/bin/sherpa-onnx
+          readelf -d build/bin/sherpa-onnx
 
       - name: Test online transducer
         shell: bash
