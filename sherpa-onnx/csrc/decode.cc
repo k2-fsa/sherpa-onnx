@@ -1,84 +1,79 @@
-/**
- * Copyright (c)  2022  Xiaomi Corporation (authors: Fangjun Kuang)
- *
- * See LICENSE for clarification regarding multiple authors
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+// sherpa/csrc/decode.cc
+//
+// Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/decode.h"
 
 #include <assert.h>
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 namespace sherpa_onnx {
 
-std::vector<int32_t> GreedySearch(RnntModel &model,  // NOLINT
-                                  const Ort::Value &encoder_out) {
+static Ort::Value Clone(Ort::Value *v) {
+  auto type_and_shape = v->GetTensorTypeAndShapeInfo();
+  std::vector<int64_t> shape = type_and_shape.GetShape();
+
+  auto memory_info =
+      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+  return Ort::Value::CreateTensor(memory_info, v->GetTensorMutableData<float>(),
+                                  type_and_shape.GetElementCount(),
+                                  shape.data(), shape.size());
+}
+
+static Ort::Value GetFrame(Ort::Value *encoder_out, int32_t t) {
+  std::vector<int64_t> encoder_out_shape =
+      encoder_out->GetTensorTypeAndShapeInfo().GetShape();
+  assert(encoder_out_shape[0] == 1);
+
+  int32_t encoder_out_dim = encoder_out_shape[2];
+
+  auto memory_info =
+      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+  std::array<int64_t, 2> shape{1, encoder_out_dim};
+
+  return Ort::Value::CreateTensor(
+      memory_info,
+      encoder_out->GetTensorMutableData<float>() + t * encoder_out_dim,
+      encoder_out_dim, shape.data(), shape.size());
+}
+
+void GreedySearch(OnlineTransducerModel *model, Ort::Value encoder_out,
+                  std::vector<int64_t> *hyp) {
   std::vector<int64_t> encoder_out_shape =
       encoder_out.GetTensorTypeAndShapeInfo().GetShape();
-  assert(encoder_out_shape[0] == 1 && "Only batch_size=1 is implemented");
-  Ort::Value projected_encoder_out =
-      model.RunJoinerEncoderProj(encoder_out.GetTensorData<float>(),
-                                 encoder_out_shape[1], encoder_out_shape[2]);
 
-  const float *p_projected_encoder_out =
-      projected_encoder_out.GetTensorData<float>();
+  if (encoder_out_shape[0] > 1) {
+    fprintf(stderr, "Only batch_size=1 is implemented. Given: %d\n",
+            static_cast<int32_t>(encoder_out_shape[0]));
+  }
 
-  int32_t context_size = 2;  // hard-code it to 2
-  int32_t blank_id = 0;      // hard-code it to 0
-  std::vector<int32_t> hyp(context_size, blank_id);
-  std::array<int64_t, 2> decoder_input{blank_id, blank_id};
+  int32_t num_frames = encoder_out_shape[1];
+  int32_t vocab_size = model->VocabSize();
 
-  Ort::Value decoder_out = model.RunDecoder(decoder_input.data(), context_size);
+  Ort::Value decoder_input = model->BuildDecoderInput(*hyp);
+  Ort::Value decoder_out = model->RunDecoder(std::move(decoder_input));
 
-  std::vector<int64_t> decoder_out_shape =
-      decoder_out.GetTensorTypeAndShapeInfo().GetShape();
-
-  Ort::Value projected_decoder_out = model.RunJoinerDecoderProj(
-      decoder_out.GetTensorData<float>(), decoder_out_shape[2]);
-
-  int32_t joiner_dim =
-      projected_decoder_out.GetTensorTypeAndShapeInfo().GetShape()[1];
-
-  int32_t T = encoder_out_shape[1];
-  for (int32_t t = 0; t != T; ++t) {
-    Ort::Value logit = model.RunJoiner(
-        p_projected_encoder_out + t * joiner_dim,
-        projected_decoder_out.GetTensorData<float>(), joiner_dim);
-
-    int32_t vocab_size = logit.GetTensorTypeAndShapeInfo().GetShape()[1];
-
+  for (int32_t t = 0; t != num_frames; ++t) {
+    Ort::Value cur_encoder_out = GetFrame(&encoder_out, t);
+    Ort::Value logit =
+        model->RunJoiner(std::move(cur_encoder_out), Clone(&decoder_out));
     const float *p_logit = logit.GetTensorData<float>();
 
     auto y = static_cast<int32_t>(std::distance(
         static_cast<const float *>(p_logit),
         std::max_element(static_cast<const float *>(p_logit),
                          static_cast<const float *>(p_logit) + vocab_size)));
-
-    if (y != blank_id) {
-      decoder_input[0] = hyp.back();
-      decoder_input[1] = y;
-      hyp.push_back(y);
-      decoder_out = model.RunDecoder(decoder_input.data(), context_size);
-      projected_decoder_out = model.RunJoinerDecoderProj(
-          decoder_out.GetTensorData<float>(), decoder_out_shape[2]);
+    if (y != 0) {
+      hyp->push_back(y);
+      decoder_input = model->BuildDecoderInput(*hyp);
+      decoder_out = model->RunDecoder(std::move(decoder_input));
     }
   }
-
-  return {hyp.begin() + context_size, hyp.end()};
 }
 
 }  // namespace sherpa_onnx

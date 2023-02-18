@@ -1,0 +1,73 @@
+name: macos
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/macos.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/macos.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  macos:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -D CMAKE_BUILD_TYPE=Release ..
+
+      - name: Build sherpa for macos
+        shell: bash
+        run: |
+          cd build
+          make -j2
+
+          ls -lh lib
+          ls -lh bin
+
+
+      - name: Display dependencies of sherpa-onnx for macos
+        shell: bash
+        run: |
+          file bin/sherpa-onnx
+          otool -L build/bin/sherpa-onnx
+          otool -l build/bin/sherpa-onnx
+
+      - name: Test online transducer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-transducer.sh

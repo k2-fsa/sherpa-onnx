@@ -4,3 +4,4 @@ build
 onnxruntime-*
 icefall-*
 run.sh
+sherpa-onnx-*

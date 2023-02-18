@@ -1,0 +1,71 @@
+name: linux
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/linux.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/linux.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+
+concurrency:
+  group: linux-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -D CMAKE_BUILD_TYPE=Release ..
+
+      - name: Build sherpa-onnx for ubuntu
+        shell: bash
+        run: |
+          cd build
+          make -j2
+
+          ls -lh lib
+          ls -lh bin
+
+      - name: Display dependencies of sherpa-onnx for linux
+        shell: bash
+        run: |
+          file build/bin/sherpa-onnx
+          readelf -d build/bin/sherpa-onnx
+
+      - name: Test online transducer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-transducer.sh
