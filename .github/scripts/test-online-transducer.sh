@@ -41,7 +41,7 @@ for wave in ${waves[@]}; do
   $repo/decoder-epoch-99-avg-1.onnx \
   $repo/joiner-epoch-99-avg-1.onnx \
   $wave \
-  2
+  4
 done
 
 rm -rf $repo

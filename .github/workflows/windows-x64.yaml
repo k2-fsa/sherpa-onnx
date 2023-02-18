@@ -1,0 +1,80 @@
+name: windows-x64
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/windows-x64.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/windows-x64.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+
+concurrency:
+  group: windows-x64-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  windows_x64:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.vs-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - vs-version: vs2015
+            toolset-version: v140
+            os: windows-2019
+
+          - vs-version: vs2017
+            toolset-version: v141
+            os: windows-2019
+
+          - vs-version: vs2019
+            toolset-version: v142
+            os: windows-2022
+
+          - vs-version: vs2022
+            toolset-version: v143
+            os: windows-2022
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -T ${{ matrix.toolset-version}},host=x64 -A x64 -D CMAKE_BUILD_TYPE=Release ..
+
+      - name: Build sherpa-onnx for windows
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --config Release -- -m:2
+
+          ls -lh ./bin/Release/sherpa-onnx.exe
+
+      - name: Test sherpa-onnx for Windows x64
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx.exe
+
+          .github/scripts/test-online-transducer.sh

@@ -56,6 +56,9 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
     case ModelType::kUnkown:
       return nullptr;
   }
+
+  // unreachable code
+  return nullptr;
 }
 
 }  // namespace sherpa_onnx
