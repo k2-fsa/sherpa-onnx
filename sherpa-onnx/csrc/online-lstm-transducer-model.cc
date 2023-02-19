@@ -3,6 +3,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/online-lstm-transducer-model.h"
 
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -10,6 +11,7 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 #define SHERPA_ONNX_READ_META_DATA(dst, src_key)                        \
@@ -114,23 +116,85 @@ void OnlineLstmTransducerModel::InitJoiner(const std::string &filename) {
   }
 }
 
-Ort::Value OnlineLstmTransducerModel::StackStates(
-    const std::vector<Ort::Value> &states) const {
-  fprintf(stderr, "implement me: %s:%d!\n", __func__,
-          static_cast<int>(__LINE__));
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-  int64_t a;
-  std::array<int64_t, 3> x_shape{1, 1, 1};
-  Ort::Value x = Ort::Value::CreateTensor(memory_info, &a, 0, &a, 0);
-  return x;
+std::vector<Ort::Value> OnlineLstmTransducerModel::StackStates(
+    const std::vector<std::vector<Ort::Value>> &states) const {
+  int32_t batch_size = static_cast<int32_t>(states.size());
+
+  std::array<int64_t, 3> h_shape{num_encoder_layers_, batch_size, d_model_};
+  Ort::Value h = Ort::Value::CreateTensor<float>(allocator_, h_shape.data(),
+                                                 h_shape.size());
+
+  std::array<int64_t, 3> c_shape{num_encoder_layers_, batch_size,
+                                 rnn_hidden_size_};
+
+  Ort::Value c = Ort::Value::CreateTensor<float>(allocator_, c_shape.data(),
+                                                 c_shape.size());
+
+  float *dst_h = h.GetTensorMutableData<float>();
+  float *dst_c = c.GetTensorMutableData<float>();
+
+  for (int32_t layer = 0; layer != num_encoder_layers_; ++layer) {
+    for (int32_t i = 0; i != batch_size; ++i) {
+      const float *src_h =
+          states[i][0].GetTensorData<float>() + layer * d_model_;
+
+      const float *src_c =
+          states[i][1].GetTensorData<float>() + layer * rnn_hidden_size_;
+
+      std::copy(src_h, src_h + d_model_, dst_h);
+      std::copy(src_c, src_c + rnn_hidden_size_, dst_c);
+
+      dst_h += d_model_;
+      dst_c += rnn_hidden_size_;
+    }
+  }
+
+  std::vector<Ort::Value> ans;
+
+  ans.reserve(2);
+  ans.push_back(std::move(h));
+  ans.push_back(std::move(c));
+
+  return ans;
 }
 
-std::vector<Ort::Value> OnlineLstmTransducerModel::UnStackStates(
-    Ort::Value states) const {
-  fprintf(stderr, "implement me: %s:%d!\n", __func__,
-          static_cast<int>(__LINE__));
-  return {};
+std::vector<std::vector<Ort::Value>> OnlineLstmTransducerModel::UnStackStates(
+    const std::vector<Ort::Value> &states) const {
+  int32_t batch_size = states[0].GetTensorTypeAndShapeInfo().GetShape()[1];
+
+  std::vector<std::vector<Ort::Value>> ans(batch_size);
+
+  // allocate space
+  std::array<int64_t, 3> h_shape{num_encoder_layers_, 1, d_model_};
+  std::array<int64_t, 3> c_shape{num_encoder_layers_, 1, rnn_hidden_size_};
+
+  for (int32_t i = 0; i != batch_size; ++i) {
+    Ort::Value h = Ort::Value::CreateTensor<float>(allocator_, h_shape.data(),
+                                                   h_shape.size());
+    Ort::Value c = Ort::Value::CreateTensor<float>(allocator_, c_shape.data(),
+                                                   c_shape.size());
+    ans[i].push_back(std::move(h));
+    ans[i].push_back(std::move(c));
+  }
+
+  for (int32_t layer = 0; layer != num_encoder_layers_; ++layer) {
+    for (int32_t i = 0; i != batch_size; ++i) {
+      const float *src_h = states[0].GetTensorData<float>() +
+                           layer * batch_size * d_model_ + i * d_model_;
+      const float *src_c = states[1].GetTensorData<float>() +
+                           layer * batch_size * rnn_hidden_size_ +
+                           i * rnn_hidden_size_;
+
+      float *dst_h = ans[i][0].GetTensorMutableData<float>() + layer * d_model_;
+      float *dst_c =
+          ans[i][1].GetTensorMutableData<float>() + layer * rnn_hidden_size_;
+
+      std::copy(src_h, src_h + d_model_, dst_h);
+      std::copy(src_c, src_c + rnn_hidden_size_, dst_c);
+    }
+  }
+
+  return ans;
 }
 
 std::vector<Ort::Value> OnlineLstmTransducerModel::GetEncoderInitStates() {
@@ -189,16 +253,21 @@ OnlineLstmTransducerModel::RunEncoder(Ort::Value features,
 }
 
 Ort::Value OnlineLstmTransducerModel::BuildDecoderInput(
-    const std::vector<int64_t> &hyp) {
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+    const std::vector<OnlineTransducerDecoderResult> &results) {
+  int32_t batch_size = static_cast<int32_t>(results.size());
+  std::array<int64_t, 2> shape{batch_size, context_size_};
+  Ort::Value decoder_input =
+      Ort::Value::CreateTensor<int64_t>(allocator_, shape.data(), shape.size());
+  int64_t *p = decoder_input.GetTensorMutableData<int64_t>();
 
-  std::array<int64_t, 2> shape{1, context_size_};
+  for (const auto &r : results) {
+    const int64_t *begin = r.tokens.data() + r.tokens.size() - context_size_;
+    const int64_t *end = r.tokens.data() + r.tokens.size();
+    std::copy(begin, end, p);
+    p += context_size_;
+  }
 
-  return Ort::Value::CreateTensor(
-      memory_info,
-      const_cast<int64_t *>(hyp.data() + hyp.size() - context_size_),
-      context_size_, shape.data(), shape.size());
+  return decoder_input;
 }
 
 Ort::Value OnlineLstmTransducerModel::RunDecoder(Ort::Value decoder_input) {

@@ -6,6 +6,7 @@
 
 #include <assert.h>
 
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <utility>
@@ -64,39 +65,50 @@ class OnlineRecognizer::Impl {
   }
 
   void DecodeStreams(OnlineStream **ss, int32_t n) {
-    if (n != 1) {
-      fprintf(stderr, "only n == 1 is implemented\n");
-      exit(-1);
-    }
-    OnlineStream *s = ss[0];
-    assert(IsReady(s));
-
     int32_t chunk_size = model_->ChunkSize();
     int32_t chunk_shift = model_->ChunkShift();
 
-    int32_t feature_dim = s->FeatureDim();
+    int32_t feature_dim = ss[0]->FeatureDim();
 
-    std::array<int64_t, 3> x_shape{1, chunk_size, feature_dim};
+    std::vector<OnlineTransducerDecoderResult> results(n);
+    std::vector<float> features_vec(n * chunk_size * feature_dim);
+    std::vector<std::vector<Ort::Value>> states_vec(n);
+
+    for (int32_t i = 0; i != n; ++i) {
+      std::vector<float> features =
+          ss[i]->GetFrames(ss[i]->GetNumProcessedFrames(), chunk_size);
+
+      ss[i]->GetNumProcessedFrames() += chunk_shift;
+
+      std::copy(features.begin(), features.end(),
+                features_vec.data() + i * chunk_size * feature_dim);
+
+      results[i] = std::move(ss[i]->GetResult());
+      states_vec[i] = std::move(ss[i]->GetStates());
+    }
 
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-    std::vector<float> features =
-        s->GetFrames(s->GetNumProcessedFrames(), chunk_size);
+    std::array<int64_t, 3> x_shape{n, chunk_size, feature_dim};
 
-    s->GetNumProcessedFrames() += chunk_shift;
+    Ort::Value x = Ort::Value::CreateTensor(memory_info, features_vec.data(),
+                                            features_vec.size(), x_shape.data(),
+                                            x_shape.size());
 
-    Ort::Value x =
-        Ort::Value::CreateTensor(memory_info, features.data(), features.size(),
-                                 x_shape.data(), x_shape.size());
+    auto states = model_->StackStates(states_vec);
 
-    auto pair = model_->RunEncoder(std::move(x), s->GetStates());
-
-    s->SetStates(std::move(pair.second));
-    std::vector<OnlineTransducerDecoderResult> results = {s->GetResult()};
+    auto pair = model_->RunEncoder(std::move(x), states);
 
     decoder_->Decode(std::move(pair.first), &results);
-    s->SetResult(results[0]);
+
+    std::vector<std::vector<Ort::Value>> next_states =
+        model_->UnStackStates(pair.second);
+
+    for (int32_t i = 0; i != n; ++i) {
+      ss[i]->SetResult(results[i]);
+      ss[i]->SetStates(std::move(next_states[i]));
+    }
   }
 
   OnlineRecognizerResult GetResult(OnlineStream *s) {
