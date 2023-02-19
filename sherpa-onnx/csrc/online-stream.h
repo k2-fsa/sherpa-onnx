@@ -1,9 +1,12 @@
-// sherpa/csrc/online-stream.h
+// sherpa-onnx/csrc/online-stream.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
 #ifndef SHERPA_ONNX_CSRC_ONLINE_STREAM_H_
 #define SHERPA_ONNX_CSRC_ONLINE_STREAM_H_
+
+#include <memory>
+#include <vector>
 
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"

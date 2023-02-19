@@ -1,7 +1,10 @@
-// sherpa/csrc/online-stream.cc
+// sherpa-onnx/csrc/online-stream.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/online-stream.h"
+
+#include <memory>
+#include <vector>
 
 #include "sherpa-onnx/csrc/features.h"
 
