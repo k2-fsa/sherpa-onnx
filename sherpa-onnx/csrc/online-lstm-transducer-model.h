@@ -19,16 +19,19 @@ class OnlineLstmTransducerModel : public OnlineTransducerModel {
  public:
   explicit OnlineLstmTransducerModel(const OnlineTransducerModelConfig &config);
 
-  Ort::Value StackStates(const std::vector<Ort::Value> &states) const override;
+  std::vector<Ort::Value> StackStates(
+      const std::vector<std::vector<Ort::Value>> &states) const override;
 
-  std::vector<Ort::Value> UnStackStates(Ort::Value states) const override;
+  std::vector<std::vector<Ort::Value>> UnStackStates(
+      const std::vector<Ort::Value> &states) const override;
 
   std::vector<Ort::Value> GetEncoderInitStates() override;
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
       Ort::Value features, std::vector<Ort::Value> &states) override;
 
-  Ort::Value BuildDecoderInput(const std::vector<int64_t> &hyp) override;
+  Ort::Value BuildDecoderInput(
+      const std::vector<OnlineTransducerDecoderResult> &results) override;
 
   Ort::Value RunDecoder(Ort::Value decoder_input) override;
 
@@ -41,6 +44,7 @@ class OnlineLstmTransducerModel : public OnlineTransducerModel {
   int32_t ChunkShift() const override { return decode_chunk_len_; }
 
   int32_t VocabSize() const override { return vocab_size_; }
+  OrtAllocator *Allocator() override { return allocator_; }
 
  private:
   void InitEncoder(const std::string &encoder_filename);
@@ -50,7 +54,6 @@ class OnlineLstmTransducerModel : public OnlineTransducerModel {
  private:
   Ort::Env env_;
   Ort::SessionOptions sess_opts_;
-
   Ort::AllocatorWithDefaultOptions allocator_;
 
   std::unique_ptr<Ort::Session> encoder_sess_;
