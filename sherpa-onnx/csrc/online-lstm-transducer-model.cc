@@ -3,6 +3,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/online-lstm-transducer-model.h"
 
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <string>
