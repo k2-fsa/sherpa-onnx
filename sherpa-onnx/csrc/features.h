@@ -6,17 +6,19 @@
 #define SHERPA_ONNX_CSRC_FEATURES_H_
 
 #include <memory>
-#include <mutex>  // NOLINT
 #include <vector>
-
-#include "kaldi-native-fbank/csrc/online-feature.h"
 
 namespace sherpa_onnx {
 
 class FeatureExtractor {
  public:
-  FeatureExtractor();
-  explicit FeatureExtractor(const knf::FbankOptions &fbank_opts);
+  /**
+   * @param sampling_rate  Sampling rate of the data used to train the model.
+   * @param feature_dim    Dimension of the features used to train the model.
+   */
+  explicit FeatureExtractor(int32_t sampling_rate = 16000,
+                            int32_t feature_dim = 80);
+  ~FeatureExtractor();
 
   /**
      @param sampling_rate The sampling_rate of the input waveform. Should match
@@ -48,12 +50,13 @@ class FeatureExtractor {
   std::vector<float> GetFrames(int32_t frame_index, int32_t n) const;
 
   void Reset();
-  int32_t FeatureDim() const { return opts_.mel_opts.num_bins; }
+
+  /// Return feature dim of this extractor
+  int32_t FeatureDim() const;
 
  private:
-  std::unique_ptr<knf::OnlineFbank> fbank_;
-  knf::FbankOptions opts_;
-  mutable std::mutex mutex_;
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace sherpa_onnx
