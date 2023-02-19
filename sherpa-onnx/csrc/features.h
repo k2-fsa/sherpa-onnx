@@ -6,7 +6,6 @@
 #define SHERPA_ONNX_CSRC_FEATURES_H_
 
 #include <memory>
-#include <mutex>  // NOLINT
 #include <vector>
 
 namespace sherpa_onnx {

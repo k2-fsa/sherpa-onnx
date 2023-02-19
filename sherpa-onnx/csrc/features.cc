@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <mutex>  // NOLINT
 #include <vector>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
