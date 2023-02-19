@@ -12,6 +12,7 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
 endif()
 
 option(SHERPA_ONNX_ENABLE_PYTHON "Whether to build Python" OFF)
+option(SHERPA_ONNX_ENABLE_TESTS "Whether to build tests" OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -53,6 +54,10 @@ include(onnxruntime)
 
 if(SHERPA_ONNX_ENABLE_PYTHON)
   include(pybind11)
+endif()
+
+if(SHERPA_ONNX_ENABLE_TESTS)
+  enable_testing()
 endif()
 
 add_subdirectory(sherpa-onnx)

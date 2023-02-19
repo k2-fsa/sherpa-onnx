@@ -2,6 +2,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 pybind11_add_module(_sherpa_onnx
   sherpa-onnx.cc
+  features.cc
 )
 
 if(APPLE)

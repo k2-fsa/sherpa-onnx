@@ -5,3 +5,4 @@ onnxruntime-*
 icefall-*
 run.sh
 sherpa-onnx-*
+__pycache__

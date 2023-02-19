@@ -1,2 +1,5 @@
 add_subdirectory(csrc)
-add_subdirectory(tests)
+
+if(SHERPA_ONNX_ENABLE_TESTS)
+  add_subdirectory(tests)
+endif()
