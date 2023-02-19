@@ -6,3 +6,5 @@ icefall-*
 run.sh
 sherpa-onnx-*
 __pycache__
+dist/
+sherpa_onnx.egg-info/
