@@ -119,7 +119,6 @@ void OnlineLstmTransducerModel::InitJoiner(const std::string &filename) {
 std::vector<Ort::Value> OnlineLstmTransducerModel::StackStates(
     const std::vector<std::vector<Ort::Value>> &states) const {
   int32_t batch_size = static_cast<int32_t>(states.size());
-  fprintf(stderr, "batch size: %d\n", batch_size);
 
   std::array<int64_t, 3> h_shape{num_encoder_layers_, batch_size, d_model_};
   Ort::Value h = Ort::Value::CreateTensor<float>(allocator_, h_shape.data(),
