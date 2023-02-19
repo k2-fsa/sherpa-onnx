@@ -85,6 +85,7 @@ function(download_onnxruntime)
   message(STATUS "location_onnxruntime: ${location_onnxruntime}")
 
   add_library(onnxruntime SHARED IMPORTED)
+
   set_target_properties(onnxruntime PROPERTIES
     IMPORTED_LOCATION ${location_onnxruntime}
     INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
@@ -100,6 +101,18 @@ function(download_onnxruntime)
         ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
     )
   endif()
+
+
+  if(UNIX AND NOT APPLE)
+    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*")
+  elseif(APPLE)
+    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*dylib")
+  elseif(WIN32)
+    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.dll")
+  endif()
+
+  message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
+  install(FILES ${onnxruntime_lib_files} DESTINATION lib)
 endfunction()
 
 download_onnxruntime()

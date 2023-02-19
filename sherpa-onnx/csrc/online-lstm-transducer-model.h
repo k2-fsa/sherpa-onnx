@@ -1,4 +1,4 @@
-// sherpa/csrc/online-lstm-transducer-model.h
+// sherpa-onnx/csrc/online-lstm-transducer-model.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 #ifndef SHERPA_ONNX_CSRC_ONLINE_LSTM_TRANSDUCER_MODEL_H_
@@ -28,7 +28,7 @@ class OnlineLstmTransducerModel : public OnlineTransducerModel {
   std::vector<Ort::Value> GetEncoderInitStates() override;
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
-      Ort::Value features, std::vector<Ort::Value> &states) override;
+      Ort::Value features, std::vector<Ort::Value> states) override;
 
   Ort::Value BuildDecoderInput(
       const std::vector<OnlineTransducerDecoderResult> &results) override;

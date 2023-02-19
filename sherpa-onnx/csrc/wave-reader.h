@@ -1,4 +1,4 @@
-// sherpa/csrc/wave-reader.h
+// sherpa-onnx/csrc/wave-reader.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 

@@ -1,4 +1,4 @@
-// sherpa/csrc/online-transducer-model-config.cc
+// sherpa-onnx/csrc/online-transducer-model-config.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"

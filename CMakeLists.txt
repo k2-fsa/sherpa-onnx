@@ -1,7 +1,19 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(sherpa-onnx)
 
-set(SHERPA_ONNX_VERSION "1.0")
+set(SHERPA_ONNX_VERSION "1.1")
+
+# Disable warning about
+#
+# "The DOWNLOAD_EXTRACT_TIMESTAMP option was not given and policy CMP0135 is
+#  not set.
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
+option(SHERPA_ONNX_ENABLE_PYTHON "Whether to build Python" OFF)
+option(SHERPA_ONNX_ENABLE_TESTS "Whether to build tests" OFF)
+option(BUILD_SHARED_LIBS "Whether to build shared libraries" OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -20,13 +32,20 @@ endif()
 set(CMAKE_INSTALL_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
 set(CMAKE_BUILD_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
 
-set(BUILD_SHARED_LIBS ON)
+if(WIN32 AND BUILD_SHARED_LIBS)
+  message(STATUS "Set BUILD_SHARED_LIBS to OFF for windows")
+  set(BUILD_SHARED_LIBS OFF)
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "No CMAKE_BUILD_TYPE given, default to Release")
   set(CMAKE_BUILD_TYPE Release)
 endif()
+
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}")
+message(STATUS "SHERPA_ONNX_ENABLE_PYTHON ${SHERPA_ONNX_ENABLE_PYTHON}")
 
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -36,5 +55,13 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 include(kaldi-native-fbank)
 include(onnxruntime)
+
+if(SHERPA_ONNX_ENABLE_PYTHON)
+  include(pybind11)
+endif()
+
+if(SHERPA_ONNX_ENABLE_TESTS)
+  enable_testing()
+endif()
 
 add_subdirectory(sherpa-onnx)

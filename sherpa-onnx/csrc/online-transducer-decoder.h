@@ -1,4 +1,4 @@
-// sherpa/csrc/online-transducer-decoder.h
+// sherpa-onnx/csrc/online-transducer-decoder.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 

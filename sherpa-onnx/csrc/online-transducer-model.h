@@ -1,4 +1,4 @@
-// sherpa/csrc/online-transducer-model.h
+// sherpa-onnx/csrc/online-transducer-model.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 #ifndef SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_MODEL_H_
@@ -59,7 +59,7 @@ class OnlineTransducerModel {
    */
   virtual std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
       Ort::Value features,
-      std::vector<Ort::Value> &states) = 0;  // NOLINT
+      std::vector<Ort::Value> states) = 0;  // NOLINT
 
   virtual Ort::Value BuildDecoderInput(
       const std::vector<OnlineTransducerDecoderResult> &results) = 0;
