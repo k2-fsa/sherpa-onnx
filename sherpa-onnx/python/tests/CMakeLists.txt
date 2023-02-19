@@ -18,6 +18,7 @@ endfunction()
 # please sort the files in alphabetic order
 set(py_test_files
   test_feature_extractor_config.py
+  test_online_transducer_model_config.py
 )
 
 foreach(source IN LISTS py_test_files)

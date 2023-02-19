@@ -1,4 +1,4 @@
-# sherpa-onnx/python/csrc/features.cc
+# sherpa-onnx/python/tests/test_feature_extractor_config.py
 #
 # Copyright (c)  2023  Xiaomi Corporation
 #
@@ -6,8 +6,9 @@
 #
 #  ctest --verbose -R  test_feature_extractor_config_py
 
-import sherpa_onnx
 import unittest
+
+import sherpa_onnx
 
 
 class TestFeatureExtractorConfig(unittest.TestCase):

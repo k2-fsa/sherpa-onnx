@@ -1,8 +1,9 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
 pybind11_add_module(_sherpa_onnx
-  sherpa-onnx.cc
   features.cc
+  online-transducer-model-config.cc
+  sherpa-onnx.cc
 )
 
 if(APPLE)

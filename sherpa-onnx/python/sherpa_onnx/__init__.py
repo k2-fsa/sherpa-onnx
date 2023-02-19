@@ -1,1 +1,1 @@
-from _sherpa_onnx import FeatureExtractorConfig
+from _sherpa_onnx import FeatureExtractorConfig, OnlineTransducerModelConfig

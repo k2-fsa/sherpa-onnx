@@ -5,12 +5,14 @@
 #include "sherpa-onnx/python/csrc/sherpa-onnx.h"
 
 #include "sherpa-onnx/python/csrc/features.h"
+#include "sherpa-onnx/python/csrc/online-transducer-model-config.h"
 
 namespace sherpa_onnx {
 
 PYBIND11_MODULE(_sherpa_onnx, m) {
   m.doc() = "pybind11 binding of sherpa-onnx";
   PybindFeatures(&m);
+  PybindOnlineTransducerModelConfig(&m);
 }
 
 }  // namespace sherpa_onnx
