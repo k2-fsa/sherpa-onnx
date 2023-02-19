@@ -1,4 +1,4 @@
-// sherpa/csrc/online-lstm-transducer-model.cc
+// sherpa-onnx/csrc/online-lstm-transducer-model.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/online-lstm-transducer-model.h"

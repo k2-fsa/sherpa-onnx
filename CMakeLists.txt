@@ -3,6 +3,16 @@ project(sherpa-onnx)
 
 set(SHERPA_ONNX_VERSION "1.0")
 
+# Disable warning about
+#
+# "The DOWNLOAD_EXTRACT_TIMESTAMP option was not given and policy CMP0135 is
+#  not set.
+if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
+  cmake_policy(SET CMP0135 NEW)
+endif()
+
+option(SHERPA_ONNX_ENABLE_PYTHON "Whether to build Python" OFF)
+
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
@@ -26,7 +36,11 @@ if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "No CMAKE_BUILD_TYPE given, default to Release")
   set(CMAKE_BUILD_TYPE Release)
 endif()
+
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
+message(STATUS "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}")
+message(STATUS "SHERPA_ONNX_ENABLE_PYTHON ${SHERPA_ONNX_ENABLE_PYTHON}")
 
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -36,5 +50,9 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 include(kaldi-native-fbank)
 include(onnxruntime)
+
+if(SHERPA_ONNX_ENABLE_PYTHON)
+  include(pybind11)
+endif()
 
 add_subdirectory(sherpa-onnx)

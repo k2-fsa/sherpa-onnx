@@ -1,4 +1,4 @@
-// sherpa/csrc/onnx-utils.cc
+// sherpa-onnx/csrc/onnx-utils.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/onnx-utils.h"
