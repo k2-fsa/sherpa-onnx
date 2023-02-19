@@ -116,8 +116,8 @@ for a list of pre-trained models to download.
   decoder.StripLeadingBlanks(&result[0]);
   const auto &hyp = result[0].tokens;
   std::string text;
-  for (size_t i = model->ContextSize(); i != hyp.size(); ++i) {
-    text += sym[hyp[i]];
+  for (auto t : hyp) {
+    text += sym[t];
   }
 
   fprintf(stderr, "Done!\n");
