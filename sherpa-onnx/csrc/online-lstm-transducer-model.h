@@ -28,7 +28,7 @@ class OnlineLstmTransducerModel : public OnlineTransducerModel {
   std::vector<Ort::Value> GetEncoderInitStates() override;
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
-      Ort::Value features, std::vector<Ort::Value> &states) override;
+      Ort::Value features, std::vector<Ort::Value> states) override;
 
   Ort::Value BuildDecoderInput(
       const std::vector<OnlineTransducerDecoderResult> &results) override;

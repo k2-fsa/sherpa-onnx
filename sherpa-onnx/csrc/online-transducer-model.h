@@ -59,7 +59,7 @@ class OnlineTransducerModel {
    */
   virtual std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
       Ort::Value features,
-      std::vector<Ort::Value> &states) = 0;  // NOLINT
+      std::vector<Ort::Value> states) = 0;  // NOLINT
 
   virtual Ort::Value BuildDecoderInput(
       const std::vector<OnlineTransducerDecoderResult> &results) = 0;

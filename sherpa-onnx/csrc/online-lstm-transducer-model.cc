@@ -232,7 +232,7 @@ std::vector<Ort::Value> OnlineLstmTransducerModel::GetEncoderInitStates() {
 
 std::pair<Ort::Value, std::vector<Ort::Value>>
 OnlineLstmTransducerModel::RunEncoder(Ort::Value features,
-                                      std::vector<Ort::Value> &states) {
+                                      std::vector<Ort::Value> states) {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 

@@ -98,7 +98,7 @@ class OnlineRecognizer::Impl {
 
     auto states = model_->StackStates(states_vec);
 
-    auto pair = model_->RunEncoder(std::move(x), states);
+    auto pair = model_->RunEncoder(std::move(x), std::move(states));
 
     decoder_->Decode(std::move(pair.first), &results);
 
