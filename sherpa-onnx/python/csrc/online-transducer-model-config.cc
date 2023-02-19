@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/python/csrc/online-transducer-model-config.h"
 
 namespace sherpa_onnx {

@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
 
+#include <string>
+#include <vector>
+
 #include "sherpa-onnx/csrc/online-recognizer.h"
 
 namespace sherpa_onnx {
