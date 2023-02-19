@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 
+#include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 
@@ -62,6 +63,9 @@ class OnlineStream {
 
   void SetResult(const OnlineTransducerDecoderResult &r);
   const OnlineTransducerDecoderResult &GetResult() const;
+
+  void SetStates(std::vector<Ort::Value> states);
+  std::vector<Ort::Value> &GetStates();
 
  private:
   class Impl;

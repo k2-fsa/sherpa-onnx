@@ -11,6 +11,7 @@ add_executable(sherpa-onnx
   sherpa-onnx.cc
   symbol-table.cc
   wave-reader.cc
+  online-recognizer.cc
 )
 
 target_link_libraries(sherpa-onnx

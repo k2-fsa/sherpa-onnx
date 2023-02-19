@@ -4,6 +4,7 @@
 #include "sherpa-onnx/csrc/online-stream.h"
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/features.h"
@@ -41,10 +42,17 @@ class OnlineStream::Impl {
 
   int32_t FeatureDim() const { return feat_extractor_.FeatureDim(); }
 
+  void SetStates(std::vector<Ort::Value> states) {
+    states_ = std::move(states);
+  }
+
+  std::vector<Ort::Value> &GetStates() { return states_; }
+
  private:
   FeatureExtractor feat_extractor_;
   int32_t num_processed_frames_ = 0;  // before subsampling
   OnlineTransducerDecoderResult result_;
+  std::vector<Ort::Value> states_;
 };
 
 OnlineStream::OnlineStream(const FeatureExtractorConfig &config /*= {}*/)
@@ -84,6 +92,14 @@ void OnlineStream::SetResult(const OnlineTransducerDecoderResult &r) {
 
 const OnlineTransducerDecoderResult &OnlineStream::GetResult() const {
   return impl_->GetResult();
+}
+
+void OnlineStream::SetStates(std::vector<Ort::Value> states) {
+  impl_->SetStates(std::move(states));
+}
+
+std::vector<Ort::Value> &OnlineStream::GetStates() {
+  return impl_->GetStates();
 }
 
 }  // namespace sherpa_onnx
