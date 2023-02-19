@@ -15,16 +15,16 @@ namespace sherpa_onnx {
 
 class FeatureExtractor::Impl {
  public:
-  Impl(int32_t sampling_rate, int32_t feature_dim) {
+  explicit Impl(const FeatureExtractorConfig &config) {
     opts_.frame_opts.dither = 0;
     opts_.frame_opts.snip_edges = false;
-    opts_.frame_opts.samp_freq = sampling_rate;
+    opts_.frame_opts.samp_freq = config.sampling_rate;
 
     // cache 100 seconds of feature frames, which is more than enough
     // for real needs
     opts_.frame_opts.max_feature_vectors = 100 * 100;
 
-    opts_.mel_opts.num_bins = feature_dim;
+    opts_.mel_opts.num_bins = config.feature_dim;
 
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
   }
@@ -80,9 +80,8 @@ class FeatureExtractor::Impl {
   mutable std::mutex mutex_;
 };
 
-FeatureExtractor::FeatureExtractor(int32_t sampling_rate /*=16000*/,
-                                   int32_t feature_dim /*=80*/)
-    : impl_(std::make_unique<Impl>(sampling_rate, feature_dim)) {}
+FeatureExtractor::FeatureExtractor(const FeatureExtractorConfig &config /*={}*/)
+    : impl_(std::make_unique<Impl>(config)) {}
 
 FeatureExtractor::~FeatureExtractor() = default;
 

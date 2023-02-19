@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
-#include "sherpa-onnx/csrc/decode.h"
 #include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/online-transducer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -64,8 +64,6 @@ for a list of pre-trained models to download.
 
   std::vector<Ort::Value> states = model->GetEncoderInitStates();
 
-  std::vector<int64_t> hyp(model->ContextSize(), 0);
-
   int32_t expected_sampling_rate = 16000;
 
   bool is_ok = false;
@@ -100,6 +98,10 @@ for a list of pre-trained models to download.
 
   std::array<int64_t, 3> x_shape{1, chunk_size, feature_dim};
 
+  sherpa_onnx::OnlineTransducerGreedySearchDecoder decoder(model.get());
+  std::vector<sherpa_onnx::OnlineTransducerDecoderResult> result = {
+      decoder.GetEmptyResult()};
+
   for (int32_t start = 0; start + chunk_size < num_frames;
        start += chunk_shift) {
     std::vector<float> features = feat_extractor.GetFrames(start, chunk_size);
@@ -109,8 +111,10 @@ for a list of pre-trained models to download.
                                  x_shape.data(), x_shape.size());
     auto pair = model->RunEncoder(std::move(x), states);
     states = std::move(pair.second);
-    sherpa_onnx::GreedySearch(model.get(), std::move(pair.first), &hyp);
+    decoder.Decode(std::move(pair.first), &result);
   }
+  decoder.StripLeadingBlanks(&result[0]);
+  const auto &hyp = result[0].tokens;
   std::string text;
   for (size_t i = model->ContextSize(); i != hyp.size(); ++i) {
     text += sym[hyp[i]];
