@@ -20,6 +20,11 @@ pushd $repo
 git lfs pull --include "*.onnx"
 popd
 
+python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
+sherpa_onnx_version=$(python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)")
+
+echo "sherpa_onnx version: $sherpa_onnx_version"
+
 pwd
 ls -lh
 

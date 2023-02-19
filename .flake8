@@ -3,17 +3,6 @@ show-source=true
 statistics=true
 max-line-length = 80
 
-per-file-ignores =
-    # F821 undefined name 'StreamingServer'
-    # E203 whitespace before ':'
-    ./sherpa/bin/*/beam_search.py: F821, E203
-
 exclude =
   .git,
   ./cmake,
-  ./docs,
-  ./scripts,
-  ./triton,
-  ./sherpa/python/sherpa/__init__.py,
-  ./sherpa/csrc/test-data/test-offline-conformer-transducer-model.py,
-  ./sherpa/python/sherpa/decode.py,
