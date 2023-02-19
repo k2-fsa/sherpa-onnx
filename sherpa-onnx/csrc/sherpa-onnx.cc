@@ -2,8 +2,9 @@
 //
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
+#include <stdio.h>
+
 #include <chrono>  // NOLINT
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -30,14 +31,14 @@ Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 for a list of pre-trained models to download.
 )usage";
-    std::cerr << usage << "\n";
+    fprintf(stderr, "%s\n", usage);
 
     return 0;
   }
 
   std::string tokens = argv[1];
   sherpa_onnx::OnlineTransducerModelConfig config;
-  config.debug = true;
+  config.debug = false;
   config.encoder_filename = argv[2];
   config.decoder_filename = argv[3];
   config.joiner_filename = argv[4];
@@ -47,7 +48,7 @@ for a list of pre-trained models to download.
   if (argc == 7) {
     config.num_threads = atoi(argv[6]);
   }
-  std::cout << config.ToString().c_str() << "\n";
+  fprintf(stderr, "%s\n", config.ToString().c_str());
 
   auto model = sherpa_onnx::OnlineTransducerModel::Create(config);
 
@@ -72,17 +73,17 @@ for a list of pre-trained models to download.
       sherpa_onnx::ReadWave(wav_filename, expected_sampling_rate, &is_ok);
 
   if (!is_ok) {
-    std::cerr << "Failed to read " << wav_filename << "\n";
+    fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
     return -1;
   }
 
-  const float duration = samples.size() / expected_sampling_rate;
+  float duration = samples.size() / static_cast<float>(expected_sampling_rate);
 
-  std::cout << "wav filename: " << wav_filename << "\n";
-  std::cout << "wav duration (s): " << duration << "\n";
+  fprintf(stderr, "wav filename: %s\n", wav_filename.c_str());
+  fprintf(stderr, "wav duration (s): %.3f\n", duration);
 
   auto begin = std::chrono::steady_clock::now();
-  std::cout << "Started!\n";
+  fprintf(stderr, "Started\n");
 
   sherpa_onnx::FeatureExtractor feat_extractor;
   feat_extractor.AcceptWaveform(expected_sampling_rate, samples.data(),
@@ -115,10 +116,10 @@ for a list of pre-trained models to download.
     text += sym[hyp[i]];
   }
 
-  std::cout << "Done!\n";
+  fprintf(stderr, "Done!\n");
 
-  std::cout << "Recognition result for " << wav_filename << "\n"
-            << text << "\n";
+  fprintf(stderr, "Recognition result for %s:\n%s\n", wav_filename.c_str(),
+          text.c_str());
 
   auto end = std::chrono::steady_clock::now();
   float elapsed_seconds =
@@ -126,7 +127,7 @@ for a list of pre-trained models to download.
           .count() /
       1000.;
 
-  std::cout << "num threads: " << config.num_threads << "\n";
+  fprintf(stderr, "num threads: %d\n", config.num_threads);
 
   fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
   float rtf = elapsed_seconds / duration;
