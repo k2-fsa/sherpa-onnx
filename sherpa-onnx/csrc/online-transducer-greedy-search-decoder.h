@@ -17,9 +17,9 @@ class OnlineTransducerGreedySearchDecoder : public OnlineTransducerDecoder {
   explicit OnlineTransducerGreedySearchDecoder(OnlineTransducerModel *model)
       : model_(model) {}
 
-  OnlineTransducerDecoderResult GetEmptyResult() override;
+  OnlineTransducerDecoderResult GetEmptyResult() const override;
 
-  void StripLeadingBlanks(OnlineTransducerDecoderResult *r) override;
+  void StripLeadingBlanks(OnlineTransducerDecoderResult *r) const override;
 
   void Decode(Ort::Value encoder_out,
               std::vector<OnlineTransducerDecoderResult> *result) override;

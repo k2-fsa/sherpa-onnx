@@ -3,6 +3,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_executable(sherpa-onnx
   features.cc
   online-lstm-transducer-model.cc
+  online-recognizer.cc
   online-stream.cc
   online-transducer-greedy-search-decoder.cc
   online-transducer-model-config.cc

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
@@ -35,35 +36,26 @@ for a list of pre-trained models to download.
     return 0;
   }
 
-  std::string tokens = argv[1];
-  sherpa_onnx::OnlineTransducerModelConfig config;
-  config.debug = false;
-  config.encoder_filename = argv[2];
-  config.decoder_filename = argv[3];
-  config.joiner_filename = argv[4];
+  sherpa_onnx::OnlineRecognizerConfig config;
+
+  config.tokens = argv[1];
+
+  config.model_config.debug = false;
+  config.model_config.encoder_filename = argv[2];
+  config.model_config.decoder_filename = argv[3];
+  config.model_config.joiner_filename = argv[4];
+
   std::string wav_filename = argv[5];
 
-  config.num_threads = 2;
+  config.model_config.num_threads = 2;
   if (argc == 7) {
-    config.num_threads = atoi(argv[6]);
+    config.model_config.num_threads = atoi(argv[6]);
   }
   fprintf(stderr, "%s\n", config.ToString().c_str());
 
-  auto model = sherpa_onnx::OnlineTransducerModel::Create(config);
+  sherpa_onnx::OnlineRecognizer recognizer(config);
 
-  sherpa_onnx::SymbolTable sym(tokens);
-
-  Ort::AllocatorWithDefaultOptions allocator;
-
-  int32_t chunk_size = model->ChunkSize();
-  int32_t chunk_shift = model->ChunkShift();
-
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
-  std::vector<Ort::Value> states = model->GetEncoderInitStates();
-
-  float expected_sampling_rate = 16000;
+  float expected_sampling_rate = config.feat_config.sampling_rate;
 
   bool is_ok = false;
   std::vector<float> samples =
@@ -82,43 +74,20 @@ for a list of pre-trained models to download.
   auto begin = std::chrono::steady_clock::now();
   fprintf(stderr, "Started\n");
 
-  sherpa_onnx::OnlineStream stream;
-  stream.AcceptWaveform(expected_sampling_rate, samples.data(), samples.size());
+  auto s = recognizer.CreateStream();
+  s->AcceptWaveform(expected_sampling_rate, samples.data(), samples.size());
 
   std::vector<float> tail_paddings(
       static_cast<int>(0.2 * expected_sampling_rate));
-  stream.AcceptWaveform(expected_sampling_rate, tail_paddings.data(),
-                        tail_paddings.size());
-  stream.InputFinished();
+  s->AcceptWaveform(expected_sampling_rate, tail_paddings.data(),
+                    tail_paddings.size());
+  s->InputFinished();
 
-  int32_t num_frames = stream.NumFramesReady();
-  int32_t feature_dim = stream.FeatureDim();
-
-  std::array<int64_t, 3> x_shape{1, chunk_size, feature_dim};
-
-  sherpa_onnx::OnlineTransducerGreedySearchDecoder decoder(model.get());
-  std::vector<sherpa_onnx::OnlineTransducerDecoderResult> result = {
-      decoder.GetEmptyResult()};
-  while (stream.NumFramesReady() - stream.GetNumProcessedFrames() >
-         chunk_size) {
-    std::vector<float> features =
-        stream.GetFrames(stream.GetNumProcessedFrames(), chunk_size);
-    stream.GetNumProcessedFrames() += chunk_shift;
-
-    Ort::Value x =
-        Ort::Value::CreateTensor(memory_info, features.data(), features.size(),
-                                 x_shape.data(), x_shape.size());
-
-    auto pair = model->RunEncoder(std::move(x), states);
-    states = std::move(pair.second);
-    decoder.Decode(std::move(pair.first), &result);
+  while (recognizer.IsReady(s.get())) {
+    recognizer.DecodeStream(s.get());
   }
-  decoder.StripLeadingBlanks(&result[0]);
-  const auto &hyp = result[0].tokens;
-  std::string text;
-  for (auto t : hyp) {
-    text += sym[t];
-  }
+
+  std::string text = recognizer.GetResult(s.get()).text;
 
   fprintf(stderr, "Done!\n");
 
@@ -131,7 +100,7 @@ for a list of pre-trained models to download.
           .count() /
       1000.;
 
-  fprintf(stderr, "num threads: %d\n", config.num_threads);
+  fprintf(stderr, "num threads: %d\n", config.model_config.num_threads);
 
   fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
   float rtf = elapsed_seconds / duration;

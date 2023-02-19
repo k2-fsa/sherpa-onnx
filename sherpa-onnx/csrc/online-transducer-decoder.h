@@ -26,13 +26,14 @@ class OnlineTransducerDecoder {
    * to the beginning of the decoding result, which will be
    * stripped by calling `StripPrecedingBlanks()`.
    */
-  virtual OnlineTransducerDecoderResult GetEmptyResult() = 0;
+  virtual OnlineTransducerDecoderResult GetEmptyResult() const = 0;
 
   /** Strip blanks added by `GetEmptyResult()`.
    *
    * @param r It is changed in-place.
    */
-  virtual void StripLeadingBlanks(OnlineTransducerDecoderResult * /*r*/) {}
+  virtual void StripLeadingBlanks(OnlineTransducerDecoderResult * /*r*/) const {
+  }
 
   /** Run transducer beam search given the output from the encoder model.
    *

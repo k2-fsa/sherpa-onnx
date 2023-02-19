@@ -33,7 +33,7 @@ static Ort::Value GetFrame(Ort::Value *encoder_out, int32_t t) {
 }
 
 OnlineTransducerDecoderResult
-OnlineTransducerGreedySearchDecoder::GetEmptyResult() {
+OnlineTransducerGreedySearchDecoder::GetEmptyResult() const {
   int32_t context_size = model_->ContextSize();
   int32_t blank_id = 0;  // always 0
   OnlineTransducerDecoderResult r;
@@ -43,7 +43,7 @@ OnlineTransducerGreedySearchDecoder::GetEmptyResult() {
 }
 
 void OnlineTransducerGreedySearchDecoder::StripLeadingBlanks(
-    OnlineTransducerDecoderResult *r) {
+    OnlineTransducerDecoderResult *r) const {
   int32_t context_size = model_->ContextSize();
 
   auto start = r->tokens.begin() + context_size;

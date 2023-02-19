@@ -7,11 +7,22 @@
 #include <algorithm>
 #include <memory>
 #include <mutex>  // NOLINT
+#include <sstream>
 #include <vector>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
 
 namespace sherpa_onnx {
+
+std::string FeatureExtractorConfig::ToString() const {
+  std::ostringstream os;
+
+  os << "FeatureExtractorConfig(";
+  os << "sampling_rate=" << sampling_rate << ", ";
+  os << "feature_dim=" << feature_dim << ")";
+
+  return os.str();
+}
 
 class FeatureExtractor::Impl {
  public:
