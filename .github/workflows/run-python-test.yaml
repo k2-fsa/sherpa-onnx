@@ -1,4 +1,4 @@
-name: linux
+name: run-python-test
 
 on:
   push:
