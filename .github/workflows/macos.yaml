@@ -47,7 +47,7 @@ jobs:
           cd build
           cmake -D CMAKE_BUILD_TYPE=Release ..
 
-      - name: Build sherpa for macos
+      - name: Build sherpa-onnx for macos
         shell: bash
         run: |
           cd build
