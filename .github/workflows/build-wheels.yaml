@@ -8,7 +8,7 @@ on:
       - '*'
 
 env:
-  SHERPA_NCNN_IS_IN_GITHUB_ACTIONS: 1
+  SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
 
 concurrency:
   group: build-wheels-${{ github.ref }}
