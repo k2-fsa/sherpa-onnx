@@ -70,7 +70,10 @@ class BuildExtension(build_ext):
             cmake_args = "-DCMAKE_BUILD_TYPE=Release"
 
         extra_cmake_args = f" -DCMAKE_INSTALL_PREFIX={install_dir} "
-        extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
+        if not is_windows():
+            extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
+        else:
+            extra_cmake_args += " -DBUILD_SHARED_LIBS=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PYTHON=ON "
 
         if "PYTHON_EXECUTABLE" not in cmake_args:
