@@ -23,6 +23,13 @@ struct OnlineRecognizerConfig {
   OnlineTransducerModelConfig model_config;
   std::string tokens;
 
+  OnlineRecognizerConfig() = default;
+
+  OnlineRecognizerConfig(const FeatureExtractorConfig &feat_config,
+                         const OnlineTransducerModelConfig &model_config,
+                         const std::string &tokens)
+      : feat_config(feat_config), model_config(model_config), tokens(tokens) {}
+
   std::string ToString() const;
 };
 

@@ -4,6 +4,8 @@ pybind11_add_module(_sherpa_onnx
   features.cc
   online-transducer-model-config.cc
   sherpa-onnx.cc
+  online-stream.cc
+  online-recognizer.cc
 )
 
 if(APPLE)
