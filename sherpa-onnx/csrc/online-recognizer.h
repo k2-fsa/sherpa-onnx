@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_H_
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_H_
 
+#include <memory>
 #include <string>
 
 #include "sherpa-onnx/csrc/features.h"

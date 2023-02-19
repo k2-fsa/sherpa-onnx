@@ -4,9 +4,13 @@
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
 
-#include <sstream>
+#include <assert.h>
 
-#include "assert.h"
+#include <memory>
+#include <sstream>
+#include <utility>
+#include <vector>
+
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
