@@ -8,8 +8,7 @@
 #include <string>
 #include <vector>
 
-#include "kaldi-native-fbank/csrc/online-feature.h"
-#include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
@@ -64,7 +63,7 @@ for a list of pre-trained models to download.
 
   std::vector<Ort::Value> states = model->GetEncoderInitStates();
 
-  int32_t expected_sampling_rate = 16000;
+  float expected_sampling_rate = 16000;
 
   bool is_ok = false;
   std::vector<float> samples =
@@ -75,7 +74,7 @@ for a list of pre-trained models to download.
     return -1;
   }
 
-  float duration = samples.size() / static_cast<float>(expected_sampling_rate);
+  float duration = samples.size() / expected_sampling_rate;
 
   fprintf(stderr, "wav filename: %s\n", wav_filename.c_str());
   fprintf(stderr, "wav duration (s): %.3f\n", duration);
@@ -83,32 +82,33 @@ for a list of pre-trained models to download.
   auto begin = std::chrono::steady_clock::now();
   fprintf(stderr, "Started\n");
 
-  sherpa_onnx::FeatureExtractor feat_extractor;
-  feat_extractor.AcceptWaveform(expected_sampling_rate, samples.data(),
-                                samples.size());
+  sherpa_onnx::OnlineStream stream;
+  stream.AcceptWaveform(expected_sampling_rate, samples.data(), samples.size());
 
   std::vector<float> tail_paddings(
       static_cast<int>(0.2 * expected_sampling_rate));
-  feat_extractor.AcceptWaveform(expected_sampling_rate, tail_paddings.data(),
-                                tail_paddings.size());
-  feat_extractor.InputFinished();
+  stream.AcceptWaveform(expected_sampling_rate, tail_paddings.data(),
+                        tail_paddings.size());
+  stream.InputFinished();
 
-  int32_t num_frames = feat_extractor.NumFramesReady();
-  int32_t feature_dim = feat_extractor.FeatureDim();
+  int32_t num_frames = stream.NumFramesReady();
+  int32_t feature_dim = stream.FeatureDim();
 
   std::array<int64_t, 3> x_shape{1, chunk_size, feature_dim};
 
   sherpa_onnx::OnlineTransducerGreedySearchDecoder decoder(model.get());
   std::vector<sherpa_onnx::OnlineTransducerDecoderResult> result = {
       decoder.GetEmptyResult()};
-
-  for (int32_t start = 0; start + chunk_size < num_frames;
-       start += chunk_shift) {
-    std::vector<float> features = feat_extractor.GetFrames(start, chunk_size);
+  while (stream.NumFramesReady() - stream.GetNumProcessedFrames() >
+         chunk_size) {
+    std::vector<float> features =
+        stream.GetFrames(stream.GetNumProcessedFrames(), chunk_size);
+    stream.GetNumProcessedFrames() += chunk_shift;
 
     Ort::Value x =
         Ort::Value::CreateTensor(memory_info, features.data(), features.size(),
                                  x_shape.data(), x_shape.size());
+
     auto pair = model->RunEncoder(std::move(x), states);
     states = std::move(pair.second);
     decoder.Decode(std::move(pair.first), &result);
@@ -116,8 +116,8 @@ for a list of pre-trained models to download.
   decoder.StripLeadingBlanks(&result[0]);
   const auto &hyp = result[0].tokens;
   std::string text;
-  for (size_t i = model->ContextSize(); i != hyp.size(); ++i) {
-    text += sym[hyp[i]];
+  for (auto t : hyp) {
+    text += sym[t];
   }
 
   fprintf(stderr, "Done!\n");

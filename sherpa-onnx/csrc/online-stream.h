@@ -1,24 +1,22 @@
-// sherpa/csrc/features.h
+// sherpa-onnx/csrc/online-stream.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_FEATURES_H_
-#define SHERPA_ONNX_CSRC_FEATURES_H_
+#ifndef SHERPA_ONNX_CSRC_ONLINE_STREAM_H_
+#define SHERPA_ONNX_CSRC_ONLINE_STREAM_H_
 
 #include <memory>
 #include <vector>
 
+#include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/online-transducer-decoder.h"
+
 namespace sherpa_onnx {
 
-struct FeatureExtractorConfig {
-  float sampling_rate = 16000;
-  int32_t feature_dim = 80;
-};
-
-class FeatureExtractor {
+class OnlineStream {
  public:
-  explicit FeatureExtractor(const FeatureExtractorConfig &config = {});
-  ~FeatureExtractor();
+  explicit OnlineStream(const FeatureExtractorConfig &config = {});
+  ~OnlineStream();
 
   /**
      @param sampling_rate The sampling_rate of the input waveform. Should match
@@ -54,8 +52,16 @@ class FeatureExtractor {
 
   void Reset();
 
-  /// Return feature dim of this extractor
   int32_t FeatureDim() const;
+
+  // Return a reference to the number of processed frames so far.
+  // Initially, it is 0. It is always less than NumFramesReady().
+  //
+  // The returned reference is valid as long as this object is alive.
+  int32_t &GetNumProcessedFrames();
+
+  void SetResult(const OnlineTransducerDecoderResult &r);
+  const OnlineTransducerDecoderResult &GetResult() const;
 
  private:
   class Impl;
@@ -64,4 +70,4 @@ class FeatureExtractor {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_FEATURES_H_
+#endif  // SHERPA_ONNX_CSRC_ONLINE_STREAM_H_
