@@ -46,4 +46,16 @@ void PrintModelMetadata(std::ostream &os, const Ort::ModelMetadata &meta_data) {
   }
 }
 
+Ort::Value Clone(Ort::Value *v) {
+  auto type_and_shape = v->GetTensorTypeAndShapeInfo();
+  std::vector<int64_t> shape = type_and_shape.GetShape();
+
+  auto memory_info =
+      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+  return Ort::Value::CreateTensor(memory_info, v->GetTensorMutableData<float>(),
+                                  type_and_shape.GetElementCount(),
+                                  shape.data(), shape.size());
+}
+
 }  // namespace sherpa_onnx

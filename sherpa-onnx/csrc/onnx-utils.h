@@ -55,6 +55,9 @@ void GetOutputNames(Ort::Session *sess, std::vector<std::string> *output_names,
 void PrintModelMetadata(std::ostream &os,
                         const Ort::ModelMetadata &meta_data);  // NOLINT
 
+// Return a shallow copy of v
+Ort::Value Clone(Ort::Value *v);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_ONNX_UTILS_H_

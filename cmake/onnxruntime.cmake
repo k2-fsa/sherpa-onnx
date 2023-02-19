@@ -9,6 +9,7 @@ function(download_onnxruntime)
       ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.14.0.tgz
       ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-1.14.0.tgz
       /tmp/onnxruntime-linux-x64-1.14.0.tgz
+      /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.14.0.tgz
     )
 
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-x64-1.14.0.tgz")

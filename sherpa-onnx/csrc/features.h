@@ -10,14 +10,18 @@
 
 namespace sherpa_onnx {
 
+struct FeatureExtractorConfig {
+  int32_t sampling_rate = 16000;
+  int32_t feature_dim = 80;
+};
+
 class FeatureExtractor {
  public:
   /**
    * @param sampling_rate  Sampling rate of the data used to train the model.
    * @param feature_dim    Dimension of the features used to train the model.
    */
-  explicit FeatureExtractor(int32_t sampling_rate = 16000,
-                            int32_t feature_dim = 80);
+  explicit FeatureExtractor(const FeatureExtractorConfig &config = {});
   ~FeatureExtractor();
 
   /**
