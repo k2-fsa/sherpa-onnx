@@ -102,7 +102,15 @@ function(download_onnxruntime)
     )
   endif()
 
-  file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*")
+
+  if(UNIX AND NOT APPLE)
+    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*")
+  elseif(APPLE)
+    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*dylib")
+  elseif(WIN32)
+    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.dll")
+  endif()
+
   message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
   install(FILES ${onnxruntime_lib_files} DESTINATION lib)
 endfunction()
