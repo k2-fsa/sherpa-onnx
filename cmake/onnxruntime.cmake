@@ -24,13 +24,13 @@ function(download_onnxruntime)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
     set(possible_file_locations
-      $ENV{HOME}/Downloads/onnxruntime-osx-x86_64-1.14.0.tgz
-      ${PROJECT_SOURCE_DIR}/onnxruntime-osx-x86_64-1.14.0.tgz
-      ${PROJECT_BINARY_DIR}/onnxruntime-osx-x86_64-1.14.0.tgz
-      /tmp/onnxruntime-osx-x86_64-1.14.0.tgz
+      $ENV{HOME}/Downloads/onnxruntime-osx-universal2-1.14.0.tgz
+      ${PROJECT_SOURCE_DIR}/onnxruntime-osx-universal2-1.14.0.tgz
+      ${PROJECT_BINARY_DIR}/onnxruntime-osx-universal2-1.14.0.tgz
+      /tmp/onnxruntime-osx-universal2-1.14.0.tgz
     )
-    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-osx-x86_64-1.14.0.tgz")
-    set(onnxruntime_HASH "SHA256=abd2056d56051e78263af37b8dffc3e6da110d2937af7a581a34d1a58dc58360")
+    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-osx-universal2-1.14.0.tgz")
+    set(onnxruntime_HASH "SHA256=348563df91f17a2ac010519f37c3b46fd5b79140974e5c5a90a57e032bb25925")
     # After downloading, it contains:
     #  ./lib/libonnxruntime.1.14.0.dylib
     #  ./lib/libonnxruntime.dylib, which is a symlink to lib/libonnxruntime.1.14.0.dylib
@@ -115,4 +115,32 @@ function(download_onnxruntime)
   install(FILES ${onnxruntime_lib_files} DESTINATION lib)
 endfunction()
 
-download_onnxruntime()
+# First, we try to locate the header and the lib if the use has already
+# installed onnxruntime. Otherwise, we will download the pre-compiled lib
+
+find_path(location_onnxruntime_header_dir onnxruntime_cxx_api.h
+  PATHS
+    /usr/include
+    /usr/local/include
+)
+message(STATUS "location_onnxruntime_header_dir: ${location_onnxruntime_header_dir}")
+
+find_library(location_onnxruntime_lib onnxruntime
+  PATHS
+    /lib
+    /usr/lib
+    /usr/local/lib
+)
+message(STATUS "location_onnxruntime_lib: ${location_onnxruntime_lib}")
+
+if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
+  add_library(onnxruntime SHARED IMPORTED)
+  set_target_properties(onnxruntime PROPERTIES
+    IMPORTED_LOCATION ${location_onnxruntime_lib}
+    INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
+  )
+else()
+  message(STATUS "Could not find a pre-installed onnxruntime. Downloading pre-compiled onnxruntime")
+  download_onnxruntime()
+endif()
+
