@@ -24,13 +24,13 @@ function(download_onnxruntime)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
     set(possible_file_locations
-      $ENV{HOME}/Downloads/onnxruntime-osx-x86_64-1.14.0.tgz
-      ${PROJECT_SOURCE_DIR}/onnxruntime-osx-x86_64-1.14.0.tgz
-      ${PROJECT_BINARY_DIR}/onnxruntime-osx-x86_64-1.14.0.tgz
-      /tmp/onnxruntime-osx-x86_64-1.14.0.tgz
+      $ENV{HOME}/Downloads/onnxruntime-osx-universal2-1.14.0.tgz
+      ${PROJECT_SOURCE_DIR}/onnxruntime-osx-universal2-1.14.0.tgz
+      ${PROJECT_BINARY_DIR}/onnxruntime-osx-universal2-1.14.0.tgz
+      /tmp/onnxruntime-osx-universal2-1.14.0.tgz
     )
-    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-osx-x86_64-1.14.0.tgz")
-    set(onnxruntime_HASH "SHA256=abd2056d56051e78263af37b8dffc3e6da110d2937af7a581a34d1a58dc58360")
+    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-osx-universal2-1.14.0.tgz")
+    set(onnxruntime_HASH "SHA256=348563df91f17a2ac010519f37c3b46fd5b79140974e5c5a90a57e032bb25925")
     # After downloading, it contains:
     #  ./lib/libonnxruntime.1.14.0.dylib
     #  ./lib/libonnxruntime.dylib, which is a symlink to lib/libonnxruntime.1.14.0.dylib
