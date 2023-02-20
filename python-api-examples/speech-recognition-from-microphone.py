@@ -40,15 +40,18 @@ def create_recognizer():
 def main():
     print("Started! Please speak")
     recognizer = create_recognizer()
-    sample_rate = recognizer.sample_rate
+    sample_rate = 16000
     samples_per_read = int(0.1 * sample_rate)  # 0.1 second = 100 ms
     last_result = ""
+    stream = recognizer.create_stream()
     with sd.InputStream(channels=1, dtype="float32", samplerate=sample_rate) as s:
         while True:
             samples, _ = s.read(samples_per_read)  # a blocking read
             samples = samples.reshape(-1)
-            recognizer.accept_waveform(sample_rate, samples)
-            result = recognizer.text
+            stream.accept_waveform(sample_rate, samples)
+            while recognizer.is_ready(stream):
+                recognizer.decode_stream(stream)
+            result = recognizer.get_result(stream)
             if last_result != result:
                 last_result = result
                 print(result)
