@@ -4,6 +4,11 @@
 #ifndef SHERPA_ONNX_CSRC_ONLINE_ZIPFORMER_TRANSDUCER_MODEL_H_
 #define SHERPA_ONNX_CSRC_ONLINE_ZIPFORMER_TRANSDUCER_MODEL_H_
 
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
@@ -76,11 +81,15 @@ class OnlineZipformerTransducerModel : public OnlineTransducerModel {
 
   OnlineTransducerModelConfig config_;
 
-  int32_t num_encoder_layers_ = 0;
+  std::vector<int32_t> encoder_dims_;
+  std::vector<int32_t> attention_dims_;
+  std::vector<int32_t> num_encoder_layers_;
+  std::vector<int32_t> cnn_module_kernels_;
+  std::vector<int32_t> left_context_len_;
+
   int32_t T_ = 0;
   int32_t decode_chunk_len_ = 0;
-  int32_t rnn_hidden_size_ = 0;
-  int32_t d_model_ = 0;
+
   int32_t context_size_ = 0;
   int32_t vocab_size_ = 0;
 };

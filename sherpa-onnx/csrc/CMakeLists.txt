@@ -11,6 +11,7 @@ add_library(sherpa-onnx-core
   online-transducer-model.cc
   onnx-utils.cc
   symbol-table.cc
+  text-utils.cc
   wave-reader.cc
 )
 

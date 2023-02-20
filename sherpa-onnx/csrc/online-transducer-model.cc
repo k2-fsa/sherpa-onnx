@@ -8,11 +8,13 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/online-lstm-transducer-model.h"
+#include "sherpa-onnx/csrc/online-zipformer-transducer-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 namespace sherpa_onnx {
 
 enum class ModelType {
   kLstm,
+  kZipformer,
   kUnkown,
 };
 
@@ -40,6 +42,8 @@ static ModelType GetModelType(const OnlineTransducerModelConfig &config) {
 
   if (model_type.get() == std::string("lstm")) {
     return ModelType::kLstm;
+  } else if (model_type.get() == std::string("zipformer")) {
+    return ModelType::kZipformer;
   } else {
     fprintf(stderr, "Unsupported model_type: %s\n", model_type.get());
     return ModelType::kUnkown;
@@ -53,6 +57,8 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
   switch (model_type) {
     case ModelType::kLstm:
       return std::make_unique<OnlineLstmTransducerModel>(config);
+    case ModelType::kZipformer:
+      return std::make_unique<OnlineZipformerTransducerModel>(config);
     case ModelType::kUnkown:
       return nullptr;
   }

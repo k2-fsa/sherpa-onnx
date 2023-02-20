@@ -11,23 +11,9 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
-
-#define SHERPA_ONNX_READ_META_DATA(dst, src_key)                        \
-  do {                                                                  \
-    auto value =                                                        \
-        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator); \
-    if (!value) {                                                       \
-      fprintf(stderr, "%s does not exist in the metadata\n", src_key);  \
-      exit(-1);                                                         \
-    }                                                                   \
-    dst = atoi(value.get());                                            \
-    if (dst <= 0) {                                                     \
-      fprintf(stderr, "Invalud value %d for %s\n", dst, src_key);       \
-      exit(-1);                                                         \
-    }                                                                   \
-  } while (0)
 
 namespace sherpa_onnx {
 
