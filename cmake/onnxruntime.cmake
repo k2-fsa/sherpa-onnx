@@ -115,4 +115,32 @@ function(download_onnxruntime)
   install(FILES ${onnxruntime_lib_files} DESTINATION lib)
 endfunction()
 
-download_onnxruntime()
+# First, we try to locate the header and the lib if the use has already
+# installed onnxruntime. Otherwise, we will download the pre-compiled lib
+
+find_path(location_onnxruntime_header_dir onnxruntime_cxx_api.h
+  PATHS
+    /usr/include
+    /usr/local/include
+)
+message(STATUS "location_onnxruntime_header_dir: ${location_onnxruntime_header_dir}")
+
+find_library(location_onnxruntime_lib onnxruntime
+  PATHS
+    /lib
+    /usr/lib
+    /usr/local/lib
+)
+message(STATUS "location_onnxruntime_lib: ${location_onnxruntime_lib}")
+
+if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
+  add_library(onnxruntime SHARED IMPORTED)
+  set_target_properties(onnxruntime PROPERTIES
+    IMPORTED_LOCATION ${location_onnxruntime_lib}
+    INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
+  )
+else()
+  message(STATUS "Could not find a pre-installed onnxruntime. Downloading pre-compiled onnxruntime")
+  download_onnxruntime()
+endif()
+
