@@ -56,7 +56,23 @@ void PrintModelMetadata(std::ostream &os,
                         const Ort::ModelMetadata &meta_data);  // NOLINT
 
 // Return a shallow copy of v
-Ort::Value Clone(Ort::Value *v);
+Ort::Value Clone(const Ort::Value *v);
+
+// Print a 1-D tensor to stderr
+void Print1D(Ort::Value *v);
+
+// Print a 2-D tensor to stderr
+void Print2D(Ort::Value *v);
+
+// Print a 3-D tensor to stderr
+void Print3D(Ort::Value *v);
+
+template <typename T = float>
+void Fill(Ort::Value *tensor, T value) {
+  auto n = tensor->GetTypeInfo().GetTensorTypeAndShapeInfo().GetElementCount();
+  auto p = tensor->GetTensorMutableData<T>();
+  std::fill(p, p + n, value);
+}
 
 }  // namespace sherpa_onnx
 

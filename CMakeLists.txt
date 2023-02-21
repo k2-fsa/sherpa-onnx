@@ -62,6 +62,7 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_TESTS)
   enable_testing()
+  include(googletest)
 endif()
 
 add_subdirectory(sherpa-onnx)
