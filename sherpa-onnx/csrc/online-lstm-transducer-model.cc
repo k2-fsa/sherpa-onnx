@@ -50,7 +50,7 @@ void OnlineLstmTransducerModel::InitEncoder(const std::string &filename) {
     fprintf(stderr, "%s\n", os.str().c_str());
   }
 
-  Ort::AllocatorWithDefaultOptions allocator;
+  Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
   SHERPA_ONNX_READ_META_DATA(num_encoder_layers_, "num_encoder_layers");
   SHERPA_ONNX_READ_META_DATA(T_, "T");
   SHERPA_ONNX_READ_META_DATA(decode_chunk_len_, "decode_chunk_len");
@@ -77,7 +77,7 @@ void OnlineLstmTransducerModel::InitDecoder(const std::string &filename) {
     fprintf(stderr, "%s\n", os.str().c_str());
   }
 
-  Ort::AllocatorWithDefaultOptions allocator;
+  Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
   SHERPA_ONNX_READ_META_DATA(vocab_size_, "vocab_size");
   SHERPA_ONNX_READ_META_DATA(context_size_, "context_size");
 }

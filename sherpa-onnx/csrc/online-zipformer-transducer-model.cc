@@ -54,7 +54,7 @@ void OnlineZipformerTransducerModel::InitEncoder(const std::string &filename) {
     fprintf(stderr, "%s\n", os.str().c_str());
   }
 
-  Ort::AllocatorWithDefaultOptions allocator;
+  Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
   SHERPA_ONNX_READ_META_DATA_VEC(encoder_dims_, "encoder_dims");
   SHERPA_ONNX_READ_META_DATA_VEC(attention_dims_, "attention_dims");
   SHERPA_ONNX_READ_META_DATA_VEC(num_encoder_layers_, "num_encoder_layers");

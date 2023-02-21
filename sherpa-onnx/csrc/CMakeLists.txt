@@ -1,6 +1,7 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
 add_library(sherpa-onnx-core
+  cat.cc
   features.cc
   online-lstm-transducer-model.cc
   online-zipformer-transducer-model.cc
@@ -29,3 +30,27 @@ endif()
 
 install(TARGETS sherpa-onnx-core DESTINATION lib)
 install(TARGETS sherpa-onnx DESTINATION bin)
+
+if(SHERPA_ONNX_ENABLE_TESTS)
+
+  set(sherpa_onnx_test_srcs
+    cat-test.cc
+  )
+
+  function(sherpa_onnx_add_test source)
+    get_filename_component(name ${source} NAME_WE)
+    set(target_name ${name})
+    add_executable(${target_name} "${source}")
+
+    target_link_libraries(${target_name}
+      PRIVATE
+        sherpa-onnx-core
+        gtest
+        gtest_main
+    )
+  endfunction()
+
+  foreach(source IN LISTS sherpa_onnx_test_srcs)
+    sherpa_onnx_add_test(${source})
+  endforeach()
+endif()
