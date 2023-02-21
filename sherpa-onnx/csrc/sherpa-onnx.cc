@@ -10,9 +10,6 @@
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-stream.h"
-#include "sherpa-onnx/csrc/online-transducer-greedy-search-decoder.h"
-#include "sherpa-onnx/csrc/online-transducer-model-config.h"
-#include "sherpa-onnx/csrc/online-transducer-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
