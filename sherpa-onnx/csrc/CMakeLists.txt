@@ -11,6 +11,7 @@ add_library(sherpa-onnx-core
   online-transducer-model.cc
   online-zipformer-transducer-model.cc
   onnx-utils.cc
+  resample.cc
   symbol-table.cc
   text-utils.cc
   unbind.cc
@@ -31,6 +32,18 @@ endif()
 
 install(TARGETS sherpa-onnx-core DESTINATION lib)
 install(TARGETS sherpa-onnx DESTINATION bin)
+
+if(SHERPA_ONNX_HAS_ALSA)
+  add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
+  target_link_libraries(sherpa-onnx-alsa PRIVATE sherpa-onnx-core)
+
+  if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})
+    target_link_libraries(sherpa-onnx-alsa PRIVATE -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
+  else()
+    target_link_libraries(sherpa-onnx-alsa PRIVATE asound)
+  endif()
+  install(TARGETS sherpa-onnx-alsa DESTINATION bin)
+endif()
 
 if(SHERPA_ONNX_ENABLE_TESTS)
   set(sherpa_onnx_test_srcs

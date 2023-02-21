@@ -50,6 +50,12 @@ message(STATUS "SHERPA_ONNX_ENABLE_PYTHON ${SHERPA_ONNX_ENABLE_PYTHON}")
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+include(CheckIncludeFileCXX)
+check_include_file_cxx(alsa/asoundlib.h SHERPA_ONNX_HAS_ALSA)
+if(SHERPA_ONNX_HAS_ALSA)
+  add_definitions(-DSHERPA_ONNX_ENABLE_ALSA=1)
+endif()
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
