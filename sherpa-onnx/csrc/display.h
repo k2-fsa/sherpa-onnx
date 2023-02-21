@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/display.cc
+// sherpa-onnx/csrc/display.h
 //
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
