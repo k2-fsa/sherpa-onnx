@@ -31,8 +31,8 @@ static void PrintShape(const std::vector<int64_t> &a) {
   fprintf(stderr, "\n");
 }
 
-Ort::Value Cat(OrtAllocator *allocator, std::vector<const Ort::Value *> values,
-               int32_t dim) {
+Ort::Value Cat(OrtAllocator *allocator,
+               const std::vector<const Ort::Value *> &values, int32_t dim) {
   std::vector<int64_t> v0_shape =
       values[0]->GetTensorTypeAndShapeInfo().GetShape();
 
@@ -63,15 +63,12 @@ Ort::Value Cat(OrtAllocator *allocator, std::vector<const Ort::Value *> values,
   ans_shape.insert(ans_shape.end(), v0_shape.data() + dim + 1,
                    v0_shape.data() + v0_shape.size());
 
-  auto leading_size = std::accumulate(v0_shape.begin(), v0_shape.begin() + dim,
-                                      1, std::multiplies<int64_t>());
+  auto leading_size = static_cast<int32_t>(std::accumulate(
+      v0_shape.begin(), v0_shape.begin() + dim, 1, std::multiplies<int64_t>()));
 
-  auto trailing_size =
+  auto trailing_size = static_cast<int32_t>(
       std::accumulate(v0_shape.begin() + dim + 1, v0_shape.end(), 1,
-                      std::multiplies<int64_t>());
-
-  fprintf(stderr, "leading size: %d\n", (int32_t)leading_size);
-  fprintf(stderr, "trailing size: %d\n", (int32_t)trailing_size);
+                      std::multiplies<int64_t>()));
 
   Ort::Value ans = Ort::Value::CreateTensor<float>(allocator, ans_shape.data(),
                                                    ans_shape.size());

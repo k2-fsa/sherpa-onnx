@@ -4,15 +4,16 @@ add_library(sherpa-onnx-core
   cat.cc
   features.cc
   online-lstm-transducer-model.cc
-  online-zipformer-transducer-model.cc
   online-recognizer.cc
   online-stream.cc
   online-transducer-greedy-search-decoder.cc
   online-transducer-model-config.cc
   online-transducer-model.cc
+  online-zipformer-transducer-model.cc
   onnx-utils.cc
   symbol-table.cc
   text-utils.cc
+  unbind.cc
   wave-reader.cc
 )
 
@@ -35,6 +36,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
 
   set(sherpa_onnx_test_srcs
     cat-test.cc
+    unbind-test.cc
   )
 
   function(sherpa_onnx_add_test source)
@@ -47,6 +49,11 @@ if(SHERPA_ONNX_ENABLE_TESTS)
         sherpa-onnx-core
         gtest
         gtest_main
+    )
+
+    add_test(NAME "${target_name}"
+      COMMAND
+        $<TARGET_FILE:${target_name}>
     )
   endfunction()
 

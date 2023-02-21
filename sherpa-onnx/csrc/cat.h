@@ -19,8 +19,8 @@ namespace sherpa_onnx {
  *
  * @return Return the concatenated tensor
  */
-Ort::Value Cat(OrtAllocator *allocator, std::vector<const Ort::Value *> values,
-               int32_t dim);
+Ort::Value Cat(OrtAllocator *allocator,
+               const std::vector<const Ort::Value *> &values, int32_t dim);
 
 }  // namespace sherpa_onnx
 

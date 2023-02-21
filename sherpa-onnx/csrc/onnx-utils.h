@@ -58,6 +58,15 @@ void PrintModelMetadata(std::ostream &os,
 // Return a shallow copy of v
 Ort::Value Clone(Ort::Value *v);
 
+// Print a 1-D tensor to stderr
+void Print1D(Ort::Value *v);
+
+// Print a 2-D tensor to stderr
+void Print2D(Ort::Value *v);
+
+// Print a 3-D tensor to stderr
+void Print3D(Ort::Value *v);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_ONNX_UTILS_H_
