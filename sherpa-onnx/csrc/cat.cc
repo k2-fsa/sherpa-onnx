@@ -9,6 +9,8 @@
 #include <numeric>
 #include <utility>
 
+#include "sherpa-onnx/csrc/onnx-utils.h"
+
 namespace sherpa_onnx {
 
 static bool Compare(const std::vector<int64_t> &a,
@@ -34,6 +36,10 @@ static void PrintShape(const std::vector<int64_t> &a) {
 template <typename T /*=float*/>
 Ort::Value Cat(OrtAllocator *allocator,
                const std::vector<const Ort::Value *> &values, int32_t dim) {
+  if (values.size() == 1u) {
+    return Clone(values[0]);
+  }
+
   std::vector<int64_t> v0_shape =
       values[0]->GetTensorTypeAndShapeInfo().GetShape();
 

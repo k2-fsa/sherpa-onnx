@@ -46,16 +46,36 @@ void PrintModelMetadata(std::ostream &os, const Ort::ModelMetadata &meta_data) {
   }
 }
 
-Ort::Value Clone(Ort::Value *v) {
+Ort::Value Clone(const Ort::Value *v) {
   auto type_and_shape = v->GetTensorTypeAndShapeInfo();
   std::vector<int64_t> shape = type_and_shape.GetShape();
 
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-  return Ort::Value::CreateTensor(memory_info, v->GetTensorMutableData<float>(),
-                                  type_and_shape.GetElementCount(),
-                                  shape.data(), shape.size());
+  switch (type_and_shape.GetElementType()) {
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32:
+      return Ort::Value::CreateTensor(
+          memory_info,
+          const_cast<Ort::Value *>(v)->GetTensorMutableData<int32_t>(),
+          type_and_shape.GetElementCount(), shape.data(), shape.size());
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT64:
+      return Ort::Value::CreateTensor(
+          memory_info,
+          const_cast<Ort::Value *>(v)->GetTensorMutableData<int64_t>(),
+          type_and_shape.GetElementCount(), shape.data(), shape.size());
+    case ONNX_TENSOR_ELEMENT_DATA_TYPE_FLOAT:
+      return Ort::Value::CreateTensor(
+          memory_info,
+          const_cast<Ort::Value *>(v)->GetTensorMutableData<float>(),
+          type_and_shape.GetElementCount(), shape.data(), shape.size());
+    default:
+      fprintf(stderr, "Unsupported type: %d\n",
+              static_cast<int32_t>(type_and_shape.GetElementType()));
+      exit(-1);
+      // unreachable code
+      return Ort::Value{nullptr};
+  }
 }
 
 void Print1D(Ort::Value *v) {

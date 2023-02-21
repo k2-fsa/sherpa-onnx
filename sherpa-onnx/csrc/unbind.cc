@@ -13,6 +13,7 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
 
@@ -23,6 +24,11 @@ std::vector<Ort::Value> Unbind(OrtAllocator *allocator, const Ort::Value *value,
   assert(dim >= 0);
   assert(dim < static_cast<int32_t>(shape.size()));
   int32_t n = static_cast<int32_t>(shape[dim]);
+  if (n == 1) {
+    std::vector<Ort::Value> ans;
+    ans.push_back(Clone(value));
+    return ans;
+  }
 
   std::vector<int64_t> ans_shape = shape;
   ans_shape[dim] = 1;  // // Unlike torch, we keep the dim to 1

@@ -33,7 +33,6 @@ install(TARGETS sherpa-onnx-core DESTINATION lib)
 install(TARGETS sherpa-onnx DESTINATION bin)
 
 if(SHERPA_ONNX_ENABLE_TESTS)
-
   set(sherpa_onnx_test_srcs
     cat-test.cc
     unbind-test.cc
@@ -46,9 +45,9 @@ if(SHERPA_ONNX_ENABLE_TESTS)
 
     target_link_libraries(${target_name}
       PRIVATE
-        sherpa-onnx-core
         gtest
         gtest_main
+        sherpa-onnx-core
     )
 
     add_test(NAME "${target_name}"
