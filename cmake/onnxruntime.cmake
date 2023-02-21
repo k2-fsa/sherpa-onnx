@@ -55,7 +55,7 @@ function(download_onnxruntime)
     # ./include
     #    It contains all the needed header files
   else()
-    message(FATAL_ERROR "Only support Linux and macOS at present. Will support other OSes later")
+    message(FATAL_ERROR "Only support Linux, macOS, and Windows at present. Will support other OSes later")
   endif()
 
   foreach(f IN LISTS possible_file_locations)
@@ -80,6 +80,7 @@ function(download_onnxruntime)
   find_library(location_onnxruntime onnxruntime
     PATHS
     "${onnxruntime_SOURCE_DIR}/lib"
+    NO_CMAKE_SYSTEM_PATH
   )
 
   message(STATUS "location_onnxruntime: ${location_onnxruntime}")
