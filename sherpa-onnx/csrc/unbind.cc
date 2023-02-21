@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/unbind.h"
 
+#include <assert.h>
+
 #include <algorithm>
 #include <functional>
 #include <numeric>

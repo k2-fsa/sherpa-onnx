@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/online-zipformer-transducer-model.h"
 
+#include <assert.h>
+
+#include <algorithm>
 #include <memory>
 #include <sstream>
 #include <string>
