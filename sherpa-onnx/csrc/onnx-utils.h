@@ -67,6 +67,13 @@ void Print2D(Ort::Value *v);
 // Print a 3-D tensor to stderr
 void Print3D(Ort::Value *v);
 
+template <typename T = float>
+void Fill(Ort::Value *tensor, T value) {
+  auto n = tensor->GetTypeInfo().GetTensorTypeAndShapeInfo().GetElementCount();
+  auto p = tensor->GetTensorMutableData<T>();
+  std::fill(p, p + n, value);
+}
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_ONNX_UTILS_H_

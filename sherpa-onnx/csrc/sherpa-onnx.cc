@@ -40,7 +40,7 @@ for a list of pre-trained models to download.
 
   config.tokens = argv[1];
 
-  config.model_config.debug = true;
+  config.model_config.debug = false;
   config.model_config.encoder_filename = argv[2];
   config.model_config.decoder_filename = argv[3];
   config.model_config.joiner_filename = argv[4];

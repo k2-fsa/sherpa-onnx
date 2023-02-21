@@ -19,6 +19,7 @@ namespace sherpa_onnx {
  *
  * @return Return the concatenated tensor
  */
+template <typename T = float>
 Ort::Value Cat(OrtAllocator *allocator,
                const std::vector<const Ort::Value *> &values, int32_t dim);
 

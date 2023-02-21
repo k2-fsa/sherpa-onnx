@@ -19,6 +19,7 @@ namespace sherpa_onnx {
  *
  * @return Return a list of tensors
  */
+template <typename T = float>
 std::vector<Ort::Value> Unbind(OrtAllocator *allocator, const Ort::Value *value,
                                int32_t dim);
 

@@ -31,6 +31,7 @@ static void PrintShape(const std::vector<int64_t> &a) {
   fprintf(stderr, "\n");
 }
 
+template <typename T /*=float*/>
 Ort::Value Cat(OrtAllocator *allocator,
                const std::vector<const Ort::Value *> &values, int32_t dim) {
   std::vector<int64_t> v0_shape =
@@ -70,14 +71,14 @@ Ort::Value Cat(OrtAllocator *allocator,
       std::accumulate(v0_shape.begin() + dim + 1, v0_shape.end(), 1,
                       std::multiplies<int64_t>()));
 
-  Ort::Value ans = Ort::Value::CreateTensor<float>(allocator, ans_shape.data(),
-                                                   ans_shape.size());
-  float *dst = ans.GetTensorMutableData<float>();
+  Ort::Value ans = Ort::Value::CreateTensor<T>(allocator, ans_shape.data(),
+                                               ans_shape.size());
+  T *dst = ans.GetTensorMutableData<T>();
 
   for (int32_t i = 0; i != leading_size; ++i) {
     for (int32_t n = 0; n != static_cast<int32_t>(values.size()); ++n) {
       auto this_dim = values[n]->GetTensorTypeAndShapeInfo().GetShape()[dim];
-      const float *src = values[n]->GetTensorData<float>();
+      const T *src = values[n]->GetTensorData<T>();
       src += i * this_dim * trailing_size;
 
       std::copy(src, src + this_dim * trailing_size, dst);
@@ -87,5 +88,13 @@ Ort::Value Cat(OrtAllocator *allocator,
 
   return std::move(ans);
 }
+
+template Ort::Value Cat<float>(OrtAllocator *allocator,
+                               const std::vector<const Ort::Value *> &values,
+                               int32_t dim);
+
+template Ort::Value Cat<int64_t>(OrtAllocator *allocator,
+                                 const std::vector<const Ort::Value *> &values,
+                                 int32_t dim);
 
 }  // namespace sherpa_onnx
