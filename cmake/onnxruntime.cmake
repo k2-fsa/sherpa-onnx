@@ -1,25 +1,39 @@
 function(download_onnxruntime)
   include(FetchContent)
 
-  if(UNIX AND NOT APPLE)
-    # If you don't have access to the Internet,
-    # please pre-download onnxruntime
-    set(possible_file_locations
-      $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.14.0.tgz
-      ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.14.0.tgz
-      ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-1.14.0.tgz
-      /tmp/onnxruntime-linux-x64-1.14.0.tgz
-      /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.14.0.tgz
-    )
+  if(CMAKE_SYSTEM_NAME STREQUAL Linux)
+    if(CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
+      # For embedded systems
+      set(possible_file_locations
+        $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-1.14.0.tgz
+        ${PROJECT_SOURCE_DIR}/onnxruntime-linux-aarch64-1.14.0.tgz
+        ${PROJECT_BINARY_DIR}/onnxruntime-linux-aarch64-1.14.0.tgz
+        /tmp/onnxruntime-linux-aarch64-1.14.0.tgz
+        /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-1.14.0.tgz
+      )
+      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-aarch64-1.14.0.tgz")
+      set(onnxruntime_HASH "SHA256=9384d2e6e29fed693a4630303902392eead0c41bee5705ccac6d6d34a3d5db86")
 
-    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-x64-1.14.0.tgz")
-    set(onnxruntime_HASH "SHA256=92bf534e5fa5820c8dffe9de2850f84ed2a1c063e47c659ce09e8c7938aa2090")
-    # After downloading, it contains:
-    #  ./lib/libonnxruntime.so.1.14.0
-    #  ./lib/libonnxruntime.so, which is a symlink to lib/libonnxruntime.so.1.14.0
-    #
-    # ./include
-    #    It contains all the needed header files
+    else()
+      # If you don't have access to the Internet,
+      # please pre-download onnxruntime
+      set(possible_file_locations
+        $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.14.0.tgz
+        ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.14.0.tgz
+        ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-1.14.0.tgz
+        /tmp/onnxruntime-linux-x64-1.14.0.tgz
+        /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.14.0.tgz
+      )
+
+      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-x64-1.14.0.tgz")
+      set(onnxruntime_HASH "SHA256=92bf534e5fa5820c8dffe9de2850f84ed2a1c063e47c659ce09e8c7938aa2090")
+      # After downloading, it contains:
+      #  ./lib/libonnxruntime.so.1.14.0
+      #  ./lib/libonnxruntime.so, which is a symlink to lib/libonnxruntime.so.1.14.0
+      #
+      # ./include
+      #    It contains all the needed header files
+    endif()
   elseif(APPLE)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime

@@ -9,3 +9,4 @@ __pycache__
 dist/
 sherpa_onnx.egg-info/
 .DS_Store
+build-aarch64-linux-gnu
