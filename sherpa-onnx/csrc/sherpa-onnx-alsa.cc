@@ -79,6 +79,12 @@ as the device_name.
     config.model_config.num_threads = atoi(argv[6]);
   }
 
+  config.enable_endpoint = true;
+
+  config.endpoint_config.rule1.min_trailing_silence = 2.4;
+  config.endpoint_config.rule2.min_trailing_silence = 1.2;
+  config.endpoint_config.rule3.min_utterance_length = 300;
+
   fprintf(stderr, "%s\n", config.ToString().c_str());
 
   sherpa_onnx::OnlineRecognizer recognizer(config);
@@ -101,6 +107,8 @@ as the device_name.
   auto stream = recognizer.CreateStream();
 
   sherpa_onnx::Display display;
+
+  int32_t segment_index = 0;
   while (!stop) {
     const std::vector<float> samples = alsa.Read(chunk);
 
@@ -113,13 +121,20 @@ as the device_name.
 
     auto text = recognizer.GetResult(stream.get()).text;
 
+    bool is_endpoint = recognizer.IsEndpoint(stream.get());
+
     if (!text.empty() && last_text != text) {
       last_text = text;
 
       std::transform(text.begin(), text.end(), text.begin(),
                      [](auto c) { return std::tolower(c); });
 
-      display.Print(0, text);
+      display.Print(segment_index, text);
+    }
+
+    if (!text.empty() && is_endpoint) {
+      ++segment_index;
+      recognizer.Reset(stream.get());
     }
   }
 
