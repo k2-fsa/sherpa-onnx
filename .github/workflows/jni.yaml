@@ -1,0 +1,59 @@
+name: jni
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/jni.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/jni/*'
+      - '.github/scripts/test-jni.sh'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/jni.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/jni/*'
+      - '.github/scripts/test-jni.sh'
+
+concurrency:
+  group: jni-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  jni:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Display kotlin version
+        shell: bash
+        run: |
+          kotlinc -version
+
+      - name: Display java version
+        shell: bash
+        run: |
+          java -version
+          echo "JAVA_HOME is: ${JAVA_HOME}"
+
+      - name:  Run JNI test
+        shell: bash
+        run: |
+          .github/scripts/test-jni.sh
