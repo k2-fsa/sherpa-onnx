@@ -55,6 +55,17 @@ class OnlineRecognizer::Impl {
         std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
   }
 
+#if __ANDROID_API__ >= 9
+  explicit Impl(AAssetManager *mgr, const OnlineRecognizerConfig &config)
+      : config_(config),
+        model_(OnlineTransducerModel::Create(mgr, config.model_config)),
+        sym_(mgr, config.tokens),
+        endpoint_(config_.endpoint_config) {
+    decoder_ =
+        std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
+  }
+#endif
+
   std::unique_ptr<OnlineStream> CreateStream() const {
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);
     stream->SetResult(decoder_->GetEmptyResult());
@@ -156,6 +167,13 @@ class OnlineRecognizer::Impl {
 
 OnlineRecognizer::OnlineRecognizer(const OnlineRecognizerConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+OnlineRecognizer::OnlineRecognizer(AAssetManager *mgr,
+                                   const OnlineRecognizerConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
+
 OnlineRecognizer::~OnlineRecognizer() = default;
 
 std::unique_ptr<OnlineStream> OnlineRecognizer::CreateStream() const {

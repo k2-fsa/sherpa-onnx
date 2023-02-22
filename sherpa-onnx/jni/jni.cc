@@ -20,7 +20,7 @@
 #endif
 
 #if __ANDROID_API__ >= 8
-#include <android/log.h>
+#include "android/log.h"
 #define SHERPA_ONNX_LOGE(...)                                            \
   do {                                                                   \
     fprintf(stderr, ##__VA_ARGS__);                                      \

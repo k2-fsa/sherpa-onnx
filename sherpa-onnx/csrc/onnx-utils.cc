@@ -3,8 +3,15 @@
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
+#include <fstream>
 #include <string>
 #include <vector>
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#include "android/log.h"
+#endif
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 
@@ -115,5 +122,31 @@ void Print3D(Ort::Value *v) {
   }
   fprintf(stderr, "\n");
 }
+
+std::vector<char> ReadFile(const std::string &filename) {
+  std::ifstream input(filename, std::ios::binary);
+  std::vector<char> buffer(std::istreambuf_iterator<char>(input), {});
+  return buffer;
+}
+
+#if __ANDROID_API__ >= 9
+std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
+  AAsset *asset = AAssetManager_open(mgr, filename.c_str(), AASSET_MODE_BUFFER);
+  if (!asset) {
+    __android_log_print(ANDROID_LOG_FATAL, "sherpa-onnx",
+                        "Read binary file: Load %s failed", filename.c_str());
+    exit(-1);
+  }
+
+  auto p = reinterpret_cast<const char *>(AAsset_getBuffer(asset));
+  size_t asset_length = AAsset_getLength(asset);
+
+  AAsset_close(asset);
+
+  std::vector<char> buffer(p, p + asset_length);
+
+  return buffer;
+}
+#endif
 
 }  // namespace sherpa_onnx

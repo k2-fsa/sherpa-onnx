@@ -7,11 +7,32 @@
 #include <cassert>
 #include <fstream>
 #include <sstream>
+#include <strstream>
+
+#include "sherpa-onnx/csrc/onnx-utils.h"
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
 
 namespace sherpa_onnx {
 
 SymbolTable::SymbolTable(const std::string &filename) {
   std::ifstream is(filename);
+  Init(is);
+}
+
+#if __ANDROID_API__ >= 9
+SymbolTable::SymbolTable(AAssetManager *mgr, const std::string &filename) {
+  auto buf = ReadFile(mgr, filename);
+
+  std::istrstream is(buf.data(), buf.size());
+  Init(is);
+}
+#endif
+
+void SymbolTable::Init(std::istream &is) {
   std::string sym;
   int32_t id;
   while (is >> sym >> id) {

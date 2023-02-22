@@ -12,6 +12,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/cat.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -30,14 +35,53 @@ OnlineLstmTransducerModel::OnlineLstmTransducerModel(
   sess_opts_.SetIntraOpNumThreads(config.num_threads);
   sess_opts_.SetInterOpNumThreads(config.num_threads);
 
-  InitEncoder(config.encoder_filename);
-  InitDecoder(config.decoder_filename);
-  InitJoiner(config.joiner_filename);
+  {
+    auto buf = ReadFile(config.encoder_filename);
+    InitEncoder(buf.data(), buf.size());
+  }
+
+  {
+    auto buf = ReadFile(config.decoder_filename);
+    InitDecoder(buf.data(), buf.size());
+  }
+
+  {
+    auto buf = ReadFile(config.joiner_filename);
+    InitJoiner(buf.data(), buf.size());
+  }
 }
 
-void OnlineLstmTransducerModel::InitEncoder(const std::string &filename) {
-  encoder_sess_ = std::make_unique<Ort::Session>(
-      env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
+#if __ANDROID_API__ >= 9
+OnlineLstmTransducerModel::OnlineLstmTransducerModel(
+    AAssetManager *mgr, const OnlineTransducerModelConfig &config)
+    : env_(ORT_LOGGING_LEVEL_WARNING),
+      config_(config),
+      sess_opts_{},
+      allocator_{} {
+  sess_opts_.SetIntraOpNumThreads(config.num_threads);
+  sess_opts_.SetInterOpNumThreads(config.num_threads);
+
+  {
+    auto buf = ReadFile(mgr, config.encoder_filename);
+    InitEncoder(buf.data(), buf.size());
+  }
+
+  {
+    auto buf = ReadFile(mgr, config.decoder_filename);
+    InitDecoder(buf.data(), buf.size());
+  }
+
+  {
+    auto buf = ReadFile(mgr, config.joiner_filename);
+    InitJoiner(buf.data(), buf.size());
+  }
+}
+#endif
+
+void OnlineLstmTransducerModel::InitEncoder(void *model_data,
+                                            size_t model_data_length) {
+  encoder_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                 model_data_length, sess_opts_);
 
   GetInputNames(encoder_sess_.get(), &encoder_input_names_,
                 &encoder_input_names_ptr_);
@@ -62,9 +106,10 @@ void OnlineLstmTransducerModel::InitEncoder(const std::string &filename) {
   SHERPA_ONNX_READ_META_DATA(d_model_, "d_model");
 }
 
-void OnlineLstmTransducerModel::InitDecoder(const std::string &filename) {
-  decoder_sess_ = std::make_unique<Ort::Session>(
-      env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
+void OnlineLstmTransducerModel::InitDecoder(void *model_data,
+                                            size_t model_data_length) {
+  decoder_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                 model_data_length, sess_opts_);
 
   GetInputNames(decoder_sess_.get(), &decoder_input_names_,
                 &decoder_input_names_ptr_);
@@ -86,9 +131,10 @@ void OnlineLstmTransducerModel::InitDecoder(const std::string &filename) {
   SHERPA_ONNX_READ_META_DATA(context_size_, "context_size");
 }
 
-void OnlineLstmTransducerModel::InitJoiner(const std::string &filename) {
-  joiner_sess_ = std::make_unique<Ort::Session>(
-      env_, SHERPA_MAYBE_WIDE(filename).c_str(), sess_opts_);
+void OnlineLstmTransducerModel::InitJoiner(void *model_data,
+                                           size_t model_data_length) {
+  joiner_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                model_data_length, sess_opts_);
 
   GetInputNames(joiner_sess_.get(), &joiner_input_names_,
                 &joiner_input_names_ptr_);

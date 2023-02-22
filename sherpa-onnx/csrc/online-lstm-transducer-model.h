@@ -9,6 +9,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
@@ -18,6 +23,11 @@ namespace sherpa_onnx {
 class OnlineLstmTransducerModel : public OnlineTransducerModel {
  public:
   explicit OnlineLstmTransducerModel(const OnlineTransducerModelConfig &config);
+
+#if __ANDROID_API__ >= 9
+  OnlineLstmTransducerModel(AAssetManager *mgr,
+                            const OnlineTransducerModelConfig &config);
+#endif
 
   std::vector<Ort::Value> StackStates(
       const std::vector<std::vector<Ort::Value>> &states) const override;
@@ -47,9 +57,9 @@ class OnlineLstmTransducerModel : public OnlineTransducerModel {
   OrtAllocator *Allocator() override { return allocator_; }
 
  private:
-  void InitEncoder(const std::string &encoder_filename);
-  void InitDecoder(const std::string &decoder_filename);
-  void InitJoiner(const std::string &joiner_filename);
+  void InitEncoder(void *model_data, size_t model_data_length);
+  void InitDecoder(void *model_data, size_t model_data_length);
+  void InitJoiner(void *model_data, size_t model_data_length);
 
  private:
   Ort::Env env_;

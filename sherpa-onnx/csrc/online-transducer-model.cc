@@ -3,6 +3,11 @@
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/online-transducer-model.h"
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include <memory>
 #include <sstream>
 #include <string>
@@ -18,15 +23,16 @@ enum class ModelType {
   kUnkown,
 };
 
-static ModelType GetModelType(const OnlineTransducerModelConfig &config) {
+static ModelType GetModelType(char *model_data, size_t model_data_length,
+                              bool debug) {
   Ort::Env env(ORT_LOGGING_LEVEL_WARNING);
   Ort::SessionOptions sess_opts;
 
-  auto sess = std::make_unique<Ort::Session>(
-      env, SHERPA_MAYBE_WIDE(config.encoder_filename).c_str(), sess_opts);
+  auto sess = std::make_unique<Ort::Session>(env, model_data, model_data_length,
+                                             sess_opts);
 
   Ort::ModelMetadata meta_data = sess->GetModelMetadata();
-  if (config.debug) {
+  if (debug) {
     std::ostringstream os;
     PrintModelMetadata(os, meta_data);
     fprintf(stderr, "%s\n", os.str().c_str());
@@ -52,7 +58,9 @@ static ModelType GetModelType(const OnlineTransducerModelConfig &config) {
 
 std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
     const OnlineTransducerModelConfig &config) {
-  auto model_type = GetModelType(config);
+  auto buffer = ReadFile(config.encoder_filename);
+
+  auto model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
 
   switch (model_type) {
     case ModelType::kLstm:
@@ -66,5 +74,25 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
   // unreachable code
   return nullptr;
 }
+
+#if __ANDROID_API__ >= 9
+std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
+    AAssetManager *mgr, const OnlineTransducerModelConfig &config) {
+  auto buffer = ReadFile(mgr, config.encoder_filename);
+  auto model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
+
+  switch (model_type) {
+    case ModelType::kLstm:
+      return std::make_unique<OnlineLstmTransducerModel>(mgr, config);
+    case ModelType::kZipformer:
+      return std::make_unique<OnlineZipformerTransducerModel>(mgr, config);
+    case ModelType::kUnkown:
+      return nullptr;
+  }
+
+  // unreachable code
+  return nullptr;
+}
+#endif
 
 }  // namespace sherpa_onnx
