@@ -65,6 +65,24 @@ if(SHERPA_ONNX_HAS_ALSA)
   install(TARGETS sherpa-onnx-alsa DESTINATION bin)
 endif()
 
+if(SHERPA_ONNX_ENABLE_PORTAUDIO)
+  add_executable(sherpa-onnx-microphone
+    sherpa-onnx-microphone.cc
+    microphone.cc
+  )
+
+  if(BUILD_SHARED_LIBS)
+    set(PA_LIB portaudio)
+  else()
+    set(PA_LIB portaudio_static)
+  endif()
+
+  target_link_libraries(sherpa-onnx-microphone PRIVATE ${PA_LIB} sherpa-onnx-core)
+
+  install(TARGETS sherpa-onnx-microphone DESTINATION bin)
+endif()
+
+
 if(SHERPA_ONNX_ENABLE_TESTS)
   set(sherpa_onnx_test_srcs
     cat-test.cc

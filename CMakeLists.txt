@@ -15,6 +15,7 @@ option(SHERPA_ONNX_ENABLE_PYTHON "Whether to build Python" OFF)
 option(SHERPA_ONNX_ENABLE_TESTS "Whether to build tests" OFF)
 option(SHERPA_ONNX_ENABLE_CHECK "Whether to build with assert" ON)
 option(BUILD_SHARED_LIBS "Whether to build shared libraries" OFF)
+option(SHERPA_ONNX_ENABLE_PORTAUDIO "Whether to build with portaudio" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -49,6 +50,7 @@ message(STATUS "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}")
 message(STATUS "SHERPA_ONNX_ENABLE_PYTHON ${SHERPA_ONNX_ENABLE_PYTHON}")
 message(STATUS "SHERPA_ONNX_ENABLE_TESTS ${SHERPA_ONNX_ENABLE_TESTS}")
 message(STATUS "SHERPA_ONNX_ENABLE_CHECK ${SHERPA_ONNX_ENABLE_CHECK}")
+message(STATUS "SHERPA_ONNX_ENABLE_PORTAUDIO ${SHERPA_ONNX_ENABLE_PORTAUDIO}")
 
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -67,6 +69,10 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
 include(kaldi-native-fbank)
 include(onnxruntime)
+
+if(SHERPA_ONNX_ENABLE_PORTAUDIO)
+  include(portaudio)
+endif()
 
 if(SHERPA_ONNX_ENABLE_PYTHON)
   include(pybind11)
