@@ -28,4 +28,6 @@ git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2
 
 kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt AssetManager.kt
 
+ls -lh main.jar
+
 java -Djava.library.path=../../build/lib -jar main.jar
