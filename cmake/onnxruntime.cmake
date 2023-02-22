@@ -1,8 +1,10 @@
 function(download_onnxruntime)
   include(FetchContent)
 
-  if(CMAKE_SYSTEM_NAME STREQUAL Linux)
-    if(CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
+  message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
+  message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+
+  if(CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
       # For embedded systems
       set(possible_file_locations
         $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-1.14.0.tgz
@@ -13,8 +15,7 @@ function(download_onnxruntime)
       )
       set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-aarch64-1.14.0.tgz")
       set(onnxruntime_HASH "SHA256=9384d2e6e29fed693a4630303902392eead0c41bee5705ccac6d6d34a3d5db86")
-
-    else()
+    elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
       # If you don't have access to the Internet,
       # please pre-download onnxruntime
       set(possible_file_locations
@@ -33,7 +34,6 @@ function(download_onnxruntime)
       #
       # ./include
       #    It contains all the needed header files
-    endif()
   elseif(APPLE)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
@@ -69,6 +69,8 @@ function(download_onnxruntime)
     # ./include
     #    It contains all the needed header files
   else()
+    message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
+    message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
     message(FATAL_ERROR "Only support Linux, macOS, and Windows at present. Will support other OSes later")
   endif()
 
@@ -91,11 +93,21 @@ function(download_onnxruntime)
   endif()
   message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-  find_library(location_onnxruntime onnxruntime
-    PATHS
-    "${onnxruntime_SOURCE_DIR}/lib"
-    NO_CMAKE_SYSTEM_PATH
-  )
+  if(NOT ANDROID)
+    find_library(location_onnxruntime onnxruntime
+      PATHS
+      "${onnxruntime_SOURCE_DIR}/lib"
+      NO_CMAKE_SYSTEM_PATH
+    )
+  else()
+    message(STATUS "here  here")
+    find_library(location_onnxruntime
+      NAMES onnxruntime libonnxruntime.so
+      PATHS
+      "${onnxruntime_SOURCE_DIR}/lib"
+      # NO_CMAKE_SYSTEM_PATH
+    )
+  endif()
 
   message(STATUS "location_onnxruntime: ${location_onnxruntime}")
 
