@@ -13,6 +13,7 @@ endif()
 
 option(SHERPA_ONNX_ENABLE_PYTHON "Whether to build Python" OFF)
 option(SHERPA_ONNX_ENABLE_TESTS "Whether to build tests" OFF)
+option(SHERPA_ONNX_ENABLE_CHECK "Whether to build with assert" ON)
 option(BUILD_SHARED_LIBS "Whether to build shared libraries" OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -46,6 +47,8 @@ message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}")
 message(STATUS "SHERPA_ONNX_ENABLE_PYTHON ${SHERPA_ONNX_ENABLE_PYTHON}")
+message(STATUS "SHERPA_ONNX_ENABLE_TESTS ${SHERPA_ONNX_ENABLE_TESTS}")
+message(STATUS "SHERPA_ONNX_ENABLE_CHECK ${SHERPA_ONNX_ENABLE_CHECK}")
 
 set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -55,6 +58,9 @@ check_include_file_cxx(alsa/asoundlib.h SHERPA_ONNX_HAS_ALSA)
 if(SHERPA_ONNX_HAS_ALSA)
   add_definitions(-DSHERPA_ONNX_ENABLE_ALSA=1)
 endif()
+
+check_include_file_cxx(cxxabi.h SHERPA_ONNX_HAVE_CXXABI_H)
+check_include_file_cxx(execinfo.h SHERPA_ONNX_HAVE_EXECINFO_H)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)

@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/python/csrc/sherpa-onnx.h"
 
+#include "sherpa-onnx/python/csrc/endpoint.h"
 #include "sherpa-onnx/python/csrc/features.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
 #include "sherpa-onnx/python/csrc/online-stream.h"
@@ -16,6 +17,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindFeatures(&m);
   PybindOnlineTransducerModelConfig(&m);
   PybindOnlineStream(&m);
+  PybindEndpoint(&m);
   PybindOnlineRecognizer(&m);
 }
 

@@ -1,7 +1,8 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
-add_library(sherpa-onnx-core
+set(sources
   cat.cc
+  endpoint.cc
   features.cc
   online-lstm-transducer-model.cc
   online-recognizer.cc
@@ -11,6 +12,7 @@ add_library(sherpa-onnx-core
   online-transducer-model.cc
   online-zipformer-transducer-model.cc
   onnx-utils.cc
+  parse-options.cc
   resample.cc
   symbol-table.cc
   text-utils.cc
@@ -18,10 +20,28 @@ add_library(sherpa-onnx-core
   wave-reader.cc
 )
 
+if(SHERPA_ONNX_ENABLE_CHECK)
+  list(APPEND sources log.cc)
+endif()
+
+add_library(sherpa-onnx-core ${sources})
+
 target_link_libraries(sherpa-onnx-core
   onnxruntime
   kaldi-native-fbank-core
 )
+
+if(SHERPA_ONNX_ENABLE_CHECK)
+  target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
+
+  if(SHERPA_ONNX_HAVE_EXECINFO_H)
+    target_compile_definitions(sherpa-onnx-core PRIVATE SHERPA_ONNX_HAVE_EXECINFO_H=1)
+  endif()
+
+  if(SHERPA_ONNX_HAVE_CXXABI_H)
+    target_compile_definitions(sherpa-onnx-core PRIVATE SHERPA_ONNX_HAVE_CXXABI_H=1)
+  endif()
+endif()
 
 add_executable(sherpa-onnx sherpa-onnx.cc)
 

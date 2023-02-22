@@ -4,9 +4,11 @@ build
 onnxruntime-*
 icefall-*
 run.sh
-sherpa-onnx-*
 __pycache__
 dist/
 sherpa_onnx.egg-info/
 .DS_Store
 build-aarch64-linux-gnu
+sherpa-onnx-streaming-zipformer-*
+sherpa-onnx-lstm-en-*
+sherpa-onnx-lstm-zh-*
