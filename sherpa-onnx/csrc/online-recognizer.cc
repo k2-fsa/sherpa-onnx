@@ -67,7 +67,7 @@ class OnlineRecognizer::Impl {
            s->NumFramesReady();
   }
 
-  void DecodeStreams(OnlineStream **ss, int32_t n) {
+  void DecodeStreams(OnlineStream **ss, int32_t n) const {
     int32_t chunk_size = model_->ChunkSize();
     int32_t chunk_shift = model_->ChunkShift();
 
@@ -114,7 +114,7 @@ class OnlineRecognizer::Impl {
     }
   }
 
-  OnlineRecognizerResult GetResult(OnlineStream *s) {
+  OnlineRecognizerResult GetResult(OnlineStream *s) const {
     OnlineTransducerDecoderResult decoder_result = s->GetResult();
     decoder_->StripLeadingBlanks(&decoder_result);
 
@@ -136,9 +136,13 @@ class OnlineRecognizer::Impl {
   }
 
   void Reset(OnlineStream *s) const {
-    // reset result and model state, but keep the feature extract state
+    // reset result and neural network model state,
+    // but keep the feature extractor state
 
+    // reset result
     s->SetResult(decoder_->GetEmptyResult());
+
+    // reset neural network model state
     s->SetStates(model_->GetEncoderInitStates());
   }
 
@@ -162,11 +166,11 @@ bool OnlineRecognizer::IsReady(OnlineStream *s) const {
   return impl_->IsReady(s);
 }
 
-void OnlineRecognizer::DecodeStreams(OnlineStream **ss, int32_t n) {
+void OnlineRecognizer::DecodeStreams(OnlineStream **ss, int32_t n) const {
   impl_->DecodeStreams(ss, n);
 }
 
-OnlineRecognizerResult OnlineRecognizer::GetResult(OnlineStream *s) {
+OnlineRecognizerResult OnlineRecognizer::GetResult(OnlineStream *s) const {
   return impl_->GetResult(s);
 }
 

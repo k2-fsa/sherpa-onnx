@@ -57,7 +57,7 @@ class OnlineRecognizer {
   bool IsReady(OnlineStream *s) const;
 
   /** Decode a single stream. */
-  void DecodeStream(OnlineStream *s) {
+  void DecodeStream(OnlineStream *s) const {
     OnlineStream *ss[1] = {s};
     DecodeStreams(ss, 1);
   }
@@ -67,9 +67,9 @@ class OnlineRecognizer {
    * @param ss Pointer array containing streams to be decoded.
    * @param n Number of streams in `ss`.
    */
-  void DecodeStreams(OnlineStream **ss, int32_t n);
+  void DecodeStreams(OnlineStream **ss, int32_t n) const;
 
-  OnlineRecognizerResult GetResult(OnlineStream *s);
+  OnlineRecognizerResult GetResult(OnlineStream *s) const;
 
   // Return true if we detect an endpoint for this stream.
   // Note: If this function returns true, you usually want to
