@@ -55,7 +55,8 @@ class OnlineStream {
 
   int32_t FeatureDim() const;
 
-  // Return a reference to the number of processed frames so far.
+  // Return a reference to the number of processed frames so far
+  // before subsampling..
   // Initially, it is 0. It is always less than NumFramesReady().
   //
   // The returned reference is valid as long as this object is alive.

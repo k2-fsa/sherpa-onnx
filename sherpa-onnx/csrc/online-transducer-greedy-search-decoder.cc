@@ -113,6 +113,9 @@ void OnlineTransducerGreedySearchDecoder::Decode(
       if (y != 0) {
         emitted = true;
         (*result)[i].tokens.push_back(y);
+        (*result)[i].num_trailing_blanks = 0;
+      } else {
+        ++(*result)[i].num_trailing_blanks;
       }
     }
     if (emitted) {

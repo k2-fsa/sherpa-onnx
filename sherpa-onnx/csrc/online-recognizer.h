@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+#include "sherpa-onnx/csrc/endpoint.h"
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
@@ -22,13 +23,21 @@ struct OnlineRecognizerConfig {
   FeatureExtractorConfig feat_config;
   OnlineTransducerModelConfig model_config;
   std::string tokens;
+  EndpointConfig endpoint_config;
+  bool enable_endpoint;
 
   OnlineRecognizerConfig() = default;
 
   OnlineRecognizerConfig(const FeatureExtractorConfig &feat_config,
                          const OnlineTransducerModelConfig &model_config,
-                         const std::string &tokens)
-      : feat_config(feat_config), model_config(model_config), tokens(tokens) {}
+                         const std::string &tokens,
+                         const EndpointConfig &endpoint_config,
+                         bool enable_endpoint)
+      : feat_config(feat_config),
+        model_config(model_config),
+        tokens(tokens),
+        endpoint_config(endpoint_config),
+        enable_endpoint(enable_endpoint) {}
 
   std::string ToString() const;
 };
@@ -61,6 +70,15 @@ class OnlineRecognizer {
   void DecodeStreams(OnlineStream **ss, int32_t n);
 
   OnlineRecognizerResult GetResult(OnlineStream *s);
+
+  // Return true if we detect an endpoint for this stream.
+  // Note: If this function returns true, you usually want to
+  // invoke Reset(s).
+  bool IsEndpoint(OnlineStream *s) const;
+
+  // Clear the state of this stream. If IsEndpoint(s) returns true,
+  // after calling this function, IsEndpoint(s) will return false
+  void Reset(OnlineStream *s) const;
 
  private:
   class Impl;

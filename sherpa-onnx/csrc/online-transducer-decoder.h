@@ -14,6 +14,9 @@ namespace sherpa_onnx {
 struct OnlineTransducerDecoderResult {
   /// The decoded token IDs so far
   std::vector<int64_t> tokens;
+
+  /// number of trailing blank frames decoded so far
+  int32_t num_trailing_blanks = 0;
 };
 
 class OnlineTransducerDecoder {
