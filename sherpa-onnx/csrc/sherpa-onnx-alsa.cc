@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/sherpa-onnx-alsa.h
+// sherpa-onnx/csrc/sherpa-onnx-alsa.cc
 //
 // Copyright (c)  2022-2023  Xiaomi Corporation
 #include <signal.h>
