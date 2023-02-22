@@ -18,7 +18,7 @@ bool stop = false;
 static void Handler(int sig) {
   stop = true;
   fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
-};
+}
 
 int main(int32_t argc, char *argv[]) {
   if (argc < 6 || argc > 7) {
