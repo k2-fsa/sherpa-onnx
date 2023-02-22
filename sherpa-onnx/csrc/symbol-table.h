@@ -8,6 +8,11 @@
 #include <string>
 #include <unordered_map>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 namespace sherpa_onnx {
 
 /// It manages mapping between symbols and integer IDs.
@@ -22,6 +27,10 @@ class SymbolTable {
   /// Fields are separated by space(s).
   explicit SymbolTable(const std::string &filename);
 
+#if __ANDROID_API__ >= 9
+  SymbolTable(AAssetManager *mgr, const std::string &filename);
+#endif
+
   /// Return a string representation of this symbol table
   std::string ToString() const;
 
@@ -35,6 +44,9 @@ class SymbolTable {
 
   /// Return true if there is a given symbol in the symbol table.
   bool contains(const std::string &sym) const;
+
+ private:
+  void Init(std::istream &is);
 
  private:
   std::unordered_map<std::string, int32_t> sym2id_;

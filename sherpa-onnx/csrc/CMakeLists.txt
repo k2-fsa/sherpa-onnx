@@ -26,6 +26,10 @@ endif()
 
 add_library(sherpa-onnx-core ${sources})
 
+if(ANDROID_NDK)
+  target_link_libraries(sherpa-onnx-core android log)
+endif()
+
 target_link_libraries(sherpa-onnx-core
   onnxruntime
   kaldi-native-fbank-core
