@@ -54,7 +54,6 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DSHERPA_ONNX_ENABLE_JNI=ON \
     -DCMAKE_INSTALL_PREFIX=./install \
     -DANDROID_ABI="arm64-v8a" \
-    --trace-expand \
     -DANDROID_PLATFORM=android-21 ..
 # make VERBOSE=1 -j4
 make -j4

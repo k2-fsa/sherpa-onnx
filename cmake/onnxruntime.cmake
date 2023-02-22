@@ -5,35 +5,35 @@ function(download_onnxruntime)
   message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
-      # For embedded systems
-      set(possible_file_locations
-        $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-1.14.0.tgz
-        ${PROJECT_SOURCE_DIR}/onnxruntime-linux-aarch64-1.14.0.tgz
-        ${PROJECT_BINARY_DIR}/onnxruntime-linux-aarch64-1.14.0.tgz
-        /tmp/onnxruntime-linux-aarch64-1.14.0.tgz
-        /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-1.14.0.tgz
-      )
-      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-aarch64-1.14.0.tgz")
-      set(onnxruntime_HASH "SHA256=9384d2e6e29fed693a4630303902392eead0c41bee5705ccac6d6d34a3d5db86")
-    elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
-      # If you don't have access to the Internet,
-      # please pre-download onnxruntime
-      set(possible_file_locations
-        $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.14.0.tgz
-        ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.14.0.tgz
-        ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-1.14.0.tgz
-        /tmp/onnxruntime-linux-x64-1.14.0.tgz
-        /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.14.0.tgz
-      )
+    # For embedded systems
+    set(possible_file_locations
+      $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-1.14.0.tgz
+      ${PROJECT_SOURCE_DIR}/onnxruntime-linux-aarch64-1.14.0.tgz
+      ${PROJECT_BINARY_DIR}/onnxruntime-linux-aarch64-1.14.0.tgz
+      /tmp/onnxruntime-linux-aarch64-1.14.0.tgz
+      /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-1.14.0.tgz
+    )
+    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-aarch64-1.14.0.tgz")
+    set(onnxruntime_HASH "SHA256=9384d2e6e29fed693a4630303902392eead0c41bee5705ccac6d6d34a3d5db86")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
+    # If you don't have access to the Internet,
+    # please pre-download onnxruntime
+    set(possible_file_locations
+      $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.14.0.tgz
+      ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.14.0.tgz
+      ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-1.14.0.tgz
+      /tmp/onnxruntime-linux-x64-1.14.0.tgz
+      /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.14.0.tgz
+    )
 
-      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-x64-1.14.0.tgz")
-      set(onnxruntime_HASH "SHA256=92bf534e5fa5820c8dffe9de2850f84ed2a1c063e47c659ce09e8c7938aa2090")
-      # After downloading, it contains:
-      #  ./lib/libonnxruntime.so.1.14.0
-      #  ./lib/libonnxruntime.so, which is a symlink to lib/libonnxruntime.so.1.14.0
-      #
-      # ./include
-      #    It contains all the needed header files
+    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-x64-1.14.0.tgz")
+    set(onnxruntime_HASH "SHA256=92bf534e5fa5820c8dffe9de2850f84ed2a1c063e47c659ce09e8c7938aa2090")
+    # After downloading, it contains:
+    #  ./lib/libonnxruntime.so.1.14.0
+    #  ./lib/libonnxruntime.so, which is a symlink to lib/libonnxruntime.so.1.14.0
+    #
+    # ./include
+    #    It contains all the needed header files
   elseif(APPLE)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
@@ -93,19 +93,13 @@ function(download_onnxruntime)
   endif()
   message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-  if(NOT ANDROID)
+  if(ANDROID)
+    set(location_onnxruntime ${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.so)
+  else()
     find_library(location_onnxruntime onnxruntime
       PATHS
       "${onnxruntime_SOURCE_DIR}/lib"
       NO_CMAKE_SYSTEM_PATH
-    )
-  else()
-    message(STATUS "here  here")
-    find_library(location_onnxruntime
-      NAMES onnxruntime libonnxruntime.so
-      PATHS
-      "${onnxruntime_SOURCE_DIR}/lib"
-      # NO_CMAKE_SYSTEM_PATH
     )
   endif()
 
