@@ -39,16 +39,14 @@ class MainActivity : AppCompatActivity() {
     // since the AudioRecord.read(float[]) needs API level >= 23
     // but we are targeting API level >= 21
     private val audioFormat = AudioFormat.ENCODING_PCM_16BIT
+    private var idx: Int = 0
+    private var lastText: String = ""
 
     @Volatile
     private var isRecording: Boolean = false
 
-    private var results: MutableList<String> = ArrayList()
-
     override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
+        requestCode: Int, permissions: Array<String>, grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         val permissionToRecordAccepted = if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
@@ -94,8 +92,9 @@ class MainActivity : AppCompatActivity() {
             recordButton.setText(R.string.stop)
             isRecording = true
             model.reset()
-            results = ArrayList()
             textView.text = ""
+            lastText = ""
+            idx = 0
 
             recordingThread = thread(true) {
                 processSamples()
@@ -107,7 +106,6 @@ class MainActivity : AppCompatActivity() {
             audioRecord!!.release()
             audioRecord = null
             recordButton.setText(R.string.start)
-            textView.text = joinText()
             Log.i(TAG, "Stopped recording")
         }
     }
@@ -127,19 +125,16 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread {
                     val isEndpoint = model.isEndpoint()
                     val text = model.text
-
-                    if (text.isNotBlank()) {
+                    if (lastText.isBlank() && text.isNotBlank()) {
+                        lastText = "${idx}: ${text}"
+                        textView.text = lastText
+                    } else if (lastText.isNotBlank()) {
+                        lastText = "${lastText}${text}"
                         if (isEndpoint) {
-                            results[results.size - 1] = text
-                            results.add("")
+                            idx += 1
                             model.reset()
-                        } else {
-                            if (results.isEmpty()) results.add("")
-                            results[results.size - 1] = text
                         }
                     }
-
-                    textView.text = joinText()
                 }
             }
         }
@@ -147,8 +142,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initMicrophone(): Boolean {
         if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.RECORD_AUDIO
+                this, Manifest.permission.RECORD_AUDIO
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
@@ -157,8 +151,7 @@ class MainActivity : AppCompatActivity() {
 
         val numBytes = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat)
         Log.i(
-            TAG,
-            "buffer size in milliseconds: ${numBytes * 1000.0f / sampleRateInHz}"
+            TAG, "buffer size in milliseconds: ${numBytes * 1000.0f / sampleRateInHz}"
         )
 
         audioRecord = AudioRecord(
@@ -174,12 +167,12 @@ class MainActivity : AppCompatActivity() {
     private fun initModel() {
         val config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = 16000.0f, featureDim = 80),
-            modelConfig = getModelConfig(type=1)!!,
+            modelConfig = getModelConfig(type = 1)!!,
             endpointConfig = getEndpointConfig(),
             enableEndpoint = true
         )
 
-        model =  SherpaOnnx(
+        model = SherpaOnnx(
             assetManager = application.assets,
             config = config,
         )
@@ -200,17 +193,5 @@ class MainActivity : AppCompatActivity() {
         model.inputFinished()
         println("result is: ${model.text}")
         model.reset()
-    }
-
-    private fun joinText(): String {
-        var r = ""
-        var sep = ""
-        results.forEachIndexed { i, s ->
-            if (s.isNotBlank()) {
-                r = r.plus("${sep}${i}: ${s}")
-                sep = "\n"
-            }
-        }
-        return r
     }
 }
