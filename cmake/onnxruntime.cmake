@@ -15,7 +15,7 @@ function(download_onnxruntime)
     )
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-aarch64-1.14.0.tgz")
     set(onnxruntime_HASH "SHA256=9384d2e6e29fed693a4630303902392eead0c41bee5705ccac6d6d34a3d5db86")
-  elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
+  elseif((CMAKE_SYSTEM_NAME STREQUAL Linux OR CMAKE_SYSTEM_NAME STREQUAL Android) AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
     set(possible_file_locations
