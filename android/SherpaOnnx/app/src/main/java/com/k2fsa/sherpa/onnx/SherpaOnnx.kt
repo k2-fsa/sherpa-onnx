@@ -93,15 +93,39 @@ to add your own. (It should be straightforward to add a new model
 by following the code)
 
 @param type
-0 - sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
+0 - sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
     https://k2-fsa.github.io/sherpa/onnx/pretrained_models/zipformer-transducer-models.html#sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-bilingual-chinese-english
 
+1 - csukuangfj/sherpa-onnx-lstm-zh-2023-02-20 (Chinese)
 
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/lstm-transducer-models.html#csukuangfj-sherpa-onnx-lstm-zh-2023-02-20-chinese
+
+2 - csukuangfj/sherpa-onnx-lstm-en-2023-02-17 (English)
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/lstm-transducer-models.html#csukuangfj-sherpa-onnx-lstm-en-2023-02-17-english
  */
 fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
     when (type) {
         0 -> {
             val modelDir = "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20"
+            return OnlineTransducerModelConfig(
+                encoder = "$modelDir/encoder-epoch-99-avg-1.onnx",
+                decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
+                joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+        1 -> {
+            val modelDir = "sherpa-onnx-lstm-zh-2023-02-20"
+            return OnlineTransducerModelConfig(
+                encoder = "$modelDir/encoder-epoch-11-avg-1.onnx",
+                decoder = "$modelDir/decoder-epoch-11-avg-1.onnx",
+                joiner = "$modelDir/joiner-epoch-11-avg-1.onnx",
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        2 -> {
+            val modelDir = "sherpa-onnx-lstm-en-2023-02-17"
             return OnlineTransducerModelConfig(
                 encoder = "$modelDir/encoder-epoch-99-avg-1.onnx",
                 decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",

@@ -43,26 +43,25 @@ fi
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 
-if [ ! -f android-onnxruntime-libs/x86_64/lib/libonnxruntime.so ]; then
+if [ ! -f android-onnxruntime-libs/jni/x86_64/libonnxruntime.so ]; then
   GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/android-onnxruntime-libs
   pushd android-onnxruntime-libs
-  cd x86_64/lib
-  git lfs pull --include "libonnxruntime.so"
+  git lfs pull --include "jni/x86_64/libonnxruntime.so"
   popd
 fi
 
-ls -l ./android-onnxruntime-libs/x86_64/lib/libonnxruntime.so
+ls -l ./android-onnxruntime-libs/jni/x86_64/libonnxruntime.so
 
 # check filesize
-filesize=$(ls -l ./android-onnxruntime-libs/x86_64/lib/libonnxruntime.so  | tr -s " " " " | cut -d " " -f 5)
+filesize=$(ls -l ./android-onnxruntime-libs/jni/x86_64/libonnxruntime.so  | tr -s " " " " | cut -d " " -f 5)
 if (( $filesize < 1000 )); then
-  ls -lh ./android-onnxruntime-libs/x86_64/lib/libonnxruntime.so
+  ls -lh ./android-onnxruntime-libs/jni/x86_64/libonnxruntime.so
   echo "Please use: git lfs pull to download libonnxruntime.so"
   exit 1
 fi
 
-export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/android-onnxruntime-libs/x86_64/lib
-export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/android-onnxruntime-libs/x86_64/include//onnxruntime/core/session
+export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/android-onnxruntime-libs/jni/x86_64/
+export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/android-onnxruntime-libs/headers/
 
 echo "SHERPA_ONNXRUNTIME_LIB_DIR: $SHERPA_ONNXRUNTIME_LIB_DIR"
 echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
@@ -82,4 +81,4 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
 # make VERBOSE=1 -j4
 make -j4
 make install/strip
-cp -fv android-onnxruntime-libs/x86_64/lib/libonnxruntime.so install/lib
+cp -fv android-onnxruntime-libs/jni/x86_64/libonnxruntime.so install/lib

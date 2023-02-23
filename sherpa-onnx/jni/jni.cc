@@ -19,22 +19,7 @@
 #include <fstream>
 #endif
 
-#if __ANDROID_API__ >= 8
-#include "android/log.h"
-#define SHERPA_ONNX_LOGE(...)                                            \
-  do {                                                                   \
-    fprintf(stderr, ##__VA_ARGS__);                                      \
-    fprintf(stderr, "\n");                                               \
-    __android_log_print(ANDROID_LOG_WARN, "sherpa-onnx", ##__VA_ARGS__); \
-  } while (0)
-#else
-#define SHERPA_ONNX_LOGE(...)       \
-  do {                              \
-    fprintf(stderr, ##__VA_ARGS__); \
-    fprintf(stderr, "\n");          \
-  } while (0)
-#endif
-
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/wave-reader.h"

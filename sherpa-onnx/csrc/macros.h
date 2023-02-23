@@ -5,6 +5,23 @@
 
 #ifndef SHERPA_ONNX_CSRC_MACROS_H_
 #define SHERPA_ONNX_CSRC_MACROS_H_
+#include <stdio.h>
+
+#if __ANDROID_API__ >= 8
+#include "android/log.h"
+#define SHERPA_ONNX_LOGE(...)                                            \
+  do {                                                                   \
+    fprintf(stderr, ##__VA_ARGS__);                                      \
+    fprintf(stderr, "\n");                                               \
+    __android_log_print(ANDROID_LOG_WARN, "sherpa-onnx", ##__VA_ARGS__); \
+  } while (0)
+#else
+#define SHERPA_ONNX_LOGE(...)       \
+  do {                              \
+    fprintf(stderr, ##__VA_ARGS__); \
+    fprintf(stderr, "\n");          \
+  } while (0)
+#endif
 
 #define SHERPA_ONNX_READ_META_DATA(dst, src_key)                        \
   do {                                                                  \
