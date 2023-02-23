@@ -85,6 +85,7 @@ class OnlineRecognizer(object):
             encoder_filename=encoder,
             decoder_filename=decoder,
             joiner_filename=joiner,
+            tokens=tokens,
             num_threads=num_threads,
         )
 
@@ -102,7 +103,6 @@ class OnlineRecognizer(object):
         recognizer_config = OnlineRecognizerConfig(
             feat_config=feat_config,
             model_config=model_config,
-            tokens=tokens,
             endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
         )

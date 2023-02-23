@@ -12,6 +12,7 @@ struct OnlineTransducerModelConfig {
   std::string encoder_filename;
   std::string decoder_filename;
   std::string joiner_filename;
+  std::string tokens;
   int32_t num_threads;
   bool debug = false;
 
@@ -19,10 +20,12 @@ struct OnlineTransducerModelConfig {
   OnlineTransducerModelConfig(const std::string &encoder_filename,
                               const std::string &decoder_filename,
                               const std::string &joiner_filename,
-                              int32_t num_threads, bool debug)
+                              const std::string &tokens, int32_t num_threads,
+                              bool debug)
       : encoder_filename(encoder_filename),
         decoder_filename(decoder_filename),
         joiner_filename(joiner_filename),
+        tokens(tokens),
         num_threads(num_threads),
         debug(debug) {}
 

@@ -141,9 +141,8 @@ std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
   auto p = reinterpret_cast<const char *>(AAsset_getBuffer(asset));
   size_t asset_length = AAsset_getLength(asset);
 
-  AAsset_close(asset);
-
   std::vector<char> buffer(p, p + asset_length);
+  AAsset_close(asset);
 
   return buffer;
 }

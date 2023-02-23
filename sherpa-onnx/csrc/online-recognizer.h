@@ -27,7 +27,6 @@ struct OnlineRecognizerResult {
 struct OnlineRecognizerConfig {
   FeatureExtractorConfig feat_config;
   OnlineTransducerModelConfig model_config;
-  std::string tokens;
   EndpointConfig endpoint_config;
   bool enable_endpoint;
 
@@ -35,12 +34,10 @@ struct OnlineRecognizerConfig {
 
   OnlineRecognizerConfig(const FeatureExtractorConfig &feat_config,
                          const OnlineTransducerModelConfig &model_config,
-                         const std::string &tokens,
                          const EndpointConfig &endpoint_config,
                          bool enable_endpoint)
       : feat_config(feat_config),
         model_config(model_config),
-        tokens(tokens),
         endpoint_config(endpoint_config),
         enable_endpoint(enable_endpoint) {}
 

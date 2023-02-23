@@ -12,3 +12,9 @@ build-aarch64-linux-gnu
 sherpa-onnx-streaming-zipformer-*
 sherpa-onnx-lstm-en-*
 sherpa-onnx-lstm-zh-*
+build-android-arm64-v8a/
+build-android-x86-64/
+a.txt
+run-bilingual*.sh
+run-*-zipformer.sh
+run-zh.sh

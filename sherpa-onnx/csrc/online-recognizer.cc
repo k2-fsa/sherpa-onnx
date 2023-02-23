@@ -37,7 +37,6 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "OnlineRecognizerConfig(";
   os << "feat_config=" << feat_config.ToString() << ", ";
   os << "model_config=" << model_config.ToString() << ", ";
-  os << "tokens=\"" << tokens << "\", ";
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
   os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ")";
 
@@ -49,7 +48,7 @@ class OnlineRecognizer::Impl {
   explicit Impl(const OnlineRecognizerConfig &config)
       : config_(config),
         model_(OnlineTransducerModel::Create(config.model_config)),
-        sym_(config.tokens),
+        sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
     decoder_ =
         std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
@@ -59,7 +58,7 @@ class OnlineRecognizer::Impl {
   explicit Impl(AAssetManager *mgr, const OnlineRecognizerConfig &config)
       : config_(config),
         model_(OnlineTransducerModel::Create(mgr, config.model_config)),
-        sym_(mgr, config.tokens),
+        sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
     decoder_ =
         std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());

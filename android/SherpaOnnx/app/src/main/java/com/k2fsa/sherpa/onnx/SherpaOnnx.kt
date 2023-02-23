@@ -18,6 +18,7 @@ data class OnlineTransducerModelConfig(
     var encoder: String,
     var decoder: String,
     var joiner: String,
+    var tokens: String,
     var numThreads: Int = 4,
     var debug: Boolean = false,
 )
@@ -30,7 +31,6 @@ data class FeatureConfig(
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineTransducerModelConfig,
-    var tokens: String,
     var endpointConfig: EndpointConfig = EndpointConfig(),
     var enableEndpoint: Boolean,
 )
@@ -79,10 +79,44 @@ class SherpaOnnx(
     }
 }
 
-fun getFeatureConfig(): FeatureConfig {
-    val featConfig = FeatureConfig()
-    featConfig.sampleRate = 16000.0f
-    featConfig.featureDim = 80
+fun getFeatureConfig(sampleRate: Float, featureDim: Int): FeatureConfig {
+    return FeatureConfig(sampleRate=sampleRate, featureDim=featureDim)
+}
 
-    return featConfig
+/*
+Please see
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+for a list of pre-trained models.
+
+We only add a few here. Please change the following code
+to add your own. (It should be straightforward to add a new model
+by following the code)
+
+@param type
+0 - sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/zipformer-transducer-models.html#sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-bilingual-chinese-english
+
+
+ */
+fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
+    when (type) {
+        0 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20"
+            return OnlineTransducerModelConfig(
+                encoder = "$modelDir/encoder-epoch-99-avg-1.onnx",
+                decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
+                joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+    }
+    return null;
+}
+
+fun getEndpointConfig(): EndpointConfig {
+    return EndpointConfig(
+        rule1 = EndpointRule(false, 2.4f, 0.0f),
+        rule2 = EndpointRule(true, 1.4f, 0.0f),
+        rule3 = EndpointRule(false, 0.0f, 20.0f)
+    )
 }
