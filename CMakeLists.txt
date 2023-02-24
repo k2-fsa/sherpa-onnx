@@ -17,6 +17,7 @@ option(SHERPA_ONNX_ENABLE_CHECK "Whether to build with assert" ON)
 option(BUILD_SHARED_LIBS "Whether to build shared libraries" OFF)
 option(SHERPA_ONNX_ENABLE_PORTAUDIO "Whether to build with portaudio" ON)
 option(SHERPA_ONNX_ENABLE_JNI "Whether to build JNI internface" OFF)
+option(SHERPA_ONNX_ENABLE_C_API "Whether to build C API" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -91,3 +92,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
 endif()
 
 add_subdirectory(sherpa-onnx)
+
+if(SHERPA_ONNX_ENABLE_C_API)
+  add_subdirectory(c-api-examples)
+endif()

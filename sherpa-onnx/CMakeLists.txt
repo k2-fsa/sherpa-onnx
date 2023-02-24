@@ -6,3 +6,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_JNI)
   add_subdirectory(jni)
 endif()
+
+if(SHERPA_ONNX_ENABLE_C_API)
+  add_subdirectory(c-api)
+endif()

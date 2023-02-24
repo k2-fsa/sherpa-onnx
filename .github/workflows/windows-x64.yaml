@@ -78,3 +78,11 @@ jobs:
           export EXE=sherpa-onnx.exe
 
           .github/scripts/test-online-transducer.sh
+
+      - name: Test online transducer (C API)
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=decode-file-c-api.exe
+
+          .github/scripts/test-online-transducer.sh

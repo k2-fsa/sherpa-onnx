@@ -18,3 +18,5 @@ a.txt
 run-bilingual*.sh
 run-*-zipformer.sh
 run-zh.sh
+decode-file-c-api
+run-decode-file-c-api.sh
