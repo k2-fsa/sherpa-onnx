@@ -48,7 +48,7 @@ jobs:
           echo "Number of CPU cores:  ${{ steps.cpu-cores.outputs.count }}"
 
       - name: Configure CMake
-        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos') 
+        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
         shell: bash
         run: |
           mkdir build
@@ -65,12 +65,24 @@ jobs:
           cmake -T ${{ matrix.toolset-version}},host=x64 -A x64 -D CMAKE_BUILD_TYPE=Release ..
           cmake --build . --config Release -- -m:2
 
-      - name: Test online transducer
-        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos') 
+      - name: Test online websocket (Ubuntu and macOS)
+        if: startsWith(matrix.os, 'ubuntu') || startsWith(matrix.os, 'macos')
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
           export SERVER_EXE=sherpa-onnx-online-websocket-server
           export CLIENT_EXE=sherpa-onnx-online-websocket-client
+
+          .github/scripts/test-online-websocket.sh
+
+      - name: Test online websocket (Windows)
+        if: startsWith(matrix.os, 'windows')
+        shell: bash
+        run: |
+          ls -lh $PWD/build/bin/Release
+
+          export PATH=$PWD/build/bin/Release:$PATH
+          export SERVER_EXE=sherpa-onnx-online-websocket-server.exe
+          export CLIENT_EXE=sherpa-onnx-online-websocket-client.exe
 
           .github/scripts/test-online-websocket.sh
