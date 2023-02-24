@@ -44,7 +44,7 @@ log "sleep 10 seconds to wait the server to start"
 
 sleep 10
 
-n=100
+n=10
 log "Start $n clients"
 
 for i in $(seq 0 $n); do
