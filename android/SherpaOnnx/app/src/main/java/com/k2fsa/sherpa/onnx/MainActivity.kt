@@ -113,7 +113,7 @@ class MainActivity : AppCompatActivity() {
     private fun processSamples() {
         Log.i(TAG, "processing samples")
 
-        val interval = 0.02 // i.e., 20 ms
+        val interval = 0.1 // i.e., 100 ms
         val bufferSize = (interval * sampleRateInHz).toInt() // in samples
         val buffer = ShortArray(bufferSize)
 
@@ -125,14 +125,20 @@ class MainActivity : AppCompatActivity() {
                 runOnUiThread {
                     val isEndpoint = model.isEndpoint()
                     val text = model.text
-                    if (lastText.isBlank() && text.isNotBlank()) {
-                        lastText = "${idx}: ${text}"
-                        textView.text = lastText
-                    } else if (lastText.isNotBlank()) {
-                        lastText = "${lastText}${text}"
-                        if (isEndpoint) {
+
+                    if(text.isNotBlank()) {
+                        if (lastText.isBlank()) {
+                            textView.text = "${idx}: ${text}"
+                        } else {
+                            textView.text = "${lastText}\n${idx}: ${text}"
+                        }
+                    }
+
+                    if (isEndpoint) {
+                        model.reset()
+                        if (text.isNotBlank()) {
+                            lastText = "${lastText}\n${idx}: ${text}"
                             idx += 1
-                            model.reset()
                         }
                     }
                 }
@@ -176,6 +182,7 @@ class MainActivity : AppCompatActivity() {
             assetManager = application.assets,
             config = config,
         )
+       /*
         println("reading samples")
         val samples = WaveReader.readWave(
             assetManager = application.assets,
@@ -190,8 +197,8 @@ class MainActivity : AppCompatActivity() {
         val tailPaddings = FloatArray(8000) // 0.5 seconds
         model.decodeSamples(tailPaddings)
 
-        model.inputFinished()
         println("result is: ${model.text}")
         model.reset()
+        */
     }
 }
