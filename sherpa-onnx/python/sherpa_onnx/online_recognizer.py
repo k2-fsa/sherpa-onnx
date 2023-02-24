@@ -1,3 +1,4 @@
+# Copyright (c)  2023  Xiaomi Corporation
 from pathlib import Path
 from typing import List
 
