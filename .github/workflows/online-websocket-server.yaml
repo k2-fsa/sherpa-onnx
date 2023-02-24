@@ -10,21 +10,16 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'ffmpeg-examples/**'
-      - 'c-api-examples/**'
 
   pull_request:
-    types: [labeled]
+    branches:
+      - master
     paths:
       - '.github/workflows/online-websocket-server.yaml'
       - '.github/scripts/test-online-websocket.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'ffmpeg-examples/**'
-      - 'c-api-examples/**'
 
 concurrency:
   group: online-websocket-${{ github.ref }}
