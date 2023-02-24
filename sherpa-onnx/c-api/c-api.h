@@ -70,7 +70,7 @@ typedef struct SherpaOnnxOnlineRecognizerConfig {
 
 typedef struct SherpaOnnxOnlineRecognizerResult {
   const char *text;
-  // TODO: Add more fields
+  // TODO(fangjun): Add more fields
 } SherpaOnnxOnlineRecognizerResult;
 
 /// Note: OnlineRecognizer here means StreamingRecognizer.

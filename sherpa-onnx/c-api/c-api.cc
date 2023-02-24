@@ -4,6 +4,11 @@
 
 #include "sherpa-onnx/c-api/c-api.h"
 
+#include <algorithm>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "sherpa-onnx/csrc/online-recognizer.h"
 
 struct SherpaOnnxOnlineRecognizer {
@@ -12,7 +17,7 @@ struct SherpaOnnxOnlineRecognizer {
 
 struct SherpaOnnxOnlineStream {
   std::unique_ptr<sherpa_onnx::OnlineStream> impl;
-  SherpaOnnxOnlineStream(std::unique_ptr<sherpa_onnx::OnlineStream> p)
+  explicit SherpaOnnxOnlineStream(std::unique_ptr<sherpa_onnx::OnlineStream> p)
       : impl(std::move(p)) {}
 };
 
