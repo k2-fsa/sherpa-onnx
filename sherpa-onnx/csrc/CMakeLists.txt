@@ -4,6 +4,7 @@ set(sources
   cat.cc
   endpoint.cc
   features.cc
+  file-utils.cc
   online-lstm-transducer-model.cc
   online-recognizer.cc
   online-stream.cc
@@ -84,6 +85,32 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   target_link_libraries(sherpa-onnx-microphone PRIVATE ${PA_LIB} sherpa-onnx-core)
 
   install(TARGETS sherpa-onnx-microphone DESTINATION bin)
+endif()
+
+if(SHERPA_ONNX_ENABLE_WEBSOCKET)
+  add_definitions(-DASIO_STANDALONE)
+  add_definitions(-D_WEBSOCKETPP_CPP11_STL_)
+
+  add_executable(sherpa-onnx-online-websocket-server
+    online-websocket-server-impl.cc
+    online-websocket-server.cc
+  )
+  target_link_libraries(sherpa-onnx-online-websocket-server sherpa-onnx-core)
+
+
+  add_executable(sherpa-onnx-online-websocket-client
+    online-websocket-client.cc
+  )
+  target_link_libraries(sherpa-onnx-online-websocket-client sherpa-onnx-core)
+
+  if(NOT WIN32)
+    target_link_libraries(sherpa-onnx-online-websocket-server -pthread)
+    target_compile_options(sherpa-onnx-online-websocket-server PRIVATE -Wno-deprecated-declarations)
+
+    target_link_libraries(sherpa-onnx-online-websocket-client -pthread)
+    target_compile_options(sherpa-onnx-online-websocket-client PRIVATE -Wno-deprecated-declarations)
+  endif()
+
 endif()
 
 

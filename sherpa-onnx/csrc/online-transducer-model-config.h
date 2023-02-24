@@ -6,6 +6,8 @@
 
 #include <string>
 
+#include "sherpa-onnx/csrc/parse-options.h"
+
 namespace sherpa_onnx {
 
 struct OnlineTransducerModelConfig {
@@ -13,7 +15,7 @@ struct OnlineTransducerModelConfig {
   std::string decoder_filename;
   std::string joiner_filename;
   std::string tokens;
-  int32_t num_threads;
+  int32_t num_threads = 2;
   bool debug = false;
 
   OnlineTransducerModelConfig() = default;
@@ -28,6 +30,9 @@ struct OnlineTransducerModelConfig {
         tokens(tokens),
         num_threads(num_threads),
         debug(debug) {}
+
+  void Register(ParseOptions *po);
+  bool Validate() const;
 
   std::string ToString() const;
 };

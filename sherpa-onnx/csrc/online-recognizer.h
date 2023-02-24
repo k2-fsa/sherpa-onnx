@@ -17,11 +17,15 @@
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
+#include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
 
 struct OnlineRecognizerResult {
   std::string text;
+
+  // TODO(fangjun): Add a method to return a json string
+  std::string ToString() const { return text; }
 };
 
 struct OnlineRecognizerConfig {
@@ -40,6 +44,9 @@ struct OnlineRecognizerConfig {
         model_config(model_config),
         endpoint_config(endpoint_config),
         enable_endpoint(enable_endpoint) {}
+
+  void Register(ParseOptions *po);
+  bool Validate() const;
 
   std::string ToString() const;
 };
