@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/parse-options.h"
+
 namespace sherpa_onnx {
 
 struct FeatureExtractorConfig {
@@ -16,6 +18,8 @@ struct FeatureExtractorConfig {
   int32_t feature_dim = 80;
 
   std::string ToString() const;
+
+  void Register(ParseOptions *po);
 };
 
 class FeatureExtractor {
