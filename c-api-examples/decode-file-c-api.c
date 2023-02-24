@@ -1,6 +1,9 @@
-// c-api-examples/decode-file-c-api.cc
+// c-api-examples/decode-file-c-api.c
 //
 // Copyright (c)  2023  Xiaomi Corporation
+
+// This file shows how to use sherpa-onnx C API
+// to decode a file.
 
 #include <stdio.h>
 #include <stdlib.h>

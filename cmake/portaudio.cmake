@@ -12,6 +12,7 @@ function(download_portaudio)
     ${PROJECT_SOURCE_DIR}/pa_stable_v190700_20210406.tgz
     ${PROJECT_BINARY_DIR}/pa_stable_v190700_20210406.tgz
     /tmp/pa_stable_v190700_20210406.tgz
+    /star-fj/fangjun/download/github/pa_stable_v190700_20210406.tgz
   )
 
   foreach(f IN LISTS possible_file_locations)
