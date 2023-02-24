@@ -20,3 +20,4 @@ run-*-zipformer.sh
 run-zh.sh
 decode-file-c-api
 run-decode-file-c-api.sh
+sherpa-onnx-ffmpeg

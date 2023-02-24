@@ -39,6 +39,7 @@ cmake \
   -DBUILD_SHARED_LIBS=OFF \
   -DSHERPA_ONNX_ENABLE_TESTS=OFF \
   -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+  -DSHERPA_ONNX_ENABLE_CHECK=OFF \
   -DCMAKE_TOOLCHAIN_FILE=../toolchains/aarch64-linux-gnu.toolchain.cmake \
   ..
 

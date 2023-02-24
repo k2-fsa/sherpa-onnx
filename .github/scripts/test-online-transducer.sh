@@ -141,4 +141,15 @@ for wave in ${waves[@]}; do
   4
 done
 
+# Decode a URL
+if [ $EXE == "sherpa-onnx-ffmpeg" ]; then
+  time $EXE \
+  $repo/tokens.txt \
+  $repo/encoder-epoch-99-avg-1.onnx \
+  $repo/decoder-epoch-99-avg-1.onnx \
+  $repo/joiner-epoch-99-avg-1.onnx \
+  https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/resolve/main/test_wavs/4.wav \
+  4
+fi
+
 rm -rf $repo

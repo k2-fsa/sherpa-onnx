@@ -10,6 +10,9 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'ffmpeg-examples/**'
+      - 'c-api-examples/**'
   pull_request:
     branches:
       - master
@@ -19,6 +22,8 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'ffmpeg-examples/**'
 
 concurrency:
   group: linux-${{ github.ref }}
@@ -40,6 +45,23 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install ffmpeg
+        shell: bash
+        run: |
+          sudo apt-get install -y software-properties-common
+          sudo add-apt-repository ppa:savoury1/ffmpeg4
+          sudo add-apt-repository ppa:savoury1/ffmpeg5
+
+          sudo apt-get install -y libavdevice-dev libavutil-dev ffmpeg
+          pkg-config --modversion libavutil
+          ffmpeg -version
+
+      - name: Show ffmpeg version
+        shell: bash
+        run: |
+          pkg-config --modversion libavutil
+          ffmpeg -version
+
       - name: Configure CMake
         shell: bash
         run: |
@@ -56,11 +78,21 @@ jobs:
           ls -lh lib
           ls -lh bin
 
+          cd ../ffmpeg-examples
+          make
+
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
         run: |
           file build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
+
+      - name: Test sherpa-onnx-ffmpeg
+        run: |
+          export PATH=$PWD/ffmpeg-examples:$PATH
+          export EXE=sherpa-onnx-ffmpeg
+
+          .github/scripts/test-online-transducer.sh
 
       - name: Test online transducer
         shell: bash
