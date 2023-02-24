@@ -50,7 +50,7 @@ log "Start $n clients"
 for i in $(seq 0 $n); do
   k=$(expr $i % 5)
   log "starting client $i, processing ${k}.wav"
-  build/bin/sherpa-onnx-online-websocket-client \
+  $CLIENT_EXE \
     --seconds-per-message=0.1 \
     --server-port=6008 \
     ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/${k}.wav &
