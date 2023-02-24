@@ -29,6 +29,7 @@ struct OnlineRecognizerConfig {
   OnlineTransducerModelConfig model_config;
   EndpointConfig endpoint_config;
   bool enable_endpoint;
+  int32_t max_active_path;
 
   OnlineRecognizerConfig() = default;
 

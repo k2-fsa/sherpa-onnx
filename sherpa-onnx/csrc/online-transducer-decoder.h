@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/hypothesis.h"
 
 namespace sherpa_onnx {
 
@@ -17,6 +18,9 @@ struct OnlineTransducerDecoderResult {
 
   /// number of trailing blank frames decoded so far
   int32_t num_trailing_blanks = 0;
+
+  // used only in modified beam_search
+  Hypotheses hyps;
 };
 
 class OnlineTransducerDecoder {

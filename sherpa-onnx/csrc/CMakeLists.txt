@@ -8,6 +8,7 @@ set(sources
   online-recognizer.cc
   online-stream.cc
   online-transducer-greedy-search-decoder.cc
+  online-transducer-modified-beam-search-decoder.cc
   online-transducer-model-config.cc
   online-transducer-model.cc
   online-zipformer-transducer-model.cc
