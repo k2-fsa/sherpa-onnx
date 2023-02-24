@@ -58,7 +58,7 @@ for a list of pre-trained models to download.
   signal(SIGINT, Handler);
 
   sherpa_onnx::OnlineRecognizerConfig config;
-  config.tokens = argv[1];
+  config.model_config.tokens = argv[1];
 
   config.model_config.debug = false;
   config.model_config.encoder_filename = argv[2];

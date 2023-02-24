@@ -19,23 +19,9 @@
 #include <fstream>
 #endif
 
-#if __ANDROID_API__ >= 8
-#include "android/log.h"
-#define SHERPA_ONNX_LOGE(...)                                            \
-  do {                                                                   \
-    fprintf(stderr, ##__VA_ARGS__);                                      \
-    fprintf(stderr, "\n");                                               \
-    __android_log_print(ANDROID_LOG_WARN, "sherpa-onnx", ##__VA_ARGS__); \
-  } while (0)
-#else
-#define SHERPA_ONNX_LOGE(...)       \
-  do {                              \
-    fprintf(stderr, ##__VA_ARGS__); \
-    fprintf(stderr, "\n");          \
-  } while (0)
-#endif
-
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 #define SHERPA_ONNX_EXTERN_C extern "C"
@@ -160,14 +146,6 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   ans.endpoint_config.rule3.min_utterance_length =
       env->GetFloatField(rule3, fid);
 
-  //---------- tokens ----------
-
-  fid = env->GetFieldID(cls, "tokens", "Ljava/lang/String;");
-  jstring s = (jstring)env->GetObjectField(config, fid);
-  const char *p = env->GetStringUTFChars(s, nullptr);
-  ans.tokens = p;
-  env->ReleaseStringUTFChars(s, p);
-
   //---------- model config ----------
   fid = env->GetFieldID(cls, "modelConfig",
                         "Lcom/k2fsa/sherpa/onnx/OnlineTransducerModelConfig;");
@@ -175,8 +153,8 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   jclass model_config_cls = env->GetObjectClass(model_config);
 
   fid = env->GetFieldID(model_config_cls, "encoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
-  p = env->GetStringUTFChars(s, nullptr);
+  jstring s = (jstring)env->GetObjectField(model_config, fid);
+  const char *p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.encoder_filename = p;
   env->ReleaseStringUTFChars(s, p);
 
@@ -190,6 +168,12 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   s = (jstring)env->GetObjectField(model_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.joiner_filename = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(model_config_cls, "tokens", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.tokens = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "numThreads", "I");
@@ -226,7 +210,6 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_new(
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_delete(
     JNIEnv *env, jobject /*obj*/, jlong ptr) {
-  SHERPA_ONNX_LOGE("freed!");
   delete reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr);
 }
 
@@ -286,12 +269,9 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWave(
     return nullptr;
   }
 
-  AAsset *asset = AAssetManager_open(mgr, p_filename, AASSET_MODE_BUFFER);
-  size_t asset_length = AAsset_getLength(asset);
-  std::vector<char> buffer(asset_length);
-  AAsset_read(asset, buffer.data(), asset_length);
+  std::vector<char> buffer = sherpa_onnx::ReadFile(mgr, p_filename);
 
-  std::istrstream is(buffer.data(), asset_length);
+  std::istrstream is(buffer.data(), buffer.size());
 #else
   std::ifstream is(p_filename, std::ios::binary);
 #endif
@@ -300,9 +280,6 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWave(
   std::vector<float> samples =
       sherpa_onnx::ReadWave(is, expected_sample_rate, &is_ok);
 
-#if __ANDROID_API__ >= 9
-  AAsset_close(asset);
-#endif
   env->ReleaseStringUTFChars(filename, p_filename);
 
   if (!is_ok) {

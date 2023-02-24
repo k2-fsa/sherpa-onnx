@@ -1,9 +1,6 @@
 function(download_onnxruntime)
   include(FetchContent)
 
-  message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
-  message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
-
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
     # For embedded systems
     set(possible_file_locations
@@ -93,15 +90,11 @@ function(download_onnxruntime)
   endif()
   message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-  if(ANDROID)
-    set(location_onnxruntime ${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.so)
-  else()
-    find_library(location_onnxruntime onnxruntime
-      PATHS
-      "${onnxruntime_SOURCE_DIR}/lib"
-      NO_CMAKE_SYSTEM_PATH
-    )
-  endif()
+  find_library(location_onnxruntime onnxruntime
+    PATHS
+    "${onnxruntime_SOURCE_DIR}/lib"
+    NO_CMAKE_SYSTEM_PATH
+  )
 
   message(STATUS "location_onnxruntime: ${location_onnxruntime}")
 
@@ -123,7 +116,6 @@ function(download_onnxruntime)
     )
   endif()
 
-
   if(UNIX AND NOT APPLE)
     file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*")
   elseif(APPLE)
@@ -139,19 +131,32 @@ endfunction()
 # First, we try to locate the header and the lib if the use has already
 # installed onnxruntime. Otherwise, we will download the pre-compiled lib
 
-find_path(location_onnxruntime_header_dir onnxruntime_cxx_api.h
-  PATHS
-    /usr/include
-    /usr/local/include
-)
+message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
+message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+
+if(ANDROID)
+  set(location_onnxruntime_header_dir $ENV{SHERPA_ONNXRUNTIME_INCLUDE_DIR})
+else()
+  find_path(location_onnxruntime_header_dir onnxruntime_cxx_api.h
+    PATHS
+      /usr/include
+      /usr/local/include
+  )
+endif()
+
 message(STATUS "location_onnxruntime_header_dir: ${location_onnxruntime_header_dir}")
 
-find_library(location_onnxruntime_lib onnxruntime
-  PATHS
-    /lib
-    /usr/lib
-    /usr/local/lib
-)
+if(ANDROID)
+  set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.so)
+else()
+  find_library(location_onnxruntime_lib onnxruntime
+    PATHS
+      /lib
+      /usr/lib
+      /usr/local/lib
+  )
+endif()
+
 message(STATUS "location_onnxruntime_lib: ${location_onnxruntime_lib}")
 
 if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
@@ -164,4 +169,3 @@ else()
   message(STATUS "Could not find a pre-installed onnxruntime. Downloading pre-compiled onnxruntime")
   download_onnxruntime()
 endif()
-

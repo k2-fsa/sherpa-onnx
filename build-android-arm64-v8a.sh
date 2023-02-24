@@ -19,7 +19,6 @@ cd $dir
 #   -g
 #   -DANDROID
 
-
 if [ -z $ANDROID_NDK ]; then
   ANDROID_NDK=/ceph-fj/fangjun/software/android-sdk/ndk/21.0.6113669
   # or use
@@ -44,6 +43,29 @@ fi
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 
+if [ ! -f android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so ]; then
+  GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/android-onnxruntime-libs
+  pushd android-onnxruntime-libs
+  git lfs pull --include "jni/arm64-v8a/libonnxruntime.so"
+  popd
+fi
+
+ls -l ./android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so
+
+# check filesize
+filesize=$(ls -l ./android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so  | tr -s " " " " | cut -d " " -f 5)
+if (( $filesize < 1000 )); then
+  ls -lh ./android-onnxruntime-libs/arm64-v8a/jni/libonnxruntime.so
+  echo "Please use: git lfs pull to download libonnxruntime.so"
+  exit 1
+fi
+
+export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/android-onnxruntime-libs/jni/arm64-v8a/
+export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/android-onnxruntime-libs/headers/
+
+echo "SHERPA_ONNXRUNTIME_LIB_DIR: $SHERPA_ONNXRUNTIME_LIB_DIR"
+echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
+
 cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" \
     -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_SHARED_LIBS=ON \
@@ -55,7 +77,8 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DCMAKE_INSTALL_PREFIX=./install \
     -DANDROID_ABI="arm64-v8a" \
     -DANDROID_PLATFORM=android-21 ..
+
 # make VERBOSE=1 -j4
 make -j4
 make install/strip
-
+cp -fv android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so install/lib
