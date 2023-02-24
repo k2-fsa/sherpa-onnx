@@ -17,11 +17,13 @@ endif
 CFLAGS := $(shell pkg-config --cflags $(SHARED_LIBS)) -I.. -Wall -std=c++11 -fopenmp ${OPTFLAG}
 LDLIBS := $(shell pkg-config --libs $(SHARED_LIBS))
 
+CUR_DIR :=$(shell pwd)
+
 LDLIBS += -L ../build/lib
 LDLIBS += -L ../build/_deps/onnxruntime-src/lib
 LDLIBS += -lsherpa-onnx-c-api -lsherpa-onnx-core -lonnxruntime -lkaldi-native-fbank-core
-LDLIBS += -Wl,-rpath,../build/lib
-LDLIBS += -Wl,-rpath,../build/_deps/onnxruntime-src/lib
+LDLIBS += -Wl,-rpath,${CUR_DIR}/../build/lib
+LDLIBS += -Wl,-rpath,${CUR_DIR}/../build/_deps/onnxruntime-src/lib
 
 
 #Get libavutil version and extract major, minor and micro
