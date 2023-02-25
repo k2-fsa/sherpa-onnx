@@ -14,7 +14,8 @@ ifeq ($(GDB), TRUE)
 	OPTFLAG += -g
 endif
 
-CFLAGS := $(shell pkg-config --cflags $(SHARED_LIBS)) -I.. -Wall -std=c++11 -fopenmp ${OPTFLAG}
+# CFLAGS := $(shell pkg-config --cflags $(SHARED_LIBS)) -I.. -Wall -std=c++11 -fopenmp ${OPTFLAG}
+CFLAGS := $(shell pkg-config --cflags $(SHARED_LIBS)) -I.. -Wall -std=c++11 ${OPTFLAG}
 LDLIBS := $(shell pkg-config --libs $(SHARED_LIBS))
 
 CUR_DIR :=$(shell pwd)
