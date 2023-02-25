@@ -32,7 +32,10 @@ class OnlineStream::Impl {
     return feat_extractor_.GetFrames(frame_index, n);
   }
 
-  void Reset() { feat_extractor_.Reset(); }
+  void Reset() {
+    feat_extractor_.Reset();
+    num_processed_frames_ = 0;
+  }
 
   int32_t &GetNumProcessedFrames() { return num_processed_frames_; }
 

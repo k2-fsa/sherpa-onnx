@@ -160,14 +160,17 @@ class OnlineRecognizer::Impl {
   }
 
   void Reset(OnlineStream *s) const {
-    // reset result and neural network model state,
-    // but keep the feature extractor state
+    // reset result, neural network model state, and
+    // the feature extractor state
 
     // reset result
     s->SetResult(decoder_->GetEmptyResult());
 
     // reset neural network model state
     s->SetStates(model_->GetEncoderInitStates());
+
+    // reset feature extractor
+    s->Reset();
   }
 
  private:
