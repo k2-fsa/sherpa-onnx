@@ -68,8 +68,9 @@ def main():
                 last_result = result
                 print(f"{segment_id}: {result}")
 
-            if result and is_endpoint:
-                segment_id += 1
+            if is_endpoint:
+                if result:
+                    segment_id += 1
                 recognizer.reset(stream)
 
 
