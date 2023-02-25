@@ -137,7 +137,7 @@ as the device_name.
         ++segment_index;
       }
 
-      recognizer.Reset(s.get());
+      recognizer.Reset(stream.get());
     }
   }
 
