@@ -232,6 +232,8 @@ static void sherpa_decode_frame(const AVFrame *frame, SherpaOnnxOnlineRecognizer
               fprintf(stderr, "%s\n", r->text);
             }
             DestroyOnlineRecognizerResult(r);
+
+            Reset(recognizer, stream);
         }
         nb_samples = 0;
     }

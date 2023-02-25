@@ -147,8 +147,11 @@ for a list of pre-trained models to download.
       display.Print(segment_index, text);
     }
 
-    if (!text.empty() && is_endpoint) {
-      ++segment_index;
+    if (is_endpoint) {
+      if (!text.empty()) {
+        ++segment_index;
+      }
+
       recognizer.Reset(s.get());
     }
 

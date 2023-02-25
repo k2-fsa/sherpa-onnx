@@ -132,8 +132,11 @@ as the device_name.
       display.Print(segment_index, text);
     }
 
-    if (!text.empty() && is_endpoint) {
-      ++segment_index;
+    if (is_endpoint) {
+      if (!text.empty()) {
+        ++segment_index;
+      }
+
       recognizer.Reset(stream.get());
     }
   }
