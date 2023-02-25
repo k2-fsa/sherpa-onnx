@@ -21,3 +21,15 @@ run-zh.sh
 decode-file-c-api
 run-decode-file-c-api.sh
 sherpa-onnx-ffmpeg
+build-ios
+build-swift-macos
+aa.sh
+client-2.sh
+ffmpeg-examples/run-3.sh
+python-api-examples/decode-file-multiple-bak-2.py
+run-en-zipformer-microphone*
+run-websocket-server*
+decode-file
+*.dylib
+tokens.txt
+*.onnx
