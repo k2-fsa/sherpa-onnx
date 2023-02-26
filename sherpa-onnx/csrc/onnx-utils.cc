@@ -3,6 +3,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
+#include <algorithm>
 #include <fstream>
 #include <string>
 #include <vector>

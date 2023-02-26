@@ -7,7 +7,9 @@
 # https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 # to download pre-trained models
 
+import argparse
 import sys
+from pathlib import Path
 
 try:
     import sounddevice as sd
@@ -22,18 +24,65 @@ except ImportError as e:
 import sherpa_onnx
 
 
+def assert_file_exists(filename: str):
+    assert Path(
+        filename
+    ).is_file(), f"{filename} does not exist!\nPlease refer to https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html to download it"
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+
+    parser.add_argument(
+        "--tokens",
+        type=str,
+        help="Path to tokens.txt",
+    )
+
+    parser.add_argument(
+        "--encoder",
+        type=str,
+        help="Path to the encoder model",
+    )
+
+    parser.add_argument(
+        "--decoder",
+        type=str,
+        help="Path to the decoder model",
+    )
+
+    parser.add_argument(
+        "--joiner",
+        type=str,
+        help="Path to the joiner model",
+    )
+
+    parser.add_argument(
+        "--wave-filename",
+        type=str,
+        help="""Path to the wave filename. Must be 16 kHz,
+        mono with 16-bit samples""",
+    )
+
+    return parser.parse_args()
+
+
 def create_recognizer():
+    args = get_args()
+    assert_file_exists(args.encoder)
+    assert_file_exists(args.decoder)
+    assert_file_exists(args.joiner)
+    assert_file_exists(args.tokens)
     # Please replace the model files if needed.
     # See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
     # for download links.
     recognizer = sherpa_onnx.OnlineRecognizer(
-        tokens="./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt",
-        encoder="./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx",
-        decoder="./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx",
-        joiner="./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx",
-        num_threads=4,
-        sample_rate=16000,
-        feature_dim=80,
+        tokens=args.tokens,
+        encoder=args.encoder,
+        decoder=args.decoder,
+        joiner=args.joiner,
         enable_endpoint_detection=True,
         rule1_min_trailing_silence=2.4,
         rule2_min_trailing_silence=1.2,

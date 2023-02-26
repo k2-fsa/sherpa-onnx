@@ -33,3 +33,4 @@ decode-file
 *.dylib
 tokens.txt
 *.onnx
+log.txt
