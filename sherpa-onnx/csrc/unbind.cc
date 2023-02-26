@@ -26,7 +26,7 @@ std::vector<Ort::Value> Unbind(OrtAllocator *allocator, const Ort::Value *value,
   int32_t n = static_cast<int32_t>(shape[dim]);
   if (n == 1) {
     std::vector<Ort::Value> ans;
-    ans.push_back(Clone(value));
+    ans.push_back(Clone(allocator, value));
     return ans;
   }
 

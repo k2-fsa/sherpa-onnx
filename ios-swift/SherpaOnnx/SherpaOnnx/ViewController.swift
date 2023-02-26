@@ -63,7 +63,7 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
-        resultLabel.text = "ASR with Next-gen Kaldi\n\nPress the Start button to run!"
+        resultLabel.text = "ASR with Next-gen Kaldi\n\nSee https://github.com/k2-fsa/sherpa-onnx\n\nPress the Start button to run!"
         recordBtn.setTitle("Start", for: .normal)
         initRecognizer()
         initRecorder()
