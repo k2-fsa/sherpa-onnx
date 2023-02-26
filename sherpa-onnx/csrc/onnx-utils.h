@@ -60,8 +60,8 @@ void GetOutputNames(Ort::Session *sess, std::vector<std::string> *output_names,
 void PrintModelMetadata(std::ostream &os,
                         const Ort::ModelMetadata &meta_data);  // NOLINT
 
-// Return a shallow copy of v
-Ort::Value Clone(const Ort::Value *v);
+// Return a deep copy of v
+Ort::Value Clone(OrtAllocator *allocator, const Ort::Value *v);
 
 // Print a 1-D tensor to stderr
 void Print1D(Ort::Value *v);

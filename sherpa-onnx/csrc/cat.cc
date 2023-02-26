@@ -37,7 +37,7 @@ template <typename T /*=float*/>
 Ort::Value Cat(OrtAllocator *allocator,
                const std::vector<const Ort::Value *> &values, int32_t dim) {
   if (values.size() == 1u) {
-    return Clone(values[0]);
+    return Clone(allocator, values[0]);
   }
 
   std::vector<int64_t> v0_shape =

@@ -100,8 +100,8 @@ void OnlineTransducerGreedySearchDecoder::Decode(
   for (int32_t t = 0; t != num_frames; ++t) {
     Ort::Value cur_encoder_out = GetFrame(&encoder_out, t);
     cur_encoder_out = Repeat(model_->Allocator(), &cur_encoder_out, batch_size);
-    Ort::Value logit =
-        model_->RunJoiner(std::move(cur_encoder_out), Clone(&decoder_out));
+    Ort::Value logit = model_->RunJoiner(
+        std::move(cur_encoder_out), Clone(model_->Allocator(), &decoder_out));
     const float *p_logit = logit.GetTensorData<float>();
 
     bool emitted = false;
