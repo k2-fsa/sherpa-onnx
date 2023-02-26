@@ -9,7 +9,7 @@ log() {
 }
 
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-lstm-en-2023-02-17
+repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
 log "Start testing ${repo_url}"
 repo=$(basename $repo_url)
@@ -30,4 +30,9 @@ ls -lh
 
 ls -lh $repo
 
-python3 python-api-examples/decode-file.py
+python3 ./python-api-examples/decode-file.py \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --wave-filename=$repo/test_wavs/4.wav
