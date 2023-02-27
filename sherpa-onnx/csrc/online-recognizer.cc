@@ -12,6 +12,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
@@ -29,6 +30,19 @@ static OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
   OnlineRecognizerResult ans;
   ans.text = std::move(text);
   return ans;
+}
+
+void OnlineRecognizerConfig::Register(ParseOptions *po) {
+  feat_config.Register(po);
+  model_config.Register(po);
+  endpoint_config.Register(po);
+
+  po->Register("enable-endpoint", &enable_endpoint,
+               "True to enable endpoint detection. False to disable it.");
+}
+
+bool OnlineRecognizerConfig::Validate() const {
+  return model_config.Validate();
 }
 
 std::string OnlineRecognizerConfig::ToString() const {
@@ -146,14 +160,17 @@ class OnlineRecognizer::Impl {
   }
 
   void Reset(OnlineStream *s) const {
-    // reset result and neural network model state,
-    // but keep the feature extractor state
+    // reset result, neural network model state, and
+    // the feature extractor state
 
     // reset result
     s->SetResult(decoder_->GetEmptyResult());
 
     // reset neural network model state
     s->SetStates(model_->GetEncoderInitStates());
+
+    // reset feature extractor
+    s->Reset();
   }
 
  private:

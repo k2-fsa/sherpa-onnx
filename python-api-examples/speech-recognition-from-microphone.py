@@ -6,7 +6,9 @@
 # https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 # to download pre-trained models
 
+import argparse
 import sys
+from pathlib import Path
 
 try:
     import sounddevice as sd
@@ -21,15 +23,65 @@ except ImportError as e:
 import sherpa_onnx
 
 
+def assert_file_exists(filename: str):
+    assert Path(
+        filename
+    ).is_file(), f"{filename} does not exist!\nPlease refer to https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html to download it"
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+
+    parser.add_argument(
+        "--tokens",
+        type=str,
+        help="Path to tokens.txt",
+    )
+
+    parser.add_argument(
+        "--encoder",
+        type=str,
+        help="Path to the encoder model",
+    )
+
+    parser.add_argument(
+        "--decoder",
+        type=str,
+        help="Path to the decoder model",
+    )
+
+    parser.add_argument(
+        "--joiner",
+        type=str,
+        help="Path to the joiner model",
+    )
+
+    parser.add_argument(
+        "--wave-filename",
+        type=str,
+        help="""Path to the wave filename. Must be 16 kHz,
+        mono with 16-bit samples""",
+    )
+
+    return parser.parse_args()
+
+
 def create_recognizer():
+    args = get_args()
+    assert_file_exists(args.encoder)
+    assert_file_exists(args.decoder)
+    assert_file_exists(args.joiner)
+    assert_file_exists(args.tokens)
     # Please replace the model files if needed.
     # See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
     # for download links.
     recognizer = sherpa_onnx.OnlineRecognizer(
-        tokens="./sherpa-onnx-lstm-en-2023-02-17/tokens.txt",
-        encoder="./sherpa-onnx-lstm-en-2023-02-17/encoder-epoch-99-avg-1.onnx",
-        decoder="./sherpa-onnx-lstm-en-2023-02-17/decoder-epoch-99-avg-1.onnx",
-        joiner="./sherpa-onnx-lstm-en-2023-02-17/joiner-epoch-99-avg-1.onnx",
+        tokens=args.tokens,
+        encoder=args.encoder,
+        decoder=args.decoder,
+        joiner=args.joiner,
         num_threads=4,
         sample_rate=16000,
         feature_dim=80,

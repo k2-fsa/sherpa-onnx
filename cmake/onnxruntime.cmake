@@ -134,7 +134,7 @@ endfunction()
 message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 
-if(ANDROID)
+if(DEFINED ENV{SHERPA_ONNXRUNTIME_INCLUDE_DIR})
   set(location_onnxruntime_header_dir $ENV{SHERPA_ONNXRUNTIME_INCLUDE_DIR})
 else()
   find_path(location_onnxruntime_header_dir onnxruntime_cxx_api.h
@@ -146,8 +146,11 @@ endif()
 
 message(STATUS "location_onnxruntime_header_dir: ${location_onnxruntime_header_dir}")
 
-if(ANDROID)
+if(DEFINED ENV{SHERPA_ONNXRUNTIME_LIB_DIR})
   set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.so)
+  if(NOT EXISTS ${location_onnxruntime_lib})
+    set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.a)
+  endif()
 else()
   find_library(location_onnxruntime_lib onnxruntime
     PATHS

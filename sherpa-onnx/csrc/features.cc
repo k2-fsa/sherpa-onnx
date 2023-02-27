@@ -14,6 +14,15 @@
 
 namespace sherpa_onnx {
 
+void FeatureExtractorConfig::Register(ParseOptions *po) {
+  po->Register("sample-rate", &sampling_rate,
+               "Sampling rate of the input waveform. Must match the one "
+               "expected by the model.");
+
+  po->Register("feat-dim", &feature_dim,
+               "Feature dimension. Must match the one expected by the model.");
+}
+
 std::string FeatureExtractorConfig::ToString() const {
   std::ostringstream os;
 
