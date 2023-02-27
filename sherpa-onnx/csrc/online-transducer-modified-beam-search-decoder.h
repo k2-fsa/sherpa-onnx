@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-transducer-modified_beam-search-decoder.h
 //
 // Copyright (c)  2023  Pingfeng Luo
+// Copyright (c)  2023  Xiaomi Corporation
 
 #ifndef SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_MODIFIED_BEAM_SEARCH_DECODER_H_
 #define SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_MODIFIED_BEAM_SEARCH_DECODER_H_
@@ -12,10 +13,12 @@
 
 namespace sherpa_onnx {
 
-class OnlineTransducerModifiedBeamSearchDecoder : public OnlineTransducerDecoder {
+class OnlineTransducerModifiedBeamSearchDecoder
+  : public OnlineTransducerDecoder {
  public:
-  explicit OnlineTransducerModifiedBeamSearchDecoder(OnlineTransducerModel *model)
-      : model_(model) {}
+  explicit OnlineTransducerModifiedBeamSearchDecoder(
+      OnlineTransducerModel *model, int32_t max_active_paths)
+    : model_(model), max_active_paths_(max_active_paths) {}
 
   OnlineTransducerDecoderResult GetEmptyResult() const override;
 
@@ -26,6 +29,7 @@ class OnlineTransducerModifiedBeamSearchDecoder : public OnlineTransducerDecoder
 
  private:
   OnlineTransducerModel *model_;  // Not owned
+  int32_t max_active_paths_;
 };
 
 }  // namespace sherpa_onnx

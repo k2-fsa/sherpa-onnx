@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-transducer-modified-beam-search-decoder.cc
 //
 // Copyright (c)  2023  Pingfeng Luo
+// Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/online-transducer-modified-beam-search-decoder.h"
 
@@ -68,19 +69,20 @@ OnlineTransducerModifiedBeamSearchDecoder::GetEmptyResult() const {
   int32_t context_size = model_->ContextSize();
   int32_t blank_id = 0;  // always 0
   OnlineTransducerDecoderResult r;
-  r.tokens.resize(context_size, blank_id);
-
+  std::vector<int32_t> blanks(context_size, blank_id);
+  Hypotheses blank_hyp({{blanks, 0}});
+  r.hyps = std::move(blank_hyp);
   return r;
 }
 
 void OnlineTransducerModifiedBeamSearchDecoder::StripLeadingBlanks(
     OnlineTransducerDecoderResult *r) const {
   int32_t context_size = model_->ContextSize();
+  auto hyp = r->hyps.GetMostProbable(true);
 
-  auto start = r->tokens.begin() + context_size;
-  auto end = r->tokens.end();
-
-  r->tokens = std::vector<int64_t>(start, end);
+  std::vector<int64_t>tokens(hyp.ys.begin() + context_size, hyp.ys.end());
+  r->tokens = std::move(tokens);
+  r->num_trailing_blanks = hyp.num_trailing_blanks;
 }
 
 void OnlineTransducerModifiedBeamSearchDecoder::Decode(
@@ -110,18 +112,17 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
   for (int32_t t = 0; t != num_frames; ++t) {
     // Due to merging paths with identical token sequences,
     // not all utterances have "num_active_paths" paths.
-    int32_t num_hyps = 0;
-    std::vector<int32_t> hyps_shape_split;
-    hyps_shape_split.push_back(0);
+    int32_t hyps_num_acc = 0;
+    std::vector<int32_t> hyps_num_split;
+    hyps_num_split.push_back(0);
 
     prev.clear();
-    prev.reserve(num_hyps);
     for (auto &hyps : cur) {
       for (auto &h : hyps) {
         prev.push_back(std::move(h.second));
+        hyps_num_acc++;
       }
-      num_hyps += cur.size();
-      hyps_shape_split.push_back(num_hyps);
+      hyps_num_split.push_back(hyps_num_acc);
     }
     cur.clear();
     cur.reserve(batch_size);
@@ -130,20 +131,22 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
     Ort::Value decoder_out = model_->RunDecoder(std::move(decoder_input));
 
     Ort::Value cur_encoder_out = GetFrame(&encoder_out, t);
-    cur_encoder_out = Repeat(model_->Allocator(), &cur_encoder_out, batch_size);
-    Ort::Value logit =
-        model_->RunJoiner(std::move(cur_encoder_out), Clone(&decoder_out));
+    cur_encoder_out =
+      Repeat(model_->Allocator(), &cur_encoder_out, hyps_num_acc);
+    Ort::Value logit = model_->RunJoiner(
+        std::move(cur_encoder_out), Clone(model_->Allocator(), &decoder_out));
     float *p_logit = const_cast<float *>(logit.GetTensorData<float>());
 
     for (int32_t b = 0; b < batch_size; ++b) {
-      int32_t cur_stream_hyps_num = hyps_shape_split[b + 1] - hyps_shape_split[b];
-      LogSoftmax(p_logit, vocab_size, cur_stream_hyps_num);
-      auto topk =
-        TopkIndex(p_logit, vocab_size * cur_stream_hyps_num , 4);
+      int32_t start = hyps_num_split[b];
+      int32_t end = hyps_num_split[b + 1];
+      LogSoftmax(p_logit, vocab_size, (end - start));
+      auto topk = TopkIndex(
+          p_logit, vocab_size * (end - start), max_active_paths_);
 
       Hypotheses hyps;
       for (auto i : topk) {
-        int32_t hyp_index = i / vocab_size + hyps_shape_split[b];
+        int32_t hyp_index = i / vocab_size + start;
         int32_t new_token = i % vocab_size;
 
         Hypothesis new_hyp = prev[hyp_index];
@@ -157,12 +160,12 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         hyps.Add(std::move(new_hyp));
       }
       cur.push_back(std::move(hyps));
-      p_logit += vocab_size * cur_stream_hyps_num;
+      p_logit += vocab_size * (end - start);
     }
   }
 
-  for (int32_t i = 0; i != batch_size; ++i) {
-    (*result)[i].hyps = std::move(cur[i]);
+  for (int32_t b = 0; b != batch_size; ++b) {
+    (*result)[b].hyps = std::move(cur[b]);
   }
 }
 
