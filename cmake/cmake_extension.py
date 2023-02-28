@@ -40,6 +40,7 @@ try:
                 # -linux_x86_64.whl
                 self.root_is_pure = False
 
+
 except ImportError:
     bdist_wheel = None
 
@@ -74,7 +75,11 @@ class BuildExtension(build_ext):
             extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
         else:
             extra_cmake_args += " -DBUILD_SHARED_LIBS=OFF "
+        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_CHECK=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PYTHON=ON "
+        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF "
+        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_C_API=OFF "
+        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF "
 
         if "PYTHON_EXECUTABLE" not in cmake_args:
             print(f"Setting PYTHON_EXECUTABLE to {sys.executable}")
