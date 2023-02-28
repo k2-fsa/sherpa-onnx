@@ -55,7 +55,7 @@ ls -l ./android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so
 # check filesize
 filesize=$(ls -l ./android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so  | tr -s " " " " | cut -d " " -f 5)
 if (( $filesize < 1000 )); then
-  ls -lh ./android-onnxruntime-libs/arm64-v8a/jni/libonnxruntime.so
+  ls -lh ./android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so
   echo "Please use: git lfs pull to download libonnxruntime.so"
   exit 1
 fi
