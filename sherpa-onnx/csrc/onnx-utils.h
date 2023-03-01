@@ -10,6 +10,7 @@
 #include <locale>
 #endif
 
+#include <cassert>
 #include <ostream>
 #include <string>
 #include <vector>
@@ -56,6 +57,17 @@ void GetInputNames(Ort::Session *sess, std::vector<std::string> *input_names,
  */
 void GetOutputNames(Ort::Session *sess, std::vector<std::string> *output_names,
                     std::vector<const char *> *output_names_ptr);
+
+/**
+ * Get the output frame of Encoder
+ *
+ * @param allocator allocator of onnxruntime
+ * @param encoder_out encoder out tensor
+ * @param t frame_index
+ *
+ */
+Ort::Value GetEncoderOutFrame(OrtAllocator *allocator, Ort::Value *encoder_out,
+                              int32_t t);
 
 void PrintModelMetadata(std::ostream &os,
                         const Ort::ModelMetadata &meta_data);  // NOLINT

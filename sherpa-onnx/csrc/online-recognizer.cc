@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-recognizer.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023  Pingfeng Luo
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
 
@@ -16,6 +17,7 @@
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
+#include "sherpa-onnx/csrc/online-transducer-modified-beam-search-decoder.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
@@ -39,6 +41,11 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
 
   po->Register("enable-endpoint", &enable_endpoint,
                "True to enable endpoint detection. False to disable it.");
+  po->Register("max-active-paths", &max_active_paths,
+               "beam size used in modified beam search.");
+  po->Register("decoding-mothod", &decoding_method,
+               "decoding method,"
+               "now support greedy_search and modified_beam_search.");
 }
 
 bool OnlineRecognizerConfig::Validate() const {
@@ -52,7 +59,9 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "feat_config=" << feat_config.ToString() << ", ";
   os << "model_config=" << model_config.ToString() << ", ";
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
-  os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ")";
+  os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ",";
+  os << "max_active_paths=" << max_active_paths << ",";
+  os << "decoding_method=\"" << decoding_method << "\")";
 
   return os.str();
 }
@@ -64,8 +73,17 @@ class OnlineRecognizer::Impl {
         model_(OnlineTransducerModel::Create(config.model_config)),
         sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
-    decoder_ =
-        std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
+    if (config.decoding_method == "modified_beam_search") {
+      decoder_ = std::make_unique<OnlineTransducerModifiedBeamSearchDecoder>(
+          model_.get(), config_.max_active_paths);
+    } else if (config.decoding_method == "greedy_search") {
+      decoder_ =
+          std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
+    } else {
+      fprintf(stderr, "Unsupported decoding method: %s\n",
+              config.decoding_method.c_str());
+      exit(-1);
+    }
   }
 
 #if __ANDROID_API__ >= 9
@@ -74,8 +92,17 @@ class OnlineRecognizer::Impl {
         model_(OnlineTransducerModel::Create(mgr, config.model_config)),
         sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
-    decoder_ =
-        std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
+    if (config.decoding_method == "modified_beam_search") {
+      decoder_ = std::make_unique<OnlineTransducerModifiedBeamSearchDecoder>(
+          model_.get(), config_.max_active_paths);
+    } else if (config.decoding_method == "greedy_search") {
+      decoder_ =
+          std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
+    } else {
+      fprintf(stderr, "Unsupported decoding method: %s\n",
+              config.decoding_method.c_str());
+      exit(-1);
+    }
   }
 #endif
 

@@ -34,3 +34,4 @@ decode-file
 tokens.txt
 *.onnx
 log.txt
+tags

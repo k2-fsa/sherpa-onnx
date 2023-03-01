@@ -247,24 +247,6 @@ OnlineLstmTransducerModel::RunEncoder(Ort::Value features,
   return {std::move(encoder_out[0]), std::move(next_states)};
 }
 
-Ort::Value OnlineLstmTransducerModel::BuildDecoderInput(
-    const std::vector<OnlineTransducerDecoderResult> &results) {
-  int32_t batch_size = static_cast<int32_t>(results.size());
-  std::array<int64_t, 2> shape{batch_size, context_size_};
-  Ort::Value decoder_input =
-      Ort::Value::CreateTensor<int64_t>(allocator_, shape.data(), shape.size());
-  int64_t *p = decoder_input.GetTensorMutableData<int64_t>();
-
-  for (const auto &r : results) {
-    const int64_t *begin = r.tokens.data() + r.tokens.size() - context_size_;
-    const int64_t *end = r.tokens.data() + r.tokens.size();
-    std::copy(begin, end, p);
-    p += context_size_;
-  }
-
-  return decoder_input;
-}
-
 Ort::Value OnlineLstmTransducerModel::RunDecoder(Ort::Value decoder_input) {
   auto decoder_out = decoder_sess_->Run(
       {}, decoder_input_names_ptr_.data(), &decoder_input, 1,

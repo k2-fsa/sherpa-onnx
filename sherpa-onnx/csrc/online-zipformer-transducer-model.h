@@ -41,9 +41,6 @@ class OnlineZipformerTransducerModel : public OnlineTransducerModel {
   std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
       Ort::Value features, std::vector<Ort::Value> states) override;
 
-  Ort::Value BuildDecoderInput(
-      const std::vector<OnlineTransducerDecoderResult> &results) override;
-
   Ort::Value RunDecoder(Ort::Value decoder_input) override;
 
   Ort::Value RunJoiner(Ort::Value encoder_out, Ort::Value decoder_out) override;
