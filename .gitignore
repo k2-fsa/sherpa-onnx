@@ -13,6 +13,7 @@ sherpa-onnx-streaming-zipformer-*
 sherpa-onnx-lstm-en-*
 sherpa-onnx-lstm-zh-*
 build-android-arm64-v8a/
+build-android-armv7-eabi/
 build-android-x86-64/
 a.txt
 run-bilingual*.sh
@@ -35,3 +36,4 @@ tokens.txt
 *.onnx
 log.txt
 tags
+android/SherpaOnnx/app/src/main/assets/
