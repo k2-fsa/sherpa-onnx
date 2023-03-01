@@ -5,8 +5,6 @@
 
 #include "sherpa-onnx/csrc/online-transducer-modified-beam-search-decoder.h"
 
-#include <assert.h>
-
 #include <algorithm>
 #include <utility>
 #include <vector>
@@ -14,23 +12,6 @@
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
-
-static Ort::Value GetFrame(Ort::Value *encoder_out, int32_t t) {
-  std::vector<int64_t> encoder_out_shape =
-      encoder_out->GetTensorTypeAndShapeInfo().GetShape();
-
-  int32_t encoder_out_dim = encoder_out_shape[2];
-
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
-  std::array<int64_t, 2> shape{1, encoder_out_dim};
-
-  return Ort::Value::CreateTensor(
-      memory_info,
-      encoder_out->GetTensorMutableData<float>() + t * encoder_out_dim,
-      encoder_out_dim, shape.data(), shape.size());
-}
 
 static Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
                          const std::vector<int32_t> &hyps_num_split) {
@@ -45,10 +26,10 @@ static Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
 
   const float *src = cur_encoder_out->GetTensorData<float>();
   float *dst = ans.GetTensorMutableData<float>();
-  int32_t batch_size = hyps_num_split.size() - 1;
+  int32_t batch_size = static_cast<int32_t>(hyps_num_split.size()) - 1;
   for (int32_t b = 0; b != batch_size; ++b) {
     int32_t cur_stream_hyps_num = hyps_num_split[b + 1] - hyps_num_split[b];
-    for (int32_t i = 0; i != cur_stream_hyps_num; i++) {
+    for (int32_t i = 0; i != cur_stream_hyps_num; ++i) {
       std::copy(src, src + cur_encoder_out_shape[1], dst);
       dst += cur_encoder_out_shape[1];
     }
@@ -130,7 +111,8 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
     Ort::Value decoder_input = model_->BuildDecoderInput(prev);
     Ort::Value decoder_out = model_->RunDecoder(std::move(decoder_input));
 
-    Ort::Value cur_encoder_out = GetFrame(&encoder_out, t);
+    Ort::Value cur_encoder_out =
+        GetEncoderOutFrame(model_->Allocator(), &encoder_out, t);
     cur_encoder_out =
         Repeat(model_->Allocator(), &cur_encoder_out, hyps_num_split);
     Ort::Value logit = model_->RunJoiner(
