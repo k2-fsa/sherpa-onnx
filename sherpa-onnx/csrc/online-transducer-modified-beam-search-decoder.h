@@ -14,11 +14,11 @@
 namespace sherpa_onnx {
 
 class OnlineTransducerModifiedBeamSearchDecoder
-  : public OnlineTransducerDecoder {
+    : public OnlineTransducerDecoder {
  public:
-  explicit OnlineTransducerModifiedBeamSearchDecoder(
-      OnlineTransducerModel *model, int32_t max_active_paths)
-    : model_(model), max_active_paths_(max_active_paths) {}
+  OnlineTransducerModifiedBeamSearchDecoder(OnlineTransducerModel *model,
+                                            int32_t max_active_paths)
+      : model_(model), max_active_paths_(max_active_paths) {}
 
   OnlineTransducerDecoderResult GetEmptyResult() const override;
 

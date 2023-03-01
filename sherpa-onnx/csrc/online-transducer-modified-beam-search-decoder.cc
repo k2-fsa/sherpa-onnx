@@ -18,7 +18,6 @@ namespace sherpa_onnx {
 static Ort::Value GetFrame(Ort::Value *encoder_out, int32_t t) {
   std::vector<int64_t> encoder_out_shape =
       encoder_out->GetTensorTypeAndShapeInfo().GetShape();
-  assert(encoder_out_shape[0] == 1);
 
   int32_t encoder_out_dim = encoder_out_shape[2];
 
@@ -80,7 +79,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::StripLeadingBlanks(
   int32_t context_size = model_->ContextSize();
   auto hyp = r->hyps.GetMostProbable(true);
 
-  std::vector<int64_t>tokens(hyp.ys.begin() + context_size, hyp.ys.end());
+  std::vector<int64_t> tokens(hyp.ys.begin() + context_size, hyp.ys.end());
   r->tokens = std::move(tokens);
   r->num_trailing_blanks = hyp.num_trailing_blanks;
 }
@@ -132,17 +131,17 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
 
     Ort::Value cur_encoder_out = GetFrame(&encoder_out, t);
     cur_encoder_out =
-      Repeat(model_->Allocator(), &cur_encoder_out, hyps_num_acc);
+        Repeat(model_->Allocator(), &cur_encoder_out, hyps_num_acc);
     Ort::Value logit = model_->RunJoiner(
         std::move(cur_encoder_out), Clone(model_->Allocator(), &decoder_out));
-    float *p_logit = const_cast<float *>(logit.GetTensorData<float>());
+    float *p_logit = logit.GetTensorMutableData<float>();
 
     for (int32_t b = 0; b < batch_size; ++b) {
       int32_t start = hyps_num_split[b];
       int32_t end = hyps_num_split[b + 1];
       LogSoftmax(p_logit, vocab_size, (end - start));
-      auto topk = TopkIndex(
-          p_logit, vocab_size * (end - start), max_active_paths_);
+      auto topk =
+          TopkIndex(p_logit, vocab_size * (end - start), max_active_paths_);
 
       Hypotheses hyps;
       for (auto i : topk) {

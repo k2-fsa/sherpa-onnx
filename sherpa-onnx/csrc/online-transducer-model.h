@@ -73,7 +73,6 @@ class OnlineTransducerModel {
       Ort::Value features,
       std::vector<Ort::Value> states) = 0;  // NOLINT
 
-
   /** Run the decoder network.
    *
    * Caution: We assume there are no recurrent connections in the decoder and
@@ -128,12 +127,10 @@ class OnlineTransducerModel {
 
   virtual OrtAllocator *Allocator() = 0;
 
-  virtual Ort::Value BuildDecoderInput(
+  Ort::Value BuildDecoderInput(
       const std::vector<OnlineTransducerDecoderResult> &results);
 
-  virtual Ort::Value BuildDecoderInput(
-      const std::vector<Hypothesis> &hyps);
-
+  Ort::Value BuildDecoderInput(const std::vector<Hypothesis> &hyps);
 };
 
 }  // namespace sherpa_onnx

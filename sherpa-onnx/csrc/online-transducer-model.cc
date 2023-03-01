@@ -87,8 +87,7 @@ Ort::Value OnlineTransducerModel::BuildDecoderInput(
   int64_t *p = decoder_input.GetTensorMutableData<int64_t>();
 
   for (const auto &r : results) {
-    const int64_t *begin =
-        r.tokens.data() + r.tokens.size() - context_size;
+    const int64_t *begin = r.tokens.data() + r.tokens.size() - context_size;
     const int64_t *end = r.tokens.data() + r.tokens.size();
     std::copy(begin, end, p);
     p += context_size;

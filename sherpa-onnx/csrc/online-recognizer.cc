@@ -60,7 +60,7 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "model_config=" << model_config.ToString() << ", ";
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
   os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ",";
-  os << "decoding_method=" << decoding_method << ")";
+  os << "decoding_method=\"" << decoding_method << "\")";
 
   return os.str();
 }
@@ -79,8 +79,8 @@ class OnlineRecognizer::Impl {
       decoder_ =
           std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
     } else {
-      fprintf(stderr,
-          "Unsupported decoding method: %s\n", config.decoding_method.c_str());
+      fprintf(stderr, "Unsupported decoding method: %s\n",
+              config.decoding_method.c_str());
       exit(-1);
     }
   }
@@ -98,8 +98,8 @@ class OnlineRecognizer::Impl {
       decoder_ =
           std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
     } else {
-      fprintf(stderr,
-          "Unsupported decoding method: %s\n", config.decoding_method.c_str());
+      fprintf(stderr, "Unsupported decoding method: %s\n",
+              config.decoding_method.c_str());
       exit(-1);
     }
   }
