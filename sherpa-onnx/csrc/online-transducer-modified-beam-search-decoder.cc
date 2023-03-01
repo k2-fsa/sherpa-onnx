@@ -33,26 +33,27 @@ static Ort::Value GetFrame(Ort::Value *encoder_out, int32_t t) {
 }
 
 static Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
-                         int32_t n) {
-  if (n == 1) {
-    return std::move(*cur_encoder_out);
-  }
-
+                         const std::vector<int32_t> &hyps_num_split) {
   std::vector<int64_t> cur_encoder_out_shape =
       cur_encoder_out->GetTensorTypeAndShapeInfo().GetShape();
 
-  std::array<int64_t, 2> ans_shape{n, cur_encoder_out_shape[1]};
+  std::array<int64_t, 2> ans_shape{hyps_num_split.back(),
+                                   cur_encoder_out_shape[1]};
 
   Ort::Value ans = Ort::Value::CreateTensor<float>(allocator, ans_shape.data(),
                                                    ans_shape.size());
 
   const float *src = cur_encoder_out->GetTensorData<float>();
   float *dst = ans.GetTensorMutableData<float>();
-  for (int32_t i = 0; i != n; ++i) {
-    std::copy(src, src + cur_encoder_out_shape[1], dst);
-    dst += cur_encoder_out_shape[1];
+  int32_t batch_size = hyps_num_split.size() - 1;
+  for (int32_t b = 0; b != batch_size; ++b) {
+    int32_t cur_stream_hyps_num = hyps_num_split[b + 1] - hyps_num_split[b];
+    for (int32_t i = 0; i != cur_stream_hyps_num; i++) {
+      std::copy(src, src + cur_encoder_out_shape[1], dst);
+      dst += cur_encoder_out_shape[1];
+    }
+    src += cur_encoder_out_shape[1];
   }
-
   return ans;
 }
 
@@ -131,7 +132,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
 
     Ort::Value cur_encoder_out = GetFrame(&encoder_out, t);
     cur_encoder_out =
-        Repeat(model_->Allocator(), &cur_encoder_out, hyps_num_acc);
+        Repeat(model_->Allocator(), &cur_encoder_out, hyps_num_split);
     Ort::Value logit = model_->RunJoiner(
         std::move(cur_encoder_out), Clone(model_->Allocator(), &decoder_out));
     float *p_logit = logit.GetTensorMutableData<float>();
