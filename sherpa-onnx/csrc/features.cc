@@ -90,7 +90,10 @@ class FeatureExtractor::Impl {
     return features;
   }
 
-  void Reset() { fbank_ = std::make_unique<knf::OnlineFbank>(opts_); }
+  void Reset() {
+    std::lock_guard<std::mutex> lock(mutex_);
+    fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
+  }
 
   int32_t FeatureDim() const { return opts_.mel_opts.num_bins; }
 
