@@ -59,8 +59,8 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "feat_config=" << feat_config.ToString() << ", ";
   os << "model_config=" << model_config.ToString() << ", ";
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
-  os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ",";
-  os << "max_active_paths=" << max_active_paths << ",";
+  os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ", ";
+  os << "max_active_paths=" << max_active_paths << ", ";
   os << "decoding_method=\"" << decoding_method << "\")";
 
   return os.str();

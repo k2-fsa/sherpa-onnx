@@ -35,7 +35,7 @@ struct OnlineRecognizerConfig {
   bool enable_endpoint = true;
   int32_t max_active_paths = 4;
 
-  std::string decoding_method = "modified_beam_search";
+  std::string decoding_method = "greedy_search";
   // now support modified_beam_search and greedy_search
 
   OnlineRecognizerConfig() = default;

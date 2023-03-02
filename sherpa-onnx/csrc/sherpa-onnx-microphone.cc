@@ -36,7 +36,7 @@ static void Handler(int32_t sig) {
 }
 
 int32_t main(int32_t argc, char *argv[]) {
-  if (argc < 5 || argc > 6) {
+  if (argc < 5 || argc > 7) {
     const char *usage = R"usage(
 Usage:
   ./bin/sherpa-onnx-microphone \
@@ -44,7 +44,10 @@ Usage:
     /path/to/encoder.onnx\
     /path/to/decoder.onnx\
     /path/to/joiner.onnx\
-    [num_threads]
+    [num_threads [decoding_method]]
+
+Default value for num_threads is 2.
+Valid values for decoding_method: greedy_search (default), modified_beam_search.
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
@@ -69,6 +72,11 @@ for a list of pre-trained models to download.
   if (argc == 6 && atoi(argv[5]) > 0) {
     config.model_config.num_threads = atoi(argv[5]);
   }
+
+  if (argc == 7) {
+    config.decoding_method = argv[6];
+  }
+  config.max_active_paths = 4;
 
   config.enable_endpoint = true;
 
