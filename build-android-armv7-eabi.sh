@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-dir=$PWD/build-android-arm64-v8a
+dir=$PWD/build-android-armv7-eabi
 
 mkdir -p $dir
 cd $dir
@@ -43,24 +43,24 @@ fi
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 
-if [ ! -f ./android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so ]; then
+if [ ! -f ./android-onnxruntime-libs/jni/armeabi-v7a/libonnxruntime.so ]; then
   GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/android-onnxruntime-libs
   pushd android-onnxruntime-libs
-  git lfs pull --include "jni/arm64-v8a/libonnxruntime.so"
+  git lfs pull --include "jni/armeabi-v7a/libonnxruntime.so"
   popd
 fi
 
-ls -l ./android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so
+ls -l ./android-onnxruntime-libs/jni/armeabi-v7a/libonnxruntime.so
 
 # check filesize
-filesize=$(ls -l ./android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so | tr -s " " " " | cut -d " " -f 5)
+filesize=$(ls -l ./android-onnxruntime-libs/jni/armeabi-v7a/libonnxruntime.so  | tr -s " " " " | cut -d " " -f 5)
 if (( $filesize < 1000 )); then
-  ls -lh ./android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so
+  ls -lh ./android-onnxruntime-libs/jni/armeabi-v7a/libonnxruntime.so
   echo "Please use: git lfs pull to download libonnxruntime.so"
   exit 1
 fi
 
-export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/android-onnxruntime-libs/jni/arm64-v8a/
+export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/android-onnxruntime-libs/jni/armeabi-v7a/
 export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$dir/android-onnxruntime-libs/headers/
 
 echo "SHERPA_ONNXRUNTIME_LIB_DIR: $SHERPA_ONNXRUNTIME_LIB_DIR"
@@ -75,10 +75,9 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
     -DSHERPA_ONNX_ENABLE_JNI=ON \
     -DCMAKE_INSTALL_PREFIX=./install \
-    -DANDROID_ABI="arm64-v8a" \
+    -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON \
     -DANDROID_PLATFORM=android-21 ..
-
 # make VERBOSE=1 -j4
 make -j4
 make install/strip
-cp -fv android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so install/lib
+cp -fv android-onnxruntime-libs/jni/armeabi-v7a/libonnxruntime.so install/lib

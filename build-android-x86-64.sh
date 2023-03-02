@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -ex
 
-dir=build-android-x86-64
+dir=$PWD/build-android-x86-64
 
 mkdir -p $dir
 cd $dir
@@ -43,7 +43,7 @@ fi
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 
-if [ ! -f android-onnxruntime-libs/jni/x86_64/libonnxruntime.so ]; then
+if [ ! -f ./android-onnxruntime-libs/jni/x86_64/libonnxruntime.so ]; then
   GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/android-onnxruntime-libs
   pushd android-onnxruntime-libs
   git lfs pull --include "jni/x86_64/libonnxruntime.so"
@@ -60,8 +60,8 @@ if (( $filesize < 1000 )); then
   exit 1
 fi
 
-export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/android-onnxruntime-libs/jni/x86_64/
-export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$PWD/android-onnxruntime-libs/headers/
+export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/android-onnxruntime-libs/jni/x86_64/
+export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$dir/android-onnxruntime-libs/headers/
 
 echo "SHERPA_ONNXRUNTIME_LIB_DIR: $SHERPA_ONNXRUNTIME_LIB_DIR"
 echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
