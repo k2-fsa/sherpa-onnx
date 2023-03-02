@@ -12,6 +12,8 @@ namespace sherpa_onnx {
 
 class Display {
  public:
+  explicit Display(int32_t max_word_per_line = 60)
+      : max_word_per_line_(max_word_per_line) {}
   void Print(int32_t segment_id, const std::string &s) {
 #ifdef _MSC_VER
     fprintf(stderr, "%d:%s\n", segment_id, s.c_str());
@@ -69,7 +71,7 @@ class Display {
   void GoUpOneLine() const { fprintf(stderr, "\033[1A\r"); }
 
  private:
-  int32_t max_word_per_line_ = 60;
+  int32_t max_word_per_line_;
   int32_t num_previous_lines_ = 0;
   int32_t last_segment_ = -1;
 };

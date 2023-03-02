@@ -13,6 +13,43 @@
 
 namespace sherpa_onnx {
 
+static void UseCachedDecoderOut(
+    const std::vector<OnlineTransducerDecoderResult> &results,
+    Ort::Value *decoder_out) {
+  std::vector<int64_t> shape =
+      decoder_out->GetTensorTypeAndShapeInfo().GetShape();
+  float *dst = decoder_out->GetTensorMutableData<float>();
+  for (const auto &r : results) {
+    if (r.decoder_out) {
+      const float *src = r.decoder_out.GetTensorData<float>();
+      std::copy(src, src + shape[1], dst);
+    }
+    dst += shape[1];
+  }
+}
+
+static void UpdateCachedDecoderOut(
+    OrtAllocator *allocator, const Ort::Value *decoder_out,
+    std::vector<OnlineTransducerDecoderResult> *results) {
+  std::vector<int64_t> shape =
+      decoder_out->GetTensorTypeAndShapeInfo().GetShape();
+  auto memory_info =
+      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+  std::array<int64_t, 2> v_shape{1, shape[1]};
+
+  const float *src = decoder_out->GetTensorData<float>();
+  for (auto &r : *results) {
+    if (!r.decoder_out) {
+      r.decoder_out = Ort::Value::CreateTensor<float>(allocator, v_shape.data(),
+                                                      v_shape.size());
+    }
+
+    float *dst = r.decoder_out.GetTensorMutableData<float>();
+    std::copy(src, src + shape[1], dst);
+    src += shape[1];
+  }
+}
+
 OnlineTransducerDecoderResult
 OnlineTransducerGreedySearchDecoder::GetEmptyResult() const {
   int32_t context_size = model_->ContextSize();
@@ -53,6 +90,7 @@ void OnlineTransducerGreedySearchDecoder::Decode(
 
   Ort::Value decoder_input = model_->BuildDecoderInput(*result);
   Ort::Value decoder_out = model_->RunDecoder(std::move(decoder_input));
+  UseCachedDecoderOut(*result, &decoder_out);
 
   for (int32_t t = 0; t != num_frames; ++t) {
     Ort::Value cur_encoder_out =
@@ -77,10 +115,12 @@ void OnlineTransducerGreedySearchDecoder::Decode(
       }
     }
     if (emitted) {
-      decoder_input = model_->BuildDecoderInput(*result);
+      Ort::Value decoder_input = model_->BuildDecoderInput(*result);
       decoder_out = model_->RunDecoder(std::move(decoder_input));
     }
   }
+
+  UpdateCachedDecoderOut(model_->Allocator(), &decoder_out, result);
 }
 
 }  // namespace sherpa_onnx

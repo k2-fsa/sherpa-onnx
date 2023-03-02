@@ -27,6 +27,8 @@ class OnlineTransducerModifiedBeamSearchDecoder
   void Decode(Ort::Value encoder_out,
               std::vector<OnlineTransducerDecoderResult> *result) override;
 
+  void UpdateDecoderOut(OnlineTransducerDecoderResult *result) override;
+
  private:
   OnlineTransducerModel *model_;  // Not owned
   int32_t max_active_paths_;

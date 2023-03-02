@@ -187,16 +187,14 @@ class OnlineRecognizer::Impl {
   }
 
   void Reset(OnlineStream *s) const {
-    // reset result, neural network model state, and
-    // the feature extractor state
-
-    // reset result
+    // we keep the decoder_out
+    decoder_->UpdateDecoderOut(&s->GetResult());
+    Ort::Value decoder_out = std::move(s->GetResult().decoder_out);
     s->SetResult(decoder_->GetEmptyResult());
+    s->GetResult().decoder_out = std::move(decoder_out);
 
-    // reset neural network model state
-    s->SetStates(model_->GetEncoderInitStates());
-
-    // reset feature extractor
+    // Note: We only update counters. The underlying audio samples
+    // are not discarded.
     s->Reset();
   }
 

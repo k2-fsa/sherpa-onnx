@@ -18,7 +18,7 @@ namespace sherpa_onnx {
 
 struct Hypothesis {
   // The predicted tokens so far. Newly predicated tokens are appended.
-  std::vector<int32_t> ys;
+  std::vector<int64_t> ys;
 
   // timestamps[i] contains the frame number after subsampling
   // on which ys[i] is decoded.
@@ -30,7 +30,7 @@ struct Hypothesis {
   int32_t num_trailing_blanks = 0;
 
   Hypothesis() = default;
-  Hypothesis(const std::vector<int32_t> &ys, double log_prob)
+  Hypothesis(const std::vector<int64_t> &ys, double log_prob)
       : ys(ys), log_prob(log_prob) {}
 
   // If two Hypotheses have the same `Key`, then they contain

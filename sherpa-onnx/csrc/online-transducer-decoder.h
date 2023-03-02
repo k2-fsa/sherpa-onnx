@@ -19,8 +19,24 @@ struct OnlineTransducerDecoderResult {
   /// number of trailing blank frames decoded so far
   int32_t num_trailing_blanks = 0;
 
+  // Cache decoder_out for endpointing
+  Ort::Value decoder_out;
+
   // used only in modified beam_search
   Hypotheses hyps;
+
+  OnlineTransducerDecoderResult()
+      : tokens{}, num_trailing_blanks(0), decoder_out{nullptr}, hyps{} {}
+
+  OnlineTransducerDecoderResult(const OnlineTransducerDecoderResult &other);
+
+  OnlineTransducerDecoderResult &operator=(
+      const OnlineTransducerDecoderResult &other);
+
+  OnlineTransducerDecoderResult(OnlineTransducerDecoderResult &&other);
+
+  OnlineTransducerDecoderResult &operator=(
+      OnlineTransducerDecoderResult &&other);
 };
 
 class OnlineTransducerDecoder {
@@ -53,6 +69,9 @@ class OnlineTransducerDecoder {
    */
   virtual void Decode(Ort::Value encoder_out,
                       std::vector<OnlineTransducerDecoderResult> *result) = 0;
+
+  // used for endpointing. We need to keep decoder_out after reset
+  virtual void UpdateDecoderOut(OnlineTransducerDecoderResult *result) {}
 };
 
 }  // namespace sherpa_onnx
