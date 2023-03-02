@@ -43,7 +43,7 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
                "True to enable endpoint detection. False to disable it.");
   po->Register("max-active-paths", &max_active_paths,
                "beam size used in modified beam search.");
-  po->Register("decoding-mothod", &decoding_method,
+  po->Register("decoding-method", &decoding_method,
                "decoding method,"
                "now support greedy_search and modified_beam_search.");
 }

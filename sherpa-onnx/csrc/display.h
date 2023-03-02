@@ -14,9 +14,14 @@ class Display {
  public:
   explicit Display(int32_t max_word_per_line = 60)
       : max_word_per_line_(max_word_per_line) {}
+
   void Print(int32_t segment_id, const std::string &s) {
 #ifdef _MSC_VER
-    fprintf(stderr, "%d:%s\n", segment_id, s.c_str());
+    if (segment_id != -1) {
+      fprintf(stderr, "%d:%s\n", segment_id, s.c_str());
+    } else {
+      fprintf(stderr, "%s\n", s.c_str());
+    }
     return;
 #endif
     if (last_segment_ == segment_id) {
@@ -29,7 +34,9 @@ class Display {
       num_previous_lines_ = 0;
     }
 
-    fprintf(stderr, "\r%d:", segment_id);
+    if (segment_id != -1) {
+      fprintf(stderr, "\r%d:", segment_id);
+    }
 
     int32_t i = 0;
     for (size_t n = 0; n < s.size();) {

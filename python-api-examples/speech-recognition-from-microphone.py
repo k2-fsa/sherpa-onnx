@@ -59,10 +59,10 @@ def get_args():
     )
 
     parser.add_argument(
-        "--wave-filename",
+        "--decoding-method",
         type=str,
-        help="""Path to the wave filename. Must be 16 kHz,
-        mono with 16-bit samples""",
+        default="greedy_search",
+        help="Valid values are greedy_search and modified_beam_search",
     )
 
     return parser.parse_args()
@@ -82,9 +82,11 @@ def create_recognizer():
         encoder=args.encoder,
         decoder=args.decoder,
         joiner=args.joiner,
-        num_threads=4,
+        num_threads=1,
         sample_rate=16000,
         feature_dim=80,
+        decoding_method=args.decoding_method,
+        max_feature_vectors=100,  # 1 second
     )
     return recognizer
 
@@ -96,6 +98,7 @@ def main():
     samples_per_read = int(0.1 * sample_rate)  # 0.1 second = 100 ms
     last_result = ""
     stream = recognizer.create_stream()
+    display = sherpa_onnx.Display(max_word_per_line=40)
     with sd.InputStream(channels=1, dtype="float32", samplerate=sample_rate) as s:
         while True:
             samples, _ = s.read(samples_per_read)  # a blocking read
@@ -106,7 +109,7 @@ def main():
             result = recognizer.get_result(stream)
             if last_result != result:
                 last_result = result
-                print(result)
+                display.print(-1, result)
 
 
 if __name__ == "__main__":
