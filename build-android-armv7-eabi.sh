@@ -77,5 +77,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DCMAKE_INSTALL_PREFIX=./install \
     -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON \
     -DANDROID_PLATFORM=android-21 ..
-make VERBOSE=1 -j4
+# make VERBOSE=1 -j4
+make -j4
 make install/strip
+cp -fv android-onnxruntime-libs/jni/armeabi-v7a/libonnxruntime.so install/lib
