@@ -188,7 +188,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::UpdateDecoderOut(
   if (result->tokens.size() == model_->ContextSize()) {
     result->decoder_out = Ort::Value{nullptr};
     return;
-  };
+  }
   Ort::Value decoder_input = model_->BuildDecoderInput({*result});
   result->decoder_out = model_->RunDecoder(std::move(decoder_input));
 }

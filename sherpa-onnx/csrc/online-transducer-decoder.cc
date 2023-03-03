@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 
+#include <utility>
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
