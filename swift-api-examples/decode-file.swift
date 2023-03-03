@@ -32,7 +32,9 @@ func run() {
   var config = sherpaOnnxOnlineRecognizerConfig(
       featConfig: featConfig,
       modelConfig: modelConfig,
-      enableEndpoint: false
+      enableEndpoint: false,
+      decodingMethod: "modified_beam_search",
+      maxActivePaths: 4
   )
 
 

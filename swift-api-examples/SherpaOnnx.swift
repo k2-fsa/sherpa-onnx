@@ -62,11 +62,15 @@ func sherpaOnnxOnlineRecognizerConfig(
     enableEndpoint: Bool = false,
     rule1MinTrailingSilence: Float = 2.4,
     rule2MinTrailingSilence: Float = 1.2,
-    rule3MinUtteranceLength: Float = 30
+    rule3MinUtteranceLength: Float = 30,
+    decodingMethod: String = "greedy_search",
+    maxActivePaths: Int = 4
 ) ->  SherpaOnnxOnlineRecognizerConfig{
   return SherpaOnnxOnlineRecognizerConfig(
     feat_config: featConfig,
     model_config: modelConfig,
+    decoding_method: toCPointer(decodingMethod),
+    max_active_paths: Int32(maxActivePaths),
     enable_endpoint: enableEndpoint ? 1 : 0,
     rule1_min_trailing_silence: rule1MinTrailingSilence,
     rule2_min_trailing_silence: rule2MinTrailingSilence,
@@ -128,12 +132,12 @@ class SherpaOnnxRecognizer {
   /// Decode wave samples.
   ///
   /// - Parameters:
-  ///   - samples: Audio samples normalzed to the range [-1, 1]
+  ///   - samples: Audio samples normalized to the range [-1, 1]
   ///   - sampleRate: Sample rate of the input audio samples. Must match
   ///                 the one expected by the model. It must be 16000 for
   ///                 models from icefall.
-  func acceptWaveform(samples: [Float], sampleRate: Float = 16000) {
-    AcceptWaveform(stream, sampleRate, samples, Int32(samples.count))
+  func acceptWaveform(samples: [Float], sampleRate: Int = 16000) {
+    AcceptWaveform(stream, Int32(sampleRate), samples, Int32(samples.count))
   }
 
   func isReady() -> Bool {
