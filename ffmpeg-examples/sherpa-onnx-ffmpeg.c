@@ -259,7 +259,7 @@ static inline char *__av_err2str(int errnum) {
 
 int main(int argc, char **argv) {
   int ret;
-  int num_threads = 4;
+  int num_threads = 1;
   AVPacket *packet = av_packet_alloc();
   AVFrame *frame = av_frame_alloc();
   AVFrame *filt_frame = av_frame_alloc();
@@ -273,8 +273,8 @@ int main(int argc, char **argv) {
       "    /path/to/joiner.onnx\\\n"
       "    /path/to/foo.wav [num_threads [decoding_method]]"
       "\n\n"
-      "Default num_threads is 4.\n"
-      "Valid decoding_method: greedy_search, modified_beam_search\n\n"
+      "Default num_threads is 1.\n"
+      "Valid decoding_method: greedy_search (default), modified_beam_search\n\n"
       "Please refer to \n"
       "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html\n"
       "for a list of pre-trained models to download.\n";
