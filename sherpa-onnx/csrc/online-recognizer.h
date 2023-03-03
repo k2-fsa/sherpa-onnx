@@ -33,21 +33,26 @@ struct OnlineRecognizerConfig {
   OnlineTransducerModelConfig model_config;
   EndpointConfig endpoint_config;
   bool enable_endpoint = true;
-  int32_t max_active_paths = 4;
 
-  std::string decoding_method = "modified_beam_search";
+  std::string decoding_method = "greedy_search";
   // now support modified_beam_search and greedy_search
+
+  int32_t max_active_paths = 4;  // used only for modified_beam_search
 
   OnlineRecognizerConfig() = default;
 
   OnlineRecognizerConfig(const FeatureExtractorConfig &feat_config,
                          const OnlineTransducerModelConfig &model_config,
                          const EndpointConfig &endpoint_config,
-                         bool enable_endpoint)
+                         bool enable_endpoint,
+                         const std::string &decoding_method,
+                         int32_t max_active_paths)
       : feat_config(feat_config),
         model_config(model_config),
         endpoint_config(endpoint_config),
-        enable_endpoint(enable_endpoint) {}
+        enable_endpoint(enable_endpoint),
+        decoding_method(decoding_method),
+        max_active_paths(max_active_paths) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

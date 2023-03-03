@@ -48,6 +48,13 @@ typedef struct SherpaOnnxOnlineRecognizerConfig {
   SherpaOnnxFeatureConfig feat_config;
   SherpaOnnxOnlineTransducerModelConfig model_config;
 
+  /// Possible values are: greedy_search, modified_beam_search
+  const char *decoding_method;
+
+  /// Used only when decoding_method is modified_beam_search
+  /// Example value: 4
+  int32_t max_active_paths;
+
   /// 0 to disable endpoint detection.
   /// A non-zero value to enable endpoint detection.
   int32_t enable_endpoint;
@@ -186,6 +193,18 @@ void InputFinished(SherpaOnnxOnlineStream *stream);
 /// @return Return 1 if an endpoint is detected. Return 0 otherwise.
 int32_t IsEndpoint(SherpaOnnxOnlineRecognizer *recognizer,
                    SherpaOnnxOnlineStream *stream);
+
+// for displaying results on Linux/macOS.
+typedef struct SherpaOnnxDisplay SherpaOnnxDisplay;
+
+/// Create a display object. Must be freed using DestroyDisplay to avoid
+/// memory leak.
+SherpaOnnxDisplay *CreateDisplay(int32_t max_word_per_line);
+
+void DestroyDisplay(SherpaOnnxDisplay *display);
+
+/// Print the result.
+void SherpaOnnxPrint(SherpaOnnxDisplay *display, int32_t idx, const char *s);
 
 #ifdef __cplusplus
 } /* extern "C" */

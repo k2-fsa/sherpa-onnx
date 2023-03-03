@@ -43,7 +43,7 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
                "True to enable endpoint detection. False to disable it.");
   po->Register("max-active-paths", &max_active_paths,
                "beam size used in modified beam search.");
-  po->Register("decoding-mothod", &decoding_method,
+  po->Register("decoding-method", &decoding_method,
                "decoding method,"
                "now support greedy_search and modified_beam_search.");
 }
@@ -59,8 +59,8 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "feat_config=" << feat_config.ToString() << ", ";
   os << "model_config=" << model_config.ToString() << ", ";
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
-  os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ",";
-  os << "max_active_paths=" << max_active_paths << ",";
+  os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ", ";
+  os << "max_active_paths=" << max_active_paths << ", ";
   os << "decoding_method=\"" << decoding_method << "\")";
 
   return os.str();
@@ -187,16 +187,14 @@ class OnlineRecognizer::Impl {
   }
 
   void Reset(OnlineStream *s) const {
-    // reset result, neural network model state, and
-    // the feature extractor state
-
-    // reset result
+    // we keep the decoder_out
+    decoder_->UpdateDecoderOut(&s->GetResult());
+    Ort::Value decoder_out = std::move(s->GetResult().decoder_out);
     s->SetResult(decoder_->GetEmptyResult());
+    s->GetResult().decoder_out = std::move(decoder_out);
 
-    // reset neural network model state
-    s->SetStates(model_->GetEncoderInitStates());
-
-    // reset feature extractor
+    // Note: We only update counters. The underlying audio samples
+    // are not discarded.
     s->Reset();
   }
 

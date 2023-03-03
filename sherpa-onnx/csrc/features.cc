@@ -28,7 +28,8 @@ std::string FeatureExtractorConfig::ToString() const {
 
   os << "FeatureExtractorConfig(";
   os << "sampling_rate=" << sampling_rate << ", ";
-  os << "feature_dim=" << feature_dim << ")";
+  os << "feature_dim=" << feature_dim << ", ";
+  os << "max_feature_vectors=" << max_feature_vectors << ")";
 
   return os.str();
 }
@@ -40,9 +41,7 @@ class FeatureExtractor::Impl {
     opts_.frame_opts.snip_edges = false;
     opts_.frame_opts.samp_freq = config.sampling_rate;
 
-    // cache 100 seconds of feature frames, which is more than enough
-    // for real needs
-    opts_.frame_opts.max_feature_vectors = 100 * 100;
+    opts_.frame_opts.max_feature_vectors = config.max_feature_vectors;
 
     opts_.mel_opts.num_bins = config.feature_dim;
 

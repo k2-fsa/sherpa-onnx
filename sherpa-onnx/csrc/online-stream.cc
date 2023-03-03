@@ -22,18 +22,21 @@ class OnlineStream::Impl {
 
   void InputFinished() { feat_extractor_.InputFinished(); }
 
-  int32_t NumFramesReady() const { return feat_extractor_.NumFramesReady(); }
+  int32_t NumFramesReady() const {
+    return feat_extractor_.NumFramesReady() - start_frame_index_;
+  }
 
   bool IsLastFrame(int32_t frame) const {
     return feat_extractor_.IsLastFrame(frame);
   }
 
   std::vector<float> GetFrames(int32_t frame_index, int32_t n) const {
-    return feat_extractor_.GetFrames(frame_index, n);
+    return feat_extractor_.GetFrames(frame_index + start_frame_index_, n);
   }
 
   void Reset() {
-    feat_extractor_.Reset();
+    // we don't reset the feature extractor
+    start_frame_index_ += num_processed_frames_;
     num_processed_frames_ = 0;
   }
 
@@ -41,7 +44,7 @@ class OnlineStream::Impl {
 
   void SetResult(const OnlineTransducerDecoderResult &r) { result_ = r; }
 
-  const OnlineTransducerDecoderResult &GetResult() const { return result_; }
+  OnlineTransducerDecoderResult &GetResult() { return result_; }
 
   int32_t FeatureDim() const { return feat_extractor_.FeatureDim(); }
 
@@ -54,6 +57,7 @@ class OnlineStream::Impl {
  private:
   FeatureExtractor feat_extractor_;
   int32_t num_processed_frames_ = 0;  // before subsampling
+  int32_t start_frame_index_ = 0;     // never reset
   OnlineTransducerDecoderResult result_;
   std::vector<Ort::Value> states_;
 };
@@ -93,7 +97,7 @@ void OnlineStream::SetResult(const OnlineTransducerDecoderResult &r) {
   impl_->SetResult(r);
 }
 
-const OnlineTransducerDecoderResult &OnlineStream::GetResult() const {
+OnlineTransducerDecoderResult &OnlineStream::GetResult() {
   return impl_->GetResult();
 }
 

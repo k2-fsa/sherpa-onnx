@@ -21,7 +21,7 @@ static void Handler(int sig) {
 }
 
 int main(int32_t argc, char *argv[]) {
-  if (argc < 6 || argc > 7) {
+  if (argc < 6 || argc > 8) {
     const char *usage = R"usage(
 Usage:
   ./bin/sherpa-onnx-alsa \
@@ -30,7 +30,10 @@ Usage:
     /path/to/decoder.onnx \
     /path/to/joiner.onnx \
     device_name \
-    [num_threads]
+    [num_threads [decoding_method]]
+
+Default value for num_threads is 2.
+Valid values for decoding_method: greedy_search (default), modified_beam_search.
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
@@ -78,6 +81,11 @@ as the device_name.
   if (argc == 7 && atoi(argv[6]) > 0) {
     config.model_config.num_threads = atoi(argv[6]);
   }
+
+  if (argc == 8) {
+    config.decoding_method = argv[7];
+  }
+  config.max_active_paths = 4;
 
   config.enable_endpoint = true;
 

@@ -63,7 +63,7 @@ class OnlineStream {
   int32_t &GetNumProcessedFrames();
 
   void SetResult(const OnlineTransducerDecoderResult &r);
-  const OnlineTransducerDecoderResult &GetResult() const;
+  OnlineTransducerDecoderResult &GetResult();
 
   void SetStates(std::vector<Ort::Value> states);
   std::vector<Ort::Value> &GetStates();

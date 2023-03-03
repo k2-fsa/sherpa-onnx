@@ -36,4 +36,5 @@ tokens.txt
 *.onnx
 log.txt
 tags
+run-decode-file-python.sh
 android/SherpaOnnx/app/src/main/assets/

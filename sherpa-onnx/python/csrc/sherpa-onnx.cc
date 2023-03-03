@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/python/csrc/sherpa-onnx.h"
 
+#include "sherpa-onnx/python/csrc/display.h"
 #include "sherpa-onnx/python/csrc/endpoint.h"
 #include "sherpa-onnx/python/csrc/features.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
@@ -19,6 +20,8 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindOnlineStream(&m);
   PybindEndpoint(&m);
   PybindOnlineRecognizer(&m);
+
+  PybindDisplay(&m);
 }
 
 }  // namespace sherpa_onnx

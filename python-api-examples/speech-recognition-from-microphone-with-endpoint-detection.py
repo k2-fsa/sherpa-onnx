@@ -60,10 +60,10 @@ def get_args():
     )
 
     parser.add_argument(
-        "--wave-filename",
+        "--decoding-method",
         type=str,
-        help="""Path to the wave filename. Must be 16 kHz,
-        mono with 16-bit samples""",
+        default="greedy_search",
+        help="Valid values are greedy_search and modified_beam_search",
     )
 
     return parser.parse_args()
@@ -83,17 +83,23 @@ def create_recognizer():
         encoder=args.encoder,
         decoder=args.decoder,
         joiner=args.joiner,
+        num_threads=1,
+        sample_rate=16000,
+        feature_dim=80,
         enable_endpoint_detection=True,
         rule1_min_trailing_silence=2.4,
         rule2_min_trailing_silence=1.2,
         rule3_min_utterance_length=300,  # it essentially disables this rule
+        decoding_method=args.decoding_method,
+        max_feature_vectors=100,  # 1 second
     )
     return recognizer
 
 
 def main():
-    print("Started! Please speak")
     recognizer = create_recognizer()
+    print("Started! Please speak")
+
     sample_rate = 16000
     samples_per_read = int(0.1 * sample_rate)  # 0.1 second = 100 ms
     last_result = ""
@@ -101,6 +107,7 @@ def main():
 
     last_result = ""
     segment_id = 0
+    display = sherpa_onnx.Display(max_word_per_line=30)
     with sd.InputStream(channels=1, dtype="float32", samplerate=sample_rate) as s:
         while True:
             samples, _ = s.read(samples_per_read)  # a blocking read
@@ -115,7 +122,7 @@ def main():
 
             if result and (last_result != result):
                 last_result = result
-                print(f"{segment_id}: {result}")
+                display.print(segment_id, result)
 
             if is_endpoint:
                 if result:

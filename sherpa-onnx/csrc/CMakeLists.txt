@@ -9,10 +9,11 @@ set(sources
   online-lstm-transducer-model.cc
   online-recognizer.cc
   online-stream.cc
+  online-transducer-decoder.cc
   online-transducer-greedy-search-decoder.cc
   online-transducer-model-config.cc
-  online-transducer-modified-beam-search-decoder.cc
   online-transducer-model.cc
+  online-transducer-modified-beam-search-decoder.cc
   online-zipformer-transducer-model.cc
   onnx-utils.cc
   parse-options.cc

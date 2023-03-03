@@ -32,6 +32,9 @@ class OnlineRecognizer(object):
         rule1_min_trailing_silence: int = 2.4,
         rule2_min_trailing_silence: int = 1.2,
         rule3_min_utterance_length: int = 20,
+        decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
+        max_feature_vectors: int = -1,
     ):
         """
         Please refer to
@@ -74,6 +77,14 @@ class OnlineRecognizer(object):
             Used only when enable_endpoint_detection is True. If the utterance
             length in seconds is larger than this value, we assume an endpoint
             is detected.
+          decoding_method:
+            Valid values are greedy_search, modified_beam_search.
+          max_active_paths:
+            Use only when decoding_method is modified_beam_search. It specifies
+            the maximum number of active paths during beam search.
+          max_feature_vectors:
+            Number of feature vectors to cache. -1 means to cache all feature
+            frames that have been processed.
         """
         _assert_file_exists(tokens)
         _assert_file_exists(encoder)
@@ -93,6 +104,7 @@ class OnlineRecognizer(object):
         feat_config = FeatureExtractorConfig(
             sampling_rate=sample_rate,
             feature_dim=feature_dim,
+            max_feature_vectors=max_feature_vectors,
         )
 
         endpoint_config = EndpointConfig(
@@ -106,6 +118,8 @@ class OnlineRecognizer(object):
             model_config=model_config,
             endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
+            decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
