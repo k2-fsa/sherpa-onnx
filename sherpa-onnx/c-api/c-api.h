@@ -120,7 +120,7 @@ void DestoryOnlineStream(SherpaOnnxOnlineStream *stream);
 /// @param samples A pointer to a 1-D array containing audio samples.
 ///                The range of samples has to be normalized to [-1, 1].
 /// @param n  Number of elements in the samples array.
-void AcceptWaveform(SherpaOnnxOnlineStream *stream, float sample_rate,
+void AcceptWaveform(SherpaOnnxOnlineStream *stream, int32_t sample_rate,
                     const float *samples, int32_t n);
 
 /// Return 1 if there are enough number of feature frames for decoding.

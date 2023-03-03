@@ -121,7 +121,10 @@ class MainActivity : AppCompatActivity() {
             val ret = audioRecord?.read(buffer, 0, buffer.size)
             if (ret != null && ret > 0) {
                 val samples = FloatArray(ret) { buffer[it] / 32768.0f }
-                model.decodeSamples(samples)
+                model.acceptWaveform(samples, sampleRate=16000)
+                while (model.isReady()) {
+                    model.decode()
+                }
                 runOnUiThread {
                     val isEndpoint = model.isEndpoint()
                     val text = model.text
@@ -177,33 +180,17 @@ class MainActivity : AppCompatActivity() {
         val type = 0
         println("Select model type ${type}")
         val config = OnlineRecognizerConfig(
-            featConfig = getFeatureConfig(sampleRate = 16000.0f, featureDim = 80),
+            featConfig = getFeatureConfig(sampleRate = 16000, featureDim = 80),
             modelConfig = getModelConfig(type = type)!!,
             endpointConfig = getEndpointConfig(),
-            enableEndpoint = true
+            enableEndpoint = true,
+            decodingMethod = "greedy_search",
+            maxActivePaths = 4,
         )
 
         model = SherpaOnnx(
             assetManager = application.assets,
             config = config,
         )
-       /*
-        println("reading samples")
-        val samples = WaveReader.readWave(
-            assetManager = application.assets,
-            // filename = "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/0.wav",
-            filename = "sherpa-onnx-lstm-zh-2023-02-20/test_wavs/0.wav",
-            // filename="sherpa-onnx-lstm-en-2023-02-17/test_wavs/1089-134686-0001.wav"
-        )
-        println("samples read done!")
-
-        model.decodeSamples(samples!!)
-
-        val tailPaddings = FloatArray(8000) // 0.5 seconds
-        model.decodeSamples(tailPaddings)
-
-        println("result is: ${model.text}")
-        model.reset()
-        */
     }
 }

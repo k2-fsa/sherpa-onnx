@@ -76,7 +76,7 @@ SherpaOnnxOnlineStream *CreateOnlineStream(
 
 void DestoryOnlineStream(SherpaOnnxOnlineStream *stream) { delete stream; }
 
-void AcceptWaveform(SherpaOnnxOnlineStream *stream, float sample_rate,
+void AcceptWaveform(SherpaOnnxOnlineStream *stream, int32_t sample_rate,
                     const float *samples, int32_t n) {
   stream->impl->AcceptWaveform(sample_rate, samples, n);
 }
