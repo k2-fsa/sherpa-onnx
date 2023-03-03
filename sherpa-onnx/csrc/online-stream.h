@@ -20,12 +20,14 @@ class OnlineStream {
   ~OnlineStream();
 
   /**
-     @param sampling_rate The sampling_rate of the input waveform. Should match
-                          the one expected by the feature extractor.
-     @param waveform Pointer to a 1-D array of size n
+     @param sampling_rate The sampling_rate of the input waveform. If it does
+                          not equal to  config.sampling_rate, we will do
+                          resampling inside.
+     @param waveform Pointer to a 1-D array of size n. It must be normalized to
+                     the range [-1, 1].
      @param n Number of entries in waveform
    */
-  void AcceptWaveform(float sampling_rate, const float *waveform, int32_t n);
+  void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n);
 
   /**
    * InputFinished() tells the class you won't be providing any

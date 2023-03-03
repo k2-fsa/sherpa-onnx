@@ -76,6 +76,7 @@ OnlineTransducerModifiedBeamSearchDecoder::GetEmptyResult() const {
   std::vector<int64_t> blanks(context_size, blank_id);
   Hypotheses blank_hyp({{blanks, 0}});
   r.hyps = std::move(blank_hyp);
+  r.tokens = std::move(blanks);
   return r;
 }
 
