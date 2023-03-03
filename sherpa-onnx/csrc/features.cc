@@ -48,7 +48,7 @@ class FeatureExtractor::Impl {
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
   }
 
-  void AcceptWaveform(float sampling_rate, const float *waveform, int32_t n) {
+  void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
     std::lock_guard<std::mutex> lock(mutex_);
     fbank_->AcceptWaveform(sampling_rate, waveform, n);
   }
@@ -107,7 +107,7 @@ FeatureExtractor::FeatureExtractor(const FeatureExtractorConfig &config /*={}*/)
 
 FeatureExtractor::~FeatureExtractor() = default;
 
-void FeatureExtractor::AcceptWaveform(float sampling_rate,
+void FeatureExtractor::AcceptWaveform(int32_t sampling_rate,
                                       const float *waveform, int32_t n) {
   impl_->AcceptWaveform(sampling_rate, waveform, n);
 }

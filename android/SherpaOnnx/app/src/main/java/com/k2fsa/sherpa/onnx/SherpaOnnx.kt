@@ -24,7 +24,7 @@ data class OnlineTransducerModelConfig(
 )
 
 data class FeatureConfig(
-    var sampleRate: Float = 16000.0f,
+    var sampleRate: Int = 16000,
     var featureDim: Int = 80,
 )
 
@@ -32,7 +32,9 @@ data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineTransducerModelConfig,
     var endpointConfig: EndpointConfig = EndpointConfig(),
-    var enableEndpoint: Boolean,
+    var enableEndpoint: Boolean = true,
+    var decodingMethod: String = "greedy_search",
+    var maxActivePaths: Int = 4,
 )
 
 class SherpaOnnx(
@@ -49,12 +51,14 @@ class SherpaOnnx(
     }
 
 
-    fun decodeSamples(samples: FloatArray) =
-        decodeSamples(ptr, samples, sampleRate = config.featConfig.sampleRate)
+    fun acceptWaveform(samples: FloatArray, sampleRate: Int) =
+        acceptWaveform(ptr, samples, sampleRate)
 
     fun inputFinished() = inputFinished(ptr)
     fun reset() = reset(ptr)
+    fun decode() = decode(ptr)
     fun isEndpoint(): Boolean = isEndpoint(ptr)
+    fun isReady(): Boolean = isReady(ptr)
 
     val text: String
         get() = getText(ptr)
@@ -66,11 +70,13 @@ class SherpaOnnx(
         config: OnlineRecognizerConfig,
     ): Long
 
-    private external fun decodeSamples(ptr: Long, samples: FloatArray, sampleRate: Float)
+    private external fun acceptWaveform(ptr: Long, samples: FloatArray, sampleRate: Int)
     private external fun inputFinished(ptr: Long)
     private external fun getText(ptr: Long): String
     private external fun reset(ptr: Long)
+    private external fun decode(ptr: Long)
     private external fun isEndpoint(ptr: Long): Boolean
+    private external fun isReady(ptr: Long): Boolean
 
     companion object {
         init {
@@ -79,7 +85,7 @@ class SherpaOnnx(
     }
 }
 
-fun getFeatureConfig(sampleRate: Float, featureDim: Int): FeatureConfig {
+fun getFeatureConfig(sampleRate: Int, featureDim: Int): FeatureConfig {
     return FeatureConfig(sampleRate=sampleRate, featureDim=featureDim)
 }
 

@@ -112,7 +112,7 @@ for a list of pre-trained models to download.
 
   param.suggestedLatency = info->defaultLowInputLatency;
   param.hostApiSpecificStreamInfo = nullptr;
-  const float sample_rate = 16000;
+  float sample_rate = 16000;
 
   PaStream *stream;
   PaError err =

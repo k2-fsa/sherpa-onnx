@@ -61,7 +61,7 @@ for a list of pre-trained models to download.
 
   sherpa_onnx::OnlineRecognizer recognizer(config);
 
-  float expected_sampling_rate = config.feat_config.sampling_rate;
+  int32_t expected_sampling_rate = config.feat_config.sampling_rate;
 
   bool is_ok = false;
   std::vector<float> samples =
@@ -72,7 +72,7 @@ for a list of pre-trained models to download.
     return -1;
   }
 
-  float duration = samples.size() / expected_sampling_rate;
+  float duration = samples.size() / static_cast<float>(expected_sampling_rate);
 
   fprintf(stderr, "wav filename: %s\n", wav_filename.c_str());
   fprintf(stderr, "wav duration (s): %.3f\n", duration);
