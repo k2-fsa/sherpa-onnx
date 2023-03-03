@@ -115,8 +115,9 @@ void DestoryOnlineStream(SherpaOnnxOnlineStream *stream);
 /// decoding.
 ///
 /// @param stream  A pointer returned by CreateOnlineStream().
-/// @param sample_rate  Sampler rate of the input samples. It has to be 16 kHz
-///                     for models from icefall.
+/// @param sample_rate  Sample rate of the input samples. If it is different
+///                     from config.feat_config.sample_rate, we will do
+///                     resampling inside sherpa-onnx.
 /// @param samples A pointer to a 1-D array containing audio samples.
 ///                The range of samples has to be normalized to [-1, 1].
 /// @param n  Number of elements in the samples array.

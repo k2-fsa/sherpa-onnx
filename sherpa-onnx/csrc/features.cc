@@ -11,6 +11,8 @@
 #include <vector>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/resample.h"
 
 namespace sherpa_onnx {
 
@@ -50,6 +52,46 @@ class FeatureExtractor::Impl {
 
   void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
     std::lock_guard<std::mutex> lock(mutex_);
+
+    if (resampler_) {
+      if (sampling_rate != resampler_->GetInputSamplingRate()) {
+        SHERPA_ONNX_LOGE(
+            "You changed the input sampling rate!! Expected: %d, given: "
+            "%d",
+            resampler_->GetInputSamplingRate(), sampling_rate);
+        exit(-1);
+      }
+
+      std::vector<float> samples;
+      resampler_->Resample(waveform, n, false, &samples);
+      fbank_->AcceptWaveform(opts_.frame_opts.samp_freq, samples.data(),
+                             samples.size());
+      return;
+    }
+
+    if (sampling_rate != opts_.frame_opts.samp_freq) {
+      SHERPA_ONNX_LOGE(
+          "Creating a resampler:\n"
+          "   in_sample_rate: %d\n"
+          "   output_sample_rate: %d\n",
+          sampling_rate, static_cast<int32_t>(opts_.frame_opts.samp_freq));
+
+      float min_freq =
+          std::min<int32_t>(sampling_rate, opts_.frame_opts.samp_freq);
+      float lowpass_cutoff = 0.99 * 0.5 * min_freq;
+
+      int32_t lowpass_filter_width = 6;
+      resampler_ = std::make_unique<LinearResample>(
+          sampling_rate, opts_.frame_opts.samp_freq, lowpass_cutoff,
+          lowpass_filter_width);
+
+      std::vector<float> samples;
+      resampler_->Resample(waveform, n, false, &samples);
+      fbank_->AcceptWaveform(opts_.frame_opts.samp_freq, samples.data(),
+                             samples.size());
+      return;
+    }
+
     fbank_->AcceptWaveform(sampling_rate, waveform, n);
   }
 
@@ -100,6 +142,7 @@ class FeatureExtractor::Impl {
   std::unique_ptr<knf::OnlineFbank> fbank_;
   knf::FbankOptions opts_;
   mutable std::mutex mutex_;
+  std::unique_ptr<LinearResample> resampler_;
 };
 
 FeatureExtractor::FeatureExtractor(const FeatureExtractorConfig &config /*={}*/)
