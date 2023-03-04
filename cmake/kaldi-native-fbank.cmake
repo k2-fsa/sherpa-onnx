@@ -2,6 +2,7 @@ function(download_kaldi_native_fbank)
   include(FetchContent)
 
   set(kaldi_native_fbank_URL  "https://github.com/csukuangfj/kaldi-native-fbank/archive/refs/tags/v1.13.tar.gz")
+  set(kaldi_native_fbank_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/kaldi-native-fbank-1.13.tar.gz")
   set(kaldi_native_fbank_HASH "SHA256=1f4d228f9fe3e3e9f92a74a7eecd2489071a03982e4ba6d7c70fc5fa7444df57")
 
   set(KALDI_NATIVE_FBANK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
@@ -26,7 +27,9 @@ function(download_kaldi_native_fbank)
   endforeach()
 
   FetchContent_Declare(kaldi_native_fbank
-    URL               ${kaldi_native_fbank_URL}
+    URL
+      ${kaldi_native_fbank_URL}
+      ${kaldi_native_fbank_URL2}
     URL_HASH          ${kaldi_native_fbank_HASH}
   )
 
