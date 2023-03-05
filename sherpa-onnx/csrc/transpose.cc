@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/transpose.h"
 
+#include <assert.h>
+
 #include <algorithm>
 #include <vector>
 
