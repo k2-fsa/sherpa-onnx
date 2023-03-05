@@ -20,6 +20,7 @@ set(sources
   resample.cc
   symbol-table.cc
   text-utils.cc
+  transpose.cc
   unbind.cc
   wave-reader.cc
 )
@@ -120,6 +121,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_TESTS)
   set(sherpa_onnx_test_srcs
     cat-test.cc
+    transpose-test.cc
     unbind-test.cc
   )
 
