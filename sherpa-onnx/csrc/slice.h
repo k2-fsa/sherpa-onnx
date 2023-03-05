@@ -8,21 +8,23 @@
 
 namespace sherpa_onnx {
 
-/** Get a shallow copy by slicing v.
+/** Get a deep copy by slicing v.
  *
- * It returns v[dim0, dim1_start:dim1_end]
+ * It returns v[dim0_start:dim0_end, dim1_start:dim1_end]
  *
+ * @param allocator
  * @param v A 3-D tensor. Its data type is T.
- * @param dim0  Start index of the first dimension..
+ * @param dim0_start  Start index of the first dimension..
+ * @param dim0_end    End index of the first dimension..
  * @param dim1_start Start index of the second dimension.
  * @param dim1_end  End index of the second dimension.
  *
- * @return Return a 2-D tensor of shape (dim1_end-dim1_start, v.shape[2])
- *
- * @caution: The returned tensor is a shallow copy of `v`!
+ * @return Return a 3-D tensor of shape
+ *         (dim0_end-dim0_start, dim1_end-dim1_start, v.shape[2])
  */
 template <typename T = float>
-Ort::Value Slice(const Ort::Value *v, int32_t dim0, int32_t dim1_start,
+Ort::Value Slice(OrtAllocator *allocator, const Ort::Value *v,
+                 int32_t dim0_start, int32_t dim0_end, int32_t dim1_start,
                  int32_t dim1_end);
 }  // namespace sherpa_onnx
 

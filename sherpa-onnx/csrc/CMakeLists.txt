@@ -16,6 +16,7 @@ set(sources
   online-transducer-modified-beam-search-decoder.cc
   online-zipformer-transducer-model.cc
   onnx-utils.cc
+  packed-sequence.cc
   pad-sequence.cc
   parse-options.cc
   resample.cc
@@ -123,6 +124,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_TESTS)
   set(sherpa_onnx_test_srcs
     cat-test.cc
+    packed-sequence-test.cc
     pad-sequence-test.cc
     slice-test.cc
     transpose-test.cc
