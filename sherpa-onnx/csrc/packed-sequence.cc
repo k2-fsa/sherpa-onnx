@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/pad-sequence.cc
+// sherpa-onnx/csrc/packed-sequence.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
@@ -52,10 +52,8 @@ PackedSequence PackPaddedSequence(OrtAllocator *allocator,
   int32_t n = static_cast<int32_t>(v_shape[0]);
 
   int64_t max_T = p_length[indexes[0]];
-  fprintf(stderr, "max T: %d\n", static_cast<int32_t>(max_T));
 
   int32_t sum_T = std::accumulate(p_length, p_length + n, 0);
-  fprintf(stderr, "sum T: %d\n", sum_T);
 
   std::array<int64_t, 2> data_shape{sum_T, v_shape[2]};
 
@@ -73,7 +71,6 @@ PackedSequence PackPaddedSequence(OrtAllocator *allocator,
   int64_t prev_l = 0;
   for (int32_t i = 0; i != n; ++i) {
     auto cur_l = p_length[indexes[n - 1 - i]];
-    fprintf(stderr, "cur l: %d\n", static_cast<int32_t>(cur_l));
     assert(cur_l >= prev_l);
     if (cur_l == prev_l) {
       continue;

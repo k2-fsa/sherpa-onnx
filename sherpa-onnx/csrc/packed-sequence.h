@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/pad-sequence.h
+// sherpa-onnx/csrc/packed-sequence.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 #ifndef SHERPA_ONNX_CSRC_PAD_SEQUENCE_H_
