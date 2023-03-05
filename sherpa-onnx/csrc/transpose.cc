@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/transpose.h"
 
+#include <algorithm>
+#include <vector>
+
 namespace sherpa_onnx {
 
 template <typename T /*=float*/>
@@ -12,8 +15,6 @@ Ort::Value Transpose01(OrtAllocator *allocator, const Ort::Value *v) {
   assert(shape.size() == 3);
 
   std::array<int64_t, 3> ans_shape{shape[1], shape[0], shape[2]};
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
   Ort::Value ans = Ort::Value::CreateTensor<float>(allocator, ans_shape.data(),
                                                    ans_shape.size());
 

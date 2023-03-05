@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/transpose.h"
 
+#include <numeric>
+
 #include "gtest/gtest.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
@@ -16,10 +18,8 @@ TEST(Tranpose, Tranpose01) {
       Ort::Value::CreateTensor<float>(allocator, shape.data(), shape.size());
   float *p = v.GetTensorMutableData<float>();
 
-  for (int32_t i = 0; i != static_cast<int32_t>(shape[0] * shape[1] * shape[2]);
-       ++i) {
-    p[i] = i;
-  }
+  std::iota(p, p + shape[0] * shape[1] * shape[2], 0);
+
   auto ans = Transpose01(allocator, &v);
   auto v2 = Transpose01(allocator, &ans);
 
