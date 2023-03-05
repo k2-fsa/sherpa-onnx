@@ -11,6 +11,7 @@ function(download_onnxruntime)
       /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-1.14.0.tgz
     )
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-aarch64-1.14.0.tgz")
+    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-aarch64-1.14.0.tgz")
     set(onnxruntime_HASH "SHA256=9384d2e6e29fed693a4630303902392eead0c41bee5705ccac6d6d34a3d5db86")
   elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
     # If you don't have access to the Internet,
@@ -24,6 +25,7 @@ function(download_onnxruntime)
     )
 
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-x64-1.14.0.tgz")
+    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-1.14.0.tgz")
     set(onnxruntime_HASH "SHA256=92bf534e5fa5820c8dffe9de2850f84ed2a1c063e47c659ce09e8c7938aa2090")
     # After downloading, it contains:
     #  ./lib/libonnxruntime.so.1.14.0
@@ -41,6 +43,7 @@ function(download_onnxruntime)
       /tmp/onnxruntime-osx-universal2-1.14.0.tgz
     )
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-osx-universal2-1.14.0.tgz")
+    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-universal2-1.14.0.tgz")
     set(onnxruntime_HASH "SHA256=348563df91f17a2ac010519f37c3b46fd5b79140974e5c5a90a57e032bb25925")
     # After downloading, it contains:
     #  ./lib/libonnxruntime.1.14.0.dylib
@@ -58,6 +61,7 @@ function(download_onnxruntime)
       /tmp/onnxruntime-win-x64-1.14.0.zip
     )
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x64-1.14.0.zip")
+    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-1.14.0.zip")
     set(onnxruntime_HASH "SHA256=300eafef456748cde2743ee08845bd40ff1bab723697ff934eba6d4ce3519620")
     # After downloading, it contains:
     #  ./lib/onnxruntime.{dll,lib,pdb}
@@ -79,7 +83,9 @@ function(download_onnxruntime)
   endforeach()
 
   FetchContent_Declare(onnxruntime
-    URL               ${onnxruntime_URL}
+    URL
+      ${onnxruntime_URL}
+      ${onnxruntime_URL2}
     URL_HASH          ${onnxruntime_HASH}
   )
 

@@ -2,6 +2,7 @@ function(download_pybind11)
   include(FetchContent)
 
   set(pybind11_URL  "https://github.com/pybind/pybind11/archive/refs/tags/v2.10.2.tar.gz")
+  set(pybind11_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/pybind11-2.10.2.tar.gz")
   set(pybind11_HASH "SHA256=93bd1e625e43e03028a3ea7389bba5d3f9f2596abc074b068e70f4ef9b1314ae")
 
   # If you don't have access to the Internet,
@@ -22,7 +23,9 @@ function(download_pybind11)
   endforeach()
 
   FetchContent_Declare(pybind11
-    URL               ${pybind11_URL}
+    URL
+      ${pybind11_URL}
+      ${pybind11_URL2}
     URL_HASH          ${pybind11_HASH}
   )
 
