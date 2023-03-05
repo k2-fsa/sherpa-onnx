@@ -57,9 +57,6 @@ Ort::Value GetEncoderOutFrame(OrtAllocator *allocator, Ort::Value *encoder_out,
 
   auto offset = num_frames * encoder_out_dim;
 
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
   std::array<int64_t, 2> shape{batch_size, encoder_out_dim};
 
   Ort::Value ans =
@@ -89,9 +86,6 @@ void PrintModelMetadata(std::ostream &os, const Ort::ModelMetadata &meta_data) {
 Ort::Value Clone(OrtAllocator *allocator, const Ort::Value *v) {
   auto type_and_shape = v->GetTensorTypeAndShapeInfo();
   std::vector<int64_t> shape = type_and_shape.GetShape();
-
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
   switch (type_and_shape.GetElementType()) {
     case ONNX_TENSOR_ELEMENT_DATA_TYPE_INT32: {

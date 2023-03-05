@@ -18,6 +18,7 @@ set(sources
   onnx-utils.cc
   parse-options.cc
   resample.cc
+  slice.cc
   symbol-table.cc
   text-utils.cc
   transpose.cc
@@ -121,6 +122,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_TESTS)
   set(sherpa_onnx_test_srcs
     cat-test.cc
+    slice-test.cc
     transpose-test.cc
     unbind-test.cc
   )
