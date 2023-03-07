@@ -18,7 +18,7 @@ function(download_portaudio)
 
   foreach(f IN LISTS possible_file_locations)
     if(EXISTS ${f})
-      set(portaudio_URL  "file://${f}")
+      set(portaudio_URL  "${f}")
       set(portaudio_URL2)
       break()
     endif()

@@ -17,7 +17,7 @@ function(download_pybind11)
 
   foreach(f IN LISTS possible_file_locations)
     if(EXISTS ${f})
-      set(pybind11_URL  "file://${f}")
+      set(pybind11_URL  "${f}")
       set(pybind11_URL2)
       break()
     endif()

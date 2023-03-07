@@ -17,7 +17,7 @@ function(download_googltest)
 
   foreach(f IN LISTS possible_file_locations)
     if(EXISTS ${f})
-      set(googletest_URL  "file://${f}")
+      set(googletest_URL  "${f}")
       set(googletest_URL2)
       break()
     endif()

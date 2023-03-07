@@ -99,7 +99,7 @@ function(download_onnxruntime)
 
   foreach(f IN LISTS possible_file_locations)
     if(EXISTS ${f})
-      set(onnxruntime_URL  "file://${f}")
+      set(onnxruntime_URL  "${f}")
       set(onnxruntime_URL2)
       break()
     endif()
