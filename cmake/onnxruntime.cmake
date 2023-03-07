@@ -60,6 +60,11 @@ function(download_onnxruntime)
       ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-1.14.0.zip
       /tmp/onnxruntime-win-x64-1.14.0.zip
     )
+    # for 32bit x86 program, use below link and HASH value:
+    # set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x86-1.14.0.zip")
+    # set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x86-1.14.0.zip")
+    # set(onnxruntime_HASH "SHA256=4214b130db602cbf31a6f26f25377ab077af0cf03c4ddd4651283e1fb68f56cf")
+
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x64-1.14.0.zip")
     set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-1.14.0.zip")
     set(onnxruntime_HASH "SHA256=300eafef456748cde2743ee08845bd40ff1bab723697ff934eba6d4ce3519620")
