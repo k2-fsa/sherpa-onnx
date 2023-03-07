@@ -54,15 +54,32 @@ function(download_onnxruntime)
   elseif(WIN32)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
-    set(possible_file_locations
-      $ENV{HOME}/Downloads/onnxruntime-win-x64-1.14.0.zip
-      ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-1.14.0.zip
-      ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-1.14.0.zip
-      /tmp/onnxruntime-win-x64-1.14.0.zip
-    )
-    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x64-1.14.0.zip")
-    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-1.14.0.zip")
-    set(onnxruntime_HASH "SHA256=300eafef456748cde2743ee08845bd40ff1bab723697ff934eba6d4ce3519620")
+
+    if(CMAKE_VS_PLATFORM_NAME STREQUAL Win32)
+      # for 32-bit windows
+      set(possible_file_locations
+        $ENV{HOME}/Downloads/onnxruntime-win-x86-1.14.0.zip
+        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-1.14.0.zip
+        ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-1.14.0.zip
+        /tmp/onnxruntime-win-x86-1.14.0.zip
+      )
+
+      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x86-1.14.0.zip")
+      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x86-1.14.0.zip")
+      set(onnxruntime_HASH "SHA256=4214b130db602cbf31a6f26f25377ab077af0cf03c4ddd4651283e1fb68f56cf")
+    else()
+      # for 64-bit windows
+      set(possible_file_locations
+        $ENV{HOME}/Downloads/onnxruntime-win-x64-1.14.0.zip
+        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-1.14.0.zip
+        ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-1.14.0.zip
+        /tmp/onnxruntime-win-x64-1.14.0.zip
+      )
+
+      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x64-1.14.0.zip")
+      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-1.14.0.zip")
+      set(onnxruntime_HASH "SHA256=300eafef456748cde2743ee08845bd40ff1bab723697ff934eba6d4ce3519620")
+    endif()
     # After downloading, it contains:
     #  ./lib/onnxruntime.{dll,lib,pdb}
     #  ./lib/onnxruntime_providers_shared.{dll,lib,pdb}

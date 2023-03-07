@@ -60,9 +60,13 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
 std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
     const OnlineTransducerModelConfig &config) {
-  auto buffer = ReadFile(config.encoder_filename);
+  ModelType model_type = ModelType::kUnkown;
 
-  auto model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
+  {
+    auto buffer = ReadFile(config.encoder_filename);
+
+    model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
+  }
 
   switch (model_type) {
     case ModelType::kLstm:
