@@ -21,7 +21,7 @@ function(download_kaldi_native_fbank)
 
   foreach(f IN LISTS possible_file_locations)
     if(EXISTS ${f})
-      set(kaldi_native_fbank_URL  "file://${f}")
+      set(kaldi_native_fbank_URL  "${f}")
       set(kaldi_native_fbank_URL2 )
       break()
     endif()

@@ -17,7 +17,7 @@ function(download_asio)
 
   foreach(f IN LISTS possible_file_locations)
     if(EXISTS ${f})
-      set(asio_URL  "file://${f}")
+      set(asio_URL  "${f}")
       set(asio_URL2)
       break()
     endif()

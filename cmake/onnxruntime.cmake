@@ -52,10 +52,12 @@ function(download_onnxruntime)
     # ./include
     #    It contains all the needed header files
   elseif(WIN32)
-    # If you don't have access to the Internet,
-    # please pre-download onnxruntime
+    message(STATUS "CMAKE_VS_PLATFORM_NAME: ${CMAKE_VS_PLATFORM_NAME}")
 
     if(CMAKE_VS_PLATFORM_NAME STREQUAL Win32)
+      # If you don't have access to the Internet,
+      # please pre-download onnxruntime
+      #
       # for 32-bit windows
       set(possible_file_locations
         $ENV{HOME}/Downloads/onnxruntime-win-x86-1.14.0.zip
@@ -68,6 +70,9 @@ function(download_onnxruntime)
       set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x86-1.14.0.zip")
       set(onnxruntime_HASH "SHA256=4214b130db602cbf31a6f26f25377ab077af0cf03c4ddd4651283e1fb68f56cf")
     else()
+      # If you don't have access to the Internet,
+      # please pre-download onnxruntime
+      #
       # for 64-bit windows
       set(possible_file_locations
         $ENV{HOME}/Downloads/onnxruntime-win-x64-1.14.0.zip
@@ -94,7 +99,7 @@ function(download_onnxruntime)
 
   foreach(f IN LISTS possible_file_locations)
     if(EXISTS ${f})
-      set(onnxruntime_URL  "file://${f}")
+      set(onnxruntime_URL  "${f}")
       set(onnxruntime_URL2)
       break()
     endif()
