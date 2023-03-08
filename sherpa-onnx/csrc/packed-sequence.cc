@@ -4,7 +4,11 @@
 
 #include "sherpa-onnx/csrc/packed-sequence.h"
 
+#include <assert.h>
+
+#include <algorithm>
 #include <numeric>
+#include <utility>
 
 #include "sherpa-onnx/csrc/slice.h"
 #include "sherpa-onnx/csrc/transpose.h"

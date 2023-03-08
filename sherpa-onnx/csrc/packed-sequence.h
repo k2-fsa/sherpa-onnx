@@ -1,8 +1,8 @@
 // sherpa-onnx/csrc/packed-sequence.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_PAD_SEQUENCE_H_
-#define SHERPA_ONNX_CSRC_PAD_SEQUENCE_H_
+#ifndef SHERPA_ONNX_CSRC_PACKED_SEQUENCE_H_
+#define SHERPA_ONNX_CSRC_PACKED_SEQUENCE_H_
 
 #include <vector>
 
@@ -30,4 +30,4 @@ PackedSequence PackPaddedSequence(OrtAllocator *allocator,
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_PAD_SEQUENCE_H_
+#endif  // SHERPA_ONNX_CSRC_PACKED_SEQUENCE_H_
