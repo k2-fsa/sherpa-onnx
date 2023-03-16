@@ -24,6 +24,7 @@ https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/csrc/online-websoc
 import argparse
 import asyncio
 import time
+import sys
 
 import numpy as np
 
