@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(sherpa-onnx)
 
-set(SHERPA_ONNX_VERSION "1.3.0")
+set(SHERPA_ONNX_VERSION "1.3.2")
 
 # Disable warning about
 #
@@ -74,8 +74,36 @@ endif()
 check_include_file_cxx(cxxabi.h SHERPA_ONNX_HAVE_CXXABI_H)
 check_include_file_cxx(execinfo.h SHERPA_ONNX_HAVE_EXECINFO_H)
 
+if(WIN32)
+  add_definitions(-DNOMINMAX) # Otherwise, std::max() and std::min() won't work
+endif()
+
+if(WIN32 AND MSVC)
+  # disable various warnings for MSVC
+  # 4244: 'return': conversion from 'unsigned __int64' to 'int', possible loss of data
+  # 4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+  # 4305: 'argument': truncation from 'double' to 'const float'
+  # 4334: '<<': result of 32-bit shift implicitly converted to 64 bits
+  # 4800: 'int': forcing value to bool 'true' or 'false'
+  # 4996: 'fopen': This function or variable may be unsafe
+  set(disabled_warnings
+      /wd4244
+      /wd4267
+      /wd4305
+      /wd4334
+      /wd4800
+      /wd4996
+  )
+  message(STATUS "Disabled warnings: ${disabled_warnings}")
+  foreach(w IN LISTS disabled_warnings)
+    string(APPEND CMAKE_CXX_FLAGS " ${w} ")
+  endforeach()
+endif()
+
+
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
+
 
 include(kaldi-native-fbank)
 include(onnxruntime)

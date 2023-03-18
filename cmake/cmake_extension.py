@@ -71,10 +71,8 @@ class BuildExtension(build_ext):
             cmake_args = "-DCMAKE_BUILD_TYPE=Release"
 
         extra_cmake_args = f" -DCMAKE_INSTALL_PREFIX={install_dir} "
-        if not is_windows():
-            extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
-        else:
-            extra_cmake_args += " -DBUILD_SHARED_LIBS=OFF "
+        extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
+
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_CHECK=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PYTHON=ON "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF "

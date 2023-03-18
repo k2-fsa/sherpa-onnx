@@ -1,0 +1,52 @@
+name: test-pip-install
+
+on:
+  push:
+    branches:
+      - test-pip-install
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 23:50 UTC time every day
+    - cron: "50 23 * * *"
+
+concurrency:
+  group: test-pip-install-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test_pip_install:
+    runs-on: ${{ matrix.os }}
+    name: Test pip install on ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.7", "3.8", "3.9", "3.10"]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install sherpa-onnx
+        shell: bash
+        run: |
+          pip install --verbose sherpa-onnx
+
+      - name: Test sherp-onnx
+        shell: bash
+        run: |
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)"

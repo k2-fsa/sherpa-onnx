@@ -62,7 +62,12 @@ if(NOT WIN32)
   target_link_libraries(sherpa-onnx "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
 endif()
 
-install(TARGETS sherpa-onnx-core DESTINATION lib)
+if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
+  install(TARGETS sherpa-onnx-core DESTINATION ..)
+else()
+  install(TARGETS sherpa-onnx-core DESTINATION lib)
+endif()
+
 install(TARGETS sherpa-onnx DESTINATION bin)
 
 if(SHERPA_ONNX_HAS_ALSA)

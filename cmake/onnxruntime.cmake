@@ -155,7 +155,11 @@ function(download_onnxruntime)
   endif()
 
   message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
-  install(FILES ${onnxruntime_lib_files} DESTINATION lib)
+  if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
+    install(FILES ${onnxruntime_lib_files} DESTINATION ..)
+  else()
+    install(FILES ${onnxruntime_lib_files} DESTINATION lib)
+  endif()
 endfunction()
 
 # First, we try to locate the header and the lib if the use has already
