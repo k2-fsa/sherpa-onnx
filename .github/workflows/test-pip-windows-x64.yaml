@@ -26,7 +26,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Python
+      - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
@@ -34,7 +34,7 @@ jobs:
       - name: Install sherpa-onnx
         shell: bash
         run: |
-          pip install --verbose sherpa-onnx==1.1.0
+          pip install --verbose sherpa-onnx==1.0.0
 
       - name: Test sherp-onnx
         shell: bash
