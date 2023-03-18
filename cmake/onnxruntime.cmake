@@ -156,6 +156,7 @@ function(download_onnxruntime)
 
   message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
   install(FILES ${onnxruntime_lib_files} DESTINATION lib)
+  install(FILES ${onnxruntime_lib_files} DESTINATION ..)
 endfunction()
 
 # First, we try to locate the header and the lib if the use has already

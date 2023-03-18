@@ -63,6 +63,7 @@ if(NOT WIN32)
 endif()
 
 install(TARGETS sherpa-onnx-core DESTINATION lib)
+install(TARGETS sherpa-onnx-core DESTINATION ..)
 install(TARGETS sherpa-onnx DESTINATION bin)
 
 if(SHERPA_ONNX_HAS_ALSA)

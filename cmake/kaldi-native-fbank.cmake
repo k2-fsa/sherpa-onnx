@@ -50,6 +50,7 @@ function(download_kaldi_native_fbank)
       ${kaldi_native_fbank_SOURCE_DIR}/
   )
   install(TARGETS kaldi-native-fbank-core DESTINATION lib)
+  install(TARGETS kaldi-native-fbank-core DESTINATION ..)
 endfunction()
 
 download_kaldi_native_fbank()
