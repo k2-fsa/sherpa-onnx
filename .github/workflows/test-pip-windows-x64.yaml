@@ -27,7 +27,7 @@ jobs:
       - name: Install sherpa-onnx
         shell: bash
         run: |
-          pip install --verbose sherpa-onnx
+          pip install --verbose sherpa-onnx==1.2.0
 
       - name: Test sherp-onnx
         shell: bash
