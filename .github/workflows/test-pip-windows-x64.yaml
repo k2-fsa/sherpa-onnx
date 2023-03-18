@@ -1,4 +1,4 @@
-name: test-pi-windows-x64
+name: test-pip-install
 
 on:
   push:
@@ -13,12 +13,13 @@ permissions:
   contents: read
 
 jobs:
-  test_pip_windows_x64:
-    runs-on: windows-2019
-    name: ${{ matrix.vs-version }}
+  test_pip_install:
+    runs-on: ${{ matrix.os }}
+    name: Test pip install on ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.7", "3.8", "3.9", "3.10"]
 
     steps:
@@ -34,7 +35,7 @@ jobs:
       - name: Install sherpa-onnx
         shell: bash
         run: |
-          pip install --verbose sherpa-onnx==1.3.2
+          pip install --verbose sherpa-onnx
 
       - name: Test sherp-onnx
         shell: bash
