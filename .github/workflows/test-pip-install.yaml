@@ -3,7 +3,15 @@ name: test-pip-install
 on:
   push:
     branches:
-      - fix-windows
+      - test-pip-install
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 23:50 UTC time every day
+    - cron: "50 23 * * *"
 
 concurrency:
   group: test-pip-install-${{ github.ref }}
