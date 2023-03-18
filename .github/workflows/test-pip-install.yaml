@@ -6,7 +6,7 @@ on:
       - fix-windows
 
 concurrency:
-  group: test-pip-windows-x64-${{ github.ref }}
+  group: test-pip-install-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
