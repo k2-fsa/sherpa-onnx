@@ -1,0 +1,71 @@
+name: test-pi-windows-x64
+
+on:
+  push:
+    branches:
+      - master
+      - fix-windows
+    paths:
+      - '.github/workflows/test-pip-windows-x64.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'setup.py'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-pip-windows-x64.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'setup.py'
+
+concurrency:
+  group: test-pip-windows-x64-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test_pip_windows_x64:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.vs-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - vs-version: vs2015
+            toolset-version: v140
+            os: windows-2019
+
+          - vs-version: vs2017
+            toolset-version: v141
+            os: windows-2019
+
+          - vs-version: vs2019
+            toolset-version: v142
+            os: windows-2022
+
+          - vs-version: vs2022
+            toolset-version: v143
+            os: windows-2022
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install sherpa-onnx
+        shell: bash
+        run: |
+          python3 setup.py install
+
+      - name: Test sherp-onnx
+        shell: bash
+        run: |
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)"
