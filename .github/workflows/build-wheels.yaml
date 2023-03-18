@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - wheel
+      - fix-windows
     tags:
       - '*'
 
