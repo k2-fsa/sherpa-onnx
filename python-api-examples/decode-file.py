@@ -70,8 +70,10 @@ def get_args():
     parser.add_argument(
         "--wave-filename",
         type=str,
-        help="""Path to the wave filename. Must be 16 kHz,
-        mono with 16-bit samples""",
+        help="""Path to the wave filename.
+        Should have a single channel with 16-bit samples.
+        It does not need to be 16kHz. It can have any sampling rate.
+        """,
     )
 
     return parser.parse_args()
