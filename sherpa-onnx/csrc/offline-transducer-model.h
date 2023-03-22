@@ -13,10 +13,8 @@ namespace sherpa_onnx {
 
 class OfflineTransducerModel {
  public:
-  virtual ~OfflineTransducerModel() = default;
-
-  static std::unique_ptr<OfflineTransducerModel> Create(
-      const OfflineTransducerModelConfig &config);
+  explicit OfflineTransducerModel(const OfflineTransducerModelConfig &config);
+  ~OfflineTransducerModel();
 
   /** Run the encoder.
    *
@@ -29,8 +27,12 @@ class OfflineTransducerModel {
    *  - encoder_out_length: A 1-D tensor of shape (N,) containing number
    *                        of frames in `encoder_out` before padding.
    */
-  virtual std::pair<Ort::Value, Ort::Value> RunEncoder(
-      Ort::Value features, Ort::Value features_length) = 0;
+  std::pair<Ort::Value, Ort::Value> RunEncoder(Ort::Value features,
+                                               Ort::Value features_length);
+
+ private:
+  class Impl;
+  std::unique_ptr<Impl> impl_;
 };
 
 }  // namespace sherpa_onnx
