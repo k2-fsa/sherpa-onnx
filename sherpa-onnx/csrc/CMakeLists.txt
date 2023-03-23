@@ -6,6 +6,7 @@ set(sources
   features.cc
   file-utils.cc
   hypothesis.cc
+  offline-stream.cc
   offline-transducer-model-config.cc
   offline-transducer-model.cc
   online-lstm-transducer-model.cc

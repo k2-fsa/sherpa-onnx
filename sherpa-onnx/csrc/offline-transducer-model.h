@@ -5,6 +5,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TRANSDUCER_MODEL_H_
 
 #include <memory>
+#include <utility>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"

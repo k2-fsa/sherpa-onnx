@@ -19,7 +19,9 @@ namespace sherpa_onnx {
 void FeatureExtractorConfig::Register(ParseOptions *po) {
   po->Register("sample-rate", &sampling_rate,
                "Sampling rate of the input waveform. Must match the one "
-               "expected by the model.");
+               "expected by the model. Note: You can have a different "
+               "sample rate for the input waveform. We will do resampling "
+               "inside the feature extractor");
 
   po->Register("feat-dim", &feature_dim,
                "Feature dimension. Must match the one expected by the model.");

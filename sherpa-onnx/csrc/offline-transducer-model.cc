@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/offline-transducer-model.h"
 
+#include <string>
+#include <vector>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
@@ -11,7 +14,7 @@ namespace sherpa_onnx {
 
 class OfflineTransducerModel::Impl {
  public:
-  Impl(const OfflineTransducerModelConfig &config)
+  explicit Impl(const OfflineTransducerModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_WARNING),
         sess_opts_{},
