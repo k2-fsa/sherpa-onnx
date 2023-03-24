@@ -6,11 +6,14 @@
 
 #include <memory>
 #include <utility>
+#include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"
 
 namespace sherpa_onnx {
+
+class OfflineTransducerDecoderResult;
 
 class OfflineTransducerModel {
  public:
@@ -54,6 +57,29 @@ class OfflineTransducerModel {
    *         not `nn.LogSoftmax`.
    */
   Ort::Value RunJoiner(Ort::Value encoder_out, Ort::Value decoder_out);
+
+  /** Return the vocabulary size of the model
+   */
+  int32_t VocabSize() const;
+
+  /** Return the context_size of the decoder model.
+   */
+  int32_t ContextSize() const;
+
+  /** Return the subsampling factor of the model.
+   */
+  int32_t SubsamplingFactor() const;
+
+  /** Return an allocator for allocating memory
+   */
+  OrtAllocator *Allocator();
+
+  /** Build decoder_input from the current results.
+   *
+   * @return Return a tensor of shape (results.size(), ContextSize())
+   */
+  Ort::Value BuildDecoderInput(
+      const std::vector<OfflineTransducerDecoderResult> &results);
 
  private:
   class Impl;

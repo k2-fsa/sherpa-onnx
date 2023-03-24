@@ -4,10 +4,12 @@
 
 #include "sherpa-onnx/csrc/offline-transducer-model.h"
 
+#include <algorithm>
 #include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-transducer-decoder.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
@@ -66,6 +68,30 @@ class OfflineTransducerModel::Impl {
                                    joiner_output_names_ptr_.size());
 
     return std::move(logit[0]);
+  }
+
+  int32_t VocabSize() const { return vocab_size_; }
+  int32_t ContextSize() const { return context_size_; }
+  int32_t SubsamplingFactor() const { return 4; }
+  OrtAllocator *Allocator() { return allocator_; }
+
+  Ort::Value BuildDecoderInput(
+      const std::vector<OfflineTransducerDecoderResult> &results) {
+    int32_t batch_size = static_cast<int32_t>(results.size());
+    int32_t context_size = ContextSize();
+    std::array<int64_t, 2> shape{batch_size, context_size};
+
+    Ort::Value decoder_input = Ort::Value::CreateTensor<int64_t>(
+        Allocator(), shape.data(), shape.size());
+    int64_t *p = decoder_input.GetTensorMutableData<int64_t>();
+
+    for (const auto &r : results) {
+      const int64_t *begin = r.tokens.data() + r.tokens.size() - context_size;
+      const int64_t *end = r.tokens.data() + r.tokens.size();
+      std::copy(begin, end, p);
+      p += context_size;
+    }
+    return decoder_input;
   }
 
  private:
@@ -183,6 +209,23 @@ Ort::Value OfflineTransducerModel::RunDecoder(Ort::Value decoder_input) {
 Ort::Value OfflineTransducerModel::RunJoiner(Ort::Value encoder_out,
                                              Ort::Value decoder_out) {
   return impl_->RunJoiner(std::move(encoder_out), std::move(decoder_out));
+}
+
+int32_t OfflineTransducerModel::VocabSize() const { return impl_->VocabSize(); }
+
+int32_t OfflineTransducerModel::ContextSize() const {
+  return impl_->ContextSize();
+}
+
+int32_t OfflineTransducerModel::SubsamplingFactor() const {
+  return impl_->SubsamplingFactor();
+}
+
+OrtAllocator *OfflineTransducerModel::Allocator() { return impl_->Allocator(); }
+
+Ort::Value OfflineTransducerModel::BuildDecoderInput(
+    const std::vector<OfflineTransducerDecoderResult> &results) {
+  return impl_->BuildDecoderInput(results);
 }
 
 }  // namespace sherpa_onnx

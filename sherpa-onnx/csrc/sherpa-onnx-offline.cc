@@ -11,6 +11,7 @@
 #include "sherpa-onnx/csrc/offline-transducer-decoder.h"
 #include "sherpa-onnx/csrc/offline-transducer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-transducer-model.h"
+#include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 int main(int32_t argc, char *argv[]) {
@@ -76,6 +77,13 @@ int main(int32_t argc, char *argv[]) {
       std::make_unique<sherpa_onnx::OfflineTransducerGreedySearchDecoder>(
           &model);
   auto results = decoder->Decode(std::move(t.first), std::move(t.second));
+
+  sherpa_onnx::SymbolTable sym(config.tokens);
+  std::string text;
+  for (const auto &t : results[0].tokens) {
+    text.append(sym[t]);
+  }
+  std::cout << text << "\n";
 
   return 0;
 }

@@ -13,7 +13,7 @@ namespace sherpa_onnx {
 
 struct OfflineTransducerDecoderResult {
   /// The decoded token IDs
-  std::vector<int32_t> tokens;
+  std::vector<int64_t> tokens;
 
   /// timestamps[i] contains the output frame index where tokens[i] is decoded.
   /// Note: The index is after subsampling
