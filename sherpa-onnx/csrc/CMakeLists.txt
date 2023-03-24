@@ -7,6 +7,7 @@ set(sources
   file-utils.cc
   hypothesis.cc
   offline-stream.cc
+  offline-transducer-greedy-search-decoder.cc
   offline-transducer-model-config.cc
   offline-transducer-model.cc
   online-lstm-transducer-model.cc

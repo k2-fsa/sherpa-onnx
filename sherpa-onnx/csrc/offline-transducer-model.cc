@@ -37,6 +37,37 @@ class OfflineTransducerModel::Impl {
     }
   }
 
+  std::pair<Ort::Value, Ort::Value> RunEncoder(Ort::Value features,
+                                               Ort::Value features_length) {
+    std::array<Ort::Value, 2> encoder_inputs = {std::move(features),
+                                                std::move(features_length)};
+
+    auto encoder_out = encoder_sess_->Run(
+        {}, encoder_input_names_ptr_.data(), encoder_inputs.data(),
+        encoder_inputs.size(), encoder_output_names_ptr_.data(),
+        encoder_output_names_ptr_.size());
+
+    return {std::move(encoder_out[0]), std::move(encoder_out[1])};
+  }
+
+  Ort::Value RunDecoder(Ort::Value decoder_input) {
+    auto decoder_out = decoder_sess_->Run(
+        {}, decoder_input_names_ptr_.data(), &decoder_input, 1,
+        decoder_output_names_ptr_.data(), decoder_output_names_ptr_.size());
+    return std::move(decoder_out[0]);
+  }
+
+  Ort::Value RunJoiner(Ort::Value encoder_out, Ort::Value decoder_out) {
+    std::array<Ort::Value, 2> joiner_input = {std::move(encoder_out),
+                                              std::move(decoder_out)};
+    auto logit = joiner_sess_->Run({}, joiner_input_names_ptr_.data(),
+                                   joiner_input.data(), joiner_input.size(),
+                                   joiner_output_names_ptr_.data(),
+                                   joiner_output_names_ptr_.size());
+
+    return std::move(logit[0]);
+  }
+
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
     encoder_sess_ = std::make_unique<Ort::Session>(
@@ -139,5 +170,19 @@ OfflineTransducerModel::OfflineTransducerModel(
     : impl_(std::make_unique<Impl>(config)) {}
 
 OfflineTransducerModel::~OfflineTransducerModel() = default;
+
+std::pair<Ort::Value, Ort::Value> OfflineTransducerModel::RunEncoder(
+    Ort::Value features, Ort::Value features_length) {
+  return impl_->RunEncoder(std::move(features), std::move(features_length));
+}
+
+Ort::Value OfflineTransducerModel::RunDecoder(Ort::Value decoder_input) {
+  return impl_->RunDecoder(std::move(decoder_input));
+}
+
+Ort::Value OfflineTransducerModel::RunJoiner(Ort::Value encoder_out,
+                                             Ort::Value decoder_out) {
+  return impl_->RunJoiner(std::move(encoder_out), std::move(decoder_out));
+}
 
 }  // namespace sherpa_onnx

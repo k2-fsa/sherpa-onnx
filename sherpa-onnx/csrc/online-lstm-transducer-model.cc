@@ -228,9 +228,6 @@ std::vector<Ort::Value> OnlineLstmTransducerModel::GetEncoderInitStates() {
 std::pair<Ort::Value, std::vector<Ort::Value>>
 OnlineLstmTransducerModel::RunEncoder(Ort::Value features,
                                       std::vector<Ort::Value> states) {
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
   std::array<Ort::Value, 3> encoder_inputs = {
       std::move(features), std::move(states[0]), std::move(states[1])};
 

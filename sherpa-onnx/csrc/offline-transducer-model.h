@@ -31,6 +31,30 @@ class OfflineTransducerModel {
   std::pair<Ort::Value, Ort::Value> RunEncoder(Ort::Value features,
                                                Ort::Value features_length);
 
+  /** Run the decoder network.
+   *
+   * Caution: We assume there are no recurrent connections in the decoder and
+   *          the decoder is stateless. See
+   * https://github.com/k2-fsa/icefall/blob/master/egs/librispeech/ASR/pruned_transducer_stateless2/decoder.py
+   *          for an example
+   *
+   * @param decoder_input It is usually of shape (N, context_size)
+   * @return Return a tensor of shape (N, decoder_dim).
+   */
+  Ort::Value RunDecoder(Ort::Value decoder_input);
+
+  /** Run the joint network.
+   *
+   * @param encoder_out Output of the encoder network. A tensor of shape
+   *                    (N, joiner_dim).
+   * @param decoder_out Output of the decoder network. A tensor of shape
+   *                    (N, joiner_dim).
+   * @return Return a tensor of shape (N, vocab_size). In icefall, the last
+   *         last layer of the joint network is `nn.Linear`,
+   *         not `nn.LogSoftmax`.
+   */
+  Ort::Value RunJoiner(Ort::Value encoder_out, Ort::Value decoder_out);
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;
