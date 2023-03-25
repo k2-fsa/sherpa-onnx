@@ -27,7 +27,8 @@ class OnlineStream {
                      the range [-1, 1].
      @param n Number of entries in waveform
    */
-  void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n);
+  void AcceptWaveform(int32_t sampling_rate, const float *waveform,
+                      int32_t n) const;
 
   /**
    * InputFinished() tells the class you won't be providing any
@@ -35,7 +36,7 @@ class OnlineStream {
    * of features, in the case where snip-edges == false; it also
    * affects the return value of IsLastFrame().
    */
-  void InputFinished();
+  void InputFinished() const;
 
   int32_t NumFramesReady() const;
 

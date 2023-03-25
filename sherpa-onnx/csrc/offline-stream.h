@@ -16,7 +16,11 @@ namespace sherpa_onnx {
 struct OfflineRecognitionResult;
 
 struct OfflineFeatureExtractorConfig {
+  // Sampling rate used by the feature extractor. If it is different from
+  // the sampling rate of the input waveform, we will do resampling inside.
   int32_t sampling_rate = 16000;
+
+  // Feature dimension
   int32_t feature_dim = 80;
 
   std::string ToString() const;

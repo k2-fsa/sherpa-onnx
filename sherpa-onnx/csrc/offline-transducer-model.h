@@ -72,7 +72,7 @@ class OfflineTransducerModel {
 
   /** Return an allocator for allocating memory
    */
-  OrtAllocator *Allocator();
+  OrtAllocator *Allocator() const;
 
   /** Build decoder_input from the current results.
    *
@@ -83,7 +83,7 @@ class OfflineTransducerModel {
    */
   Ort::Value BuildDecoderInput(
       const std::vector<OfflineTransducerDecoderResult> &results,
-      int32_t end_index);
+      int32_t end_index) const;
 
  private:
   class Impl;
