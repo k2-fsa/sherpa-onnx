@@ -40,7 +40,8 @@ class OfflineStream {
      Caution: You can only invoke this function once so you have to input
               all the samples at once
    */
-  void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n);
+  void AcceptWaveform(int32_t sampling_rate, const float *waveform,
+                      int32_t n) const;
 
   /// Return feature dim of this extractor
   int32_t FeatureDim() const;

@@ -113,7 +113,7 @@ OfflineStream::OfflineStream(
 OfflineStream::~OfflineStream() = default;
 
 void OfflineStream::AcceptWaveform(int32_t sampling_rate, const float *waveform,
-                                   int32_t n) {
+                                   int32_t n) const {
   impl_->AcceptWaveform(sampling_rate, waveform, n);
 }
 
