@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - offline-model-2
     paths:
       - '.github/workflows/windows-x64.yaml'
       - '.github/scripts/test-online-transducer.sh'
