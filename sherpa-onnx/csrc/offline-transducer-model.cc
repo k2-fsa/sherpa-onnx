@@ -76,8 +76,11 @@ class OfflineTransducerModel::Impl {
   OrtAllocator *Allocator() { return allocator_; }
 
   Ort::Value BuildDecoderInput(
-      const std::vector<OfflineTransducerDecoderResult> &results) {
-    int32_t batch_size = static_cast<int32_t>(results.size());
+      const std::vector<OfflineTransducerDecoderResult> &results,
+      int32_t end_index) {
+    assert(end_index <= results.size());
+
+    int32_t batch_size = end_index;
     int32_t context_size = ContextSize();
     std::array<int64_t, 2> shape{batch_size, context_size};
 
@@ -85,7 +88,8 @@ class OfflineTransducerModel::Impl {
         Allocator(), shape.data(), shape.size());
     int64_t *p = decoder_input.GetTensorMutableData<int64_t>();
 
-    for (const auto &r : results) {
+    for (int32_t i = 0; i != batch_size; ++i) {
+      const auto &r = results[i];
       const int64_t *begin = r.tokens.data() + r.tokens.size() - context_size;
       const int64_t *end = r.tokens.data() + r.tokens.size();
       std::copy(begin, end, p);
@@ -224,8 +228,9 @@ int32_t OfflineTransducerModel::SubsamplingFactor() const {
 OrtAllocator *OfflineTransducerModel::Allocator() { return impl_->Allocator(); }
 
 Ort::Value OfflineTransducerModel::BuildDecoderInput(
-    const std::vector<OfflineTransducerDecoderResult> &results) {
-  return impl_->BuildDecoderInput(results);
+    const std::vector<OfflineTransducerDecoderResult> &results,
+    int32_t end_index) {
+  return impl_->BuildDecoderInput(results, end_index);
 }
 
 }  // namespace sherpa_onnx

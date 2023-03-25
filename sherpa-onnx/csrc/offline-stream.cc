@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/offline-stream.h
+// sherpa-onnx/csrc/offline-stream.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 

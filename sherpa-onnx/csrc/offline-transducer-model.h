@@ -76,10 +76,14 @@ class OfflineTransducerModel {
 
   /** Build decoder_input from the current results.
    *
+   * @param results Current decoded results.
+   * @param end_index We only use results[0:end_index] to build
+   *                  the decoder_input.
    * @return Return a tensor of shape (results.size(), ContextSize())
    */
   Ort::Value BuildDecoderInput(
-      const std::vector<OfflineTransducerDecoderResult> &results);
+      const std::vector<OfflineTransducerDecoderResult> &results,
+      int32_t end_index);
 
  private:
   class Impl;

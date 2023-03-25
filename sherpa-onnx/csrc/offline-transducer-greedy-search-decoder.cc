@@ -9,61 +9,71 @@
 #include <utility>
 
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/packed-sequence.h"
+#include "sherpa-onnx/csrc/slice.h"
 
 namespace sherpa_onnx {
 
 std::vector<OfflineTransducerDecoderResult>
 OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
                                              Ort::Value encoder_out_length) {
-  std::vector<int64_t> encoder_out_shape =
-      encoder_out.GetTensorTypeAndShapeInfo().GetShape();
+  PackedSequence packed_encoder_out = PackPaddedSequence(
+      model_->Allocator(), &encoder_out, &encoder_out_length);
 
-  assert(encoder_out_shape.size() == 3);
-
-  int32_t batch_size = static_cast<int32_t>(encoder_out_shape[0]);
-  if (batch_size != 1) {
-    fprintf(stderr, "TODO(fangjun): Support batch size > 1\n");
-    exit(-1);
-  }
-
-  int32_t num_frames = static_cast<int32_t>(encoder_out_shape[1]);
+  int32_t batch_size =
+      static_cast<int32_t>(packed_encoder_out.sorted_indexes.size());
 
   int32_t vocab_size = model_->VocabSize();
   int32_t context_size = model_->ContextSize();
-  std::vector<OfflineTransducerDecoderResult> ans(1);
+
+  std::vector<OfflineTransducerDecoderResult> ans(batch_size);
   for (auto &r : ans) {
     // 0 is the ID of the blank token
     r.tokens.resize(context_size, 0);
   }
 
-  auto decoder_input = model_->BuildDecoderInput(ans);
+  auto decoder_input = model_->BuildDecoderInput(ans, ans.size());
   Ort::Value decoder_out = model_->RunDecoder(std::move(decoder_input));
 
-  for (int32_t t = 0; t != num_frames; ++t) {
-    Ort::Value cur_encoder_out =
-        GetEncoderOutFrame(model_->Allocator(), &encoder_out, t);
-    Ort::Value logit = model_->RunJoiner(
-        std::move(cur_encoder_out), Clone(model_->Allocator(), &decoder_out));
-
+  int32_t start = 0;
+  int32_t t = 0;
+  for (auto n : packed_encoder_out.batch_sizes) {
+    Ort::Value cur_encoder_out = packed_encoder_out.Get(start, n);
+    Ort::Value cur_decoder_out = Slice(model_->Allocator(), &decoder_out, 0, n);
+    start += n;
+    Ort::Value logit = model_->RunJoiner(std::move(cur_encoder_out),
+                                         std::move(cur_decoder_out));
     const float *p_logit = logit.GetTensorData<float>();
-    // TODO(fangjun): Process batch_size > 1
-    auto y = static_cast<int32_t>(std::distance(
-        static_cast<const float *>(p_logit),
-        std::max_element(static_cast<const float *>(p_logit),
-                         static_cast<const float *>(p_logit) + vocab_size)));
-
-    if (y != 0) {
-      ans[0].tokens.push_back(y);
-      ans[0].timestamps.push_back(t);
-      Ort::Value decoder_input = model_->BuildDecoderInput(ans);
+    bool emitted = false;
+    for (int32_t i = 0; i != n; ++i) {
+      auto y = static_cast<int32_t>(std::distance(
+          static_cast<const float *>(p_logit),
+          std::max_element(static_cast<const float *>(p_logit),
+                           static_cast<const float *>(p_logit) + vocab_size)));
+      p_logit += vocab_size;
+      if (y != 0) {
+        ans[i].tokens.push_back(y);
+        ans[i].timestamps.push_back(t);
+        emitted = true;
+      }
+    }
+    if (emitted) {
+      Ort::Value decoder_input = model_->BuildDecoderInput(ans, n);
       decoder_out = model_->RunDecoder(std::move(decoder_input));
     }
+    ++t;
   }
 
   for (auto &r : ans) {
     r.tokens = {r.tokens.begin() + context_size, r.tokens.end()};
   }
-  return ans;
+
+  std::vector<OfflineTransducerDecoderResult> unsorted_ans(batch_size);
+  for (int32_t i = 0; i != batch_size; ++i) {
+    unsorted_ans[packed_encoder_out.sorted_indexes[i]] = std::move(ans[i]);
+  }
+
+  return unsorted_ans;
 }
 
 }  // namespace sherpa_onnx

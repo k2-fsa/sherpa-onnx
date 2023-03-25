@@ -13,7 +13,26 @@ namespace sherpa_onnx {
 struct PackedSequence {
   std::vector<int32_t> sorted_indexes;
   std::vector<int32_t> batch_sizes;
+
+  // data is a 2-D tensor of shape (sum(batch_sizes), channels)
   Ort::Value data{nullptr};
+
+  // Return a shallow copy of data[start:start+size, :]
+  Ort::Value Get(int32_t start, int32_t size) {
+    auto shape = data.GetTensorTypeAndShapeInfo().GetShape();
+
+    std::array<int64_t, 2> ans_shape{size, shape[1]};
+
+    float *p = data.GetTensorMutableData<float>();
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    // a shallow copy
+    return Ort::Value::CreateTensor(memory_info, p + start * shape[1],
+                                    size * shape[1], ans_shape.data(),
+                                    ans_shape.size());
+  }
 };
 
 /** Similar to torch.nn.utils.rnn.pad_sequence but it supports only
