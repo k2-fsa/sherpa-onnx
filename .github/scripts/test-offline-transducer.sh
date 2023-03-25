@@ -26,7 +26,6 @@ GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
 pushd $repo
 git lfs pull --include "*.onnx"
 cd test_wavs
-sox 0.wav -r 8000 8k.wav
 popd
 
 waves=(
@@ -45,5 +44,18 @@ for wave in ${waves[@]}; do
   $wave \
   2
 done
+
+
+if command -v <the_command> &> /dev/null
+  echo "test 8kHz"
+  sox $repo/test_wavs/0.wav -r 8000 8k.wav
+  time $EXE \
+    $repo/tokens.txt \
+    $repo/encoder-epoch-99-avg-1.onnx \
+    $repo/decoder-epoch-99-avg-1.onnx \
+    $repo/joiner-epoch-99-avg-1.onnx \
+    8k.wav \
+    2
+fi
 
 rm -rf $repo
