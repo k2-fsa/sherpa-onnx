@@ -95,6 +95,7 @@ as the device_name.
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
 
+  config.Validate();
   sherpa_onnx::OnlineRecognizer recognizer(config);
 
   int32_t expected_sample_rate = config.feat_config.sampling_rate;

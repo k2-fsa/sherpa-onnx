@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 
+#include <memory>
+#include <utility>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-transducer-decoder.h"
 #include "sherpa-onnx/csrc/offline-transducer-greedy-search-decoder.h"
@@ -64,7 +67,7 @@ std::string OfflineRecognizerConfig::ToString() const {
 
 class OfflineRecognizer::Impl {
  public:
-  Impl(const OfflineRecognizerConfig &config)
+  explicit Impl(const OfflineRecognizerConfig &config)
       : config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerModel>(config_.model_config)) {

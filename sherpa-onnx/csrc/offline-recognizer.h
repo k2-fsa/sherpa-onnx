@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_H_
 
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -39,7 +40,7 @@ struct OfflineRecognizerConfig {
 
   OfflineRecognizerConfig() = default;
   OfflineRecognizerConfig(const OfflineFeatureExtractorConfig &feat_config,
-                          OfflineTransducerModelConfig &model_config,
+                          const OfflineTransducerModelConfig &model_config,
                           const std::string &decoding_method)
       : feat_config(feat_config),
         model_config(model_config),
