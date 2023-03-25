@@ -13,6 +13,7 @@
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
+struct OfflineRecognitionResult;
 
 struct OfflineFeatureExtractorConfig {
   int32_t sampling_rate = 16000;
@@ -47,6 +48,12 @@ class OfflineStream {
   // Get all the feature frames of this stream in a 1-D array, which is
   // flattened from a 2-D array of shape (num_frames, feat_dim).
   std::vector<float> GetFrames() const;
+
+  /** Set the recognition result for this stream. */
+  void SetResult(const OfflineRecognitionResult &r);
+
+  /** Get the recognition result of this stream */
+  const OfflineRecognitionResult &GetResult() const;
 
  private:
   class Impl;

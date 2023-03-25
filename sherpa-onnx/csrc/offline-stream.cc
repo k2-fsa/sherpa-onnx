@@ -8,6 +8,7 @@
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
 
 namespace sherpa_onnx {
@@ -97,9 +98,14 @@ class OfflineStream::Impl {
     return features;
   }
 
+  void SetResult(const OfflineRecognitionResult &r) { r_ = r; }
+
+  const OfflineRecognitionResult &GetResult() const { return r_; }
+
  private:
   std::unique_ptr<knf::OnlineFbank> fbank_;
   knf::FbankOptions opts_;
+  OfflineRecognitionResult r_;
 };
 
 OfflineStream::OfflineStream(
@@ -117,6 +123,14 @@ int32_t OfflineStream::FeatureDim() const { return impl_->FeatureDim(); }
 
 std::vector<float> OfflineStream::GetFrames() const {
   return impl_->GetFrames();
+}
+
+void OfflineStream::SetResult(const OfflineRecognitionResult &r) {
+  impl_->SetResult(r);
+}
+
+const OfflineRecognitionResult &OfflineStream::GetResult() const {
+  return impl_->GetResult();
 }
 
 }  // namespace sherpa_onnx
