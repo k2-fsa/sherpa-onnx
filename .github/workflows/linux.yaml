@@ -46,17 +46,20 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install ffmpeg
-        shell: bash
-        run: |
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:savoury1/ffmpeg4
-          sudo add-apt-repository ppa:savoury1/ffmpeg5
-          sudo apt-get update
+      - uses: FedericoCarboni/setup-ffmpeg@v2
+        id: setup-ffmpeg
 
-          sudo apt-get install -y ffmpeg libavdevice59
-          pkg-config --modversion libavutil
-          ffmpeg -version
+      # - name: Install ffmpeg
+      #   shell: bash
+      #   run: |
+      #     sudo apt-get install -y software-properties-common
+      #     sudo add-apt-repository ppa:savoury1/ffmpeg4
+      #     sudo add-apt-repository ppa:savoury1/ffmpeg5
+      #     sudo apt-get update
+      #
+      #     sudo apt-get install -y ffmpeg libavdevice59
+      #     pkg-config --modversion libavutil
+      #     ffmpeg -version
 
       - name: Show ffmpeg version
         shell: bash
