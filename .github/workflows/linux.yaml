@@ -46,18 +46,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Display ffmpeg version
-        shell: bash
-        run: |
-          ffmpeg -version
-
       - name: Install ffmpeg
         shell: bash
         run: |
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:savoury1/ffmpeg4
-          sudo add-apt-repository ppa:savoury1/ffmpeg5
-
           sudo apt-get install -y libavdevice-dev libavutil-dev ffmpeg
           pkg-config --modversion libavutil
           ffmpeg -version
