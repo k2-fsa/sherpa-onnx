@@ -248,11 +248,18 @@ int32_t main(int32_t argc, char *argv[]) {
   std::string wave_filename = po.GetArg(1);
 
   bool is_ok = false;
+  int32_t actual_sample_rate = -1;
   std::vector<float> samples =
-      sherpa_onnx::ReadWave(wave_filename, sample_rate, &is_ok);
+      sherpa_onnx::ReadWave(wave_filename, &actual_sample_rate, &is_ok);
 
   if (!is_ok) {
     SHERPA_ONNX_LOGE("Failed to read %s", wave_filename.c_str());
+    return -1;
+  }
+
+  if (actual_sample_rate != sample_rate) {
+    SHERPA_ONNX_LOGE("Expected sample rate: %d, given %d", sample_rate,
+                     actual_sample_rate);
     return -1;
   }
 

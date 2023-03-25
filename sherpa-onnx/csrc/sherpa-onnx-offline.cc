@@ -16,67 +16,93 @@
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 int main(int32_t argc, char *argv[]) {
-  sherpa_onnx::OfflineTransducerModelConfig model_config;
-  model_config.encoder_filename =
-      "./sherpa-onnx-conformer-en-2023-03-18/encoder-epoch-99-avg-1.onnx";
-  model_config.decoder_filename =
-      "./sherpa-onnx-conformer-en-2023-03-18/decoder-epoch-99-avg-1.onnx";
-  model_config.joiner_filename =
-      "./sherpa-onnx-conformer-en-2023-03-18/joiner-epoch-99-avg-1.onnx";
-  model_config.tokens = "./sherpa-onnx-conformer-en-2023-03-18/tokens.txt";
-  model_config.debug = false;
-  std::string wav_filename0 =
-      "./sherpa-onnx-conformer-en-2023-03-18/test_wavs/0.wav";
-  std::string wav_filename1 =
-      "./sherpa-onnx-conformer-en-2023-03-18/test_wavs/1.wav";
-  std::string wav_filename2 =
-      "./sherpa-onnx-conformer-en-2023-03-18/test_wavs/2.wav";
+  if (argc < 6 || argc > 8) {
+    const char *usage = R"usage(
+Usage:
+  ./bin/sherpa-onnx-offline \
+    /path/to/tokens.txt \
+    /path/to/encoder.onnx \
+    /path/to/decoder.onnx \
+    /path/to/joiner.onnx \
+    /path/to/foo.wav [num_threads [decoding_method]]
 
-  int32_t expected_sampling_rate = 16000;
+Default value for num_threads is 2.
+Valid values for decoding_method: greedy_search.
+foo.wav should be of single channel, 16-bit PCM encoded wave file; its
+sampling rate can be arbitrary and does not need to be 16kHz.
 
-  bool is_ok = false;
+Please refer to
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+for a list of pre-trained models to download.
+)usage";
+    fprintf(stderr, "%s\n", usage);
 
-  // TODO(fangjun): Change ReadWave() to also return sampling rate
-  std::vector<float> samples0 =
-      sherpa_onnx::ReadWave(wav_filename0, expected_sampling_rate, &is_ok);
-  assert(is_ok);
-
-  std::vector<float> samples1 =
-      sherpa_onnx::ReadWave(wav_filename1, expected_sampling_rate, &is_ok);
-  assert(is_ok);
-
-  std::vector<float> samples2 =
-      sherpa_onnx::ReadWave(wav_filename2, expected_sampling_rate, &is_ok);
-  assert(is_ok);
+    return 0;
+  }
 
   sherpa_onnx::OfflineRecognizerConfig config;
-  config.model_config = model_config;
+
+  config.model_config.tokens = argv[1];
+
+  config.model_config.debug = false;
+  config.model_config.encoder_filename = argv[2];
+  config.model_config.decoder_filename = argv[3];
+  config.model_config.joiner_filename = argv[4];
+
+  std::string wav_filename = argv[5];
+
+  config.model_config.num_threads = 2;
+  if (argc == 7 && atoi(argv[6]) > 0) {
+    config.model_config.num_threads = atoi(argv[6]);
+  }
+
+  if (argc == 8) {
+    config.decoding_method = argv[7];
+  }
+
+  fprintf(stderr, "%s\n", config.ToString().c_str());
+
+  int32_t sampling_rate = -1;
+
+  bool is_ok = false;
+  std::vector<float> samples =
+      sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
+  if (!is_ok) {
+    fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
+    return -1;
+  }
+  fprintf(stderr, "sampling rate of input file: %d\n", sampling_rate);
+
+  float duration = samples.size() / static_cast<float>(sampling_rate);
 
   sherpa_onnx::OfflineRecognizer recognizer(config);
-  auto s0 = recognizer.CreateStream();
-  auto s1 = recognizer.CreateStream();
-  auto s2 = recognizer.CreateStream();
+  auto s = recognizer.CreateStream();
 
-  s0->AcceptWaveform(expected_sampling_rate, samples0.data(), samples0.size());
-  s1->AcceptWaveform(expected_sampling_rate, samples1.data(), samples1.size());
-  s2->AcceptWaveform(expected_sampling_rate, samples2.data(), samples2.size());
+  auto begin = std::chrono::steady_clock::now();
+  fprintf(stderr, "Started\n");
 
-  std::vector<sherpa_onnx::OfflineStream *> ss = {s1.get(), s2.get()};
+  s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
-  // decode a single stream
-  recognizer.DecodeStream(s0.get());
+  recognizer.DecodeStream(s.get());
 
-  // decode multiple streams in parallel
-  recognizer.DecodeStreams(ss.data(), ss.size());
+  fprintf(stderr, "Done!\n");
 
-  fprintf(stderr, "%s\n%s\n\n", wav_filename0.c_str(),
-          s0->GetResult().text.c_str());
+  fprintf(stderr, "Recognition result for %s:\n%s\n", wav_filename.c_str(),
+          s->GetResult().text.c_str());
 
-  fprintf(stderr, "%s\n%s\n\n", wav_filename1.c_str(),
-          s1->GetResult().text.c_str());
+  auto end = std::chrono::steady_clock::now();
+  float elapsed_seconds =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
+          .count() /
+      1000.;
 
-  fprintf(stderr, "%s\n%s\n\n", wav_filename2.c_str(),
-          s2->GetResult().text.c_str());
+  fprintf(stderr, "num threads: %d\n", config.model_config.num_threads);
+  fprintf(stderr, "decoding method: %s\n", config.decoding_method.c_str());
+
+  fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
+  float rtf = elapsed_seconds / duration;
+  fprintf(stderr, "Real time factor (RTF): %.3f / %.3f = %.3f\n",
+          elapsed_seconds, duration, rtf);
 
   return 0;
 }

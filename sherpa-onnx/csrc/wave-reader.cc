@@ -102,7 +102,7 @@ static_assert(sizeof(WaveHeader) == 44, "");
 
 // Read a wave file of mono-channel.
 // Return its samples normalized to the range [-1, 1).
-std::vector<float> ReadWaveImpl(std::istream &is, float expected_sample_rate,
+std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
                                 bool *is_ok) {
   WaveHeader header;
   is.read(reinterpret_cast<char *>(&header), sizeof(header));
@@ -122,10 +122,7 @@ std::vector<float> ReadWaveImpl(std::istream &is, float expected_sample_rate,
     return {};
   }
 
-  if (expected_sample_rate != header.sample_rate) {
-    *is_ok = false;
-    return {};
-  }
+  *sampling_rate = header.sample_rate;
 
   // header.subchunk2_size contains the number of bytes in the data.
   // As we assume each sample contains two bytes, so it is divided by 2 here
@@ -148,15 +145,15 @@ std::vector<float> ReadWaveImpl(std::istream &is, float expected_sample_rate,
 
 }  // namespace
 
-std::vector<float> ReadWave(const std::string &filename,
-                            float expected_sample_rate, bool *is_ok) {
+std::vector<float> ReadWave(const std::string &filename, int32_t *sampling_rate,
+                            bool *is_ok) {
   std::ifstream is(filename, std::ifstream::binary);
-  return ReadWave(is, expected_sample_rate, is_ok);
+  return ReadWave(is, sampling_rate, is_ok);
 }
 
-std::vector<float> ReadWave(std::istream &is, float expected_sample_rate,
+std::vector<float> ReadWave(std::istream &is, int32_t *sampling_rate,
                             bool *is_ok) {
-  auto samples = ReadWaveImpl(is, expected_sample_rate, is_ok);
+  auto samples = ReadWaveImpl(is, sampling_rate, is_ok);
   return samples;
 }
 

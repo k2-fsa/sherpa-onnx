@@ -26,6 +26,8 @@ Usage:
 
 Default value for num_threads is 2.
 Valid values for decoding_method: greedy_search (default), modified_beam_search.
+foo.wav should be of single channel, 16-bit PCM encoded wave file; its
+sampling rate can be arbitrary and does not need to be 16kHz.
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
@@ -61,18 +63,19 @@ for a list of pre-trained models to download.
 
   sherpa_onnx::OnlineRecognizer recognizer(config);
 
-  int32_t expected_sampling_rate = config.feat_config.sampling_rate;
+  int32_t sampling_rate = -1;
 
   bool is_ok = false;
   std::vector<float> samples =
-      sherpa_onnx::ReadWave(wav_filename, expected_sampling_rate, &is_ok);
+      sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
 
   if (!is_ok) {
     fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
     return -1;
   }
+  fprintf(stderr, "sampling rate of input file: %d\n", sampling_rate);
 
-  float duration = samples.size() / static_cast<float>(expected_sampling_rate);
+  float duration = samples.size() / static_cast<float>(sampling_rate);
 
   fprintf(stderr, "wav filename: %s\n", wav_filename.c_str());
   fprintf(stderr, "wav duration (s): %.3f\n", duration);
@@ -81,12 +84,13 @@ for a list of pre-trained models to download.
   fprintf(stderr, "Started\n");
 
   auto s = recognizer.CreateStream();
-  s->AcceptWaveform(expected_sampling_rate, samples.data(), samples.size());
+  s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
-  std::vector<float> tail_paddings(
-      static_cast<int>(0.2 * expected_sampling_rate));
-  s->AcceptWaveform(expected_sampling_rate, tail_paddings.data(),
-                    tail_paddings.size());
+  std::vector<float> tail_paddings(static_cast<int>(0.2 * sampling_rate));
+  // Note: We can call AcceptWaveform() multiple times.
+  s->AcceptWaveform(sampling_rate, tail_paddings.data(), tail_paddings.size());
+
+  // Call InputFinished() to indicate that no audio samples are available
   s->InputFinished();
 
   while (recognizer.IsReady(s.get())) {
