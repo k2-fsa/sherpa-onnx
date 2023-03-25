@@ -40,10 +40,6 @@ class OfflineStream::Impl {
     opts_.frame_opts.dither = 0;
     opts_.frame_opts.snip_edges = false;
     opts_.frame_opts.samp_freq = config.sampling_rate;
-
-    // TODO(fangjun): Remove this member
-    opts_.frame_opts.max_feature_vectors = -1;
-
     opts_.mel_opts.num_bins = config.feature_dim;
 
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);

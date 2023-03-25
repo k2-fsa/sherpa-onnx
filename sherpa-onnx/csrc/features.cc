@@ -32,8 +32,7 @@ std::string FeatureExtractorConfig::ToString() const {
 
   os << "FeatureExtractorConfig(";
   os << "sampling_rate=" << sampling_rate << ", ";
-  os << "feature_dim=" << feature_dim << ", ";
-  os << "max_feature_vectors=" << max_feature_vectors << ")";
+  os << "feature_dim=" << feature_dim << ")";
 
   return os.str();
 }
@@ -44,8 +43,6 @@ class FeatureExtractor::Impl {
     opts_.frame_opts.dither = 0;
     opts_.frame_opts.snip_edges = false;
     opts_.frame_opts.samp_freq = config.sampling_rate;
-
-    opts_.frame_opts.max_feature_vectors = config.max_feature_vectors;
 
     opts_.mel_opts.num_bins = config.feature_dim;
 
@@ -112,12 +109,21 @@ class FeatureExtractor::Impl {
     return fbank_->IsLastFrame(frame);
   }
 
-  std::vector<float> GetFrames(int32_t frame_index, int32_t n) const {
-    if (frame_index + n > NumFramesReady()) {
-      fprintf(stderr, "%d + %d > %d\n", frame_index, n, NumFramesReady());
+  std::vector<float> GetFrames(int32_t frame_index, int32_t n) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (frame_index + n > fbank_->NumFramesReady()) {
+      SHERPA_ONNX_LOGE("%d + %d > %d\n", frame_index, n,
+                       fbank_->NumFramesReady());
       exit(-1);
     }
-    std::lock_guard<std::mutex> lock(mutex_);
+
+    int32_t discard_num = frame_index - last_frame_index_;
+    if (discard_num < 0) {
+      SHERPA_ONNX_LOGE("last_frame_index_: %d, frame_index_: %d",
+                       last_frame_index_, frame_index);
+      exit(-1);
+    }
+    fbank_->Pop(discard_num);
 
     int32_t feature_dim = fbank_->Dim();
     std::vector<float> features(feature_dim * n);
@@ -129,6 +135,8 @@ class FeatureExtractor::Impl {
       std::copy(f, f + feature_dim, p);
       p += feature_dim;
     }
+
+    last_frame_index_ = frame_index;
 
     return features;
   }
@@ -145,6 +153,7 @@ class FeatureExtractor::Impl {
   knf::FbankOptions opts_;
   mutable std::mutex mutex_;
   std::unique_ptr<LinearResample> resampler_;
+  int32_t last_frame_index_ = 0;
 };
 
 FeatureExtractor::FeatureExtractor(const FeatureExtractorConfig &config /*={}*/)

@@ -16,7 +16,6 @@ namespace sherpa_onnx {
 struct FeatureExtractorConfig {
   int32_t sampling_rate = 16000;
   int32_t feature_dim = 80;
-  int32_t max_feature_vectors = -1;
 
   std::string ToString() const;
 
