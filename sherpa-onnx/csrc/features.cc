@@ -94,7 +94,7 @@ class FeatureExtractor::Impl {
     fbank_->AcceptWaveform(sampling_rate, waveform, n);
   }
 
-  void InputFinished() {
+  void InputFinished() const {
     std::lock_guard<std::mutex> lock(mutex_);
     fbank_->InputFinished();
   }
@@ -141,11 +141,6 @@ class FeatureExtractor::Impl {
     return features;
   }
 
-  void Reset() {
-    std::lock_guard<std::mutex> lock(mutex_);
-    fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
-  }
-
   int32_t FeatureDim() const { return opts_.mel_opts.num_bins; }
 
  private:
@@ -162,11 +157,11 @@ FeatureExtractor::FeatureExtractor(const FeatureExtractorConfig &config /*={}*/)
 FeatureExtractor::~FeatureExtractor() = default;
 
 void FeatureExtractor::AcceptWaveform(int32_t sampling_rate,
-                                      const float *waveform, int32_t n) {
+                                      const float *waveform, int32_t n) const {
   impl_->AcceptWaveform(sampling_rate, waveform, n);
 }
 
-void FeatureExtractor::InputFinished() { impl_->InputFinished(); }
+void FeatureExtractor::InputFinished() const { impl_->InputFinished(); }
 
 int32_t FeatureExtractor::NumFramesReady() const {
   return impl_->NumFramesReady();
@@ -180,8 +175,6 @@ std::vector<float> FeatureExtractor::GetFrames(int32_t frame_index,
                                                int32_t n) const {
   return impl_->GetFrames(frame_index, n);
 }
-
-void FeatureExtractor::Reset() { impl_->Reset(); }
 
 int32_t FeatureExtractor::FeatureDim() const { return impl_->FeatureDim(); }
 

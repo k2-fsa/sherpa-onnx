@@ -74,6 +74,9 @@ class OfflineRecognizer::Impl {
     if (config_.decoding_method == "greedy_search") {
       decoder_ =
           std::make_unique<OfflineTransducerGreedySearchDecoder>(model_.get());
+    } else if (config_.decoding_method == "modified_beam_search") {
+      SHERPA_ONNX_LOGE("TODO: modified_beam_search is to be implemented");
+      exit(-1);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -81,11 +84,11 @@ class OfflineRecognizer::Impl {
     }
   }
 
-  std::unique_ptr<OfflineStream> CreateStream() {
+  std::unique_ptr<OfflineStream> CreateStream() const {
     return std::make_unique<OfflineStream>(config_.feat_config);
   }
 
-  void DecodeStreams(OfflineStream **ss, int32_t n) {
+  void DecodeStreams(OfflineStream **ss, int32_t n) const {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -149,11 +152,11 @@ OfflineRecognizer::OfflineRecognizer(const OfflineRecognizerConfig &config)
 
 OfflineRecognizer::~OfflineRecognizer() = default;
 
-std::unique_ptr<OfflineStream> OfflineRecognizer::CreateStream() {
+std::unique_ptr<OfflineStream> OfflineRecognizer::CreateStream() const {
   return impl_->CreateStream();
 }
 
-void OfflineRecognizer::DecodeStreams(OfflineStream **ss, int32_t n) {
+void OfflineRecognizer::DecodeStreams(OfflineStream **ss, int32_t n) const {
   impl_->DecodeStreams(ss, n);
 }
 

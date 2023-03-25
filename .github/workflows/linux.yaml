@@ -38,6 +38,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        build_type: [Release, Debug]
 
     steps:
       - uses: actions/checkout@v2
@@ -49,7 +50,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -D CMAKE_BUILD_TYPE=Release ..
+          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
 
       - name: Build sherpa-onnx for ubuntu
         shell: bash

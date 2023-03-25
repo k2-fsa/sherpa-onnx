@@ -64,7 +64,10 @@ for a list of pre-trained models to download.
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
 
-  config.Validate();
+  if (!config.Validate()) {
+    fprintf(stderr, "Errors in config!\n");
+    return -1;
+  }
 
   int32_t sampling_rate = -1;
 

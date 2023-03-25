@@ -59,13 +59,13 @@ class OfflineRecognizer {
   explicit OfflineRecognizer(const OfflineRecognizerConfig &config);
 
   /// Create a stream for decoding.
-  std::unique_ptr<OfflineStream> CreateStream();
+  std::unique_ptr<OfflineStream> CreateStream() const;
 
   /** Decode a single stream
    *
    * @param s The stream to decode.
    */
-  void DecodeStream(OfflineStream *s) {
+  void DecodeStream(OfflineStream *s) const {
     OfflineStream *ss[1] = {s};
     DecodeStreams(ss, 1);
   }
@@ -75,7 +75,7 @@ class OfflineRecognizer {
    * @param ss Pointer to an array of streams.
    * @param n  Size of the input array.
    */
-  void DecodeStreams(OfflineStream **ss, int32_t n);
+  void DecodeStreams(OfflineStream **ss, int32_t n) const;
 
  private:
   class Impl;
