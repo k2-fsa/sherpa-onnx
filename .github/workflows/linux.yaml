@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - offline-model-2
     paths:
       - '.github/workflows/linux.yaml'
       - '.github/scripts/test-online-transducer.sh'
@@ -52,9 +53,8 @@ jobs:
           sudo add-apt-repository ppa:savoury1/ffmpeg4
           sudo add-apt-repository ppa:savoury1/ffmpeg5
           sudo apt-get update
-          sudo apt-get upgrade && sudo apt-get dist-upgrade
 
-          sudo apt-get install -y libavdevice-dev libavutil-dev ffmpeg
+          sudo apt-get install -y ffmpeg
           pkg-config --modversion libavutil
           ffmpeg -version
 
