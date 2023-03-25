@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - offline-model-2
     paths:
       - '.github/workflows/macos.yaml'
       - '.github/scripts/test-online-transducer.sh'
