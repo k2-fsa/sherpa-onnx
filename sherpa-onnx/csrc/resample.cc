@@ -46,7 +46,7 @@ I Gcd(I m, I n) {
   // this function is copied from kaldi/src/base/kaldi-math.h
   if (m == 0 || n == 0) {
     if (m == 0 && n == 0) {  // gcd not defined, as all integers are divisors.
-      fprintf(stderr, "Undefined GCD since m = 0, n = 0.");
+      fprintf(stderr, "Undefined GCD since m = 0, n = 0.\n");
       exit(-1);
     }
     return (m == 0 ? (n > 0 ? n : -n) : (m > 0 ? m : -m));

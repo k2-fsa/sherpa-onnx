@@ -115,7 +115,7 @@ class OfflineTransducerModel::Impl {
       std::ostringstream os;
       os << "---encoder---\n";
       PrintModelMetadata(os, meta_data);
-      fprintf(stderr, "%s\n", os.str().c_str());
+      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
     }
   }
 
@@ -135,7 +135,7 @@ class OfflineTransducerModel::Impl {
       std::ostringstream os;
       os << "---decoder---\n";
       PrintModelMetadata(os, meta_data);
-      fprintf(stderr, "%s\n", os.str().c_str());
+      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -159,7 +159,7 @@ class OfflineTransducerModel::Impl {
       std::ostringstream os;
       os << "---joiner---\n";
       PrintModelMetadata(os, meta_data);
-      fprintf(stderr, "%s\n", os.str().c_str());
+      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
     }
   }
 
