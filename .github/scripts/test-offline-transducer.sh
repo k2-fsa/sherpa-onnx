@@ -45,7 +45,7 @@ for wave in ${waves[@]}; do
 done
 
 
-if command -v <the_command> &> /dev/null
+if command -v sox &> /dev/null
   echo "test 8kHz"
   sox $repo/test_wavs/0.wav -r 8000 8k.wav
   time $EXE \
