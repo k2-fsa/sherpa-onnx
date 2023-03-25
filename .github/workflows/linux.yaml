@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - offline-model-2
     paths:
       - '.github/workflows/linux.yaml'
       - '.github/scripts/test-online-transducer.sh'
@@ -44,6 +45,11 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Display ffmpeg version
+        shell: bash
+        run: |
+          ffmpeg -version
 
       - name: Install ffmpeg
         shell: bash
