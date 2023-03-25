@@ -6,7 +6,6 @@
 
 #include <cassert>
 #include <fstream>
-#include <iostream>
 #include <utility>
 #include <vector>
 
@@ -20,26 +19,34 @@ struct WaveHeader {
   bool Validate() const {
     //                 F F I R
     if (chunk_id != 0x46464952) {
+      fprintf(stderr, "Expected chunk_id RIFF. Given: 0x%08x\n", chunk_id);
       return false;
     }
     //               E V A W
     if (format != 0x45564157) {
+      fprintf(stderr, "Expected format WAVE. Given: 0x%08x\n", format);
       return false;
     }
 
     if (subchunk1_id != 0x20746d66) {
+      fprintf(stderr, "Expected subchunk1_id 0x20746d66. Given: 0x%08x\n",
+              subchunk1_id);
       return false;
     }
 
     if (subchunk1_size != 16) {  // 16 for PCM
+      fprintf(stderr, "Expected subchunk1_size 16. Given: %d\n",
+              subchunk1_size);
       return false;
     }
 
     if (audio_format != 1) {  // 1 for PCM
+      fprintf(stderr, "Expected audio_format 1. Given: %d\n", audio_format);
       return false;
     }
 
     if (num_channels != 1) {  // we support only single channel for now
+      fprintf(stderr, "Expected single channel. Given: %d\n", num_channels);
       return false;
     }
     if (byte_rate != (sample_rate * num_channels * bits_per_sample / 8)) {
@@ -51,6 +58,8 @@ struct WaveHeader {
     }
 
     if (bits_per_sample != 16) {  // we support only 16 bits per sample
+      fprintf(stderr, "Expected bits_per_sample 16. Given: %d\n",
+              bits_per_sample);
       return false;
     }
 
@@ -62,7 +71,7 @@ struct WaveHeader {
   // and
   // https://www.robotplanet.dk/audio/wav_meta_data/riff_mci.pdf
   void SeekToDataChunk(std::istream &is) {
-    //                        a t a d
+    //                              a t a d
     while (is && subchunk2_id != 0x61746164) {
       // const char *p = reinterpret_cast<const char *>(&subchunk2_id);
       // printf("Skip chunk (%x): %c%c%c%c of size: %d\n", subchunk2_id, p[0],
