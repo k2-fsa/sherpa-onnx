@@ -33,18 +33,20 @@ fun main() {
         config = config,
     )
 
-    var samples = WaveReader.readWave(
+    var objArray = WaveReader.readWave(
         assetManager = AssetManager(),
         filename = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/test_wavs/1089-134686-0001.wav",
     )
+    var samples : FloatArray = objArray[0] as FloatArray
+    var sampleRate : Int = objArray[1] as Int
 
-    model.acceptWaveform(samples!!, sampleRate=16000)
+    model.acceptWaveform(samples, sampleRate=sampleRate)
     while (model.isReady()) {
       model.decode()
     }
 
-    var tail_paddings = FloatArray(8000) // 0.5 seconds
-    model.acceptWaveform(tail_paddings, sampleRate=16000)
+    var tail_paddings = FloatArray((sampleRate * 0.5).toInt()) // 0.5 seconds
+    model.acceptWaveform(tail_paddings, sampleRate=sampleRate)
     model.inputFinished()
     while (model.isReady()) {
       model.decode()

@@ -91,7 +91,6 @@ def create_recognizer():
         rule2_min_trailing_silence=1.2,
         rule3_min_utterance_length=300,  # it essentially disables this rule
         decoding_method=args.decoding_method,
-        max_feature_vectors=100,  # 1 second
     )
     return recognizer
 

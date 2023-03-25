@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-stream.h"
 
+#include <assert.h>
+
 #include <algorithm>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"

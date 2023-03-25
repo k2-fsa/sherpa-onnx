@@ -34,7 +34,6 @@ class OnlineRecognizer(object):
         rule3_min_utterance_length: int = 20,
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
-        max_feature_vectors: int = -1,
     ):
         """
         Please refer to
@@ -82,9 +81,6 @@ class OnlineRecognizer(object):
           max_active_paths:
             Use only when decoding_method is modified_beam_search. It specifies
             the maximum number of active paths during beam search.
-          max_feature_vectors:
-            Number of feature vectors to cache. -1 means to cache all feature
-            frames that have been processed.
         """
         _assert_file_exists(tokens)
         _assert_file_exists(encoder)
@@ -104,7 +100,6 @@ class OnlineRecognizer(object):
         feat_config = FeatureExtractorConfig(
             sampling_rate=sample_rate,
             feature_dim=feature_dim,
-            max_feature_vectors=max_feature_vectors,
         )
 
         endpoint_config = EndpointConfig(

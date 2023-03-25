@@ -121,7 +121,7 @@ class MainActivity : AppCompatActivity() {
             val ret = audioRecord?.read(buffer, 0, buffer.size)
             if (ret != null && ret > 0) {
                 val samples = FloatArray(ret) { buffer[it] / 32768.0f }
-                model.acceptWaveform(samples, sampleRate=16000)
+                model.acceptWaveform(samples, sampleRate=sampleRateInHz)
                 while (model.isReady()) {
                     model.decode()
                 }
@@ -180,7 +180,7 @@ class MainActivity : AppCompatActivity() {
         val type = 0
         println("Select model type ${type}")
         val config = OnlineRecognizerConfig(
-            featConfig = getFeatureConfig(sampleRate = 16000, featureDim = 80),
+            featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
             modelConfig = getModelConfig(type = type)!!,
             endpointConfig = getEndpointConfig(),
             enableEndpoint = true,
