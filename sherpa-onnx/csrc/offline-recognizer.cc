@@ -142,7 +142,7 @@ class OfflineRecognizer::Impl {
   SymbolTable symbol_table_;
   std::unique_ptr<OfflineTransducerModel> model_;
   std::unique_ptr<OfflineTransducerDecoder> decoder_;
-};  // namespace sherpa_onnx
+};
 
 OfflineRecognizer::OfflineRecognizer(const OfflineRecognizerConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
