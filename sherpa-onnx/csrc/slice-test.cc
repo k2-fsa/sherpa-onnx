@@ -30,4 +30,23 @@ TEST(Slice, Slice3D) {
   // TODO(fangjun): Check that the results are correct
 }
 
+TEST(Slice, Slice2D) {
+  Ort::AllocatorWithDefaultOptions allocator;
+  std::array<int64_t, 2> shape{5, 8};
+  Ort::Value v =
+      Ort::Value::CreateTensor<float>(allocator, shape.data(), shape.size());
+  float *p = v.GetTensorMutableData<float>();
+
+  std::iota(p, p + shape[0] * shape[1], 0);
+
+  auto v1 = Slice(allocator, &v, 1, 3);
+  auto v2 = Slice(allocator, &v, 0, 2);
+
+  Print2D(&v);
+  Print2D(&v1);
+  Print2D(&v2);
+
+  // TODO(fangjun): Check that the results are correct
+}
+
 }  // namespace sherpa_onnx

@@ -13,7 +13,7 @@ endif()
 
 option(SHERPA_ONNX_ENABLE_PYTHON "Whether to build Python" OFF)
 option(SHERPA_ONNX_ENABLE_TESTS "Whether to build tests" OFF)
-option(SHERPA_ONNX_ENABLE_CHECK "Whether to build with assert" ON)
+option(SHERPA_ONNX_ENABLE_CHECK "Whether to build with assert" OFF)
 option(BUILD_SHARED_LIBS "Whether to build shared libraries" OFF)
 option(SHERPA_ONNX_ENABLE_PORTAUDIO "Whether to build with portaudio" ON)
 option(SHERPA_ONNX_ENABLE_JNI "Whether to build JNI internface" OFF)

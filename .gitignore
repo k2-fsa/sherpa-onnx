@@ -39,3 +39,5 @@ tags
 run-decode-file-python.sh
 android/SherpaOnnx/app/src/main/assets/
 *.ncnn.*
+run-sherpa-onnx-offline.sh
+sherpa-onnx-conformer-en-2023-03-18

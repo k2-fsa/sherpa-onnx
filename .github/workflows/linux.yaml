@@ -7,11 +7,11 @@ on:
     paths:
       - '.github/workflows/linux.yaml'
       - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-offline-transducer.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
-      - 'ffmpeg-examples/**'
       - 'c-api-examples/**'
   pull_request:
     branches:
@@ -19,11 +19,11 @@ on:
     paths:
       - '.github/workflows/linux.yaml'
       - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-offline-transducer.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
-      - 'ffmpeg-examples/**'
 
 concurrency:
   group: linux-${{ github.ref }}
@@ -39,35 +39,26 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        build_type: [Release, Debug]
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Install ffmpeg
+      - name: Install sox
         shell: bash
         run: |
-          sudo apt-get install -y software-properties-common
-          sudo add-apt-repository ppa:savoury1/ffmpeg4
-          sudo add-apt-repository ppa:savoury1/ffmpeg5
-
-          sudo apt-get install -y libavdevice-dev libavutil-dev ffmpeg
-          pkg-config --modversion libavutil
-          ffmpeg -version
-
-      - name: Show ffmpeg version
-        shell: bash
-        run: |
-          pkg-config --modversion libavutil
-          ffmpeg -version
+          sudo apt-get update
+          sudo apt-get install -y sox
+          sox -h
 
       - name: Configure CMake
         shell: bash
         run: |
           mkdir build
           cd build
-          cmake -D CMAKE_BUILD_TYPE=Release ..
+          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
 
       - name: Build sherpa-onnx for ubuntu
         shell: bash
@@ -78,21 +69,19 @@ jobs:
           ls -lh lib
           ls -lh bin
 
-          cd ../ffmpeg-examples
-          make
-
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
         run: |
           file build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
 
-      - name: Test sherpa-onnx-ffmpeg
+      - name: Test offline transducer
+        shell: bash
         run: |
-          export PATH=$PWD/ffmpeg-examples:$PATH
-          export EXE=sherpa-onnx-ffmpeg
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
 
-          .github/scripts/test-online-transducer.sh
+          .github/scripts/test-offline-transducer.sh
 
       - name: Test online transducer
         shell: bash

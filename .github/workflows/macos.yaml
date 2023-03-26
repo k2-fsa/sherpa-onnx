@@ -7,6 +7,7 @@ on:
     paths:
       - '.github/workflows/macos.yaml'
       - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-offline-transducer.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -16,6 +17,7 @@ on:
     paths:
       - '.github/workflows/macos.yaml'
       - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-offline-transducer.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -34,18 +36,25 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
+        build_type: [Release, Debug]
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
+      - name: Install sox
+        shell: bash
+        run: |
+          brew install sox
+          sox -h
+
       - name: Configure CMake
         shell: bash
         run: |
           mkdir build
           cd build
-          cmake -D CMAKE_BUILD_TYPE=Release ..
+          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
 
       - name: Build sherpa-onnx for macos
         shell: bash
@@ -63,6 +72,14 @@ jobs:
           file bin/sherpa-onnx
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
+
+      - name: Test offline transducer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-transducer.sh
 
       - name: Test online transducer
         shell: bash

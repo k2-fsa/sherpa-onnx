@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/sherpa-onnx.cc
+// sherpa-onnx/csrc/sherpa-onnx-offline.cc
 //
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
@@ -8,8 +8,12 @@
 #include <string>
 #include <vector>
 
-#include "sherpa-onnx/csrc/online-recognizer.h"
-#include "sherpa-onnx/csrc/online-stream.h"
+#include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/offline-stream.h"
+#include "sherpa-onnx/csrc/offline-transducer-decoder.h"
+#include "sherpa-onnx/csrc/offline-transducer-greedy-search-decoder.h"
+#include "sherpa-onnx/csrc/offline-transducer-model.h"
+#include "sherpa-onnx/csrc/pad-sequence.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
@@ -17,7 +21,7 @@ int main(int32_t argc, char *argv[]) {
   if (argc < 6 || argc > 8) {
     const char *usage = R"usage(
 Usage:
-  ./bin/sherpa-onnx \
+  ./bin/sherpa-onnx-offline \
     /path/to/tokens.txt \
     /path/to/encoder.onnx \
     /path/to/decoder.onnx \
@@ -25,7 +29,7 @@ Usage:
     /path/to/foo.wav [num_threads [decoding_method]]
 
 Default value for num_threads is 2.
-Valid values for decoding_method: greedy_search (default), modified_beam_search.
+Valid values for decoding_method: greedy_search.
 foo.wav should be of single channel, 16-bit PCM encoded wave file; its
 sampling rate can be arbitrary and does not need to be 16kHz.
 
@@ -38,7 +42,7 @@ for a list of pre-trained models to download.
     return 0;
   }
 
-  sherpa_onnx::OnlineRecognizerConfig config;
+  sherpa_onnx::OfflineRecognizerConfig config;
 
   config.model_config.tokens = argv[1];
 
@@ -57,7 +61,6 @@ for a list of pre-trained models to download.
   if (argc == 8) {
     config.decoding_method = argv[7];
   }
-  config.max_active_paths = 4;
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
 
@@ -66,14 +69,11 @@ for a list of pre-trained models to download.
     return -1;
   }
 
-  sherpa_onnx::OnlineRecognizer recognizer(config);
-
   int32_t sampling_rate = -1;
 
   bool is_ok = false;
   std::vector<float> samples =
       sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
-
   if (!is_ok) {
     fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
     return -1;
@@ -82,32 +82,20 @@ for a list of pre-trained models to download.
 
   float duration = samples.size() / static_cast<float>(sampling_rate);
 
-  fprintf(stderr, "wav filename: %s\n", wav_filename.c_str());
-  fprintf(stderr, "wav duration (s): %.3f\n", duration);
+  sherpa_onnx::OfflineRecognizer recognizer(config);
+  auto s = recognizer.CreateStream();
 
   auto begin = std::chrono::steady_clock::now();
   fprintf(stderr, "Started\n");
 
-  auto s = recognizer.CreateStream();
   s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
-  std::vector<float> tail_paddings(static_cast<int>(0.2 * sampling_rate));
-  // Note: We can call AcceptWaveform() multiple times.
-  s->AcceptWaveform(sampling_rate, tail_paddings.data(), tail_paddings.size());
-
-  // Call InputFinished() to indicate that no audio samples are available
-  s->InputFinished();
-
-  while (recognizer.IsReady(s.get())) {
-    recognizer.DecodeStream(s.get());
-  }
-
-  std::string text = recognizer.GetResult(s.get()).text;
+  recognizer.DecodeStream(s.get());
 
   fprintf(stderr, "Done!\n");
 
   fprintf(stderr, "Recognition result for %s:\n%s\n", wav_filename.c_str(),
-          text.c_str());
+          s->GetResult().text.c_str());
 
   auto end = std::chrono::steady_clock::now();
   float elapsed_seconds =

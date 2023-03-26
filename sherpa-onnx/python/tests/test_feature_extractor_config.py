@@ -8,18 +8,18 @@
 
 import unittest
 
-import sherpa_onnx
+import _sherpa_onnx
 
 
 class TestFeatureExtractorConfig(unittest.TestCase):
     def test_default_constructor(self):
-        config = sherpa_onnx.FeatureExtractorConfig()
+        config = _sherpa_onnx.FeatureExtractorConfig()
         assert config.sampling_rate == 16000, config.sampling_rate
         assert config.feature_dim == 80, config.feature_dim
         print(config)
 
     def test_constructor(self):
-        config = sherpa_onnx.FeatureExtractorConfig(sampling_rate=8000, feature_dim=40)
+        config = _sherpa_onnx.FeatureExtractorConfig(sampling_rate=8000, feature_dim=40)
         assert config.sampling_rate == 8000, config.sampling_rate
         assert config.feature_dim == 40, config.feature_dim
         print(config)

@@ -20,7 +20,7 @@ class OnlineStream::Impl {
     feat_extractor_.AcceptWaveform(sampling_rate, waveform, n);
   }
 
-  void InputFinished() { feat_extractor_.InputFinished(); }
+  void InputFinished() const { feat_extractor_.InputFinished(); }
 
   int32_t NumFramesReady() const {
     return feat_extractor_.NumFramesReady() - start_frame_index_;
@@ -68,11 +68,11 @@ OnlineStream::OnlineStream(const FeatureExtractorConfig &config /*= {}*/)
 OnlineStream::~OnlineStream() = default;
 
 void OnlineStream::AcceptWaveform(int32_t sampling_rate, const float *waveform,
-                                  int32_t n) {
+                                  int32_t n) const {
   impl_->AcceptWaveform(sampling_rate, waveform, n);
 }
 
-void OnlineStream::InputFinished() { impl_->InputFinished(); }
+void OnlineStream::InputFinished() const { impl_->InputFinished(); }
 
 int32_t OnlineStream::NumFramesReady() const { return impl_->NumFramesReady(); }
 

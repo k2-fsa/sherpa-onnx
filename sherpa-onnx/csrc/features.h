@@ -14,9 +14,12 @@
 namespace sherpa_onnx {
 
 struct FeatureExtractorConfig {
+  // Sampling rate used by the feature extractor. If it is different from
+  // the sampling rate of the input waveform, we will do resampling inside.
   int32_t sampling_rate = 16000;
+
+  // Feature dimension
   int32_t feature_dim = 80;
-  int32_t max_feature_vectors = -1;
 
   std::string ToString() const;
 
@@ -36,7 +39,8 @@ class FeatureExtractor {
                      the range [-1, 1].
      @param n Number of entries in waveform
    */
-  void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n);
+  void AcceptWaveform(int32_t sampling_rate, const float *waveform,
+                      int32_t n) const;
 
   /**
    * InputFinished() tells the class you won't be providing any
@@ -44,7 +48,7 @@ class FeatureExtractor {
    * of features, in the case where snip-edges == false; it also
    * affects the return value of IsLastFrame().
    */
-  void InputFinished();
+  void InputFinished() const;
 
   int32_t NumFramesReady() const;
 
@@ -61,8 +65,6 @@ class FeatureExtractor {
    *         which is flattened into a 1-D vector (flattened in in row major)
    */
   std::vector<float> GetFrames(int32_t frame_index, int32_t n) const;
-
-  void Reset();
 
   /// Return feature dim of this extractor
   int32_t FeatureDim() const;

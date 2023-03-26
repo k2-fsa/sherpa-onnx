@@ -86,7 +86,6 @@ def create_recognizer():
         sample_rate=16000,
         feature_dim=80,
         decoding_method=args.decoding_method,
-        max_feature_vectors=100,  # 1 second
     )
     return recognizer
 

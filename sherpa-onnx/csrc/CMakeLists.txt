@@ -6,6 +6,11 @@ set(sources
   features.cc
   file-utils.cc
   hypothesis.cc
+  offline-stream.cc
+  offline-transducer-greedy-search-decoder.cc
+  offline-transducer-model-config.cc
+  offline-transducer-model.cc
+  offline-recognizer.cc
   online-lstm-transducer-model.cc
   online-recognizer.cc
   online-stream.cc
@@ -56,10 +61,13 @@ if(SHERPA_ONNX_ENABLE_CHECK)
 endif()
 
 add_executable(sherpa-onnx sherpa-onnx.cc)
+add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
 
 target_link_libraries(sherpa-onnx sherpa-onnx-core)
+target_link_libraries(sherpa-onnx-offline sherpa-onnx-core)
 if(NOT WIN32)
   target_link_libraries(sherpa-onnx "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
+  target_link_libraries(sherpa-onnx-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
 endif()
 
 if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
@@ -68,7 +76,13 @@ else()
   install(TARGETS sherpa-onnx-core DESTINATION lib)
 endif()
 
-install(TARGETS sherpa-onnx DESTINATION bin)
+install(
+  TARGETS
+    sherpa-onnx
+    sherpa-onnx-offline
+  DESTINATION
+    bin
+)
 
 if(SHERPA_ONNX_HAS_ALSA)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)

@@ -41,7 +41,7 @@ PackedSequence PackPaddedSequence(OrtAllocator *allocator,
   std::vector<int64_t> l_shape = length->GetTensorTypeAndShapeInfo().GetShape();
 
   assert(v_shape.size() == 3);
-  assert(l_shape.size() == 3);
+  assert(l_shape.size() == 1);
   assert(v_shape[0] == l_shape[0]);
 
   std::vector<int32_t> indexes(v_shape[0]);

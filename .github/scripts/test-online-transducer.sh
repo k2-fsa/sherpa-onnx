@@ -40,7 +40,7 @@ for wave in ${waves[@]}; do
   $repo/decoder-epoch-99-avg-1.onnx \
   $repo/joiner-epoch-99-avg-1.onnx \
   $wave \
-  4
+  2
 done
 
 rm -rf $repo
@@ -72,7 +72,7 @@ for wave in ${waves[@]}; do
   $repo/decoder-epoch-11-avg-1.onnx \
   $repo/joiner-epoch-11-avg-1.onnx \
   $wave \
-  4
+  2
 done
 
 rm -rf $repo
@@ -104,7 +104,7 @@ for wave in ${waves[@]}; do
   $repo/decoder-epoch-99-avg-1.onnx \
   $repo/joiner-epoch-99-avg-1.onnx \
   $wave \
-  4
+  2
 done
 
 rm -rf $repo
@@ -138,7 +138,7 @@ for wave in ${waves[@]}; do
   $repo/decoder-epoch-99-avg-1.onnx \
   $repo/joiner-epoch-99-avg-1.onnx \
   $wave \
-  4
+  2
 done
 
 # Decode a URL
@@ -149,7 +149,7 @@ if [ $EXE == "sherpa-onnx-ffmpeg" ]; then
   $repo/decoder-epoch-99-avg-1.onnx \
   $repo/joiner-epoch-99-avg-1.onnx \
   https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/resolve/main/test_wavs/4.wav \
-  4
+  2
 fi
 
 rm -rf $repo

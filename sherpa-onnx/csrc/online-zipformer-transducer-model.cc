@@ -97,7 +97,7 @@ void OnlineZipformerTransducerModel::InitEncoder(void *model_data,
     std::ostringstream os;
     os << "---encoder---\n";
     PrintModelMetadata(os, meta_data);
-    fprintf(stderr, "%s\n", os.str().c_str());
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
   }
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -123,8 +123,8 @@ void OnlineZipformerTransducerModel::InitEncoder(void *model_data,
     print(num_encoder_layers_, "num_encoder_layers");
     print(cnn_module_kernels_, "cnn_module_kernels");
     print(left_context_len_, "left_context_len");
-    fprintf(stderr, "T: %d\n", T_);
-    fprintf(stderr, "decode_chunk_len_: %d\n", decode_chunk_len_);
+    SHERPA_ONNX_LOGE("T: %d", T_);
+    SHERPA_ONNX_LOGE("decode_chunk_len_: %d", decode_chunk_len_);
   }
 }
 
@@ -145,7 +145,7 @@ void OnlineZipformerTransducerModel::InitDecoder(void *model_data,
     std::ostringstream os;
     os << "---decoder---\n";
     PrintModelMetadata(os, meta_data);
-    fprintf(stderr, "%s\n", os.str().c_str());
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
   }
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -170,7 +170,7 @@ void OnlineZipformerTransducerModel::InitJoiner(void *model_data,
     std::ostringstream os;
     os << "---joiner---\n";
     PrintModelMetadata(os, meta_data);
-    fprintf(stderr, "%s\n", os.str().c_str());
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
   }
 }
 
@@ -435,9 +435,6 @@ std::vector<Ort::Value> OnlineZipformerTransducerModel::GetEncoderInitStates() {
 std::pair<Ort::Value, std::vector<Ort::Value>>
 OnlineZipformerTransducerModel::RunEncoder(Ort::Value features,
                                            std::vector<Ort::Value> states) {
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
   std::vector<Ort::Value> encoder_inputs;
   encoder_inputs.reserve(1 + states.size());
 

@@ -95,7 +95,7 @@ void OnlineLstmTransducerModel::InitEncoder(void *model_data,
     std::ostringstream os;
     os << "---encoder---\n";
     PrintModelMetadata(os, meta_data);
-    fprintf(stderr, "%s\n", os.str().c_str());
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
   }
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -123,7 +123,7 @@ void OnlineLstmTransducerModel::InitDecoder(void *model_data,
     std::ostringstream os;
     os << "---decoder---\n";
     PrintModelMetadata(os, meta_data);
-    fprintf(stderr, "%s\n", os.str().c_str());
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
   }
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -148,7 +148,7 @@ void OnlineLstmTransducerModel::InitJoiner(void *model_data,
     std::ostringstream os;
     os << "---joiner---\n";
     PrintModelMetadata(os, meta_data);
-    fprintf(stderr, "%s\n", os.str().c_str());
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
   }
 }
 
@@ -228,9 +228,6 @@ std::vector<Ort::Value> OnlineLstmTransducerModel::GetEncoderInitStates() {
 std::pair<Ort::Value, std::vector<Ort::Value>>
 OnlineLstmTransducerModel::RunEncoder(Ort::Value features,
                                       std::vector<Ort::Value> states) {
-  auto memory_info =
-      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
-
   std::array<Ort::Value, 3> encoder_inputs = {
       std::move(features), std::move(states[0]), std::move(states[1])};
 
