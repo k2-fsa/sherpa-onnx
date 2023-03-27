@@ -80,6 +80,12 @@ bool SplitStringToIntegers(const std::string &full, const char *delim,
   return true;
 }
 
+// This is defined for F = float and double.
+template <class F>
+bool SplitStringToFloats(const std::string &full, const char *delim,
+                         bool omit_empty_strings,  // typically false
+                         std::vector<F> *out);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_

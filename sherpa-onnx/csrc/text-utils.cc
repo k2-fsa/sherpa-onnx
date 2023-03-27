@@ -5,6 +5,8 @@
 
 #include "sherpa-onnx/csrc/text-utils.h"
 
+#include <assert.h>
+
 #include <string>
 #include <vector>
 
@@ -26,5 +28,32 @@ void SplitStringToVector(const std::string &full, const char *delim,
     start = found + 1;
   }
 }
+
+template <class F>
+bool SplitStringToFloats(const std::string &full, const char *delim,
+                         bool omit_empty_strings,  // typically false
+                         std::vector<F> *out) {
+  assert(out != nullptr);
+  if (*(full.c_str()) == '\0') {
+    out->clear();
+    return true;
+  }
+  std::vector<std::string> split;
+  SplitStringToVector(full, delim, omit_empty_strings, &split);
+  out->resize(split.size());
+  for (size_t i = 0; i < split.size(); ++i) {
+    // assume atof never fails
+    (*out)[i] = atof(split[i].c_str());
+  }
+  return true;
+}
+
+// Instantiate the template above for float and double.
+template bool SplitStringToFloats(const std::string &full, const char *delim,
+                                  bool omit_empty_strings,
+                                  std::vector<float> *out);
+template bool SplitStringToFloats(const std::string &full, const char *delim,
+                                  bool omit_empty_strings,
+                                  std::vector<double> *out);
 
 }  // namespace sherpa_onnx

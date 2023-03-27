@@ -52,6 +52,8 @@ struct OfflineRecognizerConfig {
   std::string ToString() const;
 };
 
+class OfflineRecognizerImpl;
+
 class OfflineRecognizer {
  public:
   ~OfflineRecognizer();
@@ -78,8 +80,7 @@ class OfflineRecognizer {
   void DecodeStreams(OfflineStream **ss, int32_t n) const;
 
  private:
-  class Impl;
-  std::unique_ptr<Impl> impl_;
+  std::unique_ptr<OfflineRecognizerImpl> impl_;
 };
 
 }  // namespace sherpa_onnx
