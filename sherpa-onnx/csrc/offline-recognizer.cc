@@ -5,7 +5,6 @@
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 
 #include <memory>
-#include <utility>
 
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 

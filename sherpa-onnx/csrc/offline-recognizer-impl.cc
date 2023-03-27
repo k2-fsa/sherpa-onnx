@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 
+#include <string>
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-impl.h"
