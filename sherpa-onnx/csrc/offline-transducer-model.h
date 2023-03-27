@@ -25,6 +25,7 @@ class OfflineTransducerModel {
    * @param features  A tensor of shape (N, T, C). It is changed in-place.
    * @param features_length  A 1-D tensor of shape (N,) containing number of
    *                         valid frames in `features` before padding.
+   *                         Its dtype is int64_t.
    *
    * @return Return a pair containing:
    *  - encoder_out: A 3-D tensor of shape (N, T', encoder_dim)

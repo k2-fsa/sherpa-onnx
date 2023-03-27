@@ -8,6 +8,7 @@ set(sources
   hypothesis.cc
   offline-model-config.cc
   offline-paraformer-model-config.cc
+  offline-paraformer-model.cc
   offline-recognizer-impl.cc
   offline-recognizer.cc
   offline-stream.cc
