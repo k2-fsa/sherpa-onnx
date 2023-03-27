@@ -5,6 +5,8 @@
 
 #include "sherpa-onnx/csrc/text-utils.h"
 
+#include <assert.h>
+
 #include <string>
 #include <vector>
 
@@ -31,7 +33,7 @@ template <class F>
 bool SplitStringToFloats(const std::string &full, const char *delim,
                          bool omit_empty_strings,  // typically false
                          std::vector<F> *out) {
-  assert(out != NULL);
+  assert(out != nullptr);
   if (*(full.c_str()) == '\0') {
     out->clear();
     return true;
