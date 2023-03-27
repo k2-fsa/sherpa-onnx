@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
-#include "sherpa-onnx/csrc/offline-transducer-model-config.h"
+#include "sherpa-onnx/csrc/offline-model-config.h"
 
 namespace sherpa_onnx {
 
@@ -17,7 +17,7 @@ struct OfflineTransducerDecoderResult;
 
 class OfflineTransducerModel {
  public:
-  explicit OfflineTransducerModel(const OfflineTransducerModelConfig &config);
+  explicit OfflineTransducerModel(const OfflineModelConfig &config);
   ~OfflineTransducerModel();
 
   /** Run the encoder.

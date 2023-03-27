@@ -19,7 +19,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   Ort::Env env;
 
   Ort::SessionOptions sess_opts;
-  auto buf = ReadFile(config.model_config.encoder_filename);
+  auto buf = ReadFile(config.model_config.transducer.encoder_filename);
 
   auto encoder_sess =
       std::make_unique<Ort::Session>(env, buf.data(), buf.size(), sess_opts);

@@ -6,6 +6,8 @@ set(sources
   features.cc
   file-utils.cc
   hypothesis.cc
+  offline-model-config.cc
+  offline-paraformer-model-config.cc
   offline-recognizer-impl.cc
   offline-recognizer.cc
   offline-stream.cc

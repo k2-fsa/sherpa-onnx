@@ -47,9 +47,9 @@ for a list of pre-trained models to download.
   config.model_config.tokens = argv[1];
 
   config.model_config.debug = false;
-  config.model_config.encoder_filename = argv[2];
-  config.model_config.decoder_filename = argv[3];
-  config.model_config.joiner_filename = argv[4];
+  config.model_config.transducer.encoder_filename = argv[2];
+  config.model_config.transducer.decoder_filename = argv[3];
+  config.model_config.transducer.joiner_filename = argv[4];
 
   std::string wav_filename = argv[5];
 

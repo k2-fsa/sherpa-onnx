@@ -6,6 +6,8 @@
 
 #include <memory>
 
+#include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 
 namespace sherpa_onnx {
