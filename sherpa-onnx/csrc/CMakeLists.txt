@@ -6,11 +6,12 @@ set(sources
   features.cc
   file-utils.cc
   hypothesis.cc
+  offline-recognizer-impl.cc
+  offline-recognizer.cc
   offline-stream.cc
   offline-transducer-greedy-search-decoder.cc
   offline-transducer-model-config.cc
   offline-transducer-model.cc
-  offline-recognizer.cc
   online-lstm-transducer-model.cc
   online-recognizer.cc
   online-stream.cc
