@@ -9,24 +9,32 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
-#include "sherpa-onnx/csrc/offline-stream.h"
-#include "sherpa-onnx/csrc/offline-transducer-decoder.h"
-#include "sherpa-onnx/csrc/offline-transducer-greedy-search-decoder.h"
-#include "sherpa-onnx/csrc/offline-transducer-model.h"
-#include "sherpa-onnx/csrc/pad-sequence.h"
-#include "sherpa-onnx/csrc/symbol-table.h"
+#include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 int main(int32_t argc, char *argv[]) {
-  if (argc < 6 || argc > 8) {
-    const char *usage = R"usage(
+  const char *kUsageMessage = R"usage(
 Usage:
+(1) Transducer from icefall
+
   ./bin/sherpa-onnx-offline \
-    /path/to/tokens.txt \
-    /path/to/encoder.onnx \
-    /path/to/decoder.onnx \
-    /path/to/joiner.onnx \
-    /path/to/foo.wav [num_threads [decoding_method]]
+    --tokens=/path/to/tokens.txt \
+    --encoder=/path/to/encoder.onnx \
+    --decoder=/path/to/decoder.onnx \
+    --joiner=/path/to/joiner.onnx \
+    --num-threads=2 \
+    --decoding-method=greedy_search \
+    /path/to/foo.wav
+
+(2) Paraformer from FunASR
+
+  ./bin/sherpa-onnx-offline \
+    --tokens=/path/to/tokens.txt \
+    --paraformer=/path/to/model.onnx \
+    --num-threads=2 \
+    --decoding-method=greedy_search \
+    /path/to/foo.wav
+
 
 Default value for num_threads is 2.
 Valid values for decoding_method: greedy_search.
@@ -37,29 +45,15 @@ Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 for a list of pre-trained models to download.
 )usage";
-    fprintf(stderr, "%s\n", usage);
 
-    return 0;
-  }
-
+  sherpa_onnx::ParseOptions po(kUsageMessage);
   sherpa_onnx::OfflineRecognizerConfig config;
+  config.Register(&po);
 
-  config.model_config.tokens = argv[1];
-
-  config.model_config.debug = false;
-  config.model_config.transducer.encoder_filename = argv[2];
-  config.model_config.transducer.decoder_filename = argv[3];
-  config.model_config.transducer.joiner_filename = argv[4];
-
-  std::string wav_filename = argv[5];
-
-  config.model_config.num_threads = 2;
-  if (argc == 7 && atoi(argv[6]) > 0) {
-    config.model_config.num_threads = atoi(argv[6]);
-  }
-
-  if (argc == 8) {
-    config.decoding_method = argv[7];
+  po.Read(argc, argv);
+  if (po.NumArgs() < 1) {
+    po.PrintUsage();
+    exit(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
@@ -68,6 +62,8 @@ for a list of pre-trained models to download.
     fprintf(stderr, "Errors in config!\n");
     return -1;
   }
+
+  std::string wav_filename = po.GetArg(1);
 
   int32_t sampling_rate = -1;
 
