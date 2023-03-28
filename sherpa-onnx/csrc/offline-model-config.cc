@@ -14,7 +14,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
 
   po->Register("tokens", &tokens, "Path to tokens.txt");
 
-  po->Register("num_threads", &num_threads,
+  po->Register("num-threads", &num_threads,
                "Number of threads to run the neural network");
 
   po->Register("debug", &debug,

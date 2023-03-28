@@ -45,7 +45,14 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     if (config.decoding_method == "greedy_search") {
       int32_t eos_id = symbol_table_["</s>"];
       decoder_ = std::make_unique<OfflineParaformerGreedySearchDecoder>(eos_id);
+    } else {
+      SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
+                       config.decoding_method.c_str());
+      exit(-1);
     }
+
+    // Paraformer models assume input samples are in the range
+    // [-32768, 32767], so we set normalize_samples to false
     config_.feat_config.normalize_samples = false;
   }
 
