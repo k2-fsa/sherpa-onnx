@@ -77,6 +77,8 @@ jobs:
           export PATH=$PWD/build/bin/Release:$PATH
           export EXE=sherpa-onnx-offline.exe
 
+          .github/scripts/test-offline-transducer.sh
+
       - name: Test online transducer for Windows x64
         shell: bash
         run: |
