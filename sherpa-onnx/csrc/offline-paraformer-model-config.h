@@ -14,7 +14,8 @@ struct OfflineParaformerModelConfig {
   std::string model;
 
   OfflineParaformerModelConfig() = default;
-  OfflineParaformerModelConfig(const std::string &model) : model(model) {}
+  explicit OfflineParaformerModelConfig(const std::string &model)
+      : model(model) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

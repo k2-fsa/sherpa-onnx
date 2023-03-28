@@ -5,6 +5,8 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_PARAFORMER_GREEDY_SEARCH_DECODER_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_PARAFORMER_GREEDY_SEARCH_DECODER_H_
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/offline-paraformer-decoder.h"
 
 namespace sherpa_onnx {

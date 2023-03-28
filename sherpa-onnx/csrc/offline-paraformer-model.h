@@ -4,6 +4,10 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_PARAFORMER_MODEL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_PARAFORMER_MODEL_H_
 
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-model-config.h"
 

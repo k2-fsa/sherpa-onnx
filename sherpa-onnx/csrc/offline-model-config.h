@@ -4,6 +4,8 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_MODEL_CONFIG_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_MODEL_CONFIG_H_
 
+#include <string>
+
 #include "sherpa-onnx/csrc/offline-paraformer-model-config.h"
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"
 

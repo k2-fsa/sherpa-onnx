@@ -1,8 +1,10 @@
-// sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h
+// sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h"
+
+#include <vector>
 
 namespace sherpa_onnx {
 

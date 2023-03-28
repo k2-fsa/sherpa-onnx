@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/offline-paraformer-model.h"
 
+#include <algorithm>
+#include <string>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
