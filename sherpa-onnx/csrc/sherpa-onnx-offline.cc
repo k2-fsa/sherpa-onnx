@@ -15,6 +15,7 @@
 int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
 Usage:
+
 (1) Transducer from icefall
 
   ./bin/sherpa-onnx-offline \
@@ -24,7 +25,8 @@ Usage:
     --joiner=/path/to/joiner.onnx \
     --num-threads=2 \
     --decoding-method=greedy_search \
-    /path/to/foo.wav
+    /path/to/foo.wav [bar.wav foobar.wav ...]
+
 
 (2) Paraformer from FunASR
 
@@ -33,8 +35,9 @@ Usage:
     --paraformer=/path/to/model.onnx \
     --num-threads=2 \
     --decoding-method=greedy_search \
-    /path/to/foo.wav
+    /path/to/foo.wav [bar.wav foobar.wav ...]
 
+Note: It supports decoding multiple files in batches
 
 Default value for num_threads is 2.
 Valid values for decoding_method: greedy_search.
@@ -63,37 +66,43 @@ for a list of pre-trained models to download.
     return -1;
   }
 
-  std::string wav_filename = po.GetArg(1);
-
-  int32_t sampling_rate = -1;
-
-  bool is_ok = false;
-  std::vector<float> samples =
-      sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
-  if (!is_ok) {
-    fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
-    return -1;
-  }
-  fprintf(stderr, "sampling rate of input file: %d\n", sampling_rate);
-
-  float duration = samples.size() / static_cast<float>(sampling_rate);
-
   sherpa_onnx::OfflineRecognizer recognizer(config);
-  auto s = recognizer.CreateStream();
 
   auto begin = std::chrono::steady_clock::now();
   fprintf(stderr, "Started\n");
 
-  s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
+  std::vector<std::unique_ptr<sherpa_onnx::OfflineStream>> ss;
+  std::vector<sherpa_onnx::OfflineStream *> ss_pointers;
+  float duration = 0;
+  for (int32_t i = 1; i <= po.NumArgs(); ++i) {
+    std::string wav_filename = po.GetArg(i);
+    int32_t sampling_rate = -1;
+    bool is_ok = false;
+    std::vector<float> samples =
+        sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
+    if (!is_ok) {
+      fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
+      return -1;
+    }
+    duration += samples.size() / static_cast<float>(sampling_rate);
 
-  recognizer.DecodeStream(s.get());
+    auto s = recognizer.CreateStream();
+    s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
-  fprintf(stderr, "Done!\n");
+    ss.push_back(std::move(s));
+    ss_pointers.push_back(ss.back().get());
+  }
 
-  fprintf(stderr, "Recognition result for %s:\n%s\n", wav_filename.c_str(),
-          s->GetResult().text.c_str());
+  recognizer.DecodeStreams(ss_pointers.data(), ss_pointers.size());
 
   auto end = std::chrono::steady_clock::now();
+
+  fprintf(stderr, "Done!\n\n");
+  for (int32_t i = 1; i <= po.NumArgs(); ++i) {
+    fprintf(stderr, "%s\n%s\n----\n", po.GetArg(i).c_str(),
+            ss[i - 1]->GetResult().text.c_str());
+  }
+
   float elapsed_seconds =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
           .count() /

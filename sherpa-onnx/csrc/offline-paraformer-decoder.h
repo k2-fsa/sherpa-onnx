@@ -1,0 +1,37 @@
+// sherpa-onnx/csrc/offline-paraformer-decoder.h
+//
+// Copyright (c)  2023  Xiaomi Corporation
+
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_PARAFORMER_DECODER_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_PARAFORMER_DECODER_H_
+
+#include <vector>
+
+#include "onnxruntime_cxx_api.h"  // NOLINT
+
+namespace sherpa_onnx {
+
+struct OfflineParaformerDecoderResult {
+  /// The decoded token IDs
+  std::vector<int64_t> tokens;
+};
+
+class OfflineParaformerDecoder {
+ public:
+  virtual ~OfflineParaformerDecoder() = default;
+
+  /** Run beam search given the output from the paraformer model.
+   *
+   * @param log_probs A 3-D tensor of shape (N, T, vocab_size)
+   * @param token_num A 2-D tensor of shape (N, T). Its dtype is int64_t.
+   *                  log_probs[i].argmax(axis=-1) equals to token_num[i]
+   *
+   * @return Return a vector of size `N` containing the decoded results.
+   */
+  virtual std::vector<OfflineParaformerDecoderResult> Decode(
+      Ort::Value log_probs, Ort::Value token_num) = 0;
+};
+
+}  // namespace sherpa_onnx
+
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_PARAFORMER_DECODER_H_

@@ -7,6 +7,7 @@ set(sources
   file-utils.cc
   hypothesis.cc
   offline-model-config.cc
+  offline-paraformer-greedy-search-decoder.cc
   offline-paraformer-model-config.cc
   offline-paraformer-model.cc
   offline-recognizer-impl.cc

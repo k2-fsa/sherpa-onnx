@@ -8,6 +8,8 @@
 #include <memory>
 
 #include "sherpa-onnx/csrc/offline-model-config.h"
+#include "sherpa-onnx/csrc/offline-paraformer-decoder.h"
+#include "sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-paraformer-model.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -16,13 +18,36 @@
 
 namespace sherpa_onnx {
 
+static OfflineRecognitionResult Convert(
+    const OfflineParaformerDecoderResult &src, const SymbolTable &sym_table) {
+  OfflineRecognitionResult r;
+  r.tokens.reserve(src.tokens.size());
+
+  std::string text;
+  for (auto i : src.tokens) {
+    auto sym = sym_table[i];
+    text.append(sym);
+
+    r.tokens.push_back(std::move(sym));
+  }
+  r.text = std::move(text);
+
+  return r;
+}
+
 class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerParaformerImpl(
       const OfflineRecognizerConfig &config)
       : config_(config),
         symbol_table_(config_.model_config.tokens),
-        model_(std::make_unique<OfflineParaformerModel>(config.model_config)) {}
+        model_(std::make_unique<OfflineParaformerModel>(config.model_config)) {
+    if (config.decoding_method == "greedy_search") {
+      int32_t eos_id = symbol_table_["</s>"];
+      decoder_ = std::make_unique<OfflineParaformerGreedySearchDecoder>(eos_id);
+    }
+    config_.feat_config.normalize_samples = false;
+  }
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
     return std::make_unique<OfflineStream>(config_.feat_config);
@@ -50,6 +75,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     std::vector<int32_t> features_length_vec(n);
     for (int32_t i = 0; i != n; ++i) {
       std::vector<float> f = ss[i]->GetFrames();
+
       f = ApplyLFR(f);
       ApplyCMVN(&f);
 
@@ -76,23 +102,18 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
         memory_info, features_length_vec.data(), n,
         features_length_shape.data(), features_length_shape.size());
 
-    Ort::Value x = PadSequence(model_->Allocator(), features_pointer,
-                               -23.025850929940457f);
+    // Caution(fangjun): We cannot pad it with log(eps),
+    // i.e., -23.025850929940457f
+    Ort::Value x = PadSequence(model_->Allocator(), features_pointer, 0);
 
     auto t = model_->Forward(std::move(x), std::move(x_length));
 
-    // TODO(fangjun): Create a decoder for paraformer
-    int32_t num_tokens = t.second.GetTensorTypeAndShapeInfo().GetShape()[1];
-    const int64_t *p = t.second.GetTensorData<int64_t>();
-    std::string text;
-    for (int32_t i = 0; i != num_tokens; ++i) {
-      if (p[i] == 0 || p[i] == 2) continue;
-      auto token = symbol_table_[p[i]];
-      text.append(std::move(token));
-    }
-    SHERPA_ONNX_LOGE("result is: %s\n", text.c_str());
+    auto results = decoder_->Decode(std::move(t.first), std::move(t.second));
 
-    exit(0);
+    for (int32_t i = 0; i != n; ++i) {
+      auto r = Convert(results[i], symbol_table_);
+      ss[i]->SetResult(r);
+    }
   }
 
  private:
@@ -142,6 +163,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OfflineParaformerModel> model_;
+  std::unique_ptr<OfflineParaformerDecoder> decoder_;
 };
 
 }  // namespace sherpa_onnx

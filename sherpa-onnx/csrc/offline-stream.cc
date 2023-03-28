@@ -38,7 +38,7 @@ std::string OfflineFeatureExtractorConfig::ToString() const {
 
 class OfflineStream::Impl {
  public:
-  explicit Impl(const OfflineFeatureExtractorConfig &config) {
+  explicit Impl(const OfflineFeatureExtractorConfig &config) : config_(config) {
     opts_.frame_opts.dither = 0;
     opts_.frame_opts.snip_edges = false;
     opts_.frame_opts.samp_freq = config.sampling_rate;
@@ -48,6 +48,19 @@ class OfflineStream::Impl {
   }
 
   void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
+    if (config_.normalize_samples) {
+      AcceptWaveformImpl(sampling_rate, waveform, n);
+    } else {
+      std::vector<float> buf(n);
+      for (int32_t i = 0; i != n; ++i) {
+        buf[i] = waveform[i] * 32768;
+      }
+      AcceptWaveformImpl(sampling_rate, buf.data(), n);
+    }
+  }
+
+  void AcceptWaveformImpl(int32_t sampling_rate, const float *waveform,
+                          int32_t n) {
     if (sampling_rate != opts_.frame_opts.samp_freq) {
       SHERPA_ONNX_LOGE(
           "Creating a resampler:\n"
@@ -101,6 +114,7 @@ class OfflineStream::Impl {
   const OfflineRecognitionResult &GetResult() const { return r_; }
 
  private:
+  OfflineFeatureExtractorConfig config_;
   std::unique_ptr<knf::OnlineFbank> fbank_;
   knf::FbankOptions opts_;
   OfflineRecognitionResult r_;
