@@ -9,24 +9,35 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
-#include "sherpa-onnx/csrc/offline-stream.h"
-#include "sherpa-onnx/csrc/offline-transducer-decoder.h"
-#include "sherpa-onnx/csrc/offline-transducer-greedy-search-decoder.h"
-#include "sherpa-onnx/csrc/offline-transducer-model.h"
-#include "sherpa-onnx/csrc/pad-sequence.h"
-#include "sherpa-onnx/csrc/symbol-table.h"
+#include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 int main(int32_t argc, char *argv[]) {
-  if (argc < 6 || argc > 8) {
-    const char *usage = R"usage(
+  const char *kUsageMessage = R"usage(
 Usage:
+
+(1) Transducer from icefall
+
   ./bin/sherpa-onnx-offline \
-    /path/to/tokens.txt \
-    /path/to/encoder.onnx \
-    /path/to/decoder.onnx \
-    /path/to/joiner.onnx \
-    /path/to/foo.wav [num_threads [decoding_method]]
+    --tokens=/path/to/tokens.txt \
+    --encoder=/path/to/encoder.onnx \
+    --decoder=/path/to/decoder.onnx \
+    --joiner=/path/to/joiner.onnx \
+    --num-threads=2 \
+    --decoding-method=greedy_search \
+    /path/to/foo.wav [bar.wav foobar.wav ...]
+
+
+(2) Paraformer from FunASR
+
+  ./bin/sherpa-onnx-offline \
+    --tokens=/path/to/tokens.txt \
+    --paraformer=/path/to/model.onnx \
+    --num-threads=2 \
+    --decoding-method=greedy_search \
+    /path/to/foo.wav [bar.wav foobar.wav ...]
+
+Note: It supports decoding multiple files in batches
 
 Default value for num_threads is 2.
 Valid values for decoding_method: greedy_search.
@@ -37,29 +48,15 @@ Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 for a list of pre-trained models to download.
 )usage";
-    fprintf(stderr, "%s\n", usage);
 
-    return 0;
-  }
-
+  sherpa_onnx::ParseOptions po(kUsageMessage);
   sherpa_onnx::OfflineRecognizerConfig config;
+  config.Register(&po);
 
-  config.model_config.tokens = argv[1];
-
-  config.model_config.debug = false;
-  config.model_config.encoder_filename = argv[2];
-  config.model_config.decoder_filename = argv[3];
-  config.model_config.joiner_filename = argv[4];
-
-  std::string wav_filename = argv[5];
-
-  config.model_config.num_threads = 2;
-  if (argc == 7 && atoi(argv[6]) > 0) {
-    config.model_config.num_threads = atoi(argv[6]);
-  }
-
-  if (argc == 8) {
-    config.decoding_method = argv[7];
+  po.Read(argc, argv);
+  if (po.NumArgs() < 1) {
+    po.PrintUsage();
+    exit(EXIT_FAILURE);
   }
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
@@ -69,35 +66,43 @@ for a list of pre-trained models to download.
     return -1;
   }
 
-  int32_t sampling_rate = -1;
-
-  bool is_ok = false;
-  std::vector<float> samples =
-      sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
-  if (!is_ok) {
-    fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
-    return -1;
-  }
-  fprintf(stderr, "sampling rate of input file: %d\n", sampling_rate);
-
-  float duration = samples.size() / static_cast<float>(sampling_rate);
-
   sherpa_onnx::OfflineRecognizer recognizer(config);
-  auto s = recognizer.CreateStream();
 
   auto begin = std::chrono::steady_clock::now();
   fprintf(stderr, "Started\n");
 
-  s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
+  std::vector<std::unique_ptr<sherpa_onnx::OfflineStream>> ss;
+  std::vector<sherpa_onnx::OfflineStream *> ss_pointers;
+  float duration = 0;
+  for (int32_t i = 1; i <= po.NumArgs(); ++i) {
+    std::string wav_filename = po.GetArg(i);
+    int32_t sampling_rate = -1;
+    bool is_ok = false;
+    std::vector<float> samples =
+        sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
+    if (!is_ok) {
+      fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
+      return -1;
+    }
+    duration += samples.size() / static_cast<float>(sampling_rate);
 
-  recognizer.DecodeStream(s.get());
+    auto s = recognizer.CreateStream();
+    s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
-  fprintf(stderr, "Done!\n");
+    ss.push_back(std::move(s));
+    ss_pointers.push_back(ss.back().get());
+  }
 
-  fprintf(stderr, "Recognition result for %s:\n%s\n", wav_filename.c_str(),
-          s->GetResult().text.c_str());
+  recognizer.DecodeStreams(ss_pointers.data(), ss_pointers.size());
 
   auto end = std::chrono::steady_clock::now();
+
+  fprintf(stderr, "Done!\n\n");
+  for (int32_t i = 1; i <= po.NumArgs(); ++i) {
+    fprintf(stderr, "%s\n%s\n----\n", po.GetArg(i).c_str(),
+            ss[i - 1]->GetResult().text.c_str());
+  }
+
   float elapsed_seconds =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
           .count() /

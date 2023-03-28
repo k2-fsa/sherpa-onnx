@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-stream.h"
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
@@ -32,7 +33,7 @@ struct OfflineRecognitionResult {
 
 struct OfflineRecognizerConfig {
   OfflineFeatureExtractorConfig feat_config;
-  OfflineTransducerModelConfig model_config;
+  OfflineModelConfig model_config;
 
   std::string decoding_method = "greedy_search";
   // only greedy_search is implemented
@@ -40,7 +41,7 @@ struct OfflineRecognizerConfig {
 
   OfflineRecognizerConfig() = default;
   OfflineRecognizerConfig(const OfflineFeatureExtractorConfig &feat_config,
-                          const OfflineTransducerModelConfig &model_config,
+                          const OfflineModelConfig &model_config,
                           const std::string &decoding_method)
       : feat_config(feat_config),
         model_config(model_config),

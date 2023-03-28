@@ -24,18 +24,6 @@
 
 namespace sherpa_onnx {
 
-#ifdef _MSC_VER
-// See
-// https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
-static std::wstring ToWide(const std::string &s) {
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-  return converter.from_bytes(s);
-}
-#define SHERPA_MAYBE_WIDE(s) ToWide(s)
-#else
-#define SHERPA_MAYBE_WIDE(s) s
-#endif
-
 /**
  * Get the input names of a model.
  *
@@ -79,6 +67,7 @@ Ort::Value Clone(OrtAllocator *allocator, const Ort::Value *v);
 void Print1D(Ort::Value *v);
 
 // Print a 2-D tensor to stderr
+template <typename T = float>
 void Print2D(Ort::Value *v);
 
 // Print a 3-D tensor to stderr

@@ -71,7 +71,15 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
-      - name: Test sherpa-onnx for Windows x64
+      - name: Test offline transducer for Windows x64
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-transducer.sh
+
+      - name: Test online transducer for Windows x64
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH

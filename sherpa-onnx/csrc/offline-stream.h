@@ -23,6 +23,13 @@ struct OfflineFeatureExtractorConfig {
   // Feature dimension
   int32_t feature_dim = 80;
 
+  // Set internally by some models, e.g., paraformer
+  // This parameter is not exposed to users from the commandline
+  // If true, the feature extractor expects inputs to be normalized to
+  // the range [-1, 1].
+  // If false, we will multiply the inputs by 32768
+  bool normalize_samples = true;
+
   std::string ToString() const;
 
   void Register(ParseOptions *po);

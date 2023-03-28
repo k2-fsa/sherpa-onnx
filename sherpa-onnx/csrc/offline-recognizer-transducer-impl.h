@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-recognizer-transducer-impl.h
 //
-// Copyright (c)  2022  Xiaomi Corporation
+// Copyright (c)  2022-2023  Xiaomi Corporation
 
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_TRANSDUCER_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_TRANSDUCER_IMPL_H_

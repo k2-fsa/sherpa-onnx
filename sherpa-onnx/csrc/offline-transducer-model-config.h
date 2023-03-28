@@ -14,22 +14,14 @@ struct OfflineTransducerModelConfig {
   std::string encoder_filename;
   std::string decoder_filename;
   std::string joiner_filename;
-  std::string tokens;
-  int32_t num_threads = 2;
-  bool debug = false;
 
   OfflineTransducerModelConfig() = default;
   OfflineTransducerModelConfig(const std::string &encoder_filename,
                                const std::string &decoder_filename,
-                               const std::string &joiner_filename,
-                               const std::string &tokens, int32_t num_threads,
-                               bool debug)
+                               const std::string &joiner_filename)
       : encoder_filename(encoder_filename),
         decoder_filename(decoder_filename),
-        joiner_filename(joiner_filename),
-        tokens(tokens),
-        num_threads(num_threads),
-        debug(debug) {}
+        joiner_filename(joiner_filename) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

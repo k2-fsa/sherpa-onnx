@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
-#include "sherpa-onnx/csrc/offline-transducer-model-config.h"
+#include "sherpa-onnx/csrc/offline-model-config.h"
 
 namespace sherpa_onnx {
 
@@ -17,7 +17,7 @@ struct OfflineTransducerDecoderResult;
 
 class OfflineTransducerModel {
  public:
-  explicit OfflineTransducerModel(const OfflineTransducerModelConfig &config);
+  explicit OfflineTransducerModel(const OfflineModelConfig &config);
   ~OfflineTransducerModel();
 
   /** Run the encoder.
@@ -25,6 +25,7 @@ class OfflineTransducerModel {
    * @param features  A tensor of shape (N, T, C). It is changed in-place.
    * @param features_length  A 1-D tensor of shape (N,) containing number of
    *                         valid frames in `features` before padding.
+   *                         Its dtype is int64_t.
    *
    * @return Return a pair containing:
    *  - encoder_out: A 3-D tensor of shape (N, T', encoder_dim)

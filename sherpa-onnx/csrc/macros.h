@@ -57,6 +57,23 @@
     }                                                                    \
   } while (0)
 
+// read a vector of floats
+#define SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(dst, src_key)               \
+  do {                                                                   \
+    auto value =                                                         \
+        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator);  \
+    if (!value) {                                                        \
+      SHERPA_ONNX_LOGE("%s does not exist in the metadata", src_key);    \
+      exit(-1);                                                          \
+    }                                                                    \
+                                                                         \
+    bool ret = SplitStringToFloats(value.get(), ",", true, &dst);        \
+    if (!ret) {                                                          \
+      SHERPA_ONNX_LOGE("Invalid value %s for %s", value.get(), src_key); \
+      exit(-1);                                                          \
+    }                                                                    \
+  } while (0)
+
 // Read a string
 #define SHERPA_ONNX_READ_META_DATA_STR(dst, src_key)                    \
   do {                                                                  \

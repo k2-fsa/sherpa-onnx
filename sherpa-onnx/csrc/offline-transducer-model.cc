@@ -16,7 +16,7 @@ namespace sherpa_onnx {
 
 class OfflineTransducerModel::Impl {
  public:
-  explicit Impl(const OfflineTransducerModelConfig &config)
+  explicit Impl(const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_WARNING),
         sess_opts_{},
@@ -24,17 +24,17 @@ class OfflineTransducerModel::Impl {
     sess_opts_.SetIntraOpNumThreads(config.num_threads);
     sess_opts_.SetInterOpNumThreads(config.num_threads);
     {
-      auto buf = ReadFile(config.encoder_filename);
+      auto buf = ReadFile(config.transducer.encoder_filename);
       InitEncoder(buf.data(), buf.size());
     }
 
     {
-      auto buf = ReadFile(config.decoder_filename);
+      auto buf = ReadFile(config.transducer.decoder_filename);
       InitDecoder(buf.data(), buf.size());
     }
 
     {
-      auto buf = ReadFile(config.joiner_filename);
+      auto buf = ReadFile(config.transducer.joiner_filename);
       InitJoiner(buf.data(), buf.size());
     }
   }
@@ -164,7 +164,7 @@ class OfflineTransducerModel::Impl {
   }
 
  private:
-  OfflineTransducerModelConfig config_;
+  OfflineModelConfig config_;
   Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
@@ -195,8 +195,7 @@ class OfflineTransducerModel::Impl {
   int32_t context_size_ = 0;  // initialized in InitDecoder
 };
 
-OfflineTransducerModel::OfflineTransducerModel(
-    const OfflineTransducerModelConfig &config)
+OfflineTransducerModel::OfflineTransducerModel(const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
 OfflineTransducerModel::~OfflineTransducerModel() = default;

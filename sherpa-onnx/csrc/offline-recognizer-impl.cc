@@ -8,6 +8,7 @@
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-impl.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -16,10 +17,20 @@ namespace sherpa_onnx {
 
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     const OfflineRecognizerConfig &config) {
-  Ort::Env env;
+  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 
   Ort::SessionOptions sess_opts;
-  auto buf = ReadFile(config.model_config.encoder_filename);
+  std::string model_filename;
+  if (!config.model_config.transducer.encoder_filename.empty()) {
+    model_filename = config.model_config.transducer.encoder_filename;
+  } else if (!config.model_config.paraformer.model.empty()) {
+    model_filename = config.model_config.paraformer.model;
+  } else {
+    SHERPA_ONNX_LOGE("Please provide a model");
+    exit(-1);
+  }
+
+  auto buf = ReadFile(model_filename);
 
   auto encoder_sess =
       std::make_unique<Ort::Session>(env, buf.data(), buf.size(), sess_opts);
@@ -35,7 +46,16 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerTransducerImpl>(config);
   }
 
-  SHERPA_ONNX_LOGE("Unsupported model_type: %s\n", model_type.c_str());
+  if (model_type == "paraformer") {
+    return std::make_unique<OfflineRecognizerParaformerImpl>(config);
+  }
+
+  SHERPA_ONNX_LOGE(
+      "\nUnsupported model_type: %s\n"
+      "We support only the following model types at present: \n"
+      " - transducer models from icefall\n"
+      " - Paraformer models from FunASR\n",
+      model_type.c_str());
 
   exit(-1);
 }
