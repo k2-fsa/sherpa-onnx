@@ -30,9 +30,12 @@ ls -lh
 
 ls -lh $repo
 
-python3 ./python-api-examples/decode-file.py \
+python3 ./python-api-examples/online-decode-files.py \
   --tokens=$repo/tokens.txt \
   --encoder=$repo/encoder-epoch-99-avg-1.onnx \
   --decoder=$repo/decoder-epoch-99-avg-1.onnx \
   --joiner=$repo/joiner-epoch-99-avg-1.onnx \
-  --wave-filename=$repo/test_wavs/4.wav
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/2.wav \
+  $repo/test_wavs/3.wav

@@ -5,8 +5,13 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_WEBSOCKET_SERVER_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_WEBSOCKET_SERVER_IMPL_H_
 
+#include <deque>
 #include <fstream>
+#include <map>
 #include <memory>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/parse-options.h"

@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-websocket-server-impl.h"
 
+#include <algorithm>
+
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
