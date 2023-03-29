@@ -24,13 +24,12 @@ https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/csrc/online-websoc
 import argparse
 import asyncio
 import sys
-import time
 
 import numpy as np
 
 try:
     import sounddevice as sd
-except ImportError as e:
+except ImportError:
     print("Please install sounddevice first. You can use")
     print()
     print("  pip install sounddevice")
@@ -134,7 +133,7 @@ async def run(
             await websocket.send(indata.tobytes())
 
         decoding_results = await receive_task
-        print("\nFinal result is:\n{decoding_results}")
+        print(f"\nFinal result is:\n{decoding_results}")
 
 
 async def main():

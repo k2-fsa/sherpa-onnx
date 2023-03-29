@@ -27,7 +27,6 @@ https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/csrc/online-websoc
 import argparse
 import asyncio
 import logging
-import time
 import wave
 
 try:

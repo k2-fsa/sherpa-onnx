@@ -15,7 +15,7 @@ Usage:
       /path/to/foo.wav \
       /path/to/bar.wav \
       /path/to/16kHz.wav \
-      /path/to/8kHz.wav \
+      /path/to/8kHz.wav
 
 (Note: You have to first start the server before starting the client)
 
@@ -23,9 +23,6 @@ You can find the server at
 https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/csrc/offline-websocket-server.cc
 
 Note: The server is implemented in C++.
-
-There is also a C++ version of the client. Please see
-https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/csrc/offline-websocket-client.cc
 """
 
 import argparse
@@ -45,34 +42,6 @@ except ImportError:
     print("")
 
 import numpy as np
-
-
-def read_wave(wave_filename: str) -> Tuple[int, np.ndarray]:
-    """
-    Args:
-      wave_filename:
-        Path to a wave file. Its sampling rate has to be 16000.
-        It should be single channel and each sample should be 16-bit.
-    Returns:
-      Return a tuple containing:
-       - the sample rante
-       - 1-D float32 tensor containing audio samples normalized to [-1, 1].
-    """
-
-    with wave.open(wave_filename) as f:
-        # We support only a single channel
-        assert f.getnchannels() == 1, f.getnchannels()
-
-        # Require 16-bit samples
-        assert f.getsampwidth() == 2, f.getsampwidth()  # it is in bytes
-
-        num_samples = f.getnframes()
-        samples = f.readframes(num_samples)
-        samples_int16 = np.frombuffer(samples, dtype=np.int16)
-        samples_float32 = samples_int16.astype(np.float32)
-
-        samples_float32 = samples_float32 / 32768
-        return f.getframerate(), samples_float32
 
 
 def get_args():
