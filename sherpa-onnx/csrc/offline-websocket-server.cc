@@ -1,10 +1,10 @@
-// sherpa-onnx/csrc/online-websocket-server.cc
+// sherpa-onnx/csrc/offline-websocket-server.cc
 //
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
 #include "asio.hpp"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/online-websocket-server-impl.h"
+#include "sherpa-onnx/csrc/offline-websocket-server-impl.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 static constexpr const char *kUsageMessage = R"(
@@ -12,9 +12,11 @@ Automatic speech recognition with sherpa-onnx using websocket.
 
 Usage:
 
-./bin/sherpa-onnx-online-websocket-server --help
+./bin/sherpa-onnx-offline-websocket-server --help
 
-./bin/sherpa-onnx-online-websocket-server \
+(1) For transducer models
+
+./bin/sherpa-onnx-offline-websocket-server \
   --port=6006 \
   --num-work-threads=5 \
   --tokens=/path/to/tokens.txt \
@@ -22,8 +24,17 @@ Usage:
   --decoder=/path/to/decoder.onnx \
   --joiner=/path/to/joiner.onnx \
   --log-file=./log.txt \
-  --max-batch-size=5 \
-  --loop-interval-ms=10
+  --max-batch-size=5
+
+(2) For Paraformer
+
+./bin/sherpa-onnx-offline-websocket-server \
+  --port=6006 \
+  --num-work-threads=5 \
+  --tokens=/path/to/tokens.txt \
+  --paraformer=/path/to/model.onnx \
+  --log-file=./log.txt \
+  --max-batch-size=5
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
@@ -33,7 +44,7 @@ for a list of pre-trained models to download.
 int32_t main(int32_t argc, char *argv[]) {
   sherpa_onnx::ParseOptions po(kUsageMessage);
 
-  sherpa_onnx::OnlineWebsocketServerConfig config;
+  sherpa_onnx::OfflineWebsocketServerConfig config;
 
   // the server will listen on this port
   int32_t port = 6006;
@@ -73,7 +84,7 @@ int32_t main(int32_t argc, char *argv[]) {
   asio::io_context io_conn;  // for network connections
   asio::io_context io_work;  // for neural network and decoding
 
-  sherpa_onnx::OnlineWebsocketServer server(io_conn, io_work, config);
+  sherpa_onnx::OfflineWebsocketServer server(io_conn, io_work, config);
   server.Run(port);
 
   SHERPA_ONNX_LOGE("Started!");

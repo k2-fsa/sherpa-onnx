@@ -12,7 +12,7 @@ from pathlib import Path
 
 try:
     import sounddevice as sd
-except ImportError as e:
+except ImportError:
     print("Please install sounddevice first. You can use")
     print()
     print("  pip install sounddevice")
@@ -24,9 +24,11 @@ import sherpa_onnx
 
 
 def assert_file_exists(filename: str):
-    assert Path(
-        filename
-    ).is_file(), f"{filename} does not exist!\nPlease refer to https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html to download it"
+    assert Path(filename).is_file(), (
+        f"{filename} does not exist!\n"
+        "Please refer to "
+        "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html to download it"
+    )
 
 
 def get_args():
