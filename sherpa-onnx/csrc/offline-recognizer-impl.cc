@@ -42,7 +42,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   std::string model_type;
   SHERPA_ONNX_READ_META_DATA_STR(model_type, "model_type");
 
-  if (model_type == "conformer") {
+  if (model_type == "conformer" || model_type == "zipformer") {
     return std::make_unique<OfflineRecognizerTransducerImpl>(config);
   }
 
