@@ -8,7 +8,7 @@
 
 #include <algorithm>
 #include <cctype>  // std::tolower
-#include <mutex>
+#include <mutex>   // NOLINT
 #include <thread>  // NOLINT
 
 #include "portaudio.h"  // NOLINT
