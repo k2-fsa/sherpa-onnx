@@ -107,6 +107,11 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-microphone-offline
+    sherpa-onnx-microphone-offline.cc
+    microphone.cc
+  )
+
   if(BUILD_SHARED_LIBS)
     set(PA_LIB portaudio)
   else()
@@ -114,8 +119,15 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   endif()
 
   target_link_libraries(sherpa-onnx-microphone PRIVATE ${PA_LIB} sherpa-onnx-core)
+  target_link_libraries(sherpa-onnx-microphone-offline PRIVATE ${PA_LIB} sherpa-onnx-core)
 
-  install(TARGETS sherpa-onnx-microphone DESTINATION bin)
+  install(
+    TARGETS
+      sherpa-onnx-microphone
+      sherpa-onnx-microphone-offline
+    DESTINATION
+      bin
+  )
 endif()
 
 if(SHERPA_ONNX_ENABLE_WEBSOCKET)

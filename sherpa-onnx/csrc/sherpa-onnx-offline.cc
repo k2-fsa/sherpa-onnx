@@ -66,6 +66,7 @@ for a list of pre-trained models to download.
     return -1;
   }
 
+  fprintf(stderr, "Creating recognizer ...\n");
   sherpa_onnx::OfflineRecognizer recognizer(config);
 
   auto begin = std::chrono::steady_clock::now();
