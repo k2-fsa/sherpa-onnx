@@ -35,24 +35,33 @@ time $EXE \
   --num-threads=2 \
   $repo/test_wavs/0.wav \
   $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav
+  $repo/test_wavs/8k.wav
 
+rm -rf $repo
 
-if command -v sox &> /dev/null; then
-  echo "test 8kHz"
-  sox $repo/test_wavs/0.wav -r 8000 8k.wav
+log "------------------------------------------------------------"
+log "Run Zipformer transducer (English)"
+log "------------------------------------------------------------"
 
-  time $EXE \
-    --tokens=$repo/tokens.txt \
-    --encoder=$repo/encoder-epoch-99-avg-1.onnx \
-    --decoder=$repo/decoder-epoch-99-avg-1.onnx \
-    --joiner=$repo/joiner-epoch-99-avg-1.onnx \
-    --num-threads=2 \
-    $repo/test_wavs/0.wav \
-    $repo/test_wavs/1.wav \
-    $repo/test_wavs/2.wav \
-    8k.wav
-fi
+repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-03-30
+log "Start testing ${repo_url}"
+repo=$(basename $repo_url)
+log "Download pretrained model and test-data from $repo_url"
+
+GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+pushd $repo
+git lfs pull --include "*.onnx"
+popd
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --num-threads=2 \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/8k.wav
 
 rm -rf $repo
 
