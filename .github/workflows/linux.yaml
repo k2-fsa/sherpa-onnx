@@ -46,13 +46,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install sox
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y sox
-          sox -h
-
       - name: Configure CMake
         shell: bash
         run: |

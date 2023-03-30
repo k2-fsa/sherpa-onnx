@@ -43,12 +43,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install sox
-        shell: bash
-        run: |
-          brew install sox
-          sox -h
-
       - name: Configure CMake
         shell: bash
         run: |
