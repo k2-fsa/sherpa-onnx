@@ -125,10 +125,10 @@ def main():
 
             if result and (last_result != result):
                 last_result = result
-                display.print(segment_id, result)
-
+                print("\r{}:{}".format(segment_id, result), end="", flush=True)
             if is_endpoint:
                 if result:
+                    print("\r{}:{}".format(segment_id, result), flush=True)
                     segment_id += 1
                 recognizer.reset(stream)
 

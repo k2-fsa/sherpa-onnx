@@ -113,7 +113,7 @@ def main():
             result = recognizer.get_result(stream)
             if last_result != result:
                 last_result = result
-                display.print(-1, result)
+                print("\r{}".format(result), end="", flush=True)
 
 
 if __name__ == "__main__":
