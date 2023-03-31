@@ -35,7 +35,7 @@ fun main() {
 
     var objArray = WaveReader.readWave(
         assetManager = AssetManager(),
-        filename = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/test_wavs/1089-134686-0001.wav",
+        filename = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/test_wavs/0.wav",
     )
     var samples : FloatArray = objArray[0] as FloatArray
     var sampleRate : Int = objArray[1] as Int

@@ -46,3 +46,8 @@ run-sherpa-onnx-offline-paraformer.sh
 run-sherpa-onnx-offline-transducer.sh
 sherpa-onnx-paraformer-zh-2023-03-28
 run-offline-websocket-server-paraformer.sh
+run-*int8.sh
+a.sh
+run-offline-websocket-client-*.sh
+run-sherpa-onnx-*.sh
+sherpa-onnx-zipformer-en-2023-03-30

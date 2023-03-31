@@ -25,6 +25,7 @@ log "Download pretrained model and test-data from $repo_url"
 GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
 pushd $repo
 git lfs pull --include "*.onnx"
+ls -lh *.onnx
 popd
 
 time $EXE \
@@ -32,6 +33,16 @@ time $EXE \
   --encoder=$repo/encoder-epoch-99-avg-1.onnx \
   --decoder=$repo/decoder-epoch-99-avg-1.onnx \
   --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --num-threads=2 \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/8k.wav
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
   --num-threads=2 \
   $repo/test_wavs/0.wav \
   $repo/test_wavs/1.wav \
@@ -51,6 +62,7 @@ log "Download pretrained model and test-data from $repo_url"
 GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
 pushd $repo
 git lfs pull --include "*.onnx"
+ls -lh *.onnx
 popd
 
 time $EXE \
@@ -58,6 +70,16 @@ time $EXE \
   --encoder=$repo/encoder-epoch-99-avg-1.onnx \
   --decoder=$repo/decoder-epoch-99-avg-1.onnx \
   --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --num-threads=2 \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/8k.wav
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
   --num-threads=2 \
   $repo/test_wavs/0.wav \
   $repo/test_wavs/1.wav \
@@ -77,11 +99,22 @@ log "Download pretrained model and test-data from $repo_url"
 GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
 pushd $repo
 git lfs pull --include "*.onnx"
+ls -lh *.onnx
 popd
 
 time $EXE \
   --tokens=$repo/tokens.txt \
   --paraformer=$repo/model.onnx \
+  --num-threads=2 \
+  --decoding-method=greedy_search \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/2.wav \
+  $repo/test_wavs/8k.wav
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --paraformer=$repo/model.int8.onnx \
   --num-threads=2 \
   --decoding-method=greedy_search \
   $repo/test_wavs/0.wav \
