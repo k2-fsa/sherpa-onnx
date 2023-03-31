@@ -8,7 +8,6 @@
 #include <assert.h>
 
 #include <algorithm>
-#include <iomanip>
 #include <limits>
 #include <sstream>
 #include <string>

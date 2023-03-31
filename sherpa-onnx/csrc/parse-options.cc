@@ -13,9 +13,11 @@
 
 #include <ctype.h>
 
+#include <algorithm>
 #include <cctype>
 #include <cstring>
 #include <fstream>
+#include <iomanip>
 
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
