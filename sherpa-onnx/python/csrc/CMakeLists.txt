@@ -7,6 +7,11 @@ pybind11_add_module(_sherpa_onnx
   online-recognizer.cc
   online-stream.cc
   online-transducer-model-config.cc
+  offline-recognizer.cc
+  offline-stream.cc
+  offline-paraformer-model-config.cc
+  offline-transducer-model-config.cc
+  offline-model-config.cc
   sherpa-onnx.cc
 )
 
