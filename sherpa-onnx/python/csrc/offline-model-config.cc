@@ -1,4 +1,4 @@
-// sherpa-onnx/python/csrc/online-recognizer.cc
+// sherpa-onnx/python/csrc/offline-model-config.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
@@ -21,7 +21,7 @@ void PybindOfflineModelConfig(py::module *m) {
 
   using PyClass = OfflineModelConfig;
   py::class_<PyClass>(*m, "OfflineModelConfig")
-      .def(py::init<OfflineTransducerModelConfig, OfflineParaformerModelConfig,
+      .def(py::init<OfflineTransducerModelConfig &, OfflineParaformerModelConfig &,
                     const std::string &, int32_t, bool>(),
            py::arg("transducer"), py::arg("paraformer"), py::arg("tokens"),
            py::arg("num_threads"), py::arg("debug") = false)

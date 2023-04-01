@@ -11,11 +11,11 @@
 #include "sherpa-onnx/python/csrc/online-stream.h"
 #include "sherpa-onnx/python/csrc/online-transducer-model-config.h"
 
+#include "sherpa-onnx/python/csrc/offline-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-paraformer-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-recognizer.h"
 #include "sherpa-onnx/python/csrc/offline-stream.h"
 #include "sherpa-onnx/python/csrc/offline-transducer-model-config.h"
-#include "sherpa-onnx/python/csrc/offline-paraformer-model-config.h"
-#include "sherpa-onnx/python/csrc/offline-model-config.h"
-#include "sherpa-onnx/python/csrc/offline-recognizer.h"
 
 namespace sherpa_onnx {
 
@@ -33,7 +33,6 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindOfflineStream(&m);
   PybindOfflineModelConfig(&m);
   PybindOfflineRecognizer(&m);
-
 }
 
 }  // namespace sherpa_onnx

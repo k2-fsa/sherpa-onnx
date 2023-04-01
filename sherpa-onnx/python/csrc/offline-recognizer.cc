@@ -17,7 +17,7 @@ static void PybindOfflineRecognizerConfig(py::module *m) {
   using PyClass = OfflineRecognizerConfig;
   py::class_<PyClass>(*m, "OfflineRecognizerConfig")
       .def(py::init<const OfflineFeatureExtractorConfig &,
-                    const OfflineModelConfig &, const std::string>(),
+                    const OfflineModelConfig &, const std::string &>(),
            py::arg("feat_config"), py::arg("model_config"),
            py::arg("decoding_method"))
       .def_readwrite("feat_config", &PyClass::feat_config)

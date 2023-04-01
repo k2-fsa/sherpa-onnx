@@ -2,7 +2,7 @@
 
 """
 This file demonstrates how to use sherpa-onnx Python API to transcribe
-file(s) with a streaming model.
+file(s) with a non-streaming model.
 
 paraformer Usage:
     ./python-api-examples/offline-decode-files.py  \
@@ -42,16 +42,7 @@ from pathlib import Path
 from typing import Tuple
 
 import numpy as np
-
-from _sherpa_onnx import (
-    OfflineFeatureExtractorConfig,
-    OfflineRecognizer as _Recognizer,
-    OfflineRecognizerConfig,
-    OfflineStream,
-    OfflineModelConfig,
-    OfflineTransducerModelConfig,
-    OfflineParaformerModelConfig,
-)
+import sherpa_onnx
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -89,7 +80,7 @@ def get_args():
         "--paraformer",
         default="",
         type=str,
-        help="Path to the joiner model",
+        help="Path to the paraformer model",
     )
 
     parser.add_argument(
@@ -109,21 +100,21 @@ def get_args():
         "--debug",
         type=bool,
         default=False,
-        help="Valid values are greedy_search and modified_beam_search",
+        help="True to show debug messages",
     )
 
     parser.add_argument(
         "--sample-rate",
         type=int,
         default=16000,
-        help="Number of threads for neural network computation",
+        help="Sample rate of the feature extractor. Must match the one expected by the model. Note: The input sound files can have a different sample rate from this argument.",
     )
 
     parser.add_argument(
         "--feature-dim",
         type=int,
         default=80,
-        help="Number of threads for neural network computation",
+        help="Feature dimension. Must match the one expected by the model",
     )
 
     parser.add_argument(
@@ -174,46 +165,36 @@ def read_wave(wave_filename: str) -> Tuple[np.ndarray, int]:
 
 def main():
     args = get_args()
-    if len(args.encoder)>0:
+    assert_file_exists(args.tokens)
+    assert args.num_threads > 0, args.num_threads
+    if len(args.encoder) > 0:
         assert_file_exists(args.encoder)
         assert_file_exists(args.decoder)
         assert_file_exists(args.joiner)
+        assert len(args.paraformer) == 0, args.paraformer
+        recognizer = sherpa_onnx.OfflineRecognizer.from_transducer(
+            encoder=args.encoder,
+            decoder=args.decoder,
+            joiner=args.joiner,
+            tokens=args.tokens,
+            num_threads=args.num_threads,
+            sample_rate=args.sample_rate,
+            feature_dim=args.feature_dim,
+            decoding_method=args.decoding_method,
+            debug=args.debug
+        )
     else:
         assert_file_exists(args.paraformer)
-    assert_file_exists(args.tokens)
+        recognizer = sherpa_onnx.OfflineRecognizer.from_paraformer(
+            paraformer=args.paraformer,
+            tokens=args.tokens,
+            num_threads=args.num_threads,
+            sample_rate=args.sample_rate,
+            feature_dim=args.feature_dim,
+            decoding_method=args.decoding_method,
+            debug=args.debug
+        )
 
-    assert args.num_threads > 0, args.num_threads
-
-    model_config = OfflineModelConfig(
-        transducer= OfflineTransducerModelConfig(
-            encoder_filename="",
-            decoder_filename="",
-            joiner_filename=""
-        ),
-        paraformer=OfflineParaformerModelConfig(
-            model=args.paraformer
-        ),
-        tokens=args.tokens,
-        num_threads=args.num_threads,
-        debug=args.debug
-    )
-
-    decoding_method = args.decoding_method
-
-    feat_config = OfflineFeatureExtractorConfig(
-        sampling_rate=args.sample_rate,
-        feature_dim=args.feature_dim,
-    )
-
-    recognizer_config = OfflineRecognizerConfig(
-        feat_config=feat_config,
-        model_config=model_config,
-        decoding_method=decoding_method,
-    )
-
-    print("config ok!")
-
-    recognizer = _Recognizer(recognizer_config)
 
     print("Started!")
     start_time = time.time()
