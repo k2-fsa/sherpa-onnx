@@ -102,7 +102,6 @@ def main():
     samples_per_read = int(0.1 * sample_rate)  # 0.1 second = 100 ms
     last_result = ""
     stream = recognizer.create_stream()
-    display = sherpa_onnx.Display(max_word_per_line=40)
     with sd.InputStream(channels=1, dtype="float32", samplerate=sample_rate) as s:
         while True:
             samples, _ = s.read(samples_per_read)  # a blocking read

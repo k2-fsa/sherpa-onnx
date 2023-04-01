@@ -110,7 +110,6 @@ def main():
 
     last_result = ""
     segment_id = 0
-    display = sherpa_onnx.Display(max_word_per_line=30)
     with sd.InputStream(channels=1, dtype="float32", samplerate=sample_rate) as s:
         while True:
             samples, _ = s.read(samples_per_read)  # a blocking read
