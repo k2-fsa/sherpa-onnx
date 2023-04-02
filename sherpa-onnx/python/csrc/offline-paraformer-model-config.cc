@@ -1,4 +1,4 @@
-// sherpa-onnx/python/csrc/online-recongizer.cc
+// sherpa-onnx/python/csrc/offline-paraformer-model-config.cc
 //
 // Copyright (c)  2023 by manyeyes
 
