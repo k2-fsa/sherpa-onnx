@@ -77,7 +77,6 @@ class OfflineRecognizer(object):
             num_threads=num_threads,
             debug=debug
         )
-        decoding_method = decoding_method
 
         feat_config = OfflineFeatureExtractorConfig(
             sampling_rate=sample_rate,
