@@ -15,14 +15,14 @@
 namespace sherpa_onnx {
 
 void PybindOfflineModelConfig(py::module *m) {
-
   PybindOfflineTransducerModelConfig(m);
   PybindOfflineParaformerModelConfig(m);
 
   using PyClass = OfflineModelConfig;
   py::class_<PyClass>(*m, "OfflineModelConfig")
-      .def(py::init<OfflineTransducerModelConfig &, OfflineParaformerModelConfig &,
-                    const std::string &, int32_t, bool>(),
+      .def(py::init<OfflineTransducerModelConfig &,
+              OfflineParaformerModelConfig &,
+              const std::string &, int32_t, bool>(),
            py::arg("transducer"), py::arg("paraformer"), py::arg("tokens"),
            py::arg("num_threads"), py::arg("debug") = false)
       .def_readwrite("transducer", &PyClass::transducer)

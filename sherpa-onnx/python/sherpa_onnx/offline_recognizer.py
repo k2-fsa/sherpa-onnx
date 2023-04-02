@@ -89,7 +89,6 @@ class OfflineRecognizer(object):
             model_config=model_config,
             decoding_method=decoding_method,
         )
-        print("config ok!")
         self.recognizer = _Recognizer(recognizer_config)
         return self
 
@@ -156,7 +155,6 @@ class OfflineRecognizer(object):
             model_config=model_config,
             decoding_method=decoding_method,
         )
-        print("config ok!")
         self.recognizer = _Recognizer(recognizer_config)
         return self
 
