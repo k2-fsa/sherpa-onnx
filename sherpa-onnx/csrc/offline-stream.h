@@ -13,7 +13,21 @@
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
-struct OfflineRecognitionResult;
+
+struct OfflineRecognitionResult {
+  // Recognition results.
+  // For English, it consists of space separated words.
+  // For Chinese, it consists of Chinese words without spaces.
+  std::string text;
+
+  // Decoded results at the token level.
+  // For instance, for BPE-based models it consists of a list of BPE tokens.
+  std::vector<std::string> tokens;
+
+  /// timestamps.size() == tokens.size()
+  /// timestamps[i] records the time in seconds when tokens[i] is decoded.
+  std::vector<float> timestamps;
+};
 
 struct OfflineFeatureExtractorConfig {
   // Sampling rate used by the feature extractor. If it is different from
