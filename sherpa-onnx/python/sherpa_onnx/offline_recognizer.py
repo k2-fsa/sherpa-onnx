@@ -1,4 +1,4 @@
-# Copyright (c)  2023  Xiaomi Corporation
+# Copyright (c)  2023 by manyeyes
 from pathlib import Path
 from typing import List
 

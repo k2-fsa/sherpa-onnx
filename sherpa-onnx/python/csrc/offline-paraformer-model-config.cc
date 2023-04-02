@@ -1,6 +1,6 @@
 // sherpa-onnx/python/csrc/online-recongizer.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023 by manyeyes
 
 #include "sherpa-onnx/python/csrc/offline-paraformer-model-config.h"
 

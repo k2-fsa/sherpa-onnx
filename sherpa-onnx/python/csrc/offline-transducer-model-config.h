@@ -1,6 +1,6 @@
 // sherpa-onnx/python/csrc/offline-transducer-model-config.h
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023 by manyeyes
 
 #ifndef SHERPA_ONNX_PYTHON_CSRC_OFFLINE_TRANSDUCER_MODEL_CONFIG_H_
 #define SHERPA_ONNX_PYTHON_CSRC_OFFLINE_TRANSDUCER_MODEL_CONFIG_H_

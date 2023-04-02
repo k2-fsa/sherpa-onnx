@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+#
+# Copyright (c)  2023 by manyeyes
 
 """
 This file demonstrates how to use sherpa-onnx Python API to transcribe

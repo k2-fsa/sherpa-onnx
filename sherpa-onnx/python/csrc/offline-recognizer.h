@@ -1,6 +1,6 @@
 // sherpa-onnx/python/csrc/offline-recognizer.h
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023 by manyeyes
 
 #ifndef SHERPA_ONNX_PYTHON_CSRC_OFFLINE_RECOGNIZER_H_
 #define SHERPA_ONNX_PYTHON_CSRC_OFFLINE_RECOGNIZER_H_
