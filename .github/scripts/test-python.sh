@@ -113,9 +113,7 @@ ls -lh $repo
 
 python3 ./python-api-examples/offline-decode-files.py \
   --tokens=$repo/tokens.txt \
-  --encoder=$repo/encoder-epoch-99-avg-1.onnx \
-  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
-  --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --paraformer=$repo/model.onnx \
   $repo/test_wavs/0.wav \
   $repo/test_wavs/1.wav \
   $repo/test_wavs/2.wav \
@@ -123,9 +121,7 @@ python3 ./python-api-examples/offline-decode-files.py \
 
 python3 ./python-api-examples/offline-decode-files.py \
   --tokens=$repo/tokens.txt \
-  --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
-  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
-  --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
+  --paraformer=$repo/model.int8.onnx \
   $repo/test_wavs/0.wav \
   $repo/test_wavs/1.wav \
   $repo/test_wavs/2.wav \
