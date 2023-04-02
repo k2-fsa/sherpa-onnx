@@ -46,6 +46,7 @@ from typing import Tuple
 import numpy as np
 import sherpa_onnx
 
+
 def get_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -165,6 +166,7 @@ def read_wave(wave_filename: str) -> Tuple[np.ndarray, int]:
         samples_float32 = samples_float32 / 32768
         return samples_float32, f.getframerate()
 
+
 def main():
     args = get_args()
     assert_file_exists(args.tokens)
@@ -183,7 +185,7 @@ def main():
             sample_rate=args.sample_rate,
             feature_dim=args.feature_dim,
             decoding_method=args.decoding_method,
-            debug=args.debug
+            debug=args.debug,
         )
     else:
         assert_file_exists(args.paraformer)
@@ -194,9 +196,8 @@ def main():
             sample_rate=args.sample_rate,
             feature_dim=args.feature_dim,
             decoding_method=args.decoding_method,
-            debug=args.debug
+            debug=args.debug,
         )
-
 
     print("Started!")
     start_time = time.time()
@@ -212,11 +213,7 @@ def main():
         s = recognizer.create_stream()
         s.accept_waveform(sample_rate, samples)
 
-        tail_paddings = np.zeros(int(0.2 * sample_rate), dtype=np.float32)
-        s.accept_waveform(sample_rate, tail_paddings)
-
         streams.append(s)
-
 
     recognizer.decode_streams(streams)
     results = [s.result.text for s in streams]
