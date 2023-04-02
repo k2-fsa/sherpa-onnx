@@ -17,8 +17,8 @@ namespace sherpa_onnx {
 
 void OfflineFeatureExtractorConfig::Register(ParseOptions *po) {
   po->Register("sample-rate", &sampling_rate,
-               "Sampling rate of the input waveform. Must match the one "
-               "expected by the model. Note: You can have a different "
+               "Sampling rate of the input waveform. "
+               "Note: You can have a different "
                "sample rate for the input waveform. We will do resampling "
                "inside the feature extractor");
 

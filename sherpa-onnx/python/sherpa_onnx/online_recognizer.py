@@ -17,7 +17,12 @@ def _assert_file_exists(f: str):
 
 
 class OnlineRecognizer(object):
-    """A class for streaming speech recognition."""
+    """A class for streaming speech recognition.
+
+    Please refer to the following files for usages
+     - https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/python/tests/test_online_recognizer.py
+     - https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/online-decode-files.py
+    """
 
     def __init__(
         self,
