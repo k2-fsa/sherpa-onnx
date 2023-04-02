@@ -65,6 +65,7 @@ int32_t main(int32_t argc, char *argv[]) {
   po.Register("port", &port, "The port on which the server will listen.");
 
   config.Register(&po);
+  po.DisableOption("sample-rate");
 
   if (argc == 1) {
     po.PrintUsage();
