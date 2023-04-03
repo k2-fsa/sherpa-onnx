@@ -35,6 +35,7 @@ jobs:
           CIBW_BEFORE_BUILD: "pip install -U cmake numpy"
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
+          CIBW_ENVIRONMENT: LD_LIBRARY_PATH='/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib'
 
       - name: Display wheels
         shell: bash
