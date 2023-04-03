@@ -64,7 +64,7 @@ target_link_libraries(sherpa-onnx-core
 )
 
 if(SHERPA_ONNX_ENABLE_CHECK)
-  target_compile_definitions(sherpa-onnx-core SHERPA_ONNX_ENABLE_CHECK=1)
+  target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
 
   if(SHERPA_ONNX_HAVE_EXECINFO_H)
     target_compile_definitions(sherpa-onnx-core PRIVATE SHERPA_ONNX_HAVE_EXECINFO_H=1)
@@ -172,10 +172,10 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
 
   if(NOT WIN32)
     target_link_libraries(sherpa-onnx-online-websocket-server -pthread)
-    target_compile_options(sherpa-onnx-online-websocket-server -Wno-deprecated-declarations)
+    target_compile_options(sherpa-onnx-online-websocket-server PRIVATE -Wno-deprecated-declarations)
 
     target_link_libraries(sherpa-onnx-online-websocket-client -pthread)
-    target_compile_options(sherpa-onnx-online-websocket-client -Wno-deprecated-declarations)
+    target_compile_options(sherpa-onnx-online-websocket-client PRIVATE -Wno-deprecated-declarations)
   endif()
 
   # For offline websocket
@@ -187,7 +187,7 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
 
   if(NOT WIN32)
     target_link_libraries(sherpa-onnx-offline-websocket-server -pthread)
-    target_compile_options(sherpa-onnx-offline-websocket-server -Wno-deprecated-declarations)
+    target_compile_options(sherpa-onnx-offline-websocket-server PRIVATE -Wno-deprecated-declarations)
   endif()
 
   if(NOT WIN32)
