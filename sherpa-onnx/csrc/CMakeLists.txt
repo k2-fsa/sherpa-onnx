@@ -64,7 +64,7 @@ target_link_libraries(sherpa-onnx-core
 )
 
 if(SHERPA_ONNX_ENABLE_CHECK)
-  target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
+  target_compile_definitions(sherpa-onnx-core SHERPA_ONNX_ENABLE_CHECK=1)
 
   if(SHERPA_ONNX_HAVE_EXECINFO_H)
     target_compile_definitions(sherpa-onnx-core PRIVATE SHERPA_ONNX_HAVE_EXECINFO_H=1)
@@ -106,12 +106,12 @@ install(
 
 if(SHERPA_ONNX_HAS_ALSA)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
-  target_link_libraries(sherpa-onnx-alsa PRIVATE sherpa-onnx-core)
+  target_link_libraries(sherpa-onnx-alsa sherpa-onnx-core)
 
   if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})
-    target_link_libraries(sherpa-onnx-alsa PRIVATE -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
+    target_link_libraries(sherpa-onnx-alsa -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
   else()
-    target_link_libraries(sherpa-onnx-alsa PRIVATE asound)
+    target_link_libraries(sherpa-onnx-alsa asound)
   endif()
   install(TARGETS sherpa-onnx-alsa DESTINATION bin)
 endif()
@@ -133,8 +133,8 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     set(PA_LIB portaudio_static)
   endif()
 
-  target_link_libraries(sherpa-onnx-microphone PRIVATE ${PA_LIB} sherpa-onnx-core)
-  target_link_libraries(sherpa-onnx-microphone-offline PRIVATE ${PA_LIB} sherpa-onnx-core)
+  target_link_libraries(sherpa-onnx-microphone ${PA_LIB} sherpa-onnx-core)
+  target_link_libraries(sherpa-onnx-microphone-offline ${PA_LIB} sherpa-onnx-core)
 
   if(NOT WIN32)
     target_link_libraries(sherpa-onnx-microphone "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
@@ -172,10 +172,10 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
 
   if(NOT WIN32)
     target_link_libraries(sherpa-onnx-online-websocket-server -pthread)
-    target_compile_options(sherpa-onnx-online-websocket-server PRIVATE -Wno-deprecated-declarations)
+    target_compile_options(sherpa-onnx-online-websocket-server -Wno-deprecated-declarations)
 
     target_link_libraries(sherpa-onnx-online-websocket-client -pthread)
-    target_compile_options(sherpa-onnx-online-websocket-client PRIVATE -Wno-deprecated-declarations)
+    target_compile_options(sherpa-onnx-online-websocket-client -Wno-deprecated-declarations)
   endif()
 
   # For offline websocket
@@ -187,7 +187,7 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
 
   if(NOT WIN32)
     target_link_libraries(sherpa-onnx-offline-websocket-server -pthread)
-    target_compile_options(sherpa-onnx-offline-websocket-server PRIVATE -Wno-deprecated-declarations)
+    target_compile_options(sherpa-onnx-offline-websocket-server -Wno-deprecated-declarations)
   endif()
 
   if(NOT WIN32)
