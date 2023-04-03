@@ -39,6 +39,28 @@ install_requires = [
     "numpy",
 ]
 
+
+def get_binaries_to_install():
+    bin_dir = Path("build") / "sherpa_onnx" / "bin"
+    bin_dir.mkdir(parents=True, exist_ok=True)
+    suffix = ".exe" if is_windows() else ""
+
+    # Remember to also change cmake/cmake_extension.py
+    binaries = ["sherpa-onnx"]
+    binaries += ["sherpa-onnx-offline"]
+    binaries += ["sherpa-onnx-microphone"]
+    binaries += ["sherpa-onnx-microphone-offline"]
+    binaries += ["sherpa-onnx-online-websocket-server"]
+    binaries += ["sherpa-onnx-offline-websocket-server"]
+    binaries += ["sherpa-onnx-online-websocket-client"]
+
+    exe = []
+    for f in binaries:
+        t = bin_dir / (f + suffix)
+        exe.append(str(t))
+    return exe
+
+
 setuptools.setup(
     name=package_name,
     python_requires=">=3.6",
@@ -50,6 +72,7 @@ setuptools.setup(
         "sherpa_onnx": "sherpa-onnx/python/sherpa_onnx",
     },
     packages=["sherpa_onnx"],
+    data_files=[("bin", get_binaries_to_install())],
     url="https://github.com/k2-fsa/sherpa-onnx",
     long_description=read_long_description(),
     long_description_content_type="text/markdown",

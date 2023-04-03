@@ -1,5 +1,15 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
+if(SHERPA_ONNX_ENABLE_PYTHON)
+  message(STATUS "PYTHON_EXECUTABLE: ${PYTHON_EXECUTABLE}")
+  execute_process(
+    COMMAND "${PYTHON_EXECUTABLE}" -c "import sys; print('.'.join(sys.version.split('.')[:2]))"
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+    OUTPUT_VARIABLE PYTHON_VERSION
+  )
+  message(STATUS "PYTHON_VERSION: ${PYTHON_VERSION}")
+endif()
+
 set(sources
   cat.cc
   endpoint.cc
@@ -73,6 +83,11 @@ target_link_libraries(sherpa-onnx-offline sherpa-onnx-core)
 if(NOT WIN32)
   target_link_libraries(sherpa-onnx "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
   target_link_libraries(sherpa-onnx-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
+
+  if(SHERPA_ONNX_ENABLE_PYTHON)
+    target_link_libraries(sherpa-onnx "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+    target_link_libraries(sherpa-onnx-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+  endif()
 endif()
 
 if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
@@ -121,6 +136,16 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   target_link_libraries(sherpa-onnx-microphone PRIVATE ${PA_LIB} sherpa-onnx-core)
   target_link_libraries(sherpa-onnx-microphone-offline PRIVATE ${PA_LIB} sherpa-onnx-core)
 
+  if(NOT WIN32)
+    target_link_libraries(sherpa-onnx-microphone "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
+    target_link_libraries(sherpa-onnx-microphone-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
+
+    if(SHERPA_ONNX_ENABLE_PYTHON)
+      target_link_libraries(sherpa-onnx-microphone "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+      target_link_libraries(sherpa-onnx-microphone-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+    endif()
+  endif()
+
   install(
     TARGETS
       sherpa-onnx-microphone
@@ -164,6 +189,26 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
     target_link_libraries(sherpa-onnx-offline-websocket-server -pthread)
     target_compile_options(sherpa-onnx-offline-websocket-server PRIVATE -Wno-deprecated-declarations)
   endif()
+
+  if(NOT WIN32)
+    target_link_libraries(sherpa-onnx-online-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
+    target_link_libraries(sherpa-onnx-online-websocket-client "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
+    target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
+    if(SHERPA_ONNX_ENABLE_PYTHON)
+      target_link_libraries(sherpa-onnx-online-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+      target_link_libraries(sherpa-onnx-online-websocket-client "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+      target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+    endif()
+  endif()
+
+  install(
+    TARGETS
+      sherpa-onnx-online-websocket-server
+      sherpa-onnx-online-websocket-client
+      sherpa-onnx-offline-websocket-server
+    DESTINATION
+      bin
+  )
 endif()
 
 
