@@ -143,3 +143,5 @@ class BuildExtension(build_ext):
             src_file = install_dir / "bin" / (f + suffix)
             print(f"Copying {src_file} to {out_bin_dir}/")
             shutil.copy(f"{src_file}", f"{out_bin_dir}/")
+
+        shutil.rmtree(f"{install_dir}/bin")
