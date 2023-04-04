@@ -37,7 +37,7 @@ jobs:
           # CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_SKIP: "cp27-* cp35-* cp36-* cp37-* cp39-* cp310-* cp311-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
-          # CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib'
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib'
           # CIBW_ENVIRONMENT_MACOS: LD_LIBRARY_PATH='/Users/runner/work/sherpa-onnx/sherpa-onnx/build/bdist.macosx-10.9-x86_64/wheel/sherpa_onnx/lib'
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
 
