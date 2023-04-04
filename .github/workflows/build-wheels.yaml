@@ -34,6 +34,8 @@ jobs:
           CIBW_BEFORE_BUILD: "pip install -U cmake numpy"
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib'
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
 
       - name: Display wheels
         shell: bash
@@ -55,3 +57,16 @@ jobs:
           python3 -m pip install wheel twine setuptools
 
           twine upload ./wheelhouse/*.whl
+
+      - name: Build sdist
+        shell: bash
+        run: |
+          python3 setup.py sdist
+          ls -l dist/*
+
+      - name: Publish sdist to PyPI
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          twine upload dist/sherpa-onnx-*.tar.gz

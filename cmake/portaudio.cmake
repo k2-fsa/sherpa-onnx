@@ -53,6 +53,23 @@ function(download_portaudio)
   endif()
 
   add_subdirectory(${portaudio_SOURCE_DIR} ${portaudio_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  if(BUILD_SHARED_LIBS)
+    set_target_properties(portaudio PROPERTIES OUTPUT_NAME "sherpa-onnx-portaudio")
+
+    if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
+      install(TARGETS portaudio DESTINATION ..)
+    else()
+      install(TARGETS portaudio DESTINATION lib)
+    endif()
+  else()
+    set_target_properties(portaudio_static PROPERTIES OUTPUT_NAME "sherpa-onnx-portaudio_static")
+    if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
+      install(TARGETS portaudio_static DESTINATION ..)
+    else()
+      install(TARGETS portaudio_static DESTINATION lib)
+    endif()
+  endif()
 endfunction()
 
 download_portaudio()

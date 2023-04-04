@@ -5,6 +5,7 @@
 
 import os
 import platform
+import shutil
 import sys
 from pathlib import Path
 
@@ -59,6 +60,7 @@ class BuildExtension(build_ext):
         # build/lib.linux-x86_64-3.8
         os.makedirs(self.build_lib, exist_ok=True)
 
+        out_bin_dir = Path(self.build_lib).parent / "sherpa_onnx" / "bin"
         install_dir = Path(self.build_lib).resolve() / "sherpa_onnx"
 
         sherpa_onnx_dir = Path(__file__).parent.parent.resolve()
@@ -75,9 +77,9 @@ class BuildExtension(build_ext):
 
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_CHECK=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PYTHON=ON "
-        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF "
+        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PORTAUDIO=ON "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_C_API=OFF "
-        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF "
+        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_WEBSOCKET=ON "
 
         if "PYTHON_EXECUTABLE" not in cmake_args:
             print(f"Setting PYTHON_EXECUTABLE to {sys.executable}")
@@ -125,3 +127,21 @@ class BuildExtension(build_ext):
                     "You can ask for help by creating an issue on GitHub.\n"
                     "\nClick:\n\thttps://github.com/k2-fsa/sherpa-onnx/issues/new\n"  # noqa
                 )
+
+        suffix = ".exe" if is_windows() else ""
+        # Remember to also change setup.py
+
+        binaries = ["sherpa-onnx"]
+        binaries += ["sherpa-onnx-offline"]
+        binaries += ["sherpa-onnx-microphone"]
+        binaries += ["sherpa-onnx-microphone-offline"]
+        binaries += ["sherpa-onnx-online-websocket-server"]
+        binaries += ["sherpa-onnx-offline-websocket-server"]
+        binaries += ["sherpa-onnx-online-websocket-client"]
+
+        for f in binaries:
+            src_file = install_dir / "bin" / (f + suffix)
+            print(f"Copying {src_file} to {out_bin_dir}/")
+            shutil.copy(f"{src_file}", f"{out_bin_dir}/")
+
+        shutil.rmtree(f"{install_dir}/bin")
