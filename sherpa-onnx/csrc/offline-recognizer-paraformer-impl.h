@@ -28,11 +28,51 @@ static OfflineRecognitionResult Convert(
   r.tokens.reserve(src.tokens.size());
 
   std::string text;
-  for (auto i : src.tokens) {
-    auto sym = sym_table[i];
-    text.append(sym);
 
-    r.tokens.push_back(std::move(sym));
+  // When the current token ends with "@@" we set mergeable to true
+  bool mergeable = false;
+
+  for (int32_t i = 0; i != src.tokens.size(); ++i) {
+    auto sym = sym_table[src.tokens[i]];
+    r.tokens.push_back(sym);
+
+    if ((sym.back() != '@') || (sym.size() > 2 && sym[sym.size() - 2] != '@')) {
+      // sym does not end with "@@"
+      const uint8_t *p = reinterpret_cast<const uint8_t *>(sym.c_str());
+      if (p[0] < 0x80) {
+        // an ascii
+        if (mergeable) {
+          mergeable = false;
+          text.append(sym);
+        } else {
+          text.append(" ");
+          text.append(sym);
+        }
+      } else {
+        // not an ascii
+        mergeable = false;
+
+        if (i > 0) {
+          const uint8_t *p = reinterpret_cast<const uint8_t *>(
+              sym_table[src.tokens[i - 1]].c_str());
+          if (p[0] < 0x80) {
+            // put a space between ascii and non-ascii
+            text.append(" ");
+          }
+        }
+        text.append(sym);
+      }
+    } else {
+      // this sym ends with @@
+      sym = std::string(sym.data(), sym.size() - 2);
+      if (mergeable) {
+        text.append(sym);
+      } else {
+        text.append(" ");
+        text.append(sym);
+        mergeable = true;
+      }
+    }
   }
   r.text = std::move(text);
 
