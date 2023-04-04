@@ -34,9 +34,9 @@ class OnlineRecognizer(object):
         sample_rate: float = 16000,
         feature_dim: int = 80,
         enable_endpoint_detection: bool = False,
-        rule1_min_trailing_silence: int = 2.4,
-        rule2_min_trailing_silence: int = 1.2,
-        rule3_min_utterance_length: int = 20,
+        rule1_min_trailing_silence: float = 2.4,
+        rule2_min_trailing_silence: float = 1.2,
+        rule3_min_utterance_length: float = 20.0,
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
     ):
