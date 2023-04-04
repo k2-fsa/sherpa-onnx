@@ -59,12 +59,14 @@ jobs:
           twine upload ./wheelhouse/*.whl
 
       - name: Build sdist
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         shell: bash
         run: |
           python3 setup.py sdist
           ls -l dist/*
 
       - name: Publish sdist to PyPI
+        if: ${{ matrix.os == 'ubuntu-latest' }}
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
