@@ -147,7 +147,7 @@ function(download_onnxruntime)
   endif()
 
   if(UNIX AND NOT APPLE)
-    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*so*")
+    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*")
   elseif(APPLE)
     file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.*.*dylib")
   elseif(WIN32)
