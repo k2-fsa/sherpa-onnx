@@ -68,7 +68,7 @@ refer to com/k2fsa/sherpaonnx/java_api_example for more detail.
 5.gradle commands
 ---
 5.1 run app example
-``` xml
+``` bash
   export GRADLE_OPTS="-Dfile.encoding=utf-8" //for Chinese 
   gradle run
   ```
