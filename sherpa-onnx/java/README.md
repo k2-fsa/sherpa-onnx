@@ -75,7 +75,6 @@ refer to com/k2fsa/sherpaonnx/java_api_example for more detial.
 5.2 build for jar lib
 ``` xml
   gradle build 
-  ```
  
  
  
