@@ -82,7 +82,8 @@ public class RcgExampleForFile {
             String recText = "simple:" + rcgOjb.getText() + "\n";
             byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
             System.out.printf(new String(utf8Data));
-            rcgOjb.reSet();
+            rcgOjb.reset();
+
         } catch (Exception e) {
             System.err.println(e);
         }
