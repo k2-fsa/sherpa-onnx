@@ -3,7 +3,7 @@
 // Copyright   2022-2023  by zhaoming
 // this will be used for the java environment
 // com.k2fsa.sherpaonnx.rcglib.OnlineRecognizer
-// It support for parallel stream decoding and each
+// It supports parallel stream decoding and each
 // stream will assign a uuid id.
 //
 
