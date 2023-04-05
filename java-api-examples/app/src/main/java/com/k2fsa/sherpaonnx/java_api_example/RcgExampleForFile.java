@@ -67,23 +67,18 @@ public class RcgExampleForFile {
     public void simpleExample() {
         //OnlineRecognizer rcgOjb=new OnlineRecognizer();
         try {
-            WavFile wavFile = WavFile.openWavFile(new File(wavfilename));
-            int numFrame = (int) wavFile.getNumFrames();
-            float[] buffer = new float[numFrame];
-            int framesRead = wavFile.readFrames(buffer, numFrame);
-            //System.out.println("frameRead="+String.valueOf(framesRead));
+ 
+            float[] buffer = rcgOjb.readWavFile(wavfilename); // new float[numFrame];
             rcgOjb.acceptWaveform(buffer, 16000);
             rcgOjb.inputFinished();
             while (rcgOjb.isReady()) {
                 rcgOjb.decode();
             }
-
-            wavFile.close();
             String recText = "simple:" + rcgOjb.getText() + "\n";
             byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
-            System.out.printfln(new String(utf8Data));
+            System.out.println(new String(utf8Data));
 
-            rcgOjb.reset();
+            rcgOjb.reSet();
 
         } catch (Exception e) {
             System.err.println(e);
@@ -101,8 +96,6 @@ public class RcgExampleForFile {
             // Create a buffer of 16000 
             float[] buffer = new float[1600];
             int framesRead;
-            float min = Float.MAX_VALUE;
-            float max = Float.MIN_VALUE;
             int totalframes = 0;
             do {
                 // Read frames into buffer
@@ -117,7 +110,7 @@ public class RcgExampleForFile {
                 byte[] utf8Data = testDate.getBytes(StandardCharsets.UTF_8);
 
                 if (utf8Data.length > 0) {
-                    System.out.printfln(new String(utf8Data));
+                    System.out.println(new String(utf8Data));
 
                 }
             }
@@ -126,11 +119,11 @@ public class RcgExampleForFile {
             while (rcgOjb.isReady()) {
                 rcgOjb.decode();
             }
-            // Close the wavFile
+            // Close the wavFile 
             wavFile.close();
             String wavText = "stream:" + rcgOjb.getText() + "\n";
             byte[] utf8Data = wavText.getBytes(StandardCharsets.UTF_8);
-            System.out.printf(new String(utf8Data));
+            System.out.println(new String(utf8Data));
             rcgOjb.reSet();
         } catch (Exception e) {
             System.err.println(e);
@@ -145,7 +138,7 @@ public class RcgExampleForFile {
 			String cfgpath=appdir+"/modelconfig.cfg";
             OnlineRecognizer.setCfgPath(cfgpath);
             RcgExampleForFile rcgdemo = new RcgExampleForFile(filename);
-            rcgdemo.initmodelwithcfg();
+            rcgdemo.initModelWithCfg();
             rcgdemo.streamExample();
             //Thread.sleep(2000);
             rcgdemo.simpleExample();

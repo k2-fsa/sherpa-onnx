@@ -5,19 +5,18 @@
  */
 /*
 usage example:
-        OnlineRecognizer.setCfgPath("/sherpa-onnx/sherpa-onnx/java/modelconfig.cfg"); //set cfg file
-        OnlineRecognizer rcgOjb=new OnlineRecognizer();
-		WavFile wavFile = WavFile.openWavFile(new File(wavfilename)); //read wav 
-		int numFrame= (int) wavFile.getNumFrames(); //get wav size
-		float[] buffer=new float[numFrame];
-		int framesRead = wavFile.readFrames(buffer, numFrame);
-		rcgOjb.acceptWaveform(buffer,16000);   //sample rate is 16000  //feed asr engine 
-		rcgOjb.inputFinished();                //when all wav data is feed to engine
-		while (rcgOjb.isReady()){rcgOjb.decode();}  //decode for text
-		wavFile.close();
-		String recText=rcgOjb.getText();      //get the text
-        byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
-        System.out.printf(new String(utf8Data));
+   OnlineRecognizer.setCfgPath("/sherpa-onnx/sherpa-onnx/java/modelconfig.cfg"); //set cfg file
+   OnlineRecognizer rcgOjb=new OnlineRecognizer();
+   rcgOjb.acceptWaveform(buffer, 16000);
+   rcgOjb.inputFinished();
+   while (rcgOjb.isReady()) {
+                rcgOjb.decode();
+            }
+   wavFile.close();
+   String recText = "simple:" + rcgOjb.getText() + "\n";
+   byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
+   System.out.println(new String(utf8Data));
+
 */
 package com.k2fsa.sherpaonnx;
 
@@ -27,7 +26,7 @@ import java.util.*;
 public class OnlineRecognizer {
 
     private long ptr;  //this is the asr engine ptr 
-    private String currentSid = "";  //each stream has a unique id, it is the id for current stream
+    private int currentSid = 0;  //each stream has a unique id, it is the id for current stream
     static private String cfgPath; //the config file, this file contains the model path and para , lib path  and so on.
 
     // load config file for OnlineRecognizer
@@ -49,7 +48,7 @@ public class OnlineRecognizer {
                     proMap.get("decoding_method").trim() , Integer.parseInt(proMap.get("max_active_paths").trim() ));
             //create a new Recognizer 
             this.ptr = newRecognizer(rcg_cfg);
-            currentSid = this.creatStream();  //set currentSid to the streamid
+            currentSid = 0;  //set currentSid to 0 for single stream
 
         } catch (Exception e) {
             System.err.println(e);
@@ -151,18 +150,25 @@ public class OnlineRecognizer {
         System.out.println("not implemented!");
     }
 
-    public String creatStream() {
+    public int creatStream() {
         //create one stream for data to feed in
-        String sid = creatStream(this.ptr);
+        int sid = creatStream(this.ptr);
 
         return sid;
     }
 
-    public void releaseStreams(String sid) {
+    public void releaseStreams(int sid) {
         //release one stream
         releaseStreams(this.ptr, sid);
 
     }
+	public float[] readWavFile(String filename){
+	       Object data=  readWave(filename)[0];  //data[0] is Int data, data[1] sample rate
+		   
+		   float[] floatData=(float[])data;
+		    
+		   return floatData;
+	}
 
     public static void loadsolib() {
         //load the libsherpa-onnx-jni-java so. lib 
@@ -181,27 +187,29 @@ public class OnlineRecognizer {
         OnlineRecognizer.loadsolib();
     }
     // JNI interface libsherpa-onnx-jni-java.so
-    private native void acceptWaveform(long ptr, float[] samples, int sampleRate, String sid);
+    private native void acceptWaveform(long ptr, float[] samples, int sampleRate, int sid);
 
-    private native void inputFinished(long ptr, String sid);
+    private native void inputFinished(long ptr, int sid);
 
-    private native String getText(long ptr, String sid);
+    private native String getText(long ptr, int sid);
 
-    private native void reset(long ptr, String sid);
+    private native void reset(long ptr, int sid);
 
-    private native void decode(long ptr, String sid);
+    private native void decode(long ptr, int sid);
 
-    private native boolean isEndpoint(long ptr, String sid);
+    private native boolean isEndpoint(long ptr, int sid);
 
-    private native boolean isReady(long ptr, String sid);
+    private native boolean isReady(long ptr, int sid);
 
     private native long newRecognizer(OnlineRecognizerConfig config);
 
     private native void decodeStreams(long ptr);
 
-    private native String creatStream(long ptr);
+    private native int creatStream(long ptr);
 
-    private native void releaseStreams(long ptr, String sid);
-
+    private native void releaseStreams(long ptr, int sid);
+    
+	
+	private native Object[]  readWave(String fileName);
 
 }

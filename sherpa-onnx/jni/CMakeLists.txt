@@ -10,8 +10,5 @@ if(NOT DEFINED ANDROID_ABI)
 endif()
 
 add_library(sherpa-onnx-jni jni.cc)
-add_library(sherpa-onnx-jni-java jni-java.cc)
 target_link_libraries(sherpa-onnx-jni sherpa-onnx-core)
-target_link_libraries(sherpa-onnx-jni-java sherpa-onnx-core)
 install(TARGETS sherpa-onnx-jni DESTINATION lib)
-install(TARGETS sherpa-onnx-jni-java DESTINATION lib)

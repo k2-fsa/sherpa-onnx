@@ -52,19 +52,17 @@ refer to [java_api_example](https://github.com/zhaomingwork/sherpa-onnx/blob/jav
 ``` java
    import com.k2fsa.sherpaonnx.OnlineRecognizer;
    import com.k2fsa.sherpaonnx.WavFile;
-   OnlineRecognizer.setCfgPath("./modelconfig.cfg"); //set cfg file path
-   OnlineRecognizer rcgOjb=new OnlineRecognizer();
-   WavFile wavFile = WavFile.openWavFile(new File(wavfilename)); //read wav 
-   int numFrame= (int) wavFile.getNumFrames(); //get wav size
-   float[] buffer=new float[numFrame];
-   int framesRead = wavFile.readFrames(buffer, numFrame);
-   rcgOjb.acceptWaveform(buffer,16000);    //feed asr engine in sample rate 16000
-   rcgOjb.inputFinished();                //when all wav data is feed to engine
-   while (rcgOjb.isReady()){rcgOjb.decode();}  //decode for text
+   float[] buffer = rcgOjb.readWavFile(wavfilename);  
+   rcgOjb.acceptWaveform(buffer, 16000);
+   rcgOjb.inputFinished();
+   while (rcgOjb.isReady()) {
+                rcgOjb.decode();
+            }
    wavFile.close();
-   String recText=rcgOjb.getText();      //get the text
+   String recText = "simple:" + rcgOjb.getText() + "\n";
    byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
-   System.out.printf(new String(utf8Data));
+   System.out.println(new String(utf8Data));
+
 ```
 ---
 5.gradle commands
