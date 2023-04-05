@@ -47,7 +47,7 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 4.A simple java example
 ---
 refer to com/k2fsa/sherpaonnx/java_api_example for more detial.
-``` xml
+``` java
   import com.k2fsa.sherpaonnx.rcglib.OnlineRecognizer;
   import com.k2fsa.sherpaonnx.rcglib.WavFile;
         OnlineRecognizer.setCfgPath("./modelconfig.cfg"); //set cfg file path
