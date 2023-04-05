@@ -56,7 +56,8 @@ public class RcgExampleForFile {
 
     }
 
-    public void initmodelwithcfg() {
+    public void initModelWithCfg() {
+
   
         //you should set OnlineRecognizer.setCfgPath(cfgpath) before running this
         rcgOjb = new OnlineRecognizer();
