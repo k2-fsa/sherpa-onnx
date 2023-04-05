@@ -1,5 +1,5 @@
 
-0.Intruduce
+0.Introduction
 ---
 Java wrapper com.k2fsa.sherpaonnx.rcglib.OnlineRecognizer for sherpa-onnx. Java is a cross-platform language, you can build jni-java .so lib according to your system, and then used the same java api for all your platform.
 ``` xml
