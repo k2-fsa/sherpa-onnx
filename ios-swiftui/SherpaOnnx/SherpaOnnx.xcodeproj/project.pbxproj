@@ -1,0 +1,622 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		C924F32E29DDAC0B00A440A5 /* SherpaOnnxApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F32D29DDAC0B00A440A5 /* SherpaOnnxApp.swift */; };
+		C924F33029DDAC0B00A440A5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F32F29DDAC0B00A440A5 /* ContentView.swift */; };
+		C924F33229DDAC0D00A440A5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C924F33129DDAC0D00A440A5 /* Assets.xcassets */; };
+		C924F33529DDAC0D00A440A5 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C924F33429DDAC0D00A440A5 /* Preview Assets.xcassets */; };
+		C924F33F29DDAC0D00A440A5 /* SherpaOnnxTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F33E29DDAC0D00A440A5 /* SherpaOnnxTests.swift */; };
+		C924F34929DDAC0D00A440A5 /* SherpaOnnxUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F34829DDAC0D00A440A5 /* SherpaOnnxUITests.swift */; };
+		C924F34B29DDAC0D00A440A5 /* SherpaOnnxUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F34A29DDAC0D00A440A5 /* SherpaOnnxUITestsLaunchTests.swift */; };
+		C924F35929DDACED00A440A5 /* SherpaOnnx.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F35829DDACED00A440A5 /* SherpaOnnx.swift */; };
+		C924F35C29DDAE4000A440A5 /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C924F35B29DDAE4000A440A5 /* sherpa-onnx.xcframework */; };
+		C924F35E29DDAE8200A440A5 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F35D29DDAE8200A440A5 /* Model.swift */; };
+		C924F36029DDB05D00A440A5 /* onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C924F35F29DDB05D00A440A5 /* onnxruntime.xcframework */; };
+		C924F36229DDB15D00A440A5 /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F36129DDB15D00A440A5 /* Extension.swift */; };
+		C924F36429DDB1D500A440A5 /* SherpaOnnxViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F36329DDB1D500A440A5 /* SherpaOnnxViewModel.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		C924F33B29DDAC0D00A440A5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C924F32229DDAC0B00A440A5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C924F32929DDAC0B00A440A5;
+			remoteInfo = SherpaOnnx;
+		};
+		C924F34529DDAC0D00A440A5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = C924F32229DDAC0B00A440A5 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = C924F32929DDAC0B00A440A5;
+			remoteInfo = SherpaOnnx;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		C924F32A29DDAC0B00A440A5 /* SherpaOnnx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnx.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C924F32D29DDAC0B00A440A5 /* SherpaOnnxApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxApp.swift; sourceTree = "<group>"; };
+		C924F32F29DDAC0B00A440A5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		C924F33129DDAC0D00A440A5 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C924F33429DDAC0D00A440A5 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		C924F33A29DDAC0D00A440A5 /* SherpaOnnxTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SherpaOnnxTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C924F33E29DDAC0D00A440A5 /* SherpaOnnxTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxTests.swift; sourceTree = "<group>"; };
+		C924F34429DDAC0D00A440A5 /* SherpaOnnxUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SherpaOnnxUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C924F34829DDAC0D00A440A5 /* SherpaOnnxUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxUITests.swift; sourceTree = "<group>"; };
+		C924F34A29DDAC0D00A440A5 /* SherpaOnnxUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		C924F35729DDACED00A440A5 /* SherpaOnnx-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SherpaOnnx-Bridging-Header.h"; path = "../../../swift-api-examples/SherpaOnnx-Bridging-Header.h"; sourceTree = "<group>"; };
+		C924F35829DDACED00A440A5 /* SherpaOnnx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SherpaOnnx.swift; path = "../../../swift-api-examples/SherpaOnnx.swift"; sourceTree = "<group>"; };
+		C924F35B29DDAE4000A440A5 /* sherpa-onnx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "sherpa-onnx.xcframework"; path = "../../build-ios/sherpa-onnx.xcframework"; sourceTree = "<group>"; };
+		C924F35D29DDAE8200A440A5 /* Model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
+		C924F35F29DDB05D00A440A5 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/onnxruntime.xcframework"; sourceTree = "<group>"; };
+		C924F36129DDB15D00A440A5 /* Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extension.swift; sourceTree = "<group>"; };
+		C924F36329DDB1D500A440A5 /* SherpaOnnxViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SherpaOnnxViewModel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		C924F32729DDAC0B00A440A5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C924F36029DDB05D00A440A5 /* onnxruntime.xcframework in Frameworks */,
+				C924F35C29DDAE4000A440A5 /* sherpa-onnx.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C924F33729DDAC0D00A440A5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C924F34129DDAC0D00A440A5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		C924F32129DDAC0B00A440A5 = {
+			isa = PBXGroup;
+			children = (
+				C924F32C29DDAC0B00A440A5 /* SherpaOnnx */,
+				C924F33D29DDAC0D00A440A5 /* SherpaOnnxTests */,
+				C924F34729DDAC0D00A440A5 /* SherpaOnnxUITests */,
+				C924F32B29DDAC0B00A440A5 /* Products */,
+				C924F35A29DDAE3F00A440A5 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		C924F32B29DDAC0B00A440A5 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				C924F32A29DDAC0B00A440A5 /* SherpaOnnx.app */,
+				C924F33A29DDAC0D00A440A5 /* SherpaOnnxTests.xctest */,
+				C924F34429DDAC0D00A440A5 /* SherpaOnnxUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		C924F32C29DDAC0B00A440A5 /* SherpaOnnx */ = {
+			isa = PBXGroup;
+			children = (
+				C924F36329DDB1D500A440A5 /* SherpaOnnxViewModel.swift */,
+				C924F36129DDB15D00A440A5 /* Extension.swift */,
+				C924F35D29DDAE8200A440A5 /* Model.swift */,
+				C924F35729DDACED00A440A5 /* SherpaOnnx-Bridging-Header.h */,
+				C924F35829DDACED00A440A5 /* SherpaOnnx.swift */,
+				C924F32D29DDAC0B00A440A5 /* SherpaOnnxApp.swift */,
+				C924F32F29DDAC0B00A440A5 /* ContentView.swift */,
+				C924F33129DDAC0D00A440A5 /* Assets.xcassets */,
+				C924F33329DDAC0D00A440A5 /* Preview Content */,
+			);
+			path = SherpaOnnx;
+			sourceTree = "<group>";
+		};
+		C924F33329DDAC0D00A440A5 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				C924F33429DDAC0D00A440A5 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		C924F33D29DDAC0D00A440A5 /* SherpaOnnxTests */ = {
+			isa = PBXGroup;
+			children = (
+				C924F33E29DDAC0D00A440A5 /* SherpaOnnxTests.swift */,
+			);
+			path = SherpaOnnxTests;
+			sourceTree = "<group>";
+		};
+		C924F34729DDAC0D00A440A5 /* SherpaOnnxUITests */ = {
+			isa = PBXGroup;
+			children = (
+				C924F34829DDAC0D00A440A5 /* SherpaOnnxUITests.swift */,
+				C924F34A29DDAC0D00A440A5 /* SherpaOnnxUITestsLaunchTests.swift */,
+			);
+			path = SherpaOnnxUITests;
+			sourceTree = "<group>";
+		};
+		C924F35A29DDAE3F00A440A5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C924F35F29DDB05D00A440A5 /* onnxruntime.xcframework */,
+				C924F35B29DDAE4000A440A5 /* sherpa-onnx.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		C924F32929DDAC0B00A440A5 /* SherpaOnnx */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C924F34E29DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnx" */;
+			buildPhases = (
+				C924F32629DDAC0B00A440A5 /* Sources */,
+				C924F32729DDAC0B00A440A5 /* Frameworks */,
+				C924F32829DDAC0B00A440A5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SherpaOnnx;
+			productName = SherpaOnnx;
+			productReference = C924F32A29DDAC0B00A440A5 /* SherpaOnnx.app */;
+			productType = "com.apple.product-type.application";
+		};
+		C924F33929DDAC0D00A440A5 /* SherpaOnnxTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C924F35129DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxTests" */;
+			buildPhases = (
+				C924F33629DDAC0D00A440A5 /* Sources */,
+				C924F33729DDAC0D00A440A5 /* Frameworks */,
+				C924F33829DDAC0D00A440A5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C924F33C29DDAC0D00A440A5 /* PBXTargetDependency */,
+			);
+			name = SherpaOnnxTests;
+			productName = SherpaOnnxTests;
+			productReference = C924F33A29DDAC0D00A440A5 /* SherpaOnnxTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		C924F34329DDAC0D00A440A5 /* SherpaOnnxUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C924F35429DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxUITests" */;
+			buildPhases = (
+				C924F34029DDAC0D00A440A5 /* Sources */,
+				C924F34129DDAC0D00A440A5 /* Frameworks */,
+				C924F34229DDAC0D00A440A5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C924F34629DDAC0D00A440A5 /* PBXTargetDependency */,
+			);
+			name = SherpaOnnxUITests;
+			productName = SherpaOnnxUITests;
+			productReference = C924F34429DDAC0D00A440A5 /* SherpaOnnxUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		C924F32229DDAC0B00A440A5 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1420;
+				LastUpgradeCheck = 1420;
+				TargetAttributes = {
+					C924F32929DDAC0B00A440A5 = {
+						CreatedOnToolsVersion = 14.2;
+					};
+					C924F33929DDAC0D00A440A5 = {
+						CreatedOnToolsVersion = 14.2;
+						TestTargetID = C924F32929DDAC0B00A440A5;
+					};
+					C924F34329DDAC0D00A440A5 = {
+						CreatedOnToolsVersion = 14.2;
+						TestTargetID = C924F32929DDAC0B00A440A5;
+					};
+				};
+			};
+			buildConfigurationList = C924F32529DDAC0B00A440A5 /* Build configuration list for PBXProject "SherpaOnnx" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = C924F32129DDAC0B00A440A5;
+			productRefGroup = C924F32B29DDAC0B00A440A5 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				C924F32929DDAC0B00A440A5 /* SherpaOnnx */,
+				C924F33929DDAC0D00A440A5 /* SherpaOnnxTests */,
+				C924F34329DDAC0D00A440A5 /* SherpaOnnxUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		C924F32829DDAC0B00A440A5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C924F33529DDAC0D00A440A5 /* Preview Assets.xcassets in Resources */,
+				C924F33229DDAC0D00A440A5 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C924F33829DDAC0D00A440A5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C924F34229DDAC0D00A440A5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		C924F32629DDAC0B00A440A5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C924F36229DDB15D00A440A5 /* Extension.swift in Sources */,
+				C924F33029DDAC0B00A440A5 /* ContentView.swift in Sources */,
+				C924F35929DDACED00A440A5 /* SherpaOnnx.swift in Sources */,
+				C924F32E29DDAC0B00A440A5 /* SherpaOnnxApp.swift in Sources */,
+				C924F36429DDB1D500A440A5 /* SherpaOnnxViewModel.swift in Sources */,
+				C924F35E29DDAE8200A440A5 /* Model.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C924F33629DDAC0D00A440A5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C924F33F29DDAC0D00A440A5 /* SherpaOnnxTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C924F34029DDAC0D00A440A5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C924F34B29DDAC0D00A440A5 /* SherpaOnnxUITestsLaunchTests.swift in Sources */,
+				C924F34929DDAC0D00A440A5 /* SherpaOnnxUITests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		C924F33C29DDAC0D00A440A5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C924F32929DDAC0B00A440A5 /* SherpaOnnx */;
+			targetProxy = C924F33B29DDAC0D00A440A5 /* PBXContainerItemProxy */;
+		};
+		C924F34629DDAC0D00A440A5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = C924F32929DDAC0B00A440A5 /* SherpaOnnx */;
+			targetProxy = C924F34529DDAC0D00A440A5 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		C924F34C29DDAC0D00A440A5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		C924F34D29DDAC0D00A440A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		C924F34F29DDAC0D00A440A5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnx/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../build-ios/sherpa-onnx.xcframework/Headers/";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lc++";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnx";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "${PROJECT_DIR}/../../swift-api-examples/SherpaOnnx-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C924F35029DDAC0D00A440A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnx/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../build-ios/sherpa-onnx.xcframework/Headers/";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lc++";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnx";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "${PROJECT_DIR}/../../swift-api-examples/SherpaOnnx-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		C924F35229DDAC0D00A440A5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SherpaOnnx.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SherpaOnnx";
+			};
+			name = Debug;
+		};
+		C924F35329DDAC0D00A440A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SherpaOnnx.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SherpaOnnx";
+			};
+			name = Release;
+		};
+		C924F35529DDAC0D00A440A5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SherpaOnnx;
+			};
+			name = Debug;
+		};
+		C924F35629DDAC0D00A440A5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				GENERATE_INFOPLIST_FILE = YES;
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_TARGET_NAME = SherpaOnnx;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		C924F32529DDAC0B00A440A5 /* Build configuration list for PBXProject "SherpaOnnx" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C924F34C29DDAC0D00A440A5 /* Debug */,
+				C924F34D29DDAC0D00A440A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C924F34E29DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnx" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C924F34F29DDAC0D00A440A5 /* Debug */,
+				C924F35029DDAC0D00A440A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C924F35129DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C924F35229DDAC0D00A440A5 /* Debug */,
+				C924F35329DDAC0D00A440A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C924F35429DDAC0D00A440A5 /* Build configuration list for PBXNativeTarget "SherpaOnnxUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C924F35529DDAC0D00A440A5 /* Debug */,
+				C924F35629DDAC0D00A440A5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = C924F32229DDAC0B00A440A5 /* Project object */;
+}
