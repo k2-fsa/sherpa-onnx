@@ -81,7 +81,8 @@ public class RcgExampleForFile {
             wavFile.close();
             String recText = "simple:" + rcgOjb.getText() + "\n";
             byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
-            System.out.printf(new String(utf8Data));
+            System.out.printfln(new String(utf8Data));
+
             rcgOjb.reset();
 
         } catch (Exception e) {
