@@ -8,14 +8,34 @@
 import SwiftUI
 
 struct ContentView: View {
+    @StateObject var sherpaOnnxVM = SherpaOnnxViewModel()
+
     var body: some View {
         VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundColor(.accentColor)
-            Text("Hello, world!")
+            Text("ASR with Next-gen Kaldi")
+                .font(.title)
+            if sherpaOnnxVM.status == .stop {
+                Text("See https://github.com/k2-fsa/sherpa-onnx")
+                Text("Press the Start button to run!")
+            }
+            ScrollView(.vertical, showsIndicators: true) {
+                HStack {
+                    Text(sherpaOnnxVM.subtitles)
+                    Spacer()
+                }
+            }
+            Spacer()
+            Button {
+                toggleRecorder()
+            } label: {
+                Text(sherpaOnnxVM.status == .stop ? "Start" : "Stop")
+            }
         }
         .padding()
+    }
+
+    private func toggleRecorder() {
+        sherpaOnnxVM.toggleRecorder()
     }
 }
 

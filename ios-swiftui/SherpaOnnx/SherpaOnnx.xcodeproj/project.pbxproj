@@ -18,6 +18,8 @@
 		C924F35C29DDAE4000A440A5 /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C924F35B29DDAE4000A440A5 /* sherpa-onnx.xcframework */; };
 		C924F35E29DDAE8200A440A5 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F35D29DDAE8200A440A5 /* Model.swift */; };
 		C924F36029DDB05D00A440A5 /* onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C924F35F29DDB05D00A440A5 /* onnxruntime.xcframework */; };
+		C924F36229DDB15D00A440A5 /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F36129DDB15D00A440A5 /* Extension.swift */; };
+		C924F36429DDB1D500A440A5 /* SherpaOnnxViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C924F36329DDB1D500A440A5 /* SherpaOnnxViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +55,8 @@
 		C924F35B29DDAE4000A440A5 /* sherpa-onnx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "sherpa-onnx.xcframework"; path = "../../build-ios/sherpa-onnx.xcframework"; sourceTree = "<group>"; };
 		C924F35D29DDAE8200A440A5 /* Model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Model.swift; sourceTree = "<group>"; };
 		C924F35F29DDB05D00A440A5 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/onnxruntime.xcframework"; sourceTree = "<group>"; };
+		C924F36129DDB15D00A440A5 /* Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extension.swift; sourceTree = "<group>"; };
+		C924F36329DDB1D500A440A5 /* SherpaOnnxViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SherpaOnnxViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,6 +110,8 @@
 		C924F32C29DDAC0B00A440A5 /* SherpaOnnx */ = {
 			isa = PBXGroup;
 			children = (
+				C924F36329DDB1D500A440A5 /* SherpaOnnxViewModel.swift */,
+				C924F36129DDB15D00A440A5 /* Extension.swift */,
 				C924F35D29DDAE8200A440A5 /* Model.swift */,
 				C924F35729DDACED00A440A5 /* SherpaOnnx-Bridging-Header.h */,
 				C924F35829DDACED00A440A5 /* SherpaOnnx.swift */,
@@ -281,9 +287,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C924F36229DDB15D00A440A5 /* Extension.swift in Sources */,
 				C924F33029DDAC0B00A440A5 /* ContentView.swift in Sources */,
 				C924F35929DDACED00A440A5 /* SherpaOnnx.swift in Sources */,
 				C924F32E29DDAC0B00A440A5 /* SherpaOnnxApp.swift in Sources */,
+				C924F36429DDB1D500A440A5 /* SherpaOnnxViewModel.swift in Sources */,
 				C924F35E29DDAE8200A440A5 /* Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
