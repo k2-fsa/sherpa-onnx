@@ -73,7 +73,7 @@ refer to com/k2fsa/sherpaonnx/java_api_example for more detial.
   gradle run
   ```
 5.2 build for jar lib
-``` xml
+``` bash
   gradle build 
  
  
