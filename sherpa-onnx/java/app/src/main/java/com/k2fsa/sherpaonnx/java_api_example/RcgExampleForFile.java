@@ -33,7 +33,6 @@ public class RcgExampleForFile {
     String wavfilename;
 
     public RcgExampleForFile(String filename) {
-
         wavfilename = filename;
     }
 
