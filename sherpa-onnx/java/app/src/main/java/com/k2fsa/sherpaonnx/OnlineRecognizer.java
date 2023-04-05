@@ -19,7 +19,7 @@ usage example:
         byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
         System.out.printf(new String(utf8Data));
 */
-package com.k2fsa.sherpaonnx.rcglib;
+package com.k2fsa.sherpaonnx;
 
 import java.io.*;
 import java.util.*;

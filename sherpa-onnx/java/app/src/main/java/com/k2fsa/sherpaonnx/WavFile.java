@@ -2,7 +2,7 @@
 //Copyright 2022-2023 by zhaoming
 // change double to float
 //Source based on https://github.com/Semantive/waveform-android/blob/master/library/src/main/java/com/semantive/waveformandroid/waveform/soundfile/WavFile.java.
-package com.k2fsa.sherpaonnx.rcglib;
+package com.k2fsa.sherpaonnx;
 
 import java.io.*;
 

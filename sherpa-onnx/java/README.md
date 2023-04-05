@@ -1,7 +1,7 @@
 
 0.Introduction
 ---
-Java wrapper `com.k2fsa.sherpaonnx.rcglib.OnlineRecognizer` for `sherpa-onnx`. Java is a cross-platform language; you can build jni-java .so lib according to your system, and then use the same java api for all your platform.
+Java wrapper `com.k2fsa.sherpaonnx.OnlineRecognizer` for `sherpa-onnx`. Java is a cross-platform language; you can build jni-java .so lib according to your system, and then use the same java api for all your platform.
 ``` xml
 Depend on:
   Gradle 8.0.2 
@@ -22,6 +22,8 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 ```
 ---
 2.Download asr model files
+---
+[click here for more detail](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html)
 ---
 3.Config model config.cfg
 ---
@@ -46,23 +48,23 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 ---
 4.A simple java example
 ---
-refer to com/k2fsa/sherpaonnx/java_api_example for more detail.
+refer to [java_api_example](https://github.com/zhaomingwork/sherpa-onnx/blob/java-wrapper-support/sherpa-onnx/java/app/src/main/java/com/k2fsa/sherpaonnx/java_api_example/RcgExampleForFile.java) for more detail.
 ``` java
-  import com.k2fsa.sherpaonnx.rcglib.OnlineRecognizer;
-  import com.k2fsa.sherpaonnx.rcglib.WavFile;
-        OnlineRecognizer.setCfgPath("./modelconfig.cfg"); //set cfg file path
-        OnlineRecognizer rcgOjb=new OnlineRecognizer();
-		WavFile wavFile = WavFile.openWavFile(new File(wavfilename)); //read wav 
-		int numFrame= (int) wavFile.getNumFrames(); //get wav size
-		float[] buffer=new float[numFrame];
-		int framesRead = wavFile.readFrames(buffer, numFrame);
-		rcgOjb.acceptWaveform(buffer,16000);    //feed asr engine in sample rate 16000
-		rcgOjb.inputFinished();                //when all wav data is feed to engine
-		while (rcgOjb.isReady()){rcgOjb.decode();}  //decode for text
-		wavFile.close();
-		String recText=rcgOjb.getText();      //get the text
-        byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
-        System.out.printf(new String(utf8Data));
+   import com.k2fsa.sherpaonnx.OnlineRecognizer;
+   import com.k2fsa.sherpaonnx.WavFile;
+   OnlineRecognizer.setCfgPath("./modelconfig.cfg"); //set cfg file path
+   OnlineRecognizer rcgOjb=new OnlineRecognizer();
+   WavFile wavFile = WavFile.openWavFile(new File(wavfilename)); //read wav 
+   int numFrame= (int) wavFile.getNumFrames(); //get wav size
+   float[] buffer=new float[numFrame];
+   int framesRead = wavFile.readFrames(buffer, numFrame);
+   rcgOjb.acceptWaveform(buffer,16000);    //feed asr engine in sample rate 16000
+   rcgOjb.inputFinished();                //when all wav data is feed to engine
+   while (rcgOjb.isReady()){rcgOjb.decode();}  //decode for text
+   wavFile.close();
+   String recText=rcgOjb.getText();      //get the text
+   byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
+   System.out.printf(new String(utf8Data));
 ```
 ---
 5.gradle commands
@@ -75,9 +77,4 @@ refer to com/k2fsa/sherpaonnx/java_api_example for more detail.
 5.2 build for jar lib
 ``` bash
   gradle build 
- 
- 
- 
 
-
- 

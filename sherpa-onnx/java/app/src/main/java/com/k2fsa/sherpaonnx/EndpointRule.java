@@ -2,7 +2,7 @@
  * // Copyright 2022-2023 by zhaoming
  */
 
-package com.k2fsa.sherpaonnx.rcglib;
+package com.k2fsa.sherpaonnx;
 
 public class EndpointRule {
     final private boolean mustContainNonSilence;

@@ -25,8 +25,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.charset.Charset;
 import java.io.*;
 
-import com.k2fsa.sherpaonnx.rcglib.OnlineRecognizer;
-import com.k2fsa.sherpaonnx.rcglib.WavFile;
+import com.k2fsa.sherpaonnx.OnlineRecognizer;
+import com.k2fsa.sherpaonnx.WavFile;
 
 public class RcgExampleForFile {
     OnlineRecognizer rcgOjb;
@@ -125,12 +125,8 @@ public class RcgExampleForFile {
             }
             // Close the wavFile
             wavFile.close();
-
-
             String wavText = "stream:" + rcgOjb.getText() + "\n";
             byte[] utf8Data = wavText.getBytes(StandardCharsets.UTF_8);
-
-
             System.out.printf(new String(utf8Data));
             rcgOjb.reSet();
         } catch (Exception e) {
@@ -141,7 +137,6 @@ public class RcgExampleForFile {
     public static void main(String[] args) {
         try {
 			String appdir=System.getProperty("user.dir");
-			
 			System.out.println("appdir="+appdir);
             String filename = appdir+"/test.wav";
 			String cfgpath=appdir+"/modelconfig.cfg";

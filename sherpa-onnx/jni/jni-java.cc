@@ -2,7 +2,7 @@
 // It is based on jni.cc, but with some changes
 // Copyright   2022-2023  by zhaoming
 // this will be used for the java environment
-// com.k2fsa.sherpaonnx.rcglib.OnlineRecognizer
+// com.k2fsa.sherpaonnx.OnlineRecognizer
 // It supports parallel stream decoding and each
 // stream will assign a uuid id.
 //
@@ -24,13 +24,16 @@
 #include <mutex>  // NOLINT
 namespace sherpa_onnx {
 
-static std::random_device rd;
-static std::mt19937 gen(rd());
-static std::uniform_int_distribution<> dis(0, 15);
-static std::uniform_int_distribution<> dis2(8, 11);
+
 
 static std::string GenerateUuid() {
+  // Source based on https://stackoverflow.com/questions/24365331/how-can-i-generate-uuid-in-c-without-using-boost-library
   // generate uuid for streams
+  static std::random_device rd;
+  static std::mt19937 gen(rd());
+  static std::uniform_int_distribution<> dis(0, 15);
+  static std::uniform_int_distribution<> dis2(8, 11);
+  
   std::stringstream ss;
   int i;
   ss << std::hex;
@@ -113,7 +116,7 @@ class JavaRecognizer {
     // create a new stream for recognizer
     std::unique_lock<std::mutex> lock(mutex_);
     std::shared_ptr<OnlineStream> s = recognizer_.CreateStream();
-    std::string s_key = generate_uuid();
+    std::string s_key = GenerateUuid();
     s_map.insert({s_key, std::move(s)});
 
     return s_key;
@@ -170,7 +173,7 @@ static OnlineRecognizerConfig GetConfigJava(JNIEnv *env, jobject config) {
 
   //---------- feat config ----------
   fid = env->GetFieldID(cls, "featConfig",
-                        "Lcom/k2fsa/sherpaonnx/rcglib/FeatureConfig;");
+                        "Lcom/k2fsa/sherpaonnx/FeatureConfig;");
   jobject feat_config = env->GetObjectField(config, fid);
   jclass feat_config_cls = env->GetObjectClass(feat_config);
 
@@ -187,21 +190,21 @@ static OnlineRecognizerConfig GetConfigJava(JNIEnv *env, jobject config) {
   //---------- endpoint_config ----------
 
   fid = env->GetFieldID(cls, "endpointConfig",
-                        "Lcom/k2fsa/sherpaonnx/rcglib/EndpointConfig;");
+                        "Lcom/k2fsa/sherpaonnx/EndpointConfig;");
   jobject endpoint_config = env->GetObjectField(config, fid);
   jclass endpoint_config_cls = env->GetObjectClass(endpoint_config);
 
   fid = env->GetFieldID(endpoint_config_cls, "rule1",
-                        "Lcom/k2fsa/sherpaonnx/rcglib/EndpointRule;");
+                        "Lcom/k2fsa/sherpaonnx/EndpointRule;");
   jobject rule1 = env->GetObjectField(endpoint_config, fid);
   jclass rule_class = env->GetObjectClass(rule1);
 
   fid = env->GetFieldID(endpoint_config_cls, "rule2",
-                        "Lcom/k2fsa/sherpaonnx/rcglib/EndpointRule;");
+                        "Lcom/k2fsa/sherpaonnx/EndpointRule;");
   jobject rule2 = env->GetObjectField(endpoint_config, fid);
 
   fid = env->GetFieldID(endpoint_config_cls, "rule3",
-                        "Lcom/k2fsa/sherpaonnx/rcglib/EndpointRule;");
+                        "Lcom/k2fsa/sherpaonnx/EndpointRule;");
   jobject rule3 = env->GetObjectField(endpoint_config, fid);
 
   fid = env->GetFieldID(rule_class, "mustContainNonSilence", "Z");
@@ -231,7 +234,7 @@ static OnlineRecognizerConfig GetConfigJava(JNIEnv *env, jobject config) {
   //---------- model config ----------
   fid = env->GetFieldID(
       cls, "modelConfig",
-      "Lcom/k2fsa/sherpaonnx/rcglib/OnlineTransducerModelConfig;");
+      "Lcom/k2fsa/sherpaonnx/OnlineTransducerModelConfig;");
   jobject model_config = env->GetObjectField(config, fid);
   jclass model_config_cls = env->GetObjectClass(model_config);
 
@@ -275,7 +278,7 @@ static OnlineRecognizerConfig GetConfigJava(JNIEnv *env, jobject config) {
 // all inferface are used for JNI in java
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_acceptWaveform(
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_acceptWaveform(
     JNIEnv *env, jobject objptr, jlong ptr, jfloatArray samples,
     jint sample_rate, jstring sid) {
   auto model = reinterpret_cast<sherpa_onnx::JavaRecognizer *>(ptr);
@@ -295,7 +298,7 @@ Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_acceptWaveform(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_inputFinished(
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_inputFinished(
     JNIEnv *env, jobject objptr, jlong ptr, jstring sid) {
   const char *p = env->GetStringUTFChars(sid, nullptr);
   std::string new_sid = std::string(p);
@@ -305,7 +308,7 @@ Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_inputFinished(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jstring JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_getText(JNIEnv *env,
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_getText(JNIEnv *env,
                                                               jobject objptr,
                                                               jlong ptr,
                                                               jstring sid) {
@@ -319,7 +322,7 @@ Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_getText(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_reset(JNIEnv *env,
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_reset(JNIEnv *env,
                                                             jobject objptr,
                                                             jlong ptr,
                                                             jstring sid) {
@@ -334,7 +337,7 @@ Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_reset(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_decode(JNIEnv *env,
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_decode(JNIEnv *env,
                                                              jobject objptr,
                                                              jlong ptr,
                                                              jstring sid) {
@@ -347,7 +350,7 @@ Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_decode(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jboolean JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_isEndpoint(JNIEnv *env,
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_isEndpoint(JNIEnv *env,
                                                                  jobject objptr,
                                                                  jlong ptr,
                                                                  jstring sid) {
@@ -360,7 +363,7 @@ Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_isEndpoint(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jboolean JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_isReady(JNIEnv *env,
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_isReady(JNIEnv *env,
                                                               jobject objptr,
                                                               jlong ptr,
                                                               jstring sid) {
@@ -374,7 +377,7 @@ Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_isReady(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_newRecognizer(
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_newRecognizer(
     JNIEnv *env, jobject objptr, jobject _config) {
   auto config = sherpa_onnx::GetConfigJava(env, _config);
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
@@ -385,7 +388,7 @@ Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_newRecognizer(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_decodeStreams(
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_decodeStreams(
     JNIEnv *env, jobject objptr, jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::JavaRecognizer *>(ptr);
   model->DecodeStreams();
@@ -394,7 +397,7 @@ Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_decodeStreams(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jstring JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_creatStream(
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_creatStream(
     JNIEnv *env, jobject objptr, jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::JavaRecognizer *>(ptr);
   std::string sid = model->CreatStream();
@@ -403,7 +406,7 @@ Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_creatStream(
 }
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL
-Java_com_k2fsa_sherpaonnx_rcglib_OnlineRecognizer_releaseStreams(
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_releaseStreams(
     JNIEnv *env, jobject objptr, jlong ptr, jstring sid) {
   auto model = reinterpret_cast<sherpa_onnx::JavaRecognizer *>(ptr);
   const char *p = env->GetStringUTFChars(sid, nullptr);
