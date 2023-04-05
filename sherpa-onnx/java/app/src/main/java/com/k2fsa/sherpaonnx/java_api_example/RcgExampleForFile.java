@@ -117,7 +117,8 @@ public class RcgExampleForFile {
                 byte[] utf8Data = testDate.getBytes(StandardCharsets.UTF_8);
 
                 if (utf8Data.length > 0) {
-                    System.out.printf(new String(utf8Data) + "\n");
+                    System.out.printfln(new String(utf8Data));
+
                 }
             }
             while (framesRead != 0);
