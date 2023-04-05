@@ -29,7 +29,7 @@ static std::mt19937 gen(rd());
 static std::uniform_int_distribution<> dis(0, 15);
 static std::uniform_int_distribution<> dis2(8, 11);
 
-std::string generate_uuid() {
+static std::string GenerateUuid() {
   // generate uuid for streams
   std::stringstream ss;
   int i;
