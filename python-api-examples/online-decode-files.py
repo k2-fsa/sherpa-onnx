@@ -172,12 +172,14 @@ def main():
         print("-" * 10)
 
     elapsed_seconds = end_time - start_time
-    rtf = elapsed_seconds / duration
+    rtf = elapsed_seconds / total_duration
     print(f"num_threads: {args.num_threads}")
     print(f"decoding_method: {args.decoding_method}")
-    print(f"Wave duration: {duration:.3f} s")
+    print(f"Wave duration: {total_duration:.3f} s")
     print(f"Elapsed time: {elapsed_seconds:.3f} s")
-    print(f"Real time factor (RTF): {elapsed_seconds:.3f}/{duration:.3f} = {rtf:.3f}")
+    print(
+        f"Real time factor (RTF): {elapsed_seconds:.3f}/{total_duration:.3f} = {rtf:.3f}"
+    )
 
 
 if __name__ == "__main__":

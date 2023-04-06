@@ -75,7 +75,6 @@ class OfflineRecognizer(object):
                 decoder_filename=decoder,
                 joiner_filename=joiner,
             ),
-            paraformer=OfflineParaformerModelConfig(model=""),
             tokens=tokens,
             num_threads=num_threads,
             debug=debug,
@@ -133,9 +132,6 @@ class OfflineRecognizer(object):
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
-            transducer=OfflineTransducerModelConfig(
-                encoder_filename="", decoder_filename="", joiner_filename=""
-            ),
             paraformer=OfflineParaformerModelConfig(model=paraformer),
             tokens=tokens,
             num_threads=num_threads,
