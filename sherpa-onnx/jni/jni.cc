@@ -33,7 +33,7 @@
 namespace sherpa_onnx {
 
 class SherpaOnnx {
-  //  use  map to manage streams based on its uuid,
+  //  use  map to manage streams based on its id,
   // it can be used for parallel stream decode
  public:
   SherpaOnnx(
@@ -48,7 +48,7 @@ class SherpaOnnx {
             config) {
     std::unique_lock<std::mutex> lock(mutex_);
     std::shared_ptr<OnlineStream> s = recognizer_.CreateStream();
-    s_map.insert({0, std::move(s)});
+    s_map.insert({0, std::move(s)});  //create 0 id stream as default
   }
 
   void AcceptWaveform(int32_t sample_rate, const float *samples, int32_t n,
@@ -132,7 +132,7 @@ class SherpaOnnx {
   }
   int32_t GenerateId() {
     if (current_id >= std::numeric_limits<std::int32_t>::max()) {
-      // when id reach max value, set it to 0
+      // when id reach max value, set it to 1
       current_id = 1;
     }
     return (current_id++);

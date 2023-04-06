@@ -3,8 +3,8 @@
  */
 /*
 Config modelconfig.cfg
-  #set libsherpa-onnx-jni-java.so lib root dir
-  solibpath=/sherpa-onnx/build/lib/libsherpa-onnx-jni-java.so   
+  #set libsherpa-onnx-jni.so lib root dir
+  solibpath=/sherpa-onnx/build/lib/libsherpa-onnx-jni.so   
   sample_rate=16000                  
   feature_dim=80
   rule1_min_trailing_silence=2.4

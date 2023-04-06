@@ -10,7 +10,7 @@ Depend on:
 ---
 1.Compile so. lib
 ---
-Compile sherpa-onnx/jni/jni_java.cc according to your system.
+Compile sherpa-onnx/jni/jni.cc according to your system.
 Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 ``` xml
   git clone https://github.com/k2-fsa/sherpa-onnx
@@ -28,8 +28,8 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 3.Config model config.cfg
 ---
 ``` xml
-  #set libsherpa-onnx-jni-java.so lib root dir
-  solibpath=/sherpa-onnx/build/lib/libsherpa-onnx-jni-java.so  
+  #set libsherpa-onnx-jni.so lib root dir
+  solibpath=/sherpa-onnx/build/lib/libsherpa-onnx-jni.so  
   #model config  
   sample_rate=16000                  
   feature_dim=80
@@ -48,7 +48,7 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 ---
 4.A simple java example
 ---
-refer to [java_api_example](https://github.com/zhaomingwork/sherpa-onnx/blob/java-wrapper-support/sherpa-onnx/java/app/src/main/java/com/k2fsa/sherpaonnx/java_api_example/RcgExampleForFile.java) for more detail.
+refer to [java_api_example](https://github.com/zhaomingwork/sherpa-onnx/blob/java-wrapper-support/java-api-examples/app/src/main/java/com/k2fsa/sherpaonnx/java_api_example/RcgExampleForFile.java) for more detail.
 ``` java
    import com.k2fsa.sherpaonnx.OnlineRecognizer;
    import com.k2fsa.sherpaonnx.WavFile;
