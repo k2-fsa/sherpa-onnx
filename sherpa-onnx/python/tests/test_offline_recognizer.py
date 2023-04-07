@@ -196,6 +196,71 @@ class TestOfflineRecognizer(unittest.TestCase):
             print(s2.result.text)
             print(s3.result.text)
 
+    def test_nemo_ctc_single_file(self):
+        for use_int8 in [True, False]:
+            if use_int8:
+                model = f"{d}/sherpa-onnx-nemo-ctc-en-citrinet-512/model.int8.onnx"
+            else:
+                model = f"{d}/sherpa-onnx-nemo-ctc-en-citrinet-512/model.onnx"
+
+            tokens = f"{d}/sherpa-onnx-nemo-ctc-en-citrinet-512/tokens.txt"
+            wave0 = f"{d}/sherpa-onnx-nemo-ctc-en-citrinet-512/test_wavs/0.wav"
+
+            if not Path(model).is_file():
+                print("skipping test_nemo_ctc_single_file()")
+                return
+
+            recognizer = sherpa_onnx.OfflineRecognizer.from_nemo_ctc(
+                model=model,
+                tokens=tokens,
+                num_threads=1,
+            )
+
+            s = recognizer.create_stream()
+            samples, sample_rate = read_wave(wave0)
+            s.accept_waveform(sample_rate, samples)
+            recognizer.decode_stream(s)
+            print(s.result.text)
+
+    def test_nemo_ctc_multiple_files(self):
+        for use_int8 in [True, False]:
+            if use_int8:
+                model = f"{d}/sherpa-onnx-nemo-ctc-en-citrinet-512/model.int8.onnx"
+            else:
+                model = f"{d}/sherpa-onnx-nemo-ctc-en-citrinet-512/model.onnx"
+
+            tokens = f"{d}/sherpa-onnx-nemo-ctc-en-citrinet-512/tokens.txt"
+            wave0 = f"{d}/sherpa-onnx-nemo-ctc-en-citrinet-512/test_wavs/0.wav"
+            wave1 = f"{d}/sherpa-onnx-nemo-ctc-en-citrinet-512/test_wavs/1.wav"
+            wave2 = f"{d}/sherpa-onnx-nemo-ctc-en-citrinet-512/test_wavs/8k.wav"
+
+            if not Path(model).is_file():
+                print("skipping test_nemo_ctc_multiple_files()")
+                return
+
+            recognizer = sherpa_onnx.OfflineRecognizer.from_nemo_ctc(
+                model=model,
+                tokens=tokens,
+                num_threads=1,
+            )
+
+            s0 = recognizer.create_stream()
+            samples0, sample_rate0 = read_wave(wave0)
+            s0.accept_waveform(sample_rate0, samples0)
+
+            s1 = recognizer.create_stream()
+            samples1, sample_rate1 = read_wave(wave1)
+            s1.accept_waveform(sample_rate1, samples1)
+
+            s2 = recognizer.create_stream()
+            samples2, sample_rate2 = read_wave(wave2)
+            s2.accept_waveform(sample_rate2, samples2)
+
+            recognizer.decode_streams([s0, s1, s2])
+            print(s0.result.text)
+            print(s1.result.text)
+            print(s2.result.text)
+
 
 if __name__ == "__main__":
     unittest.main()
