@@ -7,6 +7,7 @@
 #include <assert.h>
 
 #include <algorithm>
+#include <cmath>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -14,6 +15,41 @@
 #include "sherpa-onnx/csrc/resample.h"
 
 namespace sherpa_onnx {
+
+/* Compute mean and inverse stddev over rows.
+ *
+ * @param p  A pointer to a 2-d array of shape (num_rows, num_cols)
+ * @param num_rows Number of rows
+ * @param num_cols Number of columns
+ * @param mean On return, it contains p.mean(axis=0)
+ * @param inv_stddev On return, it contains 1/p.std(axis=0)
+ */
+static void ComputeMeanAndInvStd(const float *p, int32_t num_rows,
+                                 int32_t num_cols, std::vector<float> *mean,
+                                 std::vector<float> *inv_stddev) {
+  std::vector<float> sum(num_cols);
+  std::vector<float> sum_sq(num_cols);
+
+  for (int32_t i = 0; i != num_rows; ++i) {
+    for (int32_t c = 0; c != num_cols; ++c) {
+      auto t = p[c];
+      sum[c] += t;
+      sum_sq[c] += t * t;
+    }
+    p += num_cols;
+  }
+
+  mean->resize(num_cols);
+  inv_stddev->resize(num_cols);
+
+  for (int32_t i = 0; i != num_cols; ++i) {
+    auto t = sum[i] / num_rows;
+    (*mean)[i] = t;
+
+    float stddev = std::sqrt(sum_sq[i] / num_rows - t * t);
+    (*inv_stddev)[i] = 1.0f / (stddev + 1e-5f);
+  }
+}
 
 void OfflineFeatureExtractorConfig::Register(ParseOptions *po) {
   po->Register("sample-rate", &sampling_rate,
@@ -106,12 +142,46 @@ class OfflineStream::Impl {
       p += feature_dim;
     }
 
+    NemoNormalizeFeatures(features.data(), n, feature_dim);
+
     return features;
   }
 
   void SetResult(const OfflineRecognitionResult &r) { r_ = r; }
 
   const OfflineRecognitionResult &GetResult() const { return r_; }
+
+ private:
+  void NemoNormalizeFeatures(float *p, int32_t num_frames,
+                             int32_t feature_dim) const {
+    if (config_.nemo_normalize_type.empty()) {
+      return;
+    }
+
+    if (config_.nemo_normalize_type != "per_feature") {
+      SHERPA_ONNX_LOGE(
+          "Only normalize_type=per_feature is implemented. Given: %s",
+          config_.nemo_normalize_type.c_str());
+      exit(-1);
+    }
+
+    NemoNormalizePerFeature(p, num_frames, feature_dim);
+  }
+
+  static void NemoNormalizePerFeature(float *p, int32_t num_frames,
+                                      int32_t feature_dim) {
+    std::vector<float> mean;
+    std::vector<float> inv_stddev;
+
+    ComputeMeanAndInvStd(p, num_frames, feature_dim, &mean, &inv_stddev);
+
+    for (int32_t n = 0; n != num_frames; ++n) {
+      for (int32_t i = 0; i != feature_dim; ++i) {
+        p[i] = (p[i] - mean[i]) * inv_stddev[i];
+      }
+      p += feature_dim;
+    }
+  }
 
  private:
   OfflineFeatureExtractorConfig config_;

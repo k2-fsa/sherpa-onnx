@@ -46,6 +46,11 @@ class OfflineCtcModel {
   /** Return an allocator for allocating memory
    */
   virtual OrtAllocator *Allocator() const = 0;
+
+  /** For some models, e.g., those from NeMo, they require some preprocessing
+   * for the features.
+   */
+  virtual std::string FeatureNormalizationMethod() const { return {}; }
 };
 
 }  // namespace sherpa_onnx

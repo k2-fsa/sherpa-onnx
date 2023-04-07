@@ -53,6 +53,17 @@ class OfflineNemoEncDecCtcModel : public OfflineCtcModel {
    */
   OrtAllocator *Allocator() const override;
 
+  // Possible values:
+  // - per_feature
+  // - all_features (not implemented yet)
+  // - fixed_mean (not implemented)
+  // - fixed_std (not implemented)
+  // - or just leave it to empty
+  // See
+  // https://github.com/NVIDIA/NeMo/blob/main/nemo/collections/asr/parts/preprocessing/features.py#L59
+  // for details
+  std::string FeatureNormalizationMethod() const override;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

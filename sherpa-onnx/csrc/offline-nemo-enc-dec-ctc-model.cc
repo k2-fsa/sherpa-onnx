@@ -56,6 +56,8 @@ class OfflineNemoEncDecCtcModel::Impl {
 
   OrtAllocator *Allocator() const { return allocator_; }
 
+  std::string FeatureNormalizationMethod() const { return normalize_type_; }
+
  private:
   void Init() {
     auto buf = ReadFile(config_.nemo_ctc.model);
@@ -78,6 +80,7 @@ class OfflineNemoEncDecCtcModel::Impl {
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(vocab_size_, "vocab_size");
     SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
+    SHERPA_ONNX_READ_META_DATA_STR(normalize_type_, "normalize_type");
   }
 
  private:
@@ -96,6 +99,7 @@ class OfflineNemoEncDecCtcModel::Impl {
 
   int32_t vocab_size_ = 0;
   int32_t subsampling_factor_ = 0;
+  std::string normalize_type_;
 };
 
 OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(
@@ -118,6 +122,10 @@ int32_t OfflineNemoEncDecCtcModel::SubsamplingFactor() const {
 
 OrtAllocator *OfflineNemoEncDecCtcModel::Allocator() const {
   return impl_->Allocator();
+}
+
+std::string OfflineNemoEncDecCtcModel::FeatureNormalizationMethod() const {
+  return impl_->FeatureNormalizationMethod();
 }
 
 }  // namespace sherpa_onnx
