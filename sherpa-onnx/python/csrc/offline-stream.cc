@@ -31,7 +31,6 @@ static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
           "timestamps", [](const PyClass &self) { return self.timestamps; });
 }
 
-
 static void PybindOfflineFeatureExtractorConfig(py::module *m) {
   using PyClass = OfflineFeatureExtractorConfig;
   py::class_<PyClass>(*m, "OfflineFeatureExtractorConfig")
@@ -41,7 +40,6 @@ static void PybindOfflineFeatureExtractorConfig(py::module *m) {
       .def_readwrite("feature_dim", &PyClass::feature_dim)
       .def("__str__", &PyClass::ToString);
 }
-
 
 void PybindOfflineStream(py::module *m) {
   PybindOfflineFeatureExtractorConfig(m);
@@ -55,7 +53,7 @@ void PybindOfflineStream(py::module *m) {
             self.AcceptWaveform(sample_rate, waveform.data(), waveform.size());
           },
           py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage)
-        .def_property_readonly("result", &PyClass::GetResult);
+      .def_property_readonly("result", &PyClass::GetResult);
 }
 
 }  // namespace sherpa_onnx

@@ -8,6 +8,7 @@ on:
       - '.github/workflows/windows-x64.yaml'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-offline-transducer.sh'
+      - '.github/scripts/test-offline-ctc.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -18,6 +19,7 @@ on:
       - '.github/workflows/windows-x64.yaml'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-offline-transducer.sh'
+      - '.github/scripts/test-offline-ctc.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -72,6 +74,14 @@ jobs:
           cmake --build . --config Release -- -m:2
 
           ls -lh ./bin/Release/sherpa-onnx.exe
+
+      - name: Test offline CTC for windows x64
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-ctc.sh
 
       - name: Test offline transducer for Windows x64
         shell: bash

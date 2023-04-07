@@ -8,6 +8,7 @@ on:
       - '.github/workflows/linux.yaml'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-offline-transducer.sh'
+      - '.github/scripts/test-offline-ctc.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -20,6 +21,7 @@ on:
       - '.github/workflows/linux.yaml'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-offline-transducer.sh'
+      - '.github/scripts/test-offline-ctc.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -67,6 +69,14 @@ jobs:
         run: |
           file build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
+
+      - name: Test offline CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-ctc.sh
 
       - name: Test offline transducer
         shell: bash

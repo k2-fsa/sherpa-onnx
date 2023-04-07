@@ -52,3 +52,6 @@ run-offline-websocket-client-*.sh
 run-sherpa-onnx-*.sh
 sherpa-onnx-zipformer-en-2023-03-30
 sherpa-onnx-zipformer-en-2023-04-01
+run-offline-decode-files.sh
+sherpa-onnx-nemo-ctc-en-citrinet-512
+run-offline-decode-files-nemo-ctc.sh
