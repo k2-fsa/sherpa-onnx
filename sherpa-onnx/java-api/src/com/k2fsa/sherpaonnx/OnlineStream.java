@@ -38,10 +38,10 @@ public class OnlineStream {
         System.load(so_path); // ("sherpa-onnx-jni-java");
 
     }
-    public void release()
-    {    
-	    //stream object must be release after used
-	    DeleteStream(this.s_ptr);
+
+    public void release() {
+        //stream object must be release after used
+        DeleteStream(this.s_ptr);
     }
 
 
@@ -49,30 +49,26 @@ public class OnlineStream {
         DeleteStream(this.s_ptr);
     }
 
-    public boolean IsLastFrame()
-    {
+    public boolean IsLastFrame() {
         return IsLastFrame(this.s_ptr);
     }
 
-    public void Reset()
-    {
+    public void Reset() {
         Reset(this.s_ptr);
     }
 
-    public int FeatureDim()
-    {
+    public int FeatureDim() {
         return FeatureDim(this.s_ptr);
     }
 
-    public float[] GetFrames(int frame_index,int size)
-    {
-        return GetFrames(this.s_ptr,frame_index,size);
+    public float[] GetFrames(int frame_index, int size) {
+        return GetFrames(this.s_ptr, frame_index, size);
     }
 
-    public int GetNumProcessedFrames()
-    {
+    public int GetNumProcessedFrames() {
         return GetNumProcessedFrames(this.s_ptr);
     }
+
     // JNI interface libsherpa-onnx-jni.so
     private native void AcceptWaveform(long s_ptr, int sampleRate, float[] samples, int sid);
 
@@ -85,11 +81,11 @@ public class OnlineStream {
     private native boolean IsLastFrame(long s_ptr);
 
     private native void Reset(long s_ptr);
-    
+
     private native int FeatureDim(long s_ptr);
 
-    private native float[] GetFrames(long s_ptr,int frame_index,int size);
+    private native float[] GetFrames(long s_ptr, int frame_index, int size);
 
     private native int GetNumProcessedFrames(long s_ptr);
-    
+
 }

@@ -29,7 +29,7 @@ import com.k2fsa.sherpaonnx.OnlineStream;
 
 public class DecodeFile {
     OnlineRecognizer rcgOjb;
-	OnlineStream streamObj;
+    OnlineStream streamObj;
     String wavfilename;
 
     public DecodeFile(String filename) {
@@ -53,38 +53,38 @@ public class DecodeFile {
         int max_active_paths = 4;
 
         rcgOjb = new OnlineRecognizer(tokens, encoder, decoder, joiner, num_threads, sample_rate, feature_dim, enable_endpoint_detection, rule1_min_trailing_silence, rule2_min_trailing_silence, rule3_min_utterance_length, decoding_method, max_active_paths);
-        streamObj=rcgOjb.CreateStream();
+        streamObj = rcgOjb.CreateStream();
     }
 
     public void initModelWithCfg() {
 
-  
+
         //you should set setCfgPath() before running this
         rcgOjb = new OnlineRecognizer();
-        streamObj=rcgOjb.CreateStream();
+        streamObj = rcgOjb.CreateStream();
     }
 
     public void simpleExample() {
         try {
- 
-			float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
-			streamObj.acceptWaveform(buffer, 16000);          //feed stream with data, and sample rate is 16000
-			streamObj.inputFinished();                   //tell engine you done with all data 
-			while (rcgOjb.IsReady(streamObj)) {          //engine is ready for unprocessed data
 
-                OnlineStream ssObj[]=new OnlineStream[1];
-                ssObj[0]=streamObj;
+            float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
+            streamObj.acceptWaveform(buffer, 16000);          //feed stream with data, and sample rate is 16000
+            streamObj.inputFinished();                   //tell engine you done with all data 
+            while (rcgOjb.IsReady(streamObj)) {          //engine is ready for unprocessed data
+
+                OnlineStream ssObj[] = new OnlineStream[1];
+                ssObj[0] = streamObj;
                 rcgOjb.DecodeStreams(ssObj);        //decode for multiple stream 
                 //rcgOjb.DecodeStream(streamObj);   //decode for single stream
             }
 
-			String recText = "simple:" + rcgOjb.GetResult(streamObj) + "\n";
-			byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
-			System.out.println(new String(utf8Data));
-			rcgOjb.Reset(streamObj);
-			rcgOjb.releaseStream(streamObj);       //release stream
-			rcgOjb.release();                      //release recognizer
-       
+            String recText = "simple:" + rcgOjb.GetResult(streamObj) + "\n";
+            byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
+            System.out.println(new String(utf8Data));
+            rcgOjb.Reset(streamObj);
+            rcgOjb.releaseStream(streamObj);       //release stream
+            rcgOjb.release();                      //release recognizer
+
 
         } catch (Exception e) {
             System.err.println(e);
@@ -92,70 +92,69 @@ public class DecodeFile {
     }
 
     public void streamExample() {
- 
-        try {
- 
-            float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
-			float[] chunk=new float[1600];       ////echo time read 1600(0.1s) data
-			int chunk_index=0;
-			for (int i=0;i<buffer.length;i++)     //total wav length loop
-			{
-				chunk[chunk_index]=buffer[i];
-				chunk_index++;
-				if (chunk_index>=1600 || i==(buffer.length-1)) 
-				{
-					chunk_index=0;
-					streamObj.acceptWaveform(chunk, 16000); //16000 is sample rate
-                    if (rcgOjb.IsReady(streamObj)) {
-                         rcgOjb.DecodeStream(streamObj);
-                       }
-					String testDate = rcgOjb.GetResult(streamObj);
-					byte[] utf8Data = testDate.getBytes(StandardCharsets.UTF_8);
 
-					if (utf8Data.length > 0) {
-					       System.out.println(Float.valueOf((float)i/16000)+":"+new String(utf8Data));
-                         }
-				}
-				
-			}
+        try {
+
+            float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
+            float[] chunk = new float[1600];       ////each time read 1600(0.1s) data
+            int chunk_index = 0;
+            for (int i = 0; i < buffer.length; i++)     //total wav length loop
+            {
+                chunk[chunk_index] = buffer[i];
+                chunk_index++;
+                if (chunk_index >= 1600 || i == (buffer.length - 1)) {
+                    chunk_index = 0;
+                    streamObj.acceptWaveform(chunk, 16000); //16000 is sample rate
+                    if (rcgOjb.IsReady(streamObj)) {
+                        rcgOjb.DecodeStream(streamObj);
+                    }
+                    String testDate = rcgOjb.GetResult(streamObj);
+                    byte[] utf8Data = testDate.getBytes(StandardCharsets.UTF_8);
+
+                    if (utf8Data.length > 0) {
+                        System.out.println(Float.valueOf((float) i / 16000) + ":" + new String(utf8Data));
+                    }
+                }
+
+            }
             streamObj.inputFinished();
             while (rcgOjb.IsReady(streamObj)) {
                 rcgOjb.DecodeStream(streamObj);
             }
- 
- 
+
+
             String recText = "stream:" + rcgOjb.GetResult(streamObj) + "\n";
             byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
             System.out.println(new String(utf8Data));
             rcgOjb.Reset(streamObj);
             rcgOjb.releaseStream(streamObj);       //release stream
             rcgOjb.release();                      //release recognizer
-       
+
 
         } catch (Exception e) {
             System.err.println(e);
         }
     }
- 
+
     public static void main(String[] args) {
         try {
-			String appdir=System.getProperty("user.dir");
-			System.out.println("appdir="+appdir);
-            String filename = appdir+"/test.wav";
-			String cfgpath=appdir+"/modelconfig.cfg";
+            String appdir = System.getProperty("user.dir");
+            System.out.println("appdir=" + appdir);
+            String filename = appdir + "/test.wav";
+            String cfgpath = appdir + "/modelconfig.cfg";
             OnlineRecognizer.setCfgPath(cfgpath);
             DecodeFile rcgdemo = new DecodeFile(filename);
 
             //***************** */
             rcgdemo.initModelWithCfg();
-			rcgdemo.streamExample();
+            rcgdemo.streamExample();
             //**************** */
             rcgdemo.initModelWithCfg();
             rcgdemo.simpleExample();
-            
+
         } catch (Exception e) {
             System.err.println(e);
-			e.printStackTrace();
+            e.printStackTrace();
         }
 
 
