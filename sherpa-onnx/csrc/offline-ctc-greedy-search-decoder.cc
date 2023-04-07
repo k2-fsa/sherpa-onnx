@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h"
 
+#include <algorithm>
 #include <utility>
 #include <vector>
 
