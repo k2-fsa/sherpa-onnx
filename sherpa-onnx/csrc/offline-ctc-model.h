@@ -5,6 +5,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_CTC_MODEL_H_
 
 #include <memory>
+#include <string>
 #include <utility>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT

@@ -6,7 +6,11 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CTC_IMPL_H_
 
 #include <memory>
+#include <utility>
+#include <vector>
 
+#include "sherpa-onnx/csrc/offline-ctc-decoder.h"
+#include "sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/pad-sequence.h"
@@ -22,6 +26,22 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
         model_(OfflineCtcModel::Create(config_.model_config)) {
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
+
+    if (config.decoding_method == "greedy_search") {
+      if (!symbol_table_.contains("<blk>")) {
+        SHERPA_ONNX_LOGE(
+            "We expect that tokens.txt contains "
+            "the symbol <blk> and its ID.");
+        exit(-1);
+      }
+
+      int32_t blank_id = symbol_table_["<blk>"];
+      decoder_ = std::make_unique<OfflineCtcGreedySearchDecoder>(blank_id);
+    } else {
+      SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
+                       config.decoding_method.c_str());
+      exit(-1);
+    }
   }
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
@@ -69,13 +89,15 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     Ort::Value x = PadSequence(model_->Allocator(), features_pointer,
                                -23.025850929940457f);
     auto t = model_->Forward(std::move(x), std::move(x_length));
+
+    auto results = decoder_->Decode(std::move(t.first), std::move(t.second));
   }
 
  private:
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OfflineCtcModel> model_;
-  // std::unique_ptr<OfflineTransducerDecoder> decoder_;
+  std::unique_ptr<OfflineCtcDecoder> decoder_;
 };
 
 }  // namespace sherpa_onnx
