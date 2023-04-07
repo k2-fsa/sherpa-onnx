@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CTC_IMPL_H_
 
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -17,6 +18,23 @@
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
+
+static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
+                                        const SymbolTable &sym_table) {
+  OfflineRecognitionResult r;
+  r.tokens.reserve(src.tokens.size());
+
+  std::string text;
+
+  for (int32_t i = 0; i != src.tokens.size(); ++i) {
+    auto sym = sym_table[src.tokens[i]];
+    text.append(sym);
+    r.tokens.push_back(std::move(sym));
+  }
+  r.text = std::move(text);
+
+  return r;
+}
 
 class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
  public:
@@ -91,6 +109,11 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     auto t = model_->Forward(std::move(x), std::move(x_length));
 
     auto results = decoder_->Decode(std::move(t.first), std::move(t.second));
+
+    for (int32_t i = 0; i != n; ++i) {
+      auto r = Convert(results[i], symbol_table_);
+      ss[i]->SetResult(r);
+    }
   }
 
  private:
