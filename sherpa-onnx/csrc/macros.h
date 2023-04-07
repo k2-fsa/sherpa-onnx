@@ -11,15 +11,19 @@
 #include "android/log.h"
 #define SHERPA_ONNX_LOGE(...)                                            \
   do {                                                                   \
+    fprintf(stderr, "%s:%s:%d ", __FILE__, __func__,                     \
+            static_cast<int>(__LINE__));                                 \
     fprintf(stderr, ##__VA_ARGS__);                                      \
     fprintf(stderr, "\n");                                               \
     __android_log_print(ANDROID_LOG_WARN, "sherpa-onnx", ##__VA_ARGS__); \
   } while (0)
 #else
-#define SHERPA_ONNX_LOGE(...)       \
-  do {                              \
-    fprintf(stderr, ##__VA_ARGS__); \
-    fprintf(stderr, "\n");          \
+#define SHERPA_ONNX_LOGE(...)                        \
+  do {                                               \
+    fprintf(stderr, "%s:%s:%d ", __FILE__, __func__, \
+            static_cast<int>(__LINE__));             \
+    fprintf(stderr, ##__VA_ARGS__);                  \
+    fprintf(stderr, "\n");                           \
   } while (0)
 #endif
 
