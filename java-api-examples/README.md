@@ -1,14 +1,13 @@
 
 0.Introduction
 ---
-Java wrapper `com.k2fsa.sherpaonnx.OnlineRecognizer` for `sherpa-onnx`. Java is a cross-platform language; you can build jni-java .so lib according to your system, and then use the same java api for all your platform.
+Java wrapper `com.k2fsa.sherpaonnx.OnlineRecognizer` for `sherpa-onnx`. Java is a cross-platform language; you can build jni .so lib according to your system, and then use the same java api for all your platform.
 ``` xml
 Depend on:
-  Gradle 8.0.2 
   Openjdk 1.8
 ```
 ---
-1.Compile so. lib
+1.Compile libsherpa-onnx-jni.so
 ---
 Compile sherpa-onnx/jni/jni.cc according to your system.
 Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
@@ -48,31 +47,43 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 ---
 4.A simple java example
 ---
-refer to [java_api_example](https://github.com/zhaomingwork/sherpa-onnx/blob/java-wrapper-support/java-api-examples/app/src/main/java/com/k2fsa/sherpaonnx/java_api_example/RcgExampleForFile.java) for more detail.
+refer to [java_api_example](https://github.com/zhaomingwork/sherpa-onnx/blob/java-wrapper-support/java-api-examples/src/DecodeFile.java) for more detail.
 ``` java
-   import com.k2fsa.sherpaonnx.OnlineRecognizer;
-   import com.k2fsa.sherpaonnx.WavFile;
-   float[] buffer = rcgOjb.readWavFile(wavfilename);  
-   rcgOjb.acceptWaveform(buffer, 16000);
-   rcgOjb.inputFinished();
-   while (rcgOjb.isReady()) {
-                rcgOjb.decode();
+import com.k2fsa.sherpaonnx.OnlineRecognizer;
+import com.k2fsa.sherpaonnx.OnlineStream;
+String cfgpath=appdir+"/modelconfig.cfg";
+OnlineRecognizer.setCfgPath(cfgpath);      //set model config file
+OnlineRecognizer rcgOjb = new OnlineRecognizer();   //create a recognizer
+CreateStream streamObj=rcgOjb.CreateStream();       //create a stream for reading wav data
+float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
+streamObj.acceptWaveform(buffer, 16000);          //feed stream with data, and sample rate is 16000
+streamObj.inputFinished();                   //tell engine you done with all data 
+while (rcgOjb.IsReady(streamObj)) {          //engine is ready
+
+                OnlineStream ssObj[]=new OnlineStream[1];
+                ssObj[0]=streamObj;
+                rcgOjb.DecodeStreams(ssObj);        //decode for multiple stream 
+                //rcgOjb.DecodeStream(streamObj);   //decode for single stream 
             }
-   wavFile.close();
-   String recText = "simple:" + rcgOjb.getText() + "\n";
-   byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
-   System.out.println(new String(utf8Data));
+
+String recText = "simple:" + rcgOjb.GetResult(streamObj) + "\n";
+byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
+System.out.println(new String(utf8Data));
+rcgOjb.Reset(streamObj);
+rcgOjb.releaseStream(streamObj);       //release stream
+rcgOjb.release();                      //release recognizer
+       
 
 ```
 ---
-5.gradle commands
+5.Makefile 
 ---
-5.1 run app example
+package jar and run app example
+package path: /sherpa-onnx/java-api-examples/lib/sherpaonnx.jar
 ``` bash
-  export GRADLE_OPTS="-Dfile.encoding=utf-8" //for Chinese 
-  gradle run
+    cd sherpa-onnx/java-api-examples
+    make all          
+	
   ```
-5.2 build for jar lib
-``` bash
-  gradle build 
+
 
