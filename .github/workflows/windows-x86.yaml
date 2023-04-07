@@ -79,8 +79,8 @@ jobs:
       - name: Test offline CTC for windows x86
         shell: bash
         run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx-offline.exe
 
           .github/scripts/test-offline-ctc.sh
 
