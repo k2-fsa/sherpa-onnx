@@ -103,5 +103,18 @@ std::vector<int32_t> TopkIndex(const T *vec, int32_t size, int32_t topk) {
   return index;
 }
 
+template <class T>
+int32_t ArgMax(const T *vec, int32_t size) {
+  int32_t max_index = 0;
+  T max_value = vec[0];
+  for (int32_t i = 1; i < size; i++) {
+    if (vec[i] > max_value) {
+      max_value = vec[i];
+      max_index = i;
+    }
+  }
+  return max_index;
+}
+
 }  // namespace sherpa_onnx
 #endif  // SHERPA_ONNX_CSRC_MATH_H_
