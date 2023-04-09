@@ -9,7 +9,7 @@ import java.util.*;
 
 public class OnlineStream {
 
-    private long s_ptr; // this is the  stream ptr
+    private long s_ptr = 0; // this is the  stream ptr
 
     // assign ptr to this stream in construction
     public OnlineStream(long s_ptr) {
@@ -21,7 +21,8 @@ public class OnlineStream {
         return s_ptr;
     }
 
-    public void acceptWaveform(float[] samples, int sampleRate) {
+    public void acceptWaveform(float[] samples, int sampleRate) throws Exception {
+        if (this.s_ptr == 0) throw new Exception("null exception for stream s_ptr");
         // feed wave data to asr engine
         AcceptWaveform(this.s_ptr, sampleRate, samples, samples.length);
     }
@@ -41,31 +42,40 @@ public class OnlineStream {
 
     public void release() {
         //stream object must be release after used
+        if (this.s_ptr == 0) return;
         DeleteStream(this.s_ptr);
+        this.s_ptr = 0;
     }
 
 
     protected void finalize() throws Throwable {
+        if (this.s_ptr == 0) return;
         DeleteStream(this.s_ptr);
+        this.s_ptr = 0;
     }
 
-    public boolean IsLastFrame() {
+    public boolean IsLastFrame() throws Exception {
+        if (this.s_ptr == 0) throw new Exception("null exception for stream s_ptr");
         return IsLastFrame(this.s_ptr);
     }
 
-    public void Reset() {
+    public void Reset() throws Exception {
+        if (this.s_ptr == 0) throw new Exception("null exception for stream s_ptr");
         Reset(this.s_ptr);
     }
 
-    public int FeatureDim() {
+    public int FeatureDim() throws Exception {
+        if (this.s_ptr == 0) throw new Exception("null exception for stream s_ptr");
         return FeatureDim(this.s_ptr);
     }
 
-    public float[] GetFrames(int frame_index, int size) {
+    public float[] GetFrames(int frame_index, int size) throws Exception {
+        if (this.s_ptr == 0) throw new Exception("null exception for stream s_ptr");
         return GetFrames(this.s_ptr, frame_index, size);
     }
 
-    public int GetNumProcessedFrames() {
+    public int GetNumProcessedFrames() throws Exception {
+        if (this.s_ptr == 0) throw new Exception("null exception for stream s_ptr");
         return GetNumProcessedFrames(this.s_ptr);
     }
 

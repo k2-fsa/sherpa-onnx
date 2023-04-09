@@ -35,8 +35,7 @@ import java.util.*;
 
 public class OnlineRecognizer {
 
-    private long ptr; // this is the asr engine ptr
-    private long s_ptr;
+    private long ptr = 0; // this is the asr engine ptrss
 
     static private String cfgPath; // the config file, this file contains the model path and para , lib path and so
     // on.
@@ -157,44 +156,58 @@ public class OnlineRecognizer {
 
     }
 
-    public void DecodeStream(OnlineStream s) {
+    public void DecodeStream(OnlineStream s) throws Exception {
+        if (this.ptr == 0) throw new Exception("null exception for recognizer ptr");
+        long s_ptr = s.getS_ptr();
+        if (s_ptr == 0) throw new Exception("null exception for stream s_ptr");
         // when feeded samples to engine, call DecodeStream to let it process
-        DecodeStream(this.ptr, s.getS_ptr());
+        DecodeStream(this.ptr, s_ptr);
     }
 
-    public void DecodeStreams(OnlineStream[] ssOjb) {
+    public void DecodeStreams(OnlineStream[] ssOjb) throws Exception {
+        if (this.ptr == 0) throw new Exception("null exception for recognizer ptr");
         // decode for multiple streams
         long[] ss = new long[ssOjb.length];
         for (int i = 0; i < ssOjb.length; i++) {
             ss[i] = ssOjb[i].getS_ptr();
-
+            if (ss[i] == 0) throw new Exception("null exception for stream s_ptr");
         }
         DecodeStreams(this.ptr, ss);
     }
 
-    public boolean IsReady(OnlineStream s) {
+    public boolean IsReady(OnlineStream s) throws Exception {
         // whether the engine is ready for decode
-        return IsReady(this.ptr, s.getS_ptr());
+        if (this.ptr == 0) throw new Exception("null exception for recognizer ptr");
+        long s_ptr = s.getS_ptr();
+        if (s_ptr == 0) throw new Exception("null exception for stream s_ptr");
+        return IsReady(this.ptr, s_ptr);
     }
 
-    public String GetResult(OnlineStream s) {
+    public String GetResult(OnlineStream s) throws Exception {
         // get text from the engine
-
-        return GetResult(this.ptr, s.getS_ptr());
+        if (this.ptr == 0) throw new Exception("null exception for recognizer ptr");
+        long s_ptr = s.getS_ptr();
+        if (s_ptr == 0) throw new Exception("null exception for stream s_ptr");
+        return GetResult(this.ptr, s_ptr);
     }
 
-    public boolean IsEndpoint(OnlineStream s) {
-
-        return IsEndpoint(this.ptr, s.getS_ptr());
+    public boolean IsEndpoint(OnlineStream s) throws Exception {
+        if (this.ptr == 0) throw new Exception("null exception for recognizer ptr");
+        long s_ptr = s.getS_ptr();
+        if (s_ptr == 0) throw new Exception("null exception for stream s_ptr");
+        return IsEndpoint(this.ptr, s_ptr);
     }
 
-    public void Reset(OnlineStream s) {
-
-        Reset(this.ptr, s.getS_ptr());
+    public void Reset(OnlineStream s) throws Exception {
+        if (this.ptr == 0) throw new Exception("null exception for recognizer ptr");
+        long s_ptr = s.getS_ptr();
+        if (s_ptr == 0) throw new Exception("null exception for stream s_ptr");
+        Reset(this.ptr, s_ptr);
     }
 
-    public OnlineStream CreateStream() {
+    public OnlineStream CreateStream() throws Exception {
         // create one stream for data to feed in
+        if (this.ptr == 0) throw new Exception("null exception for recognizer ptr");
         long s_ptr = CreateStream(this.ptr);
         OnlineStream stream = new OnlineStream(s_ptr);
         return stream;
@@ -232,13 +245,18 @@ public class OnlineRecognizer {
     }
 
     protected void finalize() throws Throwable {
+        if (this.ptr == 0) return;
         DeleteOnlineRecognizer(this.ptr);
+        this.ptr = 0;
+
 
     }
 
     // recognizer release, you'd better call it manually if not use anymore
     public void release() {
+        if (this.ptr == 0) return;
         DeleteOnlineRecognizer(this.ptr);
+        this.ptr = 0;
     }
 
     // stream release, you'd better call it manually if not use anymore

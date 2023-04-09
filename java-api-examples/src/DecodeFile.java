@@ -4,8 +4,8 @@
 /*
 Config modelconfig.cfg
   #set libsherpa-onnx-jni.so lib root dir
-  solibpath=/sherpa-onnx/build/lib/libsherpa-onnx-jni.so   
-  sample_rate=16000                  
+  solibpath=/sherpa-onnx/build/lib/libsherpa-onnx-jni.so
+  sample_rate=16000
   feature_dim=80
   rule1_min_trailing_silence=2.4
   rule2_min_trailing_silence=1.2
@@ -37,31 +37,40 @@ public class DecodeFile {
     }
 
     public void initModelWithPara() {
-        String modelDir = "/sherpa-onnx/build_old/bin/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20";
-        String encoder = modelDir + "/encoder-epoch-99-avg-1.onnx";
-        String decoder = modelDir + "/decoder-epoch-99-avg-1.onnx";
-        String joiner = modelDir + "/joiner-epoch-99-avg-1.onnx";
-        String tokens = modelDir + "/tokens.txt";
-        int num_threads = 4;
-        int sample_rate = 16000;
-        int feature_dim = 80;
-        boolean enable_endpoint_detection = false;
-        float rule1_min_trailing_silence = 2.4F;
-        float rule2_min_trailing_silence = 1.2F;
-        float rule3_min_utterance_length = 20F;
-        String decoding_method = "greedy_search";
-        int max_active_paths = 4;
+        try {
+            String modelDir = "/sherpa-onnx/build_old/bin/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20";
+            String encoder = modelDir + "/encoder-epoch-99-avg-1.onnx";
+            String decoder = modelDir + "/decoder-epoch-99-avg-1.onnx";
+            String joiner = modelDir + "/joiner-epoch-99-avg-1.onnx";
+            String tokens = modelDir + "/tokens.txt";
+            int num_threads = 4;
+            int sample_rate = 16000;
+            int feature_dim = 80;
+            boolean enable_endpoint_detection = false;
+            float rule1_min_trailing_silence = 2.4F;
+            float rule2_min_trailing_silence = 1.2F;
+            float rule3_min_utterance_length = 20F;
+            String decoding_method = "greedy_search";
+            int max_active_paths = 4;
 
-        rcgOjb = new OnlineRecognizer(tokens, encoder, decoder, joiner, num_threads, sample_rate, feature_dim, enable_endpoint_detection, rule1_min_trailing_silence, rule2_min_trailing_silence, rule3_min_utterance_length, decoding_method, max_active_paths);
-        streamObj = rcgOjb.CreateStream();
+            rcgOjb = new OnlineRecognizer(tokens, encoder, decoder, joiner, num_threads, sample_rate, feature_dim, enable_endpoint_detection, rule1_min_trailing_silence, rule2_min_trailing_silence, rule3_min_utterance_length, decoding_method, max_active_paths);
+            streamObj = rcgOjb.CreateStream();
+        } catch (Exception e) {
+            System.err.println(e);
+            e.printStackTrace();
+        }
     }
 
     public void initModelWithCfg() {
 
-
-        //you should set setCfgPath() before running this
-        rcgOjb = new OnlineRecognizer();
-        streamObj = rcgOjb.CreateStream();
+        try {
+            //you should set setCfgPath() before running this
+            rcgOjb = new OnlineRecognizer();
+            streamObj = rcgOjb.CreateStream();
+        } catch (Exception e) {
+            System.err.println(e);
+            e.printStackTrace();
+        }
     }
 
     public void simpleExample() {
@@ -69,12 +78,12 @@ public class DecodeFile {
 
             float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
             streamObj.acceptWaveform(buffer, 16000);          //feed stream with data, and sample rate is 16000
-            streamObj.inputFinished();                   //tell engine you done with all data 
+            streamObj.inputFinished();                   //tell engine you done with all data
             while (rcgOjb.IsReady(streamObj)) {          //engine is ready for unprocessed data
 
                 OnlineStream ssObj[] = new OnlineStream[1];
                 ssObj[0] = streamObj;
-                rcgOjb.DecodeStreams(ssObj);        //decode for multiple stream 
+                rcgOjb.DecodeStreams(ssObj);        //decode for multiple stream
                 //rcgOjb.DecodeStream(streamObj);   //decode for single stream
             }
 
@@ -88,6 +97,7 @@ public class DecodeFile {
 
         } catch (Exception e) {
             System.err.println(e);
+            e.printStackTrace();
         }
     }
 
@@ -133,6 +143,7 @@ public class DecodeFile {
 
         } catch (Exception e) {
             System.err.println(e);
+            e.printStackTrace();
         }
     }
 
