@@ -4,9 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h"
 
+#include <algorithm>
 #include <vector>
-
-#include "sherpa-onnx/csrc/math.h"
 
 namespace sherpa_onnx {
 
@@ -20,10 +19,12 @@ OfflineParaformerGreedySearchDecoder::Decode(Ort::Value log_probs,
 
   std::vector<OfflineParaformerDecoderResult> results(batch_size);
 
-  const float *p = log_probs.GetTensorData<float>();
   for (int32_t i = 0; i != batch_size; ++i) {
+    const float *p =
+        log_probs.GetTensorData<float>() + i * num_tokens * vocab_size;
     for (int32_t k = 0; k != num_tokens; ++k) {
-      int32_t max_idx = ArgMax(p, vocab_size);
+      auto max_idx = static_cast<int64_t>(
+          std::distance(p, std::max_element(p, p + vocab_size)));
       if (max_idx == eos_id_) break;
 
       results[i].tokens.push_back(max_idx);
