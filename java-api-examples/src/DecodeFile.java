@@ -20,9 +20,8 @@ Config modelconfig.cfg
   max_active_paths=4
 */
 
-import java.nio.charset.StandardCharsets;
-import java.nio.charset.Charset;
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 import com.k2fsa.sherpaonnx.OnlineRecognizer;
 import com.k2fsa.sherpaonnx.OnlineStream;
@@ -62,9 +61,8 @@ public class DecodeFile {
     }
 
     public void initModelWithCfg() {
-
         try {
-            //you should set setCfgPath() before running this
+            // you should set setCfgPath() before running this
             rcgOjb = new OnlineRecognizer();
             streamObj = rcgOjb.CreateStream();
         } catch (Exception e) {
@@ -75,25 +73,22 @@ public class DecodeFile {
 
     public void simpleExample() {
         try {
-
             float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
-            streamObj.acceptWaveform(buffer, 16000);          //feed stream with data, and sample rate is 16000
-            streamObj.inputFinished();                   //tell engine you done with all data
-            while (rcgOjb.IsReady(streamObj)) {          //engine is ready for unprocessed data
-
-                OnlineStream ssObj[] = new OnlineStream[1];
+            streamObj.acceptWaveform(buffer); // feed stream with data
+            streamObj.inputFinished(); // tell engine you done with all data
+            OnlineStream ssObj[] = new OnlineStream[1];
+            while (rcgOjb.IsReady(streamObj)) { // engine is ready for unprocessed data
                 ssObj[0] = streamObj;
-                rcgOjb.DecodeStreams(ssObj);        //decode for multiple stream
-                //rcgOjb.DecodeStream(streamObj);   //decode for single stream
+                rcgOjb.DecodeStreams(ssObj); // decode for multiple stream
+                // rcgOjb.DecodeStream(streamObj);   // decode for single stream
             }
 
             String recText = "simple:" + rcgOjb.GetResult(streamObj) + "\n";
             byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
             System.out.println(new String(utf8Data));
             rcgOjb.Reset(streamObj);
-            rcgOjb.releaseStream(streamObj);       //release stream
-            rcgOjb.release();                      //release recognizer
-
+            rcgOjb.releaseStream(streamObj); // release stream
+            rcgOjb.release(); // release recognizer
 
         } catch (Exception e) {
             System.err.println(e);
@@ -102,19 +97,17 @@ public class DecodeFile {
     }
 
     public void streamExample() {
-
         try {
-
             float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
-            float[] chunk = new float[1600];       ////each time read 1600(0.1s) data
+            float[] chunk = new float[1600]; ////each time read 1600(0.1s) data
             int chunk_index = 0;
-            for (int i = 0; i < buffer.length; i++)     //total wav length loop
+            for (int i = 0; i < buffer.length; i++) // total wav length loop
             {
                 chunk[chunk_index] = buffer[i];
                 chunk_index++;
                 if (chunk_index >= 1600 || i == (buffer.length - 1)) {
                     chunk_index = 0;
-                    streamObj.acceptWaveform(chunk, 16000); //16000 is sample rate
+                    streamObj.acceptWaveform(chunk); // feed chunk
                     if (rcgOjb.IsReady(streamObj)) {
                         rcgOjb.DecodeStream(streamObj);
                     }
@@ -125,21 +118,18 @@ public class DecodeFile {
                         System.out.println(Float.valueOf((float) i / 16000) + ":" + new String(utf8Data));
                     }
                 }
-
             }
             streamObj.inputFinished();
             while (rcgOjb.IsReady(streamObj)) {
                 rcgOjb.DecodeStream(streamObj);
             }
 
-
             String recText = "stream:" + rcgOjb.GetResult(streamObj) + "\n";
             byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
             System.out.println(new String(utf8Data));
             rcgOjb.Reset(streamObj);
-            rcgOjb.releaseStream(streamObj);       //release stream
-            rcgOjb.release();                      //release recognizer
-
+            rcgOjb.releaseStream(streamObj); // release stream
+            rcgOjb.release(); // release recognizer
 
         } catch (Exception e) {
             System.err.println(e);
@@ -167,8 +157,5 @@ public class DecodeFile {
             System.err.println(e);
             e.printStackTrace();
         }
-
-
     }
-
 }

@@ -1,6 +1,6 @@
 /*
  * // Copyright 2022-2023 by zhaoming
-*/
+ */
 
 package com.k2fsa.sherpaonnx;
 

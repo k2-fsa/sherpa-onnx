@@ -49,29 +49,24 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 ---
 refer to [java_api_example](https://github.com/zhaomingwork/sherpa-onnx/blob/java-wrapper-support/java-api-examples/src/DecodeFile.java) for more detail.
 ``` java
-import com.k2fsa.sherpaonnx.OnlineRecognizer;
-import com.k2fsa.sherpaonnx.OnlineStream;
-String cfgpath = appdir+"/modelconfig.cfg";
-OnlineRecognizer.setCfgPath(cfgpath);      //set model config file
-OnlineRecognizer rcgOjb = new OnlineRecognizer();   //create a recognizer
-CreateStream streamObj=rcgOjb.CreateStream();       //create a stream for reading wav data
-float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
-streamObj.acceptWaveform(buffer, 16000);          //feed stream with data, and sample rate is 16000
-streamObj.inputFinished();                   //tell engine you are done with all data 
-while (rcgOjb.IsReady(streamObj)) {          //engine is ready
-
-                OnlineStream ssObj[]=new OnlineStream[1];
-                ssObj[0]=streamObj;
-                rcgOjb.DecodeStreams(ssObj);        //decode for multiple stream 
-                //rcgOjb.DecodeStream(streamObj);   //decode for single stream 
+            import com.k2fsa.sherpaonnx.OnlineRecognizer;
+            import com.k2fsa.sherpaonnx.OnlineStream;
+            float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
+            streamObj.acceptWaveform(buffer); // feed stream with data
+            streamObj.inputFinished(); // tell engine you done with all data
+            OnlineStream ssObj[] = new OnlineStream[1];
+            while (rcgOjb.IsReady(streamObj)) { // engine is ready for unprocessed data
+                ssObj[0] = streamObj;
+                rcgOjb.DecodeStreams(ssObj); // decode for multiple stream
+                // rcgOjb.DecodeStream(streamObj);   // decode for single stream
             }
 
-String recText = "simple:" + rcgOjb.GetResult(streamObj) + "\n";
-byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
-System.out.println(new String(utf8Data));
-rcgOjb.Reset(streamObj);
-rcgOjb.releaseStream(streamObj);       //release stream
-rcgOjb.release();                      //release recognizer
+            String recText = "simple:" + rcgOjb.GetResult(streamObj) + "\n";
+            byte[] utf8Data = recText.getBytes(StandardCharsets.UTF_8);
+            System.out.println(new String(utf8Data));
+            rcgOjb.Reset(streamObj);
+            rcgOjb.releaseStream(streamObj); // release stream
+            rcgOjb.release(); // release recognizer
        
 
 ```

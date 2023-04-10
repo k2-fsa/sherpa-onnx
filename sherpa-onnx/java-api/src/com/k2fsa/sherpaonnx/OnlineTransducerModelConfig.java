@@ -12,7 +12,6 @@ public class OnlineTransducerModelConfig {
     final private int numThreads;
     final private boolean debug;
 
-
     public OnlineTransducerModelConfig(String encoder, String decoder, String joiner, String tokens, int numThreads, boolean debug) {
         this.encoder = encoder;
         this.decoder = decoder;

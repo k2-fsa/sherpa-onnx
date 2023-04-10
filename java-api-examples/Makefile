@@ -1,16 +1,16 @@
 
 ENTRY_POINT = ./
 
+LIB_SRC_DIR := ../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx
+
 LIB_FILES = \
-	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/FeatureConfig.java \
-	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/EndpointRule.java \
-	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/EndpointConfig.java \
-	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/OnlineTransducerModelConfig.java \
-	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/EndpointRule.java \
-	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/OnlineTransducerModelConfig.java \
-	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/OnlineRecognizerConfig.java \
-	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/OnlineStream.java \
-	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/OnlineRecognizer.java \
+	$(LIB_SRC_DIR)/EndpointRule.java \
+	$(LIB_SRC_DIR)/EndpointConfig.java \
+	$(LIB_SRC_DIR)/FeatureConfig.java \
+	$(LIB_SRC_DIR)/OnlineTransducerModelConfig.java \
+	$(LIB_SRC_DIR)/OnlineRecognizerConfig.java \
+	$(LIB_SRC_DIR)/OnlineStream.java \
+	$(LIB_SRC_DIR)/OnlineRecognizer.java \
 
 LIB_BUILD_DIR = ./lib
 

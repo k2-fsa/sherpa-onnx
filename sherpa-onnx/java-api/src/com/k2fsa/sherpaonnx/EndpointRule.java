@@ -15,7 +15,6 @@ public class EndpointRule {
         this.minUtteranceLength = minUtteranceLength;
     }
 
-
     public float getMinTrailingSilence() {
         return minTrailingSilence;
     }
