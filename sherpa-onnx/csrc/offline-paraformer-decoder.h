@@ -23,8 +23,7 @@ class OfflineParaformerDecoder {
   /** Run beam search given the output from the paraformer model.
    *
    * @param log_probs A 3-D tensor of shape (N, T, vocab_size)
-   * @param token_num A 2-D tensor of shape (N, T). Its dtype is int64_t.
-   *                  log_probs[i].argmax(axis=-1) equals to token_num[i]
+   * @param token_num A 1-D tensor of shape (N). token_num equals to T.
    *
    * @return Return a vector of size `N` containing the decoded results.
    */

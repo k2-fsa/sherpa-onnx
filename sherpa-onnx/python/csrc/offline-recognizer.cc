@@ -11,8 +11,6 @@
 
 namespace sherpa_onnx {
 
-
-
 static void PybindOfflineRecognizerConfig(py::module *m) {
   using PyClass = OfflineRecognizerConfig;
   py::class_<PyClass>(*m, "OfflineRecognizerConfig")

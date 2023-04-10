@@ -37,12 +37,25 @@ struct OfflineFeatureExtractorConfig {
   // Feature dimension
   int32_t feature_dim = 80;
 
-  // Set internally by some models, e.g., paraformer
+  // Set internally by some models, e.g., paraformer sets it to false.
   // This parameter is not exposed to users from the commandline
   // If true, the feature extractor expects inputs to be normalized to
   // the range [-1, 1].
   // If false, we will multiply the inputs by 32768
   bool normalize_samples = true;
+
+  // For models from NeMo
+  // This option is not exposed and is set internally when loading models.
+  // Possible values:
+  // - per_feature
+  // - all_features (not implemented yet)
+  // - fixed_mean (not implemented)
+  // - fixed_std (not implemented)
+  // - or just leave it to empty
+  // See
+  // https://github.com/NVIDIA/NeMo/blob/main/nemo/collections/asr/parts/preprocessing/features.py#L59
+  // for details
+  std::string nemo_normalize_type;
 
   std::string ToString() const;
 

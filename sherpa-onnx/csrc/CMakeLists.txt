@@ -16,7 +16,11 @@ set(sources
   features.cc
   file-utils.cc
   hypothesis.cc
+  offline-ctc-greedy-search-decoder.cc
+  offline-ctc-model.cc
   offline-model-config.cc
+  offline-nemo-enc-dec-ctc-model-config.cc
+  offline-nemo-enc-dec-ctc-model.cc
   offline-paraformer-greedy-search-decoder.cc
   offline-paraformer-model-config.cc
   offline-paraformer-model.cc

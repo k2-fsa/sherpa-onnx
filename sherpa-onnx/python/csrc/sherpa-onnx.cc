@@ -7,15 +7,12 @@
 #include "sherpa-onnx/python/csrc/display.h"
 #include "sherpa-onnx/python/csrc/endpoint.h"
 #include "sherpa-onnx/python/csrc/features.h"
+#include "sherpa-onnx/python/csrc/offline-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-recognizer.h"
+#include "sherpa-onnx/python/csrc/offline-stream.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
 #include "sherpa-onnx/python/csrc/online-stream.h"
 #include "sherpa-onnx/python/csrc/online-transducer-model-config.h"
-
-#include "sherpa-onnx/python/csrc/offline-model-config.h"
-#include "sherpa-onnx/python/csrc/offline-paraformer-model-config.h"
-#include "sherpa-onnx/python/csrc/offline-recognizer.h"
-#include "sherpa-onnx/python/csrc/offline-stream.h"
-#include "sherpa-onnx/python/csrc/offline-transducer-model-config.h"
 
 namespace sherpa_onnx {
 

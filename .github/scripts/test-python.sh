@@ -95,6 +95,8 @@ python3 ./python-api-examples/offline-decode-files.py \
 
 python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
 
+rm -rf $repo
+
 log "Test non-streaming paraformer models"
 
 pushd $dir
@@ -128,3 +130,39 @@ python3 ./python-api-examples/offline-decode-files.py \
   $repo/test_wavs/8k.wav
 
 python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
+
+rm -rf $repo
+
+log "Test non-streaming NeMo CTC models"
+
+pushd $dir
+repo_url=http://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-citrinet-512
+
+log "Start testing ${repo_url}"
+repo=$dir/$(basename $repo_url)
+log "Download pretrained model and test-data from $repo_url"
+
+GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+cd $repo
+git lfs pull --include "*.onnx"
+popd
+
+ls -lh $repo
+
+python3 ./python-api-examples/offline-decode-files.py \
+  --tokens=$repo/tokens.txt \
+  --nemo-ctc=$repo/model.onnx \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/8k.wav
+
+python3 ./python-api-examples/offline-decode-files.py \
+  --tokens=$repo/tokens.txt \
+  --nemo-ctc=$repo/model.int8.onnx \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/8k.wav
+
+python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
+
+rm -rf $repo
