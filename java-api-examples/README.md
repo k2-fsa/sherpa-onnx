@@ -51,13 +51,13 @@ refer to [java_api_example](https://github.com/zhaomingwork/sherpa-onnx/blob/jav
 ``` java
 import com.k2fsa.sherpaonnx.OnlineRecognizer;
 import com.k2fsa.sherpaonnx.OnlineStream;
-String cfgpath=appdir+"/modelconfig.cfg";
+String cfgpath = appdir+"/modelconfig.cfg";
 OnlineRecognizer.setCfgPath(cfgpath);      //set model config file
 OnlineRecognizer rcgOjb = new OnlineRecognizer();   //create a recognizer
 CreateStream streamObj=rcgOjb.CreateStream();       //create a stream for reading wav data
 float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
 streamObj.acceptWaveform(buffer, 16000);          //feed stream with data, and sample rate is 16000
-streamObj.inputFinished();                   //tell engine you done with all data 
+streamObj.inputFinished();                   //tell engine you are done with all data 
 while (rcgOjb.IsReady(streamObj)) {          //engine is ready
 
                 OnlineStream ssObj[]=new OnlineStream[1];

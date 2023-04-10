@@ -12,14 +12,15 @@ LIB_FILES = \
 	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/OnlineStream.java \
 	../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx/OnlineRecognizer.java \
 
-LIB_BUILD_DIR=./lib
+LIB_BUILD_DIR = ./lib
 
-EXAMPLE_FILE = \
-	DecodeFile.java \
+
+EXAMPLE_FILE = DecodeFile.java
 
 JAVAC = javac
 
-BUILD_DIR=build
+BUILD_DIR = build
+
 
 RUNJFLAGS = -Dfile.encoding=utf-8
 	
