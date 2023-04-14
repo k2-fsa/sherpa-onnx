@@ -17,7 +17,8 @@ public class OnlineStream {
         this.sample_rate = sample_rate;
     }
 
-    public long getS_ptr() {
+    public long getPtr() {
+
         return s_ptr;
     }
 
@@ -26,13 +27,15 @@ public class OnlineStream {
             throw new Exception("null exception for stream s_ptr");
 
         // feed wave data to asr engine
-        AcceptWaveform(this.s_ptr, this.sample_rate, samples, samples.length);
+        AcceptWaveform(this.s_ptr, this.sample_rate, samples);
     }
 
     public void inputFinished() {
         // add some tail padding
-        int pad_len = (int) (this.sample_rate * 0.3); // 0.3 seconds at 16 kHz sample rate
-        float tail_paddings[] = new float[pad_len]; // default value is 0
+        int padLen = (int) (this.sample_rate * 0.3); // 0.3 seconds at 16 kHz sample rate
+
+        float tailPaddings[] = new float[pad_len]; // default value is 0
+
         AcceptWaveform(this.s_ptr, this.sample_rate, tail_paddings, pad_len);
 
         // tell the engine all data are feeded
@@ -54,10 +57,7 @@ public class OnlineStream {
     }
 
     protected void finalize() throws Throwable {
-        if (this.s_ptr == 0)
-            return;
-        DeleteStream(this.s_ptr);
-        this.s_ptr = 0;
+        release();
     }
 
     public boolean IsLastFrame() throws Exception {
