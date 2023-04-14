@@ -122,7 +122,8 @@ public class OnlineRecognizer {
         this.ptr = CreateOnlineRecognizer(new Object(), rcg_cfg);
     }
 
-    public static Map<String, String> readProperties() {
+    private static Map<String, String> readProperties() {
+
         // read and parse config file
         Properties props = new Properties();
         Map<String, String> proMap = new HashMap<>();
@@ -221,7 +222,8 @@ public class OnlineRecognizer {
     public float[] readWavFile(String filename) {
         // read data from the filename
         Object[] wavdata = readWave(filename);
-        Object data = wavdata[0]; // data[0] is Int data, data[1] sample rate
+        Object data = wavdata[0]; // data[0] is float data, data[1] sample rate
+
 
         float[] floatData = (float[]) data;
 
@@ -247,10 +249,8 @@ public class OnlineRecognizer {
     }
 
     protected void finalize() throws Throwable {
-        if (this.ptr == 0)
-            return;
-        DeleteOnlineRecognizer(this.ptr);
-        this.ptr = 0;
+        release();
+
     }
 
     // recognizer release, you'd better call it manually if not use anymore

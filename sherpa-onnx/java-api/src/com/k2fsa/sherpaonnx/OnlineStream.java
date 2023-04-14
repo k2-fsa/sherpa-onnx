@@ -12,7 +12,8 @@ public class OnlineStream {
 
     private int sample_rate = 16000;
     // assign ptr to this stream in construction
-    public OnlineStream(long s_ptr, int sample_rate) {
+    public OnlineStream(long ptr, int sampleRate) {
+
         this.s_ptr = s_ptr;
         this.sample_rate = sample_rate;
     }

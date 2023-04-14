@@ -79,7 +79,7 @@ class SherpaOnnx {
 };
 
 static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config,
-                                        std::string package_path) {
+                                        const std::string &package_path) {
   // package_path used for android-jni="/sherpa/onnx/" or
   // Java-jni="/sherpaonnx/"
   OnlineRecognizerConfig ans;
@@ -356,7 +356,7 @@ Java_com_k2fsa_sherpaonnx_OnlineRecognizer_readWave(JNIEnv *env, jclass /*cls*/,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
-Java_com_k2fsa_sherpaonnx_OnlineRecognizer_CreateOnlineRecognizer(
+Java_com_k2fsa_sherpaonnx_OnlineRecognizer_createOnlineRecognizer(
     JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
 #if __ANDROID_API__ >= 9
   AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
