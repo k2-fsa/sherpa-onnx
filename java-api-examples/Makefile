@@ -1,7 +1,7 @@
 
 ENTRY_POINT = ./
 
-LIB_SRC_DIR := ../sherpa-onnx/java-api/src/com/k2fsa/sherpaonnx
+LIB_SRC_DIR := ../sherpa-onnx/java-api/src/com/k2fsa/sherpa/onnx
 
 LIB_FILES = \
 	$(LIB_SRC_DIR)/EndpointRule.java \
@@ -39,9 +39,12 @@ rebuild: clean all
 clean:
 	rm -frv  $(BUILD_DIR)/*
 	rm -frv  $(LIB_BUILD_DIR)/*
+	mkdir -p $(BUILD_DIR)
+	mkdir -p ./lib
 
 	
 run:
+
 		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeFile 
 
 
@@ -49,6 +52,7 @@ buildlib: $(LIB_FILES:.java=.class)
 	
 
 %.class: %.java
+
 				$(JAVAC) -cp $(BUILD_DIR) -d $(BUILD_DIR) -encoding UTF-8 $<
 
 packjar:
