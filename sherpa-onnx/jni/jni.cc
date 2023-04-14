@@ -457,14 +457,14 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpaonnx_OnlineRecognizer_Reset(
       reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
   sherpa_onnx::OnlineStream *s =
       reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
-  return model->Reset(s);
+  model->Reset(s);
 }
 
 // *********for OnlineStream *********
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpaonnx_OnlineStream_AcceptWaveform(
     JNIEnv *env, jobject /*obj*/, jlong s_ptr, jint sample_rate,
-    jfloatArray waveform, jint wavesize) {
+    jfloatArray waveform) {
   sherpa_onnx::OnlineStream *s =
       reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
   jfloat *p = env->GetFloatArrayElements(waveform, nullptr);
@@ -491,7 +491,7 @@ JNIEXPORT jint JNICALL Java_com_k2fsa_sherpaonnx_OnlineStream_NumFramesReady(
     JNIEnv *env, jobject /*obj*/, jlong s_ptr) {
   sherpa_onnx::OnlineStream *s =
       reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
-  s->NumFramesReady();
+  return s->NumFramesReady();
 }
 
 SHERPA_ONNX_EXTERN_C

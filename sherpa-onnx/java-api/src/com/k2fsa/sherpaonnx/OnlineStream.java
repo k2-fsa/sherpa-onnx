@@ -12,7 +12,7 @@ public class OnlineStream {
     private long s_ptr = 0; // this is the stream ptr
 
 
-    private int sample_rate = 16000;
+    private int sampleRate = 16000;
     // assign ptr to this stream in construction
     public OnlineStream(long ptr, int sampleRate) {
 
