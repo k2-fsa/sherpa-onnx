@@ -1,14 +1,16 @@
 /*
  * // Copyright 2022-2023 by zhaoming
  */
-// Stream is used for feed data to asr engine
+// Stream is used for feeding data to the asr engine
+
 package com.k2fsa.sherpaonnx;
 
 import java.io.*;
 import java.util.*;
 
 public class OnlineStream {
-    private long s_ptr = 0; // this is the  stream ptr
+    private long s_ptr = 0; // this is the stream ptr
+
 
     private int sample_rate = 16000;
     // assign ptr to this stream in construction

@@ -425,8 +425,8 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpaonnx_OnlineRecognizer_DecodeStreams(
     p_ss[i] = reinterpret_cast<sherpa_onnx::OnlineStream *>(p[i]);
   }
 
-  env->ReleaseLongArrayElements(ss_ptr, p, JNI_ABORT);
   model->DecodeStreams(p_ss.data(), n);
+  env->ReleaseLongArrayElements(ss_ptr, p, JNI_ABORT);
 }
 
 SHERPA_ONNX_EXTERN_C
