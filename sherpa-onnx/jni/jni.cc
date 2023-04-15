@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2022-2023  Xiaomi Corporation
 //                2022       Pingfeng Luo
+//                2023       Zhaoming
 
 // TODO(fangjun): Add documentation to functions/methods in this file
 // and also show how to use them with kotlin, possibly with java.
@@ -12,7 +13,6 @@
 
 #include <strstream>
 #include <utility>
-
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -207,7 +207,6 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_new(
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
   }
 #endif
-
   auto config = sherpa_onnx::GetConfig(env, _config);
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
   auto model = new sherpa_onnx::SherpaOnnx(
@@ -301,7 +300,7 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWave(
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
     exit(-1);
   }
-
+  SHERPA_ONNX_LOGE("Failed to read %s", p_filename);
   std::vector<char> buffer = sherpa_onnx::ReadFile(mgr, p_filename);
 
   std::istrstream is(buffer.data(), buffer.size());
@@ -331,4 +330,187 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWave(
   env->SetObjectArrayElement(obj_arr, 1, NewInteger(env, sampling_rate));
 
   return obj_arr;
+}
+
+// ******warpper for OnlineRecognizer*******
+
+// wav reader for java interface
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jobjectArray JNICALL
+Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_readWave(JNIEnv *env,
+                                                     jclass /*cls*/,
+                                                     jstring filename) {
+  auto data = Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWave(
+      env, nullptr, nullptr, filename);
+  return data;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL
+
+Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_createOnlineRecognizer(
+
+    JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
+#if __ANDROID_API__ >= 9
+  AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
+  if (!mgr) {
+    SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+  }
+#endif
+  sherpa_onnx::OnlineRecognizerConfig config =
+      sherpa_onnx::GetConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  auto p_recognizer = new sherpa_onnx::OnlineRecognizer(
+#if __ANDROID_API__ >= 9
+      mgr,
+#endif
+      config);
+  return (jlong)p_recognizer;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_deleteOnlineRecognizer(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  delete reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL
+Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_createStream(JNIEnv *env,
+                                                         jobject /*obj*/,
+                                                         jlong ptr) {
+  std::unique_ptr<sherpa_onnx::OnlineStream> s =
+      reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr)->CreateStream();
+  sherpa_onnx::OnlineStream *p_stream = s.release();
+  return reinterpret_cast<jlong>(p_stream);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isReady(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong s_ptr) {
+  sherpa_onnx::OnlineRecognizer *model =
+      reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  return model->IsReady(s);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_decodeStream(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong s_ptr) {
+  sherpa_onnx::OnlineRecognizer *model =
+      reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  model->DecodeStream(s);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_decodeStreams(JNIEnv *env,
+                                                          jobject /*obj*/,
+                                                          jlong ptr,
+                                                          jlongArray ss_ptr,
+                                                          jint stream_size) {
+  sherpa_onnx::OnlineRecognizer *model =
+      reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
+  jlong *p = env->GetLongArrayElements(ss_ptr, nullptr);
+  jsize n = env->GetArrayLength(ss_ptr);
+  std::vector<sherpa_onnx::OnlineStream *> p_ss(n);
+  for (int32_t i = 0; i != n; ++i) {
+    p_ss[i] = reinterpret_cast<sherpa_onnx::OnlineStream *>(p[i]);
+  }
+
+  model->DecodeStreams(p_ss.data(), n);
+  env->ReleaseLongArrayElements(ss_ptr, p, JNI_ABORT);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jstring JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong s_ptr) {
+  sherpa_onnx::OnlineRecognizer *model =
+      reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  sherpa_onnx::OnlineRecognizerResult result = model->GetResult(s);
+  return env->NewStringUTF(result.ToString().c_str());
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_isEndpoint(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong s_ptr) {
+  sherpa_onnx::OnlineRecognizer *model =
+      reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  return model->IsEndpoint(s);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_reSet(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong s_ptr) {
+  sherpa_onnx::OnlineRecognizer *model =
+      reinterpret_cast<sherpa_onnx::OnlineRecognizer *>(ptr);
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  model->Reset(s);
+}
+
+// *********for OnlineStream *********
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineStream_acceptWaveform(
+    JNIEnv *env, jobject /*obj*/, jlong s_ptr, jint sample_rate,
+    jfloatArray waveform) {
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  jfloat *p = env->GetFloatArrayElements(waveform, nullptr);
+  jsize n = env->GetArrayLength(waveform);
+  s->AcceptWaveform(sample_rate, p, n);
+  env->ReleaseFloatArrayElements(waveform, p, JNI_ABORT);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineStream_inputFinished(
+    JNIEnv *env, jobject /*obj*/, jlong s_ptr) {
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  s->InputFinished();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineStream_deleteStream(
+    JNIEnv *env, jobject /*obj*/, jlong s_ptr) {
+  delete reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jint JNICALL Java_com_k2fsa_sherpa_onnx_OnlineStream_numFramesReady(
+    JNIEnv *env, jobject /*obj*/, jlong s_ptr) {
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  return s->NumFramesReady();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_OnlineStream_isLastFrame(
+    JNIEnv *env, jobject /*obj*/, jlong s_ptr, jint frame) {
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  return s->IsLastFrame(frame);
+}
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineStream_reSet(
+    JNIEnv *env, jobject /*obj*/, jlong s_ptr) {
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  s->Reset();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jint JNICALL Java_com_k2fsa_sherpa_onnx_OnlineStream_featureDim(
+    JNIEnv *env, jobject /*obj*/, jlong s_ptr) {
+  sherpa_onnx::OnlineStream *s =
+      reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
+  return s->FeatureDim();
 }
