@@ -38,13 +38,13 @@ import java.util.*;
 public class OnlineRecognizer {
   private long ptr = 0; // this is the asr engine ptrss
 
-  private int sample_rate = 16000;
+  private int sampleRate = 16000;
   // load config file for OnlineRecognizer
   public OnlineRecognizer(String modelCfgPath) {
     Map<String, String> proMap = this.readProperties(modelCfgPath);
     try {
-      int sample_rate = Integer.parseInt(proMap.get("sample_rate").trim());
-      this.sample_rate = sample_rate;
+      int sampleRate = Integer.parseInt(proMap.get("sample_rate").trim());
+      this.sampleRate = sampleRate;
       EndpointRule rule1 =
           new EndpointRule(
               false, Float.parseFloat(proMap.get("rule1_min_trailing_silence").trim()), 0.0F);
@@ -54,8 +54,8 @@ public class OnlineRecognizer {
       EndpointRule rule3 =
           new EndpointRule(
               false, 0.0F, Float.parseFloat(proMap.get("rule3_min_utterance_length").trim()));
-      EndpointConfig end_cfg = new EndpointConfig(rule1, rule2, rule3);
-      OnlineTransducerModelConfig model_cfg =
+      EndpointConfig endCfg = new EndpointConfig(rule1, rule2, rule3);
+      OnlineTransducerModelConfig modelCfg =
           new OnlineTransducerModelConfig(
               proMap.get("encoder").trim(),
               proMap.get("decoder").trim(),
@@ -63,18 +63,18 @@ public class OnlineRecognizer {
               proMap.get("tokens").trim(),
               Integer.parseInt(proMap.get("num_threads").trim()),
               false);
-      FeatureConfig feat_config =
-          new FeatureConfig(sample_rate, Integer.parseInt(proMap.get("feature_dim").trim()));
-      OnlineRecognizerConfig rcg_cfg =
+      FeatureConfig featConfig =
+          new FeatureConfig(sampleRate, Integer.parseInt(proMap.get("feature_dim").trim()));
+      OnlineRecognizerConfig rcgCfg =
           new OnlineRecognizerConfig(
-              feat_config,
-              model_cfg,
-              end_cfg,
+              featConfig,
+              modelCfg,
+              endCfg,
               Boolean.parseBoolean(proMap.get("enable_endpoint_detection").trim()),
               proMap.get("decoding_method").trim(),
               Integer.parseInt(proMap.get("max_active_paths").trim()));
       // create a new Recognizer, first parameter kept for android asset_manager ANDROID_API__ >= 9
-      this.ptr = createOnlineRecognizer(new Object(), rcg_cfg);
+      this.ptr = createOnlineRecognizer(new Object(), rcgCfg);
 
     } catch (Exception e) {
       System.err.println(e);
@@ -82,11 +82,11 @@ public class OnlineRecognizer {
   }
 
   // use for android asset_manager ANDROID_API__ >= 9
-  public OnlineRecognizer(Object asset_manager, String modelCfgPath) {
+  public OnlineRecognizer(Object assetManager, String modelCfgPath) {
     Map<String, String> proMap = this.readProperties(modelCfgPath);
     try {
-      int sample_rate = Integer.parseInt(proMap.get("sample_rate").trim());
-      this.sample_rate = sample_rate;
+      int sampleRate = Integer.parseInt(proMap.get("sample_rate").trim());
+      this.sampleRate = sampleRate;
       EndpointRule rule1 =
           new EndpointRule(
               false, Float.parseFloat(proMap.get("rule1_min_trailing_silence").trim()), 0.0F);
@@ -96,8 +96,8 @@ public class OnlineRecognizer {
       EndpointRule rule3 =
           new EndpointRule(
               false, 0.0F, Float.parseFloat(proMap.get("rule3_min_utterance_length").trim()));
-      EndpointConfig end_cfg = new EndpointConfig(rule1, rule2, rule3);
-      OnlineTransducerModelConfig model_cfg =
+      EndpointConfig endCfg = new EndpointConfig(rule1, rule2, rule3);
+      OnlineTransducerModelConfig modelCfg =
           new OnlineTransducerModelConfig(
               proMap.get("encoder").trim(),
               proMap.get("decoder").trim(),
@@ -105,18 +105,18 @@ public class OnlineRecognizer {
               proMap.get("tokens").trim(),
               Integer.parseInt(proMap.get("num_threads").trim()),
               false);
-      FeatureConfig feat_config =
-          new FeatureConfig(sample_rate, Integer.parseInt(proMap.get("feature_dim").trim()));
-      OnlineRecognizerConfig rcg_cfg =
+      FeatureConfig featConfig =
+          new FeatureConfig(sampleRate, Integer.parseInt(proMap.get("feature_dim").trim()));
+      OnlineRecognizerConfig rcgCfg =
           new OnlineRecognizerConfig(
-              feat_config,
-              model_cfg,
-              end_cfg,
+              featConfig,
+              modelCfg,
+              endCfg,
               Boolean.parseBoolean(proMap.get("enable_endpoint_detection").trim()),
               proMap.get("decoding_method").trim(),
               Integer.parseInt(proMap.get("max_active_paths").trim()));
       // create a new Recognizer, first parameter kept for android asset_manager ANDROID_API__ >= 9
-      this.ptr = createOnlineRecognizer(asset_manager, rcg_cfg);
+      this.ptr = createOnlineRecognizer(assetManager, rcgCfg);
 
     } catch (Exception e) {
       System.err.println(e);
@@ -129,33 +129,33 @@ public class OnlineRecognizer {
       String encoder,
       String decoder,
       String joiner,
-      int num_threads,
-      int sample_rate,
-      int feature_dim,
-      boolean enable_endpoint_detection,
-      float rule1_min_trailing_silence,
-      float rule2_min_trailing_silence,
-      float rule3_min_utterance_length,
-      String decoding_method,
-      int max_active_paths) {
-    this.sample_rate = sample_rate;
-    EndpointRule rule1 = new EndpointRule(false, rule1_min_trailing_silence, 0.0F);
-    EndpointRule rule2 = new EndpointRule(true, rule2_min_trailing_silence, 0.0F);
-    EndpointRule rule3 = new EndpointRule(false, 0.0F, rule3_min_utterance_length);
-    EndpointConfig end_cfg = new EndpointConfig(rule1, rule2, rule3);
-    OnlineTransducerModelConfig model_cfg =
-        new OnlineTransducerModelConfig(encoder, decoder, joiner, tokens, num_threads, false);
-    FeatureConfig feat_config = new FeatureConfig(sample_rate, feature_dim);
-    OnlineRecognizerConfig rcg_cfg =
+      int numThreads,
+      int sampleRate,
+      int featureDim,
+      boolean enableEndpointDetection,
+      float rule1MinTrailingSilence,
+      float rule2MinTrailingSilence,
+      float rule3MinUtteranceLength,
+      String decodingMethod,
+      int maxActivePaths) {
+    this.sampleRate = sampleRate;
+    EndpointRule rule1 = new EndpointRule(false, rule1MinTrailingSilence, 0.0F);
+    EndpointRule rule2 = new EndpointRule(true, rule2MinTrailingSilence, 0.0F);
+    EndpointRule rule3 = new EndpointRule(false, 0.0F, rule3MinUtteranceLength);
+    EndpointConfig endCfg = new EndpointConfig(rule1, rule2, rule3);
+    OnlineTransducerModelConfig modelCfg =
+        new OnlineTransducerModelConfig(encoder, decoder, joiner, tokens, numThreads, false);
+    FeatureConfig featConfig = new FeatureConfig(sampleRate, featureDim);
+    OnlineRecognizerConfig rcgCfg =
         new OnlineRecognizerConfig(
-            feat_config,
-            model_cfg,
-            end_cfg,
-            enable_endpoint_detection,
-            decoding_method,
-            max_active_paths);
+            featConfig,
+            modelCfg,
+            endCfg,
+            enableEndpointDetection,
+            decodingMethod,
+            maxActivePaths);
     // create a new Recognizer, first parameter kept for android asset_manager ANDROID_API__ >= 9
-    this.ptr = createOnlineRecognizer(new Object(), rcg_cfg);
+    this.ptr = createOnlineRecognizer(new Object(), rcgCfg);
   }
 
   private Map<String, String> readProperties(String modelCfgPath) {
@@ -237,14 +237,14 @@ public class OnlineRecognizer {
     // create one stream for data to feed in
     if (this.ptr == 0) throw new Exception("null exception for recognizer ptr");
     long streamPtr = createStream(this.ptr);
-    OnlineStream stream = new OnlineStream(streamPtr, this.sample_rate);
+    OnlineStream stream = new OnlineStream(streamPtr, this.sampleRate);
     return stream;
   }
 
   public float[] readWavFile(String fileName) {
     // read data from the filename
     Object[] wavdata = readWave(fileName);
-    Object data = wavdata[0]; // data[0] is Int data, data[1] sample rate
+    Object data = wavdata[0]; // data[0] is float data, data[1] sample rate
 
     float[] floatData = (float[]) data;
 

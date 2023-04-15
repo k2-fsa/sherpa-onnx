@@ -1,7 +1,7 @@
 /*
  * // Copyright 2022-2023 by zhaoming
  */
-// Stream is used for feed data to asr engine
+// Stream is used for feeding data to the asr engine
 package com.k2fsa.sherpa.onnx;
 
 import java.io.*;

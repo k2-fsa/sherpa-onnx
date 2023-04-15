@@ -28,8 +28,8 @@ public class DecodeFile {
   OnlineStream streamObj;
   String wavfilename;
 
-  public DecodeFile(String filename) {
-    wavfilename = filename;
+  public DecodeFile(String fileName) {
+    wavfilename = fileName;
   }
 
   public void initModelWithPara() {
@@ -40,15 +40,15 @@ public class DecodeFile {
       String decoder = modelDir + "/decoder-epoch-99-avg-1.onnx";
       String joiner = modelDir + "/joiner-epoch-99-avg-1.onnx";
       String tokens = modelDir + "/tokens.txt";
-      int num_threads = 4;
-      int sample_rate = 16000;
-      int feature_dim = 80;
-      boolean enable_endpoint_detection = false;
-      float rule1_min_trailing_silence = 2.4F;
-      float rule2_min_trailing_silence = 1.2F;
-      float rule3_min_utterance_length = 20F;
-      String decoding_method = "greedy_search";
-      int max_active_paths = 4;
+      int numThreads = 4;
+      int sampleRate = 16000;
+      int featureDim = 80;
+      boolean enableEndpointDetection = false;
+      float rule1MinTrailingSilence = 2.4F;
+      float rule2MinTrailingSilence = 1.2F;
+      float rule3MinUtteranceLength = 20F;
+      String decodingMethod = "greedy_search";
+      int maxActivePaths = 4;
 
       rcgOjb =
           new OnlineRecognizer(
@@ -56,15 +56,15 @@ public class DecodeFile {
               encoder,
               decoder,
               joiner,
-              num_threads,
-              sample_rate,
-              feature_dim,
-              enable_endpoint_detection,
-              rule1_min_trailing_silence,
-              rule2_min_trailing_silence,
-              rule3_min_utterance_length,
-              decoding_method,
-              max_active_paths);
+              numThreads,
+              sampleRate,
+              featureDim,
+              enableEndpointDetection,
+              rule1MinTrailingSilence,
+              rule2MinTrailingSilence,
+              rule3MinUtteranceLength,
+              decodingMethod,
+              maxActivePaths);
       streamObj = rcgOjb.createStream();
     } catch (Exception e) {
       System.err.println(e);
@@ -112,13 +112,13 @@ public class DecodeFile {
     try {
       float[] buffer = rcgOjb.readWavFile(wavfilename); // read data from file
       float[] chunk = new float[1600]; // //each time read 1600(0.1s) data
-      int chunk_index = 0;
+      int chunkIndex = 0;
       for (int i = 0; i < buffer.length; i++) // total wav length loop
       {
-        chunk[chunk_index] = buffer[i];
-        chunk_index++;
-        if (chunk_index >= 1600 || i == (buffer.length - 1)) {
-          chunk_index = 0;
+        chunk[chunkIndex] = buffer[i];
+        chunkIndex++;
+        if (chunkIndex >= 1600 || i == (buffer.length - 1)) {
+          chunkIndex = 0;
           streamObj.acceptWaveform(chunk); // feed chunk
           if (rcgOjb.isReady(streamObj)) {
             rcgOjb.decodeStream(streamObj);

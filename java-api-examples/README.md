@@ -50,7 +50,7 @@ refer to [java_api_example](https://github.com/k2-fsa/sherpa-onnx/blob/master/ja
     import com.k2fsa.sherpa.onnx.OnlineRecognizer;
     import com.k2fsa.sherpa.onnx.OnlineStream;
     String cfgpath=appdir+"/modelconfig.cfg";
-	OnlineRecognizer.setSoPath(soPath);   //set so lib path
+    OnlineRecognizer.setSoPath(soPath);   //set so lib path
 
     OnlineRecognizer rcgOjb = new OnlineRecognizer();   //create a recognizer
     rcgOjb = new OnlineRecognizer(cfgFile);    //set model config file 
