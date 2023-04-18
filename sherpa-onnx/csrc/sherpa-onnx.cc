@@ -102,7 +102,7 @@ for a list of pre-trained models to download.
     recognizer.DecodeStream(s.get());
   }
 
-  std::string text = recognizer.GetResult(s.get()).text;
+  std::string text = recognizer.GetResult(s.get()).AsJsonString();
 
   fprintf(stderr, "Done!\n");
 
