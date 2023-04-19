@@ -434,7 +434,7 @@ JNIEXPORT jstring JNICALL Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_getResult(
   sherpa_onnx::OnlineStream *s =
       reinterpret_cast<sherpa_onnx::OnlineStream *>(s_ptr);
   sherpa_onnx::OnlineRecognizerResult result = model->GetResult(s);
-  return env->NewStringUTF(result.ToString().c_str());
+  return env->NewStringUTF(result.text.c_str());
 }
 
 SHERPA_ONNX_EXTERN_C
