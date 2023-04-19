@@ -31,18 +31,13 @@ namespace sherpa_onnx {
 
 class SherpaOnnx {
  public:
-  SherpaOnnx(
 #if __ANDROID_API__ >= 9
-      AAssetManager *mgr,
+  SherpaOnnx(AAssetManager *mgr, const OnlineRecognizerConfig &config)
+      : recognizer_(mgr, config), stream_(recognizer_.CreateStream()) {}
 #endif
-      const sherpa_onnx::OnlineRecognizerConfig &config)
-      : recognizer_(
-#if __ANDROID_API__ >= 9
-            mgr,
-#endif
-            config),
-        stream_(recognizer_.CreateStream()) {
-  }
+
+  explicit SherpaOnnx(const OnlineRecognizerConfig &config)
+      : recognizer_(config), stream_(recognizer_.CreateStream()) {}
 
   void AcceptWaveform(int32_t sample_rate, const float *samples, int32_t n) {
     if (input_sample_rate_ == -1) {
@@ -73,8 +68,8 @@ class SherpaOnnx {
   void Decode() const { recognizer_.DecodeStream(stream_.get()); }
 
  private:
-  sherpa_onnx::OnlineRecognizer recognizer_;
-  std::unique_ptr<sherpa_onnx::OnlineStream> stream_;
+  OnlineRecognizer recognizer_;
+  std::unique_ptr<OnlineStream> stream_;
   int32_t input_sample_rate_ = -1;
 };
 
@@ -219,6 +214,16 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_new(
 }
 
 SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_newFromFile(
+    JNIEnv *env, jobject /*obj*/, jobject _config) {
+  auto config = sherpa_onnx::GetConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  auto model = new sherpa_onnx::SherpaOnnx(config);
+
+  return (jlong)model;
+}
+
+SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_delete(
     JNIEnv *env, jobject /*obj*/, jlong ptr) {
   delete reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr);
@@ -289,9 +294,47 @@ static jobject NewInteger(JNIEnv *env, int32_t value) {
   return env->NewObject(cls, constructor, value);
 }
 
+static jobjectArray ReadWaveImpl(JNIEnv *env, std::istream &is,
+                                 const char *p_filename) {
+  bool is_ok = false;
+  int32_t sampling_rate = -1;
+  std::vector<float> samples =
+      sherpa_onnx::ReadWave(is, &sampling_rate, &is_ok);
+
+  if (!is_ok) {
+    SHERPA_ONNX_LOGE("Failed to read %s", p_filename);
+    exit(-1);
+  }
+
+  jfloatArray samples_arr = env->NewFloatArray(samples.size());
+  env->SetFloatArrayRegion(samples_arr, 0, samples.size(), samples.data());
+
+  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
+      2, env->FindClass("java/lang/Object"), nullptr);
+
+  env->SetObjectArrayElement(obj_arr, 0, samples_arr);
+  env->SetObjectArrayElement(obj_arr, 1, NewInteger(env, sampling_rate));
+
+  return obj_arr;
+}
+
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jobjectArray JNICALL
-Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWave(
+Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWaveFromFile(
+    JNIEnv *env, jclass /*cls*/, jstring filename) {
+  const char *p_filename = env->GetStringUTFChars(filename, nullptr);
+  std::ifstream is(p_filename, std::ios::binary);
+
+  auto obj_arr = ReadWaveImpl(env, is, p_filename);
+
+  env->ReleaseStringUTFChars(filename, p_filename);
+
+  return obj_arr;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jobjectArray JNICALL
+Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWaveFromAsset(
     JNIEnv *env, jclass /*cls*/, jobject asset_manager, jstring filename) {
   const char *p_filename = env->GetStringUTFChars(filename, nullptr);
 #if __ANDROID_API__ >= 9
@@ -308,26 +351,9 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWave(
   std::ifstream is(p_filename, std::ios::binary);
 #endif
 
-  bool is_ok = false;
-  int32_t sampling_rate = -1;
-  std::vector<float> samples =
-      sherpa_onnx::ReadWave(is, &sampling_rate, &is_ok);
+  auto obj_arr = ReadWaveImpl(env, is, p_filename);
 
   env->ReleaseStringUTFChars(filename, p_filename);
-
-  if (!is_ok) {
-    SHERPA_ONNX_LOGE("Failed to read %s", p_filename);
-    exit(-1);
-  }
-
-  jfloatArray ans = env->NewFloatArray(samples.size());
-  env->SetFloatArrayRegion(ans, 0, samples.size(), samples.data());
-
-  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      2, env->FindClass("java/lang/Object"), nullptr);
-
-  env->SetObjectArrayElement(obj_arr, 0, ans);
-  env->SetObjectArrayElement(obj_arr, 1, NewInteger(env, sampling_rate));
 
   return obj_arr;
 }
@@ -340,8 +366,9 @@ JNIEXPORT jobjectArray JNICALL
 Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_readWave(JNIEnv *env,
                                                      jclass /*cls*/,
                                                      jstring filename) {
-  auto data = Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWave(
-      env, nullptr, nullptr, filename);
+  auto data =
+      Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWaveFromAsset(
+          env, nullptr, nullptr, filename);
   return data;
 }
 
