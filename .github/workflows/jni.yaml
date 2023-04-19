@@ -8,9 +8,9 @@ on:
       - '.github/workflows/jni.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
+      - 'kotlin-api-examples/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
-      - '.github/scripts/test-jni.sh'
   pull_request:
     branches:
       - master
@@ -18,9 +18,9 @@ on:
       - '.github/workflows/jni.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
+      - 'kotlin-api-examples/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
-      - '.github/scripts/test-jni.sh'
 
 concurrency:
   group: jni-${{ github.ref }}
@@ -56,4 +56,5 @@ jobs:
       - name:  Run JNI test
         shell: bash
         run: |
-          .github/scripts/test-jni.sh
+          cd ./kotlin-api-examples
+          ./run.sh

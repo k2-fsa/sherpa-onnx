@@ -8,6 +8,9 @@ fun main() {
         featureDim = 80,
     )
 
+    // please refer to
+    // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+    // to dowload pre-trained models
     var modelConfig = OnlineTransducerModelConfig(
         encoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/encoder-epoch-99-avg-1.onnx",
         decoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/decoder-epoch-99-avg-1.onnx",
@@ -29,12 +32,10 @@ fun main() {
     )
 
     var model = SherpaOnnx(
-        assetManager = AssetManager(),
         config = config,
     )
 
-    var objArray = WaveReader.readWave(
-        assetManager = AssetManager(),
+    var objArray = WaveReader.readWaveFromFile(
         filename = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/test_wavs/0.wav",
     )
     var samples : FloatArray = objArray[0] as FloatArray
@@ -45,8 +46,8 @@ fun main() {
       model.decode()
     }
 
-    var tail_paddings = FloatArray((sampleRate * 0.5).toInt()) // 0.5 seconds
-    model.acceptWaveform(tail_paddings, sampleRate=sampleRate)
+    var tailPaddings = FloatArray((sampleRate * 0.5).toInt()) // 0.5 seconds
+    model.acceptWaveform(tailPaddings, sampleRate=sampleRate)
     model.inputFinished()
     while (model.isReady()) {
       model.decode()
