@@ -25,6 +25,7 @@ struct OfflineRecognizerConfig {
   OfflineLMConfig lm_config;
 
   std::string decoding_method = "greedy_search";
+  int32_t max_active_paths = 4;
   // only greedy_search is implemented
   // TODO(fangjun): Implement modified_beam_search
 
@@ -32,11 +33,13 @@ struct OfflineRecognizerConfig {
   OfflineRecognizerConfig(const OfflineFeatureExtractorConfig &feat_config,
                           const OfflineModelConfig &model_config,
                           const OfflineLMConfig &lm_config,
-                          const std::string &decoding_method)
+                          const std::string &decoding_method,
+                          int32_t max_active_paths)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
-        decoding_method(decoding_method) {}
+        decoding_method(decoding_method),
+        max_active_paths(max_active_paths) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

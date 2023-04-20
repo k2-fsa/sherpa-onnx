@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/hypothesis.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 
 namespace sherpa_onnx {
@@ -79,12 +80,15 @@ class OfflineTransducerModel {
    *
    * @param results Current decoded results.
    * @param end_index We only use results[0:end_index] to build
-   *                  the decoder_input.
+   *                  the decoder_input. results[end_index] is not used.
    * @return Return a tensor of shape (results.size(), ContextSize())
    */
   Ort::Value BuildDecoderInput(
       const std::vector<OfflineTransducerDecoderResult> &results,
       int32_t end_index) const;
+
+  Ort::Value BuildDecoderInput(const std::vector<Hypothesis> &results,
+                               int32_t end_index) const;
 
  private:
   class Impl;

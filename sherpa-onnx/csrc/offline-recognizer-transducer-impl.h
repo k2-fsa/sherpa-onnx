@@ -16,6 +16,7 @@
 #include "sherpa-onnx/csrc/offline-transducer-decoder.h"
 #include "sherpa-onnx/csrc/offline-transducer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-transducer-model.h"
+#include "sherpa-onnx/csrc/offline-transducer-modified-beam-search-decoder.h"
 #include "sherpa-onnx/csrc/pad-sequence.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
@@ -57,8 +58,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
       decoder_ =
           std::make_unique<OfflineTransducerGreedySearchDecoder>(model_.get());
     } else if (config_.decoding_method == "modified_beam_search") {
-      SHERPA_ONNX_LOGE("TODO: modified_beam_search is to be implemented");
-      exit(-1);
+      decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
+          model_.get(), config_.max_active_paths);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());

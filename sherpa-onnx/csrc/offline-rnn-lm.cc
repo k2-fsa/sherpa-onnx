@@ -4,6 +4,10 @@
 
 #include "sherpa-onnx/csrc/offline-rnn-lm.h"
 
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
