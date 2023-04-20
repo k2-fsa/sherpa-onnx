@@ -17,6 +17,8 @@ LIB_BUILD_DIR = ./lib
 
 EXAMPLE_FILE = DecodeFile.java
 
+EXAMPLE_Mic = DecodeMic.java
+
 JAVAC = javac
 
 BUILD_DIR = build
@@ -29,8 +31,11 @@ vpath %.class $(BUILD_DIR)
 vpath %.java src
 	
 	
-buildexample:  
+buildfile:  
 		$(JAVAC) -cp lib/sherpaonnx.jar -d $(BUILD_DIR) -encoding UTF-8 src/$(EXAMPLE_FILE)
+
+buildmic:  
+		$(JAVAC) -cp lib/sherpaonnx.jar -d $(BUILD_DIR) -encoding UTF-8 src/$(EXAMPLE_Mic)
 	
 rebuild: clean all
 	
@@ -43,10 +48,13 @@ clean:
 	mkdir -p ./lib
 
 	
-run:
+runfile:
 
-		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeFile 
+		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeFile
 
+runmic:
+
+		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeMic
 
 buildlib: $(LIB_FILES:.java=.class)
 	
@@ -58,4 +66,8 @@ buildlib: $(LIB_FILES:.java=.class)
 packjar:
 				jar cvfe lib/sherpaonnx.jar . -C $(BUILD_DIR) .
 				
-all: clean buildlib packjar buildexample run
+all: clean buildlib packjar buildfile buildmic
+
+
+
+

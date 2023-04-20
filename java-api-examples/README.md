@@ -1,17 +1,22 @@
-
 0.Introduction
----
-Java wrapper `com.k2fsa.sherpaonnx.OnlineRecognizer` for `sherpa-onnx`. Java is a cross-platform language; you can build jni .so lib according to your system, and then use the same java api for all your platform.
-``` xml
+--------------
+
+Java wrapper `com.k2fsa.sherpa.onnx.OnlineRecognizer` for `sherpa-onnx`. Java is a cross-platform language; you can build jni .so lib according to your system, and then use the same java api for all your platform.
+
+```xml
 Depend on:
   Openjdk 1.8
 ```
+
 ---
+
 1.Compile libsherpa-onnx-jni.so
----
+-------------------------------
+
 Compile sherpa-onnx/jni/jni.cc according to your system.
 Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
-``` xml
+
+```xml
   git clone https://github.com/k2-fsa/sherpa-onnx
   cd sherpa-onnx
   mkdir build
@@ -19,14 +24,19 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
   cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DSHERPA_ONNX_ENABLE_JNI=ON ..
   make -j6
 ```
+
 ---
+
 2.Download asr model files
----
+--------------------------
+
 [click here for more detail](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html)
----
+--------------------------
+
 3.Config model config.cfg
----
-``` xml 
+-------------------------
+
+```xml
   #model config  
   sample_rate=16000                  
   feature_dim=80
@@ -42,11 +52,15 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
   decoding_method=greedy_search
   max_active_paths=4
 ```
+
 ---
+
 4.A simple java example
----
+-----------------------
+
 refer to [java_api_example](https://github.com/k2-fsa/sherpa-onnx/blob/master/java-api-examples/src/DecodeFile.java) for more detail.
-``` java
+
+```java
     import com.k2fsa.sherpa.onnx.OnlineRecognizer;
     import com.k2fsa.sherpa.onnx.OnlineStream;
     String cfgpath=appdir+"/modelconfig.cfg";
@@ -71,18 +85,34 @@ refer to [java_api_example](https://github.com/k2-fsa/sherpa-onnx/blob/master/ja
     rcgOjb.reSet(streamObj);
     rcgOjb.releaseStream(streamObj); // release stream
     rcgOjb.release(); // release recognizer
-       
-
 ```
+
 ---
-5.Makefile 
----
-package jar and run app example
-package path: /sherpa-onnx/java-api-examples/lib/sherpaonnx.jar
-``` bash
+
+5.Makefile
+----------
+
+OS Ubuntu 18.04 LTS
+Build package path: /sherpa-onnx/java-api-examples/lib/sherpaonnx.jar
+
+5.1 Build
+
+```bash
     cd sherpa-onnx/java-api-examples
-    make all          
-	
-  ```
+    make all
+```
+
+5.2 Run DecodeFile example
+
+```bash
+    make runfile
+```
+
+5.3 Run DecodeMic example
+
+```bash
+    make runmic
+```
+
 
 
