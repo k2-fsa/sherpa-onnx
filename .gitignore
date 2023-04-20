@@ -56,3 +56,4 @@ run-offline-decode-files.sh
 sherpa-onnx-nemo-ctc-en-citrinet-512
 run-offline-decode-files-nemo-ctc.sh
 *.jar
+sherpa-onnx-nemo-ctc-*

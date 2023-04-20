@@ -7,6 +7,7 @@
 
 #include <vector>
 
+#include "sherpa-onnx/csrc/offline-lm.h"
 #include "sherpa-onnx/csrc/offline-transducer-decoder.h"
 #include "sherpa-onnx/csrc/offline-transducer-model.h"
 
@@ -16,15 +17,23 @@ class OfflineTransducerModifiedBeamSearchDecoder
     : public OfflineTransducerDecoder {
  public:
   OfflineTransducerModifiedBeamSearchDecoder(OfflineTransducerModel *model,
-                                             int32_t max_active_paths)
-      : model_(model), max_active_paths_(max_active_paths) {}
+                                             OfflineLM *lm,
+                                             int32_t max_active_paths,
+                                             float lm_scale)
+      : model_(model),
+        lm_(lm),
+        max_active_paths_(max_active_paths),
+        lm_scale_(lm_scale) {}
 
   std::vector<OfflineTransducerDecoderResult> Decode(
       Ort::Value encoder_out, Ort::Value encoder_out_length) override;
 
  private:
   OfflineTransducerModel *model_;  // Not owned
+  OfflineLM *lm_;                  // Not owned; may be nullptr
+
   int32_t max_active_paths_;
+  float lm_scale_;  // used only when lm_ is not nullptr
 };
 
 }  // namespace sherpa_onnx

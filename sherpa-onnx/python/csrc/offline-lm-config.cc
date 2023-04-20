@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/offline-lm-config.h"
 
+#include <string>
+
 #include "sherpa-onnx//csrc/offline-lm-config.h"
 
 namespace sherpa_onnx {

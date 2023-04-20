@@ -8,6 +8,7 @@
 #include <memory>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/hypothesis.h"
 #include "sherpa-onnx/csrc/offline-lm-config.h"
 
 namespace sherpa_onnx {
@@ -29,6 +30,14 @@ class OfflineLM {
    * Caution: It returns negative log likelihood (nll), not log likelihood
    */
   virtual Ort::Value Rescore(Ort::Value x, Ort::Value x_lens) = 0;
+
+  // This function updates hyp.lm_lob_prob of hyps.
+  //
+  // @param scale LM score
+  // @param context_size Context size of the transducer decoder model
+  // @param hyps It is changed in-place.
+  void ComputeLMScore(float scale, int32_t context_size,
+                      std::vector<Hypotheses> *hyps);
 };
 
 }  // namespace sherpa_onnx

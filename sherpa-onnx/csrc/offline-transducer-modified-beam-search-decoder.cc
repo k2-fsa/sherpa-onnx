@@ -130,13 +130,20 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
         new_hyp.log_prob = p_logprob[k];
         hyps.Add(std::move(new_hyp));
       }  // for (auto k : topk)
-         //
+      p_logprob += (end - start) * vocab_size;
       cur.push_back(std::move(hyps));
     }  // for (int32_t i = 0; i != n; ++i)
-  }    // for (auto n : packed_encoder_out.batch_sizes)
+
+    ++t;
+  }  // for (auto n : packed_encoder_out.batch_sizes)
 
   for (auto &h : finalized) {
     cur.push_back(std::move(h));
+  }
+
+  if (lm_) {
+    // use LM for rescoring
+    lm_->ComputeLMScore(lm_scale_, context_size, &cur);
   }
 
   std::vector<OfflineTransducerDecoderResult> unsorted_ans(batch_size);
