@@ -5,6 +5,8 @@
 #include "sherpa-onnx/csrc/offline-lm.h"
 
 #include <algorithm>
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/offline-rnn-lm.h"
 

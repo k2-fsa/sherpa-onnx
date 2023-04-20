@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_LM_H_
 
 #include <memory>
+#include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/hypothesis.h"
