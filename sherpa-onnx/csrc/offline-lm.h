@@ -1,0 +1,36 @@
+// sherpa-onnx/csrc/offline-lm.h
+//
+// Copyright (c)  2023  Xiaomi Corporation
+
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_LM_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_LM_H_
+
+#include <memory>
+
+#include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/offline-lm-config.h"
+
+namespace sherpa_onnx {
+
+class OfflineLM {
+ public:
+  virtual ~OfflineLM() = default;
+
+  static std::unique_ptr<OfflineLM> Create(const OfflineLMConfig &config);
+
+  /** Rescore a batch of sentences.
+   *
+   * @param x A 2-D tensor of shape (N, L) with data type int64.
+   * @param x_lens A 1-D tensor of shape (N,) with data type int64.
+   *               It contains number of valid tokens in x before padding.
+   * @return Return a 1-D tensor of shape (N,) containing the negative log
+   *         likelihood of each utterance. Its data type is float32.
+   *
+   * Caution: It returns negative log likelihood (nll), not log likelihood
+   */
+  virtual Ort::Value Rescore(Ort::Value x, Ort::Value x_lens) = 0;
+};
+
+}  // namespace sherpa_onnx
+
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_LM_H_

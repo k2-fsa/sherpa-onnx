@@ -15,11 +15,14 @@ static void PybindOfflineRecognizerConfig(py::module *m) {
   using PyClass = OfflineRecognizerConfig;
   py::class_<PyClass>(*m, "OfflineRecognizerConfig")
       .def(py::init<const OfflineFeatureExtractorConfig &,
-                    const OfflineModelConfig &, const std::string &>(),
+                    const OfflineModelConfig &, const OfflineLMConfig &,
+                    const std::string &>(),
            py::arg("feat_config"), py::arg("model_config"),
-           py::arg("decoding_method"))
+           py::arg("lm_config") = OfflineLMConfig(),
+           py::arg("decoding_method") = "greedy_search")
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
+      .def_readwrite("lm_config", &PyClass::lm_config)
       .def_readwrite("decoding_method", &PyClass::decoding_method)
       .def("__str__", &PyClass::ToString);
 }

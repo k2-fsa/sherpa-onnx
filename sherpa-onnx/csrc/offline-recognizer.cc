@@ -8,6 +8,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-lm-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 
 namespace sherpa_onnx {
@@ -15,6 +16,7 @@ namespace sherpa_onnx {
 void OfflineRecognizerConfig::Register(ParseOptions *po) {
   feat_config.Register(po);
   model_config.Register(po);
+  lm_config.Register(po);
 
   po->Register("decoding-method", &decoding_method,
                "decoding method,"
@@ -22,6 +24,10 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
 }
 
 bool OfflineRecognizerConfig::Validate() const {
+  if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
+    if (!lm_config.Validate()) return false;
+  }
+
   return model_config.Validate();
 }
 
@@ -31,6 +37,7 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "OfflineRecognizerConfig(";
   os << "feat_config=" << feat_config.ToString() << ", ";
   os << "model_config=" << model_config.ToString() << ", ";
+  os << "lm_config=" << lm_config.ToString() << ", ";
   os << "decoding_method=\"" << decoding_method << "\")";
 
   return os.str();
