@@ -94,7 +94,7 @@ void DecodeOnlineStream(SherpaOnnxOnlineRecognizer *recognizer,
 void DecodeMultipleOnlineStreams(SherpaOnnxOnlineRecognizer *recognizer,
                                  SherpaOnnxOnlineStream **streams, int32_t n) {
   std::vector<sherpa_onnx::OnlineStream *> ss(n);
-  for (int32_t i = 0; i != n; ++n) {
+  for (int32_t i = 0; i != n; ++i) {
     ss[i] = streams[i]->impl.get();
   }
   recognizer->impl->DecodeStreams(ss.data(), n);
