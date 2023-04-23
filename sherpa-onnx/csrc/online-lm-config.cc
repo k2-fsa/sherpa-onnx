@@ -2,11 +2,12 @@
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
+#include "sherpa-onnx/csrc/online-lm-config.h"
+
 #include <string>
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/onfline-lm-config.h"
 
 namespace sherpa_onnx {
 

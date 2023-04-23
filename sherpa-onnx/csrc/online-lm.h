@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_ONLINE_LM_H_
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
