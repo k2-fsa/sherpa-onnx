@@ -18,6 +18,8 @@ set(sources
   hypothesis.cc
   offline-ctc-greedy-search-decoder.cc
   offline-ctc-model.cc
+  offline-lm-config.cc
+  offline-lm.cc
   offline-model-config.cc
   offline-nemo-enc-dec-ctc-model-config.cc
   offline-nemo-enc-dec-ctc-model.cc
@@ -26,10 +28,13 @@ set(sources
   offline-paraformer-model.cc
   offline-recognizer-impl.cc
   offline-recognizer.cc
+  offline-rnn-lm.cc
   offline-stream.cc
   offline-transducer-greedy-search-decoder.cc
   offline-transducer-model-config.cc
   offline-transducer-model.cc
+  offline-transducer-modified-beam-search-decoder.cc
+  online-lm-config.cc
   online-lstm-transducer-model.cc
   online-recognizer.cc
   online-stream.cc
