@@ -78,35 +78,36 @@ namespace sherpa_onnx
     /// It does not need to access the Internet during recognition.
     /// Everything is run locally.
     typedef struct SherpaOnnxOfflineRecognizer SherpaOnnxOfflineRecognizer;
+
     typedef struct SherpaOnnxOfflineStream SherpaOnnxOfflineStream;
 
     extern "C" __declspec(dllexport) SherpaOnnxOfflineRecognizer * __stdcall  CreateOfflineRecognizer(
-    const SherpaOnnxOfflineRecognizerConfig* config);
+        const SherpaOnnxOfflineRecognizerConfig* config);
 
     extern "C" __declspec(dllexport) SherpaOnnxOfflineStream * __stdcall CreateOfflineStream(
-    SherpaOnnxOfflineRecognizer* sherpaOnnxOfflineRecognizer);
+        SherpaOnnxOfflineRecognizer* sherpaOnnxOfflineRecognizer);
 
     extern "C" __declspec(dllexport) void __stdcall AcceptWaveform(
-    SherpaOnnxOfflineStream* stream, int32_t sample_rate,
+        SherpaOnnxOfflineStream* stream, int32_t sample_rate,
         const float* samples, int32_t samples_size);
 
     extern "C" __declspec(dllexport) void __stdcall DecodeOfflineStream(
-    SherpaOnnxOfflineRecognizer* recognizer, SherpaOnnxOfflineStream* stream);
+        SherpaOnnxOfflineRecognizer* recognizer,
+        SherpaOnnxOfflineStream* stream);
 
     extern "C" __declspec(dllexport) void __stdcall DecodeMultipleOfflineStreams(
-    SherpaOnnxOfflineRecognizer* recognizer,
+        SherpaOnnxOfflineRecognizer* recognizer,
         SherpaOnnxOfflineStream** streams, int32_t n);
 
     extern "C" __declspec(dllexport) SherpaOnnxOfflineRecognizerResult * __stdcall GetOfflineStreamResult(
-    SherpaOnnxOfflineStream* stream);
+        SherpaOnnxOfflineStream* stream);
 
     extern "C" __declspec(dllexport) void __stdcall DestroyOfflineRecognizer(
-    SherpaOnnxOfflineRecognizer* recognizer);
+        SherpaOnnxOfflineRecognizer* recognizer);
 
     extern "C" __declspec(dllexport) void __stdcall DestroyOfflineStream(
-    SherpaOnnxOfflineStream* stream);
+        SherpaOnnxOfflineStream* stream);
 
     extern "C" __declspec(dllexport) void __stdcall DestroyOfflineRecognizerResult(
-    SherpaOnnxOfflineRecognizerResult* r);
-
-}
+        SherpaOnnxOfflineRecognizerResult* r);
+}// namespace sherpa_onnx

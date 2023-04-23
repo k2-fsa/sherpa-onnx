@@ -133,5 +133,4 @@ namespace sherpa_onnx
 		delete r->text;
 		delete r;
 	}
-
-}
+}// namespace sherpa_onnx
