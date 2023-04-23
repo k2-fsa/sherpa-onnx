@@ -34,6 +34,7 @@ set(sources
   offline-transducer-model-config.cc
   offline-transducer-model.cc
   offline-transducer-modified-beam-search-decoder.cc
+  online-lm-config.cc
   online-lstm-transducer-model.cc
   online-recognizer.cc
   online-stream.cc
