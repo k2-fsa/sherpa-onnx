@@ -18,18 +18,34 @@
 extern "C" {
 #endif
 
+// See https://github.com/pytorch/pytorch/blob/main/c10/macros/Export.h
+// We will set SHERPA_ONNX_BUILD_SHARED_LIBS and SHERPA_ONNX_BUILD_MAIN_LIB in CMakeLists.txt
+
 #if defined(_WIN32)
+#if defined(SHERPA_ONNX_BUILD_SHARED_LIBS)
 #define SHERPA_ONNX_EXPORT __declspec(dllexport)
+#define SHERPA_ONNX_IMPORT __declspec(dllimport)
 #else
+#define SHERPA_ONNX_EXPORT
+#define SHERPA_ONNX_IMPORT
+#endif
+#else // WIN32
 #define SHERPA_ONNX_EXPORT __attribute__((visibility("default")))
 #endif
+
+#if defined(SHERPA_ONNX_BUILD_MAIN_LIB)
+#define SHERPA_ONNX_API SHERPA_ONNX_EXPORT
+#else
+#define SHERPA_ONNX_API SHERPA_ONNX_IMPORT
+#endif
+
 
 /// Please refer to
 /// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 /// to download pre-trained models. That is, you can find encoder-xxx.onnx
 /// decoder-xxx.onnx, joiner-xxx.onnx, and tokens.txt for this struct
 /// from there.
-SHERPA_ONNX_EXPORT typedef struct SherpaOnnxOnlineTransducerModelConfig {
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineTransducerModelConfig {
   const char *encoder;
   const char *decoder;
   const char *joiner;
@@ -39,7 +55,7 @@ SHERPA_ONNX_EXPORT typedef struct SherpaOnnxOnlineTransducerModelConfig {
 } SherpaOnnxOnlineTransducerModelConfig;
 
 /// It expects 16 kHz 16-bit single channel wave format.
-SHERPA_ONNX_EXPORT typedef struct SherpaOnnxFeatureConfig {
+SHERPA_ONNX_API typedef struct SherpaOnnxFeatureConfig {
   /// Sample rate of the input data. MUST match the one expected
   /// by the model. For instance, it should be 16000 for models provided
   /// by us.
@@ -50,7 +66,7 @@ SHERPA_ONNX_EXPORT typedef struct SherpaOnnxFeatureConfig {
   int32_t feature_dim;
 } SherpaOnnxFeatureConfig;
 
-SHERPA_ONNX_EXPORT typedef struct SherpaOnnxOnlineRecognizerConfig {
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
   SherpaOnnxFeatureConfig feat_config;
   SherpaOnnxOnlineTransducerModelConfig model_config;
 
@@ -81,7 +97,7 @@ SHERPA_ONNX_EXPORT typedef struct SherpaOnnxOnlineRecognizerConfig {
   float rule3_min_utterance_length;
 } SherpaOnnxOnlineRecognizerConfig;
 
-SHERPA_ONNX_EXPORT typedef struct SherpaOnnxOnlineRecognizerResult {
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerResult {
   const char *text;
   // TODO(fangjun): Add more fields
 } SherpaOnnxOnlineRecognizerResult;
@@ -89,32 +105,32 @@ SHERPA_ONNX_EXPORT typedef struct SherpaOnnxOnlineRecognizerResult {
 /// Note: OnlineRecognizer here means StreamingRecognizer.
 /// It does not need to access the Internet during recognition.
 /// Everything is run locally.
-SHERPA_ONNX_EXPORT typedef struct SherpaOnnxOnlineRecognizer SherpaOnnxOnlineRecognizer;
-SHERPA_ONNX_EXPORT typedef struct SherpaOnnxOnlineStream SherpaOnnxOnlineStream;
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizer SherpaOnnxOnlineRecognizer;
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineStream SherpaOnnxOnlineStream;
 
 /// @param config  Config for the recongizer.
 /// @return Return a pointer to the recognizer. The user has to invoke
 //          DestroyOnlineRecognizer() to free it to avoid memory leak.
-SHERPA_ONNX_EXPORT SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
+SHERPA_ONNX_API SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
     const SherpaOnnxOnlineRecognizerConfig *config);
 
 /// Free a pointer returned by CreateOnlineRecognizer()
 ///
 /// @param p A pointer returned by CreateOnlineRecognizer()
-SHERPA_ONNX_EXPORT void DestroyOnlineRecognizer(SherpaOnnxOnlineRecognizer *recognizer);
+SHERPA_ONNX_API void DestroyOnlineRecognizer(SherpaOnnxOnlineRecognizer *recognizer);
 
 /// Create an online stream for accepting wave samples.
 ///
 /// @param recognizer  A pointer returned by CreateOnlineRecognizer()
 /// @return Return a pointer to an OnlineStream. The user has to invoke
 ///         DestoryOnlineStream() to free it to avoid memory leak.
-SHERPA_ONNX_EXPORT SherpaOnnxOnlineStream *CreateOnlineStream(
+SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineStream(
     const SherpaOnnxOnlineRecognizer *recognizer);
 
 /// Destory an online stream.
 ///
 /// @param stream A pointer returned by CreateOnlineStream()
-SHERPA_ONNX_EXPORT void DestoryOnlineStream(SherpaOnnxOnlineStream *stream);
+SHERPA_ONNX_API void DestoryOnlineStream(SherpaOnnxOnlineStream *stream);
 
 /// Accept input audio samples and compute the features.
 /// The user has to invoke DecodeOnlineStream() to run the neural network and
@@ -127,7 +143,7 @@ SHERPA_ONNX_EXPORT void DestoryOnlineStream(SherpaOnnxOnlineStream *stream);
 /// @param samples A pointer to a 1-D array containing audio samples.
 ///                The range of samples has to be normalized to [-1, 1].
 /// @param n  Number of elements in the samples array.
-SHERPA_ONNX_EXPORT void AcceptWaveform(SherpaOnnxOnlineStream *stream, int32_t sample_rate,
+SHERPA_ONNX_API void AcceptWaveform(SherpaOnnxOnlineStream *stream, int32_t sample_rate,
                     const float *samples, int32_t n);
 
 /// Return 1 if there are enough number of feature frames for decoding.
@@ -135,7 +151,7 @@ SHERPA_ONNX_EXPORT void AcceptWaveform(SherpaOnnxOnlineStream *stream, int32_t s
 ///
 /// @param recognizer  A pointer returned by CreateOnlineRecognizer
 /// @param stream  A pointer returned by CreateOnlineStream
-SHERPA_ONNX_EXPORT int32_t IsOnlineStreamReady(SherpaOnnxOnlineRecognizer *recognizer,
+SHERPA_ONNX_API int32_t IsOnlineStreamReady(SherpaOnnxOnlineRecognizer *recognizer,
                             SherpaOnnxOnlineStream *stream);
 
 /// Call this function to run the neural network model and decoding.
@@ -148,7 +164,7 @@ SHERPA_ONNX_EXPORT int32_t IsOnlineStreamReady(SherpaOnnxOnlineRecognizer *recog
 ///     DecodeOnlineStream(recognizer, stream);
 ///  }
 ///
-SHERPA_ONNX_EXPORT void DecodeOnlineStream(SherpaOnnxOnlineRecognizer *recognizer,
+SHERPA_ONNX_API void DecodeOnlineStream(SherpaOnnxOnlineRecognizer *recognizer,
                         SherpaOnnxOnlineStream *stream);
 
 /// This function is similar to DecodeOnlineStream(). It decodes multiple
@@ -161,7 +177,7 @@ SHERPA_ONNX_EXPORT void DecodeOnlineStream(SherpaOnnxOnlineRecognizer *recognize
 /// @param streams  A pointer array containing pointers returned by
 ///                 CreateOnlineRecognizer()
 /// @param n  Number of elements in the given streams array.
-SHERPA_ONNX_EXPORT void DecodeMultipleOnlineStreams(SherpaOnnxOnlineRecognizer *recognizer,
+SHERPA_ONNX_API void DecodeMultipleOnlineStreams(SherpaOnnxOnlineRecognizer *recognizer,
                                  SherpaOnnxOnlineStream **streams, int32_t n);
 
 /// Get the decoding results so far for an OnlineStream.
@@ -171,7 +187,7 @@ SHERPA_ONNX_EXPORT void DecodeMultipleOnlineStreams(SherpaOnnxOnlineRecognizer *
 /// @return A pointer containing the result. The user has to invoke
 ///         DestroyOnlineRecognizerResult() to free the returned pointer to
 ///         avoid memory leak.
-SHERPA_ONNX_EXPORT SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
+SHERPA_ONNX_API SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     SherpaOnnxOnlineRecognizer *recognizer, SherpaOnnxOnlineStream *stream);
 
 /// Destroy the pointer returned by GetOnlineStreamResult().
@@ -184,34 +200,34 @@ void DestroyOnlineRecognizerResult(const SherpaOnnxOnlineRecognizerResult *r);
 ///
 /// @param recognizer A pointer returned by CreateOnlineRecognizer().
 /// @param stream A pointer returned by CreateOnlineStream
-SHERPA_ONNX_EXPORT void Reset(SherpaOnnxOnlineRecognizer *recognizer,
+SHERPA_ONNX_API void Reset(SherpaOnnxOnlineRecognizer *recognizer,
            SherpaOnnxOnlineStream *stream);
 
 /// Signal that no more audio samples would be available.
 /// After this call, you cannot call AcceptWaveform() any more.
 ///
 /// @param stream A pointer returned by CreateOnlineStream()
-SHERPA_ONNX_EXPORT void InputFinished(SherpaOnnxOnlineStream *stream);
+SHERPA_ONNX_API void InputFinished(SherpaOnnxOnlineStream *stream);
 
 /// Return 1 if an endpoint has been detected.
 ///
 /// @param recognizer A pointer returned by CreateOnlineRecognizer()
 /// @param stream A pointer returned by CreateOnlineStream()
 /// @return Return 1 if an endpoint is detected. Return 0 otherwise.
-SHERPA_ONNX_EXPORT int32_t IsEndpoint(SherpaOnnxOnlineRecognizer *recognizer,
+SHERPA_ONNX_API int32_t IsEndpoint(SherpaOnnxOnlineRecognizer *recognizer,
                    SherpaOnnxOnlineStream *stream);
 
 // for displaying results on Linux/macOS.
-SHERPA_ONNX_EXPORT typedef struct SherpaOnnxDisplay SherpaOnnxDisplay;
+SHERPA_ONNX_API typedef struct SherpaOnnxDisplay SherpaOnnxDisplay;
 
 /// Create a display object. Must be freed using DestroyDisplay to avoid
 /// memory leak.
-SHERPA_ONNX_EXPORT SherpaOnnxDisplay *CreateDisplay(int32_t max_word_per_line);
+SHERPA_ONNX_API SherpaOnnxDisplay *CreateDisplay(int32_t max_word_per_line);
 
-SHERPA_ONNX_EXPORT void DestroyDisplay(SherpaOnnxDisplay *display);
+SHERPA_ONNX_API void DestroyDisplay(SherpaOnnxDisplay *display);
 
 /// Print the result.
-SHERPA_ONNX_EXPORT void SherpaOnnxPrint(SherpaOnnxDisplay *display, int32_t idx, const char *s);
+SHERPA_ONNX_API void SherpaOnnxPrint(SherpaOnnxDisplay *display, int32_t idx, const char *s);
 
 #ifdef __cplusplus
 } /* extern "C" */
