@@ -66,4 +66,19 @@ std::vector<Hypothesis> Hypotheses::GetTopK(int32_t k, bool length_norm) const {
   return {all_hyps.begin(), all_hyps.begin() + k};
 }
 
+const std::vector<int32_t> GetHypsRowSplits(
+    const std::vector<Hypotheses> &hyps) {
+  std::vector<int32_t> row_splits;
+  row_splits.reserve(hyps.size() + 1);
+
+  row_splits.push_back(0);
+  int32_t s = 0;
+  for (const auto &h : hyps) {
+    s += h.Size();
+    row_splits.push_back(s);
+  }
+
+  return row_splits;
+}
+
 }  // namespace sherpa_onnx

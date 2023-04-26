@@ -121,6 +121,9 @@ class Hypotheses {
   Map hyps_dict_;
 };
 
+const std::vector<int32_t> GetHypsRowSplits(
+    const std::vector<Hypotheses> &hyps);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_HYPOTHESIS_H_

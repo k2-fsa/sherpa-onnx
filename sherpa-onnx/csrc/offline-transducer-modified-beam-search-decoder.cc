@@ -15,21 +15,6 @@
 
 namespace sherpa_onnx {
 
-static std::vector<int32_t> GetHypsRowSplits(
-    const std::vector<Hypotheses> &hyps) {
-  std::vector<int32_t> row_splits;
-  row_splits.reserve(hyps.size() + 1);
-
-  row_splits.push_back(0);
-  int32_t s = 0;
-  for (const auto &h : hyps) {
-    s += h.Size();
-    row_splits.push_back(s);
-  }
-
-  return row_splits;
-}
-
 std::vector<OfflineTransducerDecoderResult>
 OfflineTransducerModifiedBeamSearchDecoder::Decode(
     Ort::Value encoder_out, Ort::Value encoder_out_length) {
