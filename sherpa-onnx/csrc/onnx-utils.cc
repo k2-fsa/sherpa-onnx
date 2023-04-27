@@ -218,4 +218,44 @@ Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
   return ans;
 }
 
+CopyableOrtValue::CopyableOrtValue(const CopyableOrtValue &other)
+    : CopyableOrtValue() {
+  *this = other;
+}
+
+CopyableOrtValue::CopyableOrtValue(const Ort::Value &ort_value) : CopyableOrtValue() {
+  Ort::AllocatorWithDefaultOptions allocator;
+  value = Clone(allocator, &ort_value);
+}
+
+CopyableOrtValue &CopyableOrtValue::operator=(const Ort::Value &ort_value) {
+  Ort::AllocatorWithDefaultOptions allocator;
+  value = Clone(allocator, &ort_value);
+  return *this;
+};
+
+CopyableOrtValue &CopyableOrtValue::operator=(const CopyableOrtValue &other) {
+  if (this == &other) {
+    return *this;
+  }
+  Ort::AllocatorWithDefaultOptions allocator;
+  if (other.value) {
+    value = Clone(allocator, &other.value);
+  }
+  return *this;
+}
+
+CopyableOrtValue::CopyableOrtValue(CopyableOrtValue &&other)
+    : CopyableOrtValue() {
+  *this = std::move(other);
+}
+
+CopyableOrtValue &CopyableOrtValue::operator=(CopyableOrtValue &&other) {
+  if (this == &other) {
+    return *this;
+  }
+  value = std::move(other.value);
+  return *this;
+}
+
 }  // namespace sherpa_onnx

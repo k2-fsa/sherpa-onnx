@@ -1,5 +1,6 @@
 /**
  * Copyright (c)  2023  Xiaomi Corporation
+ * Copyright (c)  2023  Pingfeng Luo
  *
  */
 
@@ -12,7 +13,9 @@
 #include <utility>
 #include <vector>
 
+#include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/math.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
 
@@ -30,6 +33,10 @@ struct Hypothesis {
 
   // LM log prob if any.
   double lm_log_prob = 0;
+
+  int32_t cur_scored_pos = 0;               // cur scored tokens by RNN LM
+  std::vector<CopyableOrtValue> lm_states;  // state for RNN LM
+  bool lm_states_inited = false;
 
   int32_t num_trailing_blanks = 0;
 

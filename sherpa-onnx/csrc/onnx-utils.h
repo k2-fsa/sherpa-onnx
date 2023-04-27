@@ -89,6 +89,24 @@ std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename);
 // TODO(fangjun): Document it
 Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
                   const std::vector<int32_t> &hyps_num_split);
+
+struct CopyableOrtValue {
+  Ort::Value value;
+  CopyableOrtValue() : value{nullptr} {};
+
+  CopyableOrtValue(const Ort::Value &ort_value);
+
+  CopyableOrtValue &operator=(const Ort::Value &ort_value);
+
+  CopyableOrtValue(const CopyableOrtValue &other);
+
+  CopyableOrtValue &operator=(const CopyableOrtValue &other);
+
+  CopyableOrtValue(CopyableOrtValue &&other);
+
+  CopyableOrtValue &operator=(CopyableOrtValue &&other);
+};
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_ONNX_UTILS_H_

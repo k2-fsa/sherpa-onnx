@@ -156,6 +156,10 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
     }  // for (int32_t b = 0; b != batch_size; ++b)
   }
 
+  if (lm_) {
+    lm_->ComputeLMScore(lm_scale_, model_->ContextSize(), &cur);
+  }
+
   for (int32_t b = 0; b != batch_size; ++b) {
     auto &hyps = cur[b];
     auto best_hyp = hyps.GetMostProbable(true);
