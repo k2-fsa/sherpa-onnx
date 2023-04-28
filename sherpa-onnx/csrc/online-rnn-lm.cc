@@ -45,7 +45,7 @@ class OnlineRnnLM::Impl {
 
   std::vector<Ort::Value> GetInitStates() {
     constexpr int32_t kBatchSize = 1;
-    std::array<int64_t, 3> h_shape{rnn_num_layers_, kBatchSize, rnn_d_model_};
+    std::array<int64_t, 3> h_shape{rnn_num_layers_, kBatchSize, rnn_hidden_size_};
     std::array<int64_t, 3> c_shape{rnn_num_layers_, kBatchSize, rnn_hidden_size_};
     Ort::Value h = Ort::Value::CreateTensor<float>(allocator_, h_shape.data(),
                                                    h_shape.size());
@@ -83,9 +83,7 @@ class OnlineRnnLM::Impl {
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(rnn_num_layers_, "num_layers");
     SHERPA_ONNX_READ_META_DATA(rnn_hidden_size_, "hidden_size");
-    SHERPA_ONNX_READ_META_DATA(rnn_d_model_, "embedding_dim");
     SHERPA_ONNX_READ_META_DATA(sos_id_, "sos_id");
-    SHERPA_ONNX_READ_META_DATA(unk_id_, "unk_id");
   }
 
  private:
@@ -103,9 +101,7 @@ class OnlineRnnLM::Impl {
   std::vector<const char *> output_names_ptr_;
   int32_t rnn_num_layers_ = 2;
   int32_t rnn_hidden_size_ = 512;
-  int32_t rnn_d_model_ = 512;
   int32_t sos_id_ = 1;
-  int32_t unk_id_ = 0;
 };
 
 OnlineRnnLM::OnlineRnnLM(const OnlineLMConfig &config)

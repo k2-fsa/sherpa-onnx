@@ -25,7 +25,7 @@ void OnlineLM::ComputeLMScore(float scale, int32_t context_size,
     for (auto &tok : h) {
       auto &t = tok.second;
       auto &ys = t.ys;
-      const int32_t cur_score_label_len =
+      const int32_t token_len_to_score =
           t.ys.size() - context_size - t.cur_scored_pos;
 
       if (!t.lm_states_inited) {
@@ -37,8 +37,8 @@ void OnlineLM::ComputeLMScore(float scale, int32_t context_size,
         t.lm_states_inited = true;
       }
 
-      if (cur_score_label_len > 0) {
-        std::array<int64_t, 2> x_shape{1, cur_score_label_len};
+      if (token_len_to_score > 0) {
+        std::array<int64_t, 2> x_shape{1, token_len_to_score};
         // shape of x and y are same
         Ort::Value x = Ort::Value::CreateTensor<int64_t>(
             allocator, x_shape.data(), x_shape.size());
@@ -47,8 +47,8 @@ void OnlineLM::ComputeLMScore(float scale, int32_t context_size,
 
         int64_t *p_x = x.GetTensorMutableData<int64_t>();
         int64_t *p_y = y.GetTensorMutableData<int64_t>();
-        std::fill(p_x, p_x + cur_score_label_len, 0);
-        std::fill(p_y, p_y + cur_score_label_len, 0);
+        std::fill(p_x, p_x + token_len_to_score, 0);
+        std::fill(p_y, p_y + token_len_to_score, 0);
 
         std::copy(ys.begin() + context_size + t.cur_scored_pos, ys.end() - 1,
                   p_x);
@@ -65,13 +65,14 @@ void OnlineLM::ComputeLMScore(float scale, int32_t context_size,
         // rescore hyp
         const float *p_nll = out.first.GetTensorData<float>();
         t.lm_log_prob = -scale * (*p_nll);
-        t.cur_scored_pos += t.ys.size() - context_size - t.cur_scored_pos;
 
-        // update RNN states
+        // update RNN LM states
         std::vector<CopyableOrtValue> updated_states;
         updated_states.push_back(std::move(out.second[1]));
         updated_states.push_back(std::move(out.second[2]));
         t.lm_states = updated_states;
+
+        t.cur_scored_pos += token_len_to_score;
       }
     }
   }

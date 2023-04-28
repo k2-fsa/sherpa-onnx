@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/onnx-utils.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023  Pingfeng Luo
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 #include <algorithm>
@@ -223,7 +224,8 @@ CopyableOrtValue::CopyableOrtValue(const CopyableOrtValue &other)
   *this = other;
 }
 
-CopyableOrtValue::CopyableOrtValue(const Ort::Value &ort_value) : CopyableOrtValue() {
+CopyableOrtValue::CopyableOrtValue(const Ort::Value &ort_value)
+    : CopyableOrtValue() {
   Ort::AllocatorWithDefaultOptions allocator;
   value = Clone(allocator, &ort_value);
 }

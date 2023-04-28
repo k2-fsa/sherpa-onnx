@@ -14,7 +14,7 @@
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 int main(int32_t argc, char *argv[]) {
-  if (argc < 6 || argc > 8) {
+  if (argc < 6 || argc > 9) {
     const char *usage = R"usage(
 Usage:
   ./bin/sherpa-onnx \
@@ -22,7 +22,7 @@ Usage:
     /path/to/encoder.onnx \
     /path/to/decoder.onnx \
     /path/to/joiner.onnx \
-    /path/to/foo.wav [num_threads [decoding_method]]
+    /path/to/foo.wav [/path/to/rnn_lm.onnx num_threads [decoding_method]]
 
 Default value for num_threads is 2.
 Valid values for decoding_method: greedy_search (default), modified_beam_search.
@@ -50,12 +50,15 @@ for a list of pre-trained models to download.
   std::string wav_filename = argv[5];
 
   config.model_config.num_threads = 2;
-  if (argc == 7 && atoi(argv[6]) > 0) {
-    config.model_config.num_threads = atoi(argv[6]);
+  if (argc == 7) {
+    config.lm_config.model = argv[6];
+  }
+  if (argc == 8 && atoi(argv[7]) > 0) {
+    config.model_config.num_threads = atoi(argv[7]);
   }
 
-  if (argc == 8) {
-    config.decoding_method = argv[7];
+  if (argc == 9) {
+    config.decoding_method = argv[8];
   }
   config.max_active_paths = 4;
 

@@ -37,7 +37,7 @@ class OnlineTransducerModifiedBeamSearchDecoder
 
  private:
   OnlineTransducerModel *model_;  // Not owned
-  OnlineLM *lm_;
+  OnlineLM *lm_;                  // Not owned
 
   int32_t max_active_paths_;
   float lm_scale_;  // used only when lm_ is not nullptr

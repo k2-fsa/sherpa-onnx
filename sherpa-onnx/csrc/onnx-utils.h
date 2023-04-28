@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/onnx-utils.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023  Pingfeng Luo
 #ifndef SHERPA_ONNX_CSRC_ONNX_UTILS_H_
 #define SHERPA_ONNX_CSRC_ONNX_UTILS_H_
 
