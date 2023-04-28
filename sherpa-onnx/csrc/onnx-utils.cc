@@ -224,8 +224,7 @@ CopyableOrtValue::CopyableOrtValue(const CopyableOrtValue &other)
   *this = other;
 }
 
-CopyableOrtValue::CopyableOrtValue(Ort::Value ort_value)
-    : CopyableOrtValue() {
+CopyableOrtValue::CopyableOrtValue(Ort::Value ort_value) {
   value = std::move(ort_value);
 }
 
@@ -246,8 +245,7 @@ CopyableOrtValue &CopyableOrtValue::operator=(const CopyableOrtValue &other) {
   return *this;
 }
 
-CopyableOrtValue::CopyableOrtValue(CopyableOrtValue &&other)
-    : CopyableOrtValue() {
+CopyableOrtValue::CopyableOrtValue(CopyableOrtValue &&other) {
   *this = std::move(other);
 }
 

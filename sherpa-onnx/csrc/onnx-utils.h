@@ -92,7 +92,7 @@ Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
                   const std::vector<int32_t> &hyps_num_split);
 
 struct CopyableOrtValue {
-  Ort::Value value;
+  Ort::Value value{nullptr};
   CopyableOrtValue() : value{nullptr} {};
 
   CopyableOrtValue(Ort::Value ort_value);
