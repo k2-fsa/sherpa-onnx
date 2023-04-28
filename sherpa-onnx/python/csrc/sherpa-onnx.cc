@@ -7,6 +7,7 @@
 #include "sherpa-onnx/python/csrc/display.h"
 #include "sherpa-onnx/python/csrc/endpoint.h"
 #include "sherpa-onnx/python/csrc/features.h"
+#include "sherpa-onnx/python/csrc/offline-lm-config.h"
 #include "sherpa-onnx/python/csrc/offline-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-recognizer.h"
 #include "sherpa-onnx/python/csrc/offline-stream.h"
@@ -28,6 +29,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindDisplay(&m);
 
   PybindOfflineStream(&m);
+  PybindOfflineLMConfig(&m);
   PybindOfflineModelConfig(&m);
   PybindOfflineRecognizer(&m);
 }

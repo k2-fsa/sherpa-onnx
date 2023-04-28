@@ -4,6 +4,7 @@ pybind11_add_module(_sherpa_onnx
   display.cc
   endpoint.cc
   features.cc
+  offline-lm-config.cc
   offline-model-config.cc
   offline-nemo-enc-dec-ctc-model-config.cc
   offline-paraformer-model-config.cc

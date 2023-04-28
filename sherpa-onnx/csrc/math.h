@@ -88,6 +88,16 @@ void LogSoftmax(T *input, int32_t input_len) {
   }
 }
 
+template <typename T>
+void LogSoftmax(T *in, int32_t w, int32_t h) {
+  for (int32_t i = 0; i != h; ++i) {
+    LogSoftmax(in, w);
+    in += w;
+  }
+}
+
+// TODO(fangjun): use std::partial_sort to replace std::sort.
+// Remember also to fix sherpa-ncnn
 template <class T>
 std::vector<int32_t> TopkIndex(const T *vec, int32_t size, int32_t topk) {
   std::vector<int32_t> vec_index(size);

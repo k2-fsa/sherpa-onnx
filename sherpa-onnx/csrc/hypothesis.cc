@@ -17,6 +17,9 @@ void Hypotheses::Add(Hypothesis hyp) {
     hyps_dict_[key] = std::move(hyp);
   } else {
     it->second.log_prob = LogAdd<double>()(it->second.log_prob, hyp.log_prob);
+
+    it->second.lm_log_prob =
+        LogAdd<double>()(it->second.lm_log_prob, hyp.lm_log_prob);
   }
 }
 
@@ -24,8 +27,8 @@ Hypothesis Hypotheses::GetMostProbable(bool length_norm) const {
   if (length_norm == false) {
     return std::max_element(hyps_dict_.begin(), hyps_dict_.end(),
                             [](const auto &left, auto &right) -> bool {
-                              return left.second.log_prob <
-                                     right.second.log_prob;
+                              return left.second.TotalLogProb() <
+                                     right.second.TotalLogProb();
                             })
         ->second;
   } else {
@@ -33,8 +36,8 @@ Hypothesis Hypotheses::GetMostProbable(bool length_norm) const {
     return std::max_element(
                hyps_dict_.begin(), hyps_dict_.end(),
                [](const auto &left, const auto &right) -> bool {
-                 return left.second.log_prob / left.second.ys.size() <
-                        right.second.log_prob / right.second.ys.size();
+                 return left.second.TotalLogProb() / left.second.ys.size() <
+                        right.second.TotalLogProb() / right.second.ys.size();
                })
         ->second;
   }
@@ -47,19 +50,35 @@ std::vector<Hypothesis> Hypotheses::GetTopK(int32_t k, bool length_norm) const {
   std::vector<Hypothesis> all_hyps = Vec();
 
   if (length_norm == false) {
-    std::partial_sort(
-        all_hyps.begin(), all_hyps.begin() + k, all_hyps.end(),
-        [](const auto &a, const auto &b) { return a.log_prob > b.log_prob; });
+    std::partial_sort(all_hyps.begin(), all_hyps.begin() + k, all_hyps.end(),
+                      [](const auto &a, const auto &b) {
+                        return a.TotalLogProb() > b.TotalLogProb();
+                      });
   } else {
     // for length_norm is true
     std::partial_sort(all_hyps.begin(), all_hyps.begin() + k, all_hyps.end(),
                       [](const auto &a, const auto &b) {
-                        return a.log_prob / a.ys.size() >
-                               b.log_prob / b.ys.size();
+                        return a.TotalLogProb() / a.ys.size() >
+                               b.TotalLogProb() / b.ys.size();
                       });
   }
 
   return {all_hyps.begin(), all_hyps.begin() + k};
+}
+
+const std::vector<int32_t> GetHypsRowSplits(
+    const std::vector<Hypotheses> &hyps) {
+  std::vector<int32_t> row_splits;
+  row_splits.reserve(hyps.size() + 1);
+
+  row_splits.push_back(0);
+  int32_t s = 0;
+  for (const auto &h : hyps) {
+    s += h.Size();
+    row_splits.push_back(s);
+  }
+
+  return row_splits;
 }
 
 }  // namespace sherpa_onnx
