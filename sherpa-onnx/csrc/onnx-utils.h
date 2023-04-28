@@ -95,7 +95,7 @@ struct CopyableOrtValue {
   Ort::Value value;
   CopyableOrtValue() : value{nullptr} {};
 
-  CopyableOrtValue(const Ort::Value &ort_value);
+  CopyableOrtValue(Ort::Value ort_value);
 
   CopyableOrtValue &operator=(const Ort::Value &ort_value);
 

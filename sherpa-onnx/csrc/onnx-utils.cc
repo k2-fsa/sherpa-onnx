@@ -224,10 +224,9 @@ CopyableOrtValue::CopyableOrtValue(const CopyableOrtValue &other)
   *this = other;
 }
 
-CopyableOrtValue::CopyableOrtValue(const Ort::Value &ort_value)
+CopyableOrtValue::CopyableOrtValue(Ort::Value ort_value)
     : CopyableOrtValue() {
-  Ort::AllocatorWithDefaultOptions allocator;
-  value = Clone(allocator, &ort_value);
+  value = std::move(ort_value);
 }
 
 CopyableOrtValue &CopyableOrtValue::operator=(const Ort::Value &ort_value) {
