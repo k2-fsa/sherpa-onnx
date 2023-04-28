@@ -51,6 +51,16 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
   enable_endpoint_detection=false
   decoding_method=greedy_search
   max_active_paths=4
+
+  #websocket server config
+  port=8890
+  connection_thread_num=16  //threads pool handle network
+  stream_thread_num=16      //threads pool handle stream
+  stream_time_idle=10
+  decoder_thread_num=16     //threads pool handle decoder
+  parallel_decoder_num=16 
+  decoder_time_idle=10
+  deocder_time_out=3000
 ```
 
 ---
@@ -114,5 +124,29 @@ Build package path: /sherpa-onnx/java-api-examples/lib/sherpaonnx.jar
     make runmic
 ```
 
+---
 
+6.WebSocket Server
+----------
+
+support multiple threads websocket server
+
+6.1 Build
+
+```bash
+    cd sherpa-onnx/java-api-examples
+    make all
+```
+
+6.2 Run srv example
+
+```bash
+    make runsrv
+```
+
+6.3 Run client example
+
+```bash
+    make runclient
+```
 

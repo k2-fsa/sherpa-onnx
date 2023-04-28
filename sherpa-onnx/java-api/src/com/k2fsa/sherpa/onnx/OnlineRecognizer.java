@@ -148,12 +148,7 @@ public class OnlineRecognizer {
     FeatureConfig featConfig = new FeatureConfig(sampleRate, featureDim);
     OnlineRecognizerConfig rcgCfg =
         new OnlineRecognizerConfig(
-            featConfig,
-            modelCfg,
-            endCfg,
-            enableEndpointDetection,
-            decodingMethod,
-            maxActivePaths);
+            featConfig, modelCfg, endCfg, enableEndpointDetection, decodingMethod, maxActivePaths);
     // create a new Recognizer, first parameter kept for android asset_manager ANDROID_API__ >= 9
     this.ptr = createOnlineRecognizer(new Object(), rcgCfg);
   }
@@ -241,7 +236,7 @@ public class OnlineRecognizer {
     return stream;
   }
 
-  public float[] readWavFile(String fileName) {
+  public static float[] readWavFile(String fileName) {
     // read data from the filename
     Object[] wavdata = readWave(fileName);
     Object data = wavdata[0]; // data[0] is float data, data[1] sample rate
@@ -281,7 +276,9 @@ public class OnlineRecognizer {
   }
   // JNI interface libsherpa-onnx-jni.so
 
-  private native Object[] readWave(String fileName);
+  // private native Object[] readWave(String fileName);
+
+  private static native Object[] readWave(String fileName);
 
   private native String getResult(long ptr, long streamPtr);
 
