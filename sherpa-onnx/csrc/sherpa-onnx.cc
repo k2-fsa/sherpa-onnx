@@ -102,7 +102,7 @@ for a list of pre-trained models to download.
     recognizer.DecodeStream(s.get());
   }
 
-  std::string text = recognizer.GetResult(s.get()).text;
+  std::string text = recognizer.GetResult(s.get()).AsJsonString();
 
   fprintf(stderr, "Done!\n");
 
@@ -117,6 +117,9 @@ for a list of pre-trained models to download.
 
   fprintf(stderr, "num threads: %d\n", config.model_config.num_threads);
   fprintf(stderr, "decoding method: %s\n", config.decoding_method.c_str());
+  if (config.decoding_method == "modified_beam_search") {
+    fprintf(stderr, "max active paths: %d\n", config.max_active_paths);
+  }
 
   fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
   float rtf = elapsed_seconds / duration;

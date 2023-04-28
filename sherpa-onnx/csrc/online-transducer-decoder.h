@@ -13,11 +13,17 @@
 namespace sherpa_onnx {
 
 struct OnlineTransducerDecoderResult {
+  /// Number of frames after subsampling we have decoded so far
+  int32_t frame_offset = 0;
+
   /// The decoded token IDs so far
   std::vector<int64_t> tokens;
 
   /// number of trailing blank frames decoded so far
   int32_t num_trailing_blanks = 0;
+
+  /// timestamps[i] contains the output frame index where tokens[i] is decoded.
+  std::vector<int32_t> timestamps;
 
   // Cache decoder_out for endpointing
   Ort::Value decoder_out;

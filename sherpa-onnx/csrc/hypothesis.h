@@ -25,13 +25,19 @@ struct Hypothesis {
   std::vector<int32_t> timestamps;
 
   // The total score of ys in log space.
+  // It contains only acoustic scores
   double log_prob = 0;
+
+  // LM log prob if any.
+  double lm_log_prob = 0;
 
   int32_t num_trailing_blanks = 0;
 
   Hypothesis() = default;
   Hypothesis(const std::vector<int64_t> &ys, double log_prob)
       : ys(ys), log_prob(log_prob) {}
+
+  double TotalLogProb() const { return log_prob + lm_log_prob; }
 
   // If two Hypotheses have the same `Key`, then they contain
   // the same token sequence.
@@ -94,6 +100,9 @@ class Hypotheses {
   const auto begin() const { return hyps_dict_.begin(); }
   const auto end() const { return hyps_dict_.end(); }
 
+  auto begin() { return hyps_dict_.begin(); }
+  auto end() { return hyps_dict_.end(); }
+
   void Clear() { hyps_dict_.clear(); }
 
  private:
@@ -111,6 +120,9 @@ class Hypotheses {
   using Map = std ::unordered_map<std::string, Hypothesis>;
   Map hyps_dict_;
 };
+
+const std::vector<int32_t> GetHypsRowSplits(
+    const std::vector<Hypotheses> &hyps);
 
 }  // namespace sherpa_onnx
 

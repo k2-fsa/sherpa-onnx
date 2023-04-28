@@ -4,10 +4,21 @@ import android.content.res.AssetManager
 
 class WaveReader {
     companion object {
-        // Read a mono wave file.
-        // No resampling is made.
-        external fun readWave(
-            assetManager: AssetManager, filename: String, expected_sample_rate: Float = 16000.0f
+        // Read a mono wave file asset
+        // The returned array has two entries:
+        //  - the first entry contains an 1-D float array
+        //  - the second entry is the sample rate
+        external fun readWaveFromAsset(
+            assetManager: AssetManager,
+            filename: String,
+        ): Array<Any>
+
+        // Read a mono wave file from disk
+        // The returned array has two entries:
+        //  - the first entry contains an 1-D float array
+        //  - the second entry is the sample rate
+        external fun readWaveFromFile(
+            filename: String,
         ): Array<Any>
 
         init {

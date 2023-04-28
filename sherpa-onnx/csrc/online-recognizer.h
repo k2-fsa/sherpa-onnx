@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -22,10 +23,45 @@
 namespace sherpa_onnx {
 
 struct OnlineRecognizerResult {
+  /// Recognition results.
+  /// For English, it consists of space separated words.
+  /// For Chinese, it consists of Chinese words without spaces.
+  /// Example 1: "hello world"
+  /// Example 2: "你好世界"
   std::string text;
 
-  // TODO(fangjun): Add a method to return a json string
-  std::string ToString() const { return text; }
+  /// Decoded results at the token level.
+  /// For instance, for BPE-based models it consists of a list of BPE tokens.
+  std::vector<std::string> tokens;
+
+  /// timestamps.size() == tokens.size()
+  /// timestamps[i] records the time in seconds when tokens[i] is decoded.
+  std::vector<float> timestamps;
+
+  /// ID of this segment
+  /// When an endpoint is detected, it is incremented
+  int32_t segment = 0;
+
+  /// Starting frame of this segment.
+  /// When an endpoint is detected, it will change
+  float start_time = 0;
+
+  /// True if this is the last segment.
+  bool is_final = false;
+
+  /** Return a json string.
+   *
+   * The returned string contains:
+   *   {
+   *     "text": "The recognition result",
+   *     "tokens": [x, x, x],
+   *     "timestamps": [x, x, x],
+   *     "segment": x,
+   *     "start_time": x,
+   *     "is_final": true|false
+   *   }
+   */
+  std::string AsJsonString() const;
 };
 
 struct OnlineRecognizerConfig {

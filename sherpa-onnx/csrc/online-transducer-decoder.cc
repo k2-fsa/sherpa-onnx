@@ -34,6 +34,9 @@ OnlineTransducerDecoderResult &OnlineTransducerDecoderResult::operator=(
 
   hyps = other.hyps;
 
+  frame_offset = other.frame_offset;
+  timestamps = other.timestamps;
+
   return *this;
 }
 
@@ -53,6 +56,9 @@ OnlineTransducerDecoderResult &OnlineTransducerDecoderResult::operator=(
   num_trailing_blanks = other.num_trailing_blanks;
   decoder_out = std::move(other.decoder_out);
   hyps = std::move(other.hyps);
+
+  frame_offset = other.frame_offset;
+  timestamps = std::move(other.timestamps);
 
   return *this;
 }

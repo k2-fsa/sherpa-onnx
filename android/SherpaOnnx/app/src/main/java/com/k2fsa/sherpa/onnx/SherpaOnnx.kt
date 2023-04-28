@@ -38,18 +38,22 @@ data class OnlineRecognizerConfig(
 )
 
 class SherpaOnnx(
-    assetManager: AssetManager, var config: OnlineRecognizerConfig
+    assetManager: AssetManager? = null,
+    var config: OnlineRecognizerConfig,
 ) {
     private val ptr: Long
 
     init {
-        ptr = new(assetManager, config)
+        if (assetManager != null) {
+            ptr = new(assetManager, config)
+        } else {
+            ptr = newFromFile(config)
+        }
     }
 
     protected fun finalize() {
         delete(ptr)
     }
-
 
     fun acceptWaveform(samples: FloatArray, sampleRate: Int) =
         acceptWaveform(ptr, samples, sampleRate)
@@ -70,6 +74,10 @@ class SherpaOnnx(
         config: OnlineRecognizerConfig,
     ): Long
 
+    private external fun newFromFile(
+        config: OnlineRecognizerConfig,
+    ): Long
+
     private external fun acceptWaveform(ptr: Long, samples: FloatArray, sampleRate: Int)
     private external fun inputFinished(ptr: Long)
     private external fun getText(ptr: Long): String
@@ -86,7 +94,7 @@ class SherpaOnnx(
 }
 
 fun getFeatureConfig(sampleRate: Int, featureDim: Int): FeatureConfig {
-    return FeatureConfig(sampleRate=sampleRate, featureDim=featureDim)
+    return FeatureConfig(sampleRate = sampleRate, featureDim = featureDim)
 }
 
 /*

@@ -102,16 +102,18 @@ void OnlineTransducerGreedySearchDecoder::Decode(
 
     bool emitted = false;
     for (int32_t i = 0; i < batch_size; ++i, p_logit += vocab_size) {
+      auto &r = (*result)[i];
       auto y = static_cast<int32_t>(std::distance(
           static_cast<const float *>(p_logit),
           std::max_element(static_cast<const float *>(p_logit),
                            static_cast<const float *>(p_logit) + vocab_size)));
       if (y != 0) {
         emitted = true;
-        (*result)[i].tokens.push_back(y);
-        (*result)[i].num_trailing_blanks = 0;
+        r.tokens.push_back(y);
+        r.timestamps.push_back(t + r.frame_offset);
+        r.num_trailing_blanks = 0;
       } else {
-        ++(*result)[i].num_trailing_blanks;
+        ++r.num_trailing_blanks;
       }
     }
     if (emitted) {
@@ -121,6 +123,11 @@ void OnlineTransducerGreedySearchDecoder::Decode(
   }
 
   UpdateCachedDecoderOut(model_->Allocator(), &decoder_out, result);
+
+  // Update frame_offset
+  for (auto &r : *result) {
+    r.frame_offset += num_frames;
+  }
 }
 
 }  // namespace sherpa_onnx

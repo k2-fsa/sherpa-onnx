@@ -9,6 +9,7 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/offline-lm-config.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-stream.h"
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"
@@ -21,18 +22,24 @@ struct OfflineRecognitionResult;
 struct OfflineRecognizerConfig {
   OfflineFeatureExtractorConfig feat_config;
   OfflineModelConfig model_config;
+  OfflineLMConfig lm_config;
 
   std::string decoding_method = "greedy_search";
+  int32_t max_active_paths = 4;
   // only greedy_search is implemented
   // TODO(fangjun): Implement modified_beam_search
 
   OfflineRecognizerConfig() = default;
   OfflineRecognizerConfig(const OfflineFeatureExtractorConfig &feat_config,
                           const OfflineModelConfig &model_config,
-                          const std::string &decoding_method)
+                          const OfflineLMConfig &lm_config,
+                          const std::string &decoding_method,
+                          int32_t max_active_paths)
       : feat_config(feat_config),
         model_config(model_config),
-        decoding_method(decoding_method) {}
+        lm_config(lm_config),
+        decoding_method(decoding_method),
+        max_active_paths(max_active_paths) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
