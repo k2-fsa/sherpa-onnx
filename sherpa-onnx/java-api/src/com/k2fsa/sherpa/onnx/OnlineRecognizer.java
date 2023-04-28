@@ -276,9 +276,7 @@ public class OnlineRecognizer {
   }
   // JNI interface libsherpa-onnx-jni.so
 
-  // private native Object[] readWave(String fileName);
-
-  private static native Object[] readWave(String fileName);
+  private static native Object[] readWave(String fileName);  // static
 
   private native String getResult(long ptr, long streamPtr);
 
