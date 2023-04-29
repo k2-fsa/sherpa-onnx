@@ -1,7 +1,7 @@
 /*
  * // Copyright 2022-2023 by zhaoming
  */
-// java websocketServer
+// java DecoderThreadHandler
 package websocketsrv;
 
 import com.k2fsa.sherpa.onnx.OnlineRecognizer;
@@ -9,7 +9,6 @@ import com.k2fsa.sherpa.onnx.OnlineStream;
 import java.nio.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
-// thread use to process data from client.
 import java.util.*;
 import java.util.List;
 import java.util.concurrent.*;
@@ -17,18 +16,19 @@ import org.java_websocket.WebSocket;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.framing.Framedata;
 
+// threads for asr decoder
 public class DecoderThreadHandler extends Thread {
-  // total data list that wait for decoding
+  // total connection data list that waiting for decoding
   private CopyOnWriteArrayList<ConnectionData> decoderList;
 
   private OnlineRecognizer rcgOjb = null; // recgnizer object
 
-  // data list for this thread in parallel decoding
+  // connection data list for this thread to decode in parallel
   private List<ConnectionData> connDataList = new ArrayList<ConnectionData>();
 
   private int parallelDecoderNum = 10; // parallel decoding number
-  private int deocderTimeIdle = 10; // idle time when no job
-  private int deocderTimeOut = 3000; // timeout data will be remove
+  private int deocderTimeIdle = 10; // idle time(ms) when no job
+  private int deocderTimeOut = 3000; // if it is timeout(ms), the data will be removed
   CopyOnWriteArrayList<OnlineStream>
       decodeActiveList; // active list that synchronized for decoder threads
 
@@ -50,20 +50,20 @@ public class DecoderThreadHandler extends Thread {
   public void run() {
     while (true) {
       try {
-        // time idle  if there is no job
+        // time(ms) idle  if there is no job
 
         Thread.sleep(deocderTimeIdle);
-        // clear list for this threads
+        // clear data list for this threads
         connDataList.clear();
         if (rcgOjb == null) continue;
 
-        // loop total decoder list
+        // loop for total decoder list
         for (int i = 0; i < decoderList.size(); i++) {
           ConnectionData connData = decoderList.get(i);
           OnlineStream stream = connData.getStream();
           // synchronized decoderList
           synchronized (decoderList) {
-            // put to decoder list if 1.stream not in other threads and 2.stream is ready and 3.
+            // put to decoder list if 1.stream not in other threads; 2.and stream is ready; 3. and
             // size not > parallelDecoderNum
             if ((!decodeActiveList.contains(stream)
                 && rcgOjb.isReady(stream)
@@ -78,14 +78,14 @@ public class DecoderThreadHandler extends Thread {
 
             java.time.Duration duration =
                 java.time.Duration.between(connData.getLastHandleTime(), LocalDateTime.now());
-            // remove data if 1. data is done  and  stream not ready or 2  data is time out or
-            // 3.connect is closed
+            // remove data if 1. data is done  and  stream not ready; 2. or data is time out; 3. or
+            // connection is closed
             if ((connData.getEof() == true && !rcgOjb.isReady(stream))
                 || duration.toMillis() > deocderTimeOut
                 || !connData.getWebSocket().isOpen()) {
               decoderList.remove(connData);
               WebSocket webSocket = connData.getWebSocket();
-              // delay close socket as data may still in processing
+              // delay close web socket as data may still in processing
               Timer timer = new Timer();
               timer.schedule(
                   new TimerTask() {
@@ -99,7 +99,7 @@ public class DecoderThreadHandler extends Thread {
           }
         }
 
-        // if data list for this thread >0
+        // if connection data list for this thread >0
         if (connDataList.size() > 0) {
           // create a stream array for parallel decoding
           OnlineStream[] arr = new OnlineStream[connDataList.size()];
@@ -137,7 +137,7 @@ public class DecoderThreadHandler extends Thread {
             // send to client
             webSocket.sendFrame(frames);
           }
-          // stream done in this loop, release for next time
+          // job is done in this loop, release the stream from active list
           decodeActiveList.remove(stream);
         }
 

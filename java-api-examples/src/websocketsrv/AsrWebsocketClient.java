@@ -1,7 +1,8 @@
 /*
- * // Copyright 2022-2023 by zhaoming
+ * // Copyright 2022-2023 by zhaomingwork
  */
 // java AsrWebsocketClient
+// usage: AsrWebsocketClient soPath srvIp srvPort wavPath
 package websocketsrv;
 
 import com.k2fsa.sherpa.onnx.OnlineRecognizer;
@@ -34,7 +35,7 @@ public class AsrWebsocketClient extends WebSocketClient {
     float[] floats = OnlineRecognizer.readWavFile(AsrWebsocketClient.wavPath);
     ByteBuffer buffer =
         ByteBuffer.allocate(4 * floats.length)
-            .order(ByteOrder.LITTLE_ENDIAN); // allocate byte buffer
+            .order(ByteOrder.LITTLE_ENDIAN); // float is sizeof 4. allocate enough buffer
 
     for (float f : floats) {
       buffer.putFloat(f);
@@ -45,9 +46,6 @@ public class AsrWebsocketClient extends WebSocketClient {
 
     send(buffer.array()); // send buf to server
     send("Done"); // send 'Done' means finished
-
-    // if you plan to refuse connection based on ip or httpfields overload:
-    // onWebsocketHandshakeReceivedAsClient
   }
 
   @Override
@@ -83,22 +81,18 @@ public class AsrWebsocketClient extends WebSocketClient {
       return;
     }
 
-    String soPath = args[0]; // appDir + "/../build/lib/libsherpa-onnx-jni.so";
+    String soPath = args[0];
     String srvIp = args[1];
     String srvPort = args[2];
     String wavPath = args[3];
     System.out.println("serIp=" + srvIp + ",srvPort=" + srvPort + ",wavPath=" + wavPath);
     OnlineRecognizer.setSoPath(soPath);
 
-    AsrWebsocketClient.wavPath =
-        wavPath; // "/sherpa/forgithub/sherpa-onnx/java-api-examples/test.wav";
+    AsrWebsocketClient.wavPath = wavPath;
 
     String wsAddress = "ws://" + srvIp + ":" + srvPort;
-    AsrWebsocketClient c =
-        new AsrWebsocketClient(
-            new URI(
-                wsAddress)); // more about drafts here:
-                             // http://github.com/TooTallNate/Java-WebSocket/wiki/Drafts
+    AsrWebsocketClient c = new AsrWebsocketClient(new URI(wsAddress));
+
     c.connect();
   }
 }

@@ -2,14 +2,13 @@
  * // Copyright 2022-2023 by zhaoming
  */
 // java websocketServer
+// usage: AsrWebsocketServer soPath modelCfgPath
 package websocketsrv;
 
 import com.k2fsa.sherpa.onnx.OnlineRecognizer;
 import com.k2fsa.sherpa.onnx.OnlineStream;
 import java.io.*;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -25,28 +24,29 @@ import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
 
 /**
- * AsrWebSocketServer with three threads pools, one pool for recevice data, one pool for asr stream
- * and one pool for asr decoder
+ * AsrWebSocketServer has three threads pools, one pool for network io, one pool for asr stream and
+ * one pool for asr decoder
  */
 public class AsrWebsocketServer extends WebSocketServer {
-  // data Queue  consumed by stream thread
+  // connection data Queue between io network thread pool and stream thread pool
   static ConcurrentLinkedQueue<ConnectionData> clientQueue =
       new ConcurrentLinkedQueue<ConnectionData>();
-  // total data list wait for deocdeing
+  // total connection data list waiting for deocdeing
   static CopyOnWriteArrayList<ConnectionData> decoderList =
       new CopyOnWriteArrayList<ConnectionData>();
-  // in active list means handling by other thread
+  // if the stream is in active list, it means now handling by other thread
   static CopyOnWriteArrayList<OnlineStream> decoderActiveList =
       new CopyOnWriteArrayList<OnlineStream>();
   // recogizer object
   private OnlineRecognizer rcgOjb = null;
 
-  // each connect can only has one stream, this map help to do it
+  // mapping between websocket connection and asr stream, the connection is the key and has the
+  // value of asr stream
   static ConcurrentHashMap<WebSocket, OnlineStream> connectionMap =
       new ConcurrentHashMap<WebSocket, OnlineStream>();
 
   public AsrWebsocketServer(int port, int numThread) throws UnknownHostException {
-    // server port and num of threads for network
+    // server port and num of threads for  network io
     super(new InetSocketAddress(port), numThread);
   }
 
@@ -78,14 +78,14 @@ public class AsrWebsocketServer extends WebSocketServer {
 
   @Override
   public void onMessage(WebSocket conn, String message) {
-    // create a new stream if the first time
+    // create a new stream if it is first time connected
     OnlineStream stream = creatOrGetStream(conn);
-    // put this data to total data queue, its a text message type==2
+    // put Connection data to client queue with message type==2
     clientQueue.add(new ConnectionData(conn, stream, null, message, 2));
   }
 
   private OnlineStream creatOrGetStream(WebSocket conn) {
-    // create a new stream if not contained or return the existed one
+    // create a new stream if not in connection map or return the existed one
     OnlineStream stream = null;
     try {
       if (!connectionMap.containsKey(conn)) {
@@ -116,7 +116,7 @@ public class AsrWebsocketServer extends WebSocketServer {
 
       floatbuf.get(arr);
       OnlineStream stream = creatOrGetStream(conn);
-      // put data connect data to queue with binary type==1
+      // put connection  data to client queue with binary type==1
       ConnectionData connObj = new ConnectionData(conn, stream, arr, null, 1);
       clientQueue.add(connObj);
     }
@@ -124,14 +124,19 @@ public class AsrWebsocketServer extends WebSocketServer {
 
   public void initModelWithCfg(Map<String, String> cfgMap, String cfgPath) {
     try {
-      // you should set setCfgPath() before new the recognizer
-      rcgOjb = new OnlineRecognizer(cfgPath);
 
+      rcgOjb = new OnlineRecognizer(cfgPath);
+      // size of stream thread pool
       int streamThreadNum = Integer.valueOf(cfgMap.get("stream_thread_num"));
+      // size of decoder thread pool
       int decoderThreadNum = Integer.valueOf(cfgMap.get("decoder_thread_num"));
+      // time(ms) idle for stream thread when no job
       int streamTimeIdle = Integer.valueOf(cfgMap.get("stream_time_idle"));
+      // time(ms) idle for decoder thread when no job
       int decoderTimeIdle = Integer.valueOf(cfgMap.get("decoder_time_idle"));
+      // size of streams for parallel decoding
       int parallelDecoderNum = Integer.valueOf(cfgMap.get("parallel_decoder_num"));
+      // time(ms) out for connection data
       int deocderTimeOut = Integer.valueOf(cfgMap.get("deocder_time_out"));
 
       // create stream threads
@@ -183,13 +188,13 @@ public class AsrWebsocketServer extends WebSocketServer {
 
   public static void main(String[] args) throws InterruptedException, IOException {
     if (args.length != 2) {
-      System.out.println("usage: AsrWebsocketSrv soPath modelCfgPath");
+      System.out.println("usage: AsrWebsocketServer soPath modelCfgPath");
 
       return;
     }
 
-    String soPath = args[0]; // appDir + "/../build/lib/libsherpa-onnx-jni.so";
-    String cfgPath = args[1]; // appDir + "/modelconfig.cfg";
+    String soPath = args[0];
+    String cfgPath = args[1];
 
     OnlineRecognizer.setSoPath(soPath);
 
@@ -201,18 +206,6 @@ public class AsrWebsocketServer extends WebSocketServer {
     s.initModelWithCfg(cfgMap, cfgPath);
     System.out.println("Server started on port: " + s.getPort());
     s.start();
-
-    // String in = sysin.readLine();
-    BufferedReader sysin = new BufferedReader(new InputStreamReader(System.in));
-    // String in = sysin.readLine();
-    while (true) {
-      String in = sysin.readLine();
-      // s.broadcast(in);
-      if (in.equals("exit")) {
-        // s.stop(1000);
-        break;
-      }
-    }
   }
 
   @Override

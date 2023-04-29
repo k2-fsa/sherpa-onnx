@@ -1,7 +1,7 @@
 /*
  * // Copyright 2022-2023 by zhaoming
  */
-// java websocketServer
+// java StreamThreadHandler
 package websocketsrv;
 
 import com.k2fsa.sherpa.onnx.OnlineStream;
@@ -9,13 +9,13 @@ import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-// thread use to process stream from client.
+// thread for processing stream
 public class StreamThreadHandler extends Thread {
-  // Queue for data recevice from client
+  // Queue for all connection data
   private ConcurrentLinkedQueue<ConnectionData> clientQueue;
-  // List that wait for decoding
+  // List that sent to decoder thread for decoding
   private CopyOnWriteArrayList<ConnectionData> decoderList;
-  // time idle for threads
+  // time(ms) idle for threads
   private int timeIdle = 10;
 
   public StreamThreadHandler(
@@ -43,7 +43,7 @@ public class StreamThreadHandler extends Thread {
         // handle  stream sequentially
         synchronized (stream) {
 
-          // type==2 means TEXT, recevice msg "DONE" from client means finished
+          // type==2 means TEXT, recevived msg "Done" from client means finished
           if (dataObj.getType() == 2 && dataObj.getMsg().equals("Done")) {
 
             stream.inputFinished();
@@ -53,7 +53,7 @@ public class StreamThreadHandler extends Thread {
           //  type==1 means binary,recevice binary data from client
           if (dataObj.getType() == 1 && samples != null) {
 
-            // feed data for asr engine
+            // feed data for asr stream
             stream.acceptWaveform(samples);
 
             // add this data to decoder list, and wait for decoding

@@ -2,6 +2,7 @@
 --------------
 
 Java wrapper `com.k2fsa.sherpa.onnx.OnlineRecognizer` for `sherpa-onnx`. Java is a cross-platform language; you can build jni .so lib according to your system, and then use the same java api for all your platform.
+now support multiple threads for websocket server
 
 ```xml
 Depend on:
@@ -37,8 +38,8 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 -------------------------
 
 ```xml
-  #model config  
-  sample_rate=16000                  
+  #model config 
+  sample_rate=16000 
   feature_dim=80
   rule1_min_trailing_silence=2.4
   rule2_min_trailing_silence=1.2
@@ -54,12 +55,19 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 
   #websocket server config
   port=8890
-  connection_thread_num=16  //threads pool handle network
-  stream_thread_num=16      //threads pool handle stream
+  #number of threads pool for network io
+  connection_thread_num=16 
+  #number of threads pool for stream
+  stream_thread_num=16 
+  #time(ms) idle for stream thread when no job
   stream_time_idle=10
-  decoder_thread_num=16     //threads pool handle decoder
-  parallel_decoder_num=16 
+  #number of threads pool for decoder 
+  decoder_thread_num=16 
+  #size of streams for parallel decoding
+  parallel_decoder_num=16
+  #time(ms) idle for decoder thread when no job
   decoder_time_idle=10
+  #time(ms) out for connection data
   deocder_time_out=3000
 ```
 
@@ -129,7 +137,7 @@ Build package path: /sherpa-onnx/java-api-examples/lib/sherpaonnx.jar
 6.WebSocket Server
 ----------
 
-support multiple threads websocket server
+support multiple threads for websocket server
 
 6.1 Build
 
@@ -140,11 +148,16 @@ support multiple threads websocket server
 
 6.2 Run srv example
 
+usage: AsrWebsocketServer soPath modelCfgPath
+
 ```bash
     make runsrv
 ```
 
 6.3 Run client example
+
+usage: AsrWebsocketClient soPath srvIp srvPort wavPath
+json result example: {"text":"甚至出现交易几乎停滞的情况"}
 
 ```bash
     make runclient

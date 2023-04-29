@@ -7,7 +7,6 @@ package websocketsrv;
 
 import com.k2fsa.sherpa.onnx.OnlineStream;
 import java.time.LocalDateTime;
-// ClientData  help exchange data between WebsocketSrv and StreamHandler and DecoderHandler
 import java.util.concurrent.*;
 import org.java_websocket.WebSocket;
 
@@ -17,15 +16,15 @@ public class ConnectionData {
 
   private OnlineStream stream; // connection stream
 
-  private float[] samples; // binary data rec from the client
+  private float[] samples; // binary data rec from the client if type==1
 
-  private String msg; // for text
+  private String msg; // for text if type ==2
 
   private int type; // 1 binary, 2 text
 
   private boolean eof = false; // connection data is done
 
-  private LocalDateTime lastHandleTime; // used for time out
+  private LocalDateTime lastHandleTime; // used for time out in ms
 
   public ConnectionData(
       WebSocket webSocket, OnlineStream stream, float[] samples, String msg, int type) {
