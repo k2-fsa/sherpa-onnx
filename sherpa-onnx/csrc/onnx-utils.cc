@@ -219,8 +219,7 @@ Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
   return ans;
 }
 
-CopyableOrtValue::CopyableOrtValue(const CopyableOrtValue &other)
-    : CopyableOrtValue() {
+CopyableOrtValue::CopyableOrtValue(const CopyableOrtValue &other) {
   *this = other;
 }
 
@@ -229,17 +228,27 @@ CopyableOrtValue::CopyableOrtValue(Ort::Value ort_value) {
 }
 
 CopyableOrtValue &CopyableOrtValue::operator=(const Ort::Value &ort_value) {
-  Ort::AllocatorWithDefaultOptions allocator;
-  value = Clone(allocator, &ort_value);
+  if (&value == &ort_value) {
+    return *this;
+  }
+  if (ort_value) {
+    Ort::AllocatorWithDefaultOptions allocator;
+    value = Clone(allocator, &ort_value);
+  }
   return *this;
-};
+}
+
+CopyableOrtValue &CopyableOrtValue::operator=(Ort::Value &&ort_value) {
+  value = std::move(ort_value);
+  return *this;
+}
 
 CopyableOrtValue &CopyableOrtValue::operator=(const CopyableOrtValue &other) {
   if (this == &other) {
     return *this;
   }
-  Ort::AllocatorWithDefaultOptions allocator;
   if (other.value) {
+    Ort::AllocatorWithDefaultOptions allocator;
     value = Clone(allocator, &other.value);
   }
   return *this;

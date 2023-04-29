@@ -1,10 +1,10 @@
-// sherpa-onnx/csrc/on-rnn-lm.h
+// sherpa-onnx/csrc/online-rnn-lm.h
 //
 // Copyright (c)  2023  Pingfeng Luo
 // Copyright (c)  2023  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_OFFLINE_RNN_LM_H_
-#define SHERPA_ONNX_CSRC_OFFLINE_RNN_LM_H_
+#ifndef SHERPA_ONNX_CSRC_ONLINE_RNN_LM_H_
+#define SHERPA_ONNX_CSRC_ONLINE_RNN_LM_H_
 
 #include <memory>
 
@@ -43,4 +43,4 @@ class OnlineRnnLM : public OnlineLM {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_OFFLINE_RNN_LM_H_
+#endif  // SHERPA_ONNX_CSRC_ONLINE_RNN_LM_H_
