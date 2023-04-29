@@ -157,6 +157,7 @@ usage: AsrWebsocketServer soPath modelCfgPath
 6.3 Run client example
 
 usage: AsrWebsocketClient soPath srvIp srvPort wavPath
+
 json result example: {"text":"甚至出现交易几乎停滞的情况"}
 
 ```bash
