@@ -50,6 +50,7 @@ set(sources
   parse-options.cc
   resample.cc
   slice.cc
+  stack.cc
   symbol-table.cc
   text-utils.cc
   transpose.cc
@@ -239,6 +240,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     packed-sequence-test.cc
     pad-sequence-test.cc
     slice-test.cc
+    stack-test.cc
     transpose-test.cc
     unbind-test.cc
   )
