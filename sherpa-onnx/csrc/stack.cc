@@ -12,18 +12,16 @@
 
 namespace sherpa_onnx {
 
-// static bool Compare(const std::vector<int64_t> &a,
-//                     const std::vector<int64_t> &b, int32_t skip_dim) {
-//   if (a.size() != b.size()) return false;
+static bool Compare(const std::vector<int64_t> &a,
+                    const std::vector<int64_t> &b) {
+  if (a.size() != b.size()) return false;
 
-//   for (int32_t i = 0; i != static_cast<int32_t>(a.size()); ++i) {
-//     if (i == skip_dim) continue;
+  for (int32_t i = 0; i != static_cast<int32_t>(a.size()); ++i) {
+    if (a[i] != b[i]) return false;
+  }
 
-//     if (a[i] != b[i]) return false;
-//   }
-
-//   return true;
-// }
+  return true;
+}
 
 static void PrintShape(const std::vector<int64_t> &a) {
   for (auto i : a) {
@@ -35,13 +33,24 @@ static void PrintShape(const std::vector<int64_t> &a) {
 template <typename T /*=float*/>
 Ort::Value Stack(OrtAllocator *allocator,
                  const std::vector<const Ort::Value *> &values, int32_t dim) {
-  // TODO: not sure how to deal with this case yet
-  // if (values.size() == 1u) {
-  //   return Clone(allocator, values[0]);
-  // }
-
   std::vector<int64_t> v0_shape =
       values[0]->GetTensorTypeAndShapeInfo().GetShape();
+
+  for (int32_t i = 1; i != static_cast<int32_t>(values.size()); ++i) {
+    auto s = values[i]->GetTensorTypeAndShapeInfo().GetShape();
+    bool ret = Compare(v0_shape, s);
+    if (!ret) {
+      fprintf(stderr, "Incorrect shape in Stack !\n");
+
+      fprintf(stderr, "Shape for tensor 0: ");
+      PrintShape(v0_shape);
+
+      fprintf(stderr, "Shape for tensor %d: ", i);
+      PrintShape(s);
+
+      exit(-1);
+    }
+  }
 
   std::vector<int64_t> ans_shape;
   ans_shape.reserve(v0_shape.size() + 1);
@@ -55,12 +64,6 @@ Ort::Value Stack(OrtAllocator *allocator,
   auto trailing_size = static_cast<int32_t>(
       std::accumulate(v0_shape.begin() + dim, v0_shape.end(), 1,
                       std::multiplies<int64_t>()));
-
-  std::cout << "leading: " << leading_size << ", trailing: " << trailing_size << std::endl;
-  for (const auto s: ans_shape) {
-    std::cout << "   " << s;
-  }
-  std::cout << std::endl;
 
   Ort::Value ans = Ort::Value::CreateTensor<T>(allocator, ans_shape.data(), ans_shape.size());
   T *dst = ans.GetTensorMutableData<T>();
