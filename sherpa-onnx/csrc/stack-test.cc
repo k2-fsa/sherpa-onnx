@@ -1,4 +1,6 @@
 // sherpa-onnx/csrc/stack-test.cc
+//
+// Copyright (c) 2023 Jingzhao Ou (jingzhao.ou@gmail.com)
 
 #include "sherpa-onnx/csrc/stack.h"
 

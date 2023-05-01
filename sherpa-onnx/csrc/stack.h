@@ -1,4 +1,6 @@
 // sherpa-onnx/csrc/stack.h
+//
+// Copyright (c) 2023 Jingzhao Ou (jingzhao.ou@gmail.com)
 
 #ifndef SHERPA_ONNX_CSRC_STACK_H_
 #define SHERPA_ONNX_CSRC_STACK_H_
