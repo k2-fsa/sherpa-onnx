@@ -22,7 +22,7 @@ namespace sherpa_onnx {
  */
 template <typename T = float>
 Ort::Value Stack(OrtAllocator *allocator,
-               const std::vector<const Ort::Value *> &values, int32_t dim);
+                 const std::vector<const Ort::Value *> &values, int32_t dim);
 
 }  // namespace sherpa_onnx
 
