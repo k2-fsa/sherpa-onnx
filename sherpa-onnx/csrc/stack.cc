@@ -58,37 +58,44 @@ Ort::Value Stack(OrtAllocator *allocator,
   ans_shape.reserve(v0_shape.size() + 1);
   ans_shape.insert(ans_shape.end(), v0_shape.data(), v0_shape.data() + dim);
   ans_shape.push_back(values.size());
-  ans_shape.insert(ans_shape.end(), v0_shape.data() + dim, v0_shape.data() + v0_shape.size());
+  ans_shape.insert(
+      ans_shape.end(),
+      v0_shape.data() + dim,
+      v0_shape.data() + v0_shape.size());
 
   auto leading_size = static_cast<int32_t>(std::accumulate(
       v0_shape.begin(), v0_shape.begin() + dim, 1, std::multiplies<int64_t>()));
 
   auto trailing_size = static_cast<int32_t>(
-      std::accumulate(v0_shape.begin() + dim, v0_shape.end(), 1,
+      std::accumulate(v0_shape.begin() + dim,
+                      v0_shape.end(), 1,
                       std::multiplies<int64_t>()));
 
-  Ort::Value ans = Ort::Value::CreateTensor<T>(allocator, ans_shape.data(), ans_shape.size());
+  Ort::Value ans = Ort::Value::CreateTensor<T>(
+      allocator, ans_shape.data(), ans_shape.size());
   T *dst = ans.GetTensorMutableData<T>();
 
   for (int32_t i = 0; i != leading_size; ++i) {
-    for (int32_t n = 0; n != static_cast<int32_t>(values.size()); ++n) {
-      const T *src = values[n]->GetTensorData<T>();
-      src += i * trailing_size;
+      for (int32_t n = 0; n != static_cast<int32_t>(values.size()); ++n) {
+          const T *src = values[n]->GetTensorData<T>();
+          src += i * trailing_size;
 
-      std::copy(src, src + trailing_size, dst);
-      dst += trailing_size;
-    }
+          std::copy(src, src + trailing_size, dst);
+          dst += trailing_size;
+      }
   }
 
   return ans;
 }
 
-template Ort::Value Stack<float>(OrtAllocator *allocator,
-                                 const std::vector<const Ort::Value *> &values,
-                                 int32_t dim);
+template Ort::Value Stack<float>(
+    OrtAllocator *allocator,
+    const std::vector<const Ort::Value *> &values,
+    int32_t dim);
 
-template Ort::Value Stack<int64_t>(OrtAllocator *allocator,
-                                   const std::vector<const Ort::Value *> &values,
-                                   int32_t dim);
+template Ort::Value Stack<int64_t>(
+    OrtAllocator *allocator,
+    const std::vector<const Ort::Value *> &values,
+    int32_t dim);
 
 }  // namespace sherpa_onnx
