@@ -182,7 +182,8 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::StackStates(
 std::vector<std::vector<Ort::Value>>
 OnlineConformerTransducerModel::UnStackStates(
     const std::vector<Ort::Value> &states) const {
-  const int32_t batch_size = states[0].GetTensorTypeAndShapeInfo().GetShape()[1];
+  const int32_t batch_size =
+    states[0].GetTensorTypeAndShapeInfo().GetShape()[1];
   assert(states.size() == 2);
 
   std::vector<std::vector<Ort::Value>> ans(batch_size);
