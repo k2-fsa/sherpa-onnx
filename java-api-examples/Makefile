@@ -75,7 +75,7 @@ runsrv:
 		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketServer /home/zhaoming/gitcode/sherpa-onnx-mic/sherpa-onnx/build/lib/libsherpa-onnx-jni.so ./modelconfig.cfg
 
 runclient:
-		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketClient /home/zhaoming/gitcode/sherpa-onnx-mic/sherpa-onnx/build/lib/libsherpa-onnx-jni.so 127.0.0.1 8890 ./test.wav
+		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketClient /home/zhaoming/gitcode/sherpa-onnx-mic/sherpa-onnx/build/lib/libsherpa-onnx-jni.so 127.0.0.1 8890 ./test.wav 32
 
 buildlib: $(LIB_FILES:.java=.class)
 	
@@ -89,7 +89,7 @@ buildwebsocket: $(WEBSOCKET_FILES:.java=.class)
 
 %.class: %.java
 
-				$(JAVAC) -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:../lib/sherpaonnx.jar -d $(BUILD_DIR) -encoding UTF-8 $<
+				$(JAVAC) -cp $(BUILD_DIR):lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:lib/Java-WebSocket-1.5.3.jar:../lib/sherpaonnx.jar -d $(BUILD_DIR) -encoding UTF-8 $<
 
 packjar:
 				jar cvfe lib/sherpaonnx.jar . -C $(BUILD_DIR) .

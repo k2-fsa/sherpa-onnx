@@ -7,33 +7,32 @@ package websocketsrv;
 
 import com.k2fsa.sherpa.onnx.OnlineStream;
 import java.time.LocalDateTime;
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.concurrent.*;
 import org.java_websocket.WebSocket;
 
 public class ConnectionData {
 
-  private WebSocket webSocket; // the websocket for this client
+  private WebSocket webSocket; // the websocket for this connection data
 
   private OnlineStream stream; // connection stream
 
-  private float[] samples; // binary data rec from the client if type==1
-
-  private String msg; // for text if type ==2
-
-  private int type; // 1 binary, 2 text
+  private Queue<float[]> queueSamples =
+      new LinkedList<float[]>(); // binary data rec from the client
 
   private boolean eof = false; // connection data is done
 
   private LocalDateTime lastHandleTime; // used for time out in ms
 
-  public ConnectionData(
-      WebSocket webSocket, OnlineStream stream, float[] samples, String msg, int type) {
+  public ConnectionData(WebSocket webSocket, OnlineStream stream) {
     this.webSocket = webSocket;
-    this.samples = samples;
+
     this.stream = stream;
-    this.msg = msg;
-    this.type = type;
-    this.lastHandleTime = LocalDateTime.now();
+  }
+
+  public void addSamplesToData(float[] samples) {
+    this.queueSamples.add(samples);
   }
 
   public LocalDateTime getLastHandleTime() {
@@ -44,10 +43,6 @@ public class ConnectionData {
     this.lastHandleTime = now;
   }
 
-  public String getMsg() {
-    return this.msg;
-  }
-
   public boolean getEof() {
     return this.eof;
   }
@@ -56,16 +51,12 @@ public class ConnectionData {
     this.eof = eof;
   }
 
-  public int getType() {
-    return this.type;
-  }
-
   public WebSocket getWebSocket() {
     return this.webSocket;
   }
 
-  public float[] getSamples() {
-    return this.samples;
+  public Queue<float[]> getQueueSamples() {
+    return this.queueSamples;
   }
 
   public OnlineStream getStream() {

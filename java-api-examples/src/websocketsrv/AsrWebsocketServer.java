@@ -17,33 +17,32 @@ import java.nio.FloatBuffer;
 import java.util.*;
 import java.util.Collections;
 import java.util.concurrent.*;
+import java.util.concurrent.LinkedBlockingQueue;
 import org.java_websocket.WebSocket;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.drafts.Draft_6455;
 import org.java_websocket.handshake.ClientHandshake;
 import org.java_websocket.server.WebSocketServer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * AsrWebSocketServer has three threads pools, one pool for network io, one pool for asr stream and
- * one pool for asr decoder
+ * one pool for asr decoder.
  */
 public class AsrWebsocketServer extends WebSocketServer {
-  // connection data Queue between io network thread pool and stream thread pool
-  static ConcurrentLinkedQueue<ConnectionData> clientQueue =
-      new ConcurrentLinkedQueue<ConnectionData>();
-  // total connection data list waiting for deocdeing
-  static CopyOnWriteArrayList<ConnectionData> decoderList =
-      new CopyOnWriteArrayList<ConnectionData>();
-  // if the stream is in active list, it means now handling by other thread
-  static CopyOnWriteArrayList<OnlineStream> decoderActiveList =
-      new CopyOnWriteArrayList<OnlineStream>();
+  private static final Logger logger = LoggerFactory.getLogger(AsrWebsocketServer.class);
+  //  Queue between io network io thread pool and stream thread pool, use websocket as the key
+  static LinkedBlockingQueue<WebSocket> streamQueue = new LinkedBlockingQueue<WebSocket>();
+  //  Queue waiting for deocdeing, use websocket as the key
+  static LinkedBlockingQueue<WebSocket> decoderQueue = new LinkedBlockingQueue<WebSocket>();
+
   // recogizer object
   private OnlineRecognizer rcgOjb = null;
 
-  // mapping between websocket connection and asr stream, the connection is the key and has the
-  // value of asr stream
-  static ConcurrentHashMap<WebSocket, OnlineStream> connectionMap =
-      new ConcurrentHashMap<WebSocket, OnlineStream>();
+  // mapping between websocket connection and connection data
+  static ConcurrentHashMap<WebSocket, ConnectionData> connectionMap =
+      new ConcurrentHashMap<WebSocket, ConnectionData>();
 
   public AsrWebsocketServer(int port, int numThread) throws UnknownHostException {
     // server port and num of threads for  network io
@@ -59,18 +58,12 @@ public class AsrWebsocketServer extends WebSocketServer {
   }
 
   @Override
-  public void onOpen(WebSocket conn, ClientHandshake handshake) {
-
-    System.out.println(
-        conn.getRemoteSocketAddress().getAddress().getHostAddress()
-            + " open one connection,, now connection number="
-            + String.valueOf(connectionMap.size()));
-  }
+  public void onOpen(WebSocket conn, ClientHandshake handshake) {}
 
   @Override
   public void onClose(WebSocket conn, int code, String reason, boolean remote) {
     connectionMap.remove(conn);
-    System.out.println(
+    logger.info(
         conn
             + " remove one connection!, now connection number="
             + String.valueOf(connectionMap.size()));
@@ -78,48 +71,85 @@ public class AsrWebsocketServer extends WebSocketServer {
 
   @Override
   public void onMessage(WebSocket conn, String message) {
-    // create a new stream if it is first time connected
-    OnlineStream stream = creatOrGetStream(conn);
-    // put Connection data to client queue with message type==2
-    clientQueue.add(new ConnectionData(conn, stream, null, message, 2));
+    // this is text message
+    try {
+      // if rec "Done" msg from client
+      if (message.equals("Done")) {
+        ConnectionData connData = creatOrGetConnectionData(conn);
+        connData.setEof(true);
+        if (!streamQueueFind(conn)) {
+          streamQueue.put(conn);
+        }
+      }
+
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
-  private OnlineStream creatOrGetStream(WebSocket conn) {
-    // create a new stream if not in connection map or return the existed one
-    OnlineStream stream = null;
+  private ConnectionData creatOrGetConnectionData(WebSocket conn) {
+    // create a new connection data if not in connection map or return the existed one
+
+    ConnectionData connData = null;
     try {
       if (!connectionMap.containsKey(conn)) {
-        stream = rcgOjb.createStream();
-        connectionMap.put(conn, stream);
+        OnlineStream stream = rcgOjb.createStream();
+        connData = new ConnectionData(conn, stream);
+        connectionMap.put(conn, connData);
       } else {
-        stream = connectionMap.get(conn);
+        connData = connectionMap.get(conn);
       }
+
+      logger.info(
+          conn.getRemoteSocketAddress().getAddress().getHostAddress()
+              + " open one connection,, now connection number="
+              + String.valueOf(connectionMap.size()));
 
     } catch (Exception e) {
       System.err.println(e);
       e.printStackTrace();
     }
-    return stream;
+    return connData;
   }
 
   @Override
   public void onMessage(WebSocket conn, ByteBuffer blob) {
-    // for handle binary data
-    blob.order(ByteOrder.LITTLE_ENDIAN); // set little endian
+    try {
 
-    // set to float
-    FloatBuffer floatbuf = blob.asFloatBuffer();
+      // for handle binary data
+      blob.order(ByteOrder.LITTLE_ENDIAN); // set little endian
 
-    if (floatbuf.capacity() > 0) {
-      // allocate memory for float data
-      float[] arr = new float[floatbuf.capacity()];
+      // set to float
+      FloatBuffer floatbuf = blob.asFloatBuffer();
 
-      floatbuf.get(arr);
-      OnlineStream stream = creatOrGetStream(conn);
-      // put connection  data to client queue with binary type==1
-      ConnectionData connObj = new ConnectionData(conn, stream, arr, null, 1);
-      clientQueue.add(connObj);
+      if (floatbuf.capacity() > 0) {
+        // allocate memory for float data
+        float[] arr = new float[floatbuf.capacity()];
+
+        floatbuf.get(arr);
+        ConnectionData connData = creatOrGetConnectionData(conn);
+        // put websocket  to stream queue with binary type==1
+        connData.addSamplesToData(arr);
+
+        if (!streamQueueFind(conn)) {
+          streamQueue.put(conn);
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
     }
+  }
+
+  public static ConnectionData connDataFind(WebSocket conn) {
+    return connectionMap.get(conn);
+  }
+
+  public static void connDataRemove(WebSocket conn) {
+    connectionMap.remove(conn);
+  }
+
+  public boolean streamQueueFind(WebSocket conn) {
+    return streamQueue.contains(conn);
   }
 
   public void initModelWithCfg(Map<String, String> cfgMap, String cfgPath) {
@@ -130,8 +160,7 @@ public class AsrWebsocketServer extends WebSocketServer {
       int streamThreadNum = Integer.valueOf(cfgMap.get("stream_thread_num"));
       // size of decoder thread pool
       int decoderThreadNum = Integer.valueOf(cfgMap.get("decoder_thread_num"));
-      // time(ms) idle for stream thread when no job
-      int streamTimeIdle = Integer.valueOf(cfgMap.get("stream_time_idle"));
+
       // time(ms) idle for decoder thread when no job
       int decoderTimeIdle = Integer.valueOf(cfgMap.get("decoder_time_idle"));
       // size of streams for parallel decoding
@@ -141,13 +170,13 @@ public class AsrWebsocketServer extends WebSocketServer {
 
       // create stream threads
       for (int i = 0; i < streamThreadNum; i++) {
-        new StreamThreadHandler(clientQueue, decoderList, streamTimeIdle).start();
+        new StreamThreadHandler(streamQueue, decoderQueue, connectionMap).start();
       }
       // create decoder threads
       for (int i = 0; i < decoderThreadNum; i++) {
         new DecoderThreadHandler(
-                decoderList,
-                decoderActiveList,
+                decoderQueue,
+                connectionMap,
                 rcgOjb,
                 decoderTimeIdle,
                 parallelDecoderNum,
@@ -168,7 +197,7 @@ public class AsrWebsocketServer extends WebSocketServer {
 
       File file = new File(CfgPath);
       if (!file.exists()) {
-        System.out.println(String.valueOf(CfgPath) + " cfg file not exists!");
+        logger.info(String.valueOf(CfgPath) + " cfg file not exists!");
         System.exit(0);
       }
       InputStream in = new BufferedInputStream(new FileInputStream(CfgPath));
@@ -188,7 +217,7 @@ public class AsrWebsocketServer extends WebSocketServer {
 
   public static void main(String[] args) throws InterruptedException, IOException {
     if (args.length != 2) {
-      System.out.println("usage: AsrWebsocketServer soPath modelCfgPath");
+      logger.info("usage: AsrWebsocketServer soPath modelCfgPath");
 
       return;
     }
@@ -204,7 +233,7 @@ public class AsrWebsocketServer extends WebSocketServer {
     int connectionThreadNum = Integer.valueOf(cfgMap.get("connection_thread_num"));
     AsrWebsocketServer s = new AsrWebsocketServer(port, connectionThreadNum);
     s.initModelWithCfg(cfgMap, cfgPath);
-    System.out.println("Server started on port: " + s.getPort());
+    logger.info("Server started on port: " + s.getPort());
     s.start();
   }
 
@@ -218,7 +247,7 @@ public class AsrWebsocketServer extends WebSocketServer {
 
   @Override
   public void onStart() {
-    System.out.println("Server started!");
+    logger.info("Server started!");
     setConnectionLostTimeout(0);
     setConnectionLostTimeout(100);
   }

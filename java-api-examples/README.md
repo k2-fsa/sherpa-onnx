@@ -59,8 +59,6 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
   connection_thread_num=16 
   #number of threads pool for stream
   stream_thread_num=16 
-  #time(ms) idle for stream thread when no job
-  stream_time_idle=10
   #number of threads pool for decoder 
   decoder_thread_num=16 
   #size of streams for parallel decoding
@@ -154,11 +152,11 @@ usage: AsrWebsocketServer soPath modelCfgPath
     make runsrv
 ```
 
-6.3 Run client example
+6.3 Run multiple threads client example
 
-usage: AsrWebsocketClient soPath srvIp srvPort wavPath
+usage: AsrWebsocketClient soPath srvIp srvPort wavPath numThreads
 
-json result example: {"text":"甚至出现交易几乎停滞的情况"}
+json result example: {"text":"甚至出现交易几乎停滞的情况","eof":"true"}
 
 ```bash
     make runclient

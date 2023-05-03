@@ -8,56 +8,54 @@ import com.k2fsa.sherpa.onnx.OnlineStream;
 import java.nio.*;
 import java.util.*;
 import java.util.concurrent.*;
-
+import java.util.concurrent.LinkedBlockingQueue;
+import org.java_websocket.WebSocket;
 // thread for processing stream
+
 public class StreamThreadHandler extends Thread {
-  // Queue for all connection data
-  private ConcurrentLinkedQueue<ConnectionData> clientQueue;
-  // List that sent to decoder thread for decoding
-  private CopyOnWriteArrayList<ConnectionData> decoderList;
-  // time(ms) idle for threads
-  private int timeIdle = 10;
+  //  Queue between io network io thread pool and stream thread pool, use websocket as the key
+  private LinkedBlockingQueue<WebSocket> streamQueue;
+  //  Queue waiting for deocdeing, use websocket as the key
+  private LinkedBlockingQueue<WebSocket> decoderQueue;
+  // mapping between websocket connection and connection data
+  private ConcurrentHashMap<WebSocket, ConnectionData> connMap;
 
   public StreamThreadHandler(
-      ConcurrentLinkedQueue<ConnectionData> clientQueue,
-      CopyOnWriteArrayList<ConnectionData> decoderList,
-      int timeIdle) {
-    this.clientQueue = clientQueue;
-    this.decoderList = decoderList;
-    this.timeIdle = timeIdle;
+      LinkedBlockingQueue<WebSocket> streamQueue,
+      LinkedBlockingQueue<WebSocket> decoderQueue,
+      ConcurrentHashMap<WebSocket, ConnectionData> connMap) {
+    this.streamQueue = streamQueue;
+    this.decoderQueue = decoderQueue;
+    this.connMap = connMap;
   }
 
   public void run() {
     while (true) {
       try {
-        // fetch one data from queue
-        ConnectionData dataObj = (ConnectionData) this.clientQueue.poll();
+        // fetch one websocket from queue
+        WebSocket conn = (WebSocket) this.streamQueue.take();
+        // get the connection data according to websocket
+        ConnectionData connData = connMap.get(conn);
+        OnlineStream stream = connData.getStream();
 
-        // time idle if there is no job
-        if (dataObj == null) {
-          Thread.sleep(timeIdle);
-          continue;
-        }
+        // handle received binary data
+        if (!connData.getQueueSamples().isEmpty()) {
+          // loop to put all received binary data to stream
+          while (!connData.getQueueSamples().isEmpty()) {
 
-        OnlineStream stream = dataObj.getStream();
-        // handle  stream sequentially
-        synchronized (stream) {
+            float[] samples = connData.getQueueSamples().poll();
 
-          // type==2 means TEXT, recevived msg "Done" from client means finished
-          if (dataObj.getType() == 2 && dataObj.getMsg().equals("Done")) {
+            stream.acceptWaveform(samples);
+          }
+          //  if data is finished
+          if (connData.getEof() == true) {
 
             stream.inputFinished();
-            dataObj.setEof(true); // set end for this connection
           }
-          float[] samples = dataObj.getSamples();
-          //  type==1 means binary,recevice binary data from client
-          if (dataObj.getType() == 1 && samples != null) {
+          // add this websocket to decoder Queue if not in the Queue
+          if (!decoderQueue.contains(conn)) {
 
-            // feed data for asr stream
-            stream.acceptWaveform(samples);
-
-            // add this data to decoder list, and wait for decoding
-            decoderList.add(dataObj);
+            decoderQueue.put(conn);
           }
         }
 

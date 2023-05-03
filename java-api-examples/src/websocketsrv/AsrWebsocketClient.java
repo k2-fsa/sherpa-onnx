@@ -13,9 +13,12 @@ import java.util.Map;
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.drafts.Draft;
 import org.java_websocket.handshake.ServerHandshake;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /** This example demonstrates how to connect to websocket server. */
 public class AsrWebsocketClient extends WebSocketClient {
+  private static final Logger logger = LoggerFactory.getLogger(AsrWebsocketClient.class);
 
   public AsrWebsocketClient(URI serverUri, Draft draft) {
     super(serverUri, draft);
@@ -50,13 +53,14 @@ public class AsrWebsocketClient extends WebSocketClient {
 
   @Override
   public void onMessage(String message) {
-    System.out.println("received: " + message);
+
+    logger.info("received: " + message);
   }
 
   @Override
   public void onClose(int code, String reason, boolean remote) {
 
-    System.out.println(
+    logger.info(
         "Connection closed by "
             + (remote ? "remote peer" : "us")
             + " Code: "
@@ -76,8 +80,8 @@ public class AsrWebsocketClient extends WebSocketClient {
 
   public static void main(String[] args) throws URISyntaxException {
 
-    if (args.length != 4) {
-      System.out.println("usage: AsrWebsocketClient soPath srvIp srvPort wavPath");
+    if (args.length != 5) {
+      System.out.println("usage: AsrWebsocketClient soPath srvIp srvPort wavPath numThreads");
       return;
     }
 
@@ -85,14 +89,43 @@ public class AsrWebsocketClient extends WebSocketClient {
     String srvIp = args[1];
     String srvPort = args[2];
     String wavPath = args[3];
+    int numThreads = Integer.parseInt(args[4]);
     System.out.println("serIp=" + srvIp + ",srvPort=" + srvPort + ",wavPath=" + wavPath);
-    OnlineRecognizer.setSoPath(soPath);
 
-    AsrWebsocketClient.wavPath = wavPath;
+    class ClientThread implements Runnable {
 
-    String wsAddress = "ws://" + srvIp + ":" + srvPort;
-    AsrWebsocketClient c = new AsrWebsocketClient(new URI(wsAddress));
+      String soPath;
+      String srvIp;
+      String srvPort;
+      String wavPath;
 
-    c.connect();
+      ClientThread(String soPath, String srvIp, String srvPort, String wavPath) {
+        this.soPath = soPath;
+        this.srvIp = srvIp;
+        this.srvPort = srvPort;
+        this.wavPath = wavPath;
+      }
+
+      public void run() {
+        try {
+
+          OnlineRecognizer.setSoPath(soPath);
+
+          AsrWebsocketClient.wavPath = wavPath;
+
+          String wsAddress = "ws://" + srvIp + ":" + srvPort;
+          AsrWebsocketClient c = new AsrWebsocketClient(new URI(wsAddress));
+
+          c.connect();
+        } catch (Exception e) {
+          e.printStackTrace();
+        }
+      }
+    }
+    for (int i = 0; i < numThreads; i++) {
+      System.out.println("Thread1 is running...");
+      Thread t = new Thread(new ClientThread(soPath, srvIp, srvPort, wavPath));
+      t.start();
+    }
   }
 }
