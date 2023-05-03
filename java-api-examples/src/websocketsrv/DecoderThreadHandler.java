@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DecoderThreadHandler extends Thread {
-  private static final Logger logger = LoggerFactory.getLogger(AsrWebsocketClient.class);
+  private static final Logger logger = LoggerFactory.getLogger(DecoderThreadHandler.class);
   // Websocket Queue that waiting for decoding
   private LinkedBlockingQueue<WebSocket> decoderQueue;
   // the mapping between websocket and connection data

@@ -2,7 +2,7 @@
  * // Copyright 2022-2023 by zhaomingwork
  */
 // java AsrWebsocketClient
-// usage: AsrWebsocketClient soPath srvIp srvPort wavPath
+// usage: AsrWebsocketClient soPath srvIp srvPort wavPath numThreads
 package websocketsrv;
 
 import com.k2fsa.sherpa.onnx.OnlineRecognizer;
