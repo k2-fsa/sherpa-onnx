@@ -28,12 +28,15 @@ void OnlineLM::ComputeLMScore(float scale, int32_t context_size,
       const int32_t token_num_in_chunk =
           ys.size() - context_size - h.cur_scored_pos - 1;
 
-      if (!h.lm_states_inited) {
+      if (token_num_in_chunk < 1) {
+        continue;
+      }
+
+      if (!h.rnnlm_state_h.value) {
         // get RNN LM init states and store them to hyp
         auto states = GetInitStates();
         h.rnnlm_state_h.value = std::move(states[0]);  // h
-        h.rnnlm_state_c.value = std::move(states[2]);  // c
-        h.lm_states_inited = true;
+        h.rnnlm_state_c.value = std::move(states[1]);  // c
       }
 
       if (token_num_in_chunk >= h.lm_rescore_min_chunk) {
@@ -62,8 +65,8 @@ void OnlineLM::ComputeLMScore(float scale, int32_t context_size,
         h.lm_log_prob = -scale * (*p_nll);
 
         // update RNN LM states in hyp
-        h.rnnlm_state_h.value = std::move(out.second[1]);  // h
-        h.rnnlm_state_c.value = std::move(out.second[2]);  // c
+        h.rnnlm_state_h.value = std::move(out.second[0]);  // h
+        h.rnnlm_state_c.value = std::move(out.second[1]);  // c
 
         h.cur_scored_pos += token_num_in_chunk;
       }
