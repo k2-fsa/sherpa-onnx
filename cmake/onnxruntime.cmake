@@ -185,6 +185,12 @@ if(DEFINED ENV{SHERPA_ONNXRUNTIME_LIB_DIR})
   if(NOT EXISTS ${location_onnxruntime_lib})
     set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.a)
   endif()
+  if(SHERPA_ONNX_ENABLE_GPU)
+    set(location_onnxruntime_cuda_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime_providers_cuda.so)
+    if(NOT EXISTS ${location_onnxruntime_cuda_lib})
+      set(location_onnxruntime_cuda_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime_providers_cuda.a)
+    endif()
+  endif()
 else()
   find_library(location_onnxruntime_lib onnxruntime
     PATHS
@@ -192,9 +198,21 @@ else()
       /usr/lib
       /usr/local/lib
   )
+
+  if(SHERPA_ONNX_ENABLE_GPU)
+    find_library(location_onnxruntime_cuda_lib onnxruntime_providers_cuda
+      PATHS
+        /lib
+        /usr/lib
+        /usr/local/lib
+    )
+  endif()
 endif()
 
 message(STATUS "location_onnxruntime_lib: ${location_onnxruntime_lib}")
+if(SHERPA_ONNX_ENABLE_GPU)
+  message(STATUS "location_onnxruntime_cuda_lib: ${location_onnxruntime_cuda_lib}")
+endif()
 
 if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
   add_library(onnxruntime SHARED IMPORTED)
@@ -202,7 +220,16 @@ if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
     IMPORTED_LOCATION ${location_onnxruntime_lib}
     INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
   )
+  if(SHERPA_ONNX_ENABLE_GPU AND location_onnxruntime_cuda_lib)
+    add_library(onnxruntime_providers_cuda SHARED IMPORTED)
+    set_target_properties(onnxruntime_providers_cuda PROPERTIES
+      IMPORTED_LOCATION ${location_onnxruntime_cuda_lib}
+    )
+  endif()
 else()
+  if(SHERPA_ONNX_ENABLE_GPU)
+    message(FATAL_ERROR "GPU download is not supported for now.")
+  endif()
   message(STATUS "Could not find a pre-installed onnxruntime. Downloading pre-compiled onnxruntime")
   download_onnxruntime()
 endif()

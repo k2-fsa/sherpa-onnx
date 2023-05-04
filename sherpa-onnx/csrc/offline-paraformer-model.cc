@@ -23,6 +23,10 @@ class OfflineParaformerModel::Impl {
     sess_opts_.SetIntraOpNumThreads(config_.num_threads);
     sess_opts_.SetInterOpNumThreads(config_.num_threads);
 
+#ifdef ENABLE_GPU
+    OrtCUDAProviderOptions cuda_options;
+    sess_opts_.AppendExecutionProvider_CUDA(cuda_options);
+#endif
     Init();
   }
 
