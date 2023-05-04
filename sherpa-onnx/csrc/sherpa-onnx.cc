@@ -13,6 +13,7 @@
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
+// TODO(fangjun): Use ParseOptions as we are getting more args
 int main(int32_t argc, char *argv[]) {
   if (argc < 6 || argc > 9) {
     const char *usage = R"usage(
