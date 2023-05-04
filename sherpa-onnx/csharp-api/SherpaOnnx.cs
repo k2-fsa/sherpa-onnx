@@ -493,9 +493,9 @@ namespace SherpaOnnx
     internal static partial class SherpaOnnxSharp
     {
         //if WINDOWS
-        private const string dllName = @"\lib\SherpaOnnxSharp.dll";
+        private const string dllName = @"SherpaOnnxSharp.dll";
         //if LINUX
-        //private const string dllName = @"\lib\SherpaOnnxSharp.so";
+        //private const string dllName = @"SherpaOnnxSharp.so";
 
         [DllImport(dllName, EntryPoint = "CreateOfflineRecognizer", CharSet = CharSet.Ansi, CallingConvention = CallingConvention.Cdecl)]
         internal static extern SherpaOnnxOfflineRecognizer CreateOfflineRecognizer(SherpaOnnxOfflineRecognizerConfig config);
