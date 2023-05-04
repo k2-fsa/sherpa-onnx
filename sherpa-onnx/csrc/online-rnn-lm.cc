@@ -45,8 +45,10 @@ class OnlineRnnLM::Impl {
 
   std::vector<Ort::Value> GetInitStates() {
     constexpr int32_t kBatchSize = 1;
-    std::array<int64_t, 3> h_shape{rnn_num_layers_, kBatchSize, rnn_hidden_size_};
-    std::array<int64_t, 3> c_shape{rnn_num_layers_, kBatchSize, rnn_hidden_size_};
+    std::array<int64_t, 3> h_shape{rnn_num_layers_, kBatchSize,
+                                   rnn_hidden_size_};
+    std::array<int64_t, 3> c_shape{rnn_num_layers_, kBatchSize,
+                                   rnn_hidden_size_};
     Ort::Value h = Ort::Value::CreateTensor<float>(allocator_, h_shape.data(),
                                                    h_shape.size());
     Ort::Value c = Ort::Value::CreateTensor<float>(allocator_, c_shape.data(),
