@@ -21,10 +21,10 @@ for decoding, in parallel.
 Usage:
 # For offline websocket server
 
-python3 client.py \
-    --compute-cer \
-    --num-tasks $num_task \
-    --manifest-dir ./datasets/aishell1_test
+python3 ./python-api-examples/offline-websocket-client-decode-manifests-parallel.py \
+   --manifest-dir ./datasets/aishell1_test \
+   --num-tasks 10 \
+   --compute-cer
 """
 
 import argparse
