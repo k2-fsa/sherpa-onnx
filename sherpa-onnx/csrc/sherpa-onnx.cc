@@ -51,15 +51,14 @@ for a list of pre-trained models to download.
   std::string wav_filename = argv[5];
 
   config.model_config.num_threads = 2;
-  if (argc == 7) {
-    config.lm_config.model = argv[6];
+  if (argc == 7 && atoi(argv[6]) > 0) {
+    config.model_config.num_threads = atoi(argv[6]);
   }
-  if (argc == 8 && atoi(argv[7]) > 0) {
-    config.model_config.num_threads = atoi(argv[7]);
+  if (argc == 8) {
+    config.decoding_method = argv[7];
   }
-
   if (argc == 9) {
-    config.decoding_method = argv[8];
+    config.lm_config.model = argv[8];
   }
   config.max_active_paths = 4;
 
