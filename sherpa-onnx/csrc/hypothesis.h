@@ -34,8 +34,9 @@ struct Hypothesis {
   // LM log prob if any.
   double lm_log_prob = 0;
 
-  int32_t cur_scored_pos = 0;               // cur scored tokens by RNN LM
-  std::vector<CopyableOrtValue> lm_states;  // states for RNN LM
+  int32_t cur_scored_pos = 0;      // cur scored tokens by RNN LM
+  CopyableOrtValue rnnlm_state_h;  // states for RNN LM
+  CopyableOrtValue rnnlm_state_c;  // states for RNN LM
   // the minimum of tokens in a chunk for streaming RNN LM
   int32_t lm_rescore_min_chunk = 2;
   bool lm_states_inited = false;

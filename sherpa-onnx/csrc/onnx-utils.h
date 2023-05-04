@@ -93,13 +93,8 @@ Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
 
 struct CopyableOrtValue {
   Ort::Value value{nullptr};
-  CopyableOrtValue() {};
 
-  CopyableOrtValue(Ort::Value ort_value);
-
-  CopyableOrtValue &operator=(const Ort::Value &ort_value);
-
-  CopyableOrtValue &operator=(Ort::Value &&ort_value);
+  CopyableOrtValue(){};
 
   CopyableOrtValue(const CopyableOrtValue &other);
 
