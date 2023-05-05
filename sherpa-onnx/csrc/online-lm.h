@@ -44,19 +44,6 @@ class OnlineLM {
   // @param hyps It is changed in-place.
   void ComputeLMScore(float scale, int32_t context_size,
                       std::vector<Hypotheses> *hyps);
-  /** TODO(fangjun):
-   *
-   * 1. Add two fields to Hypothesis
-   *      (a) int32_t cur_scored_pos = 0; number of scored tokens so far
-   *      (b) std::vector<Ort::Value> lm_states;
-   * 2. When we want to score a hypothesis, we construct x and y as follows:
-   *
-   *      std::vector x = {hyp.ys.begin() + context_size + cur_scored_pos,
-   *                       hyp.ys.end() - 1};
-   *      std::vector y = {hyp.ys.begin() + context_size + cur_scored_pos + 1
-   *                       hyp.ys.end()};
-   *       hyp.cur_scored_pos += hyp.ys.size() - context_size - cur_scored_pos;
-   */
 };
 
 }  // namespace sherpa_onnx

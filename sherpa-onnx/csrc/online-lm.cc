@@ -72,15 +72,15 @@ void OnlineLM::ComputeLMScore(float scale, int32_t context_size,
         std::copy(ys.begin() + context_size + h.cur_scored_pos + 1, ys.end(),
                   p_y);
 
-        // streaming forward by RNN LM
+        // streaming forward by NN LM
         auto out = Rescore(std::move(x), std::move(y),
                            Convert(std::move(h.nn_lm_states)));
 
-        // update lm score in hyp
+        // update NN LM score in hyp
         const float *p_nll = out.first.GetTensorData<float>();
         h.lm_log_prob = -scale * (*p_nll);
 
-        // update RNN LM states in hyp
+        // update NN LM states in hyp
         h.nn_lm_states = Convert(std::move(out.second));
 
         h.cur_scored_pos += token_num_in_chunk;

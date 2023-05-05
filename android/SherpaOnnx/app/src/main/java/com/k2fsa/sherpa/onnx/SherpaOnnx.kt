@@ -157,6 +157,19 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
     return null;
 }
 
+/*
+Please see
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+for a list of pre-trained models.
+
+We only add a few here. Please change the following code
+to add your own LM model. (It should be straightforward to train a new NN LM model
+by following the code, https://github.com/k2-fsa/icefall/blob/master/icefall/rnn_lm/train.py)
+
+@param type
+0 - sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/zipformer-transducer-models.html#sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-bilingual-chinese-english
+ */
 fun getOnlineLMConfig(type : Int): OnlineLMConfig {
     when (type) {
         0 -> {

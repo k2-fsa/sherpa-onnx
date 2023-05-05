@@ -14,6 +14,7 @@
 #include <cassert>
 #include <ostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
@@ -96,7 +97,8 @@ struct CopyableOrtValue {
 
   CopyableOrtValue() = default;
 
-  /*explicit*/ CopyableOrtValue(Ort::Value v) : value(std::move(v)) {}
+  /*explicit*/ CopyableOrtValue(Ort::Value v) // NOLINT
+    : value(std::move(v)) {}
 
   CopyableOrtValue(const CopyableOrtValue &other);
 
