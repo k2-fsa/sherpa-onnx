@@ -43,7 +43,37 @@ class OnlineRnnLM::Impl {
     return {std::move(out[0]), std::move(next_states)};
   }
 
-  std::vector<Ort::Value> GetInitStates() {
+  std::vector<Ort::Value> GetInitStates() const {
+    std::vector<Ort::Value> ans;
+    ans.reserve(init_states_.size());
+
+    for (const auto &s : init_states_) {
+      ans.emplace_back(Clone(allocator_, &s));
+    }
+
+    return ans;
+  }
+
+ private:
+  void Init(const OnlineLMConfig &config) {
+    auto buf = ReadFile(config_.model);
+
+    sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
+                                           sess_opts_);
+
+    GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
+    GetOutputNames(sess_.get(), &output_names_, &output_names_ptr_);
+
+    Ort::ModelMetadata meta_data = sess_->GetModelMetadata();
+    Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
+    SHERPA_ONNX_READ_META_DATA(rnn_num_layers_, "num_layers");
+    SHERPA_ONNX_READ_META_DATA(rnn_hidden_size_, "hidden_size");
+    SHERPA_ONNX_READ_META_DATA(sos_id_, "sos_id");
+
+    ComputeInitStates();
+  }
+
+  void ComputeInitStates() {
     constexpr int32_t kBatchSize = 1;
     std::array<int64_t, 3> h_shape{rnn_num_layers_, kBatchSize,
                                    rnn_hidden_size_};
@@ -68,24 +98,8 @@ class OnlineRnnLM::Impl {
     states.push_back(std::move(h));
     states.push_back(std::move(c));
     auto pair = Rescore(std::move(x), std::move(y), std::move(states));
-    return std::move(pair.second);
-  }
 
- private:
-  void Init(const OnlineLMConfig &config) {
-    auto buf = ReadFile(config_.model);
-
-    sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
-                                           sess_opts_);
-
-    GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
-    GetOutputNames(sess_.get(), &output_names_, &output_names_ptr_);
-
-    Ort::ModelMetadata meta_data = sess_->GetModelMetadata();
-    Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
-    SHERPA_ONNX_READ_META_DATA(rnn_num_layers_, "num_layers");
-    SHERPA_ONNX_READ_META_DATA(rnn_hidden_size_, "hidden_size");
-    SHERPA_ONNX_READ_META_DATA(sos_id_, "sos_id");
+    init_states_ = std::move(pair.second);
   }
 
  private:
@@ -101,6 +115,9 @@ class OnlineRnnLM::Impl {
 
   std::vector<std::string> output_names_;
   std::vector<const char *> output_names_ptr_;
+
+  std::vector<Ort::Value> init_states_;
+
   int32_t rnn_num_layers_ = 2;
   int32_t rnn_hidden_size_ = 512;
   int32_t sos_id_ = 1;
