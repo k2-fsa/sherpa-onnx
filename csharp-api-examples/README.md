@@ -5,4 +5,5 @@ This C # API is cross platform and you can compile it yourself in Windows, Mac O
 
 ------------
 Alternatively, install sherpaonnx through nuget.
-This work is still ongoing.
+#NuGet for sherpa-onnx
+PM > Install-Package SherpaOnnxCsharp -Project sherpa-onnx

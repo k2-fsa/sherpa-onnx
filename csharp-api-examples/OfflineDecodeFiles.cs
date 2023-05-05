@@ -15,9 +15,9 @@ using SherpaOnnx;
 /// git clone https://huggingface.co/csukuangfj/paraformer-onnxruntime-python-example
 /// git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-citrinet-512
 
-/// NuGet for SherpaOnnx.Core
-/// PM > Install-Package NAudio -version 2.1.0 -Project SherpaOnnx.Examples
-/// PM > Install-Package Microsoft.Extensions.Logging -version 7.0.0 -SherpaOnnx.Core
+/// NuGet for sherpa-onnx
+/// PM > Install-Package NAudio -version 2.1.0 -Project sherpa-onnx
+/// PM > Install-Package SherpaOnnxCsharp -Project sherpa-onnx
 
 // transducer Usage:
 /*

@@ -13,9 +13,9 @@ using SherpaOnnx;
 /// cd /path/to
 /// git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
-/// NuGet for SherpaOnnx.Core
-/// PM > Install-Package NAudio -version 2.1.0 -Project SherpaOnnx.Examples
-/// PM > Install-Package Microsoft.Extensions.Logging -version 7.0.0 -SherpaOnnx.Core
+/// NuGet for sherpa-onnx
+/// PM > Install-Package NAudio -version 2.1.0 -Project sherpa-onnx
+/// PM > Install-Package SherpaOnnxCsharp -Project sherpa-onnx
 
 // transducer Usage:
 /*
