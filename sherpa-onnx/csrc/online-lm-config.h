@@ -15,7 +15,7 @@ struct OnlineLMConfig {
   std::string model;
 
   // LM scale
-  float scale = 1.0;
+  float scale = 0.5;
 
   OnlineLMConfig() = default;
 
