@@ -23,6 +23,11 @@ data class OnlineTransducerModelConfig(
     var debug: Boolean = false,
 )
 
+data class OnlineLMConfig(
+    var model: String = "",
+    var scale: Float = 0.5f,
+)
+
 data class FeatureConfig(
     var sampleRate: Int = 16000,
     var featureDim: Int = 80,
@@ -31,6 +36,7 @@ data class FeatureConfig(
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineTransducerModelConfig,
+    var lmConfig : OnlineLMConfig,
     var endpointConfig: EndpointConfig = EndpointConfig(),
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",
@@ -149,6 +155,19 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
         }
     }
     return null;
+}
+
+fun getOnlineLMConfig(type : Int): OnlineLMConfig {
+    when (type) {
+        0 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20"
+            return OnlineLMConfig(
+                model = "$modelDir/with-state-epoch-99-avg-1.int8.onnx",
+                scale = 0.5f,
+            )
+        }
+    }
+    return OnlineLMConfig();
 }
 
 fun getEndpointConfig(): EndpointConfig {

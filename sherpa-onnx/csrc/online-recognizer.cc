@@ -153,7 +153,8 @@ class OnlineRecognizer::Impl {
         endpoint_(config_.endpoint_config) {
     if (config.decoding_method == "modified_beam_search") {
       decoder_ = std::make_unique<OnlineTransducerModifiedBeamSearchDecoder>(
-          model_.get(), config_.max_active_paths);
+          model_.get(), lm_.get(), config_.max_active_paths,
+          config_.lm_config.scale);
     } else if (config.decoding_method == "greedy_search") {
       decoder_ =
           std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());

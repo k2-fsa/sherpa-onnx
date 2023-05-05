@@ -182,9 +182,10 @@ class MainActivity : AppCompatActivity() {
         val config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
             modelConfig = getModelConfig(type = type)!!,
+            lmConfig = getOnlineLMConfig(type = type),
             endpointConfig = getEndpointConfig(),
             enableEndpoint = true,
-            decodingMethod = "greedy_search",
+            decodingMethod = "modified_beam_search",
             maxActivePaths = 4,
         )
 
