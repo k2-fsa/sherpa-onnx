@@ -16,9 +16,8 @@
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
-#else
-#include <fstream>
 #endif
+#include <fstream>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
@@ -188,7 +187,7 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(model_config_cls, "debug", "Z");
   ans.model_config.debug = env->GetBooleanField(model_config, fid);
 
-  //----------rnn lm model config ----------
+  //---------- rnn lm model config ----------
   fid = env->GetFieldID(cls, "lmConfig",
                         "Lcom/k2fsa/sherpa/onnx/OnlineLMConfig;");
   jobject lm_model_config = env->GetObjectField(config, fid);
