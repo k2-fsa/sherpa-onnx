@@ -34,7 +34,7 @@ class OnlineLM {
    *
    * Caution: It returns negative log likelihood (nll), not log likelihood
    */
-  std::pair<Ort::Value, std::vector<Ort::Value>> Ort::Value Rescore(
+  virtual std::pair<Ort::Value, std::vector<Ort::Value>> Rescore(
       Ort::Value x, Ort::Value y, std::vector<Ort::Value> states) = 0;
 
   // This function updates hyp.lm_lob_prob of hyps.
@@ -44,19 +44,6 @@ class OnlineLM {
   // @param hyps It is changed in-place.
   void ComputeLMScore(float scale, int32_t context_size,
                       std::vector<Hypotheses> *hyps);
-  /** TODO(fangjun):
-   *
-   * 1. Add two fields to Hypothesis
-   *      (a) int32_t lm_cur_pos = 0; number of scored tokens so far
-   *      (b) std::vector<Ort::Value> lm_states;
-   * 2. When we want to score a hypothesis, we construct x and y as follows:
-   *
-   *      std::vector x = {hyp.ys.begin() + context_size + lm_cur_pos,
-   *                       hyp.ys.end() - 1};
-   *      std::vector y = {hyp.ys.begin() + context_size + lm_cur_pos + 1
-   *                       hyp.ys.end()};
-   *       hyp.lm_cur_pos += hyp.ys.size() - context_size - lm_cur_pos;
-   */
 };
 
 }  // namespace sherpa_onnx

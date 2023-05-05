@@ -1,6 +1,6 @@
 /**
  * Copyright (c)  2023  Xiaomi Corporation
- *
+ * Copyright (c)  2023  Pingfeng Luo
  */
 
 #include "sherpa-onnx/csrc/hypothesis.h"

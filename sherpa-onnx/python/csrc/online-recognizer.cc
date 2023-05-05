@@ -21,11 +21,13 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
   using PyClass = OnlineRecognizerConfig;
   py::class_<PyClass>(*m, "OnlineRecognizerConfig")
       .def(py::init<const FeatureExtractorConfig &,
-                    const OnlineTransducerModelConfig &, const EndpointConfig &,
-                    bool, const std::string &, int32_t>(),
+                    const OnlineTransducerModelConfig &, const OnlineLMConfig &,
+                    const EndpointConfig &, bool, const std::string &,
+                    int32_t>(),
            py::arg("feat_config"), py::arg("model_config"),
-           py::arg("endpoint_config"), py::arg("enable_endpoint"),
-           py::arg("decoding_method"), py::arg("max_active_paths"))
+           py::arg("lm_config") = OnlineLMConfig(), py::arg("endpoint_config"),
+           py::arg("enable_endpoint"), py::arg("decoding_method"),
+           py::arg("max_active_paths"))
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
       .def_readwrite("endpoint_config", &PyClass::endpoint_config)
