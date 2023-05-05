@@ -23,7 +23,7 @@ Usage:
     /path/to/encoder.onnx \
     /path/to/decoder.onnx \
     /path/to/joiner.onnx \
-    /path/to/foo.wav [/path/to/rnn_lm.onnx num_threads [decoding_method]]
+    /path/to/foo.wav [num_threads [decoding_method [/path/to/rnn_lm.onnx]]]
 
 Default value for num_threads is 2.
 Valid values for decoding_method: greedy_search (default), modified_beam_search.

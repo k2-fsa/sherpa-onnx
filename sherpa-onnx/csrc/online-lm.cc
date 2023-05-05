@@ -13,6 +13,28 @@
 
 namespace sherpa_onnx {
 
+static std::vector<CopyableOrtValue> Convert(std::vector<Ort::Value> values) {
+  std::vector<CopyableOrtValue> ans;
+  ans.reserve(values.size());
+
+  for (auto &v : values) {
+    ans.emplace_back(std::move(v));
+  }
+
+  return ans;
+}
+
+static std::vector<Ort::Value> Convert(std::vector<CopyableOrtValue> values) {
+  std::vector<Ort::Value> ans;
+  ans.reserve(values.size());
+
+  for (auto &v : values) {
+    ans.emplace_back(std::move(v.value));
+  }
+
+  return ans;
+}
+
 std::unique_ptr<OnlineLM> OnlineLM::Create(const OnlineLMConfig &config) {
   return std::make_unique<OnlineRnnLM>(config);
 }
@@ -32,11 +54,8 @@ void OnlineLM::ComputeLMScore(float scale, int32_t context_size,
         continue;
       }
 
-      if (!h.rnnlm_state_h.value) {
-        // get RNN LM init states and store them to hyp
-        auto states = GetInitStates();
-        h.rnnlm_state_h.value = std::move(states[0]);  // h
-        h.rnnlm_state_c.value = std::move(states[1]);  // c
+      if (h.nn_lm_states.empty()) {
+        h.nn_lm_states = Convert(GetInitStates());
       }
 
       if (token_num_in_chunk >= h.lm_rescore_min_chunk) {
@@ -53,20 +72,16 @@ void OnlineLM::ComputeLMScore(float scale, int32_t context_size,
         std::copy(ys.begin() + context_size + h.cur_scored_pos + 1, ys.end(),
                   p_y);
 
-        // get RNN LM previous states from hyp
-        std::vector<Ort::Value> states;
-        states.push_back(std::move(h.rnnlm_state_h.value));
-        states.push_back(std::move(h.rnnlm_state_c.value));
         // streaming forward by RNN LM
-        auto out = Rescore(std::move(x), std::move(y), std::move(states));
+        auto out = Rescore(std::move(x), std::move(y),
+                           Convert(std::move(h.nn_lm_states)));
 
         // update lm score in hyp
         const float *p_nll = out.first.GetTensorData<float>();
         h.lm_log_prob = -scale * (*p_nll);
 
         // update RNN LM states in hyp
-        h.rnnlm_state_h.value = std::move(out.second[0]);  // h
-        h.rnnlm_state_c.value = std::move(out.second[1]);  // c
+        h.nn_lm_states = Convert(std::move(out.second));
 
         h.cur_scored_pos += token_num_in_chunk;
       }
