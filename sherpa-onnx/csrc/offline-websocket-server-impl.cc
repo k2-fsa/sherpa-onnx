@@ -8,6 +8,8 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 
+#include <nlohmann/json.hpp>
+
 namespace sherpa_onnx {
 
 void OfflineWebsocketDecoderConfig::Register(ParseOptions *po) {
@@ -100,10 +102,17 @@ void OfflineWebsocketDecoder::Decode() {
   for (int32_t i = 0; i != size; ++i) {
     connection_hdl hdl = handles[i];
     asio::post(server_->GetConnectionContext(),
-               [this, hdl, text = ss[i]->GetResult().text]() {
+               [this, hdl, result = ss[i]->GetResult()]() {
+                 nlohmann::json response;
+                 response["timestamps"] = result.timestamps;
+                 response["text"] = result.text;
+                 response["tokens"] = nlohmann::json(result.tokens);
+
+                 std::string response_str = response.dump();
+
                  websocketpp::lib::error_code ec;
                  server_->GetServer().send(
-                     hdl, text, websocketpp::frame::opcode::text, ec);
+                     hdl, response_str, websocketpp::frame::opcode::text, ec);
                  if (ec) {
                    server_->GetServer().get_alog().write(
                        websocketpp::log::alevel::app, ec.message());
