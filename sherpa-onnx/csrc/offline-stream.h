@@ -29,7 +29,6 @@ struct OfflineRecognitionResult {
   std::vector<float> timestamps;
 
   std::string AsJsonString() const;
-
 };
 
 struct OfflineFeatureExtractorConfig {
