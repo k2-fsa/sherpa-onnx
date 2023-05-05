@@ -13,8 +13,9 @@
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
+// TODO(fangjun): Use ParseOptions as we are getting more args
 int main(int32_t argc, char *argv[]) {
-  if (argc < 6 || argc > 8) {
+  if (argc < 6 || argc > 9) {
     const char *usage = R"usage(
 Usage:
   ./bin/sherpa-onnx \
@@ -22,7 +23,7 @@ Usage:
     /path/to/encoder.onnx \
     /path/to/decoder.onnx \
     /path/to/joiner.onnx \
-    /path/to/foo.wav [num_threads [decoding_method]]
+    /path/to/foo.wav [num_threads [decoding_method [/path/to/rnn_lm.onnx]]]
 
 Default value for num_threads is 2.
 Valid values for decoding_method: greedy_search (default), modified_beam_search.
@@ -53,9 +54,11 @@ for a list of pre-trained models to download.
   if (argc == 7 && atoi(argv[6]) > 0) {
     config.model_config.num_threads = atoi(argv[6]);
   }
-
   if (argc == 8) {
     config.decoding_method = argv[7];
+  }
+  if (argc == 9) {
+    config.lm_config.model = argv[8];
   }
   config.max_active_paths = 4;
 
