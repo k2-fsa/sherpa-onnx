@@ -27,6 +27,8 @@ struct OfflineRecognitionResult {
   /// timestamps.size() == tokens.size()
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   std::vector<float> timestamps;
+
+  std::string AsJsonString() const;
 };
 
 struct OfflineFeatureExtractorConfig {

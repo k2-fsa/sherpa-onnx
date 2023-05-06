@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/onnx-utils.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023  Pingfeng Luo
 #ifndef SHERPA_ONNX_CSRC_ONNX_UTILS_H_
 #define SHERPA_ONNX_CSRC_ONNX_UTILS_H_
 
@@ -13,6 +14,7 @@
 #include <cassert>
 #include <ostream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
@@ -89,6 +91,24 @@ std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename);
 // TODO(fangjun): Document it
 Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
                   const std::vector<int32_t> &hyps_num_split);
+
+struct CopyableOrtValue {
+  Ort::Value value{nullptr};
+
+  CopyableOrtValue() = default;
+
+  /*explicit*/ CopyableOrtValue(Ort::Value v) // NOLINT
+    : value(std::move(v)) {}
+
+  CopyableOrtValue(const CopyableOrtValue &other);
+
+  CopyableOrtValue &operator=(const CopyableOrtValue &other);
+
+  CopyableOrtValue(CopyableOrtValue &&other);
+
+  CopyableOrtValue &operator=(CopyableOrtValue &&other);
+};
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_ONNX_UTILS_H_

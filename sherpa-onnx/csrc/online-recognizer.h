@@ -16,6 +16,7 @@
 
 #include "sherpa-onnx/csrc/endpoint.h"
 #include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/online-lm-config.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
@@ -67,10 +68,11 @@ struct OnlineRecognizerResult {
 struct OnlineRecognizerConfig {
   FeatureExtractorConfig feat_config;
   OnlineTransducerModelConfig model_config;
+  OnlineLMConfig lm_config;
   EndpointConfig endpoint_config;
   bool enable_endpoint = true;
 
-  std::string decoding_method = "greedy_search";
+  std::string decoding_method = "modified_beam_search";
   // now support modified_beam_search and greedy_search
 
   int32_t max_active_paths = 4;  // used only for modified_beam_search
@@ -79,6 +81,7 @@ struct OnlineRecognizerConfig {
 
   OnlineRecognizerConfig(const FeatureExtractorConfig &feat_config,
                          const OnlineTransducerModelConfig &model_config,
+                         const OnlineLMConfig &lm_config,
                          const EndpointConfig &endpoint_config,
                          bool enable_endpoint,
                          const std::string &decoding_method,

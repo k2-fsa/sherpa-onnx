@@ -11,6 +11,7 @@
 #include "sherpa-onnx/python/csrc/offline-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-recognizer.h"
 #include "sherpa-onnx/python/csrc/offline-stream.h"
+#include "sherpa-onnx/python/csrc/online-lm-config.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
 #include "sherpa-onnx/python/csrc/online-stream.h"
 #include "sherpa-onnx/python/csrc/online-transducer-model-config.h"
@@ -22,6 +23,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
 
   PybindFeatures(&m);
   PybindOnlineTransducerModelConfig(&m);
+  PybindOnlineLMConfig(&m);
   PybindOnlineStream(&m);
   PybindEndpoint(&m);
   PybindOnlineRecognizer(&m);

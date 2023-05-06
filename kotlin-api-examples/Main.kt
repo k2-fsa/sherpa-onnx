@@ -22,8 +22,11 @@ fun main() {
 
     var endpointConfig = EndpointConfig()
 
+    var lmConfig = OnlineLMConfig()
+
     var config = OnlineRecognizerConfig(
         modelConfig = modelConfig,
+        lmConfig = lmConfig,
         featConfig = featConfig,
         endpointConfig = endpointConfig,
         enableEndpoint = true,
