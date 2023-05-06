@@ -116,7 +116,7 @@ namespace SherpaOnnx
     public OfflineRecognizerResult(IntPtr handle)
     {
       Impl impl = (Impl)Marshal.PtrToStructure(handle, typeof(Impl));
-      _text = Marshal.PtrToStringAnsi(impl.Text);
+      _text = Marshal.PtrToStringUTF8(impl.Text);
     }
 
     [StructLayout(LayoutKind.Sequential)]
