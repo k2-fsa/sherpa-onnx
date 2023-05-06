@@ -100,10 +100,11 @@ void OfflineWebsocketDecoder::Decode() {
   for (int32_t i = 0; i != size; ++i) {
     connection_hdl hdl = handles[i];
     asio::post(server_->GetConnectionContext(),
-               [this, hdl, text = ss[i]->GetResult().text]() {
+               [this, hdl, result = ss[i]->GetResult()]() {
                  websocketpp::lib::error_code ec;
                  server_->GetServer().send(
-                     hdl, text, websocketpp::frame::opcode::text, ec);
+                     hdl, result.AsJsonString(),
+                     websocketpp::frame::opcode::text, ec);
                  if (ec) {
                    server_->GetServer().get_alog().write(
                        websocketpp::log::alevel::app, ec.message());
