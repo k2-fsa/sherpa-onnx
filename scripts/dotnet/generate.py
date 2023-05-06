@@ -34,12 +34,11 @@ def get_dict():
 def process_linux(s):
     libs = [
         "libkaldi-native-fbank-core.so",
-        "libncnn.so",
-        "libsherpa-ncnn-c-api.so",
-        "libsherpa-ncnn-core.so",
-        "libgomp-a34b3233.so.1.0.0",
+        "libonnxruntime.so.1.14.0",
+        "libsherpa-onnx-c-api.so",
+        "libsherpa-onnx-core.so",
     ]
-    prefix = f"{SHERPA_ONNX_DIR}/linux/sherpa_ncnn/lib/"
+    prefix = f"{SHERPA_ONNX_DIR}/macos/sherpa_onnx/lib/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
@@ -50,7 +49,7 @@ def process_linux(s):
     environment = jinja2.Environment()
     template = environment.from_string(s)
     s = template.render(**d)
-    with open("./linux/sherpa-ncnn.runtime.csproj", "w") as f:
+    with open("./linux/sherpa-onnx.runtime.csproj", "w") as f:
         f.write(s)
 
 
@@ -61,8 +60,7 @@ def process_macos(s):
         "libsherpa-onnx-c-api.dylib",
         "libsherpa-onnx-core.dylib",
     ]
-    #  prefix = f"{SHERPA_ONNX_DIR}/macos/sherpa_onnx/lib/"
-    prefix = f"{SHERPA_ONNX_DIR}/build/lib/"
+    prefix = f"{SHERPA_ONNX_DIR}/macos/sherpa_onnx/lib/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
@@ -80,11 +78,11 @@ def process_macos(s):
 def process_windows(s):
     libs = [
         "kaldi-native-fbank-core.dll",
-        "ncnn.dll",
-        "sherpa-ncnn-c-api.dll",
-        "sherpa-ncnn-core.dll",
+        "onnxruntime.dll",
+        "sherpa-onnx-c-api.dll",
+        "sherpa-onnx-core.dll",
     ]
-    prefix = f"{SHERPA_ONNX_DIR}/windows/sherpa_ncnn/lib/"
+    prefix = f"{SHERPA_ONNX_DIR}/macos/sherpa_onnx/lib/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
@@ -95,15 +93,15 @@ def process_windows(s):
     environment = jinja2.Environment()
     template = environment.from_string(s)
     s = template.render(**d)
-    with open("./windows/sherpa-ncnn.runtime.csproj", "w") as f:
+    with open("./windows/sherpa-onnx.runtime.csproj", "w") as f:
         f.write(s)
 
 
 def main():
     s = read_proj_file("./sherpa-onnx.csproj.runtime.in")
     process_macos(s)
-    #  process_linux(s)
-    #  process_windows(s)
+    process_linux(s)
+    process_windows(s)
 
     s = read_proj_file("./sherpa-onnx.csproj.in")
     d = get_dict()

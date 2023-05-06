@@ -16,6 +16,15 @@ namespace SherpaOnnx
   [StructLayout(LayoutKind.Sequential)]
   public struct OnlineTransducerModelConfig
   {
+    public OnlineTransducerModelConfig()
+    {
+      Encoder = "";
+      Decoder = "";
+      Joiner = "";
+      Tokens = "";
+      NumThreads = 1;
+      Debug = 0;
+    }
     [MarshalAs(UnmanagedType.LPStr)]
     public string Encoder;
 
@@ -39,6 +48,11 @@ namespace SherpaOnnx
   [StructLayout(LayoutKind.Sequential)]
   public struct FeatureConfig
   {
+    public FeatureConfig()
+    {
+      SampleRate = 16000;
+      FeatureDim = 80;
+    }
     /// Sample rate of the input data. MUST match the one expected
     /// by the model. For instance, it should be 16000 for models provided
     /// by us.
@@ -52,6 +66,17 @@ namespace SherpaOnnx
   [StructLayout(LayoutKind.Sequential)]
   public struct OnlineRecognizerConfig
   {
+    public OnlineRecognizerConfig()
+    {
+      FeatConfig = new FeatureConfig();
+      TransducerModelConfig = new OnlineTransducerModelConfig();
+      DecodingMethod = "greedy_search";
+      MaxActivePaths = 4;
+      EnableEndpoint = 0;
+      Rule1MinTrailingSilence = 1.2F;
+      Rule2MinTrailingSilence = 2.4F;
+      Rule3MinUtteranceLength = 20.0F;
+    }
     public FeatureConfig FeatConfig;
     public OnlineTransducerModelConfig TransducerModelConfig;
 
@@ -160,7 +185,6 @@ namespace SherpaOnnx
     {
       IntPtr h = CreateOnlineRecognizer(ref config);
       _handle = new HandleRef(this, h);
-      // string s = Dll.Filename2;
     }
 
     public OnlineStream CreateStream()
@@ -264,5 +288,4 @@ namespace SherpaOnnx
     [DllImport(Dll.Filename)]
     private static extern int IsEndpoint(IntPtr handle, IntPtr stream);
   }
-
 }

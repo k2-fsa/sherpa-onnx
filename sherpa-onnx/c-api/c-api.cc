@@ -171,6 +171,7 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
   sherpa_onnx::OfflineRecognizerConfig recognizer_config;
 
   recognizer_config.feat_config.sampling_rate = config->feat_config.sample_rate;
+
   recognizer_config.feat_config.feature_dim = config->feat_config.feature_dim;
 
   recognizer_config.model_config.transducer.encoder_filename =
