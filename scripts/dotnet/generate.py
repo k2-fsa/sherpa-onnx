@@ -38,7 +38,7 @@ def process_linux(s):
         "libsherpa-onnx-c-api.so",
         "libsherpa-onnx-core.so",
     ]
-    prefix = f"{SHERPA_ONNX_DIR}/macos/sherpa_onnx/lib/"
+    prefix = f"{SHERPA_ONNX_DIR}/linux/sherpa_onnx/lib/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
@@ -82,7 +82,7 @@ def process_windows(s):
         "sherpa-onnx-c-api.dll",
         "sherpa-onnx-core.dll",
     ]
-    prefix = f"{SHERPA_ONNX_DIR}/macos/sherpa_onnx/lib/"
+    prefix = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/lib/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 

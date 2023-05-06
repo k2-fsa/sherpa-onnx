@@ -95,8 +95,7 @@ jobs:
         run: |
           cd windows
           unzip ./*.whl
-          # cp -v ./ncnn.dll sherpa_ncnn/lib/
-          # cp -v ./sherpa-ncnn-core.dll sherpa_ncnn/lib/
+          cp -v ./*.dll sherpa_onnx/lib/
           tree .
 
       - name: Setup .NET Core 3.1
@@ -133,4 +132,4 @@ jobs:
         run: |
           # API_KEY is valid until 2024.05.02
           cd scripts/dotnet/packages
-          # dotnet nuget push ./org.k2fsa.sherpa.ncnn.*.nupkg --skip-duplicate --api-key $API_KEY --source https://api.nuget.org/v3/index.json
+          dotnet nuget push ./org.k2fsa.sherpa.onnx.*.nupkg --skip-duplicate --api-key $API_KEY --source https://api.nuget.org/v3/index.json
