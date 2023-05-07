@@ -12,6 +12,7 @@ endif()
 
 set(sources
   cat.cc
+  context-graph.cc
   endpoint.cc
   features.cc
   file-utils.cc
@@ -238,6 +239,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_TESTS)
   set(sherpa_onnx_test_srcs
     cat-test.cc
+    context-graph-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
     slice-test.cc
