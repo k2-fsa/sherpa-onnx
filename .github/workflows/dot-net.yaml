@@ -103,10 +103,10 @@ jobs:
         with:
           dotnet-version: 3.1.x
 
-      - name: Setup .NET 6.0
+      - name: Setup .NET 7.0
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 7.0.x
 
       - name: Check dotnet
         run: dotnet --info
