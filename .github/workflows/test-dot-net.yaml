@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - dot-net-2
     paths:
       - '.github/workflows/test-dot-net'
       - 'dotnet-examples/**'
