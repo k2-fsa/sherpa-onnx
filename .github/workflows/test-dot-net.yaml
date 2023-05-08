@@ -61,8 +61,10 @@ jobs:
         shell: bash
         run: |
           cd dotnet-examples/
-          cd offline-decode-files
+          cd online-decode-files
           ./run.sh
 
-          cd ../online-decode-files
-          ./run.sh
+          cd ../offline-decode-files
+          ./run-nemo-ctc.sh
+          ./run-paraformer.sh
+          ./run-zipformer.sh
