@@ -26,10 +26,11 @@ class OnlineRnnLM::Impl {
     Init(config);
   }
 
-  std::pair<Ort::Value, std::vector<Ort::Value>> Rescore(
-      Ort::Value x, Ort::Value y, std::vector<Ort::Value> states) {
-    std::array<Ort::Value, 4> inputs = {
-        std::move(x), std::move(y), std::move(states[0]), std::move(states[1])};
+  std::pair<Ort::Value, std::vector<Ort::Value>> ScoreToken(
+      Ort::Value x, Ort::Value x_lens, std::vector<Ort::Value> states) {
+    std::array<Ort::Value, 4> inputs = {std::move(x), std::move(x_lens),
+                                        std::move(states[0]),
+                                        std::move(states[1])};
 
     auto out =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
@@ -86,18 +87,18 @@ class OnlineRnnLM::Impl {
     Fill<float>(&h, 0);
     Fill<float>(&c, 0);
     std::array<int64_t, 2> x_shape{1, 1};
-    // shape of x and y are same
     Ort::Value x = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
                                                      x_shape.size());
-    Ort::Value y = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
-                                                     x_shape.size());
+    std::array<int64_t, 1> x_len_shape{1};
+    Ort::Value x_len = Ort::Value::CreateTensor<int64_t>(
+        allocator_, x_len_shape.data(), x_len_shape.size());
     *x.GetTensorMutableData<int64_t>() = sos_id_;
-    *y.GetTensorMutableData<int64_t>() = sos_id_;
+    *x_len.GetTensorMutableData<int64_t>() = 1;
 
     std::vector<Ort::Value> states;
     states.push_back(std::move(h));
     states.push_back(std::move(c));
-    auto pair = Rescore(std::move(x), std::move(y), std::move(states));
+    auto pair = ScoreToken(std::move(x), std::move(x_len), std::move(states));
 
     init_states_ = std::move(pair.second);
   }
@@ -132,9 +133,9 @@ std::vector<Ort::Value> OnlineRnnLM::GetInitStates() {
   return impl_->GetInitStates();
 }
 
-std::pair<Ort::Value, std::vector<Ort::Value>> OnlineRnnLM::Rescore(
-    Ort::Value x, Ort::Value y, std::vector<Ort::Value> states) {
-  return impl_->Rescore(std::move(x), std::move(y), std::move(states));
+std::pair<Ort::Value, std::vector<Ort::Value>> OnlineRnnLM::ScoreToken(
+    Ort::Value x, Ort::Value lens, std::vector<Ort::Value> states) {
+  return impl_->ScoreToken(std::move(x), std::move(lens), std::move(states));
 }
 
 }  // namespace sherpa_onnx

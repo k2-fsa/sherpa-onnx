@@ -24,19 +24,18 @@ class OnlineRnnLM : public OnlineLM {
 
   std::vector<Ort::Value> GetInitStates() override;
 
-  /** Rescore a batch of sentences.
+  /** ScoreToken a batch of sentences.
    *
    * @param x A 2-D tensor of shape (N, L) with data type int64.
-   * @param y A 2-D tensor of shape (N, L) with data type int64.
+   * @param lens A 2-D tensor of shape (N, L) with data type int64.
    * @param states It contains the states for the LM model
    * @return Return a pair containingo
-   *          - negative loglike
+   *          - negative log_softmax of NN LM
    *          - updated states
    *
-   * Caution: It returns negative log likelihood (nll), not log likelihood
    */
-  std::pair<Ort::Value, std::vector<Ort::Value>> Rescore(
-      Ort::Value x, Ort::Value y, std::vector<Ort::Value> states) override;
+  std::pair<Ort::Value, std::vector<Ort::Value>> ScoreToken(
+      Ort::Value x, Ort::Value lens, std::vector<Ort::Value> states) override;
 
  private:
   class Impl;
