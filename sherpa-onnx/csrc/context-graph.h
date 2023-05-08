@@ -12,7 +12,9 @@
 namespace sherpa_onnx {
 
 class ContextState;
+class ContextGraph;
 using ContextStatePtr = std::shared_ptr<ContextState>;
+using ContextGraphPtr = std::shared_ptr<ContextGraph>;
 
 struct ContextState {
   int32_t token;
@@ -35,7 +37,7 @@ class ContextGraph {
     root_->fail = root_;
   }
   ~ContextGraph() {}
-  void BuildContextGraph(const std::vector<std::vector<int32_t>> &token_ids);
+  void Build(const std::vector<std::vector<int32_t>> &token_ids);
 
   std::pair<float, ContextStatePtr> ForwardOneStep(const ContextStatePtr &state,
                                                    int32_t token_id) const;

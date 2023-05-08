@@ -22,7 +22,7 @@ TEST(ContextGraph, TestBasic) {
     contexts.push_back(tmp);
   }
   auto context_graph = ContextGraph(2);
-  context_graph.BuildContextGraph(contexts);
+  context_graph.Build(contexts);
   auto res = context_graph.ForwardOneStep(context_graph.Root(), (int32_t)'H');
   EXPECT_EQ(res.first, 2);
   EXPECT_EQ(res.second->token, (int32_t)'H');

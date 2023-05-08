@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -72,8 +73,15 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     }
   }
 
-  std::unique_ptr<OfflineStream> CreateStream() const override {
-    return std::make_unique<OfflineStream>(config_.feat_config);
+  std::unique_ptr<OfflineStream> CreateStream(
+      const std::vector<std::vector<int32_t>> &context_list) const override {
+    // We create context_graph at this level, because we might have default
+    // context_graph(will add later if need) that belong to the whole model
+    // rather than each stream.
+    ContextGraphPtr context_graph =
+        std::make_shared<ContextGraph>(ContextGraph(config_.context_score));
+    context_graph->Build(context_list);
+    return std::make_unique<OfflineStream>(config_.feat_config, context_graph);
   }
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override {

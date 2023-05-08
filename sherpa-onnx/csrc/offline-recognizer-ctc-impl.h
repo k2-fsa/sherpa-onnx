@@ -62,7 +62,10 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     }
   }
 
-  std::unique_ptr<OfflineStream> CreateStream() const override {
+  std::unique_ptr<OfflineStream> CreateStream(
+      const std::vector<std::vector<int32_t>> &context_list) const override {
+    // paraformer doesn't support modified_beam_search, so doesn't support
+    // context biasing either.
     return std::make_unique<OfflineStream>(config_.feat_config);
   }
 

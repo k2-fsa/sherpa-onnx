@@ -8,8 +8,9 @@
 
 #include <algorithm>
 #include <cmath>
-#include "nlohmann/json.hpp"
+
 #include "kaldi-native-fbank/csrc/online-feature.h"
+#include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
@@ -74,7 +75,9 @@ std::string OfflineFeatureExtractorConfig::ToString() const {
 
 class OfflineStream::Impl {
  public:
-  explicit Impl(const OfflineFeatureExtractorConfig &config) : config_(config) {
+  explicit Impl(const OfflineFeatureExtractorConfig &config,
+                const ContextGraphPtr &context_graph)
+      : config_(config), context_graph_(context_graph) {
     opts_.frame_opts.dither = 0;
     opts_.frame_opts.snip_edges = false;
     opts_.frame_opts.samp_freq = config.sampling_rate;
@@ -188,11 +191,13 @@ class OfflineStream::Impl {
   std::unique_ptr<knf::OnlineFbank> fbank_;
   knf::FbankOptions opts_;
   OfflineRecognitionResult r_;
+  ContextGraphPtr context_graph_;
 };
 
 OfflineStream::OfflineStream(
-    const OfflineFeatureExtractorConfig &config /*= {}*/)
-    : impl_(std::make_unique<Impl>(config)) {}
+    const OfflineFeatureExtractorConfig &config /*= {}*/,
+    const ContextGraphPtr &context_graph /*= nullptr*/)
+    : impl_(std::make_unique<Impl>(config, context_graph)) {}
 
 OfflineStream::~OfflineStream() = default;
 

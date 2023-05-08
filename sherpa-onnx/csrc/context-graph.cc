@@ -7,8 +7,7 @@
 #include <queue>
 
 namespace sherpa_onnx {
-void ContextGraph::BuildContextGraph(
-    const std::vector<std::vector<int32_t>> &token_ids) {
+void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids) {
   for (int32_t i = 0; i < token_ids.size(); ++i) {
     auto node = root_;
     for (int32_t j = 0; j < token_ids[i].size(); ++j) {
