@@ -1,13 +1,13 @@
 // sherpa-onnx/csrc/onnx-utils.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023  Pingfeng Luo
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 #include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -216,6 +216,33 @@ Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
     src += cur_encoder_out_shape[1];
   }
   return ans;
+}
+
+CopyableOrtValue::CopyableOrtValue(const CopyableOrtValue &other) {
+  *this = other;
+}
+
+CopyableOrtValue &CopyableOrtValue::operator=(const CopyableOrtValue &other) {
+  if (this == &other) {
+    return *this;
+  }
+  if (other.value) {
+    Ort::AllocatorWithDefaultOptions allocator;
+    value = Clone(allocator, &other.value);
+  }
+  return *this;
+}
+
+CopyableOrtValue::CopyableOrtValue(CopyableOrtValue &&other) {
+  *this = std::move(other);
+}
+
+CopyableOrtValue &CopyableOrtValue::operator=(CopyableOrtValue &&other) {
+  if (this == &other) {
+    return *this;
+  }
+  value = std::move(other.value);
+  return *this;
 }
 
 }  // namespace sherpa_onnx

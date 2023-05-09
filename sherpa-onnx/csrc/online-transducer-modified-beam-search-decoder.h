@@ -8,6 +8,7 @@
 
 #include <vector>
 
+#include "sherpa-onnx/csrc/online-lm.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
 
@@ -17,8 +18,13 @@ class OnlineTransducerModifiedBeamSearchDecoder
     : public OnlineTransducerDecoder {
  public:
   OnlineTransducerModifiedBeamSearchDecoder(OnlineTransducerModel *model,
-                                            int32_t max_active_paths)
-      : model_(model), max_active_paths_(max_active_paths) {}
+                                            OnlineLM *lm,
+                                            int32_t max_active_paths,
+                                            float lm_scale)
+      : model_(model),
+        lm_(lm),
+        max_active_paths_(max_active_paths),
+        lm_scale_(lm_scale) {}
 
   OnlineTransducerDecoderResult GetEmptyResult() const override;
 
@@ -31,7 +37,10 @@ class OnlineTransducerModifiedBeamSearchDecoder
 
  private:
   OnlineTransducerModel *model_;  // Not owned
+  OnlineLM *lm_;                  // Not owned
+
   int32_t max_active_paths_;
+  float lm_scale_;  // used only when lm_ is not nullptr
 };
 
 }  // namespace sherpa_onnx

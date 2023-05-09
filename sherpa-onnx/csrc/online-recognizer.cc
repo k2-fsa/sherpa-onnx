@@ -16,6 +16,8 @@
 
 #include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/online-lm.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
@@ -80,6 +82,7 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
   feat_config.Register(po);
   model_config.Register(po);
   endpoint_config.Register(po);
+  lm_config.Register(po);
 
   po->Register("enable-endpoint", &enable_endpoint,
                "True to enable endpoint detection. False to disable it.");
@@ -91,6 +94,14 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
 }
 
 bool OnlineRecognizerConfig::Validate() const {
+  if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
+    if (max_active_paths <= 0) {
+      SHERPA_ONNX_LOGE("max_active_paths is less than 0! Given: %d",
+                       max_active_paths);
+      return false;
+    }
+    if (!lm_config.Validate()) return false;
+  }
   return model_config.Validate();
 }
 
@@ -100,6 +111,7 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "OnlineRecognizerConfig(";
   os << "feat_config=" << feat_config.ToString() << ", ";
   os << "model_config=" << model_config.ToString() << ", ";
+  os << "lm_config=" << lm_config.ToString() << ", ";
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
   os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ", ";
   os << "max_active_paths=" << max_active_paths << ", ";
@@ -116,8 +128,13 @@ class OnlineRecognizer::Impl {
         sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
     if (config.decoding_method == "modified_beam_search") {
+      if (!config_.lm_config.model.empty()) {
+        lm_ = OnlineLM::Create(config.lm_config);
+      }
+
       decoder_ = std::make_unique<OnlineTransducerModifiedBeamSearchDecoder>(
-          model_.get(), config_.max_active_paths);
+          model_.get(), lm_.get(), config_.max_active_paths,
+          config_.lm_config.scale);
     } else if (config.decoding_method == "greedy_search") {
       decoder_ =
           std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
@@ -136,7 +153,8 @@ class OnlineRecognizer::Impl {
         endpoint_(config_.endpoint_config) {
     if (config.decoding_method == "modified_beam_search") {
       decoder_ = std::make_unique<OnlineTransducerModifiedBeamSearchDecoder>(
-          model_.get(), config_.max_active_paths);
+          model_.get(), lm_.get(), config_.max_active_paths,
+          config_.lm_config.scale);
     } else if (config.decoding_method == "greedy_search") {
       decoder_ =
           std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
@@ -246,6 +264,7 @@ class OnlineRecognizer::Impl {
  private:
   OnlineRecognizerConfig config_;
   std::unique_ptr<OnlineTransducerModel> model_;
+  std::unique_ptr<OnlineLM> lm_;
   std::unique_ptr<OnlineTransducerDecoder> decoder_;
   SymbolTable sym_;
   Endpoint endpoint_;
