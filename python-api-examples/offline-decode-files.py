@@ -46,6 +46,7 @@ from pathlib import Path
 from typing import Tuple
 
 import numpy as np
+import sentencepiece as spm
 import sherpa_onnx
 
 
@@ -58,6 +59,46 @@ def get_args():
         "--tokens",
         type=str,
         help="Path to tokens.txt",
+    )
+
+    parser.add_argument(
+        "--bpe-model",
+        type=str,
+        default="",
+        help="""
+        Path to bpe.model,
+        Used only when --decoding-method=modified_beam_search
+        """,
+    )
+
+    parser.add_argument(
+        "--modeling-unit",
+        type=str,
+        default="char",
+        help="""
+        The type of modeling unit.
+        Valid values are bpe, bpe+char, char.
+        """,
+    )
+
+    parser.add_argument(
+        "--contexts",
+        type=str,
+        default="",
+        help="""
+        The context list, it is a string containing some words/phrases separated
+        with /, for example, 'HELLO WORLD/I LOVE YOU/GO AWAY".
+        """,
+    )
+
+    parser.add_argument(
+        "--context-score",
+        type=float,
+        default=1.5,
+        help="""
+        The context score of each token for biasing word/phrase. Used only if
+        --contexts is given.
+        """,
     )
 
     parser.add_argument(
@@ -151,6 +192,23 @@ def assert_file_exists(filename: str):
     )
 
 
+def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
+    sp = None
+    if "bpe" in args.modeling_unit:
+        assert_file_exists(args.bpe_model)
+        sp = spm.SentencePieceProcessor()
+        sp.load(args.bpe_model)
+    tokens = {}
+    with open(args.tokens, "r") as f:
+        for line in f.readlines():
+            toks = line.strip().split()
+            assert len(toks) == 2, len(toks)
+            tokens[toks[0]] = int(toks[1])
+    return sherpa_onnx.encode_contexts(
+        modeling_unit=args.modeling_unit, contexts=contexts, sp=sp, tokens_table=tokens
+    )
+
+
 def read_wave(wave_filename: str) -> Tuple[np.ndarray, int]:
     """
     Args:
@@ -180,9 +238,15 @@ def main():
     args = get_args()
     assert_file_exists(args.tokens)
     assert args.num_threads > 0, args.num_threads
+
+    contexts_list = []
     if args.encoder:
         assert len(args.paraformer) == 0, args.paraformer
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
+
+        contexts = [x.strip().upper() for x in args.contexts.split("/") if x.strip()]
+        if contexts:
+            contexts_list = encode_contexts(args, contexts)
 
         assert_file_exists(args.encoder)
         assert_file_exists(args.decoder)
@@ -197,6 +261,7 @@ def main():
             sample_rate=args.sample_rate,
             feature_dim=args.feature_dim,
             decoding_method=args.decoding_method,
+            context_score=args.context_score,
             debug=args.debug,
         )
     elif args.paraformer:
@@ -237,7 +302,12 @@ def main():
         duration = len(samples) / sample_rate
         total_duration += duration
 
-        s = recognizer.create_stream()
+        if contexts_list:
+            assert len(args.paraformer) == 0, args.paraformer
+            assert len(args.nemo_ctc) == 0, args.nemo_ctc
+            s = recognizer.create_stream(contexts_list)
+        else:
+            s = recognizer.create_stream()
         s.accept_waveform(sample_rate, samples)
 
         streams.append(s)
