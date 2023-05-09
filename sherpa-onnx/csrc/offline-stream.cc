@@ -154,6 +154,8 @@ class OfflineStream::Impl {
 
   const OfflineRecognitionResult &GetResult() const { return r_; }
 
+  const ContextGraphPtr &GetContextGraph() const { return context_graph_; }
+
  private:
   void NemoNormalizeFeatures(float *p, int32_t num_frames,
                              int32_t feature_dim) const {
@@ -214,6 +216,10 @@ std::vector<float> OfflineStream::GetFrames() const {
 
 void OfflineStream::SetResult(const OfflineRecognitionResult &r) {
   impl_->SetResult(r);
+}
+
+const ContextGraphPtr &OfflineStream::GetContextGraph() const {
+  return impl_->GetContextGraph();
 }
 
 const OfflineRecognitionResult &OfflineStream::GetResult() const {

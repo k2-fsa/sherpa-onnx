@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/offline-stream.h"
 
 namespace sherpa_onnx {
 
@@ -33,7 +34,8 @@ class OfflineTransducerDecoder {
    * @return Return a vector of size `N` containing the decoded results.
    */
   virtual std::vector<OfflineTransducerDecoderResult> Decode(
-      Ort::Value encoder_out, Ort::Value encoder_out_length) = 0;
+      Ort::Value encoder_out, Ort::Value encoder_out_length,
+      OfflineStream **ss = nullptr, int32_t n = 0) = 0;
 };
 
 }  // namespace sherpa_onnx

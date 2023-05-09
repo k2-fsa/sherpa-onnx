@@ -14,6 +14,7 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
@@ -37,6 +38,8 @@ struct Hypothesis {
   int32_t cur_scored_pos = 0;  // cur scored tokens by RNN LM
   std::vector<CopyableOrtValue> nn_lm_states;
 
+  ContextStatePtr context_state;
+
   // TODO(fangjun): Make it configurable
   // the minimum of tokens in a chunk for streaming RNN LM
   int32_t lm_rescore_min_chunk = 2;  // a const
@@ -44,8 +47,9 @@ struct Hypothesis {
   int32_t num_trailing_blanks = 0;
 
   Hypothesis() = default;
-  Hypothesis(const std::vector<int64_t> &ys, double log_prob)
-      : ys(ys), log_prob(log_prob) {}
+  Hypothesis(const std::vector<int64_t> &ys, double log_prob,
+             const ContextStatePtr &context_state = nullptr)
+      : ys(ys), log_prob(log_prob), context_state(context_state) {}
 
   double TotalLogProb() const { return log_prob + lm_log_prob; }
 

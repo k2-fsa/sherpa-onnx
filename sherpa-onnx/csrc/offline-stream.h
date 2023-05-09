@@ -98,6 +98,9 @@ class OfflineStream {
   /** Get the recognition result of this stream */
   const OfflineRecognitionResult &GetResult() const;
 
+  /** Get the ContextGraph of this stream */
+  const ContextGraphPtr &GetContextGraph() const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

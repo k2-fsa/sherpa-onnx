@@ -39,6 +39,7 @@ class OfflineRecognizer(object):
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
+        context_score: float = 1.5,
         debug: bool = False,
     ):
         """
@@ -92,6 +93,7 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            context_score=context_score,
         )
         self.recognizer = _Recognizer(recognizer_config)
         return self

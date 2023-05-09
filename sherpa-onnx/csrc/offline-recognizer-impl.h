@@ -7,6 +7,7 @@
 
 #include <memory>
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/offline-stream.h"
 
@@ -20,7 +21,12 @@ class OfflineRecognizerImpl {
   virtual ~OfflineRecognizerImpl() = default;
 
   virtual std::unique_ptr<OfflineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &context_list = {}) const = 0;
+      const std::vector<std::vector<int32_t>> &context_list) const {
+    SHERPA_ONNX_LOGE("Only transducer models support context biasing.");
+    exit(-1);
+  }
+
+  virtual std::unique_ptr<OfflineStream> CreateStream() const = 0;
 
   virtual void DecodeStreams(OfflineStream **ss, int32_t n) const = 0;
 };

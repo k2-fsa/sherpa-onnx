@@ -58,8 +58,11 @@ class OfflineRecognizer {
   explicit OfflineRecognizer(const OfflineRecognizerConfig &config);
 
   /// Create a stream for decoding.
+  std::unique_ptr<OfflineStream> CreateStream() const;
+
+  /// Create a stream for decoding.
   std::unique_ptr<OfflineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &context_list = {}) const;
+      const std::vector<std::vector<int32_t>> &context_list) const;
 
   /** Decode a single stream
    *
