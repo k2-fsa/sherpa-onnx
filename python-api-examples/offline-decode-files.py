@@ -43,7 +43,7 @@ import argparse
 import time
 import wave
 from pathlib import Path
-from typing import Tuple
+from typing import List, Tuple
 
 import numpy as np
 import sentencepiece as spm
@@ -302,10 +302,11 @@ def main():
         duration = len(samples) / sample_rate
         total_duration += duration
 
+        print(f"contexts_list : {contexts_list}")
         if contexts_list:
             assert len(args.paraformer) == 0, args.paraformer
             assert len(args.nemo_ctc) == 0, args.nemo_ctc
-            s = recognizer.create_stream(contexts_list)
+            s = recognizer.create_stream(contexts_list=contexts_list)
         else:
             s = recognizer.create_stream()
         s.accept_waveform(sample_rate, samples)
