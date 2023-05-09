@@ -136,7 +136,6 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
           TopkIndex(p_logprob, vocab_size * (end - start), max_active_paths_);
 
       Hypotheses hyps;
-      std::vector<CopyableOrtValue> nn_lm_states;
       for (auto k : topk) {
         int32_t hyp_index = k / vocab_size + start;
         int32_t new_token = k % vocab_size;
@@ -144,7 +143,8 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         Hypothesis new_hyp = prev[hyp_index];
         if (new_token != 0) {
           if (lm_) {
-            nn_lm_states = std::move(new_hyp.nn_lm_states);
+            std::vector<CopyableOrtValue> nn_lm_states =
+                std::move(new_hyp.nn_lm_states);
             *lm_x_.value.GetTensorMutableData<int64_t>() = k;
             *lm_x_len_.value.GetTensorMutableData<int64_t>() = 1;
             auto lm_out = lm_->ScoreToken(std::move(lm_x_.value),

@@ -29,8 +29,9 @@ class OnlineTransducerModifiedBeamSearchDecoder
     std::array<int64_t, 2> x_shape{1, 1};
     lm_x_.value = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
                                                     x_shape.size());
+    std::array<int64_t, 1> x_len_shape{1};
     lm_x_len_.value = Ort::Value::CreateTensor<int64_t>(
-        allocator_, x_shape.data(), x_shape.size());
+        allocator_, x_len_shape.data(), x_len_shape.size());
   }
 
   OnlineTransducerDecoderResult GetEmptyResult() const override;
