@@ -29,7 +29,7 @@ class OnlineLM {
    * @param lens A 2-D tensor of shape (N, L) with data type int64.
    * @param states It contains the states for the LM model
    * @return Return a pair containingo
-   *          - negative log_softmax of NN LM
+   *          - log_softmax of NN LM
    *          - updated states
    *
    */

@@ -34,7 +34,6 @@ struct Hypothesis {
   // LM log prob if any.
   double lm_log_prob = 0;
 
-  int32_t cur_scored_pos = 0;  // cur scored tokens by NN LM
   std::vector<CopyableOrtValue> nn_lm_states;
 
   int32_t num_trailing_blanks = 0;
