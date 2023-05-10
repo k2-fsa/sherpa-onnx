@@ -71,7 +71,8 @@ class OnlineTransducerModel {
    */
   virtual std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
       Ort::Value features,
-      std::vector<Ort::Value> states) = 0;  // NOLINT
+      std::vector<Ort::Value> states,
+      Ort::Value processed_frames) = 0;  // NOLINT
 
   /** Run the decoder network.
    *

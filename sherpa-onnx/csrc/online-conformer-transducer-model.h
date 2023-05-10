@@ -40,7 +40,8 @@ class OnlineConformerTransducerModel : public OnlineTransducerModel {
   std::vector<Ort::Value> GetEncoderInitStates() override;
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
-      Ort::Value features, std::vector<Ort::Value> states) override;
+      Ort::Value features, std::vector<Ort::Value> states,
+      Ort::Value processed_frames) override;
 
   Ort::Value RunDecoder(Ort::Value decoder_input) override;
 
@@ -92,9 +93,13 @@ class OnlineConformerTransducerModel : public OnlineTransducerModel {
   int32_t num_encoder_layers_ = 0;
   int32_t T_ = 0;
   int32_t decode_chunk_len_ = 0;
-  int32_t rnn_hidden_size_ = 0;
-  int32_t d_model_ = 0;
+  int32_t cnn_module_kernel_ = 0;
   int32_t context_size_ = 0;
+  int32_t left_context_ = 0;
+  // TODO: to get from model
+  int32_t right_context_ = 4;
+  int32_t encoder_dim_ = 0;
+  int32_t pad_length_ = 0;
   int32_t vocab_size_ = 0;
 };
 

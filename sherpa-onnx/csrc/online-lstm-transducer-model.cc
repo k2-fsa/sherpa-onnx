@@ -227,7 +227,8 @@ std::vector<Ort::Value> OnlineLstmTransducerModel::GetEncoderInitStates() {
 
 std::pair<Ort::Value, std::vector<Ort::Value>>
 OnlineLstmTransducerModel::RunEncoder(Ort::Value features,
-                                      std::vector<Ort::Value> states) {
+                                      std::vector<Ort::Value> states,
+                                      Ort::Value processed_frames) {
   std::array<Ort::Value, 3> encoder_inputs = {
       std::move(features), std::move(states[0]), std::move(states[1])};
 

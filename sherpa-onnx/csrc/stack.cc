@@ -76,13 +76,13 @@ Ort::Value Stack(OrtAllocator *allocator,
   T *dst = ans.GetTensorMutableData<T>();
 
   for (int32_t i = 0; i != leading_size; ++i) {
-      for (int32_t n = 0; n != static_cast<int32_t>(values.size()); ++n) {
-          const T *src = values[n]->GetTensorData<T>();
-          src += i * trailing_size;
+    for (int32_t n = 0; n != static_cast<int32_t>(values.size()); ++n) {
+      const T *src = values[n]->GetTensorData<T>();
+      src += i * trailing_size;
 
-          std::copy(src, src + trailing_size, dst);
-          dst += trailing_size;
-      }
+      std::copy(src, src + trailing_size, dst);
+      dst += trailing_size;
+    }
   }
 
   return ans;

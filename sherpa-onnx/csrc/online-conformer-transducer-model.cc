@@ -105,8 +105,10 @@ void OnlineConformerTransducerModel::InitEncoder(void *model_data,
   SHERPA_ONNX_READ_META_DATA(num_encoder_layers_, "num_encoder_layers");
   SHERPA_ONNX_READ_META_DATA(T_, "T");
   SHERPA_ONNX_READ_META_DATA(decode_chunk_len_, "decode_chunk_len");
-  SHERPA_ONNX_READ_META_DATA(rnn_hidden_size_, "rnn_hidden_size");
-  SHERPA_ONNX_READ_META_DATA(d_model_, "d_model");
+  SHERPA_ONNX_READ_META_DATA(left_context_, "left_context");
+  SHERPA_ONNX_READ_META_DATA(encoder_dim_, "encoder_dim");
+  SHERPA_ONNX_READ_META_DATA(pad_length_, "pad_length");
+  SHERPA_ONNX_READ_META_DATA(cnn_module_kernel_, "cnn_module_kernel");
 }
 
 void OnlineConformerTransducerModel::InitDecoder(void *model_data,
@@ -158,6 +160,7 @@ void OnlineConformerTransducerModel::InitJoiner(void *model_data,
 std::vector<Ort::Value> OnlineConformerTransducerModel::StackStates(
     const std::vector<std::vector<Ort::Value>> &states) const {
   int32_t batch_size = static_cast<int32_t>(states.size());
+  std::cout << "===> StackStates (start: " << batch_size << ")" << std::endl;
 
   std::vector<const Ort::Value *> attn_vec(batch_size);
   std::vector<const Ort::Value *> conv_vec(batch_size);
@@ -165,6 +168,13 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::StackStates(
   for (int32_t i = 0; i != batch_size; ++i) {
     assert(states[i].size() == 2);
     attn_vec[i] = &states[i][0];
+    const auto shape = attn_vec[i]->GetTensorTypeAndShapeInfo().GetShape();
+    std::cout << "===> " << i << " state: ";
+    for (const auto d: shape) {
+      std::cout << d << ",";
+    }
+    std::cout << std::endl;
+
     conv_vec[i] = &states[i][1];
   }
 
@@ -176,12 +186,16 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::StackStates(
   ans.push_back(std::move(attn));
   ans.push_back(std::move(conv));
 
+  std::cout << "===> StackStates (end)" << std::endl;
+
   return ans;
 }
 
 std::vector<std::vector<Ort::Value>>
 OnlineConformerTransducerModel::UnStackStates(
     const std::vector<Ort::Value> &states) const {
+  std::cout << "===> UnStackStates (start)" << std::endl;
+
   const int32_t batch_size =
     states[0].GetTensorTypeAndShapeInfo().GetShape()[1];
   assert(states.size() == 2);
@@ -199,22 +213,24 @@ OnlineConformerTransducerModel::UnStackStates(
     ans[i].push_back(std::move(conv_vec[i]));
   }
 
+  std::cout << "===> UnStackStates (end)" << std::endl;
+
   return ans;
 }
 
 std::vector<Ort::Value> OnlineConformerTransducerModel::GetEncoderInitStates() {
   // Please see
-  // any link here?
+  // https://github.com/k2-fsa/icefall/blob/86b0db6eb9c84d9bc90a71d92774fe2a7f73e6ab/egs/librispeech/ASR/pruned_transducer_stateless5/conformer.py#L203
   // for details
   constexpr int32_t kBatchSize = 1;
-  std::array<int64_t, 3> h_shape{num_encoder_layers_, kBatchSize, d_model_};
+  std::array<int64_t, 3> h_shape{num_encoder_layers_, left_context_, encoder_dim_};
   Ort::Value h = Ort::Value::CreateTensor<float>(allocator_, h_shape.data(),
                                                  h_shape.size());
 
   Fill<float>(&h, 0);
 
-  std::array<int64_t, 3> c_shape{num_encoder_layers_, kBatchSize,
-                                 rnn_hidden_size_};
+  std::array<int64_t, 3> c_shape{num_encoder_layers_, cnn_module_kernel_ - 1,
+                                 encoder_dim_};
 
   Ort::Value c = Ort::Value::CreateTensor<float>(allocator_, c_shape.data(),
                                                  c_shape.size());
@@ -232,9 +248,11 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::GetEncoderInitStates() {
 
 std::pair<Ort::Value, std::vector<Ort::Value>>
 OnlineConformerTransducerModel::RunEncoder(Ort::Value features,
-                                           std::vector<Ort::Value> states) {
-  std::array<Ort::Value, 3> encoder_inputs = {
-      std::move(features), std::move(states[0]), std::move(states[1])};
+                                           std::vector<Ort::Value> states,
+                                           Ort::Value processed_frames) {
+  std::array<Ort::Value, 4> encoder_inputs = {
+      std::move(features), std::move(states[0]), std::move(states[1]),
+      std::move(processed_frames)};
 
   auto encoder_out = encoder_sess_->Run(
       {}, encoder_input_names_ptr_.data(), encoder_inputs.data(),

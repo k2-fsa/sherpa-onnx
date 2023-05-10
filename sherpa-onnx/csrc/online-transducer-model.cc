@@ -10,6 +10,7 @@
 #endif
 
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -37,12 +38,21 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
   Ort::Env env(ORT_LOGGING_LEVEL_WARNING);
   Ort::SessionOptions sess_opts;
+  // OrtOpenVINOProviderOptions options;
+  // options.device_type = "CPU_FP32";
+  // options.device_id = "";
+  // options.num_of_threads = 8;
+  // options.cache_dir = "";
+  // options.context = nullptr;
+  // options.enable_opencl_throttling = false;
+  // const auto& api = Ort::GetApi();
+  // const auto status = api.SessionOptionsAppendExecutionProvider_OpenVINO(sess_opts, &options);
 
   auto sess = std::make_unique<Ort::Session>(env, model_data, model_data_length,
                                              sess_opts);
 
   Ort::ModelMetadata meta_data = sess->GetModelMetadata();
-  if (debug) {
+  if (debug || true) {
     std::ostringstream os;
     PrintModelMetadata(os, meta_data);
     SHERPA_ONNX_LOGE("%s", os.str().c_str());
