@@ -26,6 +26,29 @@ class OnlineRnnLM::Impl {
     Init(config);
   }
 
+  void ComputeLMScore(float scale, Hypothesis *hyp) {
+    if (hyp->nn_lm_states.empty()) {
+      auto init_states = GetInitStates();
+      hyp->nn_lm_scores.value = std::move(init_states.first);
+      hyp->nn_lm_states = Convert(std::move(init_states.second));
+    }
+
+    // get lm score for cur token given the hyp->ys[:-1] and save to lm_log_prob
+    const float *nn_lm_scores = hyp->nn_lm_scores.value.GetTensorData<float>();
+    hyp->lm_log_prob = nn_lm_scores[hyp->ys.back()] * scale;
+
+    // get lm scores for next tokens given the hyp->ys[:] and save to
+    // nn_lm_scores
+    std::array<int64_t, 2> x_shape{1, 1};
+    x_.value = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
+                                                    x_shape.size());
+    *x_.value.GetTensorMutableData<int64_t>() = hyp->ys.back();
+    auto lm_out =
+        ScoreToken(std::move(x_.value), Convert(hyp->nn_lm_states));
+    hyp->nn_lm_scores.value = std::move(lm_out.first);
+    hyp->nn_lm_states = Convert(std::move(lm_out.second));
+  }
+
   std::pair<Ort::Value, std::vector<Ort::Value>> ScoreToken(
       Ort::Value x, std::vector<Ort::Value> states) {
     std::array<Ort::Value, 3> inputs = {std::move(x), std::move(states[0]),
@@ -114,6 +137,7 @@ class OnlineRnnLM::Impl {
 
   CopyableOrtValue init_scores_;
   std::vector<Ort::Value> init_states_;
+  CopyableOrtValue x_;
 
   int32_t rnn_num_layers_ = 2;
   int32_t rnn_hidden_size_ = 512;
@@ -132,6 +156,10 @@ std::pair<Ort::Value, std::vector<Ort::Value>> OnlineRnnLM::GetInitStates() {
 std::pair<Ort::Value, std::vector<Ort::Value>> OnlineRnnLM::ScoreToken(
     Ort::Value x, std::vector<Ort::Value> states) {
   return impl_->ScoreToken(std::move(x), std::move(states));
+}
+
+void OnlineRnnLM::ComputeLMScore(float scale, Hypothesis *hyp) {
+  return impl_->ComputeLMScore(scale, hyp);
 }
 
 }  // namespace sherpa_onnx

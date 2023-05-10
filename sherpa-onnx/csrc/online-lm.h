@@ -17,8 +17,6 @@ namespace sherpa_onnx {
 
 class OnlineLM {
  public:
-  OnlineLM() : allocator_{} {}
-
   virtual ~OnlineLM() = default;
 
   static std::unique_ptr<OnlineLM> Create(const OnlineLMConfig &config);
@@ -27,8 +25,7 @@ class OnlineLM {
 
   /** ScoreToken a batch of sentences.
    *
-   * @param x A 2-D tensor of shape (N, L) with data type int64.
-   * @param lens A 2-D tensor of shape (N, L) with data type int64.
+   * @param x A 2-D tensor of shape (N, 1) with data type int64.
    * @param states It contains the states for the LM model
    * @return Return a pair containingo
    *          - log_prob of NN LM
@@ -44,10 +41,7 @@ class OnlineLM {
    * @param hyps It is changed in-place.
    *
    */
-  void ComputeLMScore(float scale, Hypothesis *hyp);
-
-  CopyableOrtValue lm_x_;
-  Ort::AllocatorWithDefaultOptions allocator_;
+  virtual void ComputeLMScore(float scale, Hypothesis *hyp) = 0;
 };
 
 }  // namespace sherpa_onnx
