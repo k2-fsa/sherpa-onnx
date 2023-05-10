@@ -21,29 +21,27 @@ class OnlineLM {
 
   static std::unique_ptr<OnlineLM> Create(const OnlineLMConfig &config);
 
-  virtual std::vector<Ort::Value> GetInitStates() = 0;
+  virtual std::pair<Ort::Value, std::vector<Ort::Value>> GetInitStates() = 0;
 
-  /** Rescore a batch of sentences.
+  /** ScoreToken a batch of sentences.
    *
-   * @param x A 2-D tensor of shape (N, L) with data type int64.
-   * @param y A 2-D tensor of shape (N, L) with data type int64.
+   * @param x A 2-D tensor of shape (N, 1) with data type int64.
    * @param states It contains the states for the LM model
    * @return Return a pair containingo
-   *          - negative loglike
+   *          - log_prob of NN LM
    *          - updated states
    *
-   * Caution: It returns negative log likelihood (nll), not log likelihood
    */
-  virtual std::pair<Ort::Value, std::vector<Ort::Value>> Rescore(
-      Ort::Value x, Ort::Value y, std::vector<Ort::Value> states) = 0;
+  virtual std::pair<Ort::Value, std::vector<Ort::Value>> ScoreToken(
+      Ort::Value x, std::vector<Ort::Value> states) = 0;
 
-  // This function updates hyp.lm_lob_prob of hyps.
-  //
-  // @param scale LM score
-  // @param context_size Context size of the transducer decoder model
-  // @param hyps It is changed in-place.
-  void ComputeLMScore(float scale, int32_t context_size,
-                      std::vector<Hypotheses> *hyps);
+  /** This function updates lm_lob_prob and nn_lm_scores of hyp
+   *
+   * @param scale LM score
+   * @param hyps It is changed in-place.
+   *
+   */
+  virtual void ComputeLMScore(float scale, Hypothesis *hyp) = 0;
 };
 
 }  // namespace sherpa_onnx
