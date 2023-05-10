@@ -96,7 +96,7 @@ class OnlineConformerTransducerModel : public OnlineTransducerModel {
   int32_t cnn_module_kernel_ = 0;
   int32_t context_size_ = 0;
   int32_t left_context_ = 0;
-  // TODO: to get from model
+  // TODO(jingzhaoou): to retrieve from model medadata
   int32_t right_context_ = 4;
   int32_t encoder_dim_ = 0;
   int32_t pad_length_ = 0;

@@ -188,7 +188,7 @@ class OnlineRecognizer::Impl {
     std::vector<OnlineTransducerDecoderResult> results(n);
     std::vector<float> features_vec(n * chunk_size * feature_dim);
     std::vector<std::vector<Ort::Value>> states_vec(n);
-    std::vector<int32_t> all_processed_frames(n);
+    std::vector<int64_t> all_processed_frames(n);
 
     for (int32_t i = 0; i != n; ++i) {
       const auto num_processed_frames = ss[i]->GetNumProcessedFrames();
@@ -215,25 +215,30 @@ class OnlineRecognizer::Impl {
                                             features_vec.size(), x_shape.data(),
                                             x_shape.size());
 
-    std::array<int64_t, 1> processed_frames_shape{(int64_t) all_processed_frames.size()};
+    std::array<int64_t, 1> processed_frames_shape{
+      (int64_t) all_processed_frames.size()};
 
-    Ort::Value processed_frames = Ort::Value::CreateTensor(memory_info, all_processed_frames.data(),
-                                                           all_processed_frames.size(), processed_frames_shape.data(),
-                                                           processed_frames_shape.size());
+    Ort::Value processed_frames = Ort::Value::CreateTensor(
+      memory_info,
+      all_processed_frames.data(),
+      all_processed_frames.size(),
+      processed_frames_shape.data(),
+      processed_frames_shape.size());
 
     auto states = model_->StackStates(states_vec);
 
-    for (const auto &s: states) {
+    for (const auto &s : states) {
       const auto shape = s.GetTensorTypeAndShapeInfo().GetShape();
       std::cout << "state: ";
-      for (const auto d: shape) {
+      for (const auto d : shape) {
         std::cout << d << ",";
       }
       std::cout << std::endl;
     }
 
     std::cout << "===> model_->RunEncoder (begin)" << std::endl;
-    auto pair = model_->RunEncoder(std::move(x), std::move(states), std::move(processed_frames));
+    auto pair = model_->RunEncoder(
+      std::move(x), std::move(states), std::move(processed_frames));
     std::cout << "===> model_->RunEncoder (end)" << std::endl;
 
     decoder_->Decode(std::move(pair.first), &results);

@@ -170,7 +170,7 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::StackStates(
     attn_vec[i] = &states[i][0];
     const auto shape = attn_vec[i]->GetTensorTypeAndShapeInfo().GetShape();
     std::cout << "===> " << i << " state: ";
-    for (const auto d: shape) {
+    for (const auto d : shape) {
       std::cout << d << ",";
     }
     std::cout << std::endl;
@@ -223,7 +223,8 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::GetEncoderInitStates() {
   // https://github.com/k2-fsa/icefall/blob/86b0db6eb9c84d9bc90a71d92774fe2a7f73e6ab/egs/librispeech/ASR/pruned_transducer_stateless5/conformer.py#L203
   // for details
   constexpr int32_t kBatchSize = 1;
-  std::array<int64_t, 3> h_shape{num_encoder_layers_, left_context_, encoder_dim_};
+  std::array<int64_t, 3> h_shape{
+    num_encoder_layers_, left_context_, encoder_dim_};
   Ort::Value h = Ort::Value::CreateTensor<float>(allocator_, h_shape.data(),
                                                  h_shape.size());
 
