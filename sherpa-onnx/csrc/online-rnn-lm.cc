@@ -40,11 +40,12 @@ class OnlineRnnLM::Impl {
     // get lm scores for next tokens given the hyp->ys[:] and save to
     // nn_lm_scores
     std::array<int64_t, 2> x_shape{1, 1};
-    x_.value = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
+    CopyableOrtValue x;
+    x.value = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
                                                     x_shape.size());
-    *x_.value.GetTensorMutableData<int64_t>() = hyp->ys.back();
+    *x.value.GetTensorMutableData<int64_t>() = hyp->ys.back();
     auto lm_out =
-        ScoreToken(std::move(x_.value), Convert(hyp->nn_lm_states));
+        ScoreToken(std::move(x.value), Convert(hyp->nn_lm_states));
     hyp->nn_lm_scores.value = std::move(lm_out.first);
     hyp->nn_lm_states = Convert(std::move(lm_out.second));
   }
@@ -109,7 +110,6 @@ class OnlineRnnLM::Impl {
     std::array<int64_t, 2> x_shape{1, 1};
     Ort::Value x = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
                                                      x_shape.size());
-    std::array<int64_t, 1> x_len_shape{1};
     *x.GetTensorMutableData<int64_t>() = sos_id_;
 
     std::vector<Ort::Value> states;
@@ -137,7 +137,6 @@ class OnlineRnnLM::Impl {
 
   CopyableOrtValue init_scores_;
   std::vector<Ort::Value> init_states_;
-  CopyableOrtValue x_;
 
   int32_t rnn_num_layers_ = 2;
   int32_t rnn_hidden_size_ = 512;
