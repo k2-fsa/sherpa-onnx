@@ -132,7 +132,7 @@ namespace SherpaOnnx
       byte[] bytes = reader.ReadBytes(Marshal.SizeOf(typeof(WaveHeader)));
 
       GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
-      WaveHeader header = (WaveHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(WaveHeader));
+      WaveHeader header = (WaveHeader)Marshal.PtrToStructure(handle.AddrOfPinnedObject(), typeof(WaveHeader))!;
       handle.Free();
 
       return header;
