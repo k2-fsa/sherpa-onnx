@@ -23,7 +23,7 @@ class OnlineLM {
 
   static std::unique_ptr<OnlineLM> Create(const OnlineLMConfig &config);
 
-  virtual std::vector<Ort::Value> GetInitStates() = 0;
+  virtual std::pair<Ort::Value, std::vector<Ort::Value>> GetInitStates() = 0;
 
   /** ScoreToken a batch of sentences.
    *
@@ -31,7 +31,7 @@ class OnlineLM {
    * @param lens A 2-D tensor of shape (N, L) with data type int64.
    * @param states It contains the states for the LM model
    * @return Return a pair containingo
-   *          - log_softmax of NN LM
+   *          - log_prob of NN LM
    *          - updated states
    *
    */

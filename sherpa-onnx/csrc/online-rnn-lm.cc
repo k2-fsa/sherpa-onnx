@@ -43,15 +43,13 @@ class OnlineRnnLM::Impl {
     return {std::move(out[0]), std::move(next_states)};
   }
 
-  std::vector<Ort::Value> GetInitStates() const {
+  std::pair<Ort::Value, std::vector<Ort::Value>> GetInitStates() const {
     std::vector<Ort::Value> ans;
     ans.reserve(init_states_.size());
-
     for (const auto &s : init_states_) {
       ans.emplace_back(Clone(allocator_, &s));
     }
-
-    return ans;
+    return {std::move(Clone(allocator_, &init_scores_.value)), std::move(ans)};
   }
 
  private:
@@ -96,6 +94,7 @@ class OnlineRnnLM::Impl {
     states.push_back(std::move(c));
     auto pair = ScoreToken(std::move(x), std::move(states));
 
+    init_scores_.value = std::move(pair.first);
     init_states_ = std::move(pair.second);
   }
 
@@ -113,6 +112,7 @@ class OnlineRnnLM::Impl {
   std::vector<std::string> output_names_;
   std::vector<const char *> output_names_ptr_;
 
+  CopyableOrtValue init_scores_;
   std::vector<Ort::Value> init_states_;
 
   int32_t rnn_num_layers_ = 2;
@@ -125,7 +125,7 @@ OnlineRnnLM::OnlineRnnLM(const OnlineLMConfig &config)
 
 OnlineRnnLM::~OnlineRnnLM() = default;
 
-std::vector<Ort::Value> OnlineRnnLM::GetInitStates() {
+std::pair<Ort::Value, std::vector<Ort::Value>> OnlineRnnLM::GetInitStates() {
   return impl_->GetInitStates();
 }
 

@@ -119,8 +119,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
     // to match what it actually contains
     float *p_logprob = p_logit;
 
-    // add log_prob and lm_log_prob (lm_log_prob is zero when _lm is NULL) of
-    // each hypothesis to p_logprob before taking top_k
+    // add log_prob of each hypothesis to p_logprob before taking top_k
     for (int32_t i = 0; i != num_hyps; ++i) {
       float log_prob = prev[i].log_prob + prev[i].lm_log_prob;
       for (int32_t k = 0; k != vocab_size; ++k, ++p_logprob) {
@@ -142,6 +141,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         int32_t new_token = k % vocab_size;
 
         Hypothesis new_hyp = prev[hyp_index];
+        const float prev_lm_log_prob = new_hyp.lm_log_prob;
         if (new_token != 0) {
           new_hyp.ys.push_back(new_token);
           new_hyp.timestamps.push_back(t + frame_offset);
@@ -152,7 +152,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         } else {
           ++new_hyp.num_trailing_blanks;
         }
-        new_hyp.log_prob = p_logprob[k];
+        new_hyp.log_prob = p_logprob[k] - prev_lm_log_prob;
         hyps.Add(std::move(new_hyp));
       }  // for (auto k : topk)
       cur.push_back(std::move(hyps));

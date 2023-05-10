@@ -34,6 +34,9 @@ struct Hypothesis {
   // LM log prob if any.
   double lm_log_prob = 0;
 
+  // the nn lm score for next token given the current ys
+  CopyableOrtValue nn_lm_scores;
+  // the nn lm states
   std::vector<CopyableOrtValue> nn_lm_states;
 
   int32_t num_trailing_blanks = 0;
