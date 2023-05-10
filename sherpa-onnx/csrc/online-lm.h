@@ -38,7 +38,7 @@ class OnlineLM {
   virtual std::pair<Ort::Value, std::vector<Ort::Value>> ScoreToken(
       Ort::Value x, std::vector<Ort::Value> states) = 0;
 
-  /** This function updates hyp.lm_lob_prob of hyps.
+  /** This function updates lm_lob_prob and nn_lm_scores of hyp
    *
    * @param scale LM score
    * @param hyps It is changed in-place.

@@ -23,14 +23,16 @@ void OnlineLM::ComputeLMScore(float scale, Hypothesis *hyp) {
     hyp->nn_lm_scores.value = std::move(init_states.first);
     hyp->nn_lm_states = Convert(std::move(init_states.second));
   }
+
+  // get lm score for cur token given the hyp->ys[:-1] and save to lm_log_prob
+  const float *nn_lm_scores = hyp->nn_lm_scores.value.GetTensorData<float>();
+  hyp->lm_log_prob = nn_lm_scores[hyp->ys.back()] * scale;
+
+  // get lm scores for next tokens given the hyp->ys[:] and save to nn_lm_scores
   std::array<int64_t, 2> x_shape{1, 1};
   lm_x_.value = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
                                                   x_shape.size());
-
   *lm_x_.value.GetTensorMutableData<int64_t>() = hyp->ys.back();
-  float *nn_lm_scores = hyp->nn_lm_scores.value.GetTensorMutableData<float>();
-  hyp->lm_log_prob = nn_lm_scores[hyp->ys.back()];
-
   auto lm_out = ScoreToken(std::move(lm_x_.value), Convert(hyp->nn_lm_states));
   hyp->nn_lm_scores.value = std::move(lm_out.first);
   hyp->nn_lm_states = Convert(std::move(lm_out.second));
