@@ -8,7 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
-
+#include "nlohmann/json.hpp"
 #include "kaldi-native-fbank/csrc/online-feature.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -214,5 +214,12 @@ void OfflineStream::SetResult(const OfflineRecognitionResult &r) {
 const OfflineRecognitionResult &OfflineStream::GetResult() const {
   return impl_->GetResult();
 }
+std::string OfflineRecognitionResult::AsJsonString() const {
+  nlohmann::json j;
+  j["text"] = text;
+  j["tokens"] = tokens;
+  j["timestamps"] = timestamps;
 
+  return j.dump();
+}
 }  // namespace sherpa_onnx

@@ -100,8 +100,8 @@ struct CopyableOrtValue {
 
   CopyableOrtValue() = default;
 
-  /*explicit*/ CopyableOrtValue(Ort::Value v) // NOLINT
-    : value(std::move(v)) {}
+  /*explicit*/ CopyableOrtValue(Ort::Value v)  // NOLINT
+      : value(std::move(v)) {}
 
   CopyableOrtValue(const CopyableOrtValue &other);
 
@@ -111,6 +111,10 @@ struct CopyableOrtValue {
 
   CopyableOrtValue &operator=(CopyableOrtValue &&other);
 };
+
+std::vector<CopyableOrtValue> Convert(std::vector<Ort::Value> values);
+
+std::vector<Ort::Value> Convert(std::vector<CopyableOrtValue> values);
 
 }  // namespace sherpa_onnx
 

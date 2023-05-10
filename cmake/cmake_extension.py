@@ -41,7 +41,6 @@ try:
                 # -linux_x86_64.whl
                 self.root_is_pure = False
 
-
 except ImportError:
     bdist_wheel = None
 
@@ -78,7 +77,6 @@ class BuildExtension(build_ext):
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_CHECK=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PYTHON=ON "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PORTAUDIO=ON "
-        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_C_API=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_WEBSOCKET=ON "
 
         if "PYTHON_EXECUTABLE" not in cmake_args:
