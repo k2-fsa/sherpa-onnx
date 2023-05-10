@@ -216,7 +216,7 @@ class OnlineRecognizer::Impl {
                                             x_shape.size());
 
     std::array<int64_t, 1> processed_frames_shape{
-      (int64_t) all_processed_frames.size()};
+      static_cast<int64_t>(all_processed_frames.size())};
 
     Ort::Value processed_frames = Ort::Value::CreateTensor(
       memory_info,
