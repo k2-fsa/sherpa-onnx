@@ -24,15 +24,7 @@ class OnlineTransducerModifiedBeamSearchDecoder
       : model_(model),
         lm_(lm),
         max_active_paths_(max_active_paths),
-        lm_scale_(lm_scale),
-        allocator_{} {
-    std::array<int64_t, 2> x_shape{1, 1};
-    lm_x_.value = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
-                                                    x_shape.size());
-    std::array<int64_t, 1> x_len_shape{1};
-    lm_x_len_.value = Ort::Value::CreateTensor<int64_t>(
-        allocator_, x_len_shape.data(), x_len_shape.size());
-  }
+        lm_scale_(lm_scale) {}
 
   OnlineTransducerDecoderResult GetEmptyResult() const override;
 
@@ -49,9 +41,6 @@ class OnlineTransducerModifiedBeamSearchDecoder
 
   int32_t max_active_paths_;
   float lm_scale_;  // used only when lm_ is not nullptr
-  CopyableOrtValue lm_x_;
-  CopyableOrtValue lm_x_len_;
-  Ort::AllocatorWithDefaultOptions allocator_;
 };
 
 }  // namespace sherpa_onnx

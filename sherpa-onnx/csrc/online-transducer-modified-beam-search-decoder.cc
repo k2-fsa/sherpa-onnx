@@ -119,9 +119,10 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
     // to match what it actually contains
     float *p_logprob = p_logit;
 
-    // add log_prob of each hypothesis to p_logprob before taking top_k
+    // add log_prob and lm_log_prob (lm_log_prob is zero when _lm is NULL) of
+    // each hypothesis to p_logprob before taking top_k
     for (int32_t i = 0; i != num_hyps; ++i) {
-      float log_prob = prev[i].log_prob;
+      float log_prob = prev[i].log_prob + prev[i].lm_log_prob;
       for (int32_t k = 0; k != vocab_size; ++k, ++p_logprob) {
         *p_logprob += log_prob;
       }
@@ -142,21 +143,12 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
 
         Hypothesis new_hyp = prev[hyp_index];
         if (new_token != 0) {
-          if (lm_) {
-            std::vector<CopyableOrtValue> nn_lm_states =
-                std::move(new_hyp.nn_lm_states);
-            *lm_x_.value.GetTensorMutableData<int64_t>() = k;
-            *lm_x_len_.value.GetTensorMutableData<int64_t>() = 1;
-            auto lm_out = lm_->ScoreToken(std::move(lm_x_.value),
-                                          std::move(lm_x_len_.value),
-                                          std::move(Convert(nn_lm_states)));
-            new_hyp.lm_log_prob += *lm_out.first.GetTensorData<float>();
-            new_hyp.nn_lm_states = std::move(Convert(std::move(lm_out.second)));
-          }
-
           new_hyp.ys.push_back(new_token);
           new_hyp.timestamps.push_back(t + frame_offset);
           new_hyp.num_trailing_blanks = 0;
+          if (lm_) {
+            lm_->ComputeLMScore(lm_scale_, &new_hyp);
+          }
         } else {
           ++new_hyp.num_trailing_blanks;
         }

@@ -35,7 +35,7 @@ class OnlineRnnLM : public OnlineLM {
    *
    */
   std::pair<Ort::Value, std::vector<Ort::Value>> ScoreToken(
-      Ort::Value x, Ort::Value lens, std::vector<Ort::Value> states) override;
+      Ort::Value x, std::vector<Ort::Value> states) override;
 
  private:
   class Impl;

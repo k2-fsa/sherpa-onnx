@@ -17,6 +17,8 @@ namespace sherpa_onnx {
 
 class OnlineLM {
  public:
+  OnlineLM() : allocator_{} {}
+
   virtual ~OnlineLM() = default;
 
   static std::unique_ptr<OnlineLM> Create(const OnlineLMConfig &config);
@@ -34,7 +36,18 @@ class OnlineLM {
    *
    */
   virtual std::pair<Ort::Value, std::vector<Ort::Value>> ScoreToken(
-      Ort::Value x, Ort::Value lens, std::vector<Ort::Value> states) = 0;
+      Ort::Value x, std::vector<Ort::Value> states) = 0;
+
+  /** This function updates hyp.lm_lob_prob of hyps.
+   *
+   * @param scale LM score
+   * @param hyps It is changed in-place.
+   *
+   */
+  void ComputeLMScore(float scale, Hypothesis *hyp);
+
+  CopyableOrtValue lm_x_;
+  Ort::AllocatorWithDefaultOptions allocator_;
 };
 
 }  // namespace sherpa_onnx
