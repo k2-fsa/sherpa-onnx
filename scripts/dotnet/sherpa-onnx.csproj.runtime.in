@@ -1,0 +1,50 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <OutputType>Library</OutputType>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net6.0</TargetFrameworks>
+    <RuntimeIdentifier>{{ dotnet_rid }}</RuntimeIdentifier>
+    <AssemblyName>sherpa-onnx</AssemblyName>
+    <Version>{{ version }}</Version>
+
+    <PackageProjectUrl>https://github.com/k2-fsa/sherpa-onnx</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/k2-fsa/sherpa-onnx</RepositoryUrl>
+    <PackageTags>speech recognition voice audio stt asr speech-to-text AI offline
+      privacy open-sourced next-gen-kaldi k2 kaldi2 sherpa-onnx</PackageTags>
+
+    <!-- Nuget Properties -->
+    <Description>.NET native {{ dotnet_rid }} wrapper for the sherpa-onnx project.
+
+    In general, you don't need to use this package directly.
+
+    Please use https://www.nuget.org/packages/org.k2fsa.sherpa.onnx instead
+    </Description>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+
+    <!-- Pack Option -->
+    <Title>sherpa-onnx {{ dotnet_rid }} v{{ version }}</Title>
+    <PackageId>org.k2fsa.sherpa.onnx.runtime.{{ dotnet_rid }}</PackageId>
+
+    <!-- Signing -->
+    <SignAssembly>false</SignAssembly>
+    <PublicSign>false</PublicSign>
+    <DelaySign>false</DelaySign>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="../README.md" Pack="true" PackagePath="/"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Native library must be in native directory... -->
+    <!-- If project is built as a STATIC_LIBRARY (e.g. Windows) then we don't have to include it -->
+    <Content Include="
+      {{ libs }}
+    ">
+      <PackagePath>runtimes/{{ dotnet_rid }}/native/%(Filename)%(Extension)</PackagePath>
+      <Pack>true</Pack>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>
