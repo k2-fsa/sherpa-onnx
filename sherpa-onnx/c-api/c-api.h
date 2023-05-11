@@ -67,9 +67,15 @@ SHERPA_ONNX_API typedef struct SherpaOnnxFeatureConfig {
   int32_t feature_dim;
 } SherpaOnnxFeatureConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineLMConfig {
+  const char *model;
+  float scale;
+} SherpaOnnxOnlineLMConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
   SherpaOnnxFeatureConfig feat_config;
   SherpaOnnxOnlineTransducerModelConfig model_config;
+  SherpaOnnxOnlineLMConfig lm_config;
 
   /// Possible values are: greedy_search, modified_beam_search
   const char *decoding_method;
