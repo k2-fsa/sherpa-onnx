@@ -18,22 +18,29 @@ using ContextGraphPtr = std::shared_ptr<ContextGraph>;
 
 struct ContextState {
   int32_t token;
-  float score;
-  float total_score;
+  float token_score;
+  float node_score;
+  float local_node_score;
   bool is_end;
   std::unordered_map<int32_t, ContextStatePtr> next;
   ContextStatePtr fail;
+  ContextStatePtr output;
 
   ContextState() = default;
-  ContextState(int32_t token, float score, float total_score, bool is_end)
-      : token(token), score(score), total_score(total_score), is_end(is_end) {}
+  ContextState(int32_t token, float token_score, float node_score,
+               float local_node_score, bool is_end)
+      : token(token),
+        token_score(token_score),
+        node_score(node_score),
+        local_node_score(local_node_score),
+        is_end(is_end) {}
 };
 
 class ContextGraph {
  public:
   ContextGraph() = default;
   explicit ContextGraph(float context_score) : context_score_(context_score) {
-    root_ = std::make_shared<ContextState>(ContextState(-1, 0, 0, false));
+    root_ = std::make_shared<ContextState>(-1, 0, 0, 0, false);
     root_->fail = root_;
   }
   ~ContextGraph() {}
@@ -49,7 +56,7 @@ class ContextGraph {
  private:
   float context_score_;
   ContextStatePtr root_;
-  void FillFail();
+  void FillFailOutput();
 };
 
 }  // namespace sherpa_onnx
