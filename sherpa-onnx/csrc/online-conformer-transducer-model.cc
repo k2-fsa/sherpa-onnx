@@ -20,7 +20,7 @@
 #endif
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
-#include "sherpa-onnx/csrc/stack.h"
+#include "sherpa-onnx/csrc/cat.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -171,8 +171,8 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::StackStates(
     conv_vec[i] = &states[i][1];
   }
 
-  Ort::Value attn = Stack(allocator_, attn_vec, 2);
-  Ort::Value conv = Stack(allocator_, conv_vec, 2);
+  Ort::Value attn = Cat(allocator_, attn_vec, 2);
+  Ort::Value conv = Cat(allocator_, conv_vec, 2);
 
   std::vector<Ort::Value> ans;
   ans.reserve(2);
@@ -188,7 +188,7 @@ std::vector<std::vector<Ort::Value>>
 OnlineConformerTransducerModel::UnStackStates(
     const std::vector<Ort::Value> &states) const {
   const int32_t batch_size =
-    states[0].GetTensorTypeAndShapeInfo().GetShape()[1];
+    states[0].GetTensorTypeAndShapeInfo().GetShape()[2];
   assert(states.size() == 2);
 
   for (const auto &s : states) {
@@ -235,15 +235,15 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::GetEncoderInitStates() {
   // https://github.com/k2-fsa/icefall/blob/86b0db6eb9c84d9bc90a71d92774fe2a7f73e6ab/egs/librispeech/ASR/pruned_transducer_stateless5/conformer.py#L203
   // for details
   constexpr int32_t kBatchSize = 1;
-  std::array<int64_t, 3> h_shape{
-    num_encoder_layers_, left_context_, encoder_dim_};
+  std::array<int64_t, 4> h_shape{
+    num_encoder_layers_, left_context_, kBatchSize, encoder_dim_};
   Ort::Value h = Ort::Value::CreateTensor<float>(allocator_, h_shape.data(),
                                                  h_shape.size());
 
   Fill<float>(&h, 0);
 
-  std::array<int64_t, 3> c_shape{num_encoder_layers_, cnn_module_kernel_ - 1,
-                                 encoder_dim_};
+  std::array<int64_t, 4> c_shape{num_encoder_layers_, cnn_module_kernel_ - 1,
+                                 kBatchSize, encoder_dim_};
 
   Ort::Value c = Ort::Value::CreateTensor<float>(allocator_, c_shape.data(),
                                                  c_shape.size());
@@ -264,10 +264,10 @@ OnlineConformerTransducerModel::RunEncoder(Ort::Value features,
                                            std::vector<Ort::Value> states,
                                            Ort::Value processed_frames) {
   std::array<Ort::Value, 4> encoder_inputs = {
-    std::move(features),
-    std::move(states[0]),
-    std::move(states[1]),
-    std::move(processed_frames)};
+      std::move(features),
+      std::move(states[0]),
+      std::move(states[1]),
+      std::move(processed_frames)};
 
   auto encoder_out = encoder_sess_->Run(
       {}, encoder_input_names_ptr_.data(), encoder_inputs.data(),
