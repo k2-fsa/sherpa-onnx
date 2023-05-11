@@ -168,6 +168,26 @@ void Print3D(Ort::Value *v) {
   fprintf(stderr, "\n");
 }
 
+void Print4D(Ort::Value *v) {
+  std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
+  const float *d = v->GetTensorData<float>();
+
+  for (int32_t p = 0; p != static_cast<int32_t>(shape[0]); ++p) {
+    fprintf(stderr, "---plane %d---\n", p);
+    for (int32_t q = 0; q != static_cast<int32_t>(shape[1]); ++q) {
+      fprintf(stderr, "---subplane %d---\n", q);
+      for (int32_t r = 0; r != static_cast<int32_t>(shape[2]); ++r) {
+        for (int32_t c = 0; c != static_cast<int32_t>(shape[3]); ++c, ++d) {
+          fprintf(stderr, "%.3f ", *d);
+        }
+        fprintf(stderr, "\n");
+      }
+      fprintf(stderr, "\n");
+    }
+  }
+  fprintf(stderr, "\n");
+}
+
 std::vector<char> ReadFile(const std::string &filename) {
   std::ifstream input(filename, std::ios::binary);
   std::vector<char> buffer(std::istreambuf_iterator<char>(input), {});

@@ -10,11 +10,13 @@
 #endif
 
 #include <algorithm>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/online-conformer-transducer-model.h"
 #include "sherpa-onnx/csrc/online-lstm-transducer-model.h"
 #include "sherpa-onnx/csrc/online-zipformer-transducer-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -22,6 +24,7 @@
 namespace {
 
 enum class ModelType {
+  kConformer,
   kLstm,
   kZipformer,
   kUnkown,
@@ -57,7 +60,9 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kUnkown;
   }
 
-  if (model_type.get() == std::string("lstm")) {
+  if (model_type.get() == std::string("conformer")) {
+    return ModelType::kConformer;
+  } else if (model_type.get() == std::string("lstm")) {
     return ModelType::kLstm;
   } else if (model_type.get() == std::string("zipformer")) {
     return ModelType::kZipformer;
@@ -78,6 +83,8 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
   }
 
   switch (model_type) {
+    case ModelType::kConformer:
+      return std::make_unique<OnlineConformerTransducerModel>(config);
     case ModelType::kLstm:
       return std::make_unique<OnlineLstmTransducerModel>(config);
     case ModelType::kZipformer:
@@ -132,6 +139,8 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
   auto model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
 
   switch (model_type) {
+    case ModelType::kConformer:
+      return std::make_unique<OnlineConformerTransducerModel>(mgr, config);
     case ModelType::kLstm:
       return std::make_unique<OnlineLstmTransducerModel>(mgr, config);
     case ModelType::kZipformer:

@@ -34,6 +34,7 @@ set(sources
   offline-transducer-model-config.cc
   offline-transducer-model.cc
   offline-transducer-modified-beam-search-decoder.cc
+  online-conformer-transducer-model.cc
   online-lm.cc
   online-lm-config.cc
   online-lstm-transducer-model.cc
@@ -52,6 +53,7 @@ set(sources
   parse-options.cc
   resample.cc
   slice.cc
+  stack.cc
   symbol-table.cc
   text-utils.cc
   transpose.cc
@@ -241,6 +243,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     packed-sequence-test.cc
     pad-sequence-test.cc
     slice-test.cc
+    stack-test.cc
     transpose-test.cc
     unbind-test.cc
   )
