@@ -43,7 +43,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
                                              sess_opts);
 
   Ort::ModelMetadata meta_data = sess->GetModelMetadata();
-  if (debug || true) {
+  if (debug) {
     std::ostringstream os;
     PrintModelMetadata(os, meta_data);
     SHERPA_ONNX_LOGE("%s", os.str().c_str());

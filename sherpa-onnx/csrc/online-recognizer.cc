@@ -227,36 +227,18 @@ class OnlineRecognizer::Impl {
 
     auto states = model_->StackStates(states_vec);
 
-    for (const auto &s : states) {
-      const auto shape = s.GetTensorTypeAndShapeInfo().GetShape();
-      std::cout << "state: ";
-      for (const auto d : shape) {
-        std::cout << d << ",";
-      }
-      std::cout << std::endl;
-    }
-
-    std::cout << "===> model_->RunEncoder (begin)" << std::endl;
     auto pair = model_->RunEncoder(
       std::move(x), std::move(states), std::move(processed_frames));
-    std::cout << "===> model_->RunEncoder (end)" << std::endl;
 
-    std::cout << "===> model_->Decoder (begin)" << std::endl;
     decoder_->Decode(std::move(pair.first), &results);
-    std::cout << "===> model_->Decoder (end)" << std::endl;
 
-    std::cout << "===> model_->UnStackStates (begin)" << std::endl;
     std::vector<std::vector<Ort::Value>> next_states =
         model_->UnStackStates(pair.second);
-    std::cout << "===> model_->UnStackStates (end)" << std::endl;
 
-    std::cout << "===> set (start: " << n << ", " << results.size() << ", "
-              << next_states.size() << ")" << std::endl;
     for (int32_t i = 0; i != n; ++i) {
       ss[i]->SetResult(results[i]);
       ss[i]->SetStates(std::move(next_states[i]));
     }
-    std::cout << "===> set (end)" << std::endl;
   }
 
   OnlineRecognizerResult GetResult(OnlineStream *s) const {
