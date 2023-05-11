@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "online-decode-files", "online-decode-files\online-decode-files.csproj", "{45307474-BECB-4ABE-9388-D01D55A1A9BE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-decode-files", "offline-decode-files\offline-decode-files.csproj", "{2DAB152C-9E24-47A0-9DB0-781297ECE458}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{45307474-BECB-4ABE-9388-D01D55A1A9BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45307474-BECB-4ABE-9388-D01D55A1A9BE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45307474-BECB-4ABE-9388-D01D55A1A9BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45307474-BECB-4ABE-9388-D01D55A1A9BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DAB152C-9E24-47A0-9DB0-781297ECE458}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DAB152C-9E24-47A0-9DB0-781297ECE458}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DAB152C-9E24-47A0-9DB0-781297ECE458}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DAB152C-9E24-47A0-9DB0-781297ECE458}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

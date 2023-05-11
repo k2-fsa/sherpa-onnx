@@ -1,0 +1,135 @@
+name: dot-net
+
+on:
+  push:
+    branches:
+      - dot-net
+    tags:
+      - '*'
+
+concurrency:
+  group: dot-net-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-libs:
+    name: dot-net for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+      # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
+      # for a list of versions
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.11.4
+        env:
+          CIBW_BEFORE_BUILD: "pip install -U cmake numpy"
+          CIBW_BUILD: "cp38-*64"
+          CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib'
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
+
+      - name: Display wheels
+        shell: bash
+        run: |
+          ls -lh ./wheelhouse/*.whl
+          unzip -l ./wheelhouse/*.whl
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}-wheels
+          path: ./wheelhouse/*.whl
+
+  build-nuget-packages:
+    name: build-nuget-packages
+    runs-on: ubuntu-latest
+    needs: build-libs
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Retrieve artifact from ubuntu-latest
+        uses: actions/download-artifact@v2
+        with:
+          name: ubuntu-latest-wheels
+          path: ./linux
+
+      - name: Retrieve artifact from macos-latest
+        uses: actions/download-artifact@v2
+        with:
+          name: macos-latest-wheels
+          path: ./macos
+
+      - name: Retrieve artifact from windows-latest
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-latest-wheels
+          path: ./windows
+
+      - name: Display wheels
+        shell: bash
+        run: |
+          tree .
+
+      - name: Unzip Ubuntu wheels
+        shell: bash
+        run: |
+          cd linux
+          unzip ./*.whl
+          tree .
+
+      - name: Unzip macOS wheels
+        shell: bash
+        run: |
+          cd macos
+          unzip ./*.whl
+          tree .
+
+      - name: Unzip Windows wheels
+        shell: bash
+        run: |
+          cd windows
+          unzip ./*.whl
+          cp -v ./*.dll sherpa_onnx/lib/
+          tree .
+
+      - name: Setup .NET Core 3.1
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+
+      - name: Setup .NET 7.0
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 7.0.x
+
+      - name: Check dotnet
+        run: dotnet --info
+
+      - name: build nuget packages
+        shell: bash
+        run: |
+          cd scripts/dotnet
+          ./run.sh
+          ls -lh packages
+
+      - uses: actions/upload-artifact@v2
+        name: upload nuget packages
+        with:
+          name: nuget-packages
+          path: scripts/dotnet/packages/*.nupkg
+
+      - name: publish .Net packages to nuget.org
+        if: github.repository == 'csukuangfj/sherpa-onnx' || github.repository == 'k2-fsa/sherpa-onnx'
+        shell: bash
+        env:
+          API_KEY: ${{ secrets.NUGET_API_KEY }}
+        run: |
+          # API_KEY is valid until 2024.05.02
+          cd scripts/dotnet/packages
+          dotnet nuget push ./org.k2fsa.sherpa.onnx.*.nupkg --skip-duplicate --api-key $API_KEY --source https://api.nuget.org/v3/index.json
