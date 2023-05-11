@@ -228,7 +228,7 @@ popd
 waves=(
 $repo/test_wavs/0.wav
 $repo/test_wavs/1.wav
-$repo/test_wavs/8k.wav
+$repo/test_wavs/2.wav
 )
 
 for wave in ${waves[@]}; do

@@ -9,6 +9,30 @@
 
 namespace sherpa_onnx {
 
+TEST(Stack, TestScalar) {
+  Ort::AllocatorWithDefaultOptions allocator;
+
+  std::array<int64_t, 1> a_shape{1};
+
+  Ort::Value a = Ort::Value::CreateTensor<float>(allocator, a_shape.data(),
+    a_shape.size());
+
+  float *pa = a.GetTensorMutableData<float>();
+  for (int32_t i = 0; i != static_cast<int32_t>(a_shape[0]); ++i) {
+    pa[i] = i;
+  }
+
+  Ort::Value ans = Stack(allocator, {&a}, 0);
+
+  Print1D(&a);
+  Print1D(&ans);
+
+  const float *pans = ans.GetTensorData<float>();
+  for (int32_t i = 0; i != static_cast<int32_t>(a_shape[0]); ++i) {
+    EXPECT_EQ(pa[i], pans[i]);
+  }
+}
+
 TEST(Stack, Test1DTensors) {
   Ort::AllocatorWithDefaultOptions allocator;
 
