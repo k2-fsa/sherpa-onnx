@@ -160,7 +160,7 @@ void OnlineConformerTransducerModel::InitJoiner(void *model_data,
 std::vector<Ort::Value> OnlineConformerTransducerModel::StackStates(
     const std::vector<std::vector<Ort::Value>> &states) const {
   int32_t batch_size = static_cast<int32_t>(states.size());
-  std::cout << "===> StackStates (start: " << batch_size << ")" << std::endl;
+  std::cout << "===> StackStates (start)" << std::endl;
 
   std::vector<const Ort::Value *> attn_vec(batch_size);
   std::vector<const Ort::Value *> conv_vec(batch_size);
@@ -168,13 +168,6 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::StackStates(
   for (int32_t i = 0; i != batch_size; ++i) {
     assert(states[i].size() == 2);
     attn_vec[i] = &states[i][0];
-    const auto shape = attn_vec[i]->GetTensorTypeAndShapeInfo().GetShape();
-    std::cout << "===> " << i << " state: ";
-    for (const auto d : shape) {
-      std::cout << d << ",";
-    }
-    std::cout << std::endl;
-
     conv_vec[i] = &states[i][1];
   }
 
@@ -194,8 +187,6 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::StackStates(
 std::vector<std::vector<Ort::Value>>
 OnlineConformerTransducerModel::UnStackStates(
     const std::vector<Ort::Value> &states) const {
-  std::cout << "===> UnStackStates (start)" << std::endl;
-
   const int32_t batch_size =
     states[0].GetTensorTypeAndShapeInfo().GetShape()[1];
   assert(states.size() == 2);
@@ -212,8 +203,6 @@ OnlineConformerTransducerModel::UnStackStates(
     ans[i].push_back(std::move(attn_vec[i]));
     ans[i].push_back(std::move(conv_vec[i]));
   }
-
-  std::cout << "===> UnStackStates (end)" << std::endl;
 
   return ans;
 }
@@ -252,7 +241,9 @@ OnlineConformerTransducerModel::RunEncoder(Ort::Value features,
                                            std::vector<Ort::Value> states,
                                            Ort::Value processed_frames) {
   std::array<Ort::Value, 4> encoder_inputs = {
-      std::move(features), std::move(states[0]), std::move(states[1]),
+      std::move(features), 
+      std::move(states[0]), 
+      std::move(states[1]),
       std::move(processed_frames)};
 
   auto encoder_out = encoder_sess_->Run(
