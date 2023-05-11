@@ -250,7 +250,8 @@ class OnlineRecognizer::Impl {
         model_->UnStackStates(pair.second);
     std::cout << "===> model_->UnStackStates (end)" << std::endl;
 
-    std::cout << "===> set (start: " << n << ", " << results.size() << ", " << next_states.size() << ")" << std::endl;
+    std::cout << "===> set (start: " << n << ", " << results.size() << ", "
+              << next_states.size() << ")" << std::endl;
     for (int32_t i = 0; i != n; ++i) {
       ss[i]->SetResult(results[i]);
       ss[i]->SetStates(std::move(next_states[i]));

@@ -191,6 +191,15 @@ OnlineConformerTransducerModel::UnStackStates(
     states[0].GetTensorTypeAndShapeInfo().GetShape()[2];
   assert(states.size() == 2);
 
+  for (const auto &s : states) {
+    std::cout << "shape: ";
+    const auto shape = s.GetTensorTypeAndShapeInfo().GetShape();
+    for (const auto d : shape) {
+      std::cout << d << ", ";
+    }
+    std::cout << std::endl;
+  }
+
   std::vector<std::vector<Ort::Value>> ans(batch_size);
 
   std::vector<Ort::Value> attn_vec = Unbind(allocator_, &states[0], 2);
@@ -200,6 +209,20 @@ OnlineConformerTransducerModel::UnStackStates(
   assert(conv_vec.size() == batch_size);
 
   for (int32_t i = 0; i != batch_size; ++i) {
+    std::cout << "attn_vec[" << i << "]: ";
+    const auto attn_shape = attn_vec[i].GetTensorTypeAndShapeInfo().GetShape();
+    for (const auto d : attn_shape) {
+      std::cout << d << ", ";
+    }
+    std::cout << std::endl;
+
+    std::cout << "conv_vec[" << i << "]: ";
+    const auto conv_shape = conv_vec[i].GetTensorTypeAndShapeInfo().GetShape();
+    for (const auto d : conv_shape) {
+      std::cout << d << ", ";
+    }
+    std::cout << std::endl;
+
     ans[i].push_back(std::move(attn_vec[i]));
     ans[i].push_back(std::move(conv_vec[i]));
   }
