@@ -128,7 +128,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
                                -23.025850929940457f);
 
     auto t = model_->RunEncoder(std::move(x), std::move(x_length));
-    auto results = decoder_->Decode(std::move(t.first), std::move(t.second));
+    auto results =
+        decoder_->Decode(std::move(t.first), std::move(t.second), ss, n);
 
     int32_t frame_shift_ms = 10;
     for (int32_t i = 0; i != n; ++i) {
