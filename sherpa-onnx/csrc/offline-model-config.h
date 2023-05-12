@@ -20,18 +20,21 @@ struct OfflineModelConfig {
   std::string tokens;
   int32_t num_threads = 2;
   bool debug = false;
+  std::string provider = "cpu";
 
   OfflineModelConfig() = default;
   OfflineModelConfig(const OfflineTransducerModelConfig &transducer,
                      const OfflineParaformerModelConfig &paraformer,
                      const OfflineNemoEncDecCtcModelConfig &nemo_ctc,
-                     const std::string &tokens, int32_t num_threads, bool debug)
+                     const std::string &tokens, int32_t num_threads, bool debug,
+                     const std::string &provider)
       : transducer(transducer),
         paraformer(paraformer),
         nemo_ctc(nemo_ctc),
         tokens(tokens),
         num_threads(num_threads),
-        debug(debug) {}
+        debug(debug),
+        provider(provider) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

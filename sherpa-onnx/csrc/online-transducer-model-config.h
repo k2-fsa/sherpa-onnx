@@ -17,19 +17,21 @@ struct OnlineTransducerModelConfig {
   std::string tokens;
   int32_t num_threads = 2;
   bool debug = false;
+  std::string provider = "cpu";
 
   OnlineTransducerModelConfig() = default;
   OnlineTransducerModelConfig(const std::string &encoder_filename,
                               const std::string &decoder_filename,
                               const std::string &joiner_filename,
                               const std::string &tokens, int32_t num_threads,
-                              bool debug)
+                              bool debug, const std::string &provider)
       : encoder_filename(encoder_filename),
         decoder_filename(decoder_filename),
         joiner_filename(joiner_filename),
         tokens(tokens),
         num_threads(num_threads),
-        debug(debug) {}
+        debug(debug),
+        provider(provider) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
