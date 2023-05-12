@@ -13,34 +13,47 @@ extension AVAudioPCMBuffer {
 }
 
 func run() {
-  let encoder = "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx"
-  let decoder = "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx"
-  let joiner = "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx"
+  let encoder =
+    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx"
+  let decoder =
+    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx"
+  let joiner =
+    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx"
   let tokens = "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt"
+  let lm =
+    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/with-state-epoch-999-avg-1.onnx"
 
   let modelConfig = sherpaOnnxOnlineTransducerModelConfig(
     encoder: encoder,
     decoder: decoder,
     joiner: joiner,
     tokens: tokens,
-    numThreads: 2)
+    numThreads: 2,
+    debug: 0
+  )
 
   let featConfig = sherpaOnnxFeatureConfig(
     sampleRate: 16000,
     featureDim: 80
   )
-  var config = sherpaOnnxOnlineRecognizerConfig(
-      featConfig: featConfig,
-      modelConfig: modelConfig,
-      enableEndpoint: false,
-      decodingMethod: "modified_beam_search",
-      maxActivePaths: 4
-  )
 
+  let lmConfig = sherpaOnnxOnlineLMConfig(
+    model: lm,
+    scale: 0.5
+  )
+  var config = sherpaOnnxOnlineRecognizerConfig(
+    featConfig: featConfig,
+    modelConfig: modelConfig,
+    lmConfig: lmConfig,
+    enableEndpoint: false,
+    decodingMethod: "modified_beam_search",
+    /* decodingMethod: "greedy_search", */
+    maxActivePaths: 4
+  )
 
   let recognizer = SherpaOnnxRecognizer(config: &config)
 
-  let filePath = "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/1.wav"
+  let filePath = "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/5.wav"
   let fileURL: NSURL = NSURL(fileURLWithPath: filePath)
   let audioFile = try! AVAudioFile(forReading: fileURL as URL)
 
@@ -60,7 +73,7 @@ func run() {
   recognizer.acceptWaveform(samples: tailPadding)
 
   recognizer.inputFinished()
-  while (recognizer.isReady()) {
+  while recognizer.isReady() {
     recognizer.decode()
   }
 
