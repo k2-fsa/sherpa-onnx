@@ -7,6 +7,7 @@
 #include <string>
 #include <utility>
 
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/provider.h"
 #if defined(__APPLE__)
 #include "coreml_provider_factory.h"  // NOLINT
