@@ -52,8 +52,13 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
     }
     case Provider::kDirectML: {
 #if defined(_WIN32)
+      sess_opts.DisableMemPattern();
+      sess_opts.SetExecutionMode(ORT_SEQUENTIAL);
       int32_t device_id = 0;
-      OrtSessionOptionsAppendExecutionProvider_DML(session_options, device_id);
+      OrtStatus* onnx_status = OrtSessionOptionsAppendExecutionProvider_DML(sess_opts, device_id);
+      if (!onnx_status) {
+        fprintf(stderr, "failed to set directml\n");
+      }
 #else
       SHERPA_ONNX_LOGE("DirectML is for Windows only. Fallback to cpu!");
 #endif

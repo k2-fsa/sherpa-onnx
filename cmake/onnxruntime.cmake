@@ -100,13 +100,21 @@ function(download_onnxruntime)
     FetchContent_Populate(onnxruntime)
   endif()
   message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
+  if(WIN32)
+    set(LIB_PATH "${onnxruntime_SOURCE_DIR}/${LIB_PATH}")
+  endif()
 
-  find_library(location_onnxruntime onnxruntime
-    PATHS
-    "${onnxruntime_SOURCE_DIR}/lib"
-    "${LIB_PATH}"
-    NO_CMAKE_SYSTEM_PATH
-  )
+  message(STATUS "Addition lib search path for onnxruntime: ${LIB_PATH}")
+
+  if(NOT WIN32)
+    find_library(location_onnxruntime onnxruntime
+      PATHS
+      "${onnxruntime_SOURCE_DIR}/lib"
+      NO_CMAKE_SYSTEM_PATH
+    )
+  else()
+    set(location_onnxruntime ${LIB_PATH}/onnxruntime.dll)
+  endif()
 
   message(STATUS "location_onnxruntime: ${location_onnxruntime}")
 
@@ -127,10 +135,10 @@ function(download_onnxruntime)
   if(WIN32)
     set_property(TARGET onnxruntime
       PROPERTY
-        IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/${LIB_PATH}"
+        IMPORTED_IMPLIB "${LIB_PATH}/onnxruntime.lib"
     )
 
-    file(COPY ${onnxruntime_SOURCE_DIR}/${LIB_PATH}/onnxruntime.dll
+    file(COPY ${LIB_PATH}/onnxruntime.dll
       DESTINATION
         ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
     )
@@ -141,7 +149,7 @@ function(download_onnxruntime)
   elseif(APPLE)
     file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.*.*dylib")
   elseif(WIN32)
-    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/${LIB_PATH}/*.dll")
+    file(GLOB onnxruntime_lib_files "${LIB_PATH}/*.dll")
   endif()
 
   message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
