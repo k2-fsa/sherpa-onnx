@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <string>
 #include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/provider.h"
