@@ -22,6 +22,9 @@ void OfflineModelConfig::Register(ParseOptions *po) {
 
   po->Register("debug", &debug,
                "true to print model information while loading it.");
+
+  po->Register("provider", &provider,
+               "Specify a provider to use: cpu, cuda, coreml");
 }
 
 bool OfflineModelConfig::Validate() const {
@@ -55,7 +58,8 @@ std::string OfflineModelConfig::ToString() const {
   os << "nemo_ctc=" << nemo_ctc.ToString() << ", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
-  os << "debug=" << (debug ? "True" : "False") << ")";
+  os << "debug=" << (debug ? "True" : "False") << ", ";
+  os << "provider=\"" << provider << "\")";
 
   return os.str();
 }
