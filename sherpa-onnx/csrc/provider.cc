@@ -20,6 +20,8 @@ Provider StringToProvider(std::string s) {
     return Provider::kCUDA;
   } else if (s == "coreml") {
     return Provider::kCoreML;
+  } else if (s == "directml") {
+    return Provider::kDirectML;
   } else {
     SHERPA_ONNX_LOGE("Unsupported string: %s. Fallback to cpu", s.c_str());
     return Provider::kCPU;

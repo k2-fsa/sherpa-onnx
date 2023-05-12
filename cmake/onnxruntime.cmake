@@ -1,6 +1,7 @@
 function(download_onnxruntime)
   include(FetchContent)
 
+  set(LIB_PATH)
   if(CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
     # For embedded systems
     set(possible_file_locations
@@ -54,43 +55,23 @@ function(download_onnxruntime)
   elseif(WIN32)
     message(STATUS "CMAKE_VS_PLATFORM_NAME: ${CMAKE_VS_PLATFORM_NAME}")
 
+    set(possible_file_locations
+      $ENV{HOME}/Downloads/microsoft.ml.onnxruntime.directml.1.14.1.nupkg
+      ${PROJECT_SOURCE_DIR}/microsoft.ml.onnxruntime.directml.1.14.1.nupkg
+      ${PROJECT_BINARY_DIR}/microsoft.ml.onnxruntime.directml.1.14.1.nupkg
+      /tmp/microsoft.ml.onnxruntime.directml.1.14.1.nupkg
+    )
+
+    set(onnxruntime_URL  "https://globalcdn.nuget.org/packages/microsoft.ml.onnxruntime.directml.1.14.1.nupkg")
+    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/microsoft.ml.onnxruntime.directml.1.14.1.nupkg")
+    set(onnxruntime_HASH "SHA256=c8ae7623385b19cd5de968d0df5383e13b97d1b3a6771c9177eac15b56013a5a")
+
     if(CMAKE_VS_PLATFORM_NAME STREQUAL Win32)
-      # If you don't have access to the Internet,
-      # please pre-download onnxruntime
-      #
-      # for 32-bit windows
-      set(possible_file_locations
-        $ENV{HOME}/Downloads/onnxruntime-win-x86-1.14.0.zip
-        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-1.14.0.zip
-        ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-1.14.0.zip
-        /tmp/onnxruntime-win-x86-1.14.0.zip
-      )
-
-      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x86-1.14.0.zip")
-      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x86-1.14.0.zip")
-      set(onnxruntime_HASH "SHA256=4214b130db602cbf31a6f26f25377ab077af0cf03c4ddd4651283e1fb68f56cf")
+      set(LIB_PATH "runtimes/win-x86/native/")
     else()
-      # If you don't have access to the Internet,
-      # please pre-download onnxruntime
-      #
-      # for 64-bit windows
-      set(possible_file_locations
-        $ENV{HOME}/Downloads/onnxruntime-win-x64-1.14.0.zip
-        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-1.14.0.zip
-        ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-1.14.0.zip
-        /tmp/onnxruntime-win-x64-1.14.0.zip
-      )
-
-      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x64-1.14.0.zip")
-      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-1.14.0.zip")
-      set(onnxruntime_HASH "SHA256=300eafef456748cde2743ee08845bd40ff1bab723697ff934eba6d4ce3519620")
+      set(LIB_PATH "runtimes/win-x64/native/")
+      # TODO(fangjun): Support win-arm and win-arm64
     endif()
-    # After downloading, it contains:
-    #  ./lib/onnxruntime.{dll,lib,pdb}
-    #  ./lib/onnxruntime_providers_shared.{dll,lib,pdb}
-    #
-    # ./include
-    #    It contains all the needed header files
   else()
     message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
     message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
@@ -123,6 +104,7 @@ function(download_onnxruntime)
   find_library(location_onnxruntime onnxruntime
     PATHS
     "${onnxruntime_SOURCE_DIR}/lib"
+    "${LIB_PATH}"
     NO_CMAKE_SYSTEM_PATH
   )
 
@@ -130,17 +112,25 @@ function(download_onnxruntime)
 
   add_library(onnxruntime SHARED IMPORTED)
 
-  set_target_properties(onnxruntime PROPERTIES
-    IMPORTED_LOCATION ${location_onnxruntime}
-    INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
-  )
+  if(NOT WIN32)
+    set_target_properties(onnxruntime PROPERTIES
+      IMPORTED_LOCATION ${location_onnxruntime}
+      INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
+    )
+  else()
+    set_target_properties(onnxruntime PROPERTIES
+      IMPORTED_LOCATION ${location_onnxruntime}
+      INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/build/native/include"
+    )
+  endif()
+
   if(WIN32)
     set_property(TARGET onnxruntime
       PROPERTY
-        IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib"
+        IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/${LIB_PATH}"
     )
 
-    file(COPY ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll
+    file(COPY ${onnxruntime_SOURCE_DIR}/${LIB_PATH}/onnxruntime.dll
       DESTINATION
         ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
     )
@@ -151,7 +141,7 @@ function(download_onnxruntime)
   elseif(APPLE)
     file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.*.*dylib")
   elseif(WIN32)
-    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.dll")
+    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/${LIB_PATH}/*.dll")
   endif()
 
   message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")

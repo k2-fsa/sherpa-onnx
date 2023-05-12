@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/session.h"
 
+#include <string.h>
+
 #include <string>
 #include <utility>
 
@@ -11,6 +13,10 @@
 #include "sherpa-onnx/csrc/provider.h"
 #if defined(__APPLE__)
 #include "coreml_provider_factory.h"  // NOLINT
+#endif
+
+#if defined(_WIN32)
+#include "dml_provider_factory.h"  // NOLINT
 #endif
 
 namespace sherpa_onnx {
@@ -29,6 +35,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
     case Provider::kCUDA: {
       OrtCUDAProviderOptions options;
       options.device_id = 0;
+
       // set more options on need
       sess_opts.AppendExecutionProvider_CUDA(options);
       break;
@@ -40,6 +47,15 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
                                                             coreml_flags);
 #else
       SHERPA_ONNX_LOGE("CoreML is for Apple only. Fallback to cpu!");
+#endif
+      break;
+    }
+    case Provider::kDirectML: {
+#if defined(_WIN32)
+      int32_t device_id = 0;
+      OrtSessionOptionsAppendExecutionProvider_DML(session_options, device_id);
+#else
+      SHERPA_ONNX_LOGE("DirectML is for Windows only. Fallback to cpu!");
 #endif
       break;
     }
