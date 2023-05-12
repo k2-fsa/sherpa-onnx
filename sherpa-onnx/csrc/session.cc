@@ -28,15 +28,19 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
     case Provider::kCPU:
       break;  // nothing to do for the CPU provider
     case Provider::kCUDA: {
-      std::vector<std::string> available_providers = Ort::GetAvailableProviders();
-      if (std::find(available_providers.begin(), available_providers.end(), "CUDAExecutionProvider") != available_providers.end()) {
-          // The CUDA provider is available, proceed with setting the options
-          OrtCUDAProviderOptions options;
-          options.device_id = 0;
-          // set more options on need
-          sess_opts.AppendExecutionProvider_CUDA(options);
+      std::vector<std::string> available_providers =
+          Ort::GetAvailableProviders();
+      if (std::find(available_providers.begin(), available_providers.end(),
+                    "CUDAExecutionProvider") != available_providers.end()) {
+        // The CUDA provider is available, proceed with setting the options
+        OrtCUDAProviderOptions options;
+        options.device_id = 0;
+        // set more options on need
+        sess_opts.AppendExecutionProvider_CUDA(options);
       } else {
-          SHERPA_ONNX_LOGE("Please compile with -DSHERPA_ONNX_ENABLE_GPU=ON, Fallback to cpu!");
+        SHERPA_ONNX_LOGE(
+            "Please compile with -DSHERPA_ONNX_ENABLE_GPU=ON, Fallback to "
+            "cpu!");
       }
       break;
     }
