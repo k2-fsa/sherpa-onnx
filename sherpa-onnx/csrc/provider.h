@@ -2,6 +2,9 @@
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
+#ifndef SHERPA_ONNX_CSRC_PROVIDER_H_
+#define SHERPA_ONNX_CSRC_PROVIDER_H_
+
 #include <string>
 
 namespace sherpa_onnx {
@@ -24,3 +27,5 @@ enum class Provider {
 Provider StringToProvider(std::string s);
 
 }  // namespace sherpa_onnx
+
+#endif  // SHERPA_ONNX_CSRC_PROVIDER_H_

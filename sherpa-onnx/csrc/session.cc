@@ -4,16 +4,19 @@
 
 #include "sherpa-onnx/csrc/session.h"
 
+#include <string>
+#include <utility>
+
 #include "sherpa-onnx/csrc/provider.h"
 #if defined(__APPLE__)
-#include "coreml_provider_factory.h"
+#include "coreml_provider_factory.h"  // NOLINT
 #endif
 
 namespace sherpa_onnx {
 
 static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
                                                  std::string provider_str) {
-  Provider p = StringToProvider(provider_str);
+  Provider p = StringToProvider(std::move(provider_str));
 
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(num_threads);

@@ -139,7 +139,7 @@ class OnlineRecognizer::Impl {
       decoder_ =
           std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
     } else {
-      SHERPA_ONNX_LOGE(, "Unsupported decoding method: %s",
+      SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
       exit(-1);
     }
