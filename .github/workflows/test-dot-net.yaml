@@ -1,0 +1,70 @@
+name: test-dot-net
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-dot-net'
+      - 'dotnet-examples/**'
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-dot-net'
+      - 'dotnet-examples/**'
+
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 23:50 UTC time every day
+    - cron: "50 23 * * *"
+
+concurrency:
+  group: test-dot-net
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test-dot-net:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET Core 3.1
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 3.1.x
+
+      - name: Setup .NET 6.0
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 6.0.x
+
+      - name: Check dotnet
+        run: dotnet --info
+
+      - name: Decode a file
+        shell: bash
+        run: |
+          cd dotnet-examples/
+          cd online-decode-files
+          ./run.sh
+
+          cd ../offline-decode-files
+          ./run-nemo-ctc.sh
+          ./run-paraformer.sh
+          ./run-zipformer.sh

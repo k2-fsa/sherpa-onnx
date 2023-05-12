@@ -1,8 +1,9 @@
-// sherpa-onnx/csrc/online-lstm-transducer-model.h
+// sherpa-onnx/csrc/online-conformer-transducer-model.h
 //
-// Copyright (c)  2023  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_ONLINE_LSTM_TRANSDUCER_MODEL_H_
-#define SHERPA_ONNX_CSRC_ONLINE_LSTM_TRANSDUCER_MODEL_H_
+// Copyright (c) 2023 Jingzhao Ou (jingzhao.ou@gmail.com)
+
+#ifndef SHERPA_ONNX_CSRC_ONLINE_CONFORMER_TRANSDUCER_MODEL_H_
+#define SHERPA_ONNX_CSRC_ONLINE_CONFORMER_TRANSDUCER_MODEL_H_
 
 #include <memory>
 #include <string>
@@ -20,13 +21,14 @@
 
 namespace sherpa_onnx {
 
-class OnlineLstmTransducerModel : public OnlineTransducerModel {
+class OnlineConformerTransducerModel : public OnlineTransducerModel {
  public:
-  explicit OnlineLstmTransducerModel(const OnlineTransducerModelConfig &config);
+  explicit OnlineConformerTransducerModel(
+      const OnlineTransducerModelConfig &config);
 
 #if __ANDROID_API__ >= 9
-  OnlineLstmTransducerModel(AAssetManager *mgr,
-                            const OnlineTransducerModelConfig &config);
+  OnlineConformerTransducerModel(AAssetManager *mgr,
+                                 const OnlineTransducerModelConfig &config);
 #endif
 
   std::vector<Ort::Value> StackStates(
@@ -91,12 +93,16 @@ class OnlineLstmTransducerModel : public OnlineTransducerModel {
   int32_t num_encoder_layers_ = 0;
   int32_t T_ = 0;
   int32_t decode_chunk_len_ = 0;
-  int32_t rnn_hidden_size_ = 0;
-  int32_t d_model_ = 0;
+  int32_t cnn_module_kernel_ = 0;
   int32_t context_size_ = 0;
+  int32_t left_context_ = 0;
+  // TODO(jingzhaoou): to retrieve from model medadata
+  int32_t right_context_ = 4;
+  int32_t encoder_dim_ = 0;
+  int32_t pad_length_ = 0;
   int32_t vocab_size_ = 0;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_ONLINE_LSTM_TRANSDUCER_MODEL_H_
+#endif  // SHERPA_ONNX_CSRC_ONLINE_CONFORMER_TRANSDUCER_MODEL_H_

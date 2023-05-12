@@ -26,10 +26,33 @@ class OnlineRnnLM::Impl {
     Init(config);
   }
 
-  std::pair<Ort::Value, std::vector<Ort::Value>> Rescore(
-      Ort::Value x, Ort::Value y, std::vector<Ort::Value> states) {
-    std::array<Ort::Value, 4> inputs = {
-        std::move(x), std::move(y), std::move(states[0]), std::move(states[1])};
+  void ComputeLMScore(float scale, Hypothesis *hyp) {
+    if (hyp->nn_lm_states.empty()) {
+      auto init_states = GetInitStates();
+      hyp->nn_lm_scores.value = std::move(init_states.first);
+      hyp->nn_lm_states = Convert(std::move(init_states.second));
+    }
+
+    // get lm score for cur token given the hyp->ys[:-1] and save to lm_log_prob
+    const float *nn_lm_scores = hyp->nn_lm_scores.value.GetTensorData<float>();
+    hyp->lm_log_prob = nn_lm_scores[hyp->ys.back()] * scale;
+
+    // get lm scores for next tokens given the hyp->ys[:] and save to
+    // nn_lm_scores
+    std::array<int64_t, 2> x_shape{1, 1};
+    Ort::Value x = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
+                                                    x_shape.size());
+    *x.GetTensorMutableData<int64_t>() = hyp->ys.back();
+    auto lm_out =
+        ScoreToken(std::move(x), Convert(hyp->nn_lm_states));
+    hyp->nn_lm_scores.value = std::move(lm_out.first);
+    hyp->nn_lm_states = Convert(std::move(lm_out.second));
+  }
+
+  std::pair<Ort::Value, std::vector<Ort::Value>> ScoreToken(
+      Ort::Value x, std::vector<Ort::Value> states) {
+    std::array<Ort::Value, 3> inputs = {std::move(x), std::move(states[0]),
+                                        std::move(states[1])};
 
     auto out =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
@@ -43,15 +66,13 @@ class OnlineRnnLM::Impl {
     return {std::move(out[0]), std::move(next_states)};
   }
 
-  std::vector<Ort::Value> GetInitStates() const {
+  std::pair<Ort::Value, std::vector<Ort::Value>> GetInitStates() const {
     std::vector<Ort::Value> ans;
     ans.reserve(init_states_.size());
-
     for (const auto &s : init_states_) {
       ans.emplace_back(Clone(allocator_, &s));
     }
-
-    return ans;
+    return {std::move(Clone(allocator_, &init_scores_.value)), std::move(ans)};
   }
 
  private:
@@ -86,19 +107,16 @@ class OnlineRnnLM::Impl {
     Fill<float>(&h, 0);
     Fill<float>(&c, 0);
     std::array<int64_t, 2> x_shape{1, 1};
-    // shape of x and y are same
     Ort::Value x = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
                                                      x_shape.size());
-    Ort::Value y = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
-                                                     x_shape.size());
     *x.GetTensorMutableData<int64_t>() = sos_id_;
-    *y.GetTensorMutableData<int64_t>() = sos_id_;
 
     std::vector<Ort::Value> states;
     states.push_back(std::move(h));
     states.push_back(std::move(c));
-    auto pair = Rescore(std::move(x), std::move(y), std::move(states));
+    auto pair = ScoreToken(std::move(x), std::move(states));
 
+    init_scores_.value = std::move(pair.first);
     init_states_ = std::move(pair.second);
   }
 
@@ -116,6 +134,7 @@ class OnlineRnnLM::Impl {
   std::vector<std::string> output_names_;
   std::vector<const char *> output_names_ptr_;
 
+  CopyableOrtValue init_scores_;
   std::vector<Ort::Value> init_states_;
 
   int32_t rnn_num_layers_ = 2;
@@ -128,13 +147,17 @@ OnlineRnnLM::OnlineRnnLM(const OnlineLMConfig &config)
 
 OnlineRnnLM::~OnlineRnnLM() = default;
 
-std::vector<Ort::Value> OnlineRnnLM::GetInitStates() {
+std::pair<Ort::Value, std::vector<Ort::Value>> OnlineRnnLM::GetInitStates() {
   return impl_->GetInitStates();
 }
 
-std::pair<Ort::Value, std::vector<Ort::Value>> OnlineRnnLM::Rescore(
-    Ort::Value x, Ort::Value y, std::vector<Ort::Value> states) {
-  return impl_->Rescore(std::move(x), std::move(y), std::move(states));
+std::pair<Ort::Value, std::vector<Ort::Value>> OnlineRnnLM::ScoreToken(
+    Ort::Value x, std::vector<Ort::Value> states) {
+  return impl_->ScoreToken(std::move(x), std::move(states));
+}
+
+void OnlineRnnLM::ComputeLMScore(float scale, Hypothesis *hyp) {
+  return impl_->ComputeLMScore(scale, hyp);
 }
 
 }  // namespace sherpa_onnx

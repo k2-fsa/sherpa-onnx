@@ -75,6 +75,9 @@ void Print2D(Ort::Value *v);
 // Print a 3-D tensor to stderr
 void Print3D(Ort::Value *v);
 
+// Print a 4-D tensor to stderr
+void Print4D(Ort::Value *v);
+
 template <typename T = float>
 void Fill(Ort::Value *tensor, T value) {
   auto n = tensor->GetTypeInfo().GetTensorTypeAndShapeInfo().GetElementCount();
@@ -97,8 +100,8 @@ struct CopyableOrtValue {
 
   CopyableOrtValue() = default;
 
-  /*explicit*/ CopyableOrtValue(Ort::Value v) // NOLINT
-    : value(std::move(v)) {}
+  /*explicit*/ CopyableOrtValue(Ort::Value v)  // NOLINT
+      : value(std::move(v)) {}
 
   CopyableOrtValue(const CopyableOrtValue &other);
 
@@ -108,6 +111,10 @@ struct CopyableOrtValue {
 
   CopyableOrtValue &operator=(CopyableOrtValue &&other);
 };
+
+std::vector<CopyableOrtValue> Convert(std::vector<Ort::Value> values);
+
+std::vector<Ort::Value> Convert(std::vector<CopyableOrtValue> values);
 
 }  // namespace sherpa_onnx
 
