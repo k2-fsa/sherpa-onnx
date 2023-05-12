@@ -78,6 +78,12 @@ target_link_libraries(sherpa-onnx-core
   kaldi-native-fbank-core
 )
 
+if(SHERPA_ONNX_ENABLE_GPU)
+  target_link_libraries(sherpa-onnx-core
+    onnxruntime_providers_cuda
+  )
+endif()
+
 if(SHERPA_ONNX_ENABLE_CHECK)
   target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
 
