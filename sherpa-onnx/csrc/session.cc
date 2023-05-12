@@ -38,10 +38,10 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
       uint32_t coreml_flags = 0;
       (void)OrtSessionOptionsAppendExecutionProvider_CoreML(sess_opts,
                                                             coreml_flags);
-      break;
 #else
-      SHERPA_ONNX_LOGE("CoreML is for Apple only!");
+      SHERPA_ONNX_LOGE("CoreML is for Apple only. Fallback to cpu!");
 #endif
+      break;
     }
   }
 
