@@ -80,7 +80,7 @@ SherpaOnnxOnlineStream *CreateOnlineStream(
   return stream;
 }
 
-void DestoryOnlineStream(SherpaOnnxOnlineStream *stream) { delete stream; }
+void DestroyOnlineStream(SherpaOnnxOnlineStream *stream) { delete stream; }
 
 void AcceptWaveform(SherpaOnnxOnlineStream *stream, int32_t sample_rate,
                     const float *samples, int32_t n) {
@@ -222,7 +222,7 @@ SherpaOnnxOfflineStream *CreateOfflineStream(
   return stream;
 }
 
-void DestoryOfflineStream(SherpaOnnxOfflineStream *stream) { delete stream; }
+void DestroyOfflineStream(SherpaOnnxOfflineStream *stream) { delete stream; }
 
 void AcceptWaveformOffline(SherpaOnnxOfflineStream *stream, int32_t sample_rate,
                            const float *samples, int32_t n) {
