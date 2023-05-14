@@ -391,7 +391,7 @@ int main(int argc, char **argv) {
   DestroyOnlineRecognizerResult(r);
 
   DestroyDisplay(display);
-  DestoryOnlineStream(stream);
+  DestroyOnlineStream(stream);
   DestroyOnlineRecognizer(recognizer);
 
   avfilter_graph_free(&filter_graph);
