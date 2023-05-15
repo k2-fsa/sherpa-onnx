@@ -36,7 +36,7 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 
 3.Config model config.cfg
 -------------------------
-
+/**change model path in config.cfg according to your env**/
 ```xml
   #model config 
   sample_rate=16000 
@@ -136,6 +136,29 @@ Build package path: /sherpa-onnx/java-api-examples/lib/sherpaonnx.jar
 ----------
 
 support multiple threads for websocket server
+6.0 Protocol for communication
+1) client connect to server
+```shell
+   ws client -> srv ws address
+   ws address example: ws://127.0.0.1:8889/
+```
+2) client send 16k pcm_s16le binary stream data to server
+```shell
+   PCM   sampleRate 16000
+         single channel
+		 sampleSize 16bit
+		 little endian
+		 type short
+```
+3) client send "Done" text to server when all data is sent
+```shell
+	ws_socket.send("Done")
+```
+4) client will receive json message from server whenever asr engine decoded new text
+```shell
+   json example: {"text":"甚至出现交易几乎停滞的情况","eof":false"}
+``` 
+ 
 
 6.1 Build
 
@@ -149,7 +172,7 @@ support multiple threads for websocket server
 usage: AsrWebsocketServer soPath modelCfgPath
 
 ```bash
-    make runsrv
+    make runsrv  /**change path in Makefile according to your env**/
 ```
 
 6.3 Run multiple threads client example
@@ -159,6 +182,6 @@ usage: AsrWebsocketClient soPath srvIp srvPort wavPath numThreads
 json result example: {"text":"甚至出现交易几乎停滞的情况","eof":"true"}
 
 ```bash
-    make runclient
+    make runclient  /**change path in Makefile according to your env**/
 ```
 

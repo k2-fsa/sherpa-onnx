@@ -33,15 +33,15 @@ import org.slf4j.LoggerFactory;
 public class AsrWebsocketServer extends WebSocketServer {
   private static final Logger logger = LoggerFactory.getLogger(AsrWebsocketServer.class);
   //  Queue between io network io thread pool and stream thread pool, use websocket as the key
-  static LinkedBlockingQueue<WebSocket> streamQueue = new LinkedBlockingQueue<WebSocket>();
+  private LinkedBlockingQueue<WebSocket> streamQueue = new LinkedBlockingQueue<WebSocket>();
   //  Queue waiting for deocdeing, use websocket as the key
-  static LinkedBlockingQueue<WebSocket> decoderQueue = new LinkedBlockingQueue<WebSocket>();
+  private LinkedBlockingQueue<WebSocket> decoderQueue = new LinkedBlockingQueue<WebSocket>();
 
   // recogizer object
   private OnlineRecognizer rcgOjb = null;
 
   // mapping between websocket connection and connection data
-  static ConcurrentHashMap<WebSocket, ConnectionData> connectionMap =
+  private ConcurrentHashMap<WebSocket, ConnectionData> connectionMap =
       new ConcurrentHashMap<WebSocket, ConnectionData>();
 
   public AsrWebsocketServer(int port, int numThread) throws UnknownHostException {
@@ -140,13 +140,7 @@ public class AsrWebsocketServer extends WebSocketServer {
     }
   }
 
-  public static ConnectionData connDataFind(WebSocket conn) {
-    return connectionMap.get(conn);
-  }
-
-  public static void connDataRemove(WebSocket conn) {
-    connectionMap.remove(conn);
-  }
+ 
 
   public boolean streamQueueFind(WebSocket conn) {
     return streamQueue.contains(conn);
