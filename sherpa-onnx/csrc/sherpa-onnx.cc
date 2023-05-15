@@ -94,7 +94,7 @@ for a list of pre-trained models to download.
   auto s = recognizer.CreateStream();
   s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
-  std::vector<float> tail_paddings(static_cast<int>(0.5 * sampling_rate));
+  std::vector<float> tail_paddings(static_cast<int>(0.3 * sampling_rate));
   // Note: We can call AcceptWaveform() multiple times.
   s->AcceptWaveform(sampling_rate, tail_paddings.data(), tail_paddings.size());
 
