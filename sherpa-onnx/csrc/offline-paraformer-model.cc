@@ -9,6 +9,7 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
@@ -18,11 +19,8 @@ class OfflineParaformerModel::Impl {
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        sess_opts_{},
+        sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    sess_opts_.SetIntraOpNumThreads(config_.num_threads);
-    sess_opts_.SetInterOpNumThreads(config_.num_threads);
-
     Init();
   }
 

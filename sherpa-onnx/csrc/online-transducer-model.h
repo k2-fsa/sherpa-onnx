@@ -64,6 +64,7 @@ class OnlineTransducerModel {
    *
    * @param features  A tensor of shape (N, T, C). It is changed in-place.
    * @param states  Encoder state of the previous chunk. It is changed in-place.
+   * @param processed_frames  Processed frames before subsampling. It is a 1-D tensor with data type int64_t.
    *
    * @return Return a tuple containing:
    *           - encoder_out, a tensor of shape (N, T', encoder_out_dim)
@@ -71,7 +72,8 @@ class OnlineTransducerModel {
    */
   virtual std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
       Ort::Value features,
-      std::vector<Ort::Value> states) = 0;  // NOLINT
+      std::vector<Ort::Value> states,
+      Ort::Value processed_frames) = 0;  // NOLINT
 
   /** Run the decoder network.
    *

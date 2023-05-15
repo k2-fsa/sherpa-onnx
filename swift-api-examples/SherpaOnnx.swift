@@ -36,7 +36,7 @@ func sherpaOnnxOnlineTransducerModelConfig(
   tokens: String,
   numThreads: Int = 2,
   debug: Int = 0
-) -> SherpaOnnxOnlineTransducerModelConfig{
+) -> SherpaOnnxOnlineTransducerModelConfig {
   return SherpaOnnxOnlineTransducerModelConfig(
     encoder: toCPointer(encoder),
     decoder: toCPointer(decoder),
@@ -57,15 +57,15 @@ func sherpaOnnxFeatureConfig(
 }
 
 func sherpaOnnxOnlineRecognizerConfig(
-    featConfig: SherpaOnnxFeatureConfig,
-    modelConfig: SherpaOnnxOnlineTransducerModelConfig,
-    enableEndpoint: Bool = false,
-    rule1MinTrailingSilence: Float = 2.4,
-    rule2MinTrailingSilence: Float = 1.2,
-    rule3MinUtteranceLength: Float = 30,
-    decodingMethod: String = "greedy_search",
-    maxActivePaths: Int = 4
-) ->  SherpaOnnxOnlineRecognizerConfig{
+  featConfig: SherpaOnnxFeatureConfig,
+  modelConfig: SherpaOnnxOnlineTransducerModelConfig,
+  enableEndpoint: Bool = false,
+  rule1MinTrailingSilence: Float = 2.4,
+  rule2MinTrailingSilence: Float = 1.2,
+  rule3MinUtteranceLength: Float = 30,
+  decodingMethod: String = "greedy_search",
+  maxActivePaths: Int = 4
+) -> SherpaOnnxOnlineRecognizerConfig {
   return SherpaOnnxOnlineRecognizerConfig(
     feat_config: featConfig,
     model_config: modelConfig,
@@ -121,7 +121,7 @@ class SherpaOnnxRecognizer {
 
   deinit {
     if let stream {
-      DestoryOnlineStream(stream)
+      DestroyOnlineStream(stream)
     }
 
     if let recognizer {
@@ -152,7 +152,8 @@ class SherpaOnnxRecognizer {
 
   /// Get the decoding results so far
   func getResult() -> SherpaOnnxOnlineRecongitionResult {
-    let result: UnsafeMutablePointer<SherpaOnnxOnlineRecognizerResult>? = GetOnlineStreamResult(recognizer, stream)
+    let result: UnsafeMutablePointer<SherpaOnnxOnlineRecognizerResult>? = GetOnlineStreamResult(
+      recognizer, stream)
     return SherpaOnnxOnlineRecongitionResult(result: result)
   }
 

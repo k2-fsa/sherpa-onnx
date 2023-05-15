@@ -34,8 +34,9 @@ set(sources
   offline-transducer-model-config.cc
   offline-transducer-model.cc
   offline-transducer-modified-beam-search-decoder.cc
-  online-lm.cc
+  online-conformer-transducer-model.cc
   online-lm-config.cc
+  online-lm.cc
   online-lstm-transducer-model.cc
   online-recognizer.cc
   online-rnn-lm.cc
@@ -47,11 +48,14 @@ set(sources
   online-transducer-modified-beam-search-decoder.cc
   online-zipformer-transducer-model.cc
   onnx-utils.cc
+  session.cc
   packed-sequence.cc
   pad-sequence.cc
   parse-options.cc
+  provider.cc
   resample.cc
   slice.cc
+  stack.cc
   symbol-table.cc
   text-utils.cc
   transpose.cc
@@ -73,6 +77,12 @@ target_link_libraries(sherpa-onnx-core
   onnxruntime
   kaldi-native-fbank-core
 )
+
+if(SHERPA_ONNX_ENABLE_GPU)
+  target_link_libraries(sherpa-onnx-core
+    onnxruntime_providers_cuda
+  )
+endif()
 
 if(SHERPA_ONNX_ENABLE_CHECK)
   target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
@@ -241,6 +251,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     packed-sequence-test.cc
     pad-sequence-test.cc
     slice-test.cc
+    stack-test.cc
     transpose-test.cc
     unbind-test.cc
   )

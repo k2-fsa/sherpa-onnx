@@ -139,8 +139,8 @@ class OnlineRecognizer::Impl {
       decoder_ =
           std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
     } else {
-      fprintf(stderr, "Unsupported decoding method: %s\n",
-              config.decoding_method.c_str());
+      SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
+                       config.decoding_method.c_str());
       exit(-1);
     }
   }
@@ -159,8 +159,8 @@ class OnlineRecognizer::Impl {
       decoder_ =
           std::make_unique<OnlineTransducerGreedySearchDecoder>(model_.get());
     } else {
-      fprintf(stderr, "Unsupported decoding method: %s\n",
-              config.decoding_method.c_str());
+      SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
+                       config.decoding_method.c_str());
       exit(-1);
     }
   }
@@ -187,11 +187,14 @@ class OnlineRecognizer::Impl {
     std::vector<OnlineTransducerDecoderResult> results(n);
     std::vector<float> features_vec(n * chunk_size * feature_dim);
     std::vector<std::vector<Ort::Value>> states_vec(n);
+    std::vector<int64_t> all_processed_frames(n);
 
     for (int32_t i = 0; i != n; ++i) {
+      const auto num_processed_frames = ss[i]->GetNumProcessedFrames();
       std::vector<float> features =
-          ss[i]->GetFrames(ss[i]->GetNumProcessedFrames(), chunk_size);
+          ss[i]->GetFrames(num_processed_frames, chunk_size);
 
+      // Question: should num_processed_frames include chunk_shift?
       ss[i]->GetNumProcessedFrames() += chunk_shift;
 
       std::copy(features.begin(), features.end(),
@@ -199,6 +202,7 @@ class OnlineRecognizer::Impl {
 
       results[i] = std::move(ss[i]->GetResult());
       states_vec[i] = std::move(ss[i]->GetStates());
+      all_processed_frames[i] = num_processed_frames;
     }
 
     auto memory_info =
@@ -210,9 +214,17 @@ class OnlineRecognizer::Impl {
                                             features_vec.size(), x_shape.data(),
                                             x_shape.size());
 
+    std::array<int64_t, 1> processed_frames_shape{
+        static_cast<int64_t>(all_processed_frames.size())};
+
+    Ort::Value processed_frames = Ort::Value::CreateTensor(
+        memory_info, all_processed_frames.data(), all_processed_frames.size(),
+        processed_frames_shape.data(), processed_frames_shape.size());
+
     auto states = model_->StackStates(states_vec);
 
-    auto pair = model_->RunEncoder(std::move(x), std::move(states));
+    auto pair = model_->RunEncoder(std::move(x), std::move(states),
+                                   std::move(processed_frames));
 
     decoder_->Decode(std::move(pair.first), &results);
 

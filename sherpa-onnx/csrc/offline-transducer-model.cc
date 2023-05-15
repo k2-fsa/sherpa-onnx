@@ -11,6 +11,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-transducer-decoder.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/session.h"
 
 namespace sherpa_onnx {
 
@@ -19,10 +20,8 @@ class OfflineTransducerModel::Impl {
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_WARNING),
-        sess_opts_{},
+        sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    sess_opts_.SetIntraOpNumThreads(config.num_threads);
-    sess_opts_.SetInterOpNumThreads(config.num_threads);
     {
       auto buf = ReadFile(config.transducer.encoder_filename);
       InitEncoder(buf.data(), buf.size());

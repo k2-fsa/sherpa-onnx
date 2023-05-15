@@ -3,18 +3,14 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
-    <RootNamespace>sherpa_onnx</RootNamespace>
+    <RootNamespace>online_decode_files</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
-    <StartupObject>OnlineDecodeFiles</StartupObject>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="NAudio" Version="2.1.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\SherpaOnnx\SherpaOnnx.csproj" />
+    <PackageReference Include="CommandLineParser" Version="2.9.1" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx" Version="*" />
   </ItemGroup>
 
 </Project>

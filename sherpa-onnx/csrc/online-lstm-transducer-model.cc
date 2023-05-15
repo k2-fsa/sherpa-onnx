@@ -22,6 +22,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/unbind.h"
 
 namespace sherpa_onnx {
@@ -30,11 +31,8 @@ OnlineLstmTransducerModel::OnlineLstmTransducerModel(
     const OnlineTransducerModelConfig &config)
     : env_(ORT_LOGGING_LEVEL_WARNING),
       config_(config),
-      sess_opts_{},
+      sess_opts_(GetSessionOptions(config)),
       allocator_{} {
-  sess_opts_.SetIntraOpNumThreads(config.num_threads);
-  sess_opts_.SetInterOpNumThreads(config.num_threads);
-
   {
     auto buf = ReadFile(config.encoder_filename);
     InitEncoder(buf.data(), buf.size());
@@ -56,11 +54,8 @@ OnlineLstmTransducerModel::OnlineLstmTransducerModel(
     AAssetManager *mgr, const OnlineTransducerModelConfig &config)
     : env_(ORT_LOGGING_LEVEL_WARNING),
       config_(config),
-      sess_opts_{},
+      sess_opts_(GetSessionOptions(config)),
       allocator_{} {
-  sess_opts_.SetIntraOpNumThreads(config.num_threads);
-  sess_opts_.SetInterOpNumThreads(config.num_threads);
-
   {
     auto buf = ReadFile(mgr, config.encoder_filename);
     InitEncoder(buf.data(), buf.size());
@@ -227,7 +222,8 @@ std::vector<Ort::Value> OnlineLstmTransducerModel::GetEncoderInitStates() {
 
 std::pair<Ort::Value, std::vector<Ort::Value>>
 OnlineLstmTransducerModel::RunEncoder(Ort::Value features,
-                                      std::vector<Ort::Value> states) {
+                                      std::vector<Ort::Value> states,
+                                      Ort::Value /* processed_frames */) {
   std::array<Ort::Value, 3> encoder_inputs = {
       std::move(features), std::move(states[0]), std::move(states[1])};
 
