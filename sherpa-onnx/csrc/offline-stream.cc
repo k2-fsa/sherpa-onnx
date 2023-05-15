@@ -8,8 +8,9 @@
 
 #include <algorithm>
 #include <cmath>
-#include "nlohmann/json.hpp"
+
 #include "kaldi-native-fbank/csrc/online-feature.h"
+#include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
@@ -218,7 +219,19 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   nlohmann::json j;
   j["text"] = text;
   j["tokens"] = tokens;
-  j["timestamps"] = timestamps;
+
+  std::ostringstream os;
+  os << "[";
+  std::string sep = "";
+  for (auto t : timestamps) {
+    os << sep << std::fixed << std::setprecision(2) << t;
+    sep = ",";
+  }
+  os << "]";
+
+  // NOTE: We don't use j["timestamps"] = timestamps;
+  // because we need to control the number of decimal points to keep
+  j["timestamps"] = os.str();
 
   return j.dump();
 }
