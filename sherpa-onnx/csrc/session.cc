@@ -81,7 +81,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(SessionConfig config) {
       OrtStatus *status = OrtSessionOptionsAppendExecutionProvider_Nnapi(
           sess_opts, config.nnapi_flags);
       if (status) {
-        const char *msg = api.GetErrorMessage(status);  // causes segfault
+        const char *msg = api.GetErrorMessage(status);
         SHERPA_ONNX_LOGE("Failed to enable NNAPI: %s. Fallback to cpu", msg);
         api.ReleaseStatus(status);
       }
