@@ -47,7 +47,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
       uint32_t coreml_flags = 0;
       OrtStatus *status = OrtSessionOptionsAppendExecutionProvider_CoreML(
           sess_opts, coreml_flags);
-      if (!status) {
+      if (status) {
         const char *msg = api.GetErrorMessage(status);
         SHERPA_ONNX_LOGE("Failed to enable CoreML: %s. Fallback to cpu", msg);
         api.ReleaseStatus(status);
@@ -64,7 +64,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
       int32_t device_id = 0;
       OrtStatus *status =
           OrtSessionOptionsAppendExecutionProvider_DML(sess_opts, device_id);
-      if (!status) {
+      if (status) {
         const char *msg = api.GetErrorMessage(status);
         SHERPA_ONNX_LOGE("Failed to enable DirectML: %s. Fallback to cpu", msg);
         api.ReleaseStatus(status);
