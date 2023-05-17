@@ -19,7 +19,7 @@ data class OnlineTransducerModelConfig(
     var decoder: String,
     var joiner: String,
     var tokens: String,
-    var numThreads: Int = 2,
+    var numThreads: Int = 1,
     var debug: Boolean = false,
     var useNnnAPI: Boolean = false,
 )

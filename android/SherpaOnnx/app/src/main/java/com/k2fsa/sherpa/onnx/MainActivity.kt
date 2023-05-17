@@ -181,6 +181,7 @@ class MainActivity : AppCompatActivity() {
         println("Select model type ${type}")
         var modelConfig = getModelConfig(type = type)!!
         modelConfig.useNnnAPI = true
+        modelConfig.numThreads = 1
 
         val config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),

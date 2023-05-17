@@ -195,7 +195,7 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(model_config_cls, "useNnnAPI", "Z");
   bool useNnnAPI = env->GetBooleanField(model_config, fid);
   if (useNnnAPI) {
-    SHERPA_ONNX_LOGE("Use NNAPI")
+    SHERPA_ONNX_LOGE("Use NNAPI");
     ans.model_config.provider = "nnapi";
     uint32_t nnapi_flags = 0;
     // nnapi_flags |= NNAPI_FLAG_USE_FP16;
