@@ -24,7 +24,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
                "true to print model information while loading it.");
 
   po->Register("provider", &provider,
-               "Specify a provider to use: cpu, cuda, coreml");
+               "Specify a provider to use: cpu, cuda, coreml, nnapi");
 }
 
 bool OfflineModelConfig::Validate() const {

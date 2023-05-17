@@ -18,6 +18,7 @@ struct OnlineTransducerModelConfig {
   int32_t num_threads = 2;
   bool debug = false;
   std::string provider = "cpu";
+  uint32_t nnapi_flags = 0;  // used only when provider is nnapi
 
   OnlineTransducerModelConfig() = default;
   OnlineTransducerModelConfig(const std::string &encoder_filename,

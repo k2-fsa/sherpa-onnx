@@ -15,15 +15,30 @@
 #include "coreml_provider_factory.h"  // NOLINT
 #endif
 
+#if __ANDROID_API__ >= 27
+#include "nnapi_provider_factory.h"
+#endif
+
 namespace sherpa_onnx {
 
-static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
-                                                 std::string provider_str) {
-  Provider p = StringToProvider(std::move(provider_str));
+namespace {
+
+struct SessionConfig {
+  int32_t num_threads;
+  std::string provider;
+  uint32_t nnapi_flags = 0;
+};
+
+}  // namespace
+
+static Ort::SessionOptions GetSessionOptionsImpl(SessionConfig config) {
+  Provider p = StringToProvider(std::move(config.provider));
 
   Ort::SessionOptions sess_opts;
-  sess_opts.SetIntraOpNumThreads(num_threads);
-  sess_opts.SetInterOpNumThreads(num_threads);
+  sess_opts.SetIntraOpNumThreads(config.num_threads);
+  sess_opts.SetInterOpNumThreads(config.num_threads);
+
+  const auto &api = Ort::GetApi();
 
   switch (p) {
     case Provider::kCPU:
@@ -48,10 +63,33 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
     case Provider::kCoreML: {
 #if defined(__APPLE__)
       uint32_t coreml_flags = 0;
-      (void)OrtSessionOptionsAppendExecutionProvider_CoreML(sess_opts,
-                                                            coreml_flags);
+      OrtStatus *status = OrtSessionOptionsAppendExecutionProvider_CoreML(
+          sess_opts, coreml_flags);
+      if (status) {
+        const char *msg = api.GetErrorMessage(status);
+        SHERPA_ONNX_LOGE("Failed to enable CoreML: %s. Fallback to cpu", msg);
+        api.ReleaseStatus(status);
+      }
 #else
       SHERPA_ONNX_LOGE("CoreML is for Apple only. Fallback to cpu!");
+#endif
+      break;
+    }
+    case Provider::kNNAPI: {
+#if __ANDROID_API__ >= 27
+      SHERPA_ONNX_LOGE("Current API level %d ", (int32_t)__ANDROID_API__);
+      OrtStatus *status = OrtSessionOptionsAppendExecutionProvider_Nnapi(
+          sess_opts, config.nnapi_flags);
+      if (status) {
+        const char *msg = api.GetErrorMessage(status);  // causes segfault
+        SHERPA_ONNX_LOGE("Failed to enable NNAPI: %s. Fallback to cpu", msg);
+        api.ReleaseStatus(status);
+      }
+#else
+      SHERPA_ONNX_LOGE(
+          "Android NNAPI requires API level >= 27. Current API level %d "
+          "Fallback to cpu!",
+          (int32_t)__ANDROID_API__);
 #endif
       break;
     }
@@ -62,11 +100,23 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
 
 Ort::SessionOptions GetSessionOptions(
     const OnlineTransducerModelConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
+  SessionConfig sess_config;
+
+  sess_config.num_threads = config.num_threads;
+  sess_config.provider = config.provider;
+  sess_config.nnapi_flags = config.nnapi_flags;
+
+  return GetSessionOptionsImpl(std::move(sess_config));
 }
 
 Ort::SessionOptions GetSessionOptions(const OfflineModelConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
+  SessionConfig sess_config;
+
+  sess_config.num_threads = config.num_threads;
+  sess_config.provider = config.provider;
+  sess_config.nnapi_flags = config.nnapi_flags;
+
+  return GetSessionOptionsImpl(std::move(sess_config));
 }
 
 }  // namespace sherpa_onnx

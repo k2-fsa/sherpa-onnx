@@ -20,6 +20,9 @@ void OnlineTransducerModelConfig::Register(ParseOptions *po) {
 
   po->Register("debug", &debug,
                "true to print model information while loading it.");
+
+  po->Register("provider", &provider,
+               "Specify a provider to use: cpu, cuda, coreml, nnapi");
 }
 
 bool OnlineTransducerModelConfig::Validate() const {
