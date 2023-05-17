@@ -17,6 +17,11 @@
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
+
+#if __ANDROID_API__ >= 27
+#include "nnapi_provider_factory.h"
+#endif
+
 #include <fstream>
 
 #include "sherpa-onnx/csrc/macros.h"
@@ -186,6 +191,19 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
 
   fid = env->GetFieldID(model_config_cls, "debug", "Z");
   ans.model_config.debug = env->GetBooleanField(model_config, fid);
+
+  fid = env->GetFieldID(model_config_cls, "useNnnAPI", "Z");
+  bool useNnnAPI = env->GetBooleanField(model_config, fid);
+  if (useNnnAPI) {
+    SHERPA_ONNX_LOGE("Use NNAPI")
+    ans.model_config.provider = "nnapi";
+    uint32_t nnapi_flags = 0;
+    // nnapi_flags |= NNAPI_FLAG_USE_FP16;
+    // nnapi_flags |= NNAPI_FLAG_CPU_DISABLED;
+    ans.model_config.nnapi_flags = nnapi_flags;
+  } else {
+    SHERPA_ONNX_LOGE("Don't use NNAPI");
+  }
 
   //---------- rnn lm model config ----------
   fid = env->GetFieldID(cls, "lmConfig",

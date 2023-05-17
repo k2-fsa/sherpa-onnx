@@ -21,6 +21,7 @@ data class OnlineTransducerModelConfig(
     var tokens: String,
     var numThreads: Int = 2,
     var debug: Boolean = false,
+    var useNnnAPI: Boolean = false,
 )
 
 data class OnlineLMConfig(

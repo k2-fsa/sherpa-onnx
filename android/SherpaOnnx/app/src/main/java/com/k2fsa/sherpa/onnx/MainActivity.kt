@@ -179,9 +179,12 @@ class MainActivity : AppCompatActivity() {
         // for a list of available models
         val type = 0
         println("Select model type ${type}")
+        var modelConfig = getModelConfig(type = type)!!
+        modelConfig.useNnnAPI = true
+
         val config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
-            modelConfig = getModelConfig(type = type)!!,
+            modelConfig = modelConfig,
             lmConfig = getOnlineLMConfig(type = type),
             endpointConfig = getEndpointConfig(),
             enableEndpoint = true,
