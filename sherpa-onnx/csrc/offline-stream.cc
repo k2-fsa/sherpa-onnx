@@ -219,19 +219,21 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   nlohmann::json j;
   j["text"] = text;
   j["tokens"] = tokens;
-
+#if 1
+  // This branch chooses number of decimal points to keep in
+  // the return json string
   std::ostringstream os;
   os << "[";
   std::string sep = "";
   for (auto t : timestamps) {
     os << sep << std::fixed << std::setprecision(2) << t;
-    sep = ",";
+    sep = ", ";
   }
   os << "]";
-
-  // NOTE: We don't use j["timestamps"] = timestamps;
-  // because we need to control the number of decimal points to keep
   j["timestamps"] = os.str();
+#else
+  j["timestamps"] = timestamps;
+#endif
 
   return j.dump();
 }
