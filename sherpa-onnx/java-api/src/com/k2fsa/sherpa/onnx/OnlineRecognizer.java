@@ -65,11 +65,14 @@ public class OnlineRecognizer {
               false);
       FeatureConfig featConfig =
           new FeatureConfig(sampleRate, Integer.parseInt(proMap.get("feature_dim").trim()));
-      OnlineRecognizerConfig rcgCfg =
+      OnlineLMConfig onlineLmConfig=new OnlineLMConfig(proMap.get("lm_model").trim(),Float.parseFloat(proMap.get("lm_scale").trim()));
+	  
+	  OnlineRecognizerConfig rcgCfg =
           new OnlineRecognizerConfig(
               featConfig,
               modelCfg,
               endCfg,
+			  onlineLmConfig,
               Boolean.parseBoolean(proMap.get("enable_endpoint_detection").trim()),
               proMap.get("decoding_method").trim(),
               Integer.parseInt(proMap.get("max_active_paths").trim()));
@@ -107,11 +110,15 @@ public class OnlineRecognizer {
               false);
       FeatureConfig featConfig =
           new FeatureConfig(sampleRate, Integer.parseInt(proMap.get("feature_dim").trim()));
-      OnlineRecognizerConfig rcgCfg =
+      
+	  OnlineLMConfig onlineLmConfig=new OnlineLMConfig(proMap.get("lm_model").trim(),Float.parseFloat(proMap.get("lm_scale").trim()));
+	  
+	  OnlineRecognizerConfig rcgCfg =
           new OnlineRecognizerConfig(
               featConfig,
               modelCfg,
               endCfg,
+			  onlineLmConfig,
               Boolean.parseBoolean(proMap.get("enable_endpoint_detection").trim()),
               proMap.get("decoding_method").trim(),
               Integer.parseInt(proMap.get("max_active_paths").trim()));
@@ -137,6 +144,8 @@ public class OnlineRecognizer {
       float rule2MinTrailingSilence,
       float rule3MinUtteranceLength,
       String decodingMethod,
+	  String lm_model,
+	  float lm_scale,
       int maxActivePaths) {
     this.sampleRate = sampleRate;
     EndpointRule rule1 = new EndpointRule(false, rule1MinTrailingSilence, 0.0F);
@@ -146,14 +155,10 @@ public class OnlineRecognizer {
     OnlineTransducerModelConfig modelCfg =
         new OnlineTransducerModelConfig(encoder, decoder, joiner, tokens, numThreads, false);
     FeatureConfig featConfig = new FeatureConfig(sampleRate, featureDim);
-    OnlineRecognizerConfig rcgCfg =
+    OnlineLMConfig onlineLmConfig=new OnlineLMConfig(lm_model,lm_scale);
+	OnlineRecognizerConfig rcgCfg =
         new OnlineRecognizerConfig(
-            featConfig,
-            modelCfg,
-            endCfg,
-            enableEndpointDetection,
-            decodingMethod,
-            maxActivePaths);
+            featConfig, modelCfg, endCfg, onlineLmConfig,enableEndpointDetection, decodingMethod, maxActivePaths);
     // create a new Recognizer, first parameter kept for android asset_manager ANDROID_API__ >= 9
     this.ptr = createOnlineRecognizer(new Object(), rcgCfg);
   }
@@ -241,7 +246,7 @@ public class OnlineRecognizer {
     return stream;
   }
 
-  public float[] readWavFile(String fileName) {
+  public static float[] readWavFile(String fileName) {
     // read data from the filename
     Object[] wavdata = readWave(fileName);
     Object data = wavdata[0]; // data[0] is float data, data[1] sample rate
@@ -281,7 +286,7 @@ public class OnlineRecognizer {
   }
   // JNI interface libsherpa-onnx-jni.so
 
-  private native Object[] readWave(String fileName);
+  private static native Object[] readWave(String fileName);  // static
 
   private native String getResult(long ptr, long streamPtr);
 
