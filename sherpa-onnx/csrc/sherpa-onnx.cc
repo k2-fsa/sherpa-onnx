@@ -27,7 +27,7 @@ Usage:
 
 Default value for num_threads is 2.
 Valid values for decoding_method: greedy_search (default), modified_beam_search.
-Default value for provider is cpu.
+Default value for provider: cpu (default), cuda, coreml.
 foo.wav should be of single channel, 16-bit PCM encoded wave file; its
 sampling rate can be arbitrary and does not need to be 16kHz.
 
