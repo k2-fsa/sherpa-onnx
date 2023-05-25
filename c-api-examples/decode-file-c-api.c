@@ -19,16 +19,17 @@ const char *kUsage =
     "    /path/to/encoder.onnx \\\n"
     "    /path/to/decoder.onnx \\\n"
     "    /path/to/joiner.onnx \\\n"
-    "    /path/to/foo.wav [num_threads [decoding_method]]\n"
+    "    /path/to/foo.wav [num_threads [decoding_method] [provider]]\n"
     "\n\n"
     "Default num_threads is 1.\n"
     "Valid decoding_method: greedy_search (default), modified_beam_search\n\n"
+    "Valid provider: cpu (default), cuda, coreml\n\n"
     "Please refer to \n"
     "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html\n"
     "for a list of pre-trained models to download.\n";
 
 int32_t main(int32_t argc, char *argv[]) {
-  if (argc < 6 || argc > 8) {
+  if (argc < 6 || argc > 9) {
     fprintf(stderr, "%s\n", kUsage);
     return -1;
   }
@@ -49,6 +50,12 @@ int32_t main(int32_t argc, char *argv[]) {
   if (argc == 8) {
     config.decoding_method = argv[7];
   }
+
+  config.model_config.provider = "cpu";
+  if (argc == 9) {
+    config.model_config.provider = argv[8];
+  }
+  printf("===> provider: %s\n", config.model_config.provider);
 
   config.max_active_paths = 4;
 
