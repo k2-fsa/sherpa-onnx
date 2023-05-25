@@ -55,7 +55,6 @@ int32_t main(int32_t argc, char *argv[]) {
   if (argc == 9) {
     config.model_config.provider = argv[8];
   }
-  printf("===> provider: %s\n", config.model_config.provider);
 
   config.max_active_paths = 4;
 
