@@ -62,7 +62,7 @@ std::string OnlineTransducerModelConfig::ToString() const {
   os << "joiner_filename=\"" << joiner_filename << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
-  os << "provider=\"" << provider << ", ";
+  os << "provider=\"" << provider << "\", ";
   os << "debug=" << (debug ? "True" : "False") << ")";
 
   return os.str();
