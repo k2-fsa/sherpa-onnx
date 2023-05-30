@@ -25,11 +25,8 @@ import asyncio
 import http
 import json
 import logging
-import math
 import socket
 import ssl
-import sys
-import warnings
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
@@ -37,9 +34,8 @@ from typing import List, Optional, Tuple
 
 import numpy as np
 import sherpa_onnx
-from http_server import HttpServer
-
 import websockets
+from http_server import HttpServer
 
 
 def setup_logger(
@@ -659,6 +655,3 @@ if __name__ == "__main__":
     log_filename = "log/log-streaming-zipformer"
     setup_logger(log_filename)
     main()
-else:
-    torch.set_num_threads(1)
-    torch.set_num_interop_threads(1)

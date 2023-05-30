@@ -119,7 +119,9 @@ def get_args():
         "--sample-rate",
         type=int,
         default=16000,
-        help="Sample rate of the feature extractor. Must match the one expected by the model. Note: The input sound files can have a different sample rate from this argument.",
+        help="""Sample rate of the feature extractor. Must match the one
+        expected  by the model. Note: The input sound files can have a
+        different sample rate from this argument.""",
     )
 
     parser.add_argument(
