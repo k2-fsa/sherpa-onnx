@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8"></meta>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"></meta>
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet"
+        href="./css/bootstrap.min.css"
+        integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T"
+        crossorigin="anonymous">
+  </link>
+
+  <script src="./js/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+
+  <title>Next-gen Kaldi demo (Upload file for recognition)</title>
+</head>
+
+
+<body>
+  <div id="nav"></div>
+  <script>
+    $(function(){
+      $("#nav").load("nav-partial.html");
+    });
+  </script>
+
+  <h3>Recognition from real-time recordings</h3>
+  <div class="container">
+    <div class="input-group mb-1">
+      <div class="input-group-prepend">
+        <button class="btn btn-block btn-primary" type="button" id="connect">Click me to connect</button>
+      </div>
+      <span class="input-group-text" id="ws-protocol">ws://</span>
+      <input type="text" id="server-ip" class="form-control" placeholder="Sherpa server IP, e.g., localhost" aria-label="sherpa server IP">
+      <span class="input-group-text">:</span>
+      <input type="text" id="server-port" class="form-control" placeholder="Sherpa server port, e.g., 6006" aria-label="sherpa server port">
+    </div>
+
+    <div class="row">
+       <div class="col-12">
+        <canvas id="canvas" height="60px" display="block" margin-bottom="0.5rem"></canvas>
+      </div>
+    </div>
+    <div class="row">
+       <div class="col">
+        <button class="btn btn-primary btn-block" id="streaming_record">Streaming-Record</button>
+       </div>
+       <div class="col">
+        <button class="btn btn-primary btn-block" id="streaming_stop">Streaming-Stop</button>
+       </div>
+    </div>
+  </div>
+
+  <div class="mb-3">
+    <label for="results" class="form-label">Recognition results</label>
+    <textarea class="form-control" id="results" rows="8"></textarea>
+  </div>
+
+  <button class="btn btn-primary btn-block" id="clear">Clear results</button>
+
+  <section flex="1" overflow="auto" id="sound-clips">
+  </section>
+
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="./js/popper.min.js"
+          integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
+          crossorigin="anonymous">
+  </script>
+
+  <script src="./js/bootstrap.min.js"
+          integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM"
+          crossorigin="anonymous">
+  </script>
+
+  <script src="./js/streaming_record.js"> </script>
+</body>
+</html>

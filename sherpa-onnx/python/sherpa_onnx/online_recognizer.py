@@ -127,6 +127,7 @@ class OnlineRecognizer(object):
         )
 
         self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
 
     def create_stream(self):
         return self.recognizer.create_stream()
