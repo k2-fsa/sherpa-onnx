@@ -90,7 +90,8 @@ for a list of pre-trained models to download.
 
     std::vector<float> tail_paddings(static_cast<int>(0.3 * sampling_rate));
     // Note: We can call AcceptWaveform() multiple times.
-    s->AcceptWaveform(sampling_rate, tail_paddings.data(), tail_paddings.size());
+    s->AcceptWaveform(
+      sampling_rate, tail_paddings.data(), tail_paddings.size());
 
     // Call InputFinished() to indicate that no audio samples are available
     s->InputFinished();
