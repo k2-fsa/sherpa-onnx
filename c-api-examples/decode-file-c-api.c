@@ -5,9 +5,11 @@
 // This file shows how to use sherpa-onnx C API
 // to decode a file.
 
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "sherpa-onnx/c-api/c-api.h"
 
@@ -29,32 +31,13 @@ const char *kUsage =
     "for a list of pre-trained models to download.\n";
 
 int32_t main(int32_t argc, char *argv[]) {
-  if (argc < 6 || argc > 9) {
-    fprintf(stderr, "%s\n", kUsage);
-    return -1;
-  }
   SherpaOnnxOnlineRecognizerConfig config;
-  config.model_config.tokens = argv[1];
-  config.model_config.encoder = argv[2];
-  config.model_config.decoder = argv[3];
-  config.model_config.joiner = argv[4];
 
-  int32_t num_threads = 1;
-  if (argc == 7 && atoi(argv[6]) > 0) {
-    num_threads = atoi(argv[6]);
-  }
-  config.model_config.num_threads = num_threads;
   config.model_config.debug = 0;
+  config.model_config.num_threads = 1;
+  config.model_config.provider = "cpu";
 
   config.decoding_method = "greedy_search";
-  if (argc == 8) {
-    config.decoding_method = argv[7];
-  }
-
-  config.model_config.provider = "cpu";
-  if (argc == 9) {
-    config.model_config.provider = argv[8];
-  }
 
   config.max_active_paths = 4;
 
@@ -66,13 +49,46 @@ int32_t main(int32_t argc, char *argv[]) {
   config.rule2_min_trailing_silence = 1.2;
   config.rule3_min_utterance_length = 300;
 
+  int opt;
+      
+  struct option long_options[] = {
+    {"tokens", required_argument, 0, 't'},
+    {"encoder", required_argument, 0, 'e'},
+    {"decoder", required_argument, 0, 'd'},
+    {"joiner", required_argument, 0, 'j'},
+    {"num-threads", required_argument, 0, 'n'},
+    {"provider", required_argument, 0, 'p'},
+    {"decoding-method", required_argument, 0, 'm'},
+    {0, 0, 0, 0}
+  };
+
+  while ((opt = getopt_long(argc, argv, "", long_options, NULL)) != -1) {
+    switch (opt) {
+      case 't': config.model_config.tokens = optarg; break;
+      case 'e': config.model_config.encoder = optarg; break;
+      case 'd': config.model_config.decoder = optarg; break;
+      case 'j': config.model_config.joiner = optarg; break;
+      case 'n': config.model_config.num_threads = optarg; break;
+      case 'p': config.model_config.provider = optarg; break;
+      case 'm': config.decoding_method = optarg; break;
+      case '?':
+        fprintf(stderr, "Invalid option: -%c\n", optopt);
+        fprintf(stderr, "%s\n", kUsage);
+        return EXIT_FAILURE;
+      case ':':
+        fprintf(stderr, "Invalid option: -%c requires an argument\n", optopt);
+        fprintf(stderr, "%s\n", kUsage);
+        return EXIT_FAILURE;
+    }
+  }
+
   SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&config);
   SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
 
   SherpaOnnxDisplay *display = CreateDisplay(50);
   int32_t segment_id = 0;
 
-  const char *wav_filename = argv[5];
+  const char *wav_filename = argv[optind];
   FILE *fp = fopen(wav_filename, "rb");
   if (!fp) {
     fprintf(stderr, "Failed to open %s\n", wav_filename);
