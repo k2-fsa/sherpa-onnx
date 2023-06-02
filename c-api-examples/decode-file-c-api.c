@@ -112,6 +112,9 @@ int32_t main(int32_t argc, char *argv[]) {
       case 'n': config.model_config.num_threads = atoi(value); break;
       case 'p': config.model_config.provider = value; break;
       case 'm': config.decoding_method = value; break;
+      default: 
+        // do nothing as config already have valid default values
+        break;
     }
   }
   

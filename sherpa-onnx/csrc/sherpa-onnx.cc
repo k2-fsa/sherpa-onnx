@@ -82,8 +82,8 @@ for a list of pre-trained models to download.
     fprintf(stderr, "wav filename: %s\n", wav_filename.c_str());
     fprintf(stderr, "wav duration (s): %.3f\n", duration);
 
-    auto begin = std::chrono::steady_clock::now();
     fprintf(stderr, "Started\n");
+    const auto begin = std::chrono::steady_clock::now();
 
     auto s = recognizer.CreateStream();
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
@@ -100,15 +100,15 @@ for a list of pre-trained models to download.
       recognizer.DecodeStream(s.get());
     }
 
-    std::string text = recognizer.GetResult(s.get()).AsJsonString();
+    const std::string text = recognizer.GetResult(s.get()).AsJsonString();
 
     fprintf(stderr, "Done!\n");
 
     fprintf(stderr, "Recognition result for %s:\n%s\n", wav_filename.c_str(),
             text.c_str());
 
-    auto end = std::chrono::steady_clock::now();
-    float elapsed_seconds =
+    const auto end = std::chrono::steady_clock::now();
+    const float elapsed_seconds =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
             .count() /
         1000.;
