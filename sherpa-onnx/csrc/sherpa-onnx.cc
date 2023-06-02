@@ -14,7 +14,6 @@
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
-// TODO(fangjun): Use ParseOptions as we are getting more args
 int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
 Usage:
