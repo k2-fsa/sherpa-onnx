@@ -5,7 +5,7 @@
 // This file shows how to use sherpa-onnx C API
 // to decode a file.
 
-#include <getopt.h>
+#include <cargs.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -13,15 +13,62 @@
 
 #include "sherpa-onnx/c-api/c-api.h"
 
+static struct cag_option options[] = {
+  {
+    .identifier = 't',
+    .access_letters = NULL,
+    .access_name = "tokens",
+    .value_name = "tokens",
+    .description = "Tokens file"
+  }, {
+    .identifier = 'e',
+    .access_letters = NULL,
+    .access_name = "encoder",
+    .value_name = "encoder",
+    .description = "Encoder ONNX file"
+  }, {
+    .identifier = 'd',
+    .access_letters = NULL,
+    .access_name = "decoder",
+    .value_name = "decoder",
+    .description = "Decoder ONNX file"
+  }, {
+    .identifier = 'j',
+    .access_letters = NULL,
+    .access_name = "joiner",
+    .value_name = "joiner",
+    .description = "Joiner ONNX file"
+  }, {
+    .identifier = 'n',
+    .access_letters = NULL,
+    .access_name = "num-threads",
+    .value_name = "num-threads",
+    .description = "Number of threads"
+  }, {
+    .identifier = 'p',
+    .access_letters = NULL,
+    .access_name = "provider",
+    .value_name = "provider",
+    .description = "Provider: cpu (default), cuda, coreml"
+  }, {
+    .identifier = 'm',
+    .access_letters = NULL,
+    .access_name = "decoding-method",
+    .value_name = "decoding-method",
+    .description = 
+      "Decoding method: greedy_search (default), modified_beam_search"
+  }
+};
+
 const char *kUsage =
     "\n"
     "Usage:\n "
     "  ./bin/decode-file-c-api \\\n"
-    "    /path/to/tokens.txt \\\n"
-    "    /path/to/encoder.onnx \\\n"
-    "    /path/to/decoder.onnx \\\n"
-    "    /path/to/joiner.onnx \\\n"
-    "    /path/to/foo.wav [num_threads [decoding_method] [provider]]\n"
+    "    --tokens=/path/to/tokens.txt \\\n"
+    "    --encoder=/path/to/encoder.onnx \\\n"
+    "    --decoder=/path/to/decoder.onnx \\\n"
+    "    --joiner=/path/to/joiner.onnx \\\n"
+    "    /path/to/foo.wav\n"
     "\n\n"
     "Default num_threads is 1.\n"
     "Valid decoding_method: greedy_search (default), modified_beam_search\n\n"
@@ -49,46 +96,33 @@ int32_t main(int32_t argc, char *argv[]) {
   config.rule2_min_trailing_silence = 1.2;
   config.rule3_min_utterance_length = 300;
 
-  int opt;
-      
-  struct option long_options[] = {
-    {"tokens", required_argument, 0, 't'},
-    {"encoder", required_argument, 0, 'e'},
-    {"decoder", required_argument, 0, 'd'},
-    {"joiner", required_argument, 0, 'j'},
-    {"num-threads", required_argument, 0, 'n'},
-    {"provider", required_argument, 0, 'p'},
-    {"decoding-method", required_argument, 0, 'm'},
-    {0, 0, 0, 0}
-  };
+  cag_option_context context;
+  char identifier;
+  const char *value;
 
-  while ((opt = getopt_long(argc, argv, "", long_options, NULL)) != -1) {
-    switch (opt) {
-      case 't': config.model_config.tokens = optarg; break;
-      case 'e': config.model_config.encoder = optarg; break;
-      case 'd': config.model_config.decoder = optarg; break;
-      case 'j': config.model_config.joiner = optarg; break;
-      case 'n': config.model_config.num_threads = optarg; break;
-      case 'p': config.model_config.provider = optarg; break;
-      case 'm': config.decoding_method = optarg; break;
-      case '?':
-        fprintf(stderr, "Invalid option: -%c\n", optopt);
-        fprintf(stderr, "%s\n", kUsage);
-        return EXIT_FAILURE;
-      case ':':
-        fprintf(stderr, "Invalid option: -%c requires an argument\n", optopt);
-        fprintf(stderr, "%s\n", kUsage);
-        return EXIT_FAILURE;
+  cag_option_prepare(&context, options, CAG_ARRAY_SIZE(options), argc, argv);
+
+  while (cag_option_fetch(&context)) {
+    identifier = cag_option_get(&context);
+    value = cag_option_get_value(&context);
+    switch (identifier) {
+      case 't': config.model_config.tokens = value; break;
+      case 'e': config.model_config.encoder = value; break;
+      case 'd': config.model_config.decoder = value; break;
+      case 'j': config.model_config.joiner = value; break;
+      case 'n': config.model_config.num_threads = atoi(value); break;
+      case 'p': config.model_config.provider = value; break;
+      case 'm': config.decoding_method = value; break;
     }
   }
-
+  
   SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&config);
   SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
 
   SherpaOnnxDisplay *display = CreateDisplay(50);
   int32_t segment_id = 0;
 
-  const char *wav_filename = argv[optind];
+  const char *wav_filename = argv[context.index];
   FILE *fp = fopen(wav_filename, "rb");
   if (!fp) {
     fprintf(stderr, "Failed to open %s\n", wav_filename);
