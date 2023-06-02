@@ -102,17 +102,15 @@ for a list of pre-trained models to download.
 
     const std::string text = recognizer.GetResult(s.get()).AsJsonString();
 
-    fprintf(stderr, "Done!\n");
-
-    fprintf(stderr, "Recognition result for %s:\n%s\n", wav_filename.c_str(),
-            text.c_str());
-
     const auto end = std::chrono::steady_clock::now();
     const float elapsed_seconds =
         std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
-            .count() /
-        1000.;
+            .count() / 1000.;
 
+    fprintf(stderr, "Done!\n");
+    fprintf(stderr,
+            "Recognition result for %s:\n%s\n",
+            wav_filename.c_str(), text.c_str());
     fprintf(stderr, "num threads: %d\n", config.model_config.num_threads);
     fprintf(stderr, "decoding method: %s\n", config.decoding_method.c_str());
     if (config.decoding_method == "modified_beam_search") {
@@ -120,7 +118,7 @@ for a list of pre-trained models to download.
     }
 
     fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
-    float rtf = elapsed_seconds / duration;
+    const float rtf = elapsed_seconds / duration;
     fprintf(stderr, "Real time factor (RTF): %.3f / %.3f = %.3f\n",
             elapsed_seconds, duration, rtf);
   }
