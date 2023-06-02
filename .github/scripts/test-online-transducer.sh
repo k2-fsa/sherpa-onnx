@@ -36,22 +36,22 @@ $repo/test_wavs/8k.wav
 
 for wave in ${waves[@]}; do
   time $EXE \
-  $repo/tokens.txt \
-  $repo/encoder-epoch-99-avg-1.onnx \
-  $repo/decoder-epoch-99-avg-1.onnx \
-  $repo/joiner-epoch-99-avg-1.onnx \
-  $wave \
-  2
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --num-threads=2 \
+  $wave
 done
 
 for wave in ${waves[@]}; do
   time $EXE \
-  $repo/tokens.txt \
-  $repo/encoder-epoch-99-avg-1.int8.onnx \
-  $repo/decoder-epoch-99-avg-1.int8.onnx \
-  $repo/joiner-epoch-99-avg-1.int8.onnx \
-  $wave \
-  2
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
+  --num-threads=2 \
+  $wave
 done
 
 rm -rf $repo
@@ -79,22 +79,22 @@ $repo/test_wavs/8k.wav
 
 for wave in ${waves[@]}; do
   time $EXE \
-  $repo/tokens.txt \
-  $repo/encoder-epoch-11-avg-1.onnx \
-  $repo/decoder-epoch-11-avg-1.onnx \
-  $repo/joiner-epoch-11-avg-1.onnx \
-  $wave \
-  2
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-11-avg-1.onnx \
+  --decoder=$repo/decoder-epoch-11-avg-1.onnx \
+  --joiner=$repo/joiner-epoch-11-avg-1.onnx \
+  --num-threads=2 \
+  $wave
 done
 
 for wave in ${waves[@]}; do
   time $EXE \
-  $repo/tokens.txt \
-  $repo/encoder-epoch-11-avg-1.int8.onnx \
-  $repo/decoder-epoch-11-avg-1.int8.onnx \
-  $repo/joiner-epoch-11-avg-1.int8.onnx \
-  $wave \
-  2
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-11-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-11-avg-1.int8.onnx \
+  --joiner=$repo/joiner-epoch-11-avg-1.int8.onnx \
+  --num-threads=2 \
+  $wave
 done
 
 rm -rf $repo
@@ -122,24 +122,24 @@ $repo/test_wavs/8k.wav
 
 for wave in ${waves[@]}; do
   time $EXE \
-  $repo/tokens.txt \
-  $repo/encoder-epoch-99-avg-1.onnx \
-  $repo/decoder-epoch-99-avg-1.onnx \
-  $repo/joiner-epoch-99-avg-1.onnx \
-  $wave \
-  2
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --num-threads=2 \
+  $wave
 done
 
 # test int8
 #
 for wave in ${waves[@]}; do
   time $EXE \
-  $repo/tokens.txt \
-  $repo/encoder-epoch-99-avg-1.int8.onnx \
-  $repo/decoder-epoch-99-avg-1.int8.onnx \
-  $repo/joiner-epoch-99-avg-1.int8.onnx \
-  $wave \
-  2
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
+  --num-threads=2 \
+  $wave
 done
 
 rm -rf $repo
@@ -169,22 +169,22 @@ $repo/test_wavs/8k.wav
 
 for wave in ${waves[@]}; do
   time $EXE \
-  $repo/tokens.txt \
-  $repo/encoder-epoch-99-avg-1.onnx \
-  $repo/decoder-epoch-99-avg-1.onnx \
-  $repo/joiner-epoch-99-avg-1.onnx \
-  $wave \
-  2
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --num-threads=2 \
+  $wave
 done
 
 for wave in ${waves[@]}; do
   time $EXE \
-  $repo/tokens.txt \
-  $repo/encoder-epoch-99-avg-1.int8.onnx \
-  $repo/decoder-epoch-99-avg-1.int8.onnx \
-  $repo/joiner-epoch-99-avg-1.int8.onnx \
-  $wave \
-  2
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
+  --num-threads=2 \
+  $wave
 done
 
 # Decode a URL
@@ -233,22 +233,22 @@ $repo/test_wavs/2.wav
 
 for wave in ${waves[@]}; do
   time $EXE \
-  $repo/tokens.txt \
-  $repo/encoder-epoch-99-avg-1.onnx \
-  $repo/decoder-epoch-99-avg-1.onnx \
-  $repo/joiner-epoch-99-avg-1.onnx \
-  $wave \
-  2
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+  --num-threads=2 \
+  $wave
 done
 
 for wave in ${waves[@]}; do
   time $EXE \
-  $repo/tokens.txt \
-  $repo/encoder-epoch-99-avg-1.int8.onnx \
-  $repo/decoder-epoch-99-avg-1.int8.onnx \
-  $repo/joiner-epoch-99-avg-1.int8.onnx \
-  $wave \
-  2
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
+  --num-threads=2 \
+  $wave
 done
 
 rm -rf $repo

@@ -52,6 +52,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineTransducerModelConfig {
   const char *joiner;
   const char *tokens;
   int32_t num_threads;
+  const char *provider;
   int32_t debug;  // true to print debug information of the model
 } SherpaOnnxOnlineTransducerModelConfig;
 

@@ -41,6 +41,7 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
   recognizer_config.model_config.joiner_filename = config->model_config.joiner;
   recognizer_config.model_config.tokens = config->model_config.tokens;
   recognizer_config.model_config.num_threads = config->model_config.num_threads;
+  recognizer_config.model_config.provider = config->model_config.provider;
   recognizer_config.model_config.debug = config->model_config.debug;
 
   recognizer_config.decoding_method = config->decoding_method;
