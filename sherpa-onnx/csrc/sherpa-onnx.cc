@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <chrono>  // NOLINT
+#include <iostream>
 #include <string>
 #include <vector>
 
@@ -61,7 +62,9 @@ for a list of pre-trained models to download.
 
   sherpa_onnx::OnlineRecognizer recognizer(config);
 
-  float duration = 0;
+  std::vector<std::unique_ptr<sherpa_onnx::OnlineStream>> ss;
+  std::vector<sherpa_onnx::OnlineStream *> p_ss;
+
   for (int32_t i = 1; i <= po.NumArgs(); ++i) {
     const std::string wav_filename = po.GetArg(i);
     int32_t sampling_rate = -1;
@@ -94,32 +97,34 @@ for a list of pre-trained models to download.
 
     // Call InputFinished() to indicate that no audio samples are available
     s->InputFinished();
+    ss.push_back(std::move(s));
+    p_ss.push_back(ss.back().get());
+  }
 
-    while (recognizer.IsReady(s.get())) {
-      recognizer.DecodeStream(s.get());
+  std::vector<sherpa_onnx::OnlineStream *> ready_streams;
+  for (;;) {
+    ready_streams.clear();
+    for (auto s : p_ss) {
+      if (recognizer.IsReady(s)) {
+        ready_streams.push_back(s);
+      }
     }
 
-    const std::string text = recognizer.GetResult(s.get()).AsJsonString();
-
-    const auto end = std::chrono::steady_clock::now();
-    const float elapsed_seconds =
-        std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
-            .count() / 1000.;
-
-    fprintf(stderr, "Done!\n");
-    fprintf(stderr,
-            "Recognition result for %s:\n%s\n",
-            wav_filename.c_str(), text.c_str());
-    fprintf(stderr, "num threads: %d\n", config.model_config.num_threads);
-    fprintf(stderr, "decoding method: %s\n", config.decoding_method.c_str());
-    if (config.decoding_method == "modified_beam_search") {
-      fprintf(stderr, "max active paths: %d\n", config.max_active_paths);
+    if (ready_streams.empty()) {
+      break;
     }
 
-    fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
-    const float rtf = elapsed_seconds / duration;
-    fprintf(stderr, "Real time factor (RTF): %.3f / %.3f = %.3f\n",
-            elapsed_seconds, duration, rtf);
+    recognizer.DecodeStreams(ready_streams.data(), ready_streams.size());
+
+    std::ostringstream os;
+    for (int32_t i = 1; i <= po.NumArgs(); ++i) {
+      os << po.GetArg(i) << "\n";
+      auto r = recognizer.GetResult(p_ss[i - 1]);
+      os << r.text << "\n";
+      os << r.AsJsonString() << "\n\n";
+    }
+
+    std::cerr << os.str();
   }
 
   return 0;
