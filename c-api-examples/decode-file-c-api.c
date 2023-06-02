@@ -5,7 +5,7 @@
 // This file shows how to use sherpa-onnx C API
 // to decode a file.
 
-#include <cargs.h>
+#include "cargs.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
