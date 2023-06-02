@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <queue>
+#include <utility>
 
 namespace sherpa_onnx {
 void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids) {
