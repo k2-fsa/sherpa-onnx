@@ -35,7 +35,7 @@ class OnlineRnnLM::Impl {
 
     // get lm score for cur token given the hyp->ys[:-1] and save to lm_log_prob
     const float *nn_lm_scores = hyp->nn_lm_scores.value.GetTensorData<float>();
-    hyp->lm_log_prob = nn_lm_scores[hyp->ys.back()] * scale;
+    hyp->lm_log_prob += nn_lm_scores[hyp->ys.back()] * scale;
 
     // get lm scores for next tokens given the hyp->ys[:] and save to
     // nn_lm_scores

@@ -132,7 +132,7 @@ int32_t main(int32_t argc, char *argv[]) {
   DestroyOnlineRecognizerResult(r);
 
   DestroyDisplay(display);
-  DestoryOnlineStream(stream);
+  DestroyOnlineStream(stream);
   DestroyOnlineRecognizer(recognizer);
   fprintf(stderr, "\n");
 

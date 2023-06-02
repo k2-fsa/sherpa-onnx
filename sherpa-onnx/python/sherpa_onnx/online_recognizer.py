@@ -39,6 +39,7 @@ class OnlineRecognizer(object):
         rule3_min_utterance_length: float = 20.0,
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
+        provider: str = "cpu",
     ):
         """
         Please refer to
@@ -86,6 +87,8 @@ class OnlineRecognizer(object):
           max_active_paths:
             Use only when decoding_method is modified_beam_search. It specifies
             the maximum number of active paths during beam search.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
         """
         _assert_file_exists(tokens)
         _assert_file_exists(encoder)
@@ -100,6 +103,7 @@ class OnlineRecognizer(object):
             joiner_filename=joiner,
             tokens=tokens,
             num_threads=num_threads,
+            provider=provider,
         )
 
         feat_config = FeatureExtractorConfig(
@@ -123,6 +127,7 @@ class OnlineRecognizer(object):
         )
 
         self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
 
     def create_stream(self):
         return self.recognizer.create_stream()

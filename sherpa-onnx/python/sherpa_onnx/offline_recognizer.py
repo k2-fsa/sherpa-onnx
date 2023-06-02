@@ -41,6 +41,7 @@ class OfflineRecognizer(object):
         decoding_method: str = "greedy_search",
         context_score: float = 1.5,
         debug: bool = False,
+        provider: str = "cpu",
     ):
         """
         Please refer to
@@ -71,6 +72,8 @@ class OfflineRecognizer(object):
             Support only greedy_search for now.
           debug:
             True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -82,6 +85,7 @@ class OfflineRecognizer(object):
             tokens=tokens,
             num_threads=num_threads,
             debug=debug,
+            provider=provider,
         )
 
         feat_config = OfflineFeatureExtractorConfig(

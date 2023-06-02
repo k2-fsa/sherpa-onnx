@@ -152,7 +152,9 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         } else {
           ++new_hyp.num_trailing_blanks;
         }
-        new_hyp.log_prob = p_logprob[k] - prev_lm_log_prob;
+        new_hyp.log_prob =
+            p_logprob[k] - prev_lm_log_prob;  // log_prob only includes the
+                                              // score of the transducer
         hyps.Add(std::move(new_hyp));
       }  // for (auto k : topk)
       cur.push_back(std::move(hyps));

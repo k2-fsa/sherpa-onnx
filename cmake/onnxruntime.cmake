@@ -33,6 +33,14 @@ function(download_onnxruntime)
     #
     # ./include
     #    It contains all the needed header files
+    if(SHERPA_ONNX_ENABLE_GPU)
+      set(onnxruntime_URL "https://github.com/microsoft/onnxruntime/releases/download/v1.14.1/onnxruntime-linux-x64-gpu-1.14.1.tgz")
+    endif()
+    # After downloading, it contains:
+    #  ./lib/libonnxruntime.so.1.14.1
+    #  ./lib/libonnxruntime.so, which is a symlink to lib/libonnxruntime.so.1.14.1
+    #  ./lib/libonnxruntime_providers_cuda.so
+    # ./include, which contains all the needed header files
   elseif(APPLE)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
@@ -97,21 +105,28 @@ function(download_onnxruntime)
     message(FATAL_ERROR "Only support Linux, macOS, and Windows at present. Will support other OSes later")
   endif()
 
-  foreach(f IN LISTS possible_file_locations)
-    if(EXISTS ${f})
-      set(onnxruntime_URL  "${f}")
-      file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
-      set(onnxruntime_URL2)
-      break()
-    endif()
-  endforeach()
+  if(NOT SHERPA_ONNX_ENABLE_GPU)
+    foreach(f IN LISTS possible_file_locations)
+      if(EXISTS ${f})
+        set(onnxruntime_URL  "${f}")
+        file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
+        set(onnxruntime_URL2)
+        break()
+      endif()
+    endforeach()
 
-  FetchContent_Declare(onnxruntime
-    URL
-      ${onnxruntime_URL}
-      ${onnxruntime_URL2}
-    URL_HASH          ${onnxruntime_HASH}
-  )
+    FetchContent_Declare(onnxruntime
+      URL
+        ${onnxruntime_URL}
+        ${onnxruntime_URL2}
+      URL_HASH          ${onnxruntime_HASH}
+    )
+  else()
+    FetchContent_Declare(onnxruntime
+      URL
+        ${onnxruntime_URL}
+    )
+  endif()
 
   FetchContent_GetProperties(onnxruntime)
   if(NOT onnxruntime_POPULATED)
@@ -134,6 +149,19 @@ function(download_onnxruntime)
     IMPORTED_LOCATION ${location_onnxruntime}
     INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
   )
+
+  if(SHERPA_ONNX_ENABLE_GPU)
+    find_library(location_onnxruntime_cuda_lib onnxruntime_providers_cuda
+      PATHS
+      "${onnxruntime_SOURCE_DIR}/lib"
+      NO_CMAKE_SYSTEM_PATH
+    )
+    add_library(onnxruntime_providers_cuda SHARED IMPORTED)
+    set_target_properties(onnxruntime_providers_cuda PROPERTIES
+      IMPORTED_LOCATION ${location_onnxruntime_cuda_lib}
+    )
+  endif()
+
   if(WIN32)
     set_property(TARGET onnxruntime
       PROPERTY
@@ -185,6 +213,12 @@ if(DEFINED ENV{SHERPA_ONNXRUNTIME_LIB_DIR})
   if(NOT EXISTS ${location_onnxruntime_lib})
     set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.a)
   endif()
+  if(SHERPA_ONNX_ENABLE_GPU)
+    set(location_onnxruntime_cuda_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime_providers_cuda.so)
+    if(NOT EXISTS ${location_onnxruntime_cuda_lib})
+      set(location_onnxruntime_cuda_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime_providers_cuda.a)
+    endif()
+  endif()
 else()
   find_library(location_onnxruntime_lib onnxruntime
     PATHS
@@ -192,9 +226,21 @@ else()
       /usr/lib
       /usr/local/lib
   )
+
+  if(SHERPA_ONNX_ENABLE_GPU)
+    find_library(location_onnxruntime_cuda_lib onnxruntime_providers_cuda
+      PATHS
+        /lib
+        /usr/lib
+        /usr/local/lib
+    )
+  endif()
 endif()
 
 message(STATUS "location_onnxruntime_lib: ${location_onnxruntime_lib}")
+if(SHERPA_ONNX_ENABLE_GPU)
+  message(STATUS "location_onnxruntime_cuda_lib: ${location_onnxruntime_cuda_lib}")
+endif()
 
 if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
   add_library(onnxruntime SHARED IMPORTED)
@@ -202,6 +248,12 @@ if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
     IMPORTED_LOCATION ${location_onnxruntime_lib}
     INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
   )
+  if(SHERPA_ONNX_ENABLE_GPU AND location_onnxruntime_cuda_lib)
+    add_library(onnxruntime_providers_cuda SHARED IMPORTED)
+    set_target_properties(onnxruntime_providers_cuda PROPERTIES
+      IMPORTED_LOCATION ${location_onnxruntime_cuda_lib}
+    )
+  endif()
 else()
   message(STATUS "Could not find a pre-installed onnxruntime. Downloading pre-compiled onnxruntime")
   download_onnxruntime()

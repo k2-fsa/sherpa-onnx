@@ -2,6 +2,7 @@
 --------------
 
 Java wrapper `com.k2fsa.sherpa.onnx.OnlineRecognizer` for `sherpa-onnx`. Java is a cross-platform language; you can build jni .so lib according to your system, and then use the same java api for all your platform.
+now support multiple threads for websocket server
 
 ```xml
 Depend on:
@@ -35,10 +36,10 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
 
 3.Config model config.cfg
 -------------------------
-
+/**change model path in config.cfg according to your env**/
 ```xml
-  #model config  
-  sample_rate=16000                  
+  #model config 
+  sample_rate=16000 
   feature_dim=80
   rule1_min_trailing_silence=2.4
   rule2_min_trailing_silence=1.2
@@ -51,6 +52,21 @@ Example for Ubuntu 18.04 LTS, Openjdk 1.8.0_362:
   enable_endpoint_detection=false
   decoding_method=greedy_search
   max_active_paths=4
+
+  #websocket server config
+  port=8890
+  #number of threads pool for network io
+  connection_thread_num=16 
+  #number of threads pool for stream
+  stream_thread_num=16 
+  #number of threads pool for decoder 
+  decoder_thread_num=16 
+  #size of streams for parallel decoding
+  parallel_decoder_num=16
+  #time(ms) idle for decoder thread when no job
+  decoder_time_idle=10
+  #time(ms) out for connection data
+  deocder_time_out=3000
 ```
 
 ---
@@ -114,5 +130,58 @@ Build package path: /sherpa-onnx/java-api-examples/lib/sherpaonnx.jar
     make runmic
 ```
 
+---
 
+6.WebSocket Server
+----------
+
+support multiple threads for websocket server
+6.0 Protocol for communication
+1) client connect to server
+```shell
+   ws client -> srv ws address
+   ws address example: ws://127.0.0.1:8889/
+```
+2) client send 16k pcm_s16le binary stream data to server
+```shell
+   PCM   sampleRate 16000
+         single channel
+		 sampleSize 16bit
+		 little endian
+		 type short
+```
+3) client send "Done" text to server when all data is sent
+```shell
+	ws_socket.send("Done")
+```
+4) client will receive json message from server whenever asr engine decoded new text
+```shell
+   json example: {"text":"甚至出现交易几乎停滞的情况","eof":false"}
+``` 
+ 
+
+6.1 Build
+
+```bash
+    cd sherpa-onnx/java-api-examples
+    make all
+```
+
+6.2 Run srv example
+
+usage: AsrWebsocketServer soPath modelCfgPath
+
+```bash
+    make runsrv  /**change path in Makefile according to your env**/
+```
+
+6.3 Run multiple threads client example
+
+usage: AsrWebsocketClient soPath srvIp srvPort wavPath numThreads
+
+json result example: {"text":"甚至出现交易几乎停滞的情况","eof":"true"}
+
+```bash
+    make runclient  /**change path in Makefile according to your env**/
+```
 
