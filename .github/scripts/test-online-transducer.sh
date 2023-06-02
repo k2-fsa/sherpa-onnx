@@ -41,7 +41,7 @@ for wave in ${waves[@]}; do
   --decoder=$repo/decoder-epoch-99-avg-1.onnx \
   --joiner=$repo/joiner-epoch-99-avg-1.onnx \
   --num-threads=2 \
-  $wave \
+  $wave
 done
 
 for wave in ${waves[@]}; do
