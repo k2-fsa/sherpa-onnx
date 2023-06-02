@@ -3,7 +3,7 @@ function(download_cargs)
 
   set(cargs_URL "https://github.com/likle/cargs/archive/refs/tags/v1.0.3.tar.gz")
 
-  FetchContent_Declare(cargs URL ${cargs_URL} )
+  FetchContent_Declare(cargs URL ${cargs_URL})
 
   FetchContent_GetProperties(cargs)
   if(NOT cargs_POPULATED)
