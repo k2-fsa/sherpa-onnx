@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <chrono>  // NOLINT
+#include <iomanip>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -14,6 +15,12 @@
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
+
+typedef struct {
+  std::unique_ptr<sherpa_onnx::OnlineStream> online_stream;
+  float duration;
+  float elapsed_seconds;
+} Stream;
 
 int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
@@ -62,8 +69,12 @@ for a list of pre-trained models to download.
 
   sherpa_onnx::OnlineRecognizer recognizer(config);
 
-  std::vector<std::unique_ptr<sherpa_onnx::OnlineStream>> ss;
-  std::vector<sherpa_onnx::OnlineStream *> p_ss;
+  std::vector<Stream> ss;
+  // std::vector<sherpa_onnx::OnlineStream *> p_ss;
+
+  const auto begin = std::chrono::steady_clock::now();
+  std::vector<float> durations;
+  // std::vector<float> elapsed_seconds;
 
   for (int32_t i = 1; i <= po.NumArgs(); ++i) {
     const std::string wav_filename = po.GetArg(i);
@@ -71,21 +82,14 @@ for a list of pre-trained models to download.
 
     bool is_ok = false;
     const std::vector<float> samples =
-        sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
+      sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
 
     if (!is_ok) {
       fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
       return -1;
     }
-    fprintf(stderr, "sampling rate of input file: %d\n", sampling_rate);
 
     const float duration = samples.size() / static_cast<float>(sampling_rate);
-
-    fprintf(stderr, "wav filename: %s\n", wav_filename.c_str());
-    fprintf(stderr, "wav duration (s): %.3f\n", duration);
-
-    fprintf(stderr, "Started\n");
-    const auto begin = std::chrono::steady_clock::now();
 
     auto s = recognizer.CreateStream();
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
@@ -97,16 +101,22 @@ for a list of pre-trained models to download.
 
     // Call InputFinished() to indicate that no audio samples are available
     s->InputFinished();
-    ss.push_back(std::move(s));
-    p_ss.push_back(ss.back().get());
+    ss.push_back({ std::move(s), duration, 0 });
   }
 
   std::vector<sherpa_onnx::OnlineStream *> ready_streams;
   for (;;) {
     ready_streams.clear();
-    for (auto s : p_ss) {
-      if (recognizer.IsReady(s)) {
-        ready_streams.push_back(s);
+    for (auto &s : ss) {
+      const auto p_ss = s.online_stream.get();
+      if (recognizer.IsReady(p_ss)) {
+        ready_streams.push_back(p_ss);
+      } else if (s.elapsed_seconds == 0) {
+        const auto end = std::chrono::steady_clock::now();
+        const float elapsed_seconds =
+          std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
+            .count() / 1000.;
+        s.elapsed_seconds = elapsed_seconds;
       }
     }
 
@@ -115,17 +125,22 @@ for a list of pre-trained models to download.
     }
 
     recognizer.DecodeStreams(ready_streams.data(), ready_streams.size());
-
-    std::ostringstream os;
-    for (int32_t i = 1; i <= po.NumArgs(); ++i) {
-      os << po.GetArg(i) << "\n";
-      auto r = recognizer.GetResult(p_ss[i - 1]);
-      os << r.text << "\n";
-      os << r.AsJsonString() << "\n\n";
-    }
-
-    std::cerr << os.str();
   }
+
+  std::ostringstream os;
+  for (int32_t i = 1; i <= po.NumArgs(); ++i) {
+    const auto &s = ss[i - 1];
+    const float rtf = s.elapsed_seconds / s.duration;
+
+    os << po.GetArg(i) << "\n";
+    os << std::setprecision(2) << "Elapsed seconds: " << s.elapsed_seconds
+       << ", Real time factor (RTF): " << rtf << "\n";
+    const auto r = recognizer.GetResult(s.online_stream.get());
+    os << r.text << "\n";
+    os << r.AsJsonString() << "\n\n";
+  }
+
+  std::cerr << os.str();
 
   return 0;
 }
