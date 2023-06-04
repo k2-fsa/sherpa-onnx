@@ -70,11 +70,9 @@ for a list of pre-trained models to download.
   sherpa_onnx::OnlineRecognizer recognizer(config);
 
   std::vector<Stream> ss;
-  // std::vector<sherpa_onnx::OnlineStream *> p_ss;
 
   const auto begin = std::chrono::steady_clock::now();
   std::vector<float> durations;
-  // std::vector<float> elapsed_seconds;
 
   for (int32_t i = 1; i <= po.NumArgs(); ++i) {
     const std::string wav_filename = po.GetArg(i);
