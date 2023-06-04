@@ -35,6 +35,7 @@ func sherpaOnnxOnlineTransducerModelConfig(
   joiner: String,
   tokens: String,
   numThreads: Int = 2,
+  provider: String = "cpu",
   debug: Int = 0
 ) -> SherpaOnnxOnlineTransducerModelConfig {
   return SherpaOnnxOnlineTransducerModelConfig(
@@ -43,6 +44,7 @@ func sherpaOnnxOnlineTransducerModelConfig(
     joiner: toCPointer(joiner),
     tokens: toCPointer(tokens),
     num_threads: Int32(numThreads),
+    provider: toCPointer(provider),
     debug: Int32(debug)
   )
 }
