@@ -129,7 +129,7 @@ class OnlineRecognizer::Impl {
         endpoint_(config_.endpoint_config) {
     if (config.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
-        lm_ = OnlineLM::Create(config.lm_config);
+        lm_ = OnlineLM::Create(config);
       }
 
       decoder_ = std::make_unique<OnlineTransducerModifiedBeamSearchDecoder>(
