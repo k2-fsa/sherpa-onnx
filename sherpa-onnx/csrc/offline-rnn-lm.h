@@ -17,7 +17,7 @@ class OfflineRnnLM : public OfflineLM {
  public:
   ~OfflineRnnLM() override;
 
-  explicit OfflineRnnLM(const OfflineLMConfig &config);
+  explicit OfflineRnnLM(const OfflineRecognizerConfig &config);
 
   /** Rescore a batch of sentences.
    *

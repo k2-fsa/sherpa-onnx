@@ -59,7 +59,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
           std::make_unique<OfflineTransducerGreedySearchDecoder>(model_.get());
     } else if (config_.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
-        lm_ = OfflineLM::Create(config.lm_config);
+        lm_ = OfflineLM::Create(config);
       }
 
       decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(

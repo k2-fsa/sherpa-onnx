@@ -13,7 +13,8 @@
 
 namespace sherpa_onnx {
 
-std::unique_ptr<OnlineLM> OnlineLM::Create(const OnlineLMConfig &config) {
+std::unique_ptr<OnlineLM> OnlineLM::Create(
+    const OnlineRecognizerConfig &config) {
   return std::make_unique<OnlineRnnLM>(config);
 }
 

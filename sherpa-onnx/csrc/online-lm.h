@@ -11,7 +11,7 @@
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/hypothesis.h"
-#include "sherpa-onnx/csrc/online-lm-config.h"
+#include "sherpa-onnx/csrc/online-recognizer.h"
 
 namespace sherpa_onnx {
 
@@ -19,7 +19,7 @@ class OnlineLM {
  public:
   virtual ~OnlineLM() = default;
 
-  static std::unique_ptr<OnlineLM> Create(const OnlineLMConfig &config);
+  static std::unique_ptr<OnlineLM> Create(const OnlineRecognizerConfig &config);
 
   virtual std::pair<Ort::Value, std::vector<Ort::Value>> GetInitStates() = 0;
 

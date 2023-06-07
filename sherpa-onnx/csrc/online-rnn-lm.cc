@@ -13,17 +13,18 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/session.h"
 
 namespace sherpa_onnx {
 
 class OnlineRnnLM::Impl {
  public:
-  explicit Impl(const OnlineLMConfig &config)
-      : config_(config),
+  explicit Impl(const OnlineRecognizerConfig &config)
+      : config_(config.lm_config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        sess_opts_{},
+        sess_opts_{GetSessionOptions(config.model_config)},
         allocator_{} {
-    Init(config);
+    Init(config.lm_config);
   }
 
   void ComputeLMScore(float scale, Hypothesis *hyp) {
@@ -142,7 +143,7 @@ class OnlineRnnLM::Impl {
   int32_t sos_id_ = 1;
 };
 
-OnlineRnnLM::OnlineRnnLM(const OnlineLMConfig &config)
+OnlineRnnLM::OnlineRnnLM(const OnlineRecognizerConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
 OnlineRnnLM::~OnlineRnnLM() = default;
