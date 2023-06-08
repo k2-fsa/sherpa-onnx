@@ -10,7 +10,7 @@
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/hypothesis.h"
-#include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/offline-lm-config.h"
 
 namespace sherpa_onnx {
 
@@ -18,8 +18,7 @@ class OfflineLM {
  public:
   virtual ~OfflineLM() = default;
 
-  static std::unique_ptr<OfflineLM> Create(
-      const OfflineRecognizerConfig &config);
+  static std::unique_ptr<OfflineLM> Create(const OfflineLMConfig &config);
 
   /** Rescore a batch of sentences.
    *

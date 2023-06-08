@@ -20,7 +20,7 @@ class OnlineRnnLM : public OnlineLM {
  public:
   ~OnlineRnnLM() override;
 
-  explicit OnlineRnnLM(const OnlineRecognizerConfig &config);
+  explicit OnlineRnnLM(const OnlineLMConfig &config);
 
   std::pair<Ort::Value, std::vector<Ort::Value>> GetInitStates() override;
 

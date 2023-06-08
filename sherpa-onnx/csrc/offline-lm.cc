@@ -12,8 +12,7 @@
 
 namespace sherpa_onnx {
 
-std::unique_ptr<OfflineLM> OfflineLM::Create(
-    const OfflineRecognizerConfig &config) {
+std::unique_ptr<OfflineLM> OfflineLM::Create(const OfflineLMConfig &config) {
   return std::make_unique<OfflineRnnLM>(config);
 }
 
