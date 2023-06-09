@@ -13,10 +13,13 @@ namespace sherpa_onnx {
 void PybindOfflineLMConfig(py::module *m) {
   using PyClass = OfflineLMConfig;
   py::class_<PyClass>(*m, "OfflineLMConfig")
-      .def(py::init<const std::string &, float>(), py::arg("model"),
-           py::arg("scale"))
+      .def(py::init<const std::string &, float, int32_t, const std::string &>(),
+           py::arg("model"), py::arg("scale"), py::arg("lm_num_threads"),
+           py::arg("lm-provider"))
       .def_readwrite("model", &PyClass::model)
       .def_readwrite("scale", &PyClass::scale)
+      .def_readwrite("lm_provider", &PyClass::lm_provider)
+      .def_readwrite("lm_num_threads", &PyClass::lm_num_threads)
       .def("__str__", &PyClass::ToString);
 }
 
