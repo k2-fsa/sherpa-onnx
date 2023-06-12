@@ -71,7 +71,6 @@ class OnlineStream::Impl {
   int32_t start_frame_index_ = 0;     // never reset
   OnlineTransducerDecoderResult result_;
   std::vector<Ort::Value> states_;
-
 };
 
 OnlineStream::OnlineStream(const FeatureExtractorConfig &config /*= {}*/)
@@ -125,9 +124,11 @@ int32_t &OnlineStream::GetNumTrailingBlankFrames() {
   return impl_->GetNumTrailingBlankFrames();
 }
 
-int32_t &OnlineStream::GetWavSegment() { return impl_->GetWavSegment(); }
+int32_t &OnlineStream::GetWavSegment() {
+  return impl_->GetWavSegment();
+}
 
-int32_t &OnlineStream::GetStartFrame() { return impl_->GetStartFrame(); }
-
-
+int32_t &OnlineStream::GetStartFrame() {
+  return impl_->GetStartFrame();
+}
 }  // namespace sherpa_onnx

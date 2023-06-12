@@ -273,7 +273,7 @@ class OnlineRecognizer::Impl {
     float frame_shift_in_seconds = 0.01;
 
     // subsampling factor is 4
-	int32_t trailing_silence_frames = s->GetNumTrailingBlankFrames() * 4;
+    int32_t trailing_silence_frames = s->GetNumTrailingBlankFrames() * 4;
 
     return endpoint_.IsEndpoint(num_processed_frames, trailing_silence_frames,
                                 frame_shift_in_seconds);
