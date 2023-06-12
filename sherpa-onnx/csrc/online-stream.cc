@@ -54,12 +54,24 @@ class OnlineStream::Impl {
 
   std::vector<Ort::Value> &GetStates() { return states_; }
 
+  int32_t &GetNumTrailingBlankFrames() { return num_trailing_blank_frames_; }
+
+  int32_t &GetWavSegment() { return segment_; }
+
+  int32_t &GetStartFrame() { return start_frame_; }
+
  private:
   FeatureExtractor feat_extractor_;
   int32_t num_processed_frames_ = 0;  // before subsampling
+  int32_t num_trailing_blank_frames_ = 0;  // after subsampling
+  /// ID of this segment
+  int32_t segment_ = 0;
+  /// Starting frame of this segment.
+  int32_t start_frame_ = 0;
   int32_t start_frame_index_ = 0;     // never reset
   OnlineTransducerDecoderResult result_;
   std::vector<Ort::Value> states_;
+
 };
 
 OnlineStream::OnlineStream(const FeatureExtractorConfig &config /*= {}*/)
@@ -108,5 +120,14 @@ void OnlineStream::SetStates(std::vector<Ort::Value> states) {
 std::vector<Ort::Value> &OnlineStream::GetStates() {
   return impl_->GetStates();
 }
+
+int32_t &OnlineStream::GetNumTrailingBlankFrames() {
+  return impl_->GetNumTrailingBlankFrames();
+}
+
+int32_t &OnlineStream::GetWavSegment() { return impl_->GetWavSegment(); }
+
+int32_t &OnlineStream::GetStartFrame() { return impl_->GetStartFrame(); }
+
 
 }  // namespace sherpa_onnx

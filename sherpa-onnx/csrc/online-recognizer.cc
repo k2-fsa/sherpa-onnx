@@ -244,18 +244,36 @@ class OnlineRecognizer::Impl {
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = 4;
-    return Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor);
+    auto ans =  Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor);
+
+    if (!IsReady(s) && s->IsLastFrame(s->NumFramesReady() - 1)) {
+      ans.is_final = true;
+    }
+    ans.segment = s->GetWavSegment();
+    float frame_shift_s = frame_shift_ms / 1000.;
+    ans.start_time = s->GetStartFrame() * frame_shift_s;
+    s->GetNumTrailingBlankFrames() = decoder_result.num_trailing_blanks;
+
+    if (config_.enable_endpoint && IsEndpoint(s)) {
+      auto r = decoder_->GetEmptyResult();
+      s->SetResult(r);
+      ans.is_final = true;
+      s->GetWavSegment() += 1;
+      s->GetStartFrame() = s->GetNumProcessedFrames();
+      s->GetNumTrailingBlankFrames() = 0;
+    }
+    return ans;
   }
 
   bool IsEndpoint(OnlineStream *s) const {
     if (!config_.enable_endpoint) return false;
-    int32_t num_processed_frames = s->GetNumProcessedFrames();
+    int32_t num_processed_frames = s->GetNumProcessedFrames() - s->GetStartFrame();
 
     // frame shift is 10 milliseconds
     float frame_shift_in_seconds = 0.01;
 
     // subsampling factor is 4
-    int32_t trailing_silence_frames = s->GetResult().num_trailing_blanks * 4;
+	int32_t trailing_silence_frames = s->GetNumTrailingBlankFrames() * 4;
 
     return endpoint_.IsEndpoint(num_processed_frames, trailing_silence_frames,
                                 frame_shift_in_seconds);
