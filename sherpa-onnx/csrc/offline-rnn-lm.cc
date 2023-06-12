@@ -18,12 +18,12 @@ namespace sherpa_onnx {
 
 class OfflineRnnLM::Impl {
  public:
-  explicit Impl(const OfflineRecognizerConfig &config)
-      : config_(config.lm_config),
+  explicit Impl(const OfflineLMConfig &config)
+      : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        sess_opts_{GetSessionOptions(config.model_config)},
+        sess_opts_{GetSessionOptions(config)},
         allocator_{} {
-    Init(config.lm_config);
+    Init(config);
   }
 
   Ort::Value Rescore(Ort::Value x, Ort::Value x_lens) {
@@ -63,7 +63,7 @@ class OfflineRnnLM::Impl {
   std::vector<const char *> output_names_ptr_;
 };
 
-OfflineRnnLM::OfflineRnnLM(const OfflineRecognizerConfig &config)
+OfflineRnnLM::OfflineRnnLM(const OfflineLMConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
 OfflineRnnLM::~OfflineRnnLM() = default;

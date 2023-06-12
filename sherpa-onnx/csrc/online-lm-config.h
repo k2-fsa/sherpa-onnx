@@ -16,11 +16,17 @@ struct OnlineLMConfig {
 
   // LM scale
   float scale = 0.5;
+  int32_t lm_num_threads = 1;
+  std::string lm_provider = "cpu";
 
   OnlineLMConfig() = default;
 
-  OnlineLMConfig(const std::string &model, float scale)
-      : model(model), scale(scale) {}
+  OnlineLMConfig(const std::string &model, float scale, int32_t lm_num_threads,
+                  const std::string &lm_provider)
+      : model(model),
+        scale(scale),
+        lm_num_threads(lm_num_threads),
+        lm_provider(lm_provider) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

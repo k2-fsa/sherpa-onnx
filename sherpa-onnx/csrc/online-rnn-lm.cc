@@ -19,12 +19,12 @@ namespace sherpa_onnx {
 
 class OnlineRnnLM::Impl {
  public:
-  explicit Impl(const OnlineRecognizerConfig &config)
-      : config_(config.lm_config),
+  explicit Impl(const OnlineLMConfig &config)
+      : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        sess_opts_{GetSessionOptions(config.model_config)},
+        sess_opts_{GetSessionOptions(config)},
         allocator_{} {
-    Init(config.lm_config);
+    Init(config);
   }
 
   void ComputeLMScore(float scale, Hypothesis *hyp) {
@@ -143,7 +143,7 @@ class OnlineRnnLM::Impl {
   int32_t sos_id_ = 1;
 };
 
-OnlineRnnLM::OnlineRnnLM(const OnlineRecognizerConfig &config)
+OnlineRnnLM::OnlineRnnLM(const OnlineLMConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
 OnlineRnnLM::~OnlineRnnLM() = default;

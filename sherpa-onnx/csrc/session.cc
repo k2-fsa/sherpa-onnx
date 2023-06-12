@@ -69,4 +69,12 @@ Ort::SessionOptions GetSessionOptions(const OfflineModelConfig &config) {
   return GetSessionOptionsImpl(config.num_threads, config.provider);
 }
 
+Ort::SessionOptions GetSessionOptions(const OfflineLMConfig &config) {
+  return GetSessionOptionsImpl(config.lm_num_threads, config.lm_provider);
+}
+
+Ort::SessionOptions GetSessionOptions(const OnlineLMConfig &config) {
+  return GetSessionOptionsImpl(config.lm_num_threads, config.lm_provider);
+}
+
 }  // namespace sherpa_onnx
