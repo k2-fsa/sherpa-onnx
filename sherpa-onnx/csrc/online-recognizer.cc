@@ -244,7 +244,10 @@ class OnlineRecognizer::Impl {
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = 4;
-    auto ans =  Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor);
+    auto ans = Convert(decoder_result,
+               sym_,
+               frame_shift_ms,
+               subsampling_factor);
 
     if (!IsReady(s) && s->IsLastFrame(s->NumFramesReady() - 1)) {
       ans.is_final = true;
@@ -267,7 +270,8 @@ class OnlineRecognizer::Impl {
 
   bool IsEndpoint(OnlineStream *s) const {
     if (!config_.enable_endpoint) return false;
-    int32_t num_processed_frames = s->GetNumProcessedFrames() - s->GetStartFrame();
+    int32_t num_processed_frames = s->GetNumProcessedFrames() -
+                                   s->GetStartFrame();
 
     // frame shift is 10 milliseconds
     float frame_shift_in_seconds = 0.01;
