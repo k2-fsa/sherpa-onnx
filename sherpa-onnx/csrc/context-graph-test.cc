@@ -19,9 +19,9 @@ TEST(ContextGraph, TestBasic) {
   for (int32_t i = 0; i < contexts_str.size(); ++i) {
     std::vector<int32_t> tmp;
     for (int32_t j = 0; j < contexts_str[i].size(); ++j) {
-      tmp.push_back((int32_t)contexts_str[i][j]);
+      tmp.push_back(contexts_str[i][j]);
     }
-    contexts.push_back(tmp);
+    contexts.emplace_back(tmp);
   }
   auto context_graph = ContextGraph(1);
   context_graph.Build(contexts);
@@ -30,11 +30,11 @@ TEST(ContextGraph, TestBasic) {
       {"HEHERSHE", 14}, {"HERSHE", 12}, {"HISHE", 9},   {"SHED", 6},
       {"HELL", 2},      {"HELLO", 7},   {"DHRHISQ", 4}, {"THEN", 2}};
 
-  for (auto iter : queries) {
+  for (const auto &iter : queries) {
     float total_scores = 0;
     auto state = context_graph.Root();
     for (auto q : iter.first) {
-      auto res = context_graph.ForwardOneStep(state, (int32_t)q);
+      auto res = context_graph.ForwardOneStep(state, q);
       total_scores += res.first;
       state = res.second;
     }

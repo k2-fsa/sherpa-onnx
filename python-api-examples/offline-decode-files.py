@@ -205,6 +205,7 @@ def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
         for line in f.readlines():
             toks = line.strip().split()
             assert len(toks) == 2, len(toks)
+            assert toks[0] not in tokens, f"Duplicate token: {toks} "
             tokens[toks[0]] = int(toks[1])
     return sherpa_onnx.encode_contexts(
         modeling_unit=args.modeling_unit, contexts=contexts, sp=sp, tokens_table=tokens
@@ -248,6 +249,7 @@ def main():
 
         contexts = [x.strip().upper() for x in args.contexts.split("/") if x.strip()]
         if contexts:
+            print (f"Contexts list: {contexts}")
             contexts_list = encode_contexts(args, contexts)
 
         assert_file_exists(args.encoder)
@@ -303,8 +305,6 @@ def main():
         samples, sample_rate = read_wave(wave_filename)
         duration = len(samples) / sample_rate
         total_duration += duration
-
-        print(f"contexts_list : {contexts_list}")
         if contexts_list:
             assert len(args.paraformer) == 0, args.paraformer
             assert len(args.nemo_ctc) == 0, args.nemo_ctc

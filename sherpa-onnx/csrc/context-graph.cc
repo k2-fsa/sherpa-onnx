@@ -10,6 +10,7 @@
 
 namespace sherpa_onnx {
 void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids) {
+  assert(false == is_populated_);
   for (int32_t i = 0; i < token_ids.size(); ++i) {
     auto node = root_;
     for (int32_t j = 0; j < token_ids[i].size(); ++j) {
@@ -24,6 +25,7 @@ void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids) {
     }
   }
   FillFailOutput();
+  is_populated_ = true;
 }
 
 std::pair<float, ContextStatePtr> ContextGraph::ForwardOneStep(
@@ -35,9 +37,10 @@ std::pair<float, ContextStatePtr> ContextGraph::ForwardOneStep(
     score = node->token_score;
     if (state->is_end) score += state->node_score;
   } else {
-    node = state->fail;
+    // every node should have a fail arc, so no need to check the weak_ptr here.
+    node = state->fail.lock();
     while (0 == node->next.count(token)) {
-      node = node->fail;
+      node = node->fail.lock();
       if (-1 == node->token) break;  // root
     }
     if (1 == node->next.count(token)) {
@@ -47,10 +50,11 @@ std::pair<float, ContextStatePtr> ContextGraph::ForwardOneStep(
   }
   assert(nullptr != node);
   float matched_score = 0;
-  auto output = node->output;
-  while (nullptr != output) {
+  // output should be either a shared_ptr or false
+  auto output = node->output.lock();
+  while (output) {
     matched_score += output->node_score;
-    output = output->output;
+    output = output->output.lock();
   }
   return std::make_pair(score + matched_score, node);
 }
@@ -64,9 +68,9 @@ std::pair<float, ContextStatePtr> ContextGraph::Finalize(
   return std::make_pair(score, root_);
 }
 
-void ContextGraph::FillFailOutput() {
+void ContextGraph::FillFailOutput() const {
   std::queue<ContextStatePtr> node_queue;
-  for (auto kv : root_->next) {
+  for (auto &kv : root_->next) {
     kv.second->fail = root_;
     node_queue.push(kv.second);
   }
@@ -74,13 +78,13 @@ void ContextGraph::FillFailOutput() {
     auto current_node = node_queue.front();
     node_queue.pop();
     for (auto kv : current_node->next) {
-      auto fail = current_node->fail;
+      auto fail = current_node->fail.lock();
       if (1 == fail->next.count(kv.first)) {
         fail = fail->next[kv.first];
       } else {
-        fail = fail->fail;
+        fail = fail->fail.lock();
         while (0 == fail->next.count(kv.first)) {
-          fail = fail->fail;
+          fail = fail->fail.lock();
           if (-1 == fail->token) break;
         }
         if (1 == fail->next.count(kv.first)) fail = fail->next[kv.first];
@@ -89,7 +93,7 @@ void ContextGraph::FillFailOutput() {
       // fill the output arc
       auto output = fail;
       while (!output->is_end) {
-        output = output->fail;
+        output = output->fail.lock();
         if (-1 == output->token) {
           output = nullptr;
           break;

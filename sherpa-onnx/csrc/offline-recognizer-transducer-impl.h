@@ -76,8 +76,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
   std::unique_ptr<OfflineStream> CreateStream(
       const std::vector<std::vector<int32_t>> &context_list) const override {
     // We create context_graph at this level, because we might have default
-    // context_graph(will add later if need) that belong to the whole model
-    // rather than each stream.
+    // context_graph(will be added later if needed) that belongs to the whole
+    // model rather than each stream.
     auto context_graph = std::make_shared<ContextGraph>(config_.context_score);
     context_graph->Build(context_list);
     return std::make_unique<OfflineStream>(config_.feat_config, context_graph);

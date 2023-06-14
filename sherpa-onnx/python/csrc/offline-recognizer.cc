@@ -36,7 +36,8 @@ void PybindOfflineRecognizer(py::module *m) {
   using PyClass = OfflineRecognizer;
   py::class_<PyClass>(*m, "OfflineRecognizer")
       .def(py::init<const OfflineRecognizerConfig &>(), py::arg("config"))
-      .def("create_stream", [](PyClass &self) { return self.CreateStream(); })
+      .def("create_stream",
+           [](const PyClass &self) { return self.CreateStream(); })
       .def(
           "create_stream",
           [](PyClass &self,
@@ -46,7 +47,7 @@ void PybindOfflineRecognizer(py::module *m) {
           py::arg("contexts_list"))
       .def("decode_stream", &PyClass::DecodeStream)
       .def("decode_streams",
-           [](PyClass &self, std::vector<OfflineStream *> ss) {
+           [](const PyClass &self, std::vector<OfflineStream *> ss) {
              self.DecodeStreams(ss.data(), ss.size());
            });
 }
