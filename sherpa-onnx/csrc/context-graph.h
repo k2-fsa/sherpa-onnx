@@ -10,6 +10,8 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/log.h"
+
 namespace sherpa_onnx {
 
 class ContextState;
