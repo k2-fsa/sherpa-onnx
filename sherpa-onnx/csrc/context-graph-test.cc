@@ -21,7 +21,7 @@ TEST(ContextGraph, TestBasic) {
     for (int32_t j = 0; j < contexts_str[i].size(); ++j) {
       tmp.push_back(contexts_str[i][j]);
     }
-    contexts.emplace_back(tmp);
+    contexts.push_back(std::move(tmp));
   }
   auto context_graph = ContextGraph(1);
   context_graph.Build(contexts);

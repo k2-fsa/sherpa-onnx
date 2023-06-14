@@ -68,7 +68,7 @@ struct OfflineFeatureExtractorConfig {
 class OfflineStream {
  public:
   explicit OfflineStream(const OfflineFeatureExtractorConfig &config = {},
-                         const ContextGraphPtr &context_graph = nullptr);
+                         ContextGraphPtr context_graph = nullptr);
   ~OfflineStream();
 
   /**

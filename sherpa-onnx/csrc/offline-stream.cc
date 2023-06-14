@@ -76,7 +76,7 @@ std::string OfflineFeatureExtractorConfig::ToString() const {
 class OfflineStream::Impl {
  public:
   explicit Impl(const OfflineFeatureExtractorConfig &config,
-                const ContextGraphPtr &context_graph)
+                ContextGraphPtr context_graph)
       : config_(config), context_graph_(context_graph) {
     opts_.frame_opts.dither = 0;
     opts_.frame_opts.snip_edges = false;
@@ -198,7 +198,7 @@ class OfflineStream::Impl {
 
 OfflineStream::OfflineStream(
     const OfflineFeatureExtractorConfig &config /*= {}*/,
-    const ContextGraphPtr &context_graph /*= nullptr*/)
+    ContextGraphPtr context_graph /*= nullptr*/)
     : impl_(std::make_unique<Impl>(config, context_graph)) {}
 
 OfflineStream::~OfflineStream() = default;

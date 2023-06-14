@@ -10,7 +10,7 @@
 
 namespace sherpa_onnx {
 void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids) {
-  assert(false == is_populated_);
+  SHERPA_ONNX_CHECK(false == is_populated_);
   for (int32_t i = 0; i < token_ids.size(); ++i) {
     auto node = root_;
     for (int32_t j = 0; j < token_ids[i].size(); ++j) {
@@ -48,7 +48,7 @@ std::pair<float, ContextStatePtr> ContextGraph::ForwardOneStep(
     }
     score = node->node_score - state->local_node_score;
   }
-  assert(nullptr != node);
+  SHERPA_ONNX_CHECK(nullptr != node);
   float matched_score = 0;
   // output should be either a shared_ptr or false
   auto output = node->output.lock();
