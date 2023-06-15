@@ -19,8 +19,7 @@ TEST(ContextGraph, TestBasic) {
   for (int32_t i = 0; i < contexts_str.size(); ++i) {
     contexts.emplace_back(contexts_str[i].begin(), contexts_str[i].end());
   }
-  auto context_graph = ContextGraph(1);
-  context_graph.Build(contexts);
+  auto context_graph = ContextGraph(contexts, 1);
 
   auto queries = std::map<std::string, float>{
       {"HEHERSHE", 14}, {"HERSHE", 12}, {"HISHE", 9},   {"SHED", 6},

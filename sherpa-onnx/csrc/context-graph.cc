@@ -9,8 +9,8 @@
 #include <utility>
 
 namespace sherpa_onnx {
-void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids) {
-  SHERPA_ONNX_CHECK(false == is_populated_);
+void ContextGraph::Build(
+    const std::vector<std::vector<int32_t>> &token_ids) const {
   for (int32_t i = 0; i < token_ids.size(); ++i) {
     auto node = root_.get();
     for (int32_t j = 0; j < token_ids[i].size(); ++j) {
@@ -25,7 +25,6 @@ void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids) {
     }
   }
   FillFailOutput();
-  is_populated_ = true;
 }
 
 std::pair<float, const ContextState *> ContextGraph::ForwardOneStep(

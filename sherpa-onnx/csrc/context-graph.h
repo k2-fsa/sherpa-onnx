@@ -40,13 +40,13 @@ struct ContextState {
 class ContextGraph {
  public:
   ContextGraph() = default;
-  explicit ContextGraph(float context_score) : context_score_(context_score) {
-    is_populated_ = false;
+  ContextGraph(const std::vector<std::vector<int32_t>> &token_ids,
+               float context_score)
+      : context_score_(context_score) {
     root_ = std::make_unique<ContextState>(-1, 0, 0, 0, false);
     root_->fail = root_.get();
+    Build(token_ids);
   }
-
-  void Build(const std::vector<std::vector<int32_t>> &token_ids);
 
   std::pair<float, const ContextState *> ForwardOneStep(
       const ContextState *state, int32_t token_id) const;
@@ -58,7 +58,7 @@ class ContextGraph {
  private:
   float context_score_;
   std::unique_ptr<ContextState> root_;
-  bool is_populated_;
+  void Build(const std::vector<std::vector<int32_t>> &token_ids) const;
   void FillFailOutput() const;
 };
 
