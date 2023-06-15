@@ -40,7 +40,7 @@ struct Hypothesis {
   // the nn lm states
   std::vector<CopyableOrtValue> nn_lm_states;
 
-  ContextStatePtr context_state;
+  const ContextState *context_state;
 
   // TODO(fangjun): Make it configurable
   // the minimum of tokens in a chunk for streaming RNN LM
@@ -50,7 +50,7 @@ struct Hypothesis {
 
   Hypothesis() = default;
   Hypothesis(const std::vector<int64_t> &ys, double log_prob,
-             ContextStatePtr context_state = nullptr)
+             const ContextState *context_state = nullptr)
       : ys(ys), log_prob(log_prob), context_state(context_state) {}
 
   double TotalLogProb() const { return log_prob + lm_log_prob; }

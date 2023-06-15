@@ -201,8 +201,8 @@ def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
         sp = spm.SentencePieceProcessor()
         sp.load(args.bpe_model)
     tokens = {}
-    with open(args.tokens, "r") as f:
-        for line in f.readlines():
+    with open(args.tokens, "r", encoding="utf-8") as f:
+        for line in f:
             toks = line.strip().split()
             assert len(toks) == 2, len(toks)
             assert toks[0] not in tokens, f"Duplicate token: {toks} "
@@ -249,7 +249,7 @@ def main():
 
         contexts = [x.strip().upper() for x in args.contexts.split("/") if x.strip()]
         if contexts:
-            print (f"Contexts list: {contexts}")
+            print(f"Contexts list: {contexts}")
             contexts_list = encode_contexts(args, contexts)
 
         assert_file_exists(args.encoder)

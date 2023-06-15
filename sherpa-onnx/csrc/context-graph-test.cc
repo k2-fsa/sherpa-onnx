@@ -17,11 +17,7 @@ TEST(ContextGraph, TestBasic) {
       {"S", "HE", "SHE", "SHELL", "HIS", "HERS", "HELLO", "THIS", "THEM"});
   std::vector<std::vector<int32_t>> contexts;
   for (int32_t i = 0; i < contexts_str.size(); ++i) {
-    std::vector<int32_t> tmp;
-    for (int32_t j = 0; j < contexts_str[i].size(); ++j) {
-      tmp.push_back(contexts_str[i][j]);
-    }
-    contexts.push_back(std::move(tmp));
+    contexts.emplace_back(contexts_str[i].begin(), contexts_str[i].end());
   }
   auto context_graph = ContextGraph(1);
   context_graph.Build(contexts);

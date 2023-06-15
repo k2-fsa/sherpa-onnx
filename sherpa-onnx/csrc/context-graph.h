@@ -14,9 +14,7 @@
 
 namespace sherpa_onnx {
 
-class ContextState;
 class ContextGraph;
-using ContextStatePtr = std::shared_ptr<ContextState>;
 using ContextGraphPtr = std::shared_ptr<ContextGraph>;
 
 struct ContextState {
@@ -25,9 +23,9 @@ struct ContextState {
   float node_score;
   float local_node_score;
   bool is_end;
-  std::unordered_map<int32_t, ContextStatePtr> next;
-  std::weak_ptr<ContextState> fail;
-  std::weak_ptr<ContextState> output;
+  std::unordered_map<int32_t, std::unique_ptr<ContextState>> next;
+  const ContextState *fail = nullptr;
+  const ContextState *output = nullptr;
 
   ContextState() = default;
   ContextState(int32_t token, float token_score, float node_score,
@@ -44,22 +42,22 @@ class ContextGraph {
   ContextGraph() = default;
   explicit ContextGraph(float context_score) : context_score_(context_score) {
     is_populated_ = false;
-    root_ = std::make_shared<ContextState>(-1, 0, 0, 0, false);
-    root_->fail = root_;
+    root_ = std::make_unique<ContextState>(-1, 0, 0, 0, false);
+    root_->fail = root_.get();
   }
 
   void Build(const std::vector<std::vector<int32_t>> &token_ids);
 
-  std::pair<float, ContextStatePtr> ForwardOneStep(const ContextStatePtr &state,
-                                                   int32_t token_id) const;
-  std::pair<float, ContextStatePtr> Finalize(
-      const ContextStatePtr &state) const;
+  std::pair<float, const ContextState *> ForwardOneStep(
+      const ContextState *state, int32_t token_id) const;
+  std::pair<float, const ContextState *> Finalize(
+      const ContextState *state) const;
 
-  ContextStatePtr Root() const { return root_; }
+  const ContextState *Root() const { return root_.get(); }
 
  private:
   float context_score_;
-  ContextStatePtr root_;
+  std::unique_ptr<ContextState> root_;
   bool is_populated_;
   void FillFailOutput() const;
 };
