@@ -78,6 +78,7 @@ def get_args():
         help="""
         The type of modeling unit.
         Valid values are bpe, bpe+char, char.
+        Note: the char here means characters in CJK languages.
         """,
     )
 
