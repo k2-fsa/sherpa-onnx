@@ -52,7 +52,8 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "model_config=" << model_config.ToString() << ", ";
   os << "lm_config=" << lm_config.ToString() << ", ";
   os << "decoding_method=\"" << decoding_method << "\", ";
-  os << "max_active_paths=" << max_active_paths << ")";
+  os << "max_active_paths=" << max_active_paths << ", ";
+  os << "context_score=" << context_score << ")";
 
   return os.str();
 }
