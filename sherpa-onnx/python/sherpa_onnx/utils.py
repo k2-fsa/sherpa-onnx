@@ -12,7 +12,8 @@ def encode_contexts(
 
     Args:
       modeling_unit:
-        The valid values are bpe, char, bpe+char
+        The valid values are bpe, char, bpe+char.
+        Note: char here means characters in CJK languages, not English like languages.
       contexts:
         The given contexts list (a list of string).
       sp:
@@ -31,6 +32,7 @@ def encode_contexts(
 
     if "char" == modeling_unit:
         for context in contexts:
+            assert ' ' not in context
             ids = [
                 tokens_table[txt] if txt in tokens_table else tokens_table["<unk>"]
                 for txt in context
