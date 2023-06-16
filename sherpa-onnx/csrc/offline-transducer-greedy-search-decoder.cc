@@ -16,7 +16,9 @@ namespace sherpa_onnx {
 
 std::vector<OfflineTransducerDecoderResult>
 OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
-                                             Ort::Value encoder_out_length) {
+                                             Ort::Value encoder_out_length,
+                                             OfflineStream **ss /*= nullptr*/,
+                                             int32_t n /*= 0*/) {
   PackedSequence packed_encoder_out = PackPaddedSequence(
       model_->Allocator(), &encoder_out, &encoder_out_length);
 

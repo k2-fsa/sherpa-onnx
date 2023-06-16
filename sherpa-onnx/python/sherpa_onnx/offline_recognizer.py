@@ -1,6 +1,6 @@
 # Copyright (c)  2023 by manyeyes
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from _sherpa_onnx import (
     OfflineFeatureExtractorConfig,
@@ -39,6 +39,7 @@ class OfflineRecognizer(object):
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
+        context_score: float = 1.5,
         debug: bool = False,
         provider: str = "cpu",
     ):
@@ -96,6 +97,7 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            context_score=context_score,
         )
         self.recognizer = _Recognizer(recognizer_config)
         return self
@@ -216,8 +218,11 @@ class OfflineRecognizer(object):
         self.recognizer = _Recognizer(recognizer_config)
         return self
 
-    def create_stream(self):
-        return self.recognizer.create_stream()
+    def create_stream(self, contexts_list: Optional[List[List[int]]] = None):
+        if contexts_list is None:
+            return self.recognizer.create_stream()
+        else:
+            return self.recognizer.create_stream(contexts_list)
 
     def decode_stream(self, s: OfflineStream):
         self.recognizer.decode_stream(s)

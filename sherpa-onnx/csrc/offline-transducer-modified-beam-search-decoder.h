@@ -26,7 +26,8 @@ class OfflineTransducerModifiedBeamSearchDecoder
         lm_scale_(lm_scale) {}
 
   std::vector<OfflineTransducerDecoderResult> Decode(
-      Ort::Value encoder_out, Ort::Value encoder_out_length) override;
+      Ort::Value encoder_out, Ort::Value encoder_out_length,
+      OfflineStream **ss = nullptr, int32_t n = 0) override;
 
  private:
   OfflineTransducerModel *model_;  // Not owned

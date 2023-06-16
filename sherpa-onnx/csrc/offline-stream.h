@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
@@ -66,7 +67,8 @@ struct OfflineFeatureExtractorConfig {
 
 class OfflineStream {
  public:
-  explicit OfflineStream(const OfflineFeatureExtractorConfig &config = {});
+  explicit OfflineStream(const OfflineFeatureExtractorConfig &config = {},
+                         ContextGraphPtr context_graph = nullptr);
   ~OfflineStream();
 
   /**
@@ -95,6 +97,9 @@ class OfflineStream {
 
   /** Get the recognition result of this stream */
   const OfflineRecognitionResult &GetResult() const;
+
+  /** Get the ContextGraph of this stream */
+  const ContextGraphPtr &GetContextGraph() const;
 
  private:
   class Impl;

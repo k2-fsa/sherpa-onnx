@@ -54,7 +54,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy
+          python3 -m pip install --upgrade pip numpy sentencepiece==0.1.96
 
       - name: Install sherpa-onnx
         shell: bash

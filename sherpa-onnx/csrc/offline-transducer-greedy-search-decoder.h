@@ -18,7 +18,8 @@ class OfflineTransducerGreedySearchDecoder : public OfflineTransducerDecoder {
       : model_(model) {}
 
   std::vector<OfflineTransducerDecoderResult> Decode(
-      Ort::Value encoder_out, Ort::Value encoder_out_length) override;
+      Ort::Value encoder_out, Ort::Value encoder_out_length,
+      OfflineStream **ss = nullptr, int32_t n = 0) override;
 
  private:
   OfflineTransducerModel *model_;  // Not owned

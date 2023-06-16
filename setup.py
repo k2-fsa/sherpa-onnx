@@ -37,6 +37,7 @@ with open("sherpa-onnx/python/sherpa_onnx/__init__.py", "a") as f:
 
 install_requires = [
     "numpy",
+    "sentencepiece==0.1.96",
 ]
 
 
