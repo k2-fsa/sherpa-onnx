@@ -556,8 +556,8 @@ class StreamingServer(object):
 
                 await socket.send(json.dumps(message))
 
-        tail_padding = np.rand(int(self.sample_rate * 0.3), dtype=np.float32)
-        stream.accept_waveform(sampling_rate=self.sample_rate, waveform=tail_padding)
+        tail_padding = np.zeros(int(self.sample_rate * 0.3)).astype(np.float32)
+        stream.accept_waveform(sample_rate=self.sample_rate, waveform=tail_padding)
         stream.input_finished()
         while self.recognizer.is_ready(stream):
             await self.compute_and_decode(stream)
