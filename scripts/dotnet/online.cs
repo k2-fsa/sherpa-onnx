@@ -23,6 +23,7 @@ namespace SherpaOnnx
       Joiner = "";
       Tokens = "";
       NumThreads = 1;
+      Provider = "cpu";
       Debug = 0;
     }
     [MarshalAs(UnmanagedType.LPStr)]
@@ -39,6 +40,9 @@ namespace SherpaOnnx
 
     /// Number of threads used to run the neural network model
     public int NumThreads;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Provider;
 
     /// true to print debug information of the model
     public int Debug;
