@@ -20,6 +20,9 @@ class OnlineDecodeFiles
     [Option(Required = true, HelpText = "Path to tokens.txt")]
     public string Tokens { get; set; }
 
+    [Option(Required = false, Default = "cpu", HelpText = "Provider, e.g., cpu, coreml")]
+    public string Provider { get; set; }
+
     [Option(Required = true, HelpText = "Path to encoder.onnx")]
     public string Encoder { get; set; }
 
@@ -124,6 +127,7 @@ to download pre-trained streaming models.
     config.TransducerModelConfig.Decoder = options.Decoder;
     config.TransducerModelConfig.Joiner = options.Joiner;
     config.TransducerModelConfig.Tokens = options.Tokens;
+    config.TransducerModelConfig.Provider = options.Provider;
     config.TransducerModelConfig.NumThreads = options.NumThreads;
     config.TransducerModelConfig.Debug = options.Debug ? 1 : 0;
 
