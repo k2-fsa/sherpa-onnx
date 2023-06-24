@@ -75,7 +75,10 @@ struct OnlineRecognizerConfig {
   std::string decoding_method = "greedy_search";
   // now support modified_beam_search and greedy_search
 
-  int32_t max_active_paths = 4;  // used only for modified_beam_search
+  // used only for modified_beam_search
+  int32_t max_active_paths = 4;
+  /// used only for modified_beam_search
+  float context_score = 1.5;
 
   OnlineRecognizerConfig() = default;
 
@@ -111,6 +114,10 @@ class OnlineRecognizer {
 
   /// Create a stream for decoding.
   std::unique_ptr<OnlineStream> CreateStream() const;
+
+  // Create a stream with context phrases
+  std::unique_ptr<OnlineStream> CreateStream(
+      const std::vector<std::vector<int32_t>> &context_list) const;
 
   /**
    * Return true if the given stream has enough frames for decoding.

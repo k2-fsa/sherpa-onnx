@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Tuple
 
 import numpy as np
+import sentencepiece as spm
 import sherpa_onnx
 
 
@@ -70,6 +71,50 @@ def get_args():
     )
 
     parser.add_argument(
+        "--bpe-model",
+        type=str,
+        default="",
+        help="""
+        Path to bpe.model, it will be used to tokenize contexts biasing phrases.
+        Used only when --decoding-method=modified_beam_search
+        """,
+    )
+
+    parser.add_argument(
+        "--modeling-unit",
+        type=str,
+        default="char",
+        help="""
+        The type of modeling unit, it will be used to tokenize contexts biasing phrases.
+        Valid values are bpe, bpe+char, char.
+        Note: the char here means characters in CJK languages.
+        Used only when --decoding-method=modified_beam_search
+        """,
+    )
+
+    parser.add_argument(
+        "--contexts",
+        type=str,
+        default="",
+        help="""
+        The context list, it is a string containing some words/phrases separated
+        with /, for example, 'HELLO WORLD/I LOVE YOU/GO AWAY".
+        Used only when --decoding-method=modified_beam_search
+        """,
+    )
+
+    parser.add_argument(
+        "--context-score",
+        type=float,
+        default=1.5,
+        help="""
+        The context score of each token for biasing word/phrase. Used only if
+        --contexts is given.
+        Used only when --decoding-method=modified_beam_search
+        """,
+    )
+
+    parser.add_argument(
         "sound_files",
         type=str,
         nargs="+",
@@ -114,6 +159,26 @@ def read_wave(wave_filename: str) -> Tuple[np.ndarray, int]:
 
         samples_float32 = samples_float32 / 32768
         return samples_float32, f.getframerate()
+
+
+def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
+    sp = None
+    if "bpe" in args.modeling_unit:
+        sp = spm.SentencePieceProcessor()
+        sp.load(args.bpe_model)
+    tokens = {}
+    with open(args.tokens, "r", encoding="utf-8") as f:
+        for line in f:
+            toks = line.strip().split()
+            assert len(toks) == 2, len(toks)
+            assert toks[0] not in tokens, f"Duplicate token: {toks} "
+            tokens[toks[0]] = int(toks[1])
+    return sherpa.encode_contexts(
+        modeling_unit=args.modeling_unit,
+        contexts=contexts,
+        sp=sp,
+        tokens_table=tokens,
+    )
 
 
 def main():
