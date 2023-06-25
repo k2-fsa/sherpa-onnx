@@ -18,6 +18,7 @@
 #include "sherpa-onnx/csrc/online-conformer-transducer-model.h"
 #include "sherpa-onnx/csrc/online-lstm-transducer-model.h"
 #include "sherpa-onnx/csrc/online-zipformer-transducer-model.h"
+#include "sherpa-onnx/csrc/online-zipformer2-transducer-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace {
@@ -26,6 +27,7 @@ enum class ModelType {
   kConformer,
   kLstm,
   kZipformer,
+  kZipformer2,
   kUnkown,
 };
 
@@ -65,6 +67,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kLstm;
   } else if (model_type.get() == std::string("zipformer")) {
     return ModelType::kZipformer;
+  } else if (model_type.get() == std::string("zipformer2")) {
+    return ModelType::kZipformer2;
   } else {
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
     return ModelType::kUnkown;
@@ -88,6 +92,8 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
       return std::make_unique<OnlineLstmTransducerModel>(config);
     case ModelType::kZipformer:
       return std::make_unique<OnlineZipformerTransducerModel>(config);
+    case ModelType::kZipformer2:
+      return std::make_unique<OnlineZipformer2TransducerModel>(config);
     case ModelType::kUnkown:
       SHERPA_ONNX_LOGE("Unknown model type in online transducer!");
       return nullptr;
@@ -144,6 +150,8 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
       return std::make_unique<OnlineLstmTransducerModel>(mgr, config);
     case ModelType::kZipformer:
       return std::make_unique<OnlineZipformerTransducerModel>(mgr, config);
+    case ModelType::kZipformer2:
+      return std::make_unique<OnlineZipformer2TransducerModel>(mgr, config);
     case ModelType::kUnkown:
       SHERPA_ONNX_LOGE("Unknown model type in online transducer!");
       return nullptr;
