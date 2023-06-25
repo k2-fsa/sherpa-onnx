@@ -1,6 +1,6 @@
 # Copyright (c)  2023  Xiaomi Corporation
 from pathlib import Path
-from typing import List
+from typing import List, Optional
 
 from _sherpa_onnx import (
     EndpointConfig,
@@ -39,6 +39,7 @@ class OnlineRecognizer(object):
         rule3_min_utterance_length: float = 20.0,
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
+        context_score: float = 1.5,
         provider: str = "cpu",
     ):
         """
@@ -124,13 +125,17 @@ class OnlineRecognizer(object):
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
             max_active_paths=max_active_paths,
+            context_score=context_score,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
 
-    def create_stream(self):
-        return self.recognizer.create_stream()
+    def create_stream(self, contexts_list : Optional[List[List[int]]] = None):
+        if contexts_list is None:
+            return self.recognizer.create_stream()
+        else:
+            return self.recognizer.create_stream(contexts_list)
 
     def decode_stream(self, s: OnlineStream):
         self.recognizer.decode_stream(s)

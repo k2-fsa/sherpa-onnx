@@ -20,7 +20,7 @@ import argparse
 import time
 import wave
 from pathlib import Path
-from typing import Tuple
+from typing import List, Tuple
 
 import numpy as np
 import sentencepiece as spm
@@ -68,6 +68,15 @@ def get_args():
         type=str,
         default="greedy_search",
         help="Valid values are greedy_search and modified_beam_search",
+    )
+
+    parser.add_argument(
+        "--max-active-paths",
+        type=int,
+        default=4,
+        help="""Used only when --decoding-method is modified_beam_search.
+        It specifies number of active paths to keep during decoding.
+        """,
     )
 
     parser.add_argument(
@@ -164,6 +173,7 @@ def read_wave(wave_filename: str) -> Tuple[np.ndarray, int]:
 def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
     sp = None
     if "bpe" in args.modeling_unit:
+        assert_file_exists(args.bpe_model)
         sp = spm.SentencePieceProcessor()
         sp.load(args.bpe_model)
     tokens = {}
@@ -173,7 +183,7 @@ def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
             assert len(toks) == 2, len(toks)
             assert toks[0] not in tokens, f"Duplicate token: {toks} "
             tokens[toks[0]] = int(toks[1])
-    return sherpa.encode_contexts(
+    return sherpa_onnx.encode_contexts(
         modeling_unit=args.modeling_unit,
         contexts=contexts,
         sp=sp,
@@ -197,10 +207,19 @@ def main():
         sample_rate=16000,
         feature_dim=80,
         decoding_method=args.decoding_method,
+        max_active_paths=args.max_active_paths,
+        context_score=args.context_score,
     )
 
     print("Started!")
     start_time = time.time()
+
+    contexts_list = []
+    contexts = [x.strip().upper() for x in args.contexts.split("/") if x.strip()]
+    if contexts:
+        print(f"Contexts list: {contexts}")
+        contexts_list = encode_contexts(args, contexts)
+
 
     streams = []
     total_duration = 0
@@ -210,7 +229,11 @@ def main():
         duration = len(samples) / sample_rate
         total_duration += duration
 
-        s = recognizer.create_stream()
+        if contexts_list:
+            s = recognizer.create_stream(contexts_list=contexts_list)
+        else:
+            s = recognizer.create_stream()
+
         s.accept_waveform(sample_rate, samples)
 
         tail_paddings = np.zeros(int(0.2 * sample_rate), dtype=np.float32)

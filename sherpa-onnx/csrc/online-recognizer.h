@@ -88,13 +88,14 @@ struct OnlineRecognizerConfig {
                          const EndpointConfig &endpoint_config,
                          bool enable_endpoint,
                          const std::string &decoding_method,
-                         int32_t max_active_paths)
+                         int32_t max_active_paths, float context_score)
       : feat_config(feat_config),
         model_config(model_config),
         endpoint_config(endpoint_config),
         enable_endpoint(enable_endpoint),
         decoding_method(decoding_method),
-        max_active_paths(max_active_paths) {}
+        max_active_paths(max_active_paths),
+        context_score(context_score) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
