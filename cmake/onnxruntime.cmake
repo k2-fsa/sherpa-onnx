@@ -62,7 +62,7 @@ function(download_onnxruntime)
   elseif(WIN32)
     message(STATUS "CMAKE_VS_PLATFORM_NAME: ${CMAKE_VS_PLATFORM_NAME}")
 
-    if(CMAKE_VS_PLATFORM_NAME STREQUAL Win32)
+    if(CMAKE_VS_PLATFORM_NAME STREQUAL Win32 OR CMAKE_VS_PLATFORM_NAME STREQUAL win32)
       # If you don't have access to the Internet,
       # please pre-download onnxruntime
       #
