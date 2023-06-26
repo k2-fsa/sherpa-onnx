@@ -48,6 +48,7 @@ set(sources
   online-transducer-model.cc
   online-transducer-modified-beam-search-decoder.cc
   online-zipformer-transducer-model.cc
+  online-zipformer2-transducer-model.cc
   onnx-utils.cc
   session.cc
   packed-sequence.cc
