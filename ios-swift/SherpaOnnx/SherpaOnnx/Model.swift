@@ -30,6 +30,51 @@ func getBilingualStreamZhEnZipformer20230220() -> SherpaOnnxOnlineTransducerMode
   )
 }
 
+func getZhZipformer20230615() -> SherpaOnnxOnlineTransducerModelConfig {
+  let encoder = getResource("encoder-epoch-12-avg-4-chunk-16-left-128", "onnx")
+  let decoder = getResource("decoder-epoch-12-avg-4-chunk-16-left-128", "onnx")
+  let joiner = getResource("joiner-epoch-12-avg-4-chunk-16-left-128", "onnx")
+  let tokens = getResource("tokens", "txt")
+
+  return sherpaOnnxOnlineTransducerModelConfig(
+    encoder: encoder,
+    decoder: decoder,
+    joiner: joiner,
+    tokens: tokens,
+    numThreads: 2
+  )
+}
+
+func getZhZipformer20230615Int8() -> SherpaOnnxOnlineTransducerModelConfig {
+  let encoder = getResource("encoder-epoch-12-avg-4-chunk-16-left-128.int8", "onnx")
+  let decoder = getResource("decoder-epoch-12-avg-4-chunk-16-left-128", "onnx")
+  let joiner = getResource("joiner-epoch-12-avg-4-chunk-16-left-128", "onnx")
+  let tokens = getResource("tokens", "txt")
+
+  return sherpaOnnxOnlineTransducerModelConfig(
+    encoder: encoder,
+    decoder: decoder,
+    joiner: joiner,
+    tokens: tokens,
+    numThreads: 2
+  )
+}
+
+func getEnZipformer20230626() -> SherpaOnnxOnlineTransducerModelConfig {
+  let encoder = getResource("encoder-epoch-99-avg-1-chunk-16-left-128", "onnx")
+  let decoder = getResource("decoder-epoch-99-avg-1-chunk-16-left-128", "onnx")
+  let joiner = getResource("joiner-epoch-99-avg-1-chunk-16-left-128", "onnx")
+  let tokens = getResource("tokens", "txt")
+
+  return sherpaOnnxOnlineTransducerModelConfig(
+    encoder: encoder,
+    decoder: decoder,
+    joiner: joiner,
+    tokens: tokens,
+    numThreads: 2
+  )
+}
+
 /// Please refer to
 /// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 /// to add more models if you need

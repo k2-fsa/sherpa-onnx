@@ -19,7 +19,7 @@ data class OnlineTransducerModelConfig(
     var decoder: String,
     var joiner: String,
     var tokens: String,
-    var numThreads: Int = 2,
+    var numThreads: Int = 1,
     var debug: Boolean = false,
 )
 
@@ -122,6 +122,9 @@ by following the code)
 
 2 - csukuangfj/sherpa-onnx-lstm-en-2023-02-17 (English)
     https://k2-fsa.github.io/sherpa/onnx/pretrained_models/lstm-transducer-models.html#csukuangfj-sherpa-onnx-lstm-en-2023-02-17-english
+
+3 - pkufool/icefall-asr-zipformer-streaming-wenetspeech-20230615
+    https://huggingface.co/pkufool/icefall-asr-zipformer-streaming-wenetspeech-20230615
  */
 fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
     when (type) {
@@ -151,6 +154,26 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
                 decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
                 joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
                 tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        3 -> {
+            val modelDir = "icefall-asr-zipformer-streaming-wenetspeech-20230615"
+            return OnlineTransducerModelConfig(
+                encoder = "$modelDir/exp/encoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx",
+                decoder = "$modelDir/exp/decoder-epoch-12-avg-4-chunk-16-left-128.onnx",
+                joiner = "$modelDir/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx",
+                tokens = "$modelDir/data/lang_char/tokens.txt",
+            )
+        }
+
+        4 -> {
+            val modelDir = "icefall-asr-zipformer-streaming-wenetspeech-20230615"
+            return OnlineTransducerModelConfig(
+                encoder = "$modelDir/exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx",
+                decoder = "$modelDir/exp/decoder-epoch-12-avg-4-chunk-16-left-128.onnx",
+                joiner = "$modelDir/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx",
+                tokens = "$modelDir/data/lang_char/tokens.txt",
             )
         }
     }
