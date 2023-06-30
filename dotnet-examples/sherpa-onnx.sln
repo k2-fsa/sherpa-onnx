@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "online-decode-files", "onli
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-decode-files", "offline-decode-files\offline-decode-files.csproj", "{2DAB152C-9E24-47A0-9DB0-781297ECE458}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speech-recognition-from-microphone", "speech-recognition-from-microphone\speech-recognition-from-microphone.csproj", "{FE4EA1FF-062A-46B3-B78D-C828FED7B82E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{2DAB152C-9E24-47A0-9DB0-781297ECE458}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DAB152C-9E24-47A0-9DB0-781297ECE458}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DAB152C-9E24-47A0-9DB0-781297ECE458}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE4EA1FF-062A-46B3-B78D-C828FED7B82E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE4EA1FF-062A-46B3-B78D-C828FED7B82E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE4EA1FF-062A-46B3-B78D-C828FED7B82E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE4EA1FF-062A-46B3-B78D-C828FED7B82E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
