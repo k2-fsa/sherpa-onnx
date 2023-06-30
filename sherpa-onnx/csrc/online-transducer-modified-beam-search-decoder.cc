@@ -63,11 +63,11 @@ void OnlineTransducerModifiedBeamSearchDecoder::StripLeadingBlanks(
 void OnlineTransducerModifiedBeamSearchDecoder::Decode(
     Ort::Value encoder_out,
     std::vector<OnlineTransducerDecoderResult> *result) {
-  Decode(std::move(encoder_out), nullptr, 0, result);
+  Decode(std::move(encoder_out), nullptr, result);
 }
 
 void OnlineTransducerModifiedBeamSearchDecoder::Decode(
-    Ort::Value encoder_out, OnlineStream **ss, int32_t num_streams,
+    Ort::Value encoder_out, OnlineStream **ss,
     std::vector<OnlineTransducerDecoderResult> *result) {
   std::vector<int64_t> encoder_out_shape =
       encoder_out.GetTensorTypeAndShapeInfo().GetShape();
@@ -81,8 +81,6 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
   }
 
   int32_t batch_size = static_cast<int32_t>(encoder_out_shape[0]);
-
-  if (ss) SHERPA_ONNX_CHECK_EQ(batch_size, num_streams);
 
   int32_t num_frames = static_cast<int32_t>(encoder_out_shape[1]);
   int32_t vocab_size = model_->VocabSize();

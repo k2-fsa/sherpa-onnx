@@ -34,7 +34,7 @@ class OnlineTransducerModifiedBeamSearchDecoder
   void Decode(Ort::Value encoder_out,
               std::vector<OnlineTransducerDecoderResult> *result) override;
 
-  void Decode(Ort::Value encoder_out, OnlineStream **ss, int32_t num_streams,
+  void Decode(Ort::Value encoder_out, OnlineStream **ss,
               std::vector<OnlineTransducerDecoderResult> *result) override;
 
   void UpdateDecoderOut(OnlineTransducerDecoderResult *result) override;

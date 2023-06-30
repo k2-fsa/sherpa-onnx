@@ -81,11 +81,10 @@ class OnlineTransducerDecoder {
   /** Run transducer beam search given the output from the encoder model.
    *
    * Note: Currently this interface is for contextual-biasing feature which
-   *       needs a ContextGraph owning by the OnlineStream.
+   *       needs a ContextGraph owned by the OnlineStream.
    *
    * @param encoder_out A 3-D tensor of shape (N, T, joiner_dim)
    * @param ss  A list of OnlineStreams.
-   * @param num_streams  The number of OnlineStreams, should be equal to N.
    * @param result  It is modified in-place.
    *
    * @note There is no need to pass encoder_out_length here since for the
@@ -93,9 +92,9 @@ class OnlineTransducerDecoder {
    * and there are no paddings.
    */
   virtual void Decode(Ort::Value encoder_out, OnlineStream **ss,
-                      int32_t num_streams,
                       std::vector<OnlineTransducerDecoderResult> *result) {
-    SHERPA_ONNX_LOGE("This interface is for ModifiedBeamSearchDecoder.");
+    SHERPA_ONNX_LOGE(
+        "This interface is for OnlineTransducerModifiedBeamSearchDecoder.");
     exit(-1);
   }
 

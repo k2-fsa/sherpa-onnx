@@ -262,7 +262,7 @@ class OnlineRecognizer::Impl {
                                    std::move(processed_frames));
 
     if (has_context_graph) {
-      decoder_->Decode(std::move(pair.first), ss, n, &results);
+      decoder_->Decode(std::move(pair.first), ss, &results);
     } else {
       decoder_->Decode(std::move(pair.first), &results);
     }
