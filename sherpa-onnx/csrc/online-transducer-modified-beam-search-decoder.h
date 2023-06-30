@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-lm.h"
+#include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
 
@@ -31,6 +32,9 @@ class OnlineTransducerModifiedBeamSearchDecoder
   void StripLeadingBlanks(OnlineTransducerDecoderResult *r) const override;
 
   void Decode(Ort::Value encoder_out,
+              std::vector<OnlineTransducerDecoderResult> *result) override;
+
+  void Decode(Ort::Value encoder_out, OnlineStream **ss,
               std::vector<OnlineTransducerDecoderResult> *result) override;
 
   void UpdateDecoderOut(OnlineTransducerDecoderResult *result) override;

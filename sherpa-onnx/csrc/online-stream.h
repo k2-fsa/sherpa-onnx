@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 
@@ -16,7 +17,8 @@ namespace sherpa_onnx {
 
 class OnlineStream {
  public:
-  explicit OnlineStream(const FeatureExtractorConfig &config = {});
+  explicit OnlineStream(const FeatureExtractorConfig &config = {},
+                        ContextGraphPtr context_graph = nullptr);
   ~OnlineStream();
 
   /**
@@ -70,6 +72,13 @@ class OnlineStream {
 
   void SetStates(std::vector<Ort::Value> states);
   std::vector<Ort::Value> &GetStates();
+
+  /**
+   * Get the context graph corresponding to this stream.
+   *
+   * @return Return the context graph for this stream.
+   */
+  const ContextGraphPtr &GetContextGraph() const;
 
  private:
   class Impl;
