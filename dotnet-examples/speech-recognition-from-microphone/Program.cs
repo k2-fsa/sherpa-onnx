@@ -1,7 +1,7 @@
 ﻿// Copyright (c)  2023  Xiaomi Corporation
-// Copyright (c)  2023 by manyeyes
 //
-// This file shows how to use a streaming model to decode files
+// This file shows how to use a streaming model for real-time speech
+// recognition from a microphone.
 // Please refer to
 // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/zipformer-transducer-models.html
 // to download streaming models
