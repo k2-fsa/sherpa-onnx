@@ -3,7 +3,7 @@
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <OutputType>Library</OutputType>
-    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net6.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;netcoreapp3.1;net6.0;net7.0</TargetFrameworks>
     <RuntimeIdentifier>{{ dotnet_rid }}</RuntimeIdentifier>
     <AssemblyName>sherpa-onnx</AssemblyName>
     <Version>{{ version }}</Version>

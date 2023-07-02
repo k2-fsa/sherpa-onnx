@@ -1,9 +1,10 @@
 ﻿/// Copyright (c)  2023  Xiaomi Corporation (authors: Fangjun Kuang)
 /// Copyright (c)  2023 by manyeyes
 
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 using System;
 
 namespace SherpaOnnx
@@ -116,7 +117,24 @@ namespace SherpaOnnx
     public OnlineRecognizerResult(IntPtr handle)
     {
       Impl impl = (Impl)Marshal.PtrToStructure(handle, typeof(Impl));
-      _text = Marshal.PtrToStringUTF8(impl.Text);
+      // PtrToStringUTF8() requires .net standard 2.1
+      // _text = Marshal.PtrToStringUTF8(impl.Text);
+
+      int length = 0;
+
+      unsafe
+      {
+        byte* buffer = (byte*)impl.Text;
+        while (*buffer != 0)
+        {
+          ++buffer;
+        }
+        length = (int)(buffer - (byte*)impl.Text);
+      }
+
+      byte[] stringBuffer = new byte[length];
+      Marshal.Copy(impl.Text, stringBuffer, 0, length);
+      _text = Encoding.UTF8.GetString(stringBuffer);
     }
 
     [StructLayout(LayoutKind.Sequential)]
