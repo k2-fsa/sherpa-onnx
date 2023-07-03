@@ -40,24 +40,28 @@ def get_args():
     parser.add_argument(
         "--tokens",
         type=str,
+        required=True,
         help="Path to tokens.txt",
     )
 
     parser.add_argument(
         "--encoder",
         type=str,
+        required=True,
         help="Path to the encoder model",
     )
 
     parser.add_argument(
         "--decoder",
         type=str,
+        required=True,
         help="Path to the decoder model",
     )
 
     parser.add_argument(
         "--joiner",
         type=str,
+        required=True,
         help="Path to the joiner model",
     )
 
@@ -105,7 +109,7 @@ def main():
     # sherpa-onnx will do resampling inside.
     sample_rate = 48000
     samples_per_read = int(0.1 * sample_rate)  # 0.1 second = 100 ms
-    last_result = ""
+
     stream = recognizer.create_stream()
 
     last_result = ""
