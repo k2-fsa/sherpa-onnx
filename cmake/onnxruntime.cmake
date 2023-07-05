@@ -131,29 +131,22 @@ function(download_onnxruntime)
     message(FATAL_ERROR "Only support Linux, macOS, and Windows at present. Will support other OSes later")
   endif()
 
-  if(NOT SHERPA_ONNX_ENABLE_GPU)
-    foreach(f IN LISTS possible_file_locations)
-      if(EXISTS ${f})
-        set(onnxruntime_URL  "${f}")
-        file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
-        message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
-        set(onnxruntime_URL2)
-        break()
-      endif()
-    endforeach()
+  foreach(f IN LISTS possible_file_locations)
+    if(EXISTS ${f})
+      set(onnxruntime_URL  "${f}")
+      file(TO_CMAKE_PATH "${onnxruntime_URL}" onnxruntime_URL)
+      message(STATUS "Found local downloaded onnxruntime: ${onnxruntime_URL}")
+      set(onnxruntime_URL2)
+      break()
+    endif()
+  endforeach()
 
-    FetchContent_Declare(onnxruntime
-      URL
-        ${onnxruntime_URL}
-        ${onnxruntime_URL2}
-      URL_HASH          ${onnxruntime_HASH}
-    )
-  else()
-    FetchContent_Declare(onnxruntime
-      URL
-        ${onnxruntime_URL}
-    )
-  endif()
+  FetchContent_Declare(onnxruntime
+    URL
+      ${onnxruntime_URL}
+      ${onnxruntime_URL2}
+    URL_HASH          ${onnxruntime_HASH}
+  )
 
   FetchContent_GetProperties(onnxruntime)
   if(NOT onnxruntime_POPULATED)
