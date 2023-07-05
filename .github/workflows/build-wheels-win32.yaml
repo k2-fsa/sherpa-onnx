@@ -33,6 +33,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.11.4
         env:
           CIBW_BEFORE_BUILD: "pip install -U cmake numpy"
+          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-A Win32"
           CIBW_SKIP: "*-win_amd64"
           CIBW_BUILD_VERBOSITY: 3
 
