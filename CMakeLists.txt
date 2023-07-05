@@ -58,6 +58,15 @@ if(SHERPA_ONNX_ENABLE_JNI AND NOT BUILD_SHARED_LIBS)
   set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
 endif()
 
+if(SHERPA_ONNX_ENABLE_GPU)
+  message(WARNING "\
+Compiling for NVIDIA GPU is enabled. Please make sure cudatoolkit
+is installed on your system. Otherwise, you will get errors at runtime.
+Hint: You don't need sudo permission to install CUDA toolkit. Please refer to
+  https://k2-fsa.github.io/k2/installation/cuda-cudnn.html
+to install CUDA toolkit if you have not installed it.")
+endif()
+
 if(BUILD_SHARED_LIBS AND MSVC)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
