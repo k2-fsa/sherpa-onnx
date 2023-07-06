@@ -1,4 +1,4 @@
-name: build-wheels
+name: build-wheels-macos
 
 on:
   push:
@@ -11,7 +11,7 @@ env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
 
 concurrency:
-  group: build-wheels-${{ github.ref }}
+  group: build-wheels-macos-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [macos-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -32,9 +32,9 @@ jobs:
         uses: pypa/cibuildwheel@v2.11.4
         env:
           CIBW_BEFORE_BUILD: "pip install -U cmake numpy"
-          CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
+          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64;x86_64'"
+          CIBW_ARCHS: "universal2"
           CIBW_BUILD_VERBOSITY: 3
-          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib'
 
       - name: Display wheels
         shell: bash
@@ -56,18 +56,3 @@ jobs:
           python3 -m pip install wheel twine setuptools
 
           twine upload ./wheelhouse/*.whl
-
-      - name: Build sdist
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        shell: bash
-        run: |
-          python3 setup.py sdist
-          ls -l dist/*
-
-      - name: Publish sdist to PyPI
-        if: ${{ matrix.os == 'ubuntu-latest' }}
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: |
-          twine upload dist/sherpa-onnx-*.tar.gz
