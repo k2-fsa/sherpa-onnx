@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - wheel
-      - aarch64-wheel
     tags:
       - '*'
 
@@ -55,27 +54,12 @@ jobs:
         with:
           path: ./wheelhouse/*.whl
 
-      # - name: Publish wheels to PyPI
-      #   env:
-      #     TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-      #     TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      #   run: |
-      #     python3 -m pip install --upgrade pip
-      #     python3 -m pip install wheel twine setuptools
-      #
-      #     twine upload ./wheelhouse/*.whl
-      #
-      # - name: Build sdist
-      #   if: ${{ matrix.os == 'ubuntu-latest' }}
-      #   shell: bash
-      #   run: |
-      #     python3 setup.py sdist
-      #     ls -l dist/*
-      #
-      # - name: Publish sdist to PyPI
-      #   if: ${{ matrix.os == 'ubuntu-latest' }}
-      #   env:
-      #     TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-      #     TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-      #   run: |
-      #     twine upload dist/sherpa-onnx-*.tar.gz
+      - name: Publish wheels to PyPI
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine setuptools
+
+          twine upload ./wheelhouse/*.whl
