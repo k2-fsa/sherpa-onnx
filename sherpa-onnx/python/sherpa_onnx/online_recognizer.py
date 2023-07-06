@@ -131,7 +131,7 @@ class OnlineRecognizer(object):
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
 
-    def create_stream(self, contexts_list : Optional[List[List[int]]] = None):
+    def create_stream(self, contexts_list: Optional[List[List[int]]] = None):
         if contexts_list is None:
             return self.recognizer.create_stream()
         else:

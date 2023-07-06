@@ -72,6 +72,7 @@ class TestOnlineRecognizer(unittest.TestCase):
                     tokens=tokens,
                     num_threads=1,
                     decoding_method=decoding_method,
+                    provider="cpu",
                 )
                 s = recognizer.create_stream()
                 samples, sample_rate = read_wave(wave0)
@@ -115,6 +116,7 @@ class TestOnlineRecognizer(unittest.TestCase):
                     tokens=tokens,
                     num_threads=1,
                     decoding_method=decoding_method,
+                    provider="cpu",
                 )
                 streams = []
                 waves = [wave0, wave1, wave2, wave3, wave4]

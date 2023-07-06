@@ -72,6 +72,7 @@ class TestOfflineRecognizer(unittest.TestCase):
                 joiner=joiner,
                 tokens=tokens,
                 num_threads=1,
+                provider="cpu",
             )
 
             s = recognizer.create_stream()
@@ -106,6 +107,7 @@ class TestOfflineRecognizer(unittest.TestCase):
                 joiner=joiner,
                 tokens=tokens,
                 num_threads=1,
+                provider="cpu",
             )
 
             s0 = recognizer.create_stream()
@@ -143,6 +145,7 @@ class TestOfflineRecognizer(unittest.TestCase):
                 paraformer=model,
                 tokens=tokens,
                 num_threads=1,
+                provider="cpu",
             )
 
             s = recognizer.create_stream()
@@ -172,6 +175,7 @@ class TestOfflineRecognizer(unittest.TestCase):
                 paraformer=model,
                 tokens=tokens,
                 num_threads=1,
+                provider="cpu",
             )
 
             s0 = recognizer.create_stream()
@@ -214,6 +218,7 @@ class TestOfflineRecognizer(unittest.TestCase):
                 model=model,
                 tokens=tokens,
                 num_threads=1,
+                provider="cpu",
             )
 
             s = recognizer.create_stream()
@@ -242,6 +247,7 @@ class TestOfflineRecognizer(unittest.TestCase):
                 model=model,
                 tokens=tokens,
                 num_threads=1,
+                provider="cpu",
             )
 
             s0 = recognizer.create_stream()
