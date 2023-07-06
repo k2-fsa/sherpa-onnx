@@ -4,6 +4,7 @@
 #
 # Please see the end of this file for what files it will generate
 
+set -ex
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 echo "SHERPA_ONNX_VERSION: ${SHERPA_ONNX_VERSION}"
 dst=v${SHERPA_ONNX_VERSION}
