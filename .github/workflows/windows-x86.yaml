@@ -33,7 +33,7 @@ permissions:
 
 jobs:
   windows_x86:
-    if: false # disable windows x86 CI for now
+    if: true
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.vs-version }}
     strategy:
