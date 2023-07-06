@@ -3,7 +3,7 @@ name: build-wheels-macos
 on:
   push:
     branches:
-      - macos-wheel
+      - wheel
     tags:
       - '*'
 
