@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - master
-      - 32-bit-arm
     paths:
       - '.github/workflows/arm-linux-gnueabihf.yaml'
       - 'CMakeLists.txt'
