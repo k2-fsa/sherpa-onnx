@@ -1,0 +1,67 @@
+name: build-xcframework
+
+on:
+  push:
+    branches:
+      - xcframework
+    tags:
+      - '*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: build-xcframework-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_xcframework:
+    name: Build xcframework on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build iOS
+        shell: bash
+        run: |
+          ./build-ios.sh
+
+      - name: Display artifacts
+        shell: bash
+        run: |
+          brew install tree
+          tree ./build-ios
+
+          ls -lh ./wheelhouse/*.whl
+
+      - name: Package artifacts
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+
+          echo "SHERPA_ONNX_VERSION: ${SHERPA_ONNX_VERSION}"
+          dst=v${SHERPA_ONNX_VERSION}
+
+          mkdir -p $dst/build-ios/
+          cp -av ./build-ios/sherpa-onnx.xcframework $dst/build-ios/
+
+          mkdir -p $dst/build-ios/ios-onnxruntime
+          cp -av ./build-ios/ios-onnxruntime/onnxruntime.xcframework $dst/build-ios/ios-onnxruntime/
+
+          cd $dst
+
+          filename=sherpa-onnx-v${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs.tar.bz2
+
+          tar cjvf $filename ./build-ios
+          mv $filename ../
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: sherpa-onnx-v${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs
+          path: ./sherpa-onnx-v${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs.tar.bz2
