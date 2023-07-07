@@ -34,27 +34,17 @@ jobs:
         shell: bash
         run: |
           brew install tree
-          tree ./build-ios
-
-          ls -lh ./wheelhouse/*.whl
+          tree -L 2 ./build-ios
 
       - name: Package artifacts
         shell: bash
         run: |
-          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
-
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
           echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
 
-          echo "SHERPA_ONNX_VERSION: ${SHERPA_ONNX_VERSION}"
-          dst=v${SHERPA_ONNX_VERSION}
-
-          mkdir -p $dst/build-ios/
-          cp -av ./build-ios/sherpa-onnx.xcframework $dst/build-ios/
-
-          mkdir -p $dst/build-ios/ios-onnxruntime
-          cp -av ./build-ios/ios-onnxruntime/onnxruntime.xcframework $dst/build-ios/ios-onnxruntime/
-
-          cd $dst
+          rm -rf build-ios/build
+          rm -rf build-ios/install
+          ls -lh build-ios
 
           filename=sherpa-onnx-v${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs.tar.bz2
 
@@ -64,4 +54,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: sherpa-onnx-v${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs
-          path: ./sherpa-onnx-v${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs.tar.bz2
+          path: ./build-ios
