@@ -102,25 +102,25 @@ jobs:
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-linux-gnueabihf/libc
           qemu-arm -h
 
-      # - name: build arm-linux-gnueabihf
-      #   shell: bash
-      #   run: |
-      #     export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-      #
-      #     ./build-arm-linux-gnueabihf.sh
-      #
-      #     ls -lh build-arm-linux-gnueabihf/bin
-      #     ls -lh build-arm-linux-gnueabihf/lib
-      #
-      #     file build-arm-linux-gnueabihf/bin/sherpa-onnx
-      #
-      # - name: Test sherpa-onnx
-      #   shell: bash
-      #   run: |
-      #     export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-      #     export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-      #     export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-linux-gnueabihf/libc
-      #
-      #     qemu-arm ./build-arm-linux-gnueabihf/bin/sherpa-onnx
-      #
-      #     ls -lh ./build-arm-linux-gnueabihf/bin
+      - name: build arm-linux-gnueabihf
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+
+          ./build-arm-linux-gnueabihf.sh
+
+          ls -lh build-arm-linux-gnueabihf/bin
+          ls -lh build-arm-linux-gnueabihf/lib
+
+          file build-arm-linux-gnueabihf/bin/sherpa-onnx
+
+      - name: Test sherpa-onnx
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-linux-gnueabihf/libc
+
+          qemu-arm ./build-arm-linux-gnueabihf/bin/sherpa-onnx
+
+          ls -lh ./build-arm-linux-gnueabihf/bin
