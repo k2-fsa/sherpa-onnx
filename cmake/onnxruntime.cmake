@@ -15,7 +15,7 @@ function(download_onnxruntime)
     )
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-aarch64-1.14.0.tgz")
     set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-aarch64-1.14.0.tgz")
-    set(onnxruntime_HASH "SHA256=3fc357bdbf365ae86dda5c126cff1afd40c7a8e88c5d45059f381d1dacb34255")
+    set(onnxruntime_HASH "SHA256=9384d2e6e29fed693a4630303902392eead0c41bee5705ccac6d6d34a3d5db86")
   elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
     # For embedded systems
     set(possible_file_locations
