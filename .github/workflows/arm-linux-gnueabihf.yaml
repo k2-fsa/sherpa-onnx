@@ -1,0 +1,126 @@
+# Modified from https://github.com/Tencent/ncnn/blob/master/.github/workflows/linux-arm-cpu-gcc.yml
+name: arm-linux-gnueabihf
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/arm-linux-gnueabihf.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/arm-linux-gnueabihf.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
+
+concurrency:
+  group: arm-linux-gnueabihf-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  arm_linux_gnueabihf:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: cache-qemu
+        id: cache-qemu
+        uses: actions/cache@v3
+        with:
+          path: qemu-install
+          key: qemu-arm-install-20220907
+
+      - name: install-qemu-build-deps
+        if: steps.cache-qemu.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install autoconf automake autotools-dev ninja-build
+
+      - name: checkout-qemu
+        if: steps.cache-qemu.outputs.cache-hit != 'true'
+        uses: actions/checkout@v3
+        with:
+          repository: qemu/qemu
+          path: qemu
+          ref: f5643914a9e8f79c606a76e6a9d7ea82a3fc3e65
+
+      - name: qemu
+        if: steps.cache-qemu.outputs.cache-hit != 'true'
+        run: |
+          cd qemu
+          ./configure --prefix=$GITHUB_WORKSPACE/qemu-install --target-list=arm-linux-user --disable-system
+          make -j2
+          make install
+
+      - name: cache-toolchain
+        id: cache-toolchain
+        uses: actions/cache@v3
+        with:
+          path: toolchain
+          key: gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf
+
+      - name: Download toolchain
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          git lfs install
+          git clone https://huggingface.co/csukuangfj/arm-linux-gcc
+          ls -lh arm-linux-gcc
+
+          mkdir $GITHUB_WORKSPACE/toolchain
+          tar xvf ./arm-linux-gcc/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+
+      - name: Display toolchain info
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          arm-linux-gnueabihf-gcc --version
+
+      - name: Display qemu-arm -h
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-linux-gnueabihf/libc
+          qemu-arm -h
+
+      - name: build arm-linux-gnueabihf
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+
+          ./build-arm-linux-gnueabihf.sh
+
+          ls -lh build-arm-linux-gnueabihf/bin
+          ls -lh build-arm-linux-gnueabihf/lib
+
+          file build-arm-linux-gnueabihf/bin/sherpa-onnx
+
+      - name: Test sherpa-onnx
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-linux-gnueabihf/libc
+
+
+          ls -lh ./build-arm-linux-gnueabihf/bin
+
+          qemu-arm ./build-arm-linux-gnueabihf/bin/sherpa-onnx --help

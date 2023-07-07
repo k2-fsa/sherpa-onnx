@@ -1,7 +1,10 @@
 function(download_onnxruntime)
   include(FetchContent)
 
-  if(CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
+  message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
+  message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
+
+  if(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
     # For embedded systems
     set(possible_file_locations
       $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-1.14.0.tgz
@@ -13,6 +16,18 @@ function(download_onnxruntime)
     set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-aarch64-1.14.0.tgz")
     set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-aarch64-1.14.0.tgz")
     set(onnxruntime_HASH "SHA256=9384d2e6e29fed693a4630303902392eead0c41bee5705ccac6d6d34a3d5db86")
+  elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
+    # For embedded systems
+    set(possible_file_locations
+      $ENV{HOME}/Downloads/onnxruntime-linux-arm-1.14.0.zip
+      ${PROJECT_SOURCE_DIR}/onnxruntime-linux-arm-1.14.0.zip
+      ${PROJECT_BINARY_DIR}/onnxruntime-linux-arm-1.14.0.zip
+      /tmp/onnxruntime-linux-arm-1.14.0.zip
+      /star-fj/fangjun/download/github/onnxruntime-linux-arm-1.14.0.zip
+    )
+    set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.14.0.zip")
+    set(onnxruntime_URL2 "")
+    set(onnxruntime_HASH "SHA256=61e4a4fa2d211a24e878e25bfcdee0daee5a68ac8d2d2967c0000b0fb079385c")
   elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
