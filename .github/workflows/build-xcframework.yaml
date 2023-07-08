@@ -1,0 +1,85 @@
+name: build-xcframework
+
+on:
+  push:
+    branches:
+      - xcframework
+    tags:
+      - '*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: build-xcframework-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_xcframework:
+    name: Build xcframework on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build iOS
+        shell: bash
+        run: |
+          ./build-ios.sh
+
+      - name: Display artifacts
+        shell: bash
+        run: |
+          brew install tree
+          tree -L 2 ./build-ios
+
+      - name: Package artifacts
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+
+          rm -rf build-ios/build
+          rm -rf build-ios/install
+          rm -rf build-ios/ios-onnxruntime/.git
+
+          tree build-ios
+
+          filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs.tar.bz2
+
+          tar cjvf $filename ./build-ios
+
+          ls -lh
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: sherpa-onnx-pre-compiled-ios-libs
+          path: ./build-ios
+
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: ${{ github.repository_owner == 'csukuangfj' }} || ${{ github.repository_owner == 'k2-fsa' }}
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+          cd huggingface
+          git lfs pull
+
+          cp -v ../sherpa-onnx-*-pre-compiled-ios-libs.tar.bz2 ./
+
+          git status
+          git lfs track "*.bz2"
+
+          git add .
+
+          git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs.tar.bz2"
+
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
