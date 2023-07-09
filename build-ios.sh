@@ -5,27 +5,29 @@ set -e
 dir=build-ios
 mkdir -p $dir
 cd $dir
+onnxruntime_version=1.15.1
 
-if [ ! -f ios-onnxruntime/onnxruntime.xcframework/ios-arm64/onnxruntime.a ]; then
+if [ ! -f ios-onnxruntime/$onnxruntime_version/onnxruntime.xcframework/ios-arm64/onnxruntime.a ]; then
   GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/ios-onnxruntime
   pushd ios-onnxruntime
-  git lfs pull --include onnxruntime.xcframework/ios-arm64/onnxruntime.a
-  git lfs pull --include onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.a
+  ln -s $onnxruntime_version/onnxruntime.xcframework .
+  git lfs pull --include $onnxruntime_version/onnxruntime.xcframework/ios-arm64/onnxruntime.a
+  git lfs pull --include $onnxruntime_version/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.a
   popd
 fi
 
 # check filesize
-filesize=$(ls -l ./ios-onnxruntime/onnxruntime.xcframework/ios-arm64/onnxruntime.a  | tr -s " " " " | cut -d " " -f 5)
+filesize=$(ls -l ./ios-onnxruntime/$onnxruntime_version/onnxruntime.xcframework/ios-arm64/onnxruntime.a  | tr -s " " " " | cut -d " " -f 5)
 if (( $filesize < 1000 )); then
   ls -lh ./ios-onnxruntime/onnxruntime.xcframework/ios-arm64/onnxruntime.a
-  echo "Please use: git lfs pull to download ./ios-onnxruntime/onnxruntime.xcframework/ios-arm64/onnxruntime.a"
+  echo "Please use: git lfs pull to download ./ios-onnxruntime/$onnxruntime_version/onnxruntime.xcframework/ios-arm64/onnxruntime.a"
   exit 1
 fi
 
-filesize=$(ls -l ./ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.a  | tr -s " " " " | cut -d " " -f 5)
+filesize=$(ls -l ./ios-onnxruntime/$onnxruntime_version/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.a  | tr -s " " " " | cut -d " " -f 5)
 if (( $filesize < 1000 )); then
-  ls -lh ./ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.a
-  echo "Please use: git lfs pull to download ./ios-onnxruntime/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.a"
+  ls -lh ./ios-onnxruntime/$onnxruntime_version/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.a
+  echo "Please use: git lfs pull to download ./ios-onnxruntime/$onnxruntime_version/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.a"
   exit 1
 fi
 

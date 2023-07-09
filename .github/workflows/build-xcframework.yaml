@@ -3,7 +3,10 @@ name: build-xcframework
 on:
   push:
     branches:
+      - master
       - xcframework
+    paths:
+      - './build-ios.sh'
     tags:
       - '*'
 

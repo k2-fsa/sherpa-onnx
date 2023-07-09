@@ -59,7 +59,7 @@ jobs:
       - name: Install sherpa-onnx
         shell: bash
         run: |
-          python3 setup.py install
+          python3 -m pip install --verbose .
 
       - name: Test sherpa-onnx
         shell: bash

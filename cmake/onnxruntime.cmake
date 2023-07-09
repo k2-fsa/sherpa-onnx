@@ -7,80 +7,80 @@ function(download_onnxruntime)
   if(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
     # For embedded systems
     set(possible_file_locations
-      $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-1.14.0.tgz
-      ${PROJECT_SOURCE_DIR}/onnxruntime-linux-aarch64-1.14.0.tgz
-      ${PROJECT_BINARY_DIR}/onnxruntime-linux-aarch64-1.14.0.tgz
-      /tmp/onnxruntime-linux-aarch64-1.14.0.tgz
-      /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-1.14.0.tgz
+      $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-1.15.1.tgz
+      ${PROJECT_SOURCE_DIR}/onnxruntime-linux-aarch64-1.15.1.tgz
+      ${PROJECT_BINARY_DIR}/onnxruntime-linux-aarch64-1.15.1.tgz
+      /tmp/onnxruntime-linux-aarch64-1.15.1.tgz
+      /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-1.15.1.tgz
     )
-    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-aarch64-1.14.0.tgz")
-    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-aarch64-1.14.0.tgz")
-    set(onnxruntime_HASH "SHA256=9384d2e6e29fed693a4630303902392eead0c41bee5705ccac6d6d34a3d5db86")
+    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-linux-aarch64-1.15.1.tgz")
+    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-aarch64-1.15.1.tgz")
+    set(onnxruntime_HASH "SHA256=85272e75d8dd841138de4b774a9672ea93c1be108d96038c6c34a62d7f976aee")
   elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
     # For embedded systems
     set(possible_file_locations
-      $ENV{HOME}/Downloads/onnxruntime-linux-arm-1.14.0.zip
-      ${PROJECT_SOURCE_DIR}/onnxruntime-linux-arm-1.14.0.zip
-      ${PROJECT_BINARY_DIR}/onnxruntime-linux-arm-1.14.0.zip
-      /tmp/onnxruntime-linux-arm-1.14.0.zip
-      /star-fj/fangjun/download/github/onnxruntime-linux-arm-1.14.0.zip
+      $ENV{HOME}/Downloads/onnxruntime-linux-arm-1.15.1.zip
+      ${PROJECT_SOURCE_DIR}/onnxruntime-linux-arm-1.15.1.zip
+      ${PROJECT_BINARY_DIR}/onnxruntime-linux-arm-1.15.1.zip
+      /tmp/onnxruntime-linux-arm-1.15.1.zip
+      /star-fj/fangjun/download/github/onnxruntime-linux-arm-1.15.1.zip
     )
-    set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.14.0.zip")
-    set(onnxruntime_URL2 "")
-    set(onnxruntime_HASH "SHA256=61e4a4fa2d211a24e878e25bfcdee0daee5a68ac8d2d2967c0000b0fb079385c")
+    set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.15.1.zip")
+    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-arm-1.15.1.zip")
+    set(onnxruntime_HASH "SHA256=867b96210a347e4b1bb949e7c9a3f222371ea0c00c9deaaba9fdd66c689f7fb7")
   elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
     set(possible_file_locations
-      $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.14.0.tgz
-      ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.14.0.tgz
-      ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-1.14.0.tgz
-      /tmp/onnxruntime-linux-x64-1.14.0.tgz
-      /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.14.0.tgz
+      $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.15.1.tgz
+      ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.15.1.tgz
+      ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-1.15.1.tgz
+      /tmp/onnxruntime-linux-x64-1.15.1.tgz
+      /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.15.1.tgz
     )
 
-    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-x64-1.14.0.tgz")
-    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-1.14.0.tgz")
-    set(onnxruntime_HASH "SHA256=92bf534e5fa5820c8dffe9de2850f84ed2a1c063e47c659ce09e8c7938aa2090")
+    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-linux-x64-1.15.1.tgz")
+    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-1.15.1.tgz")
+    set(onnxruntime_HASH "SHA256=5492f9065f87538a286fb04c8542e9ff7950abb2ea6f8c24993a940006787d87")
     # After downloading, it contains:
-    #  ./lib/libonnxruntime.so.1.14.0
-    #  ./lib/libonnxruntime.so, which is a symlink to lib/libonnxruntime.so.1.14.0
+    #  ./lib/libonnxruntime.so.1.15.1
+    #  ./lib/libonnxruntime.so, which is a symlink to lib/libonnxruntime.so.1.15.1
     #
     # ./include
     #    It contains all the needed header files
     if(SHERPA_ONNX_ENABLE_GPU)
-      set(onnxruntime_URL "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-linux-x64-gpu-1.14.0.tgz")
-      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-gpu-1.14.0.tgz")
-      set(onnxruntime_HASH "SHA256=d28fd59be62b9749071e2997c237b42f8e52661ae4d12862f77aa934750ead21")
+      set(onnxruntime_URL "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-linux-x64-gpu-1.15.1.tgz")
+      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-gpu-1.15.1.tgz")
+      set(onnxruntime_HASH "SHA256=eab891393025edd5818d1aa26a42860e5739fcc49e3ca3f876110ec8736fe7f1")
 
       set(possible_file_locations
-        $ENV{HOME}/Downloads/onnxruntime-linux-x64-gpu-1.14.0.tgz
-        ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-gpu-1.14.0.tgz
-        ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-gpu-1.14.0.tgz
-        /tmp/onnxruntime-linux-x64-gpu-1.14.0.tgz
-        /star-fj/fangjun/download/github/onnxruntime-linux-x64-gpu-1.14.0.tgz
+        $ENV{HOME}/Downloads/onnxruntime-linux-x64-gpu-1.15.1.tgz
+        ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-gpu-1.15.1.tgz
+        ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-gpu-1.15.1.tgz
+        /tmp/onnxruntime-linux-x64-gpu-1.15.1.tgz
+        /star-fj/fangjun/download/github/onnxruntime-linux-x64-gpu-1.15.1.tgz
       )
     endif()
     # After downloading, it contains:
-    #  ./lib/libonnxruntime.so.1.14.1
-    #  ./lib/libonnxruntime.so, which is a symlink to lib/libonnxruntime.so.1.14.1
+    #  ./lib/libonnxruntime.so.1.15.1
+    #  ./lib/libonnxruntime.so, which is a symlink to lib/libonnxruntime.so.1.15.1
     #  ./lib/libonnxruntime_providers_cuda.so
     # ./include, which contains all the needed header files
   elseif(APPLE)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
     set(possible_file_locations
-      $ENV{HOME}/Downloads/onnxruntime-osx-universal2-1.14.0.tgz
-      ${PROJECT_SOURCE_DIR}/onnxruntime-osx-universal2-1.14.0.tgz
-      ${PROJECT_BINARY_DIR}/onnxruntime-osx-universal2-1.14.0.tgz
-      /tmp/onnxruntime-osx-universal2-1.14.0.tgz
+      $ENV{HOME}/Downloads/onnxruntime-osx-universal2-1.15.1.tgz
+      ${PROJECT_SOURCE_DIR}/onnxruntime-osx-universal2-1.15.1.tgz
+      ${PROJECT_BINARY_DIR}/onnxruntime-osx-universal2-1.15.1.tgz
+      /tmp/onnxruntime-osx-universal2-1.15.1.tgz
     )
-    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-osx-universal2-1.14.0.tgz")
-    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-universal2-1.14.0.tgz")
-    set(onnxruntime_HASH "SHA256=348563df91f17a2ac010519f37c3b46fd5b79140974e5c5a90a57e032bb25925")
+    set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-osx-universal2-1.15.1.tgz")
+    set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-universal2-1.15.1.tgz")
+    set(onnxruntime_HASH "SHA256=ecb7651c216fe6ffaf4c578e135d98341bc5bc944c5dc6b725ef85b0d7747be0")
     # After downloading, it contains:
-    #  ./lib/libonnxruntime.1.14.0.dylib
-    #  ./lib/libonnxruntime.dylib, which is a symlink to lib/libonnxruntime.1.14.0.dylib
+    #  ./lib/libonnxruntime.1.15.1.dylib
+    #  ./lib/libonnxruntime.dylib, which is a symlink to lib/libonnxruntime.1.15.1.dylib
     #
     # ./include
     #    It contains all the needed header files
@@ -93,15 +93,15 @@ function(download_onnxruntime)
       #
       # for 32-bit windows
       set(possible_file_locations
-        $ENV{HOME}/Downloads/onnxruntime-win-x86-1.14.0.zip
-        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-1.14.0.zip
-        ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-1.14.0.zip
-        /tmp/onnxruntime-win-x86-1.14.0.zip
+        $ENV{HOME}/Downloads/onnxruntime-win-x86-1.15.1.zip
+        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-1.15.1.zip
+        ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-1.15.1.zip
+        /tmp/onnxruntime-win-x86-1.15.1.zip
       )
 
-      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x86-1.14.0.zip")
-      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x86-1.14.0.zip")
-      set(onnxruntime_HASH "SHA256=4214b130db602cbf31a6f26f25377ab077af0cf03c4ddd4651283e1fb68f56cf")
+      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x86-1.15.1.zip")
+      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x86-1.15.1.zip")
+      set(onnxruntime_HASH "SHA256=8de18fdf274a8adcd95272fcf58beda0fe2fb37f0cd62c02bc4bb6200429e4e2")
 
       if(SHERPA_ONNX_ENABLE_GPU)
         message(FATAL_ERROR "GPU support for Win32 is not supported!")
@@ -112,25 +112,25 @@ function(download_onnxruntime)
       #
       # for 64-bit windows
       set(possible_file_locations
-        $ENV{HOME}/Downloads/onnxruntime-win-x64-1.14.0.zip
-        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-1.14.0.zip
-        ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-1.14.0.zip
-        /tmp/onnxruntime-win-x64-1.14.0.zip
+        $ENV{HOME}/Downloads/onnxruntime-win-x64-1.15.1.zip
+        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-1.15.1.zip
+        ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-1.15.1.zip
+        /tmp/onnxruntime-win-x64-1.15.1.zip
       )
 
-      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x64-1.14.0.zip")
-      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-1.14.0.zip")
-      set(onnxruntime_HASH "SHA256=300eafef456748cde2743ee08845bd40ff1bab723697ff934eba6d4ce3519620")
+      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x64-1.15.1.zip")
+      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-1.15.1.zip")
+      set(onnxruntime_HASH "SHA256=261308ee5526dfd3f405ce8863e43d624a2e0bcd16b2d33cdea8c120ab3534d3")
 
       if(SHERPA_ONNX_ENABLE_GPU)
-        set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.14.0/onnxruntime-win-x64-gpu-1.14.0.zip")
-        set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-gpu-1.14.0.zip")
-        set(onnxruntime_HASH "SHA256=b42aac412ec96db92c182b9c8b02190da00072a5efc4adcbecf9b62e933c30d3")
+        set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x64-gpu-1.15.1.zip")
+        set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-gpu-1.15.1.zip")
+        set(onnxruntime_HASH "SHA256=dcc3a385b415dd2e4a813018b71da5085d9b97774552edf17947826a255a3732")
         set(possible_file_locations
-          $ENV{HOME}/Downloads/onnxruntime-win-x64-gpu-1.14.0.zip
-          ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-gpu-1.14.0.zip
-          ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-gpu-1.14.0.zip
-          /tmp/onnxruntime-win-x64-gpu-1.14.0.zip
+          $ENV{HOME}/Downloads/onnxruntime-win-x64-gpu-1.15.1.zip
+          ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-gpu-1.15.1.zip
+          ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-gpu-1.15.1.zip
+          /tmp/onnxruntime-win-x64-gpu-1.15.1.zip
         )
       endif()
     endif()
