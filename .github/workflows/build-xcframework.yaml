@@ -104,4 +104,4 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          file: scripts/dotnet/packages/*.nupkg
+          file: sherpa-onnx-*-pre-compiled-ios-libs.tar.bz2
