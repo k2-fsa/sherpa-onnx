@@ -143,10 +143,12 @@ jobs:
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64
           mkdir $dst
-          cp -a build-aarch64-linux-gnu/install/bin ./dst/
-          cp -a build-aarch64-linux-gnu/install/lib ./dst/
+
+          cp -a build-aarch64-linux-gnu/install/bin $dst/
+          cp -a build-aarch64-linux-gnu/install/lib $dst/
 
           tree $dst
 
