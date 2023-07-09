@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    tags:
+      - '*'
     paths:
       - '.github/workflows/windows-x64.yaml'
       - '.github/scripts/test-online-transducer.sh'
@@ -23,13 +25,19 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
 
 concurrency:
   group: windows-x64-${{ github.ref }}
   cancel-in-progress: true
-
-permissions:
-  contents: read
 
 jobs:
   windows_x64:
@@ -65,7 +73,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -T ${{ matrix.toolset-version}},host=x64 -A x64 -D CMAKE_BUILD_TYPE=Release ..
+          cmake -T ${{ matrix.toolset-version}},host=x64 -A x64 -D CMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash

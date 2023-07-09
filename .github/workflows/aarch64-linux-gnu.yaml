@@ -41,9 +41,6 @@ concurrency:
   group: aarch64-linux-gnu-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-
 jobs:
   aarch64_linux_gnu:
     runs-on: ${{ matrix.os }}

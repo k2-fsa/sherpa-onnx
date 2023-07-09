@@ -39,9 +39,6 @@ concurrency:
   group: arm-linux-gnueabihf-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
-
 jobs:
   arm_linux_gnueabihf:
     runs-on: ${{ matrix.os }}
