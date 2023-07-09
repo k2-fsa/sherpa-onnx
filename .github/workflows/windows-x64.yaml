@@ -115,3 +115,27 @@ jobs:
           export EXE=decode-file-c-api.exe
 
           .github/scripts/test-online-transducer.sh
+
+      - name: Copy files
+        if: env.RELEASE == 'true' && matrix.vs-version == 'vs2015'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+          cp -a build/install/lib $dst/
+          cp -a build/install/include $dst/
+
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - name: Release pre-compiled binaries and libs for macOS
+        if: env.RELEASE == 'true' && matrix.vs-version == 'vs2015'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: sherpa-onnx-*-win-x64.tar.bz2

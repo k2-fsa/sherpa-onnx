@@ -127,13 +127,14 @@ jobs:
 
           cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
+          cp -a build/install/include $dst/
 
           tree $dst
 
           tar cjvf ${dst}.tar.bz2 $dst
 
       - name: Release pre-compiled binaries and libs for linux x64
-        if: env.RELEASE == 'true'
+        if: env.RELEASE == 'true' && matrix.build_type == "Release"
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

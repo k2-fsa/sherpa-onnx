@@ -146,6 +146,7 @@ jobs:
 
           cp -a build-aarch64-linux-gnu/install/bin $dst/
           cp -a build-aarch64-linux-gnu/install/lib $dst/
+          cp -a build-aarch64-linux-gnu/install/include $dst/
 
           tree $dst
 
