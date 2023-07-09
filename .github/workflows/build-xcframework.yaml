@@ -99,7 +99,7 @@ jobs:
 
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
 
-      - name: Release nuget packages
+      - name: Release xcframework
         if: env.RELEASE == 'true'
         uses: svenstaro/upload-release-action@v2
         with:
