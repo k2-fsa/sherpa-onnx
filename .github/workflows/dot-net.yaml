@@ -7,6 +7,8 @@ on:
     tags:
       - '*'
 
+  workflow_dispatch:
+
 concurrency:
   group: dot-net-${{ github.ref }}
   cancel-in-progress: true
@@ -133,3 +135,9 @@ jobs:
           # API_KEY is valid until 2024.05.02
           cd scripts/dotnet/packages
           dotnet nuget push ./org.k2fsa.sherpa.onnx.*.nupkg --skip-duplicate --api-key $API_KEY --source https://api.nuget.org/v3/index.json
+
+      - name: Release nuget packages
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: scripts/dotnet/packages/*.nupkg
