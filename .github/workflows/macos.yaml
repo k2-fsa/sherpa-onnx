@@ -68,6 +68,7 @@ jobs:
         run: |
           cd build
           make -j2
+          make install
 
           ls -lh lib
           ls -lh bin
