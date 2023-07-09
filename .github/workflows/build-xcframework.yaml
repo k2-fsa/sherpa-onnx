@@ -9,8 +9,20 @@ on:
       - './build-ios.sh'
     tags:
       - '*'
+  release:
+    types:
+      - published
 
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
+
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: build-xcframework-${{ github.ref }}
@@ -86,3 +98,10 @@ jobs:
           git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs.tar.bz2"
 
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
+      - name: Release nuget packages
+        if: env.RELEASE == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: scripts/dotnet/packages/*.nupkg
