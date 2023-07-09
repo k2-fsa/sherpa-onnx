@@ -132,7 +132,7 @@ jobs:
           tar cjvf ${dst}.tar.bz2 $dst
 
       - name: Release pre-compiled binaries and libs for macOS
-        if: env.RELEASE == 'true' && matrix.build_type == "Release"
+        if: env.RELEASE == 'true' && matrix.build_type == 'Release'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
