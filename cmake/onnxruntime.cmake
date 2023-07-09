@@ -27,7 +27,7 @@ function(download_onnxruntime)
     )
     set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.15.1.zip")
     set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-arm-1.15.1.zip")
-    set(onnxruntime_HASH "SHA256=aabedfb7bff17e6ab2be53097a20fcaba58a38b53b6e09fb07b196168544fe7c")
+    set(onnxruntime_HASH "SHA256=867b96210a347e4b1bb949e7c9a3f222371ea0c00c9deaaba9fdd66c689f7fb7")
   elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
     # If you don't have access to the Internet,
     # please pre-download onnxruntime
