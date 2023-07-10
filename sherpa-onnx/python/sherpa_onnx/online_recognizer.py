@@ -149,6 +149,12 @@ class OnlineRecognizer(object):
     def get_result(self, s: OnlineStream) -> str:
         return self.recognizer.get_result(s).text.strip()
 
+    def tokens(self, s: OnlineStream) -> List[str]:
+        return self.recognizer.get_result(s).tokens
+
+    def timestamps(self, s: OnlineStream) -> List[float]:
+        return self.recognizer.get_result(s).timestamps
+
     def is_endpoint(self, s: OnlineStream) -> bool:
         return self.recognizer.is_endpoint(s)
 
