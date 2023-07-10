@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+    tags:
+      - '*'
     paths:
       - '.github/workflows/windows-x64.yaml'
       - '.github/scripts/test-online-transducer.sh'
@@ -23,13 +25,24 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
+
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: windows-x64-${{ github.ref }}
   cancel-in-progress: true
-
-permissions:
-  contents: read
 
 jobs:
   windows_x64:
@@ -65,13 +78,14 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -T ${{ matrix.toolset-version}},host=x64 -A x64 -D CMAKE_BUILD_TYPE=Release ..
+          cmake -T ${{ matrix.toolset-version}},host=x64 -A x64 -D CMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
         run: |
           cd build
           cmake --build . --config Release -- -m:2
+          cmake --build . --config Release --target install -- -m:2
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
@@ -106,3 +120,26 @@ jobs:
           export EXE=decode-file-c-api.exe
 
           .github/scripts/test-online-transducer.sh
+
+      - name: Copy files
+        if: env.RELEASE == 'true' && matrix.vs-version == 'vs2015'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+          cp -a build/install/lib $dst/
+          cp -a build/install/include $dst/
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - name: Release pre-compiled binaries and libs for macOS
+        if: env.RELEASE == 'true' && matrix.vs-version == 'vs2015'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-win-x64.tar.bz2

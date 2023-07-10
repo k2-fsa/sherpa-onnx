@@ -5,6 +5,8 @@ on:
   push:
     branches:
       - master
+    tags:
+      - '*'
     paths:
       - '.github/workflows/aarch64-linux-gnu.yaml'
       - 'CMakeLists.txt'
@@ -20,13 +22,24 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'toolchains/aarch64-linux-gnu.toolchain.cmake'
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
+
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: aarch64-linux-gnu-${{ github.ref }}
   cancel-in-progress: true
-
-permissions:
-  contents: read
 
 jobs:
   aarch64_linux_gnu:
@@ -118,7 +131,31 @@ jobs:
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-linux-gnu/libc
 
-
           ls -lh ./build-aarch64-linux-gnu/bin
 
           qemu-aarch64 ./build-aarch64-linux-gnu/bin/sherpa-onnx --help
+
+      - name: Copy files
+        if: env.RELEASE == 'true'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64
+          mkdir $dst
+
+          cp -a build-aarch64-linux-gnu/install/bin $dst/
+          cp -a build-aarch64-linux-gnu/install/lib $dst/
+          cp -a build-aarch64-linux-gnu/install/include $dst/
+
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - name: Release pre-compiled binaries and libs for aarch64 linux
+        if: env.RELEASE == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-aarch64.tar.bz2

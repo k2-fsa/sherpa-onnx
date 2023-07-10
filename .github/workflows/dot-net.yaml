@@ -6,6 +6,20 @@ on:
       - dot-net
     tags:
       - '*'
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
+
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: dot-net-${{ github.ref }}
@@ -133,3 +147,11 @@ jobs:
           # API_KEY is valid until 2024.05.02
           cd scripts/dotnet/packages
           dotnet nuget push ./org.k2fsa.sherpa.onnx.*.nupkg --skip-duplicate --api-key $API_KEY --source https://api.nuget.org/v3/index.json
+
+      - name: Release nuget packages
+        if: env.RELEASE == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: scripts/dotnet/packages/*.nupkg
