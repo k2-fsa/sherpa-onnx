@@ -138,4 +138,5 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
+          overwrite: true
           file: sherpa-onnx-*linux-x64.tar.bz2
