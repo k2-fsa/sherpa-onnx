@@ -33,6 +33,11 @@ on:
         description: "Whether to release"
         type: boolean
 
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
+
 concurrency:
   group: windows-x86-${{ github.ref }}
   cancel-in-progress: true
