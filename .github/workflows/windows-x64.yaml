@@ -134,8 +134,6 @@ jobs:
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
 
-          tree $dst
-
           tar cjvf ${dst}.tar.bz2 $dst
 
       - name: Release pre-compiled binaries and libs for macOS
