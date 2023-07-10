@@ -58,6 +58,11 @@ class SherpaOnnx {
     return result.text;
   }
 
+  const std::vector<std::string> GetTokens() const {
+    auto result = recognizer_.GetResult(stream_.get());
+    return result.tokens;
+  }
+
   bool IsEndpoint() const { return recognizer_.IsEndpoint(stream_.get()); }
 
   bool IsReady() const { return recognizer_.IsReady(stream_.get()); }
@@ -298,6 +303,21 @@ JNIEXPORT jstring JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_getText(
   // https://stackoverflow.com/questions/11621449/send-c-string-to-java-via-jni
   auto text = reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr)->GetText();
   return env->NewStringUTF(text.c_str());
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jobjectArray JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_getTokens(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  // see
+  // https://stackoverflow.com/questions/11621449/send-c-string-to-java-via-jni
+  auto tokens = reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr)->GetTokens();
+  jobjectArray ret = env->NewObjectArray(tokens.size(), env->FindClass("java/lang/String"), env->NewStringUTF(""));
+
+  for(size_t i = 0; i < tokens.size(); i++) {
+    env->SetObjectArrayElement(ret, i, env->NewStringUTF(tokens[i].c_str()));
+  }
+
+  return ret;
 }
 
 // see
