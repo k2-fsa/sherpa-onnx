@@ -117,6 +117,24 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
   r->text = new char[text.size() + 1];
   std::copy(text.begin(), text.end(), const_cast<char *>(r->text));
   const_cast<char *>(r->text)[text.size()] = 0;
+  r->count = result.tokens.size();
+  if (r->count > 0) {
+    // Each word ends with nullptr
+    r->tokens = new char[text.size() + r->count];
+    memset(reinterpret_cast<void *>(const_cast<char *>(r->tokens)), 0,
+           text.size() + r->count);
+    r->timestamps = new float[r->count];
+    int pos = 0;
+    for (int32_t i = 0; i < r->count; ++i) {
+      memcpy(reinterpret_cast<void *>(const_cast<char *>(r->tokens + pos)),
+             result.tokens[i].c_str(), result.tokens[i].size());
+      pos += result.tokens[i].size() + 1;
+      r->timestamps[i] = result.timestamps[i];
+    }
+  } else {
+    r->timestamps = nullptr;
+    r->tokens = nullptr;
+  }
 
   return r;
 }

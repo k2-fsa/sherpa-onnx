@@ -97,6 +97,26 @@ class SherpaOnnxOnlineRecongitionResult {
     return String(cString: result.pointee.text)
   }
 
+  var count: Int32 {
+      return result.pointee.count
+  }
+
+  var tokens: [String] {
+    if let tokensPointer = result.pointee.tokens {
+      var tokens: [String] = []
+      var currentIndex = 0
+      for _ in 0..<count {
+          let token = String(cString: tokensPointer.advanced(by: currentIndex))
+          tokens.append(token)
+          currentIndex += token.utf8.count + 1
+      }
+      return tokens
+    } else {
+      var tokens: [String] = []
+      return tokens
+    }
+  }
+
   init(result: UnsafePointer<SherpaOnnxOnlineRecognizerResult>!) {
     self.result = result
   }
