@@ -20,13 +20,24 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
+
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: arm-linux-gnueabihf-${{ github.ref }}
   cancel-in-progress: true
-
-permissions:
-  contents: read
 
 jobs:
   arm_linux_gnueabihf:
@@ -124,3 +135,28 @@ jobs:
           ls -lh ./build-arm-linux-gnueabihf/bin
 
           qemu-arm ./build-arm-linux-gnueabihf/bin/sherpa-onnx --help
+
+      - name: Copy files
+        if: env.RELEASE == 'true'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-arm-gnueabihf
+          mkdir $dst
+
+          cp -a build-arm-linux-gnueabihf/install/bin $dst/
+          cp -a build-arm-linux-gnueabihf/install/lib $dst/
+          cp -a build-arm-linux-gnueabihf/install/include $dst/
+
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - name: Release pre-compiled binaries and libs for arm linux gnueabihf
+        if: env.RELEASE == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-arm-gnueabihf.tar.bz2

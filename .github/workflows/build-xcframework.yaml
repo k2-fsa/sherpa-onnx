@@ -9,8 +9,20 @@ on:
       - './build-ios.sh'
     tags:
       - '*'
+  release:
+    types:
+      - published
 
   workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
+
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: build-xcframework-${{ github.ref }}
@@ -51,7 +63,7 @@ jobs:
 
           tree build-ios
 
-          filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs.tar.bz2
+          filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-ios.tar.bz2
 
           tar cjvf $filename ./build-ios
 
@@ -59,12 +71,12 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: sherpa-onnx-pre-compiled-ios-libs
+          name: sherpa-onnx-ios-libs
           path: ./build-ios
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
-        if: ${{ github.repository_owner == 'csukuangfj' }} || ${{ github.repository_owner == 'k2-fsa' }}
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
@@ -76,13 +88,21 @@ jobs:
           cd huggingface
           git lfs pull
 
-          cp -v ../sherpa-onnx-*-pre-compiled-ios-libs.tar.bz2 ./
+          cp -v ../sherpa-onnx-*-ios.tar.bz2 ./
 
           git status
           git lfs track "*.bz2"
 
           git add .
 
-          git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-pre-compiled-ios-libs.tar.bz2"
+          git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-ios.tar.bz2"
 
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
+      - name: Release xcframework
+        if: env.RELEASE == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-ios.tar.bz2
