@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.32630.194
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StreamingSpeechRecognition", "StreamingSpeechRecognition\StreamingSpeechRecognition.vcxproj", "{A79C2604-C33D-497C-9770-D34E118B77FE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A79C2604-C33D-497C-9770-D34E118B77FE}.Debug|x64.ActiveCfg = Debug|x64
+		{A79C2604-C33D-497C-9770-D34E118B77FE}.Debug|x64.Build.0 = Debug|x64
+		{A79C2604-C33D-497C-9770-D34E118B77FE}.Debug|x86.ActiveCfg = Debug|Win32
+		{A79C2604-C33D-497C-9770-D34E118B77FE}.Debug|x86.Build.0 = Debug|Win32
+		{A79C2604-C33D-497C-9770-D34E118B77FE}.Release|x64.ActiveCfg = Release|x64
+		{A79C2604-C33D-497C-9770-D34E118B77FE}.Release|x64.Build.0 = Release|x64
+		{A79C2604-C33D-497C-9770-D34E118B77FE}.Release|x86.ActiveCfg = Release|Win32
+		{A79C2604-C33D-497C-9770-D34E118B77FE}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C0A85719-CF8C-4BCD-BDF6-7C57EE651CBB}
+	EndGlobalSection
+EndGlobal
