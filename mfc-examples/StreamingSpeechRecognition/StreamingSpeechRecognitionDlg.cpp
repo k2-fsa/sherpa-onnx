@@ -235,14 +235,6 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
   std::string decoder = "./decoder.onnx";
   std::string joiner = "./joiner.onnx";
   std::string tokens = "./tokens.txt";
-#if 1
-  std::string prefix =
-      "C:/Users/fangjun/source/repos/MFCApplication2/x64/Release";
-  encoder = prefix + encoder;
-  decoder = prefix + decoder;
-  joiner = prefix + joiner;
-  tokens = prefix + tokens;
-#endif
 
   bool is_ok = true;
   if (!Exists(encoder)) {
