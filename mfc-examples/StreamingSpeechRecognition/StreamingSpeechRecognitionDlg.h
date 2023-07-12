@@ -3,7 +3,13 @@
 //
 
 #pragma once
+#include "portaudio.h"
 
+class Microphone {
+ public:
+  Microphone();
+  ~Microphone();
+};
 
 // CStreamingSpeechRecognitionDlg dialog
 class CStreamingSpeechRecognitionDlg : public CDialogEx
@@ -30,4 +36,8 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+public:
+    afx_msg void OnBnClickedOk();
+    CButton my_btn_;
+    CEdit my_text_;
 };

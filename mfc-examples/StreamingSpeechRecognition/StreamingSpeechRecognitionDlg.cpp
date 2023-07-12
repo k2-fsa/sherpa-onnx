@@ -12,6 +12,21 @@
 #define new DEBUG_NEW
 #endif
 
+Microphone::Microphone() {
+  PaError err = Pa_Initialize();
+  if (err != paNoError) {
+    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
+    exit(-2);
+  }
+}
+
+Microphone::~Microphone() {
+  PaError err = Pa_Terminate();
+  if (err != paNoError) {
+    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
+    exit(-2);
+  }
+}
 
 // CStreamingSpeechRecognitionDlg dialog
 
@@ -25,12 +40,15 @@ CStreamingSpeechRecognitionDlg::CStreamingSpeechRecognitionDlg(CWnd* pParent /*=
 
 void CStreamingSpeechRecognitionDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialogEx::DoDataExchange(pDX);
+  CDialogEx::DoDataExchange(pDX);
+  DDX_Control(pDX, IDOK, my_btn_);
+  DDX_Control(pDX, IDC_EDIT1, my_text_);
 }
 
 BEGIN_MESSAGE_MAP(CStreamingSpeechRecognitionDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDOK, &CStreamingSpeechRecognitionDlg::OnBnClickedOk)
 END_MESSAGE_MAP()
 
 
@@ -46,6 +64,7 @@ BOOL CStreamingSpeechRecognitionDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+	SetWindowText(_T("Real-time speech recogntion with Next-gen Kaldi"));
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -86,3 +105,9 @@ HCURSOR CStreamingSpeechRecognitionDlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+
+
+void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
+  // TODO: Add your control notification handler code here
+  CDialogEx::OnOK();
+}
