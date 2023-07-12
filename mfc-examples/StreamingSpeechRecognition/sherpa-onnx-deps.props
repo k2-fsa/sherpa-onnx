@@ -5,16 +5,41 @@
   <PropertyGroup>
     <SherpaOnnxBuildDirectory>..\..\build</SherpaOnnxBuildDirectory>
     <SherpaOnnxInstallDirectory>..\..\build\install</SherpaOnnxInstallDirectory>
-    <SherpaOnnxLibraries>sherpa-onnx-portaudio.lib;sherpa-onnx-c-api.lib;sherpa-onnx-core.lib</SherpaOnnxLibraries>
+    <SherpaOnnxLibraries>sherpa-onnx-portaudio_static.lib;sherpa-onnx-c-api.lib;sherpa-onnx-core.lib;kaldi-native-fbank-core.lib</SherpaOnnxLibraries>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <AdditionalIncludeDirectories>
-	  $(SherpaOnnxBuildDirectory)\_deps\portaudio-src\include;$(SherpaOnnxInstallDirectory)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+	  $(SherpaOnnxBuildDirectory)\_deps\portaudio-src\include;
+    $(SherpaOnnxInstallDirectory)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SherpaOnnxInstallDirectory)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>	
-      <AdditionalDependencies>$(SherpaOnnxLibraries)</AdditionalDependencies>
+      <AdditionalDependencies>$(SherpaOnnxLibraries);
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\abseil_cpp-build\absl\base\Release\absl_base.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\abseil_cpp-build\absl\hash\Release\absl_city.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\abseil_cpp-build\absl\hash\Release\absl_hash.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\abseil_cpp-build\absl\hash\Release\absl_low_level_hash.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\abseil_cpp-build\absl\container\Release\absl_raw_hash_set.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\abseil_cpp-build\absl\base\Release\absl_raw_logging_internal.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\abseil_cpp-build\absl\base\Release\absl_throw_delegate.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\pytorch_cpuinfo-build\deps\clog\Release\clog.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\pytorch_cpuinfo-build\Release\cpuinfo.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\flatbuffers-build\Release\flatbuffers.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\onnx-build\Release\onnx.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\onnx-build\Release\onnx_proto.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\Release\onnxruntime_common.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\Release\onnxruntime_flatbuffers.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\Release\onnxruntime_framework.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\Release\onnxruntime_graph.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\Release\onnxruntime_mlas.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\Release\onnxruntime_optimizer.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\Release\onnxruntime_providers.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\Release\onnxruntime_session.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\Release\onnxruntime_util.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\re2-build\Release\re2.lib;
+C:\Users\fangjun\open-source\onnxruntime\build\Windows\Release\_deps\protobuf-build\Release\libprotobuf-lite.lib;
+      </AdditionalDependencies>
     </Link>	
   </ItemDefinitionGroup>
   <ItemGroup />

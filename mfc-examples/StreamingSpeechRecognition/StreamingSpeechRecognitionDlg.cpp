@@ -1,6 +1,10 @@
 
 // StreamingSpeechRecognitionDlg.cpp : implementation file
 //
+#include "pch.h"
+#include "framework.h"
+#include "afxdialogex.h"
+
 
 #include "StreamingSpeechRecognitionDlg.h"
 
@@ -10,9 +14,7 @@
 #include <vector>
 
 #include "StreamingSpeechRecognition.h"
-#include "afxdialogex.h"
-#include "framework.h"
-#include "pch.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -277,7 +279,7 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
 
   SherpaOnnxOnlineRecognizerConfig config;
   config.model_config.debug = 0;
-  config.model_config.num_threads = 2;
+  config.model_config.num_threads = 1;
   config.model_config.provider = "cpu";
 
   config.decoding_method = "greedy_search";
@@ -301,7 +303,7 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
 
 // see
 // https://stackoverflow.com/questions/7153935/how-to-convert-utf-8-stdstring-to-utf-16-stdwstring
-std::wstring Utf8ToUtf16(const std::string &utf8) {
+static std::wstring Utf8ToUtf16(const std::string &utf8) {
   std::vector<unsigned long> unicode;
   size_t i = 0;
   while (i < utf8.size()) {
