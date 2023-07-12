@@ -269,7 +269,7 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
         "\r\nPlease go to "
         "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html "
         "\r\n";
-    msg += "to download an offline model.";
+    msg += "to download a streaming model, i.e., an online model.";
     msg +=
         " You need to rename them to encoder.onnx, decoder.onnx, and "
         "joiner.onnx correspoondingly";
