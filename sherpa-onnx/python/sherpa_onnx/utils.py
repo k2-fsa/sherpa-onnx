@@ -70,5 +70,5 @@ def encode_contexts(
                             if p in tokens_table
                             else tokens_table["<unk>"]
                         )
-        contexts_list.append(ids)
+            contexts_list.append(ids)
     return contexts_list
