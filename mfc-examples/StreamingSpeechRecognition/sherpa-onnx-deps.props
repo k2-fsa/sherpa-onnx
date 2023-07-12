@@ -5,11 +5,12 @@
   <PropertyGroup>
     <SherpaOnnxBuildDirectory>..\..\build</SherpaOnnxBuildDirectory>
     <SherpaOnnxInstallDirectory>..\..\build\install</SherpaOnnxInstallDirectory>
-    <SherpaOnnxLibraries>sherpa-onnx-portaudio.lib</SherpaOnnxLibraries>
+    <SherpaOnnxLibraries>sherpa-onnx-portaudio.lib;sherpa-onnx-c-api.lib;sherpa-onnx-core.lib</SherpaOnnxLibraries>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <AdditionalIncludeDirectories>$(SherpaOnnxBuildDirectory)\_deps\portaudio-src\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+	  $(SherpaOnnxBuildDirectory)\_deps\portaudio-src\include;$(SherpaOnnxInstallDirectory)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>$(SherpaOnnxInstallDirectory)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>	
