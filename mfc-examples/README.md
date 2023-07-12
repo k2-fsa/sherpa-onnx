@@ -5,7 +5,7 @@ for speech recognition.
 
 Caution: You need to use Windows and install Visual Studio in order to run it.
 We use bash script below to demonstrate how to use it. Please change
-the command accordingly for Windows.
+the commands accordingly for Windows.
 
 ## Streaming speech recognition
 
@@ -23,7 +23,7 @@ cmake --build . --config Release --target install
 cd ../mfc-examples
 
 msbuild ./mfc-examples.sln /property:Configuration=Release /property:Platform=x64
-cp ../build/install/lib/*.dll .
+cp ../build/install/lib/*.dll ./x64/Release/
 
 # now run the program
 
