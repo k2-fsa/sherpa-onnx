@@ -46,7 +46,7 @@ wget https://huggingface.co/pkufool/icefall-asr-zipformer-streaming-wenetspeech-
 # now rename
 mv encoder-epoch-12-avg-4-chunk-16-left-128.onnx encoder.onnx
 mv decoder-epoch-12-avg-4-chunk-16-left-128.onnx decoder.onnx
-mv joiner-epoch-12-avg-4-chunk-16-left-128.onnx joincoder.onnx
+mv joiner-epoch-12-avg-4-chunk-16-left-128.onnx joiner.onnx
 
 # Now run it!
 ./StreamingSpeechRecognition.exe
