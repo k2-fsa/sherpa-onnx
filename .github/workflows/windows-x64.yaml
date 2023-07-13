@@ -47,7 +47,7 @@ concurrency:
 
 jobs:
   windows_x64:
-    name: ${{ matrix.vs-version }}
+    name: Windows x64
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
