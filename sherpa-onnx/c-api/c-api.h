@@ -113,6 +113,20 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerResult {
 
   // The number of tokens/timestamps in above pointer
   int32_t count;
+
+  /** Return a json string.
+   *
+   * The returned string contains:
+   *   {
+   *     "text": "The recognition result",
+   *     "tokens": [x, x, x],
+   *     "timestamps": [x, x, x],
+   *     "segment": x,
+   *     "start_time": x,
+   *     "is_final": true|false
+   *   }
+   */
+  const char *json;
 } SherpaOnnxOnlineRecognizerResult;
 
 /// Note: OnlineRecognizer here means StreamingRecognizer.
