@@ -31,7 +31,7 @@ enum class ModelType {
   kUnkown,
 };
 
-}
+}  // namespace
 
 namespace sherpa_onnx {
 
