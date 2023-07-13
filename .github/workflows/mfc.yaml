@@ -90,6 +90,16 @@ jobs:
 
           msbuild .\mfc-examples.sln /property:Configuration=Release /property:Platform=${{ matrix.arch }}
 
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          arch=${{ matrix.arch }}
+
+          cd mfc-examples/$arch/Release
+          cp StreamingSpeechRecognition.exe sherpa-onnx-streaming-${SHERPA_ONNX_VERSION}.exe
+          ls -lh
+
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
@@ -97,9 +107,9 @@ jobs:
           path: ./mfc-examples/${{ matrix.arch }}/Release/StreamingSpeechRecognition.exe
 
       - name: Release pre-compiled binaries and libs for macOS
-        # if: env.RELEASE == 'true'
+        if: env.RELEASE == 'true'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
-          file: ./mfc-examples/${{ matrix.arch }}/Release/StreamingSpeechRecognition.exe
+          file: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx*.exe
