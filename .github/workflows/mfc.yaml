@@ -49,7 +49,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        arch: [x64, Win32]
+        # arch: [x64, Win32]
+        arch: [x64]
 
     steps:
       - uses: actions/checkout@v2
@@ -95,3 +96,11 @@ jobs:
         with:
           name: streaming-speech-recognition-${{ matrix.arch }}
           path: ./mfc-examples/${{ matrix.arch }}/Release/StreamingSpeechRecognition.exe
+
+      - name: Release pre-compiled binaries and libs for macOS
+        # if: env.RELEASE == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./mfc-examples/${{ matrix.arch }}/Release/StreamingSpeechRecognition.exe
