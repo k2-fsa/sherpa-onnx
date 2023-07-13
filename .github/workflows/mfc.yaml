@@ -82,9 +82,11 @@ jobs:
           ls -lh install/bin
 
       - name: Build MFC
-        shell: bash
+        shell: cmd
         run: |
-          msbuild ./mfc-examples.sln /property:Configuration=Release /property:Platform=x64
+          set path="C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin"
+
+          msbuild .\mfc-examples.sln /property:Configuration=Release /property:Platform=x64
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
