@@ -56,8 +56,6 @@ jobs:
 
       - name: Setup MSBuild path
         uses: microsoft/setup-msbuild@v1.0.1
-        with:
-          vs-version: "[16.4,16.9)"
 
       - name: Display MSBuild info
         shell: bash

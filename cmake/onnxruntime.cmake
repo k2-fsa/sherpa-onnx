@@ -187,7 +187,7 @@ function(download_onnxruntime)
   endif()
   message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-  if(BUILD_SHARED_LIBS)
+  if(BUILD_SHARED_LIBS OR NOT WIN32)
     find_library(location_onnxruntime onnxruntime
       PATHS
       "${onnxruntime_SOURCE_DIR}/lib"
