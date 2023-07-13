@@ -43,7 +43,7 @@ concurrency:
 
 jobs:
   mfc:
-    name: ${{ matrix.vs-version }}
+    name: MFC for ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
