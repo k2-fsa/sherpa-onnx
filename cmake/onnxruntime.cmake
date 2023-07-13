@@ -88,20 +88,33 @@ function(download_onnxruntime)
     message(STATUS "CMAKE_VS_PLATFORM_NAME: ${CMAKE_VS_PLATFORM_NAME}")
 
     if(CMAKE_VS_PLATFORM_NAME STREQUAL Win32 OR CMAKE_VS_PLATFORM_NAME STREQUAL win32)
-      # If you don't have access to the Internet,
-      # please pre-download onnxruntime
-      #
-      # for 32-bit windows
-      set(possible_file_locations
-        $ENV{HOME}/Downloads/onnxruntime-win-x86-1.15.1.zip
-        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-1.15.1.zip
-        ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-1.15.1.zip
-        /tmp/onnxruntime-win-x86-1.15.1.zip
-      )
+      if(BUILD_SHARED_LIBS)
+        # If you don't have access to the Internet,
+        # please pre-download onnxruntime
+        #
+        # for 32-bit windows
+        set(possible_file_locations
+          $ENV{HOME}/Downloads/onnxruntime-win-x86-1.15.1.zip
+          ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-1.15.1.zip
+          ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-1.15.1.zip
+          /tmp/onnxruntime-win-x86-1.15.1.zip
+        )
 
-      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x86-1.15.1.zip")
-      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x86-1.15.1.zip")
-      set(onnxruntime_HASH "SHA256=8de18fdf274a8adcd95272fcf58beda0fe2fb37f0cd62c02bc4bb6200429e4e2")
+        set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x86-1.15.1.zip")
+        set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x86-1.15.1.zip")
+        set(onnxruntime_HASH "SHA256=8de18fdf274a8adcd95272fcf58beda0fe2fb37f0cd62c02bc4bb6200429e4e2")
+      else()
+        set(possible_file_locations
+          $ENV{HOME}/Downloads/onnxruntime-win-x86-static-1.15.1.tar.bz2
+          ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-static-1.15.1.tar.bz2
+          ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-static-1.15.1.tar.bz2
+          /tmp/onnxruntime-win-x86-static-1.15.1.tar.bz2
+        )
+
+        set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-static-1.15.1.tar.bz2")
+        set(onnxruntime_URL2 "")
+        set(onnxruntime_HASH "SHA256=a2b33a3e8a1f89cddf303f0a97a5a88f4202579c653cfb29158c8cf7da3734eb")
+      endif()
 
       if(SHERPA_ONNX_ENABLE_GPU)
         message(FATAL_ERROR "GPU support for Win32 is not supported!")
@@ -148,7 +161,7 @@ function(download_onnxruntime)
 
         set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x64-static-1.15.1.tar.bz2")
         set(onnxruntime_URL2 "")
-        set(onnxruntime_HASH "SHA256=5a8c5bc88a354696c3a8fe11cd7d6ef7e0e1c7395158b81adcb22bbca2234055")
+        set(onnxruntime_HASH "SHA256=f5c19ac1fc6a61c78a231a41df10aede2586665ab397bdc3f007eb8d2c8d4a19")
       endif()
     endif()
     # After downloading, it contains:

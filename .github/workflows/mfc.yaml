@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - fix-mfc-3
     tags:
       - '*'
     paths:
@@ -48,18 +49,17 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
+        arch: [x64, Win32]
 
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Setup MSBuild path
-        uses: microsoft/setup-msbuild@v1.0.1
-
       - name: Display MSBuild info
-        shell: bash
+        shell: cmd
         run: |
+          set path="C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin"
           msbuild -help
 
       - name: Configure CMake
@@ -67,7 +67,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake -A ${{ matrix.arch }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
@@ -86,10 +86,10 @@ jobs:
         run: |
           set path="C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin"
 
-          msbuild .\mfc-examples.sln /property:Configuration=Release /property:Platform=x64
+          msbuild .\mfc-examples.sln /property:Configuration=Release /property:Platform=${{ matrix.arch }}
 
       - name: Upload artifact
         uses: actions/upload-artifact@v2
         with:
-          name: streaming-speech-recognition-x64
-          path: ./mfc-examples/x64/Release/StreamingSpeechRecognition.exe
+          name: streaming-speech-recognition-${{ matrix.arch }}
+          path: ./mfc-examples/${{ matrix.arch }}/Release/StreamingSpeechRecognition.exe
