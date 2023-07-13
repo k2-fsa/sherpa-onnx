@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - fix-mfc-3
     tags:
       - '*'
     paths:

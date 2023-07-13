@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - fix-mfc-3
     paths:
       - '.github/workflows/windows-x86.yaml'
       - '.github/scripts/test-online-transducer.sh'
