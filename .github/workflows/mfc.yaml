@@ -1,0 +1,115 @@
+name: mfc
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+    paths:
+      - '.github/workflows/mfc.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'mfc-examples/**'
+      - 'sherpa-onnx/csrc/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/mfc.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'mfc-examples/**'
+      - 'sherpa-onnx/csrc/*'
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
+
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
+
+concurrency:
+  group: mfc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mfc:
+    name: MFC for ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        # arch: [x64, Win32]
+        arch: [x64]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Display MSBuild info
+        shell: cmd
+        run: |
+          set path="C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin"
+          msbuild -help
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -A ${{ matrix.arch }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=./install ..
+
+      - name: Build sherpa-onnx for windows
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --config Release -- -m:2
+          cmake --build . --config Release --target install -- -m:2
+
+          ls -lh install/*
+
+          ls -lh install/lib
+          ls -lh install/bin
+
+      - name: Build MFC
+        shell: cmd
+        run: |
+          set path="C:\Program Files\Microsoft Visual Studio\2022\Enterprise\MSBuild\Current\Bin"
+
+          cd mfc-examples
+
+          msbuild .\mfc-examples.sln /property:Configuration=Release /property:Platform=${{ matrix.arch }}
+
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          arch=${{ matrix.arch }}
+
+          cd mfc-examples/$arch/Release
+          cp StreamingSpeechRecognition.exe sherpa-onnx-streaming-${SHERPA_ONNX_VERSION}.exe
+          ls -lh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: streaming-speech-recognition-${{ matrix.arch }}
+          path: ./mfc-examples/${{ matrix.arch }}/Release/StreamingSpeechRecognition.exe
+
+      - name: Release pre-compiled binaries and libs for macOS
+        if: env.RELEASE == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx*.exe

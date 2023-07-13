@@ -88,50 +88,80 @@ function(download_onnxruntime)
     message(STATUS "CMAKE_VS_PLATFORM_NAME: ${CMAKE_VS_PLATFORM_NAME}")
 
     if(CMAKE_VS_PLATFORM_NAME STREQUAL Win32 OR CMAKE_VS_PLATFORM_NAME STREQUAL win32)
-      # If you don't have access to the Internet,
-      # please pre-download onnxruntime
-      #
-      # for 32-bit windows
-      set(possible_file_locations
-        $ENV{HOME}/Downloads/onnxruntime-win-x86-1.15.1.zip
-        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-1.15.1.zip
-        ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-1.15.1.zip
-        /tmp/onnxruntime-win-x86-1.15.1.zip
-      )
+      if(BUILD_SHARED_LIBS)
+        # If you don't have access to the Internet,
+        # please pre-download onnxruntime
+        #
+        # for 32-bit windows
+        set(possible_file_locations
+          $ENV{HOME}/Downloads/onnxruntime-win-x86-1.15.1.zip
+          ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-1.15.1.zip
+          ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-1.15.1.zip
+          /tmp/onnxruntime-win-x86-1.15.1.zip
+        )
 
-      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x86-1.15.1.zip")
-      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x86-1.15.1.zip")
-      set(onnxruntime_HASH "SHA256=8de18fdf274a8adcd95272fcf58beda0fe2fb37f0cd62c02bc4bb6200429e4e2")
+        set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x86-1.15.1.zip")
+        set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x86-1.15.1.zip")
+        set(onnxruntime_HASH "SHA256=8de18fdf274a8adcd95272fcf58beda0fe2fb37f0cd62c02bc4bb6200429e4e2")
+      else()
+        set(possible_file_locations
+          $ENV{HOME}/Downloads/onnxruntime-win-x86-static-1.15.1.tar.bz2
+          ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-static-1.15.1.tar.bz2
+          ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-static-1.15.1.tar.bz2
+          /tmp/onnxruntime-win-x86-static-1.15.1.tar.bz2
+        )
+
+        set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-static-1.15.1.tar.bz2")
+        set(onnxruntime_URL2 "")
+        set(onnxruntime_HASH "SHA256=a2b33a3e8a1f89cddf303f0a97a5a88f4202579c653cfb29158c8cf7da3734eb")
+      endif()
 
       if(SHERPA_ONNX_ENABLE_GPU)
         message(FATAL_ERROR "GPU support for Win32 is not supported!")
       endif()
     else()
-      # If you don't have access to the Internet,
-      # please pre-download onnxruntime
-      #
       # for 64-bit windows
-      set(possible_file_locations
-        $ENV{HOME}/Downloads/onnxruntime-win-x64-1.15.1.zip
-        ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-1.15.1.zip
-        ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-1.15.1.zip
-        /tmp/onnxruntime-win-x64-1.15.1.zip
-      )
 
-      set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x64-1.15.1.zip")
-      set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-1.15.1.zip")
-      set(onnxruntime_HASH "SHA256=261308ee5526dfd3f405ce8863e43d624a2e0bcd16b2d33cdea8c120ab3534d3")
-
-      if(SHERPA_ONNX_ENABLE_GPU)
-        set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x64-gpu-1.15.1.zip")
-        set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-gpu-1.15.1.zip")
-        set(onnxruntime_HASH "SHA256=dcc3a385b415dd2e4a813018b71da5085d9b97774552edf17947826a255a3732")
+      if(BUILD_SHARED_LIBS)
+        # If you don't have access to the Internet,
+        # please pre-download onnxruntime
         set(possible_file_locations
-          $ENV{HOME}/Downloads/onnxruntime-win-x64-gpu-1.15.1.zip
-          ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-gpu-1.15.1.zip
-          ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-gpu-1.15.1.zip
-          /tmp/onnxruntime-win-x64-gpu-1.15.1.zip
+          $ENV{HOME}/Downloads/onnxruntime-win-x64-1.15.1.zip
+          ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-1.15.1.zip
+          ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-1.15.1.zip
+          /tmp/onnxruntime-win-x64-1.15.1.zip
         )
+
+        set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x64-1.15.1.zip")
+        set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-1.15.1.zip")
+        set(onnxruntime_HASH "SHA256=261308ee5526dfd3f405ce8863e43d624a2e0bcd16b2d33cdea8c120ab3534d3")
+
+        if(SHERPA_ONNX_ENABLE_GPU)
+          set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-win-x64-gpu-1.15.1.zip")
+          set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-win-x64-gpu-1.15.1.zip")
+          set(onnxruntime_HASH "SHA256=dcc3a385b415dd2e4a813018b71da5085d9b97774552edf17947826a255a3732")
+          set(possible_file_locations
+            $ENV{HOME}/Downloads/onnxruntime-win-x64-gpu-1.15.1.zip
+            ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-gpu-1.15.1.zip
+            ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-gpu-1.15.1.zip
+            /tmp/onnxruntime-win-x64-gpu-1.15.1.zip
+          )
+        endif()
+      else()
+        # static libraries for windows x64
+        message(STATUS "Use static onnxruntime libraries")
+        # If you don't have access to the Internet,
+        # please pre-download onnxruntime
+        set(possible_file_locations
+          $ENV{HOME}/Downloads/onnxruntime-win-x64-static-1.15.1.tar.bz2
+          ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-static-1.15.1.tar.bz2
+          ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-static-1.15.1.tar.bz2
+          /tmp/onnxruntime-win-x64-static-1.15.1.tar.bz2
+        )
+
+        set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x64-static-1.15.1.tar.bz2")
+        set(onnxruntime_URL2 "")
+        set(onnxruntime_HASH "SHA256=f5c19ac1fc6a61c78a231a41df10aede2586665ab397bdc3f007eb8d2c8d4a19")
       endif()
     endif()
     # After downloading, it contains:
@@ -170,20 +200,22 @@ function(download_onnxruntime)
   endif()
   message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-  find_library(location_onnxruntime onnxruntime
-    PATHS
-    "${onnxruntime_SOURCE_DIR}/lib"
-    NO_CMAKE_SYSTEM_PATH
-  )
+  if(BUILD_SHARED_LIBS OR NOT WIN32)
+    find_library(location_onnxruntime onnxruntime
+      PATHS
+      "${onnxruntime_SOURCE_DIR}/lib"
+      NO_CMAKE_SYSTEM_PATH
+    )
 
-  message(STATUS "location_onnxruntime: ${location_onnxruntime}")
+    message(STATUS "location_onnxruntime: ${location_onnxruntime}")
 
-  add_library(onnxruntime SHARED IMPORTED)
+    add_library(onnxruntime SHARED IMPORTED)
 
-  set_target_properties(onnxruntime PROPERTIES
-    IMPORTED_LOCATION ${location_onnxruntime}
-    INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
-  )
+    set_target_properties(onnxruntime PROPERTIES
+      IMPORTED_LOCATION ${location_onnxruntime}
+      INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
+    )
+  endif()
 
   if(SHERPA_ONNX_ENABLE_GPU AND NOT WIN32)
     find_library(location_onnxruntime_cuda_lib onnxruntime_providers_cuda
@@ -198,32 +230,37 @@ function(download_onnxruntime)
   endif()
 
   if(WIN32)
-    set_property(TARGET onnxruntime
-      PROPERTY
-        IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib"
-    )
-
-    file(COPY ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll
-      DESTINATION
-        ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
-    )
-    if(SHERPA_ONNX_ENABLE_GPU)
-      add_library(onnxruntime_providers_cuda SHARED IMPORTED)
-
-      set_target_properties(onnxruntime_providers_cuda PROPERTIES
-        IMPORTED_LOCATION ${location_onnxruntime}
-        INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
-      )
-
-      set_property(TARGET onnxruntime_providers_cuda
+    if(BUILD_SHARED_LIBS)
+      set_property(TARGET onnxruntime
         PROPERTY
-          IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_cuda.lib"
+          IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/lib/onnxruntime.lib"
       )
 
-      file(COPY ${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_cuda.dll
+      file(COPY ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll
         DESTINATION
           ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
       )
+      if(SHERPA_ONNX_ENABLE_GPU)
+        add_library(onnxruntime_providers_cuda SHARED IMPORTED)
+
+        set_target_properties(onnxruntime_providers_cuda PROPERTIES
+          IMPORTED_LOCATION ${location_onnxruntime}
+          INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
+        )
+
+        set_property(TARGET onnxruntime_providers_cuda
+          PROPERTY
+            IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_cuda.lib"
+        )
+
+        file(COPY ${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_cuda.dll
+          DESTINATION
+            ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
+        )
+      endif()
+    else()
+      # for static libraries, we use onnxruntime_lib_files directly below
+      include_directories(${onnxruntime_SOURCE_DIR}/include)
     endif()
   endif()
 
@@ -232,7 +269,12 @@ function(download_onnxruntime)
   elseif(APPLE)
     file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.*.*dylib")
   elseif(WIN32)
-    file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.dll")
+    if(BUILD_SHARED_LIBS)
+      file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.dll")
+    else()
+      file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.lib")
+      set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
+    endif()
   endif()
 
   message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")

@@ -46,27 +46,13 @@ concurrency:
 
 jobs:
   windows_x64:
+    name: Windows x64
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.vs-version }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - vs-version: vs2015
-            toolset-version: v140
-            os: windows-2019
-
-          - vs-version: vs2017
-            toolset-version: v141
-            os: windows-2019
-
-          - vs-version: vs2019
-            toolset-version: v142
-            os: windows-2022
-
-          - vs-version: vs2022
-            toolset-version: v143
-            os: windows-2022
+        os: [windows-latest]
+        shared_lib: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v2
@@ -78,7 +64,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -T ${{ matrix.toolset-version}},host=x64 -A x64 -D CMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake -A x64 -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
@@ -122,7 +108,7 @@ jobs:
           .github/scripts/test-online-transducer.sh
 
       - name: Copy files
-        if: env.RELEASE == 'true' && matrix.vs-version == 'vs2015'
+        if: env.RELEASE == 'true'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -137,7 +123,7 @@ jobs:
           tar cjvf ${dst}.tar.bz2 $dst
 
       - name: Release pre-compiled binaries and libs for macOS
-        if: env.RELEASE == 'true' && matrix.vs-version == 'vs2015'
+        if: env.RELEASE == 'true'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

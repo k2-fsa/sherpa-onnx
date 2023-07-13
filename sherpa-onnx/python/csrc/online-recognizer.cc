@@ -17,9 +17,11 @@ static void PybindOnlineRecognizerResult(py::module *m) {
       .def_property_readonly(
           "text", [](PyClass &self) -> std::string { return self.text; })
       .def_property_readonly(
-          "tokens", [](PyClass &self) -> std::vector<std::string> { return self.tokens; })
+          "tokens",
+          [](PyClass &self) -> std::vector<std::string> { return self.tokens; })
       .def_property_readonly(
-          "timestamps", [](PyClass &self) -> std::vector<float> { return self.timestamps; });
+          "timestamps",
+          [](PyClass &self) -> std::vector<float> { return self.timestamps; });
 }
 
 static void PybindOnlineRecognizerConfig(py::module *m) {

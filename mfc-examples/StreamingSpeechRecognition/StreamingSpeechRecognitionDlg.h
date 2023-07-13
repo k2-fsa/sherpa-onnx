@@ -48,7 +48,7 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
   SherpaOnnxOnlineRecognizer *recognizer_ = nullptr;
 
   PaStream *pa_stream_ = nullptr;
-  RecognizerThread *thread_;
+  RecognizerThread *thread_ = nullptr;
   CButton my_btn_;
   CEdit my_text_;
 

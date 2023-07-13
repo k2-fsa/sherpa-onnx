@@ -3,11 +3,12 @@
 // application.
 //
 
-#include "StreamingSpeechRecognition.h"
-
-#include "StreamingSpeechRecognitionDlg.h"
-#include "framework.h"
 #include "pch.h"
+#include "framework.h"
+
+#include "StreamingSpeechRecognition.h"
+#include "StreamingSpeechRecognitionDlg.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW

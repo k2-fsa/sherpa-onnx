@@ -1,6 +1,10 @@
 
 // StreamingSpeechRecognitionDlg.cpp : implementation file
 //
+#include "pch.h"
+#include "framework.h"
+#include "afxdialogex.h"
+
 
 #include "StreamingSpeechRecognitionDlg.h"
 
@@ -10,9 +14,7 @@
 #include <vector>
 
 #include "StreamingSpeechRecognition.h"
-#include "afxdialogex.h"
-#include "framework.h"
-#include "pch.h"
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -131,6 +133,7 @@ static int32_t RecordCallback(const void *input_buffer,
 void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
   if (!recognizer_) {
     AppendLineToMultilineEditCtrl("Creating recognizer...");
+    AppendLineToMultilineEditCtrl("It will take several seconds. Please wait");
     InitRecognizer();
     if (!recognizer_) {
       // failed to create the recognizer
@@ -264,20 +267,56 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
   if (!is_ok) {
     my_btn_.EnableWindow(FALSE);
     std::string msg =
-        "\r\nPlease go to "
+        "\r\nPlease go to\r\n"
         "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html "
         "\r\n";
-    msg += "to download an offline model.";
+    msg += "to download a streaming model, i.e., an online model.\r\n";
     msg +=
-        " You need to rename them to encoder.onnx, decoder.onnx, and "
-        "joiner.onnx correspoondingly";
+        "You need to rename them to encoder.onnx, decoder.onnx, and "
+        "joiner.onnx correspoondingly.\r\n\r\n";
+    msg +=
+        "We use the following model as an example to show you how to do "
+        "that.\r\n";
+    msg +=
+        "https://huggingface.co/pkufool/"
+        "icefall-asr-zipformer-streaming-wenetspeech-20230615";
+    msg += "\r\n\r\n";
+    msg +=
+        "wget https:// "
+        "huggingface.co/pkufool/"
+        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/exp/"
+        "encoder-epoch-12-avg-4-chunk-16-left-128.onnx\r\n";
+    msg +=
+        "wget https:// "
+        "huggingface.co/pkufool/"
+        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/exp/"
+        "decoder-epoch-12-avg-4-chunk-16-left-128.onnx\r\n";
+    msg +=
+        "wget https:// "
+        "huggingface.co/pkufool/"
+        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/exp/"
+        "joiner-epoch-12-avg-4-chunk-16-left-128.onnx\r\n";
+    msg +=
+        "wget "
+        "https://huggingface.co/pkufool/"
+        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/"
+        "data/lang_char/tokens.txt\r\n";
+
+    msg += "\r\nNow rename them.\r\n";
+    msg += "mv encoder-epoch-12-avg-4-chunk-16-left-128.onnx encoder.onnx\r\n";
+    msg += "mv decoder-epoch-12-avg-4-chunk-16-left-128.onnx decoder.onnx\r\n";
+    msg += "mv joiner-epoch-12-avg-4-chunk-16-left-128.onnx joiner.onnx\r\n";
+    msg += "\r\n";
+    msg += "That's it!\r\n";
+
+
     AppendLineToMultilineEditCtrl(msg);
     return;
   }
 
   SherpaOnnxOnlineRecognizerConfig config;
   config.model_config.debug = 0;
-  config.model_config.num_threads = 2;
+  config.model_config.num_threads = 1;
   config.model_config.provider = "cpu";
 
   config.decoding_method = "greedy_search";
@@ -301,7 +340,7 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
 
 // see
 // https://stackoverflow.com/questions/7153935/how-to-convert-utf-8-stdstring-to-utf-16-stdwstring
-std::wstring Utf8ToUtf16(const std::string &utf8) {
+static std::wstring Utf8ToUtf16(const std::string &utf8) {
   std::vector<unsigned long> unicode;
   size_t i = 0;
   while (i < utf8.size()) {
@@ -392,6 +431,7 @@ static std::string Cat(const std::vector<std::string> &results,
 
 int CStreamingSpeechRecognitionDlg::RunThread() {
   std::vector<std::string> results;
+
   std::string last_text;
   while (started_) {
     while (IsOnlineStreamReady(recognizer_, stream_)) {
@@ -406,6 +446,8 @@ int CStreamingSpeechRecognitionDlg::RunThread() {
       // str.Format(_T("%s"), Cat(results, text).c_str());
       auto str = Utf8ToUtf16(Cat(results, text).c_str());
       my_text_.SetWindowText(str.c_str());
+      my_text_.SetFocus();
+      my_text_.SetSel(-1);
       last_text = text;
     }
     int is_endpoint = IsEndpoint(recognizer_, stream_);

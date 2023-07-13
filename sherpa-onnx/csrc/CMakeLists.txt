@@ -75,10 +75,13 @@ if(ANDROID_NDK)
   target_link_libraries(sherpa-onnx-core android log)
 endif()
 
-target_link_libraries(sherpa-onnx-core
-  onnxruntime
-  kaldi-native-fbank-core
-)
+target_link_libraries(sherpa-onnx-core kaldi-native-fbank-core)
+
+if(BUILD_SHARED_LIBS OR NOT WIN32)
+  target_link_libraries(sherpa-onnx-core onnxruntime)
+else()
+  target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
+endif()
 
 if(SHERPA_ONNX_ENABLE_GPU)
   target_link_libraries(sherpa-onnx-core

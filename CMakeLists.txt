@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(sherpa-onnx)
 
-set(SHERPA_ONNX_VERSION "1.5.0")
+set(SHERPA_ONNX_VERSION "1.5.1")
 
 # Disable warning about
 #
@@ -69,6 +69,18 @@ endif()
 
 if(BUILD_SHARED_LIBS AND MSVC)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+endif()
+
+if(NOT BUILD_SHARED_LIBS AND MSVC)
+  # see https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
+  # https://stackoverflow.com/questions/14172856/compile-with-mt-instead-of-md-using-cmake
+  if(MSVC)
+      add_compile_options(
+          $<$<CONFIG:>:/MT> #---------|
+          $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
+          $<$<CONFIG:Release>:/MT> #--|
+      )
+  endif()
 endif()
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
@@ -154,3 +166,4 @@ add_subdirectory(sherpa-onnx)
 if(SHERPA_ONNX_ENABLE_C_API)
   add_subdirectory(c-api-examples)
 endif()
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
