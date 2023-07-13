@@ -15,7 +15,6 @@
         absl_hash.lib;
         absl_low_level_hash.lib;
         absl_raw_hash_set.lib;
-        absl_raw_logging_internal.lib;
         absl_throw_delegate.lib;
         libprotobuf-lite.lib;
         onnx.lib;
@@ -29,6 +28,7 @@
         onnxruntime_providers.lib;
         onnxruntime_session.lib;
         onnxruntime_util.lib;
+        re2.lib;
     </SherpaOnnxLibraries>
   </PropertyGroup>
   <ItemDefinitionGroup>

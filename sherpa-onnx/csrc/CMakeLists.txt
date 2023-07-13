@@ -69,21 +69,18 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
 
-if(NOT BUILD_SHARED_LIBS)
-  list(APPEND sources ${onnxruntime_lib_files})
-endif()
-
 add_library(sherpa-onnx-core ${sources})
 
 if(ANDROID_NDK)
   target_link_libraries(sherpa-onnx-core android log)
 endif()
 
+target_link_libraries(sherpa-onnx-core kaldi-native-fbank-core)
+
 if(BUILD_SHARED_LIBS)
-  target_link_libraries(sherpa-onnx-core
-    onnxruntime
-    kaldi-native-fbank-core
-  )
+  target_link_libraries(sherpa-onnx-core onnxruntime)
+else()
+  target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
 endif()
 
 if(SHERPA_ONNX_ENABLE_GPU)

@@ -148,7 +148,7 @@ function(download_onnxruntime)
 
         set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x64-static-1.15.1.tar.bz2")
         set(onnxruntime_URL2 "")
-        set(onnxruntime_HASH "SHA256=12d50392d86870a98988e79cda9703d4f7781454e04ede0bd4b64ef98ac5c88f")
+        set(onnxruntime_HASH "SHA256=5a8c5bc88a354696c3a8fe11cd7d6ef7e0e1c7395158b81adcb22bbca2234055")
       endif()
     endif()
     # After downloading, it contains:
@@ -187,20 +187,22 @@ function(download_onnxruntime)
   endif()
   message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-  find_library(location_onnxruntime onnxruntime
-    PATHS
-    "${onnxruntime_SOURCE_DIR}/lib"
-    NO_CMAKE_SYSTEM_PATH
-  )
+  if(BUILD_SHARED_LIBS)
+    find_library(location_onnxruntime onnxruntime
+      PATHS
+      "${onnxruntime_SOURCE_DIR}/lib"
+      NO_CMAKE_SYSTEM_PATH
+    )
 
-  message(STATUS "location_onnxruntime: ${location_onnxruntime}")
+    message(STATUS "location_onnxruntime: ${location_onnxruntime}")
 
-  add_library(onnxruntime SHARED IMPORTED)
+    add_library(onnxruntime SHARED IMPORTED)
 
-  set_target_properties(onnxruntime PROPERTIES
-    IMPORTED_LOCATION ${location_onnxruntime}
-    INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
-  )
+    set_target_properties(onnxruntime PROPERTIES
+      IMPORTED_LOCATION ${location_onnxruntime}
+      INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
+    )
+  endif()
 
   if(SHERPA_ONNX_ENABLE_GPU AND NOT WIN32)
     find_library(location_onnxruntime_cuda_lib onnxruntime_providers_cuda
