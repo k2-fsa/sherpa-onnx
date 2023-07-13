@@ -17,13 +17,12 @@ git clone https://github.com/k2-fsa/sherpa-onnx
 cd sherpa-onnx
 mkdir build
 
-cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install ..
+cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=./install ..
 cmake --build . --config Release --target install
 
 cd ../mfc-examples
 
 msbuild ./mfc-examples.sln /property:Configuration=Release /property:Platform=x64
-cp ../build/install/lib/*.dll ./x64/Release/
 
 # now run the program
 

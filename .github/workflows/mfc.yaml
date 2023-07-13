@@ -1,0 +1,85 @@
+name: mfc
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+    paths:
+      - '.github/workflows/mfc.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'mfc-examples/**'
+      - 'sherpa-onnx/csrc/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/mfc.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'mfc-examples/**'
+      - 'sherpa-onnx/csrc/*'
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
+
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
+
+concurrency:
+  group: mfc-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mfc:
+    name: ${{ matrix.vs-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=./install ..
+
+      - name: Build sherpa-onnx for windows
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --config Release -- -m:2
+          cmake --build . --config Release --target install -- -m:2
+
+          ls -lh install/*
+
+          ls -lh install/lib
+          ls -lh install/bin
+
+      - name: Build MFC
+        shell: bash
+        run: |
+          msbuild ./mfc-examples.sln /property:Configuration=Release /property:Platform=x64
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: streaming-speech-recognition-x64
+          path: ./mfc-examples/x64/Release/StreamingSpeechRecognition.exe
