@@ -25,6 +25,11 @@ void OfflineModelConfig::Register(ParseOptions *po) {
 
   po->Register("provider", &provider,
                "Specify a provider to use: cpu, cuda, coreml");
+
+  po->Register("model-type", &model_type,
+               "Specify it to reduce model initialization time. "
+               "Valid values are: transducer, paraformer, nemo_ctc. "
+               "All other values lead to loading the model twice.");
 }
 
 bool OfflineModelConfig::Validate() const {
@@ -34,7 +39,7 @@ bool OfflineModelConfig::Validate() const {
   }
 
   if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("%s does not exist", tokens.c_str());
+    SHERPA_ONNX_LOGE("tokens: %s does not exist", tokens.c_str());
     return false;
   }
 
@@ -59,7 +64,8 @@ std::string OfflineModelConfig::ToString() const {
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
-  os << "provider=\"" << provider << "\")";
+  os << "provider=\"" << provider << "\", ";
+  os << "model_type=\"" << model_type << "\")";
 
   return os.str();
 }

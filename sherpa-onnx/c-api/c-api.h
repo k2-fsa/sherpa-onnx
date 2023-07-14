@@ -272,6 +272,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   const char *tokens;
   int32_t num_threads;
   int32_t debug;
+  const char *provider;
+  const char *model_type;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {

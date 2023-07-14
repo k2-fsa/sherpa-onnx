@@ -18,6 +18,21 @@ namespace sherpa_onnx {
 
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     const OfflineRecognizerConfig &config) {
+  if (!config.model_config.model_type.empty()) {
+    const auto &model_type = config.model_config.model_type;
+    if (model_type == "transducer") {
+      return std::make_unique<OfflineRecognizerTransducerImpl>(config);
+    } else if (model_type == "paraformer") {
+      return std::make_unique<OfflineRecognizerParaformerImpl>(config);
+    } else if (model_type == "nemo_ctc") {
+      return std::make_unique<OfflineRecognizerCtcImpl>(config);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Invalid model_type: %s. Trying to load the model to get its type",
+          model_type.c_str());
+    }
+  }
+
   Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 
   Ort::SessionOptions sess_opts;

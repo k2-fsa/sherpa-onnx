@@ -22,19 +22,31 @@ struct OfflineModelConfig {
   bool debug = false;
   std::string provider = "cpu";
 
+  // With the help of this field, we only need to load the model once
+  // instead of twice; and therefore it reduces initialization time.
+  //
+  // Valid values:
+  //  - transducer. The given model is from icefall
+  //  - paraformer. It is a paraformer model
+  //  - nemo_ctc. It is a NeMo CTC model.
+  //
+  // All other values are invalid and lead to loading the model twice.
+  std::string model_type;
+
   OfflineModelConfig() = default;
   OfflineModelConfig(const OfflineTransducerModelConfig &transducer,
                      const OfflineParaformerModelConfig &paraformer,
                      const OfflineNemoEncDecCtcModelConfig &nemo_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
-                     const std::string &provider)
+                     const std::string &provider, const std::string &model_type)
       : transducer(transducer),
         paraformer(paraformer),
         nemo_ctc(nemo_ctc),
         tokens(tokens),
         num_threads(num_threads),
         debug(debug),
-        provider(provider) {}
+        provider(provider),
+        model_type(model_type) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

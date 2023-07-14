@@ -86,6 +86,7 @@ class OfflineRecognizer(object):
             num_threads=num_threads,
             debug=debug,
             provider=provider,
+            model_type="transducer",
         )
 
         feat_config = OfflineFeatureExtractorConfig(
@@ -149,6 +150,7 @@ class OfflineRecognizer(object):
             num_threads=num_threads,
             debug=debug,
             provider=provider,
+            model_type="paraformer",
         )
 
         feat_config = OfflineFeatureExtractorConfig(
@@ -211,6 +213,7 @@ class OfflineRecognizer(object):
             num_threads=num_threads,
             debug=debug,
             provider=provider,
+            model_type="nemo_ctc",
         )
 
         feat_config = OfflineFeatureExtractorConfig(
