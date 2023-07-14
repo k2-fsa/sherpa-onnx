@@ -310,7 +310,6 @@ void CNonStreamingSpeechRecognitionDlg::ShowInitRecognizerHelpMessage() {
       "You need to rename them to encoder.onnx, decoder.onnx, and "
       "joiner.onnx correspoondingly.\r\n\r\n";
   msg += "It supports both transducer models and paraformer models.\r\n\r\n";
-
   msg +=
       "We give two examples below to show you how to download models\r\n\r\n";
   msg += "(1) Transducer\r\n\r\n";
@@ -462,12 +461,9 @@ void CNonStreamingSpeechRecognitionDlg::AppendTextToEditCtrl(
   // put the selection at the end of text
   my_text_.SetSel(nLength, nLength);
   // replace the selection
-  CString str;
-  str.Format(_T("%s"), s.c_str());
 
   std::wstring wstr = Utf8ToUtf16(s);
 
-  // my_text_.ReplaceSel(wstr.c_str());
   my_text_.ReplaceSel(wstr.c_str());
 }
 

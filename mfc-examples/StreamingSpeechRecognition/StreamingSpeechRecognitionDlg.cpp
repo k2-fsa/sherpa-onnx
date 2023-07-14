@@ -398,8 +398,6 @@ void CStreamingSpeechRecognitionDlg::AppendTextToEditCtrl(
   // put the selection at the end of text
   my_text_.SetSel(nLength, nLength);
   // replace the selection
-  CString str;
-  str.Format(_T("%s"), s.c_str());
 
   std::wstring wstr = Utf8ToUtf16(s);
 
