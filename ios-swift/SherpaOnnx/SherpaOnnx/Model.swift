@@ -26,7 +26,8 @@ func getBilingualStreamZhEnZipformer20230220() -> SherpaOnnxOnlineTransducerMode
     decoder: decoder,
     joiner: joiner,
     tokens: tokens,
-    numThreads: 2
+    numThreads: 2,
+    modelType: "zipformer"
   )
 }
 
@@ -41,7 +42,8 @@ func getZhZipformer20230615() -> SherpaOnnxOnlineTransducerModelConfig {
     decoder: decoder,
     joiner: joiner,
     tokens: tokens,
-    numThreads: 2
+    numThreads: 2,
+    modelType: "zipformer2"
   )
 }
 
@@ -56,7 +58,8 @@ func getZhZipformer20230615Int8() -> SherpaOnnxOnlineTransducerModelConfig {
     decoder: decoder,
     joiner: joiner,
     tokens: tokens,
-    numThreads: 2
+    numThreads: 2,
+    modelType: "zipformer2"
   )
 }
 
@@ -71,7 +74,8 @@ func getEnZipformer20230626() -> SherpaOnnxOnlineTransducerModelConfig {
     decoder: decoder,
     joiner: joiner,
     tokens: tokens,
-    numThreads: 2
+    numThreads: 2,
+    modelType: "zipformer2"
   )
 }
 

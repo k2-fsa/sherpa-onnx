@@ -53,8 +53,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineTransducerModelConfig {
   const char *tokens;
   int32_t num_threads;
   const char *provider;
-  const char *model_type;
   int32_t debug;  // true to print debug information of the model
+  const char *model_type;
 } SherpaOnnxOnlineTransducerModelConfig;
 
 /// It expects 16 kHz 16-bit single channel wave format.

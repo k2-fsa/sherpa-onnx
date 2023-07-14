@@ -26,6 +26,7 @@ namespace SherpaOnnx
       NumThreads = 1;
       Provider = "cpu";
       Debug = 0;
+      ModelType = "";
     }
     [MarshalAs(UnmanagedType.LPStr)]
     public string Encoder;
@@ -47,6 +48,9 @@ namespace SherpaOnnx
 
     /// true to print debug information of the model
     public int Debug;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string ModelType;
   }
 
   /// It expects 16 kHz 16-bit single channel wave format.
