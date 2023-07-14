@@ -36,7 +36,8 @@ struct OnlineTransducerModelConfig {
                               const std::string &decoder_filename,
                               const std::string &joiner_filename,
                               const std::string &tokens, int32_t num_threads,
-                              bool debug, const std::string &provider, const std::string &model_type)
+                              bool debug, const std::string &provider,
+                              const std::string &model_type)
       : encoder_filename(encoder_filename),
         decoder_filename(decoder_filename),
         joiner_filename(joiner_filename),
