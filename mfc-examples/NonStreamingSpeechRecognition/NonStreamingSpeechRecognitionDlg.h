@@ -17,34 +17,34 @@ class Microphone {
 };
 
 // CNonStreamingSpeechRecognitionDlg dialog
-class CNonStreamingSpeechRecognitionDlg : public CDialogEx
-{
-// Construction
-public:
-	CNonStreamingSpeechRecognitionDlg(CWnd* pParent = nullptr);	// standard constructor
-    ~CNonStreamingSpeechRecognitionDlg();
+class CNonStreamingSpeechRecognitionDlg : public CDialogEx {
+  // Construction
+ public:
+  CNonStreamingSpeechRecognitionDlg(
+      CWnd *pParent = nullptr);  // standard constructor
+  ~CNonStreamingSpeechRecognitionDlg();
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
-	enum { IDD = IDD_NONSTREAMINGSPEECHRECOGNITION_DIALOG };
+  enum { IDD = IDD_NONSTREAMINGSPEECHRECOGNITION_DIALOG };
 #endif
 
-	protected:
-	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
+ protected:
+  virtual void DoDataExchange(CDataExchange *pDX);  // DDX/DDV support
 
+  // Implementation
+ protected:
+  HICON m_hIcon;
 
-// Implementation
-protected:
-	HICON m_hIcon;
+  // Generated message map functions
+  virtual BOOL OnInitDialog();
+  afx_msg void OnPaint();
+  afx_msg HCURSOR OnQueryDragIcon();
+  DECLARE_MESSAGE_MAP()
+ public:
+  afx_msg void OnBnClickedOk();
+  int RunThread();
 
-	// Generated message map functions
-	virtual BOOL OnInitDialog();
-	afx_msg void OnPaint();
-	afx_msg HCURSOR OnQueryDragIcon();
-	DECLARE_MESSAGE_MAP()
-public:
-    afx_msg void OnBnClickedOk();
-    int RunThread();
  private:
   Microphone mic_;
 
@@ -59,6 +59,7 @@ public:
  public:
   bool started_ = false;
   std::vector<float> samples_;
+
  private:
   void AppendTextToEditCtrl(const std::string &s);
   void AppendLineToMultilineEditCtrl(const std::string &s);

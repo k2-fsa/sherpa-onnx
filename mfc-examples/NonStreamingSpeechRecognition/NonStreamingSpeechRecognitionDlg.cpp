@@ -2,12 +2,13 @@
 // NonStreamingSpeechRecognitionDlg.cpp : implementation file
 //
 
+// clang-format off
 #include "pch.h"
 #include "framework.h"
+#include "afxdialogex.h"
 #include "NonStreamingSpeechRecognition.h"
 #include "NonStreamingSpeechRecognitionDlg.h"
-#include "afxdialogex.h"
-
+// clang-format on
 
 #include <fstream>
 #include <sstream>
@@ -102,12 +103,10 @@ static std::string Cat(const std::vector<std::string> &results) {
 
 // CNonStreamingSpeechRecognitionDlg dialog
 
-
-
-CNonStreamingSpeechRecognitionDlg::CNonStreamingSpeechRecognitionDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_NONSTREAMINGSPEECHRECOGNITION_DIALOG, pParent)
-{
-	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+CNonStreamingSpeechRecognitionDlg::CNonStreamingSpeechRecognitionDlg(
+    CWnd *pParent /*=nullptr*/)
+    : CDialogEx(IDD_NONSTREAMINGSPEECHRECOGNITION_DIALOG, pParent) {
+  m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 CNonStreamingSpeechRecognitionDlg::~CNonStreamingSpeechRecognitionDlg() {
@@ -117,71 +116,65 @@ CNonStreamingSpeechRecognitionDlg::~CNonStreamingSpeechRecognitionDlg() {
   }
 }
 
-void CNonStreamingSpeechRecognitionDlg::DoDataExchange(CDataExchange* pDX)
-{
-        CDialogEx::DoDataExchange(pDX);
-        DDX_Control(pDX, IDC_EDIT1, my_text_);
-        DDX_Control(pDX, IDOK, my_btn_);
+void CNonStreamingSpeechRecognitionDlg::DoDataExchange(CDataExchange *pDX) {
+  CDialogEx::DoDataExchange(pDX);
+  DDX_Control(pDX, IDC_EDIT1, my_text_);
+  DDX_Control(pDX, IDOK, my_btn_);
 }
 
 BEGIN_MESSAGE_MAP(CNonStreamingSpeechRecognitionDlg, CDialogEx)
-	ON_WM_PAINT()
-	ON_WM_QUERYDRAGICON()
-        ON_BN_CLICKED(IDOK, &CNonStreamingSpeechRecognitionDlg::OnBnClickedOk)
-        END_MESSAGE_MAP()
-
+ON_WM_PAINT()
+ON_WM_QUERYDRAGICON()
+ON_BN_CLICKED(IDOK, &CNonStreamingSpeechRecognitionDlg::OnBnClickedOk)
+END_MESSAGE_MAP()
 
 // CNonStreamingSpeechRecognitionDlg message handlers
 
-BOOL CNonStreamingSpeechRecognitionDlg::OnInitDialog()
-{
-	CDialogEx::OnInitDialog();
+BOOL CNonStreamingSpeechRecognitionDlg::OnInitDialog() {
+  CDialogEx::OnInitDialog();
 
-	// Set the icon for this dialog.  The framework does this automatically
-	//  when the application's main window is not a dialog
-	SetIcon(m_hIcon, TRUE);			// Set big icon
-	SetIcon(m_hIcon, FALSE);		// Set small icon
+  // Set the icon for this dialog.  The framework does this automatically
+  //  when the application's main window is not a dialog
+  SetIcon(m_hIcon, TRUE);   // Set big icon
+  SetIcon(m_hIcon, FALSE);  // Set small icon
 
-	// TODO: Add extra initialization here
-    InitMicrophone();
+  // TODO: Add extra initialization here
+  InitMicrophone();
 
-	return TRUE;  // return TRUE  unless you set the focus to a control
+  return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
 // If you add a minimize button to your dialog, you will need the code below
 //  to draw the icon.  For MFC applications using the document/view model,
 //  this is automatically done for you by the framework.
 
-void CNonStreamingSpeechRecognitionDlg::OnPaint()
-{
-	if (IsIconic())
-	{
-		CPaintDC dc(this); // device context for painting
+void CNonStreamingSpeechRecognitionDlg::OnPaint() {
+  if (IsIconic()) {
+    CPaintDC dc(this);  // device context for painting
 
-		SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()), 0);
+    SendMessage(WM_ICONERASEBKGND, reinterpret_cast<WPARAM>(dc.GetSafeHdc()),
+                0);
 
-		// Center icon in client rectangle
-		int cxIcon = GetSystemMetrics(SM_CXICON);
-		int cyIcon = GetSystemMetrics(SM_CYICON);
-		CRect rect;
-		GetClientRect(&rect);
-		int x = (rect.Width() - cxIcon + 1) / 2;
-		int y = (rect.Height() - cyIcon + 1) / 2;
+    // Center icon in client rectangle
+    int cxIcon = GetSystemMetrics(SM_CXICON);
+    int cyIcon = GetSystemMetrics(SM_CYICON);
+    CRect rect;
+    GetClientRect(&rect);
+    int x = (rect.Width() - cxIcon + 1) / 2;
+    int y = (rect.Height() - cyIcon + 1) / 2;
 
-		// Draw the icon
-		dc.DrawIcon(x, y, m_hIcon);
-	}
-	else
-	{
-		CDialogEx::OnPaint();
-	}
+    // Draw the icon
+    dc.DrawIcon(x, y, m_hIcon);
+  } else {
+    CDialogEx::OnPaint();
+  }
 }
 
-// The system calls this function to obtain the cursor to display while the user drags
+// The system calls this function to obtain the cursor to display while the user
+// drags
 //  the minimized window.
-HCURSOR CNonStreamingSpeechRecognitionDlg::OnQueryDragIcon()
-{
-	return static_cast<HCURSOR>(m_hIcon);
+HCURSOR CNonStreamingSpeechRecognitionDlg::OnQueryDragIcon() {
+  return static_cast<HCURSOR>(m_hIcon);
 }
 
 static int32_t RecordCallback(const void *input_buffer,
@@ -244,7 +237,8 @@ void CNonStreamingSpeechRecognitionDlg::OnBnClickedOk() {
       my_btn_.EnableWindow(FALSE);
       return;
     }
-    AppendLineToMultilineEditCtrl("\r\nStarted! Please speak and click stop.\r\n");
+    AppendLineToMultilineEditCtrl(
+        "\r\nStarted! Please speak and click stop.\r\n");
     my_btn_.SetWindowText(_T("Stop"));
 
   } else {
@@ -262,22 +256,22 @@ void CNonStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     }
     pa_stream_ = nullptr;
 
-  SherpaOnnxOfflineStream *stream = CreateOfflineStream(recognizer_);
+    SherpaOnnxOfflineStream *stream = CreateOfflineStream(recognizer_);
 
-  AcceptWaveformOffline(stream, config_.feat_config.sample_rate,
-                        samples_.data(), samples_.size());
-  DecodeOfflineStream(recognizer_, stream);
-  SherpaOnnxOfflineRecognizerResult *r = GetOfflineStreamResult(stream);
-  results_.emplace_back(r->text);
+    AcceptWaveformOffline(stream, config_.feat_config.sample_rate,
+                          samples_.data(), samples_.size());
+    DecodeOfflineStream(recognizer_, stream);
+    SherpaOnnxOfflineRecognizerResult *r = GetOfflineStreamResult(stream);
+    results_.emplace_back(r->text);
 
-  auto str = Utf8ToUtf16(Cat(results_).c_str());
-  my_text_.SetWindowText(str.c_str());
-  my_text_.SetFocus();
-  my_text_.SetSel(-1);
+    auto str = Utf8ToUtf16(Cat(results_).c_str());
+    my_text_.SetWindowText(str.c_str());
+    my_text_.SetFocus();
+    my_text_.SetSel(-1);
 
-  DestroyOfflineRecognizerResult(r);
+    DestroyOfflineRecognizerResult(r);
 
-  DestroyOfflineStream(stream);
+    DestroyOfflineStream(stream);
     // AfxMessageBox("Stopped", MB_OK);
     my_btn_.SetWindowText(_T("Start"));
     AppendLineToMultilineEditCtrl("\r\nStopped. Please click start and speak");
@@ -306,42 +300,59 @@ bool CNonStreamingSpeechRecognitionDlg::Exists(const std::string &filename) {
 }
 
 void CNonStreamingSpeechRecognitionDlg::ShowInitRecognizerHelpMessage() {
-    my_btn_.EnableWindow(FALSE);
-    std::string msg =
-        "\r\nPlease go to\r\n"
-        "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html "
-        "\r\n";
-    msg += "to download a non-streaming model, i.e., an offline model.\r\n";
-    msg +=
-        "You need to rename them to encoder.onnx, decoder.onnx, and "
-        "joiner.onnx correspoondingly.\r\n\r\n";
-    msg += "It supports both transducer models and paraformer models.\r\n\r\n";
+  my_btn_.EnableWindow(FALSE);
+  std::string msg =
+      "\r\nPlease go to\r\n"
+      "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html "
+      "\r\n";
+  msg += "to download a non-streaming model, i.e., an offline model.\r\n";
+  msg +=
+      "You need to rename them to encoder.onnx, decoder.onnx, and "
+      "joiner.onnx correspoondingly.\r\n\r\n";
+  msg += "It supports both transducer models and paraformer models.\r\n\r\n";
 
-    msg += "We give two examples below to show you how to download models\r\n\r\n";
-    msg += "(1) Transducer\r\n\r\n";
-    msg += "We use https://huggingface.co/pkufool/icefall-asr-zipformer-wenetspeech-20230615 below\r\n";
-    msg += "wget https://huggingface.co/pkufool/icefall-asr-zipformer-wenetspeech-20230615/resolve/main/exp/encoder-epoch-12-avg-4.onnx\r\n";
-    msg += "wget https://huggingface.co/pkufool/icefall-asr-zipformer-wenetspeech-20230615/resolve/main/exp/decoder-epoch-12-avg-4.onnx\r\n";
-    msg += "wget https://huggingface.co/pkufool/icefall-asr-zipformer-wenetspeech-20230615/resolve/main/exp/joiner-epoch-12-avg-4.onnx\r\n";
-    msg += "\r\n Now rename them\r\n";
-    msg += "mv encoder-epoch-12-avg-4.onnx encoder.onnx\r\n";
-    msg += "mv decoder-epoch-12-avg-4.onnx decoder.onnx\r\n";
-    msg += "mv joiner-epoch-12-avg-4.onnx joiner.onnx\r\n\r\n";
-    msg += "(2) Paraformer\r\n\r\n";
-    msg +=
-        "wget "
-        "https://huggingface.co/csukuangfj/"
-        "sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/model.onnx\r\n";
-    msg += "wget https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/tokens.txt\r\n\r\n";
-    msg += "\r\n Now rename them\r\n";
-    msg += "mv model.onnx paraformer.onnx\r\n";
-    msg += "\r\n";
-    msg += "That's it!\r\n";
+  msg +=
+      "We give two examples below to show you how to download models\r\n\r\n";
+  msg += "(1) Transducer\r\n\r\n";
+  msg +=
+      "We use "
+      "https://huggingface.co/pkufool/"
+      "icefall-asr-zipformer-wenetspeech-20230615 below\r\n";
+  msg +=
+      "wget "
+      "https://huggingface.co/pkufool/"
+      "icefall-asr-zipformer-wenetspeech-20230615/resolve/main/exp/"
+      "encoder-epoch-12-avg-4.onnx\r\n";
+  msg +=
+      "wget "
+      "https://huggingface.co/pkufool/"
+      "icefall-asr-zipformer-wenetspeech-20230615/resolve/main/exp/"
+      "decoder-epoch-12-avg-4.onnx\r\n";
+  msg +=
+      "wget "
+      "https://huggingface.co/pkufool/"
+      "icefall-asr-zipformer-wenetspeech-20230615/resolve/main/exp/"
+      "joiner-epoch-12-avg-4.onnx\r\n";
+  msg += "\r\n Now rename them\r\n";
+  msg += "mv encoder-epoch-12-avg-4.onnx encoder.onnx\r\n";
+  msg += "mv decoder-epoch-12-avg-4.onnx decoder.onnx\r\n";
+  msg += "mv joiner-epoch-12-avg-4.onnx joiner.onnx\r\n\r\n";
+  msg += "(2) Paraformer\r\n\r\n";
+  msg +=
+      "wget "
+      "https://huggingface.co/csukuangfj/"
+      "sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/model.onnx\r\n";
+  msg +=
+      "wget "
+      "https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/"
+      "resolve/main/tokens.txt\r\n\r\n";
+  msg += "\r\n Now rename them\r\n";
+  msg += "mv model.onnx paraformer.onnx\r\n";
+  msg += "\r\n";
+  msg += "That's it!\r\n";
 
-
-    AppendLineToMultilineEditCtrl(msg);
+  AppendLineToMultilineEditCtrl(msg);
 }
-
 
 void CNonStreamingSpeechRecognitionDlg::InitParaformer() {
   std::string paraformer = "./paraformer.onnx";
@@ -375,7 +386,7 @@ void CNonStreamingSpeechRecognitionDlg::InitParaformer() {
 
   config_.model_config.paraformer.model = paraformer.c_str();
   config_.model_config.tokens = tokens.c_str();
-  config_.model_config.num_threads= 1;
+  config_.model_config.num_threads = 1;
   config_.model_config.debug = 1;
 
   config_.decoding_method = "greedy_search";
@@ -385,7 +396,7 @@ void CNonStreamingSpeechRecognitionDlg::InitParaformer() {
 }
 
 void CNonStreamingSpeechRecognitionDlg::InitRecognizer() {
-  if (Exists("./paraformer.onnx") || Exists("./paraformer.int8.onnx")){
+  if (Exists("./paraformer.onnx") || Exists("./paraformer.int8.onnx")) {
     InitParaformer();
     return;
   }
@@ -435,7 +446,7 @@ void CNonStreamingSpeechRecognitionDlg::InitRecognizer() {
   config_.model_config.transducer.decoder = decoder.c_str();
   config_.model_config.transducer.joiner = joiner.c_str();
   config_.model_config.tokens = tokens.c_str();
-  config_.model_config.num_threads= 1;
+  config_.model_config.num_threads = 1;
   config_.model_config.debug = 0;
 
   config_.decoding_method = "greedy_search";
@@ -443,7 +454,6 @@ void CNonStreamingSpeechRecognitionDlg::InitRecognizer() {
 
   recognizer_ = CreateOfflineRecognizer(&config_);
 }
-
 
 void CNonStreamingSpeechRecognitionDlg::AppendTextToEditCtrl(
     const std::string &s) {
@@ -465,4 +475,3 @@ void CNonStreamingSpeechRecognitionDlg::AppendLineToMultilineEditCtrl(
     const std::string &s) {
   AppendTextToEditCtrl("\r\n" + s);
 }
-

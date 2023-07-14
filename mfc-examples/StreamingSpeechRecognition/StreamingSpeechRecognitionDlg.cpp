@@ -1,10 +1,11 @@
 
 // StreamingSpeechRecognitionDlg.cpp : implementation file
 //
+// clang-format off
 #include "pch.h"
 #include "framework.h"
 #include "afxdialogex.h"
-
+// clang-format on
 
 #include "StreamingSpeechRecognitionDlg.h"
 
@@ -14,7 +15,6 @@
 #include <vector>
 
 #include "StreamingSpeechRecognition.h"
-
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -309,7 +309,6 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
     msg += "mv joiner-epoch-12-avg-4-chunk-16-left-128.onnx joiner.onnx\r\n";
     msg += "\r\n";
     msg += "That's it!\r\n";
-
 
     AppendLineToMultilineEditCtrl(msg);
     return;

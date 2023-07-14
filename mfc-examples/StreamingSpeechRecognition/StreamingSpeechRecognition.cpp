@@ -3,12 +3,14 @@
 // application.
 //
 
+// clang-format off
 #include "pch.h"
 #include "framework.h"
+// clang-format on
 
 #include "StreamingSpeechRecognition.h"
-#include "StreamingSpeechRecognitionDlg.h"
 
+#include "StreamingSpeechRecognitionDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
