@@ -98,6 +98,7 @@ jobs:
 
           cd mfc-examples/$arch/Release
           cp StreamingSpeechRecognition.exe sherpa-onnx-streaming-${SHERPA_ONNX_VERSION}.exe
+          cp NonStreamingSpeechRecognition.exe sherpa-onnx-non-streaming-${SHERPA_ONNX_VERSION}.exe
           ls -lh
 
       - name: Upload artifact
@@ -106,10 +107,24 @@ jobs:
           name: streaming-speech-recognition-${{ matrix.arch }}
           path: ./mfc-examples/${{ matrix.arch }}/Release/StreamingSpeechRecognition.exe
 
-      - name: Release pre-compiled binaries and libs for macOS
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: non-streaming-speech-recognition-${{ matrix.arch }}
+          path: ./mfc-examples/${{ matrix.arch }}/Release/NonStreamingSpeechRecognition.exe
+
+      - name: Release pre-compiled binaries and libs for Windows ${{ matrix.arch }}
         if: env.RELEASE == 'true'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
-          file: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx*.exe
+          file: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-streaming-*.exe
+
+      - name: Release pre-compiled binaries and libs for Windows ${{ matrix.arch }}
+        if: env.RELEASE == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-non-streaming-*.exe
