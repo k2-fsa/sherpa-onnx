@@ -50,6 +50,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
 
+    steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
