@@ -187,6 +187,18 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(model_config_cls, "debug", "Z");
   ans.model_config.debug = env->GetBooleanField(model_config, fid);
 
+  fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.provider = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(model_config_cls, "modelType", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.model_type = p;
+  env->ReleaseStringUTFChars(s, p);
+
   //---------- rnn lm model config ----------
   fid = env->GetFieldID(cls, "lmConfig",
                         "Lcom/k2fsa/sherpa/onnx/OnlineLMConfig;");
