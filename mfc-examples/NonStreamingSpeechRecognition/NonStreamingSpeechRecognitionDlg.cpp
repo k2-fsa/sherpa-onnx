@@ -387,6 +387,7 @@ void CNonStreamingSpeechRecognitionDlg::InitParaformer() {
   config_.model_config.tokens = tokens.c_str();
   config_.model_config.num_threads = 1;
   config_.model_config.debug = 1;
+  config_.model_config.model_type = "paraformer";
 
   config_.decoding_method = "greedy_search";
   config_.max_active_paths = 4;
@@ -447,6 +448,7 @@ void CNonStreamingSpeechRecognitionDlg::InitRecognizer() {
   config_.model_config.tokens = tokens.c_str();
   config_.model_config.num_threads = 1;
   config_.model_config.debug = 0;
+  config_.model_config.model_type = "transducer";
 
   config_.decoding_method = "greedy_search";
   config_.max_active_paths = 4;

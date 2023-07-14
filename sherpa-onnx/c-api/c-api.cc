@@ -33,23 +33,33 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
     const SherpaOnnxOnlineRecognizerConfig *config) {
   sherpa_onnx::OnlineRecognizerConfig recognizer_config;
 
-  recognizer_config.feat_config.sampling_rate = SHERPA_ONNX_OR(config->feat_config.sample_rate, 16000);
-  recognizer_config.feat_config.feature_dim = SHERPA_ONNX_OR(config->feat_config.feature_dim, 80);
+  recognizer_config.feat_config.sampling_rate =
+      SHERPA_ONNX_OR(config->feat_config.sample_rate, 16000);
+  recognizer_config.feat_config.feature_dim =
+      SHERPA_ONNX_OR(config->feat_config.feature_dim, 80);
 
   recognizer_config.model_config.encoder_filename =
       SHERPA_ONNX_OR(config->model_config.encoder, "");
   recognizer_config.model_config.decoder_filename =
       SHERPA_ONNX_OR(config->model_config.decoder, "");
-  recognizer_config.model_config.joiner_filename = SHERPA_ONNX_OR(config->model_config.joiner, "");
-  recognizer_config.model_config.tokens = SHERPA_ONNX_OR(config->model_config.tokens, "");
-  recognizer_config.model_config.num_threads = SHERPA_ONNX_OR(config->model_config.num_threads, 1);
-  recognizer_config.model_config.provider = SHERPA_ONNX_OR(config->model_config.provider, "cpu");
-  recognizer_config.model_config.debug = SHERPA_ONNX_OR(config->model_config.debug, 0);
+  recognizer_config.model_config.joiner_filename =
+      SHERPA_ONNX_OR(config->model_config.joiner, "");
+  recognizer_config.model_config.tokens =
+      SHERPA_ONNX_OR(config->model_config.tokens, "");
+  recognizer_config.model_config.num_threads =
+      SHERPA_ONNX_OR(config->model_config.num_threads, 1);
+  recognizer_config.model_config.provider =
+      SHERPA_ONNX_OR(config->model_config.provider, "cpu");
+  recognizer_config.model_config.debug =
+      SHERPA_ONNX_OR(config->model_config.debug, 0);
 
-  recognizer_config.decoding_method = SHERPA_ONNX_OR(config->decoding_method, "greedy_search");
-  recognizer_config.max_active_paths = SHERPA_ONNX_OR(config->max_active_paths, 4);
+  recognizer_config.decoding_method =
+      SHERPA_ONNX_OR(config->decoding_method, "greedy_search");
+  recognizer_config.max_active_paths =
+      SHERPA_ONNX_OR(config->max_active_paths, 4);
 
-  recognizer_config.enable_endpoint = SHERPA_ONNX_OR(config->enable_endpoint, 0);
+  recognizer_config.enable_endpoint =
+      SHERPA_ONNX_OR(config->enable_endpoint, 0);
 
   recognizer_config.endpoint_config.rule1.min_trailing_silence =
       SHERPA_ONNX_OR(config->rule1_min_trailing_silence, 2.4);
@@ -173,9 +183,11 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
     const SherpaOnnxOfflineRecognizerConfig *config) {
   sherpa_onnx::OfflineRecognizerConfig recognizer_config;
 
-  recognizer_config.feat_config.sampling_rate = SHERPA_ONNX_OR(config->feat_config.sample_rate, 16000);
+  recognizer_config.feat_config.sampling_rate =
+      SHERPA_ONNX_OR(config->feat_config.sample_rate, 16000);
 
-  recognizer_config.feat_config.feature_dim = SHERPA_ONNX_OR(config->feat_config.feature_dim, 80);
+  recognizer_config.feat_config.feature_dim =
+      SHERPA_ONNX_OR(config->feat_config.feature_dim, 80);
 
   recognizer_config.model_config.transducer.encoder_filename =
       SHERPA_ONNX_OR(config->model_config.transducer.encoder, "");
@@ -184,7 +196,7 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
       SHERPA_ONNX_OR(config->model_config.transducer.decoder, "");
 
   recognizer_config.model_config.transducer.joiner_filename =
-      SHERPA_ONNX_OR(config->model_config.transducer.joiner,"");
+      SHERPA_ONNX_OR(config->model_config.transducer.joiner, "");
 
   recognizer_config.model_config.paraformer.model =
       SHERPA_ONNX_OR(config->model_config.paraformer.model, "");
@@ -192,15 +204,26 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
   recognizer_config.model_config.nemo_ctc.model =
       SHERPA_ONNX_OR(config->model_config.nemo_ctc.model, "");
 
-  recognizer_config.model_config.tokens = SHERPA_ONNX_OR(config->model_config.tokens, "");
-  recognizer_config.model_config.num_threads = SHERPA_ONNX_OR(config->model_config.num_threads, 1);
-  recognizer_config.model_config.debug = SHERPA_ONNX_OR(config->model_config.debug, 0);
+  recognizer_config.model_config.tokens =
+      SHERPA_ONNX_OR(config->model_config.tokens, "");
+  recognizer_config.model_config.num_threads =
+      SHERPA_ONNX_OR(config->model_config.num_threads, 1);
+  recognizer_config.model_config.debug =
+      SHERPA_ONNX_OR(config->model_config.debug, 0);
+  recognizer_config.model_config.provider =
+      SHERPA_ONNX_OR(config->model_config.provider, "cpu");
+  recognizer_config.model_config.model_type =
+      SHERPA_ONNX_OR(config->model_config.model_type, "");
 
-  recognizer_config.lm_config.model = SHERPA_ONNX_OR(config->lm_config.model, "");
-  recognizer_config.lm_config.scale = SHERPA_ONNX_OR(config->lm_config.scale, 1.0);
+  recognizer_config.lm_config.model =
+      SHERPA_ONNX_OR(config->lm_config.model, "");
+  recognizer_config.lm_config.scale =
+      SHERPA_ONNX_OR(config->lm_config.scale, 1.0);
 
-  recognizer_config.decoding_method = SHERPA_ONNX_OR(config->decoding_method, "greedy_search");
-  recognizer_config.max_active_paths = SHERPA_ONNX_OR(config->max_active_paths, 4);
+  recognizer_config.decoding_method =
+      SHERPA_ONNX_OR(config->decoding_method, "greedy_search");
+  recognizer_config.max_active_paths =
+      SHERPA_ONNX_OR(config->max_active_paths, 4);
 
   if (config->model_config.debug) {
     fprintf(stderr, "%s\n", recognizer_config.ToString().c_str());
