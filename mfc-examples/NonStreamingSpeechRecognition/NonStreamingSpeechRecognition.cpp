@@ -1,41 +1,39 @@
 
-// StreamingSpeechRecognition.cpp : Defines the class behaviors for the
+// NonStreamingSpeechRecognition.cpp : Defines the class behaviors for the
 // application.
 //
 
 // clang-format off
 #include "pch.h"
 #include "framework.h"
+#include "NonStreamingSpeechRecognitionDlg.h"
+#include "NonStreamingSpeechRecognition.h"
 // clang-format on
-
-#include "StreamingSpeechRecognition.h"
-
-#include "StreamingSpeechRecognitionDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
-// CStreamingSpeechRecognitionApp
+// CNonStreamingSpeechRecognitionApp
 
-BEGIN_MESSAGE_MAP(CStreamingSpeechRecognitionApp, CWinApp)
+BEGIN_MESSAGE_MAP(CNonStreamingSpeechRecognitionApp, CWinApp)
 ON_COMMAND(ID_HELP, &CWinApp::OnHelp)
 END_MESSAGE_MAP()
 
-// CStreamingSpeechRecognitionApp construction
+// CNonStreamingSpeechRecognitionApp construction
 
-CStreamingSpeechRecognitionApp::CStreamingSpeechRecognitionApp() {
+CNonStreamingSpeechRecognitionApp::CNonStreamingSpeechRecognitionApp() {
   // TODO: add construction code here,
   // Place all significant initialization in InitInstance
 }
 
-// The one and only CStreamingSpeechRecognitionApp object
+// The one and only CNonStreamingSpeechRecognitionApp object
 
-CStreamingSpeechRecognitionApp theApp;
+CNonStreamingSpeechRecognitionApp theApp;
 
-// CStreamingSpeechRecognitionApp initialization
+// CNonStreamingSpeechRecognitionApp initialization
 
-BOOL CStreamingSpeechRecognitionApp::InitInstance() {
+BOOL CNonStreamingSpeechRecognitionApp::InitInstance() {
   CWinApp::InitInstance();
 
   // Create the shell manager, in case the dialog contains
@@ -55,7 +53,7 @@ BOOL CStreamingSpeechRecognitionApp::InitInstance() {
   // such as the name of your company or organization
   SetRegistryKey(_T("Local AppWizard-Generated Applications"));
 
-  CStreamingSpeechRecognitionDlg dlg;
+  CNonStreamingSpeechRecognitionDlg dlg;
   m_pMainWnd = &dlg;
   INT_PTR nResponse = dlg.DoModal();
   if (nResponse == IDOK) {

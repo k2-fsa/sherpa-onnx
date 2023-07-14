@@ -113,7 +113,7 @@ function(download_onnxruntime)
 
         set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-static-1.15.1.tar.bz2")
         set(onnxruntime_URL2 "")
-        set(onnxruntime_HASH "SHA256=a2b33a3e8a1f89cddf303f0a97a5a88f4202579c653cfb29158c8cf7da3734eb")
+        set(onnxruntime_HASH "SHA256=94d9a30976b5c4a5dff7508d00f141835916e5a36315d5f53be9b3edb85148b5")
       endif()
 
       if(SHERPA_ONNX_ENABLE_GPU)
@@ -161,7 +161,7 @@ function(download_onnxruntime)
 
         set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x64-static-1.15.1.tar.bz2")
         set(onnxruntime_URL2 "")
-        set(onnxruntime_HASH "SHA256=f5c19ac1fc6a61c78a231a41df10aede2586665ab397bdc3f007eb8d2c8d4a19")
+        set(onnxruntime_HASH "SHA256=c809a8510a89b8b37ae7d563c39229db22bac8fbefcbfe5c81a60b367d065b1b")
       endif()
     endif()
     # After downloading, it contains:

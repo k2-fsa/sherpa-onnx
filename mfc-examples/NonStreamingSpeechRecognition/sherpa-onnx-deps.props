@@ -1,0 +1,50 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ImportGroup Label="PropertySheets" />
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <SherpaOnnxBuildDirectory>..\..\build</SherpaOnnxBuildDirectory>
+    <SherpaOnnxInstallDirectory>..\..\build\install</SherpaOnnxInstallDirectory>
+    <SherpaOnnxLibraries>
+        sherpa-onnx-portaudio_static.lib;
+        sherpa-onnx-c-api.lib;
+        sherpa-onnx-core.lib;
+        kaldi-native-fbank-core.lib;
+        absl_base.lib;
+        absl_city.lib;
+        absl_hash.lib;
+        absl_low_level_hash.lib;
+        absl_raw_hash_set.lib;
+        absl_raw_logging_internal.lib;
+        absl_throw_delegate.lib;
+        clog.lib;
+        cpuinfo.lib;
+        flatbuffers.lib;
+        libprotobuf-lite.lib;
+        onnx.lib;
+        onnx_proto.lib;
+        onnxruntime_common.lib;
+        onnxruntime_flatbuffers.lib;
+        onnxruntime_framework.lib;
+        onnxruntime_graph.lib;
+        onnxruntime_mlas.lib;
+        onnxruntime_optimizer.lib;
+        onnxruntime_providers.lib;
+        onnxruntime_session.lib;
+        onnxruntime_util.lib;
+        re2.lib;
+    </SherpaOnnxLibraries>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>
+	  $(SherpaOnnxBuildDirectory)\_deps\portaudio-src\include;
+    $(SherpaOnnxInstallDirectory)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(SherpaOnnxInstallDirectory)\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(SherpaOnnxLibraries);</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup />
+</Project>

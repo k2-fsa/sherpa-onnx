@@ -1,10 +1,11 @@
 
 // StreamingSpeechRecognitionDlg.cpp : implementation file
 //
+// clang-format off
 #include "pch.h"
 #include "framework.h"
 #include "afxdialogex.h"
-
+// clang-format on
 
 #include "StreamingSpeechRecognitionDlg.h"
 
@@ -14,7 +15,6 @@
 #include <vector>
 
 #include "StreamingSpeechRecognition.h"
-
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -223,6 +223,7 @@ void CStreamingSpeechRecognitionDlg::InitMicrophone() {
     // exit(-1);
     AppendLineToMultilineEditCtrl("No default input device found!");
     my_btn_.EnableWindow(FALSE);
+    return;
   }
   AppendLineToMultilineEditCtrl(std::string("Selected device ") +
                                 Pa_GetDeviceInfo(default_device)->name);
@@ -308,7 +309,6 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
     msg += "mv joiner-epoch-12-avg-4-chunk-16-left-128.onnx joiner.onnx\r\n";
     msg += "\r\n";
     msg += "That's it!\r\n";
-
 
     AppendLineToMultilineEditCtrl(msg);
     return;
@@ -398,8 +398,6 @@ void CStreamingSpeechRecognitionDlg::AppendTextToEditCtrl(
   // put the selection at the end of text
   my_text_.SetSel(nLength, nLength);
   // replace the selection
-  CString str;
-  str.Format(_T("%s"), s.c_str());
 
   std::wstring wstr = Utf8ToUtf16(s);
 
