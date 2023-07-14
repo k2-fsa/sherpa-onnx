@@ -223,6 +223,7 @@ void CStreamingSpeechRecognitionDlg::InitMicrophone() {
     // exit(-1);
     AppendLineToMultilineEditCtrl("No default input device found!");
     my_btn_.EnableWindow(FALSE);
+    return;
   }
   AppendLineToMultilineEditCtrl(std::string("Selected device ") +
                                 Pa_GetDeviceInfo(default_device)->name);
