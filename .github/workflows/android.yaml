@@ -11,6 +11,7 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
+      - 'build-android*.sh'
   pull_request:
     branches:
       - master
@@ -20,6 +21,7 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
+      - 'build-android*.sh'
 
   release:
     types:
