@@ -137,7 +137,6 @@ jobs:
           qemu-arm ./build-arm-linux-gnueabihf/bin/sherpa-onnx --help
 
       - name: Copy files
-        if: env.RELEASE == 'true'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
