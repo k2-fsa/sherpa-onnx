@@ -82,7 +82,7 @@ jobs:
         shell: bash
         run: |
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
-          ./build-android-x86-x64.sh
+          ./build-android-x86-64.sh
           mkdir -p ./jniLibs/x86_64
           cp -v ./build-android-x86-64/install/lib/*.so ./jniLibs/x86_64
 
