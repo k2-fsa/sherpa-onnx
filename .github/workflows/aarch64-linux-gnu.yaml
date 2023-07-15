@@ -146,11 +146,14 @@ jobs:
 
           cp -a build-aarch64-linux-gnu/install/bin $dst/
           cp -a build-aarch64-linux-gnu/install/lib $dst/
-          cp -a build-aarch64-linux-gnu/install/include $dst/
 
           tree $dst
 
           tar cjvf ${dst}.tar.bz2 $dst
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: sherpa-onnx-*linux-aarch64.tar.bz2
 
       - name: Release pre-compiled binaries and libs for aarch64 linux
         if: env.RELEASE == 'true'
