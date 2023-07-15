@@ -50,6 +50,7 @@ if [ ! -f ./android-onnxruntime-libs/$onnxruntime_version/jni/x86_64/libonnxrunt
   pushd android-onnxruntime-libs
   git lfs pull --include "$onnxruntime_version/jni/x86_64/libonnxruntime.so"
   ln -s $onnxruntime_version/jni .
+  ln -s $onnxruntime_version/headers .
   popd
 fi
 
