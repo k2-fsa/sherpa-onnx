@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - android-ci
     paths:
       - '.github/workflows/android.yaml'
       - 'CMakeLists.txt'
