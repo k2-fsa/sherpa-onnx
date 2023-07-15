@@ -136,7 +136,6 @@ jobs:
           qemu-aarch64 ./build-aarch64-linux-gnu/bin/sherpa-onnx --help
 
       - name: Copy files
-        if: env.RELEASE == 'true'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -146,11 +145,14 @@ jobs:
 
           cp -a build-aarch64-linux-gnu/install/bin $dst/
           cp -a build-aarch64-linux-gnu/install/lib $dst/
-          cp -a build-aarch64-linux-gnu/install/include $dst/
 
           tree $dst
 
           tar cjvf ${dst}.tar.bz2 $dst
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: sherpa-onnx-*linux-aarch64.tar.bz2
 
       - name: Release pre-compiled binaries and libs for aarch64 linux
         if: env.RELEASE == 'true'

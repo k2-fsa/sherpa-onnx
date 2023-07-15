@@ -137,7 +137,6 @@ jobs:
           qemu-arm ./build-arm-linux-gnueabihf/bin/sherpa-onnx --help
 
       - name: Copy files
-        if: env.RELEASE == 'true'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -147,11 +146,14 @@ jobs:
 
           cp -a build-arm-linux-gnueabihf/install/bin $dst/
           cp -a build-arm-linux-gnueabihf/install/lib $dst/
-          cp -a build-arm-linux-gnueabihf/install/include $dst/
 
           tree $dst
 
           tar cjvf ${dst}.tar.bz2 $dst
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: sherpa-onnx-*linux-arm-gnueabihf.tar.bz2
 
       - name: Release pre-compiled binaries and libs for arm linux gnueabihf
         if: env.RELEASE == 'true'
