@@ -86,6 +86,14 @@ jobs:
           mkdir -p ./jniLibs/x86_64
           cp -v ./build-android-x86-64/install/lib/*.so ./jniLibs/x86_64
 
+      - name: build android x86
+        shell: bash
+        run: |
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-android-x86.sh
+          mkdir -p ./jniLibs/x86
+          cp -v ./build-android-x86/install/lib/*.so ./jniLibs/x86
+
       - name: Copy files
         shell: bash
         run: |
@@ -105,7 +113,7 @@ jobs:
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
-        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && env.RELEASE == 'true'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
