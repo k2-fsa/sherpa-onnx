@@ -21,6 +21,8 @@ data class OnlineTransducerModelConfig(
     var tokens: String,
     var numThreads: Int = 1,
     var debug: Boolean = false,
+    var provider: String = "cpu",
+    var modelType: String = "",
 )
 
 data class OnlineLMConfig(
@@ -135,6 +137,7 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
                 decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
                 joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
                 tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
             )
         }
         1 -> {
@@ -144,6 +147,7 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
                 decoder = "$modelDir/decoder-epoch-11-avg-1.onnx",
                 joiner = "$modelDir/joiner-epoch-11-avg-1.onnx",
                 tokens = "$modelDir/tokens.txt",
+                modelType = "lstm",
             )
         }
 
@@ -154,6 +158,7 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
                 decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
                 joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
                 tokens = "$modelDir/tokens.txt",
+                modelType = "lstm",
             )
         }
 
@@ -164,6 +169,7 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
                 decoder = "$modelDir/exp/decoder-epoch-12-avg-4-chunk-16-left-128.onnx",
                 joiner = "$modelDir/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx",
                 tokens = "$modelDir/data/lang_char/tokens.txt",
+                modelType = "zipformer2",
             )
         }
 
@@ -174,6 +180,7 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
                 decoder = "$modelDir/exp/decoder-epoch-12-avg-4-chunk-16-left-128.onnx",
                 joiner = "$modelDir/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx",
                 tokens = "$modelDir/data/lang_char/tokens.txt",
+                modelType = "zipformer2",
             )
         }
     }

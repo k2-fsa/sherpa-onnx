@@ -76,6 +76,8 @@ namespace SherpaOnnx
       Tokens = "";
       NumThreads = 1;
       Debug = 0;
+      Provider = "cpu";
+      ModelType = "";
     }
     public OfflineTransducerModelConfig Transducer;
     public OfflineParaformerModelConfig Paraformer;
@@ -87,6 +89,12 @@ namespace SherpaOnnx
     public int NumThreads;
 
     public int Debug;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Provider;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string ModelType;
   }
 
   [StructLayout(LayoutKind.Sequential)]

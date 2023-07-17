@@ -22,26 +22,30 @@ void OnlineTransducerModelConfig::Register(ParseOptions *po) {
 
   po->Register("debug", &debug,
                "true to print model information while loading it.");
+  po->Register("model-type", &model_type,
+               "Specify it to reduce model initialization time. "
+               "Valid values are: conformer, lstm, zipformer, zipformer2. "
+               "All other values lead to loading the model twice.");
 }
 
 bool OnlineTransducerModelConfig::Validate() const {
   if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("%s does not exist", tokens.c_str());
+    SHERPA_ONNX_LOGE("tokens: %s does not exist", tokens.c_str());
     return false;
   }
 
   if (!FileExists(encoder_filename)) {
-    SHERPA_ONNX_LOGE("%s does not exist", encoder_filename.c_str());
+    SHERPA_ONNX_LOGE("encoder: %s does not exist", encoder_filename.c_str());
     return false;
   }
 
   if (!FileExists(decoder_filename)) {
-    SHERPA_ONNX_LOGE("%s does not exist", decoder_filename.c_str());
+    SHERPA_ONNX_LOGE("decoder: %s does not exist", decoder_filename.c_str());
     return false;
   }
 
   if (!FileExists(joiner_filename)) {
-    SHERPA_ONNX_LOGE("%s does not exist", joiner_filename.c_str());
+    SHERPA_ONNX_LOGE("joiner: %s does not exist", joiner_filename.c_str());
     return false;
   }
 
@@ -63,6 +67,7 @@ std::string OnlineTransducerModelConfig::ToString() const {
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "provider=\"" << provider << "\", ";
+  os << "model_type=\"" << model_type << "\", ";
   os << "debug=" << (debug ? "True" : "False") << ")";
 
   return os.str();

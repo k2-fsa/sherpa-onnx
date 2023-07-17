@@ -1,0 +1,144 @@
+name: android
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/android.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/jni/*'
+      - 'build-android*.sh'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/android.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/jni/*'
+      - 'build-android*.sh'
+
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
+
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
+
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android-libs:
+    name: Android for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Display NDK HOME
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
+          ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: build android arm64-v8a
+        shell: bash
+        run: |
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-android-arm64-v8a.sh
+          mkdir -p jniLibs/arm64-v8a/
+          cp -v ./build-android-arm64-v8a/install/lib/*.so ./jniLibs/arm64-v8a/
+
+      - name: build android armv7-eabi
+        shell: bash
+        run: |
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-android-armv7-eabi.sh
+          mkdir -p ./jniLibs/armeabi-v7a/
+          cp -v ./build-android-armv7-eabi/install/lib/*.so ./jniLibs/armeabi-v7a/
+
+      - name: build android x86_64
+        shell: bash
+        run: |
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-android-x86-64.sh
+          mkdir -p ./jniLibs/x86_64
+          cp -v ./build-android-x86-64/install/lib/*.so ./jniLibs/x86_64
+
+      - name: build android x86
+        shell: bash
+        run: |
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-android-x86.sh
+          mkdir -p ./jniLibs/x86
+          cp -v ./build-android-x86/install/lib/*.so ./jniLibs/x86
+
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+
+          filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-android.tar.bz2
+
+          tar cjvf $filename ./jniLibs
+
+          ls -lh
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: sherpa-onnx-android-libs
+          path: ./jniLibs
+
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && env.RELEASE == 'true'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+          cd huggingface
+          git lfs pull
+
+          cp -v ../sherpa-onnx-*-android.tar.bz2 ./
+
+          git status
+          git lfs track "*.bz2"
+
+          git add .
+
+          git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-android.tar.bz2"
+
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
+      - name: Release android libs
+        if: env.RELEASE == 'true'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-android.tar.bz2

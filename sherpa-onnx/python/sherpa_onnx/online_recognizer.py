@@ -41,6 +41,7 @@ class OnlineRecognizer(object):
         max_active_paths: int = 4,
         context_score: float = 1.5,
         provider: str = "cpu",
+        model_type: str = "",
     ):
         """
         Please refer to
@@ -90,6 +91,9 @@ class OnlineRecognizer(object):
             the maximum number of active paths during beam search.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          model_type:
+            Online transducer model type. Valid values are: conformer, lstm,
+            zipformer, zipformer2. All other values lead to loading the model twice.
         """
         _assert_file_exists(tokens)
         _assert_file_exists(encoder)
@@ -105,6 +109,7 @@ class OnlineRecognizer(object):
             tokens=tokens,
             num_threads=num_threads,
             provider=provider,
+            model_type=model_type,
         )
 
         feat_config = FeatureExtractorConfig(
