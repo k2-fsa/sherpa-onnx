@@ -88,3 +88,5 @@ if(SHERPA_ONNX_ENABLE_PYTHON)
 else()
   install(FILES ${onnxruntime_lib_files} DESTINATION lib)
 endif()
+
+install(FILES ${onnxruntime_lib_files} DESTINATION bin)

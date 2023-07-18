@@ -55,6 +55,10 @@ function(download_kaldi_native_fbank)
   else()
     install(TARGETS kaldi-native-fbank-core DESTINATION lib)
   endif()
+
+  if(WIN32 AND BUILD_SHARED_LIBS)
+    install(TARGETS kaldi-native-fbank-core DESTINATION bin)
+  endif()
 endfunction()
 
 download_kaldi_native_fbank()
