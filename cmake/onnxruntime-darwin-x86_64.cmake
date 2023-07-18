@@ -9,18 +9,22 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
   message(FATAL_ERROR "This file is for macOS only. Given: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-osx-universal2-1.15.1.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-universal2-1.15.1.tgz")
-set(onnxruntime_HASH "SHA256=ecb7651c216fe6ffaf4c578e135d98341bc5bc944c5dc6b725ef85b0d7747be0")
+if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
+  message(FATAL_ERROR "This file is for x86_64 only. Given: ${CMAKE_SYSTEM_PROCESSOR}")
+endif()
+
+set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-osx-x86_64-1.15.1.tgz")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-x86_64-1.15.1.tgz")
+set(onnxruntime_HASH "SHA256=4b66ebbca24b8b96f6b74655fee3610a7e529b4e01f6790632f24ee82b778e5a")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-osx-universal2-1.15.1.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-universal2-1.15.1.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-osx-universal2-1.15.1.tgz
-  /tmp/onnxruntime-osx-universal2-1.15.1.tgz
+  $ENV{HOME}/Downloads/onnxruntime-osx-x86_64-1.15.1.tgz
+  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-x86_64-1.15.1.tgz
+  ${PROJECT_BINARY_DIR}/onnxruntime-osx-x86_64-1.15.1.tgz
+  /tmp/onnxruntime-osx-x86_64-1.15.1.tgz
 )
 
 foreach(f IN LISTS possible_file_locations)
