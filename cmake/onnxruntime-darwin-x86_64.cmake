@@ -1,5 +1,4 @@
-# Possible values for CMAKE_SYSTEM_NAME: Linux, Windows, Darwin
-
+# Copyright (c)  2022-2023  Xiaomi Corporation
 message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "CMAKE_OSX_ARCHITECTURES: ${CMAKE_OSX_ARCHITECTURES}")
