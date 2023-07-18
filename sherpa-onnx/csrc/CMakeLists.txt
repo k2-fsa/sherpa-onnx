@@ -125,6 +125,10 @@ else()
   install(TARGETS sherpa-onnx-core DESTINATION lib)
 endif()
 
+if(WIN32 AND BUILD_SHARED_LIBS)
+  install(TARGETS sherpa-onnx-core DESTINATION bin)
+endif()
+
 install(
   TARGETS
     sherpa-onnx
