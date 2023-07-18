@@ -5,14 +5,15 @@ import (
 	"encoding/binary"
 	"fmt"
 	"github.com/DylanMeeus/GoAudio/wave"
+	sherpa "github.com/k2-fsa/sherpa-onnx-go-macos/sherpa-onnx"
 	"log"
 )
 
 func main() {
 	fmt.Println("hello 2")
-	config := OnlineRecognizerConfig{}
-	config.FeatConfig = FeatureConfig{SampleRate: 16000, FeatureDim: 80}
-	config.ModelConfig = OnlineTransducerModelConfig{
+	config := sherpa.OnlineRecognizerConfig{}
+	config.FeatConfig = sherpa.FeatureConfig{SampleRate: 16000, FeatureDim: 80}
+	config.ModelConfig = sherpa.OnlineTransducerModelConfig{
 		Encoder:    "./sherpa-onnx-streaming-zipformer-en-2023-06-26/encoder-epoch-99-avg-1-chunk-16-left-128.onnx",
 		Decoder:    "./sherpa-onnx-streaming-zipformer-en-2023-06-26/decoder-epoch-99-avg-1-chunk-16-left-128.onnx",
 		Joiner:     "./sherpa-onnx-streaming-zipformer-en-2023-06-26/joiner-epoch-99-avg-1-chunk-16-left-128.onnx",
@@ -25,8 +26,8 @@ func main() {
 	config.DecodingMethod = "greedy_search"
 	config.EnableEndpoint = 0
 
-	recognizer := NewOnlineRecognizer(&config)
-	defer DeleteOnlineRecognizer(recognizer)
+	recognizer := sherpa.NewOnlineRecognizer(&config)
+	defer sherpa.DeleteOnlineRecognizer(recognizer)
 
 	testFile := "./sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/0.wav"
 	wav, err := wave.ReadWaveFile(testFile)
@@ -46,8 +47,8 @@ func main() {
 
 	samplesf32 := samplesInt16ToFloat(wav.RawData)
 
-	stream := NewOnlineStream(recognizer)
-	defer DeleteOnlineStream(stream)
+	stream := sherpa.NewOnlineStream(recognizer)
+	defer sherpa.DeleteOnlineStream(stream)
 
 	stream.AcceptWaveform(wav.SampleRate, samplesf32)
 
