@@ -124,13 +124,13 @@ jobs:
       - name: Retrieve artifact from macos-latest (x86_64)
         uses: actions/download-artifact@v2
         with:
-          name: macos-latest-for-go-x86_64
+          name: macos-latest-for-x86_64
           path: ./macos-x86_64
 
       - name: Retrieve artifact from macos-latest (arm64)
         uses: actions/download-artifact@v2
         with:
-          name: macos-latest-for-go-arm64
+          name: macos-latest-for-arm64
           path: ./macos-arm64
 
       - name: Unzip Ubuntu wheels
