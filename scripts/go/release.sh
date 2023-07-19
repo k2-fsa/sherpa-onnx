@@ -43,9 +43,9 @@ fi
 echo "new_tag: $new_tag"
 git add .
 git commit -m "Release $new_tag"
-git push
+git push origin $new_tag
 git tag $new_tag
-git push
+git push origin $new_tag
 
 popd
 echo "========================================================================="
