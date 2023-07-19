@@ -1,0 +1,47 @@
+name: release-go
+
+on:
+  push:
+    branches:
+      - go-api-2
+    tags:
+      - '*'
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+    inputs:
+      release:
+        description: "Whether to release"
+        type: boolean
+
+env:
+  RELEASE:
+    |- # Release if there is a release tag name or a release flag in workflow_dispatch
+    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
+
+concurrency:
+  group: release-go-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux_x86_64:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == "csukuangfj"
+    name: Build Linux x86_64 lib on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: SSH to GitHub
+        run: |
+          mkdir -p ~/.ssh/
+          cp scripts/go/ssh_config ~/.ssh/config
+          echo "${{ secrets.MY_GITHUB_SSH_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+          ssh github.com
+          rm ~/.ssh/id_rsa
