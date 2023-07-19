@@ -61,10 +61,10 @@ cp -v ./macos-x86_64/libsherpa-onnx-core.dylib sherpa-onnx-go-macos/lib/x86_64-a
 
 echo "Copy libs for macOS arm64"
 rm -rf sherpa-onnx-go-macos/lib/aarch64-apple-darwin/lib*
-cp -v ./macos-aarch64/libkaldi-native-fbank-core.dylib sherpa-onnx-go-macos/lib/aarch64-apple-darwin
-cp -v ./macos-aarch64/libonnxruntime* sherpa-onnx-go-macos/lib/aarch64-apple-darwin
-cp -v ./macos-aarch64/libsherpa-onnx-c-api.dylib sherpa-onnx-go-macos/lib/aarch64-apple-darwin
-cp -v ./macos-aarch64/libsherpa-onnx-core.dylib sherpa-onnx-go-macos/lib/aarch64-apple-darwin
+cp -v ./macos-arm64/libkaldi-native-fbank-core.dylib sherpa-onnx-go-macos/lib/aarch64-apple-darwin
+cp -v ./macos-arm64/libonnxruntime* sherpa-onnx-go-macos/lib/aarch64-apple-darwin
+cp -v ./macos-arm64/libsherpa-onnx-c-api.dylib sherpa-onnx-go-macos/lib/aarch64-apple-darwin
+cp -v ./macos-arm64/libsherpa-onnx-core.dylib sherpa-onnx-go-macos/lib/aarch64-apple-darwin
 
 echo "Copy sources for macOS"
 cp sherpa-onnx/c-api/c-api.h sherpa-onnx-go-macos/sherpa-onnx/

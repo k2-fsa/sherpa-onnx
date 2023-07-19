@@ -25,7 +25,7 @@ concurrency:
 jobs:
   linux-x86_64_wheel:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: Linux x86_64 wheel
+    name: Linux x86_64
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -65,13 +65,13 @@ jobs:
           name: ${{ matrix.os }}-wheels-for-go
           path: ./wheelhouse/*.whl
 
-  macOS_wheel:
+  macOS:
     name: macOS ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [macos-latest]
         arch: [x86_64, arm64]
 
     steps:
@@ -97,13 +97,13 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.os }}-wheels-for-${{ matrix.arch }}
+          name: ${{ matrix.os }}-for-${{ matrix.arch }}
           path: ./build/install/lib/
 
   linux-x86_64:
     name: Linux x86_64
     runs-on: ubuntu-latest
-    needs: [linux-x86_64_wheel, macOS_wheel]
+    needs: [linux-x86_64_wheel, macOS]
 
     steps:
       - uses: actions/checkout@v2
@@ -124,13 +124,13 @@ jobs:
       - name: Retrieve artifact from macos-latest (x86_64)
         uses: actions/download-artifact@v2
         with:
-          name: macos-latest-wheels-for-go-x86_64
+          name: macos-latest-for-go-x86_64
           path: ./macos-x86_64
 
       - name: Retrieve artifact from macos-latest (arm64)
         uses: actions/download-artifact@v2
         with:
-          name: macos-latest-wheels-for-go-arm64
+          name: macos-latest-for-go-arm64
           path: ./macos-arm64
 
       - name: Unzip Ubuntu wheels
