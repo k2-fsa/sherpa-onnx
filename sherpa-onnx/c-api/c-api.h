@@ -31,7 +31,7 @@ extern "C" {
 #define SHERPA_ONNX_IMPORT
 #endif
 #else  // WIN32
-#define SHERPA_ONNX_EXPORT __attribute__((__visibility__("default")))
+#define SHERPA_ONNX_EXPORT
 #define SHERPA_ONNX_IMPORT SHERPA_ONNX_EXPORT
 #endif
 
