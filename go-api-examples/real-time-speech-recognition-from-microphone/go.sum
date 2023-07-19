@@ -6,3 +6,5 @@ github.com/k2-fsa/sherpa-onnx-go-macos v0.1.2 h1:0hFPvhqyM4IaxvDQVuh10ozi8jNDaTA
 github.com/k2-fsa/sherpa-onnx-go-macos v0.1.2/go.mod h1:a+AJZKNQkFO+JyzGkHySysYfBzzdcoJI5ITFsnhVcmo=
 github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx v0.0.0-20230718094340-597ada07dcf2 h1:LXcKHI6NxfsbHksKk4S/JSQWhjy4id08cQU6VJXQ5S4=
 github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx v0.0.0-20230718094340-597ada07dcf2/go.mod h1:2GGEDK8zjz1eQMqWzK5/G696DyelI/3JZuzcmX9ozIc=
+github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
+github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
