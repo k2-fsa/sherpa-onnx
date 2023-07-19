@@ -27,7 +27,7 @@ concurrency:
 
 jobs:
   linux_x86_64:
-    if: github.repository_owner == 'k2-fsa' || github.repository_owner == "csukuangfj"
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
     name: Build Linux x86_64 lib on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
