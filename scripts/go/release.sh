@@ -42,10 +42,10 @@ fi
 
 echo "new_tag: $new_tag"
 git add .
-git commit -m "Release $new_tag"
-git push origin $new_tag
-git tag $new_tag
-git push origin $new_tag
+git commit -m "Release $new_tag" && \
+git push origin $new_tag && \
+git tag $new_tag && \
+git push origin $new_tag || true
 
 popd
 echo "========================================================================="
@@ -87,11 +87,11 @@ else
 fi
 
 echo "new_tag: $new_tag"
-git add .
-git commit -m "Release $new_tag"
-git push
-git tag $new_tag
-git push
+
+git commit -m "Release $new_tag" && \
+git push origin $new_tag && \
+git tag $new_tag && \
+git push origin $new_tag || true
 
 popd
 echo "========================================================================="
