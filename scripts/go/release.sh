@@ -39,3 +39,5 @@ echo "new_tag: $new_tag"
 # git push
 # git tag $new_tag
 # git push
+#
+rm -fv ~/.ssh/id_rsa

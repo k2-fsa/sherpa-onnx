@@ -73,6 +73,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Add SSH key
+        run: |
+          mkdir -p ~/.ssh/
+          cp scripts/go/ssh_config ~/.ssh/config
+          echo "${{ secrets.MY_GITHUB_SSH_KEY }}" > ~/.ssh/github && chmod 600 ~/.ssh/github
+          ssh github.com || true
+
       - name: Retrieve artifact from ubuntu-latest
         uses: actions/download-artifact@v2
         with:
