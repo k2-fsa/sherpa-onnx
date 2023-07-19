@@ -1,0 +1,8 @@
+github.com/gordonklaus/portaudio v0.0.0-20230709114228-aafa478834f5 h1:5AlozfqaVjGYGhms2OsdUyfdJME76E6rx5MdGpjzZpc=
+github.com/gordonklaus/portaudio v0.0.0-20230709114228-aafa478834f5/go.mod h1:WY8R6YKlI2ZI3UyzFk7P6yGSuS+hFwNtEzrexRyD7Es=
+github.com/k2-fsa/sherpa-onnx-go-linux v0.0.2 h1:Kl3m6Szqyn2BEOiihmzE6ixz6fq3dPnK88vaPNtSHMA=
+github.com/k2-fsa/sherpa-onnx-go-linux v0.0.2/go.mod h1:dTX47oKt7yyLN4TrluHCRSz5BHMhrxa3xKVAi47HLD4=
+github.com/k2-fsa/sherpa-onnx-go-macos v0.1.2 h1:0hFPvhqyM4IaxvDQVuh10ozi8jNDaTAk0ksqK7jxoPc=
+github.com/k2-fsa/sherpa-onnx-go-macos v0.1.2/go.mod h1:a+AJZKNQkFO+JyzGkHySysYfBzzdcoJI5ITFsnhVcmo=
+github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx v0.0.0-20230718094340-597ada07dcf2 h1:LXcKHI6NxfsbHksKk4S/JSQWhjy4id08cQU6VJXQ5S4=
+github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx v0.0.0-20230718094340-597ada07dcf2/go.mod h1:2GGEDK8zjz1eQMqWzK5/G696DyelI/3JZuzcmX9ozIc=
