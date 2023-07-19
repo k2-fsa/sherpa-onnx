@@ -42,6 +42,6 @@ jobs:
         run: |
           mkdir -p ~/.ssh/
           cp scripts/go/ssh_config ~/.ssh/config
-          echo "${{ secrets.MY_GITHUB_SSH_KEY }}" > ~/.ssh/id_rsa && chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.MY_GITHUB_SSH_KEY }}" > ~/.ssh/github && chmod 600 ~/.ssh/github
           ssh github.com
           rm ~/.ssh/id_rsa
