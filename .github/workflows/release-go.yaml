@@ -62,7 +62,7 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: ${{ matrix.os }}-wheels
+          name: ${{ matrix.os }}-wheels-for-go
           path: ./wheelhouse/*.whl
 
   linux-x86_64:
@@ -83,18 +83,14 @@ jobs:
       - name: Retrieve artifact from ubuntu-latest
         uses: actions/download-artifact@v2
         with:
-          name: ubuntu-latest-wheels
+          name: ubuntu-latest-wheels-for-go
           path: ./linux
-
-      - name: Display wheels
-        shell: bash
-        run: |
-          tree .
 
       - name: Unzip Ubuntu wheels
         shell: bash
         run: |
           cd linux
+          ls -lh
           unzip ./*.whl
           tree .
 
