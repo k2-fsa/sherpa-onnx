@@ -25,7 +25,7 @@ concurrency:
 jobs:
   linux-x86_64_wheel:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: Build Linux x86_64 lib on ${{ matrix.os }}
+    name: Linux x86_64 wheel
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -65,10 +65,45 @@ jobs:
           name: ${{ matrix.os }}-wheels-for-go
           path: ./wheelhouse/*.whl
 
+  macOS_wheel:
+    name: macOS ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        arch: [x86_64, arm64]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=ON -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} -DCMAKE_INSTALL_PREFIX=./install ..
+
+      - name: Build sherpa-onnx for macOS ${{ matrix.arch }}
+        shell: bash
+        run: |
+          cd build
+          make -j2
+          make install
+
+          ls -lh lib
+          ls -lh bin
+
+          file install/lib/lib*
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}-wheels-for-${{ matrix.arch }}
+          path: ./build/install/lib/
+
   linux-x86_64:
     name: Linux x86_64
     runs-on: ubuntu-latest
-    needs: linux-x86_64_wheel
+    needs: [linux-x86_64_wheel, macOS_wheel]
 
     steps:
       - uses: actions/checkout@v2
@@ -85,6 +120,18 @@ jobs:
         with:
           name: ubuntu-latest-wheels-for-go
           path: ./linux
+
+      - name: Retrieve artifact from macos-latest (x86_64)
+        uses: actions/download-artifact@v2
+        with:
+          name: macos-latest-wheels-for-go-x86_64
+          path: ./macos-x86_64
+
+      - name: Retrieve artifact from macos-latest (arm64)
+        uses: actions/download-artifact@v2
+        with:
+          name: macos-latest-wheels-for-go-arm64
+          path: ./macos-arm64
 
       - name: Unzip Ubuntu wheels
         shell: bash
