@@ -12,4 +12,4 @@
   --tokens ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt \
   --model-type paraformer \
   --debug 0 \
-  ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/0.wav
+  ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav
