@@ -57,7 +57,7 @@ jobs:
         run: |
           cd go-api-examples\non-streaming-decode-files
           go mod tidy
-          copy C:\Users\runneradmin\go\pkg\mod\github.com\k2-fsa\sherpa-onnx-go-windows@v*\lib\x86_64-pc-windows-gnu\*.dll .
+          copy C:\Users\runneradmin\go\pkg\mod\github.com\k2-fsa\sherpa-onnx-go-windows*\lib\x86_64-pc-windows-gnu\*.dll .
           dir .
 
       - name: Test non-streaming decoding files
@@ -70,10 +70,11 @@ jobs:
           go build
           ls -lh
 
+          echo $PWD
           if [[ ${{ matrix.os }} == windows-latest ]]; then
-            ls -lh /C:/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
-            ls -lh /C:/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
-            cp -v /C:/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
+            ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
+            ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
+            cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
           fi
           ls -lh
 
