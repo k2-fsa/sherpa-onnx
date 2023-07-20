@@ -140,7 +140,7 @@ jobs:
           path: ./build/install/lib/
 
   Release:
-    name: Linux x86_64
+    name: Release
     runs-on: ubuntu-latest
     needs: [linux-x86_64_wheel, macOS, windows]
 
