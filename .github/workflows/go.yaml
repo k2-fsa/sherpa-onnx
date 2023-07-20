@@ -18,12 +18,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  linux:
+  go:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -42,6 +42,7 @@ jobs:
         shell: bash
         run: |
           cd go-api-examples/non-streaming-decode-files
+          ls -lh
           go build
           ls -lh
 
