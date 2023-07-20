@@ -1,0 +1,10 @@
+github.com/DylanMeeus/GoAudio v0.13.1 h1:vxsqF+5Sn12aY6+AcPoG8H/P8+TfSH/XPaHAC/gY0Ng=
+github.com/DylanMeeus/GoAudio v0.13.1/go.mod h1:V+oGHNuF+LDkPKK/LDzQs5HUs80TEn2LG9d8bYdbF/c=
+github.com/k2-fsa/sherpa-onnx-go-linux v1.5.3-alpha.1 h1:waFMIytORDhKzDuNjApshUfgy69y0chiR9+OuX5Z9Mw=
+github.com/k2-fsa/sherpa-onnx-go-linux v1.5.3-alpha.1/go.mod h1:dTX47oKt7yyLN4TrluHCRSz5BHMhrxa3xKVAi47HLD4=
+github.com/k2-fsa/sherpa-onnx-go-macos v1.5.3-alpha.1 h1:7pZIqdhodDSY7Z3ZEKvypeKrq4jaAn4VVbKn0yBkhmE=
+github.com/k2-fsa/sherpa-onnx-go-macos v1.5.3-alpha.1/go.mod h1:a+AJZKNQkFO+JyzGkHySysYfBzzdcoJI5ITFsnhVcmo=
+github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx v0.0.0-20230720034813-0fd90207436b h1:awgxqynjTe9Fd5Fzc5/J2sHdm/OzAa1Irk5aEEzhR3A=
+github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx v0.0.0-20230720034813-0fd90207436b/go.mod h1:fA+6nWehSgU5dZn1TiQdYf24GEIQ6C1vsArXQpN8Ygs=
+github.com/spf13/pflag v1.0.5 h1:iy+VFUOCP1a+8yFto/drg2CJ5u0yRoB7fZw3DKv/JXA=
+github.com/spf13/pflag v1.0.5/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=

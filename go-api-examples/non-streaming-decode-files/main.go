@@ -14,17 +14,22 @@ import (
 func main() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 
-	config := sherpa.OnlineRecognizerConfig{}
+	config := sherpa.OfflineRecognizerConfig{}
 	config.FeatConfig = sherpa.FeatureConfig{SampleRate: 16000, FeatureDim: 80}
 
-	flag.StringVar(&config.ModelConfig.Encoder, "encoder", "", "Path to the encoder model")
-	flag.StringVar(&config.ModelConfig.Decoder, "decoder", "", "Path to the decoder model")
-	flag.StringVar(&config.ModelConfig.Joiner, "joiner", "", "Path to the joiner model")
+	flag.StringVar(&config.ModelConfig.Transducer.Encoder, "encoder", "", "Path to the encoder model")
+	flag.StringVar(&config.ModelConfig.Transducer.Decoder, "decoder", "", "Path to the decoder model")
+	flag.StringVar(&config.ModelConfig.Transducer.Joiner, "joiner", "", "Path to the joiner model")
+	flag.StringVar(&config.ModelConfig.Paraformer.Model, "paraformer", "", "Path to the paraformer model")
+	flag.StringVar(&config.ModelConfig.NemoCTC.Model, "nemo-ctc", "", "Path to the NeMo CTC model")
 	flag.StringVar(&config.ModelConfig.Tokens, "tokens", "", "Path to the tokens file")
 	flag.IntVar(&config.ModelConfig.NumThreads, "num-threads", 1, "Number of threads for computing")
 	flag.IntVar(&config.ModelConfig.Debug, "debug", 0, "Whether to show debug message")
 	flag.StringVar(&config.ModelConfig.ModelType, "model-type", "", "Optional. Used for loading the model in a faster way")
 	flag.StringVar(&config.ModelConfig.Provider, "provider", "cpu", "Provider to use")
+	flag.StringVar(&config.LmConfig.Model, "lm-model", "", "Optional. Path to the LM model")
+	flag.Float32Var(&config.LmConfig.Scale, "lm-scale", 1.0, "Optional. Scale for the LM model")
+
 	flag.StringVar(&config.DecodingMethod, "decoding-method", "greedy_search", "Decoding method. Possible values: greedy_search, modified_beam_search")
 	flag.IntVar(&config.MaxActivePaths, "max-active-paths", 4, "Used only when --decoding-method is modified_beam_search")
 
@@ -54,24 +59,20 @@ func main() {
 	log.Printf("Duration: %v seconds", float32(len(samplesf32))/float32(wav.SampleRate))
 
 	log.Println("Initializing recognizer (may take several seconds)")
-	recognizer := sherpa.NewOnlineRecognizer(&config)
+	recognizer := sherpa.NewOfflineRecognizer(&config)
 	log.Println("Recognizer created!")
-	defer sherpa.DeleteOnlineRecognizer(recognizer)
+	defer sherpa.DeleteOfflineRecognizer(recognizer)
 
 	log.Println("Start decoding!")
-	stream := sherpa.NewOnlineStream(recognizer)
-	defer sherpa.DeleteOnlineStream(stream)
+	stream := sherpa.NewOfflineStream(recognizer)
+	defer sherpa.DeleteOfflineStream(stream)
 
 	stream.AcceptWaveform(wav.SampleRate, samplesf32)
 
-	tailPadding := make([]float32, int(float32(wav.SampleRate)*0.3))
-	stream.AcceptWaveform(wav.SampleRate, tailPadding)
-
-	for recognizer.IsReady(stream) {
-		recognizer.Decode(stream)
-	}
+	recognizer.Decode(stream)
 	log.Println("Decoding done!")
-	result := recognizer.GetResult(stream)
+	result := stream.GetResult()
+
 	log.Println(strings.ToLower(result.Text))
 }
 
