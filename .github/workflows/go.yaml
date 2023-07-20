@@ -56,6 +56,7 @@ jobs:
         shell: cmd
         run: |
           cd go-api-examples\non-streaming-decode-files
+          go mod tidy
           copy C:\Users\runneradmin\go\pkg\mod\github.com\k2-fsa\sherpa-onnx-go-windows@v*\lib\x86_64-pc-windows-gnu\*.dll .
           dir .
 
