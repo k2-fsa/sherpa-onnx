@@ -23,7 +23,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v2
@@ -43,8 +43,17 @@ jobs:
         run: |
           cd go-api-examples/non-streaming-decode-files
           ls -lh
+          go mod tidy
+          cat go.mod
           go build
           ls -lh
+
+          os=${{ matrix.os }}
+
+          if [[ $os == windows-latest ]]; then
+            p=$(go env GOPATH)
+            cp $p/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows@v*/lib/x86_64-pc-windows-gnu .
+          fi
 
           git lfs install
 
