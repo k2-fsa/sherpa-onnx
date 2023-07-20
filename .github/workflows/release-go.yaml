@@ -100,10 +100,49 @@ jobs:
           name: ${{ matrix.os }}-for-${{ matrix.arch }}
           path: ./build/install/lib/
 
-  linux-x86_64:
+  windows:
+    name: Windows ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        # arch: [x64, Win32]
+        arch: [x64]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -A ${{ matrix.arch }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install ..
+
+      - name: Build sherpa-onnx for windows
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --config Release -- -m:2
+          cmake --build . --config Release --target install -- -m:2
+
+          ls -lh install/*
+
+          ls -lh install/lib
+          ls -lh install/bin
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: sherpa-onnx-go-windows-${{ matrix.arch }}
+          path: ./build/install/lib/
+
+  Release:
     name: Linux x86_64
     runs-on: ubuntu-latest
-    needs: [linux-x86_64_wheel, macOS]
+    needs: [linux-x86_64_wheel, macOS, windows]
 
     steps:
       - uses: actions/checkout@v2
@@ -132,6 +171,12 @@ jobs:
         with:
           name: macos-latest-for-arm64
           path: ./macos-arm64
+
+      - name: Retrieve artifact from windows-latest (x64)
+        uses: actions/download-artifact@v2
+        with:
+          name: sherpa-onnx-go-windows-x64
+          path: ./windows-x64
 
       - name: Unzip Ubuntu wheels
         shell: bash

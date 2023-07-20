@@ -37,6 +37,27 @@ jobs:
         shell: bash
         run: |
           go version
+          go env GOPATH
+          go env GOARCH
+
+      - name: Set up MinGW
+        if: matrix.os == 'windows-latest'
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: x64
+
+      - name: Show gcc
+        if: matrix.os == 'windows-latest'
+        run: |
+          gcc --version
+
+      - name: Copy DLLs for windows
+        if: matrix.os == 'windows-latest'
+        shell: cmd
+        run: |
+          cd go-api-examples\non-streaming-decode-files
+          copy C:\Users\runneradmin\go\pkg\mod\github.com\k2-fsa\sherpa-onnx-go-windows@v*\lib\x86_64-pc-windows-gnu\*.dll .
+          dir .
 
       - name: Test non-streaming decoding files
         shell: bash
@@ -46,14 +67,6 @@ jobs:
           go mod tidy
           cat go.mod
           go build
-          ls -lh
-
-          os=${{ matrix.os }}
-
-          if [[ $os == windows-latest ]]; then
-            p=$(go env GOPATH)
-            cp -v $p/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows@v*/lib/x86_64-pc-windows-gnu .
-          fi
           ls -lh
 
           git lfs install

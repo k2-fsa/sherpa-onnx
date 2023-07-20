@@ -87,13 +87,52 @@ else
 fi
 
 echo "new_tag: $new_tag"
-
+git add .
 git commit -m "Release $new_tag" && \
 git push origin $new_tag && \
 git tag $new_tag && \
 git push origin $new_tag || true
 
 popd
+echo "========================================================================="
+
+git clone git@github.com:k2-fsa/sherpa-onnx-go-windows.git
+echo "Copy libs for Windows x86_64"
+rm -fv sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu/*
+cp -v ./windows-x64/kaldi-native-fbank-core.dll sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu
+cp -v ./windows-x64/onnxruntime.dll sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu
+cp -v ./windows-x64/sherpa-onnx-c-api.dll sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu
+cp -v ./windows-x64/sherpa-onnx-core.dll sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu
+
+echo "Copy sources for Windows"
+cp sherpa-onnx/c-api/c-api.h sherpa-onnx-go-windows/sherpa-onnx/
+cp scripts/go/sherpa_onnx.go sherpa-onnx-go-windows/sherpa-onnx/
+
+pushd sherpa-onnx-go-windows
+tag=$(git describe --abbrev=0 --tags)
+if [[ x"$VERSION" == x"auto" ]]; then
+  # this is a pre-release
+  if [[ $tag == ${SHERPA_ONNX_VERSION}* ]]; then
+    # echo we have already release pre-release before, so just increment it
+    last=$(echo $tag | rev | cut -d'.' -f 1 | rev)
+    new_last=$((last+1))
+    new_tag=${SHERPA_ONNX_VERSION}-alpha.${new_last}
+  else
+    new_tag=${SHERPA_ONNX_VERSION}-alpha.1
+  fi
+else
+  new_tag=$VERSION
+fi
+
+echo "new_tag: $new_tag"
+git add .
+git commit -m "Release $new_tag" && \
+git push origin $new_tag && \
+git tag $new_tag && \
+git push origin $new_tag || true
+
+popd
+
 echo "========================================================================="
 
 
