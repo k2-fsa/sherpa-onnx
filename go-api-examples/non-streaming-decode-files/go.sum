@@ -1,7 +1,7 @@
 github.com/DylanMeeus/GoAudio v0.13.1 h1:vxsqF+5Sn12aY6+AcPoG8H/P8+TfSH/XPaHAC/gY0Ng=
 github.com/DylanMeeus/GoAudio v0.13.1/go.mod h1:V+oGHNuF+LDkPKK/LDzQs5HUs80TEn2LG9d8bYdbF/c=
-github.com/k2-fsa/sherpa-onnx-go-linux v1.5.3-alpha.1 h1:waFMIytORDhKzDuNjApshUfgy69y0chiR9+OuX5Z9Mw=
-github.com/k2-fsa/sherpa-onnx-go-linux v1.5.3-alpha.1/go.mod h1:dTX47oKt7yyLN4TrluHCRSz5BHMhrxa3xKVAi47HLD4=
+github.com/k2-fsa/sherpa-onnx-go-linux v1.5.3-alpha.2 h1:ne5Bg9dD+2k+0If9KEbM3xzxuDIWDoBdeHmj8tWoah0=
+github.com/k2-fsa/sherpa-onnx-go-linux v1.5.3-alpha.2/go.mod h1:dTX47oKt7yyLN4TrluHCRSz5BHMhrxa3xKVAi47HLD4=
 github.com/k2-fsa/sherpa-onnx-go-macos v1.5.3-alpha.1 h1:7pZIqdhodDSY7Z3ZEKvypeKrq4jaAn4VVbKn0yBkhmE=
 github.com/k2-fsa/sherpa-onnx-go-macos v1.5.3-alpha.1/go.mod h1:a+AJZKNQkFO+JyzGkHySysYfBzzdcoJI5ITFsnhVcmo=
 github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx v0.0.0-20230720034813-0fd90207436b h1:awgxqynjTe9Fd5Fzc5/J2sHdm/OzAa1Irk5aEEzhR3A=

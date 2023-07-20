@@ -9,6 +9,6 @@ require (
 )
 
 require (
-	github.com/k2-fsa/sherpa-onnx-go-linux v1.5.3-alpha.1 // indirect
+	github.com/k2-fsa/sherpa-onnx-go-linux v1.5.3-alpha.2 // indirect
 	github.com/k2-fsa/sherpa-onnx-go-macos v1.5.3-alpha.1 // indirect
 )
