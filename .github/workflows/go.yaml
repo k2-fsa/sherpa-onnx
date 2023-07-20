@@ -1,0 +1,63 @@
+name: linux
+
+on:
+  push:
+    branches:
+      - master
+      - go-api-2
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+concurrency:
+  group: go-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.20'
+
+      - name: Display go version
+        shell: bash
+        run: |
+          go version
+
+      - name: Test non-streaming decoding files
+        shell: bash
+        run: |
+          cd go-api-examples/non-streaming-decode-files
+          go build
+          ls -lh
+
+          git lfs install
+
+          echo "Test transducer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
+          ./run-paraformer.sh
+          rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+
+          echo "Test NeMo CTC"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
+          ./run-nemo-ctc.sh
+          rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
