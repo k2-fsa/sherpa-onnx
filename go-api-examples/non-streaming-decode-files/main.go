@@ -3,15 +3,17 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	"github.com/DylanMeeus/GoAudio/wave"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	flag "github.com/spf13/pflag"
+	"github.com/youpy/go-wav"
+	"os"
 	"strings"
 
 	"log"
 )
 
 func main() {
+
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 
 	config := sherpa.OfflineRecognizerConfig{}
@@ -40,23 +42,8 @@ func main() {
 	}
 
 	log.Println("Reading", flag.Arg(0))
-	wav, err := wave.ReadWaveFile(flag.Arg(0))
-	if err != nil {
-		log.Fatalf("Failed to read wave file: %s, %v", flag.Arg(0), err)
-	}
-	log.Printf("Sample rate: %v", wav.SampleRate)
-	log.Printf("Bits per sample: %v", wav.BitsPerSample)
 
-	if wav.NumChannels != 1 {
-		log.Fatalf("Only single channel is supported. Given: %v", wav.NumChannels)
-	}
-
-	if wav.BitsPerSample != 16 {
-		log.Fatalf("Only 16-bit per sample is supported. Given: %v", wav.BitsPerSample)
-	}
-
-	samplesf32 := samplesInt16ToFloat(wav.RawData)
-	log.Printf("Duration: %v seconds", float32(len(samplesf32))/float32(wav.SampleRate))
+	samples, sampleRate := readWave(flag.Arg(0))
 
 	log.Println("Initializing recognizer (may take several seconds)")
 	recognizer := sherpa.NewOfflineRecognizer(&config)
@@ -67,13 +54,50 @@ func main() {
 	stream := sherpa.NewOfflineStream(recognizer)
 	defer sherpa.DeleteOfflineStream(stream)
 
-	stream.AcceptWaveform(wav.SampleRate, samplesf32)
+	stream.AcceptWaveform(sampleRate, samples)
 
 	recognizer.Decode(stream)
 	log.Println("Decoding done!")
 	result := stream.GetResult()
 
 	log.Println(strings.ToLower(result.Text))
+	log.Printf("Wave duration: %v seconds", float32(len(samples))/float32(sampleRate))
+}
+
+func readWave(filename string) (samples []float32, sampleRate int) {
+	file, _ := os.Open(filename)
+	defer file.Close()
+
+	reader := wav.NewReader(file)
+	format, err := reader.Format()
+	if err != nil {
+		log.Fatalf("Failed to read wave format")
+	}
+
+	if format.AudioFormat != 1 {
+		log.Fatalf("Support only PCM format. Given: %v\n", format.AudioFormat)
+	}
+
+	if format.NumChannels != 1 {
+		log.Fatalf("Support only 1 channel wave file. Given: %v\n", format.NumChannels)
+	}
+
+	if format.BitsPerSample != 16 {
+		log.Fatalf("Support only 16-bit per sample. Given: %v\n", format.BitsPerSample)
+	}
+
+	reader.Duration() // so that it initializes reader.Size
+
+	buf := make([]byte, reader.Size)
+	n, err := reader.Read(buf)
+	if n != int(reader.Size) {
+		log.Fatalf("Failed to read %v bytes. Returned %v bytes\n", reader.Size, n)
+	}
+
+	samples = samplesInt16ToFloat(buf)
+	sampleRate = int(format.SampleRate)
+
+	return
 }
 
 func samplesInt16ToFloat(inSamples []byte) []float32 {
