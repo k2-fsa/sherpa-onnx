@@ -3,7 +3,7 @@ name: release-go
 on:
   push:
     branches:
-      - go-api-2
+      - master
     tags:
       - '*'
 

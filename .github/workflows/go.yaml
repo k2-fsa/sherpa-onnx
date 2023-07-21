@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - go-api-2
     tags:
       - '*'
   pull_request:
