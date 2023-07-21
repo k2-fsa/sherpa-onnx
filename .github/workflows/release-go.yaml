@@ -16,7 +16,7 @@ on:
 env:
   VERSION:
     |- # Enter release tag name or version name in workflow_dispatch. Appropriate version if not specified
-    ${{ github.event.release.tag_name || github.event.inputs.version || 'auto' }}
+    ${{ github.event.release.tag_name || github.event.inputs.version }}
 
 concurrency:
   group: release-go-${{ github.ref }}
@@ -192,6 +192,7 @@ jobs:
           tree .
 
       - name: Release go
+        if: env.VERSION != ''
         shell: bash
         run: |
           ./scripts/go/release.sh
