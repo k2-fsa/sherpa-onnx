@@ -89,7 +89,7 @@ jobs:
           rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
 
       - name: Test non-streaming decoding files (Win64)
-        if: matrix.os == 'windows-latest' && matrix.arch == amd64
+        if: matrix.os == 'windows-latest' && matrix.arch == 'amd64'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-decode-files
