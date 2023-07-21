@@ -59,7 +59,7 @@ jobs:
           ls -lh
           go mod tidy
           cat go.mod
-          go build
+          go build -x
           ls -lh
 
           echo $PWD
@@ -95,7 +95,6 @@ jobs:
           ls -lh
           go mod tidy
           cat go.mod
-          go build
           ls -lh
           rm *.dll
           ls -lh
@@ -103,6 +102,9 @@ jobs:
           go env GOARCH
           go env -w GOARCH=386
           go env GOARCH
+
+          go clean
+          go build -x
 
           echo $PWD
           ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
