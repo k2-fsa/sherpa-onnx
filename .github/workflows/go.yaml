@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   go:
-    name: go ${{ matrix.os }}
+    name: go ${{ matrix.os }} ${{matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -61,7 +61,7 @@ jobs:
           gcc --version
 
       - name: Test non-streaming decoding files (Linux/macOS)
-        if: matrix.os != 'windows'
+        if: matrix.os != 'windows-latest'
         shell: bash
         run: |
           cd go-api-examples/non-streaming-decode-files
