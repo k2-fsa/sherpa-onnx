@@ -107,8 +107,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        # arch: [x64, Win32]
-        arch: [x64]
+        arch: [x64, Win32]
     steps:
       - uses: actions/checkout@v2
         with:
@@ -177,6 +176,12 @@ jobs:
         with:
           name: sherpa-onnx-go-windows-x64
           path: ./windows-x64
+
+      - name: Retrieve artifact from windows-latest (Win32)
+        uses: actions/download-artifact@v2
+        with:
+          name: sherpa-onnx-go-windows-Win32
+          path: ./windows-win32
 
       - name: Unzip Ubuntu wheels
         shell: bash

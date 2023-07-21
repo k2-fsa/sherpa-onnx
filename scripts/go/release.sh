@@ -21,8 +21,8 @@ cp -v ./linux/sherpa_onnx/lib/libsherpa-onnx-c-api.so sherpa-onnx-go-linux/lib/x
 cp -v ./linux/sherpa_onnx/lib/libsherpa-onnx-core.so sherpa-onnx-go-linux/lib/x86_64-unknown-linux-gnu/
 
 echo "Copy sources for Linux x86_64"
-cp sherpa-onnx/c-api/c-api.h sherpa-onnx-go-linux/sherpa-onnx/
-cp scripts/go/sherpa_onnx.go sherpa-onnx-go-linux/sherpa-onnx/
+cp sherpa-onnx/c-api/c-api.h sherpa-onnx-go-linux/
+cp scripts/go/sherpa_onnx.go sherpa-onnx-go-linux/
 
 pushd sherpa-onnx-go-linux
 tag=$(git describe --abbrev=0 --tags)
@@ -42,8 +42,8 @@ fi
 
 echo "new_tag: $new_tag"
 git add .
+git status
 git commit -m "Release $new_tag" && \
-git push origin $new_tag && \
 git tag $new_tag && \
 git push origin $new_tag || true
 
@@ -67,8 +67,8 @@ cp -v ./macos-arm64/libsherpa-onnx-c-api.dylib sherpa-onnx-go-macos/lib/aarch64-
 cp -v ./macos-arm64/libsherpa-onnx-core.dylib sherpa-onnx-go-macos/lib/aarch64-apple-darwin
 
 echo "Copy sources for macOS"
-cp sherpa-onnx/c-api/c-api.h sherpa-onnx-go-macos/sherpa-onnx/
-cp scripts/go/sherpa_onnx.go sherpa-onnx-go-macos/sherpa-onnx/
+cp sherpa-onnx/c-api/c-api.h sherpa-onnx-go-macos/
+cp scripts/go/sherpa_onnx.go sherpa-onnx-go-macos/
 
 pushd sherpa-onnx-go-macos
 tag=$(git describe --abbrev=0 --tags)
@@ -88,8 +88,8 @@ fi
 
 echo "new_tag: $new_tag"
 git add .
+git status
 git commit -m "Release $new_tag" && \
-git push origin $new_tag && \
 git tag $new_tag && \
 git push origin $new_tag || true
 
@@ -104,9 +104,16 @@ cp -v ./windows-x64/onnxruntime.dll sherpa-onnx-go-windows/lib/x86_64-pc-windows
 cp -v ./windows-x64/sherpa-onnx-c-api.dll sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu
 cp -v ./windows-x64/sherpa-onnx-core.dll sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu
 
+echo "Copy libs for Windows x86"
+rm -fv sherpa-onnx-go-windows/lib/i686-pc-windows-gnu/*
+cp -v ./windows-win32/kaldi-native-fbank-core.dll sherpa-onnx-go-windows/lib/i686-pc-windows-gnu
+cp -v ./windows-win32/onnxruntime.dll sherpa-onnx-go-windows/lib/i686-pc-windows-gnu
+cp -v ./windows-win32/sherpa-onnx-c-api.dll sherpa-onnx-go-windows/lib/i686-pc-windows-gnu
+cp -v ./windows-win32/sherpa-onnx-core.dll sherpa-onnx-go-windows/lib/i686-pc-windows-gnu
+
 echo "Copy sources for Windows"
-cp sherpa-onnx/c-api/c-api.h sherpa-onnx-go-windows/sherpa-onnx/
-cp scripts/go/sherpa_onnx.go sherpa-onnx-go-windows/sherpa-onnx/
+cp sherpa-onnx/c-api/c-api.h sherpa-onnx-go-windows/
+cp scripts/go/sherpa_onnx.go sherpa-onnx-go-windows/
 
 pushd sherpa-onnx-go-windows
 tag=$(git describe --abbrev=0 --tags)
@@ -126,8 +133,8 @@ fi
 
 echo "new_tag: $new_tag"
 git add .
+git status
 git commit -m "Release $new_tag" && \
-git push origin $new_tag && \
 git tag $new_tag && \
 git push origin $new_tag || true
 
@@ -137,4 +144,3 @@ echo "========================================================================="
 
 
 rm -fv ~/.ssh/github
-
