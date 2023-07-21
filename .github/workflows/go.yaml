@@ -100,8 +100,11 @@ jobs:
           ls -lh
 
           go env GOARCH
+          go env
+          echo "------------------------------"
           go env -w GOARCH=386
-          go env GOARCH
+          go env -w CGO_ENABLED=1
+          go env
 
           go clean
           go build -x
