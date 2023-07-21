@@ -1,0 +1,239 @@
+name: test-go
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+concurrency:
+  group: go-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go:
+    name: go ${{ matrix.os }} ${{matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            arch: amd64
+          - os: macos-latest
+            arch: amd64
+          - os: windows-latest
+            arch: x64
+          - os: windows-latest
+            arch: x86 # use 386 for GOARCH
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.20'
+
+      - name: Display go version
+        shell: bash
+        run: |
+          go version
+          go env GOPATH
+          go env GOARCH
+
+      - name: Set up MinGW
+        if: matrix.os == 'windows-latest'
+        uses: egor-tensin/setup-mingw@v2
+        with:
+          platform: ${{ matrix.arch }}
+
+      - name: Show gcc
+        if: matrix.os == 'windows-latest'
+        run: |
+          gcc --version
+
+      - name: Test non-streaming decoding files (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd go-api-examples/non-streaming-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build -x
+          ls -lh
+
+          git lfs install
+
+          echo "Test transducer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
+          ./run-paraformer.sh
+          rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+
+          echo "Test NeMo CTC"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
+          ./run-nemo-ctc.sh
+          rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
+
+      - name: Test non-streaming decoding files (Win64)
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        shell: bash
+        run: |
+          cd go-api-examples/non-streaming-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          echo $PWD
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
+          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
+          ls -lh
+
+          git lfs install
+
+          echo "Test transducer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
+          ./run-paraformer.sh
+          rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+
+          echo "Test NeMo CTC"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
+          ./run-nemo-ctc.sh
+          rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
+
+      - name: Test non-streaming decoding files (Win32)
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        shell: bash
+        run: |
+          cd go-api-examples/non-streaming-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          ls -lh
+
+          go env GOARCH
+          go env
+          echo "------------------------------"
+          go env -w GOARCH=386
+          go env -w CGO_ENABLED=1
+          go env
+
+          go clean
+          go build -x
+
+          echo $PWD
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
+          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
+          ls -lh
+
+          git lfs install
+
+          echo "Test transducer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
+          ./run-paraformer.sh
+          rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+
+          echo "Test NeMo CTC"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
+          ./run-nemo-ctc.sh
+          rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
+
+      - name: Test streaming decoding files (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd go-api-examples/streaming-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build -x
+          ls -lh
+
+          git lfs install
+
+          echo "Test transducer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
+          ./run.sh
+          rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
+
+      - name: Test streaming decoding files (Win64)
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        shell: bash
+        run: |
+          cd go-api-examples/streaming-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          echo $PWD
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
+          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
+          ls -lh
+
+          git lfs install
+
+          echo "Test transducer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
+          ./run.sh
+          rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
+
+      - name: Test streaming decoding files (Win32)
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        shell: bash
+        run: |
+          cd go-api-examples/streaming-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          ls -lh
+
+          go env GOARCH
+          go env
+          echo "------------------------------"
+          go env -w GOARCH=386
+          go env -w CGO_ENABLED=1
+          go env
+
+          go clean
+          go build -x
+
+          echo $PWD
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
+          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
+          ls -lh
+
+          git lfs install
+
+          echo "Test transducer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
+          ./run.sh
+          rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26

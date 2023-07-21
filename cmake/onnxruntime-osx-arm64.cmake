@@ -8,10 +8,6 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
   message(FATAL_ERROR "This file is for macOS only. Given: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL arm64)
-  message(FATAL_ERROR "This file is for arm64 only. Given: ${CMAKE_SYSTEM_PROCESSOR}")
-endif()
-
 set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-osx-arm64-1.15.1.tgz")
 set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-arm64-1.15.1.tgz")
 set(onnxruntime_HASH "SHA256=df97832fc7907c6677a6da437f92339d84a462becb74b1d65217fcb859ee9460")
