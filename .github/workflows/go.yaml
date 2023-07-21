@@ -96,7 +96,7 @@ jobs:
           ls -lh
           go mod tidy
           cat go.mod
-          go build -x
+          go build
           ls -lh
 
           echo $PWD
@@ -130,8 +130,6 @@ jobs:
           ls -lh
           go mod tidy
           cat go.mod
-          ls -lh
-          rm *.dll
           ls -lh
 
           go env GOARCH
