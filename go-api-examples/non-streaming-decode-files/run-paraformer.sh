@@ -8,7 +8,7 @@
 # You can switch to a different online model if you need
 
 ./non-streaming-decode-files \
-  --paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.onnx \
+  --paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx \
   --tokens ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt \
   --model-type paraformer \
   --debug 0 \
