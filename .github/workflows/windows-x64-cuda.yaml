@@ -45,7 +45,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  windows_x64:_cuda
+  windows_x64_cuda:
     name: Windows x64 CUDA
     runs-on: ${{ matrix.os }}
     strategy:
