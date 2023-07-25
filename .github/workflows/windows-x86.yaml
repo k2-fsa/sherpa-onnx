@@ -120,7 +120,7 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
-      - name: Release pre-compiled binaries and libs for macOS
+      - name: Release pre-compiled binaries and libs for Windows x86
         if: env.RELEASE == 'true' && matrix.vs-version == 'vs2015'
         uses: svenstaro/upload-release-action@v2
         with:
