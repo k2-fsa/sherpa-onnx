@@ -60,10 +60,10 @@ struct Hypothesis {
   std::string Key() const {
     // TODO(fangjun): Use a hash function?
     std::ostringstream os;
-    std::string sep = "-";
+    std::string sep = "";
     for (auto i : ys) {
-      os << i << sep;
-      sep = "-";
+      os << sep << i;
+      if (sep.empty()) { sep = "-"; }
     }
     return os.str();
   }
