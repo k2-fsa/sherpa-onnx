@@ -144,7 +144,8 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
   if (count > 0) {
     size_t totalLength = 0;
     for (const auto& token : result.tokens) {
-      totalLength += token.size() + 1; // +1 for the null character at the end of each token
+      // +1 for the null character at the end of each token
+      totalLength += token.size() + 1;
     }
 
     r->count = count;
@@ -157,8 +158,9 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     for (int32_t i = 0; i < r->count; ++i) {
       memcpy(reinterpret_cast<void *>(const_cast<char *>(r->tokens + pos)),
              result.tokens[i].c_str(), result.tokens[i].size());
-      pos += result.tokens[i].size() + 1; // +1 to move past the null character
-      r->timestamps[i] = result.timestamps[i];    
+      // +1 to move past the null character
+      pos += result.tokens[i].size() + 1;
+      r->timestamps[i] = result.timestamps[i];
     }
   } else {
     r->count = 0;
