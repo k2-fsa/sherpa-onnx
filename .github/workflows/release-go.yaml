@@ -1,0 +1,198 @@
+name: release-go
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version information（e.g., 1.5.3) or auto"
+        required: true
+
+env:
+  VERSION:
+    |- # Enter release tag name or version name in workflow_dispatch. Appropriate version if not specified
+    ${{ github.event.release.tag_name || github.event.inputs.version }}
+
+concurrency:
+  group: release-go-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-x86_64_wheel:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: Linux x86_64
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: SSH to GitHub
+        run: |
+          mkdir -p ~/.ssh/
+          cp scripts/go/ssh_config ~/.ssh/config
+          echo "${{ secrets.MY_GITHUB_SSH_KEY }}" > ~/.ssh/github && chmod 600 ~/.ssh/github
+          ssh github.com || true
+          rm ~/.ssh/github
+
+      # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
+      # for a list of versions
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v2.11.4
+        env:
+          CIBW_BEFORE_BUILD: "pip install -U cmake numpy"
+          CIBW_BUILD: "cp38-*64"
+          CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
+          CIBW_BUILD_VERBOSITY: 3
+          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib'
+
+      - name: Display wheels
+        shell: bash
+        run: |
+          ls -lh ./wheelhouse/*.whl
+          unzip -l ./wheelhouse/*.whl
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}-wheels-for-go
+          path: ./wheelhouse/*.whl
+
+  macOS:
+    name: macOS ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        arch: [x86_64, arm64]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=ON -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} -DCMAKE_INSTALL_PREFIX=./install ..
+
+      - name: Build sherpa-onnx for macOS ${{ matrix.arch }}
+        shell: bash
+        run: |
+          cd build
+          make -j2
+          make install
+
+          ls -lh lib
+          ls -lh bin
+
+          file install/lib/lib*
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: ${{ matrix.os }}-for-${{ matrix.arch }}
+          path: ./build/install/lib/
+
+  windows:
+    name: Windows ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        arch: [x64, Win32]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -A ${{ matrix.arch }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install ..
+
+      - name: Build sherpa-onnx for windows
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --config Release -- -m:2
+          cmake --build . --config Release --target install -- -m:2
+
+          ls -lh install/*
+
+          ls -lh install/lib
+          ls -lh install/bin
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: sherpa-onnx-go-windows-${{ matrix.arch }}
+          path: ./build/install/lib/
+
+  Release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [linux-x86_64_wheel, macOS, windows]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Add SSH key
+        run: |
+          mkdir -p ~/.ssh/
+          cp scripts/go/ssh_config ~/.ssh/config
+          echo "${{ secrets.MY_GITHUB_SSH_KEY }}" > ~/.ssh/github && chmod 600 ~/.ssh/github
+          ssh github.com || true
+
+      - name: Retrieve artifact from ubuntu-latest
+        uses: actions/download-artifact@v2
+        with:
+          name: ubuntu-latest-wheels-for-go
+          path: ./linux
+
+      - name: Retrieve artifact from macos-latest (x86_64)
+        uses: actions/download-artifact@v2
+        with:
+          name: macos-latest-for-x86_64
+          path: ./macos-x86_64
+
+      - name: Retrieve artifact from macos-latest (arm64)
+        uses: actions/download-artifact@v2
+        with:
+          name: macos-latest-for-arm64
+          path: ./macos-arm64
+
+      - name: Retrieve artifact from windows-latest (x64)
+        uses: actions/download-artifact@v2
+        with:
+          name: sherpa-onnx-go-windows-x64
+          path: ./windows-x64
+
+      - name: Retrieve artifact from windows-latest (Win32)
+        uses: actions/download-artifact@v2
+        with:
+          name: sherpa-onnx-go-windows-Win32
+          path: ./windows-win32
+
+      - name: Unzip Ubuntu wheels
+        shell: bash
+        run: |
+          cd linux
+          ls -lh
+          unzip ./*.whl
+          tree .
+
+      - name: Release go
+        if: env.VERSION != ''
+        shell: bash
+        run: |
+          ./scripts/go/release.sh
