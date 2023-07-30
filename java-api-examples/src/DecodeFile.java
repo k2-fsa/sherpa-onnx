@@ -49,8 +49,9 @@ public class DecodeFile {
       float rule3MinUtteranceLength = 20F;
       String decodingMethod = "greedy_search";
       int maxActivePaths = 4;
-      String lm_model="";
-	  float lm_scale=0.5F;
+      String lm_model = "";
+      float lm_scale = 0.5F;
+      String modelType = "zipformer";
       rcgOjb =
           new OnlineRecognizer(
               tokens,
@@ -65,9 +66,10 @@ public class DecodeFile {
               rule2MinTrailingSilence,
               rule3MinUtteranceLength,
               decodingMethod,
-			  lm_model,
-			  lm_scale,
-              maxActivePaths);
+              lm_model,
+              lm_scale,
+              maxActivePaths,
+              modelType);
       streamObj = rcgOjb.createStream();
     } catch (Exception e) {
       System.err.println(e);
