@@ -146,11 +146,11 @@ class BuildExtension(build_ext):
 
         for f in binaries:
             suffix = "" if "dll" in f else suffix
-            src_file = install_dir / 'bin' / (f + suffix)
+            src_file = install_dir / "bin" / (f + suffix)
             if not src_file.is_file():
-              src_file = install_dir / 'lib' / (f + suffix)
+                src_file = install_dir / "lib" / (f + suffix)
             if not src_file.is_file():
-              src_file = install_dir / '..' / (f + suffix)
+                src_file = install_dir / ".." / (f + suffix)
             print(f"Copying {src_file} to {out_bin_dir}/")
             shutil.copy(f"{src_file}", f"{out_bin_dir}/")
 

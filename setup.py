@@ -63,7 +63,7 @@ def get_binaries_to_install():
 
     exe = []
     for f in binaries:
-        suffix = "" if 'dll' in f else suffix
+        suffix = "" if "dll" in f else suffix
         t = bin_dir / (f + suffix)
         exe.append(str(t))
     return exe
