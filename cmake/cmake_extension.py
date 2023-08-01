@@ -137,9 +137,23 @@ class BuildExtension(build_ext):
         binaries += ["sherpa-onnx-offline-websocket-server"]
         binaries += ["sherpa-onnx-online-websocket-client"]
 
+        if is_windows():
+            binaries += ["kaldi-native-fbank-core.dll"]
+            binaries += ["sherpa-onnx-c-api.dll"]
+            binaries += ["sherpa-onnx-core.dll"]
+            binaries += ["sherpa-onnx-portaudio.dll"]
+            binaries += ["onnxruntime.dll"]
+
         for f in binaries:
+            suffix = "" if "dll" in f else suffix
             src_file = install_dir / "bin" / (f + suffix)
+            if not src_file.is_file():
+                src_file = install_dir / "lib" / (f + suffix)
+            if not src_file.is_file():
+                src_file = install_dir / ".." / (f + suffix)
             print(f"Copying {src_file} to {out_bin_dir}/")
             shutil.copy(f"{src_file}", f"{out_bin_dir}/")
 
         shutil.rmtree(f"{install_dir}/bin")
+        if is_windows():
+            shutil.rmtree(f"{install_dir}/lib")
