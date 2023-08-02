@@ -15,7 +15,7 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/jni.yaml'
+      - '.github/workflows/run-java-test.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'java-api-examples/**'
