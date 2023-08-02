@@ -185,3 +185,9 @@ json result example: {"text":"甚至出现交易几乎停滞的情况","eof":"tr
     make runclient  /**change path in Makefile according to your env**/
 ```
 
+7 runtest
+this script will download model, compile codes and run test
+```bash
+    cd sherpa-onnx/java-api-examples
+    runtest.sh
+```
