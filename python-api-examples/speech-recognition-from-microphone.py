@@ -74,13 +74,6 @@ def get_args():
     )
 
     parser.add_argument(
-        "--num-threads",
-        type=int,
-        default=1,
-        help="Number of threads for neural network computation",
-    )
-
-    parser.add_argument(
         "--max-active-paths",
         type=int,
         default=4,
@@ -211,10 +204,6 @@ def main():
             if last_result != result:
                 last_result = result
                 print("\r{}".format(result), end="", flush=True)
-            is_endpoint = recognizer.is_endpoint(stream)
-            if is_endpoint:
-                recognizer.reset(stream)
-
 
 if __name__ == "__main__":
     devices = sd.query_devices()
