@@ -16,6 +16,8 @@ log() {
  
 echo "PATH: $PATH"
 
+
+
  
 
 log "------------------------------------------------------------"
@@ -25,18 +27,23 @@ log "------------------------------------------------------------"
 repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 log "Start testing ${repo_url}"
 repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
+log "download dir is $(basename $repo_url)" 
+if [ ! -d $repo ];then
+	log "Download pretrained model and test-data from $repo_url"
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+	GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+	pushd $repo
+	git lfs pull --include "*.onnx"
+	ls -lh *.onnx
+	popd
+fi
 
-echo $(pwd)
+log $(pwd)
 
 sed -e 's?/sherpa/?'$(pwd)'/?g'  modelconfig.cfg > modeltest.cfg
 
+log "display model cfg"
+cat modeltest.cfg
 
 cd ..
 
