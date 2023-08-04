@@ -308,7 +308,6 @@ class OnlineRecognizer::Impl {
     auto r = decoder_->GetEmptyResult();
     if (config_.decoding_method == "modified_beam_search" &&
         nullptr != s->GetContextGraph()) {
-
       for (auto it = r.hyps.begin(); it != r.hyps.end(); ++it) {
         it->second.context_state = s->GetContextGraph()->Root();
       }
