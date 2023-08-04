@@ -1,13 +1,12 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gordonklaus/portaudio"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	flag "github.com/spf13/pflag"
-	"strings"
-
-	"fmt"
 	"log"
+	"strings"
 )
 
 func main() {
@@ -57,6 +56,7 @@ func main() {
 	defer sherpa.DeleteOnlineRecognizer(recognizer)
 
 	stream := sherpa.NewOnlineStream(recognizer)
+	defer sherpa.NewOfflineStream(stream)
 
 	// you can choose another value for 0.1 if you want
 	samplesPerCall := int32(param.SampleRate * 0.1) // 0.1 second
@@ -99,8 +99,6 @@ func main() {
 	}
 
 	chk(s.Stop())
-	return
-
 }
 
 func chk(err error) {
