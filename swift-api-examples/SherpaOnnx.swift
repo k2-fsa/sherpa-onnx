@@ -104,17 +104,17 @@ class SherpaOnnxOnlineRecongitionResult {
   }
 
   var tokens: [String] {
-    if let tokensPointer = result.pointee.tokens {
+    if let tokensPointer = result.pointee.tokensArr {
       var tokens: [String] = []
-      var currentIndex = 0
-      for _ in 0..<count {
-          let token = String(cString: tokensPointer.advanced(by: currentIndex))
-          tokens.append(token)
-          currentIndex += token.utf8.count + 1
+      for index in 0..<count {
+          if let tokenPointer = tokensPointer[Int(index)] {
+                let token = String(cString: tokenPointer)
+                tokens.append(token)
+           }
       }
       return tokens
     } else {
-      var tokens: [String] = []
+      let tokens: [String] = []
       return tokens
     }
   }

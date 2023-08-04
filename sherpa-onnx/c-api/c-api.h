@@ -108,6 +108,9 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerResult {
   // which are seperated by \0
   const char *tokens;
 
+  // a pointer array contains the address of the first item in tokens
+  const char *const *tokensArr;
+
   // Pointer to continuous memory which holds timestamps which
   // are seperated by \0
   float *timestamps;

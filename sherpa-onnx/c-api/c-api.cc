@@ -154,18 +154,23 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     memset(reinterpret_cast<void *>(const_cast<char *>(r->tokens)), 0,
            totalLength);
     r->timestamps = new float[r->count];
+    char **tokensTemp = new char*[r->count]; 
     int pos = 0;
     for (int32_t i = 0; i < r->count; ++i) {
+      tokensTemp[i] = const_cast<char*>(r->tokens) + pos;
       memcpy(reinterpret_cast<void *>(const_cast<char *>(r->tokens + pos)),
              result.tokens[i].c_str(), result.tokens[i].size());
       // +1 to move past the null character
       pos += result.tokens[i].size() + 1;
       r->timestamps[i] = result.timestamps[i];
     }
+
+    r->tokensArr = const_cast<const char *const *>(tokensTemp);
   } else {
     r->count = 0;
     r->timestamps = nullptr;
     r->tokens = nullptr;
+    r->tokensArr = nullptr;
   }
 
   return r;
