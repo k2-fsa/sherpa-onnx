@@ -11,15 +11,24 @@ public class OnlineTransducerModelConfig {
   private final String tokens;
   private final int numThreads;
   private final boolean debug;
+  private final String provider = "cpu";
+  private String modelType = "";
 
   public OnlineTransducerModelConfig(
-      String encoder, String decoder, String joiner, String tokens, int numThreads, boolean debug) {
+      String encoder,
+      String decoder,
+      String joiner,
+      String tokens,
+      int numThreads,
+      boolean debug,
+      String modelType) {
     this.encoder = encoder;
     this.decoder = decoder;
     this.joiner = joiner;
     this.tokens = tokens;
     this.numThreads = numThreads;
     this.debug = debug;
+    this.modelType = modelType;
   }
 
   public String getEncoder() {

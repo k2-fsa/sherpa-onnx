@@ -6,10 +6,9 @@ import (
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	flag "github.com/spf13/pflag"
 	"github.com/youpy/go-wav"
+	"log"
 	"os"
 	"strings"
-
-	"log"
 )
 
 func main() {
