@@ -58,6 +58,11 @@ class SherpaOnnx {
     return result.text;
   }
 
+  const std::vector<std::string> GetTokens() const {
+    auto result = recognizer_.GetResult(stream_.get());
+    return result.tokens;
+  }
+
   bool IsEndpoint() const { return recognizer_.IsEndpoint(stream_.get()); }
 
   bool IsReady() const { return recognizer_.IsReady(stream_.get()); }
@@ -310,6 +315,29 @@ JNIEXPORT jstring JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_getText(
   // https://stackoverflow.com/questions/11621449/send-c-string-to-java-via-jni
   auto text = reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr)->GetText();
   return env->NewStringUTF(text.c_str());
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jobjectArray JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_getTokens(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  auto tokens = reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr)->GetTokens();
+  int size = tokens.size();
+  jclass stringClass = env->FindClass("java/lang/String");
+
+  // convert C++ list into jni string array
+  jobjectArray result = env->NewObjectArray(size, stringClass, NULL);
+  for (int i = 0; i < size; i++) {
+    // Convert the C++ string to a C string
+    const char* cstr = tokens[i].c_str();
+
+    // Convert the C string to a jstring
+    jstring jstr = env->NewStringUTF(cstr);
+
+    // Set the array element
+    env->SetObjectArrayElement(result, i, jstr);
+  }
+
+  return result;
 }
 
 // see

@@ -101,8 +101,35 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
 } SherpaOnnxOnlineRecognizerConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerResult {
+  // Recognized text
   const char *text;
-  // TODO(fangjun): Add more fields
+
+  // Pointer to continuous memory which holds string based tokens
+  // which are seperated by \0
+  const char *tokens;
+
+  // a pointer array contains the address of the first item in tokens
+  const char *const *tokens_arr;
+
+  // Pointer to continuous memory which holds timestamps
+  float *timestamps;
+
+  // The number of tokens/timestamps in above pointer
+  int32_t count;
+
+  /** Return a json string.
+   *
+   * The returned string contains:
+   *   {
+   *     "text": "The recognition result",
+   *     "tokens": [x, x, x],
+   *     "timestamps": [x, x, x],
+   *     "segment": x,
+   *     "start_time": x,
+   *     "is_final": true|false
+   *   }
+   */
+  const char *json;
 } SherpaOnnxOnlineRecognizerResult;
 
 /// Note: OnlineRecognizer here means StreamingRecognizer.
