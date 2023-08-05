@@ -36,53 +36,35 @@ static void Handler(int32_t sig) {
 }
 
 int32_t main(int32_t argc, char *argv[]) {
-  if (argc < 5 || argc > 7) {
-    const char *usage = R"usage(
-Usage:
-  ./bin/sherpa-onnx-microphone \
-    /path/to/tokens.txt \
-    /path/to/encoder.onnx\
-    /path/to/decoder.onnx\
-    /path/to/joiner.onnx\
-    [num_threads [decoding_method]]
+  signal(SIGINT, Handler);
 
-Default value for num_threads is 2.
-Valid values for decoding_method: greedy_search (default), modified_beam_search.
+  const char *kUsageMessage = R"usage(
+This program uses streaming models with microphone for speech recognition.
+Usage:
+
+  ./bin/sherpa-onnx-microphone \
+    --tokens=/path/to/tokens.txt \
+    --encoder=/path/to/encoder.onnx \
+    --decoder=/path/to/decoder.onnx \
+    --joiner=/path/to/joiner.onnx \
+    --provider=cpu \
+    --num-threads=1 \
+    --decoding-method=greedy_search
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 for a list of pre-trained models to download.
 )usage";
-    fprintf(stderr, "%s\n", usage);
-    fprintf(stderr, "argc, %d\n", argc);
 
-    return 0;
-  }
-  signal(SIGINT, Handler);
-
+  sherpa_onnx::ParseOptions po(kUsageMessage);
   sherpa_onnx::OnlineRecognizerConfig config;
-  config.model_config.tokens = argv[1];
 
-  config.model_config.debug = false;
-  config.model_config.encoder_filename = argv[2];
-  config.model_config.decoder_filename = argv[3];
-  config.model_config.joiner_filename = argv[4];
-
-  config.model_config.num_threads = 2;
-  if (argc == 6 && atoi(argv[5]) > 0) {
-    config.model_config.num_threads = atoi(argv[5]);
+  config.Register(&po);
+  po.Read(argc, argv);
+  if (po.NumArgs() != 0) {
+    po.PrintUsage();
+    exit(EXIT_FAILURE);
   }
-
-  if (argc == 7) {
-    config.decoding_method = argv[6];
-  }
-  config.max_active_paths = 4;
-
-  config.enable_endpoint = true;
-
-  config.endpoint_config.rule1.min_trailing_silence = 2.4;
-  config.endpoint_config.rule2.min_trailing_silence = 1.2;
-  config.endpoint_config.rule3.min_utterance_length = 300;
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
 
