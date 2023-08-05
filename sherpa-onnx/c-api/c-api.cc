@@ -142,22 +142,22 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
   // copy tokens
   auto count = result.tokens.size();
   if (count > 0) {
-    size_t totalLength = 0;
+    size_t total_length = 0;
     for (const auto& token : result.tokens) {
       // +1 for the null character at the end of each token
-      totalLength += token.size() + 1;
+      total_length += token.size() + 1;
     }
 
     r->count = count;
     // Each word ends with nullptr
-    r->tokens = new char[totalLength];
+    r->tokens = new char[total_length];
     memset(reinterpret_cast<void *>(const_cast<char *>(r->tokens)), 0,
-           totalLength);
+           total_length);
     r->timestamps = new float[r->count];
-    char **tokensTemp = new char*[r->count];
+    char **tokens_temp = new char*[r->count];
     int pos = 0;
     for (int32_t i = 0; i < r->count; ++i) {
-      tokensTemp[i] = const_cast<char*>(r->tokens) + pos;
+      tokens_temp[i] = const_cast<char*>(r->tokens) + pos;
       memcpy(reinterpret_cast<void *>(const_cast<char *>(r->tokens + pos)),
              result.tokens[i].c_str(), result.tokens[i].size());
       // +1 to move past the null character
@@ -165,12 +165,12 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
       r->timestamps[i] = result.timestamps[i];
     }
 
-    r->tokensArr = const_cast<const char *const *>(tokensTemp);
+    r->tokens_arr = const_cast<const char *const *>(tokens_temp);
   } else {
     r->count = 0;
     r->timestamps = nullptr;
     r->tokens = nullptr;
-    r->tokensArr = nullptr;
+    r->tokens_arr = nullptr;
   }
 
   return r;
@@ -178,6 +178,9 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
 
 void DestroyOnlineRecognizerResult(const SherpaOnnxOnlineRecognizerResult *r) {
   delete[] r->text;
+  delete[] r->json;
+  delete[] r->tokens;
+  delete[] r->tokens_arr;
   delete r;
 }
 

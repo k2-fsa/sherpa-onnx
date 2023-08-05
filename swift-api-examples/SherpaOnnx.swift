@@ -104,7 +104,7 @@ class SherpaOnnxOnlineRecongitionResult {
   }
 
   var tokens: [String] {
-    if let tokensPointer = result.pointee.tokensArr {
+    if let tokensPointer = result.pointee.tokens_arr {
       var tokens: [String] = []
       for index in 0..<count {
           if let tokenPointer = tokensPointer[Int(index)] {
