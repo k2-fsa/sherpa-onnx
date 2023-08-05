@@ -155,7 +155,7 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
            total_length);
     r->timestamps = new float[r->count];
     char **tokens_temp = new char*[r->count];
-    int pos = 0;
+    int32_t pos = 0;
     for (int32_t i = 0; i < r->count; ++i) {
       tokens_temp[i] = const_cast<char*>(r->tokens) + pos;
       memcpy(reinterpret_cast<void *>(const_cast<char *>(r->tokens + pos)),
@@ -181,6 +181,7 @@ void DestroyOnlineRecognizerResult(const SherpaOnnxOnlineRecognizerResult *r) {
   delete[] r->json;
   delete[] r->tokens;
   delete[] r->tokens_arr;
+  delete[] r->timestamps;
   delete r;
 }
 
