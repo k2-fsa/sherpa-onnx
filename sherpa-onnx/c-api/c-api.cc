@@ -165,7 +165,7 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
       r->timestamps[i] = result.timestamps[i];
     }
 
-    r->tokens_arr = const_cast<const char *const *>(tokens_temp);
+    r->tokens_arr = tokens_temp;
   } else {
     r->count = 0;
     r->timestamps = nullptr;
