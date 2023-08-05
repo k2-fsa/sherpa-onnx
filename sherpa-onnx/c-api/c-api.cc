@@ -154,7 +154,7 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     memset(reinterpret_cast<void *>(const_cast<char *>(r->tokens)), 0,
            totalLength);
     r->timestamps = new float[r->count];
-    char **tokensTemp = new char*[r->count]; 
+    char **tokensTemp = new char*[r->count];
     int pos = 0;
     for (int32_t i = 0; i < r->count; ++i) {
       tokensTemp[i] = const_cast<char*>(r->tokens) + pos;
