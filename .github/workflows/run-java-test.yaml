@@ -1,0 +1,55 @@
+name: run-java-test
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/run-java-test.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'java-api-examples/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/jni/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/run-java-test.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'java-api-examples/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/jni/*'
+
+concurrency:
+  group: jni-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  jni:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Display java version
+        shell: bash
+        run: |
+          java -version
+          echo "JAVA_HOME is: ${JAVA_HOME}"
+
+      - name:  Run java test
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./runtest.sh

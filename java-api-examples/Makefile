@@ -73,10 +73,10 @@ runmic:
 		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeMic
 
 runsrv:
-		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketServer /sherpa-onnx/20230515/zhaoming/sherpa-onnx/build/lib/libsherpa-onnx-jni.so ./modelconfig.cfg
+		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketServer ../build/lib/libsherpa-onnx-jni.so ./modeltest.cfg
 
 runclient:
-		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketClient /sherpa-onnx/20230515/zhaoming/sherpa-onnx/build/lib/libsherpa-onnx-jni.so 127.0.0.1 8890 ./test.wav 32
+		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketClient ../build/lib/libsherpa-onnx-jni.so 127.0.0.1 8890 ./test.wav 32
 
 buildlib: $(LIB_FILES:.java=.class)
 	

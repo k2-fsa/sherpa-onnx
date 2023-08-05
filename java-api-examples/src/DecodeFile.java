@@ -159,7 +159,7 @@ public class DecodeFile {
       String appDir = System.getProperty("user.dir");
       System.out.println("appdir=" + appDir);
       String fileName = appDir + "/test.wav";
-      String cfgPath = appDir + "/modelconfig.cfg";
+      String cfgPath = appDir + "/modeltest.cfg";
       String soPath = appDir + "/../build/lib/libsherpa-onnx-jni.so";
       OnlineRecognizer.setSoPath(soPath);
       DecodeFile rcgDemo = new DecodeFile(fileName);
