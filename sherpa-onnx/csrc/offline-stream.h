@@ -69,6 +69,8 @@ class OfflineStream {
  public:
   explicit OfflineStream(const OfflineFeatureExtractorConfig &config = {},
                          ContextGraphPtr context_graph = nullptr);
+
+  explicit OfflineStream(bool whisper, ContextGraphPtr context_graph = nullptr);
   ~OfflineStream();
 
   /**

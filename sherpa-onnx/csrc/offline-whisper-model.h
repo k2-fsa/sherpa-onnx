@@ -45,15 +45,17 @@ class OfflineWhisperModel {
    *                              (n_text_layer, N, n_audio_ctx, n_text_state).
    * @param offset A int64 tensor of shape (N,)
    *
-   * @return Return a tuple containing 3 tensors:
+   * @return Return a tuple containing 6 tensors:
    *
    *  - logits A 3-D tensor of shape (N, num_words, vocab_size)
    *  - out_n_layer_self_k_cache Same shape as n_layer_self_k_cache
    *  - out_n_layer_self_v_cache Same shape as n_layer_self_v_cache
    *  - out_n_layer_cross_k Same as n_layer_cross_k
    *  - out_n_layer_cross_v Same as n_layer_cross_v
+   *  - out_offset Same as offset
    */
-  std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value>
+  std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value,
+             Ort::Value>
   ForwardDecoder(Ort::Value tokens, Ort::Value n_layer_self_k_cache,
                  Ort::Value n_layer_self_v_cache, Ort::Value n_layer_cross_k,
                  Ort::Value n_layer_cross_v, Ort::Value offset);
@@ -70,6 +72,7 @@ class OfflineWhisperModel {
   /** Return an allocator for allocating memory
    */
   OrtAllocator *Allocator() const;
+  int32_t EOT() const;
 
  private:
   class Impl;

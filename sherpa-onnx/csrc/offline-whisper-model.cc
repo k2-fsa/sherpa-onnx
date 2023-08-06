@@ -42,7 +42,8 @@ class OfflineWhisperModel::Impl {
     return {std::move(encoder_out[0]), std::move(encoder_out[1])};
   }
 
-  std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value>
+  std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value,
+             Ort::Value>
   ForwardDecoder(Ort::Value tokens, Ort::Value n_layer_self_k_cache,
                  Ort::Value n_layer_self_v_cache, Ort::Value n_layer_cross_k,
                  Ort::Value n_layer_cross_v, Ort::Value offset) {
@@ -58,9 +59,9 @@ class OfflineWhisperModel::Impl {
         decoder_input.size(), decoder_output_names_ptr_.data(),
         decoder_output_names_ptr_.size());
 
-    return {std::move(decoder_out[0]), std::move(decoder_out[1]),
-            std::move(decoder_out[2]), std::move(decoder_input[3]),
-            std::move(decoder_input[4])};
+    return {std::move(decoder_out[0]),   std::move(decoder_out[1]),
+            std::move(decoder_out[2]),   std::move(decoder_input[3]),
+            std::move(decoder_input[4]), std::move(decoder_input[5])};
   }
 
   std::pair<Ort::Value, Ort::Value> GetInitialSelfKVCache() {
@@ -74,7 +75,7 @@ class OfflineWhisperModel::Impl {
 
     auto n = shape[0] * shape[1] * shape[2] * shape[3];
 
-    float *p_k = n_layer_self_v_cache.GetTensorMutableData<float>();
+    float *p_k = n_layer_self_k_cache.GetTensorMutableData<float>();
     float *p_v = n_layer_self_v_cache.GetTensorMutableData<float>();
 
     memset(p_k, 0, sizeof(float) * n);
@@ -86,6 +87,8 @@ class OfflineWhisperModel::Impl {
   OrtAllocator *Allocator() const { return allocator_; }
 
   const std::vector<int32_t> &GetInitialTokens() const { return sot_sequence_; }
+
+  int32_t EOT() const { return eot_; }
 
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
@@ -175,7 +178,8 @@ std::pair<Ort::Value, Ort::Value> OfflineWhisperModel::ForwardEncoder(
   return impl_->ForwardEncoder(std::move(features));
 }
 
-std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value>
+std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value,
+           Ort::Value>
 OfflineWhisperModel::ForwardDecoder(Ort::Value tokens,
                                     Ort::Value n_layer_self_k_cache,
                                     Ort::Value n_layer_self_v_cache,
@@ -199,5 +203,7 @@ OrtAllocator *OfflineWhisperModel::Allocator() const {
 const std::vector<int32_t> &OfflineWhisperModel::GetInitialTokens() const {
   return impl_->GetInitialTokens();
 }
+
+int32_t OfflineWhisperModel::EOT() const { return impl_->EOT(); }
 
 }  // namespace sherpa_onnx
