@@ -36,6 +36,7 @@ set(sources
   offline-transducer-model.cc
   offline-transducer-modified-beam-search-decoder.cc
   offline-whisper-model-config.cc
+  offline-whisper-model.cc
   online-conformer-transducer-model.cc
   online-lm-config.cc
   online-lm.cc

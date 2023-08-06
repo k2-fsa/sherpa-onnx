@@ -55,6 +55,7 @@ for a list of pre-trained models to download.
 
   po.Read(argc, argv);
   if (po.NumArgs() < 1) {
+    fprintf(stderr, "Error: Please provide at least 1 wave file.\n\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
   }

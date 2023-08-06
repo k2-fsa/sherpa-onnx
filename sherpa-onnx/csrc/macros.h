@@ -1,4 +1,3 @@
-
 // sherpa-onnx/csrc/macros.h
 //
 // Copyright      2023  Xiaomi Corporation

@@ -11,6 +11,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-ctc-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-whisper-impl.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
@@ -26,6 +27,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<OfflineRecognizerParaformerImpl>(config);
     } else if (model_type == "nemo_ctc") {
       return std::make_unique<OfflineRecognizerCtcImpl>(config);
+    } else if (model_type == "whisper") {
+      return std::make_unique<OfflineRecognizerWhisperImpl>(config);
     } else {
       SHERPA_ONNX_LOGE(
           "Invalid model_type: %s. Trying to load the model to get its type",
@@ -43,6 +46,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     model_filename = config.model_config.paraformer.model;
   } else if (!config.model_config.nemo_ctc.model.empty()) {
     model_filename = config.model_config.nemo_ctc.model;
+  } else if (!config.model_config.whisper.encoder.empty()) {
+    model_filename = config.model_config.whisper.encoder;
   } else {
     SHERPA_ONNX_LOGE("Please provide a model");
     exit(-1);
@@ -77,6 +82,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "\n    "
         "https://huggingface.co/csukuangfj/"
         "paraformer-onnxruntime-python-example/blob/main/add-model-metadata.py"
+        "\n    "
+        "(3) Whisper"
         "\n");
     exit(-1);
   }
@@ -95,12 +102,17 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
 
+  if (strncmp(model_type.c_str(), "whisper", 7) == 0) {
+    return std::make_unique<OfflineRecognizerWhisperImpl>(config);
+  }
+
   SHERPA_ONNX_LOGE(
       "\nUnsupported model_type: %s\n"
       "We support only the following model types at present: \n"
       " - Non-streaming transducer models from icefall\n"
       " - Non-streaming Paraformer models from FunASR\n"
-      " - EncDecCTCModelBPE models from NeMo\n",
+      " - EncDecCTCModelBPE models from NeMo\n"
+      " - Whisper models\n",
       model_type.c_str());
 
   exit(-1);
