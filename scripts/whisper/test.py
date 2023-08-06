@@ -7,6 +7,7 @@ before you run this script
 import base64
 from typing import Tuple
 
+import kaldi_native_fbank as knf
 import onnxruntime as ort
 import torch
 
@@ -48,7 +49,6 @@ class OnnxModel:
         self.sot_sequence = list(map(int, meta["sot_sequence"].split(",")))
 
         self.is_multilingual = int(meta["is_multilingual"]) == 1
-        print(self.sot_sequence, self.is_multilingual)
 
     def init_decoder(self, decoder: str):
         self.decoder = ort.InferenceSession(
@@ -146,10 +146,27 @@ def main():
     name = "tiny"
     encoder = f"./{name}-encoder.onnx"
     decoder = f"./{name}-decoder.onnx"
-    model = OnnxModel(encoder, decoder)
     audio = whisper.load_audio("0.wav")
-    audio = whisper.pad_or_trim(audio)
-    mel = whisper.log_mel_spectrogram(audio).unsqueeze(0)
+
+    features = []
+    online_whisper_fbank = knf.OnlineWhisperFbank(knf.FrameExtractionOptions())
+    online_whisper_fbank.accept_waveform(16000, audio)
+    online_whisper_fbank.input_finished()
+    for i in range(online_whisper_fbank.num_frames_ready):
+        f = online_whisper_fbank.get_frame(i)
+        f = torch.from_numpy(f)
+        features.append(f)
+
+    features = torch.stack(features)
+
+    log_spec = torch.clamp(features, min=1e-10).log10()
+    log_spec = torch.maximum(log_spec, log_spec.max() - 8.0)
+    mel = (log_spec + 4.0) / 4.0
+    target = 3000
+    mel = torch.nn.functional.pad(mel, (0, 0, 0, target - mel.shape[0]), "constant", 0)
+    mel = mel.t().unsqueeze(0)
+
+    model = OnnxModel(encoder, decoder)
     n_layer_cross_k, n_layer_cross_v = model.run_encoder(mel)
     n_layer_self_k_cache, n_layer_self_v_cache = model.get_self_cache()
 
@@ -188,17 +205,13 @@ def main():
         logits = logits[0, -1]
         model.suppress_tokens(logits, is_initial=False)
         max_token_id = logits.argmax(dim=-1)
-
-    tokenizer = whisper.tokenizer.get_tokenizer(model.is_multilingual)
-    print(tokenizer.decode(results))
-
     token_table = load_tokens(f"./{name}-tokens.txt")
     s = b""
     for i in results:
         if i in token_table:
             s += base64.b64decode(token_table[i])
         else:
-            print("oov", i, tokenizer.decode([i]))
+            print("oov", i)
 
     print(s.decode().strip())
 

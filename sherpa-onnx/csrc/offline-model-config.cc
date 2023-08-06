@@ -14,6 +14,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   transducer.Register(po);
   paraformer.Register(po);
   nemo_ctc.Register(po);
+  whisper.Register(po);
 
   po->Register("tokens", &tokens, "Path to tokens.txt");
 
@@ -51,6 +52,10 @@ bool OfflineModelConfig::Validate() const {
     return nemo_ctc.Validate();
   }
 
+  if (!whisper.encoder.empty()) {
+    return whisper.Validate();
+  }
+
   return transducer.Validate();
 }
 
@@ -61,6 +66,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "transducer=" << transducer.ToString() << ", ";
   os << "paraformer=" << paraformer.ToString() << ", ";
   os << "nemo_ctc=" << nemo_ctc.ToString() << ", ";
+  os << "whisper=" << whisper.ToString() << ", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";

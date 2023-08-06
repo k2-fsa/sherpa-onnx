@@ -35,6 +35,7 @@ set(sources
   offline-transducer-model-config.cc
   offline-transducer-model.cc
   offline-transducer-modified-beam-search-decoder.cc
+  offline-whisper-model-config.cc
   online-conformer-transducer-model.cc
   online-lm-config.cc
   online-lm.cc
@@ -50,12 +51,12 @@ set(sources
   online-zipformer-transducer-model.cc
   online-zipformer2-transducer-model.cc
   onnx-utils.cc
-  session.cc
   packed-sequence.cc
   pad-sequence.cc
   parse-options.cc
   provider.cc
   resample.cc
+  session.cc
   slice.cc
   stack.cc
   symbol-table.cc
