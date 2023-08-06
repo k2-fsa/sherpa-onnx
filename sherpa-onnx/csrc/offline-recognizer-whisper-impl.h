@@ -26,11 +26,12 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
   explicit OfflineRecognizerWhisperImpl(const OfflineRecognizerConfig &config)
       : config_(config),
         symbol_table_(config_.model_config.tokens),
-        model_(std::make_unique<OfflineWhisperModel>(config.model_config)) {}
+        model_(std::make_unique<OfflineWhisperModel>(config.model_config)) {
+    symbol_table_.ApplyBase64Decode();
+  }
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
-    bool whisper = true;
-    return std::make_unique<OfflineStream>(whisper);
+    return std::make_unique<OfflineStream>(WhisperTag{});
   }
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override {
@@ -76,9 +77,6 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     std::array<int64_t, 2> token_shape{
         1, static_cast<int64_t>(initial_tokens.size())};
 
-    SHERPA_ONNX_LOGE("initial_tokens size: %d",
-                     (int32_t)(initial_tokens.size()));
-
     Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
         model_->Allocator(), token_shape.data(), token_shape.size());
 
@@ -101,17 +99,13 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
     auto logits_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
     int32_t vocab_size = logits_shape[2];
-    SHERPA_ONNX_LOGE("vocab size: %d\n", vocab_size);
 
     int32_t max_token_id = static_cast<int32_t>(std::distance(
         p_logits, std::max_element(p_logits, p_logits + vocab_size)));
-    SHERPA_ONNX_LOGE("max_token_id: %d\n", max_token_id);
 
     std::vector<int32_t> results;
     for (int32_t i = 0; i < 400; ++i) {
       if (max_token_id == model_->EOT()) {
-        SHERPA_ONNX_LOGE("i: %d, max token id: %d, eot: %d\n", i, max_token_id,
-                         model_->EOT());
         break;
       }
       results.push_back(max_token_id);
@@ -147,9 +141,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
     std::string sr;
     for (auto i : results) {
-      SHERPA_ONNX_LOGE(" %d \n", i);
       if (symbol_table_.contains(i)) {
-        // todo(fangjun): convert symbol_table_ to base64 on load
         sr += symbol_table_[i];
       }
     }

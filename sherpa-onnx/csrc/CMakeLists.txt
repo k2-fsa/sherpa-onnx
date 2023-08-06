@@ -11,6 +11,7 @@ if(SHERPA_ONNX_ENABLE_PYTHON)
 endif()
 
 set(sources
+  base64-decode.cc
   cat.cc
   context-graph.cc
   endpoint.cc

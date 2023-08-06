@@ -86,7 +86,7 @@ class OfflineStream::Impl {
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
   }
 
-  Impl(bool /*whisper*/, ContextGraphPtr context_graph)
+  Impl(WhisperTag /*tag*/, ContextGraphPtr context_graph)
       : context_graph_(context_graph) {
     config_.normalize_samples = true;
     opts_.frame_opts.samp_freq = 16000;
@@ -227,9 +227,9 @@ OfflineStream::OfflineStream(
     ContextGraphPtr context_graph /*= nullptr*/)
     : impl_(std::make_unique<Impl>(config, context_graph)) {}
 
-OfflineStream::OfflineStream(bool whisper,
+OfflineStream::OfflineStream(WhisperTag tag,
                              ContextGraphPtr context_graph /*= nullptr*/)
-    : impl_(std::make_unique<Impl>(whisper, context_graph)) {}
+    : impl_(std::make_unique<Impl>(tag, context_graph)) {}
 
 OfflineStream::~OfflineStream() = default;
 
