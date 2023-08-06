@@ -50,11 +50,13 @@ class OfflineWhisperModel {
    *  - logits A 3-D tensor of shape (N, num_words, vocab_size)
    *  - out_n_layer_self_k_cache Same shape as n_layer_self_k_cache
    *  - out_n_layer_self_v_cache Same shape as n_layer_self_v_cache
+   *  - out_n_layer_cross_k Same as n_layer_cross_k
+   *  - out_n_layer_cross_v Same as n_layer_cross_v
    */
-  std::tuple<Ort::Value, Ort::Value, Ort::Value> ForwardDecoder(
-      Ort::Value tokens, Ort::Value n_layer_self_k_cache,
-      Ort::Value n_layer_self_v_cache, Ort::Value n_layer_cross_k,
-      Ort::Value n_layer_cross_v, Ort::Value offset);
+  std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value, Ort::Value>
+  ForwardDecoder(Ort::Value tokens, Ort::Value n_layer_self_k_cache,
+                 Ort::Value n_layer_self_v_cache, Ort::Value n_layer_cross_k,
+                 Ort::Value n_layer_cross_v, Ort::Value offset);
 
   /** Return the initial self kv cache in a pair
    *  - n_layer_self_k_cache A 4-D tensor of shape
@@ -63,6 +65,7 @@ class OfflineWhisperModel {
    *                         (n_text_layer, N, n_audio_ctx, n_text_state).
    */
   std::pair<Ort::Value, Ort::Value> GetInitialSelfKVCache();
+  const std::vector<int32_t> &GetInitialTokens() const;
 
   /** Return an allocator for allocating memory
    */
