@@ -45,6 +45,9 @@ class SymbolTable {
   /// Return true if there is a given symbol in the symbol table.
   bool contains(const std::string &sym) const;
 
+  // for tokens.txt from Whisper
+  void ApplyBase64Decode();
+
  private:
   void Init(std::istream &is);
 

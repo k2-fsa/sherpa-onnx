@@ -1,0 +1,63 @@
+name: export-whisper-to-onnx
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: release-whisper-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-whisper-models:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: ${{ matrix.model }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        model: ["tiny.en", "base.en", "small.en", "medium.en"]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python3 -m pip install openai-whisper torch onnxruntime onnx
+
+      - name: export ${{ matrix.model }}
+        shell: bash
+        run: |
+          cd scripts/whisper
+          python3 ./export-onnx.py --model ${{ matrix.model }}
+          python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
+
+          ls -lh
+
+          ls -lh ~/.cache/whisper
+
+      - name: Publish ${{ matrix.model }} to huggingface
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          cd scripts/whisper
+
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} huggingface
+
+          cp *.onnx ./huggingface
+          cp *.ort ./huggingface
+          cp *tokens.txt ./huggingface
+
+          cd huggingface
+          git status
+          ls -lh
+          git lfs track "*.onnx"
+          git lfs track "*.ort"
+          git add .
+          git commit -m "upload ${{ matrix.model }}"
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} main

@@ -11,6 +11,7 @@ pybind11_add_module(_sherpa_onnx
   offline-recognizer.cc
   offline-stream.cc
   offline-transducer-model-config.cc
+  offline-whisper-model-config.cc
   online-lm-config.cc
   online-recognizer.cc
   online-stream.cc

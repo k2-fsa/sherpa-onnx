@@ -15,7 +15,7 @@ void OfflineParaformerModelConfig::Register(ParseOptions *po) {
 
 bool OfflineParaformerModelConfig::Validate() const {
   if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("%s does not exist", model.c_str());
+    SHERPA_ONNX_LOGE("Paraformer model %s does not exist", model.c_str());
     return false;
   }
 

@@ -9,6 +9,7 @@
 #include <sstream>
 #include <strstream>
 
+#include "sherpa-onnx/csrc/base64-decode.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 #if __ANDROID_API__ >= 9
@@ -80,6 +81,14 @@ bool SymbolTable::contains(const std::string &sym) const {
 
 std::ostream &operator<<(std::ostream &os, const SymbolTable &symbol_table) {
   return os << symbol_table.ToString();
+}
+
+void SymbolTable::ApplyBase64Decode() {
+  sym2id_.clear();
+  for (auto &p : id2sym_) {
+    p.second = Base64Decode(p.second);
+    sym2id_[p.second] = p.first;
+  }
 }
 
 }  // namespace sherpa_onnx

@@ -23,7 +23,7 @@ Usage:
     --encoder=/path/to/encoder.onnx \
     --decoder=/path/to/decoder.onnx \
     --joiner=/path/to/joiner.onnx \
-    --num-threads=2 \
+    --num-threads=1 \
     --decoding-method=greedy_search \
     /path/to/foo.wav [bar.wav foobar.wav ...]
 
@@ -33,14 +33,22 @@ Usage:
   ./bin/sherpa-onnx-offline \
     --tokens=/path/to/tokens.txt \
     --paraformer=/path/to/model.onnx \
-    --num-threads=2 \
+    --num-threads=1 \
     --decoding-method=greedy_search \
     /path/to/foo.wav [bar.wav foobar.wav ...]
 
+(3) Whisper models
+
+  ./bin/sherpa-onnx-offline \
+    --whisper-encoder=./sherpa-onnx-whisper-base.en/base.en-encoder.int8.onnx \
+    --whisper-decoder=./sherpa-onnx-whisper-base.en/base.en-decoder.int8.onnx \
+    --tokens=./sherpa-onnx-whisper-base.en/base.en-tokens.txt \
+    --num-threads=1 \
+    /path/to/foo.wav [bar.wav foobar.wav ...]
+
+
 Note: It supports decoding multiple files in batches
 
-Default value for num_threads is 2.
-Valid values for decoding_method: greedy_search.
 foo.wav should be of single channel, 16-bit PCM encoded wave file; its
 sampling rate can be arbitrary and does not need to be 16kHz.
 
@@ -55,6 +63,7 @@ for a list of pre-trained models to download.
 
   po.Read(argc, argv);
   if (po.NumArgs() < 1) {
+    fprintf(stderr, "Error: Please provide at least 1 wave file.\n\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
   }

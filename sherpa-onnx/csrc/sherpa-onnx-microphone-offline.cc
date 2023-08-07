@@ -98,11 +98,15 @@ Usage:
   ./bin/sherpa-onnx-microphone-offline \
     --tokens=/path/to/tokens.txt \
     --paraformer=/path/to/model.onnx \
-    --num-threads=2 \
-    --decoding-method=greedy_search
+    --num-threads=1
 
-Default value for num_threads is 2.
-Valid values for decoding_method: greedy_search.
+(3) Whisper models
+
+  ./bin/sherpa-onnx-microphone-offline \
+    --whisper-encoder=./sherpa-onnx-whisper-base.en/base.en-encoder.int8.onnx \
+    --whisper-decoder=./sherpa-onnx-whisper-base.en/base.en-decoder.int8.onnx \
+    --tokens=./sherpa-onnx-whisper-base.en/base.en-tokens.txt \
+    --num-threads=1
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
