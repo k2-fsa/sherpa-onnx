@@ -1,4 +1,4 @@
-name: linux
+name: export-whisper-to-onnx
 
 on:
   push:
@@ -13,12 +13,13 @@ concurrency:
 jobs:
   release-whisper-models:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: release-whisper-onnx-model
+    name: ${{ matrix.model }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
+        model: ["tiny.en", "base.en", "small.en", "medium.en"]
 
     steps:
       - uses: actions/checkout@v2
@@ -28,11 +29,11 @@ jobs:
         run: |
           python3 -m pip install openai-whisper torch onnxruntime onnx
 
-      - name: export tiny.en
+      - name: export ${{ matrix.model }}
         shell: bash
         run: |
           cd scripts/whisper
-          python3 ./export-onnx.py --model tiny.en
+          python3 ./export-onnx.py --model ${{ matrix.model }}
           python -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
 
           ls -lh
