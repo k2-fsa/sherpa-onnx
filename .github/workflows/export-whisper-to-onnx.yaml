@@ -38,6 +38,8 @@ jobs:
 
           ls -lh
 
+          ls -lh ~/.cached/whisper
+
       - name: Publish ${{ matrix.model }} to huggingface
         shell: bash
         env:
