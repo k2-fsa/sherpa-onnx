@@ -28,7 +28,7 @@ def get_args():
         "--decoder",
         type=str,
         required=True,
-        help="Path to the encoder",
+        help="Path to the decoder",
     )
 
     parser.add_argument(
