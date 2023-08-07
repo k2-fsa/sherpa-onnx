@@ -23,14 +23,14 @@ on:
       - 'sherpa-onnx/jni/*'
 
 concurrency:
-  group: jni-${{ github.ref }}
+  group: run-java-test-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  jni:
+  run_java_test:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
