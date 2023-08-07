@@ -84,6 +84,14 @@ jobs:
           file build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
 
+      - name: Test offline Whisper
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-whisper.sh
+
       - name: Test offline CTC
         shell: bash
         run: |

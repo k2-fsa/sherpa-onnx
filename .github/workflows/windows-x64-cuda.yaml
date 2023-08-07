@@ -74,6 +74,14 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
+      - name: Test offline Whisper for windows x64
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-whisper.sh
+
       - name: Test offline CTC for windows x64
         shell: bash
         run: |
