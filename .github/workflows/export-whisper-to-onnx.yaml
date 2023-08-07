@@ -61,3 +61,4 @@ jobs:
           git lfs track "*.ort"
           git add .
           git commit -m "upload ${{ matrix.model }}"
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} main
