@@ -10,6 +10,7 @@ Thanks to https://github.com/TadaoYamaoka
 for making the onnx export script public.
 """
 
+import argparse
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -24,6 +25,22 @@ from whisper.model import (
     ResidualAttentionBlock,
     TextDecoder,
 )
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--model",
+        type=str,
+        required=True,
+        # fmt: off
+        choices=[
+            "tiny", "tiny.en", "base", "base.en",
+            "small", "small.en", "medium", "medium.en",
+            "large", "large-v1", "large-v2"],
+        # fmt: on
+    )
+    return parser.parse_args()
 
 
 def add_meta_data(filename: str, meta_data: Dict[str, Any]):
@@ -221,16 +238,11 @@ def convert_tokens(name, model):
 
 @torch.no_grad()
 def main():
+    args = get_args()
+    name = args.model
+
     opset_version = 13
-    name = "tiny"
-    # tiny, tiny.en
-    # base, base.en
-    # small, small.en
-    # medium, medium.en
-    # large, large-v1, large-v2
-    #
-    # please see
-    # https://github.com/openai/whisper/blob/main/whisper/__init__.py#L17
+
     model = whisper.load_model(name)
     convert_tokens(name=name, model=model)
 

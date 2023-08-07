@@ -12,6 +12,23 @@ import onnxruntime as ort
 import torch
 
 import whisper
+import argparse
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--model",
+        type=str,
+        required=True,
+        # fmt: off
+        choices=[
+            "tiny", "tiny.en", "base", "base.en",
+            "small", "small.en", "medium", "medium.en",
+            "large", "large-v1", "large-v2"],
+        # fmt: on
+    )
+    return parser.parse_args()
 
 
 class OnnxModel:
@@ -143,7 +160,9 @@ def load_tokens(filename):
 
 
 def main():
-    name = "tiny"
+    args = get_args()
+    name = args.model
+
     encoder = f"./{name}-encoder.onnx"
     decoder = f"./{name}-decoder.onnx"
     audio = whisper.load_audio("0.wav")
@@ -214,6 +233,8 @@ def main():
             print("oov", i)
 
     print(s.decode().strip())
+    print(results)
+    print(model.sot_sequence)
 
 
 if __name__ == "__main__":
