@@ -15,11 +15,31 @@
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/offline-whisper-decoder.h"
+#include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/transpose.h"
 
 namespace sherpa_onnx {
+
+static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
+                                        const SymbolTable &sym_table) {
+  OfflineRecognitionResult r;
+  r.tokens.reserve(src.tokens.size());
+
+  for (auto i : src.tokens) {
+    if (!sym_table.contains(i)) {
+      continue;
+    }
+
+    const auto &s = sym_table[i];
+    r.text += s;
+    r.tokens.push_back(s);
+  }
+
+  return r;
+}
 
 class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
  public:
@@ -27,7 +47,18 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
       : config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineWhisperModel>(config.model_config)) {
+    // tokens.txt from whisper is base64 encoded, so we need to decode it
     symbol_table_.ApplyBase64Decode();
+
+    if (config.decoding_method == "greedy_search") {
+      decoder_ =
+          std::make_unique<OfflineWhisperGreedySearchDecoder>(model_.get());
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Only greedy_search is supported at present for whisper. Given %s",
+          config.decoding_method.c_str());
+      exit(-1);
+    }
   }
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
@@ -70,82 +101,11 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     mel = Transpose12(model_->Allocator(), &mel);
 
     auto cross_kv = model_->ForwardEncoder(std::move(mel));
-    auto self_kv_cache = model_->GetInitialSelfKVCache();
+    auto results =
+        decoder_->Decode(std::move(cross_kv.first), std::move(cross_kv.second));
 
-    const std::vector<int32_t> &initial_tokens = model_->GetInitialTokens();
-
-    std::array<int64_t, 2> token_shape{
-        1, static_cast<int64_t>(initial_tokens.size())};
-
-    Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
-        model_->Allocator(), token_shape.data(), token_shape.size());
-
-    int64_t *p_tokens = tokens.GetTensorMutableData<int64_t>();
-
-    std::copy(initial_tokens.begin(), initial_tokens.end(), p_tokens);
-
-    std::array<int64_t, 1> offset_shape{1};
-    Ort::Value offset = Ort::Value::CreateTensor<int64_t>(
-        model_->Allocator(), offset_shape.data(), offset_shape.size());
-    *(offset.GetTensorMutableData<int64_t>()) = 0;
-
-    auto decoder_out = model_->ForwardDecoder(
-        std::move(tokens), std::move(self_kv_cache.first),
-        std::move(self_kv_cache.second), std::move(cross_kv.first),
-        std::move(cross_kv.second), std::move(offset));
-
-    auto &logits = std::get<0>(decoder_out);
-    const float *p_logits = logits.GetTensorData<float>();
-
-    auto logits_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
-    int32_t vocab_size = logits_shape[2];
-
-    int32_t max_token_id = static_cast<int32_t>(std::distance(
-        p_logits, std::max_element(p_logits, p_logits + vocab_size)));
-
-    std::vector<int32_t> results;
-    for (int32_t i = 0; i < 400; ++i) {
-      if (max_token_id == model_->EOT()) {
-        break;
-      }
-      results.push_back(max_token_id);
-
-      std::array<int64_t, 2> token_shape{1, 1};
-      Ort::Value tokens = Ort::Value::CreateTensor<int64_t>(
-          model_->Allocator(), token_shape.data(), token_shape.size());
-      int64_t *p_tokens = tokens.GetTensorMutableData<int64_t>();
-      p_tokens[0] = max_token_id;
-
-      int64_t *p_offset =
-          std::get<5>(decoder_out).GetTensorMutableData<int64_t>();
-
-      if (i == 0) {
-        *p_offset = initial_tokens.size();
-      } else {
-        *p_offset += 1;
-      }
-
-      decoder_out = model_->ForwardDecoder(std::move(tokens),
-                                           std::move(std::get<1>(decoder_out)),
-                                           std::move(std::get<2>(decoder_out)),
-                                           std::move(std::get<3>(decoder_out)),
-                                           std::move(std::get<4>(decoder_out)),
-                                           std::move(std::get<5>(decoder_out)));
-
-      auto &logits = std::get<0>(decoder_out);
-      const float *p_logits = logits.GetTensorData<float>();
-
-      max_token_id = static_cast<int64_t>(std::distance(
-          p_logits, std::max_element(p_logits, p_logits + vocab_size)));
-    }
-
-    std::string sr;
-    for (auto i : results) {
-      if (symbol_table_.contains(i)) {
-        sr += symbol_table_[i];
-      }
-    }
-    SHERPA_ONNX_LOGE("%s\n", sr.c_str());
+    auto r = Convert(results[0], symbol_table_);
+    s->SetResult(r);
   }
 
  private:
@@ -184,6 +144,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OfflineWhisperModel> model_;
+  std::unique_ptr<OfflineWhisperDecoder> decoder_;
 };
 
 }  // namespace sherpa_onnx

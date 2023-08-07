@@ -86,9 +86,11 @@ class OfflineWhisperModel::Impl {
 
   OrtAllocator *Allocator() const { return allocator_; }
 
-  const std::vector<int32_t> &GetInitialTokens() const { return sot_sequence_; }
+  const std::vector<int64_t> &GetInitialTokens() const { return sot_sequence_; }
 
   int32_t EOT() const { return eot_; }
+
+  int32_t TextCtx() const { return n_text_ctx_; }
 
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
@@ -165,7 +167,7 @@ class OfflineWhisperModel::Impl {
   int32_t translate_;
   int32_t no_timestamps_;
   int32_t no_speech_;
-  std::vector<int32_t> sot_sequence_;
+  std::vector<int64_t> sot_sequence_;
 };
 
 OfflineWhisperModel::OfflineWhisperModel(const OfflineModelConfig &config)
@@ -200,10 +202,12 @@ OrtAllocator *OfflineWhisperModel::Allocator() const {
   return impl_->Allocator();
 }
 
-const std::vector<int32_t> &OfflineWhisperModel::GetInitialTokens() const {
+const std::vector<int64_t> &OfflineWhisperModel::GetInitialTokens() const {
   return impl_->GetInitialTokens();
 }
 
 int32_t OfflineWhisperModel::EOT() const { return impl_->EOT(); }
+
+int32_t OfflineWhisperModel::TextCtx() const { return impl_->TextCtx(); }
 
 }  // namespace sherpa_onnx

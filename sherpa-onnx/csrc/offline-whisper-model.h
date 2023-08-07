@@ -67,12 +67,13 @@ class OfflineWhisperModel {
    *                         (n_text_layer, N, n_audio_ctx, n_text_state).
    */
   std::pair<Ort::Value, Ort::Value> GetInitialSelfKVCache();
-  const std::vector<int32_t> &GetInitialTokens() const;
+  const std::vector<int64_t> &GetInitialTokens() const;
 
   /** Return an allocator for allocating memory
    */
   OrtAllocator *Allocator() const;
   int32_t EOT() const;
+  int32_t TextCtx() const;
 
  private:
   class Impl;
