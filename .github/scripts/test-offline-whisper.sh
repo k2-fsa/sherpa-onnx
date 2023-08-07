@@ -41,8 +41,8 @@ for name in ${names[@]}; do
 
   time $EXE \
     --tokens=$repo/${name}-tokens.txt \
-    --whisper-encoder=$repo/${name}-encoder.onnx
-    --whisper-decoder=$repo/${name}-decoder.onnx
+    --whisper-encoder=$repo/${name}-encoder.onnx \
+    --whisper-decoder=$repo/${name}-decoder.onnx \
     --num-threads=2 \
     $repo/test_wavs/0.wav \
     $repo/test_wavs/1.wav \
