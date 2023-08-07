@@ -8,12 +8,6 @@
 
 namespace sherpa_onnx {
 
-constexpr static const char *kBase64Chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz"
-    "0123456789"
-    "+/";
-
 static int32_t Ord(char c) {
   if (c >= 'A' && c <= 'Z') {
     return c - 'A';

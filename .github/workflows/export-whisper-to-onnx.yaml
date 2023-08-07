@@ -1,9 +1,6 @@
 name: export-whisper-to-onnx
 
 on:
-  push:
-    branches:
-      - whisper
   workflow_dispatch:
 
 concurrency:

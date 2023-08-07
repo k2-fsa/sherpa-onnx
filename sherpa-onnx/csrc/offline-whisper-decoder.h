@@ -20,7 +20,7 @@ class OfflineWhisperDecoder {
  public:
   virtual ~OfflineWhisperDecoder() = default;
 
-  /** Run beam search given the output from the whisper model.
+  /** Run beam search given the output from the whisper encoder model.
    *
    * @param n_layer_cross_k       A 4-D tensor of shape
    *                              (n_text_layer, N, n_audio_ctx, n_text_state).

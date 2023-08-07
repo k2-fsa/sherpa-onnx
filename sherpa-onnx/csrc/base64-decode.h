@@ -4,7 +4,9 @@
 
 #ifndef SHERPA_ONNX_CSRC_BASE64_DECODE_H_
 #define SHERPA_ONNX_CSRC_BASE64_DECODE_H_
+
 #include <string>
+
 namespace sherpa_onnx {
 
 /** @param s A base64 encoded string.

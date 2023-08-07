@@ -36,7 +36,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
       std::move(self_kv_cache.second), std::move(cross_k), std::move(cross_v),
       std::move(offset));
 
-  auto &logits = std::get<0>(decoder_out);
+  const auto &logits = std::get<0>(decoder_out);
   const float *p_logits = logits.GetTensorData<float>();
 
   auto logits_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
@@ -77,7 +77,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
                                          std::move(std::get<4>(decoder_out)),
                                          std::move(std::get<5>(decoder_out)));
 
-    auto &logits = std::get<0>(decoder_out);
+    const auto &logits = std::get<0>(decoder_out);
     const float *p_logits = logits.GetTensorData<float>();
 
     max_token_id = static_cast<int64_t>(std::distance(

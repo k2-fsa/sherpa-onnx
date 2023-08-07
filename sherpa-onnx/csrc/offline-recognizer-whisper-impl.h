@@ -82,9 +82,9 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     std::vector<float> f = s->GetFrames();
     int32_t num_frames = f.size() / feat_dim;
 
-    if (num_frames > 3000) {
-      SHERPA_ONNX_LOG(FATAL)
-          << "Only waves less than 30 seconds are supported.";
+    if (num_frames > max_num_frames) {
+      SHERPA_ONNX_LOGE("Only waves less than 30 seconds are supported.");
+      exit(-1);
     }
 
     NormalizeFeatures(f.data(), num_frames, feat_dim);

@@ -1,4 +1,5 @@
 # Copyright (c)  2023 by manyeyes
+# Copyright (c)  2023  Xiaomi Corporation
 from pathlib import Path
 from typing import List, Optional
 
@@ -7,6 +8,7 @@ from _sherpa_onnx import (
     OfflineModelConfig,
     OfflineNemoEncDecCtcModelConfig,
     OfflineParaformerModelConfig,
+    OfflineWhisperModelConfig,
 )
 from _sherpa_onnx import OfflineRecognizer as _Recognizer
 from _sherpa_onnx import (
@@ -69,7 +71,7 @@ class OfflineRecognizer(object):
           feature_dim:
             Dimension of the feature used to train the model.
           decoding_method:
-            Support only greedy_search for now.
+            Valid values: greedy_search, modified_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -137,7 +139,7 @@ class OfflineRecognizer(object):
           feature_dim:
             Dimension of the feature used to train the model.
           decoding_method:
-            Valid values are greedy_search, modified_beam_search.
+            Valid values are greedy_search.
           debug:
             True to show debug messages.
           provider:
@@ -185,14 +187,14 @@ class OfflineRecognizer(object):
         English, etc.
 
         Args:
+          model:
+            Path to ``model.onnx``.
           tokens:
             Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
             columns::
 
                 symbol integer_id
 
-          model:
-            Path to ``model.onnx``.
           num_threads:
             Number of threads for neural network computation.
           sample_rate:
@@ -200,7 +202,7 @@ class OfflineRecognizer(object):
           feature_dim:
             Dimension of the feature used to train the model.
           decoding_method:
-            Valid values are greedy_search, modified_beam_search.
+            Valid values are greedy_search.
           debug:
             True to show debug messages.
           provider:
@@ -219,6 +221,68 @@ class OfflineRecognizer(object):
         feat_config = OfflineFeatureExtractorConfig(
             sampling_rate=sample_rate,
             feature_dim=feature_dim,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            decoding_method=decoding_method,
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        return self
+
+    @classmethod
+    def from_whisper(
+        cls,
+        encoder: str,
+        decoder: str,
+        tokens: str,
+        num_threads: int,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+    ):
+        """
+        Please refer to
+        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html>`_
+        to download pre-trained models for different kinds of whisper models,
+        e.g., tiny, tiny.en, base, base.en, etc.
+
+        Args:
+          encoder_model:
+            Path to the encoder model, e.g., tiny-encoder.onnx,
+            tiny-encoder.int8.onnx, tiny-encoder.ort, etc.
+          decoder_model:
+            Path to the encoder model, e.g., tiny-encoder.onnx,
+            tiny-encoder.int8.onnx, tiny-encoder.ort, etc.
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          num_threads:
+            Number of threads for neural network computation.
+          decoding_method:
+            Valid values: greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            whisper=OfflineWhisperModelConfig(encoder=encoder, decoder=decoder),
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+            model_type="whisper",
+        )
+
+        feat_config = OfflineFeatureExtractorConfig(
+            sampling_rate=16000,
+            feature_dim=80,
         )
 
         recognizer_config = OfflineRecognizerConfig(
