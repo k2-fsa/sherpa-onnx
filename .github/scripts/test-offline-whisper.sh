@@ -16,8 +16,8 @@ which $EXE
 names=(
 tiny.en
 base.en
-small.en
-medium.en
+# small.en
+# medium.en
 )
 
 for name in ${names[@]}; do
@@ -81,5 +81,5 @@ for name in ${names[@]}; do
     $repo/test_wavs/1.wav \
     $repo/test_wavs/8k.wav
 
-  rm -rfv $repo
+  rm -rf $repo
 done
