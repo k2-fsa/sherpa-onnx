@@ -41,7 +41,24 @@ jobs:
         run: |
           ls -lh ./wheelhouse/
 
-          ls -lh ./wheelhouse/*.whl
+      - name: Install patchelf
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y patchelf
+          patchelf --help
+
+      - name: Patch wheels
+        shell: bash
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir ./wheels
+          sudo ./scripts/wheel/patch_wheel.py --in-dir ./wheelhouse --out-dir ./wheels
+
+          ls -lh ./wheels/
+          rm -rf ./wheelhouse
+          mv ./wheels ./wheelhouse
 
       - uses: actions/upload-artifact@v2
         with:
