@@ -309,6 +309,9 @@ def main():
         )
     elif args.paraformer:
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
+        assert len(args.whisper_encoder) == 0, args.whisper_encoder
+        assert len(args.whisper_decoder) == 0, args.whisper_decoder
+
         assert_file_exists(args.paraformer)
 
         recognizer = sherpa_onnx.OfflineRecognizer.from_paraformer(
@@ -321,6 +324,11 @@ def main():
             debug=args.debug,
         )
     elif args.nemo_ctc:
+        assert len(args.whisper_encoder) == 0, args.whisper_encoder
+        assert len(args.whisper_decoder) == 0, args.whisper_decoder
+
+        assert_file_exists(args.nemo_ctc)
+
         recognizer = sherpa_onnx.OfflineRecognizer.from_nemo_ctc(
             model=args.nemo_ctc,
             tokens=args.tokens,
@@ -331,6 +339,9 @@ def main():
             debug=args.debug,
         )
     elif args.whisper_encoder:
+        assert_file_exists(args.whisper_encoder)
+        assert_file_exists(args.whisper_decoder)
+
         recognizer = sherpa_onnx.OfflineRecognizer.from_whisper(
             encoder=args.whisper_encoder,
             decoder=args.whisper_decoder,
