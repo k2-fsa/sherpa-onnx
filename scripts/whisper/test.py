@@ -178,7 +178,6 @@ def main():
     args = get_args()
     encoder = args.encoder
     decoder = args.decoder
-    test_wave = args.sound_file
 
     audio = whisper.load_audio(args.sound_file)
 
