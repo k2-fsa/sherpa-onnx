@@ -1,0 +1,38 @@
+name: linux
+
+on:
+  push:
+    branches:
+      - whisper
+  workflow_dispatch:
+
+concurrency:
+  group: release-whisper-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-whisper-models:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: release-whisper-onnx-model
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python3 -m pip install openai-whisper torch onnxruntime onnx
+
+      - name: export tiny.en
+        shell: bash
+        run: |
+          cd scripts/whisper
+          python3 ./export-onnx.py --model tiny.en
+          python -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
+
+          ls -lh
