@@ -1,2 +1,4 @@
 *.onnx
+*.config
+*.ort
 *-tokens.txt

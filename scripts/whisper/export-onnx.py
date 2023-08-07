@@ -16,6 +16,7 @@ from typing import Any, Dict, Optional
 
 import onnx
 import torch
+from onnxruntime.quantization import QuantType, quantize_dynamic
 from torch import Tensor, nn
 
 import whisper
@@ -410,6 +411,27 @@ def main():
             "n_layer_cross_k": {1: "n_audio"},
             "n_layer_cross_v": {1: "n_audio"},
         },
+    )
+
+    # Generate int8 quantization models
+    # See https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html#data-type-selection
+
+    print("Generate int8 quantization models")
+
+    encoder_filename_int8 = f"{name}-encoder.int8.onnx"
+    quantize_dynamic(
+        model_input=encoder_filename,
+        model_output=encoder_filename_int8,
+        op_types_to_quantize=["MatMul"],
+        weight_type=QuantType.QInt8,
+    )
+
+    decoder_filename_int8 = f"{name}-decoder.int8.onnx"
+    quantize_dynamic(
+        model_input=decoder_filename,
+        model_output=decoder_filename_int8,
+        op_types_to_quantize=["MatMul"],
+        weight_type=QuantType.QInt8,
     )
 
 
