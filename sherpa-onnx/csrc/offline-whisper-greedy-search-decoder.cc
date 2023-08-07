@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/offline-whisper-greedy-search-decoder.h"
 
+#include <algorithm>
+#include <utility>
+
 namespace sherpa_onnx {
 
 std::vector<OfflineWhisperDecoderResult>
