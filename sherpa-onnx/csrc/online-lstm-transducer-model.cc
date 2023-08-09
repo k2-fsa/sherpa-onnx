@@ -57,7 +57,7 @@ OnlineLstmTransducerModel::OnlineLstmTransducerModel(
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {
   {
-    auto buf = ReadFile(mgr, config.transdcer.encoder);
+    auto buf = ReadFile(mgr, config.transducer.encoder);
     InitEncoder(buf.data(), buf.size());
   }
 

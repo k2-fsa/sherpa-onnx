@@ -5,6 +5,11 @@
 #ifndef SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_IMPL_H_
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_IMPL_H_
 
+#include <algorithm>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-lm.h"
@@ -71,8 +76,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   explicit OnlineRecognizerTransducerImpl(AAssetManager *mgr,
                                           const OnlineRecognizerConfig &config)
       : config_(config),
-        model_(
-            OnlineTransducerModel::Create(mgr, config.model_config.transducer)),
+        model_(OnlineTransducerModel::Create(mgr, config.model_config)),
         sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
     if (config.decoding_method == "modified_beam_search") {

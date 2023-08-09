@@ -12,6 +12,7 @@
 #include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/display.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
+#include "sherpa-onnx/csrc/parse-options.h"
 
 bool stop = false;
 
@@ -21,19 +22,19 @@ static void Handler(int sig) {
 }
 
 int main(int32_t argc, char *argv[]) {
-  if (argc < 6 || argc > 8) {
-    const char *usage = R"usage(
+  signal(SIGINT, Handler);
+
+  const char *kUsageMessage = R"usage(
 Usage:
   ./bin/sherpa-onnx-alsa \
-    /path/to/tokens.txt \
-    /path/to/encoder.onnx \
-    /path/to/decoder.onnx \
-    /path/to/joiner.onnx \
+    --tokens=/path/to/tokens.txt \
+    --encoder=/path/to/encoder.onnx \
+    --decoder=/path/to/decoder.onnx \
+    --joiner=/path/to/joiner.onnx \
+    --provider=cpu \
+    --num-threads=2 \
+    --decoding-method=greedy_search \
     device_name \
-    [num_threads [decoding_method]]
-
-Default value for num_threads is 2.
-Valid values for decoding_method: greedy_search (default), modified_beam_search.
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
@@ -55,43 +56,23 @@ and if you want to select card 3 and the device 0 on that card, please use:
 
   hw:3,0
 
+or
+
+  plughw:3,0
+
 as the device_name.
 )usage";
-
-    fprintf(stderr, "%s\n", usage);
-    fprintf(stderr, "argc, %d\n", argc);
-
-    return 0;
-  }
-
-  signal(SIGINT, Handler);
-
+  sherpa_onnx::ParseOptions po(kUsageMessage);
   sherpa_onnx::OnlineRecognizerConfig config;
 
-  config.model_config.tokens = argv[1];
+  config.Register(&po);
 
-  config.model_config.debug = false;
-  config.model_config.encoder_filename = argv[2];
-  config.model_config.decoder_filename = argv[3];
-  config.model_config.joiner_filename = argv[4];
-
-  const char *device_name = argv[5];
-
-  config.model_config.num_threads = 2;
-  if (argc == 7 && atoi(argv[6]) > 0) {
-    config.model_config.num_threads = atoi(argv[6]);
+  po.Read(argc, argv);
+  if (po.NumArgs() != 1) {
+    fprintf(stderr, "Please provide only 1 argument: the device name\n");
+    po.PrintUsage();
+    exit(EXIT_FAILURE);
   }
-
-  if (argc == 8) {
-    config.decoding_method = argv[7];
-  }
-  config.max_active_paths = 4;
-
-  config.enable_endpoint = true;
-
-  config.endpoint_config.rule1.min_trailing_silence = 2.4;
-  config.endpoint_config.rule2.min_trailing_silence = 1.2;
-  config.endpoint_config.rule3.min_utterance_length = 300;
 
   fprintf(stderr, "%s\n", config.ToString().c_str());
 
@@ -103,8 +84,9 @@ as the device_name.
 
   int32_t expected_sample_rate = config.feat_config.sampling_rate;
 
-  sherpa_onnx::Alsa alsa(device_name);
-  fprintf(stderr, "Use recording device: %s\n", device_name);
+  std::string device_name = po.GetArg(1);
+  sherpa_onnx::Alsa alsa(device_name.c_str());
+  fprintf(stderr, "Use recording device: %s\n", device_name.c_str());
 
   if (alsa.GetExpectedSampleRate() != expected_sample_rate) {
     fprintf(stderr, "sample rate: %d != %d\n", alsa.GetExpectedSampleRate(),
