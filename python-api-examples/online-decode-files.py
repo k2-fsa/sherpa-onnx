@@ -80,6 +80,13 @@ def get_args():
     )
 
     parser.add_argument(
+        "--provider",
+        type=str,
+        default="cpu",
+        help="Valid values: cpu, cuda, coreml",
+    )
+
+    parser.add_argument(
         "--bpe-model",
         type=str,
         default="",
@@ -204,6 +211,7 @@ def main():
         decoder=args.decoder,
         joiner=args.joiner,
         num_threads=args.num_threads,
+        provider=args.provider,
         sample_rate=16000,
         feature_dim=80,
         decoding_method=args.decoding_method,
@@ -219,7 +227,6 @@ def main():
     if contexts:
         print(f"Contexts list: {contexts}")
         contexts_list = encode_contexts(args, contexts)
-
 
     streams = []
     total_duration = 0

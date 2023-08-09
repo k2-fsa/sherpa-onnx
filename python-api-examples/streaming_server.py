@@ -129,6 +129,13 @@ def add_model_args(parser: argparse.ArgumentParser):
         help="Feature dimension of the model",
     )
 
+    parser.add_argument(
+        "--provider",
+        type=str,
+        default="cpu",
+        help="Valid values: cpu, cuda, coreml",
+    )
+
 
 def add_decoding_args(parser: argparse.ArgumentParser):
     parser.add_argument(
@@ -301,6 +308,7 @@ def create_recognizer(args) -> sherpa_onnx.OnlineRecognizer:
         rule1_min_trailing_silence=args.rule1_min_trailing_silence,
         rule2_min_trailing_silence=args.rule2_min_trailing_silence,
         rule3_min_utterance_length=args.rule3_min_utterance_length,
+        provider=args.provider,
     )
 
     return recognizer

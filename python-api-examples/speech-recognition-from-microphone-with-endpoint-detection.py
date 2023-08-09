@@ -72,6 +72,13 @@ def get_args():
         help="Valid values are greedy_search and modified_beam_search",
     )
 
+    parser.add_argument(
+        "--provider",
+        type=str,
+        default="cpu",
+        help="Valid values: cpu, cuda, coreml",
+    )
+
     return parser.parse_args()
 
 
@@ -97,6 +104,7 @@ def create_recognizer():
         rule2_min_trailing_silence=1.2,
         rule3_min_utterance_length=300,  # it essentially disables this rule
         decoding_method=args.decoding_method,
+        provider=args.provider,
     )
     return recognizer
 

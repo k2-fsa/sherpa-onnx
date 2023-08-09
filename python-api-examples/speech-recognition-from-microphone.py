@@ -83,6 +83,13 @@ def get_args():
     )
 
     parser.add_argument(
+        "--provider",
+        type=str,
+        default="cpu",
+        help="Valid values: cpu, cuda, coreml",
+    )
+
+    parser.add_argument(
         "--bpe-model",
         type=str,
         default="",
@@ -148,9 +155,11 @@ def create_recognizer():
         feature_dim=80,
         decoding_method=args.decoding_method,
         max_active_paths=args.max_active_paths,
+        provider=args.provider,
         context_score=args.context_score,
     )
     return recognizer
+
 
 def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
     sp = None
@@ -171,6 +180,7 @@ def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
         sp=sp,
         tokens_table=tokens,
     )
+
 
 def main():
     args = get_args()
@@ -204,6 +214,7 @@ def main():
             if last_result != result:
                 last_result = result
                 print("\r{}".format(result), end="", flush=True)
+
 
 if __name__ == "__main__":
     devices = sd.query_devices()
