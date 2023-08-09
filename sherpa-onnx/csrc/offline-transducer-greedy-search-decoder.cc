@@ -30,8 +30,9 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
 
   std::vector<OfflineTransducerDecoderResult> ans(batch_size);
   for (auto &r : ans) {
+    r.tokens.resize(context_size, -1);
     // 0 is the ID of the blank token
-    r.tokens.resize(context_size, 0);
+    r.tokens.back() = 0;
   }
 
   auto decoder_input = model_->BuildDecoderInput(ans, ans.size());

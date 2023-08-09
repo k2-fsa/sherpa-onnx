@@ -32,7 +32,8 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
   int32_t vocab_size = model_->VocabSize();
   int32_t context_size = model_->ContextSize();
 
-  std::vector<int64_t> blanks(context_size, 0);
+  std::vector<int64_t> blanks(context_size, -1);
+  blanks.back() = 0;
 
   std::deque<Hypotheses> finalized;
   std::vector<Hypotheses> cur;
