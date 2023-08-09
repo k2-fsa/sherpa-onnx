@@ -42,7 +42,9 @@ OnlineTransducerModifiedBeamSearchDecoder::GetEmptyResult() const {
   int32_t context_size = model_->ContextSize();
   int32_t blank_id = 0;  // always 0
   OnlineTransducerDecoderResult r;
-  std::vector<int64_t> blanks(context_size, blank_id);
+  std::vector<int64_t> blanks(context_size, -1);
+  blanks.back() = blank_id;
+
   Hypotheses blank_hyp({{blanks, 0}});
   r.hyps = std::move(blank_hyp);
   r.tokens = std::move(blanks);

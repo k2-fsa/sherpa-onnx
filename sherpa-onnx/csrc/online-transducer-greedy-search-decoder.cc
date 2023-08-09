@@ -55,7 +55,8 @@ OnlineTransducerGreedySearchDecoder::GetEmptyResult() const {
   int32_t context_size = model_->ContextSize();
   int32_t blank_id = 0;  // always 0
   OnlineTransducerDecoderResult r;
-  r.tokens.resize(context_size, blank_id);
+  r.tokens.resize(context_size, -1);
+  r.tokens.back() = blank_id;
 
   return r;
 }
