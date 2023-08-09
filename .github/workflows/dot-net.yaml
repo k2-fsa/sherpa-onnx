@@ -109,7 +109,6 @@ jobs:
         run: |
           cd windows
           unzip ./*.whl
-          cp -v ./*.dll sherpa_onnx/lib/
           tree .
 
       - name: Setup .NET Core 3.1
