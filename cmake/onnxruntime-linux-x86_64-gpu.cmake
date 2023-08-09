@@ -82,6 +82,19 @@ add_library(onnxruntime_providers_cuda SHARED IMPORTED)
 set_target_properties(onnxruntime_providers_cuda PROPERTIES
   IMPORTED_LOCATION ${location_onnxruntime_cuda_lib}
 )
+message(STATUS "location_onnxruntime_cuda_lib: ${location_onnxruntime_cuda_lib}")
+
+# for libonnxruntime_providers_shared.so
+find_library(location_onnxruntime_providers_shared_lib onnxruntime_providers_shared
+  PATHS
+  "${onnxruntime_SOURCE_DIR}/lib"
+  NO_CMAKE_SYSTEM_PATH
+)
+add_library(onnxruntime_providers_shared SHARED IMPORTED)
+set_target_properties(onnxruntime_providers_shared PROPERTIES
+  IMPORTED_LOCATION ${location_onnxruntime_providers_shared_lib}
+)
+message(STATUS "location_onnxruntime_providers_shared_lib: ${location_onnxruntime_providers_shared_lib}")
 
 file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime*")
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
