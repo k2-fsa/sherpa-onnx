@@ -7,11 +7,11 @@ function(download_cargs)
   # If you don't have access to the Internet,
   # please pre-download asio
   set(possible_file_locations
-    $ENV{HOME}/Downloads/cargs-v1-0-3.tar.gz
-    ${PROJECT_SOURCE_DIR}/cargs-v1-0-3.tar.gz
-    ${PROJECT_BINARY_DIR}/cargs-v1-0-3.tar.gz
-    /tmp/cargs-v1-0-3.tar.gz
-    /star-fj/fangjun/download/github/cargs-v1-0-3.tar.gz
+    $ENV{HOME}/Downloads/cargs-1.0.3.tar.gz
+    ${PROJECT_SOURCE_DIR}/cargs-1.0.3.tar.gz
+    ${PROJECT_BINARY_DIR}/cargs-1.0.3.tar.gz
+    /tmp/cargs-1.0.3.tar.gz
+    /star-fj/fangjun/download/github/cargs-1.0.3.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
