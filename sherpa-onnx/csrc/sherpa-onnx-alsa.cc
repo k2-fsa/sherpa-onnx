@@ -142,6 +142,7 @@ as the device_name.
                      [](auto c) { return std::tolower(c); });
 
       display.Print(segment_index, text);
+      fflush(stderr);
     }
 
     if (is_endpoint) {

@@ -139,12 +139,14 @@ for a list of pre-trained models to download.
       std::transform(text.begin(), text.end(), text.begin(),
                      [](auto c) { return std::tolower(c); });
 
-      display.Print(segment_index, text);
+      fprintf(stderr, "\r%d: %s", segment_index, text.c_str());
+      fflush(stderr);
     }
 
     if (is_endpoint) {
       if (!text.empty()) {
         ++segment_index;
+        fprintf(stderr, "\n");
       }
 
       recognizer.Reset(s.get());
