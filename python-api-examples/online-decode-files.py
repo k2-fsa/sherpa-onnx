@@ -205,7 +205,7 @@ def main():
     assert_file_exists(args.joiner)
     assert_file_exists(args.tokens)
 
-    recognizer = sherpa_onnx.OnlineRecognizer(
+    recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
         tokens=args.tokens,
         encoder=args.encoder,
         decoder=args.decoder,

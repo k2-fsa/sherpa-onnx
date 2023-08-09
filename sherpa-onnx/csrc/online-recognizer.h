@@ -17,6 +17,7 @@
 #include "sherpa-onnx/csrc/endpoint.h"
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/online-lm-config.h"
+#include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
@@ -67,7 +68,7 @@ struct OnlineRecognizerResult {
 
 struct OnlineRecognizerConfig {
   FeatureExtractorConfig feat_config;
-  OnlineTransducerModelConfig model_config;
+  OnlineModelConfig model_config;
   OnlineLMConfig lm_config;
   EndpointConfig endpoint_config;
   bool enable_endpoint = true;
@@ -83,7 +84,7 @@ struct OnlineRecognizerConfig {
   OnlineRecognizerConfig() = default;
 
   OnlineRecognizerConfig(const FeatureExtractorConfig &feat_config,
-                         const OnlineTransducerModelConfig &model_config,
+                         const OnlineModelConfig &model_config,
                          const OnlineLMConfig &lm_config,
                          const EndpointConfig &endpoint_config,
                          bool enable_endpoint,
@@ -102,6 +103,8 @@ struct OnlineRecognizerConfig {
 
   std::string ToString() const;
 };
+
+class OnlineRecognizerImpl;
 
 class OnlineRecognizer {
  public:
@@ -151,8 +154,7 @@ class OnlineRecognizer {
   void Reset(OnlineStream *s) const;
 
  private:
-  class Impl;
-  std::unique_ptr<Impl> impl_;
+  std::unique_ptr<OnlineRecognizerImpl> impl_;
 };
 
 }  // namespace sherpa_onnx

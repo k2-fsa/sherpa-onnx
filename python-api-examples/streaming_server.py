@@ -294,7 +294,7 @@ def get_args():
 
 
 def create_recognizer(args) -> sherpa_onnx.OnlineRecognizer:
-    recognizer = sherpa_onnx.OnlineRecognizer(
+    recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
         tokens=args.tokens,
         encoder=args.encoder_model,
         decoder=args.decoder_model,

@@ -159,47 +159,47 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   //---------- model config ----------
   fid = env->GetFieldID(cls, "modelConfig",
                         "Lcom/k2fsa/sherpa/onnx/OnlineTransducerModelConfig;");
-  jobject model_config = env->GetObjectField(config, fid);
-  jclass model_config_cls = env->GetObjectClass(model_config);
+  jobject transducer_config = env->GetObjectField(config, fid);
+  jclass model_config_cls = env->GetObjectClass(transducer_config);
 
   fid = env->GetFieldID(model_config_cls, "encoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
+  s = (jstring)env->GetObjectField(transducer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.encoder_filename = p;
+  ans.model_config.transducer.encoder = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "decoder", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
+  s = (jstring)env->GetObjectField(transducer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.decoder_filename = p;
+  ans.model_config.transducer.decoder = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "joiner", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
+  s = (jstring)env->GetObjectField(transducer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.joiner_filename = p;
+  ans.model_config.transducer.joiner = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "tokens", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
+  s = (jstring)env->GetObjectField(transducer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.tokens = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "numThreads", "I");
-  ans.model_config.num_threads = env->GetIntField(model_config, fid);
+  ans.model_config.num_threads = env->GetIntField(transducer_config, fid);
 
   fid = env->GetFieldID(model_config_cls, "debug", "Z");
-  ans.model_config.debug = env->GetBooleanField(model_config, fid);
+  ans.model_config.debug = env->GetBooleanField(transducer_config, fid);
 
   fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
+  s = (jstring)env->GetObjectField(transducer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.provider = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "modelType", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(model_config, fid);
+  s = (jstring)env->GetObjectField(transducer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.model_type = p;
   env->ReleaseStringUTFChars(s, p);
@@ -328,7 +328,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_getTokens(
   jobjectArray result = env->NewObjectArray(size, stringClass, NULL);
   for (int i = 0; i < size; i++) {
     // Convert the C++ string to a C string
-    const char* cstr = tokens[i].c_str();
+    const char *cstr = tokens[i].c_str();
 
     // Convert the C string to a jstring
     jstring jstr = env->NewStringUTF(cstr);

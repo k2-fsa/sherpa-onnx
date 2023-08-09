@@ -11,41 +11,15 @@
 namespace sherpa_onnx {
 
 struct OnlineTransducerModelConfig {
-  std::string encoder_filename;
-  std::string decoder_filename;
-  std::string joiner_filename;
-  std::string tokens;
-  int32_t num_threads = 2;
-  bool debug = false;
-  std::string provider = "cpu";
-
-  // With the help of this field, we only need to load the model once
-  // instead of twice; and therefore it reduces initialization time.
-  //
-  // Valid values:
-  //  - conformer
-  //  - lstm
-  //  - zipformer
-  //  - zipformer2
-  //
-  // All other values are invalid and lead to loading the model twice.
-  std::string model_type;
+  std::string encoder;
+  std::string decoder;
+  std::string joiner;
 
   OnlineTransducerModelConfig() = default;
-  OnlineTransducerModelConfig(const std::string &encoder_filename,
-                              const std::string &decoder_filename,
-                              const std::string &joiner_filename,
-                              const std::string &tokens, int32_t num_threads,
-                              bool debug, const std::string &provider,
-                              const std::string &model_type)
-      : encoder_filename(encoder_filename),
-        decoder_filename(decoder_filename),
-        joiner_filename(joiner_filename),
-        tokens(tokens),
-        num_threads(num_threads),
-        debug(debug),
-        provider(provider),
-        model_type(model_type) {}
+  OnlineTransducerModelConfig(const std::string &encoder,
+                              const std::string &decoder,
+                              const std::string &joiner)
+      : encoder(encoder), decoder(decoder), joiner(joiner) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

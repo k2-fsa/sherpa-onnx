@@ -14,19 +14,13 @@ import _sherpa_onnx
 class TestOnlineTransducerModelConfig(unittest.TestCase):
     def test_constructor(self):
         config = _sherpa_onnx.OnlineTransducerModelConfig(
-            encoder_filename="encoder.onnx",
-            decoder_filename="decoder.onnx",
-            joiner_filename="joiner.onnx",
-            tokens="tokens.txt",
-            num_threads=8,
-            debug=True,
+            encoder="encoder.onnx",
+            decoder="decoder.onnx",
+            joiner="joiner.onnx",
         )
-        assert config.encoder_filename == "encoder.onnx", config.encoder_filename
-        assert config.decoder_filename == "decoder.onnx", config.decoder_filename
-        assert config.joiner_filename == "joiner.onnx", config.joiner_filename
-        assert config.tokens == "tokens.txt", config.tokens
-        assert config.num_threads == 8, config.num_threads
-        assert config.debug is True, config.debug
+        assert config.encoder == "encoder.onnx", config.encoder
+        assert config.decoder == "decoder.onnx", config.decoder
+        assert config.joiner == "joiner.onnx", config.joiner
         print(config)
 
 

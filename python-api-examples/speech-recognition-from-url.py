@@ -94,7 +94,7 @@ def create_recognizer(args):
     # Please replace the model files if needed.
     # See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
     # for download links.
-    recognizer = sherpa_onnx.OnlineRecognizer(
+    recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
         tokens=args.tokens,
         encoder=args.encoder,
         decoder=args.decoder,

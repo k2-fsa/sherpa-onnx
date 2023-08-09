@@ -65,7 +65,7 @@ class TestOnlineRecognizer(unittest.TestCase):
                 return
 
             for decoding_method in ["greedy_search", "modified_beam_search"]:
-                recognizer = sherpa_onnx.OnlineRecognizer(
+                recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
                     encoder=encoder,
                     decoder=decoder,
                     joiner=joiner,
@@ -109,7 +109,7 @@ class TestOnlineRecognizer(unittest.TestCase):
                 return
 
             for decoding_method in ["greedy_search", "modified_beam_search"]:
-                recognizer = sherpa_onnx.OnlineRecognizer(
+                recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
                     encoder=encoder,
                     decoder=decoder,
                     joiner=joiner,

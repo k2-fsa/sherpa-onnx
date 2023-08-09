@@ -15,19 +15,18 @@
 #endif
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
-#include "sherpa-onnx/csrc/online-transducer-model-config.h"
+#include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
 
 namespace sherpa_onnx {
 
 class OnlineZipformerTransducerModel : public OnlineTransducerModel {
  public:
-  explicit OnlineZipformerTransducerModel(
-      const OnlineTransducerModelConfig &config);
+  explicit OnlineZipformerTransducerModel(const OnlineModelConfig &config);
 
 #if __ANDROID_API__ >= 9
   OnlineZipformerTransducerModel(AAssetManager *mgr,
-                                 const OnlineTransducerModelConfig &config);
+                                 const OnlineModelConfig &config);
 #endif
 
   std::vector<Ort::Value> StackStates(
@@ -87,7 +86,7 @@ class OnlineZipformerTransducerModel : public OnlineTransducerModel {
   std::vector<std::string> joiner_output_names_;
   std::vector<const char *> joiner_output_names_ptr_;
 
-  OnlineTransducerModelConfig config_;
+  OnlineModelConfig config_;
 
   std::vector<int32_t> encoder_dims_;
   std::vector<int32_t> attention_dims_;
