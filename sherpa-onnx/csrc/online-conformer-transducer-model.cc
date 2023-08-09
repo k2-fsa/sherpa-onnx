@@ -30,46 +30,46 @@
 namespace sherpa_onnx {
 
 OnlineConformerTransducerModel::OnlineConformerTransducerModel(
-    const OnlineTransducerModelConfig &config)
+    const OnlineModelConfig &config)
     : env_(ORT_LOGGING_LEVEL_WARNING),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {
   {
-    auto buf = ReadFile(config.encoder_filename);
+    auto buf = ReadFile(config.transducer.encoder);
     InitEncoder(buf.data(), buf.size());
   }
 
   {
-    auto buf = ReadFile(config.decoder_filename);
+    auto buf = ReadFile(config.transducer.decoder);
     InitDecoder(buf.data(), buf.size());
   }
 
   {
-    auto buf = ReadFile(config.joiner_filename);
+    auto buf = ReadFile(config.transducer.joiner);
     InitJoiner(buf.data(), buf.size());
   }
 }
 
 #if __ANDROID_API__ >= 9
 OnlineConformerTransducerModel::OnlineConformerTransducerModel(
-    AAssetManager *mgr, const OnlineTransducerModelConfig &config)
+    AAssetManager *mgr, const OnlineModelConfig &config)
     : env_(ORT_LOGGING_LEVEL_WARNING),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {
   {
-    auto buf = ReadFile(mgr, config.encoder_filename);
+    auto buf = ReadFile(mgr, config.transducer.encoder);
     InitEncoder(buf.data(), buf.size());
   }
 
   {
-    auto buf = ReadFile(mgr, config.decoder_filename);
+    auto buf = ReadFile(mgr, config.transducer.decoder);
     InitDecoder(buf.data(), buf.size());
   }
 
   {
-    auto buf = ReadFile(mgr, config.joiner_filename);
+    auto buf = ReadFile(mgr, config.transducer.joiner);
     InitJoiner(buf.data(), buf.size());
   }
 }

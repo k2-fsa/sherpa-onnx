@@ -60,8 +60,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
   return sess_opts;
 }
 
-Ort::SessionOptions GetSessionOptions(
-    const OnlineTransducerModelConfig &config) {
+Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config) {
   return GetSessionOptionsImpl(config.num_threads, config.provider);
 }
 

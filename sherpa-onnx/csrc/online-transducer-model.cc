@@ -76,7 +76,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 }
 
 std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
-    const OnlineTransducerModelConfig &config) {
+    const OnlineModelConfig &config) {
   if (!config.model_type.empty()) {
     const auto &model_type = config.model_type;
     if (model_type == "conformer") {
@@ -96,7 +96,7 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
   ModelType model_type = ModelType::kUnkown;
 
   {
-    auto buffer = ReadFile(config.encoder_filename);
+    auto buffer = ReadFile(config.transducer.encoder);
 
     model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
   }
@@ -155,7 +155,7 @@ Ort::Value OnlineTransducerModel::BuildDecoderInput(
 
 #if __ANDROID_API__ >= 9
 std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
-    AAssetManager *mgr, const OnlineTransducerModelConfig &config) {
+    AAssetManager *mgr, const OnlineModelConfig &config) {
   if (!config.model_type.empty()) {
     const auto &model_type = config.model_type;
     if (model_type == "conformer") {
@@ -173,7 +173,7 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
     }
   }
 
-  auto buffer = ReadFile(mgr, config.encoder_filename);
+  auto buffer = ReadFile(mgr, config.transducer.encoder);
   auto model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
 
   switch (model_type) {
