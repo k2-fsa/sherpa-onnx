@@ -82,9 +82,20 @@ def process_windows(s):
         "sherpa-onnx-c-api.dll",
         "sherpa-onnx-core.dll",
     ]
-    prefix = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/lib/"
-    libs = [prefix + lib for lib in libs]
-    libs = "\n      ;".join(libs)
+    prefix1 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/lib/"
+    prefix2 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/"
+    prefix3 = f"{SHERPA_ONNX_DIR}/windows/"
+
+    lib_list = []
+    for lib in libs:
+        for prefix in [prefix1, prefix2, prefix3]:
+            f = Path(prefix) / lib
+            if f.is_file():
+                lib_list.append(str(f))
+                break
+
+    print("lib_list", lib_list)
+    libs = "\n      ;".join(lib_list)
 
     d = get_dict()
     d["dotnet_rid"] = "win-x64"
