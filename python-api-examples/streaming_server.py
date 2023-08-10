@@ -13,11 +13,37 @@ Usage:
 
 Example:
 
+(1) Without a certificate
+
 python3 ./python-api-examples/streaming_server.py \
   --encoder-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx \
   --decoder-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx \
   --joiner-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx \
   --tokens ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt
+
+(2) With a certificate
+
+(a) Generate a certificate first:
+
+    cd python-api-examples/web
+    ./generate-certificate.py
+    cd ../..
+
+(b) Start the server
+
+python3 ./python-api-examples/streaming_server.py \
+  --encoder-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx \
+  --decoder-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx \
+  --joiner-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx \
+  --tokens ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt \
+  --certificate ./python-api-examples/web/cert.pem
+
+Please refer to
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/index.html
+to download pre-trained models.
+
+The model in the above help messages is from
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/zipformer-transducer-models.html#csukuangfj-sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-bilingual-chinese-english
 """
 
 import argparse
@@ -269,10 +295,8 @@ def get_args():
 
     parser.add_argument(
         "--num-threads",
-        type=int,
-        default=1,
-        help="Sets the number of threads used for interop parallelism "
-        "(e.g. in JIT interpreter) on CPU.",
+        type=str,
+        help="Number of threads to run the neural network model",
     )
 
     parser.add_argument(
@@ -303,9 +327,9 @@ def create_recognizer(args) -> sherpa_onnx.OnlineRecognizer:
         encoder=args.encoder_model,
         decoder=args.decoder_model,
         joiner=args.joiner_model,
-        num_threads=1,
-        sample_rate=16000,
-        feature_dim=80,
+        num_threads=args.num_threads,
+        sample_rate=args.sample_rate,
+        feature_dim=args.feat_dim,
         decoding_method=args.decoding_method,
         max_active_paths=args.num_active_paths,
         enable_endpoint_detection=args.use_endpoint != 0,
@@ -377,6 +401,7 @@ class StreamingServer(object):
         )
 
         self.stream_queue = asyncio.Queue()
+
         self.max_wait_ms = max_wait_ms
         self.max_batch_size = max_batch_size
         self.max_message_size = max_message_size
@@ -386,11 +411,10 @@ class StreamingServer(object):
         self.current_active_connections = 0
 
         self.sample_rate = int(recognizer.config.feat_config.sampling_rate)
-        self.decoding_method = recognizer.config.decoding_method
 
     async def stream_consumer_task(self):
         """This function extracts streams from the queue, batches them up, sends
-        them to the RNN-T model for computation and decoding.
+        them to the neural network model for computation and decoding.
         """
         while True:
             if self.stream_queue.empty():
