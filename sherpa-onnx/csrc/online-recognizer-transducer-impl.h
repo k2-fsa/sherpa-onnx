@@ -228,7 +228,15 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     // we keep the decoder_out
     decoder_->UpdateDecoderOut(&s->GetResult());
     Ort::Value decoder_out = std::move(s->GetResult().decoder_out);
-    s->SetResult(decoder_->GetEmptyResult());
+
+    auto r = decoder_->GetEmptyResult();
+    if (config_.decoding_method == "modified_beam_search" &&
+        nullptr != s->GetContextGraph()) {
+      for (auto it = r.hyps.begin(); it != r.hyps.end(); ++it) {
+        it->second.context_state = s->GetContextGraph()->Root();
+      }
+    }
+    s->SetResult(r);
     s->GetResult().decoder_out = std::move(decoder_out);
 
     // Note: We only update counters. The underlying audio samples
