@@ -98,7 +98,6 @@ def process_windows(s):
             if f.is_file():
                 lib_list.append(str(f))
                 break
-        print(lib, " not found")
 
     print("lib_list", lib_list)
     libs = "\n      ;".join(lib_list)
