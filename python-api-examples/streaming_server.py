@@ -35,6 +35,7 @@ from typing import List, Optional, Tuple
 import numpy as np
 import sherpa_onnx
 import websockets
+
 from http_server import HttpServer
 
 
@@ -270,7 +271,8 @@ def get_args():
         "--num-threads",
         type=int,
         default=1,
-        help="Sets the number of threads used for interop parallelism (e.g. in JIT interpreter) on CPU.",
+        help="Sets the number of threads used for interop parallelism "
+        "(e.g. in JIT interpreter) on CPU.",
     )
 
     parser.add_argument(
@@ -278,8 +280,10 @@ def get_args():
         type=str,
         help="""Path to the X.509 certificate. You need it only if you want to
         use a secure websocket connection, i.e., use wss:// instead of ws://.
-        You can use sherpa/bin/web/generate-certificate.py
+        You can use ./web/generate-certificate.py
         to generate the certificate `cert.pem`.
+        Note ./web/generate-certificate.py will generate three files but you
+        only need to pass the generated cert.pem to this option.
         """,
     )
 
@@ -287,7 +291,7 @@ def get_args():
         "--doc-root",
         type=str,
         default="./python-api-examples/web",
-        help="""Path to the web root""",
+        help="Path to the web root",
     )
 
     return parser.parse_args()
@@ -359,7 +363,7 @@ class StreamingServer(object):
             server locate.
           certificate:
             Optional. If not None, it will use secure websocket.
-            You can use ./sherpa/bin/web/generate-certificate.py to generate
+            You can use ./web/generate-certificate.py to generate
             it (the default generated filename is `cert.pem`).
         """
         self.recognizer = recognizer
@@ -442,7 +446,22 @@ class StreamingServer(object):
             # This is a normal HTTP request
             if path == "/":
                 path = "/index.html"
-            found, response, mime_type = self.http_server.process_request(path)
+
+            if path in ("/upload.html", "/offline_record.html"):
+                response = r"""
+<!doctype html><html><head>
+<title>Speech recognition with next-gen Kaldi</title><body>
+<h2>Only /streaming_record.html is available for the streaming server.<h2>
+<br/>
+<br/>
+Go back to <a href="/streaming_record.html">/streaming_record.html</a>
+</body></head></html>
+"""
+                found = True
+                mime_type = "text/html"
+            else:
+                found, response, mime_type = self.http_server.process_request(path)
+
             if isinstance(response, str):
                 response = response.encode("utf-8")
 
@@ -484,12 +503,21 @@ class StreamingServer(object):
             process_request=self.process_request,
             ssl=ssl_context,
         ):
-            ip_list = ["0.0.0.0", "localhost", "127.0.0.1"]
-            ip_list.append(socket.gethostbyname(socket.gethostname()))
+            ip_list = ["localhost"]
+            if ssl_context:
+                ip_list = ["0.0.0.0", "localhost", "127.0.0.1"]
+                ip_list.append(socket.gethostbyname(socket.gethostname()))
             proto = "http://" if ssl_context is None else "https://"
             s = "Please visit one of the following addresses:\n\n"
             for p in ip_list:
                 s += "  " + proto + p + f":{port}" "\n"
+
+            if not ssl_context:
+                s += "\nSince you are not providing a certificate, you cannot "
+                s += "use your microphone from within the brower using "
+                s += "public IP addresses. Only localhost can be used."
+                s += "You also cannot use 0.0.0.0 or 127.0.0.1"
+
             logging.info(s)
 
             await asyncio.Future()  # run forever
@@ -525,7 +553,7 @@ class StreamingServer(object):
         socket: websockets.WebSocketServerProtocol,
     ):
         """Receive audio samples from the client, process it, and send
-        deocoding result back to the client.
+        decoding result back to the client.
 
         Args:
           socket:
@@ -559,8 +587,6 @@ class StreamingServer(object):
                 if self.recognizer.is_endpoint(stream):
                     self.recognizer.reset(stream)
                     segment += 1
-
-                print(message)
 
                 await socket.send(json.dumps(message))
 
@@ -660,6 +686,6 @@ def main():
 
 
 if __name__ == "__main__":
-    log_filename = "log/log-streaming-zipformer"
+    log_filename = "log/log-streaming-server"
     setup_logger(log_filename)
     main()
