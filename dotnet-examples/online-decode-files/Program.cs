@@ -96,7 +96,7 @@ dotnet run \
   --num-threads=2 \
   --decoding-method=modified_beam_search \
   --debug=false \
-  ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/0.wav \
+  --files ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/0.wav \
   ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/1.wav
 
 Please refer to
