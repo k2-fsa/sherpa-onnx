@@ -89,6 +89,7 @@ def process_windows(s):
     prefix2 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/"
     prefix3 = f"{SHERPA_ONNX_DIR}/windows/"
     prefix4 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx-${version}.data/data/bin/"
+    print(prefix1, prefix2, prefix3, prefix4)
 
     lib_list = []
     for lib in libs:
@@ -97,6 +98,7 @@ def process_windows(s):
             if f.is_file():
                 lib_list.append(str(f))
                 break
+        print(lib, " not found")
 
     print("lib_list", lib_list)
     libs = "\n      ;".join(lib_list)
