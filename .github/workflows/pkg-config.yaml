@@ -67,6 +67,18 @@ jobs:
           ls -lh lib
           ls -lh bin
 
+      - name: Install tree
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          sudo apt-get install tree
+
+      - name: Install tree
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          brew install tree
+
       - name: Display generated files of sherpa-onnx for ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.lib_type }}
         shell: bash
         run: |
