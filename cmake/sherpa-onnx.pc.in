@@ -1,0 +1,16 @@
+prefix="@CMAKE_INSTALL_PREFIX@"
+exec_prefix="${prefix}"
+includedir="${prefix}/include"
+libdir="${exec_prefix}/lib"
+
+Name: sherpa-onnx
+Description: pkg-config for sherpa-onnx
+URL: https://github.com/k2-fsa/sherpa-onnx
+
+Version: @SHERPA_ONNX_VERSION@
+Cflags: -I"${includedir}"
+
+# Note: -lcargs is required only for the following file
+# https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/decode-file-c-api.c
+# We add it here so that users don't need to specify -lcargs when compiling decode-file-c-api.c
+Libs: -L"${libdir}" -lsherpa-onnx-c-api -lsherpa-onnx-core -lonnxruntime -lkaldi-native-fbank-core -lcargs -Wl,-rpath,${libdir} @SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS@

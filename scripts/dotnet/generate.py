@@ -82,13 +82,17 @@ def process_windows(s):
         "sherpa-onnx-c-api.dll",
         "sherpa-onnx-core.dll",
     ]
+
+    version = get_version()
+
     prefix1 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/lib/"
     prefix2 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/"
     prefix3 = f"{SHERPA_ONNX_DIR}/windows/"
+    prefix4 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx-${version}.data/data/bin/"
 
     lib_list = []
     for lib in libs:
-        for prefix in [prefix1, prefix2, prefix3]:
+        for prefix in [prefix1, prefix2, prefix3, prefix4]:
             f = Path(prefix) / lib
             if f.is_file():
                 lib_list.append(str(f))

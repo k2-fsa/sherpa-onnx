@@ -1,0 +1,104 @@
+name: pkg-config
+
+on:
+  push:
+    branches:
+      - master
+      - pkg-config
+    tags:
+      - '*'
+    paths:
+      - '.github/workflows/pkg-config.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'c-api-examples/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/pkg-config.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: pkg-config-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.lib_type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        build_type: [Release, Debug]
+        lib_type: [shared, static]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          if [[ ${{ matrix.lib_type }} == "shared" ]]; then
+            cmake -DSHERPA_ONNX_ENABLE_C_API=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON ..
+          else
+            cmake -DSHERPA_ONNX_ENABLE_C_API=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=OFF ..
+          fi
+
+      - name: Build sherpa-onnx for ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.lib_type }}
+        shell: bash
+        run: |
+          cd build
+          make -j2
+          make install
+
+          ls -lh lib
+          ls -lh bin
+
+      - name: Install tree
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          sudo apt-get install tree
+
+      - name: Install tree
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          brew install tree
+
+      - name: Display generated files of sherpa-onnx for ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.lib_type }}
+        shell: bash
+        run: |
+          tree build/install
+          ls -lh build/install
+
+          cat build/install/sherpa-onnx.pc
+
+      - name: Build C API example
+        shell: bash
+        run: |
+          export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
+          cd c-api-examples
+          gcc -o decode-file-c-api $(pkg-config --cflags sherpa-onnx) ./decode-file-c-api.c $(pkg-config --libs sherpa-onnx)
+          ./decode-file-c-api --help
+
+      - name: Test online transducer (C API)
+        shell: bash
+        run: |
+          export PATH=$PWD/c-api-examples:$PATH
+          export EXE=decode-file-c-api
+
+          .github/scripts/test-online-transducer.sh

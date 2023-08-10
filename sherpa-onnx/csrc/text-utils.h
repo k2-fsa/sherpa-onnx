@@ -4,7 +4,7 @@
 // Copyright      2023  Xiaomi Corporation
 #ifndef SHERPA_ONNX_CSRC_TEXT_UTILS_H_
 #define SHERPA_ONNX_CSRC_TEXT_UTILS_H_
-#include <errno.h>.
+#include <errno.h>
 #include <stdlib.h>
 
 #include <limits>
