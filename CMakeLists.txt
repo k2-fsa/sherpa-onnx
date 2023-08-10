@@ -168,6 +168,16 @@ if(SHERPA_ONNX_ENABLE_C_API)
 endif()
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
+if(NOT BUILD_SHARED_LIBS)
+  if(APPLE)
+    set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-lc++")
+  endif()
+
+  if(UNIX AND NOT APPLE)
+    set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-lstdc++")
+  endif()
+endif()
+
 # See https://people.freedesktop.org/~dbn/pkg-config-guide.html
 configure_file(cmake/sherpa-onnx.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
 install(
