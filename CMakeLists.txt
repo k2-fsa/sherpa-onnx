@@ -167,3 +167,12 @@ if(SHERPA_ONNX_ENABLE_C_API)
   add_subdirectory(c-api-examples)
 endif()
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+
+# See https://people.freedesktop.org/~dbn/pkg-config-guide.html
+configure_file(cmake/sherpa-onnx.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+install(
+  FILES
+    ${PROJECT_BINARY_DIR}/sherpa-onnx.pc
+  DESTINATION
+    .
+)
