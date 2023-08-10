@@ -56,7 +56,7 @@ func main() {
 	defer sherpa.DeleteOnlineRecognizer(recognizer)
 
 	stream := sherpa.NewOnlineStream(recognizer)
-	defer sherpa.NewOfflineStream(stream)
+	defer sherpa.DeleteOnlineStream(stream)
 
 	// you can choose another value for 0.1 if you want
 	samplesPerCall := int32(param.SampleRate * 0.1) // 0.1 second
