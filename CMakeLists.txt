@@ -174,7 +174,7 @@ if(NOT BUILD_SHARED_LIBS)
   endif()
 
   if(UNIX AND NOT APPLE)
-    set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-lstdc++")
+    set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-lstdc++ -lm")
   endif()
 endif()
 
