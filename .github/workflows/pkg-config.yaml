@@ -51,7 +51,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          if [[ ${{ matrix.lib_type == "shared" ]]; then
+          if [[ ${{ matrix.lib_type }} == "shared" ]]; then
             cmake -DSHERPA_ONNX_ENABLE_C_API=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON ..
           else
             cmake -DSHERPA_ONNX_ENABLE_C_API=ON -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=OFF ..
