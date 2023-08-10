@@ -69,7 +69,7 @@ const char *kUsage =
     "Valid decoding_method: greedy_search (default), modified_beam_search\n\n"
     "Valid provider: cpu (default), cuda, coreml\n\n"
     "Please refer to \n"
-    "http://localhost:6006/onnx/pretrained_models/online-transducer/"
+    "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/"
     "index.html\n"
     "for a list of pre-trained models to download.\n"
     "\n"
