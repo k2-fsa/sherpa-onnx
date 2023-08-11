@@ -146,10 +146,10 @@ jobs:
         if: matrix.model_type == 'whisper'
         shell: bash
         run: |
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
-            cd sherpa-onnx-whisper-tiny.en
-            git lfs pull --include "*.onnx"
-            cd ..
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
+          cd sherpa-onnx-whisper-tiny.en
+          git lfs pull --include "*.onnx"
+          cd ..
 
           python3 ./python-api-examples/non_streaming_server.py \
             --whisper-encoder=./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.onnx \
