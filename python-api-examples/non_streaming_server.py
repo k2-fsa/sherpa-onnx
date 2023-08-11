@@ -591,10 +591,12 @@ or <a href="/offline_record.html">/offline_record.html</a>
             received.append(header[8:])
             num_received_bytes += len(header) - 8
 
-        while num_received_bytes < expected_num_bytes:
+        if num_received_bytes < expected_num_bytes:
             async for message in socket:
                 received.append(message)
                 num_received_bytes += len(message)
+                if num_received_bytes >= expected_num_bytes:
+                    break
 
         assert num_received_bytes == expected_num_bytes, (
             num_received_bytes,
