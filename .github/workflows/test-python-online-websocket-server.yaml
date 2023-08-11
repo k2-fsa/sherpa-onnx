@@ -65,7 +65,7 @@ jobs:
           sleep 10
 
       - name: Start client for transducer models
-        if: matrix.model_type == "transducer"
+        if: matrix.model_type == 'transducer'
         shell: bash
         run: |
           python3 ./python-api-examples/online-websocket-client-decode-file.py \
