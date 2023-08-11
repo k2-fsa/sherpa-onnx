@@ -3,6 +3,19 @@
 // and https://gist.github.com/meziantou/edb7217fddfbb70e899e
 
 var socket;
+var recognition_text = [];
+
+function getDisplayResult() {
+  let i = 0;
+  let ans = '';
+  for (let s in recognition_text) {
+    if (recognition_text[s] == '') continue;
+
+    ans += '' + i + ': ' + recognition_text[s] + '\n';
+    i += 1;
+  }
+  return ans;
+}
 
 const serverIpInput = document.getElementById('server-ip');
 const serverPortInput = document.getElementById('server-port');
@@ -44,12 +57,23 @@ function initWebSocket() {
 
   // Listen for messages
   socket.addEventListener('message', function(event) {
+    let message = JSON.parse(event.data);
+    if (message.segment in recognition_text) {
+      recognition_text[message.segment] = message.text;
+    } else {
+      recognition_text.push(message.text);
+    }
+    let text_area = document.getElementById('results');
+    text_area.value = getDisplayResult();
+    text_area.scrollTop = text_area.scrollHeight;  // auto scroll
     console.log('Received message: ', event.data);
 
+    /*
     document.getElementById('results').value = event.data;
     socket.send('Done');
     console.log('Sent Done');
     socket.close();
+    */
   });
 }
 
@@ -92,6 +116,7 @@ let recordingLength = 0;  // number of samples so far
 
 clearBtn.onclick = function() {
   document.getElementById('results').value = '';
+  recognition_text = [];
 };
 
 function send_header(n) {
@@ -243,6 +268,8 @@ if (navigator.mediaDevices.getUserMedia) {
       for (let start = 0; start < buf.byteLength; start += n) {
         socket.send(buf.slice(start, start + n));
       }
+      socket.send('Done');
+      console.log('Sent Done');
     };
   };
 
