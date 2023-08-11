@@ -44,7 +44,7 @@ jobs:
       - name: Install sherpa-onnx
         shell: bash
         run: |
-          python3 -m pip install --verbose .
+          python3 -m pip install --no-deps --verbose .
           python3 -m pip install websockets
 
 
