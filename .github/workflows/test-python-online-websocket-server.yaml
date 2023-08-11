@@ -3,7 +3,7 @@ name: Python online websocket server
 on:
   push:
     branches:
-      - python-server-2
+      - master
   pull_request:
     branches:
       - master
