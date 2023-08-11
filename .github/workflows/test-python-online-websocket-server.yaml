@@ -70,4 +70,4 @@ jobs:
         shell: bash
         run: |
           python3 ./python-api-examples/online-websocket-client-decode-file.py \
-            --tokens ./sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/0.wav
+            ./sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/0.wav
