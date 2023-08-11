@@ -45,6 +45,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install --verbose .
+          python3 -m pip install websockets
 
 
       - name: Start server for transducer models
