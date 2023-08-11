@@ -104,7 +104,6 @@ from typing import Optional, Tuple
 import numpy as np
 import sherpa_onnx
 
-print(sherpa_onnx.__file__)
 import websockets
 
 from http_server import HttpServer
@@ -578,21 +577,24 @@ or <a href="/offline_record.html">/offline_record.html</a>
         if header == "Done":
             return None, None
 
-        assert (
-            len(header) == 8
-        ), "The first message should contain 8 bytes. Given {len(header)}"
+        assert len(header) >= 8, (
+            "The first message should contain at least 8 bytes."
+            + f"Given {len(header)}"
+        )
 
         sample_rate = int.from_bytes(header[:4], "little", signed=True)
-        expected_num_bytes = int.from_bytes(header[4:], "little", signed=True)
+        expected_num_bytes = int.from_bytes(header[4:8], "little", signed=True)
 
         received = []
         num_received_bytes = 0
-        async for message in socket:
-            received.append(message)
-            num_received_bytes += len(message)
+        if len(header) > 8:
+            received.append(header[8:])
+            num_received_bytes += len(header) - 8
 
-            if num_received_bytes >= expected_num_bytes:
-                break
+        while num_received_bytes < expected_num_bytes:
+            async for message in socket:
+                received.append(message)
+                num_received_bytes += len(message)
 
         assert num_received_bytes == expected_num_bytes, (
             num_received_bytes,
@@ -601,7 +603,7 @@ or <a href="/offline_record.html">/offline_record.html</a>
 
         samples = b"".join(received)
         array = np.frombuffer(samples, dtype=np.float32)
-        return array, self.sample_rate
+        return array, sample_rate
 
     async def stream_consumer_task(self):
         """This function extracts streams from the queue, batches them up, sends
