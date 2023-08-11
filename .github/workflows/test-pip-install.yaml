@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - test-pip-install
-      - python-server-2
   schedule:
     # minute (0-59)
     # hour (0-23)
