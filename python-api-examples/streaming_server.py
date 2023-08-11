@@ -295,7 +295,8 @@ def get_args():
 
     parser.add_argument(
         "--num-threads",
-        type=str,
+        type=int,
+        default=2,
         help="Number of threads to run the neural network model",
     )
 
@@ -529,7 +530,7 @@ Go back to <a href="/streaming_record.html">/streaming_record.html</a>
         ):
             ip_list = ["localhost"]
             if ssl_context:
-                ip_list = ["0.0.0.0", "localhost", "127.0.0.1"]
+                ip_list += ["0.0.0.0", "127.0.0.1"]
                 ip_list.append(socket.gethostbyname(socket.gethostname()))
             proto = "http://" if ssl_context is None else "https://"
             s = "Please visit one of the following addresses:\n\n"
@@ -538,7 +539,7 @@ Go back to <a href="/streaming_record.html">/streaming_record.html</a>
 
             if not ssl_context:
                 s += "\nSince you are not providing a certificate, you cannot "
-                s += "use your microphone from within the brower using "
+                s += "use your microphone from within the browser using "
                 s += "public IP addresses. Only localhost can be used."
                 s += "You also cannot use 0.0.0.0 or 127.0.0.1"
 
@@ -633,7 +634,7 @@ Go back to <a href="/streaming_record.html">/streaming_record.html</a>
         self,
         socket: websockets.WebSocketServerProtocol,
     ) -> Optional[np.ndarray]:
-        """Receives a tensor from the client.
+        """Receive a tensor from the client.
 
         Each message contains either a bytes buffer containing audio samples
         in 16 kHz or contains "Done" meaning the end of utterance.

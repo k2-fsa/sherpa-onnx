@@ -60,6 +60,7 @@ const soundClips = document.getElementById('sound-clips');
 const canvas = document.getElementById('canvas');
 const mainSection = document.querySelector('.container');
 
+recordBtn.disabled = true;
 stopBtn.disabled = true;
 
 window.onload = (event) => {
@@ -95,9 +96,10 @@ clearBtn.onclick = function() {
 };
 
 function send_header(n) {
-  const header = new ArrayBuffer(4);
-  new DataView(header).setInt32(0, n, true /* littleEndian */);
-  socket.send(new Int32Array(header, 0, 1));
+  const header = new ArrayBuffer(8);
+  new DataView(header).setInt32(0, expectedSampleRate, true /* littleEndian */);
+  new DataView(header).setInt32(4, n, true /* littleEndian */);
+  socket.send(new Int32Array(header, 0, 2));
 }
 
 // copied/modified from https://mdn.github.io/web-dictaphone/

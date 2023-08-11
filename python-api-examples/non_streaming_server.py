@@ -28,13 +28,16 @@ import ssl
 import sys
 import warnings
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 from pathlib import Path
 from typing import Optional, Tuple
 
 import numpy as np
-import torch
-import websockets
 import sherpa_onnx
+
+print(sherpa_onnx.__file__)
+import websockets
+
 from http_server import HttpServer
 
 
@@ -84,7 +87,7 @@ def setup_logger(
         logging.getLogger("").addHandler(console)
 
 
-def add_transducer_model_args(parse: argparse.ArgumentParser):
+def add_transducer_model_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--encoder",
         default="",
@@ -107,7 +110,7 @@ def add_transducer_model_args(parse: argparse.ArgumentParser):
     )
 
 
-def add_paraformer_model_args(parse: argparse.ArgumentParser):
+def add_paraformer_model_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--paraformer",
         default="",
@@ -116,7 +119,7 @@ def add_paraformer_model_args(parse: argparse.ArgumentParser):
     )
 
 
-def add_nemo_ctc_model_args(parse: argparse.ArgumentParser):
+def add_nemo_ctc_model_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--nemo-ctc",
         default="",
@@ -125,7 +128,7 @@ def add_nemo_ctc_model_args(parse: argparse.ArgumentParser):
     )
 
 
-def add_whisper_model_args(parse: argparse.ArgumentParser):
+def add_whisper_model_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--whisper-encoder",
         default="",
@@ -155,7 +158,8 @@ def add_model_args(parser: argparse.ArgumentParser):
 
     parser.add_argument(
         "--num-threads",
-        type=str,
+        type=int,
+        default=2,
         help="Number of threads to run the neural network model",
     )
 
@@ -361,7 +365,7 @@ class NonStreamingServer:
         self.recognizer = recognizer
 
         self.certificate = certificate
-        self.http_server = sherpa.HttpServer(doc_root)
+        self.http_server = HttpServer(doc_root)
 
         self.nn_pool = ThreadPoolExecutor(
             max_workers=nn_pool_size,
@@ -393,15 +397,21 @@ class NonStreamingServer:
                 response = r"""
 <!doctype html><html><head>
 <title>Speech recognition with next-gen Kaldi</title><body>
-<h2>Only /upload.html and /offline_record.html is available for the non-streaming server.<h2>
+<h2>Only
+<a href="/upload.html">/upload.html</a>
+and
+<a href="/offline_record.html">/offline_record.html</a>
+is available for the non-streaming server.<h2>
 <br/>
 <br/>
 Go back to <a href="/upload.html">/upload.html</a>
 or <a href="/offline_record.html">/offline_record.html</a>
 </body></head></html>
 """
-
-            found, response, mime_type = self.http_server.process_request(path)
+                found = True
+                mime_type = "text/html"
+            else:
+                found, response, mime_type = self.http_server.process_request(path)
             if isinstance(response, str):
                 response = response.encode("utf-8")
 
@@ -445,8 +455,11 @@ or <a href="/offline_record.html">/offline_record.html</a>
             process_request=self.process_request,
             ssl=ssl_context,
         ):
-            ip_list = ["0.0.0.0", "localhost", "127.0.0.1"]
-            ip_list.append(socket.gethostbyname(socket.gethostname()))
+            ip_list = ["localhost"]
+            if ssl_context:
+                ip_list += ["0.0.0.0", "127.0.0.1"]
+                ip_list.append(socket.gethostbyname(socket.gethostname()))
+
             proto = "http://" if ssl_context is None else "https://"
             s = "Please visit one of the following addresses:\n\n"
             for p in ip_list:
@@ -454,43 +467,52 @@ or <a href="/offline_record.html">/offline_record.html</a>
             logging.info(s)
 
             await asyncio.Future()  # run forever
-        await task
+
+        await task  # not reachable
 
     async def recv_audio_samples(
         self,
         socket: websockets.WebSocketServerProtocol,
-    ) -> Optional[torch.Tensor]:
-        """Receives a tensor from the client.
-
-        As the websocket protocol is a message based protocol, not a stream
-        protocol, we can receive the whole message sent by the client at once.
+    ) -> Tuple[Optional[np.ndarray], Optional[float]]:
+        """Receive a tensor from the client.
 
         The message from the client is a **bytes** buffer.
 
         The first message can be either "Done" meaning the client won't send
-        anything in the future or it can be a buffer containing 4 bytes
-        in **little** endian format, specifying the number of bytes in the audio
-        file, which will be sent by the client in the subsequent messages.
+        anything in the future or it can be a buffer containing 8 bytes.
+        The first 4 bytes in little endian specifies the sample
+        rate of the audio samples; the second 4 bytes in little endian specifies
+        the number of bytes in the audio file, which will be sent by the client
+        in the subsequent messages.
         Since there is a limit in the message size posed by the websocket
         protocol, the client may send the audio file in multiple messages if the
         audio file is very large.
 
         The second and remaining messages contain audio samples.
 
+        Please refer to ./offline-websocket-client-decode-files-paralell.py
+        and ./offline-websocket-client-decode-files-sequential.py
+        for how the client sends the message.
+
         Args:
           socket:
             The socket for communicating with the client.
         Returns:
-          Return a 1-D torch.float32 tensor containing the audio samples or
-          return None indicating the end of utterance.
+          Return a containing:
+            - 1-D np.float32 array containing the audio samples
+            - sample rate of the audio samples
+          or return (None, None) indicating the end of utterance.
         """
         header = await socket.recv()
         if header == "Done":
-            return None
+            return None, None
 
-        assert len(header) == 4, "The first message should contain 4 bytes"
+        assert (
+            len(header) == 8
+        ), "The first message should contain 8 bytes. Given {len(header)}"
 
-        expected_num_bytes = int.from_bytes(header, "little", signed=True)
+        sample_rate = int.from_bytes(header[:4], "little", signed=True)
+        expected_num_bytes = int.from_bytes(header[4:], "little", signed=True)
 
         received = []
         num_received_bytes = 0
@@ -507,17 +529,8 @@ or <a href="/offline_record.html">/offline_record.html</a>
         )
 
         samples = b"".join(received)
-
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            # PyTorch warns that the underlying buffer is not writable.
-            # We ignore it here as we are not going to write it anyway.
-            if hasattr(torch, "frombuffer"):
-                # Note: torch.frombuffer is available only in torch>= 1.10
-                return torch.frombuffer(samples, dtype=torch.float32)
-            else:
-                array = np.frombuffer(samples, dtype=np.float32)
-                return torch.from_numpy(array)
+        array = np.frombuffer(samples, dtype=np.float32)
+        return array, self.sample_rate
 
     async def stream_consumer_task(self):
         """This function extracts streams from the queue, batches them up, sends
@@ -552,7 +565,7 @@ or <a href="/offline_record.html">/offline_record.html</a>
 
     async def compute_and_decode(
         self,
-        stream: sherpa.OfflineStream,
+        stream: sherpa_onnx.OfflineStream,
     ) -> None:
         """Put the stream into the queue and wait it to be processed by the
         consumer task.
@@ -595,7 +608,7 @@ or <a href="/offline_record.html">/offline_record.html</a>
         socket: websockets.WebSocketServerProtocol,
     ):
         """Receive audio samples from the client, process it, and send
-        deocoding result back to the client.
+        decoding results back to the client.
 
         Args:
           socket:
@@ -608,12 +621,12 @@ or <a href="/offline_record.html">/offline_record.html</a>
 
         while True:
             stream = self.recognizer.create_stream()
-            samples = await self.recv_audio_samples(socket)
+            samples, sample_rate = await self.recv_audio_samples(socket)
             if samples is None:
                 break
             # stream.accept_samples() runs in the main thread
-            # TODO(fangjun): Use a separate thread/process pool for it
-            stream.accept_samples(samples)
+
+            stream.accept_waveform(sample_rate, samples)
 
             await self.compute_and_decode(stream)
             result = stream.result.text
@@ -654,7 +667,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             tokens=args.tokens,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,
-            feature_dim=args.feature_dim,
+            feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
             max_active_paths=args.max_active_paths,
         )
@@ -707,7 +720,6 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     return recognizer
 
 
-@torch.no_grad()
 def main():
     args = get_args()
     logging.info(vars(args))
