@@ -41,6 +41,7 @@ class OfflineRecognizer(object):
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
+        max_active_paths: int = 4,
         context_score: float = 1.5,
         debug: bool = False,
         provider: str = "cpu",
@@ -72,6 +73,9 @@ class OfflineRecognizer(object):
             Dimension of the feature used to train the model.
           decoding_method:
             Valid values: greedy_search, modified_beam_search.
+          max_active_paths:
+            Maximum number of active paths to keep. Used only when
+            decoding_method is modified_beam_search.
           debug:
             True to show debug messages.
           provider:
@@ -103,6 +107,7 @@ class OfflineRecognizer(object):
             context_score=context_score,
         )
         self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
         return self
 
     @classmethod
@@ -166,6 +171,7 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
         )
         self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
         return self
 
     @classmethod
@@ -229,6 +235,7 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
         )
         self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
         return self
 
     @classmethod
@@ -291,6 +298,7 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
         )
         self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
         return self
 
     def create_stream(self, contexts_list: Optional[List[List[int]]] = None):
