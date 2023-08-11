@@ -107,6 +107,7 @@ class OfflineRecognizer(object):
             context_score=context_score,
         )
         self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
         return self
 
     @classmethod
@@ -170,6 +171,7 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
         )
         self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
         return self
 
     @classmethod
@@ -233,6 +235,7 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
         )
         self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
         return self
 
     @classmethod
@@ -295,6 +298,7 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
         )
         self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
         return self
 
     def create_stream(self, contexts_list: Optional[List[List[int]]] = None):

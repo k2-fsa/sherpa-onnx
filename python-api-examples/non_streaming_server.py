@@ -17,6 +17,75 @@ https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/index.html
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/index.html
 
 for pre-trained models to download.
+
+Usage examples:
+
+(1) Use a non-streaming transducer model
+
+cd /path/to/sherpa-onnx
+GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26
+cd sherpa-onnx-zipformer-en-2023-06-26
+git lfs pull --include "*.onnx"
+cd ..
+
+python3 ./python-api-examples/non_streaming_server.py \
+  --encoder ./sherpa-onnx-zipformer-en-2023-06-26/encoder-epoch-99-avg-1.onnx \
+  --decoder ./sherpa-onnx-zipformer-en-2023-06-26/decoder-epoch-99-avg-1.onnx \
+  --joiner ./sherpa-onnx-zipformer-en-2023-06-26/joiner-epoch-99-avg-1.onnx \
+  --tokens ./sherpa-onnx-zipformer-en-2023-06-26/tokens.txt
+
+(2) Use a non-streaming paraformer
+
+cd /path/to/sherpa-onnx
+GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
+cd sherpa-onnx-paraformer-zh-2023-03-28
+git lfs pull --include "*.onnx"
+cd ..
+
+python3 ./python-api-examples/non_streaming_server.py \
+  --paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx \
+  --tokens ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt
+
+(3) Use a non-streaming CTC model from NeMo
+
+cd /path/to/sherpa-onnx
+GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
+cd sherpa-onnx-nemo-ctc-en-conformer-medium
+git lfs pull --include "*.onnx"
+cd ..
+
+python3 ./python-api-examples/non_streaming_server.py \
+  --nemo-ctc ./sherpa-onnx-nemo-ctc-en-conformer-medium/model.onnx \
+  --tokens ./sherpa-onnx-nemo-ctc-en-conformer-medium/tokens.txt
+
+(4) Use a Whisper model
+
+cd /path/to/sherpa-onnx
+GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
+cd sherpa-onnx-whisper-tiny.en
+git lfs pull --include "*.onnx"
+cd ..
+
+python3 ./python-api-examples/non_streaming_server.py \
+  --whisper-encoder=./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.onnx \
+  --whisper-decoder=./sherpa-onnx-whisper-tiny.en/tiny.en-decoder.onnx \
+  --tokens=./sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt
+
+----
+
+To use a certificate so that you can use https, please use
+
+python3 ./python-api-examples/non_streaming_server.py \
+  --whisper-encoder=./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.onnx \
+  --whisper-decoder=./sherpa-onnx-whisper-tiny.en/tiny.en-decoder.onnx \
+  --certificate=/path/to/your/cert.pem
+
+If you don't have a certificate, please run:
+
+    cd ./python-api-examples/web
+    ./generate-certificate.py
+
+It will generate 3 files, one of which is the required `cert.pem`.
 """  # noqa
 
 import argparse
@@ -392,6 +461,8 @@ class NonStreamingServer:
             # This is a normal HTTP request
             if path == "/":
                 path = "/index.html"
+            if path[-1] == "?":
+                path = path[:-1]
 
             if path == "/streaming_record.html":
                 response = r"""
@@ -683,9 +754,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             tokens=args.tokens,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,
-            feature_dim=args.feature_dim,
+            feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
-            debug=args.debug,
         )
     elif args.nemo_ctc:
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
@@ -698,9 +768,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             tokens=args.tokens,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,
-            feature_dim=args.feature_dim,
+            feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
-            debug=args.debug,
         )
     elif args.whisper_encoder:
         assert_file_exists(args.whisper_encoder)
@@ -712,7 +781,6 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             tokens=args.tokens,
             num_threads=args.num_threads,
             decoding_method=args.decoding_method,
-            debug=args.debug,
         )
     else:
         raise ValueError("Please specify at least one model")
