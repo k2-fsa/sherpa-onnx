@@ -39,7 +39,7 @@ std::string FeatureExtractorConfig::ToString() const {
 
 class FeatureExtractor::Impl {
  public:
-  explicit Impl(const FeatureExtractorConfig &config) {
+  explicit Impl(const FeatureExtractorConfig &config) : config_(config) {
     opts_.frame_opts.dither = 0;
     opts_.frame_opts.snip_edges = false;
     opts_.frame_opts.samp_freq = config.sampling_rate;
@@ -50,6 +50,19 @@ class FeatureExtractor::Impl {
   }
 
   void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
+    if (config_.normalize_samples) {
+      AcceptWaveformImpl(sampling_rate, waveform, n);
+    } else {
+      std::vector<float> buf(n);
+      for (int32_t i = 0; i != n; ++i) {
+        buf[i] = waveform[i] * 32768;
+      }
+      AcceptWaveformImpl(sampling_rate, buf.data(), n);
+    }
+  }
+
+  void AcceptWaveformImpl(int32_t sampling_rate, const float *waveform,
+                          int32_t n) {
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (resampler_) {
@@ -146,6 +159,7 @@ class FeatureExtractor::Impl {
  private:
   std::unique_ptr<knf::OnlineFbank> fbank_;
   knf::FbankOptions opts_;
+  FeatureExtractorConfig config_;
   mutable std::mutex mutex_;
   std::unique_ptr<LinearResample> resampler_;
   int32_t last_frame_index_ = 0;

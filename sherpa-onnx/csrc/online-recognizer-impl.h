@@ -26,8 +26,6 @@ class OnlineRecognizerImpl {
 
   virtual ~OnlineRecognizerImpl() = default;
 
-  virtual void InitOnlineStream(OnlineStream *stream) const = 0;
-
   virtual std::unique_ptr<OnlineStream> CreateStream() const = 0;
 
   virtual std::unique_ptr<OnlineStream> CreateStream(

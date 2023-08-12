@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/online-paraformer-model.h"
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 
 #if __ANDROID_API__ >= 9
@@ -113,6 +114,11 @@ class OnlineParaformerModel::Impl {
     SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(inv_stddev_, "inv_stddev");
     SHERPA_ONNX_LOGE("neg mean size: %d\n", int(neg_mean_.size()));
     SHERPA_ONNX_LOGE("inv stddev  size: %d\n", int(inv_stddev_.size()));
+
+    float scale = std::sqrt(encoder_output_size_);
+    for (auto &f : inv_stddev_) {
+      f *= scale;
+    }
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
