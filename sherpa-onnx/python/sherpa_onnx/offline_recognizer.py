@@ -8,6 +8,7 @@ from _sherpa_onnx import (
     OfflineModelConfig,
     OfflineNemoEncDecCtcModelConfig,
     OfflineParaformerModelConfig,
+    OfflineTdnnModelConfig,
     OfflineWhisperModelConfig,
 )
 from _sherpa_onnx import OfflineRecognizer as _Recognizer
@@ -37,7 +38,7 @@ class OfflineRecognizer(object):
         decoder: str,
         joiner: str,
         tokens: str,
-        num_threads: int,
+        num_threads: int = 1,
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
@@ -48,7 +49,7 @@ class OfflineRecognizer(object):
     ):
         """
         Please refer to
-        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html>`_
+        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/index.html>`_
         to download pre-trained models for different languages, e.g., Chinese,
         English, etc.
 
@@ -115,7 +116,7 @@ class OfflineRecognizer(object):
         cls,
         paraformer: str,
         tokens: str,
-        num_threads: int,
+        num_threads: int = 1,
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
@@ -124,9 +125,8 @@ class OfflineRecognizer(object):
     ):
         """
         Please refer to
-        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html>`_
-        to download pre-trained models for different languages, e.g., Chinese,
-        English, etc.
+        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/index.html>`_
+        to download pre-trained models.
 
         Args:
           tokens:
@@ -179,7 +179,7 @@ class OfflineRecognizer(object):
         cls,
         model: str,
         tokens: str,
-        num_threads: int,
+        num_threads: int = 1,
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
@@ -188,7 +188,7 @@ class OfflineRecognizer(object):
     ):
         """
         Please refer to
-        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html>`_
+        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/nemo/index.html>`_
         to download pre-trained models for different languages, e.g., Chinese,
         English, etc.
 
@@ -244,14 +244,14 @@ class OfflineRecognizer(object):
         encoder: str,
         decoder: str,
         tokens: str,
-        num_threads: int,
+        num_threads: int = 1,
         decoding_method: str = "greedy_search",
         debug: bool = False,
         provider: str = "cpu",
     ):
         """
         Please refer to
-        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html>`_
+        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/index.html>`_
         to download pre-trained models for different kinds of whisper models,
         e.g., tiny, tiny.en, base, base.en, etc.
 
@@ -290,6 +290,69 @@ class OfflineRecognizer(object):
         feat_config = OfflineFeatureExtractorConfig(
             sampling_rate=16000,
             feature_dim=80,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            decoding_method=decoding_method,
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_tdnn_ctc(
+        cls,
+        model: str,
+        tokens: str,
+        num_threads: int = 1,
+        sample_rate: int = 8000,
+        feature_dim: int = 23,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+    ):
+        """
+        Please refer to
+        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/yesno/index.html>`_
+        to download pre-trained models.
+
+        Args:
+          model:
+            Path to ``model.onnx``.
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          num_threads:
+            Number of threads for neural network computation.
+          sample_rate:
+            Sample rate of the training data used to train the model.
+          feature_dim:
+            Dimension of the feature used to train the model.
+          decoding_method:
+            Valid values are greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            tdnn=OfflineTdnnModelConfig(model=model),
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+            model_type="tdnn",
+        )
+
+        feat_config = OfflineFeatureExtractorConfig(
+            sampling_rate=sample_rate,
+            feature_dim=feature_dim,
         )
 
         recognizer_config = OfflineRecognizerConfig(
