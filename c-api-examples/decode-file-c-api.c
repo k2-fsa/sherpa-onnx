@@ -69,8 +69,11 @@ const char *kUsage =
     "Valid decoding_method: greedy_search (default), modified_beam_search\n\n"
     "Valid provider: cpu (default), cuda, coreml\n\n"
     "Please refer to \n"
-    "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html\n"
-    "for a list of pre-trained models to download.\n";
+    "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/"
+    "index.html\n"
+    "for a list of pre-trained models to download.\n"
+    "\n"
+    "Note that this file supports only streaming transducer models.\n";
 
 int32_t main(int32_t argc, char *argv[]) {
   if (argc < 6) {

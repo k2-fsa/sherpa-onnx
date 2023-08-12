@@ -1,0 +1,174 @@
+name: Python offline websocket server
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+concurrency:
+  group: python-offline-websocket-server-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  python_offline_websocket_server:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.model_type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        model_type: ["transducer", "paraformer", "nemo_ctc", "whisper"]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip numpy
+
+      - name: Install sherpa-onnx
+        shell: bash
+        run: |
+          python3 -m pip install --no-deps --verbose .
+          python3 -m pip install websockets
+
+
+      - name: Start server for transducer models
+        if: matrix.model_type == 'transducer'
+        shell: bash
+        run: |
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26
+          cd sherpa-onnx-zipformer-en-2023-06-26
+          git lfs pull --include "*.onnx"
+          cd ..
+
+          python3 ./python-api-examples/non_streaming_server.py \
+            --encoder ./sherpa-onnx-zipformer-en-2023-06-26/encoder-epoch-99-avg-1.onnx \
+            --decoder ./sherpa-onnx-zipformer-en-2023-06-26/decoder-epoch-99-avg-1.onnx \
+            --joiner ./sherpa-onnx-zipformer-en-2023-06-26/joiner-epoch-99-avg-1.onnx \
+            --tokens ./sherpa-onnx-zipformer-en-2023-06-26/tokens.txt &
+
+          echo "sleep 10 seconds to wait the server start"
+          sleep 10
+
+      - name: Start client for transducer models
+        if: matrix.model_type == 'transducer'
+        shell: bash
+        run: |
+          python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
+            ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/0.wav \
+            ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/1.wav \
+            ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/8k.wav
+
+          python3 ./python-api-examples/offline-websocket-client-decode-files-sequential.py \
+            ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/0.wav \
+            ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/1.wav \
+            ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/8k.wav
+
+      - name: Start server for paraformer models
+        if: matrix.model_type == 'paraformer'
+        shell: bash
+        run: |
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
+          cd sherpa-onnx-paraformer-zh-2023-03-28
+          git lfs pull --include "*.onnx"
+          cd ..
+
+          python3 ./python-api-examples/non_streaming_server.py \
+            --paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx \
+            --tokens ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt &
+
+          echo "sleep 10 seconds to wait the server start"
+          sleep 10
+
+      - name: Start client for paraformer models
+        if: matrix.model_type == 'paraformer'
+        shell: bash
+        run: |
+          python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav
+
+          python3 ./python-api-examples/offline-websocket-client-decode-files-sequential.py \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav
+
+      - name: Start server for nemo_ctc models
+        if: matrix.model_type == 'nemo_ctc'
+        shell: bash
+        run: |
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
+          cd sherpa-onnx-nemo-ctc-en-conformer-medium
+          git lfs pull --include "*.onnx"
+          cd ..
+
+          python3 ./python-api-examples/non_streaming_server.py \
+            --nemo-ctc ./sherpa-onnx-nemo-ctc-en-conformer-medium/model.onnx \
+            --tokens ./sherpa-onnx-nemo-ctc-en-conformer-medium/tokens.txt &
+
+          echo "sleep 10 seconds to wait the server start"
+          sleep 10
+
+      - name: Start client for nemo_ctc models
+        if: matrix.model_type == 'nemo_ctc'
+        shell: bash
+        run: |
+          python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
+            ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/0.wav \
+            ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/1.wav \
+            ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/8k.wav
+
+          python3 ./python-api-examples/offline-websocket-client-decode-files-sequential.py \
+            ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/0.wav \
+            ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/1.wav \
+            ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/8k.wav
+
+      - name: Start server for whisper models
+        if: matrix.model_type == 'whisper'
+        shell: bash
+        run: |
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
+          cd sherpa-onnx-whisper-tiny.en
+          git lfs pull --include "*.onnx"
+          cd ..
+
+          python3 ./python-api-examples/non_streaming_server.py \
+            --whisper-encoder=./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.onnx \
+            --whisper-decoder=./sherpa-onnx-whisper-tiny.en/tiny.en-decoder.onnx \
+            --tokens=./sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt &
+
+          echo "sleep 10 seconds to wait the server start"
+          sleep 10
+
+      - name: Start client for whisper models
+        if: matrix.model_type == 'whisper'
+        shell: bash
+        run: |
+          python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
+            ./sherpa-onnx-whisper-tiny.en/test_wavs/0.wav \
+            ./sherpa-onnx-whisper-tiny.en/test_wavs/1.wav \
+            ./sherpa-onnx-whisper-tiny.en/test_wavs/8k.wav
+
+          python3 ./python-api-examples/offline-websocket-client-decode-files-sequential.py \
+            ./sherpa-onnx-whisper-tiny.en/test_wavs/0.wav \
+            ./sherpa-onnx-whisper-tiny.en/test_wavs/1.wav \
+            ./sherpa-onnx-whisper-tiny.en/test_wavs/8k.wav

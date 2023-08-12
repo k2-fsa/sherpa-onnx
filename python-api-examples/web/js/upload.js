@@ -74,9 +74,11 @@ connectBtn.onclick = function() {
 };
 
 function send_header(n) {
-  const header = new ArrayBuffer(4);
-  new DataView(header).setInt32(0, n, true /* littleEndian */);
-  socket.send(new Int32Array(header, 0, 1));
+  const header = new ArrayBuffer(8);
+  // assume the uploaded wave is 16000 Hz
+  new DataView(header).setInt32(0, 16000, true /* littleEndian */);
+  new DataView(header).setInt32(4, n, true /* littleEndian */);
+  socket.send(new Int32Array(header, 0, 2));
 }
 
 function onFileChange() {

@@ -88,6 +88,7 @@ const canvas = document.getElementById('canvas');
 const mainSection = document.querySelector('.container');
 
 stopBtn.disabled = true;
+recordBtn.disabled = true;
 
 let audioCtx;
 const canvasCtx = canvas.getContext('2d');

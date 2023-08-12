@@ -1,0 +1,73 @@
+name: Python online websocket server
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+concurrency:
+  group: python-online-websocket-server-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  python_online_websocket_server:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.python-version }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        model_type: ["transducer"]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip numpy
+
+      - name: Install sherpa-onnx
+        shell: bash
+        run: |
+          python3 -m pip install --no-deps --verbose .
+          python3 -m pip install websockets
+
+
+      - name: Start server for transducer models
+        if: matrix.model_type == 'transducer'
+        shell: bash
+        run: |
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
+          cd sherpa-onnx-streaming-zipformer-en-2023-06-26
+          git lfs pull --include "*.onnx"
+          cd ..
+
+          python3 ./python-api-examples/streaming_server.py \
+            --encoder ./sherpa-onnx-streaming-zipformer-en-2023-06-26/encoder-epoch-99-avg-1-chunk-16-left-128.onnx \
+            --decoder ./sherpa-onnx-streaming-zipformer-en-2023-06-26/decoder-epoch-99-avg-1-chunk-16-left-128.onnx \
+            --joiner ./sherpa-onnx-streaming-zipformer-en-2023-06-26/joiner-epoch-99-avg-1-chunk-16-left-128.onnx \
+            --tokens ./sherpa-onnx-streaming-zipformer-en-2023-06-26/tokens.txt &
+          echo "sleep 10 seconds to wait the server start"
+          sleep 10
+
+      - name: Start client for transducer models
+        if: matrix.model_type == 'transducer'
+        shell: bash
+        run: |
+          python3 ./python-api-examples/online-websocket-client-decode-file.py \
+            ./sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/0.wav

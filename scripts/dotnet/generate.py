@@ -88,7 +88,8 @@ def process_windows(s):
     prefix1 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/lib/"
     prefix2 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/"
     prefix3 = f"{SHERPA_ONNX_DIR}/windows/"
-    prefix4 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx-${version}.data/data/bin/"
+    prefix4 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx-{version}.data/data/bin/"
+    print(prefix1, prefix2, prefix3, prefix4)
 
     lib_list = []
     for lib in libs:

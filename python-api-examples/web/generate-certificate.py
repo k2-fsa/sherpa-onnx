@@ -35,8 +35,8 @@ Otherwise, you may get the following error from within you browser:
 
 
 def cert_gen(
-    emailAddress="https://github.com/k2-fsa/k2",
-    commonName="sherpa",
+    emailAddress="https://github.com/k2-fsa/sherpa-onnx",
+    commonName="sherpa-onnx",
     countryName="CN",
     localityName="k2-fsa",
     stateOrProvinceName="k2-fsa",
@@ -70,17 +70,13 @@ def cert_gen(
     cert.set_pubkey(k)
     cert.sign(k, "sha512")
     with open(CERT_FILE, "wt") as f:
-        f.write(
-            crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8")
-        )
+        f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8"))
     with open(KEY_FILE, "wt") as f:
         f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k).decode("utf-8"))
 
     with open(ALL_IN_ONE_FILE, "wt") as f:
         f.write(crypto.dump_privatekey(crypto.FILETYPE_PEM, k).decode("utf-8"))
-        f.write(
-            crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8")
-        )
+        f.write(crypto.dump_certificate(crypto.FILETYPE_PEM, cert).decode("utf-8"))
     print(f"Generated {CERT_FILE}")
     print(f"Generated {KEY_FILE}")
     print(f"Generated {ALL_IN_ONE_FILE}")

@@ -119,7 +119,13 @@ async def run(
         buf += (samples.size * 4).to_bytes(4, byteorder="little")
         buf += samples.tobytes()
 
-        await websocket.send(buf)
+        payload_len = 10240
+        while len(buf) > payload_len:
+            await websocket.send(buf[:payload_len])
+            buf = buf[payload_len:]
+
+        if buf:
+            await websocket.send(buf)
 
         decoding_results = await websocket.recv()
         logging.info(f"{wave_filename}\n{decoding_results}")

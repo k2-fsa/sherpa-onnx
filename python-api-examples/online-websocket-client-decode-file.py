@@ -15,10 +15,9 @@ Usage:
 
 (Note: You have to first start the server before starting the client)
 
-You can find the server at
+You can find the c++ server at
 https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/csrc/online-websocket-server.cc
-
-Note: The server is implemented in C++.
+or use the python server ./python-api-examples/streaming_server.py
 
 There is also a C++ version of the client. Please see
 https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/csrc/online-websocket-client.cc
@@ -115,7 +114,8 @@ async def receive_results(socket: websockets.WebSocketServerProtocol):
             last_message = message
             logging.info(message)
         else:
-            return last_message
+            break
+    return last_message
 
 
 async def run(
@@ -142,6 +142,7 @@ async def run(
 
             await websocket.send(d)
 
+            # Simulate streaming. You can remove the sleep if you want
             await asyncio.sleep(seconds_per_message)  # in seconds
 
             start += samples_per_message

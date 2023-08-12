@@ -16,7 +16,7 @@ using System.Runtime.InteropServices;
 using System;
 
 
-class OnlineDecodeFiles
+class SpeechRecognitionFromMicrophone
 {
   class Options
   {
@@ -192,6 +192,7 @@ to download pre-trained streaming models.
         );
 
     Console.WriteLine(param);
+    Console.WriteLine("Started! Please speak");
 
     stream.Start();
 
