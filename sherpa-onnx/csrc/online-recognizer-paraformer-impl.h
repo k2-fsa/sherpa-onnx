@@ -24,15 +24,14 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
  public:
   explicit OnlineRecognizerParaformerImpl(const OnlineRecognizerConfig &config)
       : config_(config),
-        model_(OnlineParaformerModel::Create(config.model_config)),
+        model_(config.model_config),
         sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
-    else if (config.decoding_method == "greedy_search") {
+    if (config.decoding_method == "greedy_search") {
       // add greedy search decoder
       SHERPA_ONNX_LOGE("to be implemented");
       exit(-1);
-    }
-    else {
+    } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
       exit(-1);
@@ -43,7 +42,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
   explicit OnlineRecognizerParaformerImpl(AAssetManager *mgr,
                                           const OnlineRecognizerConfig &config)
       : config_(config),
-        model_(OnlineParaformerModel::Create(mgr, config.model_config)),
+        model_(mgr, config.model_config),
         sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
     if (config.decoding_method == "greedy_search") {
@@ -57,6 +56,11 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     }
   }
 #endif
+  OnlineRecognizerParaformerImpl(const OnlineRecognizerParaformerImpl &) =
+      delete;
+
+  OnlineRecognizerParaformerImpl operator=(
+      const OnlineRecognizerParaformerImpl &) = delete;
 
   void InitOnlineStream(OnlineStream *stream) const override {
     SHERPA_ONNX_LOGE("to be implemented");
@@ -98,7 +102,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
  private:
   OnlineRecognizerConfig config_;
-  std::unique_ptr<OnlineParaformerModel> model_;
+  OnlineParaformerModel model_;
   SymbolTable sym_;
   Endpoint endpoint_;
 };

@@ -9,6 +9,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-model-config.h"
 
@@ -17,6 +22,11 @@ namespace sherpa_onnx {
 class OnlineParaformerModel {
  public:
   explicit OnlineParaformerModel(const OnlineModelConfig &config);
+
+#if __ANDROID_API__ >= 9
+  OnlineParaformerModel(AAssetManager *mgr, const OnlineModelConfig &config);
+#endif
+
   ~OnlineParaformerModel();
 
   std::tuple<Ort::Value, Ort::Value, Ort::Value> ForwardEncoder(

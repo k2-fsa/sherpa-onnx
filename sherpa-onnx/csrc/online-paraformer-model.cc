@@ -7,6 +7,11 @@
 #include <algorithm>
 #include <string>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -22,15 +27,33 @@ class OnlineParaformerModel::Impl {
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     {
-      auto buf = ReadFile(config.transducer.encoder);
+      auto buf = ReadFile(config.paraformer.encoder);
       InitEncoder(buf.data(), buf.size());
     }
 
     {
-      auto buf = ReadFile(config.transducer.decoder);
+      auto buf = ReadFile(config.paraformer.decoder);
       InitDecoder(buf.data(), buf.size());
     }
   }
+
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const OnlineModelConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_WARNING),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    {
+      auto buf = ReadFile(mgr, config.paraformer.encoder);
+      InitEncoder(buf.data(), buf.size());
+    }
+
+    {
+      auto buf = ReadFile(mgr, config.paraformer.decoder);
+      InitDecoder(buf.data(), buf.size());
+    }
+  }
+#endif
 
   std::tuple<Ort::Value, Ort::Value, Ort::Value> ForwardEncoder(
       Ort::Value features, Ort::Value features_length) {
@@ -88,6 +111,19 @@ class OnlineParaformerModel::Impl {
 
     SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(neg_mean_, "neg_mean");
     SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(inv_stddev_, "inv_stddev");
+    SHERPA_ONNX_LOGE("neg mean size: %d\n", int(neg_mean_.size()));
+    SHERPA_ONNX_LOGE("inv stddev  size: %d\n", int(inv_stddev_.size()));
+  }
+
+  void InitDecoder(void *model_data, size_t model_data_length) {
+    decoder_sess_ = std::make_unique<Ort::Session>(
+        env_, model_data, model_data_length, sess_opts_);
+
+    GetInputNames(decoder_sess_.get(), &decoder_input_names_,
+                  &decoder_input_names_ptr_);
+
+    GetOutputNames(decoder_sess_.get(), &decoder_output_names_,
+                   &decoder_output_names_ptr_);
   }
 
  private:
@@ -124,8 +160,14 @@ class OnlineParaformerModel::Impl {
   int32_t decoder_kernel_size_ = 0;
 };
 
-OnlineParaformerModel::OnlineParaformerModel(const OfflineModelConfig &config)
+OnlineParaformerModel::OnlineParaformerModel(const OnlineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+OnlineParaformerModel::OnlineParaformerModel(AAssetManager *mgr,
+                                             const OnlineModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
 
 OnlineParaformerModel::~OnlineParaformerModel() = default;
 
