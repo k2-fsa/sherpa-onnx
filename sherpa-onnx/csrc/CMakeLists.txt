@@ -47,6 +47,7 @@ set(sources
   online-lstm-transducer-model.cc
   online-model-config.cc
   online-paraformer-model-config.cc
+  online-paraformer-model.cc
   online-recognizer-impl.cc
   online-recognizer.cc
   online-rnn-lm.cc

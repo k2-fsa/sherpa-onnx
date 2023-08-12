@@ -1,6 +1,6 @@
 // sherpa-onnx/python/csrc/online-model-config.cc
 //
-// Copyright (c)  2023 by manyeyes
+// Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/python/csrc/online-model-config.h"
 
