@@ -28,7 +28,7 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
 
   for (int32_t i = 0; i != src.tokens.size(); ++i) {
     if (sym_table.contains("SIL") && src.tokens[i] == sym_table["SIL"]) {
-      // TDNN-LSTM from yesno has a SIL token, we should remove it.
+      // tdnn models from yesno have a SIL token, we should remove it.
       continue;
     }
     auto sym = sym_table[src.tokens[i]];
@@ -62,6 +62,7 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
       if (symbol_table_.contains("<blk>")) {
         blank_id = symbol_table_["<blk>"];
       } else if (symbol_table_.contains("<eps>")) {
+        // for tdnn models of the yesno recipe from icefall
         blank_id = symbol_table_["<eps>"];
       }
 

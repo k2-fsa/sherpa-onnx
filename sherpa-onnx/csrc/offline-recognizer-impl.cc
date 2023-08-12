@@ -89,7 +89,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "\n    "
         "(3) Whisper"
         "\n    "
-        "(4) Tdnn models"
+        "(4) Tdnn models of the yesno recipe from icefall"
         "\n    "
         "https://github.com/k2-fsa/icefall/tree/master/egs/yesno/ASR/tdnn"
         "\n"
