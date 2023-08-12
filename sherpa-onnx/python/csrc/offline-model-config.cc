@@ -21,6 +21,7 @@ void PybindOfflineModelConfig(py::module *m) {
   PybindOfflineParaformerModelConfig(m);
   PybindOfflineNemoEncDecCtcModelConfig(m);
   PybindOfflineWhisperModelConfig(m);
+  PybindOfflineTdnnModelConfig(m);
 
   using PyClass = OfflineModelConfig;
   py::class_<PyClass>(*m, "OfflineModelConfig")

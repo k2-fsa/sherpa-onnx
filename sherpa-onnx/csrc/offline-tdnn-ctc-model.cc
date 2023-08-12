@@ -31,7 +31,7 @@ class OfflineTdnnCtcModel::Impl {
         nnet_out[0].GetTensorTypeAndShapeInfo().GetShape();
 
     std::vector<int64_t> out_length_vec(nnet_out_shape[0], nnet_out_shape[1]);
-    std::vector<int64_t> out_length_shape(1, 1);
+    std::vector<int64_t> out_length_shape(1, nnet_out_shape[0]);
 
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
