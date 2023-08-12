@@ -12,6 +12,7 @@ namespace sherpa_onnx {
 
 void OnlineModelConfig::Register(ParseOptions *po) {
   transducer.Register(po);
+  paraformer.Register(po);
 
   po->Register("tokens", &tokens, "Path to tokens.txt");
 
@@ -41,6 +42,10 @@ bool OnlineModelConfig::Validate() const {
     return false;
   }
 
+  if (!paraformer.encoder.empty()) {
+    return paraformer.Validate();
+  }
+
   return transducer.Validate();
 }
 
@@ -49,6 +54,7 @@ std::string OnlineModelConfig::ToString() const {
 
   os << "OnlineModelConfig(";
   os << "transducer=" << transducer.ToString() << ", ";
+  os << "paraformer=" << paraformer.ToString() << ", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
