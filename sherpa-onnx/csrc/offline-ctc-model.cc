@@ -57,7 +57,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
   if (model_type.get() == std::string("EncDecCTCModelBPE")) {
     return ModelType::kEncDecCTCModelBPE;
-  } else if (model_type.get() == std::string("tdnn_lstm")) {
+  } else if (model_type.get() == std::string("tdnn")) {
     return ModelType::kTdnn;
   } else {
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());

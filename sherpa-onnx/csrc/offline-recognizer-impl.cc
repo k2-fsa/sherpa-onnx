@@ -27,7 +27,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<OfflineRecognizerParaformerImpl>(config);
     } else if (model_type == "nemo_ctc") {
       return std::make_unique<OfflineRecognizerCtcImpl>(config);
-    } else if (model_type == "tdnn_lstm") {
+    } else if (model_type == "tdnn") {
       return std::make_unique<OfflineRecognizerCtcImpl>(config);
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(config);
@@ -111,7 +111,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
 
-  if (model_type == "tdnn_lstm") {
+  if (model_type == "tdnn") {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
 

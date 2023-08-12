@@ -30,7 +30,8 @@ void OfflineModelConfig::Register(ParseOptions *po) {
 
   po->Register("model-type", &model_type,
                "Specify it to reduce model initialization time. "
-               "Valid values are: transducer, paraformer, nemo_ctc, whisper."
+               "Valid values are: transducer, paraformer, nemo_ctc, whisper, "
+               "tdnn."
                "All other values lead to loading the model twice.");
 }
 
