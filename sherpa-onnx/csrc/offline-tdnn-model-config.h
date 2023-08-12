@@ -15,7 +15,7 @@ struct OfflineTdnnModelConfig {
   std::string model;
 
   OfflineTdnnModelConfig() = default;
-  OfflineTdnnModelConfig(const std::string &model) : model(model) {}
+  explicit OfflineTdnnModelConfig(const std::string &model) : model(model) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
