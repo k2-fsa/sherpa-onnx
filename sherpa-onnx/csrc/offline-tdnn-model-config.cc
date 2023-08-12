@@ -10,7 +10,7 @@
 namespace sherpa_onnx {
 
 void OfflineTdnnModelConfig::Register(ParseOptions *po) {
-  po->Register("--tdnn-model", &model, "Path to onnx model");
+  po->Register("tdnn-model", &model, "Path to onnx model");
 }
 
 bool OfflineTdnnModelConfig::Validate() const {

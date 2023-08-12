@@ -39,10 +39,10 @@ class OfflineCtcModel {
 
   /** SubsamplingFactor of the model
    *
-   * For Citrinet, the subsampling factor is usually 4.
-   * For Conformer CTC, the subsampling factor is usually 8.
+   * For NeMo Citrinet, the subsampling factor is usually 4.
+   * For NeMo Conformer CTC, the subsampling factor is usually 8.
    */
-  virtual int32_t SubsamplingFactor() const = 0;
+  virtual int32_t SubsamplingFactor() const { return 1; }
 
   /** Return an allocator for allocating memory
    */
