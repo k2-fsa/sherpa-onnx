@@ -186,7 +186,7 @@ jobs:
             --tdnn-model=./sherpa-onnx-tdnn-yesno/model-epoch-14-avg-2.onnx \
             --tokens=./sherpa-onnx-tdnn-yesno/tokens.txt \
             --sample-rate=8000 \
-            --feat-dim=23
+            --feat-dim=23 &
 
           echo "sleep 10 seconds to wait the server start"
           sleep 10
