@@ -27,6 +27,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<OfflineRecognizerParaformerImpl>(config);
     } else if (model_type == "nemo_ctc") {
       return std::make_unique<OfflineRecognizerCtcImpl>(config);
+    } else if (model_type == "tdnn") {
+      return std::make_unique<OfflineRecognizerCtcImpl>(config);
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(config);
     } else {
@@ -46,6 +48,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     model_filename = config.model_config.paraformer.model;
   } else if (!config.model_config.nemo_ctc.model.empty()) {
     model_filename = config.model_config.nemo_ctc.model;
+  } else if (!config.model_config.tdnn.model.empty()) {
+    model_filename = config.model_config.tdnn.model;
   } else if (!config.model_config.whisper.encoder.empty()) {
     model_filename = config.model_config.whisper.encoder;
   } else {
@@ -84,6 +88,11 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "paraformer-onnxruntime-python-example/blob/main/add-model-metadata.py"
         "\n    "
         "(3) Whisper"
+        "\n    "
+        "(4) Tdnn models of the yesno recipe from icefall"
+        "\n    "
+        "https://github.com/k2-fsa/icefall/tree/master/egs/yesno/ASR/tdnn"
+        "\n"
         "\n");
     exit(-1);
   }
@@ -102,6 +111,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
 
+  if (model_type == "tdnn") {
+    return std::make_unique<OfflineRecognizerCtcImpl>(config);
+  }
+
   if (strncmp(model_type.c_str(), "whisper", 7) == 0) {
     return std::make_unique<OfflineRecognizerWhisperImpl>(config);
   }
@@ -112,7 +125,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - Non-streaming transducer models from icefall\n"
       " - Non-streaming Paraformer models from FunASR\n"
       " - EncDecCTCModelBPE models from NeMo\n"
-      " - Whisper models\n",
+      " - Whisper models\n"
+      " - Tdnn models\n",
       model_type.c_str());
 
   exit(-1);

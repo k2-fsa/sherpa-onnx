@@ -97,20 +97,18 @@ function onFileChange() {
   console.log('file.type ' + file.type);
   console.log('file.size ' + file.size);
 
+  let audioCtx = new AudioContext({sampleRate: 16000});
+
   let reader = new FileReader();
   reader.onload = function() {
     console.log('reading file!');
-    let view = new Int16Array(reader.result);
-    // we assume the input file is a wav file.
-    // TODO: add some checks here.
-    let int16_samples = view.subarray(22);  // header has 44 bytes == 22 shorts
-    let num_samples = int16_samples.length;
-    let float32_samples = new Float32Array(num_samples);
-    console.log('num_samples ' + num_samples)
+    audioCtx.decodeAudioData(reader.result, decodedDone);
+  };
 
-    for (let i = 0; i < num_samples; ++i) {
-      float32_samples[i] = int16_samples[i] / 32768.
-    }
+  function decodedDone(decoded) {
+    let typedArray = new Float32Array(decoded.length);
+    let float32_samples = decoded.getChannelData(0);
+    let buf = float32_samples.buffer
 
     // Send 1024 audio samples per request.
     //
@@ -119,14 +117,13 @@ function onFileChange() {
     //  (2) There is a limit on the number of bytes in the payload that can be
     //      sent by websocket, which is 1MB, I think. We can send a large
     //      audio file for decoding in this approach.
-    let buf = float32_samples.buffer
     let n = 1024 * 4;  // send this number of bytes per request.
     console.log('buf length, ' + buf.byteLength);
     send_header(buf.byteLength);
     for (let start = 0; start < buf.byteLength; start += n) {
       socket.send(buf.slice(start, start + n));
     }
-  };
+  }
 
   reader.readAsArrayBuffer(file);
 }

@@ -14,9 +14,13 @@
 
 int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
+Speech recognition using non-streaming models with sherpa-onnx.
+
 Usage:
 
 (1) Transducer from icefall
+
+See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/index.html
 
   ./bin/sherpa-onnx-offline \
     --tokens=/path/to/tokens.txt \
@@ -30,6 +34,8 @@ Usage:
 
 (2) Paraformer from FunASR
 
+See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/index.html
+
   ./bin/sherpa-onnx-offline \
     --tokens=/path/to/tokens.txt \
     --paraformer=/path/to/model.onnx \
@@ -39,6 +45,8 @@ Usage:
 
 (3) Whisper models
 
+See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html
+
   ./bin/sherpa-onnx-offline \
     --whisper-encoder=./sherpa-onnx-whisper-base.en/base.en-encoder.int8.onnx \
     --whisper-decoder=./sherpa-onnx-whisper-base.en/base.en-decoder.int8.onnx \
@@ -46,6 +54,31 @@ Usage:
     --num-threads=1 \
     /path/to/foo.wav [bar.wav foobar.wav ...]
 
+(4) NeMo CTC models
+
+See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/index.html
+
+  ./bin/sherpa-onnx-offline \
+    --tokens=./sherpa-onnx-nemo-ctc-en-conformer-medium/tokens.txt \
+    --nemo-ctc-model=./sherpa-onnx-nemo-ctc-en-conformer-medium/model.onnx \
+    --num-threads=2 \
+    --decoding-method=greedy_search \
+    --debug=false \
+    ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/0.wav \
+    ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/1.wav \
+    ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/8k.wav
+
+(5) TDNN CTC model for the yesno recipe from icefall
+
+See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/yesno/index.html
+      //
+  ./build/bin/sherpa-onnx-offline \
+    --sample-rate=8000 \
+    --feat-dim=23 \
+    --tokens=./sherpa-onnx-tdnn-yesno/tokens.txt \
+    --tdnn-model=./sherpa-onnx-tdnn-yesno/model-epoch-14-avg-2.onnx \
+    ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_0_1_0_0_0_1.wav \
+    ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_0_0_1_0.wav
 
 Note: It supports decoding multiple files in batches
 

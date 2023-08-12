@@ -32,6 +32,8 @@ set(sources
   offline-recognizer.cc
   offline-rnn-lm.cc
   offline-stream.cc
+  offline-tdnn-ctc-model.cc
+  offline-tdnn-model-config.cc
   offline-transducer-greedy-search-decoder.cc
   offline-transducer-model-config.cc
   offline-transducer-model.cc

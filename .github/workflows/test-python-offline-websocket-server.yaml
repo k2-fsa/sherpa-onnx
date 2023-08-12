@@ -24,7 +24,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
-        model_type: ["transducer", "paraformer", "nemo_ctc", "whisper"]
+        model_type: ["transducer", "paraformer", "nemo_ctc", "whisper", "tdnn"]
 
     steps:
       - uses: actions/checkout@v2
@@ -172,3 +172,41 @@ jobs:
             ./sherpa-onnx-whisper-tiny.en/test_wavs/0.wav \
             ./sherpa-onnx-whisper-tiny.en/test_wavs/1.wav \
             ./sherpa-onnx-whisper-tiny.en/test_wavs/8k.wav
+
+      - name: Start server for tdnn models
+        if: matrix.model_type == 'tdnn'
+        shell: bash
+        run: |
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-tdnn-yesno
+          cd sherpa-onnx-tdnn-yesno
+          git lfs pull --include "*.onnx"
+          cd ..
+
+          python3 ./python-api-examples/non_streaming_server.py \
+            --tdnn-model=./sherpa-onnx-tdnn-yesno/model-epoch-14-avg-2.onnx \
+            --tokens=./sherpa-onnx-tdnn-yesno/tokens.txt \
+            --sample-rate=8000 \
+            --feat-dim=23 &
+
+          echo "sleep 10 seconds to wait the server start"
+          sleep 10
+
+      - name: Start client for tdnn models
+        if: matrix.model_type == 'tdnn'
+        shell: bash
+        run: |
+          python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_0_1_0_0_0_1.wav \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_0_0_1_0.wav \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_0_1_1_1.wav \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_1_0_0_1.wav \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_1_0_0_0_1.wav \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_1_0_1_1_0.wav
+
+          python3 ./python-api-examples/offline-websocket-client-decode-files-sequential.py \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_0_1_0_0_0_1.wav \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_0_0_1_0.wav \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_0_1_1_1.wav \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_1_0_0_1.wav \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_1_0_0_0_1.wav \
+            ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_1_0_1_1_0.wav

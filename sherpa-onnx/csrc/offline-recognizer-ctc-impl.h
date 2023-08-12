@@ -27,6 +27,10 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
   std::string text;
 
   for (int32_t i = 0; i != src.tokens.size(); ++i) {
+    if (sym_table.contains("SIL") && src.tokens[i] == sym_table["SIL"]) {
+      // tdnn models from yesno have a SIL token, we should remove it.
+      continue;
+    }
     auto sym = sym_table[src.tokens[i]];
     text.append(sym);
     r.tokens.push_back(std::move(sym));
@@ -46,14 +50,22 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
         model_->FeatureNormalizationMethod();
 
     if (config.decoding_method == "greedy_search") {
-      if (!symbol_table_.contains("<blk>")) {
+      if (!symbol_table_.contains("<blk>") &&
+          !symbol_table_.contains("<eps>")) {
         SHERPA_ONNX_LOGE(
             "We expect that tokens.txt contains "
-            "the symbol <blk> and its ID.");
+            "the symbol <blk> or <eps> and its ID.");
         exit(-1);
       }
 
-      int32_t blank_id = symbol_table_["<blk>"];
+      int32_t blank_id = 0;
+      if (symbol_table_.contains("<blk>")) {
+        blank_id = symbol_table_["<blk>"];
+      } else if (symbol_table_.contains("<eps>")) {
+        // for tdnn models of the yesno recipe from icefall
+        blank_id = symbol_table_["<eps>"];
+      }
+
       decoder_ = std::make_unique<OfflineCtcGreedySearchDecoder>(blank_id);
     } else {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
