@@ -242,8 +242,8 @@ def main():
         assert_file_exists(args.decoder)
         assert_file_exists(args.joiner)
 
-        assert len(args.paraformer_encoder) == 0, args.paraformer_encoder
-        assert len(args.paraformer_decoder) == 0, args.paraformer_decoder
+        assert not args.paraformer_encoder, args.paraformer_encoder
+        assert not args.paraformer_decoder, args.paraformer_decoder
 
         recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
             tokens=args.tokens,
