@@ -115,22 +115,36 @@ def add_model_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--encoder-model",
         type=str,
-        required=True,
-        help="Path to the encoder model",
+        default="",
+        help="Path to the transducer encoder model",
     )
 
     parser.add_argument(
         "--decoder-model",
         type=str,
-        required=True,
-        help="Path to the decoder model.",
+        default="",
+        help="Path to the transducer decoder model.",
     )
 
     parser.add_argument(
         "--joiner-model",
         type=str,
-        required=True,
-        help="Path to the joiner model.",
+        default="",
+        help="Path to the transducer joiner model.",
+    )
+
+    parser.add_argument(
+        "--paraformer-encoder-model",
+        type=str,
+        default="",
+        help="Path to the paraformer encoder model",
+    )
+
+    parser.add_argument(
+        "--paraformer-decoder-model",
+        type=str,
+        default="",
+        help="Path to the transducer decoder model.",
     )
 
     parser.add_argument(
@@ -323,22 +337,40 @@ def get_args():
 
 
 def create_recognizer(args) -> sherpa_onnx.OnlineRecognizer:
-    recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
-        tokens=args.tokens,
-        encoder=args.encoder_model,
-        decoder=args.decoder_model,
-        joiner=args.joiner_model,
-        num_threads=args.num_threads,
-        sample_rate=args.sample_rate,
-        feature_dim=args.feat_dim,
-        decoding_method=args.decoding_method,
-        max_active_paths=args.num_active_paths,
-        enable_endpoint_detection=args.use_endpoint != 0,
-        rule1_min_trailing_silence=args.rule1_min_trailing_silence,
-        rule2_min_trailing_silence=args.rule2_min_trailing_silence,
-        rule3_min_utterance_length=args.rule3_min_utterance_length,
-        provider=args.provider,
-    )
+    if args.encoder_model:
+        recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
+            tokens=args.tokens,
+            encoder=args.encoder_model,
+            decoder=args.decoder_model,
+            joiner=args.joiner_model,
+            num_threads=args.num_threads,
+            sample_rate=args.sample_rate,
+            feature_dim=args.feat_dim,
+            decoding_method=args.decoding_method,
+            max_active_paths=args.num_active_paths,
+            enable_endpoint_detection=args.use_endpoint != 0,
+            rule1_min_trailing_silence=args.rule1_min_trailing_silence,
+            rule2_min_trailing_silence=args.rule2_min_trailing_silence,
+            rule3_min_utterance_length=args.rule3_min_utterance_length,
+            provider=args.provider,
+        )
+    elif args.paraformer_encoder_model:
+        recognizer = sherpa_onnx.OnlineRecognizer.from_paraformer(
+            tokens=args.tokens,
+            encoder=args.paraformer_encoder_model,
+            decoder=args.paraformer_decoder_model,
+            num_threads=args.num_threads,
+            sample_rate=args.sample_rate,
+            feature_dim=args.feat_dim,
+            decoding_method=args.decoding_method,
+            enable_endpoint_detection=args.use_endpoint != 0,
+            rule1_min_trailing_silence=args.rule1_min_trailing_silence,
+            rule2_min_trailing_silence=args.rule2_min_trailing_silence,
+            rule3_min_utterance_length=args.rule3_min_utterance_length,
+            provider=args.provider,
+        )
+    else:
+        raise ValueError("Please provide a model")
 
     return recognizer
 
@@ -654,11 +686,29 @@ Go back to <a href="/streaming_record.html">/streaming_record.html</a>
 
 
 def check_args(args):
-    assert Path(args.encoder_model).is_file(), f"{args.encoder_model} does not exist"
+    if args.encoder_model:
+        assert Path(
+            args.encoder_model
+        ).is_file(), f"{args.encoder_model} does not exist"
 
-    assert Path(args.decoder_model).is_file(), f"{args.decoder_model} does not exist"
+        assert Path(
+            args.decoder_model
+        ).is_file(), f"{args.decoder_model} does not exist"
 
-    assert Path(args.joiner_model).is_file(), f"{args.joiner_model} does not exist"
+        assert Path(args.joiner_model).is_file(), f"{args.joiner_model} does not exist"
+
+        assert len(args.paraformer_encoder_model) == 0, args.paraformer_encoder_model
+        assert len(args.paraformer_decoder_model) == 0, args.paraformer_decoder_model
+    elif args.paraformer_encoder_model:
+        assert Path(
+            args.paraformer_encoder_model
+        ).is_file(), f"{args.paraformer_encoder_model} does not exist"
+
+        assert Path(
+            args.paraformer_decoder_model
+        ).is_file(), f"{args.paraformer_decoder_model} does not exist"
+    else:
+        raise ValueError("Please provide a model")
 
     if not Path(args.tokens).is_file():
         raise ValueError(f"{args.tokens} does not exist")

@@ -6,6 +6,7 @@ from _sherpa_onnx import (
     EndpointConfig,
     FeatureExtractorConfig,
     OnlineModelConfig,
+    OnlineParaformerModelConfig,
     OnlineRecognizer as _Recognizer,
     OnlineRecognizerConfig,
     OnlineStream,
@@ -32,7 +33,7 @@ class OnlineRecognizer(object):
         encoder: str,
         decoder: str,
         joiner: str,
-        num_threads: int = 4,
+        num_threads: int = 2,
         sample_rate: float = 16000,
         feature_dim: int = 80,
         enable_endpoint_detection: bool = False,
@@ -138,6 +139,109 @@ class OnlineRecognizer(object):
             decoding_method=decoding_method,
             max_active_paths=max_active_paths,
             context_score=context_score,
+        )
+
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_paraformer(
+        cls,
+        tokens: str,
+        encoder: str,
+        decoder: str,
+        num_threads: int = 2,
+        sample_rate: float = 16000,
+        feature_dim: int = 80,
+        enable_endpoint_detection: bool = False,
+        rule1_min_trailing_silence: float = 2.4,
+        rule2_min_trailing_silence: float = 1.2,
+        rule3_min_utterance_length: float = 20.0,
+        decoding_method: str = "greedy_search",
+        provider: str = "cpu",
+    ):
+        """
+        Please refer to
+        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html>`_
+        to download pre-trained models for different languages, e.g., Chinese,
+        English, etc.
+
+        Args:
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          encoder:
+            Path to ``encoder.onnx``.
+          decoder:
+            Path to ``decoder.onnx``.
+          num_threads:
+            Number of threads for neural network computation.
+          sample_rate:
+            Sample rate of the training data used to train the model.
+          feature_dim:
+            Dimension of the feature used to train the model.
+          enable_endpoint_detection:
+            True to enable endpoint detection. False to disable endpoint
+            detection.
+          rule1_min_trailing_silence:
+            Used only when enable_endpoint_detection is True. If the duration
+            of trailing silence in seconds is larger than this value, we assume
+            an endpoint is detected.
+          rule2_min_trailing_silence:
+            Used only when enable_endpoint_detection is True. If we have decoded
+            something that is nonsilence and if the duration of trailing silence
+            in seconds is larger than this value, we assume an endpoint is
+            detected.
+          rule3_min_utterance_length:
+            Used only when enable_endpoint_detection is True. If the utterance
+            length in seconds is larger than this value, we assume an endpoint
+            is detected.
+          decoding_method:
+            The only valid value is greedy_search.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+        """
+        self = cls.__new__(cls)
+        _assert_file_exists(tokens)
+        _assert_file_exists(encoder)
+        _assert_file_exists(decoder)
+
+        assert num_threads > 0, num_threads
+
+        paraformer_config = OnlineParaformerModelConfig(
+            encoder=encoder,
+            decoder=decoder,
+        )
+
+        model_config = OnlineModelConfig(
+            paraformer=paraformer_config,
+            tokens=tokens,
+            num_threads=num_threads,
+            provider=provider,
+            model_type="paraformer",
+        )
+
+        feat_config = FeatureExtractorConfig(
+            sampling_rate=sample_rate,
+            feature_dim=feature_dim,
+        )
+
+        endpoint_config = EndpointConfig(
+            rule1_min_trailing_silence=rule1_min_trailing_silence,
+            rule2_min_trailing_silence=rule2_min_trailing_silence,
+            rule3_min_utterance_length=rule3_min_utterance_length,
+        )
+
+        recognizer_config = OnlineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            endpoint_config=endpoint_config,
+            enable_endpoint=enable_endpoint_detection,
+            decoding_method=decoding_method,
         )
 
         self.recognizer = _Recognizer(recognizer_config)

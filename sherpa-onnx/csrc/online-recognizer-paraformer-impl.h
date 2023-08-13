@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -278,9 +279,6 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
     float integrate = alpha_cache[0];
 
-    // Scale(initial_hidden.data(), initial_hidden.size(), integrate,
-    //       initial_hidden.data());
-
     for (int32_t i = 0; i != encoder_out_shape[1]; ++i) {
       float this_alpha = p_alpha[i];
       if (integrate + this_alpha < threshold) {
@@ -348,10 +346,12 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
     states.reserve(model_.DecoderNumBlocks());
     for (int32_t i = 2; i != decoder_out_vec.size(); ++i) {
+      // TODO(fangjun): When we change chunk_size_, we need to
+      // slice decoder_out_vec[i] accordingly.
       states.push_back(std::move(decoder_out_vec[i]));
     }
 
-    auto &sample_ids = decoder_out_vec[1];
+    const auto &sample_ids = decoder_out_vec[1];
     const int64_t *p_sample_ids = sample_ids.GetTensorData<int64_t>();
 
     bool non_blank_detected = false;
