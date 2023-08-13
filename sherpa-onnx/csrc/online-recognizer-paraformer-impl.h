@@ -20,6 +20,20 @@
 
 namespace sherpa_onnx {
 
+// y[i] += x[i] * scale
+static void ScaleAddInPlace(const float *x, int32_t n, float scale, float *y) {
+  for (int32_t i = 0; i != n; ++i) {
+    y[i] += x[i] * scale;
+  }
+}
+
+// y[i] = x[i] * scale
+static void Scale(const float *x, int32_t n, float scale, float *y) {
+  for (int32_t i = 0; i != n; ++i) {
+    y[i] = x[i] * scale;
+  }
+}
+
 class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
  public:
   explicit OnlineRecognizerParaformerImpl(const OnlineRecognizerConfig &config)
@@ -105,23 +119,177 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
  private:
   void DecodeStream(OnlineStream *s) const {
-    SHERPA_ONNX_LOGE("NumFramesReady: %d\n", s->NumFramesReady());
-
     const auto num_processed_frames = s->GetNumProcessedFrames();
     std::vector<float> frames = s->GetFrames(num_processed_frames, chunk_size_);
-    s->GetNumProcessedFrames() += chunk_size_;
+    s->GetNumProcessedFrames() += chunk_size_ - 1;
 
     frames = ApplyLFR(frames);
     ApplyCMVN(&frames);
+    PositionalEncoding(&frames, num_processed_frames / model_.LfrWindowShift());
+
+    int32_t feat_dim = model_.NegativeMean().size();
 
     // We have scaled inv_stddev by sqrt(encoder_output_size)
     // so the following line can be commented out
     // frames *= encoder_output_size ** 0.5
 
-    // TODO(fangjun): Implement positional embedding
+    // add overlap chunk
+    std::vector<float> &feat_cache = s->GetParaformerFeatCache();
+    if (feat_cache.empty()) {
+      int32_t n = (left_chunk_size_ + right_chunk_size_) * feat_dim;
+      feat_cache.resize(n, 0);
+    }
 
-    SHERPA_ONNX_LOGE("to be implemented");
-    exit(-1);
+    frames.insert(frames.begin(), feat_cache.begin(), feat_cache.end());
+    std::copy(frames.end() - feat_cache.size(), frames.end(),
+              feat_cache.begin());
+
+    int32_t num_frames = frames.size() / feat_dim;
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::array<int64_t, 3> x_shape{1, num_frames, feat_dim};
+    Ort::Value x =
+        Ort::Value::CreateTensor(memory_info, frames.data(), frames.size(),
+                                 x_shape.data(), x_shape.size());
+
+    int64_t x_len_shape = 1;
+    int32_t x_len_val = num_frames;
+
+    Ort::Value x_length =
+        Ort::Value::CreateTensor(memory_info, &x_len_val, 1, &x_len_shape, 1);
+
+    auto encoder_out_vec =
+        model_.ForwardEncoder(std::move(x), std::move(x_length));
+
+    // CIF search
+    auto &encoder_out = encoder_out_vec[0];
+    auto &encoder_out_len = encoder_out_vec[1];
+    auto &alpha = encoder_out_vec[2];
+
+    float *p_alpha = alpha.GetTensorMutableData<float>();
+
+    std::vector<int64_t> alpha_shape =
+        alpha.GetTensorTypeAndShapeInfo().GetShape();
+
+    std::fill(p_alpha, p_alpha + left_chunk_size_, 0);
+    std::fill(p_alpha + alpha_shape[1] - right_chunk_size_,
+              p_alpha + alpha_shape[1], 0);
+
+    const float *p_encoder_out = encoder_out.GetTensorData<float>();
+
+    std::vector<int64_t> encoder_out_shape =
+        encoder_out.GetTensorTypeAndShapeInfo().GetShape();
+
+    std::vector<float> &initial_hidden = s->GetParaformerEncoderOutCache();
+    if (initial_hidden.empty()) {
+      initial_hidden.resize(encoder_out_shape[2]);
+    }
+
+    std::vector<float> &alpha_cache = s->GetParaformerAlphaCache();
+    if (alpha_cache.empty()) {
+      alpha_cache.resize(1);
+    }
+
+    std::vector<float> acoustic_embedding;
+    acoustic_embedding.reserve(encoder_out_shape[1] * encoder_out_shape[2]);
+
+    float threshold = 1.0;
+
+    float integrate = alpha_cache[0];
+
+    // Scale(initial_hidden.data(), initial_hidden.size(), integrate,
+    //       initial_hidden.data());
+
+    for (int32_t i = 0; i != encoder_out_shape[1]; ++i) {
+      float this_alpha = p_alpha[i];
+      if (integrate + this_alpha < threshold) {
+        integrate += this_alpha;
+        ScaleAddInPlace(p_encoder_out + i * encoder_out_shape[2],
+                        encoder_out_shape[2], this_alpha,
+                        initial_hidden.data());
+        continue;
+      }
+
+      // fire
+      ScaleAddInPlace(p_encoder_out + i * encoder_out_shape[2],
+                      encoder_out_shape[2], threshold - integrate,
+                      initial_hidden.data());
+      acoustic_embedding.insert(acoustic_embedding.end(),
+                                initial_hidden.begin(), initial_hidden.end());
+      integrate += this_alpha - threshold;
+
+      Scale(p_encoder_out + i * encoder_out_shape[2], encoder_out_shape[2],
+            integrate, initial_hidden.data());
+    }
+
+    alpha_cache[0] = integrate;
+    // if (integrate > 0) {
+    //   Scale(initial_hidden.data(), initial_hidden.size(), 1 / integrate,
+    //         initial_hidden.data());
+    // }
+
+    if (acoustic_embedding.empty()) {
+      return;
+    }
+
+    auto &states = s->GetStates();
+    if (states.empty()) {
+      states.reserve(model_.DecoderNumBlocks());
+
+      std::array<int64_t, 3> shape{1, model_.EncoderOutputSize(),
+                                   model_.DecoderKernelSize() - 1};
+
+      int32_t num_bytes = sizeof(float) * shape[0] * shape[1] * shape[2];
+
+      for (int32_t i = 0; i != model_.DecoderNumBlocks(); ++i) {
+        Ort::Value this_state = Ort::Value::CreateTensor<float>(
+            model_.Allocator(), shape.data(), shape.size());
+
+        memset(this_state.GetTensorMutableData<float>(), 0, num_bytes);
+
+        states.push_back(std::move(this_state));
+      }
+    }
+
+    int32_t num_tokens = acoustic_embedding.size() / initial_hidden.size();
+    std::array<int64_t, 3> acoustic_embedding_shape{
+        1, num_tokens, static_cast<int32_t>(initial_hidden.size())};
+
+    Ort::Value acoustic_embedding_tensor = Ort::Value::CreateTensor(
+        memory_info, acoustic_embedding.data(), acoustic_embedding.size(),
+        acoustic_embedding_shape.data(), acoustic_embedding_shape.size());
+
+    std::array<int64_t, 1> acoustic_embedding_length_shape{1};
+    Ort::Value acoustic_embedding_length_tensor = Ort::Value::CreateTensor(
+        memory_info, &num_tokens, 1, acoustic_embedding_length_shape.data(),
+        acoustic_embedding_length_shape.size());
+
+    auto decoder_out_vec = model_.ForwardDecoder(
+        std::move(encoder_out), std::move(encoder_out_len),
+        std::move(acoustic_embedding_tensor),
+        std::move(acoustic_embedding_length_tensor), std::move(states));
+
+    states.reserve(model_.DecoderNumBlocks());
+    for (int32_t i = 2; i != decoder_out_vec.size(); ++i) {
+      states.push_back(std::move(decoder_out_vec[i]));
+    }
+
+    auto &sample_ids = decoder_out_vec[1];
+    const int64_t *p_sample_ids = sample_ids.GetTensorData<int64_t>();
+    for (int32_t i = 0; i != num_tokens; ++i) {
+      SHERPA_ONNX_LOGE("%s", sym_[p_sample_ids[i]].c_str());
+    }
+    SHERPA_ONNX_LOGE("\n\n");
+
+    // if (integrate) {
+    //   Scale(initial_hidden.data(), initial_hidden.size(), 1. / integrate,
+    //         initial_hidden.data());
+    // }
+
+    // SHERPA_ONNX_LOGE("to be implemented");
+    // exit(-1);
   }
 
   std::vector<float> ApplyLFR(const std::vector<float> &in) const {
@@ -167,15 +335,48 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     }
   }
 
+  void PositionalEncoding(std::vector<float> *v, int32_t t_offset) const {
+    int32_t lfr_window_size = model_.LfrWindowSize();
+    int32_t in_feat_dim = config_.feat_config.feature_dim;
+
+    int32_t feat_dim = in_feat_dim * lfr_window_size;
+    int32_t T = v->size() / feat_dim;
+
+    // log(10000)/(7*80/2-1) == 0.03301197265941284
+    // 7 is lfr_window_size
+    // 80 is in_feat_dim
+    // 7*80 is feat_dim
+    constexpr float kScale = -0.03301197265941284;
+
+    for (int32_t t = 0; t != T; ++t) {
+      float *p = v->data() + t * feat_dim;
+
+      int32_t offset = t + 1 + t_offset;
+
+      for (int32_t d = 0; d < feat_dim / 2; ++d) {
+        float inv_timescale = offset * std::exp(d * kScale);
+
+        float sin_d = std::sin(inv_timescale);
+        float cos_d = std::cos(inv_timescale);
+
+        p[d] += sin_d;
+        p[d + feat_dim / 2] += cos_d;
+      }
+    }
+  }
+
  private:
   OnlineRecognizerConfig config_;
   OnlineParaformerModel model_;
   SymbolTable sym_;
   Endpoint endpoint_;
 
-  // 0.6 seconds
+  // 0.61 seconds
   int32_t chunk_size_ = 61;
   // (61 - 7) / 6 + 1 = 10
+
+  int32_t left_chunk_size_ = 5;
+  int32_t right_chunk_size_ = 5;
 };
 
 }  // namespace sherpa_onnx

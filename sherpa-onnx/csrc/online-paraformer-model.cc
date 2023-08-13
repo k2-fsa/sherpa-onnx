@@ -56,10 +56,14 @@ class OnlineParaformerModel::Impl {
   }
 #endif
 
-  std::tuple<Ort::Value, Ort::Value, Ort::Value> ForwardEncoder(
-      Ort::Value features, Ort::Value features_length) {
-    SHERPA_ONNX_LOGE("to be implemented");
-    exit(-1);
+  std::vector<Ort::Value> ForwardEncoder(Ort::Value features,
+                                         Ort::Value features_length) {
+    std::array<Ort::Value, 2> inputs = {std::move(features),
+                                        std::move(features_length)};
+
+    return encoder_sess_->Run(
+        {}, encoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
+        encoder_output_names_ptr_.data(), encoder_output_names_ptr_.size());
   }
 
   std::vector<Ort::Value> ForwardDecoder(Ort::Value encoder_out,
@@ -67,8 +71,22 @@ class OnlineParaformerModel::Impl {
                                          Ort::Value acoustic_embedding,
                                          Ort::Value acoustic_embedding_length,
                                          std::vector<Ort::Value> states) {
-    SHERPA_ONNX_LOGE("to be implemented");
-    exit(-1);
+    std::vector<Ort::Value> decoder_inputs;
+    decoder_inputs.reserve(4 + states.size());
+
+    decoder_inputs.push_back(std::move(encoder_out));
+    decoder_inputs.push_back(std::move(encoder_out_length));
+    decoder_inputs.push_back(std::move(acoustic_embedding));
+    decoder_inputs.push_back(std::move(acoustic_embedding_length));
+
+    for (auto &v : states) {
+      decoder_inputs.push_back(std::move(v));
+    }
+
+    return decoder_sess_->Run({}, decoder_input_names_ptr_.data(),
+                              decoder_inputs.data(), decoder_inputs.size(),
+                              decoder_output_names_ptr_.data(),
+                              decoder_output_names_ptr_.size());
   }
 
   int32_t VocabSize() const { return vocab_size_; }
@@ -76,6 +94,12 @@ class OnlineParaformerModel::Impl {
   int32_t LfrWindowSize() const { return lfr_window_size_; }
 
   int32_t LfrWindowShift() const { return lfr_window_shift_; }
+
+  int32_t EncoderOutputSize() const { return encoder_output_size_; }
+
+  int32_t DecoderKernelSize() const { return decoder_kernel_size_; }
+
+  int32_t DecoderNumBlocks() const { return decoder_num_blocks_; }
 
   const std::vector<float> &NegativeMean() const { return neg_mean_; }
 
@@ -177,16 +201,15 @@ OnlineParaformerModel::OnlineParaformerModel(AAssetManager *mgr,
 
 OnlineParaformerModel::~OnlineParaformerModel() = default;
 
-std::tuple<Ort::Value, Ort::Value, Ort::Value>
-OnlineParaformerModel::ForwardEncoder(Ort::Value features,
-                                      Ort::Value features_length) {
+std::vector<Ort::Value> OnlineParaformerModel::ForwardEncoder(
+    Ort::Value features, Ort::Value features_length) const {
   return impl_->ForwardEncoder(std::move(features), std::move(features_length));
 }
 
 std::vector<Ort::Value> OnlineParaformerModel::ForwardDecoder(
     Ort::Value encoder_out, Ort::Value encoder_out_length,
     Ort::Value acoustic_embedding, Ort::Value acoustic_embedding_length,
-    std::vector<Ort::Value> states) {
+    std::vector<Ort::Value> states) const {
   return impl_->ForwardDecoder(
       std::move(encoder_out), std::move(encoder_out_length),
       std::move(acoustic_embedding), std::move(acoustic_embedding_length),
@@ -201,6 +224,19 @@ int32_t OnlineParaformerModel::LfrWindowSize() const {
 int32_t OnlineParaformerModel::LfrWindowShift() const {
   return impl_->LfrWindowShift();
 }
+
+int32_t OnlineParaformerModel::EncoderOutputSize() const {
+  return impl_->EncoderOutputSize();
+}
+
+int32_t OnlineParaformerModel::DecoderKernelSize() const {
+  return impl_->DecoderKernelSize();
+}
+
+int32_t OnlineParaformerModel::DecoderNumBlocks() const {
+  return impl_->DecoderNumBlocks();
+}
+
 const std::vector<float> &OnlineParaformerModel::NegativeMean() const {
   return impl_->NegativeMean();
 }

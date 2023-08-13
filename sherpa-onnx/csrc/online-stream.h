@@ -80,6 +80,11 @@ class OnlineStream {
    */
   const ContextGraphPtr &GetContextGraph() const;
 
+  // for streaming parformer
+  std::vector<float> &GetParaformerFeatCache();
+  std::vector<float> &GetParaformerEncoderOutCache();
+  std::vector<float> &GetParaformerAlphaCache();
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

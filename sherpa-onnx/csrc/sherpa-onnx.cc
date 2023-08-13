@@ -12,8 +12,8 @@
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-stream.h"
-#include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 typedef struct {
@@ -80,7 +80,7 @@ for a list of pre-trained models to download.
 
     bool is_ok = false;
     const std::vector<float> samples =
-      sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
+        sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
 
     if (!is_ok) {
       fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
@@ -92,14 +92,14 @@ for a list of pre-trained models to download.
     auto s = recognizer.CreateStream();
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
-    std::vector<float> tail_paddings(static_cast<int>(0.3 * sampling_rate));
+    std::vector<float> tail_paddings(static_cast<int>(0.8 * sampling_rate));
     // Note: We can call AcceptWaveform() multiple times.
-    s->AcceptWaveform(
-      sampling_rate, tail_paddings.data(), tail_paddings.size());
+    s->AcceptWaveform(sampling_rate, tail_paddings.data(),
+                      tail_paddings.size());
 
     // Call InputFinished() to indicate that no audio samples are available
     s->InputFinished();
-    ss.push_back({ std::move(s), duration, 0 });
+    ss.push_back({std::move(s), duration, 0});
   }
 
   std::vector<sherpa_onnx::OnlineStream *> ready_streams;
@@ -112,8 +112,9 @@ for a list of pre-trained models to download.
       } else if (s.elapsed_seconds == 0) {
         const auto end = std::chrono::steady_clock::now();
         const float elapsed_seconds =
-          std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
-            .count() / 1000.;
+            std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
+                .count() /
+            1000.;
         s.elapsed_seconds = elapsed_seconds;
       }
     }
