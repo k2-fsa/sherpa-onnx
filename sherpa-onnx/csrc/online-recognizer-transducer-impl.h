@@ -196,7 +196,10 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   }
 
   bool IsEndpoint(OnlineStream *s) const override {
-    if (!config_.enable_endpoint) return false;
+    if (!config_.enable_endpoint) {
+      return false;
+    }
+
     int32_t num_processed_frames = s->GetNumProcessedFrames();
 
     // frame shift is 10 milliseconds

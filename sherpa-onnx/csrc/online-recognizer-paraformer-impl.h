@@ -13,12 +13,70 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-lm.h"
+#include "sherpa-onnx/csrc/online-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/online-paraformer-model.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
+
+static OnlineRecognizerResult Convert(const OnlineParaformerDecoderResult &src,
+                                      const SymbolTable &sym_table) {
+  OnlineRecognizerResult r;
+  r.tokens.reserve(src.tokens.size());
+
+  std::string text;
+
+  // When the current token ends with "@@" we set mergeable to true
+  bool mergeable = false;
+
+  for (int32_t i = 0; i != src.tokens.size(); ++i) {
+    auto sym = sym_table[src.tokens[i]];
+    r.tokens.push_back(sym);
+
+    if ((sym.back() != '@') || (sym.size() > 2 && sym[sym.size() - 2] != '@')) {
+      // sym does not end with "@@"
+      const uint8_t *p = reinterpret_cast<const uint8_t *>(sym.c_str());
+      if (p[0] < 0x80) {
+        // an ascii
+        if (mergeable) {
+          mergeable = false;
+          text.append(sym);
+        } else {
+          text.append(" ");
+          text.append(sym);
+        }
+      } else {
+        // not an ascii
+        mergeable = false;
+
+        if (i > 0) {
+          const uint8_t *p = reinterpret_cast<const uint8_t *>(
+              sym_table[src.tokens[i - 1]].c_str());
+          if (p[0] < 0x80) {
+            // put a space between ascii and non-ascii
+            text.append(" ");
+          }
+        }
+        text.append(sym);
+      }
+    } else {
+      // this sym ends with @@
+      sym = std::string(sym.data(), sym.size() - 2);
+      if (mergeable) {
+        text.append(sym);
+      } else {
+        text.append(" ");
+        text.append(sym);
+        mergeable = true;
+      }
+    }
+  }
+  r.text = std::move(text);
+
+  return r;
+}
 
 // y[i] += x[i] * scale
 static void ScaleAddInPlace(const float *x, int32_t n, float scale, float *y) {
@@ -41,13 +99,11 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
         model_(config.model_config),
         sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
-    if (config.decoding_method == "greedy_search") {
-      // add greedy search decoder
-      // SHERPA_ONNX_LOGE("to be implemented");
-      // exit(-1);
-    } else {
-      SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
-                       config.decoding_method.c_str());
+    if (config.decoding_method != "greedy_search") {
+      SHERPA_ONNX_LOGE(
+          "Unsupported decoding method: %s. Support only greedy_search at "
+          "present",
+          config.decoding_method.c_str());
       exit(-1);
     }
 
@@ -86,6 +142,10 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);
+
+    OnlineParaformerDecoderResult r;
+    stream->SetParaformerResult(r);
+
     return stream;
   }
 
@@ -101,20 +161,39 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
   }
 
   OnlineRecognizerResult GetResult(OnlineStream *s) const override {
-    SHERPA_ONNX_LOGE("to be implemented");
-    exit(-1);
-    return {};
+    auto decoder_result = s->GetParaformerResult();
+
+    return Convert(decoder_result, sym_);
   }
 
   bool IsEndpoint(OnlineStream *s) const override {
-    SHERPA_ONNX_LOGE("to be implemented");
-    exit(-1);
-    return false;
+    if (!config_.enable_endpoint) {
+      return false;
+    }
+
+    const auto &result = s->GetParaformerResult();
+
+    int32_t num_processed_frames = s->GetNumProcessedFrames();
+
+    // frame shift is 10 milliseconds
+    float frame_shift_in_seconds = 0.01;
+
+    int32_t trailing_silence_frames =
+        num_processed_frames - result.last_non_blank_frame_index;
+
+    return endpoint_.IsEndpoint(num_processed_frames, trailing_silence_frames,
+                                frame_shift_in_seconds);
   }
 
   void Reset(OnlineStream *s) const override {
-    SHERPA_ONNX_LOGE("to be implemented");
-    exit(-1);
+    OnlineParaformerDecoderResult r;
+    s->SetParaformerResult(r);
+
+    // the internal model caches are not reset
+
+    // Note: We only update counters. The underlying audio samples
+    // are not discarded.
+    s->Reset();
   }
 
  private:
@@ -225,10 +304,6 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     }
 
     alpha_cache[0] = integrate;
-    // if (integrate > 0) {
-    //   Scale(initial_hidden.data(), initial_hidden.size(), 1 / integrate,
-    //         initial_hidden.data());
-    // }
 
     if (acoustic_embedding.empty()) {
       return;
@@ -278,18 +353,24 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
 
     auto &sample_ids = decoder_out_vec[1];
     const int64_t *p_sample_ids = sample_ids.GetTensorData<int64_t>();
+
+    bool non_blank_detected = false;
+
+    auto &result = s->GetParaformerResult();
+
     for (int32_t i = 0; i != num_tokens; ++i) {
-      SHERPA_ONNX_LOGE("%s", sym_[p_sample_ids[i]].c_str());
+      int32_t t = p_sample_ids[i];
+      if (t == 0) {
+        continue;
+      }
+
+      non_blank_detected = true;
+      result.tokens.push_back(t);
     }
-    SHERPA_ONNX_LOGE("\n\n");
 
-    // if (integrate) {
-    //   Scale(initial_hidden.data(), initial_hidden.size(), 1. / integrate,
-    //         initial_hidden.data());
-    // }
-
-    // SHERPA_ONNX_LOGE("to be implemented");
-    // exit(-1);
+    if (non_blank_detected) {
+      result.last_non_blank_frame_index = num_processed_frames;
+    }
   }
 
   std::vector<float> ApplyLFR(const std::vector<float> &in) const {

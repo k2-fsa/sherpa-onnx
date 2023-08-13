@@ -47,6 +47,14 @@ class OnlineStream::Impl {
 
   OnlineTransducerDecoderResult &GetResult() { return result_; }
 
+  void SetParaformerResult(const OnlineParaformerDecoderResult &r) {
+    paraformer_result_ = r;
+  }
+
+  OnlineParaformerDecoderResult &GetParaformerResult() {
+    return paraformer_result_;
+  }
+
   int32_t FeatureDim() const { return feat_extractor_.FeatureDim(); }
 
   void SetStates(std::vector<Ort::Value> states) {
@@ -80,6 +88,7 @@ class OnlineStream::Impl {
   std::vector<float> paraformer_feat_cache_;
   std::vector<float> paraformer_encoder_out_cache_;
   std::vector<float> paraformer_alpha_cache_;
+  OnlineParaformerDecoderResult paraformer_result_;
 };
 
 OnlineStream::OnlineStream(const FeatureExtractorConfig &config /*= {}*/,
@@ -120,6 +129,14 @@ void OnlineStream::SetResult(const OnlineTransducerDecoderResult &r) {
 
 OnlineTransducerDecoderResult &OnlineStream::GetResult() {
   return impl_->GetResult();
+}
+
+void OnlineStream::SetParaformerResult(const OnlineParaformerDecoderResult &r) {
+  impl_->SetParaformerResult(r);
+}
+
+OnlineParaformerDecoderResult &OnlineStream::GetParaformerResult() {
+  return impl_->GetParaformerResult();
 }
 
 void OnlineStream::SetStates(std::vector<Ort::Value> states) {
