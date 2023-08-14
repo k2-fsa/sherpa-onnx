@@ -39,11 +39,17 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
       SHERPA_ONNX_OR(config->feat_config.feature_dim, 80);
 
   recognizer_config.model_config.transducer.encoder =
-      SHERPA_ONNX_OR(config->model_config.encoder, "");
+      SHERPA_ONNX_OR(config->model_config.transducer.encoder, "");
   recognizer_config.model_config.transducer.decoder =
-      SHERPA_ONNX_OR(config->model_config.decoder, "");
+      SHERPA_ONNX_OR(config->model_config.transducer.decoder, "");
   recognizer_config.model_config.transducer.joiner =
-      SHERPA_ONNX_OR(config->model_config.joiner, "");
+      SHERPA_ONNX_OR(config->model_config.transducer.joiner, "");
+
+  recognizer_config.model_config.paraformer.encoder =
+      SHERPA_ONNX_OR(config->model_config.paraformer.encoder, "");
+  recognizer_config.model_config.paraformer.decoder =
+      SHERPA_ONNX_OR(config->model_config.paraformer.decoder, "");
+
   recognizer_config.model_config.tokens =
       SHERPA_ONNX_OR(config->model_config.tokens, "");
   recognizer_config.model_config.num_threads =
