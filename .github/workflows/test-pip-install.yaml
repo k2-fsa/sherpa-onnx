@@ -58,7 +58,6 @@ jobs:
           sherpa-onnx-microphone-offline --help
 
           sherpa-onnx-offline-websocket-server --help
-          sherpa-onnx-offline-websocket-client --help
 
           sherpa-onnx-online-websocket-server --help
           sherpa-onnx-online-websocket-client --help

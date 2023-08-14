@@ -24,7 +24,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
-        model_type: ["transducer"]
+        model_type: ["transducer", "paraformer"]
 
     steps:
       - uses: actions/checkout@v2
@@ -71,3 +71,36 @@ jobs:
         run: |
           python3 ./python-api-examples/online-websocket-client-decode-file.py \
             ./sherpa-onnx-streaming-zipformer-en-2023-06-26/test_wavs/0.wav
+
+      - name: Start server for paraformer models
+        if: matrix.model_type == 'paraformer'
+        shell: bash
+        run: |
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
+          cd sherpa-onnx-streaming-paraformer-bilingual-zh-en
+          git lfs pull --include "*.onnx"
+          cd ..
+
+          python3 ./python-api-examples/streaming_server.py \
+            --tokens ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt \
+            --paraformer-encoder ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx \
+            --paraformer-decoder ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx &
+
+          echo "sleep 10 seconds to wait the server start"
+          sleep 10
+
+      - name: Start client for paraformer models
+        if: matrix.model_type == 'paraformer'
+        shell: bash
+        run: |
+          python3 ./python-api-examples/online-websocket-client-decode-file.py \
+            ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/0.wav
+
+          python3 ./python-api-examples/online-websocket-client-decode-file.py \
+            ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/1.wav
+
+          python3 ./python-api-examples/online-websocket-client-decode-file.py \
+            ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/2.wav
+
+          python3 ./python-api-examples/online-websocket-client-decode-file.py \
+            ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/3.wav

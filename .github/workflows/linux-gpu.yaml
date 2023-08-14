@@ -9,6 +9,7 @@ on:
     paths:
       - '.github/workflows/linux-gpu.yaml'
       - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - 'CMakeLists.txt'
@@ -22,6 +23,7 @@ on:
     paths:
       - '.github/workflows/linux-gpu.yaml'
       - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - 'CMakeLists.txt'
@@ -84,6 +86,14 @@ jobs:
         run: |
           file build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
+
+      - name: Test online paraformer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-paraformer.sh
 
       - name: Test offline Whisper
         shell: bash

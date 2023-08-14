@@ -94,21 +94,6 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   }
 #endif
 
-  void InitOnlineStream(OnlineStream *stream) const override {
-    auto r = decoder_->GetEmptyResult();
-
-    if (config_.decoding_method == "modified_beam_search" &&
-        nullptr != stream->GetContextGraph()) {
-      // r.hyps has only one element.
-      for (auto it = r.hyps.begin(); it != r.hyps.end(); ++it) {
-        it->second.context_state = stream->GetContextGraph()->Root();
-      }
-    }
-
-    stream->SetResult(r);
-    stream->SetStates(model_->GetEncoderInitStates());
-  }
-
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);
     InitOnlineStream(stream.get());
@@ -211,7 +196,10 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   }
 
   bool IsEndpoint(OnlineStream *s) const override {
-    if (!config_.enable_endpoint) return false;
+    if (!config_.enable_endpoint) {
+      return false;
+    }
+
     int32_t num_processed_frames = s->GetNumProcessedFrames();
 
     // frame shift is 10 milliseconds
@@ -242,6 +230,22 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     // Note: We only update counters. The underlying audio samples
     // are not discarded.
     s->Reset();
+  }
+
+ private:
+  void InitOnlineStream(OnlineStream *stream) const {
+    auto r = decoder_->GetEmptyResult();
+
+    if (config_.decoding_method == "modified_beam_search" &&
+        nullptr != stream->GetContextGraph()) {
+      // r.hyps has only one element.
+      for (auto it = r.hyps.begin(); it != r.hyps.end(); ++it) {
+        it->second.context_state = stream->GetContextGraph()->Root();
+      }
+    }
+
+    stream->SetResult(r);
+    stream->SetStates(model_->GetEncoderInitStates());
   }
 
  private:

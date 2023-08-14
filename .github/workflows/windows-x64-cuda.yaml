@@ -9,6 +9,7 @@ on:
     paths:
       - '.github/workflows/windows-x64-cuda.yaml'
       - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - 'CMakeLists.txt'
@@ -20,6 +21,7 @@ on:
     paths:
       - '.github/workflows/windows-x64-cuda.yaml'
       - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - 'CMakeLists.txt'
@@ -73,6 +75,14 @@ jobs:
           cmake --build . --config Release --target install -- -m:2
 
           ls -lh ./bin/Release/sherpa-onnx.exe
+
+      - name: Test online paraformer for windows x64
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx.exe
+
+          .github/scripts/test-online-paraformer.sh
 
       - name: Test offline Whisper for windows x64
         shell: bash

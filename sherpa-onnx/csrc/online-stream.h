@@ -11,6 +11,7 @@
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/online-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 
 namespace sherpa_onnx {
@@ -70,6 +71,9 @@ class OnlineStream {
   void SetResult(const OnlineTransducerDecoderResult &r);
   OnlineTransducerDecoderResult &GetResult();
 
+  void SetParaformerResult(const OnlineParaformerDecoderResult &r);
+  OnlineParaformerDecoderResult &GetParaformerResult();
+
   void SetStates(std::vector<Ort::Value> states);
   std::vector<Ort::Value> &GetStates();
 
@@ -79,6 +83,11 @@ class OnlineStream {
    * @return Return the context graph for this stream.
    */
   const ContextGraphPtr &GetContextGraph() const;
+
+  // for streaming parformer
+  std::vector<float> &GetParaformerFeatCache();
+  std::vector<float> &GetParaformerEncoderOutCache();
+  std::vector<float> &GetParaformerAlphaCache();
 
  private:
   class Impl;

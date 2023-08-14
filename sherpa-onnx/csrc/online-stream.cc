@@ -47,6 +47,14 @@ class OnlineStream::Impl {
 
   OnlineTransducerDecoderResult &GetResult() { return result_; }
 
+  void SetParaformerResult(const OnlineParaformerDecoderResult &r) {
+    paraformer_result_ = r;
+  }
+
+  OnlineParaformerDecoderResult &GetParaformerResult() {
+    return paraformer_result_;
+  }
+
   int32_t FeatureDim() const { return feat_extractor_.FeatureDim(); }
 
   void SetStates(std::vector<Ort::Value> states) {
@@ -57,6 +65,18 @@ class OnlineStream::Impl {
 
   const ContextGraphPtr &GetContextGraph() const { return context_graph_; }
 
+  std::vector<float> &GetParaformerFeatCache() {
+    return paraformer_feat_cache_;
+  }
+
+  std::vector<float> &GetParaformerEncoderOutCache() {
+    return paraformer_encoder_out_cache_;
+  }
+
+  std::vector<float> &GetParaformerAlphaCache() {
+    return paraformer_alpha_cache_;
+  }
+
  private:
   FeatureExtractor feat_extractor_;
   /// For contextual-biasing
@@ -65,6 +85,10 @@ class OnlineStream::Impl {
   int32_t start_frame_index_ = 0;     // never reset
   OnlineTransducerDecoderResult result_;
   std::vector<Ort::Value> states_;
+  std::vector<float> paraformer_feat_cache_;
+  std::vector<float> paraformer_encoder_out_cache_;
+  std::vector<float> paraformer_alpha_cache_;
+  OnlineParaformerDecoderResult paraformer_result_;
 };
 
 OnlineStream::OnlineStream(const FeatureExtractorConfig &config /*= {}*/,
@@ -107,6 +131,14 @@ OnlineTransducerDecoderResult &OnlineStream::GetResult() {
   return impl_->GetResult();
 }
 
+void OnlineStream::SetParaformerResult(const OnlineParaformerDecoderResult &r) {
+  impl_->SetParaformerResult(r);
+}
+
+OnlineParaformerDecoderResult &OnlineStream::GetParaformerResult() {
+  return impl_->GetParaformerResult();
+}
+
 void OnlineStream::SetStates(std::vector<Ort::Value> states) {
   impl_->SetStates(std::move(states));
 }
@@ -117,6 +149,18 @@ std::vector<Ort::Value> &OnlineStream::GetStates() {
 
 const ContextGraphPtr &OnlineStream::GetContextGraph() const {
   return impl_->GetContextGraph();
+}
+
+std::vector<float> &OnlineStream::GetParaformerFeatCache() {
+  return impl_->GetParaformerFeatCache();
+}
+
+std::vector<float> &OnlineStream::GetParaformerEncoderOutCache() {
+  return impl_->GetParaformerEncoderOutCache();
+}
+
+std::vector<float> &OnlineStream::GetParaformerAlphaCache() {
+  return impl_->GetParaformerAlphaCache();
 }
 
 }  // namespace sherpa_onnx

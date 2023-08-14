@@ -37,14 +37,14 @@ python3 ./python-api-examples/non_streaming_server.py \
 (2) Use a non-streaming paraformer
 
 cd /path/to/sherpa-onnx
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
-cd sherpa-onnx-paraformer-zh-2023-03-28
+GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-bilingual-zh-en
+cd sherpa-onnx-paraformer-bilingual-zh-en/
 git lfs pull --include "*.onnx"
 cd ..
 
 python3 ./python-api-examples/non_streaming_server.py \
-  --paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx \
-  --tokens ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt
+  --paraformer ./sherpa-onnx-paraformer-bilingual-zh-en/model.int8.onnx \
+  --tokens ./sherpa-onnx-paraformer-bilingual-zh-en/tokens.txt
 
 (3) Use a non-streaming CTC model from NeMo
 
