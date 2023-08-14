@@ -145,6 +145,7 @@ jobs:
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
 
+          brew install tree
           tree $dst
 
           tar cjvf ${dst}.tar.bz2 $dst
