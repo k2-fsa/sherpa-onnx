@@ -190,7 +190,11 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     OnlineParaformerDecoderResult r;
     s->SetParaformerResult(r);
 
-    // the internal model caches are not reset
+    s->GetStates().clear();
+    s->GetParaformerEncoderOutCache().clear();
+    s->GetParaformerAlphaCache().clear();
+
+    // s->GetParaformerFeatCache().clear();
 
     // Note: We only update counters. The underlying audio samples
     // are not discarded.

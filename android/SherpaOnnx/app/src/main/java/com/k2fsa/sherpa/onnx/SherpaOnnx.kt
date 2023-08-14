@@ -15,9 +15,19 @@ data class EndpointConfig(
 )
 
 data class OnlineTransducerModelConfig(
-    var encoder: String,
-    var decoder: String,
-    var joiner: String,
+    var encoder: String = "",
+    var decoder: String = "",
+    var joiner: String = "",
+)
+
+data class OnlineParaformerModelConfig(
+    var encoder: String = "",
+    var decoder: String = "",
+)
+
+data class OnlineModelConfig(
+    var transducer: OnlineTransducerModelConfig = OnlineTransducerModelConfig(),
+    var paraformer: OnlineParaformerModelConfig = OnlineParaformerModelConfig(),
     var tokens: String,
     var numThreads: Int = 1,
     var debug: Boolean = false,
@@ -37,8 +47,8 @@ data class FeatureConfig(
 
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
-    var modelConfig: OnlineTransducerModelConfig,
-    var lmConfig : OnlineLMConfig,
+    var modelConfig: OnlineModelConfig,
+    var lmConfig: OnlineLMConfig,
     var endpointConfig: EndpointConfig = EndpointConfig(),
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",
@@ -115,37 +125,47 @@ to add your own. (It should be straightforward to add a new model
 by following the code)
 
 @param type
-0 - sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
+0 - sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
     https://k2-fsa.github.io/sherpa/onnx/pretrained_models/zipformer-transducer-models.html#sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-bilingual-chinese-english
 
-1 - csukuangfj/sherpa-onnx-lstm-zh-2023-02-20 (Chinese)
+1 - csukuangfj/sherpa-onnx-lstm-zh-2023-02-20 (Chinese)
 
     https://k2-fsa.github.io/sherpa/onnx/pretrained_models/lstm-transducer-models.html#csukuangfj-sherpa-onnx-lstm-zh-2023-02-20-chinese
 
-2 - csukuangfj/sherpa-onnx-lstm-en-2023-02-17 (English)
+2 - csukuangfj/sherpa-onnx-lstm-en-2023-02-17 (English)
     https://k2-fsa.github.io/sherpa/onnx/pretrained_models/lstm-transducer-models.html#csukuangfj-sherpa-onnx-lstm-en-2023-02-17-english
 
-3 - pkufool/icefall-asr-zipformer-streaming-wenetspeech-20230615
+3,4 - pkufool/icefall-asr-zipformer-streaming-wenetspeech-20230615
     https://huggingface.co/pkufool/icefall-asr-zipformer-streaming-wenetspeech-20230615
+    3 - int8 encoder
+    4 - float32 encoder
+
+5 - csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
+    https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
+
  */
-fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
+fun getModelConfig(type: Int): OnlineModelConfig? {
     when (type) {
         0 -> {
             val modelDir = "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20"
-            return OnlineTransducerModelConfig(
-                encoder = "$modelDir/encoder-epoch-99-avg-1.onnx",
-                decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
-                joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-99-avg-1.onnx",
+                    decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
+                ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer",
             )
         }
         1 -> {
             val modelDir = "sherpa-onnx-lstm-zh-2023-02-20"
-            return OnlineTransducerModelConfig(
-                encoder = "$modelDir/encoder-epoch-11-avg-1.onnx",
-                decoder = "$modelDir/decoder-epoch-11-avg-1.onnx",
-                joiner = "$modelDir/joiner-epoch-11-avg-1.onnx",
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-11-avg-1.onnx",
+                    decoder = "$modelDir/decoder-epoch-11-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-11-avg-1.onnx",
+                ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "lstm",
             )
@@ -153,10 +173,12 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
 
         2 -> {
             val modelDir = "sherpa-onnx-lstm-en-2023-02-17"
-            return OnlineTransducerModelConfig(
-                encoder = "$modelDir/encoder-epoch-99-avg-1.onnx",
-                decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
-                joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-99-avg-1.onnx",
+                    decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
+                ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "lstm",
             )
@@ -164,10 +186,12 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
 
         3 -> {
             val modelDir = "icefall-asr-zipformer-streaming-wenetspeech-20230615"
-            return OnlineTransducerModelConfig(
-                encoder = "$modelDir/exp/encoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx",
-                decoder = "$modelDir/exp/decoder-epoch-12-avg-4-chunk-16-left-128.onnx",
-                joiner = "$modelDir/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx",
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/exp/encoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx",
+                    decoder = "$modelDir/exp/decoder-epoch-12-avg-4-chunk-16-left-128.onnx",
+                    joiner = "$modelDir/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx",
+                ),
                 tokens = "$modelDir/data/lang_char/tokens.txt",
                 modelType = "zipformer2",
             )
@@ -175,12 +199,26 @@ fun getModelConfig(type: Int): OnlineTransducerModelConfig? {
 
         4 -> {
             val modelDir = "icefall-asr-zipformer-streaming-wenetspeech-20230615"
-            return OnlineTransducerModelConfig(
-                encoder = "$modelDir/exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx",
-                decoder = "$modelDir/exp/decoder-epoch-12-avg-4-chunk-16-left-128.onnx",
-                joiner = "$modelDir/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx",
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx",
+                    decoder = "$modelDir/exp/decoder-epoch-12-avg-4-chunk-16-left-128.onnx",
+                    joiner = "$modelDir/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx",
+                ),
                 tokens = "$modelDir/data/lang_char/tokens.txt",
                 modelType = "zipformer2",
+            )
+        }
+
+        5 -> {
+            val modelDir = "sherpa-onnx-streaming-paraformer-bilingual-zh-en"
+            return OnlineModelConfig(
+                paraformer = OnlineParaformerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "paraformer",
             )
         }
     }
@@ -200,7 +238,7 @@ by following the code, https://github.com/k2-fsa/icefall/blob/master/icefall/rnn
 0 - sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
     https://k2-fsa.github.io/sherpa/onnx/pretrained_models/zipformer-transducer-models.html#sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-bilingual-chinese-english
  */
-fun getOnlineLMConfig(type : Int): OnlineLMConfig {
+fun getOnlineLMConfig(type: Int): OnlineLMConfig {
     when (type) {
         0 -> {
             val modelDir = "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20"

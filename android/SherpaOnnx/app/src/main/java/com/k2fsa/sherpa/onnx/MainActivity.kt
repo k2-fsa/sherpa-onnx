@@ -177,7 +177,7 @@ class MainActivity : AppCompatActivity() {
         // Please change getModelConfig() to add new models
         // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
         // for a list of available models
-        val type = 3
+        val type = 5
         println("Select model type ${type}")
         val config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
@@ -185,8 +185,6 @@ class MainActivity : AppCompatActivity() {
             lmConfig = getOnlineLMConfig(type = type),
             endpointConfig = getEndpointConfig(),
             enableEndpoint = true,
-            decodingMethod = "modified_beam_search",
-            maxActivePaths = 4,
         )
 
         model = SherpaOnnx(

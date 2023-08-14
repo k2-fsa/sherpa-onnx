@@ -47,7 +47,7 @@ class SherpaOnnx {
   }
 
   void InputFinished() const {
-    std::vector<float> tail_padding(input_sample_rate_ * 0.32, 0);
+    std::vector<float> tail_padding(input_sample_rate_ * 0.6, 0);
     stream_->AcceptWaveform(input_sample_rate_, tail_padding.data(),
                             tail_padding.size());
     stream_->InputFinished();
@@ -158,48 +158,74 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
 
   //---------- model config ----------
   fid = env->GetFieldID(cls, "modelConfig",
-                        "Lcom/k2fsa/sherpa/onnx/OnlineTransducerModelConfig;");
-  jobject transducer_config = env->GetObjectField(config, fid);
-  jclass model_config_cls = env->GetObjectClass(transducer_config);
+                        "Lcom/k2fsa/sherpa/onnx/OnlineModelConfig;");
+  jobject model_config = env->GetObjectField(config, fid);
+  jclass model_config_cls = env->GetObjectClass(model_config);
 
-  fid = env->GetFieldID(model_config_cls, "encoder", "Ljava/lang/String;");
+  // transducer
+  fid = env->GetFieldID(model_config_cls, "transducer",
+                        "Lcom/k2fsa/sherpa/onnx/OnlineTransducerModelConfig;");
+  jobject transducer_config = env->GetObjectField(model_config, fid);
+  jclass transducer_config_cls = env->GetObjectClass(transducer_config);
+
+  fid = env->GetFieldID(transducer_config_cls, "encoder", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(transducer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.transducer.encoder = p;
   env->ReleaseStringUTFChars(s, p);
 
-  fid = env->GetFieldID(model_config_cls, "decoder", "Ljava/lang/String;");
+  fid = env->GetFieldID(transducer_config_cls, "decoder", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(transducer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.transducer.decoder = p;
   env->ReleaseStringUTFChars(s, p);
 
-  fid = env->GetFieldID(model_config_cls, "joiner", "Ljava/lang/String;");
+  fid = env->GetFieldID(transducer_config_cls, "joiner", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(transducer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.transducer.joiner = p;
   env->ReleaseStringUTFChars(s, p);
 
+  // paraformer
+  fid = env->GetFieldID(model_config_cls, "paraformer",
+                        "Lcom/k2fsa/sherpa/onnx/OnlineParaformerModelConfig;");
+  jobject paraformer_config = env->GetObjectField(model_config, fid);
+  jclass paraformer_config_config_cls = env->GetObjectClass(paraformer_config);
+
+  fid = env->GetFieldID(paraformer_config_config_cls, "encoder",
+                        "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(paraformer_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.paraformer.encoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(paraformer_config_config_cls, "decoder",
+                        "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(paraformer_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.paraformer.decoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
   fid = env->GetFieldID(model_config_cls, "tokens", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
+  s = (jstring)env->GetObjectField(model_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.tokens = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "numThreads", "I");
-  ans.model_config.num_threads = env->GetIntField(transducer_config, fid);
+  ans.model_config.num_threads = env->GetIntField(model_config, fid);
 
   fid = env->GetFieldID(model_config_cls, "debug", "Z");
-  ans.model_config.debug = env->GetBooleanField(transducer_config, fid);
+  ans.model_config.debug = env->GetBooleanField(model_config, fid);
 
   fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
+  s = (jstring)env->GetObjectField(model_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.provider = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "modelType", "Ljava/lang/String;");
-  s = (jstring)env->GetObjectField(transducer_config, fid);
+  s = (jstring)env->GetObjectField(model_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.model_type = p;
   env->ReleaseStringUTFChars(s, p);
