@@ -178,8 +178,13 @@ jobs:
 
           echo "Test transducer"
           git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
-          ./run.sh
+          ./run-transducer.sh
           rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
+          ./run-paraformer.sh
+          rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
       - name: Test streaming decoding files (Win64)
         if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
@@ -202,8 +207,13 @@ jobs:
 
           echo "Test transducer"
           git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
-          ./run.sh
+          ./run-transducer.sh
           rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
+          ./run-paraformer.sh
+          rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
       - name: Test streaming decoding files (Win32)
         if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
@@ -235,5 +245,10 @@ jobs:
 
           echo "Test transducer"
           git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
-          ./run.sh
+          ./run-transducer.sh
           rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
+          ./run-paraformer.sh
+          rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en

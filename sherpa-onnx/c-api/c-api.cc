@@ -265,6 +265,12 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
   recognizer_config.model_config.nemo_ctc.model =
       SHERPA_ONNX_OR(config->model_config.nemo_ctc.model, "");
 
+  recognizer_config.model_config.whisper.encoder =
+      SHERPA_ONNX_OR(config->model_config.whisper.encoder, "");
+
+  recognizer_config.model_config.whisper.decoder =
+      SHERPA_ONNX_OR(config->model_config.whisper.decoder, "");
+
   recognizer_config.model_config.tokens =
       SHERPA_ONNX_OR(config->model_config.tokens, "");
   recognizer_config.model_config.num_threads =

@@ -45,9 +45,30 @@ import "unsafe"
 // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/index.html
 // to download pre-trained models
 type OnlineTransducerModelConfig struct {
-	Encoder    string // Path to the encoder model, e.g., encoder.onnx or encoder.int8.onnx
-	Decoder    string // Path to the decoder model.
-	Joiner     string // Path to the joiner model.
+	Encoder string // Path to the encoder model, e.g., encoder.onnx or encoder.int8.onnx
+	Decoder string // Path to the decoder model.
+	Joiner  string // Path to the joiner model.
+}
+
+// Configuration for online/streaming paraformer models
+//
+// Please refer to
+// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/index.html
+// to download pre-trained models
+type OnlineParaformerModelConfig struct {
+	Encoder string // Path to the encoder model, e.g., encoder.onnx or encoder.int8.onnx
+	Decoder string // Path to the decoder model.
+}
+
+// Configuration for online/streaming models
+//
+// Please refer to
+// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/index.html
+// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/index.html
+// to download pre-trained models
+type OnlineModelConfig struct {
+	Transducer OnlineTransducerModelConfig
+	Paraformer OnlineParaformerModelConfig
 	Tokens     string // Path to tokens.txt
 	NumThreads int    // Number of threads to use for neural network computation
 	Provider   string // Optional. Valid values are: cpu, cuda, coreml
@@ -68,7 +89,7 @@ type FeatureConfig struct {
 // Configuration for the online/streaming recognizer.
 type OnlineRecognizerConfig struct {
 	FeatConfig  FeatureConfig
-	ModelConfig OnlineTransducerModelConfig
+	ModelConfig OnlineModelConfig
 
 	// Valid decoding methods: greedy_search, modified_beam_search
 	DecodingMethod string
@@ -116,14 +137,20 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 	c.feat_config.sample_rate = C.int(config.FeatConfig.SampleRate)
 	c.feat_config.feature_dim = C.int(config.FeatConfig.FeatureDim)
 
-	c.model_config.encoder = C.CString(config.ModelConfig.Encoder)
-	defer C.free(unsafe.Pointer(c.model_config.encoder))
+	c.model_config.transducer.encoder = C.CString(config.ModelConfig.Transducer.Encoder)
+	defer C.free(unsafe.Pointer(c.model_config.transducer.encoder))
 
-	c.model_config.decoder = C.CString(config.ModelConfig.Decoder)
-	defer C.free(unsafe.Pointer(c.model_config.decoder))
+	c.model_config.transducer.decoder = C.CString(config.ModelConfig.Transducer.Decoder)
+	defer C.free(unsafe.Pointer(c.model_config.transducer.decoder))
 
-	c.model_config.joiner = C.CString(config.ModelConfig.Joiner)
-	defer C.free(unsafe.Pointer(c.model_config.joiner))
+	c.model_config.transducer.joiner = C.CString(config.ModelConfig.Transducer.Joiner)
+	defer C.free(unsafe.Pointer(c.model_config.transducer.joiner))
+
+	c.model_config.paraformer.encoder = C.CString(config.ModelConfig.Paraformer.Encoder)
+	defer C.free(unsafe.Pointer(c.model_config.paraformer.encoder))
+
+	c.model_config.paraformer.decoder = C.CString(config.ModelConfig.Paraformer.Decoder)
+	defer C.free(unsafe.Pointer(c.model_config.paraformer.decoder))
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))

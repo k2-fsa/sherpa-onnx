@@ -234,7 +234,137 @@ bool CStreamingSpeechRecognitionDlg::Exists(const std::string &filename) {
   return is.good();
 }
 
+void CStreamingSpeechRecognitionDlg::ShowInitRecognizerHelpMessage() {
+    my_btn_.EnableWindow(FALSE);
+    std::string msg =
+        "\r\nPlease go to\r\n"
+        "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html "
+        "\r\n";
+    msg += "to download a streaming model, i.e., an online model.\r\n";
+    msg += "You need to rename them after downloading\r\n\r\n";
+    msg += "It supports both transducer and paraformer models.\r\n\r\n";
+    msg +=
+      "We give two examples below to show you how to download models\r\n\r\n";
+    msg += "(1) Transducer\r\n\r\n";
+    msg +=
+        "https://huggingface.co/pkufool/"
+        "icefall-asr-zipformer-streaming-wenetspeech-20230615";
+    msg += "\r\n\r\n";
+    msg +=
+        "wget https:// "
+        "huggingface.co/pkufool/"
+        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/exp/"
+        "encoder-epoch-12-avg-4-chunk-16-left-128.onnx\r\n";
+    msg +=
+        "wget https:// "
+        "huggingface.co/pkufool/"
+        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/exp/"
+        "decoder-epoch-12-avg-4-chunk-16-left-128.onnx\r\n";
+    msg +=
+        "wget https:// "
+        "huggingface.co/pkufool/"
+        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/exp/"
+        "joiner-epoch-12-avg-4-chunk-16-left-128.onnx\r\n";
+    msg +=
+        "wget "
+        "https://huggingface.co/pkufool/"
+        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/"
+        "data/lang_char/tokens.txt\r\n";
+
+    msg += "\r\nNow rename them.\r\n";
+    msg += "mv encoder-epoch-12-avg-4-chunk-16-left-128.onnx encoder.onnx\r\n";
+    msg += "mv decoder-epoch-12-avg-4-chunk-16-left-128.onnx decoder.onnx\r\n";
+    msg += "mv joiner-epoch-12-avg-4-chunk-16-left-128.onnx joiner.onnx\r\n";
+    msg += "\r\n";
+    msg += "(2) Paraformer\r\n\r\n";
+    msg +=
+        "wget "
+        "https://huggingface.co/csukuangfj/"
+        "sherpa-onnx-streaming-paraformer-bilingual-zh-en/resolve/main/"
+        "encoder.int8.onnx\r\n";
+    msg +=
+        "wget "
+        "https://huggingface.co/csukuangfj/"
+        "sherpa-onnx-streaming-paraformer-bilingual-zh-en/resolve/main/"
+        "decoder.int8.onnx\r\n";
+    msg +=
+        "wget "
+        "https://huggingface.co/csukuangfj/"
+        "sherpa-onnx-streaming-paraformer-bilingual-zh-en/resolve/main/"
+        "tokens.txt\r\n";
+    msg += "\r\nNow rename them.\r\n";
+    msg += "mv encoder.int8.onnx paraformer-encoder.onnx\r\n";
+    msg += "mv decoder.int8.onnx paraformer-decoder.onnx\r\n\r\n";
+    msg += "That's it!\r\n";
+
+    AppendLineToMultilineEditCtrl(msg);
+}
+
+void CStreamingSpeechRecognitionDlg::InitParaformer() {
+  std::string paraformer_encoder = "./paraformer-encoder.onnx";
+  std::string paraformer_decoder = "./paraformer-decoder.onnx";
+
+  std::string tokens = "./tokens.txt";
+
+  bool is_ok = true;
+
+  if (Exists("./paraformer-encoder.int8.onnx")) {
+    paraformer_encoder = "./paraformer-encoder.int8.onnx";
+  } else if (!Exists(paraformer_encoder)) {
+    std::string msg = paraformer_encoder + " does not exist!";
+    AppendLineToMultilineEditCtrl(msg);
+    is_ok = false;
+  }
+
+  if (Exists("./paraformer-decoder.int8.onnx")) {
+    paraformer_decoder = "./paraformer-decoder.int8.onnx";
+  } else if (!Exists(paraformer_decoder)) {
+    std::string msg = paraformer_decoder + " does not exist!";
+    AppendLineToMultilineEditCtrl(msg);
+    is_ok = false;
+  }
+
+  if (!Exists(tokens)) {
+    std::string msg = tokens + " does not exist!";
+    AppendLineToMultilineEditCtrl(msg);
+    is_ok = false;
+  }
+
+  if (!is_ok) {
+    ShowInitRecognizerHelpMessage();
+    return;
+  }
+
+  SherpaOnnxOnlineRecognizerConfig config;
+  memset(&config, 0, sizeof(config));
+  config.model_config.debug = 0;
+  config.model_config.num_threads = 1;
+  config.model_config.provider = "cpu";
+
+  config.decoding_method = "greedy_search";
+  config.max_active_paths = 4;
+
+  config.feat_config.sample_rate = 16000;
+  config.feat_config.feature_dim = 80;
+
+  config.enable_endpoint = 1;
+  config.rule1_min_trailing_silence = 1.2f;
+  config.rule2_min_trailing_silence = 0.8f;
+  config.rule3_min_utterance_length = 300.0f;
+
+  config.model_config.tokens = tokens.c_str();
+  config.model_config.paraformer.encoder = paraformer_encoder.c_str();
+  config.model_config.paraformer.decoder = paraformer_decoder.c_str();
+
+  recognizer_ = CreateOnlineRecognizer(&config);
+}
+
 void CStreamingSpeechRecognitionDlg::InitRecognizer() {
+  if (Exists("./paraformer-encoder.onnx") || Exists("./paraformer-encoder.int8.onnx")) {
+    InitParaformer();
+    return;
+  }
+
   std::string encoder = "./encoder.onnx";
   std::string decoder = "./decoder.onnx";
   std::string joiner = "./joiner.onnx";
@@ -266,55 +396,12 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
   }
 
   if (!is_ok) {
-    my_btn_.EnableWindow(FALSE);
-    std::string msg =
-        "\r\nPlease go to\r\n"
-        "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html "
-        "\r\n";
-    msg += "to download a streaming model, i.e., an online model.\r\n";
-    msg +=
-        "You need to rename them to encoder.onnx, decoder.onnx, and "
-        "joiner.onnx correspoondingly.\r\n\r\n";
-    msg +=
-        "We use the following model as an example to show you how to do "
-        "that.\r\n";
-    msg +=
-        "https://huggingface.co/pkufool/"
-        "icefall-asr-zipformer-streaming-wenetspeech-20230615";
-    msg += "\r\n\r\n";
-    msg +=
-        "wget https:// "
-        "huggingface.co/pkufool/"
-        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/exp/"
-        "encoder-epoch-12-avg-4-chunk-16-left-128.onnx\r\n";
-    msg +=
-        "wget https:// "
-        "huggingface.co/pkufool/"
-        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/exp/"
-        "decoder-epoch-12-avg-4-chunk-16-left-128.onnx\r\n";
-    msg +=
-        "wget https:// "
-        "huggingface.co/pkufool/"
-        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/exp/"
-        "joiner-epoch-12-avg-4-chunk-16-left-128.onnx\r\n";
-    msg +=
-        "wget "
-        "https://huggingface.co/pkufool/"
-        "icefall-asr-zipformer-streaming-wenetspeech-20230615/resolve/main/"
-        "data/lang_char/tokens.txt\r\n";
-
-    msg += "\r\nNow rename them.\r\n";
-    msg += "mv encoder-epoch-12-avg-4-chunk-16-left-128.onnx encoder.onnx\r\n";
-    msg += "mv decoder-epoch-12-avg-4-chunk-16-left-128.onnx decoder.onnx\r\n";
-    msg += "mv joiner-epoch-12-avg-4-chunk-16-left-128.onnx joiner.onnx\r\n";
-    msg += "\r\n";
-    msg += "That's it!\r\n";
-
-    AppendLineToMultilineEditCtrl(msg);
+    ShowInitRecognizerHelpMessage();
     return;
   }
 
   SherpaOnnxOnlineRecognizerConfig config;
+  memset(&config, 0, sizeof(config));
   config.model_config.debug = 0;
   config.model_config.num_threads = 1;
   config.model_config.provider = "cpu";
@@ -331,9 +418,9 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
   config.rule3_min_utterance_length = 300.0f;
 
   config.model_config.tokens = tokens.c_str();
-  config.model_config.encoder = encoder.c_str();
-  config.model_config.decoder = decoder.c_str();
-  config.model_config.joiner = joiner.c_str();
+  config.model_config.transducer.encoder = encoder.c_str();
+  config.model_config.transducer.decoder = decoder.c_str();
+  config.model_config.transducer.joiner = joiner.c_str();
 
   recognizer_ = CreateOnlineRecognizer(&config);
 }
