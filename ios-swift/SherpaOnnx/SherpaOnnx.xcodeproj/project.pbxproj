@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C93989AE2A89FE13009AB859 /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C984A81B29AA11C500D74C52 /* sherpa-onnx.xcframework */; };
+		C93989B02A89FE33009AB859 /* onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C93989AF2A89FE33009AB859 /* onnxruntime.xcframework */; };
 		C984A7E829A9EEB700D74C52 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C984A7E729A9EEB700D74C52 /* AppDelegate.swift */; };
 		C984A7EA29A9EEB700D74C52 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C984A7E929A9EEB700D74C52 /* SceneDelegate.swift */; };
 		C984A7F129A9EEB900D74C52 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C984A7F029A9EEB900D74C52 /* Assets.xcassets */; };
@@ -18,8 +20,6 @@
 		C984A82829AA196100D74C52 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = C984A82629AA196100D74C52 /* Main.storyboard */; };
 		C984A82A29AA19AC00D74C52 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = C984A82929AA19AC00D74C52 /* Model.swift */; };
 		C984A83C29AA430B00D74C52 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C984A83B29AA430B00D74C52 /* ViewController.swift */; };
-		C984A83D29AA43D900D74C52 /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C984A81B29AA11C500D74C52 /* sherpa-onnx.xcframework */; };
-		C984A83F29AA43EE00D74C52 /* onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C984A83E29AA43EE00D74C52 /* onnxruntime.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -40,6 +40,10 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		C93989AF2A89FE33009AB859 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.15.1/onnxruntime.xcframework"; sourceTree = "<group>"; };
+		C93989B12A89FF78009AB859 /* decoder.int8.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = decoder.int8.onnx; path = "../../../icefall-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx"; sourceTree = "<group>"; };
+		C93989B22A89FF78009AB859 /* encoder.int8.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = encoder.int8.onnx; path = "../../../icefall-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx"; sourceTree = "<group>"; };
+		C93989B32A89FF78009AB859 /* tokens.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = tokens.txt; path = "../../../icefall-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt"; sourceTree = "<group>"; };
 		C984A7E429A9EEB700D74C52 /* SherpaOnnx.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnx.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C984A7E729A9EEB700D74C52 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C984A7E929A9EEB700D74C52 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -66,8 +70,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C984A83F29AA43EE00D74C52 /* onnxruntime.xcframework in Frameworks */,
-				C984A83D29AA43D900D74C52 /* sherpa-onnx.xcframework in Frameworks */,
+				C93989B02A89FE33009AB859 /* onnxruntime.xcframework in Frameworks */,
+				C93989AE2A89FE13009AB859 /* sherpa-onnx.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,8 +150,12 @@
 		C984A81A29AA11C500D74C52 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C93989B12A89FF78009AB859 /* decoder.int8.onnx */,
+				C93989B22A89FF78009AB859 /* encoder.int8.onnx */,
+				C93989B32A89FF78009AB859 /* tokens.txt */,
 				C984A82029AA139600D74C52 /* onnxruntime.xcframework */,
 				C984A83E29AA43EE00D74C52 /* onnxruntime.xcframework */,
+				C93989AF2A89FE33009AB859 /* onnxruntime.xcframework */,
 				C984A81B29AA11C500D74C52 /* sherpa-onnx.xcframework */,
 			);
 			name = Frameworks;

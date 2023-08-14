@@ -87,7 +87,8 @@ class ViewController: UIViewController {
 
         // let modelConfig = getBilingualStreamZhEnZipformer20230220()
         // let modelConfig = getZhZipformer20230615()
-        let modelConfig = getEnZipformer20230626()
+        // let modelConfig = getEnZipformer20230626()
+        let modelConfig = getBilingualStreamingZhEnParaformer()
 
         let featConfig = sherpaOnnxFeatureConfig(
             sampleRate: 16000,

@@ -50,12 +50,25 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineTransducerModelConfig {
   const char *encoder;
   const char *decoder;
   const char *joiner;
+} SherpaOnnxOnlineTransducerModelConfig;
+
+// please visit
+// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/index.html
+// to download pre-trained streaming paraformer models
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineParaformerModelConfig {
+  const char *encoder;
+  const char *decoder;
+} SherpaOnnxOnlineParaformerModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxModelConfig {
+  SherpaOnnxOnlineTransducerModelConfig transducer;
+  SherpaOnnxOnlineParaformerModelConfig paraformer;
   const char *tokens;
   int32_t num_threads;
   const char *provider;
   int32_t debug;  // true to print debug information of the model
   const char *model_type;
-} SherpaOnnxOnlineTransducerModelConfig;
+} SherpaOnnxOnlineModelConfig;
 
 /// It expects 16 kHz 16-bit single channel wave format.
 SHERPA_ONNX_API typedef struct SherpaOnnxFeatureConfig {
@@ -71,7 +84,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxFeatureConfig {
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
   SherpaOnnxFeatureConfig feat_config;
-  SherpaOnnxOnlineTransducerModelConfig model_config;
+  SherpaOnnxOnlineModelConfig model_config;
 
   /// Possible values are: greedy_search, modified_beam_search
   const char *decoding_method;

@@ -113,13 +113,13 @@ int32_t main(int32_t argc, char *argv[]) {
         config.model_config.tokens = value;
         break;
       case 'e':
-        config.model_config.encoder = value;
+        config.model_config.transducer.encoder = value;
         break;
       case 'd':
-        config.model_config.decoder = value;
+        config.model_config.transducer.decoder = value;
         break;
       case 'j':
-        config.model_config.joiner = value;
+        config.model_config.transducer.joiner = value;
         break;
       case 'n':
         config.model_config.num_threads = atoi(value);
