@@ -281,17 +281,17 @@ void CStreamingSpeechRecognitionDlg::ShowInitRecognizerHelpMessage() {
         "wget "
         "https://huggingface.co/csukuangfj/"
         "sherpa-onnx-streaming-paraformer-bilingual-zh-en/resolve/main/"
-        "encoder.int8.onnx";
+        "encoder.int8.onnx\r\n";
     msg +=
         "wget "
         "https://huggingface.co/csukuangfj/"
         "sherpa-onnx-streaming-paraformer-bilingual-zh-en/resolve/main/"
-        "decoder.int8.onnx";
+        "decoder.int8.onnx\r\n";
     msg +=
         "wget "
         "https://huggingface.co/csukuangfj/"
         "sherpa-onnx-streaming-paraformer-bilingual-zh-en/resolve/main/"
-        "tokens.txt";
+        "tokens.txt\r\n";
     msg += "\r\nNow rename them.\r\n";
     msg += "mv encoder.int8.onnx paraformer-encoder.onnx\r\n";
     msg += "mv decoder.int8.onnx paraformer-decoder.onnx\r\n\r\n";
