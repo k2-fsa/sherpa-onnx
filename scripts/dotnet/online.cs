@@ -22,12 +22,8 @@ namespace SherpaOnnx
       Encoder = "";
       Decoder = "";
       Joiner = "";
-      Tokens = "";
-      NumThreads = 1;
-      Provider = "cpu";
-      Debug = 0;
-      ModelType = "";
     }
+
     [MarshalAs(UnmanagedType.LPStr)]
     public string Encoder;
 
@@ -36,6 +32,40 @@ namespace SherpaOnnx
 
     [MarshalAs(UnmanagedType.LPStr)]
     public string Joiner;
+  }
+
+  [StructLayout(LayoutKind.Sequential)]
+  public struct OnlineParaformerModelConfig
+  {
+    public OnlineParaformerModelConfig()
+    {
+      Encoder = "";
+      Decoder = "";
+    }
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Encoder;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Decoder;
+  }
+
+  [StructLayout(LayoutKind.Sequential)]
+  public struct OnlineModelConfig
+  {
+    public OnlineModelConfig()
+    {
+      Transducer = new OnlineTransducerModelConfig();
+      Paraformer = new OnlineParaformerModelConfig();
+      Tokens = "";
+      NumThreads = 1;
+      Provider = "cpu";
+      Debug = 0;
+      ModelType = "";
+    }
+
+    public OnlineTransducerModelConfig Transducer;
+    public OnlineParaformerModelConfig Paraformer;
 
     [MarshalAs(UnmanagedType.LPStr)]
     public string Tokens;
@@ -78,7 +108,7 @@ namespace SherpaOnnx
     public OnlineRecognizerConfig()
     {
       FeatConfig = new FeatureConfig();
-      TransducerModelConfig = new OnlineTransducerModelConfig();
+      ModelConfig = new OnlineModelConfig();
       DecodingMethod = "greedy_search";
       MaxActivePaths = 4;
       EnableEndpoint = 0;
@@ -87,7 +117,7 @@ namespace SherpaOnnx
       Rule3MinUtteranceLength = 20.0F;
     }
     public FeatureConfig FeatConfig;
-    public OnlineTransducerModelConfig TransducerModelConfig;
+    public OnlineModelConfig ModelConfig;
 
     [MarshalAs(UnmanagedType.LPStr)]
     public string DecodingMethod;
