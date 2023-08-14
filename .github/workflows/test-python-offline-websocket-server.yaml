@@ -84,14 +84,14 @@ jobs:
         if: matrix.model_type == 'paraformer'
         shell: bash
         run: |
-          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
-          cd sherpa-onnx-paraformer-zh-2023-03-28
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-bilingual-zh-en
+          cd sherpa-onnx-paraformer-bilingual-zh-en
           git lfs pull --include "*.onnx"
           cd ..
 
           python3 ./python-api-examples/non_streaming_server.py \
-            --paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx \
-            --tokens ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt &
+            --paraformer ./sherpa-onnx-paraformer-bilingual-zh-en/model.int8.onnx \
+            --tokens ./sherpa-onnx-paraformer-bilingual-zh-en/tokens.txt &
 
           echo "sleep 10 seconds to wait the server start"
           sleep 10
@@ -101,16 +101,16 @@ jobs:
         shell: bash
         run: |
           python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav
+            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/0.wav \
+            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/1.wav \
+            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/2.wav \
+            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/8k.wav
 
           python3 ./python-api-examples/offline-websocket-client-decode-files-sequential.py \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav
+            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/0.wav \
+            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/1.wav \
+            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/2.wav \
+            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/8k.wav
 
       - name: Start server for nemo_ctc models
         if: matrix.model_type == 'nemo_ctc'

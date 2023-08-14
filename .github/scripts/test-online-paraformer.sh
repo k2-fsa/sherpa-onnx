@@ -17,7 +17,7 @@ log "------------------------------------------------------------"
 log "Run streaming Paraformer"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-zh
+repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
 log "Start testing ${repo_url}"
 repo=$(basename $repo_url)
 log "Download pretrained model and test-data from $repo_url"

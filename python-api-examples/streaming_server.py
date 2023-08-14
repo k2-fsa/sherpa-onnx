@@ -16,9 +16,9 @@ Example:
 (1) Without a certificate
 
 python3 ./python-api-examples/streaming_server.py \
-  --encoder-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx \
-  --decoder-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx \
-  --joiner-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx \
+  --encoder ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx \
+  --decoder ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx \
+  --joiner ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx \
   --tokens ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt
 
 (2) With a certificate
@@ -32,9 +32,9 @@ python3 ./python-api-examples/streaming_server.py \
 (b) Start the server
 
 python3 ./python-api-examples/streaming_server.py \
-  --encoder-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx \
-  --decoder-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx \
-  --joiner-model ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx \
+  --encoder ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx \
+  --decoder ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx \
+  --joiner ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx \
   --tokens ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt \
   --certificate ./python-api-examples/web/cert.pem
 
@@ -120,30 +120,26 @@ def add_model_args(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument(
-        "--decoder-model",
+        "--decoder",
         type=str,
-        default="",
         help="Path to the transducer decoder model.",
     )
 
     parser.add_argument(
-        "--joiner-model",
+        "--joiner",
         type=str,
-        default="",
         help="Path to the transducer joiner model.",
     )
 
     parser.add_argument(
-        "--paraformer-encoder-model",
+        "--paraformer-encoder",
         type=str,
-        default="",
         help="Path to the paraformer encoder model",
     )
 
     parser.add_argument(
-        "--paraformer-decoder-model",
+        "--paraformer-decoder",
         type=str,
-        default="",
         help="Path to the transducer decoder model.",
     )
 
@@ -337,12 +333,12 @@ def get_args():
 
 
 def create_recognizer(args) -> sherpa_onnx.OnlineRecognizer:
-    if args.encoder_model:
+    if args.encoder:
         recognizer = sherpa_onnx.OnlineRecognizer.from_transducer(
             tokens=args.tokens,
-            encoder=args.encoder_model,
-            decoder=args.decoder_model,
-            joiner=args.joiner_model,
+            encoder=args.encoder,
+            decoder=args.decoder,
+            joiner=args.joiner,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,
             feature_dim=args.feat_dim,
@@ -354,11 +350,11 @@ def create_recognizer(args) -> sherpa_onnx.OnlineRecognizer:
             rule3_min_utterance_length=args.rule3_min_utterance_length,
             provider=args.provider,
         )
-    elif args.paraformer_encoder_model:
+    elif args.paraformer_encoder:
         recognizer = sherpa_onnx.OnlineRecognizer.from_paraformer(
             tokens=args.tokens,
-            encoder=args.paraformer_encoder_model,
-            decoder=args.paraformer_decoder_model,
+            encoder=args.paraformer_encoder,
+            decoder=args.paraformer_decoder,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,
             feature_dim=args.feat_dim,
@@ -686,27 +682,23 @@ Go back to <a href="/streaming_record.html">/streaming_record.html</a>
 
 
 def check_args(args):
-    if args.encoder_model:
+    if args.encoder:
+        assert Path(args.encoder).is_file(), f"{args.encoder} does not exist"
+
+        assert Path(args.decoder).is_file(), f"{args.decoder} does not exist"
+
+        assert Path(args.joiner).is_file(), f"{args.joiner} does not exist"
+
+        assert args.paraformer_encoder is None, args.paraformer_encoder
+        assert args.paraformer_decoder is None, args.paraformer_decoder
+    elif args.paraformer_encoder:
         assert Path(
-            args.encoder_model
-        ).is_file(), f"{args.encoder_model} does not exist"
+            args.paraformer_encoder
+        ).is_file(), f"{args.paraformer_encoder} does not exist"
 
         assert Path(
-            args.decoder_model
-        ).is_file(), f"{args.decoder_model} does not exist"
-
-        assert Path(args.joiner_model).is_file(), f"{args.joiner_model} does not exist"
-
-        assert len(args.paraformer_encoder_model) == 0, args.paraformer_encoder_model
-        assert len(args.paraformer_decoder_model) == 0, args.paraformer_decoder_model
-    elif args.paraformer_encoder_model:
-        assert Path(
-            args.paraformer_encoder_model
-        ).is_file(), f"{args.paraformer_encoder_model} does not exist"
-
-        assert Path(
-            args.paraformer_decoder_model
-        ).is_file(), f"{args.paraformer_decoder_model} does not exist"
+            args.paraformer_decoder
+        ).is_file(), f"{args.paraformer_decoder} does not exist"
     else:
         raise ValueError("Please provide a model")
 

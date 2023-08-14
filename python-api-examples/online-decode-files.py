@@ -23,17 +23,19 @@ git lfs pull --include "*.onnx"
 
 (2) Streaming paraformer
 
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-zh
-cd sherpa-onnx-streaming-paraformer-zh
+GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
+cd sherpa-onnx-streaming-paraformer-bilingual-zh-en
 git lfs pull --include "*.onnx"
 
 ./python-api-examples/online-decode-files.py \
-  --tokens=./sherpa-onnx-streaming-paraformer-zh/tokens.txt \
-  --paraformer-encoder=./sherpa-onnx-streaming-paraformer-zh/encoder.int8.onnx \
-  --paraformer-decoder=./sherpa-onnx-streaming-paraformer-zh/decoder.int8.onnx \
-  ./sherpa-onnx-streaming-paraformer-zh/test_wavs/0.wav \
-  ./sherpa-onnx-streaming-paraformer-zh/test_wavs/1.wav \
-  ./sherpa-onnx-streaming-paraformer-zh/test_wavs/8k.wav
+  --tokens=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt \
+  --paraformer-encoder=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx \
+  --paraformer-decoder=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx \
+  ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/0.wav \
+  ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/1.wav \
+  ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/2.wav \
+  ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/3.wav \
+  ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/8k.wav
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/index.html
