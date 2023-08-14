@@ -306,12 +306,10 @@ void CNonStreamingSpeechRecognitionDlg::ShowInitRecognizerHelpMessage() {
       "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html "
       "\r\n";
   msg += "to download a non-streaming model, i.e., an offline model.\r\n";
+  msg += "You need to rename them after downloading\r\n\r\n";
+  msg += "It supports transducer, paraformer, and whisper models.\r\n\r\n";
   msg +=
-      "You need to rename them to encoder.onnx, decoder.onnx, and "
-      "joiner.onnx correspoondingly.\r\n\r\n";
-  msg += "It supports both transducer models and paraformer models.\r\n\r\n";
-  msg +=
-      "We give two examples below to show you how to download models\r\n\r\n";
+      "We give three examples below to show you how to download models\r\n\r\n";
   msg += "(1) Transducer\r\n\r\n";
   msg +=
       "We use "
@@ -346,11 +344,80 @@ void CNonStreamingSpeechRecognitionDlg::ShowInitRecognizerHelpMessage() {
       "https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/"
       "resolve/main/tokens.txt\r\n\r\n";
   msg += "\r\n Now rename them\r\n";
-  msg += "mv model.onnx paraformer.onnx\r\n";
+  msg += "mv model.onnx paraformer.onnx\r\n\r\n";
+  msg += "(3) Whisper\r\n\r\n";
+  msg +=
+      "wget "
+      "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/"
+      "main/tiny.en-encoder.onnx\r\n";
+  msg +=
+      "wget "
+      "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/"
+      "main/tiny.en-decoder.onnx\r\n";
+  msg +=
+      "wget "
+      "https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en/resolve/"
+      "main/tiny.en-tokens.txt\r\n";
+  msg += "\r\n Now rename them\r\n";
+  msg += "mv tiny.en-encoder.onnx whisper-encoder.onnx\r\n";
+  msg += "mv tiny.en-decoder.onnx whisper-decoder.onnx\r\n";
   msg += "\r\n";
   msg += "That's it!\r\n";
 
   AppendLineToMultilineEditCtrl(msg);
+}
+
+void CNonStreamingSpeechRecognitionDlg::InitWhisper() {
+  std::string whisper_encoder = "./whisper-encoder.onnx";
+  std::string whisper_decoder = "./whisper-decoder.onnx";
+
+  std::string tokens = "./tokens.txt";
+
+  bool is_ok = true;
+
+  if (Exists("./whisper-encoder.int8.onnx")) {
+    whisper_encoder = "./whisper-encoder.int8.onnx";
+  } else if (!Exists(whisper_encoder)) {
+    std::string msg = whisper_encoder + " does not exist!";
+    AppendLineToMultilineEditCtrl(msg);
+    is_ok = false;
+  }
+
+  if (Exists("./whisper-decoder.int8.onnx")) {
+    whisper_decoder = "./whisper-decoder.int8.onnx";
+  } else if (!Exists(whisper_decoder)) {
+    std::string msg = whisper_decoder + " does not exist!";
+    AppendLineToMultilineEditCtrl(msg);
+    is_ok = false;
+  }
+
+  if (!Exists(tokens)) {
+    std::string msg = tokens + " does not exist!";
+    AppendLineToMultilineEditCtrl(msg);
+    is_ok = false;
+  }
+
+  if (!is_ok) {
+    ShowInitRecognizerHelpMessage();
+    return;
+  }
+
+  memset(&config_, 0, sizeof(config_));
+
+  config_.feat_config.sample_rate = 16000;
+  config_.feat_config.feature_dim = 80;
+
+  config_.model_config.whisper.encoder = whisper_encoder.c_str();
+  config_.model_config.whisper.decoder = whisper_decoder.c_str();
+  config_.model_config.tokens = tokens.c_str();
+  config_.model_config.num_threads = 1;
+  config_.model_config.debug = 1;
+  config_.model_config.model_type = "whisper";
+
+  config_.decoding_method = "greedy_search";
+  config_.max_active_paths = 4;
+
+  recognizer_ = CreateOfflineRecognizer(&config_);
 }
 
 void CNonStreamingSpeechRecognitionDlg::InitParaformer() {
@@ -398,6 +465,11 @@ void CNonStreamingSpeechRecognitionDlg::InitParaformer() {
 void CNonStreamingSpeechRecognitionDlg::InitRecognizer() {
   if (Exists("./paraformer.onnx") || Exists("./paraformer.int8.onnx")) {
     InitParaformer();
+    return;
+  }
+
+  if (Exists("./whisper-encoder.onnx") || Exists("./whisper-encoder.int8.onnx")) {
+    InitWhisper();
     return;
   }
 

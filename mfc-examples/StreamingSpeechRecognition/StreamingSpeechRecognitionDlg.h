@@ -67,6 +67,8 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
 
   bool Exists(const std::string &filename);
   void InitRecognizer();
+  void InitParaformer();
+  void ShowInitRecognizerHelpMessage();
 };
 
 class RecognizerThread : public CWinThread {

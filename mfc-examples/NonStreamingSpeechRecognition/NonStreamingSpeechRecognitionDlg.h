@@ -69,5 +69,6 @@ class CNonStreamingSpeechRecognitionDlg : public CDialogEx {
   void InitRecognizer();
 
   void InitParaformer();
+  void InitWhisper();
   void ShowInitRecognizerHelpMessage();
 };
