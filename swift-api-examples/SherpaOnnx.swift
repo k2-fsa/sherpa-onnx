@@ -18,31 +18,71 @@ func toCPointer(_ s: String) -> UnsafePointer<Int8>! {
 /// Return an instance of SherpaOnnxOnlineTransducerModelConfig.
 ///
 /// Please refer to
-/// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+/// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/index.html
 /// to download the required `.onnx` files.
 ///
 /// - Parameters:
 ///   - encoder: Path to encoder.onnx
 ///   - decoder: Path to decoder.onnx
 ///   - joiner: Path to joiner.onnx
-///   - tokens: Path to tokens.txt
-///   - numThreads:  Number of threads to use for neural network computation.
 ///
 /// - Returns: Return an instance of SherpaOnnxOnlineTransducerModelConfig
 func sherpaOnnxOnlineTransducerModelConfig(
-  encoder: String,
-  decoder: String,
-  joiner: String,
-  tokens: String,
-  numThreads: Int = 2,
-  provider: String = "cpu",
-  debug: Int = 0,
-  modelType: String = ""
+  encoder: String = "",
+  decoder: String = "",
+  joiner: String = ""
 ) -> SherpaOnnxOnlineTransducerModelConfig {
   return SherpaOnnxOnlineTransducerModelConfig(
     encoder: toCPointer(encoder),
     decoder: toCPointer(decoder),
-    joiner: toCPointer(joiner),
+    joiner: toCPointer(joiner)
+  )
+}
+
+/// Return an instance of SherpaOnnxOnlineParaformerModelConfig.
+///
+/// Please refer to
+/// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/index.html
+/// to download the required `.onnx` files.
+///
+/// - Parameters:
+///   - encoder: Path to encoder.onnx
+///   - decoder: Path to decoder.onnx
+///
+/// - Returns: Return an instance of SherpaOnnxOnlineParaformerModelConfig
+func sherpaOnnxOnlineParaformerModelConfig(
+  encoder: String = "",
+  decoder: String = ""
+) -> SherpaOnnxOnlineParaformerModelConfig {
+  return SherpaOnnxOnlineParaformerModelConfig(
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder)
+  )
+}
+
+/// Return an instance of SherpaOnnxOnlineModelConfig.
+///
+/// Please refer to
+/// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+/// to download the required `.onnx` files.
+///
+/// - Parameters:
+///   - tokens: Path to tokens.txt
+///   - numThreads:  Number of threads to use for neural network computation.
+///
+/// - Returns: Return an instance of SherpaOnnxOnlineTransducerModelConfig
+func sherpaOnnxOnlineModelConfig(
+  tokens: String,
+  transducer: SherpaOnnxOnlineTransducerModelConfig = sherpaOnnxOnlineTransducerModelConfig(),
+  paraformer: SherpaOnnxOnlineParaformerModelConfig = sherpaOnnxOnlineParaformerModelConfig(),
+  numThreads: Int = 1,
+  provider: String = "cpu",
+  debug: Int = 0,
+  modelType: String = ""
+) -> SherpaOnnxOnlineModelConfig {
+  return SherpaOnnxOnlineModelConfig(
+    transducer: transducer,
+    paraformer: paraformer,
     tokens: toCPointer(tokens),
     num_threads: Int32(numThreads),
     provider: toCPointer(provider),
@@ -62,7 +102,7 @@ func sherpaOnnxFeatureConfig(
 
 func sherpaOnnxOnlineRecognizerConfig(
   featConfig: SherpaOnnxFeatureConfig,
-  modelConfig: SherpaOnnxOnlineTransducerModelConfig,
+  modelConfig: SherpaOnnxOnlineModelConfig,
   enableEndpoint: Bool = false,
   rule1MinTrailingSilence: Float = 2.4,
   rule2MinTrailingSilence: Float = 1.2,
@@ -100,17 +140,17 @@ class SherpaOnnxOnlineRecongitionResult {
   }
 
   var count: Int32 {
-      return result.pointee.count
+    return result.pointee.count
   }
 
   var tokens: [String] {
     if let tokensPointer = result.pointee.tokens_arr {
       var tokens: [String] = []
       for index in 0..<count {
-          if let tokenPointer = tokensPointer[Int(index)] {
-                let token = String(cString: tokenPointer)
-                tokens.append(token)
-           }
+        if let tokenPointer = tokensPointer[Int(index)] {
+          let token = String(cString: tokenPointer)
+          tokens.append(token)
+        }
       }
       return tokens
     } else {

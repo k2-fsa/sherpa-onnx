@@ -134,6 +134,8 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
   const auto &text = result.text;
 
   auto r = new SherpaOnnxOnlineRecognizerResult;
+  memset(r, 0, sizeof(SherpaOnnxOnlineRecognizerResult));
+
   // copy text
   r->text = new char[text.size() + 1];
   std::copy(text.begin(), text.end(), const_cast<char *>(r->text));
@@ -159,7 +161,6 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     r->tokens = new char[total_length];
     memset(reinterpret_cast<void *>(const_cast<char *>(r->tokens)), 0,
            total_length);
-    r->timestamps = new float[r->count];
     char **tokens_temp = new char *[r->count];
     int32_t pos = 0;
     for (int32_t i = 0; i < r->count; ++i) {
@@ -168,10 +169,17 @@ SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
              result.tokens[i].c_str(), result.tokens[i].size());
       // +1 to move past the null character
       pos += result.tokens[i].size() + 1;
-      r->timestamps[i] = result.timestamps[i];
+    }
+    r->tokens_arr = tokens_temp;
+
+    if (!result.timestamps.empty()) {
+      r->timestamps = new float[r->count];
+      std::copy(result.timestamps.begin(), result.timestamps.end(),
+                r->timestamps);
+    } else {
+      r->timestamps = nullptr;
     }
 
-    r->tokens_arr = tokens_temp;
   } else {
     r->count = 0;
     r->timestamps = nullptr;
