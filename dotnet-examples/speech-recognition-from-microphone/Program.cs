@@ -26,14 +26,20 @@ class SpeechRecognitionFromMicrophone
     [Option(Required = false, Default = "cpu", HelpText = "Provider, e.g., cpu, coreml")]
     public string Provider { get; set; }
 
-    [Option(Required = true, HelpText = "Path to encoder.onnx")]
+    [Option(Required = false, HelpText = "Path to transducer encoder.onnx")]
     public string Encoder { get; set; }
 
-    [Option(Required = true, HelpText = "Path to decoder.onnx")]
+    [Option(Required = false, HelpText = "Path to transducer decoder.onnx")]
     public string Decoder { get; set; }
 
-    [Option(Required = true, HelpText = "Path to joiner.onnx")]
+    [Option(Required = false, HelpText = "Path to transducer joiner.onnx")]
     public string Joiner { get; set; }
+
+    [Option("paraformer-encoder", Required = false, HelpText = "Path to paraformer encoder.onnx")]
+    public string ParaformerEncoder { get; set; }
+
+    [Option("paraformer-decoder", Required = false, HelpText = "Path to paraformer decoder.onnx")]
+    public string ParaformerDecoder { get; set; }
 
     [Option("num-threads", Required = false, Default = 1, HelpText = "Number of threads for computation")]
     public int NumThreads { get; set; }
@@ -87,14 +93,24 @@ larger than this value. Used only when --enable-endpoint is true.")]
   private static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs)
   {
     string usage = @"
+(1) Streaming transducer models
+
 dotnet run -c Release \
   --tokens ./icefall-asr-zipformer-streaming-wenetspeech-20230615/data/lang_char/tokens.txt \
   --encoder ./icefall-asr-zipformer-streaming-wenetspeech-20230615/exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx \
   --decoder ./icefall-asr-zipformer-streaming-wenetspeech-20230615/exp/decoder-epoch-12-avg-4-chunk-16-left-128.onnx \
-  --joiner ./icefall-asr-zipformer-streaming-wenetspeech-20230615/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx \
+  --joiner ./icefall-asr-zipformer-streaming-wenetspeech-20230615/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx
+
+(2) Streaming Paraformer models
+
+dotnet run \
+  --tokens=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt \
+  --paraformer-encoder=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx \
+  --paraformer-decoder=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/index.html
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/index.html
 to download pre-trained streaming models.
 ";
 
@@ -117,13 +133,17 @@ to download pre-trained streaming models.
     // You can change it if your model has a different feature dim.
     config.FeatConfig.FeatureDim = 80;
 
-    config.TransducerModelConfig.Encoder = options.Encoder;
-    config.TransducerModelConfig.Decoder = options.Decoder;
-    config.TransducerModelConfig.Joiner = options.Joiner;
-    config.TransducerModelConfig.Tokens = options.Tokens;
-    config.TransducerModelConfig.Provider = options.Provider;
-    config.TransducerModelConfig.NumThreads = options.NumThreads;
-    config.TransducerModelConfig.Debug = options.Debug ? 1 : 0;
+    config.ModelConfig.Transducer.Encoder = options.Encoder;
+    config.ModelConfig.Transducer.Decoder = options.Decoder;
+    config.ModelConfig.Transducer.Joiner = options.Joiner;
+
+    config.ModelConfig.Paraformer.Encoder = options.ParaformerEncoder;
+    config.ModelConfig.Paraformer.Decoder = options.ParaformerDecoder;
+
+    config.ModelConfig.Tokens = options.Tokens;
+    config.ModelConfig.Provider = options.Provider;
+    config.ModelConfig.NumThreads = options.NumThreads;
+    config.ModelConfig.Debug = options.Debug ? 1 : 0;
 
     config.DecodingMethod = options.DecodingMethod;
     config.MaxActivePaths = options.MaxActivePaths;
@@ -134,7 +154,6 @@ to download pre-trained streaming models.
     config.Rule3MinUtteranceLength = options.Rule3MinUtteranceLength;
 
     OnlineRecognizer recognizer = new OnlineRecognizer(config);
-
 
     OnlineStream s = recognizer.CreateStream();
 
@@ -196,7 +215,6 @@ to download pre-trained streaming models.
 
     stream.Start();
 
-    int segment_index = 0;
     String lastText = "";
     int segmentIndex = 0;
 

@@ -63,8 +63,10 @@ jobs:
         shell: bash
         run: |
           cd dotnet-examples/
+
           cd online-decode-files
-          ./run.sh
+          ./run-transducer.sh
+          ./run-paraformer.sh
 
           cd ../offline-decode-files
           ./run-nemo-ctc.sh
