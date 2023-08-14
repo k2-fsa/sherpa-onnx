@@ -82,8 +82,7 @@ def get_args():
     return parser.parse_args()
 
 
-def create_recognizer():
-    args = get_args()
+def create_recognizer(args):
     assert_file_exists(args.encoder)
     assert_file_exists(args.decoder)
     assert_file_exists(args.joiner)
@@ -110,7 +109,18 @@ def create_recognizer():
 
 
 def main():
-    recognizer = create_recognizer()
+    args = get_args()
+
+    devices = sd.query_devices()
+    if len(devices) == 0:
+        print("No microphone devices found")
+        sys.exit(0)
+
+    print(devices)
+    default_input_device_idx = sd.default.device[0]
+    print(f'Use default device: {devices[default_input_device_idx]["name"]}')
+
+    recognizer = create_recognizer(args)
     print("Started! Please speak")
 
     # The model is using 16 kHz, we use 48 kHz here to demonstrate that
@@ -145,10 +155,6 @@ def main():
 
 
 if __name__ == "__main__":
-    devices = sd.query_devices()
-    print(devices)
-    default_input_device_idx = sd.default.device[0]
-    print(f'Use default device: {devices[default_input_device_idx]["name"]}')
 
     try:
         main()
