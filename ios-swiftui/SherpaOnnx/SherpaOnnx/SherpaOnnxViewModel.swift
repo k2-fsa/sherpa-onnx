@@ -16,15 +16,15 @@ enum Status {
 class SherpaOnnxViewModel: ObservableObject {
     @Published var status: Status = .stop
     @Published var subtitles: String = ""
-    
+
     var sentences: [String] = []
-    
+
     var audioEngine: AVAudioEngine? = nil
     var recognizer: SherpaOnnxRecognizer! = nil
-    
+
     var lastSentence: String = ""
     let maxSentence: Int = 20
-    
+
     var results: String {
         if sentences.isEmpty && lastSentence.isEmpty {
             return ""
@@ -42,24 +42,25 @@ class SherpaOnnxViewModel: ObservableObject {
                 .joined(separator: "\n") + "\n\(sentences.count): \(lastSentence.lowercased())"
         }
     }
-    
+
     func updateLabel() {
         DispatchQueue.main.async {
             self.subtitles = self.results
         }
     }
-    
+
     init() {
         initRecognizer()
         initRecorder()
     }
-    
+
     private func initRecognizer() {
         // Please select one model that is best suitable for you.
         //
         // You can also modify Model.swift to add new pre-trained models from
         // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
-        let modelConfig = getBilingualStreamZhEnZipformer20230220()
+        // let modelConfig = getBilingualStreamZhEnZipformer20230220()
+        let modelConfig = getBilingualStreamingZhEnParaformer()
 
         let featConfig = sherpaOnnxFeatureConfig(
             sampleRate: 16000,
@@ -77,7 +78,7 @@ class SherpaOnnxViewModel: ObservableObject {
         )
         recognizer = SherpaOnnxRecognizer(config: &config)
     }
-    
+
     private func initRecorder() {
         print("init recorder")
         audioEngine = AVAudioEngine()
@@ -152,7 +153,7 @@ class SherpaOnnxViewModel: ObservableObject {
             }
         }
     }
-    
+
     public func toggleRecorder() {
         if status == .stop {
             startRecorder()
