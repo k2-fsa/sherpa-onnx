@@ -113,9 +113,8 @@ def setup_logger(
 
 def add_model_args(parser: argparse.ArgumentParser):
     parser.add_argument(
-        "--encoder-model",
+        "--encoder",
         type=str,
-        default="",
         help="Path to the transducer encoder model",
     )
 
