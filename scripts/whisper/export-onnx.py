@@ -250,6 +250,7 @@ def main():
     # write tokens
 
     tokenizer = whisper.tokenizer.get_tokenizer(model.is_multilingual)
+
     model.eval()
     print(model.dims)
     audio = torch.rand(16000 * 2)
@@ -306,8 +307,12 @@ def main():
         "n_text_head": model.dims.n_text_head,
         "n_text_layer": model.dims.n_text_layer,
         "sot_sequence": ",".join(list(map(str, tokenizer.sot_sequence))),
-        "all_language_tokens": ",".join(list(map(str, tokenizer.all_language_tokens))),
-        "all_language_codes": ",".join(tokenizer.all_language_codes),
+        "all_language_tokens": ",".join(
+            list(map(str, tokenizer.all_language_tokens))
+        ),  # a list of ids
+        "all_language_codes": ",".join(
+            tokenizer.all_language_codes
+        ),  # e.g., en, de, zh, fr
         "sot": tokenizer.sot,
         "sot_index": tokenizer.sot_sequence.index(tokenizer.sot),
         "eot": tokenizer.eot,
