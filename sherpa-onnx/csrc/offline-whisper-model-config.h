@@ -14,10 +14,26 @@ struct OfflineWhisperModelConfig {
   std::string encoder;
   std::string decoder;
 
+  // Available languages can be found at
+  // https://github.com/openai/whisper/blob/main/whisper/tokenizer.py#L10
+  //
+  // Note: For non-multilingual models, it supports only "en"
+  //
+  // If empty, we will infer it from the input audio file when
+  // the model is multilingual.
+  std::string language;
+
+  // Valid values are transcribe and translate
+  //
+  // Note: For non-multilingual models, it supports only "transcribe"
+  std::string task = "transcribe";
+
   OfflineWhisperModelConfig() = default;
   OfflineWhisperModelConfig(const std::string &encoder,
-                            const std::string &decoder)
-      : encoder(encoder), decoder(decoder) {}
+                            const std::string &decoder,
+                            const std::string &language,
+                            const std::string &task)
+      : encoder(encoder), decoder(decoder), language(language), task(task) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

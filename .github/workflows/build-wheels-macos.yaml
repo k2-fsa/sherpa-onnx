@@ -36,6 +36,9 @@ jobs:
           CIBW_ARCHS: "universal2"
           CIBW_BUILD_VERBOSITY: 3
 
+          #  Don't repair macOS wheels
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
+
       - name: Display wheels
         shell: bash
         run: |

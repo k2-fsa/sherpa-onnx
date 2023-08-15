@@ -53,6 +53,7 @@ python3 ./python-api-examples/offline-decode-files.py \
   --whisper-encoder=./sherpa-onnx-whisper-base.en/base.en-encoder.int8.onnx \
   --whisper-decoder=./sherpa-onnx-whisper-base.en/base.en-decoder.int8.onnx \
   --tokens=./sherpa-onnx-whisper-base.en/base.en-tokens.txt \
+  --whisper-task=transcribe \
   --num-threads=1 \
   ./sherpa-onnx-whisper-base.en/test_wavs/0.wav \
   ./sherpa-onnx-whisper-base.en/test_wavs/1.wav \
@@ -198,6 +199,28 @@ def get_args():
         default="",
         type=str,
         help="Path to whisper decoder model",
+    )
+
+    parser.add_argument(
+        "--whisper-language",
+        default="",
+        type=str,
+        help="""It specifies the spoken language in the input audio file.
+        Example values: en, fr, de, zh, jp.
+        Available languages for multilingual models can be found at
+        https://github.com/openai/whisper/blob/main/whisper/tokenizer.py#L10
+        If not specified, we infer the language from the input audio file.
+        """,
+    )
+
+    parser.add_argument(
+        "--whisper-task",
+        default="transcribe",
+        choices=["transcribe", "translate"],
+        type=str,
+        help="""For multilingual models, if you specify translate, the output
+        will be in English.
+        """,
     )
 
     parser.add_argument(
@@ -371,10 +394,10 @@ def main():
             decoder=args.whisper_decoder,
             tokens=args.tokens,
             num_threads=args.num_threads,
-            sample_rate=args.sample_rate,
-            feature_dim=args.feature_dim,
             decoding_method=args.decoding_method,
             debug=args.debug,
+            language=args.whisper_language,
+            task=args.whisper_task,
         )
     elif args.tdnn_model:
         assert_file_exists(args.tdnn_model)

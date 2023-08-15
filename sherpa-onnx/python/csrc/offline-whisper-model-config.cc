@@ -14,10 +14,14 @@ namespace sherpa_onnx {
 void PybindOfflineWhisperModelConfig(py::module *m) {
   using PyClass = OfflineWhisperModelConfig;
   py::class_<PyClass>(*m, "OfflineWhisperModelConfig")
-      .def(py::init<const std::string &, const std::string &>(),
-           py::arg("encoder"), py::arg("decoder"))
+      .def(py::init<const std::string &, const std::string &,
+                    const std::string &, const std::string &>(),
+           py::arg("encoder"), py::arg("decoder"), py::arg("language"),
+           py::arg("task"))
       .def_readwrite("encoder", &PyClass::encoder)
       .def_readwrite("decoder", &PyClass::decoder)
+      .def_readwrite("language", &PyClass::language)
+      .def_readwrite("task", &PyClass::task)
       .def("__str__", &PyClass::ToString);
 }
 
