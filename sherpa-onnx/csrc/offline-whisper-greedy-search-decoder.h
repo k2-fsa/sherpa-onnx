@@ -8,19 +8,24 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-whisper-decoder.h"
+#include "sherpa-onnx/csrc/offline-whisper-model-config.h"
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 
 namespace sherpa_onnx {
 
 class OfflineWhisperGreedySearchDecoder : public OfflineWhisperDecoder {
  public:
-  explicit OfflineWhisperGreedySearchDecoder(OfflineWhisperModel *model)
-      : model_(model) {}
+  OfflineWhisperGreedySearchDecoder(const OfflineWhisperModelConfig &config,
+                                    OfflineWhisperModel *model)
+      : config_(config), model_(model) {}
 
   std::vector<OfflineWhisperDecoderResult> Decode(Ort::Value cross_k,
                                                   Ort::Value cross_v) override;
 
+  int32_t DetectLanguage(Ort::Value &cross_k, Ort::Value &cross_v) const;
+
  private:
+  OfflineWhisperModelConfig config_;
   OfflineWhisperModel *model_;  // not owned
 };
 

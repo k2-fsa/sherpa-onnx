@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <string>
 #include <tuple>
+#include <unordered_map>
 #include <utility>
 
 #include "sherpa-onnx/csrc/macros.h"
@@ -88,9 +89,31 @@ class OfflineWhisperModel::Impl {
 
   const std::vector<int64_t> &GetInitialTokens() const { return sot_sequence_; }
 
+  const std::vector<int32_t> &GetAllLanguageIDs() const {
+    return all_language_tokens_;
+  }
+
+  const std::unordered_map<std::string, int32_t> &GetLang2ID() const {
+    return lang2id_;
+  }
+
+  const std::unordered_map<int32_t, std::string> &GetID2Lang() const {
+    return id2lang_;
+  }
+
+  int32_t NoTimeStampsToken() const { return no_timestamps_; }
+
   int32_t EOT() const { return eot_; }
 
+  int32_t SOT() const { return sot_; }
+
   int32_t TextCtx() const { return n_text_ctx_; }
+
+  int32_t VocabSize() const { return n_vocab_; }
+
+  int32_t Translate() const { return translate_; }
+
+  bool IsMultiLingual() const { return is_multilingual_; }
 
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
@@ -116,13 +139,35 @@ class OfflineWhisperModel::Impl {
     SHERPA_ONNX_READ_META_DATA(n_text_layer_, "n_text_layer");
     SHERPA_ONNX_READ_META_DATA(n_text_ctx_, "n_text_ctx");
     SHERPA_ONNX_READ_META_DATA(n_text_state_, "n_text_state");
+    SHERPA_ONNX_READ_META_DATA(n_vocab_, "n_vocab");
     SHERPA_ONNX_READ_META_DATA(sot_, "sot");
     SHERPA_ONNX_READ_META_DATA(eot_, "eot");
     SHERPA_ONNX_READ_META_DATA(blank_, "blank_id");
     SHERPA_ONNX_READ_META_DATA(translate_, "translate");
+    SHERPA_ONNX_READ_META_DATA(transcribe_, "transcribe");
+    SHERPA_ONNX_READ_META_DATA(is_multilingual_, "is_multilingual");
     SHERPA_ONNX_READ_META_DATA(no_timestamps_, "no_timestamps");
     SHERPA_ONNX_READ_META_DATA(no_speech_, "no_speech");
     SHERPA_ONNX_READ_META_DATA_VEC(sot_sequence_, "sot_sequence");
+
+    if (is_multilingual_) {
+      SHERPA_ONNX_READ_META_DATA_VEC(all_language_tokens_,
+                                     "all_language_tokens");
+      SHERPA_ONNX_READ_META_DATA_VEC_STRING(all_language_codes_,
+                                            "all_language_codes");
+      if (all_language_tokens_.size() != all_language_codes_.size()) {
+        SHERPA_ONNX_LOGE("# lang_id: %d != # lang_code: %d",
+                         static_cast<int32_t>(all_language_tokens_.size()),
+                         static_cast<int32_t>(all_language_codes_.size()));
+        exit(-1);
+      }
+
+      for (int32_t i = 0;
+           i != static_cast<int32_t>(all_language_tokens_.size()); ++i) {
+        lang2id_[all_language_codes_[i]] = all_language_tokens_[i];
+        id2lang_[all_language_tokens_[i]] = all_language_codes_[i];
+      }
+    }
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
@@ -157,16 +202,24 @@ class OfflineWhisperModel::Impl {
   std::vector<std::string> decoder_output_names_;
   std::vector<const char *> decoder_output_names_ptr_;
 
+  std::vector<int32_t> all_language_tokens_;
+  std::vector<std::string> all_language_codes_;
+  std::unordered_map<std::string, int32_t> lang2id_;
+  std::unordered_map<int32_t, std::string> id2lang_;
+
   // model meta data
   int32_t n_text_layer_;
   int32_t n_text_ctx_;
   int32_t n_text_state_;
+  int32_t n_vocab_;
   int32_t sot_;
   int32_t eot_;
   int32_t blank_;
   int32_t translate_;
+  int32_t transcribe_;
   int32_t no_timestamps_;
   int32_t no_speech_;
+  int32_t is_multilingual_;
   std::vector<int64_t> sot_sequence_;
 };
 
@@ -176,7 +229,7 @@ OfflineWhisperModel::OfflineWhisperModel(const OfflineModelConfig &config)
 OfflineWhisperModel::~OfflineWhisperModel() = default;
 
 std::pair<Ort::Value, Ort::Value> OfflineWhisperModel::ForwardEncoder(
-    Ort::Value features) {
+    Ort::Value features) const {
   return impl_->ForwardEncoder(std::move(features));
 }
 
@@ -187,14 +240,15 @@ OfflineWhisperModel::ForwardDecoder(Ort::Value tokens,
                                     Ort::Value n_layer_self_v_cache,
                                     Ort::Value n_layer_cross_k,
                                     Ort::Value n_layer_cross_v,
-                                    Ort::Value offset) {
+                                    Ort::Value offset) const {
   return impl_->ForwardDecoder(
       std::move(tokens), std::move(n_layer_self_k_cache),
       std::move(n_layer_self_v_cache), std::move(n_layer_cross_k),
       std::move(n_layer_cross_v), std::move(offset));
 }
 
-std::pair<Ort::Value, Ort::Value> OfflineWhisperModel::GetInitialSelfKVCache() {
+std::pair<Ort::Value, Ort::Value> OfflineWhisperModel::GetInitialSelfKVCache()
+    const {
   return impl_->GetInitialSelfKVCache();
 }
 
@@ -206,8 +260,36 @@ const std::vector<int64_t> &OfflineWhisperModel::GetInitialTokens() const {
   return impl_->GetInitialTokens();
 }
 
+const std::vector<int32_t> &OfflineWhisperModel::GetAllLanguageIDs() const {
+  return impl_->GetAllLanguageIDs();
+}
+
+const std::unordered_map<std::string, int32_t>
+    &OfflineWhisperModel::GetLang2ID() const {
+  return impl_->GetLang2ID();
+}
+
+const std::unordered_map<int32_t, std::string>
+    &OfflineWhisperModel::GetID2Lang() const {
+  return impl_->GetID2Lang();
+}
+
+int32_t OfflineWhisperModel::NoTimeStampsToken() const {
+  return impl_->NoTimeStampsToken();
+}
+
 int32_t OfflineWhisperModel::EOT() const { return impl_->EOT(); }
 
+int32_t OfflineWhisperModel::SOT() const { return impl_->SOT(); }
+
 int32_t OfflineWhisperModel::TextCtx() const { return impl_->TextCtx(); }
+
+int32_t OfflineWhisperModel::VocabSize() const { return impl_->VocabSize(); }
+
+int32_t OfflineWhisperModel::Translate() const { return impl_->Translate(); }
+
+bool OfflineWhisperModel::IsMultiLingual() const {
+  return impl_->IsMultiLingual();
+}
 
 }  // namespace sherpa_onnx

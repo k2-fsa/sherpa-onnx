@@ -244,6 +244,8 @@ class OfflineRecognizer(object):
         encoder: str,
         decoder: str,
         tokens: str,
+        language: str = "en",
+        task: str = "transcribe",
         num_threads: int = 1,
         decoding_method: str = "greedy_search",
         debug: bool = False,
@@ -268,6 +270,14 @@ class OfflineRecognizer(object):
 
                 symbol integer_id
 
+          language:
+            The spoken language in the audio file. Example values: en, de, zh,
+            jp, fr. See https://github.com/openai/whisper/blob/main/whisper/tokenizer.py#L10
+            for all possible values. Note that for non-multilingual models, the
+            only valid value is 'en'.
+          task:
+            Valid values are: transcribe, translate. Note that for
+            non-multilingual models, the only valid value is 'transcribe'.
           num_threads:
             Number of threads for neural network computation.
           decoding_method:
@@ -279,7 +289,12 @@ class OfflineRecognizer(object):
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
-            whisper=OfflineWhisperModelConfig(encoder=encoder, decoder=decoder),
+            whisper=OfflineWhisperModelConfig(
+                encoder=encoder,
+                decoder=decoder,
+                language=language,
+                task=task,
+            ),
             tokens=tokens,
             num_threads=num_threads,
             debug=debug,
