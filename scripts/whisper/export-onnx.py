@@ -11,6 +11,7 @@ for making the onnx export script public.
 """
 
 import argparse
+import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -418,6 +419,9 @@ def main():
         },
     )
 
+    if 'large' in args.model:
+        # it causes errors for large models, so skip it.
+        return
     # Generate int8 quantization models
     # See https://onnxruntime.ai/docs/performance/model-optimizations/quantization.html#data-type-selection
 
