@@ -13,7 +13,7 @@
 namespace sherpa_onnx {
 
 int32_t OfflineWhisperGreedySearchDecoder::DetectLanguage(
-    Ort::Value &cross_k, Ort::Value &cross_v) const {
+    Ort::Value &cross_k, Ort::Value &cross_v) const {  // NOLINT
   int64_t token_val = model_->SOT();
   std::array<int64_t, 2> token_shape{1, 1};
 

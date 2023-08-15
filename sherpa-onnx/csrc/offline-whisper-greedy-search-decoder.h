@@ -22,7 +22,8 @@ class OfflineWhisperGreedySearchDecoder : public OfflineWhisperDecoder {
   std::vector<OfflineWhisperDecoderResult> Decode(Ort::Value cross_k,
                                                   Ort::Value cross_v) override;
 
-  int32_t DetectLanguage(Ort::Value &cross_k, Ort::Value &cross_v) const;
+  int32_t DetectLanguage(Ort::Value &cross_k,         // NOLINT
+                         Ort::Value &cross_v) const;  // NOLINT
 
  private:
   OfflineWhisperModelConfig config_;

@@ -5,6 +5,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_WHISPER_MODEL_H_
 
 #include <memory>
+#include <string>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
