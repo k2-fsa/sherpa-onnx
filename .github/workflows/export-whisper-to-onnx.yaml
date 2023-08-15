@@ -1,6 +1,9 @@
 name: export-whisper-to-onnx
 
 on:
+  # push:
+    # branches:
+      # - whisper-multilingual
   workflow_dispatch:
 
 concurrency:
@@ -16,7 +19,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        model: ["tiny.en", "base.en", "small.en", "medium.en"]
+        model: ["tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2"]
 
     steps:
       - uses: actions/checkout@v2

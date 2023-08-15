@@ -279,7 +279,6 @@ def main():
 
         if args.task == "translate":
             model.sot_sequence[2] = model.translate
-    print(model.sot_sequence)
 
     n_layer_self_k_cache, n_layer_self_v_cache = model.get_self_cache()
 
