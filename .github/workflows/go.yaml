@@ -67,7 +67,7 @@ jobs:
           ls -lh
           go mod tidy
           cat go.mod
-          go build -x
+          go build
           ls -lh
 
           git lfs install
@@ -86,6 +86,19 @@ jobs:
           git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
           ./run-nemo-ctc.sh
           rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
+
+          echo "Test Whisper tiny.en"
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
+          cd sherpa-onnx-whisper-tiny.en
+          git lfs pull --include "*.onnx"
+          cd ..
+          ./run-whisper.sh
+          rm -rf sherpa-onnx-whisper-tiny.en
+
+          echo "Test Tdnn yesno"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-tdnn-yesno
+          ./run-tdnn-yesno.sh
+          rm -rf sherpa-onnx-tdnn-yesno
 
       - name: Test non-streaming decoding files (Win64)
         if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
@@ -121,6 +134,19 @@ jobs:
           ./run-nemo-ctc.sh
           rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
 
+          echo "Test Whisper tiny.en"
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
+          cd sherpa-onnx-whisper-tiny.en
+          git lfs pull --include "*.onnx"
+          cd ..
+          ./run-whisper.sh
+          rm -rf sherpa-onnx-whisper-tiny.en
+
+          echo "Test Tdnn yesno"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-tdnn-yesno
+          ./run-tdnn-yesno.sh
+          rm -rf sherpa-onnx-tdnn-yesno
+
       - name: Test non-streaming decoding files (Win32)
         if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
         shell: bash
@@ -139,7 +165,7 @@ jobs:
           go env
 
           go clean
-          go build -x
+          go build
 
           echo $PWD
           ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
@@ -163,6 +189,19 @@ jobs:
           ./run-nemo-ctc.sh
           rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
 
+          echo "Test Whisper tiny.en"
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
+          cd sherpa-onnx-whisper-tiny.en
+          git lfs pull --include "*.onnx"
+          cd ..
+          ./run-whisper.sh
+          rm -rf sherpa-onnx-whisper-tiny.en
+
+          echo "Test Tdnn yesno"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-tdnn-yesno
+          ./run-tdnn-yesno.sh
+          rm -rf sherpa-onnx-tdnn-yesno
+
       - name: Test streaming decoding files (Linux/macOS)
         if: matrix.os != 'windows-latest'
         shell: bash
@@ -171,7 +210,7 @@ jobs:
           ls -lh
           go mod tidy
           cat go.mod
-          go build -x
+          go build
           ls -lh
 
           git lfs install
@@ -233,7 +272,7 @@ jobs:
           go env
 
           go clean
-          go build -x
+          go build
 
           echo $PWD
           ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
