@@ -218,14 +218,15 @@ public class AsrWebsocketServer extends WebSocketServer {
 
     String soPath = args[0];
     String cfgPath = args[1];
-
+ 
     OnlineRecognizer.setSoPath(soPath);
-
+    logger.info("readProperties");
     Map<String, String> cfgMap = AsrWebsocketServer.readProperties(cfgPath);
     int port = Integer.valueOf(cfgMap.get("port"));
 
     int connectionThreadNum = Integer.valueOf(cfgMap.get("connection_thread_num"));
     AsrWebsocketServer s = new AsrWebsocketServer(port, connectionThreadNum);
+    logger.info("initModelWithCfg");
     s.initModelWithCfg(cfgMap, cfgPath);
     logger.info("Server started on port: " + s.getPort());
     s.start();

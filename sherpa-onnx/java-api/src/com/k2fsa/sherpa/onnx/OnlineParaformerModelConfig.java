@@ -4,15 +4,13 @@
 
 package com.k2fsa.sherpa.onnx;
 
-public class OnlineTransducerModelConfig {
+public class OnlineParaformerModelConfig {
   private final String encoder;
   private final String decoder;
-  private final String joiner;
 
-  public OnlineTransducerModelConfig(String encoder, String decoder, String joiner) {
+  public OnlineParaformerModelConfig(String encoder, String decoder) {
     this.encoder = encoder;
     this.decoder = decoder;
-    this.joiner = joiner;
   }
 
   public String getEncoder() {
@@ -21,9 +19,5 @@ public class OnlineTransducerModelConfig {
 
   public String getDecoder() {
     return decoder;
-  }
-
-  public String getJoiner() {
-    return joiner;
   }
 }
