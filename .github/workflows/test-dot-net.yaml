@@ -69,7 +69,7 @@ jobs:
           ./run-paraformer.sh
 
           cd ../offline-decode-files
-          # ./run-nemo-ctc.sh
+          ./run-nemo-ctc.sh
           ./run-paraformer.sh
           ./run-zipformer.sh
           ./run-whisper.sh
