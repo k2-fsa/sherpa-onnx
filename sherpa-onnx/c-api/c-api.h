@@ -305,6 +305,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineWhisperModelConfig {
   const char *decoder;
 } SherpaOnnxOfflineWhisperModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTdnnModelConfig {
+  const char *model;
+} SherpaOnnxOfflineTdnnModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineLMConfig {
   const char *model;
   float scale;
@@ -315,6 +319,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   SherpaOnnxOfflineParaformerModelConfig paraformer;
   SherpaOnnxOfflineNemoEncDecCtcModelConfig nemo_ctc;
   SherpaOnnxOfflineWhisperModelConfig whisper;
+  SherpaOnnxOfflineTdnnModelConfig tdnn;
 
   const char *tokens;
   int32_t num_threads;
