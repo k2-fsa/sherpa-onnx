@@ -9,6 +9,8 @@ LIB_FILES = \
 	$(LIB_SRC_DIR)/FeatureConfig.java \
 	$(LIB_SRC_DIR)/OnlineLMConfig.java \
 	$(LIB_SRC_DIR)/OnlineTransducerModelConfig.java \
+	$(LIB_SRC_DIR)/OnlineParaformerModelConfig.java \
+	$(LIB_SRC_DIR)/OnlineModelConfig.java \
 	$(LIB_SRC_DIR)/OnlineRecognizerConfig.java \
 	$(LIB_SRC_DIR)/OnlineStream.java \
 	$(LIB_SRC_DIR)/OnlineRecognizer.java \

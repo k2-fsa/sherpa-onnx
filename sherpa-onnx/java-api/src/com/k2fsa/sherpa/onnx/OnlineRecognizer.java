@@ -57,7 +57,7 @@ public class OnlineRecognizer {
               false, 0.0F, Float.parseFloat(proMap.get("rule3_min_utterance_length").trim()));
       EndpointConfig endCfg = new EndpointConfig(rule1, rule2, rule3);
 
-      OnlineParaformerModelConfig modelParaCfg = new OnlineParaformerModelConfig("", "");
+      OnlineParaformerModelConfig modelParaCfg = new OnlineParaformerModelConfig(proMap.get("encoder").trim(), proMap.get("decoder").trim());
       OnlineTransducerModelConfig modelTranCfg =
           new OnlineTransducerModelConfig(
               proMap.get("encoder").trim(),
