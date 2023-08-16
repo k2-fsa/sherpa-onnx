@@ -56,15 +56,21 @@ public class OnlineRecognizer {
           new EndpointRule(
               false, 0.0F, Float.parseFloat(proMap.get("rule3_min_utterance_length").trim()));
       EndpointConfig endCfg = new EndpointConfig(rule1, rule2, rule3);
-      OnlineTransducerModelConfig modelCfg =
+
+      OnlineParaformerModelConfig modelParaCfg = new OnlineParaformerModelConfig("", "");
+      OnlineTransducerModelConfig modelTranCfg =
           new OnlineTransducerModelConfig(
               proMap.get("encoder").trim(),
               proMap.get("decoder").trim(),
-              proMap.get("joiner").trim(),
+              proMap.get("joiner").trim());
+      OnlineModelConfig modelCfg =
+          new OnlineModelConfig(
               proMap.get("tokens").trim(),
               Integer.parseInt(proMap.get("num_threads").trim()),
               false,
-              proMap.get("model_type").trim());
+              proMap.get("model_type").trim(),
+              modelParaCfg,
+              modelTranCfg);
       FeatureConfig featConfig =
           new FeatureConfig(sampleRate, Integer.parseInt(proMap.get("feature_dim").trim()));
       OnlineLMConfig onlineLmConfig =
@@ -104,15 +110,23 @@ public class OnlineRecognizer {
           new EndpointRule(
               false, 0.0F, Float.parseFloat(proMap.get("rule3_min_utterance_length").trim()));
       EndpointConfig endCfg = new EndpointConfig(rule1, rule2, rule3);
-      OnlineTransducerModelConfig modelCfg =
+      OnlineParaformerModelConfig modelParaCfg =
+          new OnlineParaformerModelConfig(
+              proMap.get("encoder").trim(), proMap.get("decoder").trim());
+      OnlineTransducerModelConfig modelTranCfg =
           new OnlineTransducerModelConfig(
               proMap.get("encoder").trim(),
               proMap.get("decoder").trim(),
-              proMap.get("joiner").trim(),
+              proMap.get("joiner").trim());
+
+      OnlineModelConfig modelCfg =
+          new OnlineModelConfig(
               proMap.get("tokens").trim(),
               Integer.parseInt(proMap.get("num_threads").trim()),
               false,
-              proMap.get("model_type").trim());
+              proMap.get("model_type").trim(),
+              modelParaCfg,
+              modelTranCfg);
       FeatureConfig featConfig =
           new FeatureConfig(sampleRate, Integer.parseInt(proMap.get("feature_dim").trim()));
 
@@ -160,9 +174,11 @@ public class OnlineRecognizer {
     EndpointRule rule2 = new EndpointRule(true, rule2MinTrailingSilence, 0.0F);
     EndpointRule rule3 = new EndpointRule(false, 0.0F, rule3MinUtteranceLength);
     EndpointConfig endCfg = new EndpointConfig(rule1, rule2, rule3);
-    OnlineTransducerModelConfig modelCfg =
-        new OnlineTransducerModelConfig(
-            encoder, decoder, joiner, tokens, numThreads, false, modelType);
+    OnlineParaformerModelConfig modelParaCfg = new OnlineParaformerModelConfig(encoder, decoder);
+    OnlineTransducerModelConfig modelTranCfg =
+        new OnlineTransducerModelConfig(encoder, decoder, joiner);
+    OnlineModelConfig modelCfg =
+        new OnlineModelConfig(tokens, numThreads, false, modelType, modelParaCfg, modelTranCfg);
     FeatureConfig featConfig = new FeatureConfig(sampleRate, featureDim);
     OnlineLMConfig onlineLmConfig = new OnlineLMConfig(lm_model, lm_scale);
     OnlineRecognizerConfig rcgCfg =
@@ -277,6 +293,7 @@ public class OnlineRecognizer {
 
     System.out.println("so lib path=" + soPath + "\n");
     System.load(soPath.trim());
+    System.out.println("load so lib succeed\n");
   }
 
   public static void setSoPath(String soPath) {
