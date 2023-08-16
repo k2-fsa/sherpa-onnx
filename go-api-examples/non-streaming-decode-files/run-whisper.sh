@@ -5,7 +5,7 @@
 # to download the model
 # before you run this script.
 #
-# You can switch to a different online model if you need
+# You can switch to a different offline model if you need
 
 ./non-streaming-decode-files \
   --whisper-encoder=./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.onnx \

@@ -5,7 +5,6 @@
 # to download the model
 # before you run this script.
 #
-# You can switch to a different online model if you need
 
 ./non-streaming-decode-files \
   --paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx \
