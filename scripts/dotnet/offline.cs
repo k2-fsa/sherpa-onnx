@@ -52,6 +52,32 @@ namespace SherpaOnnx
   }
 
   [StructLayout(LayoutKind.Sequential)]
+  public struct OfflineWhisperModelConfig
+  {
+    public OfflineWhisperModelConfig()
+    {
+      Encoder = "";
+      Decoder = "";
+    }
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Encoder;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Decoder;
+  }
+
+  [StructLayout(LayoutKind.Sequential)]
+  public struct OfflineTdnnModelConfig
+  {
+    public OfflineWhisperModelConfig()
+    {
+      Model = "";
+    }
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Model;
+  }
+
+  [StructLayout(LayoutKind.Sequential)]
   public struct OfflineLMConfig
   {
     public OfflineLMConfig()
@@ -73,6 +99,8 @@ namespace SherpaOnnx
       Transducer = new OfflineTransducerModelConfig();
       Paraformer = new OfflineParaformerModelConfig();
       NeMoCtc = new OfflineNemoEncDecCtcModelConfig();
+      Whisper = new OfflineWhisperModelConfig();
+      Tdnn = new OfflineTdnnModelConfig();
       Tokens = "";
       NumThreads = 1;
       Debug = 0;
@@ -82,6 +110,8 @@ namespace SherpaOnnx
     public OfflineTransducerModelConfig Transducer;
     public OfflineParaformerModelConfig Paraformer;
     public OfflineNemoEncDecCtcModelConfig NeMoCtc;
+    public OfflineWhisperModelConfig Whisper;
+    public OfflineTdnnModelConfig Tdnn;
 
     [MarshalAs(UnmanagedType.LPStr)]
     public string Tokens;
