@@ -15,7 +15,9 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 
 	config := sherpa.OfflineRecognizerConfig{}
-	config.FeatConfig = sherpa.FeatureConfig{SampleRate: 16000, FeatureDim: 80}
+
+	flag.IntVar(&config.FeatConfig.SampleRate, "sample-rate", 16000, "Sample rate of the data used to train the model")
+	flag.IntVar(&config.FeatConfig.FeatureDim, "feat-dim", 80, "Dimension of the features used to train the model")
 
 	flag.StringVar(&config.ModelConfig.Transducer.Encoder, "encoder", "", "Path to the transducer encoder model")
 	flag.StringVar(&config.ModelConfig.Transducer.Decoder, "decoder", "", "Path to the transducer decoder model")
