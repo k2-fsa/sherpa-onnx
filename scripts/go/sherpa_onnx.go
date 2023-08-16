@@ -309,6 +309,15 @@ type OfflineNemoEncDecCtcModelConfig struct {
 	Model string // Path to the model, e.g., model.onnx or model.int8.onnx
 }
 
+type OfflineWhisperModelConfig struct {
+	Encoder string
+	Decoder string
+}
+
+type OfflineTdnnModelConfig struct {
+	Model string
+}
+
 // Configuration for offline LM.
 type OfflineLMConfig struct {
 	Model string  // Path to the model
@@ -319,6 +328,8 @@ type OfflineModelConfig struct {
 	Transducer OfflineTransducerModelConfig
 	Paraformer OfflineParaformerModelConfig
 	NemoCTC    OfflineNemoEncDecCtcModelConfig
+	Whisper    OfflineWhisperModelConfig
+	Tdnn       OfflineTdnnModelConfig
 	Tokens     string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -389,6 +400,15 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 
 	c.model_config.nemo_ctc.model = C.CString(config.ModelConfig.NemoCTC.Model)
 	defer C.free(unsafe.Pointer(c.model_config.nemo_ctc.model))
+
+	c.model_config.whisper.encoder = C.CString(config.ModelConfig.Whisper.Encoder)
+	defer C.free(unsafe.Pointer(c.model_config.whisper.encoder))
+
+	c.model_config.whisper.decoder = C.CString(config.ModelConfig.Whisper.Decoder)
+	defer C.free(unsafe.Pointer(c.model_config.whisper.decoder))
+
+	c.model_config.tdnn.decoder = C.CString(config.ModelConfig.Tdnn.Model)
+	defer C.free(unsafe.Pointer(c.model_config.tdnn.model))
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))

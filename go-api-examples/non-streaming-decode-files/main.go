@@ -15,13 +15,23 @@ func main() {
 	log.SetFlags(log.LstdFlags | log.Lmicroseconds)
 
 	config := sherpa.OfflineRecognizerConfig{}
-	config.FeatConfig = sherpa.FeatureConfig{SampleRate: 16000, FeatureDim: 80}
 
-	flag.StringVar(&config.ModelConfig.Transducer.Encoder, "encoder", "", "Path to the encoder model")
-	flag.StringVar(&config.ModelConfig.Transducer.Decoder, "decoder", "", "Path to the decoder model")
+	flag.IntVar(&config.FeatConfig.SampleRate, "sample-rate", 16000, "Sample rate of the data used to train the model")
+	flag.IntVar(&config.FeatConfig.FeatureDim, "feat-dim", 80, "Dimension of the features used to train the model")
+
+	flag.StringVar(&config.ModelConfig.Transducer.Encoder, "encoder", "", "Path to the transducer encoder model")
+	flag.StringVar(&config.ModelConfig.Transducer.Decoder, "decoder", "", "Path to the transducer decoder model")
 	flag.StringVar(&config.ModelConfig.Transducer.Joiner, "joiner", "", "Path to the joiner model")
+
 	flag.StringVar(&config.ModelConfig.Paraformer.Model, "paraformer", "", "Path to the paraformer model")
+
 	flag.StringVar(&config.ModelConfig.NemoCTC.Model, "nemo-ctc", "", "Path to the NeMo CTC model")
+
+	flag.StringVar(&config.ModelConfig.Whisper.Encoder, "whisper-encoder", "", "Path to the whisper encoder model")
+	flag.StringVar(&config.ModelConfig.Whisper.Decoder, "whisper-decoder", "", "Path to the whisper decoder model")
+
+	flag.StringVar(&config.ModelConfig.Tdnn.Model, "tdnn-model", "", "Path to the tdnn model")
+
 	flag.StringVar(&config.ModelConfig.Tokens, "tokens", "", "Path to the tokens file")
 	flag.IntVar(&config.ModelConfig.NumThreads, "num-threads", 1, "Number of threads for computing")
 	flag.IntVar(&config.ModelConfig.Debug, "debug", 0, "Whether to show debug message")

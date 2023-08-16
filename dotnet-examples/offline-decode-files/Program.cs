@@ -15,17 +15,34 @@ class OfflineDecodeFiles
 {
   class Options
   {
+
+    [Option("sample-rate", Required = false, Default = 16000, HelpText = "Sample rate of the data used to train the model")]
+    public int SampleRate { get; set; }
+
+    [Option("feat-dim", Required = false, Default = 80, HelpText = "Dimension of the features used to train the model")]
+    public int FeatureDim { get; set; }
+
     [Option(Required = false, HelpText = "Path to tokens.txt")]
     public string Tokens { get; set; }
 
-    [Option(Required = false, HelpText = "Path to encoder.onnx. Used only for transducer models")]
+    [Option(Required = false, Default = "", HelpText = "Path to transducer encoder.onnx. Used only for transducer models")]
     public string Encoder { get; set; }
 
-    [Option(Required = false, HelpText = "Path to decoder.onnx. Used only for transducer models")]
+    [Option(Required = false, Default = "", HelpText = "Path to transducer decoder.onnx. Used only for transducer models")]
     public string Decoder { get; set; }
 
-    [Option(Required = false, HelpText = "Path to joiner.onnx. Used only for transducer models")]
+    [Option(Required = false,  Default = "",HelpText = "Path to transducer joiner.onnx. Used only for transducer models")]
     public string Joiner { get; set; }
+
+    [Option("whisper-encoder", Required = false, Default = "", HelpText = "Path to whisper encoder.onnx. Used only for whisper models")]
+    public string WhisperEncoder { get; set; }
+
+    [Option("whisper-decoder", Required = false, Default = "", HelpText = "Path to whisper decoder.onnx. Used only for whisper models")]
+    public string WhisperDecoder { get; set; }
+
+    [Option("tdnn-model", Required = false, Default = "", HelpText = "Path to tdnn yesno model")]
+    public string TdnnModel { get; set; }
+
 
     [Option(Required = false, HelpText = "Path to model.onnx. Used only for paraformer models")]
     public string Paraformer { get; set; }
@@ -105,6 +122,38 @@ dotnet run \
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/index.html
 to download pre-trained paraformer models
+
+# Whisper
+
+dotnet run \
+  --whisper-encoder=./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.onnx \
+  --whisper-decoder=./sherpa-onnx-whisper-tiny.en/tiny.en-decoder.onnx \
+  --tokens=./sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt \
+  --files ./sherpa-onnx-whisper-tiny.en/test_wavs/0.wav \
+  ./sherpa-onnx-whisper-tiny.en/test_wavs/1.wav \
+  ./sherpa-onnx-whisper-tiny.en/test_wavs/8k.wav
+
+Please refer to
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html
+to download pre-trained whisper models.
+
+# Tdnn yesno
+
+dotnet run \
+  --sample-rate=8000 \
+  --feat-dim=23 \
+  --tokens=./sherpa-onnx-tdnn-yesno/tokens.txt \
+  --tdnn-model=./sherpa-onnx-tdnn-yesno/model-epoch-14-avg-2.onnx \
+  --files ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_0_1_0_0_0_1.wav \
+  ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_0_0_1_0.wav \
+  ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_0_1_1_1.wav \
+  ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_0_1_0_0_1.wav \
+  ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_1_0_0_0_1.wav \
+  ./sherpa-onnx-tdnn-yesno/test_wavs/0_0_1_1_0_1_1_0.wav
+
+Please refer to
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/yesno/index.html
+to download pre-trained Tdnn models.
 ";
 
     var helpText = HelpText.AutoBuild(result, h =>
@@ -120,6 +169,9 @@ to download pre-trained paraformer models
   private static void Run(Options options)
   {
     OfflineRecognizerConfig config = new OfflineRecognizerConfig();
+    config.FeatConfig.SampleRate = options.SampleRate;
+    config.FeatConfig.FeatureDim = options.FeatureDim;
+
     config.ModelConfig.Tokens = options.Tokens;
 
     if (!String.IsNullOrEmpty(options.Encoder))
@@ -136,6 +188,15 @@ to download pre-trained paraformer models
     else if (!String.IsNullOrEmpty(options.NeMoCtc))
     {
       config.ModelConfig.NeMoCtc.Model = options.NeMoCtc;
+    }
+    else if (!String.IsNullOrEmpty(options.WhisperEncoder))
+    {
+      config.ModelConfig.Whisper.Encoder = options.WhisperEncoder;
+      config.ModelConfig.Whisper.Decoder = options.WhisperDecoder;
+    }
+    else if (!String.IsNullOrEmpty(options.TdnnModel))
+    {
+      config.ModelConfig.Tdnn.Model = options.TdnnModel;
     }
     else
     {

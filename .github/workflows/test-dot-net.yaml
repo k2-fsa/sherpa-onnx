@@ -72,3 +72,5 @@ jobs:
           ./run-nemo-ctc.sh
           ./run-paraformer.sh
           ./run-zipformer.sh
+          ./run-whisper.sh
+          ./run-tdnn-yesno.sh
