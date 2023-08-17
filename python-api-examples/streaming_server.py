@@ -498,21 +498,11 @@ class StreamingServer(object):
             # This is a normal HTTP request
             if path == "/":
                 path = "/index.html"
-
-            if path in ("/upload.html", "/offline_record.html"):
-                response = r"""
-<!doctype html><html><head>
-<title>Speech recognition with next-gen Kaldi</title><body>
-<h2>Only /streaming_record.html is available for the streaming server.<h2>
-<br/>
-<br/>
-Go back to <a href="/streaming_record.html">/streaming_record.html</a>
-</body></head></html>
-"""
-                found = True
-                mime_type = "text/html"
-            else:
-                found, response, mime_type = self.http_server.process_request(path)
+            if path == "/upload.html":
+                path = "/upload_streaming.html"
+            if path == "/offline_record.html":
+                path = "/offline_record_streaming.html"
+            found, response, mime_type = self.http_server.process_request(path)
 
             if isinstance(response, str):
                 response = response.encode("utf-8")
