@@ -2,15 +2,13 @@ name: release-go
 
 on:
   push:
-    branches:
-      - master
     tags:
       - '*'
 
   workflow_dispatch:
     inputs:
       version:
-        description: "Version information（e.g., 1.5.3) or auto"
+        description: "Version information（e.g., v1.5.3) or auto"
         required: true
 
 env:
@@ -192,7 +190,7 @@ jobs:
           tree .
 
       - name: Release go
-        if: env.VERSION != ''
+        # if: env.VERSION != ''
         shell: bash
         run: |
           ./scripts/go/release.sh

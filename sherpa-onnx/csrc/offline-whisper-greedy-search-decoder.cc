@@ -136,8 +136,10 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   auto logits_shape = logits.GetTensorTypeAndShapeInfo().GetShape();
   int32_t vocab_size = logits_shape[2];
 
-  int32_t max_token_id = static_cast<int32_t>(std::distance(
-      p_logits, std::max_element(p_logits, p_logits + vocab_size)));
+  const float *p_start = p_logits + (logits_shape[1] - 1) * vocab_size;
+
+  int32_t max_token_id = static_cast<int32_t>(
+      std::distance(p_start, std::max_element(p_start, p_start + vocab_size)));
 
   int32_t n_text_ctx = model_->TextCtx();
 

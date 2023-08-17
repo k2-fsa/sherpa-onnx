@@ -69,7 +69,7 @@ namespace SherpaOnnx
   [StructLayout(LayoutKind.Sequential)]
   public struct OfflineTdnnModelConfig
   {
-    public OfflineWhisperModelConfig()
+    public OfflineTdnnModelConfig()
     {
       Model = "";
     }
