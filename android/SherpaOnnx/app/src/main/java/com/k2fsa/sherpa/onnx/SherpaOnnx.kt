@@ -143,6 +143,9 @@ by following the code)
 5 - csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
     https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
+6 - sherpa-onnx-streaming-zipformer-en-2023-06-26
+    https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
+
  */
 fun getModelConfig(type: Int): OnlineModelConfig? {
     when (type) {
@@ -219,6 +222,19 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "paraformer",
+            )
+        }
+
+        6 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-en-2023-06-26"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-99-avg-1-chunk-16-left-128.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-99-avg-1-chunk-16-left-128.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1-chunk-16-left-128.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer2",
             )
         }
     }
