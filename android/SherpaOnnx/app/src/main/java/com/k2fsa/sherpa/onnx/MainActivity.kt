@@ -177,7 +177,7 @@ class MainActivity : AppCompatActivity() {
         // Please change getModelConfig() to add new models
         // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
         // for a list of available models
-        val type = 5
+        val type = 0
         println("Select model type ${type}")
         val config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
