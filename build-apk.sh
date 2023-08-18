@@ -117,9 +117,9 @@ rm data/lang_char/words.txt
 rm -v exp/*.pt
 rm -v exp/*32*
 rm -v exp/*256*
-rm -v encoder-epoch-12-avg-4-chunk-16-left-128.onnx
-rm -v decoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx
-rm -v joiner-epoch-12-avg-4-chunk-16-left-128.int8.onnx
+rm -v exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx
+rm -v exp/decoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx
+rm -v exp/joiner-epoch-12-avg-4-chunk-16-left-128.int8.onnx
 rm -rf exp/tensorboard
 
 popd
