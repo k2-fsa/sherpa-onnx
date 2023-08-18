@@ -159,7 +159,7 @@ done
 
 git checkout .
 
-rm -rf./android/SherpaOnnx/app/src/main/assets/$repo
+rm -rf ./android/SherpaOnnx/app/src/main/assets/$repo
 
 # type 7, encoder int8, french
 log "https://huggingface.co/shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14"
@@ -222,7 +222,7 @@ done
 
 git checkout .
 
-rm -rf./android/SherpaOnnx/app/src/main/assets/$repo
+rm -rf ./android/SherpaOnnx/app/src/main/assets/$repo
 
 # type 8, encoder int8, Binglual English + Chinese
 log "https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20"
@@ -286,6 +286,6 @@ done
 
 git checkout .
 
-rm -rf./android/SherpaOnnx/app/src/main/assets/$repo
+rm -rf ./android/SherpaOnnx/app/src/main/assets/$repo
 
 ls -lh apks/
