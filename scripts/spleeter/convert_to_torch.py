@@ -69,6 +69,11 @@ class UNet(torch.nn.Module):
             256, track_running_stats=True, eps=1e-3, momentum=0.01
         )
 
+        self.up2 = torch.nn.ConvTranspose2d(512, 128, kernel_size=5, stride=2)
+        self.bn6 = torch.nn.BatchNorm2d(
+            128, track_running_stats=True, eps=1e-3, momentum=0.01
+        )
+
     def forward(self, x):
         x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
         conv1 = self.conv(x)
@@ -112,7 +117,14 @@ class UNet(torch.nn.Module):
         batch7 = self.bn5(up1)
         merge1 = torch.cat([conv5, batch7], axis=1)  # (3, 512, 16, 32)
 
-        return merge1
+        up2 = self.up2(merge1)
+        up2 = up2[:, :, 1:-2, 1:-2]
+        up2 = torch.nn.functional.relu(up2)
+        batch8 = self.bn6(up2)
+
+        merge2 = torch.cat([conv4, batch8], axis=1)
+
+        return merge2
 
 
 def get_param(graph, name):
@@ -139,7 +151,8 @@ def main():
     #  y1 = graph.get_tensor_by_name("conv2d_transpose/BiasAdd:0")
     #  y1 = graph.get_tensor_by_name("re_lu/Relu:0")
     #  y1 = graph.get_tensor_by_name("batch_normalization_6/cond/FusedBatchNorm_1:0")
-    y1 = graph.get_tensor_by_name("concatenate/concat:0")
+    #  y1 = graph.get_tensor_by_name("concatenate/concat:0")
+    y1 = graph.get_tensor_by_name("concatenate_1/concat:0")
 
     unet = UNet()
     unet.eval()
@@ -191,6 +204,26 @@ def main():
     state_dict["bn5.running_var"] = get_param(
         graph, "batch_normalization_6/moving_variance"
     )
+
+    for i in range(1, 2):
+        state_dict[f"up{i+1}.weight"] = get_param(
+            graph, f"conv2d_transpose_{i}/kernel"
+        ).permute(3, 2, 0, 1)
+
+        state_dict[f"up{i+1}.bias"] = get_param(graph, f"conv2d_transpose_{i}/bias")
+
+        state_dict[f"bn{5+i}.weight"] = get_param(
+            graph, f"batch_normalization_{6+i}/gamma"
+        )
+        state_dict[f"bn{5+i}.bias"] = get_param(
+            graph, f"batch_normalization_{6+i}/beta"
+        )
+        state_dict[f"bn{5+i}.running_mean"] = get_param(
+            graph, f"batch_normalization_{6+i}/moving_mean"
+        )
+        state_dict[f"bn{5+i}.running_var"] = get_param(
+            graph, f"batch_normalization_{6+i}/moving_variance"
+        )
 
     unet.load_state_dict(state_dict)
 
