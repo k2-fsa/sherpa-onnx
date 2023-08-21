@@ -47,6 +47,11 @@ class UNet(torch.nn.Module):
             32, track_running_stats=True, eps=1e-3, momentum=0.01
         )
 
+        self.conv2 = torch.nn.Conv2d(32, 64, kernel_size=5, stride=(2, 2), padding=0)
+        self.bn2 = torch.nn.BatchNorm2d(
+            64, track_running_stats=True, eps=1e-3, momentum=0.01
+        )
+
     def forward(self, x):
         x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
         x = self.conv(x)
@@ -56,6 +61,11 @@ class UNet(torch.nn.Module):
         x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
         x = self.conv1(x)  # (3, 32, 128, 256)
         x = self.bn1(x)
+        x = torch.nn.functional.leaky_relu(x, negative_slope=0.2)  # (3, 32, 128, 256)
+
+        x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
+        x = self.conv2(x)  # (3, 32, 128, 256)
+        x = self.bn2(x)
         x = torch.nn.functional.leaky_relu(x, negative_slope=0.2)  # (3, 32, 128, 256)
 
         return x
@@ -80,7 +90,7 @@ def main():
     x = graph.get_tensor_by_name("waveform:0")
     #  y = graph.get_tensor_by_name("Reshape:0")
     y0 = graph.get_tensor_by_name("strided_slice_3:0")
-    y1 = graph.get_tensor_by_name("leaky_re_lu_1/LeakyRelu:0")
+    y1 = graph.get_tensor_by_name("leaky_re_lu_2/LeakyRelu:0")
     #  y1 = graph.get_tensor_by_name("conv2d_1/BiasAdd:0")
 
     unet = UNet()
@@ -102,16 +112,19 @@ def main():
         graph, "batch_normalization/moving_variance"
     )
 
-    state_dict["conv1.weight"] = get_param(graph, "conv2d_1/kernel").permute(3, 2, 0, 1)
-    state_dict["conv1.bias"] = get_param(graph, "conv2d_1/bias")
-    state_dict["bn1.weight"] = get_param(graph, "batch_normalization_1/gamma")
-    state_dict["bn1.bias"] = get_param(graph, "batch_normalization_1/beta")
-    state_dict["bn1.running_mean"] = get_param(
-        graph, "batch_normalization_1/moving_mean"
-    )
-    state_dict["bn1.running_var"] = get_param(
-        graph, "batch_normalization_1/moving_variance"
-    )
+    for i in range(1, 3):
+        state_dict[f"conv{i}.weight"] = get_param(graph, f"conv2d_{i}/kernel").permute(
+            3, 2, 0, 1
+        )
+        state_dict[f"conv{i}.bias"] = get_param(graph, f"conv2d_{i}/bias")
+        state_dict[f"bn{i}.weight"] = get_param(graph, f"batch_normalization_{i}/gamma")
+        state_dict[f"bn{i}.bias"] = get_param(graph, f"batch_normalization_{i}/beta")
+        state_dict[f"bn{i}.running_mean"] = get_param(
+            graph, f"batch_normalization_{i}/moving_mean"
+        )
+        state_dict[f"bn{i}.running_var"] = get_param(
+            graph, f"batch_normalization_{i}/moving_variance"
+        )
 
     print(list(state_dict.keys()))
     unet.load_state_dict(state_dict)
