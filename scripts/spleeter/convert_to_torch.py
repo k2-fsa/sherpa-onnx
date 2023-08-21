@@ -41,12 +41,17 @@ class UNet(torch.nn.Module):
         self.bn = torch.nn.BatchNorm2d(
             16, track_running_stats=True, eps=1e-3, momentum=0.01
         )
+        #
+        self.conv1 = torch.nn.Conv2d(16, 32, kernel_size=5, stride=(2, 2), padding=0)
 
     def forward(self, x):
         x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
         x = self.conv(x)
         x = self.bn(x)
         x = torch.nn.functional.leaky_relu(x, negative_slope=0.2)
+
+        x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
+        x = self.conv1(x)  # (3, 32, 128, 256)
 
         return x
 
@@ -70,7 +75,8 @@ def main():
     x = graph.get_tensor_by_name("waveform:0")
     #  y = graph.get_tensor_by_name("Reshape:0")
     y0 = graph.get_tensor_by_name("strided_slice_3:0")
-    y1 = graph.get_tensor_by_name("leaky_re_lu/LeakyRelu:0")
+    #  y1 = graph.get_tensor_by_name("leaky_re_lu/LeakyRelu:0")
+    y1 = graph.get_tensor_by_name("conv2d_1/BiasAdd:0")
 
     unet = UNet()
     unet.eval()
@@ -91,7 +97,9 @@ def main():
         graph, "batch_normalization/moving_variance"
     )
 
-    print(state_dict["conv.weight"].dtype)
+    state_dict["conv1.weight"] = get_param(graph, "conv2d_1/kernel").permute(3, 2, 0, 1)
+    state_dict["conv1.bias"] = get_param(graph, "conv2d_1/bias")
+
     print(list(state_dict.keys()))
     unet.load_state_dict(state_dict)
 
