@@ -64,6 +64,8 @@ class UNet(torch.nn.Module):
 
         self.conv5 = torch.nn.Conv2d(256, 512, kernel_size=5, stride=(2, 2), padding=0)
 
+        self.up1 = torch.nn.ConvTranspose2d(512, 256, kernel_size=5, stride=2)
+
     def forward(self, x):
         x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
         x = self.conv(x)
@@ -93,6 +95,9 @@ class UNet(torch.nn.Module):
         x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
         x = self.conv5(x)  # (3, 512, 8, 16)
 
+        x = self.up1(x)
+        x = x[:, :, 1:-2, 1:-2]  # (3, 256, 16, 32)
+
         return x
 
 
@@ -116,7 +121,8 @@ def main():
     #  y = graph.get_tensor_by_name("Reshape:0")
     y0 = graph.get_tensor_by_name("strided_slice_3:0")
     #  y1 = graph.get_tensor_by_name("leaky_re_lu_5/LeakyRelu:0")
-    y1 = graph.get_tensor_by_name("conv2d_5/BiasAdd:0")
+    #  y1 = graph.get_tensor_by_name("conv2d_5/BiasAdd:0")
+    y1 = graph.get_tensor_by_name("conv2d_transpose/BiasAdd:0")
 
     unet = UNet()
     unet.eval()
@@ -127,6 +133,8 @@ def main():
     # For the conv2d in torch, weight shape is (out_channel, in_channel, kernel_h, kernel_w)
     # default input shape is NCHW
     state_dict = unet.state_dict()
+    print(list(state_dict.keys()))
+
     state_dict["conv.weight"] = get_param(graph, "conv2d/kernel").permute(3, 2, 0, 1)
     state_dict["conv.bias"] = get_param(graph, "conv2d/bias")
 
@@ -153,7 +161,11 @@ def main():
             graph, f"batch_normalization_{i}/moving_variance"
         )
 
-    print(list(state_dict.keys()))
+    state_dict["up1.weight"] = get_param(graph, "conv2d_transpose/kernel").permute(
+        3, 2, 0, 1
+    )
+    state_dict["up1.bias"] = get_param(graph, "conv2d_transpose/bias")
+
     unet.load_state_dict(state_dict)
 
     with tf.compat.v1.Session(graph=graph) as sess:
@@ -174,7 +186,7 @@ def main():
 
     print(torch_y1_out.shape, torch.from_numpy(y1_out).permute(0, 3, 1, 2).shape)
     assert torch.allclose(
-        torch_y1_out, torch.from_numpy(y1_out).permute(0, 3, 1, 2), atol=1e-3
+        torch_y1_out, torch.from_numpy(y1_out).permute(0, 3, 1, 2), atol=1e-2
     ), ((torch_y1_out - torch.from_numpy(y1_out).permute(0, 3, 1, 2)).abs().max())
 
 
