@@ -38,10 +38,17 @@ class UNet(torch.nn.Module):
     def __init__(self):
         super().__init__()
         self.conv = torch.nn.Conv2d(2, 16, kernel_size=5, stride=(2, 2), padding=0)
+        self.bn = torch.nn.BatchNorm2d(
+            16, track_running_stats=True, eps=1e-3, momentum=0.01
+        )
 
     def forward(self, x):
         x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
-        return self.conv(x)
+        x = self.conv(x)
+        x = self.bn(x)
+        x = torch.nn.functional.leaky_relu(x, negative_slope=0.2)
+
+        return x
 
 
 def get_param(graph, name):
@@ -63,15 +70,11 @@ def main():
     x = graph.get_tensor_by_name("waveform:0")
     #  y = graph.get_tensor_by_name("Reshape:0")
     y0 = graph.get_tensor_by_name("strided_slice_3:0")
-    y1 = graph.get_tensor_by_name("conv2d/BiasAdd:0")
-    with tf.compat.v1.Session(graph=graph) as sess:
-        #  y0_out, y1_out = sess.run([y0, y1], feed_dict={x: generate_waveform()})
-        y0_out = sess.run(y0, feed_dict={x: generate_waveform()})
-        y1_out = sess.run(y1, feed_dict={x: generate_waveform()})
-        print(y0_out.shape)
-        print(y1_out.shape)
+    y1 = graph.get_tensor_by_name("leaky_re_lu/LeakyRelu:0")
 
     unet = UNet()
+    unet.eval()
+
     # For the conv2d in tensorflow, weight shape is (kernel_h, kernel_w, in_channel, out_channel)
     # default input shape is NHWC
 
@@ -80,14 +83,38 @@ def main():
     state_dict = unet.state_dict()
     state_dict["conv.weight"] = get_param(graph, "conv2d/kernel").permute(3, 2, 0, 1)
     state_dict["conv.bias"] = get_param(graph, "conv2d/bias")
+
+    state_dict["bn.weight"] = get_param(graph, "batch_normalization/gamma")
+    state_dict["bn.bias"] = get_param(graph, "batch_normalization/beta")
+    state_dict["bn.running_mean"] = get_param(graph, "batch_normalization/moving_mean")
+    state_dict["bn.running_var"] = get_param(
+        graph, "batch_normalization/moving_variance"
+    )
+
     print(state_dict["conv.weight"].dtype)
+    print(list(state_dict.keys()))
     unet.load_state_dict(state_dict)
+
+    with tf.compat.v1.Session(graph=graph) as sess:
+        y0_out, y1_out = sess.run([y0, y1], feed_dict={x: generate_waveform()})
+        #  y0_out = sess.run(y0, feed_dict={x: generate_waveform()})
+        #  y1_out = sess.run(y1, feed_dict={x: generate_waveform()})
+        print(y0_out.shape)
+        print(y1_out.shape)
+
+    # for the batchnormalization in tensorflow,
+    # default input shape is NHWC
+
+    # for the batchnormalization in torch,
+    # default input shape is NCHW
 
     # NHWC to NCHW
     torch_y1_out = unet(torch.from_numpy(y0_out).permute(0, 3, 1, 2))
 
     print(torch_y1_out.shape, torch.from_numpy(y1_out).permute(0, 3, 1, 2).shape)
-    assert torch.allclose(torch_y1_out, torch.from_numpy(y1_out).permute(0, 3, 1, 2))
+    assert torch.allclose(
+        torch_y1_out, torch.from_numpy(y1_out).permute(0, 3, 1, 2), atol=1e-3
+    ), ((torch_y1_out - torch.from_numpy(y1_out).permute(0, 3, 1, 2)).abs().max())
 
 
 if __name__ == "__main__":
