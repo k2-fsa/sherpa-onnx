@@ -65,40 +65,54 @@ class UNet(torch.nn.Module):
         self.conv5 = torch.nn.Conv2d(256, 512, kernel_size=5, stride=(2, 2), padding=0)
 
         self.up1 = torch.nn.ConvTranspose2d(512, 256, kernel_size=5, stride=2)
+        self.bn5 = torch.nn.BatchNorm2d(
+            256, track_running_stats=True, eps=1e-3, momentum=0.01
+        )
 
     def forward(self, x):
         x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
-        x = self.conv(x)
-        x = self.bn(x)
-        x = torch.nn.functional.leaky_relu(x, negative_slope=0.2)
+        conv1 = self.conv(x)
+        batch1 = self.bn(conv1)
+        rel1 = torch.nn.functional.leaky_relu(batch1, negative_slope=0.2)
 
-        x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
-        x = self.conv1(x)  # (3, 32, 128, 256)
-        x = self.bn1(x)
-        x = torch.nn.functional.leaky_relu(x, negative_slope=0.2)  # (3, 32, 128, 256)
+        x = torch.nn.functional.pad(rel1, (1, 2, 1, 2), "constant", 0)
+        conv2 = self.conv1(x)  # (3, 32, 128, 256)
+        batch2 = self.bn1(conv2)
+        rel2 = torch.nn.functional.leaky_relu(
+            batch2, negative_slope=0.2
+        )  # (3, 32, 128, 256)
 
-        x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
-        x = self.conv2(x)  # (3, 64, 64, 128)
-        x = self.bn2(x)
-        x = torch.nn.functional.leaky_relu(x, negative_slope=0.2)  # (3, 64, 64, 128)
+        x = torch.nn.functional.pad(rel2, (1, 2, 1, 2), "constant", 0)
+        conv3 = self.conv2(x)  # (3, 64, 64, 128)
+        batch3 = self.bn2(conv3)
+        rel3 = torch.nn.functional.leaky_relu(
+            batch3, negative_slope=0.2
+        )  # (3, 64, 64, 128)
 
-        x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
-        x = self.conv3(x)  # (3, 128, 32, 64)
-        x = self.bn3(x)
-        x = torch.nn.functional.leaky_relu(x, negative_slope=0.2)  # (3, 128, 32, 64)
+        x = torch.nn.functional.pad(rel3, (1, 2, 1, 2), "constant", 0)
+        conv4 = self.conv3(x)  # (3, 128, 32, 64)
+        batch4 = self.bn3(conv4)
+        rel4 = torch.nn.functional.leaky_relu(
+            batch4, negative_slope=0.2
+        )  # (3, 128, 32, 64)
 
-        x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
-        x = self.conv4(x)  # (3, 256, 16, 32)
-        x = self.bn4(x)
-        x = torch.nn.functional.leaky_relu(x, negative_slope=0.2)  # (3, 256, 16, 32)
+        x = torch.nn.functional.pad(rel4, (1, 2, 1, 2), "constant", 0)
+        conv5 = self.conv4(x)  # (3, 256, 16, 32)
+        batch5 = self.bn4(conv5)
+        rel6 = torch.nn.functional.leaky_relu(
+            batch5, negative_slope=0.2
+        )  # (3, 256, 16, 32)
 
-        x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
-        x = self.conv5(x)  # (3, 512, 8, 16)
+        x = torch.nn.functional.pad(rel6, (1, 2, 1, 2), "constant", 0)
+        conv6 = self.conv5(x)  # (3, 512, 8, 16)
 
-        x = self.up1(x)
-        x = x[:, :, 1:-2, 1:-2]  # (3, 256, 16, 32)
+        up1 = self.up1(conv6)
+        up1 = up1[:, :, 1:-2, 1:-2]  # (3, 256, 16, 32)
+        up1 = torch.nn.functional.relu(up1)
+        batch7 = self.bn5(up1)
+        merge1 = torch.cat([conv5, batch7], axis=1)  # (3, 512, 16, 32)
 
-        return x
+        return merge1
 
 
 def get_param(graph, name):
@@ -122,7 +136,10 @@ def main():
     y0 = graph.get_tensor_by_name("strided_slice_3:0")
     #  y1 = graph.get_tensor_by_name("leaky_re_lu_5/LeakyRelu:0")
     #  y1 = graph.get_tensor_by_name("conv2d_5/BiasAdd:0")
-    y1 = graph.get_tensor_by_name("conv2d_transpose/BiasAdd:0")
+    #  y1 = graph.get_tensor_by_name("conv2d_transpose/BiasAdd:0")
+    #  y1 = graph.get_tensor_by_name("re_lu/Relu:0")
+    #  y1 = graph.get_tensor_by_name("batch_normalization_6/cond/FusedBatchNorm_1:0")
+    y1 = graph.get_tensor_by_name("concatenate/concat:0")
 
     unet = UNet()
     unet.eval()
@@ -165,6 +182,15 @@ def main():
         3, 2, 0, 1
     )
     state_dict["up1.bias"] = get_param(graph, "conv2d_transpose/bias")
+
+    state_dict["bn5.weight"] = get_param(graph, "batch_normalization_6/gamma")
+    state_dict["bn5.bias"] = get_param(graph, "batch_normalization_6/beta")
+    state_dict["bn5.running_mean"] = get_param(
+        graph, "batch_normalization_6/moving_mean"
+    )
+    state_dict["bn5.running_var"] = get_param(
+        graph, "batch_normalization_6/moving_variance"
+    )
 
     unet.load_state_dict(state_dict)
 
