@@ -79,6 +79,11 @@ class UNet(torch.nn.Module):
             64, track_running_stats=True, eps=1e-3, momentum=0.01
         )
 
+        self.up4 = torch.nn.ConvTranspose2d(128, 32, kernel_size=5, stride=2)
+        self.bn8 = torch.nn.BatchNorm2d(
+            32, track_running_stats=True, eps=1e-3, momentum=0.01
+        )
+
     def forward(self, x):
         x = torch.nn.functional.pad(x, (1, 2, 1, 2), "constant", 0)
         conv1 = self.conv(x)
@@ -134,9 +139,16 @@ class UNet(torch.nn.Module):
         up3 = torch.nn.functional.relu(up3)
         batch9 = self.bn7(up3)
 
-        merge9 = torch.cat([conv3, batch9], axis=1)  # (3, 128, 64, 128)
+        merge3 = torch.cat([conv3, batch9], axis=1)  # (3, 128, 64, 128)
 
-        return merge9
+        up4 = self.up4(merge3)
+        up4 = up4[:, :, 1:-2, 1:-2]
+        up4 = torch.nn.functional.relu(up4)
+        batch10 = self.bn8(up4)
+
+        merge4 = torch.cat([conv2, batch10], axis=1)  # (3, 128, 64, 128)
+
+        return merge4
 
 
 def get_param(graph, name):
@@ -165,7 +177,7 @@ def main():
     #  y1 = graph.get_tensor_by_name("batch_normalization_6/cond/FusedBatchNorm_1:0")
     #  y1 = graph.get_tensor_by_name("concatenate/concat:0")
     #  y1 = graph.get_tensor_by_name("concatenate_1/concat:0")
-    y1 = graph.get_tensor_by_name("concatenate_2/concat:0")
+    y1 = graph.get_tensor_by_name("concatenate_3/concat:0")
 
     unet = UNet()
     unet.eval()
@@ -218,7 +230,7 @@ def main():
         graph, "batch_normalization_6/moving_variance"
     )
 
-    for i in range(1, 3):
+    for i in range(1, 4):
         state_dict[f"up{i+1}.weight"] = get_param(
             graph, f"conv2d_transpose_{i}/kernel"
         ).permute(3, 2, 0, 1)
