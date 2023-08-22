@@ -10,7 +10,7 @@ import os
 import tensorflow as tf
 
 
-def freeze_graph(model_dir, output_node_names):
+def freeze_graph(model_dir, output_node_names, output_filename):
     """Extract the sub graph defined by the output nodes and convert all its
     variables into constant
 
@@ -19,6 +19,8 @@ def freeze_graph(model_dir, output_node_names):
         the root folder containing the checkpoint state file
       output_node_names:
         a string, containing all the output node's names, comma separated
+      output_filename:
+        Filename to save the graph.
     """
     if not tf.compat.v1.gfile.Exists(model_dir):
         raise AssertionError(
@@ -36,7 +38,7 @@ def freeze_graph(model_dir, output_node_names):
 
     # We precise the file fullname of our freezed graph
     absolute_model_dir = "/".join(input_checkpoint.split("/")[:-1])
-    output_graph = absolute_model_dir + "/frozen_model.pb"
+    output_graph = output_filename
 
     # We clear devices to allow TensorFlow to control on which device it will load operations
     clear_devices = True
@@ -79,6 +81,11 @@ if __name__ == "__main__":
         default="vocals_spectrogram/mul,accompaniment_spectrogram/mul",
         help="The name of the output nodes, comma separated.",
     )
+
+    parser.add_argument(
+        "--output-filename",
+        type=str,
+    )
     args = parser.parse_args()
 
-    freeze_graph(args.model_dir, args.output_node_names)
+    freeze_graph(args.model_dir, args.output_node_names, args.output_filename)
