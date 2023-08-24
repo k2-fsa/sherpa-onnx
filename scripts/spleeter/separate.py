@@ -10,6 +10,8 @@ import numpy as np
 import torch
 import soundfile as sf
 import torchaudio
+from pydub import AudioSegment
+
 
 from unet import UNet
 
@@ -34,7 +36,14 @@ def load_audio(filename, sample_rate: Optional[int] = 44100):
     )
     buffer, _ = process.communicate()
     waveform = np.frombuffer(buffer, dtype="<f4").reshape(-1, n_channels)
+
     waveform = torch.from_numpy(waveform).to(torch.float32)
+    if n_channels == 1:
+        waveform = waveform.tile(1, 2)
+
+    if n_channels > 2:
+        waveform = waveform[:, :2]
+
     return waveform, sample_rate
 
 
@@ -51,7 +60,11 @@ def main():
     accompaniment.load_state_dict(state_dict)
 
     waveform, sample_rate = load_audio("./audio_example.mp3")
+    waveform, sample_rate = load_audio("./qi-feng-le.mp3")
+    waveform, sample_rate = load_audio("./Yesterday_Once_More-Carpenters.mp3")
     assert waveform.shape[1] == 2, waveform.shape
+
+    waveform = torch.nn.functional.pad(waveform, (0, 0, 0, 4096))
 
     # torch.stft requires a 2-D input of shape (N, T), so we transpose waveform
     stft = torch.stft(
@@ -90,52 +103,65 @@ def main():
     # (1, 2, 512, 1024)
     print("y3", y.shape, y.dtype)
 
-    vocals_out = vocals(y)
-    accompaniment_out = accompaniment(y)
+    vocals_spec = vocals(y)
+    accompaniment_spec = accompaniment(y)
 
-    sum_out = (vocals_out**2 + accompaniment_out**2) + 1e-10
-    print("vocals_out", vocals_out.shape, accompaniment_out.shape, sum_out.shape)
+    sum_spec = (vocals_spec**2 + accompaniment_spec**2) + 1e-10
+    print(
+        "vocals_spec",
+        vocals_spec.shape,
+        accompaniment_spec.shape,
+        sum_spec.shape,
+        vocals_spec.dtype,
+    )
 
-    vocals_mask = (vocals_out**2 + 1e-10 / 2) / sum_out
+    vocals_spec = (vocals_spec**2 + 1e-10 / 2) / sum_spec
     # (1, 2, 512, 1024)
 
-    vocals_mask = torch.nn.functional.pad(
-        vocals_mask, (0, 2049 - 1024, 0, 0, 0, 0, 0, 0)
-    )
-    # (1, 2, 512, 2049)
+    accompaniment_spec = (accompaniment_spec**2 + 1e-10 / 2) / sum_spec
+    # (1, 2, 512, 1024)
 
-    vocals_mask = vocals_mask.permute(0, 2, 3, 1)
-    # (1, 512, 2049, 2)
-    print("here00", vocals_mask.shape)
+    for name, spec in zip(
+        ["vocals", "accompaniment"], [vocals_spec, accompaniment_spec]
+    ):
+        spec = torch.nn.functional.pad(spec, (0, 2049 - 1024, 0, 0, 0, 0, 0, 0))
+        # (1, 2, 512, 2049)
 
-    vocals_mask = vocals_mask.reshape(-1, vocals_mask.shape[2], vocals_mask.shape[3])
-    # (512, 2049, 2)
+        spec = spec.permute(0, 2, 3, 1)
+        # (1, 512, 2049, 2)
+        print("here00", spec.shape)
 
-    print("here2", vocals_mask.shape)
-    # (512, 2049, 2)
+        spec = spec.reshape(-1, spec.shape[2], spec.shape[3])
+        # (512, 2049, 2)
 
-    vocals_mask = vocals_mask[: stft.shape[2], :, :]
-    # (465, 2049, 2)
-    print("here 3", vocals_mask.shape, stft.shape)
+        print("here2", spec.shape)
+        # (512, 2049, 2)
 
-    vocals_mask = vocals_mask.permute(2, 1, 0)
-    # (2, 2049, 465)
-    print(vocals_mask.sum())
-    print(vocals_mask.mean())
+        spec = spec[: stft.shape[2], :, :]
+        # (465, 2049, 2)
+        print("here 3", spec.shape, stft.shape)
 
-    masked_vocals_stft = vocals_mask * stft
+        spec = spec.permute(2, 1, 0)
+        # (2, 2049, 465)
 
-    print("final", vocals_mask.shape, stft.shape, masked_vocals_stft.shape)
+        masked_stft = spec * stft
 
-    wave = torch.istft(
-        masked_vocals_stft,
-        4096,
-        1024,
-        window=torch.hann_window(4096, periodic=True),
-        onesided=True,
-    ) * (2 / 3)
-    print(wave.shape, wave.dtype)
-    sf.write("a.wav", wave.t(), 44100)
+        wave = torch.istft(
+            masked_stft,
+            4096,
+            1024,
+            window=torch.hann_window(4096, periodic=True),
+            onesided=True,
+        ) * (2 / 3)
+
+        print(wave.shape, wave.dtype)
+        sf.write(f"{name}.wav", wave.t(), 44100)
+
+        wave = (wave.t() * 32768).to(torch.int16)
+        sound = AudioSegment(
+            data=wave.numpy().tobytes(), sample_width=2, frame_rate=44100, channels=2
+        )
+        sound.export(f"{name}.mp3", format="mp3", bitrate="128k")
 
 
 if __name__ == "__main__":
