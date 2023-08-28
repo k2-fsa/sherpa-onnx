@@ -21,7 +21,7 @@ struct ContextState {
   int32_t token;
   float token_score;
   float node_score;
-  float local_node_score;
+  float output_score;
   bool is_end;
   std::unordered_map<int32_t, std::unique_ptr<ContextState>> next;
   const ContextState *fail = nullptr;
@@ -29,11 +29,11 @@ struct ContextState {
 
   ContextState() = default;
   ContextState(int32_t token, float token_score, float node_score,
-               float local_node_score, bool is_end)
+               float output_score, bool is_end)
       : token(token),
         token_score(token_score),
         node_score(node_score),
-        local_node_score(local_node_score),
+        output_score(output_score),
         is_end(is_end) {}
 };
 
