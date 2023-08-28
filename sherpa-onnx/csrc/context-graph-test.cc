@@ -22,8 +22,9 @@ TEST(ContextGraph, TestBasic) {
   auto context_graph = ContextGraph(contexts, 1);
 
   auto queries = std::map<std::string, float>{
-      {"HEHERSHE", 14}, {"HERSHE", 12}, {"HISHE", 9},   {"SHED", 6},
-      {"HELL", 2},      {"HELLO", 7},   {"DHRHISQ", 4}, {"THEN", 2}};
+      {"HEHERSHE", 14}, {"HERSHE", 12}, {"HISHE", 9},
+      {"SHED", 6},      {"SHELF", 6},   {"HELL", 2},
+      {"HELLO", 7},     {"DHRHISQ", 4}, {"THEN", 2}};
 
   for (const auto &iter : queries) {
     float total_scores = 0;
