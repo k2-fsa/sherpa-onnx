@@ -68,6 +68,8 @@ class OnlineStream {
   // The returned reference is valid as long as this object is alive.
   int32_t &GetNumProcessedFrames();
 
+  int32_t &GetCurrentSegment();
+
   void SetResult(const OnlineTransducerDecoderResult &r);
   OnlineTransducerDecoderResult &GetResult();
 
