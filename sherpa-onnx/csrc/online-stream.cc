@@ -43,6 +43,8 @@ class OnlineStream::Impl {
 
   int32_t &GetNumProcessedFrames() { return num_processed_frames_; }
 
+  int32_t &GetCurrentSegment() { return segment_; }
+
   void SetResult(const OnlineTransducerDecoderResult &r) { result_ = r; }
 
   OnlineTransducerDecoderResult &GetResult() { return result_; }
@@ -83,6 +85,7 @@ class OnlineStream::Impl {
   ContextGraphPtr context_graph_;
   int32_t num_processed_frames_ = 0;  // before subsampling
   int32_t start_frame_index_ = 0;     // never reset
+  int32_t segment_ = 0;
   OnlineTransducerDecoderResult result_;
   std::vector<Ort::Value> states_;
   std::vector<float> paraformer_feat_cache_;
@@ -121,6 +124,10 @@ int32_t OnlineStream::FeatureDim() const { return impl_->FeatureDim(); }
 
 int32_t &OnlineStream::GetNumProcessedFrames() {
   return impl_->GetNumProcessedFrames();
+}
+
+int32_t &OnlineStream::GetCurrentSegment() {
+  return impl_->GetCurrentSegment();
 }
 
 void OnlineStream::SetResult(const OnlineTransducerDecoderResult &r) {

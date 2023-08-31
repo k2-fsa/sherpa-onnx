@@ -194,6 +194,9 @@ void OnlineWebsocketDecoder::Decode() {
 
   for (auto c : c_vec) {
     auto result = recognizer_->GetResult(c->s.get());
+    if (recognizer_->IsEndpoint(c->s.get())) {
+      recognizer_->Reset(c->s.get());
+    }
 
     asio::post(server_->GetConnectionContext(),
                [this, hdl = c->hdl, str = result.AsJsonString()]() {
