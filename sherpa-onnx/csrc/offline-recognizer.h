@@ -26,7 +26,10 @@ struct OfflineRecognizerConfig {
 
   std::string decoding_method = "greedy_search";
   int32_t max_active_paths = 4;
-  float context_score = 1.5;
+
+  std::string hotwords_file;
+  float hotwords_score = 1.5;
+
   // only greedy_search is implemented
   // TODO(fangjun): Implement modified_beam_search
 
@@ -35,13 +38,16 @@ struct OfflineRecognizerConfig {
                           const OfflineModelConfig &model_config,
                           const OfflineLMConfig &lm_config,
                           const std::string &decoding_method,
-                          int32_t max_active_paths, float context_score)
+                          int32_t max_active_paths,
+                          const std::string &hotwords_file,
+                          float hotwords_score)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
         decoding_method(decoding_method),
         max_active_paths(max_active_paths),
-        context_score(context_score) {}
+        hotwords_file(hotwords_file),
+        hotwords_score(hotwords_score) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

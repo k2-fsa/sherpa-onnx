@@ -26,7 +26,12 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
 
   po->Register("max-active-paths", &max_active_paths,
                "Used only when decoding_method is modified_beam_search");
-  po->Register("context-score", &context_score,
+
+  po->Register("hotwords-file", &hotwords_file,
+               "The bonus score for each token in context word/phrase. "
+               "Used only when decoding_method is modified_beam_search");
+
+  po->Register("hotwords-score", &hotwords_score,
                "The bonus score for each token in context word/phrase. "
                "Used only when decoding_method is modified_beam_search");
 }
@@ -53,7 +58,8 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "lm_config=" << lm_config.ToString() << ", ";
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "max_active_paths=" << max_active_paths << ", ";
-  os << "context_score=" << context_score << ")";
+  os << "hotwords_file=" << hotwords_file << ", ";
+  os << "hotwords_score=" << hotwords_score << ")";
 
   return os.str();
 }

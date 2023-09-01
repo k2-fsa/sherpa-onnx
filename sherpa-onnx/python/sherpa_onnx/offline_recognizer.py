@@ -38,12 +38,15 @@ class OfflineRecognizer(object):
         decoder: str,
         joiner: str,
         tokens: str,
+        tokens_type: str = "cjkchar",
+        bpe_model: str = "",
         num_threads: int = 1,
         sample_rate: int = 16000,
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
-        context_score: float = 1.5,
+        hotwords_file: str = "",
+        hotwords_score: float = 1.5,
         debug: bool = False,
         provider: str = "cpu",
     ):
@@ -90,6 +93,8 @@ class OfflineRecognizer(object):
                 joiner_filename=joiner,
             ),
             tokens=tokens,
+            tokens_type=tokens_type,
+            bpe_model=bpe_model,
             num_threads=num_threads,
             debug=debug,
             provider=provider,
@@ -105,7 +110,8 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
-            context_score=context_score,
+            hotwords_file=hotwords_file,
+            hotwords_score=hotwords_score,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config

@@ -348,7 +348,7 @@ def main():
             sample_rate=args.sample_rate,
             feature_dim=args.feature_dim,
             decoding_method=args.decoding_method,
-            context_score=args.context_score,
+            hotwords_score=args.context_score,
             debug=args.debug,
         )
     elif args.paraformer:

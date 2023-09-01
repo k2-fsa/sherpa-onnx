@@ -116,6 +116,7 @@ from pathlib import Path
 from typing import Optional, Tuple
 
 import numpy as np
+import sentencepiece as spm
 import sherpa_onnx
 
 import websockets
@@ -326,6 +327,39 @@ def add_modified_beam_search_args(parser: argparse.ArgumentParser):
     )
 
 
+def add_contexts_args(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--bpe-model",
+        type=str,
+        default="",
+        help="""
+        Path to bpe.model,
+        Used only when --decoding-method=modified_beam_search
+        """,
+    )
+
+    parser.add_argument(
+        "--modeling-unit",
+        type=str,
+        default="char",
+        help="""
+        The type of modeling unit.
+        Valid values are bpe, bpe+char, char.
+        Note: the char here means characters in CJK languages.
+        """,
+    )
+
+    parser.add_argument(
+        "--context-score",
+        type=float,
+        default=1.5,
+        help="""
+        The context score of each token for biasing word/phrase. Used only if
+        --contexts is given.
+        """,
+    )
+
+
 def check_args(args):
     if not Path(args.tokens).is_file():
         raise ValueError(f"{args.tokens} does not exist")
@@ -342,6 +376,9 @@ def check_args(args):
         assert Path(args.decoder).is_file(), args.decoder
         assert Path(args.joiner).is_file(), args.joiner
 
+    if args.contexts != "":
+        assert args.decoding_method == "modified_beam_search", args.decoding_method
+
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -351,6 +388,7 @@ def get_args():
     add_model_args(parser)
     add_feature_config_args(parser)
     add_decoding_args(parser)
+    add_contexts_args(parser)
 
     parser.add_argument(
         "--port",
@@ -770,6 +808,24 @@ def assert_file_exists(filename: str):
     )
 
 
+def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
+    sp = None
+    if "bpe" in args.modeling_unit:
+        assert_file_exists(args.bpe_model)
+        sp = spm.SentencePieceProcessor()
+        sp.load(args.bpe_model)
+    tokens = {}
+    with open(args.tokens, "r", encoding="utf-8") as f:
+        for line in f:
+            toks = line.strip().split()
+            assert len(toks) == 2, len(toks)
+            assert toks[0] not in tokens, f"Duplicate token: {toks} "
+            tokens[toks[0]] = int(toks[1])
+    return sherpa_onnx.encode_contexts(
+        modeling_unit=args.modeling_unit, contexts=contexts, sp=sp, tokens_table=tokens
+    )
+
+
 def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     if args.encoder:
         assert len(args.paraformer) == 0, args.paraformer
@@ -792,6 +848,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
             max_active_paths=args.max_active_paths,
+            context_score=args.context_score,
         )
     elif args.paraformer:
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
