@@ -68,7 +68,7 @@ class OfflineRecognizer {
 
   /// Create a stream for decoding.
   std::unique_ptr<OfflineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &context_list) const;
+      const std::string &hotwords) const;
 
   /** Decode a single stream
    *

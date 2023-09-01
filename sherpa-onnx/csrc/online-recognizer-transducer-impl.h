@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <memory>
+#include <regex>
 #include <utility>
 #include <vector>
 

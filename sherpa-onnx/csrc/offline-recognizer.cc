@@ -70,8 +70,8 @@ OfflineRecognizer::OfflineRecognizer(const OfflineRecognizerConfig &config)
 OfflineRecognizer::~OfflineRecognizer() = default;
 
 std::unique_ptr<OfflineStream> OfflineRecognizer::CreateStream(
-    const std::vector<std::vector<int32_t>> &context_list) const {
-  return impl_->CreateStream(context_list);
+    const std::string &hotwords) const {
+  return impl_->CreateStream(hotwords);
 }
 
 std::unique_ptr<OfflineStream> OfflineRecognizer::CreateStream() const {

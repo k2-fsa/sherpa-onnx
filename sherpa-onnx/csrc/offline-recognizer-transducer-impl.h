@@ -7,6 +7,7 @@
 
 #include <fstream>
 #include <memory>
+#include <regex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -89,15 +90,20 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
   }
 
   std::unique_ptr<OfflineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &context_list) const override {
-    // We create context_graph at this level, because we might have default
-    // context_graph(will be added later if needed) that belongs to the whole
-    // model rather than each stream.
-    std::vector<std::vector<int32_t>> hotwords;
-    hotwords.insert(hotwords.end(), hotwords_.begin(), hotwords_.end());
-    hotwords.insert(hotwords.end(), context_list.begin(), context_list.end());
+      const std::string &hotwords) const override {
+    auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
+    std::istringstream is(hws);
+    int32_t default_hws_num = hotwords_.size();
+    std::vector<std::vector<int32_t>> tmp;
+    if (!EncodeHotwords(is, config_.model_config.tokens_type, symbol_table_,
+                        bpe_processor_, &tmp)) {
+      SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
+                       hotwords.c_str());
+    }
+    hotwords_.insert(hotwords_.end(), tmp.begin(), tmp.end());
     auto context_graph =
-        std::make_shared<ContextGraph>(hotwords, config_.hotwords_score);
+        std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
+    hotwords_.resize(default_hws_num);
     return std::make_unique<OfflineStream>(config_.feat_config, context_graph);
   }
 

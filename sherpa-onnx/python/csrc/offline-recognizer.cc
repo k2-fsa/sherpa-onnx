@@ -42,11 +42,10 @@ void PybindOfflineRecognizer(py::module *m) {
            [](const PyClass &self) { return self.CreateStream(); })
       .def(
           "create_stream",
-          [](PyClass &self,
-             const std::vector<std::vector<int32_t>> &contexts_list) {
-            return self.CreateStream(contexts_list);
+          [](PyClass &self, const std::string &hotwords) {
+            return self.CreateStream(hotwords);
           },
-          py::arg("contexts_list"))
+          py::arg("hotwords"))
       .def("decode_stream", &PyClass::DecodeStream)
       .def("decode_streams",
            [](const PyClass &self, std::vector<OfflineStream *> ss) {
