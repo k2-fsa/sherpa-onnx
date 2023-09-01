@@ -57,7 +57,10 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
                "True to enable endpoint detection. False to disable it.");
   po->Register("max-active-paths", &max_active_paths,
                "beam size used in modified beam search.");
-  po->Register("context-score", &context_score,
+  po->Register("hotwords-score", &hotwords_score,
+               "The bonus score for each token in context word/phrase. "
+               "Used only when decoding_method is modified_beam_search");
+  po->Register("hotwords-file", &hotwords_file,
                "The bonus score for each token in context word/phrase. "
                "Used only when decoding_method is modified_beam_search");
   po->Register("decoding-method", &decoding_method,
@@ -87,7 +90,8 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
   os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ", ";
   os << "max_active_paths=" << max_active_paths << ", ";
-  os << "context_score=" << context_score << ", ";
+  os << "hotwords_score=" << hotwords_score << ", ";
+  os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "decoding_method=\"" << decoding_method << "\")";
 
   return os.str();

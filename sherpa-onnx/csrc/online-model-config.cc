@@ -16,6 +16,12 @@ void OnlineModelConfig::Register(ParseOptions *po) {
 
   po->Register("tokens", &tokens, "Path to tokens.txt");
 
+  po->Register("bpe-model", &bpe_model, "Path to bpe.model");
+
+  po->Register("tokens-type", &tokens_type,
+               "The tokens type (i.e. the modeling units), supporting bpe, "
+               "cjkchar, cjkchar+bpe now.");
+
   po->Register("num-threads", &num_threads,
                "Number of threads to run the neural network");
 
@@ -56,6 +62,8 @@ std::string OnlineModelConfig::ToString() const {
   os << "transducer=" << transducer.ToString() << ", ";
   os << "paraformer=" << paraformer.ToString() << ", ";
   os << "tokens=\"" << tokens << "\", ";
+  os << "tokens_type=" << tokens_type << ", ";
+  os << "bpe_model=\"" << bpe_model << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
   os << "provider=\"" << provider << "\", ";

@@ -23,7 +23,7 @@
 #include "sherpa-onnx/csrc/offline-transducer-modified-beam-search-decoder.h"
 #include "sherpa-onnx/csrc/pad-sequence.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
-#include "sherpa-onnx/csrc/utf-utils.h"
+#include "sherpa-onnx/csrc/utils.h"
 
 namespace sherpa_onnx {
 
@@ -169,87 +169,13 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
       exit(-1);
     }
 
-    InitHotwords(is);
-    hotwords_graph_ =
-        std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
-  }
-
-  void EncodeWithBpe(const std::string word, std::vector<std::string> *syms) {
-    syms->clear();
-    std::vector<std::string> bpes;
-    if (bpe_processor_.status().ok()) {
-      if (bpe_processor_.Encode(word, &bpes).ok()) {
-        for (auto bpe : bpes) {
-          if (bpe.size() >= 3) {
-            // For BPE-based models, we replace ▁ with a space
-            // Unicode 9601, hex 0x2581, utf8 0xe29681
-            const uint8_t *p = reinterpret_cast<const uint8_t *>(bpe.c_str());
-            if (p[0] == 0xe2 && p[1] == 0x96 && p[2] == 0x81) {
-              bpe = bpe.replace(0, 3, " ");
-            }
-          }
-          syms->push_back(bpe);
-        }
-      } else {
-        SHERPA_ONNX_LOGE("SentencePiece encode error for hotword %s. ",
-                         word.c_str());
-        exit(-1);
-      }
-    } else {
-      SHERPA_ONNX_LOGE("SentencePiece processor error : %s.",
-                       bpe_processor_.status().ToString().c_str());
+    if (!EncodeHotwords(is, config_.model_config.tokens_type, symbol_table_,
+                        bpe_processor_, &hotwords_)) {
+      SHERPA_ONNX_LOGE("Encode hotwords failed.");
       exit(-1);
     }
-  }
-
-  void InitHotwords(std::istream &is) {
-    std::vector<int32_t> tmp;
-    std::string line;
-    std::string word;
-
-    while (std::getline(is, line)) {
-      std::istringstream iss(line);
-      std::vector<std::string> syms;
-      while (iss >> word) {
-        if (config_.model_config.tokens_type == "cjkchar") {
-          syms.push_back(word);
-        } else if (config_.model_config.tokens_type == "bpe") {
-          std::vector<std::string> bpes;
-          EncodeWithBpe(word, &bpes);
-          syms.insert(syms.end(), bpes.begin(), bpes.end());
-        } else {
-          SHERPA_ONNX_CHECK_EQ(config_.model_config.tokens_type, "cjkchar+bpe");
-          std::vector<int32_t> codes;
-          if (StringToUnicodePoints(word, &codes)) {
-            if (IsCJK(codes[0])) {
-              syms.push_back(word);
-            } else {
-              std::vector<std::string> bpes;
-              EncodeWithBpe(word, &bpes);
-              syms.insert(syms.end(), bpes.begin(), bpes.end());
-            }
-          } else {
-            SHERPA_ONNX_LOGE("Invalid utf8 string for hotword %s at line: %s. ",
-                             word.c_str(), line.c_str());
-            exit(-1);
-          }
-        }
-      }
-      for (auto sym : syms) {
-        if (symbol_table_.contains(sym)) {
-          int32_t number = symbol_table_[sym];
-          tmp.push_back(number);
-        } else {
-          SHERPA_ONNX_LOGE(
-              "Cannot find ID for hotword %s at line: %s. (Hint: words on "
-              "the "
-              "same line are separated by spaces)",
-              sym.c_str(), line.c_str());
-          exit(-1);
-        }
-      }
-      hotwords_.push_back(std::move(tmp));
-    }
+    hotwords_graph_ =
+        std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
   }
 
  private:

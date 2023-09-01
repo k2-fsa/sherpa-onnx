@@ -78,8 +78,10 @@ struct OnlineRecognizerConfig {
 
   // used only for modified_beam_search
   int32_t max_active_paths = 4;
+
   /// used only for modified_beam_search
-  float context_score = 1.5;
+  float hotwords_score = 1.5;
+  std::string hotwords_file;
 
   OnlineRecognizerConfig() = default;
 
@@ -89,14 +91,16 @@ struct OnlineRecognizerConfig {
                          const EndpointConfig &endpoint_config,
                          bool enable_endpoint,
                          const std::string &decoding_method,
-                         int32_t max_active_paths, float context_score)
+                         int32_t max_active_paths,
+                         const std::string &hotwords_file, float hotwords_score)
       : feat_config(feat_config),
         model_config(model_config),
         endpoint_config(endpoint_config),
         enable_endpoint(enable_endpoint),
         decoding_method(decoding_method),
         max_active_paths(max_active_paths),
-        context_score(context_score) {}
+        hotwords_file(hotwords_file),
+        hotwords_score(hotwords_score) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

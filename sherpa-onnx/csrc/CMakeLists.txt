@@ -73,6 +73,7 @@ set(sources
   transpose.cc
   unbind.cc
   utf-utils.cc
+  utils.cc
   wave-reader.cc
 )
 

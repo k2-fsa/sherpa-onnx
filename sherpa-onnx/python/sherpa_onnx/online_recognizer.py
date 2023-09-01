@@ -42,7 +42,9 @@ class OnlineRecognizer(object):
         rule3_min_utterance_length: float = 20.0,
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
-        context_score: float = 1.5,
+        tokens_type: str = "cjkchar",
+        bpe_model: str = "",
+        hotwords_score: float = 1.5,
         provider: str = "cpu",
         model_type: str = "",
     ):
@@ -115,6 +117,8 @@ class OnlineRecognizer(object):
         model_config = OnlineModelConfig(
             transducer=transducer_config,
             tokens=tokens,
+            tokens_type=tokens_type,
+            bpe_model=bpe_model,
             num_threads=num_threads,
             provider=provider,
             model_type=model_type,
@@ -138,7 +142,8 @@ class OnlineRecognizer(object):
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
             max_active_paths=max_active_paths,
-            context_score=context_score,
+            hotwords_score=hotwords_score,
+            hotwords_file=hotwords_file,
         )
 
         self.recognizer = _Recognizer(recognizer_config)

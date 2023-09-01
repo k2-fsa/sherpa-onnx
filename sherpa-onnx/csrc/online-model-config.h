@@ -15,6 +15,8 @@ struct OnlineModelConfig {
   OnlineTransducerModelConfig transducer;
   OnlineParaformerModelConfig paraformer;
   std::string tokens;
+  std::string tokens_type = "cjkchar";
+  std::string bpe_model;
   int32_t num_threads = 1;
   bool debug = false;
   std::string provider = "cpu";
@@ -31,11 +33,15 @@ struct OnlineModelConfig {
   OnlineModelConfig() = default;
   OnlineModelConfig(const OnlineTransducerModelConfig &transducer,
                     const OnlineParaformerModelConfig &paraformer,
-                    const std::string &tokens, int32_t num_threads, bool debug,
-                    const std::string &provider, const std::string &model_type)
+                    const std::string &tokens, const std::string &tokens_type,
+                    const std::string &bpe_model, int32_t num_threads,
+                    bool debug, const std::string &provider,
+                    const std::string &model_type)
       : transducer(transducer),
         paraformer(paraformer),
         tokens(tokens),
+        tokens_type(tokens_type),
+        bpe_model(bpe_model),
         num_threads(num_threads),
         debug(debug),
         provider(provider),

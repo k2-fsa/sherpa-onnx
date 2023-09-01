@@ -258,7 +258,7 @@ def main():
             feature_dim=80,
             decoding_method=args.decoding_method,
             max_active_paths=args.max_active_paths,
-            context_score=args.context_score,
+            hotwords_score=args.context_score,
         )
     elif args.paraformer_encoder:
         recognizer = sherpa_onnx.OnlineRecognizer.from_paraformer(

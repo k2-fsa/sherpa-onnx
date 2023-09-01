@@ -21,15 +21,20 @@ void PybindOnlineModelConfig(py::module *m) {
   using PyClass = OnlineModelConfig;
   py::class_<PyClass>(*m, "OnlineModelConfig")
       .def(py::init<const OnlineTransducerModelConfig &,
-                    const OnlineParaformerModelConfig &, std::string &, int32_t,
-                    bool, const std::string &, const std::string &>(),
+                    const OnlineParaformerModelConfig &, const std::string &,
+                    const std::string &, const std::string &, int32_t, bool,
+                    const std::string &, const std::string &>(),
            py::arg("transducer") = OnlineTransducerModelConfig(),
            py::arg("paraformer") = OnlineParaformerModelConfig(),
-           py::arg("tokens"), py::arg("num_threads"), py::arg("debug") = false,
-           py::arg("provider") = "cpu", py::arg("model_type") = "")
+           py::arg("tokens"), py::arg("tokens_type") = "cjkchar",
+           py::arg("bpe_model"), py::arg("num_threads"),
+           py::arg("debug") = false, py::arg("provider") = "cpu",
+           py::arg("model_type") = "")
       .def_readwrite("transducer", &PyClass::transducer)
       .def_readwrite("paraformer", &PyClass::paraformer)
       .def_readwrite("tokens", &PyClass::tokens)
+      .def_readwrite("tokens_type", &PyClass::tokens_type)
+      .def_readwrite("bpe_model", &PyClass::bpe_model)
       .def_readwrite("num_threads", &PyClass::num_threads)
       .def_readwrite("debug", &PyClass::debug)
       .def_readwrite("provider", &PyClass::provider)

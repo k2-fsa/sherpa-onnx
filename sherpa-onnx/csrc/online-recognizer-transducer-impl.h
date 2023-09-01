@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "sentencepiece_processor.h"  // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-lm.h"
@@ -20,6 +21,7 @@
 #include "sherpa-onnx/csrc/online-transducer-model.h"
 #include "sherpa-onnx/csrc/online-transducer-modified-beam-search-decoder.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
+#include "sherpa-onnx/csrc/utils.h"
 
 namespace sherpa_onnx {
 
@@ -54,6 +56,18 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
         model_(OnlineTransducerModel::Create(config.model_config)),
         sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
+    if (!config_.model_config.bpe_model.empty()) {
+      auto status = bpe_processor_.Load(config_.model_config.bpe_model);
+      if (!status.ok()) {
+        SHERPA_ONNX_LOGE("Load bpe model error, status : %s.",
+                         status.ToString().c_str());
+        exit(-1);
+      }
+    }
+    if (!config_.hotwords_file.empty()) {
+      InitHotwords();
+    }
+
     if (config.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
         lm_ = OnlineLM::Create(config.lm_config);
@@ -95,7 +109,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
 #endif
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
-    auto stream = std::make_unique<OnlineStream>(config_.feat_config);
+    auto stream =
+        std::make_unique<OnlineStream>(config_.feat_config, hotwords_graph_);
     InitOnlineStream(stream.get());
     return stream;
   }
@@ -105,8 +120,11 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     // We create context_graph at this level, because we might have default
     // context_graph(will be added later if needed) that belongs to the whole
     // model rather than each stream.
+    std::vector<std::vector<int32_t>> hotwords;
+    hotwords.insert(hotwords.end(), hotwords_.begin(), hotwords_.end());
+    hotwords.insert(hotwords.end(), contexts.begin(), contexts.end());
     auto context_graph =
-        std::make_shared<ContextGraph>(contexts, config_.context_score);
+        std::make_shared<ContextGraph>(hotwords, config_.hotwords_score);
     auto stream =
         std::make_unique<OnlineStream>(config_.feat_config, context_graph);
     InitOnlineStream(stream.get());
@@ -232,6 +250,25 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     s->Reset();
   }
 
+  void InitHotwords() {
+    // each line in hotwords_file contains space-separated words
+
+    std::ifstream is(config_.hotwords_file);
+    if (!is) {
+      SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
+                       config_.hotwords_file.c_str());
+      exit(-1);
+    }
+
+    if (!EncodeHotwords(is, config_.model_config.tokens_type, sym_,
+                        bpe_processor_, &hotwords_)) {
+      SHERPA_ONNX_LOGE("Encode hotwords failed.");
+      exit(-1);
+    }
+    hotwords_graph_ =
+        std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
+  }
+
  private:
   void InitOnlineStream(OnlineStream *stream) const {
     auto r = decoder_->GetEmptyResult();
@@ -250,6 +287,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
 
  private:
   OnlineRecognizerConfig config_;
+  std::vector<std::vector<int32_t>> hotwords_;
+  ContextGraphPtr hotwords_graph_;
+  sentencepiece::SentencePieceProcessor bpe_processor_;
   std::unique_ptr<OnlineTransducerModel> model_;
   std::unique_ptr<OnlineLM> lm_;
   std::unique_ptr<OnlineTransducerDecoder> decoder_;
