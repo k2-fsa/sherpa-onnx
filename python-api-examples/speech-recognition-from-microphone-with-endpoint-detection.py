@@ -79,6 +79,49 @@ def get_args():
         help="Valid values: cpu, cuda, coreml",
     )
 
+    parser.add_argument(
+        "--bpe-model",
+        type=str,
+        default="",
+        help="""
+        Path to bpe.model,
+        Used only when --decoding-method=modified_beam_search
+        """,
+    )
+    parser.add_argument(
+        "--tokens_type",
+        type=str,
+        default="cjkchar",
+        help="""
+        The type of tokens (i.e the modeling unit).
+        Valid values are bpe, cjkchar+bpe, cjkchar.
+        """,
+    )
+
+    parser.add_argument(
+        "--hotwords-file",
+        type=str,
+        default="",
+        help="""
+        The file containing hotwords, one words/phrases per line, and for each
+        phrase the bpe/cjkchar are separated by a space. For example:
+
+        HELLO WORLD
+        你 好 世 界
+        """,
+    )
+
+    parser.add_argument(
+        "--hotwords-score",
+        type=float,
+        default=1.5,
+        help="""
+        The hotword score of each token for biasing word/phrase. Used only if
+        --hotwords-file is given.
+        """,
+    )
+
+
     return parser.parse_args()
 
 
@@ -104,6 +147,10 @@ def create_recognizer(args):
         rule3_min_utterance_length=300,  # it essentially disables this rule
         decoding_method=args.decoding_method,
         provider=args.provider,
+        tokens_type=args.tokens_type,
+        bpe_model=args.bpe_model,
+        hotwords_file=agrs.hotwords_file,
+        hotwords_score=args.hotwords_score,
     )
     return recognizer
 
