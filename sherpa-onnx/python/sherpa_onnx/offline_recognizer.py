@@ -385,11 +385,11 @@ class OfflineRecognizer(object):
         self.config = recognizer_config
         return self
 
-    def create_stream(self, contexts_list: Optional[List[List[int]]] = None):
-        if contexts_list is None:
+    def create_stream(self, hotwords: Optional[str] = None):
+        if hotwords is None:
             return self.recognizer.create_stream()
         else:
-            return self.recognizer.create_stream(contexts_list)
+            return self.recognizer.create_stream(hotwords)
 
     def decode_stream(self, s: OfflineStream):
         self.recognizer.decode_stream(s)

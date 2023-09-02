@@ -327,7 +327,7 @@ def add_modified_beam_search_args(parser: argparse.ArgumentParser):
     )
 
 
-def add_contexts_args(parser: argparse.ArgumentParser):
+def add_hotwords_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--bpe-model",
         type=str,
@@ -337,25 +337,36 @@ def add_contexts_args(parser: argparse.ArgumentParser):
         Used only when --decoding-method=modified_beam_search
         """,
     )
-
     parser.add_argument(
-        "--modeling-unit",
+        "--tokens_type",
         type=str,
-        default="char",
+        default="cjkchar",
         help="""
-        The type of modeling unit.
-        Valid values are bpe, bpe+char, char.
-        Note: the char here means characters in CJK languages.
+        The type of tokens (i.e the modeling unit).
+        Valid values are bpe, cjkchar+bpe, cjkchar.
         """,
     )
 
     parser.add_argument(
-        "--context-score",
+        "--hotwords-file",
+        type=str,
+        default="",
+        help="""
+        The file containing hotwords, one words/phrases per line, and for each
+        phrase the bpe/cjkchar are separated by a space. For example:
+
+        HELLO WORLD
+        你 好 世 界
+        """,
+    )
+
+    parser.add_argument(
+        "--hotwords-score",
         type=float,
         default=1.5,
         help="""
-        The context score of each token for biasing word/phrase. Used only if
-        --contexts is given.
+        The hotword score of each token for biasing word/phrase. Used only if
+        --hotwords-file is given.
         """,
     )
 
@@ -376,7 +387,7 @@ def check_args(args):
         assert Path(args.decoder).is_file(), args.decoder
         assert Path(args.joiner).is_file(), args.joiner
 
-    if args.contexts != "":
+    if args.hotwords_file != "":
         assert args.decoding_method == "modified_beam_search", args.decoding_method
 
 
@@ -388,7 +399,7 @@ def get_args():
     add_model_args(parser)
     add_feature_config_args(parser)
     add_decoding_args(parser)
-    add_contexts_args(parser)
+    add_hotwords_args(parser)
 
     parser.add_argument(
         "--port",
@@ -808,24 +819,6 @@ def assert_file_exists(filename: str):
     )
 
 
-def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
-    sp = None
-    if "bpe" in args.modeling_unit:
-        assert_file_exists(args.bpe_model)
-        sp = spm.SentencePieceProcessor()
-        sp.load(args.bpe_model)
-    tokens = {}
-    with open(args.tokens, "r", encoding="utf-8") as f:
-        for line in f:
-            toks = line.strip().split()
-            assert len(toks) == 2, len(toks)
-            assert toks[0] not in tokens, f"Duplicate token: {toks} "
-            tokens[toks[0]] = int(toks[1])
-    return sherpa_onnx.encode_contexts(
-        modeling_unit=args.modeling_unit, contexts=contexts, sp=sp, tokens_table=tokens
-    )
-
-
 def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     if args.encoder:
         assert len(args.paraformer) == 0, args.paraformer
@@ -848,7 +841,10 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
             max_active_paths=args.max_active_paths,
-            context_score=args.context_score,
+            tokens_type=args.tokens_type,
+            bpe_model=args.bpe_model,
+            hotwords_file=args.hotwords_file,
+            hotwords_score=args.hotwords_score,
         )
     elif args.paraformer:
         assert len(args.nemo_ctc) == 0, args.nemo_ctc

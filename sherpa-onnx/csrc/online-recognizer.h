@@ -124,8 +124,7 @@ class OnlineRecognizer {
   std::unique_ptr<OnlineStream> CreateStream() const;
 
   // Create a stream with context phrases
-  std::unique_ptr<OnlineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &context_list) const;
+  std::unique_ptr<OnlineStream> CreateStream(const std::string &hotwords) const;
 
   /**
    * Return true if the given stream has enough frames for decoding.

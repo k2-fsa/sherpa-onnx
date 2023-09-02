@@ -117,15 +117,18 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   }
 
   std::unique_ptr<OnlineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &contexts) const override {
-    // We create context_graph at this level, because we might have default
-    // context_graph(will be added later if needed) that belongs to the whole
-    // model rather than each stream.
-    std::vector<std::vector<int32_t>> hotwords;
-    hotwords.insert(hotwords.end(), hotwords_.begin(), hotwords_.end());
-    hotwords.insert(hotwords.end(), contexts.begin(), contexts.end());
+      const std::string &hotwords) const override {
+    auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
+    std::istringstream is(hws);
+    std::vector<std::vector<int32_t>> current;
+    if (!EncodeHotwords(is, config_.model_config.tokens_type, sym_,
+                        bpe_processor_, &current)) {
+      SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
+                       hotwords.c_str());
+    }
+    current.insert(current.end(), hotwords_.begin(), hotwords_.end());
     auto context_graph =
-        std::make_shared<ContextGraph>(hotwords, config_.hotwords_score);
+        std::make_shared<ContextGraph>(current, config_.hotwords_score);
     auto stream =
         std::make_unique<OnlineStream>(config_.feat_config, context_graph);
     InitOnlineStream(stream.get());

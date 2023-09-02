@@ -113,8 +113,8 @@ std::unique_ptr<OnlineStream> OnlineRecognizer::CreateStream() const {
 }
 
 std::unique_ptr<OnlineStream> OnlineRecognizer::CreateStream(
-    const std::vector<std::vector<int32_t>> &context_list) const {
-  return impl_->CreateStream(context_list);
+    const std::string &hotwords) const {
+  return impl_->CreateStream(hotwords);
 }
 
 bool OnlineRecognizer::IsReady(OnlineStream *s) const {

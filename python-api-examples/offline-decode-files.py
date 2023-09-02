@@ -134,8 +134,8 @@ def get_args():
         type=float,
         default=1.5,
         help="""
-        The context score of each token for biasing word/phrase. Used only if
-        --contexts is given.
+        The hotword score of each token for biasing word/phrase. Used only if
+        --hotwords-file is given.
         """,
     )
 
@@ -327,7 +327,7 @@ def main():
             tokens_type=args.tokens_type,
             bpe_model=args.bpe_model,
             hotwords_file=args.hotwords_file,
-            hotwords_score=args.context_score,
+            hotwords_score=args.hotwords_score,
             debug=args.debug,
         )
     elif args.paraformer:

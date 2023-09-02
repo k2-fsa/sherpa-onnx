@@ -93,17 +93,16 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
       const std::string &hotwords) const override {
     auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
     std::istringstream is(hws);
-    int32_t default_hws_num = hotwords_.size();
-    std::vector<std::vector<int32_t>> tmp;
+    std::vector<std::vector<int32_t>> current;
     if (!EncodeHotwords(is, config_.model_config.tokens_type, symbol_table_,
-                        bpe_processor_, &tmp)) {
+                        bpe_processor_, &current)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
                        hotwords.c_str());
     }
-    hotwords_.insert(hotwords_.end(), tmp.begin(), tmp.end());
+    current.insert(current.end(), hotwords_.begin(), hotwords_.end());
+
     auto context_graph =
-        std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
-    hotwords_.resize(default_hws_num);
+        std::make_shared<ContextGraph>(current, config_.hotwords_score);
     return std::make_unique<OfflineStream>(config_.feat_config, context_graph);
   }
 

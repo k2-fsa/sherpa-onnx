@@ -134,36 +134,35 @@ def get_args():
     )
 
     parser.add_argument(
-        "--modeling-unit",
+        "--tokens_type",
         type=str,
-        default="char",
+        default="cjkchar",
         help="""
-        The type of modeling unit, it will be used to tokenize contexts biasing phrases.
-        Valid values are bpe, bpe+char, char.
-        Note: the char here means characters in CJK languages.
-        Used only when --decoding-method=modified_beam_search
+        The type of tokens (i.e the modeling unit).
+        Valid values are bpe, cjkchar+bpe, cjkchar.
         """,
     )
 
     parser.add_argument(
-        "--contexts",
+        "--hotwords-file",
         type=str,
         default="",
         help="""
-        The context list, it is a string containing some words/phrases separated
-        with /, for example, 'HELLO WORLD/I LOVE YOU/GO AWAY".
-        Used only when --decoding-method=modified_beam_search
+        The file containing hotwords, one words/phrases per line, and for each
+        phrase the bpe/cjkchar are separated by a space. For example:
+
+        HELLO WORLD
+        你 好 世 界
         """,
     )
 
     parser.add_argument(
-        "--context-score",
+        "--hotwords-score",
         type=float,
         default=1.5,
         help="""
-        The context score of each token for biasing word/phrase. Used only if
-        --contexts is given.
-        Used only when --decoding-method=modified_beam_search
+        The hotword score of each token for biasing word/phrase. Used only if
+        --hotwords-file is given.
         """,
     )
 
@@ -214,27 +213,6 @@ def read_wave(wave_filename: str) -> Tuple[np.ndarray, int]:
         return samples_float32, f.getframerate()
 
 
-def encode_contexts(args, contexts: List[str]) -> List[List[int]]:
-    sp = None
-    if "bpe" in args.modeling_unit:
-        assert_file_exists(args.bpe_model)
-        sp = spm.SentencePieceProcessor()
-        sp.load(args.bpe_model)
-    tokens = {}
-    with open(args.tokens, "r", encoding="utf-8") as f:
-        for line in f:
-            toks = line.strip().split()
-            assert len(toks) == 2, len(toks)
-            assert toks[0] not in tokens, f"Duplicate token: {toks} "
-            tokens[toks[0]] = int(toks[1])
-    return sherpa_onnx.encode_contexts(
-        modeling_unit=args.modeling_unit,
-        contexts=contexts,
-        sp=sp,
-        tokens_table=tokens,
-    )
-
-
 def main():
     args = get_args()
     assert_file_exists(args.tokens)
@@ -258,7 +236,10 @@ def main():
             feature_dim=80,
             decoding_method=args.decoding_method,
             max_active_paths=args.max_active_paths,
-            hotwords_score=args.context_score,
+            tokens_type=args.tokens_type,
+            bpe_model=args.bpe_model,
+            hotwords_file=args.hotwords_file,
+            hotwords_score=args.hotwords_score,
         )
     elif args.paraformer_encoder:
         recognizer = sherpa_onnx.OnlineRecognizer.from_paraformer(
@@ -277,12 +258,6 @@ def main():
     print("Started!")
     start_time = time.time()
 
-    contexts_list = []
-    contexts = [x.strip().upper() for x in args.contexts.split("/") if x.strip()]
-    if contexts:
-        print(f"Contexts list: {contexts}")
-        contexts_list = encode_contexts(args, contexts)
-
     streams = []
     total_duration = 0
     for wave_filename in args.sound_files:
@@ -291,10 +266,7 @@ def main():
         duration = len(samples) / sample_rate
         total_duration += duration
 
-        if contexts_list:
-            s = recognizer.create_stream(contexts_list=contexts_list)
-        else:
-            s = recognizer.create_stream()
+        s = recognizer.create_stream()
 
         s.accept_waveform(sample_rate, samples)
 
