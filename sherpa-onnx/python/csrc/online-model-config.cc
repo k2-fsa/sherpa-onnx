@@ -27,7 +27,7 @@ void PybindOnlineModelConfig(py::module *m) {
            py::arg("transducer") = OnlineTransducerModelConfig(),
            py::arg("paraformer") = OnlineParaformerModelConfig(),
            py::arg("tokens"), py::arg("tokens_type") = "cjkchar",
-           py::arg("bpe_model"), py::arg("num_threads"),
+           py::arg("bpe_model") = "", py::arg("num_threads"),
            py::arg("debug") = false, py::arg("provider") = "cpu",
            py::arg("model_type") = "")
       .def_readwrite("transducer", &PyClass::transducer)

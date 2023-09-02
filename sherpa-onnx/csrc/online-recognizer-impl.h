@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_IMPL_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"

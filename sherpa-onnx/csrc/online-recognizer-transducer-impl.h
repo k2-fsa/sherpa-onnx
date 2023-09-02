@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <memory>
 #include <regex>
+#include <string>
 #include <utility>
 #include <vector>
 

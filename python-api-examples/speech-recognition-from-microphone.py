@@ -11,7 +11,6 @@ import sys
 from pathlib import Path
 
 from typing import List
-import sentencepiece as spm
 
 try:
     import sounddevice as sd

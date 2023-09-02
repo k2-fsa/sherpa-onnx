@@ -33,7 +33,7 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
            py::arg("feat_config"), py::arg("model_config"),
            py::arg("lm_config") = OnlineLMConfig(), py::arg("endpoint_config"),
            py::arg("enable_endpoint"), py::arg("decoding_method"),
-           py::arg("max_active_paths") = 4, py::arg("hotwords_file"),
+           py::arg("max_active_paths") = 4, py::arg("hotwords_file") = "",
            py::arg("hotwords_score") = 0)
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
