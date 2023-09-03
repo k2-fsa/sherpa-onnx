@@ -89,7 +89,7 @@ endif()
 
 target_link_libraries(sherpa-onnx-core
   kaldi-native-fbank-core
-  sentencepiece-static # see cmake/sentencepiece.cmake
+  sentencepiece # see cmake/sentencepiece.cmake
 )
 
 if(BUILD_SHARED_LIBS OR NOT WIN32)
