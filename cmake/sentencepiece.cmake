@@ -8,7 +8,6 @@ function(download_sentencepiece)
 
   set(SPM_ENABLE_SHARED ON CACHE BOOL "" FORCE)
   set(SPM_ENABLE_TCMALLOC OFF CACHE BOOL "" FORCE)
-  set(SPM_USE_BUILTIN_PROTOBUF OFF CACHE BOOL "" FORCE)
   set(SPM_ENABLE_MSVC_MT_BUILD ON CACHE BOOL "" FORCE)
 
   FetchContent_Declare(sentencepiece
