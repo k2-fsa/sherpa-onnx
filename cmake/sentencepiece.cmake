@@ -32,12 +32,16 @@ function(download_sentencepiece)
       ${sentencepiece_BINARY_DIR}
   )
 
-  target_include_directories(sentencepiece-static
-    INTERFACE
-      ${sentencepiece_SOURCE_DIR}
-      ${sentencepiece_SOURCE_DIR}/src
-      ${sentencepiece_BINARY_DIR}
-  )
+  if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
+    install(TARGETS sentencepiece DESTINATION ..)
+  else()
+    install(TARGETS sentencepiece DESTINATION lib)
+  endif()
+
+  if(WIN32 AND BUILD_SHARED_LIBS)
+    install(TARGETS sentencepiece DESTINATION bin)
+  endif()
+
 endfunction()
 
 download_sentencepiece()

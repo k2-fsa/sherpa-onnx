@@ -52,7 +52,7 @@ bool StringToUnicodePoints(const std::string &str,
 std::string CodepointToUTF8String(int32_t code) {
   std::ostringstream ostr;
   if (code < 0) {
-    SHERPA_ONNX_LOGE("Invalid code point : $d", code);
+    SHERPA_ONNX_LOGE("Invalid code point : %d", code);
     exit(-1);
   } else if (code < 0x80) {
     ostr << static_cast<char>(code);
