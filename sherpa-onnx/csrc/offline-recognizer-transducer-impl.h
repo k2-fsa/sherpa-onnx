@@ -7,7 +7,7 @@
 
 #include <fstream>
 #include <memory>
-#include <regex>
+#include <regex>  // NOLINT
 #include <string>
 #include <utility>
 #include <vector>
