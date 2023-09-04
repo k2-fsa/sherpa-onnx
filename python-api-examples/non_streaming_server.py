@@ -337,7 +337,7 @@ def add_hotwords_args(parser: argparse.ArgumentParser):
         """,
     )
     parser.add_argument(
-        "--tokens_type",
+        "--tokens-type",
         type=str,
         default="cjkchar",
         help="""

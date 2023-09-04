@@ -133,7 +133,7 @@ def get_args():
     )
 
     parser.add_argument(
-        "--tokens_type",
+        "--tokens-type",
         type=str,
         default="cjkchar",
         help="""

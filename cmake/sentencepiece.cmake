@@ -23,7 +23,18 @@ function(download_sentencepiece)
   message(STATUS "sentencepiece is downloaded to ${sentencepiece_SOURCE_DIR}")
   message(STATUS "sentencepiece's binary dir is ${sentencepiece_BINARY_DIR}")
 
+  if (ANDROID)
+    link_libraries(log)
+  endif()
+
   add_subdirectory(${sentencepiece_SOURCE_DIR} ${sentencepiece_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  target_include_directories(sentencepiece-static
+    INTERFACE
+      ${sentencepiece_SOURCE_DIR}
+      ${sentencepiece_SOURCE_DIR}/src
+      ${sentencepiece_BINARY_DIR}
+  )
 
   target_include_directories(sentencepiece
     INTERFACE
