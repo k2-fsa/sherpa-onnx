@@ -6,12 +6,14 @@ function(sherpa_onnx_add_py_test source)
     COMMAND
       "${PYTHON_EXECUTABLE}"
       "${CMAKE_CURRENT_SOURCE_DIR}/${source}"
+    WORKING_DIRECTORY
+      ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
   get_filename_component(sherpa_onnx_path ${CMAKE_CURRENT_LIST_DIR} DIRECTORY)
 
   set_property(TEST ${name}
-    PROPERTY ENVIRONMENT "PYTHONPATH=${sherpa_path}:$<TARGET_FILE_DIR:_sherpa_onnx>:$ENV{PYTHONPATH}"
+    PROPERTY ENVIRONMENT "PYTHONPATH=${sherpa_onnx_path}:$<TARGET_FILE_DIR:_sherpa_onnx>:$ENV{PYTHONPATH}"
   )
 endfunction()
 
@@ -21,6 +23,7 @@ set(py_test_files
   test_offline_recognizer.py
   test_online_recognizer.py
   test_online_transducer_model_config.py
+  test_text2token.py
 )
 
 foreach(source IN LISTS py_test_files)
