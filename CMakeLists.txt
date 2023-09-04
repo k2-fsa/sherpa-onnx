@@ -160,7 +160,6 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
 endif()
 
 include(json)
-include(sentencepiece)
 
 add_subdirectory(sherpa-onnx)
 

@@ -123,26 +123,6 @@ def get_args():
     )
 
     parser.add_argument(
-        "--bpe-model",
-        type=str,
-        default="",
-        help="""
-        Path to bpe.model, it will be used to tokenize contexts biasing phrases.
-        Used only when --decoding-method=modified_beam_search
-        """,
-    )
-
-    parser.add_argument(
-        "--tokens-type",
-        type=str,
-        default="cjkchar",
-        help="""
-        The type of tokens (i.e the modeling unit).
-        Valid values are bpe, cjkchar+bpe, cjkchar.
-        """,
-    )
-
-    parser.add_argument(
         "--hotwords-file",
         type=str,
         default="",
@@ -150,7 +130,7 @@ def get_args():
         The file containing hotwords, one words/phrases per line, and for each
         phrase the bpe/cjkchar are separated by a space. For example:
 
-        HELLO WORLD
+        ▁HE LL O ▁WORLD
         你 好 世 界
         """,
     )
@@ -235,8 +215,6 @@ def main():
             feature_dim=80,
             decoding_method=args.decoding_method,
             max_active_paths=args.max_active_paths,
-            tokens_type=args.tokens_type,
-            bpe_model=args.bpe_model,
             hotwords_file=args.hotwords_file,
             hotwords_score=args.hotwords_score,
         )

@@ -12,7 +12,6 @@
 #include <utility>
 #include <vector>
 
-#include "sentencepiece_processor.h"  // NOLINT
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-lm.h"
@@ -58,14 +57,6 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
         model_(OnlineTransducerModel::Create(config.model_config)),
         sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
-    if (!config_.model_config.bpe_model.empty()) {
-      auto status = bpe_processor_.Load(config_.model_config.bpe_model);
-      if (!status.ok()) {
-        SHERPA_ONNX_LOGE("Load bpe model error, status : %s.",
-                         status.ToString().c_str());
-        exit(-1);
-      }
-    }
     if (!config_.hotwords_file.empty()) {
       InitHotwords();
     }
@@ -122,8 +113,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
     std::istringstream is(hws);
     std::vector<std::vector<int32_t>> current;
-    if (!EncodeHotwords(is, config_.model_config.tokens_type, sym_,
-                        bpe_processor_, &current)) {
+    if (!EncodeHotwords(is, sym_, &current)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
                        hotwords.c_str());
     }
@@ -265,8 +255,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       exit(-1);
     }
 
-    if (!EncodeHotwords(is, config_.model_config.tokens_type, sym_,
-                        bpe_processor_, &hotwords_)) {
+    if (!EncodeHotwords(is, sym_, &hotwords_)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed.");
       exit(-1);
     }
@@ -294,7 +283,6 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   OnlineRecognizerConfig config_;
   std::vector<std::vector<int32_t>> hotwords_;
   ContextGraphPtr hotwords_graph_;
-  sentencepiece::SentencePieceProcessor bpe_processor_;
   std::unique_ptr<OnlineTransducerModel> model_;
   std::unique_ptr<OnlineLM> lm_;
   std::unique_ptr<OnlineTransducerDecoder> decoder_;

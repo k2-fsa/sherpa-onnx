@@ -27,9 +27,12 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
   po->Register("max-active-paths", &max_active_paths,
                "Used only when decoding_method is modified_beam_search");
 
-  po->Register("hotwords-file", &hotwords_file,
-               "The bonus score for each token in context word/phrase. "
-               "Used only when decoding_method is modified_beam_search");
+  po->Register(
+      "hotwords-file", &hotwords_file,
+      "The file containing hotwords, one words/phrases per line, and for each"
+      "phrase the bpe/cjkchar are separated by a space. For example: "
+      "▁HE LL O ▁WORLD"
+      "你 好 世 界");
 
   po->Register("hotwords-score", &hotwords_score,
                "The bonus score for each token in context word/phrase. "

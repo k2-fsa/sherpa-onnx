@@ -12,7 +12,6 @@
 #include <utility>
 #include <vector>
 
-#include "sentencepiece_processor.h"  // NOLINT
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -60,14 +59,6 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
       : config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerModel>(config_.model_config)) {
-    if (!config_.model_config.bpe_model.empty()) {
-      auto status = bpe_processor_.Load(config_.model_config.bpe_model);
-      if (!status.ok()) {
-        SHERPA_ONNX_LOGE("Load bpe model error, status : %s.",
-                         status.ToString().c_str());
-        exit(-1);
-      }
-    }
     if (!config_.hotwords_file.empty()) {
       InitHotwords();
     }
@@ -94,8 +85,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
     std::istringstream is(hws);
     std::vector<std::vector<int32_t>> current;
-    if (!EncodeHotwords(is, config_.model_config.tokens_type, symbol_table_,
-                        bpe_processor_, &current)) {
+    if (!EncodeHotwords(is, symbol_table_, &current)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
                        hotwords.c_str());
     }
@@ -174,8 +164,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
       exit(-1);
     }
 
-    if (!EncodeHotwords(is, config_.model_config.tokens_type, symbol_table_,
-                        bpe_processor_, &hotwords_)) {
+    if (!EncodeHotwords(is, symbol_table_, &hotwords_)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed.");
       exit(-1);
     }
@@ -188,7 +177,6 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
   SymbolTable symbol_table_;
   std::vector<std::vector<int32_t>> hotwords_;
   ContextGraphPtr hotwords_graph_;
-  sentencepiece::SentencePieceProcessor bpe_processor_;
   std::unique_ptr<OfflineTransducerModel> model_;
   std::unique_ptr<OfflineTransducerDecoder> decoder_;
   std::unique_ptr<OfflineLM> lm_;

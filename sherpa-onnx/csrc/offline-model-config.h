@@ -22,8 +22,6 @@ struct OfflineModelConfig {
   OfflineTdnnModelConfig tdnn;
 
   std::string tokens;
-  std::string bpe_model;
-  std::string tokens_type = "cjkchar";
   int32_t num_threads = 2;
   bool debug = false;
   std::string provider = "cpu";
@@ -45,18 +43,14 @@ struct OfflineModelConfig {
                      const OfflineNemoEncDecCtcModelConfig &nemo_ctc,
                      const OfflineWhisperModelConfig &whisper,
                      const OfflineTdnnModelConfig &tdnn,
-                     const std::string &tokens, const std::string &bpe_model,
-                     const std::string &tokens_type, int32_t num_threads,
-                     bool debug, const std::string &provider,
-                     const std::string &model_type)
+                     const std::string &tokens, int32_t num_threads, bool debug,
+                     const std::string &provider, const std::string &model_type)
       : transducer(transducer),
         paraformer(paraformer),
         nemo_ctc(nemo_ctc),
         whisper(whisper),
         tdnn(tdnn),
         tokens(tokens),
-        bpe_model(bpe_model),
-        tokens_type(tokens_type),
         num_threads(num_threads),
         debug(debug),
         provider(provider),

@@ -66,7 +66,15 @@ class OfflineRecognizer {
   /// Create a stream for decoding.
   std::unique_ptr<OfflineStream> CreateStream() const;
 
-  /// Create a stream for decoding.
+  /** Create a stream for decoding.
+   *
+   *  @param The hotwords for this string, it might contain several hotwords,
+   *         the hotwords are separated by "/". In each of the hotwords, there
+   *         are cjkchars or bpes, the bpe/cjkchar are separated by space (" ").
+   *         For example, hotwords I LOVE YOU and HELLO WORLD, looks like:
+   *
+   *         "▁I ▁LOVE ▁YOU/▁HE LL O ▁WORLD"
+   */
   std::unique_ptr<OfflineStream> CreateStream(
       const std::string &hotwords) const;
 
