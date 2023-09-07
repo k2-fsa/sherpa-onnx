@@ -22,6 +22,8 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
 
+  workflow_dispatch:
+
 concurrency:
   group: jni-${{ github.ref }}
   cancel-in-progress: true

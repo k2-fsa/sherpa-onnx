@@ -11,6 +11,8 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
       - 'build-android*.sh'
+    tags:
+      - '*'
   pull_request:
     branches:
       - master
@@ -21,10 +23,6 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
       - 'build-android*.sh'
-
-  release:
-    types:
-      - published
 
   workflow_dispatch:
     inputs:
@@ -112,7 +110,7 @@ jobs:
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
-        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && env.RELEASE == 'true'
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
@@ -136,7 +134,7 @@ jobs:
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
 
       - name: Release android libs
-        if: env.RELEASE == 'true'
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

@@ -14,15 +14,6 @@ on:
       - published
 
   workflow_dispatch:
-    inputs:
-      release:
-        description: "Whether to release"
-        type: boolean
-
-env:
-  RELEASE:
-    |- # Release if there is a release tag name or a release flag in workflow_dispatch
-    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: build-xcframework-${{ github.ref }}
@@ -76,7 +67,7 @@ jobs:
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
-        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
@@ -100,7 +91,7 @@ jobs:
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
 
       - name: Release xcframework
-        if: env.RELEASE == 'true'
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
