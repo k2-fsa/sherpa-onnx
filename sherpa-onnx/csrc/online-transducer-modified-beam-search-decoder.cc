@@ -155,7 +155,9 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         float context_score = 0;
         auto context_state = new_hyp.context_state;
 
-        if (new_token != 0) {
+        // blank is hardcoded to 0
+        // also, it treats unk as blank
+        if (new_token != 0 && new_token != unk_id_) {
           new_hyp.ys.push_back(new_token);
           new_hyp.timestamps.push_back(t + frame_offset);
           new_hyp.num_trailing_blanks = 0;

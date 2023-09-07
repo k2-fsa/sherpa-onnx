@@ -14,8 +14,9 @@ namespace sherpa_onnx {
 
 class OnlineTransducerGreedySearchDecoder : public OnlineTransducerDecoder {
  public:
-  explicit OnlineTransducerGreedySearchDecoder(OnlineTransducerModel *model)
-      : model_(model) {}
+  OnlineTransducerGreedySearchDecoder(OnlineTransducerModel *model,
+                                      int32_t unk_id)
+      : model_(model), unk_id_(unk_id) {}
 
   OnlineTransducerDecoderResult GetEmptyResult() const override;
 
@@ -26,6 +27,7 @@ class OnlineTransducerGreedySearchDecoder : public OnlineTransducerDecoder {
 
  private:
   OnlineTransducerModel *model_;  // Not owned
+  int32_t unk_id_;
 };
 
 }  // namespace sherpa_onnx
