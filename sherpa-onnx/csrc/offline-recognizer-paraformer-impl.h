@@ -11,6 +11,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h"
@@ -99,6 +104,28 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     // [-32768, 32767], so we set normalize_samples to false
     config_.feat_config.normalize_samples = false;
   }
+
+#if __ANDROID_API__ >= 9
+  OfflineRecognizerParaformerImpl(AAssetManager *mgr,
+                                  const OfflineRecognizerConfig &config)
+      : config_(config),
+        symbol_table_(mgr, config_.model_config.tokens),
+        model_(std::make_unique<OfflineParaformerModel>(mgr,
+                                                        config.model_config)) {
+    if (config.decoding_method == "greedy_search") {
+      int32_t eos_id = symbol_table_["</s>"];
+      decoder_ = std::make_unique<OfflineParaformerGreedySearchDecoder>(eos_id);
+    } else {
+      SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
+                       config.decoding_method.c_str());
+      exit(-1);
+    }
+
+    // Paraformer models assume input samples are in the range
+    // [-32768, 32767], so we set normalize_samples to false
+    config_.feat_config.normalize_samples = false;
+  }
+#endif
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
     return std::make_unique<OfflineStream>(config_.feat_config);

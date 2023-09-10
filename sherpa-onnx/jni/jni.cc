@@ -20,6 +20,7 @@
 #include <fstream>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
@@ -53,7 +54,7 @@ class SherpaOnnx {
     stream_->InputFinished();
   }
 
-  const std::string GetText() const {
+  std::string GetText() const {
     auto result = recognizer_.GetResult(stream_.get());
     return result.text;
   }
@@ -81,6 +82,28 @@ class SherpaOnnx {
   OnlineRecognizer recognizer_;
   std::unique_ptr<OnlineStream> stream_;
   int32_t input_sample_rate_ = -1;
+};
+
+class SherpaOnnxOffline {
+ public:
+#if __ANDROID_API__ >= 9
+  SherpaOnnxOffline(AAssetManager *mgr, const OfflineRecognizerConfig &config)
+      : recognizer_(mgr, config) {}
+#endif
+
+  explicit SherpaOnnxOffline(const OfflineRecognizerConfig &config)
+      : recognizer_(config) {}
+
+  std::string Decode(int32_t sample_rate, const float *samples, int32_t n) {
+    auto stream = recognizer_.CreateStream();
+    stream->AcceptWaveform(sample_rate, samples, n);
+
+    recognizer_.DecodeStream(stream.get());
+    return stream->GetResult().text;
+  }
+
+ private:
+  OfflineRecognizer recognizer_;
 };
 
 static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
