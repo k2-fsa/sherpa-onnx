@@ -91,7 +91,7 @@ class MainActivity : AppCompatActivity() {
             audioRecord!!.startRecording()
             recordButton.setText(R.string.stop)
             isRecording = true
-            model.reset()
+            model.reset(true)
             textView.text = ""
             lastText = ""
             idx = 0

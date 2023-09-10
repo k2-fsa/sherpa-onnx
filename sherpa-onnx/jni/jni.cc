@@ -67,7 +67,13 @@ class SherpaOnnx {
 
   bool IsReady() const { return recognizer_.IsReady(stream_.get()); }
 
-  void Reset() const { return recognizer_.Reset(stream_.get()); }
+  void Reset(bool recreate) {
+    if (recreate) {
+      stream_ = recognizer_.CreateStream();
+    } else {
+      recognizer_.Reset(stream_.get());
+    }
+  }
 
   void Decode() const { recognizer_.DecodeStream(stream_.get()); }
 
@@ -288,9 +294,9 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_delete(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_reset(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jboolean recreate) {
   auto model = reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr);
-  model->Reset();
+  model->Reset(recreate);
 }
 
 SHERPA_ONNX_EXTERN_C
