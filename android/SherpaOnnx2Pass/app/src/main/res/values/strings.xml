@@ -5,6 +5,8 @@
         \n\n\n
         The source code and pre-trained models are publicly available.
         Please see https://github.com/k2-fsa/sherpa-onnx for details.
+        \n\n
+        Two-pass speech recognition with Next-gen Kaldi.
     </string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>

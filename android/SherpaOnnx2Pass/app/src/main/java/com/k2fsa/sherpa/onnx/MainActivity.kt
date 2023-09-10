@@ -12,7 +12,6 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.k2fsa.sherpa.onnx.*
 import kotlin.concurrent.thread
 
 private const val TAG = "sherpa-onnx"
@@ -25,7 +24,8 @@ class MainActivity : AppCompatActivity() {
     // If there is no GPU and useGPU is true, we won't use GPU
     private val useGPU: Boolean = true
 
-    private lateinit var model: SherpaOnnx
+    private lateinit var onlineRecognizer: SherpaOnnx
+    private lateinit var offlineRecognizer: SherpaOnnxOffline
     private var audioRecord: AudioRecord? = null
     private lateinit var recordButton: Button
     private lateinit var textView: TextView
@@ -34,6 +34,8 @@ class MainActivity : AppCompatActivity() {
     private val audioSource = MediaRecorder.AudioSource.MIC
     private val sampleRateInHz = 16000
     private val channelConfig = AudioFormat.CHANNEL_IN_MONO
+
+    private var samplesBuffer = arrayListOf<FloatArray>()
 
     // Note: We don't use AudioFormat.ENCODING_PCM_FLOAT
     // since the AudioRecord.read(float[]) needs API level >= 23
@@ -69,9 +71,13 @@ class MainActivity : AppCompatActivity() {
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
-        Log.i(TAG, "Start to initialize model")
-        initModel()
-        Log.i(TAG, "Finished initializing model")
+        Log.i(TAG, "Start to initialize first-pass recognizer")
+        initOnlineRecognizer()
+        Log.i(TAG, "Finished initializing first-pass recognizer")
+
+        Log.i(TAG, "Start to initialize second-pass recognizer")
+        initOfflineRecognizer()
+        Log.i(TAG, "Finished initializing second-pass recognizer")
 
         recordButton = findViewById(R.id.record_button)
         recordButton.setOnClickListener { onclick() }
@@ -91,7 +97,8 @@ class MainActivity : AppCompatActivity() {
             audioRecord!!.startRecording()
             recordButton.setText(R.string.stop)
             isRecording = true
-            model.reset(true)
+            onlineRecognizer.reset(true)
+            samplesBuffer.clear()
             textView.text = ""
             lastText = ""
             idx = 0
@@ -121,29 +128,38 @@ class MainActivity : AppCompatActivity() {
             val ret = audioRecord?.read(buffer, 0, buffer.size)
             if (ret != null && ret > 0) {
                 val samples = FloatArray(ret) { buffer[it] / 32768.0f }
-                model.acceptWaveform(samples, sampleRate=sampleRateInHz)
-                while (model.isReady()) {
-                    model.decode()
+                samplesBuffer.add(samples)
+
+                onlineRecognizer.acceptWaveform(samples, sampleRate = sampleRateInHz)
+                while (onlineRecognizer.isReady()) {
+                    onlineRecognizer.decode()
                 }
+                val isEndpoint = onlineRecognizer.isEndpoint()
+                var textToDisplay = lastText
+
+                var text = onlineRecognizer.text
+                if (text.isNotBlank()) {
+                    if (lastText.isBlank()) {
+                        // textView.text = "${idx}: ${text}"
+                        textToDisplay = "${idx}: ${text}"
+                    } else {
+                        textToDisplay = "${lastText}\n${idx}: ${text}"
+                    }
+                }
+
+                if (isEndpoint) {
+                    onlineRecognizer.reset()
+
+                    if (text.isNotBlank()) {
+                        text = runSecondPass()
+                        lastText = "${lastText}\n${idx}: ${text}"
+                        idx += 1
+                    }
+                    samplesBuffer.clear()
+                }
+
                 runOnUiThread {
-                    val isEndpoint = model.isEndpoint()
-                    val text = model.text
-
-                    if(text.isNotBlank()) {
-                        if (lastText.isBlank()) {
-                            textView.text = "${idx}: ${text}"
-                        } else {
-                            textView.text = "${lastText}\n${idx}: ${text}"
-                        }
-                    }
-
-                    if (isEndpoint) {
-                        model.reset()
-                        if (text.isNotBlank()) {
-                            lastText = "${lastText}\n${idx}: ${text}"
-                            idx += 1
-                        }
-                    }
+                    textView.text = textToDisplay.lowercase()
                 }
             }
         }
@@ -173,23 +189,59 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    private fun initModel() {
+    private fun initOnlineRecognizer() {
         // Please change getModelConfig() to add new models
         // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
         // for a list of available models
-        val type = 0
-        println("Select model type ${type}")
+        val firstType = 1
+        println("Select model type ${firstType} for the first pass")
         val config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
-            modelConfig = getModelConfig(type = type)!!,
-            lmConfig = getOnlineLMConfig(type = type),
+            modelConfig = getModelConfig(type = firstType)!!,
             endpointConfig = getEndpointConfig(),
             enableEndpoint = true,
         )
 
-        model = SherpaOnnx(
+        onlineRecognizer = SherpaOnnx(
             assetManager = application.assets,
             config = config,
         )
+    }
+
+    private fun initOfflineRecognizer() {
+        // Please change getOfflineModelConfig() to add new models
+        // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+        // for a list of available models
+        val secondType = 1
+        println("Select model type ${secondType} for the second pass")
+
+        val config = OfflineRecognizerConfig(
+            featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
+            modelConfig = getOfflineModelConfig(type = secondType)!!,
+        )
+
+        offlineRecognizer = SherpaOnnxOffline(
+            assetManager = application.assets,
+            config = config,
+        )
+    }
+
+    private fun runSecondPass(): String {
+        var totalSamples = 0
+        for (a in samplesBuffer) {
+            totalSamples += a.size
+        }
+        var i = 0
+
+        val samples = FloatArray(totalSamples)
+
+        // todo(fangjun): Make it more efficient
+        for (a in samplesBuffer) {
+            for (s in a) {
+                samples[i] = s
+                i += 1
+            }
+        }
+        return offlineRecognizer.decode(samples, sampleRateInHz)
     }
 }
