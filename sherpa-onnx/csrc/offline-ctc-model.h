@@ -8,6 +8,11 @@
 #include <string>
 #include <utility>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-model-config.h"
 
@@ -16,8 +21,14 @@ namespace sherpa_onnx {
 class OfflineCtcModel {
  public:
   virtual ~OfflineCtcModel() = default;
+
   static std::unique_ptr<OfflineCtcModel> Create(
       const OfflineModelConfig &config);
+
+#if __ANDROID_API__ >= 9
+  static std::unique_ptr<OfflineCtcModel> Create(
+      AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
 
   /** Run the forward method of the model.
    *

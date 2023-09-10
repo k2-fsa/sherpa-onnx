@@ -35,6 +35,24 @@ class OfflineWhisperModel::Impl {
     }
   }
 
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_ERROR),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    {
+      auto buf = ReadFile(mgr, config.whisper.encoder);
+      InitEncoder(buf.data(), buf.size());
+    }
+
+    {
+      auto buf = ReadFile(mgr, config.whisper.decoder);
+      InitDecoder(buf.data(), buf.size());
+    }
+  }
+#endif
+
   std::pair<Ort::Value, Ort::Value> ForwardEncoder(Ort::Value features) {
     auto encoder_out = encoder_sess_->Run(
         {}, encoder_input_names_ptr_.data(), &features, 1,
@@ -225,6 +243,12 @@ class OfflineWhisperModel::Impl {
 
 OfflineWhisperModel::OfflineWhisperModel(const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+OfflineWhisperModel::OfflineWhisperModel(AAssetManager *mgr,
+                                         const OfflineModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
 
 OfflineWhisperModel::~OfflineWhisperModel() = default;
 

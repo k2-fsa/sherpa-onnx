@@ -10,6 +10,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
@@ -72,6 +77,32 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
       exit(-1);
     }
   }
+
+#if __ANDROID_API__ >= 9
+  explicit OfflineRecognizerTransducerImpl(
+      AAssetManager *mgr, const OfflineRecognizerConfig &config)
+      : config_(config),
+        symbol_table_(mgr, config_.model_config.tokens),
+        model_(std::make_unique<OfflineTransducerModel>(mgr,
+                                                        config_.model_config)) {
+    if (config_.decoding_method == "greedy_search") {
+      decoder_ =
+          std::make_unique<OfflineTransducerGreedySearchDecoder>(model_.get());
+    } else if (config_.decoding_method == "modified_beam_search") {
+      if (!config_.lm_config.model.empty()) {
+        lm_ = OfflineLM::Create(mgr, config.lm_config);
+      }
+
+      decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
+          model_.get(), lm_.get(), config_.max_active_paths,
+          config_.lm_config.scale);
+    } else {
+      SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
+                       config_.decoding_method.c_str());
+      exit(-1);
+    }
+  }
+#endif
 
   std::unique_ptr<OfflineStream> CreateStream(
       const std::vector<std::vector<int32_t>> &context_list) const override {

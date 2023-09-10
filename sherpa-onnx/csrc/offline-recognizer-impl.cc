@@ -138,15 +138,15 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (!config.model_config.model_type.empty()) {
     const auto &model_type = config.model_config.model_type;
     if (model_type == "transducer") {
-      return std::make_unique<OfflineRecognizerTransducerImpl>(config);
+      return std::make_unique<OfflineRecognizerTransducerImpl>(mgr, config);
     } else if (model_type == "paraformer") {
       return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
     } else if (model_type == "nemo_ctc") {
-      return std::make_unique<OfflineRecognizerCtcImpl>(config);
+      return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
     } else if (model_type == "tdnn") {
-      return std::make_unique<OfflineRecognizerCtcImpl>(config);
+      return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
     } else if (model_type == "whisper") {
-      return std::make_unique<OfflineRecognizerWhisperImpl>(config);
+      return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
           "Invalid model_type: %s. Trying to load the model to get its type",
@@ -216,7 +216,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (model_type == "conformer" || model_type == "zipformer" ||
       model_type == "zipformer2") {
-    return std::make_unique<OfflineRecognizerTransducerImpl>(config);
+    return std::make_unique<OfflineRecognizerTransducerImpl>(mgr, config);
   }
 
   if (model_type == "paraformer") {
@@ -224,15 +224,15 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   }
 
   if (model_type == "EncDecCTCModelBPE") {
-    return std::make_unique<OfflineRecognizerCtcImpl>(config);
+    return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }
 
   if (model_type == "tdnn") {
-    return std::make_unique<OfflineRecognizerCtcImpl>(config);
+    return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }
 
   if (strncmp(model_type.c_str(), "whisper", 7) == 0) {
-    return std::make_unique<OfflineRecognizerWhisperImpl>(config);
+    return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
   }
 
   SHERPA_ONNX_LOGE(

@@ -8,6 +8,11 @@
 #include <memory>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/hypothesis.h"
 #include "sherpa-onnx/csrc/offline-lm-config.h"
@@ -19,6 +24,11 @@ class OfflineLM {
   virtual ~OfflineLM() = default;
 
   static std::unique_ptr<OfflineLM> Create(const OfflineLMConfig &config);
+
+#if __ANDROID_API__ >= 9
+  static std::unique_ptr<OfflineLM> Create(AAssetManager *mgr,
+                                           const OfflineLMConfig &config);
+#endif
 
   /** Rescore a batch of sentences.
    *
