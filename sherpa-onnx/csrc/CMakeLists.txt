@@ -80,6 +80,7 @@ if(SHERPA_ONNX_ENABLE_CHECK)
 endif()
 
 add_library(sherpa-onnx-core ${sources})
+target_link_libraries(sherpa-onnx-core -pthread)
 
 if(ANDROID_NDK)
   target_link_libraries(sherpa-onnx-core android log)
