@@ -175,7 +175,7 @@ class SherpaOnnxRecognizer {
   let recognizer: OpaquePointer!
   let stream: OpaquePointer!
 
-  /// Constructor taking a model config and a decoder config.
+  /// Constructor taking a model config
   init(
     config: UnsafePointer<SherpaOnnxOnlineRecognizerConfig>!
   ) {
@@ -198,8 +198,7 @@ class SherpaOnnxRecognizer {
   /// - Parameters:
   ///   - samples: Audio samples normalized to the range [-1, 1]
   ///   - sampleRate: Sample rate of the input audio samples. Must match
-  ///                 the one expected by the model. It must be 16000 for
-  ///                 models from icefall.
+  ///                 the one expected by the model.
   func acceptWaveform(samples: [Float], sampleRate: Int = 16000) {
     AcceptWaveform(stream, Int32(sampleRate), samples, Int32(samples.count))
   }
@@ -236,5 +235,165 @@ class SherpaOnnxRecognizer {
   /// Return true is an endpoint has been detected.
   func isEndpoint() -> Bool {
     return IsEndpoint(recognizer, stream) == 1 ? true : false
+  }
+}
+
+// For offline APIs
+
+func sherpaOnnxOfflineTransducerModelConfig(
+  encoder: String = "",
+  decoder: String = "",
+  joiner: String = ""
+) -> SherpaOnnxOfflineTransducerModelConfig {
+  return SherpaOnnxOfflineTransducerModelConfig(
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder),
+    joiner: toCPointer(joiner)
+  )
+}
+
+func sherpaOnnxOfflineParaformerModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineParaformerModelConfig {
+  return SherpaOnnxOfflineParaformerModelConfig(
+    model: toCPointer(model)
+  )
+}
+
+func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineNemoEncDecCtcModelConfig {
+  return SherpaOnnxOfflineNemoEncDecCtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
+func sherpaOnnxOfflineWhisperModelConfig(
+  encoder: String = "",
+  decoder: String = ""
+) -> SherpaOnnxOfflineWhisperModelConfig {
+  return SherpaOnnxOfflineWhisperModelConfig(
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder)
+  )
+}
+
+func sherpaOnnxOfflineTdnnModelConfig(
+  model: String = ""
+) -> SherpaOnnxOfflineTdnnModelConfig {
+  return SherpaOnnxOfflineTdnnModelConfig(
+    model: toCPointer(model)
+  )
+}
+
+func sherpaOnnxOfflineLMConfig(
+  model: String = "",
+  scale: Float = 1.0
+) -> SherpaOnnxOfflineLMConfig {
+  return SherpaOnnxOfflineLMConfig(
+    model: toCPointer(model),
+    scale: scale
+  )
+}
+
+func sherpaOnnxOfflineModelConfig(
+  tokens: String,
+  transducer: SherpaOnnxOfflineTransducerModelConfig = sherpaOnnxOfflineTransducerModelConfig(),
+  paraformer: SherpaOnnxOfflineParaformerModelConfig = sherpaOnnxOfflineParaformerModelConfig(),
+  nemoCtc: SherpaOnnxOfflineNemoEncDecCtcModelConfig = sherpaOnnxOfflineNemoEncDecCtcModelConfig(),
+  whisper: SherpaOnnxOfflineWhisperModelConfig = sherpaOnnxOfflineWhisperModelConfig(),
+  tdnn: SherpaOnnxOfflineTdnnModelConfig = sherpaOnnxOfflineTdnnModelConfig(),
+  numThreads: Int = 1,
+  provider: String = "cpu",
+  debug: Int = 0,
+  modelType: String = ""
+) -> SherpaOnnxOfflineModelConfig {
+  return SherpaOnnxOfflineModelConfig(
+    transducer: transducer,
+    paraformer: paraformer,
+    nemo_ctc: nemoCtc,
+    whisper: whisper,
+    tdnn: tdnn,
+    tokens: toCPointer(tokens),
+    num_threads: Int32(numThreads),
+    debug: Int32(debug),
+    provider: toCPointer(provider),
+    model_type: toCPointer(modelType)
+  )
+}
+
+func sherpaOnnxOfflineRecognizerConfig(
+  featConfig: SherpaOnnxFeatureConfig,
+  modelConfig: SherpaOnnxOfflineModelConfig,
+  lmConfig: SherpaOnnxOfflineLMConfig = sherpaOnnxOfflineLMConfig(),
+  decodingMethod: String = "greedy_search",
+  maxActivePaths: Int = 4
+) -> SherpaOnnxOfflineRecognizerConfig {
+  return SherpaOnnxOfflineRecognizerConfig(
+    feat_config: featConfig,
+    model_config: modelConfig,
+    lm_config: lmConfig,
+    decoding_method: toCPointer(decodingMethod),
+    max_active_paths: Int32(maxActivePaths)
+  )
+}
+
+class SherpaOnnxOfflineRecongitionResult {
+  /// A pointer to the underlying counterpart in C
+  let result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>!
+
+  /// Return the actual recognition result.
+  /// For English models, it contains words separated by spaces.
+  /// For Chinese models, it contains Chinese words.
+  var text: String {
+    return String(cString: result.pointee.text)
+  }
+
+  init(result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>!) {
+    self.result = result
+  }
+
+  deinit {
+    if let result {
+      DestroyOfflineRecognizerResult(result)
+    }
+  }
+}
+
+class SherpaOnnxOfflineRecognizer {
+  /// A pointer to the underlying counterpart in C
+  let recognizer: OpaquePointer!
+
+  init(
+    config: UnsafePointer<SherpaOnnxOfflineRecognizerConfig>!
+  ) {
+    recognizer = CreateOfflineRecognizer(config)
+  }
+
+  deinit {
+    if let recognizer {
+      DestroyOfflineRecognizer(recognizer)
+    }
+  }
+
+  /// Decode wave samples.
+  ///
+  /// - Parameters:
+  ///   - samples: Audio samples normalized to the range [-1, 1]
+  ///   - sampleRate: Sample rate of the input audio samples. Must match
+  ///                 the one expected by the model.
+  func decode(samples: [Float], sampleRate: Int = 16000) -> SherpaOnnxOfflineRecongitionResult {
+    let stream: OpaquePointer! = CreateOfflineStream(recognizer)
+
+    AcceptWaveformOffline(stream, Int32(sampleRate), samples, Int32(samples.count))
+
+    DecodeOfflineStream(recognizer, stream)
+
+    let result: UnsafeMutablePointer<SherpaOnnxOfflineRecognizerResult>? = GetOfflineStreamResult(
+      stream)
+
+    DestroyOfflineStream(stream)
+
+    return SherpaOnnxOfflineRecongitionResult(result: result)
   }
 }

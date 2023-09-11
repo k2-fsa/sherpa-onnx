@@ -347,6 +347,8 @@ SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
   const auto &text = result.text;
 
   auto r = new SherpaOnnxOfflineRecognizerResult;
+  memset(r, 0, sizeof(SherpaOnnxOfflineRecognizerResult));
+
   r->text = new char[text.size() + 1];
   std::copy(text.begin(), text.end(), const_cast<char *>(r->text));
   const_cast<char *>(r->text)[text.size()] = 0;
