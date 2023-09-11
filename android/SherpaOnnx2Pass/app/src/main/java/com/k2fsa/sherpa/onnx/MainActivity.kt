@@ -20,10 +20,6 @@ private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
 class MainActivity : AppCompatActivity() {
     private val permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
 
-    // If there is a GPU and useGPU is true, we will use GPU
-    // If there is no GPU and useGPU is true, we won't use GPU
-    private val useGPU: Boolean = true
-
     private lateinit var onlineRecognizer: SherpaOnnx
     private lateinit var offlineRecognizer: SherpaOnnxOffline
     private var audioRecord: AudioRecord? = null
