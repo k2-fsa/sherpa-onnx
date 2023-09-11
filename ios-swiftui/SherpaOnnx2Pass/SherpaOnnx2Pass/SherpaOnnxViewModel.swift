@@ -18,12 +18,14 @@ class SherpaOnnxViewModel: ObservableObject {
     @Published var subtitles: String = ""
 
     var sentences: [String] = []
+    var samplesBuffer = [[Float]] ()
 
     var audioEngine: AVAudioEngine? = nil
     var recognizer: SherpaOnnxRecognizer! = nil
+    var offlineRecognizer: SherpaOnnxOfflineRecognizer! = nil
 
     var lastSentence: String = ""
-    let maxSentence: Int = 20
+    let maxSentence: Int = 15
 
     var results: String {
         if sentences.isEmpty && lastSentence.isEmpty {
@@ -51,6 +53,7 @@ class SherpaOnnxViewModel: ObservableObject {
 
     init() {
         initRecognizer()
+        initOfflineRecognizer()
         initRecorder()
     }
 
@@ -59,8 +62,8 @@ class SherpaOnnxViewModel: ObservableObject {
         //
         // You can also modify Model.swift to add new pre-trained models from
         // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
-        // let modelConfig = getBilingualStreamZhEnZipformer20230220()
-        let modelConfig = getBilingualStreamingZhEnParaformer()
+        // let modelConfig = getBilingualStreamingZhEnZipformer20230220()
+        let modelConfig = getStreamingZh14MZipformer20230223()
 
         let featConfig = sherpaOnnxFeatureConfig(
             sampleRate: 16000,
@@ -71,12 +74,28 @@ class SherpaOnnxViewModel: ObservableObject {
             modelConfig: modelConfig,
             enableEndpoint: true,
             rule1MinTrailingSilence: 2.4,
-            rule2MinTrailingSilence: 0.8,
+            rule2MinTrailingSilence: 1.2,
             rule3MinUtteranceLength: 30,
             decodingMethod: "greedy_search",
             maxActivePaths: 4
         )
         recognizer = SherpaOnnxRecognizer(config: &config)
+    }
+
+    private func initOfflineRecognizer() {
+        let modelConfig = getNonStreamingZhParaformer20230328()
+
+        let featConfig = sherpaOnnxFeatureConfig(
+            sampleRate: 16000,
+            featureDim: 80)
+
+        var config = sherpaOnnxOfflineRecognizerConfig(
+            featConfig: featConfig,
+            modelConfig: modelConfig,
+            decodingMethod: "greedy_search",
+            maxActivePaths: 4
+        )
+        offlineRecognizer = SherpaOnnxOfflineRecognizer(config: &config)
     }
 
     private func initRecorder() {
@@ -129,6 +148,8 @@ class SherpaOnnxViewModel: ObservableObject {
 
             let array = convertedBuffer.array()
             if !array.isEmpty {
+                self.samplesBuffer.append(array)
+
                 self.recognizer.acceptWaveform(samples: array)
                 while (self.recognizer.isReady()){
                     self.recognizer.decode()
@@ -144,9 +165,43 @@ class SherpaOnnxViewModel: ObservableObject {
 
                 if isEndpoint{
                     if !text.isEmpty {
+                        // Invoke offline recognizer
+                        var numSamples: Int = 0
+                        for a in self.samplesBuffer {
+                          numSamples += a.count
+                        }
+
+                        var samples: [Float] = Array(repeating: 0, count: numSamples)
+                        var i = 0
+                        for a in self.samplesBuffer {
+                            for s in a {
+                                samples[i] = s
+                                i += 1
+                            }
+                        }
+
+                        self.lastSentence = self.offlineRecognizer.decode(samples: Array(samples[0..<samples.count-12000])).text
+
                         let tmp = self.lastSentence
                         self.lastSentence = ""
                         self.sentences.append(tmp)
+
+                        self.updateLabel()
+
+                        i = 0
+                        if samples.count > 12000 {
+                            i = samples.count - 12000
+                        }
+                        var tail: [Float] = Array(repeating: 0, count: samples.count - i)
+
+                        for k in 0  ... samples.count - i - 1 {
+                            tail[k] = samples[i+k];
+                        }
+
+                        self.samplesBuffer = [[Float]]()
+                        self.samplesBuffer.append(tail)
+                    } else {
+                        self.samplesBuffer = [[Float]]()
                     }
                     self.recognizer.reset()
                 }
@@ -167,6 +222,8 @@ class SherpaOnnxViewModel: ObservableObject {
     private func startRecorder() {
         lastSentence = ""
         sentences = []
+        samplesBuffer = [[Float]] ()
+        updateLabel()
 
         do {
             try self.audioEngine?.start()
