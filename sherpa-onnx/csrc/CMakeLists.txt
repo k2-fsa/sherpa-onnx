@@ -78,9 +78,11 @@ set(sources
 if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
-
 add_library(sherpa-onnx-core ${sources})
-target_link_libraries(sherpa-onnx-core -pthread)
+
+if(NOT WIN32)
+  target_link_libraries(sherpa-onnx-core -pthread)
+endif()
 
 if(ANDROID_NDK)
   target_link_libraries(sherpa-onnx-core android log)
