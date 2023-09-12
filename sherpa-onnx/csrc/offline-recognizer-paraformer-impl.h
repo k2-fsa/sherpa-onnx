@@ -188,7 +188,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     try {
       t = model_->Forward(std::move(x), std::move(x_length));
     } catch (const Ort::Exception &ex) {
-      SHERPA_ONNX_LOGE("\n\nCaught exception:\n\n%s\n\nReturn empty result",
+      SHERPA_ONNX_LOGE("\n\nCaught exception:\n\n%s\n\nReturn an empty result",
                        ex.what());
       return;
     }
