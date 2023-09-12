@@ -38,6 +38,7 @@ jobs:
         shell: bash
         run: |
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-apk-two-pass.sh
           ./build-apk.sh
 
       - name: Display APK
@@ -49,8 +50,8 @@ jobs:
         with:
           path: ./apks/*.apk
 
-      - name: Release APK
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          file: apks/*.apk
+      # - name: Release APK
+      #   uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     file_glob: true
+      #     file: apks/*.apk
