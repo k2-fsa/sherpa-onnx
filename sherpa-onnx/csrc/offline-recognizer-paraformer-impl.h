@@ -184,7 +184,14 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     // i.e., -23.025850929940457f
     Ort::Value x = PadSequence(model_->Allocator(), features_pointer, 0);
 
-    auto t = model_->Forward(std::move(x), std::move(x_length));
+    std::pair<Ort::Value, Ort::Value> t{nullptr, nullptr};
+    try {
+      t = model_->Forward(std::move(x), std::move(x_length));
+    } catch (const Ort::Exception &ex) {
+      SHERPA_ONNX_LOGE("\n\nCaught exception:\n\n%s\n\nReturn an empty result",
+                       ex.what());
+      return;
+    }
 
     auto results = decoder_->Decode(std::move(t.first), std::move(t.second));
 
