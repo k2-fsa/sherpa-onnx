@@ -9,7 +9,7 @@ data class EndpointRule(
 )
 
 data class EndpointConfig(
-    var rule1: EndpointRule = EndpointRule(false, 2.4f, 0.0f),
+    var rule1: EndpointRule = EndpointRule(false, 2.0f, 0.0f),
     var rule2: EndpointRule = EndpointRule(true, 1.2f, 0.0f),
     var rule3: EndpointRule = EndpointRule(false, 0.0f, 20.0f)
 )
@@ -265,10 +265,11 @@ fun getOnlineLMConfig(type: Int): OnlineLMConfig {
     return OnlineLMConfig()
 }
 
+// for English models, use a small value for rule2.minTrailingSilence, e.g., 0.8
 fun getEndpointConfig(): EndpointConfig {
     return EndpointConfig(
         rule1 = EndpointRule(false, 2.4f, 0.0f),
-        rule2 = EndpointRule(true, 1.2f, 0.0f),
+        rule2 = EndpointRule(true, 0.8f, 0.0f),
         rule3 = EndpointRule(false, 0.0f, 20.0f)
     )
 }
@@ -288,15 +289,21 @@ by following the code)
     https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-03-28-chinese
     int8
 
+1 - icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04 (English)
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/zipformer-transducer-models.html#icefall-asr-multidataset-pruned-transducer-stateless7-2023-05-04-english
+    encoder int8, decoder/joiner float32
 
-1 - sherpa-onnx-whisper-tiny.en
+2 - sherpa-onnx-whisper-tiny.en
     https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html#tiny-en
     encoder int8, decoder int8
 
-2 - pkufool/icefall-asr-zipformer-wenetspeech-20230615 (Chinese)
+3 - sherpa-onnx-whisper-base.en
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html#tiny-en
+    encoder int8, decoder int8
+
+4 - pkufool/icefall-asr-zipformer-wenetspeech-20230615 (Chinese)
     https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/zipformer-transducer-models.html#pkufool-icefall-asr-zipformer-wenetspeech-20230615-chinese
     encoder/joiner int8, decoder fp32
-
 
  */
 fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
@@ -313,6 +320,19 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
         }
 
         1 -> {
+            val modelDir = "icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-30-avg-4.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-30-avg-4.onnx",
+                    joiner = "$modelDir/joiner-epoch-30-avg-4.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
+            )
+        }
+
+        2 -> {
             val modelDir = "sherpa-onnx-whisper-tiny.en"
             return OfflineModelConfig(
                 whisper = OfflineWhisperModelConfig(
@@ -324,7 +344,20 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
             )
         }
 
-        2 -> {
+        3 -> {
+            val modelDir = "sherpa-onnx-whisper-base.en"
+            return OfflineModelConfig(
+                whisper = OfflineWhisperModelConfig(
+                    encoder = "$modelDir/base.en-encoder.int8.onnx",
+                    decoder = "$modelDir/base.en-decoder.int8.onnx",
+                ),
+                tokens = "$modelDir/base.en-tokens.txt",
+                modelType = "whisper",
+            )
+        }
+
+
+        4 -> {
             val modelDir = "icefall-asr-zipformer-wenetspeech-20230615"
             return OfflineModelConfig(
                 transducer = OfflineTransducerModelConfig(

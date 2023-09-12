@@ -150,8 +150,9 @@ class MainActivity : AppCompatActivity() {
                         text = runSecondPass()
                         lastText = "${lastText}\n${idx}: ${text}"
                         idx += 1
+                    } else {
+                        samplesBuffer.clear()
                     }
-                    samplesBuffer.clear()
                 }
 
                 runOnUiThread {
@@ -238,6 +239,13 @@ class MainActivity : AppCompatActivity() {
                 i += 1
             }
         }
-        return offlineRecognizer.decode(samples, sampleRateInHz)
+
+
+        val n = maxOf(0, samples.size - 8000)
+
+        samplesBuffer.clear()
+        samplesBuffer.add(samples.sliceArray(n..samples.size-1))
+
+        return offlineRecognizer.decode(samples.sliceArray(0..n), sampleRateInHz)
     }
 }
