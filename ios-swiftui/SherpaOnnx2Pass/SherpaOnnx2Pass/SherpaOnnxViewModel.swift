@@ -25,7 +25,8 @@ class SherpaOnnxViewModel: ObservableObject {
     var offlineRecognizer: SherpaOnnxOfflineRecognizer! = nil
 
     var lastSentence: String = ""
-    let maxSentence: Int = 15
+    // let maxSentence: Int = 10 // for Chinese
+    let maxSentence: Int = 6 // for English
 
     var results: String {
         if sentences.isEmpty && lastSentence.isEmpty {
@@ -63,7 +64,9 @@ class SherpaOnnxViewModel: ObservableObject {
         // You can also modify Model.swift to add new pre-trained models from
         // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
         // let modelConfig = getBilingualStreamingZhEnZipformer20230220()
-        let modelConfig = getStreamingZh14MZipformer20230223()
+        /* let modelConfig = getStreamingZh14MZipformer20230223() */
+
+        let modelConfig = getStreamingEn20MZipformer20230217()
 
         let featConfig = sherpaOnnxFeatureConfig(
             sampleRate: 16000,
@@ -74,7 +77,11 @@ class SherpaOnnxViewModel: ObservableObject {
             modelConfig: modelConfig,
             enableEndpoint: true,
             rule1MinTrailingSilence: 2.4,
-            rule2MinTrailingSilence: 1.2,
+
+            // rule2MinTrailingSilence: 1.2, // for Chinese
+
+            rule2MinTrailingSilence: 0.5, // for English
+
             rule3MinUtteranceLength: 30,
             decodingMethod: "greedy_search",
             maxActivePaths: 4
@@ -83,7 +90,10 @@ class SherpaOnnxViewModel: ObservableObject {
     }
 
     private func initOfflineRecognizer() {
-        let modelConfig = getNonStreamingZhParaformer20230328()
+        // let modelConfig = getNonStreamingZhParaformer20230328()
+        let modelConfig = getNonStreamingWhisperTinyEn()
+
+        // let modelConfig = getNonStreamingEnZipformer20230504()
 
         let featConfig = sherpaOnnxFeatureConfig(
             sampleRate: 16000,
@@ -180,7 +190,9 @@ class SherpaOnnxViewModel: ObservableObject {
                             }
                         }
 
-                        self.lastSentence = self.offlineRecognizer.decode(samples: Array(samples[0..<samples.count-12000])).text
+                        // let num = 12000 // For Chinese
+                        let num = 10000 // For English
+                        self.lastSentence = self.offlineRecognizer.decode(samples: Array(samples[0..<samples.count-num])).text
 
                         let tmp = self.lastSentence
                         self.lastSentence = ""
@@ -189,8 +201,8 @@ class SherpaOnnxViewModel: ObservableObject {
                         self.updateLabel()
 
                         i = 0
-                        if samples.count > 12000 {
-                            i = samples.count - 12000
+                        if samples.count > num {
+                            i = samples.count - num
                         }
                         var tail: [Float] = Array(repeating: 0, count: samples.count - i)
 

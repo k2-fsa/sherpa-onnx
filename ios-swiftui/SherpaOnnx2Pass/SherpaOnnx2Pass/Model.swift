@@ -58,7 +58,7 @@ func getStreamingZh14MZipformer20230223() -> SherpaOnnxOnlineModelConfig {
 func getStreamingEn20MZipformer20230217() -> SherpaOnnxOnlineModelConfig {
   let encoder = getResource("encoder-epoch-99-avg-1.int8", "onnx")
   let decoder = getResource("decoder-epoch-99-avg-1", "onnx")
-  let joiner = getResource("joiner-epoch-99-avg-1.int8", "onnx")
+  let joiner = getResource("joiner-epoch-99-avg-1", "onnx")
   let tokens = getResource("tokens", "txt")
 
   return sherpaOnnxOnlineModelConfig(
@@ -91,6 +91,43 @@ func getNonStreamingZhParaformer20230328() -> SherpaOnnxOfflineModelConfig {
   )
 }
 
+// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html#tiny-en
+// English, int8 encoder and decoder
+func getNonStreamingWhisperTinyEn() -> SherpaOnnxOfflineModelConfig {
+  let encoder = getResource("tiny.en-encoder.int8", "onnx")
+  let decoder = getResource("tiny.en-decoder.int8", "onnx")
+  let tokens = getResource("tiny.en-tokens", "txt")
+
+  return sherpaOnnxOfflineModelConfig(
+    tokens: tokens,
+    whisper: sherpaOnnxOfflineWhisperModelConfig(
+      encoder: encoder,
+      decoder: decoder
+    ),
+    numThreads: 1,
+    modelType: "whisper"
+  )
+}
+
+// icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04 (English)
+// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/zipformer-transducer-models.html#icefall-asr-multidataset-pruned-transducer-stateless7-2023-05-04-english
+
+func getNonStreamingEnZipformer20230504() -> SherpaOnnxOfflineModelConfig {
+  let encoder = getResource("encoder-epoch-30-avg-4.int8", "onnx")
+  let decoder = getResource("decoder-epoch-30-avg-4", "onnx")
+  let joiner = getResource("joiner-epoch-30-avg-4", "onnx")
+  let tokens = getResource("non-streaming-zipformer-tokens", "txt")
+
+  return sherpaOnnxOfflineModelConfig(
+    tokens: tokens,
+    transducer: sherpaOnnxOfflineTransducerModelConfig(
+      encoder: encoder,
+      decoder: decoder,
+      joiner: joiner),
+    numThreads: 1,
+    modelType: "zipformer"
+  )
+}
 
 /// Please refer to
 /// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
