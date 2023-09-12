@@ -81,8 +81,8 @@ void asr_inference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
     ss_pointers.push_back(ss.back().get());
   }
   recognizer->DecodeStreams(ss_pointers.data(), ss_pointers.size());
-  std::vector<sherpa_onnx::OfflineStream *>().swap(ss_pointers);
-  std::vector<std::unique_ptr<sherpa_onnx::OfflineStream>>().swap(ss);
+  ss_pointers.clear();
+  ss.clear();
   
   while (true) {
     int chunk = wav_index.fetch_add(1);
@@ -119,8 +119,8 @@ void asr_inference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
               ss[i]->GetResult().AsJsonString().c_str());
       i = i + 1;
     }
-    std::vector<sherpa_onnx::OfflineStream *>().swap(ss_pointers);
-    std::vector<std::unique_ptr<sherpa_onnx::OfflineStream>>().swap(ss);
+    ss_pointers.clear();
+    ss.clear();
   }
   fprintf(stderr, "thread %lu.\n", std::this_thread::get_id());
   {
