@@ -12,6 +12,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -253,16 +258,32 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
       : config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineWhisperModel>(config.model_config)) {
+    Init();
+  }
+
+#if __ANDROID_API__ >= 9
+  OfflineRecognizerWhisperImpl(AAssetManager *mgr,
+                               const OfflineRecognizerConfig &config)
+      : config_(config),
+        symbol_table_(mgr, config_.model_config.tokens),
+        model_(
+            std::make_unique<OfflineWhisperModel>(mgr, config.model_config)) {
+    Init();
+  }
+
+#endif
+
+  void Init() {
     // tokens.txt from whisper is base64 encoded, so we need to decode it
     symbol_table_.ApplyBase64Decode();
 
-    if (config.decoding_method == "greedy_search") {
+    if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineWhisperGreedySearchDecoder>(
           config_.model_config.whisper, model_.get());
     } else {
       SHERPA_ONNX_LOGE(
           "Only greedy_search is supported at present for whisper. Given %s",
-          config.decoding_method.c_str());
+          config_.decoding_method.c_str());
       exit(-1);
     }
   }

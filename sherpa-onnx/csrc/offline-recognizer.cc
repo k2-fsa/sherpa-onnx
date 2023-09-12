@@ -58,6 +58,12 @@ std::string OfflineRecognizerConfig::ToString() const {
   return os.str();
 }
 
+#if __ANDROID_API__ >= 9
+OfflineRecognizer::OfflineRecognizer(AAssetManager *mgr,
+                                     const OfflineRecognizerConfig &config)
+    : impl_(OfflineRecognizerImpl::Create(mgr, config)) {}
+#endif
+
 OfflineRecognizer::OfflineRecognizer(const OfflineRecognizerConfig &config)
     : impl_(OfflineRecognizerImpl::Create(config)) {}
 

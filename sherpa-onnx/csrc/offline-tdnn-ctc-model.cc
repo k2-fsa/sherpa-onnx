@@ -19,8 +19,20 @@ class OfflineTdnnCtcModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    Init();
+    auto buf = ReadFile(config_.tdnn.model);
+    Init(buf.data(), buf.size());
   }
+
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_ERROR),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    auto buf = ReadFile(mgr, config_.tdnn.model);
+    Init(buf.data(), buf.size());
+  }
+#endif
 
   std::pair<Ort::Value, Ort::Value> Forward(Ort::Value features) {
     auto nnet_out =
@@ -48,10 +60,8 @@ class OfflineTdnnCtcModel::Impl {
   OrtAllocator *Allocator() const { return allocator_; }
 
  private:
-  void Init() {
-    auto buf = ReadFile(config_.tdnn.model);
-
-    sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
+  void Init(void *model_data, size_t model_data_length) {
+    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
                                            sess_opts_);
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
@@ -89,6 +99,12 @@ class OfflineTdnnCtcModel::Impl {
 
 OfflineTdnnCtcModel::OfflineTdnnCtcModel(const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+OfflineTdnnCtcModel::OfflineTdnnCtcModel(AAssetManager *mgr,
+                                         const OfflineModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
 
 OfflineTdnnCtcModel::~OfflineTdnnCtcModel() = default;
 

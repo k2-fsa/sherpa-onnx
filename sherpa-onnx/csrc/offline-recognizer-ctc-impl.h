@@ -10,6 +10,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/offline-ctc-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-model.h"
@@ -46,10 +51,24 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
       : config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(OfflineCtcModel::Create(config_.model_config)) {
+    Init();
+  }
+
+#if __ANDROID_API__ >= 9
+  OfflineRecognizerCtcImpl(AAssetManager *mgr,
+                           const OfflineRecognizerConfig &config)
+      : config_(config),
+        symbol_table_(mgr, config_.model_config.tokens),
+        model_(OfflineCtcModel::Create(mgr, config_.model_config)) {
+    Init();
+  }
+#endif
+
+  void Init() {
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
 
-    if (config.decoding_method == "greedy_search") {
+    if (config_.decoding_method == "greedy_search") {
       if (!symbol_table_.contains("<blk>") &&
           !symbol_table_.contains("<eps>")) {
         SHERPA_ONNX_LOGE(
@@ -69,7 +88,7 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
       decoder_ = std::make_unique<OfflineCtcGreedySearchDecoder>(blank_id);
     } else {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
-                       config.decoding_method.c_str());
+                       config_.decoding_method.c_str());
       exit(-1);
     }
   }

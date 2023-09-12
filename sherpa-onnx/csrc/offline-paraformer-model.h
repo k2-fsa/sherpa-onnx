@@ -8,6 +8,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-model-config.h"
 
@@ -16,6 +21,11 @@ namespace sherpa_onnx {
 class OfflineParaformerModel {
  public:
   explicit OfflineParaformerModel(const OfflineModelConfig &config);
+
+#if __ANDROID_API__ >= 9
+  OfflineParaformerModel(AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
   ~OfflineParaformerModel();
 
   /** Run the forward method of the model.

@@ -8,6 +8,11 @@
 #include <memory>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/offline-stream.h"
@@ -18,6 +23,11 @@ class OfflineRecognizerImpl {
  public:
   static std::unique_ptr<OfflineRecognizerImpl> Create(
       const OfflineRecognizerConfig &config);
+
+#if __ANDROID_API__ >= 9
+  static std::unique_ptr<OfflineRecognizerImpl> Create(
+      AAssetManager *mgr, const OfflineRecognizerConfig &config);
+#endif
 
   virtual ~OfflineRecognizerImpl() = default;
 

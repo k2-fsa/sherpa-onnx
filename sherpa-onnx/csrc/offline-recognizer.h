@@ -9,6 +9,11 @@
 #include <string>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/offline-lm-config.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-stream.h"
@@ -54,6 +59,10 @@ class OfflineRecognizerImpl;
 class OfflineRecognizer {
  public:
   ~OfflineRecognizer();
+
+#if __ANDROID_API__ >= 9
+  OfflineRecognizer(AAssetManager *mgr, const OfflineRecognizerConfig &config);
+#endif
 
   explicit OfflineRecognizer(const OfflineRecognizerConfig &config);
 
