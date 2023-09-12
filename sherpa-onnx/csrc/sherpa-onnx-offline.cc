@@ -7,10 +7,9 @@
 #include <atomic>
 #include <chrono>  // NOLINT
 #include <fstream>
-#include <mutex>
-#include <map>
+#include <mutex>  // NOLINT
 #include <string>
-#include <thread>
+#include <thread>  // NOLINT
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -38,27 +37,25 @@ std::vector<std::vector<std::string>> split_to_batchsize(
   return outputs;
 }
 
-
 std::vector<std::string> load_scp_file(std::string wav_scp_path) {
   std::vector<std::string> wav_paths;
   std::ifstream in(wav_scp_path);
   if (!in.is_open()) {
-      fprintf(stderr,"Failed to open file: %s.\n", wav_scp_path.c_str());
+      fprintf(stderr, "Failed to open file: %s.\n", wav_scp_path.c_str());
       return wav_paths;
   }
   std::string line;
-  while(std::getline(in, line))
+  while (std::getline(in, line))
   {
-      std::istringstream iss(line);
-      std::string column1, column2;
-      iss >> column1 >> column2;
-      wav_paths.emplace_back(column2);
+    std::istringstream iss(line);
+    std::string column1, column2;
+    iss >> column1 >> column2;
+    wav_paths.emplace_back(column2);
   }
   in.close();
 
   return wav_paths;
 }
-
 
 void asr_inference(std::vector<std::vector<std::string>> chunk_wav_paths, 
                    sherpa_onnx::OfflineRecognizer* recognizer,
@@ -130,8 +127,8 @@ void asr_inference(std::vector<std::vector<std::string>> chunk_wav_paths,
   {
     std::lock_guard<std::mutex> guard(mtx);
     *total_length += duration;
-    if(*total_time < elapsed_seconds_batch){
-        *total_time = elapsed_seconds_batch;
+    if (*total_time < elapsed_seconds_batch){
+      *total_time = elapsed_seconds_batch;
     }
   }
 }
@@ -242,7 +239,7 @@ for a list of pre-trained models to download.
     fprintf(stderr, "Errors in config!\n");
     return -1;
   }
-  std::this_thread::sleep_for(std::chrono::seconds(10)); // sleep 10s
+  std::this_thread::sleep_for(std::chrono::seconds(10));  // sleep 10s
   fprintf(stderr, "Creating recognizer ...\n");
   const auto begin = std::chrono::steady_clock::now();
   sherpa_onnx::OfflineRecognizer recognizer(config);
@@ -255,8 +252,7 @@ for a list of pre-trained models to download.
           "Started nj: %d, batch_size: %d, wav_path: %s. init time: %.6f\n", nj,
           batch_size, wav_scp.c_str(), elapsed_seconds);
 
-  std::this_thread::sleep_for(std::chrono::seconds(10)); // sleep 10s
-  
+  std::this_thread::sleep_for(std::chrono::seconds(10));  // sleep 10s
   std::vector<std::string> wav_paths;
   if (!wav_scp.empty()) {
     wav_paths = load_scp_file(wav_scp);
@@ -265,12 +261,10 @@ for a list of pre-trained models to download.
       wav_paths.emplace_back(po.GetArg(i));
     }
   }
-    
   if (wav_paths.empty()) {
     fprintf(stderr, "file %s is empty.\n", wav_scp.c_str());
     return -1;
   }
-
   std::vector<std::thread> threads;
   std::vector<std::vector<std::string>> batch_wav_paths = 
       split_to_batchsize(wav_paths, batch_size);
