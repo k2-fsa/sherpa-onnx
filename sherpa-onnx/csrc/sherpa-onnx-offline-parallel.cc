@@ -45,8 +45,7 @@ std::vector<std::string> load_scp_file(const std::string &wav_scp_path) {
       return wav_paths;
   }
   std::string line, column1, column2;
-  while (std::getline(in, line))
-  {
+  while (std::getline(in, line)) {
     std::istringstream iss(line);
     iss >> column1 >> column2;
     wav_paths.emplace_back(std::move(column2));
@@ -56,7 +55,7 @@ std::vector<std::string> load_scp_file(const std::string &wav_scp_path) {
   return wav_paths;
 }
 
-void asr_inference(const std::vector<std::vector<std::string>> &chunk_wav_paths, 
+void asr_inference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
                    sherpa_onnx::OfflineRecognizer* recognizer,
                    float* total_length, float* total_time) {
   std::vector<std::unique_ptr<sherpa_onnx::OfflineStream>> ss;
@@ -83,7 +82,7 @@ void asr_inference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
   recognizer->DecodeStreams(ss_pointers.data(), ss_pointers.size());
   ss_pointers.clear();
   ss.clear();
-  
+
   while (true) {
     int chunk = wav_index.fetch_add(1);
     if (chunk >= chunk_wav_paths.size()) {
@@ -126,7 +125,7 @@ void asr_inference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
   {
     std::lock_guard<std::mutex> guard(mtx);
     *total_length += duration;
-    if (*total_time < elapsed_seconds_batch){
+    if (*total_time < elapsed_seconds_batch) {
       *total_time = elapsed_seconds_batch;
     }
   }
@@ -210,8 +209,8 @@ Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 for a list of pre-trained models to download.
 )usage";
-  std::string wav_scp="";    // true to use wav.scp as input
-  int32_t nj = 1;  // true to use feats.scp as input
+  std::string wav_scp = "";
+  int32_t nj = 1;  // thread number
   int32_t batch_size = 1;
   sherpa_onnx::ParseOptions po(kUsageMessage);
   sherpa_onnx::OfflineRecognizerConfig config;
@@ -265,18 +264,16 @@ for a list of pre-trained models to download.
     return -1;
   }
   std::vector<std::thread> threads;
-  std::vector<std::vector<std::string>> batch_wav_paths = 
+  std::vector<std::vector<std::string>> batch_wav_paths =
       split_to_batchsize(wav_paths, batch_size);
-  float total_length =0.0f;
+  float total_length = 0.0f;
   float total_time = 0.0f;
-  for (int i = 0; i < nj; i++)
-  {
+  for (int i = 0; i < nj; i++) {
     threads.emplace_back(std::thread(asr_inference, batch_wav_paths,
                          &recognizer, &total_length, &total_time));
   }
 
-  for (auto& thread : threads)
-  {
+  for (auto& thread : threads) {
       thread.join();
   }
 
@@ -289,7 +286,7 @@ for a list of pre-trained models to download.
   float rtf = total_time / total_length;
   fprintf(stderr, "Real time factor (RTF): %.6f / %.6f = %.4f\n",
           total_time, total_length, rtf);
-  fprintf(stderr, "speedup: %.6f\n", 1.0 / rtf);
+  fprintf(stderr, "speedup: %.4f\n", 1.0 / rtf);
 
   return 0;
 }
