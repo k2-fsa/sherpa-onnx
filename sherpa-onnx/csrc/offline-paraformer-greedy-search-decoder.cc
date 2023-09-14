@@ -11,28 +11,29 @@ namespace sherpa_onnx {
 
 std::vector<OfflineParaformerDecoderResult>
 OfflineParaformerGreedySearchDecoder::Decode(
-    Ort::Value /*log_probs*/, Ort::Value token_num,
+    Ort::Value log_probs, Ort::Value /*token_num*/,
     Ort::Value us_cif_peak /*=Ort::Value(nullptr)*/
 ) {
-  std::vector<int64_t> shape = token_num.GetTensorTypeAndShapeInfo().GetShape();
+  std::vector<int64_t> shape = log_probs.GetTensorTypeAndShapeInfo().GetShape();
   int32_t batch_size = shape[0];
-  int32_t max_num_tokens = shape[1];
+  int32_t num_tokens = shape[1];
+  int32_t vocab_size = shape[2];
 
   std::vector<OfflineParaformerDecoderResult> results(batch_size);
 
-  if (!us_cif_peak) {
-    // when timestamp is enabled, the data type of token_num is int32_t
-    const int64_t *p_token = token_num.GetTensorData<int64_t>();
-
-    for (int32_t i = 0; i != batch_size; ++i, p_token += max_num_tokens) {
-      for (int32_t k = 0; k != max_num_tokens; ++k) {
-        int32_t t = p_token[k];
-        if (t == eos_id_) {
-          break;
-        }
-
-        results[i].tokens.push_back(t);
+  for (int32_t i = 0; i != batch_size; ++i) {
+    const float *p =
+        log_probs.GetTensorData<float>() + i * num_tokens * vocab_size;
+    for (int32_t k = 0; k != num_tokens; ++k) {
+      auto max_idx = static_cast<int64_t>(
+          std::distance(p, std::max_element(p, p + vocab_size)));
+      if (max_idx == eos_id_) {
+        break;
       }
+
+      results[i].tokens.push_back(max_idx);
+
+      p += vocab_size;
     }
   }
 
