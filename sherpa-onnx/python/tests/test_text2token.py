@@ -26,7 +26,7 @@ class TestText2Token(unittest.TestCase):
             print(
                 f"No test data found, skipping test_bpe().\n"
                 f"You can download the test data by: \n"
-                f"git clone git@github.com:pkufool/sherpa-test-data.git /tmp/sherpa-test-data"
+                f"git clone https://github.com/pkufool/sherpa-test-data.git /tmp/sherpa-test-data"
             )
             return
 
@@ -58,7 +58,7 @@ class TestText2Token(unittest.TestCase):
             print(
                 f"No test data found, skipping test_cjkchar().\n"
                 f"You can download the test data by: \n"
-                f"git clone git@github.com:pkufool/sherpa-test-data.git /tmp/sherpa-test-data"
+                f"git clone https://github.com/pkufool/sherpa-test-data.git /tmp/sherpa-test-data"
             )
             return
 
@@ -89,7 +89,7 @@ class TestText2Token(unittest.TestCase):
             print(
                 f"No test data found, skipping test_cjkchar_bpe().\n"
                 f"You can download the test data by: \n"
-                f"git clone git@github.com:pkufool/sherpa-test-data.git /tmp/sherpa-test-data"
+                f"git clone https://github.com/pkufool/sherpa-test-data.git /tmp/sherpa-test-data"
             )
             return
 
