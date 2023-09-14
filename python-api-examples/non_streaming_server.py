@@ -369,6 +369,7 @@ def check_args(args):
 
     if args.hotwords_file != "":
         assert args.decoding_method == "modified_beam_search", args.decoding_method
+        assert Path(args.hotwords_file).is_file(), args.hotwords_file
 
 
 def get_args():
