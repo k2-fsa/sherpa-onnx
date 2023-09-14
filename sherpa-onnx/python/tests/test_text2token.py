@@ -10,15 +10,19 @@ import unittest
 
 import sherpa_onnx
 
+d = "/tmp/sherpa-test-data"
+# Please refer to
+# https://github.com/pkufool/sherpa-test-data
+# to download test data for testing
 
 class TestText2Token(unittest.TestCase):
     def test_bpe(self):
         texts = ["HELLO WORLD", "I LOVE YOU"]
         encoded_texts = sherpa_onnx.text2token(
             texts,
-            tokens="testdata/tokens_en.txt",
+            tokens=f"{d}/text2token/tokens_en.txt",
             tokens_type="bpe",
-            bpe_model="testdata/bpe_en.model",
+            bpe_model=f"{d}/text2token/bpe_en.model",
         )
         assert encoded_texts == [
             ["▁HE", "LL", "O", "▁WORLD"],
@@ -27,9 +31,9 @@ class TestText2Token(unittest.TestCase):
 
         encoded_ids = sherpa_onnx.text2token(
             texts,
-            tokens="testdata/tokens_en.txt",
+            tokens=f"{d}/text2token/tokens_en.txt",
             tokens_type="bpe",
-            bpe_model="testdata/bpe_en.model",
+            bpe_model=f"{d}/text2token/bpe_en.model",
             output_ids=True,
         )
         assert encoded_ids == [[22, 58, 24, 425], [19, 370, 47]], encoded_ids
@@ -37,7 +41,7 @@ class TestText2Token(unittest.TestCase):
     def test_cjkchar(self):
         texts = ["世界人民大团结", "中国 VS 美国"]
         encoded_texts = sherpa_onnx.text2token(
-            texts, tokens="testdata/tokens_cn.txt", tokens_type="cjkchar"
+            texts, tokens=f"{d}/text2token/tokens_cn.txt", tokens_type="cjkchar"
         )
         assert encoded_texts == [
             ["世", "界", "人", "民", "大", "团", "结"],
@@ -45,7 +49,7 @@ class TestText2Token(unittest.TestCase):
         ], encoded_texts
         encoded_ids = sherpa_onnx.text2token(
             texts,
-            tokens="testdata/tokens_cn.txt",
+            tokens=f"{d}/text2token/tokens_cn.txt",
             tokens_type="cjkchar",
             output_ids=True,
         )
@@ -58,22 +62,22 @@ class TestText2Token(unittest.TestCase):
         texts = ["世界人民 GOES TOGETHER", "中国 GOES WITH 美国"]
         encoded_texts = sherpa_onnx.text2token(
             texts,
-            tokens="testdata/tokens_mix.txt",
+            tokens=f"{d}/text2token/tokens_mix.txt",
             tokens_type="cjkchar+bpe",
-            bpe_model="testdata/bpe_mix.model",
+            bpe_model=f"{d}/text2token/bpe_mix.model",
         )
-        encoded_texts == [
+        assert encoded_texts == [
             ["世", "界", "人", "民", "▁GO", "ES", "▁TOGETHER"],
             ["中", "国", "▁GO", "ES", "▁WITH", "美", "国"],
         ], encoded_texts
         encoded_ids = sherpa_onnx.text2token(
             texts,
-            tokens="testdata/tokens_mix.txt",
+            tokens=f"{d}/text2token/tokens_mix.txt",
             tokens_type="cjkchar+bpe",
-            bpe_model="testdata/bpe_mix.model",
+            bpe_model=f"{d}/text2token/bpe_mix.model",
             output_ids=True,
         )
-        encoded_ids == [
+        assert encoded_ids == [
             [1368, 1392, 557, 680, 275, 178, 475],
             [685, 736, 275, 178, 179, 921, 736],
         ], encoded_ids

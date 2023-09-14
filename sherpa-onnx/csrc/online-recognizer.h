@@ -99,8 +99,8 @@ struct OnlineRecognizerConfig {
         enable_endpoint(enable_endpoint),
         decoding_method(decoding_method),
         max_active_paths(max_active_paths),
-        hotwords_file(hotwords_file),
-        hotwords_score(hotwords_score) {}
+        hotwords_score(hotwords_score),
+        hotwords_file(hotwords_file) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

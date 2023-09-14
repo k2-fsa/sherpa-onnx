@@ -2,7 +2,7 @@
 import re
 
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 import sentencepiece as spm
 
@@ -11,9 +11,9 @@ def text2token(
     texts: List[str],
     tokens: str,
     tokens_type: str = "cjkchar",
-    bpe_model: str = "",
+    bpe_model: Optional[str] = None,
     output_ids: bool = False,
-) -> List[List[str]]:
+) -> List[List[Union[str, int]]]:
     """
     Encode the given texts (a list of string) to a list of a list of tokens.
 
@@ -25,7 +25,8 @@ def text2token(
       tokens_type:
         The valid values are cjkchar, bpe, cjkchar+bpe.
       bpe_model:
-        The path of the bpe model.
+        The path of the bpe model. Only required when tokens_type is bpe or
+        cjkchar+bpe.
       output_ids:
         True to output token ids otherwise tokens.
     Returns:
@@ -42,23 +43,20 @@ def text2token(
             tokens_table[toks[0]] = int(toks[1])
 
     if "bpe" in tokens_type:
-        assert Path(bpe_model).is_file, f"File not exists, {bpe_model}"
+        assert Path(bpe_model).is_file(), f"File not exists, {bpe_model}"
         sp = spm.SentencePieceProcessor()
         sp.load(bpe_model)
 
     texts_list: List[List[str]] = []
 
-    if "cjkchar" == tokens_type:
+    if tokens_type == "cjkchar":
         texts_list = [list("".join(text.split())) for text in texts]
-    elif "bpe" == tokens_type:
-        assert (
-            sp is not None
-        ), f"Please provide a valid bpe model, given {bpe_model}"
+    elif tokens_type == "bpe":
         texts_list = sp.encode(texts, out_type=str)
     else:
         assert (
-            "cjkchar+bpe" == tokens_type
-        ), f"Supporting tokens_type are cjkchar, bpe, cjkchar+bpe, given {tokens_type}"
+            tokens_type == "cjkchar+bpe"
+        ), f"Supported tokens_type are cjkchar, bpe, cjkchar+bpe, given {tokens_type}"
         # CJK(China Japan Korea) unicode range is [U+4E00, U+9FFF], ref:
         # https://en.wikipedia.org/wiki/CJK_Unified_Ideographs_(Unicode_block)
         pattern = re.compile(r"([\u4e00-\u9fff])")

@@ -61,7 +61,7 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "lm_config=" << lm_config.ToString() << ", ";
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "max_active_paths=" << max_active_paths << ", ";
-  os << "hotwords_file=" << hotwords_file << ", ";
+  os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "hotwords_score=" << hotwords_score << ")";
 
   return os.str();

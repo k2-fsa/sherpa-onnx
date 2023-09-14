@@ -23,21 +23,25 @@ def cli():
 @click.option(
     "--tokens",
     type=str,
+    required=True,
     help="The path to tokens.txt.",
 )
 @click.option(
     "--tokens-type",
     type=str,
+    required=True,
     default="cjkchar",
     help="The type of modeling units, should be cjkchar, bpe or cjkchar+bpe",
 )
 @click.option(
     "--bpe-model",
     type=str,
-    help="The path to bpe.model.",
+    help="The path to bpe.model. Only required when tokens-type is bpe or cjkchar+bpe.",
 )
 def encode_text(input: Path, output: Path, tokens: Path, tokens_type: str, bpe_model: Path):
-    """ """
+    """
+    Encode the texts given by the INPUT to tokens and write the results to the OUTPUT.
+    """
     texts = []
     with open(input, "r", encoding="utf8") as f:
         for line in f:

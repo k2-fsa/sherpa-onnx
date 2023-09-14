@@ -11,16 +11,16 @@
 
 namespace sherpa_onnx {
 
-/* Encode the hotwords in a input stream to be tokens ids.
+/* Encode the hotwords in an input stream to be tokens ids.
  *
- * @param is The input stream, it contains several lines, one hotwords for each
+ * @param is The input stream, it contains several lines, one hotword for each
  *           line. For each hotword, the tokens (cjkchar or bpe) are separated
  *           by spaces.
- * @symbol_table  The tokens table mapping symbols to ids. All the symbols in
- *                the stream should be in the symbol_table, if not this function
- *                returns fasle.
+ * @param symbol_table  The tokens table mapping symbols to ids. All the symbols
+ *                      in the stream should be in the symbol_table, if not this
+ *                      function returns fasle.
  *
- * @hotwords  The encoded ids to be written to.
+ * @@param hotwords  The encoded ids to be written to.
  *
  * @return  If all the symbols from ``is`` are in the symbol_table, returns true
  *          otherwise returns false.

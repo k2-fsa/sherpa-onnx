@@ -56,7 +56,7 @@ TEST(ContextGraph, Benchmark) {
       for (int32_t j = 0; j < word_len; ++j) {
         tmp.push_back(char_dist(mt));
       }
-      contexts.push_back(tmp);
+      contexts.push_back(std::move(tmp));
     }
     auto start = std::chrono::high_resolution_clock::now();
     auto context_graph = ContextGraph(contexts, 1);

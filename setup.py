@@ -96,7 +96,7 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            'sherpa-onnx=sherpa_onnx.cli:cli',
+            'sherpa-onnx-cli=sherpa_onnx.cli:cli',
         ],
     },
     license="Apache licensed, as found in the LICENSE file",
