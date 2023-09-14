@@ -170,4 +170,4 @@ rm -rf $repo
 # test text2token
 git clone https://github.com/pkufool/sherpa-test-data /tmp/sherpa-test-data
 
-python3 sherpa_onnx/python/tests/test_text2token.py --verbose
+python3 sherpa-onnx/python/tests/test_text2token.py --verbose
