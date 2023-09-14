@@ -353,11 +353,22 @@ SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
   std::copy(text.begin(), text.end(), const_cast<char *>(r->text));
   const_cast<char *>(r->text)[text.size()] = 0;
 
+  if (!result.timestamps.empty()) {
+    r->timestamps = new float[result.timestamps.size()];
+    std::copy(result.timestamps.begin(), result.timestamps.end(),
+              r->timestamps);
+    r->count = result.timestamps.size();
+  } else {
+    r->timestamps = nullptr;
+    r->count = 0;
+  }
+
   return r;
 }
 
 void DestroyOfflineRecognizerResult(
     const SherpaOnnxOfflineRecognizerResult *r) {
   delete[] r->text;
+  delete[] r->timestamps;
   delete r;
 }

@@ -408,6 +408,14 @@ SHERPA_ONNX_API void DecodeMultipleOfflineStreams(
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
   const char *text;
+
+  // Pointer to continuous memory which holds timestamps
+  //
+  // It is NULL if the model does not support timestamps
+  float *timestamps;
+
+  // number of entries in timestamps
+  int32_t count;
   // TODO(fangjun): Add more fields
 } SherpaOnnxOfflineRecognizerResult;
 

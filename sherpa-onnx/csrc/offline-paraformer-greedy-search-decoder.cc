@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h"
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
