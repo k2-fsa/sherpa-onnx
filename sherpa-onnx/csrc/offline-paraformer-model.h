@@ -5,7 +5,6 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_PARAFORMER_MODEL_H_
 
 #include <memory>
-#include <utility>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
@@ -35,13 +34,17 @@ class OfflineParaformerModel {
    *                         valid frames in `features` before padding.
    *                         Its dtype is int32_t.
    *
-   * @return Return a pair containing:
+   * @return Return a vector containing:
    *  - log_probs: A 3-D tensor of shape (N, T', vocab_size)
    *  - token_num: A 1-D tensor of shape (N, T') containing number
    *               of valid tokens in each utterance. Its dtype is int64_t.
+   *  If it is a model supporting timestamps, then there are additional two
+   *  outputs:
+   *   - us_alphas
+   *   - us_cif_peak
    */
-  std::pair<Ort::Value, Ort::Value> Forward(Ort::Value features,
-                                            Ort::Value features_length);
+  std::vector<Ort::Value> Forward(Ort::Value features,
+                                  Ort::Value features_length);
 
   /** Return the vocabulary size of the model
    */

@@ -28,7 +28,8 @@ class OfflineParaformerDecoder {
    * @return Return a vector of size `N` containing the decoded results.
    */
   virtual std::vector<OfflineParaformerDecoderResult> Decode(
-      Ort::Value log_probs, Ort::Value token_num) = 0;
+      Ort::Value log_probs, Ort::Value token_num,
+      Ort::Value us_cif_peak = Ort::Value(nullptr)) = 0;
 };
 
 }  // namespace sherpa_onnx
