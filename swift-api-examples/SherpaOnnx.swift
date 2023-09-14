@@ -349,6 +349,23 @@ class SherpaOnnxOfflineRecongitionResult {
     return String(cString: result.pointee.text)
   }
 
+  var count: Int32 {
+    return result.pointee.count
+  }
+
+  var timestamps: [Float] {
+    if let p = result.pointee.timestamps {
+      var timestamps: [Float] = []
+      for index in 0..<count {
+        timestamps.append(p[Int(index)])
+      }
+      return timestamps
+    } else {
+      let timestamps: [Float] = []
+      return timestamps
+    }
+  }
+
   init(result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>!) {
     self.result = result
   }

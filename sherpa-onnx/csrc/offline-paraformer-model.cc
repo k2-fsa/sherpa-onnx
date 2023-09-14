@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -36,16 +37,13 @@ class OfflineParaformerModel::Impl {
   }
 #endif
 
-  std::pair<Ort::Value, Ort::Value> Forward(Ort::Value features,
-                                            Ort::Value features_length) {
+  std::vector<Ort::Value> Forward(Ort::Value features,
+                                  Ort::Value features_length) {
     std::array<Ort::Value, 2> inputs = {std::move(features),
                                         std::move(features_length)};
 
-    auto out =
-        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
-                   output_names_ptr_.data(), output_names_ptr_.size());
-
-    return {std::move(out[0]), std::move(out[1])};
+    return sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                      output_names_ptr_.data(), output_names_ptr_.size());
   }
 
   int32_t VocabSize() const { return vocab_size_; }
@@ -119,7 +117,7 @@ OfflineParaformerModel::OfflineParaformerModel(AAssetManager *mgr,
 
 OfflineParaformerModel::~OfflineParaformerModel() = default;
 
-std::pair<Ort::Value, Ort::Value> OfflineParaformerModel::Forward(
+std::vector<Ort::Value> OfflineParaformerModel::Forward(
     Ort::Value features, Ort::Value features_length) {
   return impl_->Forward(std::move(features), std::move(features_length));
 }

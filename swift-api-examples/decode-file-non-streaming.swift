@@ -13,21 +13,45 @@ extension AVAudioPCMBuffer {
 }
 
 func run() {
-  let encoder = "./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx"
-  let decoder = "./sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx"
-  let tokens = "./sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt"
 
-  let whisperConfig = sherpaOnnxOfflineWhisperModelConfig(
-    encoder: encoder,
-    decoder: decoder
-  )
+  var recognizer: SherpaOnnxOfflineRecognizer
+  var modelConfig: SherpaOnnxOfflineModelConfig
+  var modelType = "whisper"
+  // modelType = "paraformer"
 
-  let modelConfig = sherpaOnnxOfflineModelConfig(
-    tokens: tokens,
-    whisper: whisperConfig,
-    debug: 0,
-    modelType: "whisper"
-  )
+  if modelType == "whisper" {
+    let encoder = "./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx"
+    let decoder = "./sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx"
+    let tokens = "./sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt"
+
+    let whisperConfig = sherpaOnnxOfflineWhisperModelConfig(
+      encoder: encoder,
+      decoder: decoder
+    )
+
+    modelConfig = sherpaOnnxOfflineModelConfig(
+      tokens: tokens,
+      whisper: whisperConfig,
+      debug: 0,
+      modelType: "whisper"
+    )
+  } else if modelType == "paraformer" {
+    let model = "./sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx"
+    let tokens = "./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt"
+    let paraformerConfig = sherpaOnnxOfflineParaformerModelConfig(
+      model: model
+    )
+
+    modelConfig = sherpaOnnxOfflineModelConfig(
+      tokens: tokens,
+      paraformer: paraformerConfig,
+      debug: 0,
+      modelType: "paraformer"
+    )
+  } else {
+    print("Please specify a supported modelType \(modelType)")
+    return
+  }
 
   let featConfig = sherpaOnnxFeatureConfig(
     sampleRate: 16000,
@@ -38,7 +62,7 @@ func run() {
     modelConfig: modelConfig
   )
 
-  let recognizer = SherpaOnnxOfflineRecognizer(config: &config)
+  recognizer = SherpaOnnxOfflineRecognizer(config: &config)
 
   let filePath = "./sherpa-onnx-whisper-tiny.en/test_wavs/0.wav"
   let fileURL: NSURL = NSURL(fileURLWithPath: filePath)
@@ -55,6 +79,10 @@ func run() {
   let array: [Float]! = audioFileBuffer?.array()
   let result = recognizer.decode(samples: array, sampleRate: Int(audioFormat.sampleRate))
   print("\nresult is:\n\(result.text)")
+  if result.timestamps.count != 0 {
+    print("\ntimestamps is:\n\(result.timestamps)")
+  }
+
 }
 
 @main

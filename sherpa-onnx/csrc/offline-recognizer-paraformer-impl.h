@@ -31,6 +31,7 @@ static OfflineRecognitionResult Convert(
     const OfflineParaformerDecoderResult &src, const SymbolTable &sym_table) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
+  r.timestamps = src.timestamps;
 
   std::string text;
 
@@ -184,7 +185,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     // i.e., -23.025850929940457f
     Ort::Value x = PadSequence(model_->Allocator(), features_pointer, 0);
 
-    std::pair<Ort::Value, Ort::Value> t{nullptr, nullptr};
+    std::vector<Ort::Value> t;
     try {
       t = model_->Forward(std::move(x), std::move(x_length));
     } catch (const Ort::Exception &ex) {
@@ -193,7 +194,13 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
       return;
     }
 
-    auto results = decoder_->Decode(std::move(t.first), std::move(t.second));
+    std::vector<OfflineParaformerDecoderResult> results;
+    if (t.size() == 2) {
+      results = decoder_->Decode(std::move(t[0]), std::move(t[1]));
+    } else {
+      results =
+          decoder_->Decode(std::move(t[0]), std::move(t[1]), std::move(t[3]));
+    }
 
     for (int32_t i = 0; i != n; ++i) {
       auto r = Convert(results[i], symbol_table_);

@@ -123,3 +123,30 @@ time $EXE \
   $repo/test_wavs/8k.wav
 
 rm -rf $repo
+
+log "------------------------------------------------------------"
+log "Run Paraformer (Chinese) with timestamps"
+log "------------------------------------------------------------"
+
+repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-09-14
+log "Start testing ${repo_url}"
+repo=$(basename $repo_url)
+log "Download pretrained model and test-data from $repo_url"
+
+GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+pushd $repo
+git lfs pull --include "*.onnx"
+ls -lh *.onnx
+popd
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --paraformer=$repo/model.int8.onnx \
+  --num-threads=2 \
+  --decoding-method=greedy_search \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/2.wav \
+  $repo/test_wavs/8k.wav
+
+rm -rf $repo
