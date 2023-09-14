@@ -78,8 +78,10 @@ struct OnlineRecognizerConfig {
 
   // used only for modified_beam_search
   int32_t max_active_paths = 4;
+
   /// used only for modified_beam_search
-  float context_score = 1.5;
+  float hotwords_score = 1.5;
+  std::string hotwords_file;
 
   OnlineRecognizerConfig() = default;
 
@@ -89,14 +91,16 @@ struct OnlineRecognizerConfig {
                          const EndpointConfig &endpoint_config,
                          bool enable_endpoint,
                          const std::string &decoding_method,
-                         int32_t max_active_paths, float context_score)
+                         int32_t max_active_paths,
+                         const std::string &hotwords_file, float hotwords_score)
       : feat_config(feat_config),
         model_config(model_config),
         endpoint_config(endpoint_config),
         enable_endpoint(enable_endpoint),
         decoding_method(decoding_method),
         max_active_paths(max_active_paths),
-        context_score(context_score) {}
+        hotwords_score(hotwords_score),
+        hotwords_file(hotwords_file) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
@@ -119,9 +123,16 @@ class OnlineRecognizer {
   /// Create a stream for decoding.
   std::unique_ptr<OnlineStream> CreateStream() const;
 
-  // Create a stream with context phrases
-  std::unique_ptr<OnlineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &context_list) const;
+  /** Create a stream for decoding.
+   *
+   *  @param The hotwords for this string, it might contain several hotwords,
+   *         the hotwords are separated by "/". In each of the hotwords, there
+   *         are cjkchars or bpes, the bpe/cjkchar are separated by space (" ").
+   *         For example, hotwords I LOVE YOU and HELLO WORLD, looks like:
+   *
+   *         "▁I ▁LOVE ▁YOU/▁HE LL O ▁WORLD"
+   */
+  std::unique_ptr<OnlineStream> CreateStream(const std::string &hotwords) const;
 
   /**
    * Return true if the given stream has enough frames for decoding.

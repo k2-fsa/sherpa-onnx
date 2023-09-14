@@ -39,6 +39,7 @@ install_requires = [
     "numpy",
     "sentencepiece==0.1.96; python_version < '3.11'",
     "sentencepiece; python_version >= '3.11'",
+    "click>=7.1.1",
 ]
 
 
@@ -93,6 +94,11 @@ setuptools.setup(
         "Programming Language :: Python",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
+    entry_points={
+        'console_scripts': [
+            'sherpa-onnx-cli=sherpa_onnx.cli:cli',
+        ],
+    },
     license="Apache licensed, as found in the LICENSE file",
 )
 

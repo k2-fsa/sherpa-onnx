@@ -26,7 +26,15 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
 
   po->Register("max-active-paths", &max_active_paths,
                "Used only when decoding_method is modified_beam_search");
-  po->Register("context-score", &context_score,
+
+  po->Register(
+      "hotwords-file", &hotwords_file,
+      "The file containing hotwords, one words/phrases per line, and for each"
+      "phrase the bpe/cjkchar are separated by a space. For example: "
+      "▁HE LL O ▁WORLD"
+      "你 好 世 界");
+
+  po->Register("hotwords-score", &hotwords_score,
                "The bonus score for each token in context word/phrase. "
                "Used only when decoding_method is modified_beam_search");
 }
@@ -53,7 +61,8 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "lm_config=" << lm_config.ToString() << ", ";
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "max_active_paths=" << max_active_paths << ", ";
-  os << "context_score=" << context_score << ")";
+  os << "hotwords_file=\"" << hotwords_file << "\", ";
+  os << "hotwords_score=" << hotwords_score << ")";
 
   return os.str();
 }
@@ -70,8 +79,8 @@ OfflineRecognizer::OfflineRecognizer(const OfflineRecognizerConfig &config)
 OfflineRecognizer::~OfflineRecognizer() = default;
 
 std::unique_ptr<OfflineStream> OfflineRecognizer::CreateStream(
-    const std::vector<std::vector<int32_t>> &context_list) const {
-  return impl_->CreateStream(context_list);
+    const std::string &hotwords) const {
+  return impl_->CreateStream(hotwords);
 }
 
 std::unique_ptr<OfflineStream> OfflineRecognizer::CreateStream() const {

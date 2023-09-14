@@ -31,7 +31,10 @@ struct OfflineRecognizerConfig {
 
   std::string decoding_method = "greedy_search";
   int32_t max_active_paths = 4;
-  float context_score = 1.5;
+
+  std::string hotwords_file;
+  float hotwords_score = 1.5;
+
   // only greedy_search is implemented
   // TODO(fangjun): Implement modified_beam_search
 
@@ -40,13 +43,16 @@ struct OfflineRecognizerConfig {
                           const OfflineModelConfig &model_config,
                           const OfflineLMConfig &lm_config,
                           const std::string &decoding_method,
-                          int32_t max_active_paths, float context_score)
+                          int32_t max_active_paths,
+                          const std::string &hotwords_file,
+                          float hotwords_score)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
         decoding_method(decoding_method),
         max_active_paths(max_active_paths),
-        context_score(context_score) {}
+        hotwords_file(hotwords_file),
+        hotwords_score(hotwords_score) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
@@ -69,9 +75,17 @@ class OfflineRecognizer {
   /// Create a stream for decoding.
   std::unique_ptr<OfflineStream> CreateStream() const;
 
-  /// Create a stream for decoding.
+  /** Create a stream for decoding.
+   *
+   *  @param The hotwords for this string, it might contain several hotwords,
+   *         the hotwords are separated by "/". In each of the hotwords, there
+   *         are cjkchars or bpes, the bpe/cjkchar are separated by space (" ").
+   *         For example, hotwords I LOVE YOU and HELLO WORLD, looks like:
+   *
+   *         "▁I ▁LOVE ▁YOU/▁HE LL O ▁WORLD"
+   */
   std::unique_ptr<OfflineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &context_list) const;
+      const std::string &hotwords) const;
 
   /** Decode a single stream
    *

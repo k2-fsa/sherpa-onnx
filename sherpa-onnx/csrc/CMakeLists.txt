@@ -72,6 +72,7 @@ set(sources
   text-utils.cc
   transpose.cc
   unbind.cc
+  utils.cc
   wave-reader.cc
 )
 

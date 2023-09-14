@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_IMPL_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
@@ -32,7 +33,7 @@ class OfflineRecognizerImpl {
   virtual ~OfflineRecognizerImpl() = default;
 
   virtual std::unique_ptr<OfflineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &context_list) const {
+      const std::string &hotwords) const {
     SHERPA_ONNX_LOGE("Only transducer models support contextual biasing.");
     exit(-1);
   }

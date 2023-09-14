@@ -29,18 +29,20 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
   py::class_<PyClass>(*m, "OnlineRecognizerConfig")
       .def(py::init<const FeatureExtractorConfig &, const OnlineModelConfig &,
                     const OnlineLMConfig &, const EndpointConfig &, bool,
-                    const std::string &, int32_t, float>(),
+                    const std::string &, int32_t, const std::string &, float>(),
            py::arg("feat_config"), py::arg("model_config"),
            py::arg("lm_config") = OnlineLMConfig(), py::arg("endpoint_config"),
            py::arg("enable_endpoint"), py::arg("decoding_method"),
-           py::arg("max_active_paths") = 4, py::arg("context_score") = 0)
+           py::arg("max_active_paths") = 4, py::arg("hotwords_file") = "",
+           py::arg("hotwords_score") = 0)
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
       .def_readwrite("endpoint_config", &PyClass::endpoint_config)
       .def_readwrite("enable_endpoint", &PyClass::enable_endpoint)
       .def_readwrite("decoding_method", &PyClass::decoding_method)
       .def_readwrite("max_active_paths", &PyClass::max_active_paths)
-      .def_readwrite("context_score", &PyClass::context_score)
+      .def_readwrite("hotwords_file", &PyClass::hotwords_file)
+      .def_readwrite("hotwords_score", &PyClass::hotwords_score)
       .def("__str__", &PyClass::ToString);
 }
 
@@ -55,11 +57,10 @@ void PybindOnlineRecognizer(py::module *m) {
            [](const PyClass &self) { return self.CreateStream(); })
       .def(
           "create_stream",
-          [](PyClass &self,
-             const std::vector<std::vector<int32_t>> &contexts_list) {
-            return self.CreateStream(contexts_list);
+          [](PyClass &self, const std::string &hotwords) {
+            return self.CreateStream(hotwords);
           },
-          py::arg("contexts_list"))
+          py::arg("hotwords"))
       .def("is_ready", &PyClass::IsReady)
       .def("decode_stream", &PyClass::DecodeStream)
       .def("decode_streams",

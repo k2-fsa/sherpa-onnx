@@ -326,6 +326,31 @@ def add_modified_beam_search_args(parser: argparse.ArgumentParser):
     )
 
 
+def add_hotwords_args(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--hotwords-file",
+        type=str,
+        default="",
+        help="""
+        The file containing hotwords, one words/phrases per line, and for each
+        phrase the bpe/cjkchar are separated by a space. For example:
+
+        ▁HE LL O ▁WORLD
+        你 好 世 界
+        """,
+    )
+
+    parser.add_argument(
+        "--hotwords-score",
+        type=float,
+        default=1.5,
+        help="""
+        The hotword score of each token for biasing word/phrase. Used only if
+        --hotwords-file is given.
+        """,
+    )
+
+
 def check_args(args):
     if not Path(args.tokens).is_file():
         raise ValueError(f"{args.tokens} does not exist")
@@ -342,6 +367,10 @@ def check_args(args):
         assert Path(args.decoder).is_file(), args.decoder
         assert Path(args.joiner).is_file(), args.joiner
 
+    if args.hotwords_file != "":
+        assert args.decoding_method == "modified_beam_search", args.decoding_method
+        assert Path(args.hotwords_file).is_file(), args.hotwords_file
+
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -351,6 +380,7 @@ def get_args():
     add_model_args(parser)
     add_feature_config_args(parser)
     add_decoding_args(parser)
+    add_hotwords_args(parser)
 
     parser.add_argument(
         "--port",
@@ -792,6 +822,8 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
             max_active_paths=args.max_active_paths,
+            hotwords_file=args.hotwords_file,
+            hotwords_score=args.hotwords_score,
         )
     elif args.paraformer:
         assert len(args.nemo_ctc) == 0, args.nemo_ctc

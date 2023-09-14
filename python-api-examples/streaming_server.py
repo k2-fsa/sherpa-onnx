@@ -187,6 +187,32 @@ def add_decoding_args(parser: argparse.ArgumentParser):
     add_modified_beam_search_args(parser)
 
 
+def add_hotwords_args(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--hotwords-file",
+        type=str,
+        default="",
+        help="""
+        The file containing hotwords, one words/phrases per line, and for each
+        phrase the bpe/cjkchar are separated by a space. For example:
+
+        ▁HE LL O ▁WORLD
+        你 好 世 界
+        """,
+    )
+
+    parser.add_argument(
+        "--hotwords-score",
+        type=float,
+        default=1.5,
+        help="""
+        The hotword score of each token for biasing word/phrase. Used only if
+        --hotwords-file is given.
+        """,
+    )
+
+
+
 def add_modified_beam_search_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--num-active-paths",
@@ -239,6 +265,7 @@ def get_args():
     add_model_args(parser)
     add_decoding_args(parser)
     add_endpointing_args(parser)
+    add_hotwords_args(parser)
 
     parser.add_argument(
         "--port",
@@ -343,6 +370,8 @@ def create_recognizer(args) -> sherpa_onnx.OnlineRecognizer:
             feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
             max_active_paths=args.num_active_paths,
+            hotwords_score=args.hotwords_score,
+            hotwords_file=args.hotwords_file,
             enable_endpoint_detection=args.use_endpoint != 0,
             rule1_min_trailing_silence=args.rule1_min_trailing_silence,
             rule2_min_trailing_silence=args.rule2_min_trailing_silence,

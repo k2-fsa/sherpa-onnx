@@ -42,7 +42,8 @@ class OnlineRecognizer(object):
         rule3_min_utterance_length: float = 20.0,
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
-        context_score: float = 1.5,
+        hotwords_score: float = 1.5,
+        hotwords_file: str = "",
         provider: str = "cpu",
         model_type: str = "",
     ):
@@ -138,7 +139,8 @@ class OnlineRecognizer(object):
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
             max_active_paths=max_active_paths,
-            context_score=context_score,
+            hotwords_score=hotwords_score,
+            hotwords_file=hotwords_file,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -248,11 +250,11 @@ class OnlineRecognizer(object):
         self.config = recognizer_config
         return self
 
-    def create_stream(self, contexts_list: Optional[List[List[int]]] = None):
-        if contexts_list is None:
+    def create_stream(self, hotwords: Optional[str] = None):
+        if hotwords is None:
             return self.recognizer.create_stream()
         else:
-            return self.recognizer.create_stream(contexts_list)
+            return self.recognizer.create_stream(hotwords)
 
     def decode_stream(self, s: OnlineStream):
         self.recognizer.decode_stream(s)

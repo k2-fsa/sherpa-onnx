@@ -57,9 +57,15 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
                "True to enable endpoint detection. False to disable it.");
   po->Register("max-active-paths", &max_active_paths,
                "beam size used in modified beam search.");
-  po->Register("context-score", &context_score,
+  po->Register("hotwords-score", &hotwords_score,
                "The bonus score for each token in context word/phrase. "
                "Used only when decoding_method is modified_beam_search");
+  po->Register(
+      "hotwords-file", &hotwords_file,
+      "The file containing hotwords, one words/phrases per line, and for each"
+      "phrase the bpe/cjkchar are separated by a space. For example: "
+      "▁HE LL O ▁WORLD"
+      "你 好 世 界");
   po->Register("decoding-method", &decoding_method,
                "decoding method,"
                "now support greedy_search and modified_beam_search.");
@@ -87,7 +93,8 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
   os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ", ";
   os << "max_active_paths=" << max_active_paths << ", ";
-  os << "context_score=" << context_score << ", ";
+  os << "hotwords_score=" << hotwords_score << ", ";
+  os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "decoding_method=\"" << decoding_method << "\")";
 
   return os.str();
@@ -109,8 +116,8 @@ std::unique_ptr<OnlineStream> OnlineRecognizer::CreateStream() const {
 }
 
 std::unique_ptr<OnlineStream> OnlineRecognizer::CreateStream(
-    const std::vector<std::vector<int32_t>> &context_list) const {
-  return impl_->CreateStream(context_list);
+    const std::string &hotwords) const {
+  return impl_->CreateStream(hotwords);
 }
 
 bool OnlineRecognizer::IsReady(OnlineStream *s) const {

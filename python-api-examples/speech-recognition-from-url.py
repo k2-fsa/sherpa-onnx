@@ -87,6 +87,30 @@ def get_args():
         """,
     )
 
+    parser.add_argument(
+        "--hotwords-file",
+        type=str,
+        default="",
+        help="""
+        The file containing hotwords, one words/phrases per line, and for each
+        phrase the bpe/cjkchar are separated by a space. For example:
+
+        ▁HE LL O ▁WORLD
+        你 好 世 界
+        """,
+    )
+
+    parser.add_argument(
+        "--hotwords-score",
+        type=float,
+        default=1.5,
+        help="""
+        The hotword score of each token for biasing word/phrase. Used only if
+        --hotwords-file is given.
+        """,
+    )
+
+
     return parser.parse_args()
 
 
@@ -107,6 +131,8 @@ def create_recognizer(args):
         rule1_min_trailing_silence=2.4,
         rule2_min_trailing_silence=1.2,
         rule3_min_utterance_length=300,  # it essentially disables this rule
+        hotwords_file=args.hotwords_file,
+        hotwords_score=args.hotwords_score,
     )
     return recognizer
 
