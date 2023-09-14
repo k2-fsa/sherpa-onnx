@@ -100,4 +100,42 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   return nullptr;
 }
 
+#if __ANDROID_API__ >= 9
+
+std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
+    AAssetManager *mgr, const OfflineModelConfig &config) {
+  ModelType model_type = ModelType::kUnkown;
+
+  std::string filename;
+  if (!config.nemo_ctc.model.empty()) {
+    filename = config.nemo_ctc.model;
+  } else if (!config.tdnn.model.empty()) {
+    filename = config.tdnn.model;
+  } else {
+    SHERPA_ONNX_LOGE("Please specify a CTC model");
+    exit(-1);
+  }
+
+  {
+    auto buffer = ReadFile(mgr, filename);
+
+    model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
+  }
+
+  switch (model_type) {
+    case ModelType::kEncDecCTCModelBPE:
+      return std::make_unique<OfflineNemoEncDecCtcModel>(mgr, config);
+      break;
+    case ModelType::kTdnn:
+      return std::make_unique<OfflineTdnnCtcModel>(mgr, config);
+      break;
+    case ModelType::kUnkown:
+      SHERPA_ONNX_LOGE("Unknown model type in offline CTC!");
+      return nullptr;
+  }
+
+  return nullptr;
+}
+#endif
+
 }  // namespace sherpa_onnx

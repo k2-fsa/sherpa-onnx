@@ -16,6 +16,13 @@ std::unique_ptr<OfflineLM> OfflineLM::Create(const OfflineLMConfig &config) {
   return std::make_unique<OfflineRnnLM>(config);
 }
 
+#if __ANDROID_API__ >= 9
+std::unique_ptr<OfflineLM> OfflineLM::Create(AAssetManager *mgr,
+                                             const OfflineLMConfig &config) {
+  return std::make_unique<OfflineRnnLM>(mgr, config);
+}
+#endif
+
 void OfflineLM::ComputeLMScore(float scale, int32_t context_size,
                                std::vector<Hypotheses> *hyps) {
   // compute the max token seq so that we know how much space to allocate

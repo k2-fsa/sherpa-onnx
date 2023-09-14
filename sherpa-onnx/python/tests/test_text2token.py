@@ -15,6 +15,7 @@ d = "/tmp/sherpa-test-data"
 # https://github.com/pkufool/sherpa-test-data
 # to download test data for testing
 
+
 class TestText2Token(unittest.TestCase):
     def test_bpe(self):
         texts = ["HELLO WORLD", "I LOVE YOU"]

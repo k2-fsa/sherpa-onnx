@@ -11,6 +11,8 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
+    tags:
+      - '*'
   pull_request:
     branches:
       - master
@@ -20,20 +22,8 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
-  release:
-    types:
-      - published
 
   workflow_dispatch:
-    inputs:
-      release:
-        description: "Whether to release"
-        type: boolean
-
-env:
-  RELEASE:
-    |- # Release if there is a release tag name or a release flag in workflow_dispatch
-    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: arm-linux-gnueabihf-${{ github.ref }}
@@ -131,7 +121,6 @@ jobs:
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-linux-gnueabihf/libc
 
-
           ls -lh ./build-arm-linux-gnueabihf/bin
 
           qemu-arm ./build-arm-linux-gnueabihf/bin/sherpa-onnx --help
@@ -156,7 +145,7 @@ jobs:
           path: sherpa-onnx-*linux-arm-gnueabihf.tar.bz2
 
       - name: Release pre-compiled binaries and libs for arm linux gnueabihf
-        if: env.RELEASE == 'true'
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

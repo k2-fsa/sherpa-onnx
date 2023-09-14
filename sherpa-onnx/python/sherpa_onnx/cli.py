@@ -38,7 +38,9 @@ def cli():
     type=str,
     help="The path to bpe.model. Only required when tokens-type is bpe or cjkchar+bpe.",
 )
-def encode_text(input: Path, output: Path, tokens: Path, tokens_type: str, bpe_model: Path):
+def encode_text(
+    input: Path, output: Path, tokens: Path, tokens_type: str, bpe_model: Path
+):
     """
     Encode the texts given by the INPUT to tokens and write the results to the OUTPUT.
     """

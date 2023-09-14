@@ -38,6 +38,7 @@ jobs:
         shell: bash
         run: |
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-apk-two-pass.sh
           ./build-apk.sh
 
       - name: Display APK

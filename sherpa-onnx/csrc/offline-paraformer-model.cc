@@ -21,8 +21,20 @@ class OfflineParaformerModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    Init();
+    auto buf = ReadFile(config_.paraformer.model);
+    Init(buf.data(), buf.size());
   }
+
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_ERROR),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    auto buf = ReadFile(mgr, config_.paraformer.model);
+    Init(buf.data(), buf.size());
+  }
+#endif
 
   std::pair<Ort::Value, Ort::Value> Forward(Ort::Value features,
                                             Ort::Value features_length) {
@@ -49,10 +61,8 @@ class OfflineParaformerModel::Impl {
   OrtAllocator *Allocator() const { return allocator_; }
 
  private:
-  void Init() {
-    auto buf = ReadFile(config_.paraformer.model);
-
-    sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
+  void Init(void *model_data, size_t model_data_length) {
+    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
                                            sess_opts_);
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
@@ -100,6 +110,12 @@ class OfflineParaformerModel::Impl {
 
 OfflineParaformerModel::OfflineParaformerModel(const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+OfflineParaformerModel::OfflineParaformerModel(AAssetManager *mgr,
+                                               const OfflineModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
 
 OfflineParaformerModel::~OfflineParaformerModel() = default;
 

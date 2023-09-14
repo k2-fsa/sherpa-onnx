@@ -8,6 +8,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
@@ -23,6 +28,12 @@ namespace sherpa_onnx {
 class OfflineNemoEncDecCtcModel : public OfflineCtcModel {
  public:
   explicit OfflineNemoEncDecCtcModel(const OfflineModelConfig &config);
+
+#if __ANDROID_API__ >= 9
+  OfflineNemoEncDecCtcModel(AAssetManager *mgr,
+                            const OfflineModelConfig &config);
+#endif
+
   ~OfflineNemoEncDecCtcModel() override;
 
   /** Run the forward method of the model.

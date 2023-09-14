@@ -108,7 +108,9 @@ void OnlineTransducerGreedySearchDecoder::Decode(
           static_cast<const float *>(p_logit),
           std::max_element(static_cast<const float *>(p_logit),
                            static_cast<const float *>(p_logit) + vocab_size)));
-      if (y != 0) {
+      // blank id is hardcoded to 0
+      // also, it treats unk as blank
+      if (y != 0 && y != unk_id_) {
         emitted = true;
         r.tokens.push_back(y);
         r.timestamps.push_back(t + r.frame_offset);

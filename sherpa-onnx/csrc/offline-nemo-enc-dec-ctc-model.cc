@@ -19,8 +19,20 @@ class OfflineNemoEncDecCtcModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    Init();
+    auto buf = ReadFile(config_.nemo_ctc.model);
+    Init(buf.data(), buf.size());
   }
+
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_ERROR),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    auto buf = ReadFile(mgr, config_.nemo_ctc.model);
+    Init(buf.data(), buf.size());
+  }
+#endif
 
   std::pair<Ort::Value, Ort::Value> Forward(Ort::Value features,
                                             Ort::Value features_length) {
@@ -57,10 +69,8 @@ class OfflineNemoEncDecCtcModel::Impl {
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
 
  private:
-  void Init() {
-    auto buf = ReadFile(config_.nemo_ctc.model);
-
-    sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
+  void Init(void *model_data, size_t model_data_length) {
+    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
                                            sess_opts_);
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
@@ -103,6 +113,12 @@ class OfflineNemoEncDecCtcModel::Impl {
 OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(
     const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(
+    AAssetManager *mgr, const OfflineModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
 
 OfflineNemoEncDecCtcModel::~OfflineNemoEncDecCtcModel() = default;
 

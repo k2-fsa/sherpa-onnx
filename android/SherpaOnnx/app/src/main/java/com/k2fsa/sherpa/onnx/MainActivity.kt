@@ -21,10 +21,6 @@ private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
 class MainActivity : AppCompatActivity() {
     private val permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
 
-    // If there is a GPU and useGPU is true, we will use GPU
-    // If there is no GPU and useGPU is true, we won't use GPU
-    private val useGPU: Boolean = true
-
     private lateinit var model: SherpaOnnx
     private var audioRecord: AudioRecord? = null
     private lateinit var recordButton: Button
@@ -91,7 +87,7 @@ class MainActivity : AppCompatActivity() {
             audioRecord!!.startRecording()
             recordButton.setText(R.string.stop)
             isRecording = true
-            model.reset()
+            model.reset(true)
             textView.text = ""
             lastText = ""
             idx = 0
@@ -125,25 +121,31 @@ class MainActivity : AppCompatActivity() {
                 while (model.isReady()) {
                     model.decode()
                 }
+
+                val isEndpoint = model.isEndpoint()
+                val text = model.text
+
+                var textToDisplay = lastText;
+
+                if(text.isNotBlank()) {
+                    if (lastText.isBlank()) {
+                        textToDisplay = "${idx}: ${text}"
+                    } else {
+                        textToDisplay = "${lastText}\n${idx}: ${text}"
+                    }
+                }
+
+                if (isEndpoint) {
+                    model.reset()
+                    if (text.isNotBlank()) {
+                        lastText = "${lastText}\n${idx}: ${text}"
+                        textToDisplay = lastText;
+                        idx += 1
+                    }
+                }
+
                 runOnUiThread {
-                    val isEndpoint = model.isEndpoint()
-                    val text = model.text
-
-                    if(text.isNotBlank()) {
-                        if (lastText.isBlank()) {
-                            textView.text = "${idx}: ${text}"
-                        } else {
-                            textView.text = "${lastText}\n${idx}: ${text}"
-                        }
-                    }
-
-                    if (isEndpoint) {
-                        model.reset()
-                        if (text.isNotBlank()) {
-                            lastText = "${lastText}\n${idx}: ${text}"
-                            idx += 1
-                        }
-                    }
+                    textView.text = textToDisplay
                 }
             }
         }

@@ -7,6 +7,11 @@
 
 #include <memory>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-lm-config.h"
 #include "sherpa-onnx/csrc/offline-lm.h"
@@ -18,6 +23,10 @@ class OfflineRnnLM : public OfflineLM {
   ~OfflineRnnLM() override;
 
   explicit OfflineRnnLM(const OfflineLMConfig &config);
+
+#if __ANDROID_API__ >= 9
+  OfflineRnnLM(AAssetManager *mgr, const OfflineLMConfig &config);
+#endif
 
   /** Rescore a batch of sentences.
    *
