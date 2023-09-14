@@ -56,7 +56,6 @@ def get_args():
         "--tokens-type",
         type=str,
         required=True,
-        default="cjkchar",
         help="The type of modeling units, should be cjkchar, bpe or cjkchar+bpe",
     )
 
