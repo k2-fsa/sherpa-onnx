@@ -14,6 +14,11 @@ namespace sherpa_onnx {
 struct OfflineParaformerDecoderResult {
   /// The decoded token IDs
   std::vector<int64_t> tokens;
+
+  // it contains the start time of each token in seconds
+  //
+  // len(timestamps) == len(tokens)
+  std::vector<float> timestamps;
 };
 
 class OfflineParaformerDecoder {

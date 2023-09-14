@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <vector>
 
+#include "sherpa-onnx/csrc/macros.h"
+
 namespace sherpa_onnx {
 
 std::vector<OfflineParaformerDecoderResult>
@@ -34,6 +36,35 @@ OfflineParaformerGreedySearchDecoder::Decode(
       results[i].tokens.push_back(max_idx);
 
       p += vocab_size;
+    }
+
+    if (us_cif_peak) {
+      int32_t dim = us_cif_peak.GetTensorTypeAndShapeInfo().GetShape()[1];
+
+      const auto *peak = us_cif_peak.GetTensorData<float>() + i * dim;
+      std::vector<float> timestamps;
+      timestamps.reserve(results[i].tokens.size());
+
+      // 10.0: frameshift is 10 milliseconds
+      // 6: LfrWindowSize
+      // 3: us_cif_peak is upsampled by a factor of 3
+      // 1000: milliseconds to seconds
+      float scale = 10.0 * 6 / 3 / 1000;
+
+      for (int32_t k = 0; k != dim; ++k) {
+        if (peak[k] > 1 - 1e-4) {
+          timestamps.push_back(k * scale);
+        }
+      }
+      timestamps.pop_back();
+
+      if (timestamps.size() == results[i].tokens.size()) {
+        results[i].timestamps = std::move(timestamps);
+      } else {
+        SHERPA_ONNX_LOGE("time stamp for batch: %d, %d vs %d", i,
+                         static_cast<int32_t>(results[i].tokens.size()),
+                         static_cast<int32_t>(timestamps.size()));
+      }
     }
   }
 
