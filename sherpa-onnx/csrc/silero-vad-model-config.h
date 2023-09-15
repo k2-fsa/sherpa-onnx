@@ -10,7 +10,7 @@
 
 namespace sherpa_onnx {
 
-struct SilerVadModelConfig {
+struct SileroVadModelConfig {
   std::string model;
 
   // threshold to classify a segment as speech
@@ -24,6 +24,8 @@ struct SilerVadModelConfig {
   // 512, 1024, 1536 samples for 16000 Hz
   // 256, 512, 768 samples for 800 Hz
   int window_size = 1536;  // in samples
+
+  SileroVadModelConfig() = default;
 
   void Register(ParseOptions *po);
 

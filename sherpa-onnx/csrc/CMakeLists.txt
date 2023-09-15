@@ -74,6 +74,7 @@ set(sources
   transpose.cc
   unbind.cc
   utils.cc
+  vad-model-config.cc
   wave-reader.cc
 )
 

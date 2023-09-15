@@ -9,7 +9,7 @@
 
 namespace sherpa_onnx {
 
-void SilerVadModelConfig::Register(ParseOptions *po) {
+void SileroVadModelConfig::Register(ParseOptions *po) {
   po->Register("silero-vad-model", &model, "Path to silero VAD ONNX model.");
 
   po->Register("silero-vad-prob", &prob,
@@ -32,7 +32,7 @@ void SilerVadModelConfig::Register(ParseOptions *po) {
       "perfomance!");
 }
 
-bool SilerVadModelConfig::Validate() const {
+bool SileroVadModelConfig::Validate() const {
   if (!FileExists(model)) {
     SHERPA_ONNX_LOGE("Silero vad model file %s does not exist", model.c_str());
     return false;
@@ -53,7 +53,7 @@ bool SilerVadModelConfig::Validate() const {
   return true;
 }
 
-std::string SilerVadModelConfig::ToString() const {
+std::string SileroVadModelConfig::ToString() const {
   std::ostringstream os;
 
   os << "SilerVadModelConfig(";
