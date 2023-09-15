@@ -1,6 +1,6 @@
-// sherpa-onnx/csrc/sherpa-onnx-offline.cc
+// sherpa-onnx/csrc/sherpa-onnx-offline-parallel.cc
 //
-// Copyright (c)  2022-2023  Xiaomi Corporation
+// Copyright (c)  2022-2023  cuidc
 
 #include <stdio.h>
 
@@ -50,7 +50,6 @@ std::vector<std::string> load_scp_file(const std::string &wav_scp_path) {
     iss >> column1 >> column2;
     wav_paths.emplace_back(std::move(column2));
   }
-  in.close();
 
   return wav_paths;
 }
@@ -71,6 +70,7 @@ void asr_inference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
         sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
     if (!is_ok) {
       fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
+       continue;
     }
     duration += samples.size() / static_cast<float>(sampling_rate);
     auto s = recognizer->CreateStream();
@@ -97,6 +97,7 @@ void asr_inference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
           sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
       if (!is_ok) {
         fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
+         continue;
       }
       duration += samples.size() / static_cast<float>(sampling_rate);
       auto s = recognizer->CreateStream();
@@ -142,21 +143,33 @@ Usage:
 
 See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/index.html
 
-  ./bin/sherpa-onnx-offline \
+  ./bin/sherpa-onnx-offline-parallel \
     --tokens=/path/to/tokens.txt \
     --encoder=/path/to/encoder.onnx \
     --decoder=/path/to/decoder.onnx \
     --joiner=/path/to/joiner.onnx \
     --num-threads=1 \
     --decoding-method=greedy_search \
-    /path/to/foo.wav [bar.wav foobar.wav ...]
+    --batch-size=8 \
+    --nj=1 \
+    --wav-scp=wav.scp
 
+  ./bin/sherpa-onnx-offline-parallel \
+    --tokens=/path/to/tokens.txt \
+    --encoder=/path/to/encoder.onnx \
+    --decoder=/path/to/decoder.onnx \
+    --joiner=/path/to/joiner.onnx \
+    --num-threads=1 \
+    --decoding-method=greedy_search \
+    --batch-size=1 \
+    --nj=8 \
+    /path/to/foo.wav [bar.wav foobar.wav ...]
 
 (2) Paraformer from FunASR
 
 See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/index.html
 
-  ./bin/sherpa-onnx-offline \
+  ./bin/sherpa-onnx-offline-parallel \
     --tokens=/path/to/tokens.txt \
     --paraformer=/path/to/model.onnx \
     --num-threads=1 \
@@ -167,7 +180,7 @@ See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/in
 
 See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html
 
-  ./bin/sherpa-onnx-offline \
+  ./bin/sherpa-onnx-offline-parallel \
     --whisper-encoder=./sherpa-onnx-whisper-base.en/base.en-encoder.int8.onnx \
     --whisper-decoder=./sherpa-onnx-whisper-base.en/base.en-decoder.int8.onnx \
     --tokens=./sherpa-onnx-whisper-base.en/base.en-tokens.txt \
@@ -178,7 +191,7 @@ See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html
 
 See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/index.html
 
-  ./bin/sherpa-onnx-offline \
+  ./bin/sherpa-onnx-offline-parallel \
     --tokens=./sherpa-onnx-nemo-ctc-en-conformer-medium/tokens.txt \
     --nemo-ctc-model=./sherpa-onnx-nemo-ctc-en-conformer-medium/model.onnx \
     --num-threads=2 \
@@ -192,7 +205,7 @@ See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/index.htm
 
 See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/yesno/index.html
       //
-  ./build/bin/sherpa-onnx-offline \
+  ./bin/sherpa-onnx-offline-parallel \
     --sample-rate=8000 \
     --feat-dim=23 \
     --tokens=./sherpa-onnx-tdnn-yesno/tokens.txt \
@@ -209,23 +222,24 @@ Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 for a list of pre-trained models to download.
 )usage";
-  std::string wav_scp = "";
+  std::string wav_scp = "";  // file path, kaldi style wav list.
   int32_t nj = 1;  // thread number
-  int32_t batch_size = 1;
+  int32_t batch_size = 1; // number of wav files processed at once.
   sherpa_onnx::ParseOptions po(kUsageMessage);
   sherpa_onnx::OfflineRecognizerConfig config;
   config.Register(&po);
   po.Register("wav-scp", &wav_scp,
-              "the input wav.scp, kaldi style wav list. default=""."
-              "when it is not empty, positional parameters is invalid.");
+              "a file including wav-id and wav-path, kaldi style wav list."
+              "default="". when it is not empty, wav files which positional "
+              "parameters provide are invalid.");
   po.Register("nj", &nj,
               "multi-thread num for decoding, default=1");
   po.Register("batch-size", &batch_size,
-              "It specifies the batch size to use for decoding. "
-              "default=1");
+              "number of wav files processed at once during the decoding"
+              "process. default=1");
 
   po.Read(argc, argv);
-  if (po.NumArgs() < 1) {
+  if (po.NumArgs() < 1 && wav_scp.empty()) {
     fprintf(stderr, "Error: Please provide at least 1 wave file.\n\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
@@ -247,9 +261,8 @@ for a list of pre-trained models to download.
           .count() /
       1000.;
   fprintf(stderr,
-          "Started nj: %d, batch_size: %d, wav_path: %s. init time: %.6f\n", nj,
-          batch_size, wav_scp.c_str(), elapsed_seconds);
-
+          "Started nj: %d, batch_size: %d, wav_path: %s. recognizer init time: "
+          "%.6f\n", nj, batch_size, wav_scp.c_str(), elapsed_seconds);
   std::this_thread::sleep_for(std::chrono::seconds(10));  // sleep 10s
   std::vector<std::string> wav_paths;
   if (!wav_scp.empty()) {
@@ -260,7 +273,7 @@ for a list of pre-trained models to download.
     }
   }
   if (wav_paths.empty()) {
-    fprintf(stderr, "file %s is empty.\n", wav_scp.c_str());
+    fprintf(stderr, "wav files is empty.\n");
     return -1;
   }
   std::vector<std::thread> threads;
@@ -286,7 +299,7 @@ for a list of pre-trained models to download.
   float rtf = total_time / total_length;
   fprintf(stderr, "Real time factor (RTF): %.6f / %.6f = %.4f\n",
           total_time, total_length, rtf);
-  fprintf(stderr, "speedup: %.4f\n", 1.0 / rtf);
+  fprintf(stderr, "SPEEDUP: %.4f\n", 1.0 / rtf);
 
   return 0;
 }
