@@ -33,6 +33,11 @@ void SileroVadModelConfig::Register(ParseOptions *po) {
 }
 
 bool SileroVadModelConfig::Validate() const {
+  if (model.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --silero-vad-model");
+    return false;
+  }
+
   if (!FileExists(model)) {
     SHERPA_ONNX_LOGE("Silero vad model file %s does not exist", model.c_str());
     return false;
