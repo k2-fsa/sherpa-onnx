@@ -67,6 +67,7 @@ set(sources
   resample.cc
   session.cc
   silero-vad-model-config.cc
+  silero-vad-model.cc
   slice.cc
   stack.cc
   symbol-table.cc
@@ -75,6 +76,7 @@ set(sources
   unbind.cc
   utils.cc
   vad-model-config.cc
+  vad-model.cc
   wave-reader.cc
 )
 

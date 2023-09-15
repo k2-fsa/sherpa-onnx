@@ -25,6 +25,9 @@ struct SileroVadModelConfig {
   // 256, 512, 768 samples for 800 Hz
   int window_size = 1536;  // in samples
 
+  // support only 16000 and 8000
+  int32_t sample_rate = 16000;
+
   SileroVadModelConfig() = default;
 
   void Register(ParseOptions *po);
