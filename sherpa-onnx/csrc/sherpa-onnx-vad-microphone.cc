@@ -12,10 +12,7 @@
 #include <queue>
 
 #include "portaudio.h"  // NOLINT
-#include "sherpa-onnx/csrc/display.h"
 #include "sherpa-onnx/csrc/microphone.h"
-#include "sherpa-onnx/csrc/parse-options.h"
-#include "sherpa-onnx/csrc/vad-model-config.h"
 #include "sherpa-onnx/csrc/vad-model.h"
 
 bool stop = false;
@@ -28,11 +25,19 @@ static int32_t RecordCallback(const void *input_buffer,
                               const PaStreamCallbackTimeInfo * /*time_info*/,
                               PaStreamCallbackFlags /*status_flags*/,
                               void *user_data) {
+  int32_t window_size = *reinterpret_cast<int32_t *>(user_data);
+
   std::lock_guard<std::mutex> lock(mutex);
 
-  queue.emplace(
+  std::vector<float> samples(
       reinterpret_cast<const float *>(input_buffer),
       reinterpret_cast<const float *>(input_buffer) + frames_per_buffer);
+
+  if (!queue.empty() && queue.back().size() < window_size) {
+    queue.back().insert(queue.back().end(), samples.begin(), samples.end());
+  } else {
+    queue.push(std::move(samples));
+  }
 
   return stop ? paComplete : paContinue;
 }
@@ -109,13 +114,16 @@ wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
                     0,          // frames per buffer
                     paClipOff,  // we won't output out of range samples
                                 // so don't bother clipping them
-                    RecordCallback, nullptr);
+                    RecordCallback, &config.silero_vad.window_size);
   if (err != paNoError) {
     fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
     exit(EXIT_FAILURE);
   }
 
   err = Pa_StartStream(stream);
+
+  auto vad_model = sherpa_onnx::VadModel::Create(config);
+
   fprintf(stderr, "Started\n");
 
   if (err != paNoError) {
@@ -123,16 +131,40 @@ wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
     exit(EXIT_FAILURE);
   }
 
+  int32_t speech_count = 0;
+  int32_t non_speech_count = 0;
   while (!stop) {
     {
       std::lock_guard<std::mutex> lock(mutex);
-      while (!queue.empty()) {
-        fprintf(stderr, "%d\n", (int)queue.size());
+      while (!queue.empty() &&
+             queue.front().size() >= config.silero_vad.window_size) {
+        bool is_speech =
+            vad_model->IsSpeech(queue.front().data(), queue.front().size());
+
         queue.pop();
+
+        if (is_speech) {
+          speech_count += 1;
+          non_speech_count = 0;
+        } else {
+          speech_count = 0;
+          non_speech_count += 1;
+        }
+
+        if (speech_count == 1) {
+          static int32_t k = 0;
+          ++k;
+          fprintf(stderr, "Detected speech: %d\n", k);
+        }
+
+        if (non_speech_count == 1) {
+          static int32_t k = 0;
+          ++k;
+          fprintf(stderr, "Detected non-speech: %d\n", k);
+        }
       }
     }
     Pa_Sleep(100);  // sleep for 100ms
-    stop = true;
   }
 
   err = Pa_CloseStream(stream);

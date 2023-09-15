@@ -18,6 +18,9 @@ void VadModelConfig::Register(ParseOptions *po) {
   po->Register("vad-provider", &provider,
                "Specify a provider to run the VAD model. Supported values: "
                "cpu, cuda, coreml");
+
+  po->Register("vad-debug", &debug,
+               "true to display debug information when loading vad models");
 }
 
 bool VadModelConfig::Validate() const { return silero_vad.Validate(); }
@@ -28,7 +31,8 @@ std::string VadModelConfig::ToString() const {
   os << "VadModelConfig(";
   os << "silero_vad=" << silero_vad.ToString() << ", ";
   os << "num_threads=" << num_threads << ", ";
-  os << "provider=\"" << provider << "\")";
+  os << "provider=\"" << provider << "\", ";
+  os << "debug=" << (debug ? "True" : "False") << ")";
 
   return os.str();
 }

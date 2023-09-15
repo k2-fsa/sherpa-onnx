@@ -12,16 +12,21 @@ namespace sherpa_onnx {
 void SileroVadModelConfig::Register(ParseOptions *po) {
   po->Register("silero-vad-model", &model, "Path to silero VAD ONNX model.");
 
-  po->Register("silero-vad-prob", &prob,
+  po->Register("silero-vad-threshold", &threshold,
                "Speech threshold. Silero VAD outputs speech probabilities for "
                "each audio chunk, probabilities ABOVE this value are "
                "considered as SPEECH. It is better to tune this parameter for "
                "each dataset separately, but lazy "
                "0.5 is pretty good for most datasets.");
+
   po->Register(
       "silero-vad-min-silence-duration", &min_silence_duration,
       "In seconds.  In the end of each speech chunk wait for "
       "--silero-vad-min-silence-duration seconds before separating it");
+
+  po->Register("silero-vad-min-speech-duration", &min_speech_duration,
+               "In seconds.  In the end of each silence chunk wait for "
+               "--silero-vad-min-speech-duration seconds before separating it");
 
   po->Register(
       "silero-vad-window-size", &window_size,
@@ -43,15 +48,17 @@ bool SileroVadModelConfig::Validate() const {
     return false;
   }
 
-  if (prob < 0.01) {
+  if (threshold < 0.01) {
     SHERPA_ONNX_LOGE(
-        "Please use a larger value for --silero-vad-prob. Given: %f", prob);
+        "Please use a larger value for --silero-vad-threshold. Given: %f",
+        threshold);
     return false;
   }
 
-  if (prob >= 1) {
+  if (threshold >= 1) {
     SHERPA_ONNX_LOGE(
-        "Please use a smaller value for --silero-vad-prob. Given: %f", prob);
+        "Please use a smaller value for --silero-vad-threshold. Given: %f",
+        threshold);
     return false;
   }
 
@@ -63,8 +70,9 @@ std::string SileroVadModelConfig::ToString() const {
 
   os << "SilerVadModelConfig(";
   os << "model=\"" << model << "\", ";
-  os << "prob=" << prob << ", ";
+  os << "threshold=" << threshold << ", ";
   os << "min_silence_duration=" << min_silence_duration << ", ";
+  os << "min_speech_duration=" << min_speech_duration << ", ";
   os << "window_size=" << window_size << ")";
 
   return os.str();

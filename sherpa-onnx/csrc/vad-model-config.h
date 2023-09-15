@@ -17,11 +17,17 @@ struct VadModelConfig {
   int32_t num_threads = 1;
   std::string provider = "cpu";
 
+  // true to show debug information when loading models
+  bool debug = false;
+
   VadModelConfig() = default;
 
   VadModelConfig(const SileroVadModelConfig &silero_vad, int32_t num_threads,
-                 const std::string &provider)
-      : silero_vad(silero_vad), num_threads(num_threads), provider(provider) {}
+                 const std::string &provider, bool debug)
+      : silero_vad(silero_vad),
+        num_threads(num_threads),
+        provider(provider),
+        debug(debug) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
