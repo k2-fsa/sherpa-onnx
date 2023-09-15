@@ -66,6 +66,7 @@ set(sources
   provider.cc
   resample.cc
   session.cc
+  silero-vad-model-config.cc
   slice.cc
   stack.cc
   symbol-table.cc
