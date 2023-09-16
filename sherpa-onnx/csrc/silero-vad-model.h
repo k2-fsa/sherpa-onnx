@@ -27,6 +27,11 @@ class SileroVadModel : public VadModel {
    */
   bool IsSpeech(const float *samples, int32_t n) override;
 
+  int32_t WindowSize() const override;
+
+  int32_t MinSilenceDurationSamples() const override;
+  int32_t MinSpeechDurationSamples() const override;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

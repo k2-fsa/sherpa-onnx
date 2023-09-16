@@ -20,7 +20,13 @@ class SileroVadModel::Impl {
     auto buf = ReadFile(config.silero_vad.model);
     Init(buf.data(), buf.size());
 
-    sample_rate_ = config.silero_vad.sample_rate;
+    sample_rate_ = config.sample_rate;
+    if (sample_rate_ != 16000) {
+      SHERPA_ONNX_LOGE("Expect sample rate 16000. Given: %d",
+                       static_cast<int32_t>(sample_rate_));
+      exit(-1);
+    }
+
     min_silence_samples_ =
         sample_rate_ * config_.silero_vad.min_silence_duration;
 
@@ -55,6 +61,12 @@ class SileroVadModel::Impl {
   }
 
   bool IsSpeech(const float *samples, int32_t n) {
+    if (n != config_.silero_vad.window_size) {
+      SHERPA_ONNX_LOGE("n: %d != window_size: %d", n,
+                       config_.silero_vad.window_size);
+      exit(-1);
+    }
+
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -144,6 +156,12 @@ class SileroVadModel::Impl {
 
     return false;
   }
+
+  int32_t WindowSize() const { return config_.silero_vad.window_size; }
+
+  int32_t MinSilenceDurationSamples() const { return min_silence_samples_; }
+
+  int32_t MinSpeechDurationSamples() const { return min_speech_samples_; }
 
  private:
   void Init(void *model_data, size_t model_data_length) {
@@ -244,6 +262,16 @@ void SileroVadModel::Reset() { return impl_->Reset(); }
 
 bool SileroVadModel::IsSpeech(const float *samples, int32_t n) {
   return impl_->IsSpeech(samples, n);
+}
+
+int32_t SileroVadModel::WindowSize() const { return impl_->WindowSize(); }
+
+int32_t SileroVadModel::MinSilenceDurationSamples() const {
+  return impl_->MinSilenceDurationSamples();
+}
+
+int32_t SileroVadModel::MinSpeechDurationSamples() const {
+  return impl_->MinSpeechDurationSamples();
 }
 
 }  // namespace sherpa_onnx

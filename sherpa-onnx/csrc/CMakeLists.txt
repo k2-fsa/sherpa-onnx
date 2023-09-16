@@ -78,6 +78,7 @@ set(sources
   utils.cc
   vad-model-config.cc
   vad-model.cc
+  voice-activity-detector.cc
   wave-reader.cc
 )
 

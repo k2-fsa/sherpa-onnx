@@ -33,6 +33,11 @@ class CircularBuffer {
   int32_t Head() const { return head_; }
   int32_t Tail() const { return tail_; }
 
+  void Reset() {
+    head_ = 0;
+    tail_ = 0;
+  }
+
  private:
   std::vector<float> buffer_;
 
