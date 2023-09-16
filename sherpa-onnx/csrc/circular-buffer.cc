@@ -21,16 +21,16 @@ CircularBuffer::CircularBuffer(int32_t capacity) {
 
 void CircularBuffer::Push(const float *p, int32_t n) {
   int32_t capacity = buffer_.size();
-  if (n + size_ > capacity) {
+  int32_t size = Size();
+  if (n + size > capacity) {
     SHERPA_ONNX_LOGE("Overflow! n: %d, size: %d, n+size: %d, capacity: %d", n,
-                     size_, n + size_, capacity);
+                     size, n + size, capacity);
     exit(-1);
   }
 
   int32_t start = tail_ % capacity;
 
   tail_ += n;
-  size_ += n;
 
   if (start + n < capacity) {
     std::copy(p, p + n, buffer_.begin() + start);
@@ -51,16 +51,17 @@ std::vector<float> CircularBuffer::Get(int32_t start_index, int32_t n) const {
     return {};
   }
 
-  if (n < 0 || n > size_) {
-    SHERPA_ONNX_LOGE("Invalid n: %d. size_: %d", n, size_);
+  int32_t size = tail_ - head_;
+  if (n < 0 || n > size) {
+    SHERPA_ONNX_LOGE("Invalid n: %d. size: %d", n, size);
     return {};
   }
 
   int32_t capacity = buffer_.size();
 
-  if (start_index - head_ + n > size_) {
-    SHERPA_ONNX_LOGE("Invalid start_index: %d and n: %d. head_: %d, size_: %d",
-                     start_index, n, head_, size_);
+  if (start_index - head_ + n > size) {
+    SHERPA_ONNX_LOGE("Invalid start_index: %d and n: %d. head_: %d, size: %d",
+                     start_index, n, head_, size);
     return {};
   }
 
@@ -83,13 +84,13 @@ std::vector<float> CircularBuffer::Get(int32_t start_index, int32_t n) const {
 }
 
 void CircularBuffer::Pop(int32_t n) {
-  if (n < 0 || n > size_) {
-    SHERPA_ONNX_LOGE("Invalid n: %d. size: %d", n, size_);
+  int32_t size = Size();
+  if (n < 0 || n > size) {
+    SHERPA_ONNX_LOGE("Invalid n: %d. size: %d", n, size);
     return;
   }
 
   head_ += n;
-  size_ -= n;
 }
 
 }  // namespace sherpa_onnx

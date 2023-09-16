@@ -29,17 +29,12 @@ class CircularBuffer {
   // @param n Should be in the range [0, size_]
   void Pop(int32_t n);
 
-  int32_t Size() const { return size_; }
+  int32_t Size() const { return tail_ - head_; }
   int32_t Head() const { return head_; }
   int32_t Tail() const { return tail_; }
 
  private:
   std::vector<float> buffer_;
-
-  int32_t size_ = 0;  // number of elements currently in the buffer.
-                      // Should never exceed buffer_.size();
-                      // Otherwise, it prints an error message and exits the
-                      // program.
 
   int32_t head_ = 0;  // linear index; always increasing; never wraps around
   int32_t tail_ = 0;  // linear index, always increasing; never wraps around.
