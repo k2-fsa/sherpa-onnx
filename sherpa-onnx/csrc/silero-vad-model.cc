@@ -90,7 +90,7 @@ class SileroVadModel::Impl {
     }
 
     if (prob > threshold && temp_start_ == 0) {
-      // start speaking, but we constraint that it must satisfy
+      // start speaking, but we require that it must satisfy
       // min_speech_duration
       temp_start_ = current_sample_;
       return false;
@@ -108,6 +108,8 @@ class SileroVadModel::Impl {
 
     if ((prob < threshold) && !triggered_) {
       // silence
+      temp_start_ = 0;
+      temp_end_ = 0;
       return false;
     }
 
