@@ -4,6 +4,7 @@
 #ifndef SHERPA_ONNX_CSRC_CIRCULAR_BUFFER_H_
 #define SHERPA_ONNX_CSRC_CIRCULAR_BUFFER_H_
 
+#include <cstdint>
 #include <vector>
 
 namespace sherpa_onnx {
