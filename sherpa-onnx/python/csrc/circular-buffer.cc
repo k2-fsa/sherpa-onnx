@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/circular-buffer.h"
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/circular-buffer.h"
 
 namespace sherpa_onnx {

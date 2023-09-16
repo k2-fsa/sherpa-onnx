@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/vad-model.h"
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/vad-model.h"
 
 namespace sherpa_onnx {

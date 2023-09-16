@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/vad-model-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/vad-model-config.h"
 #include "sherpa-onnx/python/csrc/silero-vad-model-config.h"
 

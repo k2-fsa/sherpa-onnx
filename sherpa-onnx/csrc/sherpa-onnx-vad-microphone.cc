@@ -7,8 +7,7 @@
 #include <stdlib.h>
 
 #include <algorithm>
-#include <cctype>  // std::tolower
-#include <mutex>
+#include <mutex>  // NOLINT
 
 #include "portaudio.h"  // NOLINT
 #include "sherpa-onnx/csrc/circular-buffer.h"

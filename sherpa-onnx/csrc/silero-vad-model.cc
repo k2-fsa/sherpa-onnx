@@ -4,6 +4,10 @@
 
 #include "sherpa-onnx/csrc/silero-vad-model.h"
 
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -12,7 +16,7 @@ namespace sherpa_onnx {
 
 class SileroVadModel::Impl {
  public:
-  Impl(const VadModelConfig &config)
+  explicit Impl(const VadModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),

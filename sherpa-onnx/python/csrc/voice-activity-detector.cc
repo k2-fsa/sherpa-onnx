@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/voice-activity-detector.h"
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 
 namespace sherpa_onnx {

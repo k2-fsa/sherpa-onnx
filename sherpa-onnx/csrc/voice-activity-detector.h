@@ -5,7 +5,7 @@
 #define SHERPA_ONNX_CSRC_VOICE_ACTIVITY_DETECTOR_H_
 
 #include <memory>
-#include <queue>
+#include <vector>
 
 #include "sherpa-onnx/csrc/vad-model-config.h"
 

@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/python/csrc/silero-vad-model-config.h"
 
+#include <memory>
+#include <string>
+
 #include "sherpa-onnx/csrc/silero-vad-model-config.h"
 
 namespace sherpa_onnx {

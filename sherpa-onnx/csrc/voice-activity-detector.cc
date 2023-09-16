@@ -4,6 +4,9 @@
 
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 
+#include <queue>
+#include <utility>
+
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/vad-model.h"
 
@@ -11,7 +14,7 @@ namespace sherpa_onnx {
 
 class VoiceActivityDetector::Impl {
  public:
-  Impl(const VadModelConfig &config, float buffer_size_in_seconds = 60)
+  explicit Impl(const VadModelConfig &config, float buffer_size_in_seconds = 60)
       : model_(VadModel::Create(config)),
         config_(config),
         buffer_(buffer_size_in_seconds * config.sample_rate) {}

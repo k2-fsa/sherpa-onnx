@@ -12,7 +12,7 @@ namespace sherpa_onnx {
 
 class SileroVadModel : public VadModel {
  public:
-  SileroVadModel(const VadModelConfig &config);
+  explicit SileroVadModel(const VadModelConfig &config);
   ~SileroVadModel() override;
 
   // reset the internal model states
