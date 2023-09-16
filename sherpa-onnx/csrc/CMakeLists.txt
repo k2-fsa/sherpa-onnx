@@ -13,6 +13,7 @@ endif()
 set(sources
   base64-decode.cc
   cat.cc
+  circular-buffer.cc
   context-graph.cc
   endpoint.cc
   features.cc
@@ -283,6 +284,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_TESTS)
   set(sherpa_onnx_test_srcs
     cat-test.cc
+    circular-buffer-test.cc
     context-graph-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
