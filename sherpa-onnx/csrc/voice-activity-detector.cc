@@ -23,7 +23,8 @@ class VoiceActivityDetector::Impl {
     if (is_speech) {
       if (start_ == -1) {
         // beginning of speech
-        start_ = buffer_.Tail() - model_->MinSpeechDurationSamples();
+        start_ = buffer_.Tail() - 2 * model_->WindowSize() -
+                 model_->MinSpeechDurationSamples();
       }
     } else {
       // non-speech
