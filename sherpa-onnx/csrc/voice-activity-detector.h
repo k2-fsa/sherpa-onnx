@@ -18,9 +18,8 @@ struct SpeechSegment {
 
 class VoiceActivityDetector {
  public:
-  // @param buffer_size In seconds
   explicit VoiceActivityDetector(const VadModelConfig &config,
-                                 float buffer_size = 60);
+                                 float buffer_size_in_seconds = 60);
   ~VoiceActivityDetector();
 
   void AcceptWaveform(const float *samples, int32_t n);

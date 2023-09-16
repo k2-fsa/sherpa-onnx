@@ -11,10 +11,10 @@ namespace sherpa_onnx {
 
 class VoiceActivityDetector::Impl {
  public:
-  Impl(const VadModelConfig &config, float buffer_size = 60)
+  Impl(const VadModelConfig &config, float buffer_size_in_seconds = 60)
       : model_(VadModel::Create(config)),
         config_(config),
-        buffer_(buffer_size * config.sample_rate) {}
+        buffer_(buffer_size_in_seconds * config.sample_rate) {}
 
   void AcceptWaveform(const float *samples, int32_t n) {
     buffer_.Push(samples, n);
@@ -73,9 +73,9 @@ class VoiceActivityDetector::Impl {
   int32_t start_ = -1;
 };
 
-VoiceActivityDetector::VoiceActivityDetector(const VadModelConfig &config,
-                                             float buffer_size /*= 60*/)
-    : impl_(std::make_unique<Impl>(config, buffer_size)) {}
+VoiceActivityDetector::VoiceActivityDetector(
+    const VadModelConfig &config, float buffer_size_in_seconds /*= 60*/)
+    : impl_(std::make_unique<Impl>(config, buffer_size_in_seconds)) {}
 
 VoiceActivityDetector::~VoiceActivityDetector() = default;
 
