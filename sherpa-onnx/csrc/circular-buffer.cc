@@ -51,7 +51,7 @@ std::vector<float> CircularBuffer::Get(int32_t start_index, int32_t n) const {
     return {};
   }
 
-  int32_t size = tail_ - head_;
+  int32_t size = Size();
   if (n < 0 || n > size) {
     SHERPA_ONNX_LOGE("Invalid n: %d. size: %d", n, size);
     return {};

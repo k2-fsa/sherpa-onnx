@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/circular-buffer.h"
 
+#include <vector>
+
 #include "gtest/gtest.h"
 #include "sherpa-onnx/csrc/macros.h"
 

@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/silero-vad-model.h
+// sherpa-onnx/csrc/silero-vad-model.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
@@ -26,8 +26,8 @@ class SileroVadModel::Impl {
 
     sample_rate_ = config.sample_rate;
     if (sample_rate_ != 16000) {
-      SHERPA_ONNX_LOGE("Expect sample rate 16000. Given: %d",
-                       static_cast<int32_t>(sample_rate_));
+      SHERPA_ONNX_LOGE("Expected sample rate 16000. Given: %d",
+                       config.sample_rate);
       exit(-1);
     }
 

@@ -19,10 +19,13 @@ class CircularBuffer {
   //
   // @param p Pointer to the start address of the array
   // @param n Number of elements in the array
+  //
+  // Note: If n + Size() > capacity, we print an error message and exit.
   void Push(const float *p, int32_t n);
 
   // @param start_index Should in the range [head_, tail_)
   // @param n Number of elements to get
+  // @return Return a vector of size n containing the requested elements
   std::vector<float> Get(int32_t start_index, int32_t n) const;
 
   // Remove n elements from the buffer
@@ -30,8 +33,13 @@ class CircularBuffer {
   // @param n Should be in the range [0, size_]
   void Pop(int32_t n);
 
+  // Number of elements in the buffer.
   int32_t Size() const { return tail_ - head_; }
+
+  // Current position of the head
   int32_t Head() const { return head_; }
+
+  // Current position of the tail
   int32_t Tail() const { return tail_; }
 
   void Reset() {
