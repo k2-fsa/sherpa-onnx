@@ -2,7 +2,7 @@
 
 """
 This file shows how to remove non-speech segments
-and merge all speech segments in to a large segment
+and merge all speech segments into a large segment
 and save it to a file.
 
 Usage
@@ -20,6 +20,7 @@ wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
 """
 
 import argparse
+import sys
 import time
 from pathlib import Path
 
