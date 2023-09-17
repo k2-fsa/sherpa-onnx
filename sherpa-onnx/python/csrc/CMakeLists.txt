@@ -1,6 +1,7 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
 pybind11_add_module(_sherpa_onnx
+  circular-buffer.cc
   display.cc
   endpoint.cc
   features.cc
@@ -20,6 +21,10 @@ pybind11_add_module(_sherpa_onnx
   online-stream.cc
   online-transducer-model-config.cc
   sherpa-onnx.cc
+  silero-vad-model-config.cc
+  vad-model-config.cc
+  vad-model.cc
+  voice-activity-detector.cc
 )
 
 if(APPLE)
