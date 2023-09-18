@@ -15,7 +15,7 @@ struct SileroVadModelConfig {
 
   // threshold to classify a segment as speech
   //
-  // The predicted probability of a segment is larger than this
+  // If the predicted probability of a segment is larger than this
   // value, then it is classified as speech.
   float threshold = 0.5;
 
@@ -25,7 +25,7 @@ struct SileroVadModelConfig {
 
   // 512, 1024, 1536 samples for 16000 Hz
   // 256, 512, 768 samples for 800 Hz
-  int window_size = 512;  // in samples
+  int32_t window_size = 512;  // in samples
 
   SileroVadModelConfig() = default;
 
