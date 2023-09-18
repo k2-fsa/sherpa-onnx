@@ -261,7 +261,7 @@ void CNonStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     AcceptWaveformOffline(stream, config_.feat_config.sample_rate,
                           samples_.data(), samples_.size());
     DecodeOfflineStream(recognizer_, stream);
-    SherpaOnnxOfflineRecognizerResult *r = GetOfflineStreamResult(stream);
+    auto r = GetOfflineStreamResult(stream);
     results_.emplace_back(r->text);
 
     auto str = Utf8ToUtf16(Cat(results_).c_str());
