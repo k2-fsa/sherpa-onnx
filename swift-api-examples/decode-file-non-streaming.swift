@@ -13,7 +13,6 @@ extension AVAudioPCMBuffer {
 }
 
 func run() {
-
   var recognizer: SherpaOnnxOfflineRecognizer
   var modelConfig: SherpaOnnxOfflineModelConfig
   var modelType = "whisper"

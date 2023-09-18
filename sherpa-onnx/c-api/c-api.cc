@@ -478,8 +478,8 @@ SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorPop(
   p->impl->Pop();
 }
 
-SHERPA_ONNX_API SherpaOnnxSpeechSegment *SherpaOnnxVoiceActivityDetectorFront(
-    SherpaOnnxVoiceActivityDetector *p) {
+SHERPA_ONNX_API const SherpaOnnxSpeechSegment *
+SherpaOnnxVoiceActivityDetectorFront(SherpaOnnxVoiceActivityDetector *p) {
   const sherpa_onnx::SpeechSegment &segment = p->impl->Front();
 
   SherpaOnnxSpeechSegment *ans = new SherpaOnnxSpeechSegment;
@@ -491,7 +491,7 @@ SHERPA_ONNX_API SherpaOnnxSpeechSegment *SherpaOnnxVoiceActivityDetectorFront(
   return ans;
 }
 
-void SherpaOnnxDestroySpeechSegment(SherpaOnnxSpeechSegment *p) {
+void SherpaOnnxDestroySpeechSegment(const SherpaOnnxSpeechSegment *p) {
   delete[] p->samples;
   delete p;
 }
