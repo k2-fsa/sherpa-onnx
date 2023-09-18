@@ -52,7 +52,21 @@ static struct cag_option options[] = {
      .access_name = "decoding-method",
      .value_name = "decoding-method",
      .description =
-         "Decoding method: greedy_search (default), modified_beam_search"}};
+         "Decoding method: greedy_search (default), modified_beam_search"},
+    {.identifier = 'f',
+     .access_letters = NULL,
+     .access_name = "hotwords-file",
+     .value_name = "hotwords-file",
+     .description = "The file containing hotwords, one words/phrases per line, "
+                    "and for each phrase the bpe/cjkchar are separated by a "
+                    "space. For example: ▁HE LL O ▁WORLD, 你 好 世 界"},
+    {.identifier = 's',
+     .access_letters = NULL,
+     .access_name = "hotwords-score",
+     .value_name = "hotwords-score",
+     .description = "The bonus score for each token in hotwords. Used only "
+                    "when decoding_method is modified_beam_search"},
+};
 
 const char *kUsage =
     "\n"
@@ -129,6 +143,12 @@ int32_t main(int32_t argc, char *argv[]) {
         break;
       case 'm':
         config.decoding_method = value;
+        break;
+      case 'f':
+        config.hotwords_file = value;
+        break;
+      case 's':
+        config.hotwords_score = atof(value);
         break;
       case 'h': {
         fprintf(stderr, "%s\n", kUsage);
