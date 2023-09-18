@@ -215,7 +215,7 @@ class SherpaOnnxRecognizer {
 
   /// Get the decoding results so far
   func getResult() -> SherpaOnnxOnlineRecongitionResult {
-    let result: UnsafeMutablePointer<SherpaOnnxOnlineRecognizerResult>? = GetOnlineStreamResult(
+    let result: UnsafePointer<SherpaOnnxOnlineRecognizerResult>? = GetOnlineStreamResult(
       recognizer, stream)
     return SherpaOnnxOnlineRecongitionResult(result: result)
   }
@@ -406,11 +406,153 @@ class SherpaOnnxOfflineRecognizer {
 
     DecodeOfflineStream(recognizer, stream)
 
-    let result: UnsafeMutablePointer<SherpaOnnxOfflineRecognizerResult>? = GetOfflineStreamResult(
+    let result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>? = GetOfflineStreamResult(
       stream)
 
     DestroyOfflineStream(stream)
 
     return SherpaOnnxOfflineRecongitionResult(result: result)
+  }
+}
+
+func sherpaOnnxSileroVadModelConfig(
+  model: String,
+  threshold: Float = 0.5,
+  minSilenceDuration: Float = 0.25,
+  minSpeechDuration: Float = 0.5,
+  windowSize: Int = 512
+) -> SherpaOnnxSileroVadModelConfig {
+  return SherpaOnnxSileroVadModelConfig(
+    model: toCPointer(model),
+    threshold: threshold,
+    min_silence_duration: minSilenceDuration,
+    min_speech_duration: minSpeechDuration,
+    window_size: Int32(windowSize)
+  )
+}
+
+func sherpaOnnxVadModelConfig(
+  sileroVad: SherpaOnnxSileroVadModelConfig,
+  sampleRate: Int32 = 16000,
+  numThreads: Int = 1,
+  provider: String = "cpu",
+  debug: Int = 0
+) -> SherpaOnnxVadModelConfig {
+  return SherpaOnnxVadModelConfig(
+    silero_vad: sileroVad,
+    sample_rate: sampleRate,
+    num_threads: Int32(numThreads),
+    provider: toCPointer(provider),
+    debug: Int32(debug)
+  )
+}
+
+class SherpaOnnxCircularBufferWrapper {
+  let buffer: OpaquePointer!
+
+  init(capacity: Int) {
+    buffer = SherpaOnnxCreateCircularBuffer(Int32(capacity))
+  }
+
+  deinit {
+    if let buffer {
+      SherpaOnnxDestroyCircularBuffer(buffer)
+    }
+  }
+
+  func push(samples: [Float]) {
+    SherpaOnnxCircularBufferPush(buffer, samples, Int32(samples.count))
+  }
+
+  func get(startIndex: Int, n: Int) -> [Float] {
+    let p: UnsafePointer<Float>! = SherpaOnnxCircularBufferGet(buffer, Int32(startIndex), Int32(n))
+
+    var samples: [Float] = []
+
+    for index in 0..<n {
+      samples.append(p[Int(index)])
+    }
+
+    SherpaOnnxCircularBufferFree(p)
+
+    return samples
+  }
+
+  func pop(n: Int) {
+    SherpaOnnxCircularBufferPop(buffer, Int32(n))
+  }
+
+  func size() -> Int {
+    return Int(SherpaOnnxCircularBufferSize(buffer))
+  }
+
+  func reset() {
+    SherpaOnnxCircularBufferReset(buffer)
+  }
+}
+
+class SherpaOnnxSpeechSegmentWrapper {
+  let p: UnsafePointer<SherpaOnnxSpeechSegment>!
+
+  init(p: UnsafePointer<SherpaOnnxSpeechSegment>!) {
+    self.p = p
+  }
+
+  deinit {
+    if let p {
+      SherpaOnnxDestroySpeechSegment(p)
+    }
+  }
+
+  var start: Int {
+    return Int(p.pointee.start)
+  }
+
+  var n: Int {
+    return Int(p.pointee.n)
+  }
+
+  var samples: [Float] {
+    var samples: [Float] = []
+    for index in 0..<n {
+      samples.append(p.pointee.samples[Int(index)])
+    }
+    return samples
+  }
+}
+
+class SherpaOnnxVoiceActivityDetectorWrapper {
+  /// A pointer to the underlying counterpart in C
+  let vad: OpaquePointer!
+
+  init(config: UnsafePointer<SherpaOnnxVadModelConfig>!, buffer_size_in_seconds: Float) {
+    vad = SherpaOnnxCreateVoiceActivityDetector(config, buffer_size_in_seconds)
+  }
+
+  deinit {
+    if let vad {
+      SherpaOnnxDestroyVoiceActivityDetector(vad)
+    }
+  }
+
+  func acceptWaveform(samples: [Float]) {
+    SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, samples, Int32(samples.count))
+  }
+
+  func isEmpty() -> Bool {
+    return SherpaOnnxVoiceActivityDetectorEmpty(vad) == 1 ? true : false
+  }
+
+  func pop() {
+    SherpaOnnxVoiceActivityDetectorPop(vad)
+  }
+
+  func front() -> SherpaOnnxSpeechSegmentWrapper {
+    let p: UnsafePointer<SherpaOnnxSpeechSegment>? = SherpaOnnxVoiceActivityDetectorFront(vad)
+    return SherpaOnnxSpeechSegmentWrapper(p: p)
+  }
+
+  func reset() {
+    SherpaOnnxVoiceActivityDetectorReset(vad)
   }
 }

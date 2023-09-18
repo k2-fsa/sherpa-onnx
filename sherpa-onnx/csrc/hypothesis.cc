@@ -18,9 +18,9 @@ void Hypotheses::Add(Hypothesis hyp) {
   } else {
     it->second.log_prob = LogAdd<double>()(it->second.log_prob, hyp.log_prob);
 
-    if (it->second.lm_log_prob != 0 && hyp.lm_log_prob != 0){
+    if (it->second.lm_log_prob != 0 && hyp.lm_log_prob != 0) {
       it->second.lm_log_prob =
-        LogAdd<double>()(it->second.lm_log_prob, hyp.lm_log_prob);
+          LogAdd<double>()(it->second.lm_log_prob, hyp.lm_log_prob);
     }
   }
 }

@@ -234,7 +234,7 @@ SHERPA_ONNX_API void DecodeMultipleOnlineStreams(
 /// @return A pointer containing the result. The user has to invoke
 ///         DestroyOnlineRecognizerResult() to free the returned pointer to
 ///         avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
+SHERPA_ONNX_API const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     SherpaOnnxOnlineRecognizer *recognizer, SherpaOnnxOnlineStream *stream);
 
 /// Destroy the pointer returned by GetOnlineStreamResult().
@@ -429,7 +429,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
 /// @return Return a pointer to the result. The user has to invoke
 ///         DestroyOnlineRecognizerResult() to free the returned pointer to
 ///         avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
+SHERPA_ONNX_API const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
     SherpaOnnxOfflineStream *stream);
 
 /// Destroy the pointer returned by GetOfflineStreamResult().
@@ -437,6 +437,127 @@ SHERPA_ONNX_API SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
 /// @param r A pointer returned by GetOfflineStreamResult()
 SHERPA_ONNX_API void DestroyOfflineRecognizerResult(
     const SherpaOnnxOfflineRecognizerResult *r);
+
+// ============================================================
+// For VAD
+// ============================================================
+
+SHERPA_ONNX_API typedef struct SherpaOnnxSileroVadModelConfig {
+  // Path to the silero VAD model
+  const char *model;
+
+  // threshold to classify a segment as speech
+  //
+  // If the predicted probability of a segment is larger than this
+  // value, then it is classified as speech.
+  float threshold;
+
+  // in seconds
+  float min_silence_duration;
+
+  // in seconds
+  float min_speech_duration;
+
+  int window_size;
+} SherpaOnnxSileroVadModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxVadModelConfig {
+  SherpaOnnxSileroVadModelConfig silero_vad;
+
+  int32_t sample_rate;
+  int32_t num_threads;
+  const char *provider;
+  int32_t debug;
+} SherpaOnnxVadModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxCircularBuffer
+    SherpaOnnxCircularBuffer;
+
+// Return an instance of circular buffer. The user has to use
+// SherpaOnnxDestroyCircularBuffer() to free the returned pointer to avoid
+// memory leak.
+SHERPA_ONNX_API SherpaOnnxCircularBuffer *SherpaOnnxCreateCircularBuffer(
+    int32_t capacity);
+
+// Free the pointer returned by SherpaOnnxCreateCircularBuffer()
+SHERPA_ONNX_API void SherpaOnnxDestroyCircularBuffer(
+    SherpaOnnxCircularBuffer *buffer);
+
+SHERPA_ONNX_API void SherpaOnnxCircularBufferPush(
+    SherpaOnnxCircularBuffer *buffer, const float *p, int32_t n);
+
+// Return n samples starting at the given index.
+//
+// Return a pointer to an array containing n samples starting at start_index.
+// The user has to use SherpaOnnxCircularBufferFree() to free the returned
+// pointer to avoid memory leak.
+SHERPA_ONNX_API const float *SherpaOnnxCircularBufferGet(
+    SherpaOnnxCircularBuffer *buffer, int32_t start_index, int32_t n);
+
+// Free the pointer returned by SherpaOnnxCircularBufferGet().
+SHERPA_ONNX_API void SherpaOnnxCircularBufferFree(const float *p);
+
+// Remove n elements from the buffer
+SHERPA_ONNX_API void SherpaOnnxCircularBufferPop(
+    SherpaOnnxCircularBuffer *buffer, int32_t n);
+
+// Return number of elements in the buffer.
+SHERPA_ONNX_API int32_t
+SherpaOnnxCircularBufferSize(SherpaOnnxCircularBuffer *buffer);
+
+// Clear all elements in the buffer
+SHERPA_ONNX_API void SherpaOnnxCircularBufferReset(
+    SherpaOnnxCircularBuffer *buffer);
+
+SHERPA_ONNX_API typedef struct SherpaOnnxSpeechSegment {
+  // The start index in samples of this segment
+  int32_t start;
+
+  // pointer to the array containing the samples
+  float *samples;
+
+  // number of samples in this segment
+  int32_t n;
+} SherpaOnnxSpeechSegment;
+
+typedef struct SherpaOnnxVoiceActivityDetector SherpaOnnxVoiceActivityDetector;
+
+// Return an instance of VoiceActivityDetector.
+// The user has to use SherpaOnnxDestroyVoiceActivityDetector() to free
+// the returned pointer to avoid memory leak.
+SHERPA_ONNX_API SherpaOnnxVoiceActivityDetector *
+SherpaOnnxCreateVoiceActivityDetector(const SherpaOnnxVadModelConfig *config,
+                                      float buffer_size_in_seconds);
+
+SHERPA_ONNX_API void SherpaOnnxDestroyVoiceActivityDetector(
+    SherpaOnnxVoiceActivityDetector *p);
+
+SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorAcceptWaveform(
+    SherpaOnnxVoiceActivityDetector *p, const float *samples, int32_t n);
+
+// Return 1 if there are no speech segments available.
+// Return 0 if there are speech segments.
+SHERPA_ONNX_API int32_t
+SherpaOnnxVoiceActivityDetectorEmpty(SherpaOnnxVoiceActivityDetector *p);
+
+// Return the first speech segment.
+// It throws if SherpaOnnxVoiceActivityDetectorEmpty() returns 1.
+SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorPop(
+    SherpaOnnxVoiceActivityDetector *p);
+
+// Return the first speech segment.
+// The user has to use SherpaOnnxDestroySpeechSegment() to free the returned
+// pointer to avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxSpeechSegment *
+SherpaOnnxVoiceActivityDetectorFront(SherpaOnnxVoiceActivityDetector *p);
+
+// Free the pointer returned SherpaOnnxVoiceActivityDetectorFront().
+SHERPA_ONNX_API void SherpaOnnxDestroySpeechSegment(
+    const SherpaOnnxSpeechSegment *p);
+
+// Re-initialize the voice activity detector.
+SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorReset(
+    SherpaOnnxVoiceActivityDetector *p);
 
 #ifdef __cplusplus
 } /* extern "C" */
