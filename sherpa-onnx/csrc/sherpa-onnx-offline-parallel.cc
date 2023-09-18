@@ -19,7 +19,7 @@
 std::atomic<int> wav_index(0);
 std::mutex mtx;
 
-std::vector<std::vector<std::string>> split_to_batchsize(
+std::vector<std::vector<std::string>> SplitToBatches(
     const std::vector<std::string> &input, int32_t batch_size) {
   std::vector<std::vector<std::string>> outputs;
   auto itr = input.cbegin();
@@ -37,7 +37,7 @@ std::vector<std::vector<std::string>> split_to_batchsize(
   return outputs;
 }
 
-std::vector<std::string> load_scp_file(const std::string &wav_scp_path) {
+std::vector<std::string> LoadScpFile(const std::string &wav_scp_path) {
   std::vector<std::string> wav_paths;
   std::ifstream in(wav_scp_path);
   if (!in.is_open()) {
@@ -54,7 +54,7 @@ std::vector<std::string> load_scp_file(const std::string &wav_scp_path) {
   return wav_paths;
 }
 
-void asr_inference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
+void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
                    sherpa_onnx::OfflineRecognizer* recognizer,
                    float* total_length, float* total_time) {
   std::vector<std::unique_ptr<sherpa_onnx::OfflineStream>> ss;
@@ -266,7 +266,7 @@ for a list of pre-trained models to download.
   std::this_thread::sleep_for(std::chrono::seconds(10));  // sleep 10s
   std::vector<std::string> wav_paths;
   if (!wav_scp.empty()) {
-    wav_paths = load_scp_file(wav_scp);
+    wav_paths = LoadScpFile(wav_scp);
   } else {
     for (int32_t i = 1; i <= po.NumArgs(); ++i) {
       wav_paths.emplace_back(po.GetArg(i));
@@ -278,11 +278,11 @@ for a list of pre-trained models to download.
   }
   std::vector<std::thread> threads;
   std::vector<std::vector<std::string>> batch_wav_paths =
-      split_to_batchsize(wav_paths, batch_size);
+      SplitToBatches(wav_paths, batch_size);
   float total_length = 0.0f;
   float total_time = 0.0f;
   for (int i = 0; i < nj; i++) {
-    threads.emplace_back(std::thread(asr_inference, batch_wav_paths,
+    threads.emplace_back(std::thread(AsrInference, batch_wav_paths,
                          &recognizer, &total_length, &total_time));
   }
 
