@@ -162,7 +162,7 @@ public class DecodeFile {
     try {
       String appDir = System.getProperty("user.dir");
       System.out.println("appdir=" + appDir);
-      String fileName = appDir + "/test.wav";
+      String fileName = appDir + "/" + args[0];
       String cfgPath = appDir + "/modeltest.cfg";
       String soPath = appDir + "/../build/lib/libsherpa-onnx-jni.so";
       OnlineRecognizer.setSoPath(soPath);
