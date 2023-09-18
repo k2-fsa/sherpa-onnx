@@ -129,7 +129,7 @@ void DecodeMultipleOnlineStreams(SherpaOnnxOnlineRecognizer *recognizer,
   recognizer->impl->DecodeStreams(ss.data(), n);
 }
 
-SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
+const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     SherpaOnnxOnlineRecognizer *recognizer, SherpaOnnxOnlineStream *stream) {
   sherpa_onnx::OnlineRecognizerResult result =
       recognizer->impl->GetResult(stream->impl.get());
@@ -342,7 +342,7 @@ void DecodeMultipleOfflineStreams(SherpaOnnxOfflineRecognizer *recognizer,
   recognizer->impl->DecodeStreams(ss.data(), n);
 }
 
-SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
+const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
     SherpaOnnxOfflineStream *stream) {
   const sherpa_onnx::OfflineRecognitionResult &result =
       stream->impl->GetResult();

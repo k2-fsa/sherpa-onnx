@@ -149,7 +149,7 @@ func run() {
 
   recognizer = SherpaOnnxOfflineRecognizer(config: &config)
 
-  let audioFile = try! AVAudioFile(forReading: filePath.URL)
+  let audioFile = try! AVAudioFile(forReading: filePath.fileURL)
 
   let audioFormat = audioFile.processingFormat
   assert(audioFormat.sampleRate == Double(sampleRate))

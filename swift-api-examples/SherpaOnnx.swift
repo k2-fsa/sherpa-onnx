@@ -215,7 +215,7 @@ class SherpaOnnxRecognizer {
 
   /// Get the decoding results so far
   func getResult() -> SherpaOnnxOnlineRecongitionResult {
-    let result: UnsafeMutablePointer<SherpaOnnxOnlineRecognizerResult>? = GetOnlineStreamResult(
+    let result: UnsafePointer<SherpaOnnxOnlineRecognizerResult>? = GetOnlineStreamResult(
       recognizer, stream)
     return SherpaOnnxOnlineRecongitionResult(result: result)
   }
@@ -406,7 +406,7 @@ class SherpaOnnxOfflineRecognizer {
 
     DecodeOfflineStream(recognizer, stream)
 
-    let result: UnsafeMutablePointer<SherpaOnnxOfflineRecognizerResult>? = GetOfflineStreamResult(
+    let result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>? = GetOfflineStreamResult(
       stream)
 
     DestroyOfflineStream(stream)

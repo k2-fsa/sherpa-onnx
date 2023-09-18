@@ -234,7 +234,7 @@ SHERPA_ONNX_API void DecodeMultipleOnlineStreams(
 /// @return A pointer containing the result. The user has to invoke
 ///         DestroyOnlineRecognizerResult() to free the returned pointer to
 ///         avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
+SHERPA_ONNX_API const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     SherpaOnnxOnlineRecognizer *recognizer, SherpaOnnxOnlineStream *stream);
 
 /// Destroy the pointer returned by GetOnlineStreamResult().
@@ -429,7 +429,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
 /// @return Return a pointer to the result. The user has to invoke
 ///         DestroyOnlineRecognizerResult() to free the returned pointer to
 ///         avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
+SHERPA_ONNX_API const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
     SherpaOnnxOfflineStream *stream);
 
 /// Destroy the pointer returned by GetOfflineStreamResult().
