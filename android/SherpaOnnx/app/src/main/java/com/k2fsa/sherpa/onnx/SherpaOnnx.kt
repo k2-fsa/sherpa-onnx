@@ -53,6 +53,8 @@ data class OnlineRecognizerConfig(
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",
     var maxActivePaths: Int = 4,
+    var hotwordsFile: String = "",
+    var hotwordsScore: Float = 1.5f,
 )
 
 class SherpaOnnx(
