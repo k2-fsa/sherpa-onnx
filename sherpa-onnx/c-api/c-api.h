@@ -111,6 +111,12 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
   /// this value.
   /// Used only when enable_endpoint is not 0.
   float rule3_min_utterance_length;
+
+  /// Path to the hotwords.
+  const char *hotwords_file;
+
+  /// Bonus score for each token in hotwords.
+  float hotwords_score;
 } SherpaOnnxOnlineRecognizerConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerResult {
@@ -335,6 +341,12 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {
 
   const char *decoding_method;
   int32_t max_active_paths;
+
+  /// Path to the hotwords.
+  const char *hotwords_file;
+
+  /// Bonus score for each token in hotwords.
+  float hotwords_score;
 } SherpaOnnxOfflineRecognizerConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizer
