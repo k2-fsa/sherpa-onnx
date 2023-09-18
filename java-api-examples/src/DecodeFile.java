@@ -49,6 +49,8 @@ public class DecodeFile {
       float rule3MinUtteranceLength = 20F;
       String decodingMethod = "greedy_search";
       int maxActivePaths = 4;
+      String hotwordsFile = "";
+      float hotwordsScore = 1.5F;
       String lm_model = "";
       float lm_scale = 0.5F;
       String modelType = "zipformer";
@@ -69,6 +71,8 @@ public class DecodeFile {
               lm_model,
               lm_scale,
               maxActivePaths,
+              hotwordsFile,
+              hotwordsScore,
               modelType);
       streamObj = rcgOjb.createStream();
     } catch (Exception e) {
