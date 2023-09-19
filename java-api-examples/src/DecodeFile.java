@@ -49,6 +49,8 @@ public class DecodeFile {
       float rule3MinUtteranceLength = 20F;
       String decodingMethod = "greedy_search";
       int maxActivePaths = 4;
+      String hotwordsFile = "";
+      float hotwordsScore = 1.5F;
       String lm_model = "";
       float lm_scale = 0.5F;
       String modelType = "zipformer";
@@ -69,6 +71,8 @@ public class DecodeFile {
               lm_model,
               lm_scale,
               maxActivePaths,
+              hotwordsFile,
+              hotwordsScore,
               modelType);
       streamObj = rcgOjb.createStream();
     } catch (Exception e) {
@@ -158,7 +162,7 @@ public class DecodeFile {
     try {
       String appDir = System.getProperty("user.dir");
       System.out.println("appdir=" + appDir);
-      String fileName = appDir + "/test.wav";
+      String fileName = appDir + "/" + args[0];
       String cfgPath = appDir + "/modeltest.cfg";
       String soPath = appDir + "/../build/lib/libsherpa-onnx-jni.so";
       OnlineRecognizer.setSoPath(soPath);

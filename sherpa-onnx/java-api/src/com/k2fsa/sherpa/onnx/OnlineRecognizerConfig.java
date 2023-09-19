@@ -12,6 +12,8 @@ public class OnlineRecognizerConfig {
   private final boolean enableEndpoint;
   private final String decodingMethod;
   private final int maxActivePaths;
+  private final String hotwordsFile;
+  private final float hotwordsScore;
 
   public OnlineRecognizerConfig(
       FeatureConfig featConfig,
@@ -20,7 +22,9 @@ public class OnlineRecognizerConfig {
       OnlineLMConfig lmConfig,
       boolean enableEndpoint,
       String decodingMethod,
-      int maxActivePaths) {
+      int maxActivePaths,
+      String hotwordsFile,
+      float hotwordsScore) {
     this.featConfig = featConfig;
     this.modelConfig = modelConfig;
     this.endpointConfig = endpointConfig;
@@ -28,6 +32,8 @@ public class OnlineRecognizerConfig {
     this.enableEndpoint = enableEndpoint;
     this.decodingMethod = decodingMethod;
     this.maxActivePaths = maxActivePaths;
+    this.hotwordsFile = hotwordsFile;
+    this.hotwordsScore = hotwordsScore;
   }
 
   public OnlineLMConfig getLmConfig() {
