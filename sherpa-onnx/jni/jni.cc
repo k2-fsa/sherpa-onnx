@@ -125,6 +125,15 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(cls, "maxActivePaths", "I");
   ans.max_active_paths = env->GetIntField(config, fid);
 
+  fid = env->GetFieldID(cls, "hotwordsFile", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.hotwords_file = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(cls, "hotwordsScore", "F");
+  ans.hotwords_score = env->GetFloatField(config, fid);
+
   //---------- feat config ----------
   fid = env->GetFieldID(cls, "featConfig",
                         "Lcom/k2fsa/sherpa/onnx/FeatureConfig;");
@@ -292,6 +301,15 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
 
   fid = env->GetFieldID(cls, "maxActivePaths", "I");
   ans.max_active_paths = env->GetIntField(config, fid);
+
+  fid = env->GetFieldID(cls, "hotwordsFile", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.hotwords_file = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(cls, "hotwordsScore", "F");
+  ans.hotwords_score = env->GetFloatField(config, fid);
 
   //---------- feat config ----------
   fid = env->GetFieldID(cls, "featConfig",

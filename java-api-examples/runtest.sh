@@ -36,6 +36,8 @@ if [ ! -d $repo ];then
 	git lfs pull --include "*.onnx"
 	ls -lh *.onnx
 	popd
+	ln -s $repo/test_wavs/0.wav hotwords.wav
+
 fi
 
 log $(pwd)
@@ -64,3 +66,9 @@ cd ../java-api-examples
 make all
 
 make runfile
+
+echo "礼 拜 二" > hotwords.txt
+
+sed -i 's/hotwords_file=/hotwords_file=hotwords.txt/g' modeltest.cfg
+
+make runhotwords

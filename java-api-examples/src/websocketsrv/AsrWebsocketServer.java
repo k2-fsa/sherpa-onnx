@@ -140,8 +140,6 @@ public class AsrWebsocketServer extends WebSocketServer {
     }
   }
 
- 
-
   public boolean streamQueueFind(WebSocket conn) {
     return streamQueue.contains(conn);
   }
@@ -151,16 +149,16 @@ public class AsrWebsocketServer extends WebSocketServer {
 
       rcgOjb = new OnlineRecognizer(cfgPath);
       // size of stream thread pool
-      int streamThreadNum = Integer.valueOf(cfgMap.get("stream_thread_num"));
+      int streamThreadNum = Integer.valueOf(cfgMap.getOrDefault("stream_thread_num", "16"));
       // size of decoder thread pool
-      int decoderThreadNum = Integer.valueOf(cfgMap.get("decoder_thread_num"));
+      int decoderThreadNum = Integer.valueOf(cfgMap.getOrDefault("decoder_thread_num", "16"));
 
       // time(ms) idle for decoder thread when no job
-      int decoderTimeIdle = Integer.valueOf(cfgMap.get("decoder_time_idle"));
+      int decoderTimeIdle = Integer.valueOf(cfgMap.getOrDefault("decoder_time_idle", "200"));
       // size of streams for parallel decoding
-      int parallelDecoderNum = Integer.valueOf(cfgMap.get("parallel_decoder_num"));
+      int parallelDecoderNum = Integer.valueOf(cfgMap.getOrDefault("parallel_decoder_num", "16"));
       // time(ms) out for connection data
-      int deocderTimeOut = Integer.valueOf(cfgMap.get("deocder_time_out"));
+      int deocderTimeOut = Integer.valueOf(cfgMap.getOrDefault("deocder_time_out", "30000"));
 
       // create stream threads
       for (int i = 0; i < streamThreadNum; i++) {
@@ -218,13 +216,13 @@ public class AsrWebsocketServer extends WebSocketServer {
 
     String soPath = args[0];
     String cfgPath = args[1];
- 
+
     OnlineRecognizer.setSoPath(soPath);
     logger.info("readProperties");
     Map<String, String> cfgMap = AsrWebsocketServer.readProperties(cfgPath);
-    int port = Integer.valueOf(cfgMap.get("port"));
+    int port = Integer.valueOf(cfgMap.getOrDefault("port", "8890"));
 
-    int connectionThreadNum = Integer.valueOf(cfgMap.get("connection_thread_num"));
+    int connectionThreadNum = Integer.valueOf(cfgMap.getOrDefault("connection_thread_num", "16"));
     AsrWebsocketServer s = new AsrWebsocketServer(port, connectionThreadNum);
     logger.info("initModelWithCfg");
     s.initModelWithCfg(cfgMap, cfgPath);
