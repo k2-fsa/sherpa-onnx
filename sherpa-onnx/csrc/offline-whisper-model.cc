@@ -78,9 +78,11 @@ class OfflineWhisperModel::Impl {
         decoder_input.size(), decoder_output_names_ptr_.data(),
         decoder_output_names_ptr_.size());
 
-    return {std::move(decoder_out[0]),   std::move(decoder_out[1]),
-            std::move(decoder_out[2]),   std::move(decoder_input[3]),
-            std::move(decoder_input[4]), std::move(decoder_input[5])};
+    return std::tuple<Ort::Value, Ort::Value, Ort::Value, Ort::Value,
+                      Ort::Value, Ort::Value>{
+        std::move(decoder_out[0]),   std::move(decoder_out[1]),
+        std::move(decoder_out[2]),   std::move(decoder_input[3]),
+        std::move(decoder_input[4]), std::move(decoder_input[5])};
   }
 
   std::pair<Ort::Value, Ort::Value> GetInitialSelfKVCache() {

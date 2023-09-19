@@ -85,8 +85,11 @@ set(sources
 if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
-
 add_library(sherpa-onnx-core ${sources})
+
+if(NOT WIN32)
+  target_link_libraries(sherpa-onnx-core -pthread)
+endif()
 
 if(ANDROID_NDK)
   target_link_libraries(sherpa-onnx-core android log)
@@ -121,19 +124,23 @@ endif()
 
 add_executable(sherpa-onnx sherpa-onnx.cc)
 add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
+add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
 
 target_link_libraries(sherpa-onnx sherpa-onnx-core)
 target_link_libraries(sherpa-onnx-offline sherpa-onnx-core)
+target_link_libraries(sherpa-onnx-offline-parallel sherpa-onnx-core)
 if(NOT WIN32)
   target_link_libraries(sherpa-onnx "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
   target_link_libraries(sherpa-onnx "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
 
   target_link_libraries(sherpa-onnx-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
   target_link_libraries(sherpa-onnx-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
+  target_link_libraries(sherpa-onnx-offline-parallel "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
 
   if(SHERPA_ONNX_ENABLE_PYTHON)
     target_link_libraries(sherpa-onnx "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
     target_link_libraries(sherpa-onnx-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+    target_link_libraries(sherpa-onnx-offline-parallel "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
   endif()
 endif()
 
@@ -151,6 +158,7 @@ install(
   TARGETS
     sherpa-onnx
     sherpa-onnx-offline
+    sherpa-onnx-offline-parallel
   DESTINATION
     bin
 )
