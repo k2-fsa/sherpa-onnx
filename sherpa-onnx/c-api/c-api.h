@@ -31,7 +31,7 @@ extern "C" {
 #define SHERPA_ONNX_IMPORT
 #endif
 #else  // WIN32
-#define SHERPA_ONNX_EXPORT
+#define SHERPA_ONNX_EXPORT __attribute__((visibility("default"))) 
 #define SHERPA_ONNX_IMPORT SHERPA_ONNX_EXPORT
 #endif
 
@@ -177,6 +177,13 @@ SHERPA_ONNX_API void DestroyOnlineRecognizer(
 ///         DestroyOnlineStream() to free it to avoid memory leak.
 SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineStream(
     const SherpaOnnxOnlineRecognizer *recognizer);
+
+/// Create an online stream for accepting wave samples with the specified hot words.
+///
+/// @param recognizer  A pointer returned by CreateOnlineRecognizer()
+/// @return Return a pointer to an OnlineStream. The user has to invoke
+///         DestroyOnlineStream() to free it to avoid memory leak.
+SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineStreamWithHotwords(const SherpaOnnxOnlineRecognizer *recognizer, const char *hotwords);
 
 /// Destroy an online stream.
 ///
