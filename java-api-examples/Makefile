@@ -1,4 +1,3 @@
-
 ENTRY_POINT = ./
 
 LIB_SRC_DIR := ../sherpa-onnx/java-api/src/com/k2fsa/sherpa/onnx
@@ -65,18 +64,22 @@ clean:
 	mkdir -p ./lib
 
 runfile:
+		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeFile test.wav
 
-		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeFile
+runhotwords:
+		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeFile hotwords.wav
 
 runmic:
-
 		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeMic
 
 runsrv:
-		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketServer ../build/lib/libsherpa-onnx-jni.so ./modeltest.cfg
+		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketServer $(shell pwd)/../build/lib/libsherpa-onnx-jni.so ./modeltest.cfg
 
 runclient:
-		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketClient ../build/lib/libsherpa-onnx-jni.so 127.0.0.1 8890 ./test.wav 32
+		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketClient $(shell pwd)/../build/lib/libsherpa-onnx-jni.so 127.0.0.1 8890 ./test.wav 32
+
+runclienthotwords:
+		java   -cp $(BUILD_DIR):lib/Java-WebSocket-1.5.3.jar:lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:../lib/sherpaonnx.jar  $(RUNJFLAGS)  websocketsrv.AsrWebsocketClient $(shell pwd)/../build/lib/libsherpa-onnx-jni.so 127.0.0.1 8890 ./hotwords.wav 32
 
 buildlib: $(LIB_FILES:.java=.class)
 
