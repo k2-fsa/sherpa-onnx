@@ -183,7 +183,7 @@ SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineStream(
 /// @param recognizer  A pointer returned by CreateOnlineRecognizer()
 /// @return Return a pointer to an OnlineStream. The user has to invoke
 ///         DestroyOnlineStream() to free it to avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineStreamWithHotwords(const SherpaOnnxOnlineRecognizer *recognizer, const char* hotwords);
+SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineStreamWithHotwords(const SherpaOnnxOnlineRecognizer *recognizer, const char *hotwords);
 
 /// Destroy an online stream.
 ///
