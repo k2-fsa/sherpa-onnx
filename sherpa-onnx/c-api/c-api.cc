@@ -107,6 +107,14 @@ SherpaOnnxOnlineStream *CreateOnlineStream(
   return stream;
 }
 
+SherpaOnnxOnlineStream *CreateOnlineStreamWithHotwords(
+    const SherpaOnnxOnlineRecognizer *recognizer, const char* hotwords) {
+  std::string hw(hotwords);
+  SherpaOnnxOnlineStream *stream =
+      new SherpaOnnxOnlineStream(recognizer->impl->CreateStream(hw));
+  return stream;
+}
+
 void DestroyOnlineStream(SherpaOnnxOnlineStream *stream) { delete stream; }
 
 void AcceptWaveform(SherpaOnnxOnlineStream *stream, int32_t sample_rate,
