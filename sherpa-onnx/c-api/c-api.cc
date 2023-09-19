@@ -108,10 +108,9 @@ SherpaOnnxOnlineStream *CreateOnlineStream(
 }
 
 SherpaOnnxOnlineStream *CreateOnlineStreamWithHotwords(
-    const SherpaOnnxOnlineRecognizer *recognizer, const char* hotwords) {
-  std::string hw(hotwords);
+    const SherpaOnnxOnlineRecognizer *recognizer, const char *hotwords) {
   SherpaOnnxOnlineStream *stream =
-      new SherpaOnnxOnlineStream(recognizer->impl->CreateStream(hw));
+      new SherpaOnnxOnlineStream(recognizer->impl->CreateStream(hotwords));
   return stream;
 }
 
