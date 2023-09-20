@@ -15,8 +15,8 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 # TODO(fangjun): update the URL
-set(onnxruntime_URL "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static-1.15.1.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static-1.15.1.zip")
+set(onnxruntime_URL  "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.15.1.tgz")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.15.1.tgz")
 set(onnxruntime_HASH "SHA256=b64fcf4115e3d02193c7406461d582703ccc1f0c24ad320ef74b07e5f71681c6")
 
 # If you don't have access to the Internet,
