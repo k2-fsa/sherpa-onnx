@@ -20,6 +20,7 @@ option(SHERPA_ONNX_ENABLE_JNI "Whether to build JNI internface" OFF)
 option(SHERPA_ONNX_ENABLE_C_API "Whether to build C API" ON)
 option(SHERPA_ONNX_ENABLE_WEBSOCKET "Whether to build webscoket server/client" ON)
 option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime GPU support" OFF)
+option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically. Used only when BUILD_SHARED_LIBS is ON on Linux" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -65,6 +66,10 @@ is installed on your system. Otherwise, you will get errors at runtime.
 Hint: You don't need sudo permission to install CUDA toolkit. Please refer to
   https://k2-fsa.github.io/k2/installation/cuda-cudnn.html
 to install CUDA toolkit if you have not installed it.")
+  if(NOT BUILD_SHARED_LIBS)
+    message(STATUS "Set BUILD_SHARED_LIBS to ON since SHERPA_ONNX_ENABLE_GPU is ON")
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+  endif()
 endif()
 
 if(BUILD_SHARED_LIBS AND MSVC)
@@ -131,12 +136,22 @@ if(WIN32 AND MSVC)
   foreach(w IN LISTS disabled_warnings)
     string(APPEND CMAKE_CXX_FLAGS " ${w} ")
   endforeach()
-endif()
 
+  add_compile_options("$<$<C_COMPILER_ID:MSVC>:/utf-8>")
+  add_compile_options("$<$<CXX_COMPILER_ID:MSVC>:/utf-8>")
+endif()
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+if(NOT BUILD_SHARED_LIBS AND LINUX AND NOT APPLE)
+  if(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY)
+    message(STATUS "Link libstdc++ statically")
+    set(CMAKE_CXX_FLAGS " ${CMAKE_CXX_FLAGS} -static-libstdc++ -static-libgcc ")
+  else()
+    message(STATUS "Link libstdc++ dynamically")
+  endif()
+endif()
 
 include(kaldi-native-fbank)
 include(onnxruntime)
@@ -186,3 +201,4 @@ install(
   DESTINATION
     .
 )
+message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
