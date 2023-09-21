@@ -10,19 +10,19 @@ if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
   message(FATAL_ERROR "This file is for arm only. Given: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
-set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.15.1.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-arm-1.15.1.zip")
-set(onnxruntime_HASH "SHA256=867b96210a347e4b1bb949e7c9a3f222371ea0c00c9deaaba9fdd66c689f7fb7")
+set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.16.0.zip")
+set(onnxruntime_URL2 )
+set(onnxruntime_HASH "SHA256=0a63ea99fbba3ee399d6626c36752844ae93ae19bab30e4bf00d45cc8a13da02")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-arm-1.15.1.zip
-  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-arm-1.15.1.zip
-  ${PROJECT_BINARY_DIR}/onnxruntime-linux-arm-1.15.1.zip
-  /tmp/onnxruntime-linux-arm-1.15.1.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-arm-1.15.1.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-arm-1.16.0.zip
+  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-arm-1.16.0.zip
+  ${PROJECT_BINARY_DIR}/onnxruntime-linux-arm-1.16.0.zip
+  /tmp/onnxruntime-linux-arm-1.16.0.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-arm-1.16.0.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

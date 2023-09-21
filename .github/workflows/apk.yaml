@@ -55,3 +55,4 @@ jobs:
         with:
           file_glob: true
           file: apks/*.apk
+          overwrite: true

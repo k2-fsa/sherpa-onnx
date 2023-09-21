@@ -43,7 +43,7 @@ fi
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 
-onnxruntime_version=v1.15.1
+onnxruntime_version=v1.16.0
 
 if [ ! -f ./android-onnxruntime-libs/$onnxruntime_version/jni/x86_64/libonnxruntime.so ]; then
   GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/android-onnxruntime-libs
