@@ -10,19 +10,19 @@ if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
   message(FATAL_ERROR "This file is for aarch64 only. Given: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-linux-aarch64-1.15.1.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-aarch64-1.15.1.tgz")
-set(onnxruntime_HASH "SHA256=85272e75d8dd841138de4b774a9672ea93c1be108d96038c6c34a62d7f976aee")
+set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.16.0/onnxruntime-linux-aarch64-1.16.0.tgz")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-aarch64-1.16.0.tgz")
+set(onnxruntime_HASH "SHA256=86138ee89f53e847a0dfacbef71b0272e64c20cf27aaebaaf3c37c39378d5b48")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-1.15.1.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-aarch64-1.15.1.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-linux-aarch64-1.15.1.tgz
-  /tmp/onnxruntime-linux-aarch64-1.15.1.tgz
-  /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-1.15.1.tgz
+  $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-1.16.0.tgz
+  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-aarch64-1.16.0.tgz
+  ${PROJECT_BINARY_DIR}/onnxruntime-linux-aarch64-1.16.0.tgz
+  /tmp/onnxruntime-linux-aarch64-1.16.0.tgz
+  /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-1.16.0.tgz
 )
 
 foreach(f IN LISTS possible_file_locations)

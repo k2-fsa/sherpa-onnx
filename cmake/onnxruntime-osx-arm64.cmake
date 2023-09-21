@@ -8,18 +8,18 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
   message(FATAL_ERROR "This file is for macOS only. Given: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-osx-arm64-1.15.1.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-arm64-1.15.1.tgz")
-set(onnxruntime_HASH "SHA256=df97832fc7907c6677a6da437f92339d84a462becb74b1d65217fcb859ee9460")
+set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.16.0/onnxruntime-osx-arm64-1.16.0.tgz")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-arm64-1.16.0.tgz")
+set(onnxruntime_HASH "SHA256=39c83b53a3c61900f08815c534797a714c11f3a74b2f213877844ea18066f3af")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-osx-arm64-1.15.1.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-arm64-1.15.1.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-osx-arm64-1.15.1.tgz
-  /tmp/onnxruntime-osx-arm64-1.15.1.tgz
+  $ENV{HOME}/Downloads/onnxruntime-osx-arm64-1.16.0.tgz
+  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-arm64-1.16.0.tgz
+  ${PROJECT_BINARY_DIR}/onnxruntime-osx-arm64-1.16.0.tgz
+  /tmp/onnxruntime-osx-arm64-1.16.0.tgz
 )
 
 foreach(f IN LISTS possible_file_locations)

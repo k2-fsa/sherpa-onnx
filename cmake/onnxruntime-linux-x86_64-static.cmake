@@ -15,21 +15,19 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 # TODO(fangjun): update the URL
-set(onnxruntime_URL  "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.15.1.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.15.1.tgz")
-set(onnxruntime_HASH "SHA256=b64fcf4115e3d02193c7406461d582703ccc1f0c24ad320ef74b07e5f71681c6")
+set(onnxruntime_URL  "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.16.0.tgz")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.16.0.tgz")
+set(onnxruntime_HASH "SHA256=9a66e5df521a28ee8364cd814bb2e87c48bfb751b1a200593feceff99e8cd4ee")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.15.1.tgz
-
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.15.1.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.15.1.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.15.1.tgz
-  /tmp/onnxruntime-linux-x64-static_lib-1.15.1.tgz
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.15.1.tgz
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.16.0.tgz
+  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.16.0.tgz
+  ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.16.0.tgz
+  /tmp/onnxruntime-linux-x64-static_lib-1.16.0.tgz
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.16.0.tgz
 )
 
 foreach(f IN LISTS possible_file_locations)
