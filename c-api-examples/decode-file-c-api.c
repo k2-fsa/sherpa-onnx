@@ -96,6 +96,7 @@ int32_t main(int32_t argc, char *argv[]) {
   }
 
   SherpaOnnxOnlineRecognizerConfig config;
+  memset(&config, 0, sizeof(config));
 
   config.model_config.debug = 0;
   config.model_config.num_threads = 1;
@@ -195,7 +196,7 @@ int32_t main(int32_t argc, char *argv[]) {
         DecodeOnlineStream(recognizer, stream);
       }
 
-      SherpaOnnxOnlineRecognizerResult *r =
+      const SherpaOnnxOnlineRecognizerResult *r =
           GetOnlineStreamResult(recognizer, stream);
 
       if (strlen(r->text)) {
@@ -223,7 +224,7 @@ int32_t main(int32_t argc, char *argv[]) {
     DecodeOnlineStream(recognizer, stream);
   }
 
-  SherpaOnnxOnlineRecognizerResult *r =
+  const SherpaOnnxOnlineRecognizerResult *r =
       GetOnlineStreamResult(recognizer, stream);
 
   if (strlen(r->text)) {

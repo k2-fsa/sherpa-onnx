@@ -10,23 +10,26 @@ if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL x86_64)
   message(FATAL_ERROR "This file is for x86_64 only. Given: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
-if(NOT BUILD_SHARED_LIBS)
-  message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
+if(BUILD_SHARED_LIBS)
+  message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.15.1/onnxruntime-linux-x64-1.15.1.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-1.15.1.tgz")
-set(onnxruntime_HASH "SHA256=5492f9065f87538a286fb04c8542e9ff7950abb2ea6f8c24993a940006787d87")
+# TODO(fangjun): update the URL
+set(onnxruntime_URL  "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.15.1.tgz")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.15.1.tgz")
+set(onnxruntime_HASH "SHA256=b64fcf4115e3d02193c7406461d582703ccc1f0c24ad320ef74b07e5f71681c6")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.15.1.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.15.1.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-1.15.1.tgz
-  /tmp/onnxruntime-linux-x64-1.15.1.tgz
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.15.1.tgz
+  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.15.1.tgz
+
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.15.1.tgz
+  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.15.1.tgz
+  ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.15.1.tgz
+  /tmp/onnxruntime-linux-x64-static_lib-1.15.1.tgz
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.15.1.tgz
 )
 
 foreach(f IN LISTS possible_file_locations)
@@ -53,21 +56,12 @@ if(NOT onnxruntime_POPULATED)
 endif()
 message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-find_library(location_onnxruntime onnxruntime
-  PATHS
-  "${onnxruntime_SOURCE_DIR}/lib"
-  NO_CMAKE_SYSTEM_PATH
-)
+# for static libraries, we use onnxruntime_lib_files directly below
+include_directories(${onnxruntime_SOURCE_DIR}/include)
 
-message(STATUS "location_onnxruntime: ${location_onnxruntime}")
+file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*.a")
 
-add_library(onnxruntime SHARED IMPORTED)
+set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
 
-set_target_properties(onnxruntime PROPERTIES
-  IMPORTED_LOCATION ${location_onnxruntime}
-  INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
-)
-
-file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime*")
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
 install(FILES ${onnxruntime_lib_files} DESTINATION lib)

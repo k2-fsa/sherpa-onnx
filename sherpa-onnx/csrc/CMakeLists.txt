@@ -97,7 +97,7 @@ endif()
 
 target_link_libraries(sherpa-onnx-core kaldi-native-fbank-core)
 
-if(BUILD_SHARED_LIBS OR NOT WIN32)
+if(BUILD_SHARED_LIBS OR APPLE OR CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64 OR CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
   target_link_libraries(sherpa-onnx-core onnxruntime)
 else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
@@ -122,9 +122,14 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   endif()
 endif()
 
+if(NOT BUILD_SHARED_LIBS AND LINUX AND NOT APPLE)
+  target_link_libraries(sherpa-onnx-core -pthread -ldl)
+endif()
+
 add_executable(sherpa-onnx sherpa-onnx.cc)
 add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
 add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
+
 
 target_link_libraries(sherpa-onnx sherpa-onnx-core)
 target_link_libraries(sherpa-onnx-offline sherpa-onnx-core)

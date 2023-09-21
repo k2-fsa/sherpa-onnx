@@ -39,12 +39,14 @@ concurrency:
 
 jobs:
   linux:
+    name: ${{ matrix.build_type }} ${{ matrix.shared_lib }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         build_type: [Release, Debug]
+        shared_lib: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v2
@@ -56,7 +58,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for ubuntu
         shell: bash
@@ -87,6 +89,8 @@ jobs:
         run: |
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx-offline
+
+          readelf -d build/bin/sherpa-onnx-offline
 
           .github/scripts/test-offline-whisper.sh
 
