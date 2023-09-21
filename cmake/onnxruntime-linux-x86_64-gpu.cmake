@@ -18,9 +18,9 @@ if(NOT SHERPA_ONNX_ENABLE_GPU)
   message(FATAL_ERROR "This file is for NVIDIA GPU only. Given SHERPA_ONNX_ENABLE_GPU: ${SHERPA_ONNX_ENABLE_GPU}")
 endif()
 
-set(onnxruntime_URL "https://github.com/microsoft/onnxruntime/releases/download/v1.16.0/onnxruntime-linux-x64-gpu-1.16.0.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-gpu-1.16.0.tgz")
-set(onnxruntime_HASH "SHA256=9afb2a26cb45b7733c005118b6015e6f4256233041201efc6aa1116dde26a656")
+set(onnxruntime_URL "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-gpu-1.16.0.tgz")
+set(onnxruntime_URL2 )
+set(onnxruntime_HASH "SHA256=f9cbf3d711f46d7e03ea43746ee9d1c7d8e82c171a4655f6591dd4d1ba1b9ec7")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.

@@ -10,9 +10,9 @@ if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
   message(FATAL_ERROR "This file is for aarch64 only. Given: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.16.0/onnxruntime-linux-aarch64-1.16.0.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-aarch64-1.16.0.tgz")
-set(onnxruntime_HASH "SHA256=86138ee89f53e847a0dfacbef71b0272e64c20cf27aaebaaf3c37c39378d5b48")
+set(onnxruntime_URL "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-aarch64-1.16.0.tgz")
+set(onnxruntime_URL2 )
+set(onnxruntime_HASH "SHA256=8b15781d974803203c09df7d52c84d8c9f1ac7d949a97f515e4d2f5dc978d8af")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.

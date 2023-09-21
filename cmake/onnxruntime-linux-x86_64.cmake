@@ -14,9 +14,9 @@ if(NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.16.0/onnxruntime-linux-x64-1.16.0.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-1.16.0.tgz")
-set(onnxruntime_HASH "SHA256=23d867eb2a778dd54c601778e5d2bcf45ceb76c5a82cc0144053c83f5d1f0005")
+set(onnxruntime_URL "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-1.16.0.tgz")
+set(onnxruntime_URL2 )
+set(onnxruntime_HASH "SHA256=02bcd1e4fef295dacc3b232774efeaa0a83527f439f29147c3badade4df1f6dc")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
