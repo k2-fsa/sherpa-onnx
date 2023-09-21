@@ -39,7 +39,8 @@ concurrency:
 
 jobs:
   linux:
-    runs-on: ${{ matrix.build_type }} ${{ matrix.shared_lib }}
+    name: ${{ matrix.build_type }} ${{ matrix.shared_lib }}
+    runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
