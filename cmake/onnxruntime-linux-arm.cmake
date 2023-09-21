@@ -11,8 +11,8 @@ if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
 endif()
 
 set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.16.0.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-arm-1.16.0.zip")
-set(onnxruntime_HASH "SHA256=0c794c7bdb089c459b8d8f49fe4f79a3956b665d974145287706c7c7a913506d")
+set(onnxruntime_URL2 )
+set(onnxruntime_HASH "SHA256=0a63ea99fbba3ee399d6626c36752844ae93ae19bab30e4bf00d45cc8a13da02")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.

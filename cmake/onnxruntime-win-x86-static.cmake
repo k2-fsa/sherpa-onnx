@@ -17,7 +17,7 @@ endif()
 
 set(onnxruntime_URL  "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-static-1.16.0.tar.bz2")
 set(onnxruntime_URL2 "")
-set(onnxruntime_HASH "SHA256=d03359dbd534aab621fb08b93929118ca5cfc35243071f96d2733c0cecb38616")
+set(onnxruntime_HASH "SHA256=aedb6b5275f7832ac5117db8e40328a0842ae8ce6749a0c99bcb4218c53fdc60")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
