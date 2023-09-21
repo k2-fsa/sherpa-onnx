@@ -24,7 +24,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          python3 -m pip install openai-whisper torch onnxruntime onnx
+          python3 -m pip install openai-whisper torch onnxruntime==1.15.1 onnx
 
       - name: export ${{ matrix.model }}
         shell: bash
