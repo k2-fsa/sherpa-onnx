@@ -108,7 +108,9 @@ func sherpaOnnxOnlineRecognizerConfig(
   rule2MinTrailingSilence: Float = 1.2,
   rule3MinUtteranceLength: Float = 30,
   decodingMethod: String = "greedy_search",
-  maxActivePaths: Int = 4
+  maxActivePaths: Int = 4,
+  hotwordsFile: String = "",
+  hotwordsScore: Float = 1.5
 ) -> SherpaOnnxOnlineRecognizerConfig {
   return SherpaOnnxOnlineRecognizerConfig(
     feat_config: featConfig,
@@ -118,7 +120,9 @@ func sherpaOnnxOnlineRecognizerConfig(
     enable_endpoint: enableEndpoint ? 1 : 0,
     rule1_min_trailing_silence: rule1MinTrailingSilence,
     rule2_min_trailing_silence: rule2MinTrailingSilence,
-    rule3_min_utterance_length: rule3MinUtteranceLength)
+    rule3_min_utterance_length: rule3MinUtteranceLength,
+    hotwords_file: toCPointer(hotwordsFile),
+    hotwords_score: hotwordsScore)
 }
 
 /// Wrapper for recognition result.
@@ -327,14 +331,18 @@ func sherpaOnnxOfflineRecognizerConfig(
   modelConfig: SherpaOnnxOfflineModelConfig,
   lmConfig: SherpaOnnxOfflineLMConfig = sherpaOnnxOfflineLMConfig(),
   decodingMethod: String = "greedy_search",
-  maxActivePaths: Int = 4
+  maxActivePaths: Int = 4,
+  hotwordsFile: String = "",
+  hotwordsScore: Float = 1.5
 ) -> SherpaOnnxOfflineRecognizerConfig {
   return SherpaOnnxOfflineRecognizerConfig(
     feat_config: featConfig,
     model_config: modelConfig,
     lm_config: lmConfig,
     decoding_method: toCPointer(decodingMethod),
-    max_active_paths: Int32(maxActivePaths)
+    max_active_paths: Int32(maxActivePaths),
+    hotwords_file: toCPointer(hotwordsFile),
+    hotwords_score: hotwordsScore
   )
 }
 
