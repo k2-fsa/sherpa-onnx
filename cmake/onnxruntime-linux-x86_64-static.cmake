@@ -14,8 +14,8 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.16.0.tgz")
-set(onnxruntime_URL2 )
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.0/onnxruntime-linux-x64-static_lib-1.16.0.tgz")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.16.0.tgz")
 set(onnxruntime_HASH "SHA256=a36e989c9a07f12bf16f63acb2217b02a0cf4ac75aa7bc27de76ae08706a5c1f")
 
 # If you don't have access to the Internet,
