@@ -51,7 +51,7 @@ void SymbolTable::Init(std::istream &is) {
     if (id >= 3 && id <= 258 && sym.size() == 6 && sym[0] == '<' &&
         sym[1] == '0' && sym[2] == 'x' && sym[5] == '>') {
       std::ostringstream os;
-      os << std::hex << (id - 3);
+      os << std::hex << std::uppercase << (id - 3);
 
       if (std::string(sym.data() + 3, sym.data() + 5) == os.str()) {
         uint8_t i = id - 3;
