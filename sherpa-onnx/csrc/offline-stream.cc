@@ -8,9 +8,9 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iomanip>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
-#include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
@@ -256,25 +256,50 @@ const OfflineRecognitionResult &OfflineStream::GetResult() const {
   return impl_->GetResult();
 }
 std::string OfflineRecognitionResult::AsJsonString() const {
-  nlohmann::json j;
-  j["text"] = text;
-  j["tokens"] = tokens;
-#if 1
-  // This branch chooses number of decimal points to keep in
-  // the return json string
   std::ostringstream os;
-  os << "[";
+  os << "{";
+  os << "\"text\""
+     << ": ";
+  os << "\"" << text << "\""
+     << ", ";
+
+  os << "\""
+     << "timestamps"
+     << "\""
+     << ": ";
+  os << "\"[";
+
   std::string sep = "";
   for (auto t : timestamps) {
     os << sep << std::fixed << std::setprecision(2) << t;
     sep = ", ";
   }
-  os << "]";
-  j["timestamps"] = os.str();
-#else
-  j["timestamps"] = timestamps;
-#endif
+  os << "]\", ";
 
-  return j.dump();
+  os << "\""
+     << "tokens"
+     << "\""
+     << ":";
+  os << "[";
+
+  sep = "";
+  auto oldFlags = os.flags();
+  for (const auto &t : tokens) {
+    if (t.size() == 1 && static_cast<uint8_t>(t[0]) > 0x7f) {
+      const uint8_t *p = reinterpret_cast<const uint8_t *>(t.c_str());
+      os << sep << "\""
+         << "<0x" << std::hex << std::uppercase << static_cast<uint32_t>(p[0])
+         << ">"
+         << "\"";
+      os.flags(oldFlags);
+    } else {
+      os << sep << "\"" << t << "\"";
+    }
+    sep = ", ";
+  }
+  os << "]";
+  os << "}";
+
+  return os.str();
 }
 }  // namespace sherpa_onnx
