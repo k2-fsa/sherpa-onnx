@@ -7,3 +7,6 @@
 - [vad-remove-non-speech-segments.py](./vad-remove-non-speech-segments.py) It uses
   [silero-vad](https://github.com/snakers4/silero-vad) to remove non-speech
   segments and concatenate all speech segments into a single one.
+- [vad-with-non-streaming-asr.py](./vad-with-non-streaming-asr.py) It shows
+  how to use VAD with a non-streaming ASR model for speech recognition from
+  a microphone
