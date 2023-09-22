@@ -8,8 +8,8 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
   message(FATAL_ERROR "This file is for macOS only. Given: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-set(onnxruntime_URL "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-arm64-1.16.0.tgz")
-set(onnxruntime_URL2  )
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.0/onnxruntime-osx-arm64-1.16.0.tgz")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-arm64-1.16.0.tgz")
 set(onnxruntime_HASH "SHA256=fec3b70ca4f642a5c6d5c3a6f3a4eddd4c1b9281893fe2c7ae03a3086e20c316")
 
 # If you don't have access to the Internet,
