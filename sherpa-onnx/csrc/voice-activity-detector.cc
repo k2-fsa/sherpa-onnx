@@ -41,7 +41,9 @@ class VoiceActivityDetector::Impl {
       buffer_.Push(p, window_size);
       is_speech = model_->IsSpeech(p, window_size);
     }
-    last_ = std::vector<float>(p, last_.data() + last_.size());
+
+    last_ = std::vector<float>(
+        p, static_cast<const float *>(last_.data()) + last_.size());
 
     if (is_speech) {
       if (start_ == -1) {
