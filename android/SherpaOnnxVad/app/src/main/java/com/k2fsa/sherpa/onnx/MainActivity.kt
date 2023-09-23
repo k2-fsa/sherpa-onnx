@@ -108,9 +108,9 @@ class MainActivity : AppCompatActivity() {
 
     private fun onVad(isSpeech: Boolean) {
         if(isSpeech) {
-            circle.background = resources.getDrawable(R.drawable.green_circle)
+            circle.background = resources.getDrawable(R.drawable.red_circle)
         } else {
-            circle.background = resources.getDrawable(R.drawable.gray_circle)
+            circle.background = resources.getDrawable(R.drawable.black_circle)
         }
     }
 
@@ -152,8 +152,7 @@ class MainActivity : AppCompatActivity() {
     private fun processSamples() {
         Log.i(TAG, "processing samples")
 
-        val interval = 0.1 // i.e., 100 ms
-        val bufferSize = (interval * sampleRateInHz).toInt() // in samples
+        val bufferSize = 512 // in samples
         val buffer = ShortArray(bufferSize)
 
         while (isRecording) {

@@ -3,7 +3,7 @@
   <item>
     <shape  android:shape="oval">
 
-    <solid  android:color="#666666"/>
+    <solid  android:color="#FFFF0000"/>
 
     <size
         android:width="300dp"

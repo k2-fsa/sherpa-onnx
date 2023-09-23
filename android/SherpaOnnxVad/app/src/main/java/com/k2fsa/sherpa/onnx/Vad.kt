@@ -6,7 +6,7 @@ import android.content.res.AssetManager
 data class SileroVadModelConfig(
     var model: String,
     var threshold: Float = 0.5F,
-    var minSilenceDuration: Float = 0.5F,
+    var minSilenceDuration: Float = 0.25F,
     var minSpeechDuration: Float = 0.25F,
     var windowSize: Int = 512,
 )
@@ -87,7 +87,7 @@ fun getVadModelConfig(type: Int): VadModelConfig? {
                 sileroVadModelConfig = SileroVadModelConfig(
                     model = "silero_vad.onnx",
                     threshold = 0.5F,
-                    minSilenceDuration = 0.5F,
+                    minSilenceDuration = 0.25F,
                     minSpeechDuration = 0.25F,
                     windowSize = 512,
                 ),
