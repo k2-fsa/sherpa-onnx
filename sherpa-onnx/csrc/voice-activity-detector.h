@@ -7,6 +7,11 @@
 #include <memory>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/vad-model-config.h"
 
 namespace sherpa_onnx {
@@ -20,6 +25,12 @@ class VoiceActivityDetector {
  public:
   explicit VoiceActivityDetector(const VadModelConfig &config,
                                  float buffer_size_in_seconds = 60);
+
+#if __ANDROID_API__ >= 9
+  VoiceActivityDetector(AAssetManager *mgr, const VadModelConfig &config,
+                        float buffer_size_in_seconds = 60);
+#endif
+
   ~VoiceActivityDetector();
 
   void AcceptWaveform(const float *samples, int32_t n);

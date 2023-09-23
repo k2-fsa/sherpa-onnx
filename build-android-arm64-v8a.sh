@@ -45,7 +45,9 @@ sleep 1
 onnxruntime_version=v1.16.0
 
 if [ ! -f ./android-onnxruntime-libs/$onnxruntime_version/jni/arm64-v8a/libonnxruntime.so ]; then
-  GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/android-onnxruntime-libs
+  if [ ! -d android-onnxruntime-libs ]; then
+    GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/android-onnxruntime-libs
+  fi
   pushd android-onnxruntime-libs
   git lfs pull --include "$onnxruntime_version/jni/arm64-v8a/libonnxruntime.so"
   ln -s $onnxruntime_version/jni .

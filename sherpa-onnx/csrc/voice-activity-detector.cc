@@ -19,10 +19,32 @@ class VoiceActivityDetector::Impl {
         config_(config),
         buffer_(buffer_size_in_seconds * config.sample_rate) {}
 
-  void AcceptWaveform(const float *samples, int32_t n) {
-    buffer_.Push(samples, n);
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const VadModelConfig &config,
+       float buffer_size_in_seconds = 60)
+      : model_(VadModel::Create(mgr, config)),
+        config_(config),
+        buffer_(buffer_size_in_seconds * config.sample_rate) {}
+#endif
 
-    bool is_speech = model_->IsSpeech(samples, n);
+  void AcceptWaveform(const float *samples, int32_t n) {
+    int32_t window_size = model_->WindowSize();
+
+    // note n is usally window_size and there is no need to use
+    // an extra buffer here
+    last_.insert(last_.end(), samples, samples + n);
+    int32_t k = static_cast<int32_t>(last_.size()) / window_size;
+    const float *p = last_.data();
+    bool is_speech = false;
+
+    for (int32_t i = 0; i != k; ++i, p += window_size) {
+      buffer_.Push(p, window_size);
+      is_speech = model_->IsSpeech(p, window_size);
+    }
+
+    last_ = std::vector<float>(
+        p, static_cast<const float *>(last_.data()) + last_.size());
+
     if (is_speech) {
       if (start_ == -1) {
         // beginning of speech
@@ -31,15 +53,15 @@ class VoiceActivityDetector::Impl {
       }
     } else {
       // non-speech
-      if (start_ != -1) {
+      if (start_ != -1 && buffer_.Size()) {
         // end of speech, save the speech segment
         int32_t end = buffer_.Tail() - model_->MinSilenceDurationSamples();
 
-        std::vector<float> samples = buffer_.Get(start_, end - start_);
+        std::vector<float> s = buffer_.Get(start_, end - start_);
         SpeechSegment segment;
 
         segment.start = start_;
-        segment.samples = std::move(samples);
+        segment.samples = std::move(s);
 
         segments_.push(std::move(segment));
 
@@ -73,6 +95,7 @@ class VoiceActivityDetector::Impl {
   std::unique_ptr<VadModel> model_;
   VadModelConfig config_;
   CircularBuffer buffer_;
+  std::vector<float> last_;
 
   int32_t start_ = -1;
 };
@@ -80,6 +103,13 @@ class VoiceActivityDetector::Impl {
 VoiceActivityDetector::VoiceActivityDetector(
     const VadModelConfig &config, float buffer_size_in_seconds /*= 60*/)
     : impl_(std::make_unique<Impl>(config, buffer_size_in_seconds)) {}
+
+#if __ANDROID_API__ >= 9
+VoiceActivityDetector::VoiceActivityDetector(
+    AAssetManager *mgr, const VadModelConfig &config,
+    float buffer_size_in_seconds /*= 60*/)
+    : impl_(std::make_unique<Impl>(mgr, config, buffer_size_in_seconds)) {}
+#endif
 
 VoiceActivityDetector::~VoiceActivityDetector() = default;
 
