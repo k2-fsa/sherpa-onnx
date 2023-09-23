@@ -53,6 +53,8 @@ data class OnlineRecognizerConfig(
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",
     var maxActivePaths: Int = 4,
+    var hotwordsFile: String = "",
+    var hotwordsScore: Float = 1.5f,
 )
 
 data class OfflineTransducerModelConfig(
@@ -87,6 +89,8 @@ data class OfflineRecognizerConfig(
     // var lmConfig: OfflineLMConfig(), // TODO(fangjun): enable it
     var decodingMethod: String = "greedy_search",
     var maxActivePaths: Int = 4,
+    var hotwordsFile: String = "",
+    var hotwordsScore: Float = 1.5f,
 )
 
 class SherpaOnnx(
@@ -367,6 +371,19 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer",
+            )
+        }
+
+        5 -> {
+            val modelDir = "sherpa-onnx-zipformer-multi-zh-hans-2023-9-2"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-20-avg-1.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-20-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-20-avg-1.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer2",
             )
         }
 
