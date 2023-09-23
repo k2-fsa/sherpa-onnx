@@ -22,9 +22,6 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'toolchains/aarch64-linux-gnu.toolchain.cmake'
-  release:
-    types:
-      - published
 
   workflow_dispatch:
     inputs:

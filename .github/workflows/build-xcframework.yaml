@@ -9,9 +9,6 @@ on:
       - './build-ios.sh'
     tags:
       - '*'
-  release:
-    types:
-      - published
 
   workflow_dispatch:
 
