@@ -6,6 +6,11 @@
 
 #include <memory>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/vad-model-config.h"
 
 namespace sherpa_onnx {
@@ -15,6 +20,11 @@ class VadModel {
   virtual ~VadModel() = default;
 
   static std::unique_ptr<VadModel> Create(const VadModelConfig &config);
+
+#if __ANDROID_API__ >= 9
+  static std::unique_ptr<VadModel> Create(AAssetManager *mgr,
+                                          const VadModelConfig &config);
+#endif
 
   // reset the internal model states
   virtual void Reset() = 0;

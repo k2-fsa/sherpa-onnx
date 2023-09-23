@@ -19,6 +19,14 @@ class VoiceActivityDetector::Impl {
         config_(config),
         buffer_(buffer_size_in_seconds * config.sample_rate) {}
 
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const VadModelConfig &config,
+       float buffer_size_in_seconds = 60)
+      : model_(VadModel::Create(mgr, config)),
+        config_(config),
+        buffer_(buffer_size_in_seconds * config.sample_rate) {}
+#endif
+
   void AcceptWaveform(const float *samples, int32_t n) {
     buffer_.Push(samples, n);
 
@@ -80,6 +88,13 @@ class VoiceActivityDetector::Impl {
 VoiceActivityDetector::VoiceActivityDetector(
     const VadModelConfig &config, float buffer_size_in_seconds /*= 60*/)
     : impl_(std::make_unique<Impl>(config, buffer_size_in_seconds)) {}
+
+#if __ANDROID_API__ >= 9
+VoiceActivityDetector::VoiceActivityDetector(
+    AAssetManager *mgr, const VadModelConfig &config,
+    float buffer_size_in_seconds /*= 60*/)
+    : impl_(std::make_unique<Impl>(mgr, config, buffer_size_in_seconds)) {}
+#endif
 
 VoiceActivityDetector::~VoiceActivityDetector() = default;
 

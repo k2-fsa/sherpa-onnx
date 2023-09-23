@@ -37,6 +37,29 @@ class SileroVadModel::Impl {
     min_speech_samples_ = sample_rate_ * config_.silero_vad.min_speech_duration;
   }
 
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const VadModelConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_ERROR),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    auto buf = ReadFile(mgr, config.silero_vad.model);
+    Init(buf.data(), buf.size());
+
+    sample_rate_ = config.sample_rate;
+    if (sample_rate_ != 16000) {
+      SHERPA_ONNX_LOGE("Expected sample rate 16000. Given: %d",
+                       config.sample_rate);
+      exit(-1);
+    }
+
+    min_silence_samples_ =
+        sample_rate_ * config_.silero_vad.min_silence_duration;
+
+    min_speech_samples_ = sample_rate_ * config_.silero_vad.min_speech_duration;
+  }
+#endif
+
   void Reset() {
     // 2 - number of LSTM layer
     // 1 - batch size
@@ -259,6 +282,11 @@ class SileroVadModel::Impl {
 
 SileroVadModel::SileroVadModel(const VadModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+SileroVadModel::SileroVadModel(AAssetManager *mgr, const VadModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
 
 SileroVadModel::~SileroVadModel() = default;
 

@@ -32,7 +32,7 @@ std::vector<std::vector<std::string>> SplitToBatches(
     process_num += batch_size;
   }
   if (itr != input.cend()) {
-     outputs.emplace_back(itr, input.cend());
+    outputs.emplace_back(itr, input.cend());
   }
   return outputs;
 }
@@ -41,8 +41,8 @@ std::vector<std::string> LoadScpFile(const std::string &wav_scp_path) {
   std::vector<std::string> wav_paths;
   std::ifstream in(wav_scp_path);
   if (!in.is_open()) {
-      fprintf(stderr, "Failed to open file: %s.\n", wav_scp_path.c_str());
-      return wav_paths;
+    fprintf(stderr, "Failed to open file: %s.\n", wav_scp_path.c_str());
+    return wav_paths;
   }
   std::string line, column1, column2;
   while (std::getline(in, line)) {
@@ -55,8 +55,8 @@ std::vector<std::string> LoadScpFile(const std::string &wav_scp_path) {
 }
 
 void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
-                   sherpa_onnx::OfflineRecognizer* recognizer,
-                   float* total_length, float* total_time) {
+                  sherpa_onnx::OfflineRecognizer *recognizer,
+                  float *total_length, float *total_time) {
   std::vector<std::unique_ptr<sherpa_onnx::OfflineStream>> ss;
   std::vector<sherpa_onnx::OfflineStream *> ss_pointers;
   float duration = 0.0f;
@@ -70,7 +70,7 @@ void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
         sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
     if (!is_ok) {
       fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
-       continue;
+      continue;
     }
     duration += samples.size() / static_cast<float>(sampling_rate);
     auto s = recognizer->CreateStream();
@@ -97,7 +97,7 @@ void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
           sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
       if (!is_ok) {
         fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
-         continue;
+        continue;
       }
       duration += samples.size() / static_cast<float>(sampling_rate);
       auto s = recognizer->CreateStream();
@@ -109,9 +109,9 @@ void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
     recognizer->DecodeStreams(ss_pointers.data(), ss_pointers.size());
     const auto end = std::chrono::steady_clock::now();
     float elapsed_seconds =
-      std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
-          .count() /
-      1000.;
+        std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
+            .count() /
+        1000.;
     elapsed_seconds_batch += elapsed_seconds;
     int i = 0;
     for (const auto &wav_filename : wav_paths) {
@@ -122,7 +122,7 @@ void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
     ss_pointers.clear();
     ss.clear();
   }
-  fprintf(stderr, "thread %lu.\n", std::this_thread::get_id());
+
   {
     std::lock_guard<std::mutex> guard(mtx);
     *total_length += duration;
@@ -131,7 +131,6 @@ void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
     }
   }
 }
-
 
 int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
@@ -223,17 +222,17 @@ https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 for a list of pre-trained models to download.
 )usage";
   std::string wav_scp = "";  // file path, kaldi style wav list.
-  int32_t nj = 1;  // thread number
-  int32_t batch_size = 1; // number of wav files processed at once.
+  int32_t nj = 1;            // thread number
+  int32_t batch_size = 1;    // number of wav files processed at once.
   sherpa_onnx::ParseOptions po(kUsageMessage);
   sherpa_onnx::OfflineRecognizerConfig config;
   config.Register(&po);
   po.Register("wav-scp", &wav_scp,
               "a file including wav-id and wav-path, kaldi style wav list."
-              "default="". when it is not empty, wav files which positional "
+              "default="
+              ". when it is not empty, wav files which positional "
               "parameters provide are invalid.");
-  po.Register("nj", &nj,
-              "multi-thread num for decoding, default=1");
+  po.Register("nj", &nj, "multi-thread num for decoding, default=1");
   po.Register("batch-size", &batch_size,
               "number of wav files processed at once during the decoding"
               "process. default=1");
@@ -262,7 +261,8 @@ for a list of pre-trained models to download.
       1000.;
   fprintf(stderr,
           "Started nj: %d, batch_size: %d, wav_path: %s. recognizer init time: "
-          "%.6f\n", nj, batch_size, wav_scp.c_str(), elapsed_seconds);
+          "%.6f\n",
+          nj, batch_size, wav_scp.c_str(), elapsed_seconds);
   std::this_thread::sleep_for(std::chrono::seconds(10));  // sleep 10s
   std::vector<std::string> wav_paths;
   if (!wav_scp.empty()) {
@@ -282,12 +282,12 @@ for a list of pre-trained models to download.
   float total_length = 0.0f;
   float total_time = 0.0f;
   for (int i = 0; i < nj; i++) {
-    threads.emplace_back(std::thread(AsrInference, batch_wav_paths,
-                         &recognizer, &total_length, &total_time));
+    threads.emplace_back(std::thread(AsrInference, batch_wav_paths, &recognizer,
+                                     &total_length, &total_time));
   }
 
-  for (auto& thread : threads) {
-      thread.join();
+  for (auto &thread : threads) {
+    thread.join();
   }
 
   fprintf(stderr, "num threads: %d\n", config.model_config.num_threads);
@@ -297,8 +297,8 @@ for a list of pre-trained models to download.
   }
   fprintf(stderr, "Elapsed seconds: %.3f s\n", total_time);
   float rtf = total_time / total_length;
-  fprintf(stderr, "Real time factor (RTF): %.6f / %.6f = %.4f\n",
-          total_time, total_length, rtf);
+  fprintf(stderr, "Real time factor (RTF): %.6f / %.6f = %.4f\n", total_time,
+          total_length, rtf);
   fprintf(stderr, "SPEEDUP: %.4f\n", 1.0 / rtf);
 
   return 0;
