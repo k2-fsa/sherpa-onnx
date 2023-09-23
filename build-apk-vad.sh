@@ -61,6 +61,6 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   rm -v ./android/SherpaOnnxVad/app/src/main/jniLibs/$arch/*.so
 done
 
-rm -rf ./android/SherpaOnnx/app/src/main/assets/*.onnx
+rm -rf ./android/SherpaOnnxVad/app/src/main/assets/*.onnx
 
 ls -lh apks/
