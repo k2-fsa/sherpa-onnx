@@ -1,4 +1,4 @@
-name: nightly-pip
+name: nightly-wheel-arm
 
 on:
   push:
@@ -15,10 +15,14 @@ on:
     # nightly build at 23:50 UTC time every day
     - cron: "50 23 * * *"
 
-  workflow_dispatch:
+  workflow_dispatc
+
+concurrency:
+  group: nightly-wheel-armv7l-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  nightly-arm-wheel:
+  nightly-wheel-arm:
     name: ${{ matrix.python-version }}
     # see https://github.com/actions/virtual-environments/blob/win19/20210525.0/images/win/Windows2019-Readme.md
     runs-on: ${{ matrix.os}}
@@ -51,5 +55,5 @@ jobs:
               cd /workspace
               ls -lh
 
-              pip install -i https://www.piwheels.org/simple sherpa-onnx
+              pip install -i https://www.piwheels.org/simple -i https://pypi.org/simple/ sherpa-onnx
               python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__, sherpa_onnx.__version__); print(dir(sherpa_onnx)); print(help(sherpa_onnx))"
