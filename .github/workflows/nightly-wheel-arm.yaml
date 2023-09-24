@@ -55,5 +55,6 @@ jobs:
               cd /workspace
               ls -lh
 
-              pip install -i https://www.piwheels.org/simple -i https://pypi.org/simple/ sherpa-onnx
+              pip install -i https://www.piwheels.org/simple numpy sentencepiece click
+              pip install --no-deps sherpa-onnx
               python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__, sherpa_onnx.__version__); print(dir(sherpa_onnx)); print(help(sherpa_onnx))"
