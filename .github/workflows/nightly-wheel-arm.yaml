@@ -15,7 +15,7 @@ on:
     # nightly build at 23:50 UTC time every day
     - cron: "50 23 * * *"
 
-  workflow_dispatc
+  workflow_dispatch:
 
 concurrency:
   group: nightly-wheel-armv7l-${{ github.ref }}
