@@ -19,8 +19,9 @@ on:
 
 jobs:
   nightly-arm-wheel:
+    name: ${{ matrix.python-version }}
     # see https://github.com/actions/virtual-environments/blob/win19/20210525.0/images/win/Windows2019-Readme.md
-    runs-on: ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os}}
     strategy:
       fail-fast: false
       matrix:
