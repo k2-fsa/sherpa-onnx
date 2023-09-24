@@ -6,7 +6,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Linux)
   message(FATAL_ERROR "This file is for Linux only. Given: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-if(NOT CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
+if(NOT (CMAKE_SYSTEM_PROCESSOR STREQUAL arm OR CMAKE_SYSTEM_PROCESSOR STREQUAL armv7l))
   message(FATAL_ERROR "This file is for arm only. Given: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
