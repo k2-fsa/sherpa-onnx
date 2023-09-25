@@ -122,7 +122,7 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   endif()
 endif()
 
-if(NOT BUILD_SHARED_LIBS AND LINUX AND NOT APPLE)
+if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
   target_link_libraries(sherpa-onnx-core -pthread -ldl)
 endif()
 
