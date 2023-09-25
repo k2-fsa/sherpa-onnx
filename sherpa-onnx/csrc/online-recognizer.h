@@ -44,11 +44,11 @@ struct OnlineRecognizerResult {
   /// When an endpoint is detected, it is incremented
   int32_t segment = 0;
 
-  /// Starting frame of this segment.
+  /// Starting time of this segment.
   /// When an endpoint is detected, it will change
   float start_time = 0;
 
-  /// True if this is the last segment.
+  /// True if the end of this segment is reached
   bool is_final = false;
 
   /** Return a json string.

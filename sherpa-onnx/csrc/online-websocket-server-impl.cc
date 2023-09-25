@@ -195,7 +195,12 @@ void OnlineWebsocketDecoder::Decode() {
   for (auto c : c_vec) {
     auto result = recognizer_->GetResult(c->s.get());
     if (recognizer_->IsEndpoint(c->s.get())) {
+      result.is_final = true;
       recognizer_->Reset(c->s.get());
+    }
+
+    if (!recognizer_->IsReady(c->s.get()) && c->eof) {
+      result.is_final = true;
     }
 
     asio::post(server_->GetConnectionContext(),
