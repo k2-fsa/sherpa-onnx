@@ -5,7 +5,6 @@ on:
     branches:
       - master
       - nightly
-      - wheel-arm
   schedule:
     # minute (0-59)
     # hour (0-23)
