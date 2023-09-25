@@ -35,14 +35,14 @@ std::string OnlineRecognizerResult::AsJsonString() const {
      << "timestamps"
      << "\""
      << ": ";
-  os << "\"[";
+  os << "[";
 
   std::string sep = "";
   for (auto t : timestamps) {
     os << sep << std::fixed << std::setprecision(2) << t;
     sep = ", ";
   }
-  os << "]\", ";
+  os << "], ";
 
   os << "\""
      << "tokens"
