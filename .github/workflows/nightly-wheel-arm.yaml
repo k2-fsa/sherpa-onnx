@@ -1,0 +1,68 @@
+name: nightly-wheel-arm
+
+on:
+  push:
+    branches:
+      - master
+      - nightly
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 23:50 UTC time every day
+    - cron: "50 23 * * *"
+
+  workflow_dispatch:
+
+concurrency:
+  group: nightly-wheel-armv7l-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  nightly-wheel-arm:
+    name: ${{ matrix.python-version }}
+    # see https://github.com/actions/virtual-environments/blob/win19/20210525.0/images/win/Windows2019-Readme.md
+    runs-on: ${{ matrix.os}}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm
+
+      - name: Run docker
+        uses: addnab/docker-run-action@v3
+        with:
+            image: balenalib/raspberrypi3-python:${{ matrix.python-version }}-bullseye-build
+            options: |
+              --platform linux/arm/v7
+              --volume ${{ github.workspace }}/:/workspace
+            shell: bash
+            run: |
+              uname -a
+              cd /workspace
+              ls -lh
+
+              v=${{ matrix.python-version }}
+              PYTHON_VERSION=${v/./}
+              echo PYTHON_VERSION=$PYTHON_VERSION >> $GITHUB_ENV
+              extra=""
+              if [[ ${PYTHON_VERSION} == "37" ]]; then
+                extra="m"
+              fi
+
+              # pip install -i https://www.piwheels.org/simple numpy sentencepiece click
+              pip install https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/sentencepiece-0.2.0-cp${PYTHON_VERSION}-cp${PYTHON_VERSION}${extra}-linux_armv7l.whl
+              pip install --no-deps sherpa-onnx
+              python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__, sherpa_onnx.__version__); print(dir(sherpa_onnx)); print(help(sherpa_onnx))"
