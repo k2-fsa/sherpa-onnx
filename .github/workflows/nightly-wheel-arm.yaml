@@ -55,7 +55,15 @@ jobs:
               cd /workspace
               ls -lh
 
+              v=${{ matrix.python-version }}
+              PYTHON_VERSION=${v/./}
+              echo PYTHON_VERSION=$PYTHON_VERSION >> $GITHUB_ENV
+              extra=""
+              if [[ ${PYTHON_VERSION} == "37" ]]; then
+                extra="m"
+              fi
+
               # pip install -i https://www.piwheels.org/simple numpy sentencepiece click
-              pip install https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/sentencepiece-0.2.0-cp38-cp38-linux_armv7l.whl
+              pip install https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/sentencepiece-0.2.0-cp${PYTHON_VERSION}-cp${PYTHON_VERSION}${extra}-linux_armv7l.whl
               pip install --no-deps sherpa-onnx
               python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__, sherpa_onnx.__version__); print(dir(sherpa_onnx)); print(help(sherpa_onnx))"
