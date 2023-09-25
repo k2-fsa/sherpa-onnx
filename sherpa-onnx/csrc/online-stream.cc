@@ -43,6 +43,8 @@ class OnlineStream::Impl {
 
   int32_t &GetNumProcessedFrames() { return num_processed_frames_; }
 
+  int32_t GetNumFramesSinceStart() const { return start_frame_index_; }
+
   int32_t &GetCurrentSegment() { return segment_; }
 
   void SetResult(const OnlineTransducerDecoderResult &r) { result_ = r; }
@@ -124,6 +126,10 @@ int32_t OnlineStream::FeatureDim() const { return impl_->FeatureDim(); }
 
 int32_t &OnlineStream::GetNumProcessedFrames() {
   return impl_->GetNumProcessedFrames();
+}
+
+int32_t OnlineStream::GetNumFramesSinceStart() const {
+  return impl_->GetNumFramesSinceStart();
 }
 
 int32_t &OnlineStream::GetCurrentSegment() {

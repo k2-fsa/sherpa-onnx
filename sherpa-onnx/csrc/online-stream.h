@@ -66,7 +66,9 @@ class OnlineStream {
   // Initially, it is 0. It is always less than NumFramesReady().
   //
   // The returned reference is valid as long as this object is alive.
-  int32_t &GetNumProcessedFrames();
+  int32_t &GetNumProcessedFrames();  // It's reset after calling Reset()
+
+  int32_t GetNumFramesSinceStart() const;
 
   int32_t &GetCurrentSegment();
 

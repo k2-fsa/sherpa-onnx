@@ -14,37 +14,61 @@
 #include <utility>
 #include <vector>
 
-#include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 
 namespace sherpa_onnx {
 
 std::string OnlineRecognizerResult::AsJsonString() const {
-  using json = nlohmann::json;
-  json j;
-  j["text"] = text;
-  j["tokens"] = tokens;
-  j["start_time"] = start_time;
-#if 1
-  // This branch chooses number of decimal points to keep in
-  // the return json string
   std::ostringstream os;
+  os << "{";
+  os << "\"is_final\":" << (is_final ? "true" : "false") << ", ";
+  os << "\"segment\":" << segment << ", ";
+  os << "\"start_time\":" << std::fixed << std::setprecision(2) << start_time
+     << ", ";
+
+  os << "\"text\""
+     << ": ";
+  os << "\"" << text << "\""
+     << ", ";
+
+  os << "\""
+     << "timestamps"
+     << "\""
+     << ": ";
   os << "[";
+
   std::string sep = "";
   for (auto t : timestamps) {
     os << sep << std::fixed << std::setprecision(2) << t;
     sep = ", ";
   }
+  os << "], ";
+
+  os << "\""
+     << "tokens"
+     << "\""
+     << ":";
+  os << "[";
+
+  sep = "";
+  auto oldFlags = os.flags();
+  for (const auto &t : tokens) {
+    if (t.size() == 1 && static_cast<uint8_t>(t[0]) > 0x7f) {
+      const uint8_t *p = reinterpret_cast<const uint8_t *>(t.c_str());
+      os << sep << "\""
+         << "<0x" << std::hex << std::uppercase << static_cast<uint32_t>(p[0])
+         << ">"
+         << "\"";
+      os.flags(oldFlags);
+    } else {
+      os << sep << "\"" << t << "\"";
+    }
+    sep = ", ";
+  }
   os << "]";
-  j["timestamps"] = os.str();
-#else
-  j["timestamps"] = timestamps;
-#endif
+  os << "}";
 
-  j["segment"] = segment;
-  j["is_final"] = is_final;
-
-  return j.dump();
+  return os.str();
 }
 
 void OnlineRecognizerConfig::Register(ParseOptions *po) {

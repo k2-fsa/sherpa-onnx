@@ -28,9 +28,10 @@ namespace sherpa_onnx {
 
 static OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
                                       const SymbolTable &sym_table,
-                                      int32_t frame_shift_ms,
+                                      float frame_shift_ms,
                                       int32_t subsampling_factor,
-                                      int32_t segment) {
+                                      int32_t segment,
+                                      int32_t frames_since_start) {
   OnlineRecognizerResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
@@ -49,6 +50,7 @@ static OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
   }
 
   r.segment = segment;
+  r.start_time = frames_since_start * frame_shift_ms / 1000.;
 
   return r;
 }
@@ -216,7 +218,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = 4;
     return Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor,
-                   s->GetCurrentSegment());
+                   s->GetCurrentSegment(), s->GetNumFramesSinceStart());
   }
 
   bool IsEndpoint(OnlineStream *s) const override {
