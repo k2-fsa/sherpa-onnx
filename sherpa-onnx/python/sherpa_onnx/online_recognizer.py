@@ -132,6 +132,12 @@ class OnlineRecognizer(object):
             rule3_min_utterance_length=rule3_min_utterance_length,
         )
 
+        if len(hotwords_file) > 0 and decoding_method != "modified_beam_search":
+            raise ValueError(
+                "Please use --decoding-method=modified_beam_search when using "
+                f"--hotwords-file. Currently given: {decoding_method}"
+            )
+
         recognizer_config = OnlineRecognizerConfig(
             feat_config=feat_config,
             model_config=model_config,

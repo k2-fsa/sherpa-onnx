@@ -102,8 +102,20 @@ bool OnlineRecognizerConfig::Validate() const {
                        max_active_paths);
       return false;
     }
-    if (!lm_config.Validate()) return false;
+
+    if (!lm_config.Validate()) {
+      return false;
+    }
   }
+
+  if (!hotwords_file.empty() && decoding_method != "modified_beam_search") {
+    SHERPA_ONNX_LOGE(
+        "Please use --decoding-method=modified_beam_search if you"
+        " provide --hotwords-file. Given --decoding-method=%s",
+        decoding_method.c_str());
+    return false;
+  }
+
   return model_config.Validate();
 }
 

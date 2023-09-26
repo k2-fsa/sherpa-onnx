@@ -156,8 +156,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     bool has_context_graph = false;
 
     for (int32_t i = 0; i != n; ++i) {
-      if (!has_context_graph && ss[i]->GetContextGraph())
+      if (!has_context_graph && ss[i]->GetContextGraph()) {
         has_context_graph = true;
+      }
 
       const auto num_processed_frames = ss[i]->GetNumProcessedFrames();
       std::vector<float> features =

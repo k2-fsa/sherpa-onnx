@@ -102,6 +102,12 @@ class OfflineRecognizer(object):
             feature_dim=feature_dim,
         )
 
+        if len(hotwords_file) > 0 and decoding_method != "modified_beam_search":
+            raise ValueError(
+                "Please use --decoding-method=modified_beam_search when using "
+                f"--hotwords-file. Currently given: {decoding_method}"
+            )
+
         recognizer_config = OfflineRecognizerConfig(
             feat_config=feat_config,
             model_config=model_config,
