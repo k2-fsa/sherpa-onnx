@@ -19,6 +19,7 @@ set(sources
   features.cc
   file-utils.cc
   hypothesis.cc
+  offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
   offline-ctc-model.cc
   offline-lm-config.cc
@@ -96,6 +97,8 @@ if(ANDROID_NDK)
 endif()
 
 target_link_libraries(sherpa-onnx-core kaldi-native-fbank-core)
+
+target_link_libraries(sherpa-onnx-core kaldi-hmm-gmm-core)
 
 if(BUILD_SHARED_LIBS OR APPLE OR CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64 OR CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
   target_link_libraries(sherpa-onnx-core onnxruntime)
