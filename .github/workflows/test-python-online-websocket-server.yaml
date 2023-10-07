@@ -18,7 +18,7 @@ permissions:
 jobs:
   python_online_websocket_server:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} ${{ matrix.python-version }}
+    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.model_type }}
     strategy:
       fail-fast: false
       matrix:
