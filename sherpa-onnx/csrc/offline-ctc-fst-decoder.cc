@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder.h"
 
 #include <string>
+#include <utility>
 
 #include "fst/fstlib.h"
 #include "kaldi-decoder/csrc/decodable-ctc.h"
@@ -54,7 +55,6 @@ static fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
 static OfflineCtcDecoderResult DecodeOne(kaldi_decoder::FasterDecoder *decoder,
                                          const float *p, int32_t num_frames,
                                          int32_t vocab_size) {
-  SHERPA_ONNX_LOGE("num_frames: %d, vocab_size: %d", num_frames, vocab_size);
   OfflineCtcDecoderResult r;
   kaldi_decoder::DecodableCtc decodable(p, num_frames, vocab_size);
 
@@ -74,7 +74,6 @@ static OfflineCtcDecoderResult DecodeOne(kaldi_decoder::FasterDecoder *decoder,
   }
 
   auto cur_state = decoded.Start();
-  SHERPA_ONNX_LOGE("number states: %d", decoded.NumStates());
 
   int32_t blank_id = 0;
 
@@ -137,7 +136,6 @@ std::vector<OfflineCtcDecoderResult> OfflineCtcFstDecoder::Decode(
     const float *p = start + i * T * vocab_size;
     int32_t num_frames = log_probs_length.GetTensorData<int64_t>()[i];
     auto r = DecodeOne(&faster_decoder, p, num_frames, vocab_size);
-    SHERPA_ONNX_LOGE("decoded!");
     ans.push_back(std::move(r));
   }
 
