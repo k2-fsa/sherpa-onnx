@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/offline-ctc-fst-decoder-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder-config.h"
 
 namespace sherpa_onnx {

@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/offline-zipformer-ctc-model-config.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model-config.h"
 
 namespace sherpa_onnx {

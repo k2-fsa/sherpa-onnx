@@ -44,6 +44,7 @@ class OfflineZipformerCtcModel::Impl {
   }
 
   int32_t VocabSize() const { return vocab_size_; }
+  int32_t SubsamplingFactor() const { return 4; }
 
   OrtAllocator *Allocator() const { return allocator_; }
 
@@ -109,6 +110,10 @@ int32_t OfflineZipformerCtcModel::VocabSize() const {
 
 OrtAllocator *OfflineZipformerCtcModel::Allocator() const {
   return impl_->Allocator();
+}
+
+int32_t OfflineZipformerCtcModel::SubsamplingFactor() const {
+  return impl_->SubsamplingFactor();
 }
 
 }  // namespace sherpa_onnx

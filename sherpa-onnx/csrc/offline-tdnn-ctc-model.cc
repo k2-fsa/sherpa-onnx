@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"
 
+#include <utility>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"

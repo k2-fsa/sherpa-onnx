@@ -58,6 +58,8 @@ class OfflineZipformerCtcModel : public OfflineCtcModel {
    */
   OrtAllocator *Allocator() const override;
 
+  int32_t SubsamplingFactor() const override;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

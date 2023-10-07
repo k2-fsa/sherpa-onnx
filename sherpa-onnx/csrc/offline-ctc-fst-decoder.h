@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "fst/fst.h"
+#include "kaldi-decoder/csrc/faster-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
@@ -21,6 +22,11 @@ class OfflineCtcFstDecoder : public OfflineCtcDecoder {
 
   std::vector<OfflineCtcDecoderResult> Decode(
       Ort::Value log_probs, Ort::Value log_probs_length) override;
+
+ private:
+  // Decode a single utterance
+  OfflineCtcDecoderResult Decode(const float *p, int32_t num_frames,
+                                 int32_t vocab_size) const;
 
  private:
   OfflineCtcFstDecoderConfig config_;

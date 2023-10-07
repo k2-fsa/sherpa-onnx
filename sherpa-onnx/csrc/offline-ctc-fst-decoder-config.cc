@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder-config.h"
 
 #include <sstream>
+#include <string>
 
 namespace sherpa_onnx {
 
