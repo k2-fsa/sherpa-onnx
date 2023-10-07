@@ -42,7 +42,7 @@ function(download_kaldifst)
 
   list(APPEND CMAKE_MODULE_PATH ${kaldifst_SOURCE_DIR}/cmake)
 
-  add_subdirectory(${kaldifst_SOURCE_DIR} ${kaldifst_BINARY_DIR})
+  add_subdirectory(${kaldifst_SOURCE_DIR} ${kaldifst_BINARY_DIR} EXCLUDE_FROM_ALL)
 
   target_include_directories(kaldifst_core
     PUBLIC
@@ -56,13 +56,6 @@ function(download_kaldifst)
 
   set_target_properties(kaldifst_core PROPERTIES OUTPUT_NAME "sherpa-onnx-kaldifst-core")
   set_target_properties(fst PROPERTIES OUTPUT_NAME "sherpa-onnx-fst")
-
-  if(KHG_BUILD_PYTHON AND WIN32)
-    install(TARGETS kaldifst_core fst DESTINATION ..)
-  else()
-    install(TARGETS kaldifst_core fst DESTINATION lib)
-  endif()
-
 endfunction()
 
 download_kaldifst()

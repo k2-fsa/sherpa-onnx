@@ -52,13 +52,25 @@ function(download_kaldi_decoder)
       ${kaldi-decoder_SOURCE_DIR}/
   )
   if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-    install(TARGETS kaldi-decoder-core DESTINATION ..)
+    install(TARGETS
+      kaldi-decoder-core
+      kaldifst_core
+      fst
+    DESTINATION ..)
   else()
-    install(TARGETS kaldi-decoder-core DESTINATION lib)
+    install(TARGETS
+      kaldi-decoder-core
+      kaldifst_core
+      fst
+    DESTINATION lib)
   endif()
 
   if(WIN32 AND BUILD_SHARED_LIBS)
-    install(TARGETS kaldi-decoder-core DESTINATION bin)
+    install(TARGETS
+      kaldi-decoder-core
+      kaldifst_core
+      fst
+    DESTINATION bin)
   endif()
 endfunction()
 
