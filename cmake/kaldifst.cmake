@@ -54,7 +54,7 @@ function(download_kaldifst)
       ${openfst_SOURCE_DIR}/src/include
   )
 
-  set_target_properties(kaldifst_core PROPERTIES OUTPUT_NAME "sherpa-onnx-fst-core")
+  set_target_properties(kaldifst_core PROPERTIES OUTPUT_NAME "sherpa-onnx-kaldifst-core")
   set_target_properties(fst PROPERTIES OUTPUT_NAME "sherpa-onnx-fst")
 
   if(KHG_BUILD_PYTHON AND WIN32)

@@ -17,6 +17,7 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
   feat_config.Register(po);
   model_config.Register(po);
   lm_config.Register(po);
+  ctc_fst_decoder_config.Register(po);
 
   po->Register(
       "decoding-method", &decoding_method,
@@ -69,6 +70,7 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "feat_config=" << feat_config.ToString() << ", ";
   os << "model_config=" << model_config.ToString() << ", ";
   os << "lm_config=" << lm_config.ToString() << ", ";
+  os << "ctc_fst_decoder_config=" << ctc_fst_decoder_config.ToString() << ", ";
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "max_active_paths=" << max_active_paths << ", ";
   os << "hotwords_file=\"" << hotwords_file << "\", ";

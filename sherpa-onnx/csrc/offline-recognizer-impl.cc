@@ -25,9 +25,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<OfflineRecognizerTransducerImpl>(config);
     } else if (model_type == "paraformer") {
       return std::make_unique<OfflineRecognizerParaformerImpl>(config);
-    } else if (model_type == "nemo_ctc") {
-      return std::make_unique<OfflineRecognizerCtcImpl>(config);
-    } else if (model_type == "tdnn") {
+    } else if (model_type == "nemo_ctc" || model_type == "tdnn" ||
+               model_type == "zipformer2_ctc") {
       return std::make_unique<OfflineRecognizerCtcImpl>(config);
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(config);
@@ -50,6 +49,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     model_filename = config.model_config.nemo_ctc.model;
   } else if (!config.model_config.tdnn.model.empty()) {
     model_filename = config.model_config.tdnn.model;
+  } else if (!config.model_config.zipformer_ctc.model.empty()) {
+    model_filename = config.model_config.zipformer_ctc.model;
   } else if (!config.model_config.whisper.encoder.empty()) {
     model_filename = config.model_config.whisper.encoder;
   } else {
@@ -93,6 +94,11 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "\n    "
         "https://github.com/k2-fsa/icefall/tree/master/egs/yesno/ASR/tdnn"
         "\n"
+        "(5) Zipformer CTC models from icefall"
+        "\n    "
+        "https://github.com/k2-fsa/icefall/blob/master/egs/librispeech/ASR/"
+        "zipformer/export-onnx-ctc.py"
+        "\n"
         "\n");
     exit(-1);
   }
@@ -107,11 +113,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerParaformerImpl>(config);
   }
 
-  if (model_type == "EncDecCTCModelBPE") {
-    return std::make_unique<OfflineRecognizerCtcImpl>(config);
-  }
-
-  if (model_type == "tdnn") {
+  if (model_type == "EncDecCTCModelBPE" || model_type == "tdnn" ||
+      model_type == "zipformer2_ctc") {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
 
@@ -126,7 +129,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - Non-streaming Paraformer models from FunASR\n"
       " - EncDecCTCModelBPE models from NeMo\n"
       " - Whisper models\n"
-      " - Tdnn models\n",
+      " - Tdnn models\n"
+      " - Zipformer CTC models\n",
       model_type.c_str());
 
   exit(-1);
@@ -141,9 +145,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<OfflineRecognizerTransducerImpl>(mgr, config);
     } else if (model_type == "paraformer") {
       return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
-    } else if (model_type == "nemo_ctc") {
-      return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
-    } else if (model_type == "tdnn") {
+    } else if (model_type == "nemo_ctc" || model_type == "tdnn" ||
+               model_type == "zipformer2_ctc") {
       return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
@@ -166,6 +169,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     model_filename = config.model_config.nemo_ctc.model;
   } else if (!config.model_config.tdnn.model.empty()) {
     model_filename = config.model_config.tdnn.model;
+  } else if (!config.model_config.zipformer_ctc.model.empty()) {
+    model_filename = config.model_config.zipformer_ctc.model;
   } else if (!config.model_config.whisper.encoder.empty()) {
     model_filename = config.model_config.whisper.encoder;
   } else {
@@ -209,6 +214,11 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "\n    "
         "https://github.com/k2-fsa/icefall/tree/master/egs/yesno/ASR/tdnn"
         "\n"
+        "(5) Zipformer CTC models from icefall"
+        "\n    "
+        "https://github.com/k2-fsa/icefall/blob/master/egs/librispeech/ASR/"
+        "zipformer/export-onnx-ctc.py"
+        "\n"
         "\n");
     exit(-1);
   }
@@ -223,11 +233,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
   }
 
-  if (model_type == "EncDecCTCModelBPE") {
-    return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
-  }
-
-  if (model_type == "tdnn") {
+  if (model_type == "EncDecCTCModelBPE" || model_type == "tdnn" ||
+      model_type == "zipformer2_ctc") {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }
 
@@ -242,7 +249,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - Non-streaming Paraformer models from FunASR\n"
       " - EncDecCTCModelBPE models from NeMo\n"
       " - Whisper models\n"
-      " - Tdnn models\n",
+      " - Tdnn models\n"
+      " - Zipformer CTC models\n",
       model_type.c_str());
 
   exit(-1);

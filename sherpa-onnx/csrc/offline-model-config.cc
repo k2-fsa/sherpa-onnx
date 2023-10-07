@@ -16,6 +16,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   nemo_ctc.Register(po);
   whisper.Register(po);
   tdnn.Register(po);
+  zipformer_ctc.Register(po);
 
   po->Register("tokens", &tokens, "Path to tokens.txt");
 
@@ -31,7 +32,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   po->Register("model-type", &model_type,
                "Specify it to reduce model initialization time. "
                "Valid values are: transducer, paraformer, nemo_ctc, whisper, "
-               "tdnn."
+               "tdnn, zipformer2_ctc"
                "All other values lead to loading the model twice.");
 }
 
@@ -62,6 +63,10 @@ bool OfflineModelConfig::Validate() const {
     return tdnn.Validate();
   }
 
+  if (!zipformer_ctc.model.empty()) {
+    return zipformer_ctc.Validate();
+  }
+
   return transducer.Validate();
 }
 
@@ -74,6 +79,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "nemo_ctc=" << nemo_ctc.ToString() << ", ";
   os << "whisper=" << whisper.ToString() << ", ";
   os << "tdnn=" << tdnn.ToString() << ", ";
+  os << "zipformer_ctc=" << zipformer_ctc.ToString() << ", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";

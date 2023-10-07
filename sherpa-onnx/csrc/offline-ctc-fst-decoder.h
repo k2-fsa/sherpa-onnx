@@ -10,13 +10,10 @@
 
 #include "fst/fst.h"
 #include "sherpa-onnx/csrc/offline-ctc-decoder.h"
+#include "sherpa-onnx/csrc/offline-ctc-fst-decoder-config.h"
+#include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
-
-struct OfflineCtcFstDecoderConfig {
-  // Path to H.fst, HL.fst or HLG.fst
-  std::string graph;
-};
 
 class OfflineCtcFstDecoder : public OfflineCtcDecoder {
  public:

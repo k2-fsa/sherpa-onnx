@@ -5,21 +5,20 @@
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder.h"
 
 #include "fst/fstlib.h"
-#include "kaldi_native_io/csrc/kaldi-io.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
 // this function is copied from kaldi
-fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
+static fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
   // read decoding network FST
-  kaldiio::Input ki(filename);  // use ki.Stream() instead of is.
-  if (!ki.Stream().good()) {
+  std::ifstream is(filename);
+  if (!is.good()) {
     SHERPA_ONNX_LOGE("Could not open decoding-graph FST %s", filename.c_str());
   }
 
   fst::FstHeader hdr;
-  if (!hdr.Read(ki.Stream(), "<unknown>")) {
+  if (!hdr.Read(is, "<unknown>")) {
     SHERPA_ONNX_LOGE("Reading FST: error reading FST header.");
   }
 
@@ -32,9 +31,9 @@ fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
   fst::Fst<fst::StdArc> *decode_fst = NULL;
 
   if (hdr.FstType() == "vector") {
-    decode_fst = fst::VectorFst<fst::StdArc>::Read(ki.Stream(), ropts);
+    decode_fst = fst::VectorFst<fst::StdArc>::Read(is, ropts);
   } else if (hdr.FstType() == "const") {
-    decode_fst = fst::ConstFst<fst::StdArc>::Read(ki.Stream(), ropts);
+    decode_fst = fst::ConstFst<fst::StdArc>::Read(is, ropts);
   } else {
     SHERPA_ONNX_LOGE("Reading FST: unsupported FST type: %s",
                      hdr.FstType().c_str());
@@ -54,6 +53,11 @@ OfflineCtcFstDecoder::OfflineCtcFstDecoder(
 
 std::vector<OfflineCtcDecoderResult> OfflineCtcFstDecoder::Decode(
     Ort::Value log_probs, Ort::Value log_probs_length) {
+  std::vector<int64_t> shape = log_probs.GetTensorTypeAndShapeInfo().GetShape();
+
+  assert(static_cast<int32_t>(shape.size()) == 3);
+  int32_t batch_size = shape[0];
+
   return {};
 }
 

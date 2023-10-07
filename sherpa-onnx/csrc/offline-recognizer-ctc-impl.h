@@ -139,7 +139,7 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
                                -23.025850929940457f);
     auto t = model_->Forward(std::move(x), std::move(x_length));
 
-    auto results = decoder_->Decode(std::move(t.first), std::move(t.second));
+    auto results = decoder_->Decode(std::move(t[0]), std::move(t[1]));
 
     for (int32_t i = 0; i != n; ++i) {
       auto r = Convert(results[i], symbol_table_);
