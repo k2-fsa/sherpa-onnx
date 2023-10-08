@@ -79,6 +79,8 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
         model_->FeatureNormalizationMethod();
 
     if (!config_.ctc_fst_decoder_config.graph.empty()) {
+      // TODO(fangjun): Support android to read the graph from
+      // asset_manager
       decoder_ = std::make_unique<OfflineCtcFstDecoder>(
           config_.ctc_fst_decoder_config);
     } else if (config_.decoding_method == "greedy_search") {

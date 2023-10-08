@@ -10,15 +10,18 @@
 
 namespace sherpa_onnx {
 
-// for https://github.com/k2-fsa/icefall/tree/master/egs/yesno/ASR/tdnn
+// for
+// https://github.com/k2-fsa/icefall/blob/master/egs/librispeech/ASR/zipformer/export-onnx-ctc.py
 struct OfflineZipformerCtcModelConfig {
   std::string model;
 
   OfflineZipformerCtcModelConfig() = default;
+
   explicit OfflineZipformerCtcModelConfig(const std::string &model)
       : model(model) {}
 
   void Register(ParseOptions *po);
+
   bool Validate() const;
 
   std::string ToString() const;

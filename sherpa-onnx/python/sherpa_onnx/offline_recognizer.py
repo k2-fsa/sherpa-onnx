@@ -11,6 +11,7 @@ from _sherpa_onnx import (
     OfflineParaformerModelConfig,
     OfflineTdnnModelConfig,
     OfflineWhisperModelConfig,
+    OfflineZipformerCtcModelConfig,
 )
 from _sherpa_onnx import OfflineRecognizer as _Recognizer
 from _sherpa_onnx import (

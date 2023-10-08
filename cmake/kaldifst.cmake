@@ -6,7 +6,7 @@ function(download_kaldifst)
   set(kaldifst_HASH "SHA256=79280c0bb08b5ed1a2ab7c21320a2b071f1f0eb10d2f047e8d6f027f0d32b4d2")
 
   # If you don't have access to the Internet,
-  # please pre-download kaldi_native_io
+  # please pre-download kaldifst
   set(possible_file_locations
     $ENV{HOME}/Downloads/kaldifst-1.7.6.tar.gz
     ${PROJECT_SOURCE_DIR}/kaldifst-1.7.6.tar.gz
@@ -19,6 +19,7 @@ function(download_kaldifst)
     if(EXISTS ${f})
       set(kaldifst_URL  "${f}")
       file(TO_CMAKE_PATH "${kaldifst_URL}" kaldifst_URL)
+      message(STATUS "Found local downloaded kaldifst: ${kaldifst_URL}")
       set(kaldifst_URL2)
       break()
     endif()
@@ -34,7 +35,7 @@ function(download_kaldifst)
 
   FetchContent_GetProperties(kaldifst)
   if(NOT kaldifst_POPULATED)
-    message(STATUS "Downloading kaldifst ${kaldifst_URL}")
+    message(STATUS "Downloading kaldifst from ${kaldifst_URL}")
     FetchContent_Populate(kaldifst)
   endif()
   message(STATUS "kaldifst is downloaded to ${kaldifst_SOURCE_DIR}")

@@ -10,11 +10,16 @@
 #include "fst/fstlib.h"
 #include "kaldi-decoder/csrc/decodable-ctc.h"
 #include "kaldi-decoder/csrc/eigen.h"
+#include "kaldi-decoder/csrc/faster-decoder.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
-// this function is copied from kaldi
+// This function is copied from kaldi.
+//
+// @param filename Path to a StdVectorFst or StdConstFst graph
+// @return The caller should free the returned pointer using `delete` to
+//         avoid memory leak.
 static fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
   // read decoding network FST
   std::ifstream is(filename);
@@ -33,7 +38,7 @@ static fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
   }
   fst::FstReadOptions ropts("<unspecified>", &hdr);
 
-  fst::Fst<fst::StdArc> *decode_fst = NULL;
+  fst::Fst<fst::StdArc> *decode_fst = nullptr;
 
   if (hdr.FstType() == "vector") {
     decode_fst = fst::VectorFst<fst::StdArc>::Read(is, ropts);
@@ -52,6 +57,13 @@ static fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
   }
 }
 
+/**
+ * @param decoder
+ * @param p Pointer to a 2-d array of shape (num_frames, vocab_size)
+ * @param num_frames Number of rows in the 2-d array.
+ * @param vocab_size Number of columns in the 2-d array.
+ * @return Return the decoded result.
+ */
 static OfflineCtcDecoderResult DecodeOne(kaldi_decoder::FasterDecoder *decoder,
                                          const float *p, int32_t num_frames,
                                          int32_t vocab_size) {
