@@ -19,6 +19,8 @@ set(sources
   features.cc
   file-utils.cc
   hypothesis.cc
+  offline-ctc-fst-decoder-config.cc
+  offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
   offline-ctc-model.cc
   offline-lm-config.cc
@@ -42,6 +44,8 @@ set(sources
   offline-whisper-greedy-search-decoder.cc
   offline-whisper-model-config.cc
   offline-whisper-model.cc
+  offline-zipformer-ctc-model-config.cc
+  offline-zipformer-ctc-model.cc
   online-conformer-transducer-model.cc
   online-lm-config.cc
   online-lm.cc
@@ -96,6 +100,8 @@ if(ANDROID_NDK)
 endif()
 
 target_link_libraries(sherpa-onnx-core kaldi-native-fbank-core)
+
+target_link_libraries(sherpa-onnx-core kaldi-decoder-core)
 
 if(BUILD_SHARED_LIBS OR APPLE OR CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64 OR CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
   target_link_libraries(sherpa-onnx-core onnxruntime)

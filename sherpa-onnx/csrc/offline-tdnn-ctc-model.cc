@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"
 
+#include <utility>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -34,7 +36,7 @@ class OfflineTdnnCtcModel::Impl {
   }
 #endif
 
-  std::pair<Ort::Value, Ort::Value> Forward(Ort::Value features) {
+  std::vector<Ort::Value> Forward(Ort::Value features) {
     auto nnet_out =
         sess_->Run({}, input_names_ptr_.data(), &features, 1,
                    output_names_ptr_.data(), output_names_ptr_.size());
@@ -52,7 +54,11 @@ class OfflineTdnnCtcModel::Impl {
         memory_info, out_length_vec.data(), out_length_vec.size(),
         out_length_shape.data(), out_length_shape.size());
 
-    return {std::move(nnet_out[0]), Clone(Allocator(), &nnet_out_length)};
+    std::vector<Ort::Value> ans;
+    ans.reserve(2);
+    ans.push_back(std::move(nnet_out[0]));
+    ans.push_back(Clone(Allocator(), &nnet_out_length));
+    return ans;
   }
 
   int32_t VocabSize() const { return vocab_size_; }
@@ -108,7 +114,7 @@ OfflineTdnnCtcModel::OfflineTdnnCtcModel(AAssetManager *mgr,
 
 OfflineTdnnCtcModel::~OfflineTdnnCtcModel() = default;
 
-std::pair<Ort::Value, Ort::Value> OfflineTdnnCtcModel::Forward(
+std::vector<Ort::Value> OfflineTdnnCtcModel::Forward(
     Ort::Value features, Ort::Value /*features_length*/) {
   return impl_->Forward(std::move(features));
 }

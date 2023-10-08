@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h
+// sherpa-onnx/csrc/offline-zipformer-ctc-model.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_OFFLINE_NEMO_ENC_DEC_CTC_MODEL_H_
-#define SHERPA_ONNX_CSRC_OFFLINE_NEMO_ENC_DEC_CTC_MODEL_H_
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_CTC_MODEL_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_CTC_MODEL_H_
 #include <memory>
 #include <string>
 #include <utility>
@@ -19,22 +19,22 @@
 
 namespace sherpa_onnx {
 
-/** This class implements the EncDecCTCModelBPE model from NeMo.
+/** This class implements the zipformer CTC model of the librispeech recipe
+ * from icefall.
  *
  * See
- * https://github.com/NVIDIA/NeMo/blob/main/nemo/collections/asr/models/ctc_bpe_models.py
- * https://github.com/NVIDIA/NeMo/blob/main/nemo/collections/asr/models/ctc_models.py
+ * https://github.com/k2-fsa/icefall/blob/master/egs/librispeech/ASR/zipformer/export-onnx-ctc.py
  */
-class OfflineNemoEncDecCtcModel : public OfflineCtcModel {
+class OfflineZipformerCtcModel : public OfflineCtcModel {
  public:
-  explicit OfflineNemoEncDecCtcModel(const OfflineModelConfig &config);
+  explicit OfflineZipformerCtcModel(const OfflineModelConfig &config);
 
 #if __ANDROID_API__ >= 9
-  OfflineNemoEncDecCtcModel(AAssetManager *mgr,
-                            const OfflineModelConfig &config);
+  OfflineZipformerCtcModel(AAssetManager *mgr,
+                           const OfflineModelConfig &config);
 #endif
 
-  ~OfflineNemoEncDecCtcModel() override;
+  ~OfflineZipformerCtcModel() override;
 
   /** Run the forward method of the model.
    *
@@ -54,27 +54,11 @@ class OfflineNemoEncDecCtcModel : public OfflineCtcModel {
    */
   int32_t VocabSize() const override;
 
-  /** SubsamplingFactor of the model
-   *
-   * For Citrinet, the subsampling factor is usually 4.
-   * For Conformer CTC, the subsampling factor is usually 8.
-   */
-  int32_t SubsamplingFactor() const override;
-
   /** Return an allocator for allocating memory
    */
   OrtAllocator *Allocator() const override;
 
-  // Possible values:
-  // - per_feature
-  // - all_features (not implemented yet)
-  // - fixed_mean (not implemented)
-  // - fixed_std (not implemented)
-  // - or just leave it to empty
-  // See
-  // https://github.com/NVIDIA/NeMo/blob/main/nemo/collections/asr/parts/preprocessing/features.py#L59
-  // for details
-  std::string FeatureNormalizationMethod() const override;
+  int32_t SubsamplingFactor() const override;
 
  private:
   class Impl;
@@ -83,4 +67,4 @@ class OfflineNemoEncDecCtcModel : public OfflineCtcModel {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_OFFLINE_NEMO_ENC_DEC_CTC_MODEL_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_CTC_MODEL_H_

@@ -89,3 +89,48 @@ time $EXE \
   $repo/test_wavs/8k.wav
 
 rm -rf $repo
+
+log "------------------------------------------------------------"
+log "Run Librispeech zipformer CTC H/HL/HLG decoding (English)   "
+log "------------------------------------------------------------"
+repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-en-2023-10-02
+log "Start testing ${repo_url}"
+repo=$(basename $repo_url)
+log "Download pretrained model and test-data from $repo_url"
+
+GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+pushd $repo
+git lfs pull --include "*.onnx"
+git lfs pull --include "*.fst"
+ls -lh
+popd
+
+graphs=(
+$repo/H.fst
+$repo/HL.fst
+$repo/HLG.fst
+)
+
+for graph in ${graphs[@]}; do
+  log "test float32 models with $graph"
+  time $EXE \
+    --model-type=zipformer2_ctc \
+    --ctc.graph=$graph \
+    --zipformer-ctc-model=$repo/model.onnx \
+    --tokens=$repo/tokens.txt \
+    $repo/test_wavs/0.wav \
+    $repo/test_wavs/1.wav \
+    $repo/test_wavs/2.wav
+
+  log "test int8 models with $graph"
+  time $EXE \
+    --model-type=zipformer2_ctc \
+    --ctc.graph=$graph \
+    --zipformer-ctc-model=$repo/model.int8.onnx \
+    --tokens=$repo/tokens.txt \
+    $repo/test_wavs/0.wav \
+    $repo/test_wavs/1.wav \
+    $repo/test_wavs/2.wav
+done
+
+rm -rf $repo

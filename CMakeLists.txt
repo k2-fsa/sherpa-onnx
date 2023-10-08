@@ -154,6 +154,7 @@ if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
 endif()
 
 include(kaldi-native-fbank)
+include(kaldi-decoder)
 include(onnxruntime)
 
 if(SHERPA_ONNX_ENABLE_PORTAUDIO)

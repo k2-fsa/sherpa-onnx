@@ -4,12 +4,14 @@ from pathlib import Path
 from typing import List, Optional
 
 from _sherpa_onnx import (
+    OfflineCtcFstDecoderConfig,
     OfflineFeatureExtractorConfig,
     OfflineModelConfig,
     OfflineNemoEncDecCtcModelConfig,
     OfflineParaformerModelConfig,
     OfflineTdnnModelConfig,
     OfflineWhisperModelConfig,
+    OfflineZipformerCtcModelConfig,
 )
 from _sherpa_onnx import OfflineRecognizer as _Recognizer
 from _sherpa_onnx import (
