@@ -95,6 +95,7 @@ struct OnlineRecognizerConfig {
                          const std::string &hotwords_file, float hotwords_score)
       : feat_config(feat_config),
         model_config(model_config),
+        lm_config(lm_config),
         endpoint_config(endpoint_config),
         enable_endpoint(enable_endpoint),
         decoding_method(decoding_method),

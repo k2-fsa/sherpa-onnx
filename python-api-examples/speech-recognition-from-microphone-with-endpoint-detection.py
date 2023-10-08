@@ -128,7 +128,7 @@ def create_recognizer(args):
         rule3_min_utterance_length=300,  # it essentially disables this rule
         decoding_method=args.decoding_method,
         provider=args.provider,
-        hotwords_file=agrs.hotwords_file,
+        hotwords_file=args.hotwords_file,
         hotwords_score=args.hotwords_score,
     )
     return recognizer
