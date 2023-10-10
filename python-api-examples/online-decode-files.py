@@ -118,7 +118,7 @@ def get_args():
     parser.add_argument(
         "--lm",
         type=str,
-        default=0.1,
+        default="",
         help="""Used only when --decoding-method is modified_beam_search.
         path of language model.
         """,

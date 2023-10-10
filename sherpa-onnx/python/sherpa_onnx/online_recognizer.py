@@ -47,8 +47,8 @@ class OnlineRecognizer(object):
         hotwords_file: str = "",
         provider: str = "cpu",
         model_type: str = "",
-        lm:str = "",
-        scale:float = 0.1,
+        lm: str = "",
+        scale: float = 0.1,
     ):
         """
         Please refer to
@@ -148,14 +148,14 @@ class OnlineRecognizer(object):
             )
         
         lm_config = OnlineLMConfig(
-            model = lm,
-            scale = scale,
+            model=lm,
+            scale=scale,
         )
 
         recognizer_config = OnlineRecognizerConfig(
             feat_config=feat_config,
             model_config=model_config,
-            lm_config = lm_config ,
+            lm_config=lm_config,
             endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
