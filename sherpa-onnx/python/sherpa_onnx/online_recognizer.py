@@ -48,7 +48,7 @@ class OnlineRecognizer(object):
         provider: str = "cpu",
         model_type: str = "",
         lm: str = "",
-        scale: float = 0.1,
+        lm_scale: float = 0.1,
     ):
         """
         Please refer to
@@ -149,7 +149,7 @@ class OnlineRecognizer(object):
         
         lm_config = OnlineLMConfig(
             model=lm,
-            scale=scale,
+            scale=lm_scale,
         )
 
         recognizer_config = OnlineRecognizerConfig(
