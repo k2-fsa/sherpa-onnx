@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# Copyright    2023  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 """
 This script converts vits models trained using the LJ Speech dataset.
@@ -32,18 +33,21 @@ import sys
 # Please change this line to point to the vits directory.
 # You can download vits from
 # https://github.com/jaywalnut310/vits
-sys.path.insert(0, "/Users/fangjun/open-source/vits")
+sys.path.insert(0, "/Users/fangjun/open-source/vits")  # noqa
 
 import argparse
 from pathlib import Path
+from typing import Dict, Any
 
 import commons
+import onnx
 import torch
 import utils
 from models import SynthesizerTrn
 from onnxruntime.quantization import QuantType, quantize_dynamic
 from text import text_to_sequence
 from text.symbols import symbols
+from text.symbols import _punctuation
 
 
 def get_args():
@@ -111,9 +115,38 @@ def check_args(args):
     assert Path(args.checkpoint).is_file(), args.checkpoint
 
 
+def add_meta_data(filename: str, meta_data: Dict[str, Any]):
+    """Add meta data to an ONNX model. It is changed in-place.
+
+    Args:
+      filename:
+        Filename of the ONNX model to be changed.
+      meta_data:
+        Key-value pairs.
+    """
+    model = onnx.load(filename)
+    for key, value in meta_data.items():
+        meta = model.metadata_props.add()
+        meta.key = key
+        meta.value = str(value)
+
+    onnx.save(model, filename)
+
+
+def generate_tokens():
+    with open("tokens-ljs.txt", "w", encoding="utf-8") as f:
+        for i, s in enumerate(symbols):
+            f.write(f"{s} {i}\n")
+    print("Generated tokens-ljs.txt")
+
+
 @torch.no_grad()
 def main():
     args = get_args()
+    check_args(args)
+
+    generate_tokens()
+
     hps = utils.get_hparams_from_file(args.config)
 
     net_g = SynthesizerTrn(
@@ -153,6 +186,16 @@ def main():
             "y": {0: "N", 2: "L"},
         },
     )
+    meta_data = {
+        "model_type": "vits",
+        "comment": "ljspeech",
+        "language": "English",
+        "add_blank": int(hps.data.add_blank),
+        "sample_rate": hps.data.sampling_rate,
+        "punctuation": " ".join(list(_punctuation)),
+    }
+    print("meta_data", meta_data)
+    add_meta_data(filename=filename, meta_data=meta_data)
 
     print("Generate int8 quantization models")
 
