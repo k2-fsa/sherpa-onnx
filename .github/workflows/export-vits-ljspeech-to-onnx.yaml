@@ -37,7 +37,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install -qq torch==${{ matrix.torch }}+cpu -f https://download.pytorch.org/whl/torch_stable.html numpy
-          python3 -m pip install onnxruntime onnx scipy
+          python3 -m pip install onnxruntime onnx scipy cython
 
       - name: export vits ljspeech
         shell: bash
@@ -46,16 +46,22 @@ jobs:
 
           echo "Downloading vits"
           git clone https://github.com/jaywalnut310/vits
+          pushd vits/monotonic_align
+          python3 setup.py build
+          ls -lh build/
+          ls -lh build/lib*/
+          ls -lh build/lib*/*/
+
+          cp build/lib*/monotonic_align/core*.so .
 
           export PYTHONPATH=$PWD/vits:$PYTHONPATH
 
           echo "Download models"
 
-          wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/pretrained_ljs.pth
-          wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/lexicon.txt
-          wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
-          wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/test.py
-
+          wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/pretrained_ljs.pth
+          wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/lexicon.txt
+          wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
+          wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/test.py
 
           python3 ./export-onnx-ljs.py --config vits/configs/ljs_base.json --checkpoint ./pretrained_ljs.pth
           python3 ./test.py
