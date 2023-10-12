@@ -53,6 +53,7 @@ jobs:
           ls -lh build/lib*/*/
 
           cp build/lib*/monotonic_align/core*.so .
+          sed -i.bak s/.monotonic_align.core/.core/g ./__init__.py
           popd
 
           export PYTHONPATH=$PWD/vits:$PYTHONPATH
