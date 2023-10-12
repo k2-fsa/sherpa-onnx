@@ -537,9 +537,9 @@ class NonStreamingServer:
             if path == "/":
                 path = "/index.html"
             if path == "/upload.html":
-                path = "/upload_non_streaming.html"
+                path = "/non_streaming_upload.html"
             if path == "/offline_record.html":
-                path = "/offline_record_non_streaming.html"
+                path = "/non_streaming_record.html"
             if path[-1] == "?":
                 path = path[:-1]
 
