@@ -40,6 +40,13 @@ jobs:
           python3 -m pip install onnxruntime onnx
           python3 -m pip install scipy cython unidecode phonemizer
 
+          # required by phonemizer
+          # See https://bootphon.github.io/phonemizer/install.html
+          # To fix the following error: RuntimeError: espeak not installed on your system
+          #
+          sudo apt-get install festival espeak-ng mbrola
+
+
       - name: export vits ljspeech
         shell: bash
         run: |
