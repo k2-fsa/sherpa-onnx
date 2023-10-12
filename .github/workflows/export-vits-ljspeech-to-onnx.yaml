@@ -1,0 +1,93 @@
+name: export-vits-ljspeech-to-onnx
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'scripts/vits/**'
+      - '.github/workflows/export-vits-ljspeech-to-onnx.yaml'
+  pull_request:
+    paths:
+      - 'scripts/vits/**'
+      - '.github/workflows/export-vits-ljspeech-to-onnx.yaml'
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-vits-ljspeech-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-vits-ljspeech-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: vits ljspeech
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        torch: ["1.13.0"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python3 -m pip install -qq torch==${{ matrix.torch }}+cpu -f https://download.pytorch.org/whl/torch_stable.html numpy
+          python3 -m pip install onnxruntime onnx soundfile
+          python3 -m pip install scipy cython unidecode phonemizer
+
+          # required by phonemizer
+          # See https://bootphon.github.io/phonemizer/install.html
+          # To fix the following error: RuntimeError: espeak not installed on your system
+          #
+          sudo apt-get install festival espeak-ng mbrola
+
+
+      - name: export vits ljspeech
+        shell: bash
+        run: |
+          cd scripts/vits
+
+          echo "Downloading vits"
+          git clone https://github.com/jaywalnut310/vits
+          pushd vits/monotonic_align
+          python3 setup.py build
+          ls -lh build/
+          ls -lh build/lib*/
+          ls -lh build/lib*/*/
+
+          cp build/lib*/monotonic_align/core*.so .
+          sed -i.bak s/.monotonic_align.core/.core/g ./__init__.py
+          git diff
+          popd
+
+          export PYTHONPATH=$PWD/vits:$PYTHONPATH
+
+          echo "Download models"
+
+          wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/pretrained_ljs.pth
+          wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/lexicon.txt
+          wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
+          wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/test.py
+
+          python3 ./export-onnx-ljs.py --config vits/configs/ljs_base.json --checkpoint ./pretrained_ljs.pth
+          python3 ./test.py
+          ls -lh *.wav
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: test-0.wav
+          path: scripts/vits/test-0.wav
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: test-1.wav
+          path: scripts/vits/test-1.wav
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: test-2.wav
+          path: scripts/vits/test-2.wav
