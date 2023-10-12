@@ -488,6 +488,11 @@ int32_t SherpaOnnxVoiceActivityDetectorEmpty(
   return p->impl->Empty();
 }
 
+int32_t SherpaOnnxVoiceActivityDetectorDetected(
+    SherpaOnnxVoiceActivityDetector *p) {
+  return p->impl->IsSpeechDetected();
+}
+
 SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorPop(
     SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Pop();

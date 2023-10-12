@@ -548,7 +548,11 @@ class SherpaOnnxVoiceActivityDetectorWrapper {
   }
 
   func isEmpty() -> Bool {
-    return SherpaOnnxVoiceActivityDetectorEmpty(vad) == 1 ? true : false
+    return SherpaOnnxVoiceActivityDetectorEmpty(vad) == 1
+  }
+
+  func isDetected() -> Bool {
+    return SherpaOnnxVoiceActivityDetectorDetected(vad) == 1
   }
 
   func pop() {

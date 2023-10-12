@@ -570,6 +570,11 @@ SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorAcceptWaveform(
 SHERPA_ONNX_API int32_t
 SherpaOnnxVoiceActivityDetectorEmpty(SherpaOnnxVoiceActivityDetector *p);
 
+// Return 1 if there is voice detected.
+// Return 0 if voice is silent.
+SHERPA_ONNX_API int32_t
+SherpaOnnxVoiceActivityDetectorDetected(SherpaOnnxVoiceActivityDetector *p);
+
 // Return the first speech segment.
 // It throws if SherpaOnnxVoiceActivityDetectorEmpty() returns 1.
 SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorPop(
