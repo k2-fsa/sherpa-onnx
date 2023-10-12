@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - convert-vits-2
     paths:
       - 'scripts/vits/**'
       - '.github/workflows/export-vits-ljspeech-to-onnx.yaml'
@@ -36,7 +37,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install -qq torch==${{ matrix.torch }}+cpu -f https://download.pytorch.org/whl/torch_stable.html numpy
-          python3 -m pip install onnxruntime onnx
+          python3 -m pip install onnxruntime onnx scipy
 
       - name: export vits ljspeech
         shell: bash
