@@ -37,7 +37,8 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install -qq torch==${{ matrix.torch }}+cpu -f https://download.pytorch.org/whl/torch_stable.html numpy
-          python3 -m pip install onnxruntime onnx scipy cython
+          python3 -m pip install onnxruntime onnx
+          python3 -m pip install scipy cython unidecode phonemizer
 
       - name: export vits ljspeech
         shell: bash
@@ -54,6 +55,7 @@ jobs:
 
           cp build/lib*/monotonic_align/core*.so .
           sed -i.bak s/.monotonic_align.core/.core/g ./__init__.py
+          git diff
           popd
 
           export PYTHONPATH=$PWD/vits:$PYTHONPATH
