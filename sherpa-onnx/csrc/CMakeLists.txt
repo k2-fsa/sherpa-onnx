@@ -13,11 +13,14 @@ endif()
 set(sources
   base64-decode.cc
   cat.cc
+  circular-buffer.cc
   context-graph.cc
   endpoint.cc
   features.cc
   file-utils.cc
   hypothesis.cc
+  offline-ctc-fst-decoder-config.cc
+  offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
   offline-ctc-model.cc
   offline-lm-config.cc
@@ -41,6 +44,8 @@ set(sources
   offline-whisper-greedy-search-decoder.cc
   offline-whisper-model-config.cc
   offline-whisper-model.cc
+  offline-zipformer-ctc-model-config.cc
+  offline-zipformer-ctc-model.cc
   online-conformer-transducer-model.cc
   online-lm-config.cc
   online-lm.cc
@@ -66,20 +71,29 @@ set(sources
   provider.cc
   resample.cc
   session.cc
+  silero-vad-model-config.cc
+  silero-vad-model.cc
   slice.cc
   stack.cc
   symbol-table.cc
   text-utils.cc
   transpose.cc
   unbind.cc
+  utils.cc
+  vad-model-config.cc
+  vad-model.cc
+  voice-activity-detector.cc
   wave-reader.cc
 )
 
 if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
-
 add_library(sherpa-onnx-core ${sources})
+
+if(NOT WIN32)
+  target_link_libraries(sherpa-onnx-core -pthread)
+endif()
 
 if(ANDROID_NDK)
   target_link_libraries(sherpa-onnx-core android log)
@@ -87,7 +101,9 @@ endif()
 
 target_link_libraries(sherpa-onnx-core kaldi-native-fbank-core)
 
-if(BUILD_SHARED_LIBS OR NOT WIN32)
+target_link_libraries(sherpa-onnx-core kaldi-decoder-core)
+
+if(BUILD_SHARED_LIBS OR APPLE OR CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64 OR CMAKE_SYSTEM_PROCESSOR STREQUAL arm)
   target_link_libraries(sherpa-onnx-core onnxruntime)
 else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
@@ -112,21 +128,30 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   endif()
 endif()
 
+if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
+  target_link_libraries(sherpa-onnx-core -pthread -ldl)
+endif()
+
 add_executable(sherpa-onnx sherpa-onnx.cc)
 add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
+add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
+
 
 target_link_libraries(sherpa-onnx sherpa-onnx-core)
 target_link_libraries(sherpa-onnx-offline sherpa-onnx-core)
+target_link_libraries(sherpa-onnx-offline-parallel sherpa-onnx-core)
 if(NOT WIN32)
   target_link_libraries(sherpa-onnx "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
   target_link_libraries(sherpa-onnx "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
 
   target_link_libraries(sherpa-onnx-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
   target_link_libraries(sherpa-onnx-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
+  target_link_libraries(sherpa-onnx-offline-parallel "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
 
   if(SHERPA_ONNX_ENABLE_PYTHON)
     target_link_libraries(sherpa-onnx "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
     target_link_libraries(sherpa-onnx-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+    target_link_libraries(sherpa-onnx-offline-parallel "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
   endif()
 endif()
 
@@ -144,6 +169,7 @@ install(
   TARGETS
     sherpa-onnx
     sherpa-onnx-offline
+    sherpa-onnx-offline-parallel
   DESTINATION
     bin
 )
@@ -171,32 +197,42 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-vad-microphone
+    sherpa-onnx-vad-microphone.cc
+    microphone.cc
+  )
+
   if(BUILD_SHARED_LIBS)
     set(PA_LIB portaudio)
   else()
     set(PA_LIB portaudio_static)
   endif()
 
-  target_link_libraries(sherpa-onnx-microphone ${PA_LIB} sherpa-onnx-core)
-  target_link_libraries(sherpa-onnx-microphone-offline ${PA_LIB} sherpa-onnx-core)
+  set(exes
+    sherpa-onnx-microphone
+    sherpa-onnx-microphone-offline
+    sherpa-onnx-vad-microphone
+  )
+  foreach(exe IN LISTS exes)
+    target_link_libraries(${exe} ${PA_LIB} sherpa-onnx-core)
+  endforeach()
 
   if(NOT WIN32)
-    target_link_libraries(sherpa-onnx-microphone "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
-    target_link_libraries(sherpa-onnx-microphone "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
-
-    target_link_libraries(sherpa-onnx-microphone-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
-    target_link_libraries(sherpa-onnx-microphone-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
+    foreach(exe IN LISTS exes)
+      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
+      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
+    endforeach()
 
     if(SHERPA_ONNX_ENABLE_PYTHON)
-      target_link_libraries(sherpa-onnx-microphone "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
-      target_link_libraries(sherpa-onnx-microphone-offline "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+
+      foreach(exe IN LISTS exes)
+        target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+      endforeach()
     endif()
   endif()
 
   install(
-    TARGETS
-      sherpa-onnx-microphone
-      sherpa-onnx-microphone-offline
+    TARGETS ${exes}
     DESTINATION
       bin
   )
@@ -268,6 +304,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_TESTS)
   set(sherpa_onnx_test_srcs
     cat-test.cc
+    circular-buffer-test.cc
     context-graph-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc

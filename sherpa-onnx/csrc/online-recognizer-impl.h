@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_IMPL_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
@@ -29,7 +30,7 @@ class OnlineRecognizerImpl {
   virtual std::unique_ptr<OnlineStream> CreateStream() const = 0;
 
   virtual std::unique_ptr<OnlineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &contexts) const {
+      const std::string &hotwords) const {
     SHERPA_ONNX_LOGE("Only transducer models support contextual biasing.");
     exit(-1);
   }

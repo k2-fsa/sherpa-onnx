@@ -39,6 +39,7 @@ install_requires = [
     "numpy",
     "sentencepiece==0.1.96; python_version < '3.11'",
     "sentencepiece; python_version >= '3.11'",
+    "click>=7.1.1",
 ]
 
 
@@ -55,6 +56,7 @@ def get_binaries_to_install():
     binaries += ["sherpa-onnx-online-websocket-server"]
     binaries += ["sherpa-onnx-offline-websocket-server"]
     binaries += ["sherpa-onnx-online-websocket-client"]
+    binaries += ["sherpa-onnx-vad-microphone"]
     if is_windows():
         binaries += ["kaldi-native-fbank-core.dll"]
         binaries += ["sherpa-onnx-c-api.dll"]
@@ -93,6 +95,11 @@ setuptools.setup(
         "Programming Language :: Python",
         "Topic :: Scientific/Engineering :: Artificial Intelligence",
     ],
+    entry_points={
+        "console_scripts": [
+            "sherpa-onnx-cli=sherpa_onnx.cli:cli",
+        ],
+    },
     license="Apache licensed, as found in the LICENSE file",
 )
 

@@ -14,6 +14,11 @@ namespace sherpa_onnx {
 struct OfflineParaformerDecoderResult {
   /// The decoded token IDs
   std::vector<int64_t> tokens;
+
+  // it contains the start time of each token in seconds
+  //
+  // len(timestamps) == len(tokens)
+  std::vector<float> timestamps;
 };
 
 class OfflineParaformerDecoder {
@@ -28,7 +33,8 @@ class OfflineParaformerDecoder {
    * @return Return a vector of size `N` containing the decoded results.
    */
   virtual std::vector<OfflineParaformerDecoderResult> Decode(
-      Ort::Value log_probs, Ort::Value token_num) = 0;
+      Ort::Value log_probs, Ort::Value token_num,
+      Ort::Value us_cif_peak = Ort::Value(nullptr)) = 0;
 };
 
 }  // namespace sherpa_onnx

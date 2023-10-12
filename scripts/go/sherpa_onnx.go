@@ -407,7 +407,7 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 	c.model_config.whisper.decoder = C.CString(config.ModelConfig.Whisper.Decoder)
 	defer C.free(unsafe.Pointer(c.model_config.whisper.decoder))
 
-	c.model_config.tdnn.decoder = C.CString(config.ModelConfig.Tdnn.Model)
+	c.model_config.tdnn.model = C.CString(config.ModelConfig.Tdnn.Model)
 	defer C.free(unsafe.Pointer(c.model_config.tdnn.model))
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)

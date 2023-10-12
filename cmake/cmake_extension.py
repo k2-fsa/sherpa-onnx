@@ -136,6 +136,7 @@ class BuildExtension(build_ext):
         binaries += ["sherpa-onnx-online-websocket-server"]
         binaries += ["sherpa-onnx-offline-websocket-server"]
         binaries += ["sherpa-onnx-online-websocket-client"]
+        binaries += ["sherpa-onnx-vad-microphone"]
 
         if is_windows():
             binaries += ["kaldi-native-fbank-core.dll"]

@@ -1,3 +1,4 @@
+// Copyright (c)  2023  Xiaomi Corporation
 package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
@@ -53,6 +54,8 @@ data class OnlineRecognizerConfig(
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",
     var maxActivePaths: Int = 4,
+    var hotwordsFile: String = "",
+    var hotwordsScore: Float = 1.5f,
 )
 
 class SherpaOnnx(
@@ -77,7 +80,7 @@ class SherpaOnnx(
         acceptWaveform(ptr, samples, sampleRate)
 
     fun inputFinished() = inputFinished(ptr)
-    fun reset() = reset(ptr)
+    fun reset(recreate: Boolean = false) = reset(ptr, recreate = recreate)
     fun decode() = decode(ptr)
     fun isEndpoint(): Boolean = isEndpoint(ptr)
     fun isReady(): Boolean = isReady(ptr)
@@ -99,7 +102,7 @@ class SherpaOnnx(
     private external fun acceptWaveform(ptr: Long, samples: FloatArray, sampleRate: Int)
     private external fun inputFinished(ptr: Long)
     private external fun getText(ptr: Long): String
-    private external fun reset(ptr: Long)
+    private external fun reset(ptr: Long, recreate: Boolean)
     private external fun decode(ptr: Long)
     private external fun isEndpoint(ptr: Long): Boolean
     private external fun isReady(ptr: Long): Boolean
@@ -143,6 +146,16 @@ by following the code)
 5 - csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
     https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
+6 - sherpa-onnx-streaming-zipformer-en-2023-06-26
+    https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
+
+7 - shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14 (French)
+    https://huggingface.co/shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14
+
+8 - csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
+    https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+    encoder int8, decoder/joiner float32
+
  */
 fun getModelConfig(type: Int): OnlineModelConfig? {
     when (type) {
@@ -158,6 +171,7 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                 modelType = "zipformer",
             )
         }
+
         1 -> {
             val modelDir = "sherpa-onnx-lstm-zh-2023-02-20"
             return OnlineModelConfig(
@@ -219,6 +233,45 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "paraformer",
+            )
+        }
+
+        6 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-en-2023-06-26"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-99-avg-1-chunk-16-left-128.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-99-avg-1-chunk-16-left-128.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1-chunk-16-left-128.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer2",
+            )
+        }
+
+        7 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-fr-2023-04-14"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-29-avg-9-with-averaged-model.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-29-avg-9-with-averaged-model.onnx",
+                    joiner = "$modelDir/joiner-epoch-29-avg-9-with-averaged-model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
+            )
+        }
+
+        8 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-99-avg-1.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
             )
         }
     }

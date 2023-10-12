@@ -1,9 +1,11 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
 pybind11_add_module(_sherpa_onnx
+  circular-buffer.cc
   display.cc
   endpoint.cc
   features.cc
+  offline-ctc-fst-decoder-config.cc
   offline-lm-config.cc
   offline-model-config.cc
   offline-nemo-enc-dec-ctc-model-config.cc
@@ -13,6 +15,7 @@ pybind11_add_module(_sherpa_onnx
   offline-tdnn-model-config.cc
   offline-transducer-model-config.cc
   offline-whisper-model-config.cc
+  offline-zipformer-ctc-model-config.cc
   online-lm-config.cc
   online-model-config.cc
   online-paraformer-model-config.cc
@@ -20,6 +23,10 @@ pybind11_add_module(_sherpa_onnx
   online-stream.cc
   online-transducer-model-config.cc
   sherpa-onnx.cc
+  silero-vad-model-config.cc
+  vad-model-config.cc
+  vad-model.cc
+  voice-activity-detector.cc
 )
 
 if(APPLE)

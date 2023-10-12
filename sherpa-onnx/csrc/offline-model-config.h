@@ -11,6 +11,7 @@
 #include "sherpa-onnx/csrc/offline-tdnn-model-config.h"
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"
 #include "sherpa-onnx/csrc/offline-whisper-model-config.h"
+#include "sherpa-onnx/csrc/offline-zipformer-ctc-model-config.h"
 
 namespace sherpa_onnx {
 
@@ -20,6 +21,7 @@ struct OfflineModelConfig {
   OfflineNemoEncDecCtcModelConfig nemo_ctc;
   OfflineWhisperModelConfig whisper;
   OfflineTdnnModelConfig tdnn;
+  OfflineZipformerCtcModelConfig zipformer_ctc;
 
   std::string tokens;
   int32_t num_threads = 2;
@@ -43,6 +45,7 @@ struct OfflineModelConfig {
                      const OfflineNemoEncDecCtcModelConfig &nemo_ctc,
                      const OfflineWhisperModelConfig &whisper,
                      const OfflineTdnnModelConfig &tdnn,
+                     const OfflineZipformerCtcModelConfig &zipformer_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
                      const std::string &provider, const std::string &model_type)
       : transducer(transducer),
@@ -50,6 +53,7 @@ struct OfflineModelConfig {
         nemo_ctc(nemo_ctc),
         whisper(whisper),
         tdnn(tdnn),
+        zipformer_ctc(zipformer_ctc),
         tokens(tokens),
         num_threads(num_threads),
         debug(debug),

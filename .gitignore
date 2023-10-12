@@ -57,6 +57,12 @@ run-offline-decode-files.sh
 sherpa-onnx-nemo-ctc-en-citrinet-512
 sherpa-onnx-streaming-paraformer-bilingual-zh-en
 run-offline-decode-files-nemo-ctc.sh
-*.jar
 sherpa-onnx-nemo-ctc-*
 *.wav
+sherpa-onnx-zipformer-*
+sherpa-onnx-conformer-*
+sherpa-onnx-whisper-*
+swift-api-examples/k2fsa-*
+run-*.sh
+two-pass-*.sh
+build-*

@@ -10,6 +10,7 @@
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/online-lm-config.h"
 #include "sherpa-onnx/csrc/online-model-config.h"
+#include "sherpa-onnx/csrc/vad-model-config.h"
 
 namespace sherpa_onnx {
 
@@ -20,6 +21,8 @@ Ort::SessionOptions GetSessionOptions(const OfflineModelConfig &config);
 Ort::SessionOptions GetSessionOptions(const OfflineLMConfig &config);
 
 Ort::SessionOptions GetSessionOptions(const OnlineLMConfig &config);
+
+Ort::SessionOptions GetSessionOptions(const VadModelConfig &config);
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_SESSION_H_

@@ -1,0 +1,99 @@
+name: build-wheels-armv7l
+
+on:
+  push:
+    branches:
+      - wheel
+    tags:
+      - '*'
+  workflow_dispatch:
+
+env:
+  SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
+
+concurrency:
+  group: build-wheels-armv7l-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_wheels_armv7l:
+    name: ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm
+
+      - name: Get version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(cat ./CMakeLists.txt | grep SHERPA_ONNX_VERSION | cut -d " " -f 2 | cut -d '"' -f 2)
+          echo "sherpa-onnx version: $SHERPA_ONNX_VERSION"
+          echo SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION >> $GITHUB_ENV
+
+          v=${{ matrix.python-version }}
+          PYTHON_VERSION=${v/./}
+          echo PYTHON_VERSION=$PYTHON_VERSION >> $GITHUB_ENV
+
+      # https://github.com/mshr-h/onnx-dockerfile-for-raspberry-pi/blob/main/3.10-bullseye-build/Dockerfile.arm32v7
+      - name: Run docker
+        uses: addnab/docker-run-action@v3
+        with:
+            image: balenalib/raspberrypi3-python:${{ matrix.python-version }}-bullseye-build
+            options: |
+              --platform linux/arm/v7
+              --volume ${{ github.workspace }}/:/workspace
+            shell: bash
+            run: |
+              uname -a
+              cd /workspace
+              ls -lh
+
+              id
+              apt install -qq -y git wget
+              wget -qq https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/cmake-3.27-for-armv7.tar.bz2
+
+              ls -lh
+              tar xf cmake-3.27-for-armv7.tar.bz2
+              ls -lh cmake/data/bin
+              chmod +x cmake/data/bin/cmake
+              export PATH=$PWD/cmake/data/bin:$PATH
+
+              cmake --version
+
+              export SHERPA_ONNX_CMAKE_ARGS='-DCMAKE_C_FLAGS="-march=armv7-a -mfloat-abi=hard -mfpu=neon" -DCMAKE_CXX_FLAGS="-march=armv7-a -mfloat-abi=hard -mfpu=neon"'
+              python3 setup.py bdist_wheel
+              ls -lh dist
+
+              mkdir wheelhouse
+              cp -v dist/* wheelhouse/
+
+      - name: Display wheels
+        shell: bash
+        run: |
+          ls -lh ./wheelhouse/
+
+      - name: Upload wheel
+        uses: actions/upload-artifact@v3
+        with:
+          name: sherpa_onnx-${{ env.SHERPA_ONNX_VERSION }}-cp${{ env.PYTHON_VERSION }}-cp${{ env.PYTHON_VERSION }}-linux_armv7l.whl.zip
+          path: ./wheelhouse/*.whl
+
+      - name: Publish wheels to PyPI
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine setuptools
+
+          twine upload ./wheelhouse/*.whl

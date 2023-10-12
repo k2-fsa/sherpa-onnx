@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <string>
+#include <utility>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -21,19 +22,28 @@ class OfflineParaformerModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    Init();
+    auto buf = ReadFile(config_.paraformer.model);
+    Init(buf.data(), buf.size());
   }
 
-  std::pair<Ort::Value, Ort::Value> Forward(Ort::Value features,
-                                            Ort::Value features_length) {
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_ERROR),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    auto buf = ReadFile(mgr, config_.paraformer.model);
+    Init(buf.data(), buf.size());
+  }
+#endif
+
+  std::vector<Ort::Value> Forward(Ort::Value features,
+                                  Ort::Value features_length) {
     std::array<Ort::Value, 2> inputs = {std::move(features),
                                         std::move(features_length)};
 
-    auto out =
-        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
-                   output_names_ptr_.data(), output_names_ptr_.size());
-
-    return {std::move(out[0]), std::move(out[1])};
+    return sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                      output_names_ptr_.data(), output_names_ptr_.size());
   }
 
   int32_t VocabSize() const { return vocab_size_; }
@@ -49,10 +59,8 @@ class OfflineParaformerModel::Impl {
   OrtAllocator *Allocator() const { return allocator_; }
 
  private:
-  void Init() {
-    auto buf = ReadFile(config_.paraformer.model);
-
-    sess_ = std::make_unique<Ort::Session>(env_, buf.data(), buf.size(),
+  void Init(void *model_data, size_t model_data_length) {
+    sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
                                            sess_opts_);
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
@@ -101,9 +109,15 @@ class OfflineParaformerModel::Impl {
 OfflineParaformerModel::OfflineParaformerModel(const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
+#if __ANDROID_API__ >= 9
+OfflineParaformerModel::OfflineParaformerModel(AAssetManager *mgr,
+                                               const OfflineModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
+
 OfflineParaformerModel::~OfflineParaformerModel() = default;
 
-std::pair<Ort::Value, Ort::Value> OfflineParaformerModel::Forward(
+std::vector<Ort::Value> OfflineParaformerModel::Forward(
     Ort::Value features, Ort::Value features_length) {
   return impl_->Forward(std::move(features), std::move(features_length));
 }

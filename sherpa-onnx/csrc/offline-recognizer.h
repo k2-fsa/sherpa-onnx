@@ -9,6 +9,12 @@
 #include <string>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#include "sherpa-onnx/csrc/offline-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/csrc/offline-lm-config.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-stream.h"
@@ -23,25 +29,32 @@ struct OfflineRecognizerConfig {
   OfflineFeatureExtractorConfig feat_config;
   OfflineModelConfig model_config;
   OfflineLMConfig lm_config;
+  OfflineCtcFstDecoderConfig ctc_fst_decoder_config;
 
   std::string decoding_method = "greedy_search";
   int32_t max_active_paths = 4;
-  float context_score = 1.5;
+
+  std::string hotwords_file;
+  float hotwords_score = 1.5;
+
   // only greedy_search is implemented
   // TODO(fangjun): Implement modified_beam_search
 
   OfflineRecognizerConfig() = default;
-  OfflineRecognizerConfig(const OfflineFeatureExtractorConfig &feat_config,
-                          const OfflineModelConfig &model_config,
-                          const OfflineLMConfig &lm_config,
-                          const std::string &decoding_method,
-                          int32_t max_active_paths, float context_score)
+  OfflineRecognizerConfig(
+      const OfflineFeatureExtractorConfig &feat_config,
+      const OfflineModelConfig &model_config, const OfflineLMConfig &lm_config,
+      const OfflineCtcFstDecoderConfig &ctc_fst_decoder_config,
+      const std::string &decoding_method, int32_t max_active_paths,
+      const std::string &hotwords_file, float hotwords_score)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
+        ctc_fst_decoder_config(ctc_fst_decoder_config),
         decoding_method(decoding_method),
         max_active_paths(max_active_paths),
-        context_score(context_score) {}
+        hotwords_file(hotwords_file),
+        hotwords_score(hotwords_score) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
@@ -55,14 +68,26 @@ class OfflineRecognizer {
  public:
   ~OfflineRecognizer();
 
+#if __ANDROID_API__ >= 9
+  OfflineRecognizer(AAssetManager *mgr, const OfflineRecognizerConfig &config);
+#endif
+
   explicit OfflineRecognizer(const OfflineRecognizerConfig &config);
 
   /// Create a stream for decoding.
   std::unique_ptr<OfflineStream> CreateStream() const;
 
-  /// Create a stream for decoding.
+  /** Create a stream for decoding.
+   *
+   *  @param The hotwords for this string, it might contain several hotwords,
+   *         the hotwords are separated by "/". In each of the hotwords, there
+   *         are cjkchars or bpes, the bpe/cjkchar are separated by space (" ").
+   *         For example, hotwords I LOVE YOU and HELLO WORLD, looks like:
+   *
+   *         "▁I ▁LOVE ▁YOU/▁HE LL O ▁WORLD"
+   */
   std::unique_ptr<OfflineStream> CreateStream(
-      const std::vector<std::vector<int32_t>> &context_list) const;
+      const std::string &hotwords) const;
 
   /** Decode a single stream
    *

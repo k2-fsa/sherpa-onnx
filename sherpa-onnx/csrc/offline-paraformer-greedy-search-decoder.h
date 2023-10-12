@@ -17,7 +17,8 @@ class OfflineParaformerGreedySearchDecoder : public OfflineParaformerDecoder {
       : eos_id_(eos_id) {}
 
   std::vector<OfflineParaformerDecoderResult> Decode(
-      Ort::Value log_probs, Ort::Value /*token_num*/) override;
+      Ort::Value log_probs, Ort::Value token_num,
+      Ort::Value us_cif_peak = Ort::Value(nullptr)) override;
 
  private:
   int32_t eos_id_;

@@ -38,6 +38,29 @@ class OfflineTransducerModel::Impl {
     }
   }
 
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_WARNING),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    {
+      auto buf = ReadFile(mgr, config.transducer.encoder_filename);
+      InitEncoder(buf.data(), buf.size());
+    }
+
+    {
+      auto buf = ReadFile(mgr, config.transducer.decoder_filename);
+      InitDecoder(buf.data(), buf.size());
+    }
+
+    {
+      auto buf = ReadFile(mgr, config.transducer.joiner_filename);
+      InitJoiner(buf.data(), buf.size());
+    }
+  }
+#endif
+
   std::pair<Ort::Value, Ort::Value> RunEncoder(Ort::Value features,
                                                Ort::Value features_length) {
     std::array<Ort::Value, 2> encoder_inputs = {std::move(features),
@@ -220,6 +243,12 @@ class OfflineTransducerModel::Impl {
 
 OfflineTransducerModel::OfflineTransducerModel(const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+OfflineTransducerModel::OfflineTransducerModel(AAssetManager *mgr,
+                                               const OfflineModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
 
 OfflineTransducerModel::~OfflineTransducerModel() = default;
 

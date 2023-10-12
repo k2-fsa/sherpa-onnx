@@ -4,12 +4,14 @@ from pathlib import Path
 from typing import List, Optional
 
 from _sherpa_onnx import (
+    OfflineCtcFstDecoderConfig,
     OfflineFeatureExtractorConfig,
     OfflineModelConfig,
     OfflineNemoEncDecCtcModelConfig,
     OfflineParaformerModelConfig,
     OfflineTdnnModelConfig,
     OfflineWhisperModelConfig,
+    OfflineZipformerCtcModelConfig,
 )
 from _sherpa_onnx import OfflineRecognizer as _Recognizer
 from _sherpa_onnx import (
@@ -43,7 +45,8 @@ class OfflineRecognizer(object):
         feature_dim: int = 80,
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
-        context_score: float = 1.5,
+        hotwords_file: str = "",
+        hotwords_score: float = 1.5,
         debug: bool = False,
         provider: str = "cpu",
     ):
@@ -101,11 +104,18 @@ class OfflineRecognizer(object):
             feature_dim=feature_dim,
         )
 
+        if len(hotwords_file) > 0 and decoding_method != "modified_beam_search":
+            raise ValueError(
+                "Please use --decoding-method=modified_beam_search when using "
+                f"--hotwords-file. Currently given: {decoding_method}"
+            )
+
         recognizer_config = OfflineRecognizerConfig(
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
-            context_score=context_score,
+            hotwords_file=hotwords_file,
+            hotwords_score=hotwords_score,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -379,11 +389,11 @@ class OfflineRecognizer(object):
         self.config = recognizer_config
         return self
 
-    def create_stream(self, contexts_list: Optional[List[List[int]]] = None):
-        if contexts_list is None:
+    def create_stream(self, hotwords: Optional[str] = None):
+        if hotwords is None:
             return self.recognizer.create_stream()
         else:
-            return self.recognizer.create_stream(contexts_list)
+            return self.recognizer.create_stream(hotwords)
 
     def decode_stream(self, s: OfflineStream):
         self.recognizer.decode_stream(s)

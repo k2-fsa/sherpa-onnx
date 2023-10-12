@@ -14,37 +14,61 @@
 #include <utility>
 #include <vector>
 
-#include "nlohmann/json.hpp"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 
 namespace sherpa_onnx {
 
 std::string OnlineRecognizerResult::AsJsonString() const {
-  using json = nlohmann::json;
-  json j;
-  j["text"] = text;
-  j["tokens"] = tokens;
-  j["start_time"] = start_time;
-#if 1
-  // This branch chooses number of decimal points to keep in
-  // the return json string
   std::ostringstream os;
+  os << "{";
+  os << "\"is_final\":" << (is_final ? "true" : "false") << ", ";
+  os << "\"segment\":" << segment << ", ";
+  os << "\"start_time\":" << std::fixed << std::setprecision(2) << start_time
+     << ", ";
+
+  os << "\"text\""
+     << ": ";
+  os << "\"" << text << "\""
+     << ", ";
+
+  os << "\""
+     << "timestamps"
+     << "\""
+     << ": ";
   os << "[";
+
   std::string sep = "";
   for (auto t : timestamps) {
     os << sep << std::fixed << std::setprecision(2) << t;
     sep = ", ";
   }
+  os << "], ";
+
+  os << "\""
+     << "tokens"
+     << "\""
+     << ":";
+  os << "[";
+
+  sep = "";
+  auto oldFlags = os.flags();
+  for (const auto &t : tokens) {
+    if (t.size() == 1 && static_cast<uint8_t>(t[0]) > 0x7f) {
+      const uint8_t *p = reinterpret_cast<const uint8_t *>(t.c_str());
+      os << sep << "\""
+         << "<0x" << std::hex << std::uppercase << static_cast<uint32_t>(p[0])
+         << ">"
+         << "\"";
+      os.flags(oldFlags);
+    } else {
+      os << sep << "\"" << t << "\"";
+    }
+    sep = ", ";
+  }
   os << "]";
-  j["timestamps"] = os.str();
-#else
-  j["timestamps"] = timestamps;
-#endif
+  os << "}";
 
-  j["segment"] = segment;
-  j["is_final"] = is_final;
-
-  return j.dump();
+  return os.str();
 }
 
 void OnlineRecognizerConfig::Register(ParseOptions *po) {
@@ -57,9 +81,15 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
                "True to enable endpoint detection. False to disable it.");
   po->Register("max-active-paths", &max_active_paths,
                "beam size used in modified beam search.");
-  po->Register("context-score", &context_score,
+  po->Register("hotwords-score", &hotwords_score,
                "The bonus score for each token in context word/phrase. "
                "Used only when decoding_method is modified_beam_search");
+  po->Register(
+      "hotwords-file", &hotwords_file,
+      "The file containing hotwords, one words/phrases per line, and for each"
+      "phrase the bpe/cjkchar are separated by a space. For example: "
+      "▁HE LL O ▁WORLD"
+      "你 好 世 界");
   po->Register("decoding-method", &decoding_method,
                "decoding method,"
                "now support greedy_search and modified_beam_search.");
@@ -72,8 +102,20 @@ bool OnlineRecognizerConfig::Validate() const {
                        max_active_paths);
       return false;
     }
-    if (!lm_config.Validate()) return false;
+
+    if (!lm_config.Validate()) {
+      return false;
+    }
   }
+
+  if (!hotwords_file.empty() && decoding_method != "modified_beam_search") {
+    SHERPA_ONNX_LOGE(
+        "Please use --decoding-method=modified_beam_search if you"
+        " provide --hotwords-file. Given --decoding-method=%s",
+        decoding_method.c_str());
+    return false;
+  }
+
   return model_config.Validate();
 }
 
@@ -87,7 +129,8 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
   os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ", ";
   os << "max_active_paths=" << max_active_paths << ", ";
-  os << "context_score=" << context_score << ", ";
+  os << "hotwords_score=" << hotwords_score << ", ";
+  os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "decoding_method=\"" << decoding_method << "\")";
 
   return os.str();
@@ -109,8 +152,8 @@ std::unique_ptr<OnlineStream> OnlineRecognizer::CreateStream() const {
 }
 
 std::unique_ptr<OnlineStream> OnlineRecognizer::CreateStream(
-    const std::vector<std::vector<int32_t>> &context_list) const {
-  return impl_->CreateStream(context_list);
+    const std::string &hotwords) const {
+  return impl_->CreateStream(hotwords);
 }
 
 bool OnlineRecognizer::IsReady(OnlineStream *s) const {

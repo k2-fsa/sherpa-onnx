@@ -17,6 +17,7 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
   feat_config.Register(po);
   model_config.Register(po);
   lm_config.Register(po);
+  ctc_fst_decoder_config.Register(po);
 
   po->Register(
       "decoding-method", &decoding_method,
@@ -26,7 +27,15 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
 
   po->Register("max-active-paths", &max_active_paths,
                "Used only when decoding_method is modified_beam_search");
-  po->Register("context-score", &context_score,
+
+  po->Register(
+      "hotwords-file", &hotwords_file,
+      "The file containing hotwords, one words/phrases per line, and for each"
+      "phrase the bpe/cjkchar are separated by a space. For example: "
+      "▁HE LL O ▁WORLD"
+      "你 好 世 界");
+
+  po->Register("hotwords-score", &hotwords_score,
                "The bonus score for each token in context word/phrase. "
                "Used only when decoding_method is modified_beam_search");
 }
@@ -38,7 +47,17 @@ bool OfflineRecognizerConfig::Validate() const {
                        max_active_paths);
       return false;
     }
-    if (!lm_config.Validate()) return false;
+    if (!lm_config.Validate()) {
+      return false;
+    }
+  }
+
+  if (!hotwords_file.empty() && decoding_method != "modified_beam_search") {
+    SHERPA_ONNX_LOGE(
+        "Please use --decoding-method=modified_beam_search if you"
+        " provide --hotwords-file. Given --decoding-method=%s",
+        decoding_method.c_str());
+    return false;
   }
 
   return model_config.Validate();
@@ -51,12 +70,20 @@ std::string OfflineRecognizerConfig::ToString() const {
   os << "feat_config=" << feat_config.ToString() << ", ";
   os << "model_config=" << model_config.ToString() << ", ";
   os << "lm_config=" << lm_config.ToString() << ", ";
+  os << "ctc_fst_decoder_config=" << ctc_fst_decoder_config.ToString() << ", ";
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "max_active_paths=" << max_active_paths << ", ";
-  os << "context_score=" << context_score << ")";
+  os << "hotwords_file=\"" << hotwords_file << "\", ";
+  os << "hotwords_score=" << hotwords_score << ")";
 
   return os.str();
 }
+
+#if __ANDROID_API__ >= 9
+OfflineRecognizer::OfflineRecognizer(AAssetManager *mgr,
+                                     const OfflineRecognizerConfig &config)
+    : impl_(OfflineRecognizerImpl::Create(mgr, config)) {}
+#endif
 
 OfflineRecognizer::OfflineRecognizer(const OfflineRecognizerConfig &config)
     : impl_(OfflineRecognizerImpl::Create(config)) {}
@@ -64,8 +91,8 @@ OfflineRecognizer::OfflineRecognizer(const OfflineRecognizerConfig &config)
 OfflineRecognizer::~OfflineRecognizer() = default;
 
 std::unique_ptr<OfflineStream> OfflineRecognizer::CreateStream(
-    const std::vector<std::vector<int32_t>> &context_list) const {
-  return impl_->CreateStream(context_list);
+    const std::string &hotwords) const {
+  return impl_->CreateStream(hotwords);
 }
 
 std::unique_ptr<OfflineStream> OfflineRecognizer::CreateStream() const {

@@ -5,8 +5,12 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TDNN_CTC_MODEL_H_
 #include <memory>
 #include <string>
-#include <utility>
 #include <vector>
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-ctc-model.h"
@@ -22,11 +26,16 @@ namespace sherpa_onnx {
 class OfflineTdnnCtcModel : public OfflineCtcModel {
  public:
   explicit OfflineTdnnCtcModel(const OfflineModelConfig &config);
+
+#if __ANDROID_API__ >= 9
+  OfflineTdnnCtcModel(AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
   ~OfflineTdnnCtcModel() override;
 
   /** Run the forward method of the model.
    *
-   * @param features  A tensor of shape (N, T, C). It is changed in-place.
+   * @param features  A tensor of shape (N, T, C).
    * @param features_length  A 1-D tensor of shape (N,) containing number of
    *                         valid frames in `features` before padding.
    *                         Its dtype is int64_t.
@@ -35,8 +44,8 @@ class OfflineTdnnCtcModel : public OfflineCtcModel {
    *  - log_probs: A 3-D tensor of shape (N, T', vocab_size).
    *  - log_probs_length A 1-D tensor of shape (N,). Its dtype is int64_t
    */
-  std::pair<Ort::Value, Ort::Value> Forward(
-      Ort::Value features, Ort::Value /*features_length*/) override;
+  std::vector<Ort::Value> Forward(Ort::Value features,
+                                  Ort::Value /*features_length*/) override;
 
   /** Return the vocabulary size of the model
    */

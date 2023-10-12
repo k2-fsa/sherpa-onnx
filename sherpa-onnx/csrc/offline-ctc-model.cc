@@ -12,6 +12,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"
+#include "sherpa-onnx/csrc/offline-zipformer-ctc-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace {
@@ -19,6 +20,7 @@ namespace {
 enum class ModelType {
   kEncDecCTCModelBPE,
   kTdnn,
+  kZipformerCtc,
   kUnkown,
 };
 
@@ -59,6 +61,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kEncDecCTCModelBPE;
   } else if (model_type.get() == std::string("tdnn")) {
     return ModelType::kTdnn;
+  } else if (model_type.get() == std::string("zipformer2_ctc")) {
+    return ModelType::kZipformerCtc;
   } else {
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
     return ModelType::kUnkown;
@@ -74,6 +78,8 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     filename = config.nemo_ctc.model;
   } else if (!config.tdnn.model.empty()) {
     filename = config.tdnn.model;
+  } else if (!config.zipformer_ctc.model.empty()) {
+    filename = config.zipformer_ctc.model;
   } else {
     SHERPA_ONNX_LOGE("Please specify a CTC model");
     exit(-1);
@@ -92,6 +98,9 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     case ModelType::kTdnn:
       return std::make_unique<OfflineTdnnCtcModel>(config);
       break;
+    case ModelType::kZipformerCtc:
+      return std::make_unique<OfflineZipformerCtcModel>(config);
+      break;
     case ModelType::kUnkown:
       SHERPA_ONNX_LOGE("Unknown model type in offline CTC!");
       return nullptr;
@@ -99,5 +108,48 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
 
   return nullptr;
 }
+
+#if __ANDROID_API__ >= 9
+
+std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
+    AAssetManager *mgr, const OfflineModelConfig &config) {
+  ModelType model_type = ModelType::kUnkown;
+
+  std::string filename;
+  if (!config.nemo_ctc.model.empty()) {
+    filename = config.nemo_ctc.model;
+  } else if (!config.tdnn.model.empty()) {
+    filename = config.tdnn.model;
+  } else if (!config.zipformer_ctc.model.empty()) {
+    filename = config.zipformer_ctc.model;
+  } else {
+    SHERPA_ONNX_LOGE("Please specify a CTC model");
+    exit(-1);
+  }
+
+  {
+    auto buffer = ReadFile(mgr, filename);
+
+    model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
+  }
+
+  switch (model_type) {
+    case ModelType::kEncDecCTCModelBPE:
+      return std::make_unique<OfflineNemoEncDecCtcModel>(mgr, config);
+      break;
+    case ModelType::kTdnn:
+      return std::make_unique<OfflineTdnnCtcModel>(mgr, config);
+      break;
+    case ModelType::kZipformerCtc:
+      return std::make_unique<OfflineZipformerCtcModel>(mgr, config);
+      break;
+    case ModelType::kUnkown:
+      SHERPA_ONNX_LOGE("Unknown model type in offline CTC!");
+      return nullptr;
+  }
+
+  return nullptr;
+}
+#endif
 
 }  // namespace sherpa_onnx

@@ -21,8 +21,8 @@ void PybindOnlineModelConfig(py::module *m) {
   using PyClass = OnlineModelConfig;
   py::class_<PyClass>(*m, "OnlineModelConfig")
       .def(py::init<const OnlineTransducerModelConfig &,
-                    const OnlineParaformerModelConfig &, std::string &, int32_t,
-                    bool, const std::string &, const std::string &>(),
+                    const OnlineParaformerModelConfig &, const std::string &,
+                    int32_t, bool, const std::string &, const std::string &>(),
            py::arg("transducer") = OnlineTransducerModelConfig(),
            py::arg("paraformer") = OnlineParaformerModelConfig(),
            py::arg("tokens"), py::arg("num_threads"), py::arg("debug") = false,

@@ -18,7 +18,7 @@ permissions:
 jobs:
   python_online_websocket_server:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.os }} ${{ matrix.python-version }}
+    name: ${{ matrix.os }} ${{ matrix.python-version }} ${{ matrix.model_type }}
     strategy:
       fail-fast: false
       matrix:
@@ -39,7 +39,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy
+          python3 -m pip install --upgrade pip numpy sentencepiece
 
       - name: Install sherpa-onnx
         shell: bash

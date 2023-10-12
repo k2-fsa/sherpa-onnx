@@ -11,6 +11,8 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
+    tags:
+      - '*'
   pull_request:
     branches:
       - master
@@ -20,20 +22,8 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
-  release:
-    types:
-      - published
 
   workflow_dispatch:
-    inputs:
-      release:
-        description: "Whether to release"
-        type: boolean
-
-env:
-  RELEASE:
-    |- # Release if there is a release tag name or a release flag in workflow_dispatch
-    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: arm-linux-gnueabihf-${{ github.ref }}
@@ -86,7 +76,7 @@ jobs:
         uses: actions/cache@v3
         with:
           path: toolchain
-          key: gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf
+          key: gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf
 
       - name: Download toolchain
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
@@ -97,19 +87,19 @@ jobs:
           ls -lh arm-linux-gcc
 
           mkdir $GITHUB_WORKSPACE/toolchain
-          tar xvf ./arm-linux-gcc/gcc-arm-8.3-2019.03-x86_64-arm-linux-gnueabihf.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+          tar xvf ./arm-linux-gcc/gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
 
       - name: Display toolchain info
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-          arm-linux-gnueabihf-gcc --version
+          arm-none-linux-gnueabihf-gcc --version
 
       - name: Display qemu-arm -h
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-linux-gnueabihf/libc
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-none-linux-gnueabihf/libc
           qemu-arm -h
 
       - name: build arm-linux-gnueabihf
@@ -129,8 +119,7 @@ jobs:
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-linux-gnueabihf/libc
-
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/arm-none-linux-gnueabihf/libc
 
           ls -lh ./build-arm-linux-gnueabihf/bin
 
@@ -156,7 +145,7 @@ jobs:
           path: sherpa-onnx-*linux-arm-gnueabihf.tar.bz2
 
       - name: Release pre-compiled binaries and libs for arm linux gnueabihf
-        if: env.RELEASE == 'true'
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

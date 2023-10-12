@@ -34,7 +34,7 @@ def get_dict():
 def process_linux(s):
     libs = [
         "libkaldi-native-fbank-core.so",
-        "libonnxruntime.so.1.15.1",
+        "libonnxruntime.so.1.16.0",
         "libsherpa-onnx-c-api.so",
         "libsherpa-onnx-core.so",
     ]
@@ -56,7 +56,7 @@ def process_linux(s):
 def process_macos(s):
     libs = [
         "libkaldi-native-fbank-core.dylib",
-        "libonnxruntime.1.15.1.dylib",
+        "libonnxruntime.1.16.0.dylib",
         "libsherpa-onnx-c-api.dylib",
         "libsherpa-onnx-core.dylib",
     ]

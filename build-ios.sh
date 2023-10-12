@@ -5,12 +5,17 @@ set -e
 dir=build-ios
 mkdir -p $dir
 cd $dir
-onnxruntime_version=1.15.1
+onnxruntime_version=1.16.0
 
 if [ ! -f ios-onnxruntime/$onnxruntime_version/onnxruntime.xcframework/ios-arm64/onnxruntime.a ]; then
-  GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/ios-onnxruntime
+  if [ ! -d ios-onnxruntime ]; then
+    GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/ios-onnxruntime
+  fi
+
   pushd ios-onnxruntime
-  ln -s $onnxruntime_version/onnxruntime.xcframework .
+  git pull
+
+  ln -sf $onnxruntime_version/onnxruntime.xcframework .
   git lfs pull --include $onnxruntime_version/onnxruntime.xcframework/ios-arm64/onnxruntime.a
   git lfs pull --include $onnxruntime_version/onnxruntime.xcframework/ios-arm64_x86_64-simulator/onnxruntime.a
   popd

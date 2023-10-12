@@ -166,3 +166,8 @@ python3 ./python-api-examples/offline-decode-files.py \
 python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
 
 rm -rf $repo
+
+# test text2token
+git clone https://github.com/pkufool/sherpa-test-data /tmp/sherpa-test-data
+
+python3 sherpa-onnx/python/tests/test_text2token.py --verbose

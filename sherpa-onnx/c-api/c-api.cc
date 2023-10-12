@@ -9,9 +9,11 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/display.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
+#include "sherpa-onnx/csrc/voice-activity-detector.h"
 
 struct SherpaOnnxOnlineRecognizer {
   std::unique_ptr<sherpa_onnx::OnlineRecognizer> impl;
@@ -78,6 +80,10 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
   recognizer_config.endpoint_config.rule3.min_utterance_length =
       SHERPA_ONNX_OR(config->rule3_min_utterance_length, 20);
 
+  recognizer_config.hotwords_file = SHERPA_ONNX_OR(config->hotwords_file, "");
+  recognizer_config.hotwords_score =
+      SHERPA_ONNX_OR(config->hotwords_score, 1.5);
+
   if (config->model_config.debug) {
     fprintf(stderr, "%s\n", recognizer_config.ToString().c_str());
   }
@@ -98,6 +104,13 @@ SherpaOnnxOnlineStream *CreateOnlineStream(
     const SherpaOnnxOnlineRecognizer *recognizer) {
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(recognizer->impl->CreateStream());
+  return stream;
+}
+
+SherpaOnnxOnlineStream *CreateOnlineStreamWithHotwords(
+    const SherpaOnnxOnlineRecognizer *recognizer, const char *hotwords) {
+  SherpaOnnxOnlineStream *stream =
+      new SherpaOnnxOnlineStream(recognizer->impl->CreateStream(hotwords));
   return stream;
 }
 
@@ -127,7 +140,7 @@ void DecodeMultipleOnlineStreams(SherpaOnnxOnlineRecognizer *recognizer,
   recognizer->impl->DecodeStreams(ss.data(), n);
 }
 
-SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
+const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     SherpaOnnxOnlineRecognizer *recognizer, SherpaOnnxOnlineStream *stream) {
   sherpa_onnx::OnlineRecognizerResult result =
       recognizer->impl->GetResult(stream->impl.get());
@@ -295,6 +308,10 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
   recognizer_config.max_active_paths =
       SHERPA_ONNX_OR(config->max_active_paths, 4);
 
+  recognizer_config.hotwords_file = SHERPA_ONNX_OR(config->hotwords_file, "");
+  recognizer_config.hotwords_score =
+      SHERPA_ONNX_OR(config->hotwords_score, 1.5);
+
   if (config->model_config.debug) {
     fprintf(stderr, "%s\n", recognizer_config.ToString().c_str());
   }
@@ -340,16 +357,28 @@ void DecodeMultipleOfflineStreams(SherpaOnnxOfflineRecognizer *recognizer,
   recognizer->impl->DecodeStreams(ss.data(), n);
 }
 
-SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
+const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
     SherpaOnnxOfflineStream *stream) {
   const sherpa_onnx::OfflineRecognitionResult &result =
       stream->impl->GetResult();
   const auto &text = result.text;
 
   auto r = new SherpaOnnxOfflineRecognizerResult;
+  memset(r, 0, sizeof(SherpaOnnxOfflineRecognizerResult));
+
   r->text = new char[text.size() + 1];
   std::copy(text.begin(), text.end(), const_cast<char *>(r->text));
   const_cast<char *>(r->text)[text.size()] = 0;
+
+  if (!result.timestamps.empty()) {
+    r->timestamps = new float[result.timestamps.size()];
+    std::copy(result.timestamps.begin(), result.timestamps.end(),
+              r->timestamps);
+    r->count = result.timestamps.size();
+  } else {
+    r->timestamps = nullptr;
+    r->count = 0;
+  }
 
   return r;
 }
@@ -357,5 +386,136 @@ SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
 void DestroyOfflineRecognizerResult(
     const SherpaOnnxOfflineRecognizerResult *r) {
   delete[] r->text;
+  delete[] r->timestamps;
   delete r;
+}
+
+// ============================================================
+// For VAD
+// ============================================================
+//
+struct SherpaOnnxCircularBuffer {
+  std::unique_ptr<sherpa_onnx::CircularBuffer> impl;
+};
+
+SherpaOnnxCircularBuffer *SherpaOnnxCreateCircularBuffer(int32_t capacity) {
+  SherpaOnnxCircularBuffer *buffer = new SherpaOnnxCircularBuffer;
+  buffer->impl = std::make_unique<sherpa_onnx::CircularBuffer>(capacity);
+  return buffer;
+}
+
+void SherpaOnnxDestroyCircularBuffer(SherpaOnnxCircularBuffer *buffer) {
+  delete buffer;
+}
+
+void SherpaOnnxCircularBufferPush(SherpaOnnxCircularBuffer *buffer,
+                                  const float *p, int32_t n) {
+  buffer->impl->Push(p, n);
+}
+
+const float *SherpaOnnxCircularBufferGet(SherpaOnnxCircularBuffer *buffer,
+                                         int32_t start_index, int32_t n) {
+  std::vector<float> v = buffer->impl->Get(start_index, n);
+
+  float *p = new float[n];
+  std::copy(v.begin(), v.end(), p);
+  return p;
+}
+
+void SherpaOnnxCircularBufferFree(const float *p) { delete[] p; }
+
+void SherpaOnnxCircularBufferPop(SherpaOnnxCircularBuffer *buffer, int32_t n) {
+  buffer->impl->Pop(n);
+}
+
+int32_t SherpaOnnxCircularBufferSize(SherpaOnnxCircularBuffer *buffer) {
+  return buffer->impl->Size();
+}
+
+void SherpaOnnxCircularBufferReset(SherpaOnnxCircularBuffer *buffer) {
+  buffer->impl->Reset();
+}
+
+struct SherpaOnnxVoiceActivityDetector {
+  std::unique_ptr<sherpa_onnx::VoiceActivityDetector> impl;
+};
+
+SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
+    const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds) {
+  sherpa_onnx::VadModelConfig vad_config;
+
+  vad_config.silero_vad.model = SHERPA_ONNX_OR(config->silero_vad.model, "");
+  vad_config.silero_vad.threshold =
+      SHERPA_ONNX_OR(config->silero_vad.threshold, 0.5);
+
+  vad_config.silero_vad.min_silence_duration =
+      SHERPA_ONNX_OR(config->silero_vad.min_silence_duration, 0.5);
+
+  vad_config.silero_vad.min_speech_duration =
+      SHERPA_ONNX_OR(config->silero_vad.min_speech_duration, 0.25);
+
+  vad_config.silero_vad.window_size =
+      SHERPA_ONNX_OR(config->silero_vad.window_size, 512);
+
+  vad_config.sample_rate = SHERPA_ONNX_OR(config->sample_rate, 16000);
+  vad_config.num_threads = SHERPA_ONNX_OR(config->num_threads, 1);
+  vad_config.provider = SHERPA_ONNX_OR(config->provider, "cpu");
+  vad_config.debug = SHERPA_ONNX_OR(config->debug, false);
+
+  if (vad_config.debug) {
+    fprintf(stderr, "%s\n", vad_config.ToString().c_str());
+  }
+
+  SherpaOnnxVoiceActivityDetector *p = new SherpaOnnxVoiceActivityDetector;
+  p->impl = std::make_unique<sherpa_onnx::VoiceActivityDetector>(
+      vad_config, buffer_size_in_seconds);
+
+  return p;
+}
+
+void SherpaOnnxDestroyVoiceActivityDetector(
+    SherpaOnnxVoiceActivityDetector *p) {
+  delete p;
+}
+
+void SherpaOnnxVoiceActivityDetectorAcceptWaveform(
+    SherpaOnnxVoiceActivityDetector *p, const float *samples, int32_t n) {
+  p->impl->AcceptWaveform(samples, n);
+}
+
+int32_t SherpaOnnxVoiceActivityDetectorEmpty(
+    SherpaOnnxVoiceActivityDetector *p) {
+  return p->impl->Empty();
+}
+
+int32_t SherpaOnnxVoiceActivityDetectorDetected(
+    SherpaOnnxVoiceActivityDetector *p) {
+  return p->impl->IsSpeechDetected();
+}
+
+SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorPop(
+    SherpaOnnxVoiceActivityDetector *p) {
+  p->impl->Pop();
+}
+
+SHERPA_ONNX_API const SherpaOnnxSpeechSegment *
+SherpaOnnxVoiceActivityDetectorFront(SherpaOnnxVoiceActivityDetector *p) {
+  const sherpa_onnx::SpeechSegment &segment = p->impl->Front();
+
+  SherpaOnnxSpeechSegment *ans = new SherpaOnnxSpeechSegment;
+  ans->start = segment.start;
+  ans->samples = new float[segment.samples.size()];
+  std::copy(segment.samples.begin(), segment.samples.end(), ans->samples);
+  ans->n = segment.samples.size();
+
+  return ans;
+}
+
+void SherpaOnnxDestroySpeechSegment(const SherpaOnnxSpeechSegment *p) {
+  delete[] p->samples;
+  delete p;
+}
+
+void SherpaOnnxVoiceActivityDetectorReset(SherpaOnnxVoiceActivityDetector *p) {
+  p->impl->Reset();
 }

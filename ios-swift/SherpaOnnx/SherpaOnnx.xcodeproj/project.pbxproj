@@ -40,7 +40,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		C93989AF2A89FE33009AB859 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.15.1/onnxruntime.xcframework"; sourceTree = "<group>"; };
+		C93989AF2A89FE33009AB859 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.16.0/onnxruntime.xcframework"; sourceTree = "<group>"; };
 		C93989B12A89FF78009AB859 /* decoder.int8.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = decoder.int8.onnx; path = "../../../icefall-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx"; sourceTree = "<group>"; };
 		C93989B22A89FF78009AB859 /* encoder.int8.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = encoder.int8.onnx; path = "../../../icefall-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx"; sourceTree = "<group>"; };
 		C93989B32A89FF78009AB859 /* tokens.txt */ = {isa = PBXFileReference; lastKnownFileType = text; name = tokens.txt; path = "../../../icefall-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt"; sourceTree = "<group>"; };
