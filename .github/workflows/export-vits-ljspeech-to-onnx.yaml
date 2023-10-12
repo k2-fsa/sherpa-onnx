@@ -37,7 +37,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install -qq torch==${{ matrix.torch }}+cpu -f https://download.pytorch.org/whl/torch_stable.html numpy
-          python3 -m pip install onnxruntime onnx
+          python3 -m pip install onnxruntime onnx soundfile
           python3 -m pip install scipy cython unidecode phonemizer
 
           # required by phonemizer
