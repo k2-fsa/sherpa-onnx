@@ -26,4 +26,7 @@ make install
 libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libsherpa-onnx-c-api.a \
   ./install/lib/libsherpa-onnx-core.a \
-  ./install/lib/libkaldi-native-fbank-core.a
+  ./install/lib/libkaldi-native-fbank-core.a \
+  ./install/lib/libsherpa-onnx-fst.a \
+  ./install/lib/libsherpa-onnx-kaldifst-core.a \
+  ./install/lib/libkaldi-decoder-core.a
