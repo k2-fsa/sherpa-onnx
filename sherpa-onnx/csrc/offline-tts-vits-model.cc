@@ -25,7 +25,45 @@ class OfflineTtsVitsModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-  Ort::Value Run(Ort::Value x) { return Ort::Value(nullptr); }
+  Ort::Value Run(Ort::Value x) {
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::vector<int64_t> x_shape = x.GetTensorTypeAndShapeInfo().GetShape();
+    if (x_shape[0] != 1) {
+      SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
+                       static_cast<int32_t>(x_shape[0]));
+      exit(-1);
+    }
+
+    int64_t len = x_shape[1];
+    int64_t len_shape = 1;
+
+    Ort::Value x_length =
+        Ort::Value::CreateTensor(memory_info, &len, 1, &len_shape, 1);
+
+    int64_t scale_shape = 1;
+    float noise_scale = 1;
+    float length_scale = 1;
+    float noise_scale_w = 1;
+
+    Ort::Value noise_scale_tensor =
+        Ort::Value::CreateTensor(memory_info, &noise_scale, 1, &scale_shape, 1);
+    Ort::Value length_scale_tensor = Ort::Value::CreateTensor(
+        memory_info, &length_scale, 1, &scale_shape, 1);
+    Ort::Value noise_scale_w_tensor = Ort::Value::CreateTensor(
+        memory_info, &noise_scale_w, 1, &scale_shape, 1);
+
+    std::array<Ort::Value, 5> inputs = {
+        std::move(x), std::move(x_length), std::move(noise_scale_tensor),
+        std::move(length_scale_tensor), std::move(noise_scale_w_tensor)};
+
+    auto out =
+        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                   output_names_ptr_.data(), output_names_ptr_.size());
+
+    return std::move(out[0]);
+  }
 
   int32_t SampleRate() const { return sample_rate_; }
 

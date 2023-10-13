@@ -35,6 +35,7 @@ It will generate a file test.wav.
   }
 
   sherpa_onnx::OfflineTts tts(config);
+  tts.Generate("hello world\n");
 
   return 0;
 }
