@@ -5,6 +5,7 @@ from typing import List, Optional
 from _sherpa_onnx import (
     EndpointConfig,
     FeatureExtractorConfig,
+    OnlineLMConfig,
     OnlineModelConfig,
     OnlineParaformerModelConfig,
     OnlineRecognizer as _Recognizer,
@@ -46,6 +47,8 @@ class OnlineRecognizer(object):
         hotwords_file: str = "",
         provider: str = "cpu",
         model_type: str = "",
+        lm: str = "",
+        lm_scale: float = 0.1,
     ):
         """
         Please refer to
@@ -137,10 +140,22 @@ class OnlineRecognizer(object):
                 "Please use --decoding-method=modified_beam_search when using "
                 f"--hotwords-file. Currently given: {decoding_method}"
             )
+        
+        if lm and decoding_method != "modified_beam_search":
+            raise ValueError(
+                "Please use --decoding-method=modified_beam_search when using "
+                f"--lm. Currently given: {decoding_method}"
+            )
+        
+        lm_config = OnlineLMConfig(
+            model=lm,
+            scale=lm_scale,
+        )
 
         recognizer_config = OnlineRecognizerConfig(
             feat_config=feat_config,
             model_config=model_config,
+            lm_config=lm_config,
             endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,

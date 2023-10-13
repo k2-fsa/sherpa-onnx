@@ -37,6 +37,7 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
            py::arg("hotwords_score") = 0)
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
+      .def_readwrite("lm_config", &PyClass::lm_config)
       .def_readwrite("endpoint_config", &PyClass::endpoint_config)
       .def_readwrite("enable_endpoint", &PyClass::enable_endpoint)
       .def_readwrite("decoding_method", &PyClass::decoding_method)

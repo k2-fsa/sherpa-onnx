@@ -116,6 +116,24 @@ def get_args():
     )
 
     parser.add_argument(
+        "--lm",
+        type=str,
+        default="",
+        help="""Used only when --decoding-method is modified_beam_search.
+        path of language model.
+        """,
+    )
+
+    parser.add_argument(
+        "--lm-scale",
+        type=float,
+        default=0.1,
+        help="""Used only when --decoding-method is modified_beam_search.
+        scale of language model.
+        """,
+    )
+
+    parser.add_argument(
         "--provider",
         type=str,
         default="cpu",
@@ -215,6 +233,8 @@ def main():
             feature_dim=80,
             decoding_method=args.decoding_method,
             max_active_paths=args.max_active_paths,
+            lm=args.lm,
+            lm_scale=args.lm_scale,
             hotwords_file=args.hotwords_file,
             hotwords_score=args.hotwords_score,
         )
