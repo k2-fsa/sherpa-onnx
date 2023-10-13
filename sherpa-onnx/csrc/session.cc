@@ -87,4 +87,8 @@ Ort::SessionOptions GetSessionOptions(const VadModelConfig &config) {
   return GetSessionOptionsImpl(config.num_threads, config.provider);
 }
 
+Ort::SessionOptions GetSessionOptions(const OfflineTtsModelConfig &config) {
+  return GetSessionOptionsImpl(config.num_threads, config.provider);
+}
+
 }  // namespace sherpa_onnx
