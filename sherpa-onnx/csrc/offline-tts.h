@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/offline-tts-synthesizer.h
+// sherpa-onnx/csrc/offline-tts.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_SYNTHESIZER_H_
-#define SHERPA_ONNX_CSRC_OFFLINE_TTS_SYNTHESIZER_H_
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_TTS_H_
 
 #include <cstdint>
 #include <memory>
@@ -14,11 +14,11 @@
 
 namespace sherpa_onnx {
 
-struct OfflineTtsSynthesizerConfig {
+struct OfflineTtsConfig {
   OfflineTtsVitsModelConfig vits;
 
-  OfflineTtsSynthesizerConfig() = default;
-  explicit OfflineTtsSynthesizerConfig(const OfflineTtsVitsModelConfig &vits)
+  OfflineTtsConfig() = default;
+  explicit OfflineTtsConfig(const OfflineTtsVitsModelConfig &vits)
       : vits(vits) {}
 
   void Register(ParseOptions *po);
@@ -32,19 +32,19 @@ struct GeneratedAudio {
   int32_t sample_rate;
 };
 
-class OfflineTtsSynthesizerImpl;
+class OfflineTtsImpl;
 
-class OfflineTtsSynthesizer {
+class OfflineTts {
  public:
-  ~OfflineTtsSynthesizer();
-  explicit OfflineTtsSynthesizer(const OfflineTtsSynthesizerConfig &config);
+  ~OfflineTts();
+  explicit OfflineTts(const OfflineTtsConfig &config);
   // @param text A string containing words separated by spaces
   GeneratedAudio Generate(const std::string &text) const;
 
  private:
-  std::unique_ptr<OfflineTtsSynthesizerImpl> impl_;
+  std::unique_ptr<OfflineTtsImpl> impl_;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_OFFLINE_TTS_SYNTHESIZER_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_TTS_H_

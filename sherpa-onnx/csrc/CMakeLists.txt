@@ -85,8 +85,8 @@ set(sources
   voice-activity-detector.cc
   wave-reader.cc
   # For tts
-  offline-tts-synthesizer-impl.cc
-  offline-tts-synthesizer.cc
+  offline-tts-impl.cc
+  offline-tts.cc
   offline-tts-vits-model-config.cc
 )
 

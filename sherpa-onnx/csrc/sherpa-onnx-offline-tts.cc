@@ -2,7 +2,7 @@
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
-#include "sherpa-onnx/csrc/offline-tts-synthesizer.h"
+#include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 int main(int32_t argc, char *argv[]) {
@@ -19,7 +19,7 @@ It will generate a file test.wav.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
-  sherpa_onnx::OfflineTtsSynthesizerConfig config;
+  sherpa_onnx::OfflineTtsConfig config;
   config.Register(&po);
   po.Read(argc, argv);
 
