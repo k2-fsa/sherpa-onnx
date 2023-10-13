@@ -5,12 +5,12 @@ from typing import List, Optional
 from _sherpa_onnx import (
     EndpointConfig,
     FeatureExtractorConfig,
+    OnlineLMConfig,
     OnlineModelConfig,
     OnlineParaformerModelConfig,
     OnlineRecognizer as _Recognizer,
     OnlineRecognizerConfig,
     OnlineStream,
-    OnlineLMConfig,
     OnlineTransducerModelConfig,
 )
 

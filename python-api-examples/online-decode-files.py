@@ -234,7 +234,7 @@ def main():
             decoding_method=args.decoding_method,
             max_active_paths=args.max_active_paths,
             lm=args.lm,
-            scale=args.lm_scale,
+            lm_scale=args.lm_scale,
             hotwords_file=args.hotwords_file,
             hotwords_score=args.hotwords_score,
         )
