@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/wave-writer.h
+// sherpa-onnx/csrc/wave-writer.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
