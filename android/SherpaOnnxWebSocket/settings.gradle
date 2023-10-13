@@ -1,4 +1,4 @@
-gitpluginManagement {
+pluginManagement {
     repositories {
         gradlePluginPortal()
         google()
