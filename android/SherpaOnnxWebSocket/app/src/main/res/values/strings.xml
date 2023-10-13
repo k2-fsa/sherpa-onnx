@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">ASR with Next-gen Kaldi</string>
+    <string name="hint">
+        Click the connect button to connect websocket.
+        \n
+        \n\n\n
+        Click the Start button to play speech-to-text with Next-gen Kaldi.
+        \n
+        \n\n\n
+        The source code and pre-trained models are publicly available.
+        Please see https://github.com/k2-fsa/sherpa-onnx for details.
+    </string>
+    <string name="start">Start</string>
+    <string name="stop">Stop</string>
+    <string name="connect">connect</string>
+    <string name="disconnect">disconnect</string>
+    <string name="uri_format">please input uri first,format as follows:\n
+        ws://ip:port or wss://ip:port</string>
+    <string name="uri_hint">please input uri first</string>
+</resources>
