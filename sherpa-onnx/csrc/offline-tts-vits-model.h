@@ -29,6 +29,9 @@ class OfflineTtsVitsModel {
   // Sample rate of the generated audio
   int32_t SampleRate() const;
 
+  // true to insert a blank between each token
+  bool AddBlank() const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

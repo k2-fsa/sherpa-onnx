@@ -84,7 +84,10 @@ set(sources
   vad-model.cc
   voice-activity-detector.cc
   wave-reader.cc
-  # For tts
+)
+
+list(APPEND sources
+  lexicon.cc
   offline-tts-impl.cc
   offline-tts-model-config.cc
   offline-tts-vits-model-config.cc

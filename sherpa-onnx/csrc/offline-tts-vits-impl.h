@@ -5,8 +5,12 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_VITS_IMPL_H_
 
 #include <fstream>
+#include <memory>
 #include <string>
+#include <utility>
+#include <vector>
 
+#include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-model.h"
@@ -16,7 +20,8 @@ namespace sherpa_onnx {
 class OfflineTtsVitsImpl : public OfflineTtsImpl {
  public:
   explicit OfflineTtsVitsImpl(const OfflineTtsConfig &config)
-      : model_(std::make_unique<OfflineTtsVitsModel>(config.model)) {
+      : model_(std::make_unique<OfflineTtsVitsModel>(config.model)),
+        lexicon_(config.model.vits.lexicon, config.model.vits.tokens) {
     SHERPA_ONNX_LOGE("config: %s\n", config.ToString().c_str());
   }
 
@@ -24,6 +29,12 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     SHERPA_ONNX_LOGE("txt: %s", text.c_str());
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    auto t = lexicon_.ConvertTextToTokenIds("liliana");
+    for (auto i : t) {
+      fprintf(stderr, "%d ", i);
+    }
+    fprintf(stderr, "\n");
 
     std::vector<int64_t> x = {
         0, 54,  0, 157, 0, 102, 0, 54, 0, 51,  0, 158, 0, 156, 0, 72,
@@ -41,7 +52,6 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     std::vector<int64_t> audio_shape =
         audio.GetTensorTypeAndShapeInfo().GetShape();
 
-    SHERPA_ONNX_LOGE("%d, %d", int(audio_shape.size()), int(audio_shape[2]));
     const float *p = audio.GetTensorData<float>();
     std::ofstream os("t.pcm", std::ios::binary);
     os.write(reinterpret_cast<const char *>(p), sizeof(float) * audio_shape[2]);
@@ -53,6 +63,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
  private:
   std::unique_ptr<OfflineTtsVitsModel> model_;
+  Lexicon lexicon_;
 };
 
 }  // namespace sherpa_onnx
