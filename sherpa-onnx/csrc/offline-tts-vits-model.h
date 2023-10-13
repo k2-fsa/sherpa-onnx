@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_VITS_MODEL_H_
 
 #include <memory>
+#include <string>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
@@ -31,6 +32,8 @@ class OfflineTtsVitsModel {
 
   // true to insert a blank between each token
   bool AddBlank() const;
+
+  std::string Punctuations() const;
 
  private:
   class Impl;

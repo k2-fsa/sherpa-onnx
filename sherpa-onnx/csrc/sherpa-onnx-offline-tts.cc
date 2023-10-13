@@ -2,6 +2,8 @@
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
+#include <fstream>
+
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -13,7 +15,7 @@ Offline text-to-speech with sherpa-onnx
  --vits-model /path/to/model.onnx \
  --vits-lexicon /path/to/lexicon.txt \
  --vits-tokens /path/to/tokens.txt
- "some text within double quotes"
+ 'some text within single quotes'
 
 It will generate a file test.wav.
 )usage";
@@ -23,8 +25,16 @@ It will generate a file test.wav.
   config.Register(&po);
   po.Read(argc, argv);
 
-  if (po.NumArgs() != 1) {
+  if (po.NumArgs() == 0) {
     fprintf(stderr, "Error: Please provide the text to generate audio.\n\n");
+    po.PrintUsage();
+    exit(EXIT_FAILURE);
+  }
+
+  if (po.NumArgs() > 1) {
+    fprintf(stderr,
+            "Error: Accept only one positional argument. Please use single "
+            "quotes to wrap your text\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
   }
@@ -35,7 +45,13 @@ It will generate a file test.wav.
   }
 
   sherpa_onnx::OfflineTts tts(config);
-  tts.Generate("hello world\n");
+  auto audio = tts.Generate(po.GetArg(1));
+
+  std::ofstream os("t.pcm", std::ios::binary);
+  os.write(reinterpret_cast<const char *>(audio.samples.data()),
+           sizeof(float) * audio.samples.size());
+
+  // sox -t raw -r 22050 -b 32 -e floating-point -c 1 ./t.pcm ./t.wav
 
   return 0;
 }

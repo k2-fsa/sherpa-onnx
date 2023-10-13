@@ -70,6 +70,8 @@ class OfflineTtsVitsModel::Impl {
 
   bool AddBlank() const { return add_blank_; }
 
+  std::string Punctuations() const { return punctuations_; }
+
  private:
   void Init(void *model_data, size_t model_data_length) {
     sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
@@ -91,6 +93,7 @@ class OfflineTtsVitsModel::Impl {
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(sample_rate_, "sample_rate");
     SHERPA_ONNX_READ_META_DATA(add_blank_, "add_blank");
+    SHERPA_ONNX_READ_META_DATA_STR(punctuations_, "punctuation");
   }
 
  private:
@@ -109,6 +112,7 @@ class OfflineTtsVitsModel::Impl {
 
   int32_t sample_rate_;
   int32_t add_blank_;
+  std::string punctuations_;
 };
 
 OfflineTtsVitsModel::OfflineTtsVitsModel(const OfflineTtsModelConfig &config)
@@ -123,5 +127,9 @@ Ort::Value OfflineTtsVitsModel::Run(Ort::Value x) {
 int32_t OfflineTtsVitsModel::SampleRate() const { return impl_->SampleRate(); }
 
 bool OfflineTtsVitsModel::AddBlank() const { return impl_->AddBlank(); }
+
+std::string OfflineTtsVitsModel::Punctuations() const {
+  return impl_->Punctuations();
+}
 
 }  // namespace sherpa_onnx

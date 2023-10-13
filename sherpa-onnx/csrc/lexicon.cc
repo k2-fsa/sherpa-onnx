@@ -75,8 +75,9 @@ static std::vector<int32_t> ConvertTokensToIds(
   return ids;
 }
 
-Lexicon::Lexicon(const std::string &lexicon, const std::string &tokens) {
-  std::unordered_map<std::string, int32_t> token2id = ReadTokens(tokens);
+Lexicon::Lexicon(const std::string &lexicon, const std::string &tokens,
+                 const std::string &punctuations) {
+  token2id_ = ReadTokens(tokens);
   std::ifstream is(lexicon);
 
   std::string word;
@@ -101,15 +102,22 @@ Lexicon::Lexicon(const std::string &lexicon, const std::string &tokens) {
       token_list.push_back(std::move(phone));
     }
 
-    std::vector<int32_t> ids = ConvertTokensToIds(token2id, token_list);
+    std::vector<int32_t> ids = ConvertTokensToIds(token2id_, token_list);
     if (ids.empty()) {
       continue;
     }
     word2ids_.insert({std::move(word), std::move(ids)});
   }
+
+  // process punctuations
+  std::vector<std::string> punctuation_list;
+  SplitStringToVector(punctuations, " ", false, &punctuation_list);
+  for (auto &s : punctuation_list) {
+    punctuations_.insert(std::move(s));
+  }
 }
 
-std::vector<int32_t> Lexicon::ConvertTextToTokenIds(
+std::vector<int64_t> Lexicon::ConvertTextToTokenIds(
     const std::string &_text) const {
   std::string text(_text);
   ToLowerCase(&text);
@@ -117,15 +125,30 @@ std::vector<int32_t> Lexicon::ConvertTextToTokenIds(
   std::vector<std::string> words;
   SplitStringToVector(text, " ", false, &words);
 
-  std::vector<int32_t> ans;
-  for (const auto &w : words) {
+  std::vector<int64_t> ans;
+  for (auto w : words) {
+    std::vector<int64_t> prefix;
+    while (!w.empty() && punctuations_.count(std::string(1, w[0]))) {
+      // if w begins with a punctuation
+      prefix.push_back(token2id_.at(std::string(1, w[0])));
+      w = std::string(w.begin() + 1, w.end());
+    }
+
+    std::vector<int64_t> suffix;
+    while (!w.empty() && punctuations_.count(std::string(1, w.back()))) {
+      suffix.push_back(token2id_.at(std::string(1, w.back())));
+      w = std::string(w.begin(), w.end() - 1);
+    }
+
     if (!word2ids_.count(w)) {
       SHERPA_ONNX_LOGE("OOV %s. Ignore it!", w.c_str());
       continue;
     }
 
     const auto &token_ids = word2ids_.at(w);
+    ans.insert(ans.end(), prefix.begin(), prefix.end());
     ans.insert(ans.end(), token_ids.begin(), token_ids.end());
+    ans.insert(ans.end(), suffix.rbegin(), suffix.rend());
   }
 
   return ans;
