@@ -24,6 +24,7 @@ class Lexicon {
   std::unordered_map<std::string, std::vector<int32_t>> word2ids_;
   std::unordered_set<std::string> punctuations_;
   std::unordered_map<std::string, int32_t> token2id_;
+  int32_t blank_;  // ID for the blank token
 };
 
 }  // namespace sherpa_onnx
