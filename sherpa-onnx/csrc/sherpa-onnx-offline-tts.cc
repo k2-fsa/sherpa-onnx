@@ -29,5 +29,12 @@ It will generate a file test.wav.
     exit(EXIT_FAILURE);
   }
 
+  if (!config.Validate()) {
+    fprintf(stderr, "Errors in config!\n");
+    exit(EXIT_FAILURE);
+  }
+
+  sherpa_onnx::OfflineTts tts(config);
+
   return 0;
 }

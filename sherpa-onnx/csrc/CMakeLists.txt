@@ -86,8 +86,10 @@ set(sources
   wave-reader.cc
   # For tts
   offline-tts-impl.cc
-  offline-tts.cc
+  offline-tts-model-config.cc
   offline-tts-vits-model-config.cc
+  offline-tts-vits-model.cc
+  offline-tts.cc
 )
 
 if(SHERPA_ONNX_ENABLE_CHECK)

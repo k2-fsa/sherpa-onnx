@@ -9,17 +9,17 @@
 #include <string>
 #include <vector>
 
-#include "sherpa-onnx/csrc/offline-tts-vits-model-config.h"
+#include "sherpa-onnx/csrc/offline-tts-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
 
 struct OfflineTtsConfig {
-  OfflineTtsVitsModelConfig vits;
+  OfflineTtsModelConfig model;
 
   OfflineTtsConfig() = default;
-  explicit OfflineTtsConfig(const OfflineTtsVitsModelConfig &vits)
-      : vits(vits) {}
+  explicit OfflineTtsConfig(const OfflineTtsModelConfig &model)
+      : model(model) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

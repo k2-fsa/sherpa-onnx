@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 
+#include <memory>
+
 #include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
 
 namespace sherpa_onnx {

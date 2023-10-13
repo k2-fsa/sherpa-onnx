@@ -10,15 +10,15 @@
 
 namespace sherpa_onnx {
 
-void OfflineTtsConfig::Register(ParseOptions *po) { vits.Register(po); }
+void OfflineTtsConfig::Register(ParseOptions *po) { model.Register(po); }
 
-bool OfflineTtsConfig::Validate() const { return vits.Validate(); }
+bool OfflineTtsConfig::Validate() const { return model.Validate(); }
 
 std::string OfflineTtsConfig::ToString() const {
   std::ostringstream os;
 
   os << "OfflineTtsConfig(";
-  os << "vits=" << vits.ToString() << ")";
+  os << "model=" << model.ToString() << ")";
 
   return os.str();
 }
