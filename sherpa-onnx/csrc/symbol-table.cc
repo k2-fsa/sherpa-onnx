@@ -60,7 +60,16 @@ void SymbolTable::Init(std::istream &is) {
     }
 
     assert(!sym.empty());
-    assert(sym2id_.count(sym) == 0);
+
+    // for byte bpe, after replacing ▁ with a space, whose ascii is also 0x20,
+    // there is a conflict between the real byte 0x20 and ▁, so we disable
+    // the following check.
+    //
+    // Note: Only id2sym_ matters as we use it to convert ID to symbols.
+    if (sym != " ") {
+      assert(sym2id_.count(sym) == 0);
+    }
+
     assert(id2sym_.count(id) == 0);
 
     sym2id_.insert({sym, id});
