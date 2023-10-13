@@ -53,7 +53,7 @@ static std::unordered_map<std::string, int32_t> ReadTokens(
       exit(-1);
     }
 #endif
-    token2id.insert({sym, id});
+    token2id.insert({std::move(sym), id});
   }
 
   return token2id;
@@ -78,6 +78,7 @@ static std::vector<int32_t> ConvertTokensToIds(
 Lexicon::Lexicon(const std::string &lexicon, const std::string &tokens,
                  const std::string &punctuations) {
   token2id_ = ReadTokens(tokens);
+  blank_ = token2id_.at(" ");
   std::ifstream is(lexicon);
 
   std::string word;
@@ -149,6 +150,11 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIds(
     ans.insert(ans.end(), prefix.begin(), prefix.end());
     ans.insert(ans.end(), token_ids.begin(), token_ids.end());
     ans.insert(ans.end(), suffix.rbegin(), suffix.rend());
+    ans.push_back(blank_);
+  }
+
+  if (!ans.empty()) {
+    ans.resize(ans.size() - 1);
   }
 
   return ans;

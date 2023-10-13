@@ -93,6 +93,7 @@ list(APPEND sources
   offline-tts-vits-model-config.cc
   offline-tts-vits-model.cc
   offline-tts.cc
+  wave-writer.cc
 )
 
 if(SHERPA_ONNX_ENABLE_CHECK)
