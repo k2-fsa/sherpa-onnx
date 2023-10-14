@@ -146,11 +146,11 @@ class BuildExtension(build_ext):
             binaries += ["sherpa-onnx-portaudio.dll"]
             binaries += ["onnxruntime.dll"]
             binaries += ["kaldi-decoder-core.dll"]
-            binaries += ["sherpa-onnx-fst.dll"]
-            binaries += ["sherpa-onnx-kaldifst-core.dll"]
+            binaries += ["sherpa-onnx-fst.lib"]
+            binaries += ["sherpa-onnx-kaldifst-core.lib"]
 
         for f in binaries:
-            suffix = "" if "dll" in f else suffix
+            suffix = "" if (".dll" in f or ".lib" in f) else suffix
             src_file = install_dir / "bin" / (f + suffix)
             if not src_file.is_file():
                 src_file = install_dir / "lib" / (f + suffix)
