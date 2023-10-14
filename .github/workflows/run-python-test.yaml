@@ -42,7 +42,7 @@ jobs:
             python-version: "3.10"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -54,7 +54,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy sentencepiece==0.1.96
+          python3 -m pip install --upgrade pip numpy sentencepiece==0.1.96 soundfile
 
       - name: Install sherpa-onnx
         shell: bash
@@ -65,3 +65,8 @@ jobs:
         shell: bash
         run: |
           .github/scripts/test-python.sh
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tts-generated-test-files
+          path: tts.wav

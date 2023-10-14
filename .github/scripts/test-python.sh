@@ -8,6 +8,24 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "Offline TTS test"
+
+wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/vits-ljs.onnx
+wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/lexicon.txt
+wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
+
+python3 ./python-api-examples/offline-tts.py \
+  --vits-model=./vits-ljs.onnx \
+  --vits-lexicon=./lexicon.txt \
+  --vits-tokens=./tokens.txt \
+  --output-filename=./tts.wav \
+  'liliana, the most beautiful and lovely assistant of our team!'
+
+ls -lh ./tts.wav
+file ./tts.wav
+
+rm -v vits-ljs.onnx ./lexicon.txt ./tokens.txt
+
 mkdir -p /tmp/icefall-models
 dir=/tmp/icefall-models
 
@@ -171,3 +189,5 @@ rm -rf $repo
 git clone https://github.com/pkufool/sherpa-test-data /tmp/sherpa-test-data
 
 python3 sherpa-onnx/python/tests/test_text2token.py --verbose
+
+rm -rf /tmp/sherpa-test-data
