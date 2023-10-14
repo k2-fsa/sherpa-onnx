@@ -13,6 +13,7 @@
 #include "sherpa-onnx/python/csrc/offline-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-recognizer.h"
 #include "sherpa-onnx/python/csrc/offline-stream.h"
+#include "sherpa-onnx/python/csrc/offline-tts.h"
 #include "sherpa-onnx/python/csrc/online-lm-config.h"
 #include "sherpa-onnx/python/csrc/online-model-config.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
@@ -45,6 +46,8 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindVadModel(&m);
   PybindCircularBuffer(&m);
   PybindVoiceActivityDetector(&m);
+
+  PybindOfflineTts(&m);
 }
 
 }  // namespace sherpa_onnx

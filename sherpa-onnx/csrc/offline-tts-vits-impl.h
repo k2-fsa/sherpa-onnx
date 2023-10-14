@@ -21,9 +21,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   explicit OfflineTtsVitsImpl(const OfflineTtsConfig &config)
       : model_(std::make_unique<OfflineTtsVitsModel>(config.model)),
         lexicon_(config.model.vits.lexicon, config.model.vits.tokens,
-                 model_->Punctuations()) {
-    SHERPA_ONNX_LOGE("config: %s\n", config.ToString().c_str());
-  }
+                 model_->Punctuations()) {}
 
   GeneratedAudio Generate(const std::string &text) const override {
     std::vector<int64_t> x = lexicon_.ConvertTextToTokenIds(text);
