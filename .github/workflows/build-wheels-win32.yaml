@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - wheel
-      - fix-build-win-wheel
     tags:
       - '*'
   workflow_dispatch:
