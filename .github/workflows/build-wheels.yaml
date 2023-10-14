@@ -6,6 +6,7 @@ on:
       - wheel
     tags:
       - '*'
+  workflow_dispatch:
 
 env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
