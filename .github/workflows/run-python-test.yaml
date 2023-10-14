@@ -42,7 +42,7 @@ jobs:
             python-version: "3.10"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -65,3 +65,8 @@ jobs:
         shell: bash
         run: |
           .github/scripts/test-python.sh
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tts-generated-test-files
+          path: tts.wav
