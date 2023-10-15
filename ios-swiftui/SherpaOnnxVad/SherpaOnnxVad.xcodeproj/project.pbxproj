@@ -1,0 +1,391 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DE50A4522AD675820044CF2D /* SherpaOnnxVadApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE50A4512AD675820044CF2D /* SherpaOnnxVadApp.swift */; };
+		DE50A4542AD675820044CF2D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE50A4532AD675820044CF2D /* ContentView.swift */; };
+		DE50A4562AD675840044CF2D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DE50A4552AD675840044CF2D /* Assets.xcassets */; };
+		DE50A4592AD675840044CF2D /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DE50A4582AD675840044CF2D /* Preview Assets.xcassets */; };
+		DE50A4602AD675B90044CF2D /* SherpaOnnx.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE50A45F2AD675B90044CF2D /* SherpaOnnx.swift */; };
+		DE50A46C2AD676A00044CF2D /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE50A46B2AD676A00044CF2D /* Model.swift */; };
+		DE50A46E2AD677D50044CF2D /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE50A46D2AD677D50044CF2D /* ViewModel.swift */; };
+		DE50A46F2AD7D76C0044CF2D /* onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE50A4622AD676440044CF2D /* onnxruntime.xcframework */; };
+		DE50A4712AD7D76D0044CF2D /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE50A4662AD676590044CF2D /* sherpa-onnx.xcframework */; };
+		DE50A4742AD7E0830044CF2D /* silero_vad.onnx in Resources */ = {isa = PBXBuildFile; fileRef = DE50A46A2AD676840044CF2D /* silero_vad.onnx */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		DE50A44E2AD675820044CF2D /* SherpaOnnxVad.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnxVad.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE50A4512AD675820044CF2D /* SherpaOnnxVadApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxVadApp.swift; sourceTree = "<group>"; };
+		DE50A4532AD675820044CF2D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		DE50A4552AD675840044CF2D /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DE50A4582AD675840044CF2D /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		DE50A45F2AD675B90044CF2D /* SherpaOnnx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SherpaOnnx.swift; path = "../../../swift-api-examples/SherpaOnnx.swift"; sourceTree = "<group>"; };
+		DE50A4622AD676440044CF2D /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.16.0/onnxruntime.xcframework"; sourceTree = "<group>"; };
+		DE50A4662AD676590044CF2D /* sherpa-onnx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "sherpa-onnx.xcframework"; path = "../../build-ios/sherpa-onnx.xcframework"; sourceTree = "<group>"; };
+		DE50A46A2AD676840044CF2D /* silero_vad.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; name = silero_vad.onnx; path = ../../SherpaOnnxSubtitle/SherpaOnnxSubtitle/silero_vad.onnx; sourceTree = "<group>"; };
+		DE50A46B2AD676A00044CF2D /* Model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Model.swift; path = ../../SherpaOnnx2Pass/SherpaOnnx2Pass/Model.swift; sourceTree = "<group>"; };
+		DE50A46D2AD677D50044CF2D /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DE50A44B2AD675820044CF2D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE50A46F2AD7D76C0044CF2D /* onnxruntime.xcframework in Frameworks */,
+				DE50A4712AD7D76D0044CF2D /* sherpa-onnx.xcframework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DE50A4452AD675820044CF2D = {
+			isa = PBXGroup;
+			children = (
+				DE50A4502AD675820044CF2D /* SherpaOnnxVad */,
+				DE50A44F2AD675820044CF2D /* Products */,
+				DE50A4612AD676440044CF2D /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		DE50A44F2AD675820044CF2D /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DE50A44E2AD675820044CF2D /* SherpaOnnxVad.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DE50A4502AD675820044CF2D /* SherpaOnnxVad */ = {
+			isa = PBXGroup;
+			children = (
+				DE50A46A2AD676840044CF2D /* silero_vad.onnx */,
+				DE50A4512AD675820044CF2D /* SherpaOnnxVadApp.swift */,
+				DE50A45F2AD675B90044CF2D /* SherpaOnnx.swift */,
+				DE50A4532AD675820044CF2D /* ContentView.swift */,
+				DE50A46D2AD677D50044CF2D /* ViewModel.swift */,
+				DE50A46B2AD676A00044CF2D /* Model.swift */,
+				DE50A4552AD675840044CF2D /* Assets.xcassets */,
+				DE50A4572AD675840044CF2D /* Preview Content */,
+			);
+			path = SherpaOnnxVad;
+			sourceTree = "<group>";
+		};
+		DE50A4572AD675840044CF2D /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				DE50A4582AD675840044CF2D /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		DE50A4612AD676440044CF2D /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DE50A4662AD676590044CF2D /* sherpa-onnx.xcframework */,
+				DE50A4622AD676440044CF2D /* onnxruntime.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DE50A44D2AD675820044CF2D /* SherpaOnnxVad */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DE50A45C2AD675840044CF2D /* Build configuration list for PBXNativeTarget "SherpaOnnxVad" */;
+			buildPhases = (
+				DE50A44A2AD675820044CF2D /* Sources */,
+				DE50A44B2AD675820044CF2D /* Frameworks */,
+				DE50A44C2AD675820044CF2D /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SherpaOnnxVad;
+			productName = SherpaOnnxVad;
+			productReference = DE50A44E2AD675820044CF2D /* SherpaOnnxVad.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DE50A4462AD675820044CF2D /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1500;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					DE50A44D2AD675820044CF2D = {
+						CreatedOnToolsVersion = 15.0;
+					};
+				};
+			};
+			buildConfigurationList = DE50A4492AD675820044CF2D /* Build configuration list for PBXProject "SherpaOnnxVad" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = DE50A4452AD675820044CF2D;
+			productRefGroup = DE50A44F2AD675820044CF2D /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				DE50A44D2AD675820044CF2D /* SherpaOnnxVad */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DE50A44C2AD675820044CF2D /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE50A4742AD7E0830044CF2D /* silero_vad.onnx in Resources */,
+				DE50A4592AD675840044CF2D /* Preview Assets.xcassets in Resources */,
+				DE50A4562AD675840044CF2D /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DE50A44A2AD675820044CF2D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DE50A46E2AD677D50044CF2D /* ViewModel.swift in Sources */,
+				DE50A4542AD675820044CF2D /* ContentView.swift in Sources */,
+				DE50A4602AD675B90044CF2D /* SherpaOnnx.swift in Sources */,
+				DE50A4522AD675820044CF2D /* SherpaOnnxVadApp.swift in Sources */,
+				DE50A46C2AD676A00044CF2D /* Model.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		DE50A45A2AD675840044CF2D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		DE50A45B2AD675840044CF2D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		DE50A45D2AD675840044CF2D /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnxVad/Preview Content\"";
+				DEVELOPMENT_TEAM = 896WS4KUPV;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Use Microphone to record voice and VAD";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lc++";
+				PRODUCT_BUNDLE_IDENTIFIER = net.duoziwei.SherpaOnnxVad;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "${PROJECT_DIR}/../../swift-api-examples/SherpaOnnx-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				SYSTEM_HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../build-ios/sherpa-onnx.xcframework/Headers/";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		DE50A45E2AD675840044CF2D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnxVad/Preview Content\"";
+				DEVELOPMENT_TEAM = 896WS4KUPV;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Use Microphone to record voice and VAD";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lc++";
+				PRODUCT_BUNDLE_IDENTIFIER = net.duoziwei.SherpaOnnxVad;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "${PROJECT_DIR}/../../swift-api-examples/SherpaOnnx-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				SYSTEM_HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../build-ios/sherpa-onnx.xcframework/Headers/";
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DE50A4492AD675820044CF2D /* Build configuration list for PBXProject "SherpaOnnxVad" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DE50A45A2AD675840044CF2D /* Debug */,
+				DE50A45B2AD675840044CF2D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DE50A45C2AD675840044CF2D /* Build configuration list for PBXNativeTarget "SherpaOnnxVad" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DE50A45D2AD675840044CF2D /* Debug */,
+				DE50A45E2AD675840044CF2D /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = DE50A4462AD675820044CF2D /* Project object */;
+}
