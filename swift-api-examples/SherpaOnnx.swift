@@ -559,6 +559,10 @@ class SherpaOnnxVoiceActivityDetectorWrapper {
     SherpaOnnxVoiceActivityDetectorPop(vad)
   }
 
+  func clear() {
+    SherpaOnnxVoiceActivityDetectorClear(vad)
+  }
+
   func front() -> SherpaOnnxSpeechSegmentWrapper {
     let p: UnsafePointer<SherpaOnnxSpeechSegment>? = SherpaOnnxVoiceActivityDetectorFront(vad)
     return SherpaOnnxSpeechSegmentWrapper(p: p)

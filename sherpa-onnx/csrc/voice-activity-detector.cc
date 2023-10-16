@@ -76,6 +76,8 @@ class VoiceActivityDetector::Impl {
 
   void Pop() { segments_.pop(); }
 
+  void Clear() { std::queue<SpeechSegment>().swap(segments_); }
+
   const SpeechSegment &Front() const { return segments_.front(); }
 
   void Reset() {

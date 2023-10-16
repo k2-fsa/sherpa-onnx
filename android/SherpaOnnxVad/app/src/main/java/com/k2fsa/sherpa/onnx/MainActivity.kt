@@ -161,9 +161,9 @@ class MainActivity : AppCompatActivity() {
                 val samples = FloatArray(ret) { buffer[it] / 32768.0f }
 
                 vad.acceptWaveform(samples)
-                while(!vad.empty()) {vad.pop();}
 
                 val isSpeechDetected = vad.isSpeechDetected()
+                vad.clear()
 
                 runOnUiThread {
                     onVad(isSpeechDetected)
