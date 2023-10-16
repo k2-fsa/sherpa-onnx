@@ -19,7 +19,7 @@
     <EditText
         android:id="@+id/et_uri"
         android:layout_width="match_parent"
-        android:layout_height="42dp"
+        android:layout_height="56dp"
         android:layout_marginTop="4dp"
         android:hint="@string/uri_hint"
         android:gravity="center"

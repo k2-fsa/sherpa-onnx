@@ -43,4 +43,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.0'
 
     implementation 'org.java-websocket:Java-WebSocket:1.4.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
 }
