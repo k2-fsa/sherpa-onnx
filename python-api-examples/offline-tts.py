@@ -59,6 +59,16 @@ def get_args():
     )
 
     parser.add_argument(
+        "--sid",
+        type=int,
+        default=0,
+        help="""Speaker ID. Used only for multi-speaker models, e.g.
+        models trained using the VCTK dataset. Not used for single-speaker
+        models, e.g., models trained using the LJ speech dataset.
+        """,
+    )
+
+    parser.add_argument(
         "--debug",
         type=bool,
         default=False,
@@ -105,7 +115,7 @@ def main():
         )
     )
     tts = sherpa_onnx.OfflineTts(tts_config)
-    audio = tts.generate(args.text)
+    audio = tts.generate(args.text, sid=args.sid)
     sf.write(
         args.output_filename,
         audio.samples,

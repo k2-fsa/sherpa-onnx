@@ -22,10 +22,14 @@ class OfflineTtsVitsModel {
   /** Run the model.
    *
    * @param x A int64 tensor of shape (1, num_tokens)
+  // @param sid Speaker ID. Used only for multi-speaker models, e.g., models
+  //            trained using the VCTK dataset. It is not used for
+  //            single-speaker models, e.g., models trained using the ljspeech
+  //            dataset.
    * @return Return a float32 tensor containing audio samples. You can flatten
    *         it to a 1-D tensor.
    */
-  Ort::Value Run(Ort::Value x);
+  Ort::Value Run(Ort::Value x, int64_t sid = 0);
 
   // Sample rate of the generated audio
   int32_t SampleRate() const;

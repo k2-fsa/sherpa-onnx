@@ -16,12 +16,26 @@ struct OfflineTtsVitsModelConfig {
   std::string lexicon;
   std::string tokens;
 
+  float noise_scale = 0.667;
+  float noise_scale_w = 0.8;
+  float length_scale = 1;
+
+  // used only for multi-speaker models, e.g, vctk speech dataset.
+  // Not applicable for single-speaker models, e.g., ljspeech dataset
+
   OfflineTtsVitsModelConfig() = default;
 
   OfflineTtsVitsModelConfig(const std::string &model,
                             const std::string &lexicon,
-                            const std::string &tokens)
-      : model(model), lexicon(lexicon), tokens(tokens) {}
+                            const std::string &tokens,
+                            float noise_scale = 0.667,
+                            float noise_scale_w = 0.8, float length_scale = 1)
+      : model(model),
+        lexicon(lexicon),
+        tokens(tokens),
+        noise_scale(noise_scale),
+        noise_scale_w(noise_scale_w),
+        length_scale(length_scale) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
