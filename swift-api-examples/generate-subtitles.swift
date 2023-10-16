@@ -174,32 +174,31 @@ func run() {
 
   var segments: [SpeechSegment] = []
 
-  while array.count > windowSize {
-    // todo(fangjun): avoid extra copies here
-    vad.acceptWaveform(samples: [Float](array[0..<windowSize]))
-    array = [Float](array[windowSize..<array.count])
-
-    while !vad.isEmpty() {
-      let s = vad.front()
-      vad.pop()
-      let result = recognizer.decode(samples: s.samples)
-
-      segments.append(
-        SpeechSegment(
-          start: Float(s.start) / Float(sampleRate),
-          duration: Float(s.samples.count) / Float(sampleRate),
-          text: result.text))
-
-      print(segments.last!)
-
-    }
+  for offset in stride(from: 0, to: array.count, by: windowSize) {
+      let end = min(offset + windowSize, array.count)
+      vad.acceptWaveform(samples: [Float](array[offset ..< end]))
   }
 
-  let srt = zip(segments.indices, segments).map { (index, element) in
+  var index: Int = 0
+  while !vad.isEmpty() {
+    let s = vad.front()
+    vad.pop()
+    let result = recognizer.decode(samples: s.samples)
+
+    segments.append(
+      SpeechSegment(
+        start: Float(s.start) / Float(sampleRate),
+        duration: Float(s.samples.count) / Float(sampleRate),
+        text: result.text))
+
+    print(segments.last!)
+  }
+
+  let srt: String = zip(segments.indices, segments).map { (index, element) in
     return "\(index+1)\n\(element)"
   }.joined(separator: "\n\n")
 
-  let srtFilename = filePath.stringByDeletingPathExtension + ".srt"
+  let srtFilename: String = filePath.stringByDeletingPathExtension + ".srt"
   do {
     try srt.write(to: srtFilename.fileURL, atomically: true, encoding: .utf8)
   } catch {

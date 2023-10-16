@@ -493,12 +493,17 @@ int32_t SherpaOnnxVoiceActivityDetectorDetected(
   return p->impl->IsSpeechDetected();
 }
 
-SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorPop(
+void SherpaOnnxVoiceActivityDetectorPop(
     SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Pop();
 }
 
-SHERPA_ONNX_API const SherpaOnnxSpeechSegment *
+void SherpaOnnxVoiceActivityDetectorClear(
+    SherpaOnnxVoiceActivityDetector *p) {
+  p->impl->Clear();
+}
+
+const SherpaOnnxSpeechSegment *
 SherpaOnnxVoiceActivityDetectorFront(SherpaOnnxVoiceActivityDetector *p) {
   const sherpa_onnx::SpeechSegment &segment = p->impl->Front();
 

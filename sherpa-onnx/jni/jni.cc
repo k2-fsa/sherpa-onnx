@@ -124,6 +124,8 @@ class SherpaOnnxVad {
 
   void Pop() { vad_.Pop(); }
 
+  void Clear() { vad_.Clear();}
+
   const SpeechSegment &Front() const { return vad_.Front(); }
 
   bool IsSpeechDetected() const { return vad_.IsSpeechDetected(); }
@@ -554,6 +556,14 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_pop(JNIEnv *env,
                                                           jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxVad *>(ptr);
   model->Pop();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_clear(JNIEnv *env,
+                                                          jobject /*obj*/,
+                                                          jlong ptr) {
+  auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxVad *>(ptr);
+  model->Clear();
 }
 
 // see

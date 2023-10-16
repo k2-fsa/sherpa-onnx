@@ -551,12 +551,16 @@ class SherpaOnnxVoiceActivityDetectorWrapper {
     return SherpaOnnxVoiceActivityDetectorEmpty(vad) == 1
   }
 
-  func isDetected() -> Bool {
+  func isSpeechDetected() -> Bool {
     return SherpaOnnxVoiceActivityDetectorDetected(vad) == 1
   }
 
   func pop() {
     SherpaOnnxVoiceActivityDetectorPop(vad)
+  }
+
+  func clear() {
+    SherpaOnnxVoiceActivityDetectorClear(vad)
   }
 
   func front() -> SherpaOnnxSpeechSegmentWrapper {

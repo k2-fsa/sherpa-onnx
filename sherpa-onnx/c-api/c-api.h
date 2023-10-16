@@ -580,6 +580,10 @@ SherpaOnnxVoiceActivityDetectorDetected(SherpaOnnxVoiceActivityDetector *p);
 SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorPop(
     SherpaOnnxVoiceActivityDetector *p);
 
+// Clear current speech segments.
+SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorClear(
+    SherpaOnnxVoiceActivityDetector *p);
+
 // Return the first speech segment.
 // The user has to use SherpaOnnxDestroySpeechSegment() to free the returned
 // pointer to avoid memory leak.
