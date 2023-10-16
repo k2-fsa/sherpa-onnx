@@ -2,7 +2,7 @@
 # Copyright    2023  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 """
-This script converts vits models trained using the LJ Speech dataset.
+This script converts vits models trained using the VCTK dataset.
 
 Usage:
 
@@ -12,21 +12,21 @@ cd /Users/fangjun/open-source
 git clone https://github.com/jaywalnut310/vits
 
 (2) Download pre-trained models from
-https://huggingface.co/csukuangfj/vits-ljs/tree/main
+https://huggingface.co/csukuangfj/vits-vctk/tree/main
 
-wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/pretrained_ljs.pth
+wget https://huggingface.co/csukuangfj/vits-vctk/resolve/main/pretrained_vctk.pth
 
 (3) Run this file
 
-./export-onnx-ljs.py  \
-  --config ~/open-source//vits/configs/ljs_base.json \
-  --checkpoint ~/open-source/icefall-models/vits-ljs/pretrained_ljs.pth
+./export-onnx-vctk.py  \
+  --config ~/open-source//vits/configs/vctk_base.json \
+  --checkpoint ~/open-source/icefall-models/vits-vctk/pretrained_vctk.pth
 
 It will generate the following two files:
 
 $ ls -lh *.onnx
--rw-r--r--  1 fangjun  staff    36M Oct 10 20:48 vits-ljs.int8.onnx
--rw-r--r--  1 fangjun  staff   109M Oct 10 20:48 vits-ljs.onnx
+-rw-r--r--  1 fangjun  staff    37M Oct 16 10:57 vits-vctk.int8.onnx
+-rw-r--r--  1 fangjun  staff   116M Oct 16 10:57 vits-vctk.onnx
 """
 import sys
 
@@ -56,9 +56,9 @@ def get_args():
         "--config",
         type=str,
         required=True,
-        help="""Path to ljs_base.json.
+        help="""Path to vctk_base.json.
         You can find it at
-        https://huggingface.co/csukuangfj/vits-ljs/resolve/main/ljs_base.json
+        https://huggingface.co/csukuangfj/vits-vctk/resolve/main/vctk_base.json
         """,
     )
 
@@ -68,8 +68,7 @@ def get_args():
         required=True,
         help="""Path to the checkpoint file.
         You can find it at
-        https://huggingface.co/csukuangfj/vits-ljs/resolve/main/pretrained_ljs.pth
-
+        https://huggingface.co/csukuangfj/vits-vctk/resolve/main/pretrained_vctk.pth
         """,
     )
 
@@ -88,7 +87,7 @@ class OnnxModel(torch.nn.Module):
         noise_scale=1,
         length_scale=1,
         noise_scale_w=1.0,
-        sid=None,
+        sid=0,
         max_len=None,
     ):
         return self.model.infer(
@@ -134,10 +133,10 @@ def add_meta_data(filename: str, meta_data: Dict[str, Any]):
 
 
 def generate_tokens():
-    with open("tokens-ljs.txt", "w", encoding="utf-8") as f:
+    with open("tokens-vctk.txt", "w", encoding="utf-8") as f:
         for i, s in enumerate(symbols):
             f.write(f"{s} {i}\n")
-    print("Generated tokens-ljs.txt")
+    print("Generated tokens-vctk.txt")
 
 
 @torch.no_grad()
@@ -153,6 +152,7 @@ def main():
         len(symbols),
         hps.data.filter_length // 2 + 1,
         hps.train.segment_size // hps.data.hop_length,
+        n_speakers=hps.data.n_speakers,
         **hps.model,
     )
     _ = net_g.eval()
@@ -166,19 +166,27 @@ def main():
     noise_scale = torch.tensor([1], dtype=torch.float32)
     length_scale = torch.tensor([1], dtype=torch.float32)
     noise_scale_w = torch.tensor([1], dtype=torch.float32)
+    sid = torch.tensor([0], dtype=torch.int64)
 
     model = OnnxModel(net_g)
 
     opset_version = 13
 
-    filename = "vits-ljs.onnx"
+    filename = "vits-vctk.onnx"
 
     torch.onnx.export(
         model,
-        (x, x_length, noise_scale, length_scale, noise_scale_w),
+        (x, x_length, noise_scale, length_scale, noise_scale_w, sid),
         filename,
         opset_version=opset_version,
-        input_names=["x", "x_length", "noise_scale", "length_scale", "noise_scale_w"],
+        input_names=[
+            "x",
+            "x_length",
+            "noise_scale",
+            "length_scale",
+            "noise_scale_w",
+            "sid",
+        ],
         output_names=["y"],
         dynamic_axes={
             "x": {0: "N", 1: "L"},  # n_audio is also known as batch_size
@@ -188,7 +196,7 @@ def main():
     )
     meta_data = {
         "model_type": "vits",
-        "comment": "ljspeech",
+        "comment": "vctk",
         "language": "English",
         "add_blank": int(hps.data.add_blank),
         "n_speakers": int(hps.data.n_speakers),
@@ -200,7 +208,7 @@ def main():
 
     print("Generate int8 quantization models")
 
-    filename_int8 = "vits-ljs.int8.onnx"
+    filename_int8 = "vits-vctk.int8.onnx"
     quantize_dynamic(
         model_input=filename,
         model_output=filename_int8,

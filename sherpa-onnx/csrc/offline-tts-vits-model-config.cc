@@ -13,6 +13,11 @@ void OfflineTtsVitsModelConfig::Register(ParseOptions *po) {
   po->Register("vits-model", &model, "Path to VITS model");
   po->Register("vits-lexicon", &lexicon, "Path to lexicon.txt for VITS models");
   po->Register("vits-tokens", &tokens, "Path to tokens.txt for VITS models");
+  po->Register("vits-noise-scale", &noise_scale, "noise_scale for VITS models");
+  po->Register("vits-noise-scale-w", &noise_scale_w,
+               "noise_scale_w for VITS models");
+  po->Register("vits-length-scale", &length_scale,
+               "length_scale for VITS models");
 }
 
 bool OfflineTtsVitsModelConfig::Validate() const {
@@ -55,7 +60,10 @@ std::string OfflineTtsVitsModelConfig::ToString() const {
   os << "OfflineTtsVitsModelConfig(";
   os << "model=\"" << model << "\", ";
   os << "lexicon=\"" << lexicon << "\", ";
-  os << "tokens=\"" << tokens << "\")";
+  os << "tokens=\"" << tokens << "\", ";
+  os << "noise_scale=" << noise_scale << ", ";
+  os << "noise_scale_w=" << noise_scale_w << ", ";
+  os << "length_scale=" << length_scale << ")";
 
   return os.str();
 }

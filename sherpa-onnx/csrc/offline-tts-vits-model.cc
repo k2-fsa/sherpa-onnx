@@ -26,7 +26,7 @@ class OfflineTtsVitsModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-  Ort::Value Run(Ort::Value x) {
+  Ort::Value Run(Ort::Value x, int64_t sid) {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -44,20 +44,33 @@ class OfflineTtsVitsModel::Impl {
         Ort::Value::CreateTensor(memory_info, &len, 1, &len_shape, 1);
 
     int64_t scale_shape = 1;
-    float noise_scale = 1;
-    float length_scale = 1;
-    float noise_scale_w = 1;
+    float noise_scale = config_.vits.noise_scale;
+    float length_scale = config_.vits.length_scale;
+    float noise_scale_w = config_.vits.noise_scale_w;
 
     Ort::Value noise_scale_tensor =
         Ort::Value::CreateTensor(memory_info, &noise_scale, 1, &scale_shape, 1);
+
     Ort::Value length_scale_tensor = Ort::Value::CreateTensor(
         memory_info, &length_scale, 1, &scale_shape, 1);
+
     Ort::Value noise_scale_w_tensor = Ort::Value::CreateTensor(
         memory_info, &noise_scale_w, 1, &scale_shape, 1);
 
-    std::array<Ort::Value, 5> inputs = {
-        std::move(x), std::move(x_length), std::move(noise_scale_tensor),
-        std::move(length_scale_tensor), std::move(noise_scale_w_tensor)};
+    Ort::Value sid_tensor =
+        Ort::Value::CreateTensor(memory_info, &sid, 1, &scale_shape, 1);
+
+    std::vector<Ort::Value> inputs;
+    inputs.reserve(6);
+    inputs.push_back(std::move(x));
+    inputs.push_back(std::move(x_length));
+    inputs.push_back(std::move(noise_scale_tensor));
+    inputs.push_back(std::move(length_scale_tensor));
+    inputs.push_back(std::move(noise_scale_w_tensor));
+
+    if (input_names_.size() == 6 && input_names_.back() == "sid") {
+      inputs.push_back(std::move(sid_tensor));
+    }
 
     auto out =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
@@ -93,6 +106,7 @@ class OfflineTtsVitsModel::Impl {
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(sample_rate_, "sample_rate");
     SHERPA_ONNX_READ_META_DATA(add_blank_, "add_blank");
+    SHERPA_ONNX_READ_META_DATA(n_speakers_, "n_speakers");
     SHERPA_ONNX_READ_META_DATA_STR(punctuations_, "punctuation");
   }
 
@@ -112,6 +126,7 @@ class OfflineTtsVitsModel::Impl {
 
   int32_t sample_rate_;
   int32_t add_blank_;
+  int32_t n_speakers_;
   std::string punctuations_;
 };
 
@@ -120,8 +135,8 @@ OfflineTtsVitsModel::OfflineTtsVitsModel(const OfflineTtsModelConfig &config)
 
 OfflineTtsVitsModel::~OfflineTtsVitsModel() = default;
 
-Ort::Value OfflineTtsVitsModel::Run(Ort::Value x) {
-  return impl_->Run(std::move(x));
+Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, int64_t sid /*=0*/) {
+  return impl_->Run(std::move(x), sid);
 }
 
 int32_t OfflineTtsVitsModel::SampleRate() const { return impl_->SampleRate(); }

@@ -23,7 +23,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
         lexicon_(config.model.vits.lexicon, config.model.vits.tokens,
                  model_->Punctuations()) {}
 
-  GeneratedAudio Generate(const std::string &text) const override {
+  GeneratedAudio Generate(const std::string &text,
+                          int64_t sid = 0) const override {
     std::vector<int64_t> x = lexicon_.ConvertTextToTokenIds(text);
     if (x.empty()) {
       SHERPA_ONNX_LOGE("Failed to convert %s to token IDs", text.c_str());
@@ -47,7 +48,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     Ort::Value x_tensor = Ort::Value::CreateTensor(
         memory_info, x.data(), x.size(), x_shape.data(), x_shape.size());
 
-    Ort::Value audio = model_->Run(std::move(x_tensor));
+    Ort::Value audio = model_->Run(std::move(x_tensor), sid);
 
     std::vector<int64_t> audio_shape =
         audio.GetTensorTypeAndShapeInfo().GetShape();

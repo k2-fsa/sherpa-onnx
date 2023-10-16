@@ -39,7 +39,11 @@ class OfflineTts {
   ~OfflineTts();
   explicit OfflineTts(const OfflineTtsConfig &config);
   // @param text A string containing words separated by spaces
-  GeneratedAudio Generate(const std::string &text) const;
+  // @param sid Speaker ID. Used only for multi-speaker models, e.g., models
+  //            trained using the VCTK dataset. It is not used for
+  //            single-speaker models, e.g., models trained using the ljspeech
+  //            dataset.
+  GeneratedAudio Generate(const std::string &text, int64_t sid = 0) const;
 
  private:
   std::unique_ptr<OfflineTtsImpl> impl_;

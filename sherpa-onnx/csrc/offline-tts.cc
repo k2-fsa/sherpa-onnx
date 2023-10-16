@@ -28,8 +28,9 @@ OfflineTts::OfflineTts(const OfflineTtsConfig &config)
 
 OfflineTts::~OfflineTts() = default;
 
-GeneratedAudio OfflineTts::Generate(const std::string &text) const {
-  return impl_->Generate(text);
+GeneratedAudio OfflineTts::Generate(const std::string &text,
+                                    int64_t sid /*=0*/) const {
+  return impl_->Generate(text, sid);
 }
 
 }  // namespace sherpa_onnx

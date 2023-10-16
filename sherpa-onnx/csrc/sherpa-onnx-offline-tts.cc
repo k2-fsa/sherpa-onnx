@@ -13,11 +13,12 @@ int main(int32_t argc, char *argv[]) {
 Offline text-to-speech with sherpa-onnx
 
 ./bin/sherpa-onnx-offline-tts \
- --vits-model /path/to/model.onnx \
- --vits-lexicon /path/to/lexicon.txt \
- --vits-tokens /path/to/tokens.txt
- --output-filename ./generated.wav \
- 'some text within single quotes'
+ --vits-model=/path/to/model.onnx \
+ --vits-lexicon=/path/to/lexicon.txt \
+ --vits-tokens=/path/to/tokens.txt \
+ --sid=0 \
+ --output-filename=./generated.wav \
+ 'some text within single quotes on linux/macos or use double quotes on windows'
 
 It will generate a file ./generated.wav as specified by --output-filename.
 
@@ -33,14 +34,26 @@ wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
   --vits-model=./vits-ljs.onnx \
   --vits-lexicon=./lexicon.txt \
   --vits-tokens=./tokens.txt \
+  --sid=0 \
   --output-filename=./generated.wav \
   'liliana, the most beautiful and lovely assistant of our team!'
+
+Please see
+https://k2-fsa.github.io/sherpa/onnx/tts/index.html
+or detailes.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
   std::string output_filename = "./generated.wav";
+  int32_t sid = 0;
+
   po.Register("output-filename", &output_filename,
               "Path to save the generated audio");
+
+  po.Register("sid", &sid,
+              "Speaker ID. Used only for multi-speaker models, e.g., models "
+              "trained using the VCTK dataset. Not used for single-speaker "
+              "models, e.g., models trained using the LJSpeech dataset");
 
   sherpa_onnx::OfflineTtsConfig config;
 
@@ -67,7 +80,7 @@ wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
   }
 
   sherpa_onnx::OfflineTts tts(config);
-  auto audio = tts.Generate(po.GetArg(1));
+  auto audio = tts.Generate(po.GetArg(1), sid);
 
   bool ok = sherpa_onnx::WriteWave(output_filename, audio.sample_rate,
                                    audio.samples.data(), audio.samples.size());
@@ -76,7 +89,8 @@ wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
     exit(EXIT_FAILURE);
   }
 
-  fprintf(stderr, "The text is: %s\n", po.GetArg(1).c_str());
+  fprintf(stderr, "The text is: %s. Speaker ID: %d\n", po.GetArg(1).c_str(),
+          sid);
   fprintf(stderr, "Saved to %s successfully!\n", output_filename.c_str());
 
   return 0;
