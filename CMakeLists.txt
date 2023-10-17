@@ -175,6 +175,8 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
   include(asio)
 endif()
 
+include(utfcpp)
+
 add_subdirectory(sherpa-onnx)
 
 if(SHERPA_ONNX_ENABLE_C_API)

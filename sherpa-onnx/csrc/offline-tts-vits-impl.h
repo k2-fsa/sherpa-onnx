@@ -21,7 +21,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   explicit OfflineTtsVitsImpl(const OfflineTtsConfig &config)
       : model_(std::make_unique<OfflineTtsVitsModel>(config.model)),
         lexicon_(config.model.vits.lexicon, config.model.vits.tokens,
-                 model_->Punctuations()) {}
+                 model_->Punctuations(), model_->Language()) {}
 
   GeneratedAudio Generate(const std::string &text,
                           int64_t sid = 0) const override {

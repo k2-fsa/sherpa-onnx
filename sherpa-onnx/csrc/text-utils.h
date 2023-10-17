@@ -119,6 +119,8 @@ bool SplitStringToFloats(const std::string &full, const char *delim,
 template <typename T>
 bool ConvertStringToReal(const std::string &str, T *out);
 
+std::vector<std::string> SplitUtf8(const std::string &text);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_
