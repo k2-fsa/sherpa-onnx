@@ -69,4 +69,4 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           name: tts-generated-test-files
-          path: tts.wav
+          path: tts
