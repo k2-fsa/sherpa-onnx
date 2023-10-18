@@ -13,18 +13,40 @@
 
 namespace sherpa_onnx {
 
+// TODO(fangjun): Refactor it to an abstract class
 class Lexicon {
  public:
   Lexicon(const std::string &lexicon, const std::string &tokens,
-          const std::string &punctuations);
+          const std::string &punctuations, const std::string &language);
 
   std::vector<int64_t> ConvertTextToTokenIds(const std::string &text) const;
+
+ private:
+  std::vector<int64_t> ConvertTextToTokenIdsEnglish(
+      const std::string &text) const;
+
+  std::vector<int64_t> ConvertTextToTokenIdsChinese(
+      const std::string &text) const;
+
+  void InitLanguage(const std::string &lang);
+  void InitTokens(const std::string &tokens);
+  void InitLexicon(const std::string &lexicon);
+  void InitPunctuations(const std::string &punctuations);
+
+ private:
+  enum class Language {
+    kEnglish,
+    kChinese,
+    kUnknown,
+  };
 
  private:
   std::unordered_map<std::string, std::vector<int32_t>> word2ids_;
   std::unordered_set<std::string> punctuations_;
   std::unordered_map<std::string, int32_t> token2id_;
-  int32_t blank_;  // ID for the blank token
+  int32_t blank_ = -1;  // ID for the blank token
+  Language language_;
+  //
 };
 
 }  // namespace sherpa_onnx

@@ -38,6 +38,7 @@ class OfflineTtsVitsModel {
   bool AddBlank() const;
 
   std::string Punctuations() const;
+  std::string Language() const;
 
  private:
   class Impl;

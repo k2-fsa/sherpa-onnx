@@ -8,11 +8,15 @@
 #include <assert.h>
 
 #include <algorithm>
+#include <cctype>
 #include <limits>
 #include <sstream>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
+
+#include "source/utf8.h"
 
 // This file is copied/modified from
 // https://github.com/kaldi-asr/kaldi/blob/master/src/util/text-utils.cc
@@ -158,4 +162,57 @@ template bool SplitStringToFloats(const std::string &full, const char *delim,
                                   bool omit_empty_strings,
                                   std::vector<double> *out);
 
+std::vector<std::string> SplitUtf8(const std::string &text) {
+  char *begin = const_cast<char *>(text.c_str());
+  char *end = begin + text.size();
+
+  std::vector<std::string> ans;
+  std::string buf;
+
+  while (begin < end) {
+    uint32_t code = utf8::next(begin, end);
+
+    // 1. is punctuation
+    if (std::ispunct(code)) {
+      if (!buf.empty()) {
+        ans.push_back(std::move(buf));
+      }
+
+      char s[5] = {0};
+      utf8::append(code, s);
+      ans.push_back(s);
+      continue;
+    }
+
+    // 2. is space
+    if (std::isspace(code)) {
+      if (!buf.empty()) {
+        ans.push_back(std::move(buf));
+      }
+      continue;
+    }
+
+    // 3. is alpha
+    if (std::isalpha(code)) {
+      buf.push_back(code);
+      continue;
+    }
+
+    if (!buf.empty()) {
+      ans.push_back(std::move(buf));
+    }
+
+    // for others
+
+    char s[5] = {0};
+    utf8::append(code, s);
+    ans.push_back(s);
+  }
+
+  if (!buf.empty()) {
+    ans.push_back(std::move(buf));
+  }
+
+  return ans;
+}
 }  // namespace sherpa_onnx

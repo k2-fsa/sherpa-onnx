@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(sherpa-onnx)
 
-set(SHERPA_ONNX_VERSION "1.8.1")
+set(SHERPA_ONNX_VERSION "1.8.2")
 
 # Disable warning about
 #
@@ -174,6 +174,8 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
   include(websocketpp)
   include(asio)
 endif()
+
+include(utfcpp)
 
 add_subdirectory(sherpa-onnx)
 

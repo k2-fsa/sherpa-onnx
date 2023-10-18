@@ -331,6 +331,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     stack-test.cc
     transpose-test.cc
     unbind-test.cc
+    utfcpp-test.cc
   )
 
   function(sherpa_onnx_add_test source)

@@ -20,9 +20,14 @@ python3 ./python-api-examples/offline-tts.py \
   --vits-tokens=./tokens.txt \
   --output-filename=./generated.wav \
   'liliana, the most beautiful and lovely assistant of our team!'
+
+Please see
+https://k2-fsa.github.io/sherpa/onnx/tts/index.html
+for details.
 """
 
 import argparse
+import time
 
 import sherpa_onnx
 import soundfile as sf
@@ -115,7 +120,14 @@ def main():
         )
     )
     tts = sherpa_onnx.OfflineTts(tts_config)
+
+    start = time.time()
     audio = tts.generate(args.text, sid=args.sid)
+    end = time.time()
+    elapsed_seconds = end - start
+    audio_duration = len(audio.samples) / audio.sample_rate
+    real_time_factor = elapsed_seconds / audio_duration
+
     sf.write(
         args.output_filename,
         audio.samples,
@@ -124,6 +136,9 @@ def main():
     )
     print(f"Saved to {args.output_filename}")
     print(f"The text is '{args.text}'")
+    print(f"Elapsed seconds: {elapsed_seconds:.3f}")
+    print(f"Audio duration in seconds: {audio_duration:.3f}")
+    print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
 
 
 if __name__ == "__main__":

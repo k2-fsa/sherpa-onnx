@@ -84,6 +84,7 @@ class OfflineTtsVitsModel::Impl {
   bool AddBlank() const { return add_blank_; }
 
   std::string Punctuations() const { return punctuations_; }
+  std::string Language() const { return language_; }
 
  private:
   void Init(void *model_data, size_t model_data_length) {
@@ -108,6 +109,7 @@ class OfflineTtsVitsModel::Impl {
     SHERPA_ONNX_READ_META_DATA(add_blank_, "add_blank");
     SHERPA_ONNX_READ_META_DATA(n_speakers_, "n_speakers");
     SHERPA_ONNX_READ_META_DATA_STR(punctuations_, "punctuation");
+    SHERPA_ONNX_READ_META_DATA_STR(language_, "language");
   }
 
  private:
@@ -128,6 +130,7 @@ class OfflineTtsVitsModel::Impl {
   int32_t add_blank_;
   int32_t n_speakers_;
   std::string punctuations_;
+  std::string language_;
 };
 
 OfflineTtsVitsModel::OfflineTtsVitsModel(const OfflineTtsModelConfig &config)
@@ -146,5 +149,7 @@ bool OfflineTtsVitsModel::AddBlank() const { return impl_->AddBlank(); }
 std::string OfflineTtsVitsModel::Punctuations() const {
   return impl_->Punctuations();
 }
+
+std::string OfflineTtsVitsModel::Language() const { return impl_->Language(); }
 
 }  // namespace sherpa_onnx
