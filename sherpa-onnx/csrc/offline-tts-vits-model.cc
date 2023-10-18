@@ -85,6 +85,7 @@ class OfflineTtsVitsModel::Impl {
 
   std::string Punctuations() const { return punctuations_; }
   std::string Language() const { return language_; }
+  int32_t NumSpeakers() const { return num_speakers_; }
 
  private:
   void Init(void *model_data, size_t model_data_length) {
@@ -107,7 +108,7 @@ class OfflineTtsVitsModel::Impl {
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(sample_rate_, "sample_rate");
     SHERPA_ONNX_READ_META_DATA(add_blank_, "add_blank");
-    SHERPA_ONNX_READ_META_DATA(n_speakers_, "n_speakers");
+    SHERPA_ONNX_READ_META_DATA(num_speakers_, "n_speakers");
     SHERPA_ONNX_READ_META_DATA_STR(punctuations_, "punctuation");
     SHERPA_ONNX_READ_META_DATA_STR(language_, "language");
   }
@@ -128,7 +129,7 @@ class OfflineTtsVitsModel::Impl {
 
   int32_t sample_rate_;
   int32_t add_blank_;
-  int32_t n_speakers_;
+  int32_t num_speakers_;
   std::string punctuations_;
   std::string language_;
 };
@@ -151,5 +152,9 @@ std::string OfflineTtsVitsModel::Punctuations() const {
 }
 
 std::string OfflineTtsVitsModel::Language() const { return impl_->Language(); }
+
+int32_t OfflineTtsVitsModel::NumSpeakers() const {
+  return impl_->NumSpeakers();
+}
 
 }  // namespace sherpa_onnx

@@ -39,6 +39,7 @@ class OfflineTtsVitsModel {
 
   std::string Punctuations() const;
   std::string Language() const;
+  int32_t NumSpeakers() const;
 
  private:
   class Impl;
