@@ -124,6 +124,11 @@ def main():
     start = time.time()
     audio = tts.generate(args.text, sid=args.sid)
     end = time.time()
+
+    if len(audio.samples) == 0:
+        print("Error in generating audios. Please read previous error messages.")
+        return
+
     elapsed_seconds = end - start
     audio_duration = len(audio.samples) / audio.sample_rate
     real_time_factor = elapsed_seconds / audio_duration

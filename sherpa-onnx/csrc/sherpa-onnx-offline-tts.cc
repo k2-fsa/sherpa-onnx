@@ -81,6 +81,12 @@ or detailes.
 
   sherpa_onnx::OfflineTts tts(config);
   auto audio = tts.Generate(po.GetArg(1), sid);
+  if (audio.samples.empty()) {
+    fprintf(
+        stderr,
+        "Error in generating audios. Please read previous error messages.\n");
+    exit(EXIT_FAILURE);
+  }
 
   bool ok = sherpa_onnx::WriteWave(output_filename, audio.sample_rate,
                                    audio.samples.data(), audio.samples.size());
