@@ -46,7 +46,8 @@ jobs:
       - name: Test sherp-onnx
         shell: bash
         run: |
-          pip install --verbose sherpa-onnx
+          python3 -c "from pathlib import Path; import sys; print(sys.exectuable); print(Path(sys.exectuable).parent)"
+          # pip install --verbose sherpa-onnx
 
       # - name: Install sherpa-onnx
       #   shell: bash
