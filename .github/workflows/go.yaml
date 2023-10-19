@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - fix-go-ci
     tags:
       - '*'
   pull_request:
@@ -50,7 +51,7 @@ jobs:
 
       - name: Set up MinGW
         if: matrix.os == 'windows-latest'
-        uses: egor-tensin/setup-mingw@v2
+        uses: csukuangfj/setup-mingw@v2.2.1
         with:
           platform: ${{ matrix.arch }}
 
