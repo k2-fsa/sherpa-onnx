@@ -60,7 +60,7 @@ jobs:
         uses: csukuangfj/setup-mingw@v2.2.1
         with:
           platform: ${{ matrix.arch }}
-          version: v12.2.0.3042023
+          version: '12.2.0.3042023'
 
       - name: Show gcc
         if: matrix.os == 'windows-latest'
