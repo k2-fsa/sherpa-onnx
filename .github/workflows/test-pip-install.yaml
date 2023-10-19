@@ -55,7 +55,7 @@ jobs:
           p=$(python3 -c "from pathlib import Path; import sys; print(Path(sys.executable).parent)")
           echo $p
           ls -lh $p
-          ls -lh $p/bin
+          # ls -lh $p/bin
           # export PATH=$p/bin:$PATH
 
           # For windows
