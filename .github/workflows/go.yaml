@@ -49,11 +49,18 @@ jobs:
           go env GOPATH
           go env GOARCH
 
-      - name: Set up MinGW
-        if: matrix.os == 'windows-latest'
+      - name: Set up MinGW for x64
+        if: matrix.os == 'windows-latest' && arch == 'x64'
         uses: csukuangfj/setup-mingw@v2.2.1
         with:
           platform: ${{ matrix.arch }}
+
+      - name: Set up MinGW for x86
+        if: matrix.os == 'windows-latest' && arch == 'x86'
+        uses: csukuangfj/setup-mingw@v2.2.1
+        with:
+          platform: ${{ matrix.arch }}
+          version: v12.2.0.3042023
 
       - name: Show gcc
         if: matrix.os == 'windows-latest'
