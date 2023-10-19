@@ -28,10 +28,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-latest, windows-latest, macos-latest]
-        # python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
-        os: [windows-latest]
-        python-version: ["3.8"]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
 
     steps:
       - uses: actions/checkout@v3
@@ -58,7 +56,15 @@ jobs:
           echo $p
           ls -lh $p
           ls -lh $p/bin
-          export PATH=$p/bin:$PATH
+          # export PATH=$p/bin:$PATH
+
+          # For windows
+          export PATH=/c/hostedtoolcache/windows/Python/3.7.9/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.8.10/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.9.13/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.11.6/x64/bin:$PATH
+
 
           sherpa-onnx --help
           sherpa-onnx-offline --help
