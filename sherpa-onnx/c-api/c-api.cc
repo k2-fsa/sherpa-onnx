@@ -15,6 +15,7 @@
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
+#include "sherpa-onnx/csrc/wave-writer.h"
 
 struct SherpaOnnxOnlineRecognizer {
   std::unique_ptr<sherpa_onnx::OnlineRecognizer> impl;
@@ -584,4 +585,9 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p) {
   delete[] p->samples;
   delete p;
+}
+
+int32_t SherpaOnnxDestroyOfflineWriteWave(const SherpaOnnxGeneratedAudio *p,
+                                          const char *filename) {
+  return sherpa_onnx::WriteWave(filename, p->sample_rate, p->samples, p->n);
 }

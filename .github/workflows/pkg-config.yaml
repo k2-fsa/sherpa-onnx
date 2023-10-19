@@ -9,6 +9,7 @@ on:
       - '*'
     paths:
       - '.github/workflows/pkg-config.yaml'
+      - '.github/scripts/test-offline-tts.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -19,6 +20,7 @@ on:
       - master
     paths:
       - '.github/workflows/pkg-config.yaml'
+      - '.github/scripts/test-offline-tts.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -92,8 +94,19 @@ jobs:
         run: |
           export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
           cd c-api-examples
+
           gcc -o decode-file-c-api $(pkg-config --cflags sherpa-onnx) ./decode-file-c-api.c $(pkg-config --libs sherpa-onnx)
           ./decode-file-c-api --help
+
+          gcc -o offline-tts-c-api $(pkg-config --cflags sherpa-onnx) ./offline-tts-c-api.c $(pkg-config --libs sherpa-onnx)
+          ./offline-tts-c-api --help
+
+      - name: Test offline TTS C API
+        shell: bash
+        run: |
+          export PATH=$PWD/c-api-examples:$PATH
+          export EXE=offline-tts-c-api
+          .github/scripts/test-offline-tts.sh
 
       - name: Test online transducer (C API)
         shell: bash
@@ -102,3 +115,8 @@ jobs:
           export EXE=decode-file-c-api
 
           .github/scripts/test-online-transducer.sh
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tts-generated-test-files
+          path: tts

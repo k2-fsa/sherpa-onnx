@@ -40,7 +40,7 @@ wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
 
 Please see
 https://k2-fsa.github.io/sherpa/onnx/tts/index.html
-or detailes.
+or details.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
