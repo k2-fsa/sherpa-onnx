@@ -12,6 +12,7 @@
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/display.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 
@@ -493,18 +494,16 @@ int32_t SherpaOnnxVoiceActivityDetectorDetected(
   return p->impl->IsSpeechDetected();
 }
 
-void SherpaOnnxVoiceActivityDetectorPop(
-    SherpaOnnxVoiceActivityDetector *p) {
+void SherpaOnnxVoiceActivityDetectorPop(SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Pop();
 }
 
-void SherpaOnnxVoiceActivityDetectorClear(
-    SherpaOnnxVoiceActivityDetector *p) {
+void SherpaOnnxVoiceActivityDetectorClear(SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Clear();
 }
 
-const SherpaOnnxSpeechSegment *
-SherpaOnnxVoiceActivityDetectorFront(SherpaOnnxVoiceActivityDetector *p) {
+const SherpaOnnxSpeechSegment *SherpaOnnxVoiceActivityDetectorFront(
+    SherpaOnnxVoiceActivityDetector *p) {
   const sherpa_onnx::SpeechSegment &segment = p->impl->Front();
 
   SherpaOnnxSpeechSegment *ans = new SherpaOnnxSpeechSegment;
@@ -523,4 +522,66 @@ void SherpaOnnxDestroySpeechSegment(const SherpaOnnxSpeechSegment *p) {
 
 void SherpaOnnxVoiceActivityDetectorReset(SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Reset();
+}
+
+struct SherpaOnnxOfflineTts {
+  std::unique_ptr<sherpa_onnx::OfflineTts> impl;
+};
+
+SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
+    const SherpaOnnxOfflineTtsConfig *config) {
+  sherpa_onnx::OfflineTtsConfig tts_config;
+
+  tts_config.model.vits.model = SHERPA_ONNX_OR(config->model.vits.model, "");
+  tts_config.model.vits.lexicon =
+      SHERPA_ONNX_OR(config->model.vits.lexicon, "");
+  tts_config.model.vits.tokens = SHERPA_ONNX_OR(config->model.vits.tokens, "");
+  tts_config.model.vits.noise_scale =
+      SHERPA_ONNX_OR(config->model.vits.noise_scale, 0.667);
+  tts_config.model.vits.noise_scale_w =
+      SHERPA_ONNX_OR(config->model.vits.noise_scale_w, 0.8);
+  tts_config.model.vits.length_scale =
+      SHERPA_ONNX_OR(config->model.vits.length_scale, 1.0);
+
+  tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
+  tts_config.model.debug = config->model.debug;
+  tts_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+
+  if (tts_config.model.debug) {
+    fprintf(stderr, "%s\n", tts_config.ToString().c_str());
+  }
+
+  SherpaOnnxOfflineTts *tts = new SherpaOnnxOfflineTts;
+
+  tts->impl = std::make_unique<sherpa_onnx::OfflineTts>(tts_config);
+
+  return tts;
+}
+
+void SherpaOnnxDestroyOfflineTts(SherpaOnnxOfflineTts *tts) { delete tts; }
+
+const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid) {
+  sherpa_onnx::GeneratedAudio audio = tts->impl->Generate(text, sid);
+
+  if (audio.samples.empty()) {
+    return nullptr;
+  }
+
+  SherpaOnnxGeneratedAudio *ans = new SherpaOnnxGeneratedAudio;
+
+  float *samples = new float[audio.samples.size()];
+  std::copy(audio.samples.begin(), audio.samples.end(), samples);
+
+  ans->samples = samples;
+  ans->n = audio.samples.size();
+  ans->sample_rate = audio.sample_rate;
+
+  return ans;
+}
+
+SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
+    const SherpaOnnxGeneratedAudio *p) {
+  delete[] p->samples;
+  delete p;
 }
