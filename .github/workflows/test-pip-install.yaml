@@ -46,7 +46,7 @@ jobs:
       - name: Test sherp-onnx
         shell: bash
         run: |
-          python3 -c "import sys; print(sys.executable); print(Path(sys.exectuable).parent)"
+          python3 -c "import sys; print(sys.executable)"
           python3 -c "from pathlib import Path; import sys; print(Path(sys.executable).parent)"
           p=$(python3 -c "from pathlib import Path; import sys; print(Path(sys.executable).parent)")
           echo $p
