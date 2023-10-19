@@ -51,7 +51,8 @@ jobs:
           p=$(python3 -c "from pathlib import Path; import sys; print(Path(sys.executable).parent)")
           echo $p
           ls -lh $p
-          # pip install --verbose sherpa-onnx
+          pip install --verbose sherpa-onnx
+          ls -lh $p
 
       # - name: Install sherpa-onnx
       #   shell: bash
