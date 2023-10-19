@@ -39,7 +39,7 @@ $EXE \
 
 ls -lh ./tts
 
-rm -fv $repo
+rm -rfv $repo
 
 log "------------------------------------------------------------"
 log "vits-vctk test"
@@ -65,7 +65,7 @@ for sid in 0 10 90; do
     'liliana, the most beautiful and lovely assistant of our team!'
 done
 
-rm -fv $repo
+rm -rfv $repo
 
 ls -lh tts/
 
@@ -93,6 +93,6 @@ for sid in 0 10 90; do
     '林美丽最美丽'
 done
 
-rm -fv $repo
+rm -rfv $repo
 
 ls -lh ./tts/
