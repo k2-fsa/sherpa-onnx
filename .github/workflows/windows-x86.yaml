@@ -12,6 +12,7 @@ on:
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-offline-tts.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -24,6 +25,7 @@ on:
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-offline-tts.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -45,7 +47,7 @@ jobs:
         shared_lib: [ON, OFF]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -64,6 +66,14 @@ jobs:
           cmake --build . --config Release --target install -- -m:2
 
           ls -lh ./bin/Release/sherpa-onnx.exe
+
+      - name: Test offline TTS
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx-offline-tts.exe
+
+          .github/scripts/test-offline-tts.sh
 
       - name: Test online paraformer for windows x86
         shell: bash

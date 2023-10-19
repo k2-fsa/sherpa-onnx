@@ -595,6 +595,62 @@ SHERPA_ONNX_API void SherpaOnnxDestroySpeechSegment(
 SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorReset(
     SherpaOnnxVoiceActivityDetector *p);
 
+// ============================================================
+// For offline Text-to-Speech (i.e., non-streaming TTS)
+// ============================================================
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsVitsModelConfig {
+  const char *model;
+  const char *lexicon;
+  const char *tokens;
+
+  float noise_scale;
+  float noise_scale_w;
+  float length_scale;  // < 1, faster in speed; > 1, slower in speed
+} SherpaOnnxOfflineTtsVitsModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {
+  SherpaOnnxOfflineTtsVitsModelConfig vits;
+  int32_t num_threads;
+  int32_t debug;
+  const char *provider;
+} SherpaOnnxOfflineTtsModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsConfig {
+  SherpaOnnxOfflineTtsModelConfig model;
+} SherpaOnnxOfflineTtsConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxGeneratedAudio {
+  const float *samples;  // in the range [-1, 1]
+  int32_t n;             // number of samples
+  int32_t sample_rate;
+} SherpaOnnxGeneratedAudio;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTts SherpaOnnxOfflineTts;
+
+// Create an instance of offline TTS. The user has to use DestroyOfflineTts()
+// to free the returned pointer to avoid memory leak.
+SHERPA_ONNX_API SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
+    const SherpaOnnxOfflineTtsConfig *config);
+
+// Free the pointer returned by CreateOfflineTts()
+SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTts(SherpaOnnxOfflineTts *tts);
+
+// Generate audio from the given text and speaker id (sid).
+// The user has to use DestroyOfflineTtsGeneratedAudio() to free the returned
+// pointer to avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid);
+
+SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
+    const SherpaOnnxGeneratedAudio *p);
+
+// Write the generated audio to a wave file.
+// The saved wave file contains a single channel and has 16-bit samples.
+//
+// Return 1 if the write succeeded; return 0 on failure.
+SHERPA_ONNX_API int32_t SherpaOnnxDestroyOfflineWriteWave(
+    const SherpaOnnxGeneratedAudio *p, const char *filename);
+
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
