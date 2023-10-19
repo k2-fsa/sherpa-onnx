@@ -206,12 +206,14 @@ const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
 }
 
 void DestroyOnlineRecognizerResult(const SherpaOnnxOnlineRecognizerResult *r) {
-  delete[] r->text;
-  delete[] r->json;
-  delete[] r->tokens;
-  delete[] r->tokens_arr;
-  delete[] r->timestamps;
-  delete r;
+  if (r) {
+    delete[] r->text;
+    delete[] r->json;
+    delete[] r->tokens;
+    delete[] r->tokens_arr;
+    delete[] r->timestamps;
+    delete r;
+  }
 }
 
 void Reset(SherpaOnnxOnlineRecognizer *recognizer,
@@ -387,9 +389,11 @@ const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
 
 void DestroyOfflineRecognizerResult(
     const SherpaOnnxOfflineRecognizerResult *r) {
-  delete[] r->text;
-  delete[] r->timestamps;
-  delete r;
+  if (r) {
+    delete[] r->text;
+    delete[] r->timestamps;
+    delete r;
+  }
 }
 
 // ============================================================
@@ -517,8 +521,10 @@ const SherpaOnnxSpeechSegment *SherpaOnnxVoiceActivityDetectorFront(
 }
 
 void SherpaOnnxDestroySpeechSegment(const SherpaOnnxSpeechSegment *p) {
-  delete[] p->samples;
-  delete p;
+  if (p) {
+    delete[] p->samples;
+    delete p;
+  }
 }
 
 void SherpaOnnxVoiceActivityDetectorReset(SherpaOnnxVoiceActivityDetector *p) {
@@ -583,8 +589,10 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
 
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p) {
-  delete[] p->samples;
-  delete p;
+  if (p) {
+    delete[] p->samples;
+    delete p;
+  }
 }
 
 int32_t SherpaOnnxDestroyOfflineWriteWave(const SherpaOnnxGeneratedAudio *p,
