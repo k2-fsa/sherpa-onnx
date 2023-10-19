@@ -12,6 +12,7 @@ on:
     # day of the week (0-6)
     # nightly build at 23:50 UTC time every day
     - cron: "50 23 * * *"
+  workflow_dispatch:
 
 concurrency:
   group: test-pip-install-${{ github.ref }}
@@ -29,9 +30,12 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        exclude:
+          - os: macos-latest
+            python-version: "3.7"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -51,8 +55,23 @@ jobs:
           python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
           python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)"
 
+          p=$(python3 -c "from pathlib import Path; import sys; print(Path(sys.executable).parent)")
+          echo $p
+          ls -lh $p
+          # ls -lh $p/bin
+          # export PATH=$p/bin:$PATH
+
+          # For windows
+          export PATH=/c/hostedtoolcache/windows/Python/3.7.9/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.8.10/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.9.13/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.11.6/x64/bin:$PATH
+
+
           sherpa-onnx --help
           sherpa-onnx-offline --help
+          sherpa-onnx-offline-tts --help
 
           sherpa-onnx-microphone --help
           sherpa-onnx-microphone-offline --help

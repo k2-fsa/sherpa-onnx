@@ -19,6 +19,7 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+  workflow_dispatch:
 
 concurrency:
   group: run-python-test-${{ github.ref }}

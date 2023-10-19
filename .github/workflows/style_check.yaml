@@ -29,6 +29,7 @@ on:
     paths:
       - '.github/workflows/style_check.yaml'
       - 'sherpa-onnx/**'
+  workflow_dispatch:
 
 concurrency:
   group: style_check-${{ github.ref }}

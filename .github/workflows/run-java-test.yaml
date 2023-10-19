@@ -21,6 +21,7 @@ on:
       - 'java-api-examples/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
+  workflow_dispatch:
 
 concurrency:
   group: run-java-test-${{ github.ref }}
