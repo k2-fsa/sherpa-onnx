@@ -43,38 +43,31 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install sherpa-onnx
+        shell: bash
+        run: |
+          pip install --verbose sherpa-onnx
+
       - name: Test sherp-onnx
         shell: bash
         run: |
-          python3 -c "import sys; print(sys.executable)"
-          python3 -c "from pathlib import Path; import sys; print(Path(sys.executable).parent)"
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)"
+
           p=$(python3 -c "from pathlib import Path; import sys; print(Path(sys.executable).parent)")
           echo $p
           ls -lh $p
-          pip install --verbose sherpa-onnx
-          ls -lh $p
-          echo "----------"
           ls -lh $p/bin
-          echo $PWD
+          export PATH=$p/bin:$PATH
 
-      # - name: Install sherpa-onnx
-      #   shell: bash
-      #   run: |
-      #     pip install --verbose sherpa-onnx
-      #
-      # - name: Test sherp-onnx
-      #   shell: bash
-      #   run: |
-      #     python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
-      #     python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)"
-      #
-      #     sherpa-onnx --help
-      #     sherpa-onnx-offline --help
-      #
-      #     sherpa-onnx-microphone --help
-      #     sherpa-onnx-microphone-offline --help
-      #
-      #     sherpa-onnx-offline-websocket-server --help
-      #
-      #     sherpa-onnx-online-websocket-server --help
-      #     sherpa-onnx-online-websocket-client --help
+          sherpa-onnx --help
+          sherpa-onnx-offline --help
+          sherpa-onnx-offline-tts --help
+
+          sherpa-onnx-microphone --help
+          sherpa-onnx-microphone-offline --help
+
+          sherpa-onnx-offline-websocket-server --help
+
+          sherpa-onnx-online-websocket-server --help
+          sherpa-onnx-online-websocket-client --help
