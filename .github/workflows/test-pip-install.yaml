@@ -53,6 +53,9 @@ jobs:
           ls -lh $p
           pip install --verbose sherpa-onnx
           ls -lh $p
+          echo "----------"
+          ls -lh $p/bin
+          echo $PWD
 
       # - name: Install sherpa-onnx
       #   shell: bash
