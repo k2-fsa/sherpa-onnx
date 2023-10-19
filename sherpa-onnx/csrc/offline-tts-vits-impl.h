@@ -30,7 +30,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       SHERPA_ONNX_LOGE(
           "This is a single-speaker model and supports only sid 0. Given sid: "
           "%d",
-          sid);
+          static_cast<int32_t>(sid));
       return {};
     }
 
@@ -38,7 +38,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       SHERPA_ONNX_LOGE(
           "This model contains only %d speakers. sid should be in the range "
           "[%d, %d]. Given: %d",
-          num_speakers, 0, num_speakers - 1, sid);
+          num_speakers, 0, num_speakers - 1, static_cast<int32_t>(sid));
       return {};
     }
 

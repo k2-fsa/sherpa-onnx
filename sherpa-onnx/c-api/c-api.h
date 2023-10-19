@@ -22,6 +22,11 @@ extern "C" {
 // We will set SHERPA_ONNX_BUILD_SHARED_LIBS and SHERPA_ONNX_BUILD_MAIN_LIB in
 // CMakeLists.txt
 
+#if defined(__GNUC__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wattributes"
+#endif
+
 #if defined(_WIN32)
 #if defined(SHERPA_ONNX_BUILD_SHARED_LIBS)
 #define SHERPA_ONNX_EXPORT __declspec(dllexport)
@@ -31,15 +36,7 @@ extern "C" {
 #define SHERPA_ONNX_IMPORT
 #endif
 #else  // WIN32
-#if __APPLE__
-// it throws a warning on macOS when using
-// __attribute__((visibility("default")))
-//
-// warning: 'visibility' attribute ignored [-Wignored-attributes]
-#define SHERPA_ONNX_EXPORT
-#else
 #define SHERPA_ONNX_EXPORT __attribute__((visibility("default")))
-#endif  // __APPLE__
 
 #define SHERPA_ONNX_IMPORT SHERPA_ONNX_EXPORT
 #endif  // WIN32
@@ -597,6 +594,10 @@ SHERPA_ONNX_API void SherpaOnnxDestroySpeechSegment(
 // Re-initialize the voice activity detector.
 SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorReset(
     SherpaOnnxVoiceActivityDetector *p);
+
+#if defined(__GNUC__)
+#pragma GCC diagnostic pop
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
