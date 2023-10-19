@@ -12,6 +12,7 @@ on:
     # day of the week (0-6)
     # nightly build at 23:50 UTC time every day
     - cron: "50 23 * * *"
+  workflow_dispatch:
 
 concurrency:
   group: test-pip-install-${{ github.ref }}
