@@ -34,7 +34,7 @@ jobs:
             arch: x86 # use 386 for GOARCH
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - uses: actions/setup-go@v4
@@ -48,11 +48,18 @@ jobs:
           go env GOPATH
           go env GOARCH
 
-      - name: Set up MinGW
-        if: matrix.os == 'windows-latest'
-        uses: egor-tensin/setup-mingw@v2
+      - name: Set up MinGW for x64
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        uses: csukuangfj/setup-mingw@v2.2.1
         with:
           platform: ${{ matrix.arch }}
+
+      - name: Set up MinGW for x86
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        uses: csukuangfj/setup-mingw@v2.2.1
+        with:
+          platform: ${{ matrix.arch }}
+          version: '12.2.0'
 
       - name: Show gcc
         if: matrix.os == 'windows-latest'
