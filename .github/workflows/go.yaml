@@ -50,13 +50,13 @@ jobs:
           go env GOARCH
 
       - name: Set up MinGW for x64
-        if: matrix.os == 'windows-latest' && arch == 'x64'
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
         uses: csukuangfj/setup-mingw@v2.2.1
         with:
           platform: ${{ matrix.arch }}
 
       - name: Set up MinGW for x86
-        if: matrix.os == 'windows-latest' && arch == 'x86'
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
         uses: csukuangfj/setup-mingw@v2.2.1
         with:
           platform: ${{ matrix.arch }}
