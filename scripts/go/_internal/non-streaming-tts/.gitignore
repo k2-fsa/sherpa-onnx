@@ -1,0 +1,5 @@
+*.wav
+vits-ljs
+vits-vctk
+vits-zh-aishell3
+non-streaming-tts

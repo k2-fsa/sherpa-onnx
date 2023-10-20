@@ -60,6 +60,42 @@ jobs:
           go mod tidy
           go build
 
+      - name: Test non-streaming TTS (macOS)
+        shell: bash
+        run: |
+          mkdir tts-waves
+
+          cd scripts/go/_internal/non-streaming-tts/
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          git lfs install
+
+          echo "Test vits-ljs"
+          git clone https://huggingface.co/csukuangfj/vits-ljs
+          ./run-vits-ljs.sh
+          rm -rf vits-ljs
+
+          echo "Test vits-vctk"
+          git clone https://huggingface.co/csukuangfj/vits-vctk
+          ./run-vits-vctk.sh
+          rm -rf vits-vctk
+
+          echo "Test vits-zh-aishell3"
+          git clone https://huggingface.co/csukuangfj/vits-zh-aishell3
+          ./run-vits-zh-aishell3.sh
+          rm -rf vits-zh-aishell3
+
+          cp *.wav ../../../../tts-waves/
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tts-waves
+          path: tts-waves
+
       - name: Test non-streaming decoding files (macOS)
         shell: bash
         run: |
