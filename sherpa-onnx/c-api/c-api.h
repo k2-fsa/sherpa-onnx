@@ -639,7 +639,8 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTts(SherpaOnnxOfflineTts *tts);
 // The user has to use DestroyOfflineTtsGeneratedAudio() to free the returned
 // pointer to avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
-    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid);
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid,
+    float speed);
 
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p);

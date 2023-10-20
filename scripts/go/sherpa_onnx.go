@@ -572,11 +572,11 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	return tts
 }
 
-func (tts *OfflineTts) Generate(text string, sid int) *GeneratedAudio {
+func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedAudio {
 	s := C.CString(text)
 	defer C.free(unsafe.Pointer(s))
 
-	audio := C.SherpaOnnxOfflineTtsGenerate(tts.impl, s, C.int(sid))
+	audio := C.SherpaOnnxOfflineTtsGenerate(tts.impl, s, C.int(sid), C.float(speed))
 	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
 
 	ans := &GeneratedAudio{}

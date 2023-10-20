@@ -568,8 +568,9 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
 void SherpaOnnxDestroyOfflineTts(SherpaOnnxOfflineTts *tts) { delete tts; }
 
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
-    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid) {
-  sherpa_onnx::GeneratedAudio audio = tts->impl->Generate(text, sid);
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid,
+    float speed) {
+  sherpa_onnx::GeneratedAudio audio = tts->impl->Generate(text, sid, speed);
 
   if (audio.samples.empty()) {
     return nullptr;
