@@ -145,6 +145,7 @@ void CNonStreamingTextToSpeechDlg::DoDataExchange(CDataExchange* pDX)
         DDX_Control(pDX, IDC_SPEAKER, speaker_id_);
         DDX_Control(pDX, IDC_SPEED, speed_);
         DDX_Control(pDX, IDOK, generate_btn_);
+        DDX_Control(pDX, IDC_TEXT, my_text_);
 }
 
 BEGIN_MESSAGE_MAP(CNonStreamingTextToSpeechDlg, CDialogEx)
@@ -289,8 +290,27 @@ void CNonStreamingTextToSpeechDlg::Init() {
         "tokens.txt\r\n";
 
     AppendLineToMultilineEditCtrl(my_hint_, error_message);
+    return;
   }
+
+  // Now init tts
+  SherpaOnnxOfflineTtsConfig config;
+  memset(&config, 0, sizeof(config));
+  config.model.debug = 0;
+  config.model.num_threads = 1;
+  config.model.provider = "cpu";
+  config.model.vits.model = "./model.onnx";
+  config.model.vits.lexicon = "./lexicon.txt";
+  config.model.vits.tokens = "./tokens.txt";
+
+  tts_ = SherpaOnnxCreateOfflineTts(&config);
 }
+
+ CNonStreamingTextToSpeechDlg::~CNonStreamingTextToSpeechDlg() {
+  if (tts_) {
+    SherpaOnnxDestroyOfflineTts(tts_);
+  }
+ }
 
 
 
@@ -309,6 +329,28 @@ void CNonStreamingTextToSpeechDlg::OnBnClickedOk() {
   if (speed < 0) {
     AfxMessageBox(Utf8ToUtf16("Please input a valid speed").c_str(), MB_OK);
     return;
+  }
+
+  my_text_.GetWindowText(s);
+  CT2CA pszConvertedAnsiString(s);
+  std::string ss(pszConvertedAnsiString);
+  if (ss.empty()) {
+    AfxMessageBox(Utf8ToUtf16("Please input your text").c_str(), MB_OK);
+    return;
+  }
+
+const SherpaOnnxGeneratedAudio *audio =
+      SherpaOnnxOfflineTtsGenerate(tts_, ss.c_str(), speaker_id, speed);
+  std::string filename = "./generated.wav";
+int ok = SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate,
+                    filename.c_str());
+
+  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+
+  if (ok) {
+    AfxMessageBox(Utf8ToUtf16("Saved to ./generated.wav successfully").c_str(), MB_OK);
+  } else {
+    AfxMessageBox(Utf8ToUtf16("Failed to save to ./generated.wav").c_str(), MB_OK);
   }
 
   //CDialogEx::OnOK();

@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include "sherpa-onnx/c-api/c-api.h"
+
 
 // CNonStreamingTextToSpeechDlg dialog
 class CNonStreamingTextToSpeechDlg : public CDialogEx
@@ -11,6 +13,7 @@ class CNonStreamingTextToSpeechDlg : public CDialogEx
 // Construction
 public:
 	CNonStreamingTextToSpeechDlg(CWnd* pParent = nullptr);	// standard constructor
+ ~CNonStreamingTextToSpeechDlg();
 
 // Dialog Data
 #ifdef AFX_DESIGN_TIME
@@ -39,4 +42,7 @@ protected:
         void InitHint();
         CButton generate_btn_;
         afx_msg void OnBnClickedOk();
+
+		SherpaOnnxOfflineTts *tts_;
+        CEdit my_text_;
 };
