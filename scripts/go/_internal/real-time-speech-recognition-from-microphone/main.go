@@ -1,0 +1,1 @@
+../../../../go-api-examples/real-time-speech-recognition-from-microphone/main.go

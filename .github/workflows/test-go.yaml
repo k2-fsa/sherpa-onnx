@@ -1,0 +1,123 @@
+name: test-go
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-go-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-go:
+    name: ${{ matrix.os }} ${{matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-latest
+            arch: amd64
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.arch }}
+
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '>=1.12'
+
+      - name: Display go version
+        shell: bash
+        run: |
+          go version
+          go env GOPATH
+          go env GOARCH
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          mkdir build
+          cd build
+          cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_SHARED_LIBS=ON -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF ..
+          make -j
+          cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
+
+          cd ../scripts/go/_internal/
+          go mod tidy
+          go build
+
+      - name: Test non-streaming decoding files (macOS)
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-decode-files/
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          git lfs install
+
+          echo "Test transducer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
+          ./run-paraformer.sh
+          rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+
+          echo "Test NeMo CTC"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
+          ./run-nemo-ctc.sh
+          rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
+
+          echo "Test Whisper tiny.en"
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
+          cd sherpa-onnx-whisper-tiny.en
+          git lfs pull --include "*.onnx"
+          cd ..
+          ./run-whisper.sh
+          rm -rf sherpa-onnx-whisper-tiny.en
+
+          echo "Test Tdnn yesno"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-tdnn-yesno
+          ./run-tdnn-yesno.sh
+          rm -rf sherpa-onnx-tdnn-yesno
+
+      - name: Test streaming decoding files
+        shell: bash
+        run: |
+          cd scripts/go/_internal/streaming-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          git lfs install
+
+          echo "Test transducer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
+          ./run-paraformer.sh
+          rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
