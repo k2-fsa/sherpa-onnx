@@ -28,9 +28,14 @@ jobs:
         model_type: ["transducer", "paraformer", "nemo_ctc", "whisper", "tdnn"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-python-${{ matrix.python-version }}
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
@@ -45,9 +50,12 @@ jobs:
       - name: Install sherpa-onnx
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
           python3 -m pip install --no-deps --verbose .
           python3 -m pip install websockets
-
 
       - name: Start server for transducer models
         if: matrix.model_type == 'transducer'

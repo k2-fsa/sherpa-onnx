@@ -25,7 +25,7 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Display NDK HOME
@@ -47,7 +47,7 @@ jobs:
         run: |
           ls -lh ./apks/
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./apks/*.apk
 

@@ -47,7 +47,7 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -147,7 +147,7 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: sherpa-onnx-*linux-aarch64.tar.bz2
 

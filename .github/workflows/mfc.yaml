@@ -40,7 +40,7 @@ jobs:
         arch: [x64]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -90,13 +90,13 @@ jobs:
           ls -lh
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: streaming-speech-recognition-${{ matrix.arch }}
           path: ./mfc-examples/${{ matrix.arch }}/Release/StreamingSpeechRecognition.exe
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: non-streaming-speech-recognition-${{ matrix.arch }}
           path: ./mfc-examples/${{ matrix.arch }}/Release/NonStreamingSpeechRecognition.exe

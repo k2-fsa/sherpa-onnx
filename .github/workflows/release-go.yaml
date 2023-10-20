@@ -31,7 +31,7 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: SSH to GitHub
         run: |
@@ -58,7 +58,7 @@ jobs:
           ls -lh ./wheelhouse/*.whl
           unzip -l ./wheelhouse/*.whl
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}-wheels-for-go
           path: ./wheelhouse/*.whl
@@ -73,10 +73,20 @@ jobs:
         arch: [x86_64, arm64]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.arch }}
+
       - name: Configure CMake
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
           mkdir build
           cd build
           cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=ON -DCMAKE_OSX_ARCHITECTURES=${{ matrix.arch }} -DCMAKE_INSTALL_PREFIX=./install ..
@@ -84,6 +94,8 @@ jobs:
       - name: Build sherpa-onnx for macOS ${{ matrix.arch }}
         shell: bash
         run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
           cd build
           make -j2
           make install
@@ -93,7 +105,7 @@ jobs:
 
           file install/lib/lib*
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}-for-${{ matrix.arch }}
           path: ./build/install/lib/
@@ -107,7 +119,7 @@ jobs:
         os: [windows-latest]
         arch: [x64, Win32]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -131,7 +143,7 @@ jobs:
           ls -lh install/bin
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: sherpa-onnx-go-windows-${{ matrix.arch }}
           path: ./build/install/lib/
@@ -142,7 +154,7 @@ jobs:
     needs: [linux-x86_64_wheel, macOS, windows]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Add SSH key
         run: |

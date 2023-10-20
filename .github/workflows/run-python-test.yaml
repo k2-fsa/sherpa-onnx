@@ -43,9 +43,14 @@ jobs:
             python-version: "3.10"
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-python-${{ matrix.python-version }}
 
       - name: Setup Python
         uses: actions/setup-python@v2
@@ -60,6 +65,10 @@ jobs:
       - name: Install sherpa-onnx
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
           python3 -m pip install --verbose .
 
       - name: Test sherpa-onnx
