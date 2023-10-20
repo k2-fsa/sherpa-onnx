@@ -40,9 +40,14 @@ jobs:
         os: [ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}
 
       - name: Display kotlin version
         shell: bash
@@ -58,5 +63,9 @@ jobs:
       - name:  Run JNI test
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
           cd ./kotlin-api-examples
           ./run.sh

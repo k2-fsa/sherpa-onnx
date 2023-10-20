@@ -44,13 +44,22 @@ jobs:
         lib_type: [shared, static]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.build_type }}-lib-${{ matrix.lib_type }}
 
       - name: Configure CMake
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
           mkdir build
           cd build
           if [[ ${{ matrix.lib_type }} == "shared" ]]; then
@@ -62,6 +71,8 @@ jobs:
       - name: Build sherpa-onnx for ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.lib_type }}
         shell: bash
         run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
           cd build
           make -j2
           make install
