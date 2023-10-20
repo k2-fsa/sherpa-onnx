@@ -577,6 +577,7 @@ func (tts *OfflineTts) Generate(text string, sid int) *GeneratedAudio {
 	defer C.free(unsafe.Pointer(s))
 
 	audio := C.SherpaOnnxOfflineTtsGenerate(tts.impl, s, C.int(sid))
+	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
 
 	ans := &GeneratedAudio{}
 	ans.SampleRate = int(audio.sample_rate)
@@ -587,8 +588,6 @@ func (tts *OfflineTts) Generate(text string, sid int) *GeneratedAudio {
 	for i := 0; i < n; i++ {
 		ans.Samples[i] = float32(samples[i])
 	}
-
-	C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
 
 	return ans
 }

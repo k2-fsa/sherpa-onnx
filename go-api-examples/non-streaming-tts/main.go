@@ -41,17 +41,21 @@ func main() {
 	log.Println("Output filename:", filename)
 
 	log.Println("Initializing model (may take several seconds)")
+
 	tts := sherpa.NewOfflineTts(&config)
-	log.Println("Model created!")
 	defer sherpa.DeleteOfflineTts(tts)
+
+	log.Println("Model created!")
 
 	log.Println("Start generating!")
 
 	audio := tts.Generate(text, sid)
+
+	log.Println("Done!")
+
 	ok := audio.Save(filename)
 	if ok != 1 {
 		log.Fatalf("Failed to write", filename)
 	}
 
-	log.Println("Done!")
 }
