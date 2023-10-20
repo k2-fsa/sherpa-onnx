@@ -63,7 +63,7 @@ jobs:
           go mod tidy
           go build
 
-      - name: Test non-streaming decoding files (Linux/macOS)
+      - name: Test non-streaming decoding files (macOS)
         shell: bash
         run: |
           cd scripts/go/_internal/non-streaming-decode-files/
@@ -102,3 +102,25 @@ jobs:
           git clone https://huggingface.co/csukuangfj/sherpa-onnx-tdnn-yesno
           ./run-tdnn-yesno.sh
           rm -rf sherpa-onnx-tdnn-yesno
+
+      - name: Test streaming decoding files
+        shell: bash
+        run: |
+          cd scripts/go/_internal/streaming-decode-files
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          git lfs install
+
+          echo "Test transducer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
+          ./run-paraformer.sh
+          rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
