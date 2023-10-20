@@ -8,6 +8,11 @@
 #include "NonStreamingTextToSpeechDlg.h"
 #include "afxdialogex.h"
 
+#include <fstream>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -48,24 +53,106 @@ END_MESSAGE_MAP()
 
 // CNonStreamingTextToSpeechDlg dialog
 
+// see
+// https://stackoverflow.com/questions/7153935/how-to-convert-utf-8-stdstring-to-utf-16-stdwstring
+static std::wstring Utf8ToUtf16(const std::string &utf8) {
+  std::vector<unsigned long> unicode;
+  size_t i = 0;
+  while (i < utf8.size()) {
+    unsigned long uni;
+    size_t todo;
+    bool error = false;
+    unsigned char ch = utf8[i++];
+    if (ch <= 0x7F) {
+      uni = ch;
+      todo = 0;
+    } else if (ch <= 0xBF) {
+      throw std::logic_error("not a UTF-8 string");
+    } else if (ch <= 0xDF) {
+      uni = ch & 0x1F;
+      todo = 1;
+    } else if (ch <= 0xEF) {
+      uni = ch & 0x0F;
+      todo = 2;
+    } else if (ch <= 0xF7) {
+      uni = ch & 0x07;
+      todo = 3;
+    } else {
+      throw std::logic_error("not a UTF-8 string");
+    }
+    for (size_t j = 0; j < todo; ++j) {
+      if (i == utf8.size()) throw std::logic_error("not a UTF-8 string");
+      unsigned char ch = utf8[i++];
+      if (ch < 0x80 || ch > 0xBF) throw std::logic_error("not a UTF-8 string");
+      uni <<= 6;
+      uni += ch & 0x3F;
+    }
+    if (uni >= 0xD800 && uni <= 0xDFFF)
+      throw std::logic_error("not a UTF-8 string");
+    if (uni > 0x10FFFF) throw std::logic_error("not a UTF-8 string");
+    unicode.push_back(uni);
+  }
+  std::wstring utf16;
+  for (size_t i = 0; i < unicode.size(); ++i) {
+    unsigned long uni = unicode[i];
+    if (uni <= 0xFFFF) {
+      utf16 += (wchar_t)uni;
+    } else {
+      uni -= 0x10000;
+      utf16 += (wchar_t)((uni >> 10) + 0xD800);
+      utf16 += (wchar_t)((uni & 0x3FF) + 0xDC00);
+    }
+  }
+  return utf16;
+}
+
+// The system calls this function to obtain the cursor to display while the user drags
+//  the minimized window.
+HCURSOR CNonStreamingTextToSpeechDlg::OnQueryDragIcon()
+{
+	return static_cast<HCURSOR>(m_hIcon);
+}
+
+
+void AppendTextToEditCtrl(CEdit& e, const std::string &s) {
+  // get the initial text length
+  int nLength = e.GetWindowTextLength();
+  // put the selection at the end of text
+  e.SetSel(nLength, nLength);
+  // replace the selection
+
+  std::wstring wstr = Utf8ToUtf16(s);
+
+  // my_text_.ReplaceSel(wstr.c_str());
+  e.ReplaceSel(wstr.c_str());
+}
+
+void AppendLineToMultilineEditCtrl(CEdit& e, const std::string &s) {
+  AppendTextToEditCtrl(e, "\r\n" + s);
+}
 
 
 CNonStreamingTextToSpeechDlg::CNonStreamingTextToSpeechDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_NONSTREAMINGTEXTTOSPEECH_DIALOG, pParent)
-{
+       {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 void CNonStreamingTextToSpeechDlg::DoDataExchange(CDataExchange* pDX)
 {
-	CDialogEx::DoDataExchange(pDX);
+        CDialogEx::DoDataExchange(pDX);
+        DDX_Control(pDX, IDC_HINT, my_hint_);
+        DDX_Control(pDX, IDC_SPEAKER, speaker_id_);
+        DDX_Control(pDX, IDC_SPEED, speed_);
+        DDX_Control(pDX, IDOK, generate_btn_);
 }
 
 BEGIN_MESSAGE_MAP(CNonStreamingTextToSpeechDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-END_MESSAGE_MAP()
+        ON_BN_CLICKED(IDOK, &CNonStreamingTextToSpeechDlg::OnBnClickedOk)
+        END_MESSAGE_MAP()
 
 
 // CNonStreamingTextToSpeechDlg message handlers
@@ -100,6 +187,7 @@ BOOL CNonStreamingTextToSpeechDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+    Init();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -118,7 +206,7 @@ void CNonStreamingTextToSpeechDlg::OnSysCommand(UINT nID, LPARAM lParam)
 }
 
 // If you add a minimize button to your dialog, you will need the code below
-//  to draw the icon.  For MFC applications using the document/view model,
+//  to draw the icon            .  For MFC applications using the document/view model,
 //  this is automatically done for you by the framework.
 
 void CNonStreamingTextToSpeechDlg::OnPaint()
@@ -131,7 +219,7 @@ void CNonStreamingTextToSpeechDlg::OnPaint()
 
 		// Center icon in client rectangle
 		int cxIcon = GetSystemMetrics(SM_CXICON);
-		int cyIcon = GetSystemMetrics(SM_CYICON);
+		int cyIcon =             GetSystemMetrics(SM_CYICON);
 		CRect rect;
 		GetClientRect(&rect);
 		int x = (rect.Width() - cxIcon + 1) / 2;
@@ -146,10 +234,82 @@ void CNonStreamingTextToSpeechDlg::OnPaint()
 	}
 }
 
-// The system calls this function to obtain the cursor to display while the user drags
-//  the minimized window.
-HCURSOR CNonStreamingTextToSpeechDlg::OnQueryDragIcon()
-{
-	return static_cast<HCURSOR>(m_hIcon);
+bool Exists(const std::string &filename) {
+  std::ifstream is(filename);
+  return is.good();
 }
 
+void CNonStreamingTextToSpeechDlg::InitHint() {
+    AppendLineToMultilineEditCtrl(my_hint_, "Speaker ID: Used only for multi-speaker models. Example value: 0");
+    AppendLineToMultilineEditCtrl(my_hint_, "Speed: Larger -> Faster in speech speed. Example value: 1.0");
+    AppendLineToMultilineEditCtrl(my_hint_, "\r\n\r\nPlease input your text and click the button Generate");
+
+}
+
+void CNonStreamingTextToSpeechDlg::Init() {
+    InitHint();
+    speaker_id_.SetWindowText(Utf8ToUtf16("0").c_str());
+    speed_.SetWindowText(Utf8ToUtf16("1.0").c_str());
+
+	bool ok = true;
+    std::string error_message = "--------------------";
+  if (!Exists("./model.onnx")) {
+    error_message += "Cannot find ./model.onnx\r\n";
+    ok = false;
+  }
+
+  if (!Exists("./lexicon.txt")) {
+    error_message += "Cannot find ./lexicon.txt\r\n";
+    ok = false;
+  }
+
+  if (!Exists("./tokens.txt")) {
+    error_message += "Cannot find ./tokens.txt\r\n";
+    ok = false;
+  }
+
+  if (!ok) {
+    generate_btn_.EnableWindow(FALSE);
+    error_message +=
+        "\r\nPlease refer to\r\n"
+        "https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html";
+    error_message += "\r\nto download models.\r\n";
+    error_message += "\r\nWe given an example below\r\n\r\n";
+    error_message +=
+        "wget -O model.onnx "
+        "https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/"
+        "vits-aishell3.onnx\r\n";
+    error_message +=
+        "wget  "
+        "https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/"
+        "lexicon.txt\r\n";
+    error_message +=
+        "wget  "
+        "https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/"
+        "tokens.txt\r\n";
+
+    AppendLineToMultilineEditCtrl(my_hint_, error_message);
+  }
+}
+
+
+
+void CNonStreamingTextToSpeechDlg::OnBnClickedOk() {
+  // TODO: Add your control notification handler code here
+  CString s;
+  speaker_id_.GetWindowText(s);
+  int speaker_id = _ttoi(s);
+  if (speaker_id < 0) {
+    AfxMessageBox(Utf8ToUtf16("Please input a valid speaker ID").c_str(), MB_OK);
+    return;
+  }
+
+  speed_.GetWindowText(s);
+  float speed = _ttof(s); 
+  if (speed < 0) {
+    AfxMessageBox(Utf8ToUtf16("Please input a valid speed").c_str(), MB_OK);
+    return;
+  }
+
+  //CDialogEx::OnOK();
+}

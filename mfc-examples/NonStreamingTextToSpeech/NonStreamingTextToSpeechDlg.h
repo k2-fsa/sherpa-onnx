@@ -31,4 +31,12 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
+       public:
+        CEdit my_hint_;
+        CEdit speaker_id_;
+        CEdit speed_;
+        void Init();
+        void InitHint();
+        CButton generate_btn_;
+        afx_msg void OnBnClickedOk();
 };
