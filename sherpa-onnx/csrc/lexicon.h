@@ -17,7 +17,8 @@ namespace sherpa_onnx {
 class Lexicon {
  public:
   Lexicon(const std::string &lexicon, const std::string &tokens,
-          const std::string &punctuations, const std::string &language);
+          const std::string &punctuations, const std::string &language,
+          bool debug = false);
 
   std::vector<int64_t> ConvertTextToTokenIds(const std::string &text) const;
 
@@ -45,6 +46,7 @@ class Lexicon {
   std::unordered_set<std::string> punctuations_;
   std::unordered_map<std::string, int32_t> token2id_;
   Language language_;
+  bool debug_;
   //
 };
 
