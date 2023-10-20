@@ -28,6 +28,11 @@ Usage examples:
     Please see
     https://github.com/k2-fsa/sherpa-onnx/tree/master/go-api-examples/streaming-decode-files
 
+ 4. Convert text to speech using a non-streaming model
+
+    Please see
+    https://github.com/k2-fsa/sherpa-onnx/tree/master/go-api-examples/non-streaming-tts
+
 [sherpa-onnx]: https://github.com/k2-fsa/sherpa-onnx
 [onnxruntime]: https://github.com/microsoft/onnxruntime
 [Next-gen Kaldi]: https://github.com/k2-fsa/
@@ -487,4 +492,111 @@ func (s *OfflineStream) GetResult() *OfflineRecognizerResult {
 	result.Text = C.GoString(p.text)
 
 	return result
+}
+
+// Configuration for offline/non-streaming text-to-speech (TTS).
+//
+// Please refer to
+// https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
+// to download pre-trained models
+type OfflineTtsVitsModelConfig struct {
+	Model       string  // Path to the VITS onnx model
+	Lexicon     string  // Path to lexicon.txt
+	Tokens      string  // Path to tokens.txt
+	NoiseScale  float32 // noise scale for vits models. Please use 0.667 in general
+	NoiseScaleW float32 // noise scale for vits models. Please use 0.8 in general
+	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
+}
+
+type OfflineTtsModelConfig struct {
+	Vits OfflineTtsVitsModelConfig
+
+	// Number of threads to use for neural network computation
+	NumThreads int
+
+	// 1 to print model meta information while loading
+	Debug int
+
+	// Optional. Valid values: cpu, cuda, coreml
+	Provider string
+}
+
+type OfflineTtsConfig struct {
+	Model OfflineTtsModelConfig
+}
+
+type GeneratedAudio struct {
+	// Normalized samples in the range [-1, 1]
+	Samples []float32
+
+	SampleRate int
+}
+
+// The offline tts class. It wraps a pointer from C.
+type OfflineTts struct {
+	impl *C.struct_SherpaOnnxOfflineTts
+}
+
+// Free the internal pointer inside the tts to avoid memory leak.
+func DeleteOfflineTts(tts *OfflineTts) {
+	C.SherpaOnnxDestroyOfflineTts(tts.impl)
+	tts.impl = nil
+}
+
+// The user is responsible to invoke [DeleteOfflineTts]() to free
+// the returned tts to avoid memory leak
+func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
+	c := C.struct_SherpaOnnxOfflineTtsConfig{}
+	c.model.vits.model = C.CString(config.Model.Vits.Model)
+	defer C.free(unsafe.Pointer(c.model.vits.model))
+
+	c.model.vits.lexicon = C.CString(config.Model.Vits.Lexicon)
+	defer C.free(unsafe.Pointer(c.model.vits.lexicon))
+
+	c.model.vits.tokens = C.CString(config.Model.Vits.Tokens)
+	defer C.free(unsafe.Pointer(c.model.vits.tokens))
+
+	c.model.vits.noise_scale = C.float(config.Model.Vits.NoiseScale)
+	c.model.vits.noise_scale_w = C.float(config.Model.Vits.NoiseScaleW)
+	c.model.vits.length_scale = C.float(config.Model.Vits.LengthScale)
+
+	c.model.num_threads = C.int(config.Model.NumThreads)
+	c.model.debug = C.int(config.Model.Debug)
+
+	c.model.provider = C.CString(config.Model.Provider)
+	defer C.free(unsafe.Pointer(c.model.provider))
+
+	tts := &OfflineTts{}
+	tts.impl = C.SherpaOnnxCreateOfflineTts(&c)
+
+	return tts
+}
+
+func (tts *OfflineTts) Generate(text string, sid int) *GeneratedAudio {
+	s := C.CString(text)
+	defer C.free(unsafe.Pointer(s))
+
+	audio := C.SherpaOnnxOfflineTtsGenerate(tts.impl, s, C.int(sid))
+	defer C.SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
+
+	ans := &GeneratedAudio{}
+	ans.SampleRate = int(audio.sample_rate)
+	n := int(audio.n)
+	ans.Samples = make([]float32, n)
+	samples := (*[1 << 28]C.float)(unsafe.Pointer(audio.samples))[:n:n]
+	// copy(ans.Samples, samples)
+	for i := 0; i < n; i++ {
+		ans.Samples[i] = float32(samples[i])
+	}
+
+	return ans
+}
+
+func (audio *GeneratedAudio) Save(filename string) int {
+	s := C.CString(filename)
+	defer C.free(unsafe.Pointer(s))
+
+	ok := int(C.SherpaOnnxWriteWave((*C.float)(&audio.Samples[0]), C.int(len(audio.Samples)), C.int(audio.SampleRate), s))
+
+	return ok
 }

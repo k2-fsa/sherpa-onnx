@@ -648,8 +648,9 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
 // The saved wave file contains a single channel and has 16-bit samples.
 //
 // Return 1 if the write succeeded; return 0 on failure.
-SHERPA_ONNX_API int32_t SherpaOnnxDestroyOfflineWriteWave(
-    const SherpaOnnxGeneratedAudio *p, const char *filename);
+SHERPA_ONNX_API int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
+                                            int32_t sample_rate,
+                                            const char *filename);
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop

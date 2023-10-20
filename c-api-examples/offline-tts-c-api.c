@@ -188,7 +188,7 @@ int32_t main(int32_t argc, char *argv[]) {
   const SherpaOnnxGeneratedAudio *audio =
       SherpaOnnxOfflineTtsGenerate(tts, text, sid);
 
-  SherpaOnnxDestroyOfflineWriteWave(audio, filename);
+  SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate, filename);
 
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
   SherpaOnnxDestroyOfflineTts(tts);

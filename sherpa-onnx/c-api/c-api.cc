@@ -595,7 +595,7 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
   }
 }
 
-int32_t SherpaOnnxDestroyOfflineWriteWave(const SherpaOnnxGeneratedAudio *p,
-                                          const char *filename) {
-  return sherpa_onnx::WriteWave(filename, p->sample_rate, p->samples, p->n);
+int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
+                            int32_t sample_rate, const char *filename) {
+  return sherpa_onnx::WriteWave(filename, sample_rate, samples, n);
 }
