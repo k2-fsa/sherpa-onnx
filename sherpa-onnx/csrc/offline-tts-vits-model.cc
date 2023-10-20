@@ -26,7 +26,7 @@ class OfflineTtsVitsModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-  Ort::Value Run(Ort::Value x, int64_t sid) {
+  Ort::Value Run(Ort::Value x, int64_t sid, float speed) {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -47,6 +47,10 @@ class OfflineTtsVitsModel::Impl {
     float noise_scale = config_.vits.noise_scale;
     float length_scale = config_.vits.length_scale;
     float noise_scale_w = config_.vits.noise_scale_w;
+
+    if (speed != 1 && speed > 0) {
+      length_scale = 1. / speed;
+    }
 
     Ort::Value noise_scale_tensor =
         Ort::Value::CreateTensor(memory_info, &noise_scale, 1, &scale_shape, 1);
@@ -139,8 +143,9 @@ OfflineTtsVitsModel::OfflineTtsVitsModel(const OfflineTtsModelConfig &config)
 
 OfflineTtsVitsModel::~OfflineTtsVitsModel() = default;
 
-Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, int64_t sid /*=0*/) {
-  return impl_->Run(std::move(x), sid);
+Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, int64_t sid /*=0*/,
+                                    float speed /*= 1.0*/) {
+  return impl_->Run(std::move(x), sid, speed);
 }
 
 int32_t OfflineTtsVitsModel::SampleRate() const { return impl_->SampleRate(); }

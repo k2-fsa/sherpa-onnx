@@ -49,7 +49,7 @@ func main() {
 
 	log.Println("Start generating!")
 
-	audio := tts.Generate(text, sid)
+	audio := tts.Generate(text, sid, 1.0)
 
 	log.Println("Done!")
 

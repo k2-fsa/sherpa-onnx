@@ -29,7 +29,7 @@ class OfflineTtsVitsModel {
    * @return Return a float32 tensor containing audio samples. You can flatten
    *         it to a 1-D tensor.
    */
-  Ort::Value Run(Ort::Value x, int64_t sid = 0);
+  Ort::Value Run(Ort::Value x, int64_t sid = 0, float speed = 1.0);
 
   // Sample rate of the generated audio
   int32_t SampleRate() const;

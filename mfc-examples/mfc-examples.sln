@@ -7,6 +7,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StreamingSpeechRecognition"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NonStreamingSpeechRecognition", "NonStreamingSpeechRecognition\NonStreamingSpeechRecognition.vcxproj", "{0298EE00-7AF2-4A66-9D5F-AA0D92AC871D}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NonStreamingTextToSpeech", "NonStreamingTextToSpeech\NonStreamingTextToSpeech.vcxproj", "{9A5F2CCC-1AAB-4F7F-A608-F0B512023405}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -31,6 +33,14 @@ Global
 		{0298EE00-7AF2-4A66-9D5F-AA0D92AC871D}.Release|x64.Build.0 = Release|x64
 		{0298EE00-7AF2-4A66-9D5F-AA0D92AC871D}.Release|x86.ActiveCfg = Release|Win32
 		{0298EE00-7AF2-4A66-9D5F-AA0D92AC871D}.Release|x86.Build.0 = Release|Win32
+		{9A5F2CCC-1AAB-4F7F-A608-F0B512023405}.Debug|x64.ActiveCfg = Debug|x64
+		{9A5F2CCC-1AAB-4F7F-A608-F0B512023405}.Debug|x64.Build.0 = Debug|x64
+		{9A5F2CCC-1AAB-4F7F-A608-F0B512023405}.Debug|x86.ActiveCfg = Debug|Win32
+		{9A5F2CCC-1AAB-4F7F-A608-F0B512023405}.Debug|x86.Build.0 = Debug|Win32
+		{9A5F2CCC-1AAB-4F7F-A608-F0B512023405}.Release|x64.ActiveCfg = Release|x64
+		{9A5F2CCC-1AAB-4F7F-A608-F0B512023405}.Release|x64.Build.0 = Release|x64
+		{9A5F2CCC-1AAB-4F7F-A608-F0B512023405}.Release|x86.ActiveCfg = Release|Win32
+		{9A5F2CCC-1AAB-4F7F-A608-F0B512023405}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

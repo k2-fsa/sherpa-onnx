@@ -18,8 +18,8 @@ class OfflineTtsImpl {
 
   static std::unique_ptr<OfflineTtsImpl> Create(const OfflineTtsConfig &config);
 
-  virtual GeneratedAudio Generate(const std::string &text,
-                                  int64_t sid = 0) const = 0;
+  virtual GeneratedAudio Generate(const std::string &text, int64_t sid = 0,
+                                  float speed = 1.0) const = 0;
 };
 
 }  // namespace sherpa_onnx

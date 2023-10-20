@@ -24,8 +24,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
                  model_->Punctuations(), model_->Language(),
                  config.model.debug) {}
 
-  GeneratedAudio Generate(const std::string &text,
-                          int64_t sid = 0) const override {
+  GeneratedAudio Generate(const std::string &text, int64_t sid = 0,
+                          float speed = 1.0) const override {
     int32_t num_speakers = model_->NumSpeakers();
     if (num_speakers == 0 && sid != 0) {
       SHERPA_ONNX_LOGE(
@@ -66,7 +66,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     Ort::Value x_tensor = Ort::Value::CreateTensor(
         memory_info, x.data(), x.size(), x_shape.data(), x_shape.size());
 
-    Ort::Value audio = model_->Run(std::move(x_tensor), sid);
+    Ort::Value audio = model_->Run(std::move(x_tensor), sid, speed);
 
     std::vector<int64_t> audio_shape =
         audio.GetTensorTypeAndShapeInfo().GetShape();
