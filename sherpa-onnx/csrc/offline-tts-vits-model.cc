@@ -48,8 +48,8 @@ class OfflineTtsVitsModel::Impl {
     float length_scale = config_.vits.length_scale;
     float noise_scale_w = config_.vits.noise_scale_w;
 
-    if (speed != 1) {
-      length_scale = speed;
+    if (speed != 1 && speed > 0) {
+      length_scale = 1. / speed;
     }
 
     Ort::Value noise_scale_tensor =
