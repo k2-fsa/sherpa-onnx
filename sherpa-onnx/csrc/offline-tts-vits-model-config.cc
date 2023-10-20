@@ -17,7 +17,7 @@ void OfflineTtsVitsModelConfig::Register(ParseOptions *po) {
   po->Register("vits-noise-scale-w", &noise_scale_w,
                "noise_scale_w for VITS models");
   po->Register("vits-length-scale", &length_scale,
-               "length_scale for VITS models");
+               "Speech speed. Larger->Slower; Smaller->faster.");
 }
 
 bool OfflineTtsVitsModelConfig::Validate() const {
