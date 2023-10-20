@@ -150,6 +150,21 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsEnglish(
   ToLowerCase(&text);
 
   std::vector<std::string> words = SplitUtf8(text);
+
+  if (debug_) {
+    fprintf(stderr, "Input text (lowercase) in string: %s\n", text.c_str());
+    fprintf(stderr, "Input text in bytes:");
+    for (uint8_t c : text) {
+      fprintf(stderr, " %02x", c);
+    }
+    fprintf(stderr, "\n");
+    fprintf(stderr, "After splitting to words:");
+    for (const auto &w : words) {
+      fprintf(stderr, " %s", w.c_str());
+    }
+    fprintf(stderr, "\n");
+  }
+
   int32_t blank = token2id_.at(" ");
 
   std::vector<int64_t> ans;
