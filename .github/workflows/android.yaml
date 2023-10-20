@@ -103,7 +103,7 @@ jobs:
 
           ls -lh
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: sherpa-onnx-android-libs
           path: ./jniLibs

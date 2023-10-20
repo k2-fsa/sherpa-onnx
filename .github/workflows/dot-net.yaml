@@ -42,7 +42,7 @@ jobs:
           ls -lh ./wheelhouse/*.whl
           unzip -l ./wheelhouse/*.whl
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.os }}-wheels
           path: ./wheelhouse/*.whl
@@ -119,7 +119,7 @@ jobs:
           ./run.sh
           ls -lh packages
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         name: upload nuget packages
         with:
           name: nuget-packages

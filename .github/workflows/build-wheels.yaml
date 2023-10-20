@@ -61,7 +61,7 @@ jobs:
           rm -rf ./wheelhouse
           mv ./wheels ./wheelhouse
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
 

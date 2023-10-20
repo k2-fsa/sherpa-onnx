@@ -140,7 +140,7 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: sherpa-onnx-*linux-arm-gnueabihf.tar.bz2
 
