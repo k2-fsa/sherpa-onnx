@@ -45,4 +45,5 @@ protected:
 
 		SherpaOnnxOfflineTts *tts_;
         CEdit my_text_;
+                CEdit output_filename_;
 };

@@ -146,6 +146,7 @@ void CNonStreamingTextToSpeechDlg::DoDataExchange(CDataExchange* pDX)
         DDX_Control(pDX, IDC_SPEED, speed_);
         DDX_Control(pDX, IDOK, generate_btn_);
         DDX_Control(pDX, IDC_TEXT, my_text_);
+        DDX_Control(pDX, IDC_OUTPUT_FILENAME, output_filename_);
 }
 
 BEGIN_MESSAGE_MAP(CNonStreamingTextToSpeechDlg, CDialogEx)
@@ -251,6 +252,7 @@ void CNonStreamingTextToSpeechDlg::Init() {
     InitHint();
     speaker_id_.SetWindowText(Utf8ToUtf16("0").c_str());
     speed_.SetWindowText(Utf8ToUtf16("1.0").c_str());
+    output_filename_.SetWindowText(Utf8ToUtf16("./generated.wav").c_str());
 
 	bool ok = true;
     std::string error_message = "--------------------";
@@ -313,6 +315,10 @@ void CNonStreamingTextToSpeechDlg::Init() {
  }
 
 
+ static std::string ToString(const CString &s) {
+    CT2CA pszConvertedAnsiString( s);
+    return std::string(pszConvertedAnsiString);
+ }
 
 void CNonStreamingTextToSpeechDlg::OnBnClickedOk() {
   // TODO: Add your control notification handler code here
@@ -325,32 +331,32 @@ void CNonStreamingTextToSpeechDlg::OnBnClickedOk() {
   }
 
   speed_.GetWindowText(s);
-  float speed = _ttof(s); 
+  float speed = static_cast<float>(_ttof(s)); 
   if (speed < 0) {
     AfxMessageBox(Utf8ToUtf16("Please input a valid speed").c_str(), MB_OK);
     return;
   }
 
   my_text_.GetWindowText(s);
-  CT2CA pszConvertedAnsiString(s);
-  std::string ss(pszConvertedAnsiString);
+  std::string ss = ToString(s);
   if (ss.empty()) {
     AfxMessageBox(Utf8ToUtf16("Please input your text").c_str(), MB_OK);
     return;
   }
 
-const SherpaOnnxGeneratedAudio *audio =
+  const SherpaOnnxGeneratedAudio *audio =
       SherpaOnnxOfflineTtsGenerate(tts_, ss.c_str(), speaker_id, speed);
-  std::string filename = "./generated.wav";
-int ok = SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate,
+  output_filename_.GetWindowText(s);
+  std::string filename = ToString(s);
+  int ok = SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate,
                     filename.c_str());
 
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
 
   if (ok) {
-    AfxMessageBox(Utf8ToUtf16("Saved to ./generated.wav successfully").c_str(), MB_OK);
+    AfxMessageBox(Utf8ToUtf16(std::string("Saved to ") + filename + " successfully").c_str(), MB_OK);
   } else {
-    AfxMessageBox(Utf8ToUtf16("Failed to save to ./generated.wav").c_str(), MB_OK);
+    AfxMessageBox(Utf8ToUtf16(std::string("Failed to save to ") + filename).c_str(), MB_OK);
   }
 
   //CDialogEx::OnOK();
