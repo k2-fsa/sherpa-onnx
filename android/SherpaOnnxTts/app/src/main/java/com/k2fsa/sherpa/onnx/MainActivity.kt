@@ -45,6 +45,8 @@ class MainActivity : AppCompatActivity() {
         // we will change sampleText here in the CI
         val sampleText = ""
         text.setText(sampleText)
+
+        play.isEnabled = false;
     }
 
     fun onClickGenerate() {
