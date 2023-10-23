@@ -6,10 +6,16 @@
 #define SHERPA_ONNX_CSRC_LEXICON_H_
 
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
 
 namespace sherpa_onnx {
 
@@ -19,6 +25,12 @@ class Lexicon {
   Lexicon(const std::string &lexicon, const std::string &tokens,
           const std::string &punctuations, const std::string &language,
           bool debug = false);
+
+#if __ANDROID_API__ >= 9
+  Lexicon(AAssetManager *mgr, const std::string &lexicon,
+          const std::string &tokens, const std::string &punctuations,
+          const std::string &language, bool debug = false);
+#endif
 
   std::vector<int64_t> ConvertTextToTokenIds(const std::string &text) const;
 
@@ -30,8 +42,8 @@ class Lexicon {
       const std::string &text) const;
 
   void InitLanguage(const std::string &lang);
-  void InitTokens(const std::string &tokens);
-  void InitLexicon(const std::string &lexicon);
+  void InitTokens(std::istream &is);
+  void InitLexicon(std::istream &is);
   void InitPunctuations(const std::string &punctuations);
 
  private:

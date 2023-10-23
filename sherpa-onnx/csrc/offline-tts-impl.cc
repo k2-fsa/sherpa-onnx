@@ -16,4 +16,12 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
   return std::make_unique<OfflineTtsVitsImpl>(config);
 }
 
+#if __ANDROID_API__ >= 9
+std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
+    AAssetManager *mgr, const OfflineTtsConfig &config) {
+  // TODO(fangjun): Support other types
+  return std::make_unique<OfflineTtsVitsImpl>(mgr, config);
+}
+#endif
+
 }  // namespace sherpa_onnx

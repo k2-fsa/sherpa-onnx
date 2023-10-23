@@ -26,6 +26,11 @@ std::string OfflineTtsConfig::ToString() const {
 OfflineTts::OfflineTts(const OfflineTtsConfig &config)
     : impl_(OfflineTtsImpl::Create(config)) {}
 
+#if __ANDROID_API__ >= 9
+OfflineTts::OfflineTts(AAssetManager *mgr, const OfflineTtsConfig &config)
+    : impl_(OfflineTtsImpl::Create(mgr, config)) {}
+#endif
+
 OfflineTts::~OfflineTts() = default;
 
 GeneratedAudio OfflineTts::Generate(const std::string &text, int64_t sid /*=0*/,

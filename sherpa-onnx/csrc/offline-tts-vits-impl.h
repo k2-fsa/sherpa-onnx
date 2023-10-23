@@ -9,6 +9,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
@@ -23,6 +28,14 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
         lexicon_(config.model.vits.lexicon, config.model.vits.tokens,
                  model_->Punctuations(), model_->Language(),
                  config.model.debug) {}
+
+#if __ANDROID_API__ >= 9
+  OfflineTtsVitsImpl(AAssetManager *mgr, const OfflineTtsConfig &config)
+      : model_(std::make_unique<OfflineTtsVitsModel>(mgr, config.model)),
+        lexicon_(mgr, config.model.vits.lexicon, config.model.vits.tokens,
+                 model_->Punctuations(), model_->Language(),
+                 config.model.debug) {}
+#endif
 
   GeneratedAudio Generate(const std::string &text, int64_t sid = 0,
                           float speed = 1.0) const override {

@@ -21,10 +21,12 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
+#include "sherpa-onnx/csrc/wave-writer.h"
 
 #define SHERPA_ONNX_EXTERN_C extern "C"
 
@@ -124,7 +126,7 @@ class SherpaOnnxVad {
 
   void Pop() { vad_.Pop(); }
 
-  void Clear() { vad_.Clear();}
+  void Clear() { vad_.Clear(); }
 
   const SpeechSegment &Front() const { return vad_.Front(); }
 
@@ -491,7 +493,171 @@ static VadModelConfig GetVadModelConfig(JNIEnv *env, jobject config) {
   return ans;
 }
 
+class SherpaOnnxOfflineTts {
+ public:
+#if __ANDROID_API__ >= 9
+  SherpaOnnxOfflineTts(AAssetManager *mgr, const OfflineTtsConfig &config)
+      : tts_(mgr, config) {}
+#endif
+  explicit SherpaOnnxOfflineTts(const OfflineTtsConfig &config)
+      : tts_(config) {}
+
+  GeneratedAudio Generate(const std::string &text, int64_t sid = 0,
+                          float speed = 1.0) const {
+    return tts_.Generate(text, sid, speed);
+  }
+
+ private:
+  OfflineTts tts_;
+};
+
+static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
+  OfflineTtsConfig ans;
+
+  jclass cls = env->GetObjectClass(config);
+  jfieldID fid;
+
+  fid = env->GetFieldID(cls, "model",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineTtsModelConfig;");
+  jobject model = env->GetObjectField(config, fid);
+  jclass model_config_cls = env->GetObjectClass(model);
+
+  fid = env->GetFieldID(model_config_cls, "vits",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineTtsVitsModelConfig;");
+  jobject vits = env->GetObjectField(model, fid);
+  jclass vits_cls = env->GetObjectClass(vits);
+
+  fid = env->GetFieldID(vits_cls, "model", "Ljava/lang/String;");
+  jstring s = (jstring)env->GetObjectField(vits, fid);
+  const char *p = env->GetStringUTFChars(s, nullptr);
+  ans.model.vits.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(vits_cls, "lexicon", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(vits, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.vits.lexicon = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(vits_cls, "tokens", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(vits, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.vits.tokens = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(vits_cls, "noiseScale", "F");
+  ans.model.vits.noise_scale = env->GetFloatField(vits, fid);
+
+  fid = env->GetFieldID(vits_cls, "noiseScaleW", "F");
+  ans.model.vits.noise_scale_w = env->GetFloatField(vits, fid);
+
+  fid = env->GetFieldID(vits_cls, "lengthScale", "F");
+  ans.model.vits.length_scale = env->GetFloatField(vits, fid);
+
+  fid = env->GetFieldID(model_config_cls, "numThreads", "I");
+  ans.model.num_threads = env->GetIntField(model, fid);
+
+  fid = env->GetFieldID(model_config_cls, "debug", "Z");
+  ans.model.debug = env->GetBooleanField(model, fid);
+
+  fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.provider = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  return ans;
+}
+
 }  // namespace sherpa_onnx
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_new(
+    JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
+#if __ANDROID_API__ >= 9
+  AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
+  if (!mgr) {
+    SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+  }
+#endif
+  auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  auto tts = new sherpa_onnx::SherpaOnnxOfflineTts(
+#if __ANDROID_API__ >= 9
+      mgr,
+#endif
+      config);
+
+  return (jlong)tts;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile(
+    JNIEnv *env, jobject /*obj*/, jobject _config) {
+  auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  auto tts = new sherpa_onnx::SherpaOnnxOfflineTts(config);
+
+  return (jlong)tts;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_delete(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  delete reinterpret_cast<sherpa_onnx::SherpaOnnxOfflineTts *>(ptr);
+}
+
+// see
+// https://stackoverflow.com/questions/29043872/android-jni-return-multiple-variables
+static jobject NewInteger(JNIEnv *env, int32_t value) {
+  jclass cls = env->FindClass("java/lang/Integer");
+  jmethodID constructor = env->GetMethodID(cls, "<init>", "(I)V");
+  return env->NewObject(cls, constructor, value);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jobjectArray JNICALL
+Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(JNIEnv *env, jobject /*obj*/,
+                                                   jlong ptr, jstring text,
+                                                   jint sid, jfloat speed) {
+  const char *p_text = env->GetStringUTFChars(text, nullptr);
+  SHERPA_ONNX_LOGE("string is: %s", p_text);
+
+  auto audio =
+      reinterpret_cast<sherpa_onnx::SherpaOnnxOfflineTts *>(ptr)->Generate(
+          p_text, sid, speed);
+
+  jfloatArray samples_arr = env->NewFloatArray(audio.samples.size());
+  env->SetFloatArrayRegion(samples_arr, 0, audio.samples.size(),
+                           audio.samples.data());
+
+  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
+      2, env->FindClass("java/lang/Object"), nullptr);
+
+  env->SetObjectArrayElement(obj_arr, 0, samples_arr);
+  env->SetObjectArrayElement(obj_arr, 1, NewInteger(env, audio.sample_rate));
+
+  env->ReleaseStringUTFChars(text, p_text);
+
+  return obj_arr;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_GeneratedAudio_saveImpl(
+    JNIEnv *env, jobject /*obj*/, jstring filename, jfloatArray samples,
+    jint sample_rate) {
+  const char *p_filename = env->GetStringUTFChars(filename, nullptr);
+
+  jfloat *p = env->GetFloatArrayElements(samples, nullptr);
+  jsize n = env->GetArrayLength(samples);
+
+  bool ok = sherpa_onnx::WriteWave(p_filename, sample_rate, p, n);
+
+  env->ReleaseStringUTFChars(filename, p_filename);
+  env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
+
+  return ok;
+}
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_Vad_new(
@@ -513,6 +679,7 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_Vad_new(
   return (jlong)model;
 }
 
+SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_Vad_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
   auto config = sherpa_onnx::GetVadModelConfig(env, _config);
@@ -560,18 +727,10 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_pop(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_clear(JNIEnv *env,
-                                                          jobject /*obj*/,
-                                                          jlong ptr) {
+                                                            jobject /*obj*/,
+                                                            jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxVad *>(ptr);
   model->Clear();
-}
-
-// see
-// https://stackoverflow.com/questions/29043872/android-jni-return-multiple-variables
-static jobject NewInteger(JNIEnv *env, int32_t value) {
-  jclass cls = env->FindClass("java/lang/Integer");
-  jmethodID constructor = env->GetMethodID(cls, "<init>", "(I)V");
-  return env->NewObject(cls, constructor, value);
 }
 
 SHERPA_ONNX_EXTERN_C

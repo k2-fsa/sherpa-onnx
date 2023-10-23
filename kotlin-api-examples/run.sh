@@ -6,21 +6,24 @@
 
 set -e
 
+
 cd ..
 mkdir -p build
 cd build
 
-cmake \
-  -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
-  -DSHERPA_ONNX_ENABLE_TESTS=OFF \
-  -DSHERPA_ONNX_ENABLE_CHECK=OFF \
-  -DBUILD_SHARED_LIBS=ON \
-  -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-  -DSHERPA_ONNX_ENABLE_JNI=ON \
-  ..
+if [ ! -f ../build/lib/libsherpa-onnx-jni.dylib ]; then
+  cmake \
+    -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+    -DSHERPA_ONNX_ENABLE_TESTS=OFF \
+    -DSHERPA_ONNX_ENABLE_CHECK=OFF \
+    -DBUILD_SHARED_LIBS=ON \
+    -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+    -DSHERPA_ONNX_ENABLE_JNI=ON \
+    ..
 
-make -j4
-ls -lh lib
+  make -j4
+  ls -lh lib
+fi
 
 export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
 
@@ -31,7 +34,7 @@ if [ ! -f ./sherpa-onnx-streaming-zipformer-en-2023-02-21/tokens.txt ]; then
   git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21
 fi
 
-kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt faked-asset-manager.kt
+kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt faked-asset-manager.kt Tts.kt
 
 ls -lh main.jar
 
