@@ -601,6 +601,12 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile(
   return (jlong)tts;
 }
 
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_delete(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  delete reinterpret_cast<sherpa_onnx::SherpaOnnxOfflineTts *>(ptr);
+}
+
 // see
 // https://stackoverflow.com/questions/29043872/android-jni-return-multiple-variables
 static jobject NewInteger(JNIEnv *env, int32_t value) {
@@ -614,7 +620,6 @@ JNIEXPORT jobjectArray JNICALL
 Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(JNIEnv *env, jobject /*obj*/,
                                                    jlong ptr, jstring text,
                                                    jint sid, jfloat speed) {
-  SHERPA_ONNX_LOGE("get string");
   const char *p_text = env->GetStringUTFChars(text, nullptr);
   SHERPA_ONNX_LOGE("string is: %s", p_text);
 

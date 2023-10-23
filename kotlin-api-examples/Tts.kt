@@ -40,7 +40,7 @@ class OfflineTts(
     assetManager: AssetManager? = null,
     var config: OfflineTtsConfig,
 ) {
-    private val ptr: Long
+    private var ptr: Long
 
     init {
         if (assetManager != null) {
@@ -58,6 +58,23 @@ class OfflineTts(
       var objArray = generateImpl(ptr, text=text, sid=sid, speed=speed)
       return GeneratedAudio(samples=objArray[0] as FloatArray,
                             sampleRate=objArray[1] as Int)
+    }
+
+    fun allocate(assetManager: AssetManager? = null) {
+      if (ptr == 0L) {
+        if (assetManager != null) {
+          ptr = new(assetManager, config)
+        } else {
+          ptr = newFromFile(config)
+        }
+      }
+    }
+
+    fun free() {
+      if (ptr != 0L) {
+        delete(ptr)
+        ptr = 0
+      }
     }
 
     protected fun finalize() {
