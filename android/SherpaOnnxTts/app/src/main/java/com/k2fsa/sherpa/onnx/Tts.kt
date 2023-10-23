@@ -24,10 +24,11 @@ data class OfflineTtsConfig(
 )
 
 class GeneratedAudio(
-    val samples : FloatArray,
+    val samples: FloatArray,
     val sampleRate: Int,
 ) {
-    fun save(filename: String) = saveImpl(filename=filename, samples=samples, sampleRate=sampleRate)
+    fun save(filename: String) =
+        saveImpl(filename = filename, samples = samples, sampleRate = sampleRate)
 
     private external fun saveImpl(
         filename: String,
@@ -55,26 +56,28 @@ class OfflineTts(
         sid: Int = 0,
         speed: Float = 1.0f
     ): GeneratedAudio {
-      var objArray = generateImpl(ptr, text=text, sid=sid, speed=speed)
-      return GeneratedAudio(samples=objArray[0] as FloatArray,
-                            sampleRate=objArray[1] as Int)
+        var objArray = generateImpl(ptr, text = text, sid = sid, speed = speed)
+        return GeneratedAudio(
+            samples = objArray[0] as FloatArray,
+            sampleRate = objArray[1] as Int
+        )
     }
 
     fun allocate(assetManager: AssetManager? = null) {
-      if (ptr == 0L) {
-        if (assetManager != null) {
-          ptr = new(assetManager, config)
-        } else {
-          ptr = newFromFile(config)
+        if (ptr == 0L) {
+            if (assetManager != null) {
+                ptr = new(assetManager, config)
+            } else {
+                ptr = newFromFile(config)
+            }
         }
-      }
     }
 
     fun free() {
-      if (ptr != 0L) {
-        delete(ptr)
-        ptr = 0
-      }
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
 
     protected fun finalize() {
