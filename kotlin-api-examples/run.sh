@@ -11,7 +11,7 @@ cd ..
 mkdir -p build
 cd build
 
-if [ ! -f ../build/lib/libsherpa-onnx-jni.dylib ]; then
+if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa-onnx-jni.so ]]; then
   cmake \
     -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
@@ -32,6 +32,11 @@ cd ../kotlin-api-examples
 if [ ! -f ./sherpa-onnx-streaming-zipformer-en-2023-02-21/tokens.txt ]; then
   git lfs install
   git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21
+fi
+
+if [ ! -f ./vits-zh-aishell3/tokens.txt ]; then
+  git lfs install
+  git clone https://huggingface.co/csukuangfj/vits-zh-aishell3
 fi
 
 kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt faked-asset-manager.kt Tts.kt

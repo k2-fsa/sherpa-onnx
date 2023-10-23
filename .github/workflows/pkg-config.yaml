@@ -33,7 +33,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  linux:
+  pkg_config:
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.lib_type }}
     strategy:
