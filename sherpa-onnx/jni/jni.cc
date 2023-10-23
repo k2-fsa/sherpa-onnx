@@ -21,6 +21,7 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
@@ -124,7 +125,7 @@ class SherpaOnnxVad {
 
   void Pop() { vad_.Pop(); }
 
-  void Clear() { vad_.Clear();}
+  void Clear() { vad_.Clear(); }
 
   const SpeechSegment &Front() const { return vad_.Front(); }
 
@@ -491,6 +492,23 @@ static VadModelConfig GetVadModelConfig(JNIEnv *env, jobject config) {
   return ans;
 }
 
+class SherpaOnnxOfflineTts {
+ public:
+#if __ANDROID_API__ >= 9
+  SherpaOnnxOfflineTts(AAssetManager *mgr, const OfflineTtsConfig &config)
+      : tts_(mgr, config) {}
+#endif
+  SherpaOnnxOfflineTts(const OfflineTtsConfig &config) : tts_(config) {}
+
+  GeneratedAudio Generate(const std::string &text, int64_t sid = 0,
+                          float speed = 1.0) const {
+    return tts_.Generate(text, sid, speed);
+  }
+
+ private:
+  OfflineTts tts_;
+};
+
 }  // namespace sherpa_onnx
 
 SHERPA_ONNX_EXTERN_C
@@ -560,8 +578,8 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_pop(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_clear(JNIEnv *env,
-                                                          jobject /*obj*/,
-                                                          jlong ptr) {
+                                                            jobject /*obj*/,
+                                                            jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxVad *>(ptr);
   model->Clear();
 }

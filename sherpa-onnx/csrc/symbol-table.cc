@@ -7,12 +7,13 @@
 #include <cassert>
 #include <fstream>
 #include <sstream>
-#include <strstream>
 
 #include "sherpa-onnx/csrc/base64-decode.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 #if __ANDROID_API__ >= 9
+#include <strstream>
+
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif

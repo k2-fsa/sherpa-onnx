@@ -10,7 +10,15 @@
 #include <sstream>
 #include <utility>
 
+#if __ANDROID_API__ >= 9
+#include <strstream>
+
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
@@ -22,11 +30,9 @@ static void ToLowerCase(std::string *in_out) {
 
 // Note: We don't use SymbolTable here since tokens may contain a blank
 // in the first column
-static std::unordered_map<std::string, int32_t> ReadTokens(
-    const std::string &tokens) {
+static std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is) {
   std::unordered_map<std::string, int32_t> token2id;
 
-  std::ifstream is(tokens);
   std::string line;
 
   std::string sym;
@@ -80,10 +86,42 @@ Lexicon::Lexicon(const std::string &lexicon, const std::string &tokens,
                  bool debug /*= false*/)
     : debug_(debug) {
   InitLanguage(language);
-  InitTokens(tokens);
-  InitLexicon(lexicon);
+
+  {
+    std::ifstream is(tokens);
+    InitTokens(is);
+  }
+
+  {
+    std::ifstream is(lexicon);
+    InitLexicon(is);
+  }
+
   InitPunctuations(punctuations);
 }
+
+#if __ANDROID_API__ >= 9
+Lexicon::Lexicon(AAssetManager *mgr, const std::string &lexicon,
+                 const std::string &tokens, const std::string &punctuations,
+                 const std::string &language, bool debug /*= false*/)
+    : debug_(debug) {
+  InitLanguage(language);
+
+  {
+    auto buf = ReadFile(mgr, tokens);
+    std::istrstream is(buf.data(), buf.size());
+    InitTokens(is);
+  }
+
+  {
+    auto buf = ReadFile(mgr, lexicon);
+    std::istrstream is(buf.data(), buf.size());
+    InitLexicon(is);
+  }
+
+  InitPunctuations(punctuations);
+}
+#endif
 
 std::vector<int64_t> Lexicon::ConvertTextToTokenIds(
     const std::string &text) const {
@@ -192,9 +230,7 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsEnglish(
   return ans;
 }
 
-void Lexicon::InitTokens(const std::string &tokens) {
-  token2id_ = ReadTokens(tokens);
-}
+void Lexicon::InitTokens(std::istream &is) { token2id_ = ReadTokens(is); }
 
 void Lexicon::InitLanguage(const std::string &_lang) {
   std::string lang(_lang);
@@ -209,9 +245,7 @@ void Lexicon::InitLanguage(const std::string &_lang) {
   }
 }
 
-void Lexicon::InitLexicon(const std::string &lexicon) {
-  std::ifstream is(lexicon);
-
+void Lexicon::InitLexicon(std::istream &is) {
   std::string word;
   std::vector<std::string> token_list;
   std::string line;

@@ -26,6 +26,17 @@ class OfflineTtsVitsModel::Impl {
     Init(buf.data(), buf.size());
   }
 
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const OfflineTtsModelConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_WARNING),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    auto buf = ReadFile(mgr, config.vits.model);
+    Init(buf.data(), buf.size());
+  }
+#endif
+
   Ort::Value Run(Ort::Value x, int64_t sid, float speed) {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -140,6 +151,12 @@ class OfflineTtsVitsModel::Impl {
 
 OfflineTtsVitsModel::OfflineTtsVitsModel(const OfflineTtsModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+OfflineTtsVitsModel::OfflineTtsVitsModel(AAssetManager *mgr,
+                                         const OfflineTtsModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
 
 OfflineTtsVitsModel::~OfflineTtsVitsModel() = default;
 
