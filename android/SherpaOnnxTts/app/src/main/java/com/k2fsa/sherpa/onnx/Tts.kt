@@ -2,6 +2,7 @@
 package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
+import android.util.Log
 
 data class OfflineTtsVitsModelConfig(
     var model: String,
@@ -111,5 +112,50 @@ class OfflineTts(
             System.loadLibrary("sherpa-onnx-jni")
         }
     }
+}
+
+// please refer to
+// https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
+// to download models
+//
+// You can change the type as you wish
+fun getOfflineTtsConfig(type: Int, debug: Boolean = false): OfflineTtsConfig? {
+    when (type) {
+        0 -> {
+            val modelDir = "vits-vctk"
+            return OfflineTtsConfig(
+                model = OfflineTtsModelConfig(
+                    vits = OfflineTtsVitsModelConfig(
+                        model = "$modelDir/vits-vctk.onnx",
+                        lexicon = "$modelDir/lexicon.txt",
+                        tokens = "$modelDir/tokens.txt"
+                    ),
+                    numThreads = 2,
+                    debug = debug,
+                    provider = "cpu",
+                )
+            )
+        }
+
+        1 -> {
+            val modelDir = "vits-zh-aishell3"
+            return OfflineTtsConfig(
+                model = OfflineTtsModelConfig(
+                    vits = OfflineTtsVitsModelConfig(
+                        model = "$modelDir/vits-aishell3.onnx",
+                        lexicon = "$modelDir/lexicon.txt",
+                        tokens = "$modelDir/tokens.txt"
+                    ),
+                    numThreads = 2,
+                    debug = debug,
+                    provider = "cpu",
+                )
+            )
+        }
+    }
+
+    Log.i(TAG, "Unsupported type $type")
+
+    return null
 
 }

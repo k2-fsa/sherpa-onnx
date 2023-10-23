@@ -19,7 +19,7 @@
     <EditText
         android:id="@+id/sid"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="60dp"
         android:layout_marginTop="0dp"
         android:hint="@string/sid_hint"
         android:gravity="center"
@@ -40,7 +40,7 @@
     <EditText
         android:id="@+id/speed"
         android:layout_width="match_parent"
-        android:layout_height="40dp"
+        android:layout_height="60dp"
         android:layout_marginTop="0dp"
         android:hint="@string/speed_hint"
         android:gravity="center"
@@ -52,9 +52,9 @@
         android:id="@+id/text"
         android:inputType="textMultiLine"
         android:lines="8"
-        android:minLines="6"
+        android:minLines="10"
         android:gravity="top|start"
-        android:maxLines="10"
+        android:maxLines="30"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
         android:scrollbars="vertical"
@@ -65,6 +65,7 @@
 
     <Button
         android:id="@+id/generate"
+        android:textAllCaps="false"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:layout_marginTop="4dp"
@@ -72,4 +73,15 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/text" />
+
+    <Button
+        android:id="@+id/play"
+        android:textAllCaps="false"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="4dp"
+        android:text="@string/play"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/generate" />
 </androidx.constraintlayout.widget.ConstraintLayout>
