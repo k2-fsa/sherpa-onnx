@@ -95,6 +95,13 @@ def get_args():
     )
 
     parser.add_argument(
+        "--speed",
+        type=float,
+        default=1.0,
+        help="Speech speed. Larger->faster; smaller->slower",
+    )
+
+    parser.add_argument(
         "text",
         type=str,
         help="The input text to generate audio for",
@@ -122,7 +129,7 @@ def main():
     tts = sherpa_onnx.OfflineTts(tts_config)
 
     start = time.time()
-    audio = tts.generate(args.text, sid=args.sid)
+    audio = tts.generate(args.text, sid=args.sid, speed=args.speed)
     end = time.time()
 
     if len(audio.samples) == 0:
