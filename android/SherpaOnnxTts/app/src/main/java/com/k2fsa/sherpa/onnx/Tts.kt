@@ -2,7 +2,6 @@
 package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
-import android.util.Log
 
 data class OfflineTtsVitsModelConfig(
     var model: String,
@@ -154,7 +153,7 @@ fun getOfflineTtsConfig(type: Int, debug: Boolean = false): OfflineTtsConfig? {
         }
     }
 
-    Log.i(TAG, "Unsupported type $type")
+    println("Unsupported type $type")
 
     return null
 
