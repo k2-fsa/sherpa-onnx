@@ -10,6 +10,7 @@
 #include <string.h>
 
 #include "cargs.h"
+#include "portaudio.h"
 #include "sherpa-onnx/c-api/c-api.h"
 
 static struct cag_option options[] = {
@@ -111,6 +112,100 @@ static void ShowUsage() {
   exit(0);
 }
 
+int32_t g_i = 0;
+static int patestCallback(const void *inputBuffer, void *outputBuffer,
+                          unsigned long framesPerBuffer,
+                          const PaStreamCallbackTimeInfo *timeInfo,
+                          PaStreamCallbackFlags statusFlags, void *userData) {
+  SherpaOnnxGeneratedAudio *data = (SherpaOnnxGeneratedAudio *)userData;
+  float *out = (float *)outputBuffer;
+
+  (void)timeInfo; /* Prevent unused variable warnings. */
+  (void)statusFlags;
+  (void)inputBuffer;
+
+  for (int32_t i = 0; i < framesPerBuffer; i++) {
+    if (g_i >= data->n) {
+      return paComplete;
+    }
+
+    *out++ = data->samples[g_i + i]; /* left */
+  }
+  g_i += framesPerBuffer;
+
+  return paContinue;
+}
+
+static void StreamFinished(void *userData) {
+  SherpaOnnxGeneratedAudio *data = (SherpaOnnxGeneratedAudio *)userData;
+  printf("Stream Completed. Number of samples %d\n", data->n);
+}
+
+#define FRAMES_PER_BUFFER (64)
+
+PaError Play(const SherpaOnnxGeneratedAudio *audio) {
+  printf("n: %d, sample_rate: %d\n", audio->n, audio->sample_rate);
+  PaStreamParameters outputParameters;
+  PaStream *stream;
+  PaError err;
+
+  err = Pa_Initialize();
+  if (err != paNoError) goto error;
+
+  outputParameters.device =
+      Pa_GetDefaultOutputDevice(); /* default output device */
+
+  if (outputParameters.device == paNoDevice) {
+    fprintf(stderr, "Error: No default output device.\n");
+    goto error;
+  }
+
+  const PaDeviceInfo *info = Pa_GetDeviceInfo(outputParameters.device);
+  fprintf(stderr, "  Name: %s\n", info->name);
+  fprintf(stderr, "  Max output channels: %d\n", info->maxOutputChannels);
+
+  outputParameters.channelCount = 1;         /* Mono output */
+  outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+  outputParameters.suggestedLatency =
+      Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+  outputParameters.hostApiSpecificStreamInfo = NULL;
+
+  err = Pa_OpenStream(&stream, NULL, /* no input */
+                      &outputParameters, audio->sample_rate, FRAMES_PER_BUFFER,
+                      paClipOff, /* we won't output out of range samples so
+                                    don't bother clipping them */
+                      patestCallback, (void *)audio);
+  if (err != paNoError) goto error;
+
+  err = Pa_SetStreamFinishedCallback(stream, &StreamFinished);
+  if (err != paNoError) goto error;
+
+  err = Pa_StartStream(stream);
+  if (err != paNoError) goto error;
+
+  float num_seconds = audio->n / (float)audio->sample_rate;
+  printf("Play for %.3f seconds.\n", num_seconds);
+  while (Pa_IsStreamActive(stream) == 1) {
+    Pa_Sleep(0.1 * 1000);  // 100ms
+  }
+
+  err = Pa_StopStream(stream);
+  if (err != paNoError) goto error;
+  err = Pa_CloseStream(stream);
+  if (err != paNoError) goto error;
+
+  Pa_Terminate();
+  printf("Test finished.\n");
+
+  return err;
+error:
+  Pa_Terminate();
+  fprintf(stderr, "An error occurred while using the portaudio stream\n");
+  fprintf(stderr, "Error number: %d\n", err);
+  fprintf(stderr, "Error message: %s\n", Pa_GetErrorText(err));
+  return err;
+}
+
 int32_t main(int32_t argc, char *argv[]) {
   cag_option_context context;
   char identifier;
@@ -190,6 +285,7 @@ int32_t main(int32_t argc, char *argv[]) {
 
   SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate, filename);
 
+  Play(audio);
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
   SherpaOnnxDestroyOfflineTts(tts);
 
