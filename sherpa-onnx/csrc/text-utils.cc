@@ -189,7 +189,9 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
       start += num_bytes;
     } else {
       SHERPA_ONNX_LOGE("Invalid byte at position: %d",
-                       static_cast<int32_t>(begin - start));
+                       static_cast<int32_t>(start - begin));
+      // skip this byte
+      ++start;
     }
   }
 
