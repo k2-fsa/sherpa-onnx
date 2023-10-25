@@ -17,7 +17,6 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
-#include "source/utf8.h"
 
 // This file is copied/modified from
 // https://github.com/kaldi-asr/kaldi/blob/master/src/util/text-utils.cc
