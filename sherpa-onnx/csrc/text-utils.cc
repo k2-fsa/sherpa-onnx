@@ -16,7 +16,7 @@
 #include <utility>
 #include <vector>
 
-#include "source/utf8.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 // This file is copied/modified from
 // https://github.com/kaldi-asr/kaldi/blob/master/src/util/text-utils.cc
@@ -163,56 +163,39 @@ template bool SplitStringToFloats(const std::string &full, const char *delim,
                                   std::vector<double> *out);
 
 std::vector<std::string> SplitUtf8(const std::string &text) {
-  char *begin = const_cast<char *>(text.c_str());
-  char *end = begin + text.size();
+  const uint8_t *begin = reinterpret_cast<const uint8_t *>(text.c_str());
+  const uint8_t *end = begin + text.size();
 
   std::vector<std::string> ans;
-  std::string buf;
 
-  while (begin < end) {
-    uint32_t code = utf8::next(begin, end);
+  auto start = begin;
+  while (start < end) {
+    uint8_t c = *start;
+    uint8_t i = 0x80;
+    int32_t num_bytes = 0;
 
-    // 1. is punctuation
-    if (std::ispunct(code)) {
-      if (!buf.empty()) {
-        ans.push_back(std::move(buf));
-      }
-
-      char s[5] = {0};
-      utf8::append(code, s);
-      ans.push_back(s);
-      continue;
+    // see
+    // https://en.wikipedia.org/wiki/UTF-8
+    for (; c & i; i >>= 1) {
+      ++num_bytes;
     }
 
-    // 2. is space
-    if (std::isspace(code)) {
-      if (!buf.empty()) {
-        ans.push_back(std::move(buf));
-      }
-      continue;
+    if (num_bytes == 0) {
+      // this is an ascii
+      ans.emplace_back(reinterpret_cast<const char *>(start), 1);
+      ++start;
+    } else if (2 <= num_bytes && num_bytes <= 4) {
+      ans.emplace_back(reinterpret_cast<const char *>(start), num_bytes);
+      start += num_bytes;
+    } else {
+      SHERPA_ONNX_LOGE("Invalid byte at position: %d",
+                       static_cast<int32_t>(start - begin));
+      // skip this byte
+      ++start;
     }
-
-    // 3. is alpha
-    if (std::isalpha(code)) {
-      buf.push_back(code);
-      continue;
-    }
-
-    if (!buf.empty()) {
-      ans.push_back(std::move(buf));
-    }
-
-    // for others
-
-    char s[5] = {0};
-    utf8::append(code, s);
-    ans.push_back(s);
-  }
-
-  if (!buf.empty()) {
-    ans.push_back(std::move(buf));
   }
 
   return ans;
 }
+
 }  // namespace sherpa_onnx
