@@ -199,6 +199,7 @@ static std::vector<std::string> MergeCharactersIntoWords(
     }
 
     SHERPA_ONNX_LOGE("Ignore %s", w.c_str());
+    ++i;
   }
 
   if (prev != -1) {
