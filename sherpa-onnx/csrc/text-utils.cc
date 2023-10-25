@@ -162,10 +162,63 @@ template bool SplitStringToFloats(const std::string &full, const char *delim,
                                   bool omit_empty_strings,
                                   std::vector<double> *out);
 
+static std::vector<std::string> MergeCharactersIntoWords(
+    const std::vector<std::string> &words) {
+  std::vector<std::string> ans;
+
+  int32_t n = static_cast<int32_t>(words.size());
+  int32_t i = 0;
+  int32_t prev = -1;
+
+  while (i < n) {
+    const auto &w = words[i];
+    if (w.size() > 1 ||
+        (w.size() == 1 && (std::ispunct(w[0]) || std::isspace(w[0])))) {
+      if (prev != -1) {
+        std::string t;
+        for (; prev < i; ++prev) {
+          t.append(words[prev]);
+        }
+        prev = -1;
+        ans.push_back(std::move(t));
+      }
+
+      if (!std::isspace(w[0])) {
+        ans.push_back(w);
+      }
+      ++i;
+      continue;
+    }
+
+    if (w.size() == 1) {
+      if (prev == -1) {
+        prev = i;
+      }
+      ++i;
+      continue;
+    }
+
+    SHERPA_ONNX_LOGE("Ignore %s", w.c_str());
+    ++i;
+  }
+
+  if (prev != -1) {
+    std::string t;
+    for (; prev < i; ++prev) {
+      t.append(words[prev]);
+    }
+    ans.push_back(std::move(t));
+  }
+
+  return ans;
+}
+
 std::vector<std::string> SplitUtf8(const std::string &text) {
   const uint8_t *begin = reinterpret_cast<const uint8_t *>(text.c_str());
   const uint8_t *end = begin + text.size();
 
+  // Note that English words are split into single characters.
+  // We need to invoke MergeCharactersIntoWords() to merge them
   std::vector<std::string> ans;
 
   auto start = begin;
@@ -195,7 +248,7 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
     }
   }
 
-  return ans;
+  return MergeCharactersIntoWords(ans);
 }
 
 }  // namespace sherpa_onnx
