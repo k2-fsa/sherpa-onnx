@@ -163,6 +163,8 @@ template bool SplitStringToFloats(const std::string &full, const char *delim,
                                   bool omit_empty_strings,
                                   std::vector<double> *out);
 
+static bool IsPunct(char c) { return c != '\'' && std::ispunct(c); }
+
 static std::vector<std::string> MergeCharactersIntoWords(
     const std::vector<std::string> &words) {
   std::vector<std::string> ans;
@@ -174,7 +176,7 @@ static std::vector<std::string> MergeCharactersIntoWords(
   while (i < n) {
     const auto &w = words[i];
     if (w.size() > 1 ||
-        (w.size() == 1 && (std::ispunct(w[0]) || std::isspace(w[0])))) {
+        (w.size() == 1 && (IsPunct(w[0]) || std::isspace(w[0])))) {
       if (prev != -1) {
         std::string t;
         for (; prev < i; ++prev) {
