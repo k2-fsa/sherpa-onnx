@@ -83,8 +83,8 @@ static std::vector<int32_t> ConvertTokensToIds(
 
 Lexicon::Lexicon(const std::string &lexicon, const std::string &tokens,
                  const std::string &punctuations, const std::string &language,
-                 bool debug /*= false*/)
-    : debug_(debug) {
+                 bool debug /*= false*/, bool is_piper /*= false*/)
+    : debug_(debug), is_piper_(is_piper) {
   InitLanguage(language);
 
   {
@@ -103,8 +103,9 @@ Lexicon::Lexicon(const std::string &lexicon, const std::string &tokens,
 #if __ANDROID_API__ >= 9
 Lexicon::Lexicon(AAssetManager *mgr, const std::string &lexicon,
                  const std::string &tokens, const std::string &punctuations,
-                 const std::string &language, bool debug /*= false*/)
-    : debug_(debug) {
+                 const std::string &language, bool debug /*= false*/,
+                 bool is_piper /*= false*/)
+    : debug_(debug), is_piper_(is_piper) {
   InitLanguage(language);
 
   {
@@ -206,6 +207,10 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsEnglish(
   int32_t blank = token2id_.at(" ");
 
   std::vector<int64_t> ans;
+  if (is_piper_) {
+    ans.push_back(token2id_.at("^"));  // sos
+  }
+
   for (const auto &w : words) {
     if (punctuations_.count(w)) {
       ans.push_back(token2id_.at(w));
@@ -225,6 +230,10 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsEnglish(
   if (!ans.empty()) {
     // remove the last blank
     ans.resize(ans.size() - 1);
+  }
+
+  if (is_piper_) {
+    ans.push_back(token2id_.at("$"));  // eos
   }
 
   return ans;

@@ -24,12 +24,13 @@ class Lexicon {
  public:
   Lexicon(const std::string &lexicon, const std::string &tokens,
           const std::string &punctuations, const std::string &language,
-          bool debug = false);
+          bool debug = false, bool is_piper = false);
 
 #if __ANDROID_API__ >= 9
   Lexicon(AAssetManager *mgr, const std::string &lexicon,
           const std::string &tokens, const std::string &punctuations,
-          const std::string &language, bool debug = false);
+          const std::string &language, bool debug = false,
+          bool is_piper = false);
 #endif
 
   std::vector<int64_t> ConvertTextToTokenIds(const std::string &text) const;
@@ -59,7 +60,7 @@ class Lexicon {
   std::unordered_map<std::string, int32_t> token2id_;
   Language language_;
   bool debug_;
-  //
+  bool is_piper_;
 };
 
 }  // namespace sherpa_onnx
