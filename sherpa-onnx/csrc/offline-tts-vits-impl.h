@@ -26,15 +26,15 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   explicit OfflineTtsVitsImpl(const OfflineTtsConfig &config)
       : model_(std::make_unique<OfflineTtsVitsModel>(config.model)),
         lexicon_(config.model.vits.lexicon, config.model.vits.tokens,
-                 model_->Punctuations(), model_->Language(),
-                 config.model.debug) {}
+                 model_->Punctuations(), model_->Language(), config.model.debug,
+                 model_->IsPiper()) {}
 
 #if __ANDROID_API__ >= 9
   OfflineTtsVitsImpl(AAssetManager *mgr, const OfflineTtsConfig &config)
       : model_(std::make_unique<OfflineTtsVitsModel>(mgr, config.model)),
         lexicon_(mgr, config.model.vits.lexicon, config.model.vits.tokens,
-                 model_->Punctuations(), model_->Language(),
-                 config.model.debug) {}
+                 model_->Punctuations(), model_->Language(), config.model.debug,
+                 model_->IsPiper()) {}
 #endif
 
   GeneratedAudio Generate(const std::string &text, int64_t sid = 0,
@@ -43,17 +43,16 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (num_speakers == 0 && sid != 0) {
       SHERPA_ONNX_LOGE(
           "This is a single-speaker model and supports only sid 0. Given sid: "
-          "%d",
+          "%d. sid is ignored",
           static_cast<int32_t>(sid));
-      return {};
     }
 
     if (num_speakers != 0 && (sid >= num_speakers || sid < 0)) {
       SHERPA_ONNX_LOGE(
           "This model contains only %d speakers. sid should be in the range "
-          "[%d, %d]. Given: %d",
+          "[%d, %d]. Given: %d. Use sid=0",
           num_speakers, 0, num_speakers - 1, static_cast<int32_t>(sid));
-      return {};
+      sid = 0;
     }
 
     std::vector<int64_t> x = lexicon_.ConvertTextToTokenIds(text);
