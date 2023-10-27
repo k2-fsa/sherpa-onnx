@@ -77,19 +77,13 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
+        play.isEnabled = false;
         val audio = tts.generate(text = textStr, sid = sidInt, speed = speedFloat)
 
         val filename = application.filesDir.absolutePath + "/generated.wav"
         val ok = audio.samples.size > 0 && audio.save(filename)
         if (ok) {
             play.isEnabled = true
-            Toast.makeText(
-                applicationContext,
-                "Generated! Please click play to listen to it",
-                Toast.LENGTH_SHORT
-            ).show()
-        } else {
-            play.isEnabled = false
         }
     }
 
