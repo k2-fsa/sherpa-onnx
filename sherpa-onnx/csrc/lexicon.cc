@@ -129,10 +129,12 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIds(
   switch (language_) {
     case Language::kEnglish:
       return ConvertTextToTokenIdsEnglish(text);
+    case Language::kGerman:
+      return ConvertTextToTokenIdsGerman(text);
     case Language::kChinese:
       return ConvertTextToTokenIdsChinese(text);
     default:
-      SHERPA_ONNX_LOGE("Unknonw language: %d", static_cast<int32_t>(language_));
+      SHERPA_ONNX_LOGE("Unknown language: %d", static_cast<int32_t>(language_));
       exit(-1);
   }
 
@@ -246,6 +248,8 @@ void Lexicon::InitLanguage(const std::string &_lang) {
   ToLowerCase(&lang);
   if (lang == "english") {
     language_ = Language::kEnglish;
+  } else if (lang == "german") {
+    language_ = Language::kGerman;
   } else if (lang == "chinese") {
     language_ = Language::kChinese;
   } else {
@@ -269,8 +273,8 @@ void Lexicon::InitLexicon(std::istream &is) {
     ToLowerCase(&word);
 
     if (word2ids_.count(word)) {
-      SHERPA_ONNX_LOGE("Duplicated word: %s", word.c_str());
-      return;
+      SHERPA_ONNX_LOGE("Duplicated word: %s. Ignore it.", word.c_str());
+      continue;
     }
 
     while (iss >> phone) {

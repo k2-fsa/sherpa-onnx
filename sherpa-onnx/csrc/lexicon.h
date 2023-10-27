@@ -36,6 +36,11 @@ class Lexicon {
   std::vector<int64_t> ConvertTextToTokenIds(const std::string &text) const;
 
  private:
+  std::vector<int64_t> ConvertTextToTokenIdsGerman(
+      const std::string &text) const {
+    return ConvertTextToTokenIdsEnglish(text);
+  }
+
   std::vector<int64_t> ConvertTextToTokenIdsEnglish(
       const std::string &text) const;
 
@@ -50,6 +55,7 @@ class Lexicon {
  private:
   enum class Language {
     kEnglish,
+    kGerman,
     kChinese,
     kUnknown,
   };
