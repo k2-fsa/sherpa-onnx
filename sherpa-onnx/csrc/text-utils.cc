@@ -164,6 +164,27 @@ template bool SplitStringToFloats(const std::string &full, const char *delim,
                                   std::vector<double> *out);
 
 static bool IsPunct(char c) { return c != '\'' && std::ispunct(c); }
+static bool IsGermanUmlauts(const std::string &words) {
+  // ä 0xC3 0xA4
+  // ö 0xC3 0xB6
+  // ü 0xC3 0xBC
+  // Ä 0xC3 0x84
+  // Ö 0xC3 0x96
+  // Ü 0xC3 0x9C
+  // ß 0xC3 0x9F
+
+  if (words.size() != 2 || static_cast<uint8_t>(words[0]) != 0xc3) {
+    return false;
+  }
+
+  auto c = static_cast<uint8_t>(words[1]);
+  if (c == 0xa4 || c == 0xb6 || c == 0xbC || c == 0x84 || c == 0x96 ||
+      c == 0x9c || c == 0x9f) {
+    return true;
+  }
+
+  return false;
+}
 
 static std::vector<std::string> MergeCharactersIntoWords(
     const std::vector<std::string> &words) {
@@ -175,7 +196,7 @@ static std::vector<std::string> MergeCharactersIntoWords(
 
   while (i < n) {
     const auto &w = words[i];
-    if (w.size() > 1 ||
+    if (w.size() >= 3 || (w.size() == 2 && !IsGermanUmlauts(w)) ||
         (w.size() == 1 && (IsPunct(w[0]) || std::isspace(w[0])))) {
       if (prev != -1) {
         std::string t;
@@ -193,7 +214,8 @@ static std::vector<std::string> MergeCharactersIntoWords(
       continue;
     }
 
-    if (w.size() == 1) {
+    // e.g., öffnen
+    if (w.size() == 1 || (w.size() == 2 && IsGermanUmlauts(w))) {
       if (prev == -1) {
         prev = i;
       }
