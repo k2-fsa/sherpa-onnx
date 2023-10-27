@@ -273,8 +273,8 @@ void Lexicon::InitLexicon(std::istream &is) {
     ToLowerCase(&word);
 
     if (word2ids_.count(word)) {
-      SHERPA_ONNX_LOGE("Duplicated word: %s", word.c_str());
-      return;
+      SHERPA_ONNX_LOGE("Duplicated word: %s. Ignore it.", word.c_str());
+      continue;
     }
 
     while (iss >> phone) {
