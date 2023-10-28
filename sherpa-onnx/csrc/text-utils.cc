@@ -284,9 +284,9 @@ static bool IsSpecial(const std::string &w) {
   // ’ 0xE2 0x80 0x99
   bool ans2 = false;
   if (w.size() == 3) {
-    auto c0 = static_cast<uint8_t>(word[0]);
-    auto c1 = static_cast<uint8_t>(word[1]);
-    auto c2 = static_cast<uint8_t>(word[2]);
+    auto c0 = static_cast<uint8_t>(w[0]);
+    auto c1 = static_cast<uint8_t>(w[1]);
+    auto c2 = static_cast<uint8_t>(w[2]);
     if (c0 == 0xe2 && c1 == 0x80 && c2 == 0x99) {
       ans2 = true;
     }
