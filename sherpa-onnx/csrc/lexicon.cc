@@ -133,6 +133,8 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIds(
       return ConvertTextToTokenIdsGerman(text);
     case Language::kSpanish:
       return ConvertTextToTokenIdsSpanish(text);
+    case Language::kFrench:
+      return ConvertTextToTokenIdsFrench(text);
     case Language::kChinese:
       return ConvertTextToTokenIdsChinese(text);
     default:
@@ -254,6 +256,8 @@ void Lexicon::InitLanguage(const std::string &_lang) {
     language_ = Language::kGerman;
   } else if (lang == "spanish") {
     language_ = Language::kSpanish;
+  } else if (lang == "french") {
+    language_ = Language::kFrench;
   } else if (lang == "chinese") {
     language_ = Language::kChinese;
   } else {
