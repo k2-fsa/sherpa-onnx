@@ -46,6 +46,11 @@ class Lexicon {
     return ConvertTextToTokenIdsEnglish(text);
   }
 
+  std::vector<int64_t> ConvertTextToTokenIdsFrench(
+      const std::string &text) const {
+    return ConvertTextToTokenIdsEnglish(text);
+  }
+
   std::vector<int64_t> ConvertTextToTokenIdsEnglish(
       const std::string &text) const;
 
@@ -62,6 +67,7 @@ class Lexicon {
     kEnglish,
     kGerman,
     kSpanish,
+    kFrench,
     kChinese,
     kUnknown,
   };
