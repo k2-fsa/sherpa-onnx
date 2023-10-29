@@ -21,11 +21,13 @@ jobs:
   apk_tts:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
-    name: apk for tts
+    name: apk for tts ${{ matrix.index }}/${{ matrix.total }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        total: ["12"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
 
     steps:
       - uses: actions/checkout@v4
@@ -47,7 +49,12 @@ jobs:
         shell: bash
         run: |
           cd scripts/apk
-          ./generate-tts-apk-script.py
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-tts-apk-script.py --total $total --index $index
+
           chmod +x build-apk-tts.sh
           mv -v ./build-apk-tts.sh ../..
 

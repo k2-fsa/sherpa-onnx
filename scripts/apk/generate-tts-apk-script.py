@@ -4,6 +4,24 @@ from dataclasses import dataclass
 
 import jinja2
 from typing import List
+import argparse
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--total",
+        type=int,
+        default=1,
+        help="Number of runners",
+    )
+    parser.add_argument(
+        "--index",
+        type=int,
+        default=0,
+        help="Index of the current runner",
+    )
+    return parser.parse_args()
 
 
 @dataclass
@@ -72,18 +90,34 @@ def get_all_models() -> List[TtsModel]:
 
         # Spanish (MX)
         TtsModel(model_dir="vits-piper-es_MX-ald-medium", model_name="es_MX-ald-medium.onnx",lang="en",),
-
         # fmt: on
     ]
 
 
 def main():
+    args = get_args()
+    index = args.index
+    total = args.total
+    assert 0 <= index < total, (index, total)
     environment = jinja2.Environment()
     with open("./build-apk-tts.sh.in") as f:
         s = f.read()
     template = environment.from_string(s)
     d = dict()
-    d["tts_model_list"] = get_all_models()
+    all_model_list = get_all_models()
+    num_models = len(all_model_list)
+
+    num_per_runner = num_models // total
+    if num_per_runner <= 0:
+        raise ValueError(f"num_models: {num_models}, num_runners: {total}")
+
+    start = index * num_per_runner
+    end = start + num_per_runner
+    if index == args.total - 1:
+        end = num_models
+
+    print(f"{index}/{total}: {start}-{end}/{num_models}")
+    d["tts_model_list"] = all_model_list[start:end]
     s = template.render(**d)
     with open("./build-apk-tts.sh", "w") as f:
         print(s, file=f)
