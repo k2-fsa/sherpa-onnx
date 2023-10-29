@@ -67,29 +67,29 @@ def get_all_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-en_GB-southern_english_female-low", model_name="en_GB-southern_english_female-low.onnx",lang="en",),
         TtsModel(model_dir="vits-piper-en_GB-vctk-medium", model_name="en_GB-vctk-medium.onnx",lang="en",),
         # German (DE)
-        TtsModel(model_dir="vits-piper-de_DE-eva_k-x_low", model_name="de_DE-eva_k-x_low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-de_DE-karlsson-low", model_name="de_DE-karlsson-low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-de_DE-kerstin-low", model_name="de_DE-kerstin-low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-de_DE-pavoque-low", model_name="de_DE-pavoque-low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-de_DE-ramona-low", model_name="de_DE-ramona-low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-de_DE-thorsten-low", model_name="de_DE-thorsten-low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-de_DE-thorsten-medium", model_name="de_DE-thorsten-medium.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-de_DE-thorsten-high", model_name="de_DE-thorsten-high.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-de_DE-thorsten_emotional-medium", model_name="de_DE-thorsten_emotional-medium.onnx",lang="en",),
+        TtsModel(model_dir="vits-piper-de_DE-eva_k-x_low", model_name="de_DE-eva_k-x_low.onnx",lang="de",),
+        TtsModel(model_dir="vits-piper-de_DE-karlsson-low", model_name="de_DE-karlsson-low.onnx",lang="de",),
+        TtsModel(model_dir="vits-piper-de_DE-kerstin-low", model_name="de_DE-kerstin-low.onnx",lang="de",),
+        TtsModel(model_dir="vits-piper-de_DE-pavoque-low", model_name="de_DE-pavoque-low.onnx",lang="de",),
+        TtsModel(model_dir="vits-piper-de_DE-ramona-low", model_name="de_DE-ramona-low.onnx",lang="de",),
+        TtsModel(model_dir="vits-piper-de_DE-thorsten-low", model_name="de_DE-thorsten-low.onnx",lang="de",),
+        TtsModel(model_dir="vits-piper-de_DE-thorsten-medium", model_name="de_DE-thorsten-medium.onnx",lang="de",),
+        TtsModel(model_dir="vits-piper-de_DE-thorsten-high", model_name="de_DE-thorsten-high.onnx",lang="de",),
+        TtsModel(model_dir="vits-piper-de_DE-thorsten_emotional-medium", model_name="de_DE-thorsten_emotional-medium.onnx",lang="de",),
         # French (FR)
-        TtsModel(model_dir="vits-piper-fr_FR-upmc-medium", model_name="fr_FR-upmc-medium.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-fr_FR-siwis-low", model_name="fr_FR-siwis-low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-fr_FR-siwis-medium", model_name="fr_FR-siwis-medium.onnx",lang="en",),
+        TtsModel(model_dir="vits-piper-fr_FR-upmc-medium", model_name="fr_FR-upmc-medium.onnx",lang="fr",),
+        TtsModel(model_dir="vits-piper-fr_FR-siwis-low", model_name="fr_FR-siwis-low.onnx",lang="fr",),
+        TtsModel(model_dir="vits-piper-fr_FR-siwis-medium", model_name="fr_FR-siwis-medium.onnx",lang="fr",),
 
         # Spanish (ES)
-        TtsModel(model_dir="vits-piper-es_ES-carlfm-x_low", model_name="es_ES-carlfm-x_low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-es_ES-davefx-medium", model_name="es_ES-davefx-medium.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-es_ES-mls_10246-low", model_name="es_ES-mls_10246-low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-es_ES-mls_9972-low", model_name="es_ES-mls_9972-low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-es_ES-sharvard-medium", model_name="es_ES-sharvard-medium.onnx",lang="en",),
+        TtsModel(model_dir="vits-piper-es_ES-carlfm-x_low", model_name="es_ES-carlfm-x_low.onnx",lang="es",),
+        TtsModel(model_dir="vits-piper-es_ES-davefx-medium", model_name="es_ES-davefx-medium.onnx",lang="es",),
+        TtsModel(model_dir="vits-piper-es_ES-mls_10246-low", model_name="es_ES-mls_10246-low.onnx",lang="es",),
+        TtsModel(model_dir="vits-piper-es_ES-mls_9972-low", model_name="es_ES-mls_9972-low.onnx",lang="es",),
+        TtsModel(model_dir="vits-piper-es_ES-sharvard-medium", model_name="es_ES-sharvard-medium.onnx",lang="es",),
 
         # Spanish (MX)
-        TtsModel(model_dir="vits-piper-es_MX-ald-medium", model_name="es_MX-ald-medium.onnx",lang="en",),
+        TtsModel(model_dir="vits-piper-es_MX-ald-medium", model_name="es_MX-ald-medium.onnx",lang="es",),
         # fmt: on
     ]
 
