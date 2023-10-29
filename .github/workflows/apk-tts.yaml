@@ -19,6 +19,7 @@ permissions:
 
 jobs:
   apk_tts:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
     name: apk for tts
     strategy:
@@ -60,8 +61,36 @@ jobs:
         shell: bash
         run: |
           ls -lh ./apks/
+          du -h -d1 .
 
-      - uses: actions/upload-artifact@v3
+      # - uses: actions/upload-artifact@v3
+      #   with:
+      #     name: tts-apk
+      #     path: ./apks/*.apk
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
         with:
-          name: tts-apk
-          path: ./apks/*.apk
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-apk huggingface
+            cd huggingface
+            git pull
+
+            mkdir -p tts
+            cp -v ../apks/*.apk ./tts/
+            git status
+            git lfs track "*.apk"
+            git add .
+            git commit -m "add more apks"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-apk main
