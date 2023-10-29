@@ -84,6 +84,8 @@ class MainActivity : AppCompatActivity() {
         val ok = audio.samples.size > 0 && audio.save(filename)
         if (ok) {
             play.isEnabled = true
+            // Play automatically after generation
+            onClickPlay()
         }
     }
 
@@ -97,10 +99,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun initTts() {
-        // 0 - vits-vctk (multi-speaker, English)
-        // 1 - vits-zh-aishell3 (multi-speaker, Chinese)
-        val type = 0
-        val config = getOfflineTtsConfig(type = type, debug = true)!!
+        var modelDir :String?
+        var modelName :String?
+
+        // The purpose of such a design is to make the CI test easier
+        // Please see
+        // https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/apk/generate-tts-apk-script.py
+        modelDir = null
+        modelName = null
+
+        // Example 1:
+        // modelDir = "vits-vctk"
+        // modelName = "vits-vctk.onnx"
+
+        // Example 2:
+        // modelDir = "vits-piper-en_US-lessac-medium"
+        // modelName = "en_US-lessac-medium.onnx"
+
+        val config = getOfflineTtsConfig(modelDir = modelDir!!, modelName = modelName!!)!!
         tts = OfflineTts(assetManager = application.assets, config = config)
     }
 }

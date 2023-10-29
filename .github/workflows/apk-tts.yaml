@@ -1,0 +1,103 @@
+name: apk-tts
+
+on:
+  push:
+    branches:
+      - apk-tts
+      - apk
+    tags:
+      - '*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: apk-tts-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  apk_tts:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ${{ matrix.os }}
+    name: apk for tts ${{ matrix.index }}/${{ matrix.total }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        total: ["12"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Display NDK HOME
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
+          ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/apk
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-tts-apk-script.py --total $total --index $index
+
+          chmod +x build-apk-tts.sh
+          mv -v ./build-apk-tts.sh ../..
+
+      - name: build APK
+        shell: bash
+        run: |
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-apk-tts.sh
+
+      - name: Display APK
+        shell: bash
+        run: |
+          ls -lh ./apks/
+          du -h -d1 .
+
+      # - uses: actions/upload-artifact@v3
+      #   with:
+      #     name: tts-apk
+      #     path: ./apks/*.apk
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-apk huggingface
+            cd huggingface
+            git pull
+
+            mkdir -p tts
+            cp -v ../apks/*.apk ./tts/
+            git status
+            git lfs track "*.apk"
+            git add .
+            git commit -m "add more apks"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-apk main
