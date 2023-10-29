@@ -49,8 +49,8 @@ popd
 
 git checkout .
 pushd android/SherpaOnnxTts/app/src/main/java/com/k2fsa/sherpa/onnx
-sed -i.bak s/"modelDir = null"/"modelDir = $model_dir"/ ./MainActivity.kt
-sed -i.bak s/"modelName = null"/"modelName = $model_name"/ ./MainActivity.kt
+sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
+sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./MainActivity.kt
 git diff
 popd
 
