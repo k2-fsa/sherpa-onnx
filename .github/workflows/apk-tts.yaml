@@ -60,3 +60,8 @@ jobs:
         shell: bash
         run: |
           ls -lh ./apks/
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tts-apk
+          path: ./apks/*.apk

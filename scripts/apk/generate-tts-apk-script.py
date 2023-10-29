@@ -15,11 +15,11 @@ class TtsModel:
 
 def get_all_models() -> List[TtsModel]:
     return [
-        TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
-        TtsModel(model_dir="vits-vctk", model_name="vits-vctk.onnx", lang="en"),
-        TtsModel(
-            model_dir="vits-zh-aishell3", model_name="vits-aishell3.onnx", lang="en"
-        ),
+        #  TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
+        #  TtsModel(model_dir="vits-vctk", model_name="vits-vctk.onnx", lang="en"),
+        #  TtsModel(
+        #      model_dir="vits-zh-aishell3", model_name="vits-aishell3.onnx", lang="en"
+        #  ),
         TtsModel(
             model_dir="vits-piper-en_US-lessac-medium",
             model_name="en_US-lessac-medium.onnx",
