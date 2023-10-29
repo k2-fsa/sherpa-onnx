@@ -84,6 +84,8 @@ class MainActivity : AppCompatActivity() {
         val ok = audio.samples.size > 0 && audio.save(filename)
         if (ok) {
             play.isEnabled = true
+            // Play automatically after generation
+            onClickPlay()
         }
     }
 
