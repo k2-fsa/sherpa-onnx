@@ -1,8 +1,9 @@
-name: apk
+name: apk-tts
 
 on:
   push:
     branches:
+      - apk-tts
       - apk
     tags:
       - '*'
@@ -10,15 +11,16 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: apk-${{ github.ref }}
+  group: apk-tts-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
-  apk:
+  apk_tts:
     runs-on: ${{ matrix.os }}
+    name: apk for tts
     strategy:
       fail-fast: false
       matrix:
@@ -28,32 +30,33 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
       - name: Display NDK HOME
         shell: bash
         run: |
           echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
           ls -lh ${ANDROID_NDK_LATEST_HOME}
 
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/apk
+          ./generate-tts-apk-script.py
+          chmod +x build-apk-tts.sh
+          mv -v ./build-apk-tts.sh ../..
+
       - name: build APK
         shell: bash
         run: |
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
-          ./build-apk-vad.sh
-          ./build-apk-two-pass.sh
-          ./build-apk.sh
+          ./build-apk-tts.sh
 
       - name: Display APK
         shell: bash
         run: |
           ls -lh ./apks/
-
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./apks/*.apk
-
-      - name: Release APK
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          file: apks/*.apk
-          overwrite: true

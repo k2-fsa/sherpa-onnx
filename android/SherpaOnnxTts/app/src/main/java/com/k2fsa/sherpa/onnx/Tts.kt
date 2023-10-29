@@ -116,45 +116,17 @@ class OfflineTts(
 // please refer to
 // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
 // to download models
-//
-// You can change the type as you wish
-fun getOfflineTtsConfig(type: Int, debug: Boolean = false): OfflineTtsConfig? {
-    when (type) {
-        0 -> {
-            val modelDir = "vits-vctk"
-            return OfflineTtsConfig(
-                model = OfflineTtsModelConfig(
-                    vits = OfflineTtsVitsModelConfig(
-                        model = "$modelDir/vits-vctk.onnx",
-                        lexicon = "$modelDir/lexicon.txt",
-                        tokens = "$modelDir/tokens.txt"
-                    ),
-                    numThreads = 2,
-                    debug = debug,
-                    provider = "cpu",
-                )
-            )
-        }
-
-        1 -> {
-            val modelDir = "vits-zh-aishell3"
-            return OfflineTtsConfig(
-                model = OfflineTtsModelConfig(
-                    vits = OfflineTtsVitsModelConfig(
-                        model = "$modelDir/vits-aishell3.onnx",
-                        lexicon = "$modelDir/lexicon.txt",
-                        tokens = "$modelDir/tokens.txt"
-                    ),
-                    numThreads = 2,
-                    debug = debug,
-                    provider = "cpu",
-                )
-            )
-        }
-    }
-
-    println("Unsupported type $type")
-
-    return null
-
+fun getOfflineTtsConfig(modelDir: String, modelName: String): OfflineTtsConfig? {
+    return OfflineTtsConfig(
+        model = OfflineTtsModelConfig(
+            vits = OfflineTtsVitsModelConfig(
+                model = "$modelDir/$modelName",
+                lexicon = "$modelDir/lexicon.txt",
+                tokens = "$modelDir/tokens.txt"
+            ),
+            numThreads = 2,
+            debug = false,
+            provider = "cpu",
+        )
+    )
 }
