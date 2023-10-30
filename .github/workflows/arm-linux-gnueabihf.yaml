@@ -31,7 +31,8 @@ concurrency:
 
 jobs:
   arm_linux_gnueabihf:
-    runs-on: ${{ matrix.os }} ${{ matrix.shared_lib }}
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.shared_lib }}
     strategy:
       fail-fast: false
       matrix:
