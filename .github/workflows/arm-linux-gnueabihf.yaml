@@ -31,16 +31,22 @@ concurrency:
 
 jobs:
   arm_linux_gnueabihf:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }} ${{ matrix.shared_lib }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        shared_lib: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-arm-${{ matrix.shared_lib }}
 
       - name: cache-qemu
         id: cache-qemu
@@ -106,6 +112,13 @@ jobs:
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cmake --version
+
+          export BUILD_SHARED_LIBS=${{ matrix.shared_lib }}
 
           ./build-arm-linux-gnueabihf.sh
 
