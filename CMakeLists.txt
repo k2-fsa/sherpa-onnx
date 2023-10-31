@@ -21,6 +21,13 @@ option(SHERPA_ONNX_ENABLE_C_API "Whether to build C API" ON)
 option(SHERPA_ONNX_ENABLE_WEBSOCKET "Whether to build webscoket server/client" ON)
 option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime GPU support" OFF)
 option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically. Used only when BUILD_SHARED_LIBS is OFF on Linux" ON)
+option(SHERPA_ONNX_USE_CXX11_ABI "True to use CXX11 ABI" OFF)
+
+if(SHERPA_ONNX_USE_CXX11_ABI)
+  add_definitions(-D_GLIBCXX_USE_CXX11_ABI=1)
+else()
+  add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
+endif()
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
