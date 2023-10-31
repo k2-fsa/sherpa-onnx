@@ -32,15 +32,22 @@ concurrency:
 jobs:
   arm_linux_gnueabihf:
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.lib_type }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        lib_type: [static, shared]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-arm-${{ matrix.lib_type }}
 
       - name: cache-qemu
         id: cache-qemu
@@ -107,6 +114,19 @@ jobs:
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
 
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cmake --version
+
+          lib_type=${{ matrix.lib_type }}
+
+          if [[ $lib_type == "shared" ]]; then
+            export BUILD_SHARED_LIBS=ON
+          else
+            export BUILD_SHARED_LIBS=OFF
+          fi
+
           ./build-arm-linux-gnueabihf.sh
 
           ls -lh build-arm-linux-gnueabihf/bin
@@ -125,12 +145,14 @@ jobs:
 
           qemu-arm ./build-arm-linux-gnueabihf/bin/sherpa-onnx --help
 
+          readelf -d ./build-arm-linux-gnueabihf/bin/sherpa-onnx
+
       - name: Copy files
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-arm-gnueabihf
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-arm-gnueabihf-${{ matrix.lib_type }}
           mkdir $dst
 
           cp -a build-arm-linux-gnueabihf/install/bin $dst/
@@ -141,13 +163,21 @@ jobs:
           tar cjvf ${dst}.tar.bz2 $dst
 
       - uses: actions/upload-artifact@v3
+        if: matrix.lib_type == 'shared'
         with:
-          path: sherpa-onnx-*linux-arm-gnueabihf.tar.bz2
+          name: sherpa-onnx-linux-arm-gnueabihf-shared
+          path: sherpa-onnx-*linux-arm-gnueabihf-shared.tar.bz2
 
-      - name: Release pre-compiled binaries and libs for arm linux gnueabihf
+      - uses: actions/upload-artifact@v3
+        if: matrix.lib_type == 'static'
+        with:
+          name: sherpa-onnx-linux-arm-gnueabihf-static
+          path: sherpa-onnx-*linux-arm-gnueabihf-static.tar.bz2
+
+      - name: Release pre-compiled binaries and libs for arm linux gnueabihf ${{ matrix.lib_type }}
         if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*linux-arm-gnueabihf.tar.bz2
+          file: sherpa-onnx-*linux-arm-gnueabihf*.tar.bz2
