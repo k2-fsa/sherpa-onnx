@@ -41,15 +41,22 @@ concurrency:
 jobs:
   aarch64_linux_gnu:
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.lib_type }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        lib_type: [static, shared]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-aarch64-${{ matrix.lib_type }}
 
       - name: cache-qemu
         id: cache-qemu
@@ -114,6 +121,19 @@ jobs:
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
 
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cmake --version
+
+          lib_type=${{ matrix.lib_type }}
+
+          if [[ $lib_type == "shared" ]]; then
+            export BUILD_SHARED_LIBS=ON
+          else
+            export BUILD_SHARED_LIBS=OFF
+          fi
+
           ./build-aarch64-linux-gnu.sh
 
           ls -lh build-aarch64-linux-gnu/bin
@@ -132,12 +152,14 @@ jobs:
 
           qemu-aarch64 ./build-aarch64-linux-gnu/bin/sherpa-onnx --help
 
+          readelf -d ./build-aarch64-linux-gnu/bin/sherpa-onnx
+
       - name: Copy files
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-${{ matrix.lib_type }}
           mkdir $dst
 
           cp -a build-aarch64-linux-gnu/install/bin $dst/
@@ -148,8 +170,16 @@ jobs:
           tar cjvf ${dst}.tar.bz2 $dst
 
       - uses: actions/upload-artifact@v3
+        if: matrix.lib_type == 'shared'
         with:
-          path: sherpa-onnx-*linux-aarch64.tar.bz2
+          name: sherpa-onnx-linux-aarch64-shared
+          path: sherpa-onnx-*linux-aarch64-shared.tar.bz2
+
+      - uses: actions/upload-artifact@v3
+        if: matrix.lib_type == 'static'
+        with:
+          name: sherpa-onnx-linux-aarch64-static
+          path: sherpa-onnx-*linux-aarch64-static.tar.bz2
 
       - name: Release pre-compiled binaries and libs for aarch64 linux
         if: env.RELEASE == 'true'
@@ -157,4 +187,4 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*linux-aarch64.tar.bz2
+          file: sherpa-onnx-*linux-aarch64*.tar.bz2
