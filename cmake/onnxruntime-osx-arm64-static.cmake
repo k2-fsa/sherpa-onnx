@@ -8,22 +8,22 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
   message(FATAL_ERROR "This file is for macOS only. Given: ${CMAKE_SYSTEM_NAME}")
 endif()
 
-if(NOT BUILD_SHARED_LIBS)
-  message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
+if(BUILD_SHARED_LIBS)
+  message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.0/onnxruntime-osx-x86_64-1.16.0.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-x86_64-1.16.0.tgz")
-set(onnxruntime_HASH "SHA256=3d639a269af4e97a455f23cff363a709ef3a5f3e086162e65e3395c339122285")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.0/onnxruntime-osx-arm64-static_lib-1.16.0.zip")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-osx-arm64-static_lib-1.16.0.zip")
+set(onnxruntime_HASH "SHA256=5f99c9a51d91e751ac20fcbb73dfa31a379438381c5357fd3f37bda816934e3e")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-osx-x86_64-1.16.0.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-x86_64-1.16.0.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-osx-x86_64-1.16.0.tgz
-  /tmp/onnxruntime-osx-x86_64-1.16.0.tgz
+  $ENV{HOME}/Downloads/onnxruntime-osx-arm64-static_lib-1.16.0.zip
+  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-arm64-static_lib-1.16.0.zip
+  ${PROJECT_BINARY_DIR}/onnxruntime-osx-arm64-static_lib-1.16.0.zip
+  /tmp/onnxruntime-osx-arm64-static_lib-1.16.0.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
@@ -50,21 +50,12 @@ if(NOT onnxruntime_POPULATED)
 endif()
 message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-find_library(location_onnxruntime onnxruntime
-  PATHS
-  "${onnxruntime_SOURCE_DIR}/lib"
-  NO_CMAKE_SYSTEM_PATH
-)
+# for static libraries, we use onnxruntime_lib_files directly below
+include_directories(${onnxruntime_SOURCE_DIR}/include)
 
-message(STATUS "location_onnxruntime: ${location_onnxruntime}")
+file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/lib*.a")
 
-add_library(onnxruntime SHARED IMPORTED)
+set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
 
-set_target_properties(onnxruntime PROPERTIES
-  IMPORTED_LOCATION ${location_onnxruntime}
-  INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
-)
-
-file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime*dylib")
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
 install(FILES ${onnxruntime_lib_files} DESTINATION lib)

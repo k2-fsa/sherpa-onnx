@@ -39,11 +39,13 @@ concurrency:
 jobs:
   macos:
     runs-on: ${{ matrix.os }}
+    name: ${{ matrix.build_type }} ${{ matrix.lib_type }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
         build_type: [Release, Debug]
+        lib_type: [static, shared]
 
     steps:
       - uses: actions/checkout@v4
@@ -53,7 +55,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-${{ matrix.build_type }}
+          key: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.lib_type }}
 
       - name: Configure CMake
         shell: bash
@@ -64,7 +66,14 @@ jobs:
 
           mkdir build
           cd build
-          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DCMAKE_INSTALL_PREFIX=./install ..
+          lib_type=${{ matrix.lib_type }}
+          if [[ $lib_type == "static" ]]; then
+            BUILD_SHARED_LIBS=OFF
+          else
+            BUILD_SHARED_LIBS=ON
+          fi
+
+          cmake -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for macos
         shell: bash
@@ -149,7 +158,7 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}
           mkdir $dst
 
           cp -a build/install/bin $dst/
@@ -167,4 +176,4 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*osx-universal2.tar.bz2
+          file: sherpa-onnx-*osx-universal2*.tar.bz2
