@@ -113,10 +113,14 @@ target_link_libraries(sherpa-onnx-core kaldi-native-fbank-core)
 
 target_link_libraries(sherpa-onnx-core kaldi-decoder-core)
 
-if(BUILD_SHARED_LIBS OR APPLE)
+if(BUILD_SHARED_LIBS)
   target_link_libraries(sherpa-onnx-core onnxruntime)
 else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
+endif()
+
+if(NOT BUILD_SHARED_LIBS AND APPLE)
+  target_link_libraries(sherpa-onnx-core "-framework Foundation")
 endif()
 
 if(SHERPA_ONNX_ENABLE_GPU)

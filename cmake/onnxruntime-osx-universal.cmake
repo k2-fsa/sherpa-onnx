@@ -9,6 +9,10 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Darwin)
   message(FATAL_ERROR "This file is for macOS only. Given: ${CMAKE_SYSTEM_NAME}")
 endif()
 
+if(NOT BUILD_SHARED_LIBS)
+  message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
+endif()
+
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.0/onnxruntime-osx-universal2-1.16.0.tgz")
 set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-universal2-1.16.0.tgz")
 set(onnxruntime_HASH "SHA256=e5b69ece634cf1cd5cf4b45ab478417199a5e8ab5775f6f12560e09dc5ef7749")
