@@ -13,29 +13,7 @@
         sherpa-onnx-kaldifst-core.lib;
         sherpa-onnx-fst.lib;
         kaldi-native-fbank-core.lib;
-        absl_base.lib;
-        absl_city.lib;
-        absl_hash.lib;
-        absl_low_level_hash.lib;
-        absl_raw_hash_set.lib;
-        absl_raw_logging_internal.lib;
-        absl_throw_delegate.lib;
-        clog.lib;
-        cpuinfo.lib;
-        flatbuffers.lib;
-        libprotobuf-lite.lib;
-        onnx.lib;
-        onnx_proto.lib;
-        onnxruntime_common.lib;
-        onnxruntime_flatbuffers.lib;
-        onnxruntime_framework.lib;
-        onnxruntime_graph.lib;
-        onnxruntime_mlas.lib;
-        onnxruntime_optimizer.lib;
-        onnxruntime_providers.lib;
-        onnxruntime_session.lib;
-        onnxruntime_util.lib;
-        re2.lib;
+        onnxruntime.lib;
     </SherpaOnnxLibraries>
   </PropertyGroup>
   <ItemDefinitionGroup>
