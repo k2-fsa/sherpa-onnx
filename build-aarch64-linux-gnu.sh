@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-if command -v aarch64-linux-gnu-gcc  &> /dev/null; then
+if command -v aarch64-none-linux-gnu-gcc  &> /dev/null; then
   ln -svf $(which aarch64-none-linux-gnu-gcc) ./aarch64-none-linux-gnu-gcc
   ln -svf $(which aarch64-none-linux-gnu-g++) ./aarch64-none-linux-gnu-g++
   export PATH=$PWD:$PATH
