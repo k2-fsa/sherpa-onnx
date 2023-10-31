@@ -1,5 +1,5 @@
 # Modified from https://github.com/Tencent/ncnn/blob/master/.github/workflows/linux-arm-cpu-gcc.yml
-name: aarch64-linux-gnu
+name: aarch64-linux-gnu-static
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
     tags:
       - '*'
     paths:
-      - '.github/workflows/aarch64-linux-gnu.yaml'
+      - '.github/workflows/aarch64-linux-gnu-static.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -17,7 +17,7 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/aarch64-linux-gnu.yaml'
+      - '.github/workflows/aarch64-linux-gnu-static.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -35,12 +35,13 @@ env:
     ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
-  group: aarch64-linux-gnu-${{ github.ref }}
+  group: aarch64-linux-gnu-static-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  aarch64_linux_gnu:
+  aarch64_linux_gnu_static:
     runs-on: ${{ matrix.os }}
+    name: aarch64 static lib test
     strategy:
       fail-fast: false
       matrix:
@@ -50,6 +51,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-aarch64-static
 
       - name: cache-qemu
         id: cache-qemu
@@ -85,34 +91,42 @@ jobs:
         uses: actions/cache@v3
         with:
           path: toolchain
-          key: gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu
+          key: gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu.tar.xz
 
       - name: Download toolchain
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          wget https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
+          # wget wget https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/9.2-2019.12/binrel/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu.tar.xz
+          wget -qq https://huggingface.co/csukuangfj/sherpa-ncnn-toolchains/resolve/main/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu.tar.xz
 
           mkdir $GITHUB_WORKSPACE/toolchain
-          tar xvf ./gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+          tar xf ./gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
 
       - name: Display toolchain info
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-          aarch64-linux-gnu-gcc --version
+          aarch64-none-linux-gnu-gcc --version
 
       - name: Display qemu-aarch64 -h
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-linux-gnu/libc
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-none-linux-gnu/libc
           qemu-aarch64 -h
 
       - name: build aarch64-linux-gnu
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cmake --version
+
+          export BUILD_SHARED_LIBS=OFF
 
           ./build-aarch64-linux-gnu.sh
 
@@ -126,18 +140,20 @@ jobs:
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-linux-gnu/libc
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-none-linux-gnu/libc
 
           ls -lh ./build-aarch64-linux-gnu/bin
 
           qemu-aarch64 ./build-aarch64-linux-gnu/bin/sherpa-onnx --help
+
+          readelf -d ./build-aarch64-linux-gnu/bin/sherpa-onnx
 
       - name: Copy files
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-static
           mkdir $dst
 
           cp -a build-aarch64-linux-gnu/install/bin $dst/
@@ -149,7 +165,8 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          path: sherpa-onnx-*linux-aarch64.tar.bz2
+          name: sherpa-onnx-linux-aarch64-static
+          path: sherpa-onnx-*linux-aarch64-static.tar.bz2
 
       - name: Release pre-compiled binaries and libs for aarch64 linux
         if: env.RELEASE == 'true'
@@ -157,4 +174,4 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*linux-aarch64.tar.bz2
+          file: sherpa-onnx-*linux-aarch64*.tar.bz2

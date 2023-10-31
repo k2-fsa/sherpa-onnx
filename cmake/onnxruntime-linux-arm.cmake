@@ -10,6 +10,10 @@ if(NOT (CMAKE_SYSTEM_PROCESSOR STREQUAL arm OR CMAKE_SYSTEM_PROCESSOR STREQUAL a
   message(FATAL_ERROR "This file is for arm only. Given: ${CMAKE_SYSTEM_PROCESSOR}")
 endif()
 
+if(NOT BUILD_SHARED_LIBS)
+  message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
+endif()
+
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.0/onnxruntime-linux-arm-1.16.0.zip")
 set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.16.0.zip")
 set(onnxruntime_HASH "SHA256=0a63ea99fbba3ee399d6626c36752844ae93ae19bab30e4bf00d45cc8a13da02")
