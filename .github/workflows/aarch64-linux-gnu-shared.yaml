@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - static-link-aarch64
     tags:
       - '*'
     paths:
