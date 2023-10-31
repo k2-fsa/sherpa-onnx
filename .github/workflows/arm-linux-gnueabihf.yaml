@@ -165,13 +165,13 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: matrix.lib_type == 'shared'
         with:
-          name: sherpa-onnx-*linux-arm-gnueabihf-shared
+          name: sherpa-onnx-linux-arm-gnueabihf-shared
           path: sherpa-onnx-*linux-arm-gnueabihf-shared.tar.bz2
 
       - uses: actions/upload-artifact@v3
         if: matrix.lib_type == 'static'
         with:
-          name: sherpa-onnx-*linux-arm-gnueabihf-static
+          name: sherpa-onnx-linux-arm-gnueabihf-static
           path: sherpa-onnx-*linux-arm-gnueabihf-static.tar.bz2
 
       - name: Release pre-compiled binaries and libs for arm linux gnueabihf ${{ matrix.lib_type }}
