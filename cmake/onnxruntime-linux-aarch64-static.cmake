@@ -14,19 +14,19 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.0/onnxruntime-linux-aarch64-static_lib-1.16.0.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-static_lib-1.16.0.zip")
-set(onnxruntime_HASH "SHA256=ddcb4e67bcdff53eb72265a12420c71f73acc8610054e06259e9b98770136bd5")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.1/onnxruntime-linux-aarch64-static_lib-1.16.1.zip")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-static_lib-1.16.1.zip")
+set(onnxruntime_HASH "SHA256=9b25c41fc2158b345744984d154ca975c8a772c0eb90a0ccfbe2be147b438ae3")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-static_lib-1.16.0.zip
-  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-aarch64-static_lib-1.16.0.zip
-  ${PROJECT_BINARY_DIR}/onnxruntime-linux-aarch64-static_lib-1.16.0.zip
-  /tmp/onnxruntime-linux-aarch64-static_lib-1.16.0.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-static_lib-1.16.0.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-static_lib-1.16.1.zip
+  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-aarch64-static_lib-1.16.1.zip
+  ${PROJECT_BINARY_DIR}/onnxruntime-linux-aarch64-static_lib-1.16.1.zip
+  /tmp/onnxruntime-linux-aarch64-static_lib-1.16.1.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-static_lib-1.16.1.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
