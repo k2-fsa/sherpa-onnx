@@ -12,18 +12,18 @@ if(NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.0/onnxruntime-osx-arm64-1.16.0.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-osx-arm64-1.16.0.tgz")
-set(onnxruntime_HASH "SHA256=fec3b70ca4f642a5c6d5c3a6f3a4eddd4c1b9281893fe2c7ae03a3086e20c316")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.1/onnxruntime-osx-arm64-1.16.1.tgz")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-osx-arm64-1.16.1.tgz")
+set(onnxruntime_HASH "SHA256=56ca6b8de3a220ea606c2067ba65d11dfa6e4f722e01ac7dc75f7152b81445e0")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-osx-arm64-1.16.0.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-arm64-1.16.0.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-osx-arm64-1.16.0.tgz
-  /tmp/onnxruntime-osx-arm64-1.16.0.tgz
+  $ENV{HOME}/Downloads/onnxruntime-osx-arm64-1.16.1.tgz
+  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-arm64-1.16.1.tgz
+  ${PROJECT_BINARY_DIR}/onnxruntime-osx-arm64-1.16.1.tgz
+  /tmp/onnxruntime-osx-arm64-1.16.1.tgz
 )
 
 foreach(f IN LISTS possible_file_locations)

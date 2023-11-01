@@ -5,7 +5,7 @@ set -e
 dir=build-ios
 mkdir -p $dir
 cd $dir
-onnxruntime_version=1.16.0
+onnxruntime_version=1.16.1
 
 if [ ! -f ios-onnxruntime/$onnxruntime_version/onnxruntime.xcframework/ios-arm64/onnxruntime.a ]; then
   if [ ! -d ios-onnxruntime ]; then
