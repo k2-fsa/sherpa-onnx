@@ -184,7 +184,7 @@ message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
 if(NOT BUILD_SHARED_LIBS)
   if(APPLE)
-    set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-lc++")
+    set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-lc++ -framework Foundation")
   endif()
 
   if(UNIX AND NOT APPLE)
