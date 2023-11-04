@@ -6,19 +6,44 @@
 
 #include <string>
 
+#include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
-void OfflineTtsConfig::Register(ParseOptions *po) { model.Register(po); }
+void OfflineTtsConfig::Register(ParseOptions *po) {
+  model.Register(po);
 
-bool OfflineTtsConfig::Validate() const { return model.Validate(); }
+  po->Register("tts-rule-fsts", &rule_fsts,
+               "It not empty, it contains a list of rule FST filenames."
+               "Multiple filenames are separated by a comma and they are "
+               "applied from left to right. An example value: "
+               "rule1.fst,rule2,fst,rule3.fst");
+}
+
+bool OfflineTtsConfig::Validate() const {
+  if (!rule_fsts.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(rule_fsts, ",", false, &files);
+    for (const auto &f : files) {
+      if (!FileExists(f)) {
+        SHERPA_ONNX_LOGE("Rule fst %s does not exist. ", f.c_str());
+        return false;
+      }
+    }
+  }
+
+  return model.Validate();
+}
 
 std::string OfflineTtsConfig::ToString() const {
   std::ostringstream os;
 
   os << "OfflineTtsConfig(";
-  os << "model=" << model.ToString() << ")";
+  os << "model=" << model.ToString() << ", ";
+  os << "rule_fsts=\"" << rule_fsts << "\")";
 
   return os.str();
 }

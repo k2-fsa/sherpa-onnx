@@ -13,7 +13,7 @@ if(NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.1/onnxruntime-osx-universal2-1.16.1.tgz")
+set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.16.1/onnxruntime-osx-universal2-1.16.1.tgz")
 set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-osx-universal2-1.16.1.tgz")
 set(onnxruntime_HASH "SHA256=e8568a4a3f602c25ea7c3bbd2f085340dff5bb68fa7c859fd763d944105e3d76")
 
