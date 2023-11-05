@@ -103,7 +103,9 @@ jobs:
 
             git clone https://huggingface.co/csukuangfj/sherpa-onnx-apk huggingface
             cd huggingface
+            git fetch
             git pull
+            git merge -m "merge remote" --ff origin main
 
             mkdir -p tts
             cp -v ../apks/*.apk ./tts/
