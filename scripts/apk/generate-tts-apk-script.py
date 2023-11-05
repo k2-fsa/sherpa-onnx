@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
+import argparse
 from dataclasses import dataclass
+from typing import List, Optional
 
 import jinja2
-from typing import List
-import argparse
 
 
 def get_args():
@@ -29,12 +29,16 @@ class TtsModel:
     model_dir: str
     model_name: str
     lang: str  # en, zh, fr, de, etc.
+    rule_fsts: Optional[List[str]] = (None,)
 
 
 def get_all_models() -> List[TtsModel]:
     return [
         TtsModel(
-            model_dir="vits-zh-aishell3", model_name="vits-aishell3.onnx", lang="zh"
+            model_dir="vits-zh-aishell3",
+            model_name="vits-aishell3.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-aishell3/rule.fst",
         ),
         # English (US)
         # fmt: off
@@ -91,7 +95,7 @@ def get_all_models() -> List[TtsModel]:
         # Spanish (MX)
         TtsModel(model_dir="vits-piper-es_MX-ald-medium", model_name="es_MX-ald-medium.onnx",lang="es",),
         # fmt: on
-    ]
+    ][0:1]
 
 
 def main():

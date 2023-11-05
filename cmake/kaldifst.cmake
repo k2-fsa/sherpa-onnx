@@ -1,18 +1,18 @@
 function(download_kaldifst)
   include(FetchContent)
 
-  set(kaldifst_URL  "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.7.8.tar.gz")
-  set(kaldifst_URL2 "https://huggingface.co/csukuangfj/kaldi-hmm-gmm-cmake-deps/resolve/main/kaldifst-1.7.8.tar.gz")
-  set(kaldifst_HASH "SHA256=94613923568ef9a240ba1059b8b9dfe3082daad794934635d99e66248a6687b5")
+  set(kaldifst_URL  "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.7.9.tar.gz")
+  set(kaldifst_URL2 "https://huggingface.co/csukuangfj/kaldi-hmm-gmm-cmake-deps/resolve/main/kaldifst-1.7.9.tar.gz")
+  set(kaldifst_HASH "SHA256=8c653021491dca54c38ab659565edfab391418a79ae87099257863cd5664dd39")
 
   # If you don't have access to the Internet,
   # please pre-download kaldifst
   set(possible_file_locations
-    $ENV{HOME}/Downloads/kaldifst-1.7.8.tar.gz
-    ${PROJECT_SOURCE_DIR}/kaldifst-1.7.8.tar.gz
-    ${PROJECT_BINARY_DIR}/kaldifst-1.7.8.tar.gz
-    /tmp/kaldifst-1.7.8.tar.gz
-    /star-fj/fangjun/download/github/kaldifst-1.7.8.tar.gz
+    $ENV{HOME}/Downloads/kaldifst-1.7.9.tar.gz
+    ${PROJECT_SOURCE_DIR}/kaldifst-1.7.9.tar.gz
+    ${PROJECT_BINARY_DIR}/kaldifst-1.7.9.tar.gz
+    /tmp/kaldifst-1.7.9.tar.gz
+    /star-fj/fangjun/download/github/kaldifst-1.7.9.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)

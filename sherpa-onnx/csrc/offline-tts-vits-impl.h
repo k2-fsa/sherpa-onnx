@@ -10,15 +10,17 @@
 #include <vector>
 
 #if __ANDROID_API__ >= 9
+#include <strstream>
+
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
-
 #include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-model.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
@@ -52,7 +54,17 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
                  model_->Punctuations(), model_->Language(), config.model.debug,
                  model_->IsPiper()) {
     if (!config.rule_fsts.empty()) {
-      SHERPA_ONNX_LOGE("TODO(fangjun): Implement rule FST for Android");
+      std::vector<std::string> files;
+      SplitStringToVector(config.rule_fsts, ",", false, &files);
+      tn_list_.reserve(files.size());
+      for (const auto &f : files) {
+        if (config.model.debug) {
+          SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
+        }
+        auto buf = ReadFile(mgr, f);
+        std::istrstream is(buf.data(), buf.size());
+        tn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(is));
+      }
     }
   }
 #endif

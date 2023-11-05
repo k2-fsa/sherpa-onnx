@@ -8,7 +8,7 @@
 # Inside the $ANDROID_NDK directory, you can find a binary ndk-build
 # and some other files like the file "build/cmake/android.toolchain.cmake"
 
-set -e
+set -ex
 
 log() {
   # This function is from espnet
@@ -23,11 +23,11 @@ log "Building APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
 log "====================armv7-eabi================"
-./build-android-armv7-eabi.sh
+# ./build-android-armv7-eabi.sh
 log "====================x86-64===================="
-./build-android-x86-64.sh
+# ./build-android-x86-64.sh
 log "====================x86===================="
-./build-android-x86.sh
+# ./build-android-x86.sh
 
 mkdir -p apks
 
@@ -51,10 +51,16 @@ git checkout .
 pushd android/SherpaOnnxTts/app/src/main/java/com/k2fsa/sherpa/onnx
 sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
 sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./MainActivity.kt
+{% if tts_model.rule_fsts %}
+  rule_fsts={{ tts_model.rule_fsts }}
+  sed -i.bak s%"ruleFsts = null"%"ruleFsts = \"$rule_fsts\""% ./MainActivity.kt
+{% endif %}
+
 git diff
 popd
 
-for arch in arm64-v8a armeabi-v7a x86_64 x86; do
+# for arch in arm64-v8a armeabi-v7a x86_64 x86; do
+for arch in arm64-v8a; do
   log "------------------------------------------------------------"
   log "build tts apk for $arch"
   log "------------------------------------------------------------"
