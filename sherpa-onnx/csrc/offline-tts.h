@@ -21,10 +21,17 @@ namespace sherpa_onnx {
 
 struct OfflineTtsConfig {
   OfflineTtsModelConfig model;
+  // If not empty, it contains a list of rule FST filenames.
+  // Filenames are separated by a comma.
+  // Example value: rule1.fst,rule2,fst,rule3.fst
+  //
+  // If there are multiple rules, they are applied from left to right.
+  std::string rule_fsts;
 
   OfflineTtsConfig() = default;
-  explicit OfflineTtsConfig(const OfflineTtsModelConfig &model)
-      : model(model) {}
+  OfflineTtsConfig(const OfflineTtsModelConfig &model,
+                   const std::string &rule_fsts)
+      : model(model), rule_fsts(rule_fsts) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

@@ -3,6 +3,8 @@
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/python/csrc/offline-tts.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/python/csrc/offline-tts-model-config.h"
 
@@ -28,8 +30,10 @@ static void PybindOfflineTtsConfig(py::module *m) {
   using PyClass = OfflineTtsConfig;
   py::class_<PyClass>(*m, "OfflineTtsConfig")
       .def(py::init<>())
-      .def(py::init<const OfflineTtsModelConfig &>(), py::arg("model"))
+      .def(py::init<const OfflineTtsModelConfig &, const std::string &>(),
+           py::arg("model"), py::arg("rule_fsts") = "")
       .def_readwrite("model", &PyClass::model)
+      .def_readwrite("rule_fsts", &PyClass::rule_fsts)
       .def("__str__", &PyClass::ToString);
 }
 

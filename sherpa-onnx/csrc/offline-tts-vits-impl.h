@@ -14,30 +14,50 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-model.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
 class OfflineTtsVitsImpl : public OfflineTtsImpl {
  public:
   explicit OfflineTtsVitsImpl(const OfflineTtsConfig &config)
-      : model_(std::make_unique<OfflineTtsVitsModel>(config.model)),
+      : config_(config),
+        model_(std::make_unique<OfflineTtsVitsModel>(config.model)),
         lexicon_(config.model.vits.lexicon, config.model.vits.tokens,
                  model_->Punctuations(), model_->Language(), config.model.debug,
-                 model_->IsPiper()) {}
+                 model_->IsPiper()) {
+    if (!config.rule_fsts.empty()) {
+      std::vector<std::string> files;
+      SplitStringToVector(config.rule_fsts, ",", false, &files);
+      tn_list_.reserve(files.size());
+      for (const auto &f : files) {
+        if (config.model.debug) {
+          SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
+        }
+        tn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(f));
+      }
+    }
+  }
 
 #if __ANDROID_API__ >= 9
   OfflineTtsVitsImpl(AAssetManager *mgr, const OfflineTtsConfig &config)
-      : model_(std::make_unique<OfflineTtsVitsModel>(mgr, config.model)),
+      : config_(config),
+        model_(std::make_unique<OfflineTtsVitsModel>(mgr, config.model)),
         lexicon_(mgr, config.model.vits.lexicon, config.model.vits.tokens,
                  model_->Punctuations(), model_->Language(), config.model.debug,
-                 model_->IsPiper()) {}
+                 model_->IsPiper()) {
+    if (!config.rule_fsts.empty()) {
+      SHERPA_ONNX_LOGE("TODO(fangjun): Implement rule FST for Android");
+    }
+  }
 #endif
 
-  GeneratedAudio Generate(const std::string &text, int64_t sid = 0,
+  GeneratedAudio Generate(const std::string &_text, int64_t sid = 0,
                           float speed = 1.0) const override {
     int32_t num_speakers = model_->NumSpeakers();
     if (num_speakers == 0 && sid != 0) {
@@ -53,6 +73,20 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
           "[%d, %d]. Given: %d. Use sid=0",
           num_speakers, 0, num_speakers - 1, static_cast<int32_t>(sid));
       sid = 0;
+    }
+
+    std::string text = _text;
+    if (config_.model.debug) {
+      SHERPA_ONNX_LOGE("Raw text: %s", text.c_str());
+    }
+
+    if (!tn_list_.empty()) {
+      for (const auto &tn : tn_list_) {
+        text = tn->Normalize(text);
+        if (config_.model.debug) {
+          SHERPA_ONNX_LOGE("After normalizing: %s", text.c_str());
+        }
+      }
     }
 
     std::vector<int64_t> x = lexicon_.ConvertTextToTokenIds(text);
@@ -98,7 +132,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   }
 
  private:
+  OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsVitsModel> model_;
+  std::vector<std::unique_ptr<kaldifst::TextNormalizer>> tn_list_;
   Lexicon lexicon_;
 };
 
