@@ -43,6 +43,7 @@ wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/$model_name
 wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/lexicon.txt
 wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/tokens.txt
 wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/MODEL_CARD 2>/dev/null || true
+wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/rule.fst 2>/dev/null || true
 
 popd
 # Now we are at the project root directory
