@@ -17,6 +17,8 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#include <regex>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -147,7 +149,36 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIds(
 
 std::vector<int64_t> Lexicon::ConvertTextToTokenIdsChinese(
     const std::string &text) const {
-  std::vector<std::string> words = SplitUtf8(text);
+  std::vector<std::string> words;
+  if (pattern_) {
+    // Handle polyphones
+    size_t pos = 0;
+    auto begin = std::sregex_iterator(text.begin(), text.end(), *pattern_);
+    auto end = std::sregex_iterator();
+    for (std::sregex_iterator i = begin; i != end; ++i) {
+      std::smatch match = *i;
+      if (pos < match.position()) {
+        auto this_segment = text.substr(pos, match.position() - pos);
+        auto this_segment_words = SplitUtf8(this_segment);
+        words.insert(words.end(), this_segment_words.begin(),
+                     this_segment_words.end());
+        pos = match.position() + match.length();
+      } else if (pos == match.position()) {
+        pos = match.position() + match.length();
+      }
+
+      words.push_back(match.str());
+    }
+
+    if (pos < text.size()) {
+      auto this_segment = text.substr(pos, text.size() - pos);
+      auto this_segment_words = SplitUtf8(this_segment);
+      words.insert(words.end(), this_segment_words.begin(),
+                   this_segment_words.end());
+    }
+  } else {
+    words = SplitUtf8(text);
+  }
 
   if (debug_) {
     fprintf(stderr, "Input text in string: %s\n", text.c_str());
@@ -272,6 +303,9 @@ void Lexicon::InitLexicon(std::istream &is) {
   std::string line;
   std::string phone;
 
+  std::ostringstream os;
+  std::string sep;
+
   while (std::getline(is, line)) {
     std::istringstream iss(line);
 
@@ -293,7 +327,17 @@ void Lexicon::InitLexicon(std::istream &is) {
     if (ids.empty()) {
       continue;
     }
+    if (language_ == Language::kChinese && word.size() > 3) {
+      // this is not a single word;
+      os << sep << word;
+      sep = "|";
+    }
+
     word2ids_.insert({std::move(word), std::move(ids)});
+  }
+
+  if (!sep.empty()) {
+    pattern_ = std::make_unique<std::regex>(os.str());
   }
 }
 

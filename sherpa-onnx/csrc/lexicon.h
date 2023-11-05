@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <iostream>
+#include <regex>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -79,6 +80,9 @@ class Lexicon {
   Language language_;
   bool debug_;
   bool is_piper_;
+
+  // for Chinese polyphones
+  std::unique_ptr<std::regex> pattern_;
 };
 
 }  // namespace sherpa_onnx
