@@ -34,6 +34,7 @@ class TtsModel:
 
 def get_all_models() -> List[TtsModel]:
     return [
+        # Chinese
         TtsModel(
             model_dir="vits-zh-aishell3",
             model_name="vits-aishell3.onnx",
@@ -143,7 +144,7 @@ def get_all_models() -> List[TtsModel]:
         # Spanish (MX)
         TtsModel(model_dir="vits-piper-es_MX-ald-medium", model_name="es_MX-ald-medium.onnx",lang="es",),
         # fmt: on
-    ][0:1]
+    ]
 
 
 def main():

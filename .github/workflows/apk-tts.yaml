@@ -26,10 +26,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        # total: ["12"]
-        # index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
-        total: ["1"]
-        index: ["0"]
+        total: ["12"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
 
     steps:
       - uses: actions/checkout@v4
@@ -82,12 +80,13 @@ jobs:
           du -h -d1 .
 
       - uses: actions/upload-artifact@v3
+        if: false
         with:
           name: tts-apk
           path: ./apks/*.apk
 
       - name: Publish to huggingface
-        if: false
+        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v2

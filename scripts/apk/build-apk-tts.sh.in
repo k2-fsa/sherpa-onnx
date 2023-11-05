@@ -23,11 +23,11 @@ log "Building APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
 log "====================armv7-eabi================"
-# ./build-android-armv7-eabi.sh
+./build-android-armv7-eabi.sh
 log "====================x86-64===================="
-# ./build-android-x86-64.sh
+./build-android-x86-64.sh
 log "====================x86===================="
-# ./build-android-x86.sh
+./build-android-x86.sh
 
 mkdir -p apks
 
@@ -60,8 +60,7 @@ sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./MainActivity.kt
 git diff
 popd
 
-# for arch in arm64-v8a armeabi-v7a x86_64 x86; do
-for arch in arm64-v8a; do
+for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   log "------------------------------------------------------------"
   log "build tts apk for $arch"
   log "------------------------------------------------------------"
