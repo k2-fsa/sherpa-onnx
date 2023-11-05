@@ -3,6 +3,8 @@
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/python/csrc/offline-tts.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/python/csrc/offline-tts-model-config.h"
 
