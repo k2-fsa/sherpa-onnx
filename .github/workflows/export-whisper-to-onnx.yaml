@@ -17,9 +17,15 @@ jobs:
       matrix:
         os: [macos-latest]
         model: ["distil-medium.en", "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2"]
+        python-version: ["3.8"]
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
 
       - name: Install dependencies
         shell: bash
