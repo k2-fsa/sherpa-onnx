@@ -48,7 +48,9 @@ jobs:
 
           ls -lh
 
-          ls -lh ~/.cache/whisper
+          if [[ $model != distil-medium.en ]]; then
+            ls -lh ~/.cache/whisper
+          fi
 
       - name: Publish ${{ matrix.model }} to huggingface
         shell: bash
