@@ -101,12 +101,14 @@ class MainActivity : AppCompatActivity() {
     fun initTts() {
         var modelDir :String?
         var modelName :String?
+        var ruleFsts: String?
 
         // The purpose of such a design is to make the CI test easier
         // Please see
         // https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/apk/generate-tts-apk-script.py
         modelDir = null
         modelName = null
+        ruleFsts = null
 
         // Example 1:
         // modelDir = "vits-vctk"
@@ -116,7 +118,12 @@ class MainActivity : AppCompatActivity() {
         // modelDir = "vits-piper-en_US-lessac-medium"
         // modelName = "en_US-lessac-medium.onnx"
 
-        val config = getOfflineTtsConfig(modelDir = modelDir!!, modelName = modelName!!)!!
+        // Example 3:
+        // modelDir = "vits-zh-aishell3"
+        // modelName = "vits-aishell3.onnx"
+        // ruleFsts = "vits-zh-aishell3/rule.fst"
+
+        val config = getOfflineTtsConfig(modelDir = modelDir!!, modelName = modelName!!, ruleFsts = ruleFsts ?: "")!!
         tts = OfflineTts(assetManager = application.assets, config = config)
     }
 }

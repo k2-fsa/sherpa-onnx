@@ -21,6 +21,7 @@ data class OfflineTtsModelConfig(
 
 data class OfflineTtsConfig(
     var model: OfflineTtsModelConfig,
+    var ruleFsts: String = "",
 )
 
 class GeneratedAudio(
@@ -116,7 +117,7 @@ class OfflineTts(
 // please refer to
 // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
 // to download models
-fun getOfflineTtsConfig(modelDir: String, modelName: String): OfflineTtsConfig? {
+fun getOfflineTtsConfig(modelDir: String, modelName: String, ruleFsts: String): OfflineTtsConfig? {
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
             vits = OfflineTtsVitsModelConfig(
@@ -125,8 +126,9 @@ fun getOfflineTtsConfig(modelDir: String, modelName: String): OfflineTtsConfig? 
                 tokens = "$modelDir/tokens.txt"
             ),
             numThreads = 2,
-            debug = false,
+            debug = true,
             provider = "cpu",
-        )
+        ),
+        ruleFsts=ruleFsts,
     )
 }

@@ -196,8 +196,14 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsChinese(
 
   std::vector<int64_t> ans;
 
-  auto sil = token2id_.at("sil");
-  auto eos = token2id_.at("eos");
+  int32_t sil = -1;
+  int32_t eos = -1;
+  if (token2id_.count("sil")) {
+    sil = token2id_.at("sil");
+    eos = token2id_.at("eos");
+  } else {
+    sil = 0;
+  }
 
   ans.push_back(sil);
 
@@ -216,7 +222,9 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsChinese(
     ans.insert(ans.end(), token_ids.begin(), token_ids.end());
   }
   ans.push_back(sil);
-  ans.push_back(eos);
+  if (eos != -1) {
+    ans.push_back(eos);
+  }
   return ans;
 }
 

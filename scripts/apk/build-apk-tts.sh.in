@@ -8,7 +8,7 @@
 # Inside the $ANDROID_NDK directory, you can find a binary ndk-build
 # and some other files like the file "build/cmake/android.toolchain.cmake"
 
-set -e
+set -ex
 
 log() {
   # This function is from espnet
@@ -43,6 +43,7 @@ wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/$model_name
 wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/lexicon.txt
 wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/tokens.txt
 wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/MODEL_CARD 2>/dev/null || true
+wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/rule.fst 2>/dev/null || true
 
 popd
 # Now we are at the project root directory
@@ -51,6 +52,11 @@ git checkout .
 pushd android/SherpaOnnxTts/app/src/main/java/com/k2fsa/sherpa/onnx
 sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
 sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./MainActivity.kt
+{% if tts_model.rule_fsts %}
+  rule_fsts={{ tts_model.rule_fsts }}
+  sed -i.bak s%"ruleFsts = null"%"ruleFsts = \"$rule_fsts\""% ./MainActivity.kt
+{% endif %}
+
 git diff
 popd
 

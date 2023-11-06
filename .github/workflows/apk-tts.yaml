@@ -34,6 +34,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-android
+
       - name: Display NDK HOME
         shell: bash
         run: |
@@ -61,6 +66,10 @@ jobs:
       - name: build APK
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
           ./build-apk-tts.sh
 
@@ -70,12 +79,14 @@ jobs:
           ls -lh ./apks/
           du -h -d1 .
 
-      # - uses: actions/upload-artifact@v3
-      #   with:
-      #     name: tts-apk
-      #     path: ./apks/*.apk
+      - uses: actions/upload-artifact@v3
+        if: false
+        with:
+          name: tts-apk
+          path: ./apks/*.apk
 
       - name: Publish to huggingface
+        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v2
@@ -92,7 +103,9 @@ jobs:
 
             git clone https://huggingface.co/csukuangfj/sherpa-onnx-apk huggingface
             cd huggingface
+            git fetch
             git pull
+            git merge -m "merge remote" --ff origin main
 
             mkdir -p tts
             cp -v ../apks/*.apk ./tts/

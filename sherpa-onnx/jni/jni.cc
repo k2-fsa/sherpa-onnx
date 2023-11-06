@@ -566,6 +566,13 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   ans.model.provider = p;
   env->ReleaseStringUTFChars(s, p);
 
+  // for ruleFsts
+  fid = env->GetFieldID(cls, "ruleFsts", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.rule_fsts = p;
+  env->ReleaseStringUTFChars(s, p);
+
   return ans;
 }
 
