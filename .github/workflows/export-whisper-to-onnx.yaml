@@ -37,6 +37,11 @@ jobs:
         shell: bash
         run: |
           cd scripts/whisper
+          model=${{ matrix.model }}
+          echo "model: $model"
+          if [[ $model == distil-medium.en ]]; then
+            wget -O distil-medium-en-original-model.bin https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin
+          fi
           python3 ./export-onnx.py --model ${{ matrix.model }}
           python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
 

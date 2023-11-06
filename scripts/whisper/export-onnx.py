@@ -259,11 +259,13 @@ def convert_tokens(name, model):
 def main():
     args = get_args()
     name = args.model
+    print(args)
+    print(name)
 
     opset_version = 13
 
     if name == "distil-medium.en":
-        filename = "distil-medium-en-original-model.bin"
+        filename = "./distil-medium-en-original-model.bin"
         if not Path(filename):
             raise ValueError(
                 """
@@ -274,7 +276,7 @@ def main():
                 wget -O distil-medium-en-original-model.bin https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin
             """
             )
-        model = whisper.load_model(name)
+        model = whisper.load_model(filename)
     else:
         model = whisper.load_model(name)
 
