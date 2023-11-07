@@ -21,6 +21,22 @@ python3 ./python-api-examples/offline-tts.py \
   --output-filename=./generated.wav \
   'liliana, the most beautiful and lovely assistant of our team!'
 
+2. Download a model
+
+wget https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/vits-aishell3.onnx
+wget https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/lexicon.txt
+wget https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/tokens.txt
+wget https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/rule.fst
+
+python3 ./python-api-examples/offline-tts.py 
+ --vits-model=./vits-aishell3.onnx \
+ --vits-lexicon=./lexicon.txt \
+ --vits-tokens=./tokens.txt \
+ --tts-rule-fsts=./rule.fst \
+ --sid=21 \
+ --output-filename=./liubei-21.wav \
+ "勿以恶小而为之，勿以善小而不为。惟贤惟德，能服于人。122334"
+
 Please see
 https://k2-fsa.github.io/sherpa/onnx/tts/index.html
 for details.
@@ -54,6 +70,13 @@ def get_args():
         "--vits-tokens",
         type=str,
         help="Path to tokens.txt",
+    )
+
+    parser.add_argument(
+        "--tts-rule-fsts",
+        type=str,
+        default="",
+        help="Path to rule.fst",
     )
 
     parser.add_argument(
@@ -124,7 +147,8 @@ def main():
             provider=args.provider,
             debug=args.debug,
             num_threads=args.num_threads,
-        )
+        ),
+        rule_fsts=args.tts_rule_fsts
     )
     tts = sherpa_onnx.OfflineTts(tts_config)
 
