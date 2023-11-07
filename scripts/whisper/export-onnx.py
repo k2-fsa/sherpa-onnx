@@ -266,7 +266,7 @@ def main():
 
     if name == "distil-medium.en":
         filename = "./distil-medium-en-original-model.bin"
-        if not Path(filename):
+        if not Path(filename).is_file():
             raise ValueError(
                 """
                 Please go to https://huggingface.co/distil-whisper/distil-medium.en
