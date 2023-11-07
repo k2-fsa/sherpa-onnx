@@ -3,6 +3,28 @@ package com.k2fsa.sherpa.onnx
 import android.content.res.AssetManager
 
 fun main() {
+  testTts()
+  testAsr()
+}
+
+fun testTts() {
+  var config = OfflineTtsConfig(
+    model=OfflineTtsModelConfig(
+      vits=OfflineTtsVitsModelConfig(
+        model="./vits-zh-aishell3/vits-aishell3.onnx",
+        lexicon="./vits-zh-aishell3/lexicon.txt",
+        tokens="./vits-zh-aishell3/tokens.txt",
+      ),
+      numThreads=1,
+      debug=true,
+    )
+  )
+  val tts = OfflineTts(config=config)
+  val audio = tts.generate(text="林美丽最美丽!", sid=99, speed=1.2f)
+  audio.save(filename="99.wav")
+}
+
+fun testAsr() {
     var featConfig = FeatureConfig(
         sampleRate = 16000,
         featureDim = 80,

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(sherpa-onnx)
 
-set(SHERPA_ONNX_VERSION "1.7.21")
+set(SHERPA_ONNX_VERSION "1.8.7")
 
 # Disable warning about
 #
@@ -20,7 +20,7 @@ option(SHERPA_ONNX_ENABLE_JNI "Whether to build JNI internface" OFF)
 option(SHERPA_ONNX_ENABLE_C_API "Whether to build C API" ON)
 option(SHERPA_ONNX_ENABLE_WEBSOCKET "Whether to build webscoket server/client" ON)
 option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime GPU support" OFF)
-option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically. Used only when BUILD_SHARED_LIBS is ON on Linux" ON)
+option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically. Used only when BUILD_SHARED_LIBS is OFF on Linux" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -100,8 +100,11 @@ message(STATUS "SHERPA_ONNX_ENABLE_C_API ${SHERPA_ONNX_ENABLE_C_API}")
 message(STATUS "SHERPA_ONNX_ENABLE_WEBSOCKET ${SHERPA_ONNX_ENABLE_WEBSOCKET}")
 message(STATUS "SHERPA_ONNX_ENABLE_GPU ${SHERPA_ONNX_ENABLE_GPU}")
 
-set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
+if(NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
+endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
+message(STATUS "C++ Standard version: ${CMAKE_CXX_STANDARD}")
 
 include(CheckIncludeFileCXX)
 check_include_file_cxx(alsa/asoundlib.h SHERPA_ONNX_HAS_ALSA)
@@ -184,7 +187,7 @@ message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
 if(NOT BUILD_SHARED_LIBS)
   if(APPLE)
-    set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-lc++")
+    set(SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS "-lc++ -framework Foundation")
   endif()
 
   if(UNIX AND NOT APPLE)

@@ -12,6 +12,7 @@ on:
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-offline-tts.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -26,6 +27,7 @@ on:
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-offline-tts.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -48,13 +50,22 @@ jobs:
         build_type: [Release, Debug]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.build_type }}-gpu
 
       - name: Configure CMake
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
           mkdir build
           cd build
           cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DSHERPA_ONNX_ENABLE_GPU=ON ..
@@ -62,6 +73,8 @@ jobs:
       - name: Build sherpa-onnx for ubuntu
         shell: bash
         run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
           cd build
           make -j2
           make install
@@ -74,6 +87,14 @@ jobs:
         run: |
           file build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
+
+      - name: Test offline TTS
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-tts
+
+          .github/scripts/test-offline-tts.sh
 
       - name: Test online paraformer
         shell: bash

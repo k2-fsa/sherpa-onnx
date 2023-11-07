@@ -21,6 +21,7 @@ run-bilingual*.sh
 run-*-zipformer.sh
 run-zh.sh
 decode-file-c-api
+offline-tts-c-api
 run-decode-file-c-api.sh
 sherpa-onnx-ffmpeg
 build-ios

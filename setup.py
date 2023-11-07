@@ -57,16 +57,20 @@ def get_binaries_to_install():
     binaries += ["sherpa-onnx-offline-websocket-server"]
     binaries += ["sherpa-onnx-online-websocket-client"]
     binaries += ["sherpa-onnx-vad-microphone"]
+    binaries += ["sherpa-onnx-offline-tts"]
     if is_windows():
         binaries += ["kaldi-native-fbank-core.dll"]
         binaries += ["sherpa-onnx-c-api.dll"]
         binaries += ["sherpa-onnx-core.dll"]
         binaries += ["sherpa-onnx-portaudio.dll"]
         binaries += ["onnxruntime.dll"]
+        binaries += ["kaldi-decoder-core.dll"]
+        binaries += ["sherpa-onnx-fst.lib"]
+        binaries += ["sherpa-onnx-kaldifst-core.lib"]
 
     exe = []
     for f in binaries:
-        suffix = "" if "dll" in f else suffix
+        suffix = "" if (".dll" in f or ".lib" in f) else suffix
         t = bin_dir / (f + suffix)
         exe.append(str(t))
     return exe

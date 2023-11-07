@@ -1,0 +1,1 @@
+../../../../go-api-examples/streaming-decode-files/run-paraformer.sh

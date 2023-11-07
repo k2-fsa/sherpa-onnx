@@ -19,6 +19,7 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+  workflow_dispatch:
 
 concurrency:
   group: run-python-test-${{ github.ref }}
@@ -42,9 +43,14 @@ jobs:
             python-version: "3.10"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-python-${{ matrix.python-version }}
 
       - name: Setup Python
         uses: actions/setup-python@v2
@@ -54,14 +60,23 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy sentencepiece==0.1.96
+          python3 -m pip install --upgrade pip numpy sentencepiece==0.1.96 soundfile
 
       - name: Install sherpa-onnx
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
           python3 -m pip install --verbose .
 
       - name: Test sherpa-onnx
         shell: bash
         run: |
           .github/scripts/test-python.sh
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: tts-generated-test-files
+          path: tts

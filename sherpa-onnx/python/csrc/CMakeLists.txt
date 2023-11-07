@@ -14,6 +14,9 @@ pybind11_add_module(_sherpa_onnx
   offline-stream.cc
   offline-tdnn-model-config.cc
   offline-transducer-model-config.cc
+  offline-tts-model-config.cc
+  offline-tts-vits-model-config.cc
+  offline-tts.cc
   offline-whisper-model-config.cc
   offline-zipformer-ctc-model-config.cc
   online-lm-config.cc

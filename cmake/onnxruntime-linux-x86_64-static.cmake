@@ -14,19 +14,19 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.0/onnxruntime-linux-x64-static_lib-1.16.0.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/onnxruntime-linux-x64-static_lib-1.16.0.tgz")
-set(onnxruntime_HASH "SHA256=a36e989c9a07f12bf16f63acb2217b02a0cf4ac75aa7bc27de76ae08706a5c1f")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.1/onnxruntime-linux-x64-static_lib-1.16.1.zip")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-x64-static_lib-1.16.1.zip")
+set(onnxruntime_HASH "SHA256=0aa52fbff16ee9b165f42b7ea2ad61600d415d19681c9a9c6daca686c512cc64")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.16.0.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.16.0.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.16.0.tgz
-  /tmp/onnxruntime-linux-x64-static_lib-1.16.0.tgz
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.16.0.tgz
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.16.1.zip
+  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.16.1.zip
+  ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.16.1.zip
+  /tmp/onnxruntime-linux-x64-static_lib-1.16.1.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.16.1.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

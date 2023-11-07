@@ -137,6 +137,7 @@ class BuildExtension(build_ext):
         binaries += ["sherpa-onnx-offline-websocket-server"]
         binaries += ["sherpa-onnx-online-websocket-client"]
         binaries += ["sherpa-onnx-vad-microphone"]
+        binaries += ["sherpa-onnx-offline-tts"]
 
         if is_windows():
             binaries += ["kaldi-native-fbank-core.dll"]
@@ -144,9 +145,12 @@ class BuildExtension(build_ext):
             binaries += ["sherpa-onnx-core.dll"]
             binaries += ["sherpa-onnx-portaudio.dll"]
             binaries += ["onnxruntime.dll"]
+            binaries += ["kaldi-decoder-core.dll"]
+            binaries += ["sherpa-onnx-fst.lib"]
+            binaries += ["sherpa-onnx-kaldifst-core.lib"]
 
         for f in binaries:
-            suffix = "" if "dll" in f else suffix
+            suffix = "" if (".dll" in f or ".lib" in f) else suffix
             src_file = install_dir / "bin" / (f + suffix)
             if not src_file.is_file():
                 src_file = install_dir / "lib" / (f + suffix)

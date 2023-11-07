@@ -107,8 +107,10 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     int32_t num_frames = f.size() / feat_dim;
 
     if (num_frames > max_num_frames) {
-      SHERPA_ONNX_LOGE("Only waves less than 30 seconds are supported.");
-      exit(-1);
+      SHERPA_ONNX_LOGE(
+          "Only waves less than 30 seconds are supported. We process only the "
+          "first 30 seconds and discard the remaining data");
+      num_frames = max_num_frames;
     }
 
     NormalizeFeatures(f.data(), num_frames, feat_dim);
@@ -124,13 +126,19 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
            (max_num_frames - num_frames) * feat_dim * sizeof(float));
     mel = Transpose12(model_->Allocator(), &mel);
 
-    auto cross_kv = model_->ForwardEncoder(std::move(mel));
+    try {
+      auto cross_kv = model_->ForwardEncoder(std::move(mel));
 
-    auto results =
-        decoder_->Decode(std::move(cross_kv.first), std::move(cross_kv.second));
+      auto results = decoder_->Decode(std::move(cross_kv.first),
+                                      std::move(cross_kv.second));
 
-    auto r = Convert(results[0], symbol_table_);
-    s->SetResult(r);
+      auto r = Convert(results[0], symbol_table_);
+      s->SetResult(r);
+    } catch (const Ort::Exception &ex) {
+      SHERPA_ONNX_LOGE("\n\nCaught exception:\n\n%s\n\nReturn an empty result",
+                       ex.what());
+      return;
+    }
   }
 
  private:

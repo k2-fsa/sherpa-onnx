@@ -6,7 +6,7 @@ function(download_kaldi_decoder)
   set(kaldi_decoder_HASH "SHA256=98bf445a5b7961ccf3c3522317d900054eaadb6a9cdcf4531e7d9caece94a56d")
 
   set(KALDI_DECODER_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
-  set(KALDI_DECODER_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
+  set(KALDI_DECODER_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
   set(KALDIFST_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
 
   # If you don't have access to the Internet,

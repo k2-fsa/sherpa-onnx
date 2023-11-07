@@ -36,6 +36,7 @@ class VoiceActivityDetector {
   void AcceptWaveform(const float *samples, int32_t n);
   bool Empty() const;
   void Pop();
+  void Clear();
   const SpeechSegment &Front() const;
 
   bool IsSpeechDetected() const;

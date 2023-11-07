@@ -76,6 +76,8 @@ class VoiceActivityDetector::Impl {
 
   void Pop() { segments_.pop(); }
 
+  void Clear() { std::queue<SpeechSegment>().swap(segments_); }
+
   const SpeechSegment &Front() const { return segments_.front(); }
 
   void Reset() {
@@ -120,6 +122,8 @@ void VoiceActivityDetector::AcceptWaveform(const float *samples, int32_t n) {
 bool VoiceActivityDetector::Empty() const { return impl_->Empty(); }
 
 void VoiceActivityDetector::Pop() { impl_->Pop(); }
+
+void VoiceActivityDetector::Clear() { impl_->Clear(); }
 
 const SpeechSegment &VoiceActivityDetector::Front() const {
   return impl_->Front();

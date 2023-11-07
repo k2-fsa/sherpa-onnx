@@ -1,5 +1,11 @@
 #!/usr/bin/env bash
 
+if command -v aarch64-none-linux-gnu-gcc  &> /dev/null; then
+  ln -svf $(which aarch64-none-linux-gnu-gcc) ./aarch64-linux-gnu-gcc
+  ln -svf $(which aarch64-none-linux-gnu-g++) ./aarch64-linux-gnu-g++
+  export PATH=$PWD:$PATH
+fi
+
 if ! command -v aarch64-linux-gnu-gcc  &> /dev/null; then
   echo "Please install a toolchain for cross-compiling."
   echo "You can refer to: "
@@ -33,10 +39,15 @@ fi
 export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
 export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
 
+if [[ x"$BUILD_SHARED_LIBS" == x"" ]]; then
+  # By default, use static link
+  BUILD_SHARED_LIBS=OFF
+fi
+
 cmake \
   -DCMAKE_INSTALL_PREFIX=./install \
   -DCMAKE_BUILD_TYPE=Release \
-  -DBUILD_SHARED_LIBS=OFF \
+  -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
   -DSHERPA_ONNX_ENABLE_TESTS=OFF \
   -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
   -DSHERPA_ONNX_ENABLE_CHECK=OFF \

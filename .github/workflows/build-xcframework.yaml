@@ -26,7 +26,7 @@ jobs:
         os: [macos-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Build iOS
         shell: bash
@@ -57,7 +57,7 @@ jobs:
 
           ls -lh
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: sherpa-onnx-ios-libs
           path: ./build-ios

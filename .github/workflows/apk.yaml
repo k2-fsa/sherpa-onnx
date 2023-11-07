@@ -25,9 +25,15 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-android
+
       - name: Display NDK HOME
         shell: bash
         run: |
@@ -37,6 +43,10 @@ jobs:
       - name: build APK
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
           ./build-apk-vad.sh
           ./build-apk-two-pass.sh
@@ -47,7 +57,7 @@ jobs:
         run: |
           ls -lh ./apks/
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./apks/*.apk
 

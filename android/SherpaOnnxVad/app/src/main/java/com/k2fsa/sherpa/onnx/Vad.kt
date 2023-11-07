@@ -46,6 +46,8 @@ class Vad(
     // [start: Int, samples: FloatArray]
     fun front() = front(ptr)
 
+    fun clear() = clear(ptr)
+
     fun isSpeechDetected(): Boolean = isSpeechDetected(ptr)
 
     fun reset() = reset(ptr)
@@ -64,6 +66,7 @@ class Vad(
     private external fun acceptWaveform(ptr: Long, samples: FloatArray)
     private external fun empty(ptr: Long): Boolean
     private external fun pop(ptr: Long)
+    private external fun clear(ptr: Long)
     private external fun front(ptr: Long): Array<Any>
     private external fun isSpeechDetected(ptr: Long): Boolean
     private external fun reset(ptr: Long)

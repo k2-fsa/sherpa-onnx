@@ -1,0 +1,1 @@
+../../../../go-api-examples/non-streaming-decode-files/run-tdnn-yesno.sh

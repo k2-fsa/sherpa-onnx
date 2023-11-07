@@ -191,6 +191,7 @@ def main():
         "comment": "ljspeech",
         "language": "English",
         "add_blank": int(hps.data.add_blank),
+        "n_speakers": int(hps.data.n_speakers),
         "sample_rate": hps.data.sampling_rate,
         "punctuation": " ".join(list(_punctuation)),
     }
