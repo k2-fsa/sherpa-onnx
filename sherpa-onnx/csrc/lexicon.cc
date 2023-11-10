@@ -196,20 +196,27 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsChinese(
 
   std::vector<int64_t> ans;
 
+  int32_t blank = -1;
+  if (token2id_.count(" ")) {
+    blank = token2id_.at(" ");
+  }
+
   int32_t sil = -1;
   int32_t eos = -1;
   if (token2id_.count("sil")) {
     sil = token2id_.at("sil");
     eos = token2id_.at("eos");
-  } else {
-    sil = 0;
   }
 
-  ans.push_back(sil);
+  if (sil != -1) {
+    ans.push_back(sil);
+  }
 
   for (const auto &w : words) {
     if (punctuations_.count(w)) {
-      ans.push_back(sil);
+      if (sil != -1) {
+        ans.push_back(sil);
+      }
       continue;
     }
 
@@ -220,11 +227,19 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsChinese(
 
     const auto &token_ids = word2ids_.at(w);
     ans.insert(ans.end(), token_ids.begin(), token_ids.end());
+    if (blank != -1) {
+      ans.push_back(blank);
+    }
   }
-  ans.push_back(sil);
+
+  if (sil != -1) {
+    ans.push_back(sil);
+  }
+
   if (eos != -1) {
     ans.push_back(eos);
   }
+
   return ans;
 }
 
@@ -252,7 +267,7 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsEnglish(
   int32_t blank = token2id_.at(" ");
 
   std::vector<int64_t> ans;
-  if (is_piper_) {
+  if (is_piper_ && token2id_.count("^")) {
     ans.push_back(token2id_.at("^"));  // sos
   }
 
@@ -277,7 +292,7 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsEnglish(
     ans.resize(ans.size() - 1);
   }
 
-  if (is_piper_) {
+  if (is_piper_ && token2id_.count("$")) {
     ans.push_back(token2id_.at("$"));  // eos
   }
 

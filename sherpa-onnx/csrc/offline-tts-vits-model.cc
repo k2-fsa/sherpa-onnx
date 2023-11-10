@@ -81,7 +81,8 @@ class OfflineTtsVitsModel::Impl {
 
     std::string comment;
     SHERPA_ONNX_READ_META_DATA_STR(comment, "comment");
-    if (comment.find("piper") != std::string::npos) {
+    if (comment.find("piper") != std::string::npos ||
+        comment.find("coqui") != std::string::npos) {
       is_piper_ = true;
     }
   }
