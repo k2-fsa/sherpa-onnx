@@ -214,7 +214,9 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsChinese(
 
   for (const auto &w : words) {
     if (punctuations_.count(w)) {
-      if (sil != -1) {
+      if (token2id_.count(w)) {
+        ans.push_back(token2id_.at(w));
+      } else if (sil != -1) {
         ans.push_back(sil);
       }
       continue;
