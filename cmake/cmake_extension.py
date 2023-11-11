@@ -137,6 +137,7 @@ class BuildExtension(build_ext):
         binaries += ["sherpa-onnx-offline-websocket-server"]
         binaries += ["sherpa-onnx-online-websocket-client"]
         binaries += ["sherpa-onnx-vad-microphone"]
+        binaries += ["sherpa-onnx-vad-microphone-offline-asr"]
         binaries += ["sherpa-onnx-offline-tts"]
 
         if is_windows():
