@@ -225,6 +225,11 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-vad-microphone-offline-asr
+    sherpa-onnx-vad-microphone-offline-asr.cc
+    microphone.cc
+  )
+
   if(BUILD_SHARED_LIBS)
     set(PA_LIB portaudio)
   else()
@@ -235,6 +240,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     sherpa-onnx-microphone
     sherpa-onnx-microphone-offline
     sherpa-onnx-vad-microphone
+    sherpa-onnx-vad-microphone-offline-asr
   )
   foreach(exe IN LISTS exes)
     target_link_libraries(${exe} ${PA_LIB} sherpa-onnx-core)
