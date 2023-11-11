@@ -29,7 +29,7 @@ class TtsModel:
     model_dir: str
     model_name: str
     lang: str  # en, zh, fr, de, etc.
-    rule_fsts: Optional[List[str]] = (None,)
+    rule_fsts: Optional[List[str]] = None
 
 
 def get_all_models() -> List[TtsModel]:
