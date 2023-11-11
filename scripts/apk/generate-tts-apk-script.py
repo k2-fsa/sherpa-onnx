@@ -94,7 +94,7 @@ def get_all_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-coqui-en-ljspeech", model_name="model.onnx", lang="en"),
         TtsModel(model_dir="vits-coqui-en-ljspeech-neon", model_name="model.onnx", lang="en"),
         TtsModel(model_dir="vits-coqui-en-vctk", model_name="model.onnx", lang="en"),
-        TtsModel(model_dir="vits-coqui-en-jenny", model_name="model.onnx", lang="en"),
+        #  TtsModel(model_dir="vits-coqui-en-jenny", model_name="model.onnx", lang="en"),
         # English (US)
         TtsModel(model_dir="vits-vctk", model_name="vits-vctk.onnx", lang="en"),
         TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
