@@ -29,7 +29,7 @@ class TtsModel:
     model_dir: str
     model_name: str
     lang: str  # en, zh, fr, de, etc.
-    rule_fsts: Optional[List[str]] = (None,)
+    rule_fsts: Optional[List[str]] = None
 
 
 def get_all_models() -> List[TtsModel]:
@@ -89,8 +89,13 @@ def get_all_models() -> List[TtsModel]:
             lang="zh",
             rule_fsts="vits-zh-hf-theresa/rule.fst",
         ),
-        # English (US)
+        # English (coqui-ai/TTS)
         # fmt: off
+        TtsModel(model_dir="vits-coqui-en-ljspeech", model_name="model.onnx", lang="en"),
+        TtsModel(model_dir="vits-coqui-en-ljspeech-neon", model_name="model.onnx", lang="en"),
+        TtsModel(model_dir="vits-coqui-en-vctk", model_name="model.onnx", lang="en"),
+        #  TtsModel(model_dir="vits-coqui-en-jenny", model_name="model.onnx", lang="en"),
+        # English (US)
         TtsModel(model_dir="vits-vctk", model_name="vits-vctk.onnx", lang="en"),
         TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
         TtsModel(model_dir="vits-piper-en_US-amy-low", model_name="en_US-amy-low.onnx", lang="en",),
