@@ -15,18 +15,18 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.1/onnxruntime-win-x86-static_lib-1.16.1.tar.bz2")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-static_lib-1.16.1.tar.bz2")
-set(onnxruntime_HASH "SHA256=590d702f6705452567789ef862384e8ab99b039da10e7ecdc11a07d778c80ff9")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.2/onnxruntime-win-x86-static_lib-1.16.2.tar.bz2")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-static_lib-1.16.2.tar.bz2")
+set(onnxruntime_HASH "SHA256=b862605afc38a3b859673bc6a6691524328fc851b5a60a86eac12fb3192475e3")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-win-x86-static_lib-1.16.1.tar.bz2
-  ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-static_lib-1.16.1.tar.bz2
-  ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-static_lib-1.16.1.tar.bz2
-  /tmp/onnxruntime-win-x86-static_lib-1.16.1.tar.bz2
+  $ENV{HOME}/Downloads/onnxruntime-win-x86-static_lib-1.16.2.tar.bz2
+  ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-static_lib-1.16.2.tar.bz2
+  ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-static_lib-1.16.2.tar.bz2
+  /tmp/onnxruntime-win-x86-static_lib-1.16.2.tar.bz2
 )
 
 foreach(f IN LISTS possible_file_locations)

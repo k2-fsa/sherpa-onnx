@@ -14,19 +14,19 @@ if(NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.1/onnxruntime-linux-arm-1.16.1.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.16.1.zip")
-set(onnxruntime_HASH "SHA256=a668be37aa2eb5370e682f7599266c767b5327c1468203c372d8ceca4be1b585")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.2/onnxruntime-linux-arm-1.16.2.zip")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.16.2.zip")
+set(onnxruntime_HASH "SHA256=3744a80478cba2c08d8a32a4d6a9dab45b47fd9bb4bde2ba1d1633bc00ca9990")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-arm-1.16.1.zip
-  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-arm-1.16.1.zip
-  ${PROJECT_BINARY_DIR}/onnxruntime-linux-arm-1.16.1.zip
-  /tmp/onnxruntime-linux-arm-1.16.1.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-arm-1.16.1.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-arm-1.16.2.zip
+  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-arm-1.16.2.zip
+  ${PROJECT_BINARY_DIR}/onnxruntime-linux-arm-1.16.2.zip
+  /tmp/onnxruntime-linux-arm-1.16.2.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-arm-1.16.2.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

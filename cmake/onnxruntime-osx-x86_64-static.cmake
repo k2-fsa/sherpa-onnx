@@ -12,18 +12,18 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.1/onnxruntime-osx-x86_64-static_lib-1.16.1.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-osx-x86_64-static_lib-1.16.1.zip")
-set(onnxruntime_HASH "SHA256=da7e223d975ddfc9599187d016e2fc47e6f072f2a9817c5a48d8d7f021b49fbb")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.2/onnxruntime-osx-x86_64-static_lib-1.16.2.zip")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-osx-x86_64-static_lib-1.16.2.zip")
+set(onnxruntime_HASH "SHA256=5b35de726aca53e6db714db6e1b5537ac5416fae43941dbe5edc103d0c093d39")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-osx-x86_64-static_lib-1.16.1.zip
-  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-x86_64-static_lib-1.16.1.zip
-  ${PROJECT_BINARY_DIR}/onnxruntime-osx-x86_64-static_lib-1.16.1.zip
-  /tmp/onnxruntime-osx-x86_64-static_lib-1.16.1.zip
+  $ENV{HOME}/Downloads/onnxruntime-osx-x86_64-static_lib-1.16.2.zip
+  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-x86_64-static_lib-1.16.2.zip
+  ${PROJECT_BINARY_DIR}/onnxruntime-osx-x86_64-static_lib-1.16.2.zip
+  /tmp/onnxruntime-osx-x86_64-static_lib-1.16.2.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
