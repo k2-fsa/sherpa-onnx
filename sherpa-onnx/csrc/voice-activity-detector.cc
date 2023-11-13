@@ -4,7 +4,7 @@
 
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 
-#include <iostream>
+#include <algorithm>
 #include <queue>
 #include <utility>
 

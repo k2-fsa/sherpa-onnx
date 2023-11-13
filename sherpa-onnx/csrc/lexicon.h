@@ -6,8 +6,8 @@
 #define SHERPA_ONNX_CSRC_LEXICON_H_
 
 #include <cstdint>
-#include <iostream>
-#include <regex>
+#include <memory>
+#include <regex>  // NOLINT
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
