@@ -47,6 +47,8 @@ class CircularBuffer {
     tail_ = 0;
   }
 
+  void Resize(int32_t new_capacity);
+
  private:
   std::vector<float> buffer_;
 
