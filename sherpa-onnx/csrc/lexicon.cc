@@ -17,7 +17,8 @@
 #include "android/asset_manager_jni.h"
 #endif
 
-#include <regex>
+#include <memory>
+#include <regex>  // NOLINT
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"

@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 
+#include <algorithm>
 #include <queue>
 #include <utility>
 
@@ -30,7 +31,7 @@ class VoiceActivityDetector::Impl {
   void AcceptWaveform(const float *samples, int32_t n) {
     int32_t window_size = model_->WindowSize();
 
-    // note n is usally window_size and there is no need to use
+    // note n is usually window_size and there is no need to use
     // an extra buffer here
     last_.insert(last_.end(), samples, samples + n);
     int32_t k = static_cast<int32_t>(last_.size()) / window_size;
@@ -39,7 +40,7 @@ class VoiceActivityDetector::Impl {
 
     for (int32_t i = 0; i != k; ++i, p += window_size) {
       buffer_.Push(p, window_size);
-      is_speech = model_->IsSpeech(p, window_size);
+      is_speech = is_speech || model_->IsSpeech(p, window_size);
     }
 
     last_ = std::vector<float>(
@@ -48,8 +49,9 @@ class VoiceActivityDetector::Impl {
     if (is_speech) {
       if (start_ == -1) {
         // beginning of speech
-        start_ = buffer_.Tail() - 2 * model_->WindowSize() -
-                 model_->MinSpeechDurationSamples();
+        start_ = std::max(buffer_.Tail() - 2 * model_->WindowSize() -
+                              model_->MinSpeechDurationSamples(),
+                          buffer_.Head());
       }
     } else {
       // non-speech
@@ -66,6 +68,15 @@ class VoiceActivityDetector::Impl {
         segments_.push(std::move(segment));
 
         buffer_.Pop(end - buffer_.Head());
+      }
+
+      if (start_ == -1) {
+        int32_t end = buffer_.Tail() - 2 * model_->WindowSize() -
+                      model_->MinSpeechDurationSamples();
+        int32_t n = std::max(0, end - buffer_.Head());
+        if (n > 0) {
+          buffer_.Pop(n);
+        }
       }
 
       start_ = -1;

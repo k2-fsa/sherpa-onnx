@@ -19,13 +19,83 @@ CircularBuffer::CircularBuffer(int32_t capacity) {
   buffer_.resize(capacity);
 }
 
+void CircularBuffer::Resize(int32_t new_capacity) {
+  int32_t capacity = buffer_.size();
+  if (new_capacity <= capacity) {
+    SHERPA_ONNX_LOGE("new_capacity (%d) <= original capacity (%d). Skip it.",
+                     new_capacity, capacity);
+    return;
+  }
+
+  int32_t size = Size();
+  if (size == 0) {
+    buffer_.resize(new_capacity);
+    return;
+  }
+
+  std::vector<float> new_buffer(new_capacity);
+  int32_t start = head_ % capacity;
+  int32_t dest = head_ % new_capacity;
+
+  if (start + size <= capacity) {
+    if (dest + size <= new_capacity) {
+      std::copy(buffer_.begin() + start, buffer_.begin() + start + size,
+                new_buffer.begin() + dest);
+    } else {
+      int32_t part1_size = new_capacity - dest;
+
+      // copy [start, start+part1_size] to new_buffer
+      std::copy(buffer_.begin() + start, buffer_.begin() + start + part1_size,
+                new_buffer.begin() + dest);
+
+      // copy [start+part1_size, start+size] to new_buffer
+      std::copy(buffer_.begin() + start + part1_size,
+                buffer_.begin() + start + size, new_buffer.begin());
+    }
+  } else {
+    int32_t part1_size = capacity - start;
+    int32_t part2_size = size - part1_size;
+
+    // copy [start, start+part1_size] to new_buffer
+    if (dest + part1_size <= new_capacity) {
+      std::copy(buffer_.begin() + start, buffer_.begin() + start + part1_size,
+                new_buffer.begin() + dest);
+    } else {
+      int32_t first_part = new_capacity - dest;
+      int32_t second_part = part1_size - first_part;
+      std::copy(buffer_.begin() + start, buffer_.begin() + start + first_part,
+                new_buffer.begin() + dest);
+
+      std::copy(buffer_.begin() + start + first_part,
+                buffer_.begin() + start + part1_size, new_buffer.begin());
+    }
+
+    int32_t new_dest = (dest + part1_size) % new_capacity;
+
+    if (new_dest + part2_size <= new_capacity) {
+      std::copy(buffer_.begin(), buffer_.begin() + part2_size,
+                new_buffer.begin() + new_dest);
+    } else {
+      int32_t first_part = new_capacity - new_dest;
+      std::copy(buffer_.begin(), buffer_.begin() + first_part,
+                new_buffer.begin() + new_dest);
+      std::copy(buffer_.begin() + first_part, buffer_.begin() + part2_size,
+                new_buffer.begin());
+    }
+  }
+  buffer_.swap(new_buffer);
+}
+
 void CircularBuffer::Push(const float *p, int32_t n) {
   int32_t capacity = buffer_.size();
   int32_t size = Size();
   if (n + size > capacity) {
-    SHERPA_ONNX_LOGE("Overflow! n: %d, size: %d, n+size: %d, capacity: %d", n,
-                     size, n + size, capacity);
-    exit(-1);
+    int32_t new_capacity = std::max(capacity * 2, n + size);
+    SHERPA_ONNX_LOGE(
+        "Overflow! n: %d, size: %d, n+size: %d, capacity: %d. Increase "
+        "capacity to: %d",
+        n, size, n + size, capacity, new_capacity);
+    Resize(new_capacity);
   }
 
   int32_t start = tail_ % capacity;
