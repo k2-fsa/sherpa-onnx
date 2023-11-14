@@ -1,0 +1,39 @@
+name: export-wenet-to-onnx
+
+on:
+  push:
+    branches:
+      - master
+      - wenet-onnx-export-script
+    paths:
+      - 'scripts/wenet/**'
+      - '.github/workflows/export-wenet-to-onnx.yaml'
+  pull_request:
+    paths:
+      - 'scripts/wenet/**'
+      - '.github/workflows/export-wenet-to-onnx.yaml'
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-wenet-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-wenet-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export wenet
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/wenet
+          ./run.sh
