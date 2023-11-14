@@ -7,6 +7,8 @@
 # for a table of pre-trained models.
 # Please select the column "Checkpoint Model" for downloading.
 
+set -ex
+
 function install_dependencies() {
   pip install torch==2.1.0+cpu torchaudio==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
   pip install k2==1.24.4.dev20231022+cpu.torch2.1.0 -f https://k2-fsa.github.io/k2/cpu.html
@@ -25,7 +27,7 @@ function install_dependencies() {
   fi
 
   if [ ! -d $wenet_dir/ctl_model ]; then
-    cp -a .//wenet/wenet/ctl_model $wenet_dir
+    cp -a ./wenet/wenet/ctl_model $wenet_dir
   fi
 }
 
@@ -53,6 +55,6 @@ function aishell() {
   popd
 }
 
-install_dependencies()
+install_dependencies
 
-aishell()
+aishell
