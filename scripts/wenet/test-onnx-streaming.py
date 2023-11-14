@@ -133,7 +133,7 @@ def main():
     model_filename = "./model-streaming.onnx"
     model = OnnxModel(model_filename)
 
-    filename = "./BAC009S0764W0121.wav"
+    filename = "./0.wav"
     x = get_features(filename)
 
     padding = torch.zeros(int(16000 * 0.5), 80)

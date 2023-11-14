@@ -14,6 +14,7 @@ import onnx
 import torch
 import yaml
 from onnxruntime.quantization import QuantType, quantize_dynamic
+
 from wenet.utils.init_model import init_model
 
 

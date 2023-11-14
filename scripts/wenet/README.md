@@ -1,6 +1,6 @@
 # Introduction
 
-This folder contains script for export models
+This folder contains script for exporting models
 from [wenet](https://github.com/wenet-e2e/wenet)
 to onnx. You can use the exported models in sherpa-onnx.
 
