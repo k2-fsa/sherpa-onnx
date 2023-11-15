@@ -12,6 +12,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"
+#include "sherpa-onnx/csrc/offline-wenet-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 

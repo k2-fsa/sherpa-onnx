@@ -19,7 +19,7 @@ class OfflineWenetCtcModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(config_.nemo_ctc.model);
+    auto buf = ReadFile(config_.wenet_ctc.model);
     Init(buf.data(), buf.size());
   }
 
@@ -29,7 +29,7 @@ class OfflineWenetCtcModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(mgr, config_.nemo_ctc.model);
+    auto buf = ReadFile(mgr, config_.wenet_ctc.model);
     Init(buf.data(), buf.size());
   }
 #endif
