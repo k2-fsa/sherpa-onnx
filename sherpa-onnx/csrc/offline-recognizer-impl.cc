@@ -26,7 +26,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     } else if (model_type == "paraformer") {
       return std::make_unique<OfflineRecognizerParaformerImpl>(config);
     } else if (model_type == "nemo_ctc" || model_type == "tdnn" ||
-               model_type == "zipformer2_ctc") {
+               model_type == "zipformer2_ctc" || model_type == "wenet_ctc") {
       return std::make_unique<OfflineRecognizerCtcImpl>(config);
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(config);
@@ -51,6 +51,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     model_filename = config.model_config.tdnn.model;
   } else if (!config.model_config.zipformer_ctc.model.empty()) {
     model_filename = config.model_config.zipformer_ctc.model;
+  } else if (!config.model_config.wenet_ctc.model.empty()) {
+    model_filename = config.model_config.wenet_ctc.model;
   } else if (!config.model_config.whisper.encoder.empty()) {
     model_filename = config.model_config.whisper.encoder;
   } else {
@@ -99,6 +101,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "https://github.com/k2-fsa/icefall/blob/master/egs/librispeech/ASR/"
         "zipformer/export-onnx-ctc.py"
         "\n"
+        "(6) CTC models from WeNet"
+        "\n    "
+        "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/wenet/run.sh"
+        "\n"
         "\n");
     exit(-1);
   }
@@ -114,7 +120,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   }
 
   if (model_type == "EncDecCTCModelBPE" || model_type == "tdnn" ||
-      model_type == "zipformer2_ctc") {
+      model_type == "zipformer2_ctc" || model_type == "wenet_ctc") {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
 
@@ -130,7 +136,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - EncDecCTCModelBPE models from NeMo\n"
       " - Whisper models\n"
       " - Tdnn models\n"
-      " - Zipformer CTC models\n",
+      " - Zipformer CTC models\n"
+      " - WeNet CTC models\n",
       model_type.c_str());
 
   exit(-1);
@@ -146,7 +153,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     } else if (model_type == "paraformer") {
       return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
     } else if (model_type == "nemo_ctc" || model_type == "tdnn" ||
-               model_type == "zipformer2_ctc") {
+               model_type == "zipformer2_ctc" || model_type == "wenet_ctc") {
       return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
@@ -171,6 +178,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     model_filename = config.model_config.tdnn.model;
   } else if (!config.model_config.zipformer_ctc.model.empty()) {
     model_filename = config.model_config.zipformer_ctc.model;
+  } else if (!config.model_config.wenet_ctc.model.empty()) {
+    model_filename = config.model_config.wenet_ctc.model;
   } else if (!config.model_config.whisper.encoder.empty()) {
     model_filename = config.model_config.whisper.encoder;
   } else {
@@ -219,6 +228,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "https://github.com/k2-fsa/icefall/blob/master/egs/librispeech/ASR/"
         "zipformer/export-onnx-ctc.py"
         "\n"
+        "(6) CTC models from WeNet"
+        "\n    "
+        "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/wenet/run.sh"
+        "\n"
         "\n");
     exit(-1);
   }
@@ -234,7 +247,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   }
 
   if (model_type == "EncDecCTCModelBPE" || model_type == "tdnn" ||
-      model_type == "zipformer2_ctc") {
+      model_type == "zipformer2_ctc" || model_type == "wenet_ctc") {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }
 
@@ -250,7 +263,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - EncDecCTCModelBPE models from NeMo\n"
       " - Whisper models\n"
       " - Tdnn models\n"
-      " - Zipformer CTC models\n",
+      " - Zipformer CTC models\n"
+      " - WeNet CTC models\n",
       model_type.c_str());
 
   exit(-1);

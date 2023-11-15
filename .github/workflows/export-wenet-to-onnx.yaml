@@ -1,17 +1,6 @@
 name: export-wenet-to-onnx
 
 on:
-  push:
-    branches:
-      - master
-    paths:
-      - 'scripts/wenet/**'
-      - '.github/workflows/export-wenet-to-onnx.yaml'
-  pull_request:
-    paths:
-      - 'scripts/wenet/**'
-      - '.github/workflows/export-wenet-to-onnx.yaml'
-
   workflow_dispatch:
 
 concurrency:

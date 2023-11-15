@@ -10,6 +10,7 @@
 #include "sherpa-onnx/csrc/offline-paraformer-model-config.h"
 #include "sherpa-onnx/csrc/offline-tdnn-model-config.h"
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"
+#include "sherpa-onnx/csrc/offline-wenet-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-whisper-model-config.h"
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model-config.h"
 
@@ -22,6 +23,7 @@ struct OfflineModelConfig {
   OfflineWhisperModelConfig whisper;
   OfflineTdnnModelConfig tdnn;
   OfflineZipformerCtcModelConfig zipformer_ctc;
+  OfflineWenetCtcModelConfig wenet_ctc;
 
   std::string tokens;
   int32_t num_threads = 2;
@@ -46,6 +48,7 @@ struct OfflineModelConfig {
                      const OfflineWhisperModelConfig &whisper,
                      const OfflineTdnnModelConfig &tdnn,
                      const OfflineZipformerCtcModelConfig &zipformer_ctc,
+                     const OfflineWenetCtcModelConfig &wenet_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
                      const std::string &provider, const std::string &model_type)
       : transducer(transducer),
@@ -54,6 +57,7 @@ struct OfflineModelConfig {
         whisper(whisper),
         tdnn(tdnn),
         zipformer_ctc(zipformer_ctc),
+        wenet_ctc(wenet_ctc),
         tokens(tokens),
         num_threads(num_threads),
         debug(debug),

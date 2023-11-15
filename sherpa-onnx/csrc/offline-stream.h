@@ -40,7 +40,8 @@ struct OfflineFeatureExtractorConfig {
   // Feature dimension
   int32_t feature_dim = 80;
 
-  // Set internally by some models, e.g., paraformer sets it to false.
+  // Set internally by some models, e.g., paraformer and wenet CTC models set
+  // it to false.
   // This parameter is not exposed to users from the commandline
   // If true, the feature extractor expects inputs to be normalized to
   // the range [-1, 1].

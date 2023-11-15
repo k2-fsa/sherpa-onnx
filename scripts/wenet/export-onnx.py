@@ -107,10 +107,12 @@ def main():
     # https://wenet.org.cn/downloads?models=wenet&version=aishell_u2pp_conformer_exp.tar.gz
     url = os.environ.get("WENET_URL", "")
     meta_data = {
-        "model_type": "wenet-ctc",
+        "model_type": "wenet_ctc",
         "version": "1",
         "model_author": "wenet",
         "comment": "non-streaming",
+        "subsampling_factor": torch_model.encoder.embed.subsampling_rate,
+        "vocab_size": torch_model.ctc.ctc_lo.weight.shape[0],
         "url": url,
     }
     add_meta_data(filename=filename, meta_data=meta_data)
