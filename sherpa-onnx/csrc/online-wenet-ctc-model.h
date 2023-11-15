@@ -28,19 +28,22 @@ class OnlineWenetCtcModel {
 
   ~OnlineWenetCtcModel();
 
-  std::vector<Ort::Value> GetInitStates();
+  // A list of 3 tensors:
+  //  - attn_cache
+  //  - conv_cache
+  //  - offset
+  std::vector<Ort::Value> GetInitStates() const;
 
   /**
    *
    * @param x A 3-D tensor of shape (N, T, C). N has to be 1.
-   * @param offset A scalar tensor of type int64.
    * @param states  It is from GetInitStates() or returned from this method.
    *
    * @return Return a list of tensors
    *    - ans[0] contains log_probs, of shape (N, T, C)
    *    - ans[1:] contains next_states
    */
-  std::vector<Ort::Value> Forward(Ort::Value x, Ort::Value offset,
+  std::vector<Ort::Value> Forward(Ort::Value x,
                                   std::vector<Ort::Value> states) const;
 
   /** Return the vocabulary size of the model

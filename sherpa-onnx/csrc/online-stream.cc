@@ -51,6 +51,10 @@ class OnlineStream::Impl {
 
   OnlineTransducerDecoderResult &GetResult() { return result_; }
 
+  OnlineCtcDecoderResult &GetCtcResult() { return ctc_result_; }
+
+  void SetCtcResult(const OnlineCtcDecoderResult &r) { ctc_result_ = r; }
+
   void SetParaformerResult(const OnlineParaformerDecoderResult &r) {
     paraformer_result_ = r;
   }
@@ -89,7 +93,8 @@ class OnlineStream::Impl {
   int32_t start_frame_index_ = 0;     // never reset
   int32_t segment_ = 0;
   OnlineTransducerDecoderResult result_;
-  std::vector<Ort::Value> states_;
+  OnlineCtcDecoderResult ctc_result_;
+  std::vector<Ort::Value> states_;  // states for transducer or ctc models
   std::vector<float> paraformer_feat_cache_;
   std::vector<float> paraformer_encoder_out_cache_;
   std::vector<float> paraformer_alpha_cache_;
@@ -142,6 +147,14 @@ void OnlineStream::SetResult(const OnlineTransducerDecoderResult &r) {
 
 OnlineTransducerDecoderResult &OnlineStream::GetResult() {
   return impl_->GetResult();
+}
+
+OnlineCtcDecoderResult &OnlineStream::GetCtcResult() {
+  return impl_->GetCtcResult();
+}
+
+void OnlineStream::SetCtcResult(const OnlineCtcDecoderResult &r) {
+  impl_->SetCtcResult(r);
 }
 
 void OnlineStream::SetParaformerResult(const OnlineParaformerDecoderResult &r) {

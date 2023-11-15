@@ -41,6 +41,12 @@ void OnlineCtcGreedySearchDecoder::Decode(
           std::max_element(static_cast<const float *>(p),
                            static_cast<const float *>(p) + vocab_size)));
 
+      if (y == blank_id_) {
+        r.num_trailing_blanks += 1;
+      } else {
+        r.num_trailing_blanks = 0;
+      }
+
       if (y != blank_id_ && y != prev_id) {
         r.tokens.push_back(y);
         r.timestamps.push_back(t);

@@ -11,6 +11,7 @@
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/online-ctc-decoder.h"
 #include "sherpa-onnx/csrc/online-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 
@@ -74,6 +75,9 @@ class OnlineStream {
 
   void SetResult(const OnlineTransducerDecoderResult &r);
   OnlineTransducerDecoderResult &GetResult();
+
+  void SetCtcResult(const OnlineCtcDecoderResult &r);
+  OnlineCtcDecoderResult &GetCtcResult();
 
   void SetParaformerResult(const OnlineParaformerDecoderResult &r);
   OnlineParaformerDecoderResult &GetParaformerResult();

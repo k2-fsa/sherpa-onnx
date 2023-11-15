@@ -46,14 +46,46 @@ class OnlineWenetCtcModel::Impl {
   }
 #endif
 
-  std::vector<Ort::Value> Forward(Ort::Value x, Ort::Value offset,
+  std::vector<Ort::Value> Forward(Ort::Value x,
                                   std::vector<Ort::Value> states) {
-    // std::array<Ort::Value, 2> inputs = {std::move(features),
-    //                                     std::move(features_length)};
-    //
-    // return sess_->Run({}, input_names_ptr_.data(), inputs.data(),
-    // inputs.size(),
-    //                   output_names_ptr_.data(), output_names_ptr_.size());
+    Ort::Value &attn_cache = states[0];
+    Ort::Value &conv_cache = states[1];
+    Ort::Value &offset = states[2];
+
+    int32_t chunk_size = config_.wenet_ctc.chunk_size;
+    int32_t left_chunks = config_.wenet_ctc.num_left_chunks;
+    // build attn_mask
+    std::array<int64_t, 3> attn_mask_shape{1, 1,
+                                           required_cache_size_ + chunk_size};
+    Ort::Value attn_mask = Ort::Value::CreateTensor<bool>(
+        allocator_, attn_mask_shape.data(), attn_mask_shape.size());
+    bool *p = attn_mask.GetTensorMutableData<bool>();
+    int32_t chunk_idx =
+        offset.GetTensorData<int64_t>()[0] / chunk_size - left_chunks;
+    if (chunk_idx < left_chunks) {
+      std::fill(p, p + required_cache_size_ - chunk_idx * chunk_size, 0);
+      std::fill(p + required_cache_size_ - chunk_idx * chunk_size,
+                p + attn_mask_shape[2], 1);
+    } else {
+      std::fill(p, p + attn_mask_shape[2], 1);
+    }
+
+    std::array<Ort::Value, 6> inputs = {std::move(x),
+                                        View(&offset),
+                                        View(&required_cache_size_tensor_),
+                                        std::move(attn_cache),
+                                        std::move(conv_cache),
+                                        std::move(attn_mask)};
+
+    auto out =
+        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                   output_names_ptr_.data(), output_names_ptr_.size());
+
+    offset.GetTensorMutableData<int64_t>()[0] +=
+        out[0].GetTensorTypeAndShapeInfo().GetShape()[1];
+    out.push_back(std::move(offset));
+
+    return out;
   }
 
   int32_t VocabSize() const { return vocab_size_; }
@@ -68,6 +100,28 @@ class OnlineWenetCtcModel::Impl {
   int32_t ChunkShift() const { return required_cache_size_; }
 
   OrtAllocator *Allocator() const { return allocator_; }
+
+  // Return a vector containing 3 tensors
+  // - attn_cache
+  // - conv_cache
+  // - offset
+  std::vector<Ort::Value> GetInitStates() const {
+    std::vector<Ort::Value> ans;
+    ans.reserve(3);
+    ans.push_back(Clone(Allocator(), &attn_cache_));
+    ans.push_back(Clone(Allocator(), &conv_cache_));
+
+    int64_t offset_shape = 1;
+
+    Ort::Value offset =
+        Ort::Value::CreateTensor<int64_t>(allocator_, &offset_shape, 1);
+
+    offset.GetTensorMutableData<int64_t>()[0] = required_cache_size_;
+
+    ans.push_back(std::move(offset));
+
+    return ans;
+  }
 
  private:
   void Init(void *model_data, size_t model_data_length) {
@@ -97,6 +151,31 @@ class OnlineWenetCtcModel::Impl {
 
     required_cache_size_ =
         config_.wenet_ctc.chunk_size * config_.wenet_ctc.num_left_chunks;
+
+    InitStates();
+  }
+
+  void InitStates() {
+    std::array<int64_t, 4> attn_cache_shape{
+        num_blocks_, head_, required_cache_size_, output_size_ / head_ * 2};
+    attn_cache_ = Ort::Value::CreateTensor<float>(
+        allocator_, attn_cache_shape.data(), attn_cache_shape.size());
+
+    Fill<float>(&attn_cache_, 0);
+
+    std::array<int64_t, 4> conv_cache_shape{num_blocks_, 1, output_size_,
+                                            cnn_module_kernel_ - 1};
+    conv_cache_ = Ort::Value::CreateTensor<float>(
+        allocator_, conv_cache_shape.data(), conv_cache_shape.size());
+
+    Fill<float>(&conv_cache_, 0);
+
+    int64_t shape = 1;
+    required_cache_size_tensor_ =
+        Ort::Value::CreateTensor<int64_t>(allocator_, &shape, 1);
+
+    required_cache_size_tensor_.GetTensorMutableData<int64_t>()[0] =
+        required_cache_size_;
   }
 
  private:
@@ -122,6 +201,10 @@ class OnlineWenetCtcModel::Impl {
   int32_t vocab_size_;
 
   int32_t required_cache_size_;
+
+  Ort::Value attn_cache_{nullptr};
+  Ort::Value conv_cache_{nullptr};
+  Ort::Value required_cache_size_tensor_{nullptr};
 };
 
 OnlineWenetCtcModel::OnlineWenetCtcModel(const OnlineModelConfig &config)
@@ -136,8 +219,8 @@ OnlineWenetCtcModel::OnlineWenetCtcModel(AAssetManager *mgr,
 OnlineWenetCtcModel::~OnlineWenetCtcModel() = default;
 
 std::vector<Ort::Value> OnlineWenetCtcModel::Forward(
-    Ort::Value x, Ort::Value offset, std::vector<Ort::Value> states) const {
-  return impl_->Forward(std::move(x), std::move(offset), std::move(states));
+    Ort::Value x, std::vector<Ort::Value> states) const {
+  return impl_->Forward(std::move(x), std::move(states));
 }
 
 int32_t OnlineWenetCtcModel::VocabSize() const { return impl_->VocabSize(); }
@@ -150,6 +233,10 @@ int32_t OnlineWenetCtcModel::ChunkShift() const { return impl_->ChunkShift(); }
 
 OrtAllocator *OnlineWenetCtcModel::Allocator() const {
   return impl_->Allocator();
+}
+
+std::vector<Ort::Value> OnlineWenetCtcModel::GetInitStates() const {
+  return impl_->GetInitStates();
 }
 
 }  // namespace sherpa_onnx

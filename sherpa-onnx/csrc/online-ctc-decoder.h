@@ -18,6 +18,8 @@ struct OnlineCtcDecoderResult {
   /// timestamps[i] contains the output frame index where tokens[i] is decoded.
   /// Note: The index is after subsampling
   std::vector<int32_t> timestamps;
+
+  int32_t num_trailing_blanks = 0;
 };
 
 class OnlineCtcDecoder {
