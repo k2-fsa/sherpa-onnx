@@ -12,6 +12,7 @@
 #include "sherpa-onnx/python/csrc/offline-paraformer-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-tdnn-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-transducer-model-config.h"
+#include "sherpa-onnx/python/csrc/offline-wenet-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-whisper-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-zipformer-ctc-model-config.h"
 
@@ -24,6 +25,7 @@ void PybindOfflineModelConfig(py::module *m) {
   PybindOfflineWhisperModelConfig(m);
   PybindOfflineTdnnModelConfig(m);
   PybindOfflineZipformerCtcModelConfig(m);
+  PybindOfflineWenetCtcModelConfig(m);
 
   using PyClass = OfflineModelConfig;
   py::class_<PyClass>(*m, "OfflineModelConfig")
@@ -32,7 +34,8 @@ void PybindOfflineModelConfig(py::module *m) {
                     const OfflineNemoEncDecCtcModelConfig &,
                     const OfflineWhisperModelConfig &,
                     const OfflineTdnnModelConfig &,
-                    const OfflineZipformerCtcModelConfig &, const std::string &,
+                    const OfflineZipformerCtcModelConfig &,
+                    const OfflineWenetCtcModelConfig &, const std::string &,
                     int32_t, bool, const std::string &, const std::string &>(),
            py::arg("transducer") = OfflineTransducerModelConfig(),
            py::arg("paraformer") = OfflineParaformerModelConfig(),
@@ -40,6 +43,7 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("whisper") = OfflineWhisperModelConfig(),
            py::arg("tdnn") = OfflineTdnnModelConfig(),
            py::arg("zipformer_ctc") = OfflineZipformerCtcModelConfig(),
+           py::arg("wenet_ctc") = OfflineWenetCtcModelConfig(),
            py::arg("tokens"), py::arg("num_threads"), py::arg("debug") = false,
            py::arg("provider") = "cpu", py::arg("model_type") = "")
       .def_readwrite("transducer", &PyClass::transducer)
@@ -48,6 +52,7 @@ void PybindOfflineModelConfig(py::module *m) {
       .def_readwrite("whisper", &PyClass::whisper)
       .def_readwrite("tdnn", &PyClass::tdnn)
       .def_readwrite("zipformer_ctc", &PyClass::zipformer_ctc)
+      .def_readwrite("wenet_ctc", &PyClass::wenet_ctc)
       .def_readwrite("tokens", &PyClass::tokens)
       .def_readwrite("num_threads", &PyClass::num_threads)
       .def_readwrite("debug", &PyClass::debug)

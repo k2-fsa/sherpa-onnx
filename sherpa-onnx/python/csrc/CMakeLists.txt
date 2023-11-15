@@ -17,6 +17,7 @@ pybind11_add_module(_sherpa_onnx
   offline-tts-model-config.cc
   offline-tts-vits-model-config.cc
   offline-tts.cc
+  offline-wenet-ctc-model-config.cc
   offline-whisper-model-config.cc
   offline-zipformer-ctc-model-config.cc
   online-lm-config.cc
