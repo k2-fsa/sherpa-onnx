@@ -58,6 +58,12 @@ function aishell() {
   ./export-onnx.py
   ls -lh
   ./test-onnx.py
+
+  cat > README.md <<EOF
+# Introduction
+This model is converted from https://wenet.org.cn/downloads?models=wenet&version=aishell_u2pp_conformer_exp.tar.gz
+EOF
+
   popd
 }
 
@@ -85,6 +91,12 @@ function aishell2() {
   ./export-onnx.py
   ls -lh
   ./test-onnx.py
+
+  cat > README.md <<EOF
+# Introduction
+This model is converted from https://wenet.org.cn/downloads?models=wenet&version=aishell2_u2pp_conformer_exp.tar.gz
+EOF
+
   popd
 }
 
@@ -112,6 +124,12 @@ function multi_cn() {
   ./export-onnx.py
   ls -lh
   ./test-onnx.py
+
+  cat > README.md <<EOF
+# Introduction
+This model is converted from https://wenet.org.cn/downloads?models=wenet&version=multi_cn_unified_conformer_exp.tar.gz
+EOF
+
   popd
 }
 
@@ -139,6 +157,12 @@ function wenetspeech() {
   ./export-onnx.py
   ls -lh
   ./test-onnx.py
+
+  cat > README.md <<EOF
+# Introduction
+This model is converted from https://wenet.org.cn/downloads?models=wenet&version=wenetspeech_u2pp_conformer_exp.tar.gz
+EOF
+
   popd
 }
 
@@ -166,6 +190,12 @@ function librispeech() {
   ./export-onnx.py
   ls -lh
   ./test-onnx.py
+
+  cat > README.md <<EOF
+# Introduction
+This model is converted from https://wenet.org.cn/downloads?models=wenet&version=librispeech_u2pp_conformer_exp.tar.gz
+EOF
+
   popd
 }
 
@@ -193,6 +223,12 @@ function gigaspeech() {
   ./export-onnx.py
   ls -lh
   ./test-onnx.py
+
+  cat > README.md <<EOF
+# Introduction
+This model is converted from https://wenet.org.cn/downloads?models=wenet&version=gigaspeech_u2pp_conformer_exp.tar.gz
+EOF
+
   popd
 }
 
