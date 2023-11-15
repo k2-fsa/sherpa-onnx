@@ -72,7 +72,7 @@ jobs:
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx-offline.exe
+          export EXE=sherpa-onnx.exe
 
           .github/scripts/test-online-ctc.sh
 
