@@ -17,6 +17,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   whisper.Register(po);
   tdnn.Register(po);
   zipformer_ctc.Register(po);
+  wenet_ctc.Register(po);
 
   po->Register("tokens", &tokens, "Path to tokens.txt");
 
@@ -67,6 +68,10 @@ bool OfflineModelConfig::Validate() const {
     return zipformer_ctc.Validate();
   }
 
+  if (!wenet_ctc.model.empty()) {
+    return wenet_ctc.Validate();
+  }
+
   return transducer.Validate();
 }
 
@@ -80,6 +85,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "whisper=" << whisper.ToString() << ", ";
   os << "tdnn=" << tdnn.ToString() << ", ";
   os << "zipformer_ctc=" << zipformer_ctc.ToString() << ", ";
+  os << "wenet_ctc=" << wenet_ctc.ToString() << ", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
