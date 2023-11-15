@@ -1,0 +1,293 @@
+name: export-wenet-to-onnx
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'scripts/wenet/**'
+      - '.github/workflows/export-wenet-to-onnx.yaml'
+  pull_request:
+    paths:
+      - 'scripts/wenet/**'
+      - '.github/workflows/export-wenet-to-onnx.yaml'
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-wenet-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-wenet-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export wenet
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run
+        shell: bash
+        run: |
+          sudo apt-get install tree sox
+          cd scripts/wenet
+          ./run.sh
+
+      - name: Publish to huggingface (aishell)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-aishell huggingface
+            cd huggingface
+            git fetch
+            git pull
+
+            cp -v ../scripts/wenet/aishell_u2pp_conformer_exp/*.onnx .
+            cp -v ../scripts/wenet/aishell_u2pp_conformer_exp/units.txt tokens.txt
+            cp -v ../scripts/wenet/aishell_u2pp_conformer_exp/README.md .
+
+            if [ ! -d test_wavs ]; then
+              mkdir test_wavs
+              cd test_wavs
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/0.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/1.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/8k.wav
+              cd ..
+            fi
+            git lfs track "*.onnx"
+            git add .
+
+            git commit -m "add aishell models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-aishell main || true
+
+            cd ..
+            rm -rf huggingface
+
+      - name: Publish to huggingface (aishell2)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-aishell2 huggingface
+            cd huggingface
+            git fetch
+            git pull
+
+            cp -v ../scripts/wenet/aishell2_u2pp_conformer_exp/*.onnx .
+            cp -v ../scripts/wenet/aishell2_u2pp_conformer_exp/units.txt tokens.txt
+            cp -v ../scripts/wenet/aishell2_u2pp_conformer_exp/README.md .
+
+            if [ ! -d test_wavs ]; then
+              mkdir test_wavs
+              cd test_wavs
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/0.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/1.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/8k.wav
+              cd ..
+            fi
+            git lfs track "*.onnx"
+            git add .
+
+            git commit -m "add aishell2 models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-aishell2 main || true
+
+            cd ..
+            rm -rf huggingface
+
+      - name: Publish to huggingface (multi_cn)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-multi-cn huggingface
+            cd huggingface
+            git fetch
+            git pull
+
+            cp -v ../scripts/wenet/multi_cn_unified_conformer_exp/*.onnx .
+            cp -v ../scripts/wenet/multi_cn_unified_conformer_exp/units.txt tokens.txt
+            cp -v ../scripts/wenet/multi_cn_unified_conformer_exp/README.md .
+
+            if [ ! -d test_wavs ]; then
+              mkdir test_wavs
+              cd test_wavs
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/0.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/1.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/8k.wav
+              cd ..
+            fi
+            git lfs track "*.onnx"
+            git add .
+
+            git commit -m "add multi_cn models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-multi-cn main || true
+
+            cd ..
+            rm -rf huggingface
+
+      - name: Publish to huggingface (wenetspeech)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-wenetspeech huggingface
+            cd huggingface
+            git fetch
+            git pull
+
+            cp -v ../scripts/wenet/20220506_u2pp_conformer_exp/*.onnx .
+            cp -v ../scripts/wenet/20220506_u2pp_conformer_exp/units.txt tokens.txt
+            cp -v ../scripts/wenet/20220506_u2pp_conformer_exp/README.md .
+
+            if [ ! -d test_wavs ]; then
+              mkdir test_wavs
+              cd test_wavs
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/0.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/1.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/resolve/main/test_wavs/8k.wav
+              cd ..
+            fi
+            git lfs track "*.onnx"
+            git add .
+
+            git commit -m "add wenetspeech models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-wenetspeech main || true
+
+            cd ..
+            rm -rf huggingface
+
+      - name: Publish to huggingface (librispeech)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-en-wenet-librispeech huggingface
+            cd huggingface
+            git fetch
+            git pull
+
+            cp -v ../scripts/wenet/librispeech_u2pp_conformer_exp/*.onnx .
+            cp -v ../scripts/wenet/librispeech_u2pp_conformer_exp/units.txt tokens.txt
+            cp -v ../scripts/wenet/librispeech_u2pp_conformer_exp/README.md .
+
+            if [ ! -d test_wavs ]; then
+              mkdir test_wavs
+              cd test_wavs
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21/resolve/main/test_wavs/0.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21/resolve/main/test_wavs/1.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21/resolve/main/test_wavs/8k.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21/resolve/main/test_wavs/trans.txt
+              cd ..
+            fi
+            git lfs track "*.onnx"
+            git add .
+
+            git commit -m "add librispeech models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-en-wenet-librispeech main || true
+
+            cd ..
+            rm -rf huggingface
+
+      - name: Publish to huggingface (gigaspeech)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-en-wenet-gigaspeech huggingface
+            cd huggingface
+            git fetch
+            git pull
+
+            cp -v ../scripts/wenet/20210728_u2pp_conformer_exp/*.onnx .
+            cp -v ../scripts/wenet/20210728_u2pp_conformer_exp/units.txt tokens.txt
+            cp -v ../scripts/wenet/20210728_u2pp_conformer_exp/README.md .
+
+            if [ ! -d test_wavs ]; then
+              mkdir test_wavs
+              cd test_wavs
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21/resolve/main/test_wavs/0.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21/resolve/main/test_wavs/1.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21/resolve/main/test_wavs/8k.wav
+              wget -q https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21/resolve/main/test_wavs/trans.txt
+              cd ..
+            fi
+            git lfs track "*.onnx"
+            git add .
+
+            git commit -m "add gigaspeech models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-en-wenet-gigaspeech main || true
+
+            cd ..
+            rm -rf huggingface
