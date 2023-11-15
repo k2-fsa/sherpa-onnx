@@ -78,6 +78,12 @@ class OnlineWenetCtcModel::Impl {
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
+    SHERPA_ONNX_READ_META_DATA(head_, "head");
+    SHERPA_ONNX_READ_META_DATA(num_blocks_, "num_blocks");
+    SHERPA_ONNX_READ_META_DATA(output_size_, "output_size");
+    SHERPA_ONNX_READ_META_DATA(cnn_module_kernel_, "cnn_module_kernel");
+    SHERPA_ONNX_READ_META_DATA(right_context_, "right_context");
+    SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
     SHERPA_ONNX_READ_META_DATA(vocab_size_, "vocab_size");
   }
 
@@ -95,7 +101,13 @@ class OnlineWenetCtcModel::Impl {
   std::vector<std::string> output_names_;
   std::vector<const char *> output_names_ptr_;
 
-  int32_t vocab_size_ = 0;  // initialized in Init
+  int32_t head_;
+  int32_t num_blocks_;
+  int32_t output_size_;
+  int32_t cnn_module_kernel_;
+  int32_t right_context_;
+  int32_t subsampling_factor_;
+  int32_t vocab_size_;
 };
 
 OnlineWenetCtcModel::OnlineWenetCtcModel(const OnlineModelConfig &config)
