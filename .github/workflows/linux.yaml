@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - online-wenet-ctc
     tags:
       - '*'
     paths:
@@ -12,6 +13,7 @@ on:
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
@@ -27,6 +29,7 @@ on:
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
@@ -88,6 +91,14 @@ jobs:
         run: |
           file build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
+
+      - name: Test online CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-ctc.sh
 
       - name: Test offline CTC
         shell: bash
