@@ -65,6 +65,7 @@ set(sources
   online-transducer-model.cc
   online-transducer-modified-beam-search-decoder.cc
   online-wenet-ctc-model-config.cc
+  online-wenet-ctc-model.cc
   online-zipformer-transducer-model.cc
   online-zipformer2-transducer-model.cc
   onnx-utils.cc
