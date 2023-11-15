@@ -63,6 +63,9 @@ class OfflineCtcModel {
    * for the features.
    */
   virtual std::string FeatureNormalizationMethod() const { return {}; }
+
+  // Return true if the model supports batch size > 1
+  virtual bool SupportBatchProcessing() const { return true; }
 };
 
 }  // namespace sherpa_onnx

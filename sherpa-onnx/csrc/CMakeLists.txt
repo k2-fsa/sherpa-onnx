@@ -42,6 +42,7 @@ set(sources
   offline-transducer-model.cc
   offline-transducer-modified-beam-search-decoder.cc
   offline-wenet-ctc-model-config.cc
+  offline-wenet-ctc-model.cc
   offline-whisper-greedy-search-decoder.cc
   offline-whisper-model-config.cc
   offline-whisper-model.cc
