@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/online-wenet-ctc-model.h
+// sherpa-onnx/csrc/online-ctc-model.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_ONLINE_WENET_CTC_MODEL_H_
-#define SHERPA_ONNX_CSRC_ONLINE_WENET_CTC_MODEL_H_
+#ifndef SHERPA_ONNX_CSRC_ONLINE_CTC_MODEL_H_
+#define SHERPA_ONNX_CSRC_ONLINE_CTC_MODEL_H_
 
 #include <memory>
 #include <utility>
@@ -14,26 +14,24 @@
 #endif
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
-#include "sherpa-onnx/csrc/online-ctc-model.h"
 #include "sherpa-onnx/csrc/online-model-config.h"
 
 namespace sherpa_onnx {
 
-class OnlineWenetCtcModel : public OnlineCtcModel {
+class OnlineCtcModel {
  public:
-  explicit OnlineWenetCtcModel(const OnlineModelConfig &config);
+  virtual ~OnlineCtcModel() = default;
+
+  static std::unique_ptr<OnlineCtcModel> Create(
+      const OnlineModelConfig &config);
 
 #if __ANDROID_API__ >= 9
-  OnlineWenetCtcModel(AAssetManager *mgr, const OnlineModelConfig &config);
+  static std::unique_ptr<OnlineCtcModel> Create(
+      AAssetManager *mgr, const OnlineModelConfig &config);
 #endif
 
-  ~OnlineWenetCtcModel() override;
-
-  // A list of 3 tensors:
-  //  - attn_cache
-  //  - conv_cache
-  //  - offset
-  std::vector<Ort::Value> GetInitStates() const override;
+  // Return a list of tensors containing the initial states
+  virtual std::vector<Ort::Value> GetInitStates() const = 0;
 
   /**
    *
@@ -44,30 +42,26 @@ class OnlineWenetCtcModel : public OnlineCtcModel {
    *    - ans[0] contains log_probs, of shape (N, T, C)
    *    - ans[1:] contains next_states
    */
-  std::vector<Ort::Value> Forward(
-      Ort::Value x, std::vector<Ort::Value> states) const override;
+  virtual std::vector<Ort::Value> Forward(
+      Ort::Value x, std::vector<Ort::Value> states) const = 0;
 
   /** Return the vocabulary size of the model
    */
-  int32_t VocabSize() const override;
+  virtual int32_t VocabSize() const = 0;
 
   /** Return an allocator for allocating memory
    */
-  OrtAllocator *Allocator() const override;
+  virtual OrtAllocator *Allocator() const = 0;
 
   // The model accepts this number of frames before subsampling as input
-  int32_t ChunkLength() const override;
+  virtual int32_t ChunkLength() const = 0;
 
   // Similar to frame_shift in feature extractor, after processing
   // ChunkLength() frames, we advance by ChunkShift() frames
   // before we process the next chunk.
-  int32_t ChunkShift() const override;
-
- private:
-  class Impl;
-  std::unique_ptr<Impl> impl_;
+  virtual int32_t ChunkShift() const = 0;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_ONLINE_WENET_CTC_MODEL_H_
+#endif  // SHERPA_ONNX_CSRC_ONLINE_CTC_MODEL_H_

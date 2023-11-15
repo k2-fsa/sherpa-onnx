@@ -15,10 +15,10 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-ctc-decoder.h"
 #include "sherpa-onnx/csrc/online-ctc-greedy-search-decoder.h"
+#include "sherpa-onnx/csrc/online-ctc-model.h"
 #include "sherpa-onnx/csrc/online-lm.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
-#include "sherpa-onnx/csrc/online-wenet-ctc-model.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
@@ -56,7 +56,7 @@ class OnlineRecognizerWenetCtcImpl : public OnlineRecognizerImpl {
  public:
   explicit OnlineRecognizerWenetCtcImpl(const OnlineRecognizerConfig &config)
       : config_(config),
-        model_(std::make_unique<OnlineWenetCtcModel>(config.model_config)),
+        model_(OnlineCtcModel::Create(config.model_config)),
         sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
     if (!config.model_config.wenet_ctc.model.empty()) {
@@ -72,7 +72,7 @@ class OnlineRecognizerWenetCtcImpl : public OnlineRecognizerImpl {
   explicit OnlineRecognizerWenetCtcImpl(AAssetManager *mgr,
                                         const OnlineRecognizerConfig &config)
       : config_(config),
-        model_(std::make_unique<OnlineWenetCtcModel>(mgr, config.model_config)),
+        model_(OnlineCtcModel::Create(mgr, config.model_config)),
         sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
     if (!config.model_config.wenet_ctc.model.empty()) {
@@ -222,7 +222,7 @@ class OnlineRecognizerWenetCtcImpl : public OnlineRecognizerImpl {
 
  private:
   OnlineRecognizerConfig config_;
-  std::unique_ptr<OnlineWenetCtcModel> model_;
+  std::unique_ptr<OnlineCtcModel> model_;
   std::unique_ptr<OnlineCtcDecoder> decoder_;
   SymbolTable sym_;
   Endpoint endpoint_;
