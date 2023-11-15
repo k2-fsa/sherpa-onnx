@@ -49,6 +49,7 @@ set(sources
   offline-zipformer-ctc-model-config.cc
   offline-zipformer-ctc-model.cc
   online-conformer-transducer-model.cc
+  online-ctc-greedy-search-decoder.cc
   online-lm-config.cc
   online-lm.cc
   online-lstm-transducer-model.cc

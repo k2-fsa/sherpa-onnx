@@ -51,6 +51,14 @@ class OnlineWenetCtcModel {
    */
   OrtAllocator *Allocator() const;
 
+  // The model accepts this number of frames before subsampling as input
+  int32_t ChunkLength() const;
+
+  // Similar to frame_shift in feature extractor, after processing
+  // ChunkLength() frames, we advance by ChunkShift() frames
+  // before we process the next chunk.
+  int32_t ChunkShift() const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

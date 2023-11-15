@@ -58,6 +58,15 @@ class OnlineWenetCtcModel::Impl {
 
   int32_t VocabSize() const { return vocab_size_; }
 
+  int32_t ChunkLength() const {
+    // When chunk_size is 16, subsampling_factor_ is 4, right_context_ is 6,
+    // the returned value is (16 - 1)*4 + 6 + 1 = 67
+    return (config_.wenet_ctc.chunk_size - 1) * subsampling_factor_ +
+           right_context_ + 1;
+  }
+
+  int32_t ChunkShift() const { return required_cache_size_; }
+
   OrtAllocator *Allocator() const { return allocator_; }
 
  private:
@@ -85,6 +94,9 @@ class OnlineWenetCtcModel::Impl {
     SHERPA_ONNX_READ_META_DATA(right_context_, "right_context");
     SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
     SHERPA_ONNX_READ_META_DATA(vocab_size_, "vocab_size");
+
+    required_cache_size_ =
+        config_.wenet_ctc.chunk_size * config_.wenet_ctc.num_left_chunks;
   }
 
  private:
@@ -108,6 +120,8 @@ class OnlineWenetCtcModel::Impl {
   int32_t right_context_;
   int32_t subsampling_factor_;
   int32_t vocab_size_;
+
+  int32_t required_cache_size_;
 };
 
 OnlineWenetCtcModel::OnlineWenetCtcModel(const OnlineModelConfig &config)
@@ -127,6 +141,12 @@ std::vector<Ort::Value> OnlineWenetCtcModel::Forward(
 }
 
 int32_t OnlineWenetCtcModel::VocabSize() const { return impl_->VocabSize(); }
+
+int32_t OnlineWenetCtcModel::ChunkLength() const {
+  return impl_->ChunkLength();
+}
+
+int32_t OnlineWenetCtcModel::ChunkShift() const { return impl_->ChunkShift(); }
 
 OrtAllocator *OnlineWenetCtcModel::Allocator() const {
   return impl_->Allocator();
