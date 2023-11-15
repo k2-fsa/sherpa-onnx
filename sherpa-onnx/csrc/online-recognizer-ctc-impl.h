@@ -1,9 +1,9 @@
-// sherpa-onnx/csrc/online-recognizer-wenet-ctc-impl.h
+// sherpa-onnx/csrc/online-recognizer-ctc-impl.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_WENET_CTC_IMPL_H_
-#define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_WENET_CTC_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_CTC_IMPL_H_
+#define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_CTC_IMPL_H_
 
 #include <algorithm>
 #include <memory>
@@ -52,9 +52,9 @@ static OnlineRecognizerResult Convert(const OnlineCtcDecoderResult &src,
   return r;
 }
 
-class OnlineRecognizerWenetCtcImpl : public OnlineRecognizerImpl {
+class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
  public:
-  explicit OnlineRecognizerWenetCtcImpl(const OnlineRecognizerConfig &config)
+  explicit OnlineRecognizerCtcImpl(const OnlineRecognizerConfig &config)
       : config_(config),
         model_(OnlineCtcModel::Create(config.model_config)),
         sym_(config.model_config.tokens),
@@ -69,8 +69,8 @@ class OnlineRecognizerWenetCtcImpl : public OnlineRecognizerImpl {
   }
 
 #if __ANDROID_API__ >= 9
-  explicit OnlineRecognizerWenetCtcImpl(AAssetManager *mgr,
-                                        const OnlineRecognizerConfig &config)
+  explicit OnlineRecognizerCtcImpl(AAssetManager *mgr,
+                                   const OnlineRecognizerConfig &config)
       : config_(config),
         model_(OnlineCtcModel::Create(mgr, config.model_config)),
         sym_(mgr, config.model_config.tokens),
@@ -85,10 +85,9 @@ class OnlineRecognizerWenetCtcImpl : public OnlineRecognizerImpl {
   }
 #endif
 
-  OnlineRecognizerWenetCtcImpl(const OnlineRecognizerWenetCtcImpl &) = delete;
+  OnlineRecognizerCtcImpl(const OnlineRecognizerCtcImpl &) = delete;
 
-  OnlineRecognizerWenetCtcImpl operator=(const OnlineRecognizerWenetCtcImpl &) =
-      delete;
+  OnlineRecognizerCtcImpl operator=(const OnlineRecognizerCtcImpl &) = delete;
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);
@@ -230,4 +229,4 @@ class OnlineRecognizerWenetCtcImpl : public OnlineRecognizerImpl {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_WENET_CTC_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_CTC_IMPL_H_

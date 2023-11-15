@@ -53,7 +53,6 @@ void OnlineCtcGreedySearchDecoder::Decode(
       }
 
       prev_id = y;
-
     }  // for (int32_t t = 0; t != num_frames; ++t) {
   }    // for (int32_t b = 0; b != batch_size; ++b)
 }
