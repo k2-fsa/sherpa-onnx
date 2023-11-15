@@ -208,7 +208,7 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     states.reserve(num_states);
 
     for (int32_t i = 0; i != num_states; ++i) {
-      states[i] = std::move(out[i + 1]);
+      states.push_back(std::move(out[i + 1]));
     }
     s->SetStates(std::move(states));
 

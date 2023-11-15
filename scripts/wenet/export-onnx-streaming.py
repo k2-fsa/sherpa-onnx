@@ -164,6 +164,7 @@ def main():
         dynamic_axes={
             "x": {0: "N", 1: "T"},
             "attn_cache": {2: "T"},
+            "attn_mask": {2: "T"},
             "log_probs": {0: "N"},
             "new_attn_cache": {2: "T"},
         },

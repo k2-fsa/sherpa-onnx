@@ -13,6 +13,7 @@ on:
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
+      - '.github/scripts/test-online-ctc.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -26,6 +27,7 @@ on:
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
+      - '.github/scripts/test-online-ctc.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -95,6 +97,15 @@ jobs:
           file bin/sherpa-onnx
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
+
+      - name: Test online CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-ctc.sh
+
 
       - name: Test offline TTS
         shell: bash
