@@ -16,9 +16,7 @@
 #include "sherpa-onnx/csrc/online-ctc-decoder.h"
 #include "sherpa-onnx/csrc/online-ctc-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/online-ctc-model.h"
-#include "sherpa-onnx/csrc/online-lm.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
-#include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
@@ -84,10 +82,6 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     InitDecoder();
   }
 #endif
-
-  OnlineRecognizerCtcImpl(const OnlineRecognizerCtcImpl &) = delete;
-
-  OnlineRecognizerCtcImpl operator=(const OnlineRecognizerCtcImpl &) = delete;
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);
