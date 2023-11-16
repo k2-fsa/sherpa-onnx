@@ -41,7 +41,7 @@ for name in ${wenet_models[@]}; do
 
   python3 ./python-api-examples/online-decode-files.py \
     --tokens=$repo/tokens.txt \
-    --wenet-ctc=$repo/model.onnx \
+    --wenet-ctc=$repo/model-streaming.onnx \
     $repo/test_wavs/0.wav \
     $repo/test_wavs/1.wav \
     $repo/test_wavs/8k.wav
