@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - python-api-wenet-ctc
     paths:
       - '.github/workflows/run-python-test.yaml'
       - '.github/scripts/test-python.sh'

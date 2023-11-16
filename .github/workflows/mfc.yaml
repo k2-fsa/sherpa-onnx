@@ -85,9 +85,18 @@ jobs:
           arch=${{ matrix.arch }}
 
           cd mfc-examples/$arch/Release
-          cp StreamingSpeechRecognition.exe sherpa-onnx-streaming-${SHERPA_ONNX_VERSION}.exe
-          cp NonStreamingSpeechRecognition.exe sherpa-onnx-non-streaming-${SHERPA_ONNX_VERSION}.exe
           ls -lh
+
+          cp -v StreamingSpeechRecognition.exe sherpa-onnx-streaming-${SHERPA_ONNX_VERSION}.exe
+          cp -v NonStreamingSpeechRecognition.exe sherpa-onnx-non-streaming-${SHERPA_ONNX_VERSION}.exe
+          cp -v NonStreamingTextToSpeech.exe ../sherpa-onnx-non-streaming-tts-${SHERPA_ONNX_VERSION}.exe
+          ls -lh
+
+      - name: Upload artifact tts
+        uses: actions/upload-artifact@v3
+        with:
+          name: non-streaming-tts-${{ matrix.arch }}
+          path: ./mfc-examples/${{ matrix.arch }}/Release/NonStreamingTextToSpeech.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -116,3 +125,11 @@ jobs:
           file_glob: true
           overwrite: true
           file: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-non-streaming-*.exe
+
+      - name: Release pre-compiled binaries and libs for Windows ${{ matrix.arch }}
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./mfc-examples/${{ matrix.arch }}/sherpa-onnx-non-streaming-*.exe
