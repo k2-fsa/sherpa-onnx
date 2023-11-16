@@ -175,6 +175,7 @@ class TestOnlineRecognizer(unittest.TestCase):
                     provider="cpu",
                 )
 
+                streams = []
                 waves = [wave0, wave1, wave2]
                 for wave in waves:
                     s = recognizer.create_stream()
