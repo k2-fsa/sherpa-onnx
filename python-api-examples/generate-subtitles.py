@@ -58,6 +58,15 @@ wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
   --num-threads=2 \
   /path/to/test.mp4
 
+(4) For WeNet CTC models
+
+./python-api-examples/generate-subtitles.py  \
+  --silero-vad-model=/path/to/silero_vad.onnx \
+  --wenet-ctc=./sherpa-onnx-zh-wenet-wenetspeech/model.onnx \
+  --tokens=./sherpa-onnx-zh-wenet-wenetspeech/tokens.txt \
+  --num-threads=2 \
+  /path/to/test.mp4
+
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/index.html
 to install sherpa-onnx and to download non-streaming pre-trained models
@@ -119,6 +128,13 @@ def get_args():
         default="",
         type=str,
         help="Path to the model.onnx from Paraformer",
+    )
+
+    parser.add_argument(
+        "--wenet-ctc",
+        default="",
+        type=str,
+        help="Path to the CTC model.onnx from WeNet",
     )
 
     parser.add_argument(
@@ -215,6 +231,7 @@ def assert_file_exists(filename: str):
 def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     if args.encoder:
         assert len(args.paraformer) == 0, args.paraformer
+        assert len(args.wenet_ctc) == 0, args.wenet_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
 
@@ -234,6 +251,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             debug=args.debug,
         )
     elif args.paraformer:
+        assert len(args.wenet_ctc) == 0, args.wenet_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
 
@@ -241,6 +259,21 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
 
         recognizer = sherpa_onnx.OfflineRecognizer.from_paraformer(
             paraformer=args.paraformer,
+            tokens=args.tokens,
+            num_threads=args.num_threads,
+            sample_rate=args.sample_rate,
+            feature_dim=args.feature_dim,
+            decoding_method=args.decoding_method,
+            debug=args.debug,
+        )
+    elif args.wenet_ctc:
+        assert len(args.whisper_encoder) == 0, args.whisper_encoder
+        assert len(args.whisper_decoder) == 0, args.whisper_decoder
+
+        assert_file_exists(args.wenet_ctc)
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_wenet_ctc(
+            model=args.wenet_ctc,
             tokens=args.tokens,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,
