@@ -65,6 +65,9 @@ void PrintModelMetadata(std::ostream &os,
 // Return a deep copy of v
 Ort::Value Clone(OrtAllocator *allocator, const Ort::Value *v);
 
+// Return a shallow copy
+Ort::Value View(Ort::Value *v);
+
 // Print a 1-D tensor to stderr
 void Print1D(Ort::Value *v);
 

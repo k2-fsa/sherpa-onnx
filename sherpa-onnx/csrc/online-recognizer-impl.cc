@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 
+#include "sherpa-onnx/csrc/online-recognizer-ctc-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer-transducer-impl.h"
 
@@ -19,6 +20,10 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     return std::make_unique<OnlineRecognizerParaformerImpl>(config);
   }
 
+  if (!config.model_config.wenet_ctc.model.empty()) {
+    return std::make_unique<OnlineRecognizerCtcImpl>(config);
+  }
+
   SHERPA_ONNX_LOGE("Please specify a model");
   exit(-1);
 }
@@ -32,6 +37,10 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 
   if (!config.model_config.paraformer.encoder.empty()) {
     return std::make_unique<OnlineRecognizerParaformerImpl>(mgr, config);
+  }
+
+  if (!config.model_config.wenet_ctc.model.empty()) {
+    return std::make_unique<OnlineRecognizerCtcImpl>(mgr, config);
   }
 
   SHERPA_ONNX_LOGE("Please specify a model");

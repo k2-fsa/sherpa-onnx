@@ -8,12 +8,14 @@
 
 #include "sherpa-onnx/csrc/online-paraformer-model-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
+#include "sherpa-onnx/csrc/online-wenet-ctc-model-config.h"
 
 namespace sherpa_onnx {
 
 struct OnlineModelConfig {
   OnlineTransducerModelConfig transducer;
   OnlineParaformerModelConfig paraformer;
+  OnlineWenetCtcModelConfig wenet_ctc;
   std::string tokens;
   int32_t num_threads = 1;
   bool debug = false;
@@ -31,10 +33,12 @@ struct OnlineModelConfig {
   OnlineModelConfig() = default;
   OnlineModelConfig(const OnlineTransducerModelConfig &transducer,
                     const OnlineParaformerModelConfig &paraformer,
+                    const OnlineWenetCtcModelConfig &wenet_ctc,
                     const std::string &tokens, int32_t num_threads, bool debug,
                     const std::string &provider, const std::string &model_type)
       : transducer(transducer),
         paraformer(paraformer),
+        wenet_ctc(wenet_ctc),
         tokens(tokens),
         num_threads(num_threads),
         debug(debug),

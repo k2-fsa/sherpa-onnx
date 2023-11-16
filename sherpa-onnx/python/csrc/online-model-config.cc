@@ -11,24 +11,29 @@
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/python/csrc/online-paraformer-model-config.h"
 #include "sherpa-onnx/python/csrc/online-transducer-model-config.h"
+#include "sherpa-onnx/python/csrc/online-wenet-ctc-model-config.h"
 
 namespace sherpa_onnx {
 
 void PybindOnlineModelConfig(py::module *m) {
   PybindOnlineTransducerModelConfig(m);
   PybindOnlineParaformerModelConfig(m);
+  PybindOnlineWenetCtcModelConfig(m);
 
   using PyClass = OnlineModelConfig;
   py::class_<PyClass>(*m, "OnlineModelConfig")
       .def(py::init<const OnlineTransducerModelConfig &,
-                    const OnlineParaformerModelConfig &, const std::string &,
+                    const OnlineParaformerModelConfig &,
+                    const OnlineWenetCtcModelConfig &, const std::string &,
                     int32_t, bool, const std::string &, const std::string &>(),
            py::arg("transducer") = OnlineTransducerModelConfig(),
            py::arg("paraformer") = OnlineParaformerModelConfig(),
+           py::arg("wenet_ctc") = OnlineWenetCtcModelConfig(),
            py::arg("tokens"), py::arg("num_threads"), py::arg("debug") = false,
            py::arg("provider") = "cpu", py::arg("model_type") = "")
       .def_readwrite("transducer", &PyClass::transducer)
       .def_readwrite("paraformer", &PyClass::paraformer)
+      .def_readwrite("wenet_ctc", &PyClass::wenet_ctc)
       .def_readwrite("tokens", &PyClass::tokens)
       .def_readwrite("num_threads", &PyClass::num_threads)
       .def_readwrite("debug", &PyClass::debug)

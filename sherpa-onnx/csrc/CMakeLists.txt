@@ -49,6 +49,8 @@ set(sources
   offline-zipformer-ctc-model-config.cc
   offline-zipformer-ctc-model.cc
   online-conformer-transducer-model.cc
+  online-ctc-greedy-search-decoder.cc
+  online-ctc-model.cc
   online-lm-config.cc
   online-lm.cc
   online-lstm-transducer-model.cc
@@ -64,6 +66,8 @@ set(sources
   online-transducer-model-config.cc
   online-transducer-model.cc
   online-transducer-modified-beam-search-decoder.cc
+  online-wenet-ctc-model-config.cc
+  online-wenet-ctc-model.cc
   online-zipformer-transducer-model.cc
   online-zipformer2-transducer-model.cc
   onnx-utils.cc

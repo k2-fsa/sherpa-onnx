@@ -120,11 +120,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
         model_(mgr, config.model_config),
         sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
-    if (config.decoding_method == "greedy_search") {
-      // add greedy search decoder
-      // SHERPA_ONNX_LOGE("to be implemented");
-      // exit(-1);
-    } else {
+    if (config.decoding_method != "greedy_search") {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
       exit(-1);
