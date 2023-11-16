@@ -40,7 +40,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
   }
 
   if (!config.model_config.wenet_ctc.model.empty()) {
-    return std::make_unique<OnlineRecognizerWenetCtcImpl>(mgr, config);
+    return std::make_unique<OnlineRecognizerCtcImpl>(mgr, config);
   }
 
   SHERPA_ONNX_LOGE("Please specify a model");
