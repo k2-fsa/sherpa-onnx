@@ -9,15 +9,16 @@ from _sherpa_onnx import (
     OfflineModelConfig,
     OfflineNemoEncDecCtcModelConfig,
     OfflineParaformerModelConfig,
-    OfflineTdnnModelConfig,
-    OfflineWhisperModelConfig,
-    OfflineZipformerCtcModelConfig,
 )
 from _sherpa_onnx import OfflineRecognizer as _Recognizer
 from _sherpa_onnx import (
     OfflineRecognizerConfig,
     OfflineStream,
+    OfflineTdnnModelConfig,
     OfflineTransducerModelConfig,
+    OfflineWenetCtcModelConfig,
+    OfflineWhisperModelConfig,
+    OfflineZipformerCtcModelConfig,
 )
 
 
@@ -373,6 +374,70 @@ class OfflineRecognizer(object):
             debug=debug,
             provider=provider,
             model_type="tdnn",
+        )
+
+        feat_config = OfflineFeatureExtractorConfig(
+            sampling_rate=sample_rate,
+            feature_dim=feature_dim,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            decoding_method=decoding_method,
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_wenet_ctc(
+        cls,
+        model: str,
+        tokens: str,
+        num_threads: int = 1,
+        sample_rate: int = 16000,
+        feature_dim: int = 80,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+    ):
+        """
+        Please refer to
+        `<https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/index.html>`_
+        to download pre-trained models for different languages, e.g., Chinese,
+        English, etc.
+
+        Args:
+          model:
+            Path to ``model.onnx``.
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          num_threads:
+            Number of threads for neural network computation.
+          sample_rate:
+            Sample rate of the training data used to train the model.
+          feature_dim:
+            Dimension of the feature used to train the model.
+          decoding_method:
+            Valid values are greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            wenet_ctc=OfflineWenetCtcModelConfig(model=model),
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+            model_type="wenet_ctc",
         )
 
         feat_config = OfflineFeatureExtractorConfig(

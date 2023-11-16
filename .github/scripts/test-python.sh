@@ -8,6 +8,51 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+wenet_models=(
+sherpa-onnx-zh-wenet-aishell
+sherpa-onnx-zh-wenet-aishell2
+sherpa-onnx-zh-wenet-wenetspeech
+sherpa-onnx-zh-wenet-multi-cn
+sherpa-onnx-en-wenet-librispeech
+sherpa-onnx-en-wenet-gigaspeech
+)
+
+mkdir -p /tmp/icefall-models
+dir=/tmp/icefall-models
+
+for name in ${wenet_models[@]}; do
+  repo_url=https://huggingface.co/csukuangfj/$name
+  log "Start testing ${repo_url}"
+  repo=$dir/$(basename $repo_url)
+  log "Download pretrained model and test-data from $repo_url"
+  pushd $dir
+  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+  cd $repo
+  git lfs pull --include "*.onnx"
+  ls -lh *.onnx
+  popd
+
+  python3 ./python-api-examples/offline-decode-files.py \
+    --tokens=$repo/tokens.txt \
+    --wenet-ctc=$repo/model.onnx \
+    $repo/test_wavs/0.wav \
+    $repo/test_wavs/1.wav \
+    $repo/test_wavs/8k.wav
+
+  python3 ./python-api-examples/online-decode-files.py \
+    --tokens=$repo/tokens.txt \
+    --wenet-ctc=$repo/model-streaming.onnx \
+    $repo/test_wavs/0.wav \
+    $repo/test_wavs/1.wav \
+    $repo/test_wavs/8k.wav
+
+  python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
+
+  python3 sherpa-onnx/python/tests/test_online_recognizer.py --verbose
+
+  rm -rf $repo
+done
+
 log "Offline TTS test"
 # test waves are saved in ./tts
 mkdir ./tts

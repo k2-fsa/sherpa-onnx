@@ -59,7 +59,16 @@ python3 ./python-api-examples/offline-decode-files.py \
   ./sherpa-onnx-whisper-base.en/test_wavs/1.wav \
   ./sherpa-onnx-whisper-base.en/test_wavs/8k.wav
 
-(5) For tdnn models of the yesno recipe from icefall
+(5) For CTC models from WeNet
+
+python3 ./python-api-examples/offline-decode-files.py \
+  --wenet-ctc=./sherpa-onnx-zh-wenet-wenetspeech/model.onnx \
+  --tokens=./sherpa-onnx-zh-wenet-wenetspeech/tokens.txt \
+  ./sherpa-onnx-zh-wenet-wenetspeech/test_wavs/0.wav \
+  ./sherpa-onnx-zh-wenet-wenetspeech/test_wavs/1.wav \
+  ./sherpa-onnx-zh-wenet-wenetspeech/test_wavs/8k.wav
+
+(6) For tdnn models of the yesno recipe from icefall
 
 python3 ./python-api-examples/offline-decode-files.py \
   --sample-rate=8000 \
@@ -152,6 +161,13 @@ def get_args():
         default="",
         type=str,
         help="Path to the model.onnx from NeMo CTC",
+    )
+
+    parser.add_argument(
+        "--wenet-ctc",
+        default="",
+        type=str,
+        help="Path to the model.onnx from WeNet CTC",
     )
 
     parser.add_argument(
@@ -254,6 +270,7 @@ def assert_file_exists(filename: str):
         "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html to download it"
     )
 
+
 def read_wave(wave_filename: str) -> Tuple[np.ndarray, int]:
     """
     Args:
@@ -287,6 +304,7 @@ def main():
     if args.encoder:
         assert len(args.paraformer) == 0, args.paraformer
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
+        assert len(args.wenet_ctc) == 0, args.wenet_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.tdnn_model) == 0, args.tdnn_model
@@ -310,6 +328,7 @@ def main():
         )
     elif args.paraformer:
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
+        assert len(args.wenet_ctc) == 0, args.wenet_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.tdnn_model) == 0, args.tdnn_model
@@ -326,6 +345,7 @@ def main():
             debug=args.debug,
         )
     elif args.nemo_ctc:
+        assert len(args.wenet_ctc) == 0, args.wenet_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.tdnn_model) == 0, args.tdnn_model
@@ -334,6 +354,22 @@ def main():
 
         recognizer = sherpa_onnx.OfflineRecognizer.from_nemo_ctc(
             model=args.nemo_ctc,
+            tokens=args.tokens,
+            num_threads=args.num_threads,
+            sample_rate=args.sample_rate,
+            feature_dim=args.feature_dim,
+            decoding_method=args.decoding_method,
+            debug=args.debug,
+        )
+    elif args.wenet_ctc:
+        assert len(args.whisper_encoder) == 0, args.whisper_encoder
+        assert len(args.whisper_decoder) == 0, args.whisper_decoder
+        assert len(args.tdnn_model) == 0, args.tdnn_model
+
+        assert_file_exists(args.wenet_ctc)
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_wenet_ctc(
+            model=args.wenet_ctc,
             tokens=args.tokens,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,

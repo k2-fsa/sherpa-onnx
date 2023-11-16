@@ -37,8 +37,25 @@ git lfs pull --include "*.onnx"
   ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/3.wav \
   ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/8k.wav
 
+(3) Streaming Conformer CTC from WeNet
+
+GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-wenetspeech
+cd sherpa-onnx-zh-wenet-wenetspeech
+git lfs pull --include "*.onnx"
+
+./python-api-examples/online-decode-files.py \
+  --tokens=./sherpa-onnx-zh-wenet-wenetspeech/tokens.txt \
+  --wenet-ctc=./sherpa-onnx-zh-wenet-wenetspeech/model-streaming.onnx \
+  ./sherpa-onnx-zh-wenet-wenetspeech/test_wavs/0.wav \
+  ./sherpa-onnx-zh-wenet-wenetspeech/test_wavs/1.wav \
+  ./sherpa-onnx-zh-wenet-wenetspeech/test_wavs/8k.wav
+
+
+
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/index.html
+and
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/wenet/index.html
 to install sherpa-onnx and to download streaming pre-trained models.
 """
 import argparse
@@ -90,6 +107,26 @@ def get_args():
         "--paraformer-decoder",
         type=str,
         help="Path to the paraformer decoder model",
+    )
+
+    parser.add_argument(
+        "--wenet-ctc",
+        type=str,
+        help="Path to the wenet ctc model model",
+    )
+
+    parser.add_argument(
+        "--wenet-ctc-chunk-size",
+        type=int,
+        default=16,
+        help="The --chunk-size parameter for streaming WeNet models",
+    )
+
+    parser.add_argument(
+        "--wenet-ctc-num-left-chunks",
+        type=int,
+        default=4,
+        help="The --num-left-chunks parameter for streaming WeNet models",
     )
 
     parser.add_argument(
@@ -243,6 +280,18 @@ def main():
             tokens=args.tokens,
             encoder=args.paraformer_encoder,
             decoder=args.paraformer_decoder,
+            num_threads=args.num_threads,
+            provider=args.provider,
+            sample_rate=16000,
+            feature_dim=80,
+            decoding_method="greedy_search",
+        )
+    elif args.wenet_ctc:
+        recognizer = sherpa_onnx.OnlineRecognizer.from_wenet_ctc(
+            tokens=args.tokens,
+            model=args.wenet_ctc,
+            chunk_size=args.wenet_ctc_chunk_size,
+            num_left_chunks=args.wenet_ctc_num_left_chunks,
             num_threads=args.num_threads,
             provider=args.provider,
             sample_rate=16000,

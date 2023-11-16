@@ -267,6 +267,53 @@ class TestOfflineRecognizer(unittest.TestCase):
             print(s1.result.text)
             print(s2.result.text)
 
+    def test_wenet_ctc(self):
+        models = [
+            "sherpa-onnx-zh-wenet-aishell",
+            "sherpa-onnx-zh-wenet-aishell2",
+            "sherpa-onnx-zh-wenet-wenetspeech",
+            "sherpa-onnx-zh-wenet-multi-cn",
+            "sherpa-onnx-en-wenet-librispeech",
+            "sherpa-onnx-en-wenet-gigaspeech",
+        ]
+        for m in models:
+            for use_int8 in [True, False]:
+                name = "model.int8.onnx" if use_int8 else "model.onnx"
+                model = f"{d}/{m}/{name}"
+                tokens = f"{d}/{m}/tokens.txt"
+
+                wave0 = f"{d}/{m}/test_wavs/0.wav"
+                wave1 = f"{d}/{m}/test_wavs/1.wav"
+                wave2 = f"{d}/{m}/test_wavs/8k.wav"
+
+                if not Path(model).is_file():
+                    print("skipping test_wenet_ctc()")
+                    return
+
+                recognizer = sherpa_onnx.OfflineRecognizer.from_wenet_ctc(
+                    model=model,
+                    tokens=tokens,
+                    num_threads=1,
+                    provider="cpu",
+                )
+
+                s0 = recognizer.create_stream()
+                samples0, sample_rate0 = read_wave(wave0)
+                s0.accept_waveform(sample_rate0, samples0)
+
+                s1 = recognizer.create_stream()
+                samples1, sample_rate1 = read_wave(wave1)
+                s1.accept_waveform(sample_rate1, samples1)
+
+                s2 = recognizer.create_stream()
+                samples2, sample_rate2 = read_wave(wave2)
+                s2.accept_waveform(sample_rate2, samples2)
+
+                recognizer.decode_streams([s0, s1, s2])
+                print(s0.result.text)
+                print(s1.result.text)
+                print(s2.result.text)
+
 
 if __name__ == "__main__":
     unittest.main()

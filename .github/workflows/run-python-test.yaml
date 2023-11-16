@@ -10,6 +10,7 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'python-api-examples/**'
   pull_request:
     branches:
       - master
@@ -19,6 +20,7 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'python-api-examples/**'
   workflow_dispatch:
 
 concurrency:
