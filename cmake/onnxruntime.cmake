@@ -104,6 +104,8 @@ message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 
 if(DEFINED ENV{SHERPA_ONNXRUNTIME_INCLUDE_DIR})
   set(location_onnxruntime_header_dir $ENV{SHERPA_ONNXRUNTIME_INCLUDE_DIR})
+
+  include_directories(${location_onnxruntime_header_dir})
 else()
   find_path(location_onnxruntime_header_dir onnxruntime_cxx_api.h
     PATHS
@@ -122,6 +124,11 @@ if(DEFINED ENV{SHERPA_ONNXRUNTIME_LIB_DIR})
   endif()
   if(NOT EXISTS ${location_onnxruntime_lib})
     set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.a)
+    if(NOT EXISTS ${location_onnxruntime_lib})
+      message(FATAL_ERROR "${location_onnxruntime_lib} cannot be found")
+    endif()
+    set(onnxruntime_lib_files $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.a)
+    message("Use static lib: ${onnxruntime_lib_files}")
   endif()
   if(SHERPA_ONNX_ENABLE_GPU)
     set(location_onnxruntime_cuda_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime_providers_cuda.so)
@@ -153,16 +160,18 @@ if(SHERPA_ONNX_ENABLE_GPU)
 endif()
 
 if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
-  add_library(onnxruntime SHARED IMPORTED)
-  set_target_properties(onnxruntime PROPERTIES
-    IMPORTED_LOCATION ${location_onnxruntime_lib}
-    INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
-  )
-  if(SHERPA_ONNX_ENABLE_GPU AND location_onnxruntime_cuda_lib)
-    add_library(onnxruntime_providers_cuda SHARED IMPORTED)
-    set_target_properties(onnxruntime_providers_cuda PROPERTIES
-      IMPORTED_LOCATION ${location_onnxruntime_cuda_lib}
+  if(NOT DEFINED onnxruntime_lib_files)
+    add_library(onnxruntime SHARED IMPORTED)
+    set_target_properties(onnxruntime PROPERTIES
+      IMPORTED_LOCATION ${location_onnxruntime_lib}
+      INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
     )
+    if(SHERPA_ONNX_ENABLE_GPU AND location_onnxruntime_cuda_lib)
+      add_library(onnxruntime_providers_cuda SHARED IMPORTED)
+      set_target_properties(onnxruntime_providers_cuda PROPERTIES
+        IMPORTED_LOCATION ${location_onnxruntime_cuda_lib}
+      )
+    endif()
   endif()
 else()
   message(STATUS "Could not find a pre-installed onnxruntime. Downloading pre-compiled onnxruntime")
