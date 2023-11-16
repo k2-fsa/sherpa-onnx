@@ -175,22 +175,30 @@ class TestOnlineRecognizer(unittest.TestCase):
                     provider="cpu",
                 )
 
-                s0 = recognizer.create_stream()
-                samples0, sample_rate0 = read_wave(wave0)
-                s0.accept_waveform(sample_rate0, samples0)
+                waves = [wave0, wave1, wave2]
+                for wave in waves:
+                    s = recognizer.create_stream()
+                    samples, sample_rate = read_wave(wave)
+                    s.accept_waveform(sample_rate, samples)
 
-                s1 = recognizer.create_stream()
-                samples1, sample_rate1 = read_wave(wave1)
-                s1.accept_waveform(sample_rate1, samples1)
+                    tail_paddings = np.zeros(int(0.2 * sample_rate), dtype=np.float32)
+                    s.accept_waveform(sample_rate, tail_paddings)
+                    s.input_finished()
+                    streams.append(s)
 
-                s2 = recognizer.create_stream()
-                samples2, sample_rate2 = read_wave(wave2)
-                s2.accept_waveform(sample_rate2, samples2)
+                while True:
+                    ready_list = []
+                    for s in streams:
+                        if recognizer.is_ready(s):
+                            ready_list.append(s)
+                    if len(ready_list) == 0:
+                        break
+                    recognizer.decode_streams(ready_list)
 
-                recognizer.decode_streams([s0, s1, s2])
-                print(s0.result.text)
-                print(s1.result.text)
-                print(s2.result.text)
+                results = [recognizer.get_result(s) for s in streams]
+                for wave_filename, result in zip(waves, results):
+                    print(f"{wave_filename}\n{result}")
+                    print("-" * 10)
 
 
 if __name__ == "__main__":
