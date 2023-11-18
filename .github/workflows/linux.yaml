@@ -101,6 +101,12 @@ jobs:
           ls -lh build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
 
+      - uses: actions/upload-artifact@v3
+        if: matrix.shared_lib == 'OFF' && matrix.build_type == 'Release'
+        with:
+          name: release-static
+          path: build/bin/*
+
       - name: Test online CTC
         shell: bash
         run: |
@@ -196,3 +202,4 @@ jobs:
         with:
           name: tts-generated-test-files
           path: tts
+
