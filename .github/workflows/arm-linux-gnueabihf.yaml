@@ -156,8 +156,8 @@ jobs:
           mkdir $dst
 
           cp -a build-arm-linux-gnueabihf/install/bin $dst/
-          ls -lh $dst
-          strip $dst/*
+          ls -lh $dst/bin/*
+          strip $dst/bin/*
           ls -lh $dst
 
           lib_type=${{ matrix.lib_type }}

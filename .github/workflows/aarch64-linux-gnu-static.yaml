@@ -148,10 +148,10 @@ jobs:
           mkdir $dst
 
           cp -a build-aarch64-linux-gnu/install/bin $dst/
-          ls -lh $dst/
+          ls -lh $dst/bin/
           echo "strip"
-          strip $dst/*
-          ls -lh $dst
+          strip $dst/bin/*
+          ls -lh $dst/bin/
 
           tree $dst
 
