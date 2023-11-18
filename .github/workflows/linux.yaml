@@ -88,8 +88,24 @@ jobs:
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
         run: |
+          ls -lh build/bin
+          ls -lh build/_deps/onnxruntime-src/lib/
+
+          echo "strip"
+          strip build/bin/*
+          echo "after strip"
+          ls -lh build/bin
+
           file build/bin/sherpa-onnx
+          file build/bin/sherpa-onnx
+          ls -lh build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
+
+      - uses: actions/upload-artifact@v3
+        if: matrix.shared_lib == 'OFF' && matrix.build_type == 'Release'
+        with:
+          name: release-static
+          path: build/bin/*
 
       - name: Test online CTC
         shell: bash
@@ -186,3 +202,4 @@ jobs:
         with:
           name: tts-generated-test-files
           path: tts
+

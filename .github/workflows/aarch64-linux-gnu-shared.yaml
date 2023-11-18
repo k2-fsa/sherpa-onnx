@@ -24,15 +24,6 @@ on:
       - 'toolchains/aarch64-linux-gnu.toolchain.cmake'
 
   workflow_dispatch:
-    inputs:
-      release:
-        description: "Whether to release"
-        type: boolean
-
-env:
-  RELEASE:
-    |- # Release if there is a release tag name or a release flag in workflow_dispatch
-    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: aarch64-linux-gnu-shared-${{ github.ref }}
@@ -150,6 +141,9 @@ jobs:
       - name: Copy files
         shell: bash
         run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          aarch64-none-linux-gnu-strip --version
+
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-shared
@@ -157,6 +151,13 @@ jobs:
 
           cp -a build-aarch64-linux-gnu/install/bin $dst/
           cp -a build-aarch64-linux-gnu/install/lib $dst/
+
+          ls -lh build-aarch64-linux-gnu/install/lib
+          ls -lh build-aarch64-linux-gnu/install/bin
+
+          ls -lh $dst/bin/
+          echo "strip"
+          aarch64-none-linux-gnu-strip $dst/bin/*
 
           tree $dst
 
@@ -168,7 +169,7 @@ jobs:
           path: sherpa-onnx-*linux-aarch64-shared.tar.bz2
 
       - name: Release pre-compiled binaries and libs for aarch64 linux
-        if: env.RELEASE == 'true'
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

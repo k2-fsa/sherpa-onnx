@@ -36,8 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        # arch: [x64, Win32]
-        arch: [x64]
+        arch: [x64, x86]
 
     steps:
       - uses: actions/checkout@v4
@@ -55,7 +54,11 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A ${{ matrix.arch }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=./install ..
+          arch=${{ matrix.arch }}
+          if [[ $arch == "x86" ]]; then
+            arch=Win32
+          fi
+          cmake -A $arch -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
@@ -83,32 +86,40 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
           arch=${{ matrix.arch }}
+          if [[ $arch == "x86" ]]; then
+            src=mfc-examples/Release
+            ls -h $src
+            dst=mfc-examples/$arch/Release
+
+            mkdir -p $dst
+            cp $src/* $dst
+          fi
 
           cd mfc-examples/$arch/Release
           ls -lh
 
-          cp -v StreamingSpeechRecognition.exe sherpa-onnx-streaming-${SHERPA_ONNX_VERSION}.exe
-          cp -v NonStreamingSpeechRecognition.exe sherpa-onnx-non-streaming-${SHERPA_ONNX_VERSION}.exe
-          cp -v NonStreamingTextToSpeech.exe ../sherpa-onnx-non-streaming-tts-${SHERPA_ONNX_VERSION}.exe
+          cp -v StreamingSpeechRecognition.exe sherpa-onnx-streaming-asr-$arch-${SHERPA_ONNX_VERSION}.exe
+          cp -v NonStreamingSpeechRecognition.exe sherpa-onnx-non-streaming-asr-$arch-${SHERPA_ONNX_VERSION}.exe
+          cp -v NonStreamingTextToSpeech.exe ../sherpa-onnx-non-streaming-tts-$arch-${SHERPA_ONNX_VERSION}.exe
           ls -lh
 
       - name: Upload artifact tts
         uses: actions/upload-artifact@v3
         with:
           name: non-streaming-tts-${{ matrix.arch }}
-          path: ./mfc-examples/${{ matrix.arch }}/Release/NonStreamingTextToSpeech.exe
+          path: ./mfc-examples/${{ matrix.arch }}/sherpa-onnx-non-streaming-tts-*.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: streaming-speech-recognition-${{ matrix.arch }}
-          path: ./mfc-examples/${{ matrix.arch }}/Release/StreamingSpeechRecognition.exe
+          path: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-streaming-asr-*.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
           name: non-streaming-speech-recognition-${{ matrix.arch }}
-          path: ./mfc-examples/${{ matrix.arch }}/Release/NonStreamingSpeechRecognition.exe
+          path: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-non-streaming-asr-*.exe
 
       - name: Release pre-compiled binaries and libs for Windows ${{ matrix.arch }}
         if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')

@@ -150,13 +150,25 @@ jobs:
       - name: Copy files
         shell: bash
         run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          arm-none-linux-gnueabihf-strip --version
+
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-arm-gnueabihf-${{ matrix.lib_type }}
           mkdir $dst
 
+          ls -lh build-arm-linux-gnueabihf/install/lib
+
           cp -a build-arm-linux-gnueabihf/install/bin $dst/
-          cp -a build-arm-linux-gnueabihf/install/lib $dst/
+          ls -lh $dst/bin/*
+          arm-none-linux-gnueabihf-strip $dst/bin/*
+          ls -lh $dst
+
+          lib_type=${{ matrix.lib_type }}
+          if [[ $lib_type == "shared" ]]; then
+            cp -a build-arm-linux-gnueabihf/install/lib $dst/
+          fi
 
           tree $dst
 
