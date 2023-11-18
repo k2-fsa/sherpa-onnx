@@ -36,7 +36,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        arch: [x64, Win32]
+        arch: [x64, x86]
         # arch: [x64]
 
     steps:

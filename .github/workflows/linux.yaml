@@ -89,6 +89,8 @@ jobs:
         shell: bash
         run: |
           file build/bin/sherpa-onnx
+          strip build/bin/sherpa-onnx
+          ls -lh build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
 
       - name: Test online CTC
