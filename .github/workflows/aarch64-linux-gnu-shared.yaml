@@ -141,6 +141,9 @@ jobs:
       - name: Copy files
         shell: bash
         run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          aarch64-none-linux-gnu-strip --version
+
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-shared
@@ -148,6 +151,13 @@ jobs:
 
           cp -a build-aarch64-linux-gnu/install/bin $dst/
           cp -a build-aarch64-linux-gnu/install/lib $dst/
+
+          ls -lh build-aarch64-linux-gnu/install/lib
+          ls -lh build-aarch64-linux-gnu/install/bin
+
+          ls -lh $dst/bin/
+          echo "strip"
+          aarch64-none-linux-gnu-strip $dst/bin/*
 
           tree $dst
 

@@ -87,6 +87,14 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
           arch=${{ matrix.arch }}
+          if [[ $arch == "x86" ]]; then
+            src=mfc-examples/Release
+            ls -h $src
+            dst=mfc-examples/$arch/Release
+
+            mkdir -p $dst
+            cp $src/* $dst
+          fi
 
           cd mfc-examples/$arch/Release
           ls -lh

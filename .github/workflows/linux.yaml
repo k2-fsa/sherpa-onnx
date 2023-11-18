@@ -89,6 +89,8 @@ jobs:
         shell: bash
         run: |
           ls -lh build/bin
+          ls -lh build/_deps/onnxruntime-src/lib/
+
           echo "strip"
           strip build/bin/*
           echo "after strip"
