@@ -67,13 +67,13 @@ class OnlineRnnLM::Impl {
     return {std::move(out[0]), std::move(next_states)};
   }
 
-  std::pair<Ort::Value, std::vector<Ort::Value>> GetInitStates() const {
+  std::pair<Ort::Value, std::vector<Ort::Value>> GetInitStates() {
     std::vector<Ort::Value> ans;
     ans.reserve(init_states_.size());
-    for (const auto &s : init_states_) {
-      ans.emplace_back(Clone(allocator_, &s));
+    for (auto &s : init_states_) {
+      ans.emplace_back(View(&s));
     }
-    return {std::move(Clone(allocator_, &init_scores_.value)), std::move(ans)};
+    return {View(&init_scores_.value), std::move(ans)};
   }
 
  private:

@@ -120,7 +120,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
     cur_encoder_out =
         Repeat(model_->Allocator(), &cur_encoder_out, hyps_row_splits);
     Ort::Value logit = model_->RunJoiner(
-        std::move(cur_encoder_out), Clone(model_->Allocator(), &decoder_out));
+        std::move(cur_encoder_out), View(&decoder_out));
 
     float *p_logit = logit.GetTensorMutableData<float>();
     LogSoftmax(p_logit, vocab_size, num_hyps);

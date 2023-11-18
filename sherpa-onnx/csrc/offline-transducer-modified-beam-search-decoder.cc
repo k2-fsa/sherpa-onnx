@@ -94,7 +94,7 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
     // now cur_encoder_out is of shape (num_hyps, joiner_dim)
 
     Ort::Value logit = model_->RunJoiner(
-        std::move(cur_encoder_out), Clone(model_->Allocator(), &decoder_out));
+        std::move(cur_encoder_out), View(&decoder_out));
 
     float *p_logit = logit.GetTensorMutableData<float>();
     LogSoftmax(p_logit, vocab_size, num_hyps);

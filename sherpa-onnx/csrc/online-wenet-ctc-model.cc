@@ -105,11 +105,11 @@ class OnlineWenetCtcModel::Impl {
   // - attn_cache
   // - conv_cache
   // - offset
-  std::vector<Ort::Value> GetInitStates() const {
+  std::vector<Ort::Value> GetInitStates() {
     std::vector<Ort::Value> ans;
     ans.reserve(3);
-    ans.push_back(Clone(Allocator(), &attn_cache_));
-    ans.push_back(Clone(Allocator(), &conv_cache_));
+    ans.push_back(View(&attn_cache_));
+    ans.push_back(View(&conv_cache_));
 
     int64_t offset_shape = 1;
 
