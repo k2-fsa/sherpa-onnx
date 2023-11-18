@@ -156,7 +156,14 @@ jobs:
           mkdir $dst
 
           cp -a build-arm-linux-gnueabihf/install/bin $dst/
-          cp -a build-arm-linux-gnueabihf/install/lib $dst/
+          ls -lh $dst
+          strip $dst/*
+          ls -lh $dst
+
+          lib_type=${{ matrix.lib_type }}
+          if [[ $lib_type == "shared" ]]; then
+            cp -a build-arm-linux-gnueabihf/install/lib $dst/
+          fi
 
           tree $dst
 
