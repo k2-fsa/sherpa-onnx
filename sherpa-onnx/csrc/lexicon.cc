@@ -276,7 +276,11 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsEnglish(
 
   for (const auto &w : words) {
     if (punctuations_.count(w)) {
-      ans.push_back(token2id_.at(w));
+      if (token2id_.count(w)) {
+        ans.push_back(token2id_.at(w));
+      }
+      ans.push_back(blank);
+      ans.push_back(blank);
       continue;
     }
 

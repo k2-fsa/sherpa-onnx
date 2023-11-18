@@ -36,8 +36,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        # arch: [x64, Win32]
-        arch: [x64]
+        arch: [x64, Win32]
+        # arch: [x64]
 
     steps:
       - uses: actions/checkout@v4
