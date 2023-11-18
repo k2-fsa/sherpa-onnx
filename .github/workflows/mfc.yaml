@@ -55,7 +55,11 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A ${{ matrix.arch }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=./install ..
+          arch=${{ matrix.arch }}
+          if [[ $arch == "x86" ]]; then
+            arch=Win32
+          fi
+          cmake -A $arch -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
@@ -87,9 +91,9 @@ jobs:
           cd mfc-examples/$arch/Release
           ls -lh
 
-          cp -v StreamingSpeechRecognition.exe sherpa-onnx-streaming-${SHERPA_ONNX_VERSION}.exe
-          cp -v NonStreamingSpeechRecognition.exe sherpa-onnx-non-streaming-${SHERPA_ONNX_VERSION}.exe
-          cp -v NonStreamingTextToSpeech.exe ../sherpa-onnx-non-streaming-tts-${SHERPA_ONNX_VERSION}.exe
+          cp -v StreamingSpeechRecognition.exe sherpa-onnx-streaming-asr-$arch-${SHERPA_ONNX_VERSION}.exe
+          cp -v NonStreamingSpeechRecognition.exe sherpa-onnx-non-streaming-asr-$arch-${SHERPA_ONNX_VERSION}.exe
+          cp -v NonStreamingTextToSpeech.exe ../sherpa-onnx-non-streaming-tts-$arch-${SHERPA_ONNX_VERSION}.exe
           ls -lh
 
       - name: Upload artifact tts
