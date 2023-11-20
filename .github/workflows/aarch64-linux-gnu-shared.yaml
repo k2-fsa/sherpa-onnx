@@ -142,7 +142,7 @@ jobs:
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-          aarch64-none-linux-gnu-strip --version
+          aarch64-linux-gnu-strip --version
 
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
@@ -157,7 +157,7 @@ jobs:
 
           ls -lh $dst/bin/
           echo "strip"
-          aarch64-none-linux-gnu-strip $dst/bin/*
+          aarch64-linux-gnu-strip $dst/bin/*
 
           tree $dst
 
