@@ -1,0 +1,28 @@
+{
+  "name": "sherpa-onnx2",
+  "version": "1.8.9",
+  "description": "Real-time speech recognition with Next-gen Kaldi",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/k2-fsa/sherpa-onnx.git"
+  },
+  "keywords": [
+    "asr"
+  ],
+  "author": "The next-gen Kaldi team",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/k2-fsa/sherpa-onnx/issues"
+  },
+  "homepage": "https://github.com/k2-fsa/sherpa-onnx#readme",
+  "dependencies": {
+    "ffi-napi": "^4.0.3",
+    "npm": "^6.14.4",
+    "ref-napi": "^3.0.3",
+    "ref-struct-napi": "^1.1.1"
+  }
+}
