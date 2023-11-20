@@ -45,6 +45,7 @@ jobs:
           echo PYTHON_VERSION=$PYTHON_VERSION >> $GITHUB_ENV
 
       # https://github.com/mshr-h/onnx-dockerfile-for-raspberry-pi/blob/main/3.10-bullseye-build/Dockerfile.arm32v7
+      # https://hub.docker.com/r/balenalib/raspberrypi3-python
       - name: Run docker
         uses: addnab/docker-run-action@v3
         with:
