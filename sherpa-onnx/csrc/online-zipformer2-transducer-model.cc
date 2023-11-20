@@ -51,6 +51,19 @@ OnlineZipformer2TransducerModel::OnlineZipformer2TransducerModel(
     auto buf = ReadFile(config.transducer.joiner);
     InitJoiner(buf.data(), buf.size());
   }
+
+  if (!config.transducer.ctc.empty())
+  {
+    {
+      auto buf = ReadFile(config.transducer.ctc);
+      InitCTC(buf.data(), buf.size());
+    }
+
+    {
+      auto buf = ReadFile(config.transducer.frame_reducer);
+      InitFrameReducer(buf.data(), buf.size());
+    }
+  }
 }
 
 #if __ANDROID_API__ >= 9
@@ -92,9 +105,24 @@ void OnlineZipformer2TransducerModel::InitEncoder(void *model_data,
   Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
   if (config_.debug) {
     std::ostringstream os;
-    os << "---encoder---\n";
+    os << "\n---encoder---\n";
     PrintModelMetadata(os, meta_data);
     SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    fprintf(stderr, "\033[1;33m");
+    fprintf(stderr, "encoder input names:\n");
+    for (const auto& n : encoder_input_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "\033[1;34m");
+    fprintf(stderr, "encoder output names:\n");
+    for (const auto& n : encoder_output_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }  
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "--------------------------------------\n");
   }
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -144,9 +172,24 @@ void OnlineZipformer2TransducerModel::InitDecoder(void *model_data,
   Ort::ModelMetadata meta_data = decoder_sess_->GetModelMetadata();
   if (config_.debug) {
     std::ostringstream os;
-    os << "---decoder---\n";
+    os << "\n---decoder---\n";
     PrintModelMetadata(os, meta_data);
     SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    fprintf(stderr, "\033[1;33m");
+    fprintf(stderr, "decoder input names:\n");
+    for (const auto& n : decoder_input_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "\033[1;34m");
+    fprintf(stderr, "decoder output names:\n");
+    for (const auto& n : decoder_output_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "--------------------------------------\n");
   }
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -169,9 +212,96 @@ void OnlineZipformer2TransducerModel::InitJoiner(void *model_data,
   Ort::ModelMetadata meta_data = joiner_sess_->GetModelMetadata();
   if (config_.debug) {
     std::ostringstream os;
-    os << "---joiner---\n";
+    os << "\n---joiner---\n";
     PrintModelMetadata(os, meta_data);
     SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    fprintf(stderr, "\033[1;33m");
+    fprintf(stderr, "joiner input names:\n");
+    for (const auto& n : joiner_input_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "\033[1;34m");
+    fprintf(stderr, "joiner output names:\n");
+    for (const auto& n : joiner_output_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "--------------------------------------\n");
+  }
+}
+
+void OnlineZipformer2TransducerModel::InitCTC(void *model_data, size_t model_data_length)
+{
+  ctc_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                model_data_length, sess_opts_);
+
+  GetInputNames(ctc_sess_.get(), &ctc_input_names_,
+                &ctc_input_names_ptr_);
+
+  GetOutputNames(ctc_sess_.get(), &ctc_output_names_,
+                 &ctc_output_names_ptr_);
+
+  // get meta data
+  Ort::ModelMetadata meta_data = ctc_sess_->GetModelMetadata();
+  if (config_.debug) {
+    std::ostringstream os;
+    os << "\n---ctc---\n";
+    PrintModelMetadata(os, meta_data);
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    fprintf(stderr, "\033[1;33m");
+    fprintf(stderr, "ctc input names:\n");
+    for (const auto& n : ctc_input_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "\033[1;34m");
+    fprintf(stderr, "ctc output names:\n");
+    for (const auto& n : ctc_output_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "--------------------------------------\n");
+  }
+}
+
+void OnlineZipformer2TransducerModel::InitFrameReducer(void *model_data, size_t model_data_length)
+{
+  frame_reducer_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                model_data_length, sess_opts_);
+
+  GetInputNames(frame_reducer_sess_.get(), &frame_reducer_input_names_,
+                &frame_reducer_input_names_ptr_);
+
+  GetOutputNames(frame_reducer_sess_.get(), &frame_reducer_output_names_,
+                 &frame_reducer_output_names_ptr_);
+
+  // get meta data
+  Ort::ModelMetadata meta_data = frame_reducer_sess_->GetModelMetadata();
+  if (config_.debug) {
+    std::ostringstream os;
+    os << "\n---frame_reducer---\n";
+    PrintModelMetadata(os, meta_data);
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    fprintf(stderr, "\033[1;33m");
+    fprintf(stderr, "frame reducer input names:\n");
+    for (const auto& n : frame_reducer_input_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "\033[1;34m");
+    fprintf(stderr, "frame reducer output names:\n");
+    for (const auto& n : frame_reducer_output_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "--------------------------------------\n");
   }
 }
 
@@ -462,5 +592,19 @@ Ort::Value OnlineZipformer2TransducerModel::RunJoiner(Ort::Value encoder_out,
 
   return std::move(logit[0]);
 }
+
+// Ort::Value OnlineZipformer2TransducerModel::RunCTC(Ort::Value encoder_out) {
+//   auto ctc_out = ctc_sess_->Run(
+//       {}, ctc_input_names_ptr_.data(), &encoder_out, 1,
+//       ctc_output_names_ptr_.data(), ctc_output_names_ptr_.size());
+//   return std::move(ctc_out[0]);
+// }
+
+// Ort::Value OnlineZipformer2TransducerModel::RunFrameReducer(Ort::Value encoder_out) {
+//   auto ctc_out = ctc_sess_->Run(
+//       {}, ctc_input_names_ptr_.data(), &encoder_out, 1,
+//       ctc_output_names_ptr_.data(), ctc_output_names_ptr_.size());
+//   return std::move(ctc_out[0]);
+// }
 
 }  // namespace sherpa_onnx

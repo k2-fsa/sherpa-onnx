@@ -198,6 +198,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
     std::array<int64_t, 3> x_shape{n, chunk_size, feature_dim};
+    // std::array<int64_t, 3> x_shape{chunk_size, n, feature_dim};
 
     Ort::Value x = Ort::Value::CreateTensor(memory_info, features_vec.data(),
                                             features_vec.size(), x_shape.data(),
@@ -211,6 +212,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
         processed_frames_shape.data(), processed_frames_shape.size());
 
     auto states = model_->StackStates(states_vec);
+
+    SHERPA_ONNX_LOGE("streams num: %d", n);
 
     auto pair = model_->RunEncoder(std::move(x), std::move(states),
                                    std::move(processed_frames));

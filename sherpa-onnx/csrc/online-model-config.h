@@ -16,7 +16,7 @@ struct OnlineModelConfig {
   OnlineParaformerModelConfig paraformer;
   std::string tokens;
   int32_t num_threads = 1;
-  bool debug = false;
+  bool debug = true;
   std::string provider = "cpu";
 
   // Valid values:

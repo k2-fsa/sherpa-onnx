@@ -25,7 +25,7 @@ struct OfflineModelConfig {
 
   std::string tokens;
   int32_t num_threads = 2;
-  bool debug = false;
+  bool debug = true;
   std::string provider = "cpu";
 
   // With the help of this field, we only need to load the model once
@@ -37,7 +37,7 @@ struct OfflineModelConfig {
   //  - nemo_ctc. It is a NeMo CTC model.
   //
   // All other values are invalid and lead to loading the model twice.
-  std::string model_type;
+  std::string model_type = "transducer";
 
   OfflineModelConfig() = default;
   OfflineModelConfig(const OfflineTransducerModelConfig &transducer,
