@@ -19,14 +19,12 @@ let tokens = './sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt'
 let modelConfig = new sherpa_onnx.OfflineModelConfig();
 modelConfig.whisper = whisper;
 modelConfig.tokens = tokens;
-modelConfig.debug = 1;
 modelConfig.modelType = 'whisper';
 
 let recognizerConfig = new sherpa_onnx.OfflineRecognizerConfig()
 recognizerConfig.featConfig = featConfig;
 recognizerConfig.modelConfig = modelConfig;
 recognizerConfig.decodingMethod = 'greedy_search';
-
 
 recognizer = new sherpa_onnx.OfflineRecognizer(recognizerConfig);
 stream = recognizer.createStream()

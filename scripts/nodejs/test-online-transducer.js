@@ -15,24 +15,21 @@ let transducer = new sherpa_onnx.OnlineTransducerModelConfig();
 transducer.encoder =
     './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx'
 transducer.decoder =
-    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.int8.onnx'
+    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx'
 transducer.joiner =
-    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx'
+    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx'
 let tokens =
     './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt'
 
 let modelConfig = new sherpa_onnx.OnlineModelConfig()
 modelConfig.transducer = transducer;
 modelConfig.tokens = tokens;
-modelConfig.debug = 1;
 modelConfig.modelType = 'zipformer';
 
 let recognizerConfig = new sherpa_onnx.OnlineRecognizerConfig()
 recognizerConfig.featConfig = featConfig;
 recognizerConfig.modelConfig = modelConfig;
 recognizerConfig.decodingMethod = 'greedy_search';
-
-console.log(recognizerConfig);
 
 recognizer = new sherpa_onnx.OnlineRecognizer(recognizerConfig);
 stream = recognizer.createStream()

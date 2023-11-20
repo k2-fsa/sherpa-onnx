@@ -23,15 +23,12 @@ let tokens = './sherpa-onnx-zipformer-en-2023-06-26/tokens.txt';
 let modelConfig = new sherpa_onnx.OfflineModelConfig();
 modelConfig.transducer = transducer;
 modelConfig.tokens = tokens;
-modelConfig.debug = 1;
 modelConfig.modelType = 'zipformer2';
 
 let recognizerConfig = new sherpa_onnx.OfflineRecognizerConfig()
 recognizerConfig.featConfig = featConfig;
 recognizerConfig.modelConfig = modelConfig;
 recognizerConfig.decodingMethod = 'greedy_search';
-
-console.log(recognizerConfig);
 
 recognizer = new sherpa_onnx.OfflineRecognizer(recognizerConfig);
 stream = recognizer.createStream()

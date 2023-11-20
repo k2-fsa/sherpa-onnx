@@ -18,7 +18,6 @@ let tokens = './sherpa-onnx-nemo-ctc-en-conformer-small/tokens.txt'
 let modelConfig = new sherpa_onnx.OfflineModelConfig();
 modelConfig.nemoCtc = nemoCtc;
 modelConfig.tokens = tokens;
-modelConfig.debug = 1;
 modelConfig.modelType = 'nemo_ctc';
 
 let recognizerConfig = new sherpa_onnx.OfflineRecognizerConfig()
@@ -63,7 +62,7 @@ fs.createReadStream(waveFilename, {'highWaterMark': 4096})
           new Float32Array(recognizerConfig.featConfig.sampleRate * 0.5);
 
       buf.push(floatSamples)
-      var flattened = Float32Array.from(buf.reduce((a, b) => [...a, ...b], []));
+      let flattened = Float32Array.from(buf.reduce((a, b) => [...a, ...b], []));
 
       stream.acceptWaveform(recognizerConfig.featConfig.sampleRate, flattened);
       recognizer.decode(stream);

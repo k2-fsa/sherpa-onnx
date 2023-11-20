@@ -20,7 +20,9 @@ const path = require('path');
 const ffi = require('ffi-napi');
 const ref = require('ref-napi');
 const fs = require('fs');
+var ArrayType = require('ref-array-napi');
 
+const FloatArray = ArrayType(ref.types.float);
 const StructType = require('ref-struct-napi');
 const cstring = ref.types.CString;
 const cstringPtr = ref.refType(cstring);
@@ -170,7 +172,7 @@ const SherpaOnnxVadModelConfig = StructType({
 
 const SherpaOnnxSpeechSegment = StructType({
   'start': int32_t,
-  'samples': floatPtr,
+  'samples': FloatArray,
   'n': int32_t,
 });
 
@@ -211,6 +213,8 @@ const SherpaOnnxOfflineTtsVitsModelConfigPtr =
 const SherpaOnnxOfflineTtsConfigPtr = ref.refType(SherpaOnnxOfflineTtsConfig);
 const SherpaOnnxGeneratedAudioPtr = ref.refType(SherpaOnnxGeneratedAudio);
 const SherpaOnnxOfflineTtsPtr = ref.refType(ref.types.void);
+
+const SherpaOnnxDisplayPtr = ref.refType(ref.types.void);
 
 let soname;
 if (os.platform() == 'win32') {
@@ -320,8 +324,8 @@ const libsherpa_onnx = ffi.Library(soname, {
   'SherpaOnnxCircularBufferPush':
       ['void', [SherpaOnnxCircularBufferPtr, floatPtr, int32_t]],
   'SherpaOnnxCircularBufferGet':
-      [floatPtr, [SherpaOnnxCircularBufferPtr, int32_t, int32_t]],
-  'SherpaOnnxCircularBufferFree': ['void', [floatPtr]],
+      [FloatArray, [SherpaOnnxCircularBufferPtr, int32_t, int32_t]],
+  'SherpaOnnxCircularBufferFree': ['void', [FloatArray]],
   'SherpaOnnxCircularBufferPop':
       ['void', [SherpaOnnxCircularBufferPtr, int32_t]],
   'SherpaOnnxCircularBufferSize': [int32_t, [SherpaOnnxCircularBufferPtr]],
@@ -357,7 +361,28 @@ const libsherpa_onnx = ffi.Library(soname, {
   'SherpaOnnxDestroyOfflineTtsGeneratedAudio':
       ['void', [SherpaOnnxGeneratedAudioPtr]],
   'SherpaOnnxWriteWave': ['void', [floatPtr, int32_t, int32_t, cstring]],
+
+  // display
+  'CreateDisplay': [SherpaOnnxDisplayPtr, [int32_t]],
+  'DestroyDisplay': ['void', [SherpaOnnxDisplayPtr]],
+  'SherpaOnnxPrint': ['void', [SherpaOnnxDisplayPtr, int32_t, cstring]],
 });
+
+class Display {
+  constructor(maxWordPerLine) {
+    this.handle = libsherpa_onnx.CreateDisplay(maxWordPerLine);
+  }
+  free() {
+    if (this.handle) {
+      libsherpa_onnx.DestroyDisplay(this.handle);
+      this.handle = null;
+    }
+  }
+
+  print(idx, s) {
+    libsherpa_onnx.SherpaOnnxPrint(this.handle, idx, s);
+  }
+};
 
 class OnlineResult {
   constructor(text) {
@@ -409,6 +434,14 @@ class OnlineRecognizer {
   isReady(stream) {
     return libsherpa_onnx.IsOnlineStreamReady(
         this.recognizer_handle, stream.handle)
+  }
+
+  isEndpoint(stream) {
+    return libsherpa_onnx.IsEndpoint(this.recognizer_handle, stream.handle);
+  }
+
+  reset(stream) {
+    libsherpa_onnx.Reset(this.recognizer_handle, stream.handle);
   }
 
   decode(stream) {
@@ -487,6 +520,140 @@ class OfflineRecognizer {
   }
 };
 
+class SpeechSegment {
+  constructor(start, samples) {
+    self.start = start;
+    self.samples = samples;
+  }
+};
+
+// this buffer holds only float entries.
+class CircularBuffer {
+  /**
+   * @param capacity {int} The capacity of the circular buffer.
+   */
+  constructor(capacity) {
+    this.handle = libsherpa_onnx.SherpaOnnxCreateCircularBuffer(capacity);
+  }
+
+  free() {
+    if (this.handle) {
+      libsherpa_onnx.SherpaOnnxDestroyCircularBuffer(this.handle);
+      this.handle = null;
+    }
+  }
+
+  /**
+   * @param samples {Float32Array}
+   */
+  push(samples) {
+    libsherpa_onnx.SherpaOnnxCircularBufferPush(
+        this.handle, samples, samples.length);
+  }
+
+  get(startIndex, n) {
+    let data =
+        libsherpa_onnx.SherpaOnnxCircularBufferGet(this.handle, startIndex, n);
+
+    // https://tootallnate.github.io/ref/#exports-reinterpret
+    const buffer = data.buffer.reinterpret(n * ref.sizeof.float).buffer;
+
+    // create a copy since we are going to free the buffer at the end
+    let s = new Float32Array(buffer).slice(0);
+    libsherpa_onnx.SherpaOnnxCircularBufferFree(data);
+    return s;
+  }
+
+  pop(n) {
+    libsherpa_onnx.SherpaOnnxCircularBufferPop(this.handle, n);
+  }
+
+  size() {
+    libsherpa_onnx.SherpaOnnxCircularBufferSize(this.handle);
+  }
+
+  reset() {
+    libsherpa_onnx.SherpaOnnxCircularBufferReset(this.handle);
+  }
+};
+
+class VoiceActivityDetector {
+  constructor(config, bufferSizeInSeconds) {
+    this.handle = libsherpa_onnx.SherpaOnnxCreateVoiceActivityDetector(
+        config.ref(), bufferSizeInSeconds);
+  }
+
+  free() {
+    if (this.handle) {
+      libsherpa_onnx.SherpaOnnxDestroyVoiceActivityDetector(this.handle);
+    }
+  }
+
+  acceptWaveform(samples) {
+    libsherpa_onnx.SherpaOnnxVoiceActivityDetectorAcceptWaveform(
+        this.handle, samples, samples.length);
+  }
+
+  isEmpty() {
+    return libsherpa_onnx.SherpaOnnxVoiceActivityDetectorEmpty(this.handle);
+  }
+
+  isDetected() {
+    return libsherpa_onnx.SherpaOnnxVoiceActivityDetectorDetected(this.handle);
+  }
+  pop() {
+    libsherpa_onnx.SherpaOnnxVoiceActivityDetectorPop(this.handle);
+  }
+
+  clear() {
+    libsherpa_onnx.SherpaOnnxVoiceActivityDetectorClear(this.handle);
+  }
+
+  reset() {
+    libsherpa_onnx.SherpaOnnxVoiceActivityDetectorReset(this.handle);
+  }
+
+  front() {
+    let segment =
+        libsherpa_onnx.SherpaOnnxVoiceActivityDetectorFront(this.handle)
+            .deref();
+
+    let buffer =
+        segment.samples.buffer.reinterpret(segment.n * ref.sizeof.float).buffer;
+
+    let samples = new Float32Array(buffer).slice(0);
+    let ans = new SpeechSegment(segment.start, samples);
+
+    libsherpa_onnx.SherpaOnnxDestroySpeechSegment(segment);
+    return ans;
+  }
+};
+
+class GeneratedAudio {
+  constructor(sampleRate, samples) {
+    this.sampleRate = sampleRate;
+    this.samples = samples;
+  }
+  save(filename) {
+    libsherpa_onnx.SherpaOnnxWriteWave(
+        this.samples, this.samples.length, this.sampleRate, filename);
+  }
+};
+
+class OfflineTts {
+  constructor(config) {
+    this.handle = libsherpa_onnx.SherpaOnnxCreateOfflineTts(config.ref());
+  }
+
+  free() {
+    if (this.handle) {
+      libsherpa_onnx.SherpaOnnxDestroyOfflineTts(this.handle);
+      this.handle = null;
+    }
+  }
+};
+
+
 
 // online asr
 const OnlineTransducerModelConfig = SherpaOnnxOnlineTransducerModelConfig;
@@ -503,7 +670,16 @@ const OfflineParaformerModelConfig = SherpaOnnxOfflineParaformerModelConfig;
 const OfflineWhisperModelConfig = SherpaOnnxOfflineWhisperModelConfig;
 const OfflineNemoEncDecCtcModelConfig =
     SherpaOnnxOfflineNemoEncDecCtcModelConfig;
-const OnnxOfflineTdnnModelConfig = SherpaOnnxOfflineTdnnModelConfig;
+const OfflineTdnnModelConfig = SherpaOnnxOfflineTdnnModelConfig;
+
+// vad
+const SileroVadModelConfig = SherpaOnnxSileroVadModelConfig;
+const VadModelConfig = SherpaOnnxVadModelConfig;
+
+// tts
+const OfflineTtsVitsModelConfig = SherpaOnnxOfflineTtsVitsModelConfig;
+const OfflineTtsModelConfig = SherpaOnnxOfflineTtsModelConfig;
+const OfflineTtsConfig = SherpaOnnxOfflineTtsConfig;
 
 module.exports = {
   // online asr
@@ -524,5 +700,17 @@ module.exports = {
   OfflineParaformerModelConfig,
   OfflineWhisperModelConfig,
   OfflineNemoEncDecCtcModelConfig,
-  OnnxOfflineTdnnModelConfig,
+  OfflineTdnnModelConfig,
+  // vad
+  SileroVadModelConfig,
+  VadModelConfig,
+  CircularBuffer,
+  VoiceActivityDetector,
+  // tts
+  OfflineTtsVitsModelConfig,
+  OfflineTtsModelConfig,
+  OfflineTtsConfig,
+
+  //
+  Display,
 };

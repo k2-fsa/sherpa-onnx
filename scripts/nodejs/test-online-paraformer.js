@@ -20,15 +20,12 @@ let tokens = './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt'
 let modelConfig = new sherpa_onnx.OnlineModelConfig()
 modelConfig.paraformer = paraformer;
 modelConfig.tokens = tokens;
-modelConfig.debug = 1;
 modelConfig.modelType = 'paraformer';
 
 let recognizerConfig = new sherpa_onnx.OnlineRecognizerConfig()
 recognizerConfig.featConfig = featConfig;
 recognizerConfig.modelConfig = modelConfig;
 recognizerConfig.decodingMethod = 'greedy_search';
-
-console.log(recognizerConfig);
 
 recognizer = new sherpa_onnx.OnlineRecognizer(recognizerConfig);
 stream = recognizer.createStream()

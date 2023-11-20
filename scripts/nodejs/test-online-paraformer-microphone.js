@@ -1,10 +1,7 @@
 // Copyright (c)  2023  Xiaomi Corporation (authors: Fangjun Kuang)
 //
-const fs = require('fs');
-const {Readable} = require('stream');
-const wav = require('wav');
 var portAudio = require('naudiodon2');
-// console.log(portAudio.getDevices());
+console.log(portAudio.getDevices());
 
 const sherpa_onnx = require('./index.js');
 
@@ -12,21 +9,17 @@ let featConfig = new sherpa_onnx.FeatureConfig()
 featConfig.sampleRate = 16000;
 featConfig.featureDim = 80;
 
-// test online recognizer
-let transducer = new sherpa_onnx.OnlineTransducerModelConfig();
-transducer.encoder =
-    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx'
-transducer.decoder =
-    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx'
-transducer.joiner =
-    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx'
-let tokens =
-    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt'
+let paraformer = new sherpa_onnx.OnlineParaformerModelConfig();
+paraformer.encoder =
+    './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx'
+paraformer.decoder =
+    './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx'
+let tokens = './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt'
 
 let modelConfig = new sherpa_onnx.OnlineModelConfig()
-modelConfig.transducer = transducer;
+modelConfig.paraformer = paraformer;
 modelConfig.tokens = tokens;
-modelConfig.modelType = 'zipformer';
+modelConfig.modelType = 'paraformer';
 
 let recognizerConfig = new sherpa_onnx.OnlineRecognizerConfig()
 recognizerConfig.featConfig = featConfig;
@@ -36,6 +29,7 @@ recognizerConfig.enableEndpoint = 1;
 
 recognizer = new sherpa_onnx.OnlineRecognizer(recognizerConfig);
 stream = recognizer.createStream()
+
 display = new sherpa_onnx.Display(50)
 
 let lastText = ''
@@ -84,3 +78,4 @@ ai.on('close', () => {
 });
 
 ai.start();
+console.log('Started! Please speak')
