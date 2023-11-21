@@ -6,6 +6,8 @@ console.log(portAudio.getDevices());
 
 let sileroVadModelConfig = new sherpa_onnx.SileroVadModelConfig();
 sileroVadModelConfig.model = './silero_vad.onnx';
+sileroVadModelConfig.minSpeechDuration = 0.3;   // seconds
+sileroVadModelConfig.minSilenceDuration = 0.3;  // seconds
 sileroVadModelConfig.windowSize = 512;
 
 let vadModelConfig = new sherpa_onnx.VadModelConfig();
@@ -15,51 +17,52 @@ vadModelConfig.sampleRate = 16000;
 let bufferSizeInSeconds = 60;
 let vad =
     new sherpa_onnx.VoiceActivityDetector(vadModelConfig, bufferSizeInSeconds);
-let buffer = new sherpa_onnx.CircularBuffer(bufferSizeInSeconds);
+let buffer = new sherpa_onnx.CircularBuffer(
+    bufferSizeInSeconds * vadModelConfig.sampleRate);
 
 var ai = new portAudio.AudioIO({
   inOptions: {
     channelCount: 1,
     sampleFormat: portAudio.SampleFormatFloat32,
-    sampleRate: featConfig.sampleRate,
+    sampleRate: vadModelConfig.sampleRate,
     deviceId: -1,  // Use -1 or omit the deviceId to select the default device
     closeOnError: true  // Close the stream if an audio error is detected, if
                         // set false then just log the error
   }
 });
 
+let printed = false;
+let index = 0;
 ai.on('data', data => {
-  let samples = new Float32Array(data.buffer);
-  buffer.push(samples);
-  while (buffer.size() > sileroVadModelConfig.windowSize) {
-  }
-
-  stream.acceptWaveform(recognizerConfig.featConfig.sampleRate, samples);
-
-  while (recognizer.isReady(stream)) {
-    recognizer.decode(stream);
-  }
-
-  let isEndpoint = recognizer.isEndpoint(stream);
-  let text = recognizer.getResult(stream).text;
-
-  if (text.length > 0 && lastText != text) {
-    lastText = text;
-    display.print(segmentIndex, lastText);
-  }
-  if (isEndpoint) {
-    if (text.length > 0) {
-      lastText = text;
-      segmentIndex += 1;
+  let windowSize = sileroVadModelConfig.windowSize;
+  buffer.push(new Float32Array(data.buffer));
+  while (buffer.size() > windowSize) {
+    let samples = buffer.get(buffer.head(), windowSize);
+    buffer.pop(windowSize);
+    vad.acceptWaveform(samples)
+    if (vad.isDetected() && !printed) {
+      console.log(`${index}: Detected speech`)
+      printed = true;
     }
-    recognizer.reset(stream)
+
+    if (!vad.isDetected()) {
+      printed = false;
+    }
+
+    while (!vad.isEmpty()) {
+      let segment = vad.front();
+      vad.pop();
+      let duration = segment.samples.length / vadModelConfig.sampleRate;
+      console.log(`${index} End of speech. Duration: ${duration} seconds`);
+      index += 1;
+    }
   }
 });
 
 ai.on('close', () => {
   console.log('Free resources');
-  stream.free();
-  recognizer.free();
+  vad.free();
+  buffer.free();
 });
 
 ai.start();

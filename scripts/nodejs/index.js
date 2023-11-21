@@ -329,6 +329,7 @@ const libsherpa_onnx = ffi.Library(soname, {
   'SherpaOnnxCircularBufferPop':
       ['void', [SherpaOnnxCircularBufferPtr, int32_t]],
   'SherpaOnnxCircularBufferSize': [int32_t, [SherpaOnnxCircularBufferPtr]],
+  'SherpaOnnxCircularBufferHead': [int32_t, [SherpaOnnxCircularBufferPtr]],
   'SherpaOnnxCircularBufferReset': ['void', [SherpaOnnxCircularBufferPtr]],
   'SherpaOnnxCreateVoiceActivityDetector': [
     SherpaOnnxVoiceActivityDetectorPtr, [SherpaOnnxVadModelConfigPtr, float]
@@ -522,8 +523,8 @@ class OfflineRecognizer {
 
 class SpeechSegment {
   constructor(start, samples) {
-    self.start = start;
-    self.samples = samples;
+    this.start = start;
+    this.samples = samples;
   }
 };
 
@@ -569,7 +570,11 @@ class CircularBuffer {
   }
 
   size() {
-    libsherpa_onnx.SherpaOnnxCircularBufferSize(this.handle);
+    return libsherpa_onnx.SherpaOnnxCircularBufferSize(this.handle);
+  }
+
+  head() {
+    return libsherpa_onnx.SherpaOnnxCircularBufferHead(this.handle);
   }
 
   reset() {
@@ -615,14 +620,15 @@ class VoiceActivityDetector {
 
   front() {
     let segment =
-        libsherpa_onnx.SherpaOnnxVoiceActivityDetectorFront(this.handle)
-            .deref();
+        libsherpa_onnx.SherpaOnnxVoiceActivityDetectorFront(this.handle);
 
     let buffer =
-        segment.samples.buffer.reinterpret(segment.n * ref.sizeof.float).buffer;
+        segment.deref()
+            .samples.buffer.reinterpret(segment.deref().n * ref.sizeof.float)
+            .buffer;
 
     let samples = new Float32Array(buffer).slice(0);
-    let ans = new SpeechSegment(segment.start, samples);
+    let ans = new SpeechSegment(segment.deref().start, samples);
 
     libsherpa_onnx.SherpaOnnxDestroySpeechSegment(segment);
     return ans;

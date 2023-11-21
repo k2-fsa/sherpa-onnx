@@ -438,6 +438,10 @@ int32_t SherpaOnnxCircularBufferSize(SherpaOnnxCircularBuffer *buffer) {
   return buffer->impl->Size();
 }
 
+int32_t SherpaOnnxCircularBufferHead(SherpaOnnxCircularBuffer *buffer) {
+  return buffer->impl->Head();
+}
+
 void SherpaOnnxCircularBufferReset(SherpaOnnxCircularBuffer *buffer) {
   buffer->impl->Reset();
 }
