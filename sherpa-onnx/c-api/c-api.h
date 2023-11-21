@@ -622,6 +622,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsConfig {
   SherpaOnnxOfflineTtsModelConfig model;
+  const char *rule_fsts;
 } SherpaOnnxOfflineTtsConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxGeneratedAudio {

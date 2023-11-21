@@ -1,5 +1,5 @@
 // Copyright (c)  2023  Xiaomi Corporation (authors: Fangjun Kuang)
-//
+
 const sherpa_onnx = require("./index.js");
 const portAudio = require("naudiodon2");
 console.log(portAudio.getDevices());

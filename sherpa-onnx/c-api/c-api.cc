@@ -557,6 +557,7 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
   tts_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+  tts_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
 
   if (tts_config.model.debug) {
     fprintf(stderr, "%s\n", tts_config.ToString().c_str());

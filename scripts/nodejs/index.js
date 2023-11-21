@@ -12,18 +12,18 @@
 // https://github.com/node-ffi-napi/node-ffi-napi/issues/244
 // and
 // https://github.com/node-ffi-napi/node-ffi-napi/issues/97
-'use strict'
+"use strict"
 
-const debug = require('debug')('sherpa-onnx');
-const os = require('os');
-const path = require('path');
-const ffi = require('ffi-napi');
-const ref = require('ref-napi');
-const fs = require('fs');
-var ArrayType = require('ref-array-napi');
+const debug = require("debug")("sherpa-onnx");
+const os = require("os");
+const path = require("path");
+const ffi = require("ffi-napi");
+const ref = require("ref-napi");
+const fs = require("fs");
+var ArrayType = require("ref-array-napi");
 
 const FloatArray = ArrayType(ref.types.float);
-const StructType = require('ref-struct-napi');
+const StructType = require("ref-struct-napi");
 const cstring = ref.types.CString;
 const cstringPtr = ref.refType(cstring);
 const int32_t = ref.types.int32;
@@ -31,51 +31,51 @@ const float = ref.types.float;
 const floatPtr = ref.refType(float);
 
 const SherpaOnnxOnlineTransducerModelConfig = StructType({
-  'encoder': cstring,
-  'decoder': cstring,
-  'joiner': cstring,
+  "encoder" : cstring,
+  "decoder" : cstring,
+  "joiner" : cstring,
 });
 
 const SherpaOnnxOnlineParaformerModelConfig = StructType({
-  'encoder': cstring,
-  'decoder': cstring,
+  "encoder" : cstring,
+  "decoder" : cstring,
 });
 
 const SherpaOnnxOnlineModelConfig = StructType({
-  'transducer': SherpaOnnxOnlineTransducerModelConfig,
-  'paraformer': SherpaOnnxOnlineParaformerModelConfig,
-  'tokens': cstring,
-  'numThreads': int32_t,
-  'provider': cstring,
-  'debug': int32_t,
-  'modelType': cstring,
+  "transducer" : SherpaOnnxOnlineTransducerModelConfig,
+  "paraformer" : SherpaOnnxOnlineParaformerModelConfig,
+  "tokens" : cstring,
+  "numThreads" : int32_t,
+  "provider" : cstring,
+  "debug" : int32_t,
+  "modelType" : cstring,
 });
 
 const SherpaOnnxFeatureConfig = StructType({
-  'sampleRate': int32_t,
-  'featureDim': int32_t,
+  "sampleRate" : int32_t,
+  "featureDim" : int32_t,
 });
 
 const SherpaOnnxOnlineRecognizerConfig = StructType({
-  'featConfig': SherpaOnnxFeatureConfig,
-  'modelConfig': SherpaOnnxOnlineModelConfig,
-  'decodingMethod': cstring,
-  'maxActivePaths': int32_t,
-  'enableEndpoint': int32_t,
-  'rule1MinTrailingSilence': float,
-  'rule2MinTrailingSilence': float,
-  'rule3MinUtteranceLength': float,
-  'hotwordsFile': cstring,
-  'hotwordsScore': float,
+  "featConfig" : SherpaOnnxFeatureConfig,
+  "modelConfig" : SherpaOnnxOnlineModelConfig,
+  "decodingMethod" : cstring,
+  "maxActivePaths" : int32_t,
+  "enableEndpoint" : int32_t,
+  "rule1MinTrailingSilence" : float,
+  "rule2MinTrailingSilence" : float,
+  "rule3MinUtteranceLength" : float,
+  "hotwordsFile" : cstring,
+  "hotwordsScore" : float,
 });
 
 const SherpaOnnxOnlineRecognizerResult = StructType({
-  'text': cstring,
-  'tokens': cstring,
-  'tokensArr': cstringPtr,
-  'timestamps': floatPtr,
-  'count': int32_t,
-  'json': cstring,
+  "text" : cstring,
+  "tokens" : cstring,
+  "tokensArr" : cstringPtr,
+  "timestamps" : floatPtr,
+  "count" : int32_t,
+  "json" : cstring,
 });
 
 const SherpaOnnxOnlineRecognizerPtr = ref.refType(ref.types.void);
@@ -88,60 +88,60 @@ const SherpaOnnxOnlineRecognizerConfigPtr =
     ref.refType(SherpaOnnxOnlineRecognizerConfig);
 
 const SherpaOnnxOfflineTransducerModelConfig = StructType({
-  'encoder': cstring,
-  'decoder': cstring,
-  'joiner': cstring,
+  "encoder" : cstring,
+  "decoder" : cstring,
+  "joiner" : cstring,
 });
 
 const SherpaOnnxOfflineParaformerModelConfig = StructType({
-  'model': cstring,
+  "model" : cstring,
 });
 
 const SherpaOnnxOfflineNemoEncDecCtcModelConfig = StructType({
-  'model': cstring,
+  "model" : cstring,
 });
 
 const SherpaOnnxOfflineWhisperModelConfig = StructType({
-  'encoder': cstring,
-  'decoder': cstring,
+  "encoder" : cstring,
+  "decoder" : cstring,
 });
 
 const SherpaOnnxOfflineTdnnModelConfig = StructType({
-  'model': cstring,
+  "model" : cstring,
 });
 
 const SherpaOnnxOfflineLMConfig = StructType({
-  'model': cstring,
-  'scale': float,
+  "model" : cstring,
+  "scale" : float,
 });
 
 const SherpaOnnxOfflineModelConfig = StructType({
-  'transducer': SherpaOnnxOfflineTransducerModelConfig,
-  'paraformer': SherpaOnnxOfflineParaformerModelConfig,
-  'nemoCtc': SherpaOnnxOfflineNemoEncDecCtcModelConfig,
-  'whisper': SherpaOnnxOfflineWhisperModelConfig,
-  'tdnn': SherpaOnnxOfflineTdnnModelConfig,
-  'tokens': cstring,
-  'numThreads': int32_t,
-  'debug': int32_t,
-  'provider': cstring,
-  'modelType': cstring,
+  "transducer" : SherpaOnnxOfflineTransducerModelConfig,
+  "paraformer" : SherpaOnnxOfflineParaformerModelConfig,
+  "nemoCtc" : SherpaOnnxOfflineNemoEncDecCtcModelConfig,
+  "whisper" : SherpaOnnxOfflineWhisperModelConfig,
+  "tdnn" : SherpaOnnxOfflineTdnnModelConfig,
+  "tokens" : cstring,
+  "numThreads" : int32_t,
+  "debug" : int32_t,
+  "provider" : cstring,
+  "modelType" : cstring,
 });
 
 const SherpaOnnxOfflineRecognizerConfig = StructType({
-  'featConfig': SherpaOnnxFeatureConfig,
-  'modelConfig': SherpaOnnxOfflineModelConfig,
-  'lmConfig': SherpaOnnxOfflineLMConfig,
-  'decodingMethod': cstring,
-  'maxActivePaths': int32_t,
-  'hotwordsFile': cstring,
-  'hotwordsScore': float,
+  "featConfig" : SherpaOnnxFeatureConfig,
+  "modelConfig" : SherpaOnnxOfflineModelConfig,
+  "lmConfig" : SherpaOnnxOfflineLMConfig,
+  "decodingMethod" : cstring,
+  "maxActivePaths" : int32_t,
+  "hotwordsFile" : cstring,
+  "hotwordsScore" : float,
 });
 
 const SherpaOnnxOfflineRecognizerResult = StructType({
-  'text': cstring,
-  'timestamps': floatPtr,
-  'count': int32_t,
+  "text" : cstring,
+  "timestamps" : floatPtr,
+  "count" : int32_t,
 });
 
 const SherpaOnnxOfflineRecognizerPtr = ref.refType(ref.types.void);
@@ -155,25 +155,25 @@ const SherpaOnnxOfflineRecognizerConfigPtr =
 
 // vad
 const SherpaOnnxSileroVadModelConfig = StructType({
-  'model': cstring,
-  'threshold': float,
-  'minSilenceDuration': float,
-  'minSpeechDuration': float,
-  'windowSize': int32_t,
+  "model" : cstring,
+  "threshold" : float,
+  "minSilenceDuration" : float,
+  "minSpeechDuration" : float,
+  "windowSize" : int32_t,
 });
 
 const SherpaOnnxVadModelConfig = StructType({
-  'sileroVad': SherpaOnnxSileroVadModelConfig,
-  'sampleRate': int32_t,
-  'numThreads': int32_t,
-  'provider': cstring,
-  'debug': int32_t,
+  "sileroVad" : SherpaOnnxSileroVadModelConfig,
+  "sampleRate" : int32_t,
+  "numThreads" : int32_t,
+  "provider" : cstring,
+  "debug" : int32_t,
 });
 
 const SherpaOnnxSpeechSegment = StructType({
-  'start': int32_t,
-  'samples': FloatArray,
-  'n': int32_t,
+  "start" : int32_t,
+  "samples" : FloatArray,
+  "n" : int32_t,
 });
 
 const SherpaOnnxVadModelConfigPtr = ref.refType(SherpaOnnxVadModelConfig);
@@ -183,29 +183,30 @@ const SherpaOnnxVoiceActivityDetectorPtr = ref.refType(ref.types.void);
 
 // tts
 const SherpaOnnxOfflineTtsVitsModelConfig = StructType({
-  'model': cstring,
-  'lexicon': cstring,
-  'tokens': cstring,
-  'noiseScale': float,
-  'noiseScaleW': float,
-  'lengthScale': float,
+  "model" : cstring,
+  "lexicon" : cstring,
+  "tokens" : cstring,
+  "noiseScale" : float,
+  "noiseScaleW" : float,
+  "lengthScale" : float,
 });
 
 const SherpaOnnxOfflineTtsModelConfig = StructType({
-  'vits': SherpaOnnxOfflineTtsVitsModelConfig,
-  'numThreads': int32_t,
-  'debug': int32_t,
-  'provider': cstring,
+  "vits" : SherpaOnnxOfflineTtsVitsModelConfig,
+  "numThreads" : int32_t,
+  "debug" : int32_t,
+  "provider" : cstring,
 });
 
 const SherpaOnnxOfflineTtsConfig = StructType({
-  'model': SherpaOnnxOfflineTtsModelConfig,
+  "model" : SherpaOnnxOfflineTtsModelConfig,
+  "ruleFsts" : cstring,
 });
 
 const SherpaOnnxGeneratedAudio = StructType({
-  'samples': floatPtr,
-  'n': int32_t,
-  'sampleRate': int32_t,
+  "samples" : FloatArray,
+  "n" : int32_t,
+  "sampleRate" : int32_t,
 });
 
 const SherpaOnnxOfflineTtsVitsModelConfigPtr =
@@ -217,42 +218,42 @@ const SherpaOnnxOfflineTtsPtr = ref.refType(ref.types.void);
 const SherpaOnnxDisplayPtr = ref.refType(ref.types.void);
 
 let soname;
-if (os.platform() == 'win32') {
+if (os.platform() == "win32") {
   // see https://nodejs.org/api/process.html#processarch
-  if (process.arch == 'x64') {
+  if (process.arch == "x64") {
     let currentPath = process.env.Path;
-    let dllDirectory = path.resolve(path.join(__dirname, 'lib', 'win-x64'));
+    let dllDirectory = path.resolve(path.join(__dirname, "lib", "win-x64"));
     process.env.Path = currentPath + path.delimiter + dllDirectory;
 
-    soname = path.join(__dirname, 'lib', 'win-x64', 'sherpa-onnx-c-api.dll')
-  } else if (process.arch == 'ia32') {
+    soname = path.join(__dirname, "lib", "win-x64", "sherpa-onnx-c-api.dll")
+  } else if (process.arch == "ia32") {
     let currentPath = process.env.Path;
-    let dllDirectory = path.resolve(path.join(__dirname, 'lib', 'win-x86'));
+    let dllDirectory = path.resolve(path.join(__dirname, "lib", "win-x86"));
     process.env.Path = currentPath + path.delimiter + dllDirectory;
 
-    soname = path.join(__dirname, 'lib', 'win-x86', 'sherpa-onnx-c-api.dll')
+    soname = path.join(__dirname, "lib", "win-x86", "sherpa-onnx-c-api.dll")
   } else {
     throw new Error(
         `Support only Windows x86 and x64 for now. Given ${process.arch}`);
   }
-} else if (os.platform() == 'darwin') {
-  if (process.arch == 'x64') {
+} else if (os.platform() == "darwin") {
+  if (process.arch == "x64") {
     soname =
-        path.join(__dirname, 'lib', 'osx-x64', 'libsherpa-onnx-c-api.dylib');
-  } else if (process.arch == 'arm64') {
+        path.join(__dirname, "lib", "osx-x64", "libsherpa-onnx-c-api.dylib");
+  } else if (process.arch == "arm64") {
     soname =
-        path.join(__dirname, 'lib', 'osx-arm64', 'libsherpa-onnx-c-api.dylib');
+        path.join(__dirname, "lib", "osx-arm64", "libsherpa-onnx-c-api.dylib");
   } else {
     throw new Error(
         `Support only macOS x64 and arm64 for now. Given ${process.arch}`);
   }
-} else if (os.platform() == 'linux') {
-  if (process.arch == 'x64') {
+} else if (os.platform() == "linux") {
+  if (process.arch == "x64") {
     soname =
-        path.join(__dirname, 'lib', 'linux-x64', 'libsherpa-onnx-c-api.so');
-  } else if (process.arch == 'ia32') {
+        path.join(__dirname, "lib", "linux-x64", "libsherpa-onnx-c-api.so");
+  } else if (process.arch == "ia32") {
     soname =
-        path.join(__dirname, 'lib', 'linux-x86', 'libsherpa-onnx-c-api.so');
+        path.join(__dirname, "lib", "linux-x86", "libsherpa-onnx-c-api.so");
   } else {
     throw new Error(
         `Support only Linux x86 and x64 for now. Given ${process.arch}`);
@@ -265,108 +266,114 @@ if (!fs.existsSync(soname)) {
       ./build.sh`);
 }
 
-debug('soname ', soname)
+debug("soname ", soname)
 
 const libsherpa_onnx = ffi.Library(soname, {
   // online asr
-  'CreateOnlineRecognizer':
-      [SherpaOnnxOnlineRecognizerPtr, [SherpaOnnxOnlineRecognizerConfigPtr]],
-  'DestroyOnlineRecognizer': ['void', [SherpaOnnxOnlineRecognizerPtr]],
-  'CreateOnlineStream':
-      [SherpaOnnxOnlineStreamPtr, [SherpaOnnxOnlineRecognizerPtr]],
-  'CreateOnlineStreamWithHotwords':
-      [SherpaOnnxOnlineStreamPtr, [SherpaOnnxOnlineRecognizerPtr, cstring]],
-  'DestroyOnlineStream': ['void', [SherpaOnnxOnlineStreamPtr]],
-  'AcceptWaveform':
-      ['void', [SherpaOnnxOnlineStreamPtr, int32_t, floatPtr, int32_t]],
-  'IsOnlineStreamReady':
-      [int32_t, [SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtr]],
-  'DecodeOnlineStream':
-      ['void', [SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtr]],
-  'DecodeMultipleOnlineStreams': [
-    'void',
-    [SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtrPtr, int32_t]
+  "CreateOnlineRecognizer" : [
+    SherpaOnnxOnlineRecognizerPtr, [ SherpaOnnxOnlineRecognizerConfigPtr ]
   ],
-  'GetOnlineStreamResult': [
+  "DestroyOnlineRecognizer" : [ "void", [ SherpaOnnxOnlineRecognizerPtr ] ],
+  "CreateOnlineStream" :
+      [ SherpaOnnxOnlineStreamPtr, [ SherpaOnnxOnlineRecognizerPtr ] ],
+  "CreateOnlineStreamWithHotwords" :
+      [ SherpaOnnxOnlineStreamPtr, [ SherpaOnnxOnlineRecognizerPtr, cstring ] ],
+  "DestroyOnlineStream" : [ "void", [ SherpaOnnxOnlineStreamPtr ] ],
+  "AcceptWaveform" :
+      [ "void", [ SherpaOnnxOnlineStreamPtr, int32_t, floatPtr, int32_t ] ],
+  "IsOnlineStreamReady" :
+      [ int32_t, [ SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtr ] ],
+  "DecodeOnlineStream" :
+      [ "void", [ SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtr ] ],
+  "DecodeMultipleOnlineStreams" : [
+    "void",
+    [ SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtrPtr, int32_t ]
+  ],
+  "GetOnlineStreamResult" : [
     SherpaOnnxOnlineRecognizerResultPtr,
-    [SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtr]
+    [ SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtr ]
   ],
-  'DestroyOnlineRecognizerResult':
-      ['void', [SherpaOnnxOnlineRecognizerResultPtr]],
-  'Reset': ['void', [SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtr]],
-  'InputFinished': ['void', [SherpaOnnxOnlineStreamPtr]],
-  'IsEndpoint':
-      [int32_t, [SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtr]],
+  "DestroyOnlineRecognizerResult" :
+      [ "void", [ SherpaOnnxOnlineRecognizerResultPtr ] ],
+  "Reset" :
+      [ "void", [ SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtr ] ],
+  "InputFinished" : [ "void", [ SherpaOnnxOnlineStreamPtr ] ],
+  "IsEndpoint" :
+      [ int32_t, [ SherpaOnnxOnlineRecognizerPtr, SherpaOnnxOnlineStreamPtr ] ],
 
   // offline asr
-  'CreateOfflineRecognizer':
-      [SherpaOnnxOfflineRecognizerPtr, [SherpaOnnxOfflineRecognizerConfigPtr]],
-  'DestroyOfflineRecognizer': ['void', [SherpaOnnxOfflineRecognizerPtr]],
-  'CreateOfflineStream':
-      [SherpaOnnxOfflineStreamPtr, [SherpaOnnxOfflineRecognizerPtr]],
-  'DestroyOfflineStream': ['void', [SherpaOnnxOfflineStreamPtr]],
-  'AcceptWaveformOffline':
-      ['void', [SherpaOnnxOfflineStreamPtr, int32_t, floatPtr, int32_t]],
-  'DecodeOfflineStream':
-      ['void', [SherpaOnnxOfflineRecognizerPtr, SherpaOnnxOfflineStreamPtr]],
-  'DecodeMultipleOfflineStreams': [
-    'void',
-    [SherpaOnnxOfflineRecognizerPtr, SherpaOnnxOfflineStreamPtrPtr, int32_t]
+  "CreateOfflineRecognizer" : [
+    SherpaOnnxOfflineRecognizerPtr, [ SherpaOnnxOfflineRecognizerConfigPtr ]
   ],
-  'GetOfflineStreamResult':
-      [SherpaOnnxOfflineRecognizerResultPtr, [SherpaOnnxOfflineStreamPtr]],
-  'DestroyOfflineRecognizerResult':
-      ['void', [SherpaOnnxOfflineRecognizerResultPtr]],
+  "DestroyOfflineRecognizer" : [ "void", [ SherpaOnnxOfflineRecognizerPtr ] ],
+  "CreateOfflineStream" :
+      [ SherpaOnnxOfflineStreamPtr, [ SherpaOnnxOfflineRecognizerPtr ] ],
+  "DestroyOfflineStream" : [ "void", [ SherpaOnnxOfflineStreamPtr ] ],
+  "AcceptWaveformOffline" :
+      [ "void", [ SherpaOnnxOfflineStreamPtr, int32_t, floatPtr, int32_t ] ],
+  "DecodeOfflineStream" : [
+    "void", [ SherpaOnnxOfflineRecognizerPtr, SherpaOnnxOfflineStreamPtr ]
+  ],
+  "DecodeMultipleOfflineStreams" : [
+    "void",
+    [ SherpaOnnxOfflineRecognizerPtr, SherpaOnnxOfflineStreamPtrPtr, int32_t ]
+  ],
+  "GetOfflineStreamResult" :
+      [ SherpaOnnxOfflineRecognizerResultPtr, [ SherpaOnnxOfflineStreamPtr ] ],
+  "DestroyOfflineRecognizerResult" :
+      [ "void", [ SherpaOnnxOfflineRecognizerResultPtr ] ],
 
   // vad
-  'SherpaOnnxCreateCircularBuffer': [SherpaOnnxCircularBufferPtr, [int32_t]],
-  'SherpaOnnxDestroyCircularBuffer': ['void', [SherpaOnnxCircularBufferPtr]],
-  'SherpaOnnxCircularBufferPush':
-      ['void', [SherpaOnnxCircularBufferPtr, floatPtr, int32_t]],
-  'SherpaOnnxCircularBufferGet':
-      [FloatArray, [SherpaOnnxCircularBufferPtr, int32_t, int32_t]],
-  'SherpaOnnxCircularBufferFree': ['void', [FloatArray]],
-  'SherpaOnnxCircularBufferPop':
-      ['void', [SherpaOnnxCircularBufferPtr, int32_t]],
-  'SherpaOnnxCircularBufferSize': [int32_t, [SherpaOnnxCircularBufferPtr]],
-  'SherpaOnnxCircularBufferHead': [int32_t, [SherpaOnnxCircularBufferPtr]],
-  'SherpaOnnxCircularBufferReset': ['void', [SherpaOnnxCircularBufferPtr]],
-  'SherpaOnnxCreateVoiceActivityDetector': [
-    SherpaOnnxVoiceActivityDetectorPtr, [SherpaOnnxVadModelConfigPtr, float]
+  "SherpaOnnxCreateCircularBuffer" :
+      [ SherpaOnnxCircularBufferPtr, [ int32_t ] ],
+  "SherpaOnnxDestroyCircularBuffer" :
+      [ "void", [ SherpaOnnxCircularBufferPtr ] ],
+  "SherpaOnnxCircularBufferPush" :
+      [ "void", [ SherpaOnnxCircularBufferPtr, floatPtr, int32_t ] ],
+  "SherpaOnnxCircularBufferGet" :
+      [ FloatArray, [ SherpaOnnxCircularBufferPtr, int32_t, int32_t ] ],
+  "SherpaOnnxCircularBufferFree" : [ "void", [ FloatArray ] ],
+  "SherpaOnnxCircularBufferPop" :
+      [ "void", [ SherpaOnnxCircularBufferPtr, int32_t ] ],
+  "SherpaOnnxCircularBufferSize" : [ int32_t, [ SherpaOnnxCircularBufferPtr ] ],
+  "SherpaOnnxCircularBufferHead" : [ int32_t, [ SherpaOnnxCircularBufferPtr ] ],
+  "SherpaOnnxCircularBufferReset" : [ "void", [ SherpaOnnxCircularBufferPtr ] ],
+  "SherpaOnnxCreateVoiceActivityDetector" : [
+    SherpaOnnxVoiceActivityDetectorPtr, [ SherpaOnnxVadModelConfigPtr, float ]
   ],
-  'SherpaOnnxDestroyVoiceActivityDetector':
-      ['void', [SherpaOnnxVoiceActivityDetectorPtr]],
-  'SherpaOnnxVoiceActivityDetectorAcceptWaveform':
-      ['void', [SherpaOnnxVoiceActivityDetectorPtr, floatPtr, int32_t]],
-  'SherpaOnnxVoiceActivityDetectorEmpty':
-      [int32_t, [SherpaOnnxVoiceActivityDetectorPtr]],
-  'SherpaOnnxVoiceActivityDetectorDetected':
-      [int32_t, [SherpaOnnxVoiceActivityDetectorPtr]],
-  'SherpaOnnxVoiceActivityDetectorPop':
-      ['void', [SherpaOnnxVoiceActivityDetectorPtr]],
-  'SherpaOnnxVoiceActivityDetectorClear':
-      ['void', [SherpaOnnxVoiceActivityDetectorPtr]],
-  'SherpaOnnxVoiceActivityDetectorFront':
-      [SherpaOnnxSpeechSegmentPtr, [SherpaOnnxVoiceActivityDetectorPtr]],
-  'SherpaOnnxDestroySpeechSegment': ['void', [SherpaOnnxSpeechSegmentPtr]],
-  'SherpaOnnxVoiceActivityDetectorReset':
-      ['void', [SherpaOnnxVoiceActivityDetectorPtr]],
+  "SherpaOnnxDestroyVoiceActivityDetector" :
+      [ "void", [ SherpaOnnxVoiceActivityDetectorPtr ] ],
+  "SherpaOnnxVoiceActivityDetectorAcceptWaveform" :
+      [ "void", [ SherpaOnnxVoiceActivityDetectorPtr, floatPtr, int32_t ] ],
+  "SherpaOnnxVoiceActivityDetectorEmpty" :
+      [ int32_t, [ SherpaOnnxVoiceActivityDetectorPtr ] ],
+  "SherpaOnnxVoiceActivityDetectorDetected" :
+      [ int32_t, [ SherpaOnnxVoiceActivityDetectorPtr ] ],
+  "SherpaOnnxVoiceActivityDetectorPop" :
+      [ "void", [ SherpaOnnxVoiceActivityDetectorPtr ] ],
+  "SherpaOnnxVoiceActivityDetectorClear" :
+      [ "void", [ SherpaOnnxVoiceActivityDetectorPtr ] ],
+  "SherpaOnnxVoiceActivityDetectorFront" :
+      [ SherpaOnnxSpeechSegmentPtr, [ SherpaOnnxVoiceActivityDetectorPtr ] ],
+  "SherpaOnnxDestroySpeechSegment" : [ "void", [ SherpaOnnxSpeechSegmentPtr ] ],
+  "SherpaOnnxVoiceActivityDetectorReset" :
+      [ "void", [ SherpaOnnxVoiceActivityDetectorPtr ] ],
   // tts
-  'SherpaOnnxCreateOfflineTts':
-      [SherpaOnnxOfflineTtsPtr, [SherpaOnnxOfflineTtsConfigPtr]],
-  'SherpaOnnxDestroyOfflineTts': ['void', [SherpaOnnxOfflineTtsPtr]],
-  'SherpaOnnxOfflineTtsGenerate': [
+  "SherpaOnnxCreateOfflineTts" :
+      [ SherpaOnnxOfflineTtsPtr, [ SherpaOnnxOfflineTtsConfigPtr ] ],
+  "SherpaOnnxDestroyOfflineTts" : [ "void", [ SherpaOnnxOfflineTtsPtr ] ],
+  "SherpaOnnxOfflineTtsGenerate" : [
     SherpaOnnxGeneratedAudioPtr,
-    [SherpaOnnxOfflineTtsPtr, cstring, int32_t, float]
+    [ SherpaOnnxOfflineTtsPtr, cstring, int32_t, float ]
   ],
-  'SherpaOnnxDestroyOfflineTtsGeneratedAudio':
-      ['void', [SherpaOnnxGeneratedAudioPtr]],
-  'SherpaOnnxWriteWave': ['void', [floatPtr, int32_t, int32_t, cstring]],
+  "SherpaOnnxDestroyOfflineTtsGeneratedAudio" :
+      [ "void", [ SherpaOnnxGeneratedAudioPtr ] ],
+  "SherpaOnnxWriteWave" : [ "void", [ floatPtr, int32_t, int32_t, cstring ] ],
 
   // display
-  'CreateDisplay': [SherpaOnnxDisplayPtr, [int32_t]],
-  'DestroyDisplay': ['void', [SherpaOnnxDisplayPtr]],
-  'SherpaOnnxPrint': ['void', [SherpaOnnxDisplayPtr, int32_t, cstring]],
+  "CreateDisplay" : [ SherpaOnnxDisplayPtr, [ int32_t ] ],
+  "DestroyDisplay" : [ "void", [ SherpaOnnxDisplayPtr ] ],
+  "SherpaOnnxPrint" : [ "void", [ SherpaOnnxDisplayPtr, int32_t, cstring ] ],
 });
 
 class Display {
@@ -380,22 +387,18 @@ class Display {
     }
   }
 
-  print(idx, s) {
-    libsherpa_onnx.SherpaOnnxPrint(this.handle, idx, s);
-  }
+  print(idx, s) { libsherpa_onnx.SherpaOnnxPrint(this.handle, idx, s); }
 };
 
 class OnlineResult {
   constructor(text) {
-    this.text = Buffer.from(text, 'utf-8').toString();
+    this.text = Buffer.from(text, "utf-8").toString();
     // TODO(fangjun): Support tokens, tokensArr, and timestamps
   }
 };
 
 class OnlineStream {
-  constructor(handle) {
-    this.handle = handle
-  }
+  constructor(handle) { this.handle = handle }
 
   free() {
     if (this.handle) {
@@ -409,8 +412,8 @@ class OnlineStream {
    * @param samples {Float32Array} Containing samples in the range [-1, 1]
    */
   acceptWaveform(sampleRate, samples) {
-    libsherpa_onnx.AcceptWaveform(
-        this.handle, sampleRate, samples, samples.length);
+    libsherpa_onnx.AcceptWaveform(this.handle, sampleRate, samples,
+                                  samples.length);
   }
 };
 
@@ -434,25 +437,23 @@ class OnlineRecognizer {
   }
 
   isReady(stream) {
-    return libsherpa_onnx.IsOnlineStreamReady(
-        this.recognizer_handle, stream.handle)
+    return libsherpa_onnx.IsOnlineStreamReady(this.recognizer_handle,
+                                              stream.handle)
   }
 
   isEndpoint(stream) {
     return libsherpa_onnx.IsEndpoint(this.recognizer_handle, stream.handle);
   }
 
-  reset(stream) {
-    libsherpa_onnx.Reset(this.recognizer_handle, stream.handle);
-  }
+  reset(stream) { libsherpa_onnx.Reset(this.recognizer_handle, stream.handle); }
 
   decode(stream) {
     libsherpa_onnx.DecodeOnlineStream(this.recognizer_handle, stream.handle)
   }
 
   getResult(stream) {
-    let handle = libsherpa_onnx.GetOnlineStreamResult(
-        this.recognizer_handle, stream.handle);
+    let handle = libsherpa_onnx.GetOnlineStreamResult(this.recognizer_handle,
+                                                      stream.handle);
     let r = handle.deref();
     let ans = new OnlineResult(r.text);
     libsherpa_onnx.DestroyOnlineRecognizerResult(handle);
@@ -463,15 +464,13 @@ class OnlineRecognizer {
 
 class OfflineResult {
   constructor(text) {
-    this.text = Buffer.from(text, 'utf-8').toString();
+    this.text = Buffer.from(text, "utf-8").toString();
     // TODO(fangjun): Support tokens, tokensArr, and timestamps
   }
 };
 
 class OfflineStream {
-  constructor(handle) {
-    this.handle = handle
-  }
+  constructor(handle) { this.handle = handle }
 
   free() {
     if (this.handle) {
@@ -485,8 +484,8 @@ class OfflineStream {
    * @param samples {Float32Array} Containing samples in the range [-1, 1]
    */
   acceptWaveform(sampleRate, samples) {
-    libsherpa_onnx.AcceptWaveformOffline(
-        this.handle, sampleRate, samples, samples.length);
+    libsherpa_onnx.AcceptWaveformOffline(this.handle, sampleRate, samples,
+                                         samples.length);
   }
 };
 
@@ -550,8 +549,8 @@ class CircularBuffer {
    * @param samples {Float32Array}
    */
   push(samples) {
-    libsherpa_onnx.SherpaOnnxCircularBufferPush(
-        this.handle, samples, samples.length);
+    libsherpa_onnx.SherpaOnnxCircularBufferPush(this.handle, samples,
+                                                samples.length);
   }
 
   get(startIndex, n) {
@@ -567,21 +566,13 @@ class CircularBuffer {
     return s;
   }
 
-  pop(n) {
-    libsherpa_onnx.SherpaOnnxCircularBufferPop(this.handle, n);
-  }
+  pop(n) { libsherpa_onnx.SherpaOnnxCircularBufferPop(this.handle, n); }
 
-  size() {
-    return libsherpa_onnx.SherpaOnnxCircularBufferSize(this.handle);
-  }
+  size() { return libsherpa_onnx.SherpaOnnxCircularBufferSize(this.handle); }
 
-  head() {
-    return libsherpa_onnx.SherpaOnnxCircularBufferHead(this.handle);
-  }
+  head() { return libsherpa_onnx.SherpaOnnxCircularBufferHead(this.handle); }
 
-  reset() {
-    libsherpa_onnx.SherpaOnnxCircularBufferReset(this.handle);
-  }
+  reset() { libsherpa_onnx.SherpaOnnxCircularBufferReset(this.handle); }
 };
 
 class VoiceActivityDetector {
@@ -609,17 +600,11 @@ class VoiceActivityDetector {
   isDetected() {
     return libsherpa_onnx.SherpaOnnxVoiceActivityDetectorDetected(this.handle);
   }
-  pop() {
-    libsherpa_onnx.SherpaOnnxVoiceActivityDetectorPop(this.handle);
-  }
+  pop() { libsherpa_onnx.SherpaOnnxVoiceActivityDetectorPop(this.handle); }
 
-  clear() {
-    libsherpa_onnx.SherpaOnnxVoiceActivityDetectorClear(this.handle);
-  }
+  clear() { libsherpa_onnx.SherpaOnnxVoiceActivityDetectorClear(this.handle); }
 
-  reset() {
-    libsherpa_onnx.SherpaOnnxVoiceActivityDetectorReset(this.handle);
-  }
+  reset() { libsherpa_onnx.SherpaOnnxVoiceActivityDetectorReset(this.handle); }
 
   front() {
     let segment =
@@ -644,8 +629,8 @@ class GeneratedAudio {
     this.samples = samples;
   }
   save(filename) {
-    libsherpa_onnx.SherpaOnnxWriteWave(
-        this.samples, this.samples.length, this.sampleRate, filename);
+    libsherpa_onnx.SherpaOnnxWriteWave(this.samples, this.samples.length,
+                                       this.sampleRate, filename);
   }
 };
 
@@ -661,9 +646,23 @@ class OfflineTts {
       this.handle = null;
     }
   }
+  generate(text, sid, speed) {
+    let r = libsherpa_onnx.SherpaOnnxOfflineTtsGenerate(this.handle, text, sid,
+                                                        speed);
+    const buffer =
+        r.deref()
+            .samples.buffer.reinterpret(r.deref().n * ref.sizeof.float)
+            .buffer;
+    let samples = new Float32Array(buffer).slice(0);
+    let sampleRate = r.deref().sampleRate;
+
+    let generatedAudio = new GeneratedAudio(sampleRate, samples);
+
+    libsherpa_onnx.SherpaOnnxDestroyOfflineTtsGeneratedAudio(r);
+
+    return generatedAudio;
+  }
 };
-
-
 
 // online asr
 const OnlineTransducerModelConfig = SherpaOnnxOnlineTransducerModelConfig;
@@ -720,6 +719,7 @@ module.exports = {
   OfflineTtsVitsModelConfig,
   OfflineTtsModelConfig,
   OfflineTtsConfig,
+  OfflineTts,
 
   //
   Display,
