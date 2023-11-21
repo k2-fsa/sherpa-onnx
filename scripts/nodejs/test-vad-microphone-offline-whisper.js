@@ -4,6 +4,31 @@ const sherpa_onnx = require("./index.js");
 const portAudio = require("naudiodon2");
 console.log(portAudio.getDevices());
 
+function createOfflineRecognizer() {
+  let featConfig = new sherpa_onnx.FeatureConfig();
+  featConfig.sampleRate = 16000;
+  featConfig.featureDim = 80;
+
+  // test online recognizer
+  let whisper = new sherpa_onnx.OfflineWhisperModelConfig();
+  whisper.encoder = "./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx";
+  whisper.decoder = "./sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx";
+  let tokens = "./sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt";
+
+  let modelConfig = new sherpa_onnx.OfflineModelConfig();
+  modelConfig.whisper = whisper;
+  modelConfig.tokens = tokens;
+  modelConfig.modelType = "whisper";
+
+  let recognizerConfig = new sherpa_onnx.OfflineRecognizerConfig();
+  recognizerConfig.featConfig = featConfig;
+  recognizerConfig.modelConfig = modelConfig;
+  recognizerConfig.decodingMethod = "greedy_search";
+
+  let recognizer = new sherpa_onnx.OfflineRecognizer(recognizerConfig);
+  return recognizer;
+}
+
 function createVad() {
   let sileroVadModelConfig = new sherpa_onnx.SileroVadModelConfig();
   sileroVadModelConfig.model = "./silero_vad.onnx";
@@ -20,7 +45,10 @@ function createVad() {
                                                   bufferSizeInSeconds);
   return vad;
 }
-vad = createVad();
+
+let recognizer = createOfflineRecognizer();
+let vad = createVad();
+
 let bufferSizeInSeconds = 30;
 let buffer =
     new sherpa_onnx.CircularBuffer(bufferSizeInSeconds * vad.config.sampleRate);
@@ -45,20 +73,19 @@ ai.on("data", data => {
     let samples = buffer.get(buffer.head(), windowSize);
     buffer.pop(windowSize);
     vad.acceptWaveform(samples)
-    if (vad.isDetected() && !printed) {
-      console.log(`${index}: Detected speech`)
-      printed = true;
-    }
+  }
 
-    if (!vad.isDetected()) {
-      printed = false;
-    }
-
-    while (!vad.isEmpty()) {
-      let segment = vad.front();
-      vad.pop();
-      let duration = segment.samples.length / vad.config.sampleRate;
-      console.log(`${index} End of speech. Duration: ${duration} seconds`);
+  while (!vad.isEmpty()) {
+    let segment = vad.front();
+    vad.pop();
+    let stream = recognizer.createStream();
+    stream.acceptWaveform(recognizer.config.featConfig.sampleRate,
+                          segment.samples);
+    recognizer.decode(stream);
+    let r = recognizer.getResult(stream);
+    stream.free();
+    if (r.text.length > 0) {
+      console.log(`${index}: ${r.text}`);
       index += 1;
     }
   }
@@ -66,6 +93,7 @@ ai.on("data", data => {
 
 ai.on("close", () => {
   console.log("Free resources");
+  recognizer.free();
   vad.free();
   buffer.free();
 });
