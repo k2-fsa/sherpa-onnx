@@ -130,10 +130,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerResult {
   const char *text;
 
   // Pointer to continuous memory which holds string based tokens
-  // which are seperated by \0
+  // which are separated by \0
   const char *tokens;
 
-  // a pointer array contains the address of the first item in tokens
+  // a pointer array containing the address of the first item in tokens
   const char *const *tokens_arr;
 
   // Pointer to continuous memory which holds timestamps
@@ -532,6 +532,11 @@ SHERPA_ONNX_API void SherpaOnnxCircularBufferPop(
 SHERPA_ONNX_API int32_t
 SherpaOnnxCircularBufferSize(SherpaOnnxCircularBuffer *buffer);
 
+// Return the head of the buffer. It's always non-decreasing until you
+// invoke SherpaOnnxCircularBufferReset() which resets head to 0.
+SHERPA_ONNX_API int32_t
+SherpaOnnxCircularBufferHead(SherpaOnnxCircularBuffer *buffer);
+
 // Clear all elements in the buffer
 SHERPA_ONNX_API void SherpaOnnxCircularBufferReset(
     SherpaOnnxCircularBuffer *buffer);
@@ -617,6 +622,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsConfig {
   SherpaOnnxOfflineTtsModelConfig model;
+  const char *rule_fsts;
 } SherpaOnnxOfflineTtsConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxGeneratedAudio {

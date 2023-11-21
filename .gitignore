@@ -67,3 +67,6 @@ swift-api-examples/k2fsa-*
 run-*.sh
 two-pass-*.sh
 build-*
+vits-vctk
+vits-zh-aishell3
+jslint.mjs

@@ -457,7 +457,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
   // (61 - 7) / 6 + 1 = 10
 
   int32_t left_chunk_size_ = 5;
-  int32_t right_chunk_size_ = 5;
+  int32_t right_chunk_size_ = 2;
 };
 
 }  // namespace sherpa_onnx
