@@ -391,10 +391,7 @@ class Display {
 };
 
 class OnlineResult {
-  constructor(text) {
-    this.text = Buffer.from(text, "utf-8").toString();
-    // TODO(fangjun): Support tokens, tokensArr, and timestamps
-  }
+  constructor(text) { this.text = Buffer.from(text, "utf-8").toString(); }
 };
 
 class OnlineStream {
@@ -463,10 +460,7 @@ class OnlineRecognizer {
 };
 
 class OfflineResult {
-  constructor(text) {
-    this.text = Buffer.from(text, "utf-8").toString();
-    // TODO(fangjun): Support tokens, tokensArr, and timestamps
-  }
+  constructor(text) { this.text = Buffer.from(text, "utf-8").toString(); }
 };
 
 class OfflineStream {
