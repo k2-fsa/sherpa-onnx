@@ -1,4 +1,4 @@
-name: build-wheels-win32
+name: build-wheels-win64
 
 on:
   push:
@@ -12,11 +12,11 @@ env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
 
 concurrency:
-  group: build-wheels-win32-${{ github.ref }}
+  group: build-wheels-win64-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build_wheels_win32:
+  build_wheels_win64:
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -33,9 +33,8 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.15.0
         env:
-          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-A Win32"
           CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_SKIP: "*-win_amd64"
+          CIBW_SKIP: "cp27-* cp35-* *-win32 pp* *-musllinux*"
           CIBW_BUILD_VERBOSITY: 3
 
       - name: Display wheels
@@ -48,6 +47,35 @@ jobs:
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
+
+      - name: Publish to huggingface
+        if: matrix.python-version == 'cp38'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            cp -v ../wheelhouse/*.whl .
+
+            git status
+            git add .
+            git commit -m "add more wheels"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
 
       - name: Publish to huggingface
         if: matrix.python-version == 'cp38'

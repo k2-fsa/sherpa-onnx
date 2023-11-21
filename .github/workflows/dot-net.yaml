@@ -7,20 +7,6 @@ on:
       - fix-dot-net
     tags:
       - '*'
-  release:
-    types:
-      - published
-
-  workflow_dispatch:
-    inputs:
-      release:
-        description: "Whether to release"
-        type: boolean
-
-env:
-  RELEASE:
-    |- # Release if there is a release tag name or a release flag in workflow_dispatch
-    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
   workflow_dispatch:
 

@@ -1,4 +1,4 @@
-name: build-wheels-win32
+name: build-wheels-macos-x64
 
 on:
   push:
@@ -12,17 +12,17 @@ env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
 
 concurrency:
-  group: build-wheels-win32-${{ github.ref }}
+  group: build-wheels-macos-x64-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build_wheels_win32:
+  build_wheels:
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [macos-latest]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
 
     steps:
@@ -31,12 +31,27 @@ jobs:
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
       - name: Build wheels
+        if: matrix.python-version == 'cp37'
+        uses: pypa/cibuildwheel@v2.11.4
+        env:
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
+          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='x86_64'"
+          CIBW_ARCHS: "x86_64"
+          CIBW_BUILD_VERBOSITY: 3
+
+          #  Don't repair macOS wheels
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
+      - name: Build wheels
+        if: matrix.python-version != 'cp37'
         uses: pypa/cibuildwheel@v2.15.0
         env:
-          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-A Win32"
           CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_SKIP: "*-win_amd64"
+          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='x86_64'"
+          CIBW_ARCHS: "x86_64"
           CIBW_BUILD_VERBOSITY: 3
+
+          #  Don't repair macOS wheels
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
 
       - name: Display wheels
         shell: bash

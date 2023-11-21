@@ -1,26 +1,35 @@
-name: npm
+name: test-nodejs-npm
 
 on:
   workflow_dispatch:
 
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 23:50 UTC time every day
+    - cron: "50 23 * * *"
+
 concurrency:
-  group: npm-${{ github.ref }}
+  group: test-nodejs-npm-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  nodejs:
+  test-nodejs-npm:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest] #, windows-latest]
         python-version: ["3.8"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -39,20 +48,12 @@ jobs:
         run: |
           node --version
           npm --version
-          cd nodejs-examples
 
-          npm install npm@6.14.4 -g
-          npm install npm@6.14.4
+      - name: Run tests
+        shell: bash
+        run: |
+          node --version
           npm --version
 
-      - name: Build nodejs package
-        shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          cd scripts/nodejs
-          ./run.sh
-          npm install
-          rm run.sh
-          npm ci
-          npm publish --provenance --access public
+          export d=nodejs-examples
+          ./.github/scripts/test-nodejs-npm.sh

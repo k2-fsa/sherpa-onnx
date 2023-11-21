@@ -59,8 +59,11 @@ function linux_x64() {
   wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 
-  cp -v sherpa_onnx/lib/*.so $dst
+  cp -v sherpa_onnx/lib/*.so* $dst
   rm -v $dst/libcargs.so
+  rm -v $dst/libsherpa-onnx-portaudio.so
+  rm -v $dst/libsherpa-onnx-fst.so
+  rm -v $dst/libonnxruntime.so
 
   cd ..
   rm -rf t
@@ -79,6 +82,7 @@ function osx_x64() {
   rm -v $dst/libonnxruntime.dylib
   rm -v $dst/libcargs.dylib
   rm -v $dst/libsherpa-onnx-fst.dylib
+  rm -v $dst/libsherpa-onnx-portaudio.dylib
 
   cd ..
   rm -rf t
@@ -97,6 +101,7 @@ function osx_arm64() {
   rm -v $dst/libonnxruntime.dylib
   rm -v $dst/libcargs.dylib
   rm -v $dst/libsherpa-onnx-fst.dylib
+  rm -v $dst/libsherpa-onnx-portaudio.dylib
 
   cd ..
   rm -rf t

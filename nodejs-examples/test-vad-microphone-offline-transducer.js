@@ -1,92 +1,92 @@
 // Copyright (c)  2023  Xiaomi Corporation (authors: Fangjun Kuang)
 //
-const sherpa_onnx = require("./index.js");
-const portAudio = require("naudiodon2");
+const sherpa_onnx = require('sherpa-onnx');
+const portAudio = require('naudiodon2');
 console.log(portAudio.getDevices());
 
 function createOfflineRecognizer() {
-  let featConfig = new sherpa_onnx.FeatureConfig();
+  const featConfig = new sherpa_onnx.FeatureConfig();
   featConfig.sampleRate = 16000;
   featConfig.featureDim = 80;
 
   // test online recognizer
-  let transducer = new sherpa_onnx.OfflineTransducerModelConfig();
+  const transducer = new sherpa_onnx.OfflineTransducerModelConfig();
   transducer.encoder =
-      "./sherpa-onnx-zipformer-en-2023-06-26/encoder-epoch-99-avg-1.onnx";
+      './sherpa-onnx-zipformer-en-2023-06-26/encoder-epoch-99-avg-1.onnx';
   transducer.decoder =
-      "./sherpa-onnx-zipformer-en-2023-06-26/decoder-epoch-99-avg-1.onnx";
+      './sherpa-onnx-zipformer-en-2023-06-26/decoder-epoch-99-avg-1.onnx';
   transducer.joiner =
-      "./sherpa-onnx-zipformer-en-2023-06-26/joiner-epoch-99-avg-1.onnx";
-  let tokens = "./sherpa-onnx-zipformer-en-2023-06-26/tokens.txt";
+      './sherpa-onnx-zipformer-en-2023-06-26/joiner-epoch-99-avg-1.onnx';
+  const tokens = './sherpa-onnx-zipformer-en-2023-06-26/tokens.txt';
 
-  let modelConfig = new sherpa_onnx.OfflineModelConfig();
+  const modelConfig = new sherpa_onnx.OfflineModelConfig();
   modelConfig.transducer = transducer;
   modelConfig.tokens = tokens;
-  modelConfig.modelType = "transducer";
+  modelConfig.modelType = 'transducer';
 
-  let recognizerConfig = new sherpa_onnx.OfflineRecognizerConfig();
+  const recognizerConfig = new sherpa_onnx.OfflineRecognizerConfig();
   recognizerConfig.featConfig = featConfig;
   recognizerConfig.modelConfig = modelConfig;
-  recognizerConfig.decodingMethod = "greedy_search";
+  recognizerConfig.decodingMethod = 'greedy_search';
 
-  let recognizer = new sherpa_onnx.OfflineRecognizer(recognizerConfig);
+  const recognizer = new sherpa_onnx.OfflineRecognizer(recognizerConfig);
   return recognizer;
 }
 
 function createVad() {
-  let sileroVadModelConfig = new sherpa_onnx.SileroVadModelConfig();
-  sileroVadModelConfig.model = "./silero_vad.onnx";
-  sileroVadModelConfig.minSpeechDuration = 0.3;  // seconds
-  sileroVadModelConfig.minSilenceDuration = 0.3; // seconds
+  const sileroVadModelConfig = new sherpa_onnx.SileroVadModelConfig();
+  sileroVadModelConfig.model = './silero_vad.onnx';
+  sileroVadModelConfig.minSpeechDuration = 0.3;   // seconds
+  sileroVadModelConfig.minSilenceDuration = 0.3;  // seconds
   sileroVadModelConfig.windowSize = 512;
 
-  let vadModelConfig = new sherpa_onnx.VadModelConfig();
+  const vadModelConfig = new sherpa_onnx.VadModelConfig();
   vadModelConfig.sileroVad = sileroVadModelConfig;
   vadModelConfig.sampleRate = 16000;
 
-  let bufferSizeInSeconds = 60;
-  let vad = new sherpa_onnx.VoiceActivityDetector(vadModelConfig,
-                                                  bufferSizeInSeconds);
+  const bufferSizeInSeconds = 60;
+  const vad = new sherpa_onnx.VoiceActivityDetector(
+      vadModelConfig, bufferSizeInSeconds);
   return vad;
 }
 
-let recognizer = createOfflineRecognizer();
-let vad = createVad();
+const recognizer = createOfflineRecognizer();
+const vad = createVad();
 
-let bufferSizeInSeconds = 30;
-let buffer =
+const bufferSizeInSeconds = 30;
+const buffer =
     new sherpa_onnx.CircularBuffer(bufferSizeInSeconds * vad.config.sampleRate);
 
-let ai = new portAudio.AudioIO({
-  inOptions : {
-    channelCount : 1,
-    closeOnError : true, // Close the stream if an audio error is detected, if
+const ai = new portAudio.AudioIO({
+  inOptions: {
+    channelCount: 1,
+    closeOnError: true,  // Close the stream if an audio error is detected, if
                          // set false then just log the error
-    deviceId : -1, // Use -1 or omit the deviceId to select the default device
-    sampleFormat : portAudio.SampleFormatFloat32,
-    sampleRate : vad.config.sampleRate
+    deviceId: -1,  // Use -1 or omit the deviceId to select the default device
+    sampleFormat: portAudio.SampleFormatFloat32,
+    sampleRate: vad.config.sampleRate
   }
 });
 
 let printed = false;
 let index = 0;
-ai.on("data", data => {
-  let windowSize = vad.config.sileroVad.windowSize;
+ai.on('data', data => {
+  const windowSize = vad.config.sileroVad.windowSize;
   buffer.push(new Float32Array(data.buffer));
   while (buffer.size() > windowSize) {
-    let samples = buffer.get(buffer.head(), windowSize);
+    const samples = buffer.get(buffer.head(), windowSize);
     buffer.pop(windowSize);
     vad.acceptWaveform(samples)
   }
 
   while (!vad.isEmpty()) {
-    let segment = vad.front();
+    const segment = vad.front();
     vad.pop();
-    let stream = recognizer.createStream();
-    stream.acceptWaveform(recognizer.config.featConfig.sampleRate,
-                          segment.samples);
+    const stream = recognizer.createStream();
+    stream.acceptWaveform(
+        recognizer.config.featConfig.sampleRate, segment.samples);
     recognizer.decode(stream);
-    let r = recognizer.getResult(stream);
+    const r = recognizer.getResult(stream);
     stream.free();
     if (r.text.length > 0) {
       console.log(`${index}: ${r.text}`);
@@ -95,12 +95,12 @@ ai.on("data", data => {
   }
 });
 
-ai.on("close", () => {
-  console.log("Free resources");
+ai.on('close', () => {
+  console.log('Free resources');
   recognizer.free();
   vad.free();
   buffer.free();
 });
 
 ai.start();
-console.log("Started! Please speak")
+console.log('Started! Please speak')
