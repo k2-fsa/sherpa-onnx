@@ -1,6 +1,6 @@
 {
-  "name": "sherpa-onnx2",
-  "version": "1.8.10",
+  "name": "sherpa-onnx3",
+  "version": "SHERPA_ONNX_VERSION",
   "description": "Real-time speech recognition with Next-gen Kaldi",
   "main": "index.js",
   "scripts": {

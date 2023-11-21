@@ -251,16 +251,13 @@ if (os.platform() == "win32") {
   if (process.arch == "x64") {
     soname =
         path.join(__dirname, "lib", "linux-x64", "libsherpa-onnx-c-api.so");
-  } else if (process.arch == "ia32") {
-    soname =
-        path.join(__dirname, "lib", "linux-x86", "libsherpa-onnx-c-api.so");
   } else {
-    throw new Error(
-        `Support only Linux x86 and x64 for now. Given ${process.arch}`);
+    throw new Error(`Support only Linux x64 for now. Given ${process.arch}`);
   }
 } else {
   throw new Error(`Unsupported platform ${os.platform()}`);
 }
+
 if (!fs.existsSync(soname)) {
   throw new Error(`Cannot find file ${soname}. Please make sure you have run
       ./build.sh`);
