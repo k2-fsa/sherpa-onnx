@@ -5,34 +5,38 @@ console.log(portAudio.getDevices());
 
 const sherpa_onnx = require('./index.js');
 
-let featConfig = new sherpa_onnx.FeatureConfig()
-featConfig.sampleRate = 16000;
-featConfig.featureDim = 80;
+function createRecognizer() {
+  let featConfig = new sherpa_onnx.FeatureConfig()
+  featConfig.sampleRate = 16000;
+  featConfig.featureDim = 80;
 
-let paraformer = new sherpa_onnx.OnlineParaformerModelConfig();
-paraformer.encoder =
-    './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx'
-paraformer.decoder =
-    './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx'
-let tokens = './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt'
+  let paraformer = new sherpa_onnx.OnlineParaformerModelConfig();
+  paraformer.encoder =
+      './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx'
+  paraformer.decoder =
+      './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx'
+  let tokens = './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt'
 
-let modelConfig = new sherpa_onnx.OnlineModelConfig()
-modelConfig.paraformer = paraformer;
-modelConfig.tokens = tokens;
-modelConfig.modelType = 'paraformer';
+  let modelConfig = new sherpa_onnx.OnlineModelConfig()
+  modelConfig.paraformer = paraformer;
+  modelConfig.tokens = tokens;
+  modelConfig.modelType = 'paraformer';
 
-let recognizerConfig = new sherpa_onnx.OnlineRecognizerConfig()
-recognizerConfig.featConfig = featConfig;
-recognizerConfig.modelConfig = modelConfig;
-recognizerConfig.decodingMethod = 'greedy_search';
-recognizerConfig.enableEndpoint = 1;
+  let recognizerConfig = new sherpa_onnx.OnlineRecognizerConfig()
+  recognizerConfig.featConfig = featConfig;
+  recognizerConfig.modelConfig = modelConfig;
+  recognizerConfig.decodingMethod = 'greedy_search';
+  recognizerConfig.enableEndpoint = 1;
 
-recognizer = new sherpa_onnx.OnlineRecognizer(recognizerConfig);
-stream = recognizer.createStream()
+  recognizer = new sherpa_onnx.OnlineRecognizer(recognizerConfig);
+  return recognizer;
+}
+recognizer = createRecognizer();
+stream = recognizer.createStream();
 
-display = new sherpa_onnx.Display(50)
+display = new sherpa_onnx.Display(50);
 
-let lastText = ''
+let lastText = '';
 let segmentIndex = 0;
 
 var ai = new portAudio.AudioIO({

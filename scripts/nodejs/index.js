@@ -416,6 +416,7 @@ class OnlineStream {
 
 class OnlineRecognizer {
   constructor(config) {
+    this.config = config;
     this.recognizer_handle =
         libsherpa_onnx.CreateOnlineRecognizer(config.ref());
   }
@@ -491,6 +492,7 @@ class OfflineStream {
 
 class OfflineRecognizer {
   constructor(config) {
+    this.config = config;
     this.recognizer_handle =
         libsherpa_onnx.CreateOfflineRecognizer(config.ref());
   }
@@ -584,6 +586,7 @@ class CircularBuffer {
 
 class VoiceActivityDetector {
   constructor(config, bufferSizeInSeconds) {
+    this.config = config;
     this.handle = libsherpa_onnx.SherpaOnnxCreateVoiceActivityDetector(
         config.ref(), bufferSizeInSeconds);
   }
@@ -648,6 +651,7 @@ class GeneratedAudio {
 
 class OfflineTts {
   constructor(config) {
+    this.config = config;
     this.handle = libsherpa_onnx.SherpaOnnxCreateOfflineTts(config.ref());
   }
 
