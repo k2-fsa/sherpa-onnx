@@ -572,3 +572,110 @@ class SherpaOnnxVoiceActivityDetectorWrapper {
     SherpaOnnxVoiceActivityDetectorReset(vad)
   }
 }
+
+// offline tts
+func sherpaOnnxOfflineTtsVitsModelConfig(
+  model: String,
+  lexicon: String,
+  tokens: String,
+  noiseScale: Float = 0.667,
+  noiseScaleW: Float = 0.8,
+  lengthScale: Float = 1.0
+) -> SherpaOnnxOfflineTtsVitsModelConfig {
+  return SherpaOnnxOfflineTtsVitsModelConfig(
+    model: toCPointer(model),
+    lexicon: toCPointer(lexicon),
+    tokens: toCPointer(tokens),
+    noise_scale: noiseScale,
+    noise_scale_w: noiseScaleW,
+    length_scale: lengthScale)
+}
+
+func sherpaOnnxOfflineTtsModelConfig(
+  vits: SherpaOnnxOfflineTtsVitsModelConfig,
+  numThreads: Int = 1,
+  debug: Int = 0,
+  provider: String = "cpu"
+) -> SherpaOnnxOfflineTtsModelConfig {
+  return SherpaOnnxOfflineTtsModelConfig(
+    vits: vits,
+    num_threads: Int32(numThreads),
+    debug: Int32(debug),
+    provider: toCPointer(provider)
+  )
+}
+
+func sherpaOnnxOfflineTtsConfig(
+  model: SherpaOnnxOfflineTtsModelConfig,
+  ruleFsts: String = ""
+) -> SherpaOnnxOfflineTtsConfig {
+  return SherpaOnnxOfflineTtsConfig(
+    model: model,
+    rule_fsts: toCPointer(ruleFsts)
+  )
+}
+
+class SherpaOnnxGeneratedAudioWrapper {
+  /// A pointer to the underlying counterpart in C
+  let audio: UnsafePointer<SherpaOnnxGeneratedAudio>!
+
+  init(audio: UnsafePointer<SherpaOnnxGeneratedAudio>!) {
+    self.audio = audio
+  }
+
+  deinit {
+    if let audio {
+      SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio)
+    }
+  }
+
+  var n: Int32 {
+    return audio.pointee.n
+  }
+
+  var sampleRate: Int32 {
+    return audio.pointee.sample_rate
+  }
+
+  var samples: [Float] {
+    if let p = audio.pointee.samples {
+      var samples: [Float] = []
+      for index in 0..<n {
+        samples.append(p[Int(index)])
+      }
+      return samples
+    } else {
+      let samples: [Float] = []
+      return samples
+    }
+  }
+
+  func save(filename: String) {
+    SherpaOnnxWriteWave(audio.pointee.samples, n, sampleRate, toCPointer(filename))
+  }
+}
+
+class SherpaOnnxOfflineTtsWrapper {
+  /// A pointer to the underlying counterpart in C
+  let tts: OpaquePointer!
+
+  /// Constructor taking a model config
+  init(
+    config: UnsafePointer<SherpaOnnxOfflineTtsConfig>!
+  ) {
+    tts = SherpaOnnxCreateOfflineTts(config)
+  }
+
+  deinit {
+    if let tts {
+      SherpaOnnxDestroyOfflineTts(tts)
+    }
+  }
+
+  func generate(text: String, sid: Int = 0, speed: Float = 1.0) -> SherpaOnnxGeneratedAudioWrapper {
+    let audio: UnsafePointer<SherpaOnnxGeneratedAudio>? = SherpaOnnxOfflineTtsGenerate(
+      tts, toCPointer(text), Int32(sid), speed)
+
+    return SherpaOnnxGeneratedAudioWrapper(audio: audio)
+  }
+}

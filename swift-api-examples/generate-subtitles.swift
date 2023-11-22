@@ -175,8 +175,8 @@ func run() {
   var segments: [SpeechSegment] = []
 
   for offset in stride(from: 0, to: array.count, by: windowSize) {
-      let end = min(offset + windowSize, array.count)
-      vad.acceptWaveform(samples: [Float](array[offset ..< end]))
+    let end = min(offset + windowSize, array.count)
+    vad.acceptWaveform(samples: [Float](array[offset..<end]))
   }
 
   var index: Int = 0

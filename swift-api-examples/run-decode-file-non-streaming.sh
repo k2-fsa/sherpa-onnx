@@ -18,29 +18,24 @@ if [ ! -d ./sherpa-onnx-whisper-tiny.en ]; then
   wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
   tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
   rm sherpa-onnx-whisper-tiny.en.tar.bz2
-  ls -lh sherpa-onnx-whisper-tiny.en
-fi
-if [ ! -f ./silero_vad.onnx ]; then
-  echo "downloading silero_vad"
-  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 fi
 
-if [ ! -e ./generate-subtitles ]; then
+if [ ! -e ./decode-file-non-streaming ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
     -I ../build-swift-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
-    ./generate-subtitles.swift  ./SherpaOnnx.swift \
+    ./decode-file-non-streaming.swift  ./SherpaOnnx.swift \
     -L ../build-swift-macos/install/lib/ \
     -l sherpa-onnx \
     -l onnxruntime \
-    -o generate-subtitles
+    -o decode-file-non-streaming
 
-  strip generate-subtitles
+  strip decode-file-non-streaming
 else
-  echo "./generate-subtitles exists - skip building"
+  echo "./decode-file-non-streaming exists - skip building"
 fi
 
 export DYLD_LIBRARY_PATH=$PWD/../build-swift-macos/install/lib:$DYLD_LIBRARY_PATH
-./generate-subtitles
+./decode-file-non-streaming
