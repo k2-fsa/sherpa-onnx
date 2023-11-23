@@ -7,6 +7,9 @@
 
 import Foundation
 
-func createOfflineTts() {
-  return SherpaOnnxOfflineTtsWrapper()
+func createOfflineTts() -> SherpaOnnxOfflineTtsWrapper{
+    let vits = sherpaOnnxOfflineTtsVitsModelConfig(model: "", lexicon: "", tokens: "")
+    let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits)
+    var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
+    return SherpaOnnxOfflineTtsWrapper(config: &config)
 }
