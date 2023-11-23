@@ -650,8 +650,8 @@ class SherpaOnnxGeneratedAudioWrapper {
     }
   }
 
-  func save(filename: String) {
-    SherpaOnnxWriteWave(audio.pointee.samples, n, sampleRate, toCPointer(filename))
+  func save(filename: String) -> Int32 {
+    return SherpaOnnxWriteWave(audio.pointee.samples, n, sampleRate, toCPointer(filename))
   }
 }
 
