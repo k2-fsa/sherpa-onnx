@@ -12,6 +12,7 @@
 		C917B4E92B0EEF3C005245AC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C917B4E82B0EEF3C005245AC /* Assets.xcassets */; };
 		C917B4EC2B0EEF3C005245AC /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C917B4EB2B0EEF3C005245AC /* Preview Assets.xcassets */; };
 		C9FE9FE52B0F33CD009F1003 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */; };
+		C9FE9FE72B0F3620009F1003 /* SherpaOnnx.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9FE9FE62B0F3620009F1003 /* SherpaOnnx.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +22,7 @@
 		C917B4E82B0EEF3C005245AC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C917B4EB2B0EEF3C005245AC /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
 		C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
+		C9FE9FE62B0F3620009F1003 /* SherpaOnnx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SherpaOnnx.swift; path = "../../../swift-api-examples/SherpaOnnx.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +55,7 @@
 		C917B4E32B0EEF3B005245AC /* SherpaOnnxTts */ = {
 			isa = PBXGroup;
 			children = (
+				C9FE9FE62B0F3620009F1003 /* SherpaOnnx.swift */,
 				C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */,
 				C917B4E42B0EEF3B005245AC /* SherpaOnnxTtsApp.swift */,
 				C917B4E62B0EEF3B005245AC /* ContentView.swift */,
@@ -141,6 +144,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C917B4E72B0EEF3B005245AC /* ContentView.swift in Sources */,
+				C9FE9FE72B0F3620009F1003 /* SherpaOnnx.swift in Sources */,
 				C9FE9FE52B0F33CD009F1003 /* ViewModel.swift in Sources */,
 				C917B4E52B0EEF3B005245AC /* SherpaOnnxTtsApp.swift in Sources */,
 			);
