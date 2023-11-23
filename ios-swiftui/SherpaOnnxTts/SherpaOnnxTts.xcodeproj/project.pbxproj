@@ -14,7 +14,7 @@
 		C9FE9FE52B0F33CD009F1003 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */; };
 		C9FE9FE72B0F3620009F1003 /* SherpaOnnx.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9FE9FE62B0F3620009F1003 /* SherpaOnnx.swift */; };
 		C9FE9FEA2B0F3754009F1003 /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9FE9FE92B0F3754009F1003 /* sherpa-onnx.xcframework */; };
-		C9FE9FED2B0F37BE009F1003 /* onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9FE9FEB2B0F3785009F1003 /* onnxruntime.xcframework */; };
+		C9FE9FEF2B0F3EFB009F1003 /* onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = C9FE9FEB2B0F3785009F1003 /* onnxruntime.xcframework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,7 +34,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				C9FE9FED2B0F37BE009F1003 /* onnxruntime.xcframework in Frameworks */,
+				C9FE9FEF2B0F3EFB009F1003 /* onnxruntime.xcframework in Frameworks */,
 				C9FE9FEA2B0F3754009F1003 /* sherpa-onnx.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
