@@ -14,7 +14,10 @@ if [ ! -d ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 ]; then
   echo "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/zipformer-transducer-models.html#sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-bilingual-chinese-english"
   echo ""
   echo "for help"
-  exit 1
+
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+  tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+  rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 fi
 
 if [ ! -e ./decode-file ]; then
@@ -28,6 +31,8 @@ if [ ! -e ./decode-file ]; then
     -l sherpa-onnx \
     -l onnxruntime \
     -o decode-file
+
+  strip decode-file
 else
   echo "./decode-file exists - skip building"
 fi

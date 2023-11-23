@@ -1,0 +1,53 @@
+name: swift
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+concurrency:
+  group: swift-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swift:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-13]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-swift
+
+      - name: Build
+        shell: bash
+        run: |
+          sudo mkdir -p /Users/fangjun/Desktop
+          sudo chmod a=rwx /Users/fangjun/Desktop
+          ls -lhd /Users/fangjun/Desktop
+          ls -lh /Users/fangjun/Desktop
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          ./build-swift-macos.sh
+
+      - name: test
+        shell: bash
+        run: |
+          .github/scripts/test-swift.sh

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - dot-net
+      - fix-dot-net
     tags:
       - '*'
 

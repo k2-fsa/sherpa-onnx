@@ -74,3 +74,6 @@ xcuserdata/
 ## Xcode 8 and earlier
 *.xcscmblueprint
 *.xccheckout
+vits-vctk
+vits-zh-aishell3
+jslint.mjs
