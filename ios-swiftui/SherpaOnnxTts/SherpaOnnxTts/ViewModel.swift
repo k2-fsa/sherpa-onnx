@@ -6,3 +6,7 @@
 //
 
 import Foundation
+
+func createOfflineTts() {
+  return SherpaOnnxOfflineTtsWrapper()
+}

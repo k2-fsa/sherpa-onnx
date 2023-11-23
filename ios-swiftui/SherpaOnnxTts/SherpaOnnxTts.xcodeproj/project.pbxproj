@@ -11,6 +11,7 @@
 		C917B4E72B0EEF3B005245AC /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C917B4E62B0EEF3B005245AC /* ContentView.swift */; };
 		C917B4E92B0EEF3C005245AC /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C917B4E82B0EEF3C005245AC /* Assets.xcassets */; };
 		C917B4EC2B0EEF3C005245AC /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C917B4EB2B0EEF3C005245AC /* Preview Assets.xcassets */; };
+		C9FE9FE52B0F33CD009F1003 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -19,6 +20,7 @@
 		C917B4E62B0EEF3B005245AC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		C917B4E82B0EEF3C005245AC /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C917B4EB2B0EEF3C005245AC /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +53,7 @@
 		C917B4E32B0EEF3B005245AC /* SherpaOnnxTts */ = {
 			isa = PBXGroup;
 			children = (
+				C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */,
 				C917B4E42B0EEF3B005245AC /* SherpaOnnxTtsApp.swift */,
 				C917B4E62B0EEF3B005245AC /* ContentView.swift */,
 				C917B4E82B0EEF3C005245AC /* Assets.xcassets */,
@@ -138,6 +141,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				C917B4E72B0EEF3B005245AC /* ContentView.swift in Sources */,
+				C9FE9FE52B0F33CD009F1003 /* ViewModel.swift in Sources */,
 				C917B4E52B0EEF3B005245AC /* SherpaOnnxTtsApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -282,6 +286,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxTts";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "${PROJECT_DIR}/../../swift-api-examples/SherpaOnnx-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -310,6 +315,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxTts";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "${PROJECT_DIR}/../../swift-api-examples/SherpaOnnx-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
