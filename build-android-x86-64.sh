@@ -43,7 +43,7 @@ fi
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 
-onnxruntime_version=v1.16.2
+onnxruntime_version=v1.16.3
 
 if [ ! -f ./android-onnxruntime-libs/$onnxruntime_version/jni/x86_64/libonnxruntime.so ]; then
   if [ ! -d android-onnxruntime-libs ]; then
