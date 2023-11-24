@@ -304,7 +304,10 @@ void OnlineWebsocketServer::OnMessage(connection_hdl hdl,
       int32_t num_samples = payload.size() / sizeof(float);
       std::vector<float> samples(p, p + num_samples);
 
-      c->samples.push_back(std::move(samples));
+      {
+        std::lock_guard<std::mutex> lock(c->mutex);
+        c->samples.push_back(std::move(samples));
+      }
 
       asio::post(io_work_, [this, c]() { decoder_.AcceptWaveform(c); });
       break;
