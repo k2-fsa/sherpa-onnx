@@ -18,8 +18,8 @@ rm .clang-format
 
 function windows_x64() {
   echo "Process Windows (x64)"
-  mkdir -p lib/windows-x64
-  dst=$(realpath lib/windows-x64)
+  mkdir -p lib/win-x64
+  dst=$(realpath lib/win-x64)
   mkdir t
   cd t
   wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
@@ -35,8 +35,8 @@ function windows_x64() {
 
 function windows_x86() {
   echo "Process Windows (x86)"
-  mkdir -p lib/windows-x86
-  dst=$(realpath lib/windows-x86)
+  mkdir -p lib/win-x86
+  dst=$(realpath lib/win-x86)
   mkdir t
   cd t
   wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win32.whl
@@ -108,10 +108,10 @@ function osx_arm64() {
 }
 
 windows_x64
-ls -lh lib/windows-x64
+ls -lh lib/win-x64
 
 windows_x86
-ls -lh lib/windows-x86
+ls -lh lib/win-x86
 
 linux_x64
 ls -lh lib/linux-x64

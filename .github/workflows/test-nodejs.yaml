@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest] #, windows-latest]
+        os: [ubuntu-latest, macos-latest] #, windows-2019]
         python-version: ["3.8"]
 
     steps:
@@ -47,8 +47,8 @@ jobs:
           mkdir build
           cd build
           cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install ..
-          make -j2
-          make install
+          cmake --build . --target install --config Release
+
           ls -lh install/lib
 
       - name: Setup Python ${{ matrix.python-version }}
@@ -66,6 +66,9 @@ jobs:
           elif [[ $os == 'macos-latest' ]]; then
             mkdir -p scripts/nodejs/lib/osx-x64
             dst=scripts/nodejs/lib/osx-x64
+          elif [[ $os == 'windows-2019' ]]; then
+            mkdir -p scripts/nodejs/lib/win-x64
+            dst=scripts/nodejs/lib/win-x64
           fi
           cp -v build/install/lib/* $dst/
 
