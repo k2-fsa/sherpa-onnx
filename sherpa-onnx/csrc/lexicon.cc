@@ -50,6 +50,8 @@ static std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is) {
       iss >> id;
     }
 
+    // eat the trailing \r\n on windows
+    iss >> std::ws;
     if (!iss.eof()) {
       SHERPA_ONNX_LOGE("Error: %s", line.c_str());
       exit(-1);
