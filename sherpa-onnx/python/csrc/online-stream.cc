@@ -28,8 +28,10 @@ void PybindOnlineStream(py::module *m) {
           [](PyClass &self, float sample_rate, py::array_t<float> waveform) {
             self.AcceptWaveform(sample_rate, waveform.data(), waveform.size());
           },
-          py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage)
-      .def("input_finished", &PyClass::InputFinished);
+          py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage,
+          py::call_guard<py::gil_scoped_release>())
+      .def("input_finished", &PyClass::InputFinished,
+           py::call_guard<py::gil_scoped_release>());
 }
 
 }  // namespace sherpa_onnx

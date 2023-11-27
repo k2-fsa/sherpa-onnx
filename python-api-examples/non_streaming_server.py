@@ -414,7 +414,7 @@ def get_args():
     parser.add_argument(
         "--max-batch-size",
         type=int,
-        default=25,
+        default=3,
         help="""Max batch size for computation. Note if there are not enough
         requests in the queue, it will wait for max_wait_ms time. After that,
         even if there are not enough requests, it still sends the
@@ -459,7 +459,7 @@ def get_args():
     parser.add_argument(
         "--max-active-connections",
         type=int,
-        default=500,
+        default=200,
         help="""Maximum number of active connections. The server will refuse
         to accept new connections once the current number of active connections
         equals to this limit.
@@ -533,6 +533,7 @@ class NonStreamingServer:
         self.certificate = certificate
         self.http_server = HttpServer(doc_root)
 
+        self.nn_pool_size = nn_pool_size
         self.nn_pool = ThreadPoolExecutor(
             max_workers=nn_pool_size,
             thread_name_prefix="nn",
@@ -604,7 +605,9 @@ or <a href="/offline_record.html">/offline_record.html</a>
     async def run(self, port: int):
         logging.info("started")
 
-        task = asyncio.create_task(self.stream_consumer_task())
+        tasks = []
+        for i in range(self.nn_pool_size):
+            tasks.append(asyncio.create_task(self.stream_consumer_task()))
 
         if self.certificate:
             logging.info(f"Using certificate: {self.certificate}")
@@ -636,7 +639,7 @@ or <a href="/offline_record.html">/offline_record.html</a>
 
             await asyncio.Future()  # run forever
 
-        await task  # not reachable
+        await asyncio.gather(*tasks)  # not reachable
 
     async def recv_audio_samples(
         self,
@@ -722,6 +725,7 @@ or <a href="/offline_record.html">/offline_record.html</a>
                     batch.append(item)
             except asyncio.QueueEmpty:
                 pass
+
             stream_list = [b[0] for b in batch]
             future_list = [b[1] for b in batch]
 

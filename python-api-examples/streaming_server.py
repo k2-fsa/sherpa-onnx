@@ -296,7 +296,7 @@ def get_args():
     parser.add_argument(
         "--max-batch-size",
         type=int,
-        default=50,
+        default=3,
         help="""Max batch size for computation. Note if there are not enough
         requests in the queue, it will wait for max_wait_ms time. After that,
         even if there are not enough requests, it still sends the
@@ -334,7 +334,7 @@ def get_args():
     parser.add_argument(
         "--max-active-connections",
         type=int,
-        default=500,
+        default=200,
         help="""Maximum number of active connections. The server will refuse
         to accept new connections once the current number of active connections
         equals to this limit.
@@ -478,6 +478,7 @@ class StreamingServer(object):
         self.certificate = certificate
         self.http_server = HttpServer(doc_root)
 
+        self.nn_pool_size = nn_pool_size
         self.nn_pool = ThreadPoolExecutor(
             max_workers=nn_pool_size,
             thread_name_prefix="nn",
@@ -591,7 +592,9 @@ Go back to <a href="/streaming_record.html">/streaming_record.html</a>
         return status, header, response
 
     async def run(self, port: int):
-        task = asyncio.create_task(self.stream_consumer_task())
+        tasks = []
+        for i in range(self.nn_pool_size):
+            tasks.append(asyncio.create_task(self.stream_consumer_task()))
 
         if self.certificate:
             logging.info(f"Using certificate: {self.certificate}")
@@ -629,7 +632,7 @@ Go back to <a href="/streaming_record.html">/streaming_record.html</a>
 
             await asyncio.Future()  # run forever
 
-        await task  # not reachable
+        await asyncio.gather(*tasks)  # not reachable
 
     async def handle_connection(
         self,
