@@ -30,11 +30,12 @@ void PybindVoiceActivityDetector(py::module *m) {
           [](PyClass &self, const std::vector<float> &samples) {
             self.AcceptWaveform(samples.data(), samples.size());
           },
-          py::arg("samples"))
-      .def("empty", &PyClass::Empty)
-      .def("pop", &PyClass::Pop)
-      .def("is_speech_detected", &PyClass::IsSpeechDetected)
-      .def("reset", &PyClass::Reset)
+          py::arg("samples"), py::call_guard<py::gil_scoped_release>())
+      .def("empty", &PyClass::Empty, py::call_guard<py::gil_scoped_release>())
+      .def("pop", &PyClass::Pop, py::call_guard<py::gil_scoped_release>())
+      .def("is_speech_detected", &PyClass::IsSpeechDetected,
+           py::call_guard<py::gil_scoped_release>())
+      .def("reset", &PyClass::Reset, py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("front", &PyClass::Front);
 }
 

@@ -50,9 +50,20 @@ void PybindOfflineStream(py::module *m) {
       .def(
           "accept_waveform",
           [](PyClass &self, float sample_rate, py::array_t<float> waveform) {
+#if 0
+            auto report_gil_status = []() {
+              auto is_gil_held = false;
+              if (auto tstate = py::detail::get_thread_state_unchecked())
+                is_gil_held = (tstate == PyGILState_GetThisThreadState());
+
+              return is_gil_held ? "GIL held" : "GIL released";
+            };
+            std::cout << report_gil_status() << "\n";
+#endif
             self.AcceptWaveform(sample_rate, waveform.data(), waveform.size());
           },
-          py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage)
+          py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage,
+          py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("result", &PyClass::GetResult);
 }
 

@@ -19,10 +19,12 @@ void PybindCircularBuffer(py::module *m) {
           [](PyClass &self, const std::vector<float> &samples) {
             self.Push(samples.data(), samples.size());
           },
-          py::arg("samples"))
-      .def("get", &PyClass::Get, py::arg("start_index"), py::arg("n"))
-      .def("pop", &PyClass::Pop, py::arg("n"))
-      .def("reset", &PyClass::Reset)
+          py::arg("samples"), py::call_guard<py::gil_scoped_release>())
+      .def("get", &PyClass::Get, py::arg("start_index"), py::arg("n"),
+           py::call_guard<py::gil_scoped_release>())
+      .def("pop", &PyClass::Pop, py::arg("n"),
+           py::call_guard<py::gil_scoped_release>())
+      .def("reset", &PyClass::Reset, py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("size", &PyClass::Size)
       .def_property_readonly("head", &PyClass::Head)
       .def_property_readonly("tail", &PyClass::Tail);

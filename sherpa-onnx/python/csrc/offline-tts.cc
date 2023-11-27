@@ -45,7 +45,7 @@ void PybindOfflineTts(py::module *m) {
   py::class_<PyClass>(*m, "OfflineTts")
       .def(py::init<const OfflineTtsConfig &>(), py::arg("config"))
       .def("generate", &PyClass::Generate, py::arg("text"), py::arg("sid") = 0,
-           py::arg("speed") = 1.0);
+           py::arg("speed") = 1.0, py::call_guard<py::gil_scoped_release>());
 }
 
 }  // namespace sherpa_onnx

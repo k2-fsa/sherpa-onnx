@@ -41,19 +41,24 @@ void PybindOfflineRecognizer(py::module *m) {
   using PyClass = OfflineRecognizer;
   py::class_<PyClass>(*m, "OfflineRecognizer")
       .def(py::init<const OfflineRecognizerConfig &>(), py::arg("config"))
-      .def("create_stream",
-           [](const PyClass &self) { return self.CreateStream(); })
+      .def(
+          "create_stream",
+          [](const PyClass &self) { return self.CreateStream(); },
+          py::call_guard<py::gil_scoped_release>())
       .def(
           "create_stream",
           [](PyClass &self, const std::string &hotwords) {
             return self.CreateStream(hotwords);
           },
-          py::arg("hotwords"))
-      .def("decode_stream", &PyClass::DecodeStream)
-      .def("decode_streams",
-           [](const PyClass &self, std::vector<OfflineStream *> ss) {
-             self.DecodeStreams(ss.data(), ss.size());
-           });
+          py::arg("hotwords"), py::call_guard<py::gil_scoped_release>())
+      .def("decode_stream", &PyClass::DecodeStream,
+           py::call_guard<py::gil_scoped_release>())
+      .def(
+          "decode_streams",
+          [](const PyClass &self, std::vector<OfflineStream *> ss) {
+            self.DecodeStreams(ss.data(), ss.size());
+          },
+          py::call_guard<py::gil_scoped_release>());
 }
 
 }  // namespace sherpa_onnx
