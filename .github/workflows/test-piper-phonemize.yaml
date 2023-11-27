@@ -22,6 +22,10 @@ jobs:
         os: [ubuntu-latest, macos-latest, windows-latest]
         build_type: [Release, Debug]
         shared_lib: [ON, OFF]
+        exclude:
+          - os: windows-latest
+            build_type: Debug
+            shared_lib: OFF
 
     steps:
       - uses: actions/checkout@v4
@@ -40,17 +44,9 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
-          build_type=${{ matrix.build_type }}
-          os=${{ matrix.os }}
-          shared_lib=${{ matrix.shared_lib }}
-
-          if [[ $os == 'windows-latest' && $build_type == Debug && $shared_lib == OFF ]]; then
-            build_type=RelWithDebInfo
-          fi
-
           mkdir build
           cd build
-          cmake -D SHERPA_ONNX_ENABLE_TESTS=ON -D CMAKE_BUILD_TYPE=$build_type -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake -D SHERPA_ONNX_ENABLE_TESTS=ON -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build
         shell: bash
@@ -59,16 +55,8 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
-          build_type=${{ matrix.build_type }}
-          os=${{ matrix.os }}
-          shared_lib=${{ matrix.shared_lib }}
-
-          if [[ $os == 'windows-latest' && $build_type == Debug && $shared_lib == OFF ]]; then
-            build_type=RelWithDebInfo
-          fi
-
           cd build
-          cmake --build . --target install --config $build_type
+          cmake --build . --target install --config ${{ matrix.build_type }}
 
       - name: run test
         if: matrix.os != 'windows-latest'
@@ -88,16 +76,8 @@ jobs:
         run: |
           cd build
 
-          build_type=${{ matrix.build_type }}
-          os=${{ matrix.os }}
-          shared_lib=${{ matrix.shared_lib }}
-
-          if [[ $os == 'windows-latest' && $build_type == Debug && $shared_lib == OFF ]]; then
-            build_type=RelWithDebInfo
-          fi
-
           ls -lh install/
           ls -lh install/share
           ls -lh install/share/espeak-ng-data/
 
-          ./bin/$build_type/piper-phonemize-test
+          ./bin/${{ matrix.build_type }}/piper-phonemize-test

@@ -5,7 +5,7 @@ set -e
 dir=build-ios
 mkdir -p $dir
 cd $dir
-onnxruntime_version=1.16.3
+onnxruntime_version=1.16.2
 
 if [ ! -f ios-onnxruntime/$onnxruntime_version/onnxruntime.xcframework/ios-arm64/onnxruntime.a ]; then
   if [ ! -d ios-onnxruntime ]; then
@@ -51,6 +51,11 @@ echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
 #
 
 cmake \
+  -DONNXRUNTIME_DIR=/ \
+  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
+  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
+  -DBUILD_ESPEAK_NG_EXE=OFF \
+  -DBUILD_ESPEAK_NG_TESTS=OFF \
   -S .. \
   -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
   -DPLATFORM=SIMULATOR64 \
@@ -74,6 +79,11 @@ cmake --build build/simulator_x86_64 -j 4 --verbose
 echo "Building for simulator (arm64)"
 
 cmake \
+  -DONNXRUNTIME_DIR=/ \
+  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
+  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
+  -DBUILD_ESPEAK_NG_EXE=OFF \
+  -DBUILD_ESPEAK_NG_TESTS=OFF \
   -S .. \
   -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
   -DPLATFORM=SIMULATORARM64 \
@@ -101,6 +111,11 @@ export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframework/i
 
 
 cmake \
+  -DONNXRUNTIME_DIR=/ \
+  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
+  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
+  -DBUILD_ESPEAK_NG_EXE=OFF \
+  -DBUILD_ESPEAK_NG_TESTS=OFF \
   -S .. \
   -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
   -DPLATFORM=OS64 \
