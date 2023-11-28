@@ -47,6 +47,13 @@ function(download_kaldi_decoder)
   include_directories(${kaldi_decoder_SOURCE_DIR})
   add_subdirectory(${kaldi_decoder_SOURCE_DIR} ${kaldi_decoder_BINARY_DIR} EXCLUDE_FROM_ALL)
 
+  if(WIN32 AND MSVC)
+    target_compile_options(kaldi-decoder-core PUBLIC
+      /wd4018
+      /wd4291
+    )
+  endif()
+
   target_include_directories(kaldi-decoder-core
     INTERFACE
       ${kaldi-decoder_SOURCE_DIR}/

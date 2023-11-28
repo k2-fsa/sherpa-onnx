@@ -53,6 +53,33 @@ function(download_espeak_ng_for_piper)
   add_subdirectory(${espeak_ng_SOURCE_DIR} ${espeak_ng_BINARY_DIR})
   set(espeak_ng_SOURCE_DIR ${espeak_ng_SOURCE_DIR} PARENT_SCOPE)
 
+  if(WIN32 AND MSVC)
+    target_compile_options(ucd PUBLIC
+      /wd4309
+    )
+
+    target_compile_options(espeak-ng PUBLIC
+      /wd4005
+      /wd4018
+      /wd4067
+      /wd4068
+      /wd4090
+      /wd4101
+      /wd4244
+      /wd4267
+      /wd4996
+    )
+
+    target_compile_options(espeak-ng-bin PRIVATE
+      /wd4244
+      /wd4024
+      /wd4047
+      /wd4067
+      /wd4267
+      /wd4996
+    )
+  endif()
+
   if(UNIX AND NOT APPLE)
     target_compile_options(espeak-ng PRIVATE
       -Wno-unused-result
