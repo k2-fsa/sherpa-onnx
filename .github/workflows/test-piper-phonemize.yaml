@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - master
-      - support-espeak-ng
+      - support-espeak-ng-2
 
   workflow_dispatch:
 
@@ -46,7 +46,7 @@ jobs:
 
           mkdir build
           cd build
-          cmake -D SHERPA_ONNX_ENABLE_TESTS=ON -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -D SHERPA_ONNX_ENABLE_TESTS=ON -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build
         shell: bash
