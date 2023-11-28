@@ -1,18 +1,18 @@
 function(download_piper_phonemize)
   include(FetchContent)
 
-  set(piper_phonemize_URL  "https://github.com/csukuangfj/piper-phonemize/archive/6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip")
+  set(piper_phonemize_URL  "https://github.com/csukuangfj/piper-phonemize/archive/c45ba1d30b1d8a3abfb890744709077a032faabc.zip")
   set(piper_phonemize_URL2 "")
-  set(piper_phonemize_HASH "SHA256=6fbacf540b03f00d1386bb372fb7090e3bb852bd019d74e615d3f161f728bc93")
+  set(piper_phonemize_HASH "SHA256=af41f146b3a06ac45af137a9fe2b6a61a5ea3f49917bfc8d4e9a0d20433f5887")
 
   # If you don't have access to the Internet,
   # please pre-download kaldi-decoder
   set(possible_file_locations
-    $ENV{HOME}/Downloads/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
-    ${PROJECT_SOURCE_DIR}/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
-    ${PROJECT_BINARY_DIR}/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
-    /tmp/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
-    /star-fj/fangjun/download/github/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
+    $ENV{HOME}/Downloads/piper-phonemize-c45ba1d30b1d8a3abfb890744709077a032faabc.zip
+    ${PROJECT_SOURCE_DIR}/piper-phonemize-c45ba1d30b1d8a3abfb890744709077a032faabc.zip
+    ${PROJECT_BINARY_DIR}/piper-phonemize-c45ba1d30b1d8a3abfb890744709077a032faabc.zip
+    /tmp/piper-phonemize-c45ba1d30b1d8a3abfb890744709077a032faabc.zip
+    /star-fj/fangjun/download/github/piper-phonemize-c45ba1d30b1d8a3abfb890744709077a032faabc.zip
   )
 
   foreach(f IN LISTS possible_file_locations)
