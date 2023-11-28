@@ -106,6 +106,11 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
 add_library(sherpa-onnx-core ${sources})
+if(APPLE)
+  target_compile_options(sherpa-onnx-core PRIVATE
+    -Wno-deprecated-declarations
+  )
+endif()
 
 if(NOT WIN32)
   target_link_libraries(sherpa-onnx-core -pthread)
@@ -135,6 +140,8 @@ if(SHERPA_ONNX_ENABLE_GPU)
     onnxruntime_providers_shared
   )
 endif()
+
+target_link_libraries(sherpa-onnx-core piper_phonemize)
 
 if(SHERPA_ONNX_ENABLE_CHECK)
   target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
@@ -343,6 +350,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     context-graph-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
+    piper-phonemize-test.cc
     slice-test.cc
     stack-test.cc
     transpose-test.cc

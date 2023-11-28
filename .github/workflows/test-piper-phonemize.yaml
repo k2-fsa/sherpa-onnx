@@ -1,0 +1,82 @@
+name: test-piper-phonemize
+on:
+  push:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-piper-phonemize-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  test_piper_phonemize:
+    name: ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.shared_lib }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        build_type: [Release, Debug]
+        shared_lib: [ON, OFF]
+        exclude:
+          - os: windows-latest
+            build_type: Debug
+            shared_lib: OFF
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.build_type }}-shared-${{ matrix.shared_lib }}
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -D SHERPA_ONNX_ENABLE_TESTS=ON -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+
+      - name: Build
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          cd build
+          cmake --build . --target install --config ${{ matrix.build_type }}
+
+      - name: run test
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd build
+
+          ls -lh install/
+          ls -lh install/share
+          ls -lh install/share/espeak-ng-data/
+
+          ./bin/piper-phonemize-test
+
+      - name: run test
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          cd build
+
+          ls -lh install/
+          ls -lh install/share
+          ls -lh install/share/espeak-ng-data/
+
+          ./bin/${{ matrix.build_type }}/piper-phonemize-test

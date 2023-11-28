@@ -159,6 +159,8 @@ endif()
 include(kaldi-native-fbank)
 include(kaldi-decoder)
 include(onnxruntime)
+set(ONNXRUNTIME_DIR ${onnxruntime_SOURCE_DIR})
+message(STATUS "ONNXRUNTIME_DIR: ${ONNXRUNTIME_DIR}")
 
 if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   include(portaudio)
@@ -177,6 +179,11 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
   include(websocketpp)
   include(asio)
 endif()
+
+include(espeak-ng-for-piper)
+set(ESPEAK_NG_DIR ${espeak_ng_SOURCE_DIR})
+message(STATUS "ESPEAK_NG_DIR: ${ESPEAK_NG_DIR}")
+include(piper-phonemize)
 
 add_subdirectory(sherpa-onnx)
 

@@ -94,6 +94,7 @@ function(download_onnxruntime)
     message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
     message(FATAL_ERROR "Only support Linux, macOS, and Windows at present. Will support other OSes later")
   endif()
+  set(onnxruntime_SOURCE_DIR ${onnxruntime_SOURCE_DIR} PARENT_SCOPE)
 endfunction()
 
 # First, we try to locate the header and the lib if the use has already

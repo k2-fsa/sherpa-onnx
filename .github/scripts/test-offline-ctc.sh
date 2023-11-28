@@ -19,10 +19,10 @@ log "------------------------------------------------------------"
 wenet_models=(
 sherpa-onnx-zh-wenet-aishell
 sherpa-onnx-zh-wenet-aishell2
-sherpa-onnx-zh-wenet-wenetspeech
+# sherpa-onnx-zh-wenet-wenetspeech
 sherpa-onnx-zh-wenet-multi-cn
 sherpa-onnx-en-wenet-librispeech
-sherpa-onnx-en-wenet-gigaspeech
+# sherpa-onnx-en-wenet-gigaspeech
 )
 for name in ${wenet_models[@]}; do
   repo_url=https://huggingface.co/csukuangfj/$name
