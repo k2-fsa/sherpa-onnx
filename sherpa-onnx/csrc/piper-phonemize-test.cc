@@ -48,7 +48,7 @@ TEST(PiperPhonemize, Case1) {
 
   piper::eSpeakPhonemeConfig config;
 
-  // ./bin/espeak-ng --path  ./install/share/espeak-ng-data/ --voices
+  // ./bin/espeak-ng-bin --path  ./install/share/espeak-ng-data/ --voices
   // to list available voices
   config.voice = "en-us";
 
@@ -61,15 +61,15 @@ TEST(PiperPhonemize, Case1) {
   }
   std::cout << "\n";
 
-  std::vector<piper::PhonemeId> phonemeIds;
-  std::map<piper::Phoneme, std::size_t> missingPhonemes;
+  std::vector<piper::PhonemeId> phoneme_ids;
+  std::map<piper::Phoneme, std::size_t> missing_phonemes;
 
   {
     piper::PhonemeIdConfig config;
-    phonemes_to_ids(phonemes[0], config, phonemeIds, missingPhonemes);
+    phonemes_to_ids(phonemes[0], config, phoneme_ids, missing_phonemes);
   }
 
-  for (int32_t p : phonemeIds) {
+  for (int32_t p : phoneme_ids) {
     std::cout << p << " ";
   }
   std::cout << "\n";

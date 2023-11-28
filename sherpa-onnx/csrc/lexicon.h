@@ -23,6 +23,8 @@ namespace sherpa_onnx {
 // TODO(fangjun): Refactor it to an abstract class
 class Lexicon {
  public:
+  virtual ~Lexicon() = default;
+  Lexicon() = default;  // for subclasses
   Lexicon(const std::string &lexicon, const std::string &tokens,
           const std::string &punctuations, const std::string &language,
           bool debug = false, bool is_piper = false);
@@ -34,7 +36,8 @@ class Lexicon {
           bool is_piper = false);
 #endif
 
-  std::vector<int64_t> ConvertTextToTokenIds(const std::string &text) const;
+  virtual std::vector<int64_t> ConvertTextToTokenIds(
+      const std::string &text, const std::string &voice = "") const;
 
  private:
   std::vector<int64_t> ConvertTextToTokenIdsGerman(

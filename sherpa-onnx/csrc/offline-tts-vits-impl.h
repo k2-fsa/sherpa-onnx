@@ -21,6 +21,7 @@
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/piper-phonemize-lexicon.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
@@ -29,10 +30,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
  public:
   explicit OfflineTtsVitsImpl(const OfflineTtsConfig &config)
       : config_(config),
-        model_(std::make_unique<OfflineTtsVitsModel>(config.model)),
-        lexicon_(config.model.vits.lexicon, config.model.vits.tokens,
-                 model_->Punctuations(), model_->Language(), config.model.debug,
-                 model_->IsPiper()) {
+        model_(std::make_unique<OfflineTtsVitsModel>(config.model)) {
+    InitLexicon();
+
     if (!config.rule_fsts.empty()) {
       std::vector<std::string> files;
       SplitStringToVector(config.rule_fsts, ",", false, &files);
@@ -50,9 +50,10 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   OfflineTtsVitsImpl(AAssetManager *mgr, const OfflineTtsConfig &config)
       : config_(config),
         model_(std::make_unique<OfflineTtsVitsModel>(mgr, config.model)),
-        lexicon_(mgr, config.model.vits.lexicon, config.model.vits.tokens,
-                 model_->Punctuations(), model_->Language(), config.model.debug,
-                 model_->IsPiper()) {
+        lexicon_(std::make_unique<Lexicon>(
+            mgr, config.model.vits.lexicon, config.model.vits.tokens,
+            model_->Punctuations(), model_->Language(), config.model.debug,
+            model_->IsPiper())) {
     if (!config.rule_fsts.empty()) {
       std::vector<std::string> files;
       SplitStringToVector(config.rule_fsts, ",", false, &files);
@@ -101,13 +102,14 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       }
     }
 
-    std::vector<int64_t> x = lexicon_.ConvertTextToTokenIds(text);
+    std::vector<int64_t> x =
+        lexicon_->ConvertTextToTokenIds(text, model_->Voice());
     if (x.empty()) {
       SHERPA_ONNX_LOGE("Failed to convert %s to token IDs", text.c_str());
       return {};
     }
 
-    if (model_->AddBlank()) {
+    if (model_->AddBlank() && config_.model.vits.data_dir.empty()) {
       std::vector<int64_t> buffer(x.size() * 2 + 1);
       int32_t i = 1;
       for (auto k : x) {
@@ -144,10 +146,24 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   }
 
  private:
+  void InitLexicon() {
+    if (model_->IsPiper() && model_->Language() == "English" &&
+        !config_.model.vits.data_dir.empty()) {
+      lexicon_ =
+          std::make_unique<PiperPhonemizeLexicon>(config_.model.vits.data_dir);
+    } else {
+      lexicon_ = std::make_unique<Lexicon>(
+          config_.model.vits.lexicon, config_.model.vits.tokens,
+          model_->Punctuations(), model_->Language(), config_.model.debug,
+          model_->IsPiper());
+    }
+  }
+
+ private:
   OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsVitsModel> model_;
   std::vector<std::unique_ptr<kaldifst::TextNormalizer>> tn_list_;
-  Lexicon lexicon_;
+  std::unique_ptr<Lexicon> lexicon_;
 };
 
 }  // namespace sherpa_onnx

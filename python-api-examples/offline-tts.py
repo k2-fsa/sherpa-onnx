@@ -63,13 +63,23 @@ def get_args():
     parser.add_argument(
         "--vits-lexicon",
         type=str,
+        default="",
         help="Path to lexicon.txt",
     )
 
     parser.add_argument(
         "--vits-tokens",
         type=str,
+        default="",
         help="Path to tokens.txt",
+    )
+
+    parser.add_argument(
+        "--vits-data-dir",
+        type=str,
+        default="",
+        help="""Path to the dict director of espeak-ng. If it is specified,
+        --vits-lexicon and --vits-tokens are ignored""",
     )
 
     parser.add_argument(
@@ -142,13 +152,14 @@ def main():
             vits=sherpa_onnx.OfflineTtsVitsModelConfig(
                 model=args.vits_model,
                 lexicon=args.vits_lexicon,
+                data_dir=args.vits_data_dir,
                 tokens=args.vits_tokens,
             ),
             provider=args.provider,
             debug=args.debug,
             num_threads=args.num_threads,
         ),
-        rule_fsts=args.tts_rule_fsts
+        rule_fsts=args.tts_rule_fsts,
     )
     tts = sherpa_onnx.OfflineTts(tts_config)
 

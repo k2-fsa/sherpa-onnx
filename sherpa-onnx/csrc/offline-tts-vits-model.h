@@ -46,7 +46,8 @@ class OfflineTtsVitsModel {
   bool AddBlank() const;
 
   std::string Punctuations() const;
-  std::string Language() const;
+  std::string Language() const;  // e.g., Chinese, English, German, etc.
+  std::string Voice() const;     // e.g., en-us, for espeak-ng
   bool IsPiper() const;
   int32_t NumSpeakers() const;
 

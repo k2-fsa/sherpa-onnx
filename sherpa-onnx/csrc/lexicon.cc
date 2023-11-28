@@ -130,7 +130,7 @@ Lexicon::Lexicon(AAssetManager *mgr, const std::string &lexicon,
 #endif
 
 std::vector<int64_t> Lexicon::ConvertTextToTokenIds(
-    const std::string &text) const {
+    const std::string &text, const std::string & /*voice*/ /*= ""*/) const {
   switch (language_) {
     case Language::kEnglish:
       return ConvertTextToTokenIdsEnglish(text);
