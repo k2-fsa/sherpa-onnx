@@ -42,6 +42,12 @@ function(download_piper_phonemize)
 
   add_subdirectory(${piper_phonemize_SOURCE_DIR} ${piper_phonemize_BINARY_DIR} EXCLUDE_FROM_ALL)
 
+  if(WIN32 AND MSVC)
+    target_compile_options(piper_phonemize PUBLIC
+      /wd4309
+    )
+  endif()
+
   target_include_directories(piper_phonemize
     INTERFACE
       ${piper_phonemize_SOURCE_DIR}/src/include
