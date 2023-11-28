@@ -142,6 +142,8 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIds(
       return ConvertTextToTokenIdsFrench(text);
     case Language::kChinese:
       return ConvertTextToTokenIdsChinese(text);
+    case Language::kUkrainian:
+      return ConvertTextToTokenIdsChinese(text);      
     default:
       SHERPA_ONNX_LOGE("Unknown language: %d", static_cast<int32_t>(language_));
       exit(-1);
@@ -319,6 +321,8 @@ void Lexicon::InitLanguage(const std::string &_lang) {
     language_ = Language::kFrench;
   } else if (lang == "chinese") {
     language_ = Language::kChinese;
+  } else if (lang == "ukrainian") {
+    language_ = Language::kUkrainian;    
   } else {
     SHERPA_ONNX_LOGE("Unknown language: %s", _lang.c_str());
     exit(-1);
