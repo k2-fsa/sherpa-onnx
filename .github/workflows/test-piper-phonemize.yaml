@@ -3,7 +3,6 @@ on:
   push:
     branches:
       - master
-      - support-espeak-ng-2
 
   workflow_dispatch:
 

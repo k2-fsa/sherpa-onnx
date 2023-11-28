@@ -70,14 +70,16 @@ function(download_espeak_ng_for_piper)
       /wd4996
     )
 
-    target_compile_options(espeak-ng-bin PRIVATE
-      /wd4244
-      /wd4024
-      /wd4047
-      /wd4067
-      /wd4267
-      /wd4996
-    )
+    if(TARGET espeak-ng-bin)
+      target_compile_options(espeak-ng-bin PRIVATE
+        /wd4244
+        /wd4024
+        /wd4047
+        /wd4067
+        /wd4267
+        /wd4996
+      )
+    endif()
   endif()
 
   if(UNIX AND NOT APPLE)
@@ -89,9 +91,11 @@ function(download_espeak_ng_for_piper)
       -Wno-format
     )
 
-    target_compile_options(espeak-ng-bin PRIVATE
-      -Wno-unused-result
-    )
+    if(TARGET espeak-ng-bin)
+      target_compile_options(espeak-ng-bin PRIVATE
+        -Wno-unused-result
+      )
+    endif()
   endif()
 
   target_include_directories(espeak-ng

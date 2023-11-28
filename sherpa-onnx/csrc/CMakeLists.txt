@@ -106,6 +106,11 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
 add_library(sherpa-onnx-core ${sources})
+if(APPLE)
+  target_compile_options(sherpa-onnx-core PRIVATE
+    -Wno-deprecated-declarations
+  )
+endif()
 
 if(NOT WIN32)
   target_link_libraries(sherpa-onnx-core -pthread)

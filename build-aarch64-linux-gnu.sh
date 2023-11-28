@@ -45,6 +45,7 @@ if [[ x"$BUILD_SHARED_LIBS" == x"" ]]; then
 fi
 
 cmake \
+  -DCMAKE_CXX_STANDARD=17 \
   -DBUILD_PIPER_PHONMIZE_EXE=OFF \
   -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
   -DBUILD_ESPEAK_NG_EXE=OFF \
@@ -62,7 +63,7 @@ cmake \
   -DCMAKE_TOOLCHAIN_FILE=../toolchains/aarch64-linux-gnu.toolchain.cmake \
   ..
 
-make VERBOSE=1 -j4
+make VERBOSE=1 -j1
 make install/strip
 
 # Enable it if only needed
