@@ -62,7 +62,7 @@ cmake \
   -DCMAKE_TOOLCHAIN_FILE=../toolchains/aarch64-linux-gnu.toolchain.cmake \
   ..
 
-make VERBOSE=1 -j1
+make VERBOSE=1 -j4
 make install/strip
 
 # Enable it if only needed
