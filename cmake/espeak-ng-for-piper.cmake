@@ -13,7 +13,6 @@ function(download_espeak_ng_for_piper)
   set(USE_SPEECHPLAYER OFF CACHE BOOL "" FORCE)
   set(EXTRA_cmn ON CACHE BOOL "" FORCE)
   set(EXTRA_ru ON CACHE BOOL "" FORCE)
-  # set(CMAKE_C_FLAGS " ${CMAKE_C_FLAGS} -D_FILE_OFFSET_BITS=64 ")
 
   # If you don't have access to the Internet,
   # please pre-download kaldi-decoder
