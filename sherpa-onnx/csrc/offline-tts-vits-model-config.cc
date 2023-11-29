@@ -15,7 +15,7 @@ void OfflineTtsVitsModelConfig::Register(ParseOptions *po) {
   po->Register("vits-tokens", &tokens, "Path to tokens.txt for VITS models");
   po->Register("vits-data-dir", &data_dir,
                "Path to the directory containing dict for espeak-ng. If it is "
-               "given, --vits-lexicon and --vits-tokens are ignored.");
+               "given, --vits-lexicon is ignored.");
   po->Register("vits-noise-scale", &noise_scale, "noise_scale for VITS models");
   po->Register("vits-noise-scale-w", &noise_scale_w,
                "noise_scale_w for VITS models");
@@ -34,6 +34,16 @@ bool OfflineTtsVitsModelConfig::Validate() const {
     return false;
   }
 
+  if (tokens.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --vits-tokens");
+    return false;
+  }
+
+  if (!FileExists(tokens)) {
+    SHERPA_ONNX_LOGE("--vits-tokens: %s does not exist", tokens.c_str());
+    return false;
+  }
+
   if (data_dir.empty()) {
     if (lexicon.empty()) {
       SHERPA_ONNX_LOGE("Please provide --vits-lexicon");
@@ -45,15 +55,6 @@ bool OfflineTtsVitsModelConfig::Validate() const {
       return false;
     }
 
-    if (tokens.empty()) {
-      SHERPA_ONNX_LOGE("Please provide --vits-tokens");
-      return false;
-    }
-
-    if (!FileExists(tokens)) {
-      SHERPA_ONNX_LOGE("--vits-tokens: %s does not exist", tokens.c_str());
-      return false;
-    }
   } else {
     if (!FileExists(data_dir + "/phontab")) {
       SHERPA_ONNX_LOGE("%s/phontab does not exist. Skipping test",

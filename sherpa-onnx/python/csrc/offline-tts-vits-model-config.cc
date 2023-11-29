@@ -28,7 +28,8 @@ void PybindOfflineTtsVitsModelConfig(py::module *m) {
       .def_readwrite("noise_scale", &PyClass::noise_scale)
       .def_readwrite("noise_scale_w", &PyClass::noise_scale_w)
       .def_readwrite("length_scale", &PyClass::length_scale)
-      .def("__str__", &PyClass::ToString);
+      .def("__str__", &PyClass::ToString)
+      .def("validate", &PyClass::Validate);
 }
 
 }  // namespace sherpa_onnx

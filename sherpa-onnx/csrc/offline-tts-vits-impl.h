@@ -147,10 +147,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
  private:
   void InitLexicon() {
-    if (model_->IsPiper() && model_->Language() == "English" &&
-        !config_.model.vits.data_dir.empty()) {
-      lexicon_ =
-          std::make_unique<PiperPhonemizeLexicon>(config_.model.vits.data_dir);
+    if (model_->IsPiper() && !config_.model.vits.data_dir.empty()) {
+      lexicon_ = std::make_unique<PiperPhonemizeLexicon>(
+          config_.model.vits.tokens, config_.model.vits.data_dir);
     } else {
       lexicon_ = std::make_unique<Lexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,

@@ -34,6 +34,7 @@ static void PybindOfflineTtsConfig(py::module *m) {
            py::arg("model"), py::arg("rule_fsts") = "")
       .def_readwrite("model", &PyClass::model)
       .def_readwrite("rule_fsts", &PyClass::rule_fsts)
+      .def("validate", &PyClass::Validate)
       .def("__str__", &PyClass::ToString);
 }
 

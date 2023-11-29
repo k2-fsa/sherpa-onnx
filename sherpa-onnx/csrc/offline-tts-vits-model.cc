@@ -75,15 +75,12 @@ class OfflineTtsVitsModel::Impl {
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(sample_rate_, "sample_rate");
-    SHERPA_ONNX_READ_META_DATA(add_blank_, "add_blank");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(add_blank_, "add_blank", 0);
     SHERPA_ONNX_READ_META_DATA(num_speakers_, "n_speakers");
-    SHERPA_ONNX_READ_META_DATA_STR(punctuations_, "punctuation");
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(punctuations_, "punctuation",
+                                                "");
     SHERPA_ONNX_READ_META_DATA_STR(language_, "language");
-    // SHERPA_ONNX_READ_META_DATA_STR(voice_, "voice");
-    if (language_ == "English") {
-      // FIXME(fangjun): Read voice from the metadata
-      voice_ = "en-us";
-    }
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(voice_, "voice", "");
 
     std::string comment;
     SHERPA_ONNX_READ_META_DATA_STR(comment, "comment");

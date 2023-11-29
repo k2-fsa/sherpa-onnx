@@ -161,6 +161,9 @@ def main():
         ),
         rule_fsts=args.tts_rule_fsts,
     )
+    if not tts_config.validate():
+        raise ValueError("Please check your config")
+
     tts = sherpa_onnx.OfflineTts(tts_config)
 
     start = time.time()
