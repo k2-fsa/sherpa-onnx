@@ -186,7 +186,7 @@ class MainActivity : AppCompatActivity() {
             val istream = application.assets.open(filename)
             val newFilename = application.getExternalFilesDir(null).toString() + "/" + filename
             val ostream = FileOutputStream(newFilename)
-            Log.i(TAG, "Copying $filename to $newFilename")
+            // Log.i(TAG, "Copying $filename to $newFilename")
             val buffer = ByteArray(1024)
             var read = 0
             while (read != -1) {

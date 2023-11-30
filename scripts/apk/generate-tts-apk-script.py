@@ -27,9 +27,47 @@ def get_args():
 @dataclass
 class TtsModel:
     model_dir: str
-    model_name: str
-    lang: str  # en, zh, fr, de, etc.
+    model_name: str = ""
+    lang: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
+    data_dir: Optional[str] = None
+
+
+def get_piper_english_models() -> List[TtsModel]:
+    models = [
+        TtsModel(model_dir="vits-piper-en_US-amy-low"),
+        TtsModel(model_dir="vits-piper-en_US-amy-medium"),
+        TtsModel(model_dir="vits-piper-en_US-arctic-medium"),
+        TtsModel(model_dir="vits-piper-en_US-danny-low"),
+        TtsModel(model_dir="vits-piper-en_US-hfc_male-medium"),
+        TtsModel(model_dir="vits-piper-en_US-joe-medium"),
+        TtsModel(model_dir="vits-piper-en_US-kathleen-low"),
+        TtsModel(model_dir="vits-piper-en_US-kusal-medium"),
+        TtsModel(model_dir="vits-piper-en_US-l2arctic-medium"),
+        TtsModel(model_dir="vits-piper-en_US-lessac-low"),
+        TtsModel(model_dir="vits-piper-en_US-lessac-medium"),
+        TtsModel(model_dir="vits-piper-en_US-lessac-high"),
+        TtsModel(model_dir="vits-piper-en_US-libritts-high"),
+        TtsModel(model_dir="vits-piper-en_US-libritts_r-medium"),
+        TtsModel(model_dir="vits-piper-en_US-ryan-low"),
+        TtsModel(model_dir="vits-piper-en_US-ryan-medium"),
+        TtsModel(model_dir="vits-piper-en_US-ryan-high"),
+        # English (GB)
+        TtsModel(model_dir="vits-piper-en_GB-alan-low"),
+        TtsModel(model_dir="vits-piper-en_GB-alan-medium"),
+        TtsModel(model_dir="vits-piper-en_GB-alba-medium"),
+        TtsModel(model_dir="vits-piper-en_GB-jenny_dioco-medium"),
+        TtsModel(model_dir="vits-piper-en_GB-northern_english_male-medium"),
+        TtsModel(model_dir="vits-piper-en_GB-semaine-medium"),
+        TtsModel(model_dir="vits-piper-en_GB-southern_english_female-low"),
+        TtsModel(model_dir="vits-piper-en_GB-vctk-medium"),
+    ]
+    for m in models:
+        m.data_dir = m.model_dir + "/" + "espeak-data-ng"
+        m.model_name = m.model_dir[len("vits-piper-") :] + ".onnx"
+        m.lang = "en"
+
+    return models
 
 
 def get_all_models() -> List[TtsModel]:
@@ -98,32 +136,7 @@ def get_all_models() -> List[TtsModel]:
         # English (US)
         TtsModel(model_dir="vits-vctk", model_name="vits-vctk.onnx", lang="en"),
         TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
-        TtsModel(model_dir="vits-piper-en_US-amy-low", model_name="en_US-amy-low.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-amy-medium", model_name="en_US-amy-medium.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-arctic-medium", model_name="en_US-arctic-medium.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-danny-low", model_name="en_US-danny-low.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-hfc_male-medium", model_name="en_US-hfc_male-medium.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-joe-medium", model_name="en_US-joe-medium.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-kathleen-low", model_name="en_US-kathleen-low.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-kusal-medium", model_name="en_US-kusal-medium.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-l2arctic-medium", model_name="en_US-l2arctic-medium.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-lessac-low", model_name="en_US-lessac-low.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-lessac-medium", model_name="en_US-lessac-medium.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-lessac-high", model_name="en_US-lessac-high.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-libritts-high", model_name="en_US-libritts-high.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-libritts_r-medium", model_name="en_US-libritts_r-medium.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-ryan-low", model_name="en_US-ryan-low.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-ryan-medium", model_name="en_US-ryan-medium.onnx", lang="en",),
-        TtsModel(model_dir="vits-piper-en_US-ryan-high", model_name="en_US-ryan-high.onnx", lang="en",),
-        # English (GB)
-        TtsModel(model_dir="vits-piper-en_GB-alan-low", model_name="en_GB-alan-low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-en_GB-alan-medium", model_name="en_GB-alan-medium.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-en_GB-alba-medium", model_name="en_GB-alba-medium.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-en_GB-jenny_dioco-medium", model_name="en_GB-jenny_dioco-medium.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-en_GB-northern_english_male-medium", model_name="en_GB-northern_english_male-medium.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-en_GB-semaine-medium", model_name="en_GB-semaine-medium.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-en_GB-southern_english_female-low", model_name="en_GB-southern_english_female-low.onnx",lang="en",),
-        TtsModel(model_dir="vits-piper-en_GB-vctk-medium", model_name="en_GB-vctk-medium.onnx",lang="en",),
+
         # German (DE)
         TtsModel(model_dir="vits-piper-de_DE-eva_k-x_low", model_name="de_DE-eva_k-x_low.onnx",lang="de",),
         TtsModel(model_dir="vits-piper-de_DE-karlsson-low", model_name="de_DE-karlsson-low.onnx",lang="de",),
@@ -162,7 +175,8 @@ def main():
         s = f.read()
     template = environment.from_string(s)
     d = dict()
-    all_model_list = get_all_models()
+    #  all_model_list = get_all_models()
+    all_model_list = get_piper_english_models()
     num_models = len(all_model_list)
 
     num_per_runner = num_models // total
