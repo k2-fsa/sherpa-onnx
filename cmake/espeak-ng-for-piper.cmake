@@ -86,7 +86,7 @@ function(download_espeak_ng_for_piper)
       -Wno-unused-result
       -Wno-format-overflow
       -Wno-format-truncation
-      -Wno-maybe-uninitialized
+      -Wno-uninitialized
       -Wno-format
     )
 

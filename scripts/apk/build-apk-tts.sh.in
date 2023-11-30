@@ -56,7 +56,7 @@ sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./MainActivity.kt
 
 {% if tts_model.data_dir %}
   data_dir={{ tts_model.data_dir }}
-  sed -i.bak s%"dataDir = null"%"dataDir = \"$dataDir\""% ./MainActivity.kt
+  sed -i.bak s%"dataDir = null"%"dataDir = \"$data_dir\""% ./MainActivity.kt
 {% else %}
   sed -i.bak s/"lexicon = null"/"lexicon = \"lexicon.txt\""/ ./MainActivity.kt
 {% endif %}
