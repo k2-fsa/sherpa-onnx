@@ -607,6 +607,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsVitsModelConfig {
   const char *model;
   const char *lexicon;
   const char *tokens;
+  const char *data_dir;
 
   float noise_scale;
   float noise_scale_w;
@@ -623,6 +624,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsConfig {
   SherpaOnnxOfflineTtsModelConfig model;
   const char *rule_fsts;
+  int32_t max_num_sentences;
 } SherpaOnnxOfflineTtsConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxGeneratedAudio {

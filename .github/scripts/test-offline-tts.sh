@@ -17,6 +17,24 @@ which $EXE
 mkdir ./tts
 
 log "------------------------------------------------------------"
+log "vits-piper-en_US-amy-low"
+log "------------------------------------------------------------"
+curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+tar xf vits-piper-en_US-amy-low.tar.bz2
+rm vits-piper-en_US-amy-low.tar.bz2
+
+$EXE \
+  --vits-model=./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
+  --vits-tokens=./vits-piper-en_US-amy-low/tokens.txt \
+  --vits-data-dir=./vits-piper-en_US-amy-low/espeak-ng-data \
+  --debug=1 \
+  --output-filename=./tts/amy.wav \
+  "“Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.” The sun shone bleakly in the sky, its meager light struggling to penetrate the thick foliage of the forest. Birds sang their songs up in the crowns of the trees, fluttering from one branch to the other. A blanket of total tranquility lied over the forest. The peace was only broken by the steady gallop of the horses of the soldiers who were traveling to their upcoming knighting the morrow at Camelot, and rowdy conversation. “Finally we will get what we deserve,” “It’s been about time,” Perceval agreed. “We’ve been risking our arses for the past two years. It’s the least they could give us.” Merlin remained ostensibly silent, refusing to join the verbal parade of self-aggrandizing his fellow soldiers have engaged in. He found it difficult to happy about anything, when even if they had won the war, he had lost everything else in the process."
+
+file ./tts/amy.wav
+rm -rf vits-piper-en_US-amy-low
+
+log "------------------------------------------------------------"
 log "vits-ljs test"
 log "------------------------------------------------------------"
 

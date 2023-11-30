@@ -547,6 +547,8 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
   tts_config.model.vits.lexicon =
       SHERPA_ONNX_OR(config->model.vits.lexicon, "");
   tts_config.model.vits.tokens = SHERPA_ONNX_OR(config->model.vits.tokens, "");
+  tts_config.model.vits.data_dir =
+      SHERPA_ONNX_OR(config->model.vits.data_dir, "");
   tts_config.model.vits.noise_scale =
       SHERPA_ONNX_OR(config->model.vits.noise_scale, 0.667);
   tts_config.model.vits.noise_scale_w =
@@ -558,6 +560,7 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
   tts_config.model.debug = config->model.debug;
   tts_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
   tts_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
+  tts_config.max_num_sentences = SHERPA_ONNX_OR(config->max_num_sentences, 2);
 
   if (tts_config.model.debug) {
     fprintf(stderr, "%s\n", tts_config.ToString().c_str());
