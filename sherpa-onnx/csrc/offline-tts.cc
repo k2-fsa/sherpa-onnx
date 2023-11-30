@@ -21,6 +21,12 @@ void OfflineTtsConfig::Register(ParseOptions *po) {
                "Multiple filenames are separated by a comma and they are "
                "applied from left to right. An example value: "
                "rule1.fst,rule2,fst,rule3.fst");
+
+  po->Register(
+      "tts-max-num-sentences", &max_num_sentences,
+      "Maximum number of sentences that we process at a time. "
+      "This is to avoid OOM for very long input text. "
+      "If you set it to -1, then we process all sentences in a single batch.");
 }
 
 bool OfflineTtsConfig::Validate() const {
@@ -43,7 +49,8 @@ std::string OfflineTtsConfig::ToString() const {
 
   os << "OfflineTtsConfig(";
   os << "model=" << model.ToString() << ", ";
-  os << "rule_fsts=\"" << rule_fsts << "\")";
+  os << "rule_fsts=\"" << rule_fsts << "\", ";
+  os << "max_num_sentences=" << max_num_sentences << ")";
 
   return os.str();
 }

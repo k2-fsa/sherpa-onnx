@@ -90,6 +90,17 @@ def get_args():
     )
 
     parser.add_argument(
+        "--max-num-sentences",
+        type=int,
+        default=2,
+        help="""Max number of sentences in a batch to avoid OOM if the input
+        text is very long. Set it to -1 to process all the sentences in a
+        single batch. A smaller value does not mean it is slower compared
+        to a larger one on CPU.
+        """,
+    )
+
+    parser.add_argument(
         "--output-filename",
         type=str,
         default="./generated.wav",
@@ -160,6 +171,7 @@ def main():
             num_threads=args.num_threads,
         ),
         rule_fsts=args.tts_rule_fsts,
+        max_num_sentences=args.max_num_sentences,
     )
     if not tts_config.validate():
         raise ValueError("Please check your config")

@@ -9,6 +9,9 @@
 #include <map>
 #include <mutex>  // NOLINT
 #include <sstream>
+#include <string>
+#include <utility>
+#include <vector>
 
 #include "espeak-ng/speak_lib.h"
 #include "phoneme_ids.hpp"
@@ -117,7 +120,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(const std::string &tokens,
   InitEspeak(data_dir_);
 }
 
-std::vector<int64_t> PiperPhonemizeLexicon::ConvertTextToTokenIds(
+std::vector<std::vector<int64_t>> PiperPhonemizeLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string &voice /*= ""*/) const {
   piper::eSpeakPhonemeConfig config;
 
@@ -128,12 +131,12 @@ std::vector<int64_t> PiperPhonemizeLexicon::ConvertTextToTokenIds(
   std::vector<std::vector<piper::Phoneme>> phonemes;
   piper::phonemize_eSpeak(text, config, phonemes);
 
-  std::vector<int64_t> ans;
+  std::vector<std::vector<int64_t>> ans;
 
   std::vector<int64_t> phoneme_ids;
   for (const auto &p : phonemes) {
     phoneme_ids = PhonemesToIds(token2id_, p);
-    ans.insert(ans.end(), phoneme_ids.begin(), phoneme_ids.end());
+    ans.push_back(std::move(phoneme_ids));
   }
 
   return ans;

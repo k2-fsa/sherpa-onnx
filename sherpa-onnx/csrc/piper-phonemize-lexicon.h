@@ -5,18 +5,20 @@
 #ifndef SHERPA_ONNX_CSRC_PIPER_PHONEMIZE_LEXICON_H_
 #define SHERPA_ONNX_CSRC_PIPER_PHONEMIZE_LEXICON_H_
 
+#include <string>
 #include <unordered_map>
+#include <vector>
 
-#include "sherpa-onnx/csrc/lexicon.h"
+#include "sherpa-onnx/csrc/offline-tts-frontend.h"
 
 namespace sherpa_onnx {
 
-class PiperPhonemizeLexicon : public Lexicon {
+class PiperPhonemizeLexicon : public OfflineTtsFrontend {
  public:
   explicit PiperPhonemizeLexicon(const std::string &tokens,
                                  const std::string &data_dir);
 
-  std::vector<int64_t> ConvertTextToTokenIds(
+  std::vector<std::vector<int64_t>> ConvertTextToTokenIds(
       const std::string &text, const std::string &voice = "") const override;
 
  private:
