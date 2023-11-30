@@ -5,8 +5,9 @@ import android.content.res.AssetManager
 
 data class OfflineTtsVitsModelConfig(
     var model: String,
-    var lexicon: String,
+    var lexicon: String = "",
     var tokens: String,
+    var dataDir: String = "",
     var noiseScale: Float = 0.667f,
     var noiseScaleW: Float = 0.8f,
     var lengthScale: Float = 1.0f,
@@ -22,6 +23,7 @@ data class OfflineTtsModelConfig(
 data class OfflineTtsConfig(
     var model: OfflineTtsModelConfig,
     var ruleFsts: String = "",
+    var maxNumSentences: Int = 2,
 )
 
 class GeneratedAudio(

@@ -3,7 +3,7 @@ name: test-build-wheel
 on:
   push:
     branches:
-      - english-piper-phonemize-2
+      - master
 
   pull_request:
 

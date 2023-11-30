@@ -545,6 +545,12 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   ans.model.vits.tokens = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(vits_cls, "dataDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(vits, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.vits.data_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
   fid = env->GetFieldID(vits_cls, "noiseScale", "F");
   ans.model.vits.noise_scale = env->GetFloatField(vits, fid);
 
@@ -572,6 +578,9 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   p = env->GetStringUTFChars(s, nullptr);
   ans.rule_fsts = p;
   env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(cls, "maxNumSentences", "I");
+  ans.max_num_sentences = env->GetIntField(config, fid);
 
   return ans;
 }
