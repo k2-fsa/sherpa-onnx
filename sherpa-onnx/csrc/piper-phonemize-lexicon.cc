@@ -6,6 +6,7 @@
 
 #include <codecvt>
 #include <fstream>
+#include <locale>
 #include <map>
 #include <mutex>  // NOLINT
 #include <sstream>
