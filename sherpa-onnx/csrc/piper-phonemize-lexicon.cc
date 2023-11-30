@@ -14,10 +14,18 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include <strstream>
+
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "espeak-ng/speak_lib.h"
 #include "phoneme_ids.hpp"
 #include "phonemize.hpp"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
 
@@ -120,6 +128,22 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(const std::string &tokens,
 
   InitEspeak(data_dir_);
 }
+
+#if __ANDROID_API__ >= 9
+PiperPhonemizeLexicon::PiperPhonemizeLexicon(AAssetManager *mgr,
+                                             const std::string &tokens,
+                                             const std::string &data_dir) {
+  {
+    auto buf = ReadFile(mgr, tokens);
+    std::istrstream is(buf.data(), buf.size());
+    token2id_ = ReadTokens(is);
+  }
+
+  // We should copy the directory of espeak-ng-data from the asset to
+  // some internal or external storage and then pass the directory to data_dir.
+  InitEspeak(data_dir_);
+}
+#endif
 
 std::vector<std::vector<int64_t>> PiperPhonemizeLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string &voice /*= ""*/) const {

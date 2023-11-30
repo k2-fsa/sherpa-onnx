@@ -32,7 +32,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   explicit OfflineTtsVitsImpl(const OfflineTtsConfig &config)
       : config_(config),
         model_(std::make_unique<OfflineTtsVitsModel>(config.model)) {
-    InitLexicon();
+    InitFrontend();
 
     if (!config.rule_fsts.empty()) {
       std::vector<std::string> files;
@@ -50,11 +50,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 #if __ANDROID_API__ >= 9
   OfflineTtsVitsImpl(AAssetManager *mgr, const OfflineTtsConfig &config)
       : config_(config),
-        model_(std::make_unique<OfflineTtsVitsModel>(mgr, config.model)),
-        frontend_(std::make_unique<Lexicon>(
-            mgr, config.model.vits.lexicon, config.model.vits.tokens,
-            model_->Punctuations(), model_->Language(), config.model.debug,
-            model_->IsPiper())) {
+        model_(std::make_unique<OfflineTtsVitsModel>(mgr, config.model)) {
+    InitFrontend(mgr);
+
     if (!config.rule_fsts.empty()) {
       std::vector<std::string> files;
       SplitStringToVector(config.rule_fsts, ",", false, &files);
@@ -170,7 +168,19 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   }
 
  private:
-  void InitLexicon() {
+  void InitFrontend(AAssetManager *mgr) {
+    if (model_->IsPiper() && !config_.model.vits.data_dir.empty()) {
+      frontend_ = std::make_unique<PiperPhonemizeLexicon>(
+          mgr, config_.model.vits.tokens, config_.model.vits.data_dir);
+    } else {
+      frontend_ = std::make_unique<Lexicon>(
+          mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
+          model_->Punctuations(), model_->Language(), config_.model.debug,
+          model_->IsPiper());
+    }
+  }
+
+  void InitFrontend() {
     if (model_->IsPiper() && !config_.model.vits.data_dir.empty()) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           config_.model.vits.tokens, config_.model.vits.data_dir);

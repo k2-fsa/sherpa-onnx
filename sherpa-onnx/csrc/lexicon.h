@@ -13,12 +13,12 @@
 #include <unordered_set>
 #include <vector>
 
-#include "sherpa-onnx/csrc/offline-tts-frontend.h"
-
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
+
+#include "sherpa-onnx/csrc/offline-tts-frontend.h"
 
 namespace sherpa_onnx {
 

@@ -119,18 +119,25 @@ class OfflineTts(
 // please refer to
 // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
 // to download models
-fun getOfflineTtsConfig(modelDir: String, modelName: String, ruleFsts: String): OfflineTtsConfig? {
+fun getOfflineTtsConfig(
+    modelDir: String,
+    modelName: String,
+    lexicon: String,
+    dataDir: String,
+    ruleFsts: String
+): OfflineTtsConfig? {
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
             vits = OfflineTtsVitsModelConfig(
                 model = "$modelDir/$modelName",
-                lexicon = "$modelDir/lexicon.txt",
-                tokens = "$modelDir/tokens.txt"
+                lexicon = "$modelDir/$lexicon",
+                tokens = "$modelDir/tokens.txt",
+                dataDir = "$dataDir"
             ),
             numThreads = 2,
             debug = true,
             provider = "cpu",
         ),
-        ruleFsts=ruleFsts,
+        ruleFsts = ruleFsts,
     )
 }
