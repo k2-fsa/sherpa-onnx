@@ -7,6 +7,12 @@
 
 import Foundation
 
+
+// used to get the path to espeak-ng-data
+func resourceURL(to path: String) -> String {
+    return URL(string: path, relativeTo: Bundle.main.resourceURL)!.path
+}
+
 func getResource(_ forResource: String, _ ofType: String) -> String {
   let path = Bundle.main.path(forResource: forResource, ofType: ofType)
   precondition(
@@ -59,8 +65,30 @@ func getTtsForAishell3() -> SherpaOnnxOfflineTtsWrapper {
   return SherpaOnnxOfflineTtsWrapper(config: &config)
 }
 
+// https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+func getTtsFor_en_US_amy_low() -> SherpaOnnxOfflineTtsWrapper {
+  // please see  https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+
+  // vits-vctk.onnx
+  let model = getResource("en_US-amy-low", "onnx")
+
+  // tokens.txt
+  let tokens = getResource("tokens", "txt")
+
+  // in this case, we don't need lexicon.txt
+  let dataDir = resourceURL(to: "espeak-ng-data")
+
+  let vits = sherpaOnnxOfflineTtsVitsModelConfig(model: model, lexicon: "", tokens: tokens, dataDir: dataDir)
+  let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits)
+  var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
+
+  return SherpaOnnxOfflineTtsWrapper(config: &config)
+}
+
 func createOfflineTts() -> SherpaOnnxOfflineTtsWrapper {
-  return getTtsForVCTK()
+  return getTtsFor_en_US_amy_low()
+
+  // return getTtsForVCTK()
 
   // return getTtsForAishell3()
 
