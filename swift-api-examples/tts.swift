@@ -1,18 +1,20 @@
 func run() {
-  let model = "./vits-vctk/vits-vctk.onnx"
-  let lexicon = "./vits-vctk/lexicon.txt"
-  let tokens = "./vits-vctk/tokens.txt"
+  let model = "./vits-piper-en_US-amy-low/en_US-amy-low.onnx"
+  let tokens = "./vits-piper-en_US-amy-low/tokens.txt"
+  let dataDir = "./vits-piper-en_US-amy-low/espeak-ng-data"
   let vits = sherpaOnnxOfflineTtsVitsModelConfig(
     model: model,
-    lexicon: lexicon,
-    tokens: tokens
+    lexicon: "",
+    tokens: tokens,
+    dataDir: dataDir
   )
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits)
   var ttsConfig = sherpaOnnxOfflineTtsConfig(model: modelConfig)
 
   let tts = SherpaOnnxOfflineTtsWrapper(config: &ttsConfig)
 
-  let text = "How are you doing? Fantastic!"
+  let text =
+    "“Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.”"
   let sid = 99
   let speed: Float = 1.0
 

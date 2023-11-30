@@ -7,17 +7,12 @@ if [ ! -d ../build-swift-macos ]; then
   exit 1
 fi
 
-if [ ! -d ./vits-vctk ]; then
-  echo "Please download the pre-trained model for testing."
-  echo "You can refer to"
-  echo ""
-  echo "https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#vctk-english-multi-speaker-109-speakers"
-  echo ""
-  echo "for help"
+if [ ! -d ./vits-piper-en_US-amy-low ]; then
+  echo "Download a pre-trained model for testing."
 
-  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-vctk.tar.bz2
-  tar xvf vits-vctk.tar.bz2
-  rm vits-vctk.tar.bz2
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+  tar xf vits-piper-en_US-amy-low.tar.bz2
+  rm vits-piper-en_US-amy-low.tar.bz2
 fi
 
 if [ ! -e ./tts ]; then
