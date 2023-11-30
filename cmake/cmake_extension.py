@@ -169,5 +169,7 @@ class BuildExtension(build_ext):
 
         shutil.rmtree(f"{install_dir}/bin")
         shutil.rmtree(f"{install_dir}/share")
+        shutil.rmtree(f"{install_dir}/lib/pkgconfig")
+
         if is_windows():
             shutil.rmtree(f"{install_dir}/lib")
