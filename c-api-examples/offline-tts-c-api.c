@@ -65,6 +65,29 @@ static struct cag_option options[] = {
      .identifier = 'a',
      .description =
          "Filename to save the generated audio. Default to ./generated.wav"},
+
+    {.access_name = "tts-rule-fsts",
+     .value_name = "/path/to/rule.fst",
+     .identifier = 'b',
+     .description = "It not empty, it contains a list of rule FST filenames."
+                    "Multiple filenames are separated by a comma and they are "
+                    "applied from left to right. An example value: "
+                    "rule1.fst,rule2,fst,rule3.fst"},
+
+    {.access_name = "max-num-sentences",
+     .value_name = "2",
+     .identifier = 'c',
+     .description = "Maximum number of sentences that we process at a time. "
+                    "This is to avoid OOM for very long input text. "
+                    "If you set it to -1, then we process all sentences in a "
+                    "single batch."},
+
+    {.access_name = "vits-data-dir",
+     .value_name = "/path/to/espeak-ng-data",
+     .identifier = 'd',
+     .description =
+         "Path to espeak-ng-data. If it is given, --vits-lexicon is ignored"},
+
 };
 
 static void ShowUsage() {
@@ -163,15 +186,38 @@ int32_t main(int32_t argc, char *argv[]) {
         free((void *)filename);
         filename = strdup(value);
         break;
+      case 'b':
+        config.rule_fsts = value;
+        break;
+      case 'c':
+        config.max_num_sentences = atoi(value);
+        break;
+      case 'd':
+        config.model.vits.data_dir = value;
+        break;
+      case '?':
+        fprintf(stderr, "Unknown option\n");
+        // fall through
       case 'h':
         // fall through
       default:
         ShowUsage();
     }
   }
+  fprintf(stderr, "here\n");
 
-  if (!config.model.vits.model || !config.model.vits.lexicon ||
-      !config.model.vits.tokens) {
+  if (!config.model.vits.model) {
+    fprintf(stderr, "Please provide --vits-model\n");
+    ShowUsage();
+  }
+
+  if (!config.model.vits.tokens) {
+    fprintf(stderr, "Please provide --vits-tokens\n");
+    ShowUsage();
+  }
+
+  if (!config.model.vits.data_dir && !config.model.vits.lexicon) {
+    fprintf(stderr, "Please provide --vits-data-dir or --vits-lexicon\n");
     ShowUsage();
   }
 

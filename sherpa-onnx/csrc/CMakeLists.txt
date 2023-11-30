@@ -74,6 +74,7 @@ set(sources
   packed-sequence.cc
   pad-sequence.cc
   parse-options.cc
+  piper-phonemize-lexicon.cc
   provider.cc
   resample.cc
   session.cc

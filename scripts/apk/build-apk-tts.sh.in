@@ -37,13 +37,9 @@ model_dir={{ tts_model.model_dir }}
 model_name={{ tts_model.model_name }}
 lang={{ tts_model.lang }}
 
-mkdir $model_dir
-cd $model_dir
-wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/$model_name
-wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/lexicon.txt
-wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/tokens.txt
-wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/MODEL_CARD 2>/dev/null || true
-wget -qq https://huggingface.co/csukuangfj/$model_dir/resolve/main/rule.fst 2>/dev/null || true
+wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$model_dir.tar.bz2
+tar xf $model_dir.tar.bz2
+rm $model_dir.tar.bz2
 
 popd
 # Now we are at the project root directory
@@ -52,9 +48,17 @@ git checkout .
 pushd android/SherpaOnnxTts/app/src/main/java/com/k2fsa/sherpa/onnx
 sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
 sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./MainActivity.kt
+
 {% if tts_model.rule_fsts %}
   rule_fsts={{ tts_model.rule_fsts }}
   sed -i.bak s%"ruleFsts = null"%"ruleFsts = \"$rule_fsts\""% ./MainActivity.kt
+{% endif %}
+
+{% if tts_model.data_dir %}
+  data_dir={{ tts_model.data_dir }}
+  sed -i.bak s%"dataDir = null"%"dataDir = \"$data_dir\""% ./MainActivity.kt
+{% else %}
+  sed -i.bak s/"lexicon = null"/"lexicon = \"lexicon.txt\""/ ./MainActivity.kt
 {% endif %}
 
 git diff

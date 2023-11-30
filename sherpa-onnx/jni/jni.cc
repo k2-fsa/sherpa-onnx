@@ -545,6 +545,12 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   ans.model.vits.tokens = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(vits_cls, "dataDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(vits, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.vits.data_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
   fid = env->GetFieldID(vits_cls, "noiseScale", "F");
   ans.model.vits.noise_scale = env->GetFloatField(vits, fid);
 
@@ -573,6 +579,9 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   ans.rule_fsts = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(cls, "maxNumSentences", "I");
+  ans.max_num_sentences = env->GetIntField(config, fid);
+
   return ans;
 }
 
@@ -589,6 +598,11 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_new(
 #endif
   auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
+  if (!config.Validate()) {
+    SHERPA_ONNX_LOGE("Erros found in config!");
+  }
+
   auto tts = new sherpa_onnx::SherpaOnnxOfflineTts(
 #if __ANDROID_API__ >= 9
       mgr,

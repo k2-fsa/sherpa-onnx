@@ -129,8 +129,8 @@ Lexicon::Lexicon(AAssetManager *mgr, const std::string &lexicon,
 }
 #endif
 
-std::vector<int64_t> Lexicon::ConvertTextToTokenIds(
-    const std::string &text) const {
+std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIds(
+    const std::string &text, const std::string & /*voice*/ /*= ""*/) const {
   switch (language_) {
     case Language::kEnglish:
       return ConvertTextToTokenIdsEnglish(text);
@@ -150,7 +150,7 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIds(
   return {};
 }
 
-std::vector<int64_t> Lexicon::ConvertTextToTokenIdsChinese(
+std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsChinese(
     const std::string &text) const {
   std::vector<std::string> words;
   if (pattern_) {
@@ -245,10 +245,10 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsChinese(
     ans.push_back(eos);
   }
 
-  return ans;
+  return {ans};
 }
 
-std::vector<int64_t> Lexicon::ConvertTextToTokenIdsEnglish(
+std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsEnglish(
     const std::string &_text) const {
   std::string text(_text);
   ToLowerCase(&text);
@@ -301,7 +301,7 @@ std::vector<int64_t> Lexicon::ConvertTextToTokenIdsEnglish(
     ans.push_back(token2id_.at("$"));  // eos
   }
 
-  return ans;
+  return {ans};
 }
 
 void Lexicon::InitTokens(std::istream &is) { token2id_ = ReadTokens(is); }

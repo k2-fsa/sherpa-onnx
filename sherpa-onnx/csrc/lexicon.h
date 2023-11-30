@@ -18,11 +18,15 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#include "sherpa-onnx/csrc/offline-tts-frontend.h"
+
 namespace sherpa_onnx {
 
-// TODO(fangjun): Refactor it to an abstract class
-class Lexicon {
+class Lexicon : public OfflineTtsFrontend {
  public:
+  Lexicon() = default;  // for subclasses
+                        //
+  // Note: for models from piper, we won't use this class.
   Lexicon(const std::string &lexicon, const std::string &tokens,
           const std::string &punctuations, const std::string &language,
           bool debug = false, bool is_piper = false);
@@ -34,28 +38,29 @@ class Lexicon {
           bool is_piper = false);
 #endif
 
-  std::vector<int64_t> ConvertTextToTokenIds(const std::string &text) const;
+  std::vector<std::vector<int64_t>> ConvertTextToTokenIds(
+      const std::string &text, const std::string &voice = "") const override;
 
  private:
-  std::vector<int64_t> ConvertTextToTokenIdsGerman(
+  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsGerman(
       const std::string &text) const {
     return ConvertTextToTokenIdsEnglish(text);
   }
 
-  std::vector<int64_t> ConvertTextToTokenIdsSpanish(
+  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsSpanish(
       const std::string &text) const {
     return ConvertTextToTokenIdsEnglish(text);
   }
 
-  std::vector<int64_t> ConvertTextToTokenIdsFrench(
+  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsFrench(
       const std::string &text) const {
     return ConvertTextToTokenIdsEnglish(text);
   }
 
-  std::vector<int64_t> ConvertTextToTokenIdsEnglish(
+  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsEnglish(
       const std::string &text) const;
 
-  std::vector<int64_t> ConvertTextToTokenIdsChinese(
+  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsChinese(
       const std::string &text) const;
 
   void InitLanguage(const std::string &lang);

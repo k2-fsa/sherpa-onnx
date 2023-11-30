@@ -34,9 +34,10 @@ if [ ! -f ./sherpa-onnx-streaming-zipformer-en-2023-02-21/tokens.txt ]; then
   git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21
 fi
 
-if [ ! -f ./vits-zh-aishell3/tokens.txt ]; then
-  git lfs install
-  git clone https://huggingface.co/csukuangfj/vits-zh-aishell3
+if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+  tar xf vits-piper-en_US-amy-low.tar.bz2
+  rm vits-piper-en_US-amy-low.tar.bz2
 fi
 
 kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt faked-asset-manager.kt Tts.kt

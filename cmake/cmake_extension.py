@@ -73,6 +73,10 @@ class BuildExtension(build_ext):
 
         extra_cmake_args = f" -DCMAKE_INSTALL_PREFIX={install_dir} "
         extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
+        extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_EXE=OFF "
+        extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_TESTS=OFF "
+        extra_cmake_args += " -DBUILD_ESPEAK_NG_EXE=OFF "
+        extra_cmake_args += " -DBUILD_ESPEAK_NG_TESTS=OFF "
 
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_CHECK=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PYTHON=ON "
@@ -146,6 +150,9 @@ class BuildExtension(build_ext):
             binaries += ["sherpa-onnx-core.dll"]
             binaries += ["sherpa-onnx-portaudio.dll"]
             binaries += ["onnxruntime.dll"]
+            binaries += ["piper_phonemize.dll"]
+            binaries += ["espeak-ng.dll"]
+            binaries += ["ucd.dll"]
             binaries += ["kaldi-decoder-core.dll"]
             binaries += ["sherpa-onnx-fst.lib"]
             binaries += ["sherpa-onnx-kaldifst-core.lib"]
@@ -161,5 +168,8 @@ class BuildExtension(build_ext):
             shutil.copy(f"{src_file}", f"{out_bin_dir}/")
 
         shutil.rmtree(f"{install_dir}/bin")
+        shutil.rmtree(f"{install_dir}/share")
+        shutil.rmtree(f"{install_dir}/lib/pkgconfig")
+
         if is_windows():
             shutil.rmtree(f"{install_dir}/lib")

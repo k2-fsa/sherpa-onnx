@@ -13,6 +13,9 @@ void OfflineTtsVitsModelConfig::Register(ParseOptions *po) {
   po->Register("vits-model", &model, "Path to VITS model");
   po->Register("vits-lexicon", &lexicon, "Path to lexicon.txt for VITS models");
   po->Register("vits-tokens", &tokens, "Path to tokens.txt for VITS models");
+  po->Register("vits-data-dir", &data_dir,
+               "Path to the directory containing dict for espeak-ng. If it is "
+               "given, --vits-lexicon is ignored.");
   po->Register("vits-noise-scale", &noise_scale, "noise_scale for VITS models");
   po->Register("vits-noise-scale-w", &noise_scale_w,
                "noise_scale_w for VITS models");
@@ -31,16 +34,6 @@ bool OfflineTtsVitsModelConfig::Validate() const {
     return false;
   }
 
-  if (lexicon.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --vits-lexicon");
-    return false;
-  }
-
-  if (!FileExists(lexicon)) {
-    SHERPA_ONNX_LOGE("--vits-lexicon: %s does not exist", lexicon.c_str());
-    return false;
-  }
-
   if (tokens.empty()) {
     SHERPA_ONNX_LOGE("Please provide --vits-tokens");
     return false;
@@ -49,6 +42,43 @@ bool OfflineTtsVitsModelConfig::Validate() const {
   if (!FileExists(tokens)) {
     SHERPA_ONNX_LOGE("--vits-tokens: %s does not exist", tokens.c_str());
     return false;
+  }
+
+  if (data_dir.empty()) {
+    if (lexicon.empty()) {
+      SHERPA_ONNX_LOGE("Please provide --vits-lexicon");
+      return false;
+    }
+
+    if (!FileExists(lexicon)) {
+      SHERPA_ONNX_LOGE("--vits-lexicon: %s does not exist", lexicon.c_str());
+      return false;
+    }
+
+  } else {
+    if (!FileExists(data_dir + "/phontab")) {
+      SHERPA_ONNX_LOGE("%s/phontab does not exist. Skipping test",
+                       data_dir.c_str());
+      return false;
+    }
+
+    if (!FileExists(data_dir + "/phonindex")) {
+      SHERPA_ONNX_LOGE("%s/phonindex does not exist. Skipping test",
+                       data_dir.c_str());
+      return false;
+    }
+
+    if (!FileExists(data_dir + "/phondata")) {
+      SHERPA_ONNX_LOGE("%s/phondata does not exist. Skipping test",
+                       data_dir.c_str());
+      return false;
+    }
+
+    if (!FileExists(data_dir + "/intonations")) {
+      SHERPA_ONNX_LOGE("%s/intonations does not exist. Skipping test",
+                       data_dir.c_str());
+      return false;
+    }
   }
 
   return true;
@@ -61,6 +91,7 @@ std::string OfflineTtsVitsModelConfig::ToString() const {
   os << "model=\"" << model << "\", ";
   os << "lexicon=\"" << lexicon << "\", ";
   os << "tokens=\"" << tokens << "\", ";
+  os << "data_dir=\"" << data_dir << "\", ";
   os << "noise_scale=" << noise_scale << ", ";
   os << "noise_scale_w=" << noise_scale_w << ", ";
   os << "length_scale=" << length_scale << ")";

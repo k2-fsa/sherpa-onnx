@@ -42,15 +42,14 @@ In the following, we demonstrate how to run text-to-speech.
 ## ./test-offline-tts-en.js
 
 [./test-offline-tts-en.js](./test-offline-tts-en.js) shows how to use
-a VITS pretrained model
-[VCTK](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#vctk-english-multi-speaker-109-speakers)
+[vits-piper-en_US-amy-low.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2)
 for text-to-speech.
 
 You can use the following command to run it:
 
 ```bash
-wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-vctk.tar.bz2
-tar xvf vits-vctk.tar.bz2
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+tar xvf vits-piper-en_US-amy-low.tar.bz2
 node ./test-offline-tts-en.js
 ```
 

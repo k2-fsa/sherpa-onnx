@@ -1,0 +1,80 @@
+name: test-build-wheel
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-build-wheel-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-build-wheel:
+    name: ${{ matrix.os }} ${{ matrix.python_version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.python_version }}
+
+      - name: Install python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine setuptools
+
+      - name: Build
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          export SHERPA_ONNX_MAKE_ARGS="VERBOSE=1 -j"
+
+          python3 setup.py bdist_wheel
+          ls -lh dist
+
+      - name: Display wheel
+        shell: bash
+        run: |
+          ls -lh dist
+
+      - name: Install wheel
+        shell: bash
+        run: |
+          pip install --verbose ./dist/*.whl
+
+      - name: Test
+        shell: bash
+        run: |
+          # For windows
+          export PATH=/c/hostedtoolcache/windows/Python/3.7.9/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.8.10/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.9.13/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.11.6/x64/bin:$PATH
+
+          which sherpa-onnx
+          sherpa-onnx --help

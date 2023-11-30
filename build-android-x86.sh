@@ -94,3 +94,4 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
 make -j4
 make install/strip
 cp -fv android-onnxruntime-libs/jni/x86/libonnxruntime.so install/lib
+rm -rf install/lib/pkgconfig

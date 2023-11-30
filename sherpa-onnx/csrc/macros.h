@@ -43,6 +43,21 @@
     }                                                                   \
   } while (0)
 
+#define SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(dst, src_key, default_value) \
+  do {                                                                       \
+    auto value =                                                             \
+        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator);      \
+    if (!value) {                                                            \
+      dst = default_value;                                                   \
+    } else {                                                                 \
+      dst = atoi(value.get());                                               \
+      if (dst < 0) {                                                         \
+        SHERPA_ONNX_LOGE("Invalid value %d for %s", dst, src_key);           \
+        exit(-1);                                                            \
+      }                                                                      \
+    }                                                                        \
+  } while (0)
+
 // read a vector of integers
 #define SHERPA_ONNX_READ_META_DATA_VEC(dst, src_key)                     \
   do {                                                                   \
@@ -109,6 +124,22 @@
     if (dst.empty()) {                                                  \
       SHERPA_ONNX_LOGE("Invalid value for %s\n", src_key);              \
       exit(-1);                                                         \
+    }                                                                   \
+  } while (0)
+
+#define SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(dst, src_key,       \
+                                                    default_value)      \
+  do {                                                                  \
+    auto value =                                                        \
+        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator); \
+    if (!value) {                                                       \
+      dst = default_value;                                              \
+    } else {                                                            \
+      dst = value.get();                                                \
+      if (dst.empty()) {                                                \
+        SHERPA_ONNX_LOGE("Invalid value for %s\n", src_key);            \
+        exit(-1);                                                       \
+      }                                                                 \
     }                                                                   \
   } while (0)
 

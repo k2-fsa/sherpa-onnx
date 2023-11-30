@@ -65,7 +65,7 @@ struct ContentView: View {
                         self.filename = tempDirectoryURL.appendingPathComponent("test.wav")
                     }
 
-                    let ret = audio.save(filename: filename.path)
+                    let _ = audio.save(filename: filename.path)
 
                     self.audioPlayer = try! AVAudioPlayer(contentsOf: filename)
                     self.audioPlayer.play()

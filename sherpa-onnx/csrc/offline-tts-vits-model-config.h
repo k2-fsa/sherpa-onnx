@@ -16,6 +16,10 @@ struct OfflineTtsVitsModelConfig {
   std::string lexicon;
   std::string tokens;
 
+  // If data_dir is given, lexicon is ignored
+  // data_dir is for piper-phonemize, which uses espeak-ng
+  std::string data_dir;
+
   float noise_scale = 0.667;
   float noise_scale_w = 0.8;
   float length_scale = 1;
@@ -28,11 +32,13 @@ struct OfflineTtsVitsModelConfig {
   OfflineTtsVitsModelConfig(const std::string &model,
                             const std::string &lexicon,
                             const std::string &tokens,
+                            const std::string &data_dir,
                             float noise_scale = 0.667,
                             float noise_scale_w = 0.8, float length_scale = 1)
       : model(model),
         lexicon(lexicon),
         tokens(tokens),
+        data_dir(data_dir),
         noise_scale(noise_scale),
         noise_scale_w(noise_scale_w),
         length_scale(length_scale) {}

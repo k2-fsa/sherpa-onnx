@@ -51,6 +51,7 @@ class OfflineTtsVitsModel::Impl {
 
   std::string Punctuations() const { return punctuations_; }
   std::string Language() const { return language_; }
+  std::string Voice() const { return voice_; }
   bool IsPiper() const { return is_piper_; }
   int32_t NumSpeakers() const { return num_speakers_; }
 
@@ -74,10 +75,12 @@ class OfflineTtsVitsModel::Impl {
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(sample_rate_, "sample_rate");
-    SHERPA_ONNX_READ_META_DATA(add_blank_, "add_blank");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(add_blank_, "add_blank", 0);
     SHERPA_ONNX_READ_META_DATA(num_speakers_, "n_speakers");
-    SHERPA_ONNX_READ_META_DATA_STR(punctuations_, "punctuation");
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(punctuations_, "punctuation",
+                                                "");
     SHERPA_ONNX_READ_META_DATA_STR(language_, "language");
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(voice_, "voice", "");
 
     std::string comment;
     SHERPA_ONNX_READ_META_DATA_STR(comment, "comment");
@@ -215,6 +218,7 @@ class OfflineTtsVitsModel::Impl {
   int32_t num_speakers_;
   std::string punctuations_;
   std::string language_;
+  std::string voice_;
 
   bool is_piper_ = false;
 };
@@ -244,6 +248,7 @@ std::string OfflineTtsVitsModel::Punctuations() const {
 }
 
 std::string OfflineTtsVitsModel::Language() const { return impl_->Language(); }
+std::string OfflineTtsVitsModel::Voice() const { return impl_->Voice(); }
 
 bool OfflineTtsVitsModel::IsPiper() const { return impl_->IsPiper(); }
 

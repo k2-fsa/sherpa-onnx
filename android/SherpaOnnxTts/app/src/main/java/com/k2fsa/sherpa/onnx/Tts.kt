@@ -5,8 +5,9 @@ import android.content.res.AssetManager
 
 data class OfflineTtsVitsModelConfig(
     var model: String,
-    var lexicon: String,
+    var lexicon: String = "",
     var tokens: String,
+    var dataDir: String = "",
     var noiseScale: Float = 0.667f,
     var noiseScaleW: Float = 0.8f,
     var lengthScale: Float = 1.0f,
@@ -22,6 +23,7 @@ data class OfflineTtsModelConfig(
 data class OfflineTtsConfig(
     var model: OfflineTtsModelConfig,
     var ruleFsts: String = "",
+    var maxNumSentences: Int = 2,
 )
 
 class GeneratedAudio(
@@ -117,18 +119,25 @@ class OfflineTts(
 // please refer to
 // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html
 // to download models
-fun getOfflineTtsConfig(modelDir: String, modelName: String, ruleFsts: String): OfflineTtsConfig? {
+fun getOfflineTtsConfig(
+    modelDir: String,
+    modelName: String,
+    lexicon: String,
+    dataDir: String,
+    ruleFsts: String
+): OfflineTtsConfig? {
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
             vits = OfflineTtsVitsModelConfig(
                 model = "$modelDir/$modelName",
-                lexicon = "$modelDir/lexicon.txt",
-                tokens = "$modelDir/tokens.txt"
+                lexicon = "$modelDir/$lexicon",
+                tokens = "$modelDir/tokens.txt",
+                dataDir = "$dataDir"
             ),
             numThreads = 2,
             debug = true,
             provider = "cpu",
         ),
-        ruleFsts=ruleFsts,
+        ruleFsts = ruleFsts,
     )
 }

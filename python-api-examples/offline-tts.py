@@ -63,13 +63,23 @@ def get_args():
     parser.add_argument(
         "--vits-lexicon",
         type=str,
+        default="",
         help="Path to lexicon.txt",
     )
 
     parser.add_argument(
         "--vits-tokens",
         type=str,
+        default="",
         help="Path to tokens.txt",
+    )
+
+    parser.add_argument(
+        "--vits-data-dir",
+        type=str,
+        default="",
+        help="""Path to the dict director of espeak-ng. If it is specified,
+        --vits-lexicon and --vits-tokens are ignored""",
     )
 
     parser.add_argument(
@@ -77,6 +87,17 @@ def get_args():
         type=str,
         default="",
         help="Path to rule.fst",
+    )
+
+    parser.add_argument(
+        "--max-num-sentences",
+        type=int,
+        default=2,
+        help="""Max number of sentences in a batch to avoid OOM if the input
+        text is very long. Set it to -1 to process all the sentences in a
+        single batch. A smaller value does not mean it is slower compared
+        to a larger one on CPU.
+        """,
     )
 
     parser.add_argument(
@@ -142,14 +163,19 @@ def main():
             vits=sherpa_onnx.OfflineTtsVitsModelConfig(
                 model=args.vits_model,
                 lexicon=args.vits_lexicon,
+                data_dir=args.vits_data_dir,
                 tokens=args.vits_tokens,
             ),
             provider=args.provider,
             debug=args.debug,
             num_threads=args.num_threads,
         ),
-        rule_fsts=args.tts_rule_fsts
+        rule_fsts=args.tts_rule_fsts,
+        max_num_sentences=args.max_num_sentences,
     )
+    if not tts_config.validate():
+        raise ValueError("Please check your config")
+
     tts = sherpa_onnx.OfflineTts(tts_config)
 
     start = time.time()

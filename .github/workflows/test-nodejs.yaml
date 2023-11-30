@@ -70,6 +70,10 @@ jobs:
             mkdir -p scripts/nodejs/lib/win-x64
             dst=scripts/nodejs/lib/win-x64
           fi
+          ls -lh build/install/lib/
+
+          rm -rf build/install/lib/pkgconfig
+
           cp -v build/install/lib/* $dst/
 
       - name: replace files
