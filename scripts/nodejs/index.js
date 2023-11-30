@@ -186,6 +186,7 @@ const SherpaOnnxOfflineTtsVitsModelConfig = StructType({
   "model" : cstring,
   "lexicon" : cstring,
   "tokens" : cstring,
+  "dataDir" : cstring,
   "noiseScale" : float,
   "noiseScaleW" : float,
   "lengthScale" : float,
@@ -201,6 +202,7 @@ const SherpaOnnxOfflineTtsModelConfig = StructType({
 const SherpaOnnxOfflineTtsConfig = StructType({
   "model" : SherpaOnnxOfflineTtsModelConfig,
   "ruleFsts" : cstring,
+  "maxNumSentences" : int32_t,
 });
 
 const SherpaOnnxGeneratedAudio = StructType({
