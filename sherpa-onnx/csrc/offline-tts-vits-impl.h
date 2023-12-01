@@ -168,6 +168,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   }
 
  private:
+#if __ANDROID_API__ >= 9
   void InitFrontend(AAssetManager *mgr) {
     if (model_->IsPiper() && !config_.model.vits.data_dir.empty()) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
@@ -179,6 +180,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
           model_->IsPiper());
     }
   }
+#endif
 
   void InitFrontend() {
     if (model_->IsPiper() && !config_.model.vits.data_dir.empty()) {
