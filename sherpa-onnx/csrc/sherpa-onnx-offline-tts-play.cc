@@ -19,8 +19,8 @@
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
-std::condition_variable g_cv;
-std::mutex g_cv_m;
+static std::condition_variable g_cv;
+static std::mutex g_cv_m;
 
 struct Samples {
   std::vector<float> data;
@@ -30,18 +30,20 @@ struct Samples {
 struct Buffer {
   std::queue<Samples> samples;
   std::mutex mutex;
-} g_buffer;
+};
 
-bool g_started = false;
-bool g_stopped = false;
-bool g_killed = false;
+static Buffer g_buffer;
+
+static bool g_started = false;
+static bool g_stopped = false;
+static bool g_killed = false;
 
 static void Handler(int32_t /*sig*/) {
   g_killed = true;
   fprintf(stderr, "\nCaught Ctrl + C. Exiting\n");
 }
 
-void AudioGeneratedCallback(const float *s, int32_t n) {
+static void AudioGeneratedCallback(const float *s, int32_t n) {
   if (n > 0) {
     Samples samples;
     samples.data = std::vector<float>{s, s + n};
@@ -54,9 +56,9 @@ void AudioGeneratedCallback(const float *s, int32_t n) {
 
 static int PlayCallback(const void * /*in*/, void *out,
                         unsigned long n,  // NOLINT
-                        const PaStreamCallbackTimeInfo * /*timeInfo*/,
-                        PaStreamCallbackFlags /*statusFlags*/,
-                        void * /*userData*/) {
+                        const PaStreamCallbackTimeInfo * /*time_info*/,
+                        PaStreamCallbackFlags /*status_flags*/,
+                        void * /*user_data*/) {
   if (g_killed) {
     return paComplete;
   }
@@ -70,7 +72,7 @@ static int PlayCallback(const void * /*in*/, void *out,
       return paComplete;
     }
 
-    // The current sentence is super long, though very unlikely, that
+    // The current sentence is so long, though very unlikely, that
     // the model has not finished processing it yet.
     std::fill_n(pout, n, 0);
 

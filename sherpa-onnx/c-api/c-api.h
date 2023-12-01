@@ -655,7 +655,7 @@ SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
 
 // callback is called whenever SherpaOnnxOfflineTtsConfig.max_num_sentences
 // sentences have been processed. The pointer passed to the callback
-// is freed once the callback is returned. The so caller should not keep
+// is freed once the callback is returned. So the caller should not keep
 // a reference to it.
 SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *
 SherpaOnnxOfflineTtsGenerateWithCallback(

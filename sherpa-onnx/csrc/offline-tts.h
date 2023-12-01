@@ -71,8 +71,8 @@ class OfflineTts {
   //            dataset.
   // @param speed The speed for the generated speech. E.g., 2 means 2x faster.
   // @param callback If not NULL, it is called whenever config.max_num_sentences
-  //                 sentence has been processed. Note that the passed
-  //                 pointer `samples for the callback might be invalidated
+  //                 sentences have been processed. Note that the passed
+  //                 pointer `samples` for the callback might be invalidated
   //                 after the callback is returned, so the caller should not
   //                 keep a reference to it. The caller can copy the data if
   //                 he/she wants to access the samples after the callback
