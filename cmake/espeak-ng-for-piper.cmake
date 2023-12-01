@@ -107,10 +107,12 @@ function(download_espeak_ng_for_piper)
   if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
     install(TARGETS
       espeak-ng
+      ucd
     DESTINATION ..)
   else()
     install(TARGETS
       espeak-ng
+      ucd
     DESTINATION lib)
   endif()
 
@@ -121,6 +123,7 @@ function(download_espeak_ng_for_piper)
   if(WIN32 AND BUILD_SHARED_LIBS)
     install(TARGETS
       espeak-ng
+      ucd
     DESTINATION bin)
   endif()
 endfunction()
