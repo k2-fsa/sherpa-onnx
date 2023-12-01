@@ -5,12 +5,12 @@
 #include <signal.h>
 
 #include <algorithm>
-#include <chrono>  // NOLINT
-#include <condition_variable>
+#include <chrono>              // NOLINT
+#include <condition_variable>  // NOLINT
 #include <fstream>
-#include <mutex>
+#include <mutex>  // NOLINT
 #include <queue>
-#include <thread>
+#include <thread>  // NOLINT
 #include <vector>
 
 #include "portaudio.h"  // NOLINT
@@ -52,7 +52,8 @@ void AudioGeneratedCallback(const float *s, int32_t n) {
   }
 }
 
-static int PlayCallback(const void * /*in*/, void *out, unsigned long n,
+static int PlayCallback(const void * /*in*/, void *out,
+                        unsigned long n,  // NOLINT
                         const PaStreamCallbackTimeInfo * /*timeInfo*/,
                         PaStreamCallbackFlags /*statusFlags*/,
                         void * /*userData*/) {
@@ -132,8 +133,8 @@ static void StartPlayback(int32_t sample_rate) {
 
   err = Pa_OpenStream(&stream, nullptr, /* no input */
                       &outputParameters, sample_rate, frames_per_buffer,
-                      paClipOff, /* we won't output out of range samples so
-                                    don't bother clipping them */
+                      paClipOff,  // we won't output out of range samples so
+                                  //   don't bother clipping them
                       PlayCallback, nullptr);
   if (err != paNoError) {
     fprintf(stderr, "%d portaudio error: %s\n", __LINE__, Pa_GetErrorText(err));
