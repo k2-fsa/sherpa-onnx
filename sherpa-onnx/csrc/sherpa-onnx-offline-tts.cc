@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
+#include <chrono>  // NOLINT
 #include <fstream>
 
 #include "sherpa-onnx/csrc/offline-tts.h"
@@ -12,31 +13,22 @@ int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
 Offline text-to-speech with sherpa-onnx
 
+Usage example:
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+tar xf vits-piper-en_US-amy-low.tar.bz2
+
 ./bin/sherpa-onnx-offline-tts \
- --vits-model=/path/to/model.onnx \
- --vits-lexicon=/path/to/lexicon.txt \
- --vits-tokens=/path/to/tokens.txt \
- --sid=0 \
+ --vits-model=./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
+ --vits-tokens=./vits-piper-en_US-amy-low/tokens.txt \
+ --vits-data-dir=./vits-piper-en_US-amy-low/espeak-ng-data \
  --output-filename=./generated.wav \
- 'some text within single quotes on linux/macos or use double quotes on windows'
+ "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
 
 It will generate a file ./generated.wav as specified by --output-filename.
 
-You can download a test model from
-https://huggingface.co/csukuangfj/vits-ljs
-
-For instance, you can use:
-wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/vits-ljs.onnx
-wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/lexicon.txt
-wget https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
-
-./bin/sherpa-onnx-offline-tts \
-  --vits-model=./vits-ljs.onnx \
-  --vits-lexicon=./lexicon.txt \
-  --vits-tokens=./tokens.txt \
-  --sid=0 \
-  --output-filename=./generated.wav \
-  'liliana, the most beautiful and lovely assistant of our team!'
+You can find more models at
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 
 Please see
 https://k2-fsa.github.io/sherpa/onnx/tts/index.html
@@ -80,13 +72,29 @@ or details.
   }
 
   sherpa_onnx::OfflineTts tts(config);
+
+  const auto begin = std::chrono::steady_clock::now();
   auto audio = tts.Generate(po.GetArg(1), sid);
+  const auto end = std::chrono::steady_clock::now();
+
   if (audio.samples.empty()) {
     fprintf(
         stderr,
-        "Error in generating audios. Please read previous error messages.\n");
+        "Error in generating audio. Please read previous error messages.\n");
     exit(EXIT_FAILURE);
   }
+
+  float elapsed_seconds =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
+          .count() /
+      1000.;
+  float duration = audio.samples.size() / static_cast<float>(audio.sample_rate);
+
+  float rtf = elapsed_seconds / duration;
+  fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
+  fprintf(stderr, "Audio duration: %.3f s\n", duration);
+  fprintf(stderr, "Real-time factor (RTF): %.3f/%.3f = %.3f\n", elapsed_seconds,
+          duration, rtf);
 
   bool ok = sherpa_onnx::WriteWave(output_filename, audio.sample_rate,
                                    audio.samples.data(), audio.samples.size());
