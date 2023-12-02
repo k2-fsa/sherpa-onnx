@@ -5,6 +5,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_H_
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
