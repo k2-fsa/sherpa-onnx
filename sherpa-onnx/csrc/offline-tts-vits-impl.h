@@ -69,8 +69,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   }
 #endif
 
-  GeneratedAudio Generate(const std::string &_text, int64_t sid = 0,
-                          float speed = 1.0) const override {
+  int32_t SampleRate() const override { return model_->SampleRate(); }
+
+  GeneratedAudio Generate(
+      const std::string &_text, int64_t sid = 0, float speed = 1.0,
+      GeneratedAudioCallback callback = nullptr) const override {
     int32_t num_speakers = model_->NumSpeakers();
     if (num_speakers == 0 && sid != 0) {
       SHERPA_ONNX_LOGE(
@@ -118,7 +121,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     int32_t x_size = static_cast<int32_t>(x.size());
 
     if (config_.max_num_sentences <= 0 || x_size <= config_.max_num_sentences) {
-      return Process(x, sid, speed);
+      auto ans = Process(x, sid, speed);
+      if (callback) {
+        callback(ans.samples.data(), ans.samples.size());
+      }
+      return ans;
     }
 
     // the input text is too long, we process sentences within it in batches
@@ -149,6 +156,12 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       ans.sample_rate = audio.sample_rate;
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
+      if (callback) {
+        callback(audio.samples.data(), audio.samples.size());
+        // Caution(fangjun): audio is freed when the callback returns, so users
+        // should copy the data if they want to access the data after
+        // the callback returns to avoid segmentation fault.
+      }
     }
 
     batch.clear();
@@ -162,6 +175,12 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       ans.sample_rate = audio.sample_rate;
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
+      if (callback) {
+        callback(audio.samples.data(), audio.samples.size());
+        // Caution(fangjun): audio is freed when the callback returns, so users
+        // should copy the data if they want to access the data after
+        // the callback returns to avoid segmentation fault.
+      }
     }
 
     return ans;

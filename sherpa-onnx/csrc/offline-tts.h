@@ -5,6 +5,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_H_
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -53,6 +54,9 @@ struct GeneratedAudio {
 
 class OfflineTtsImpl;
 
+using GeneratedAudioCallback =
+    std::function<void(const float * /*samples*/, int32_t /*n*/)>;
+
 class OfflineTts {
  public:
   ~OfflineTts();
@@ -67,8 +71,20 @@ class OfflineTts {
   //            trained using the VCTK dataset. It is not used for
   //            single-speaker models, e.g., models trained using the ljspeech
   //            dataset.
+  // @param speed The speed for the generated speech. E.g., 2 means 2x faster.
+  // @param callback If not NULL, it is called whenever config.max_num_sentences
+  //                 sentences have been processed. Note that the passed
+  //                 pointer `samples` for the callback might be invalidated
+  //                 after the callback is returned, so the caller should not
+  //                 keep a reference to it. The caller can copy the data if
+  //                 he/she wants to access the samples after the callback
+  //                 returns. The callback is called in the current thread.
   GeneratedAudio Generate(const std::string &text, int64_t sid = 0,
-                          float speed = 1.0) const;
+                          float speed = 1.0,
+                          GeneratedAudioCallback callback = nullptr) const;
+
+  // Return the sample rate of the generated audio
+  int32_t SampleRate() const;
 
  private:
   std::unique_ptr<OfflineTtsImpl> impl_;

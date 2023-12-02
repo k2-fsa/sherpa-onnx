@@ -3,6 +3,7 @@
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/python/csrc/offline-tts.h"
 
+#include <algorithm>
 #include <string>
 
 #include "sherpa-onnx/csrc/offline-tts.h"
@@ -48,8 +49,35 @@ void PybindOfflineTts(py::module *m) {
   using PyClass = OfflineTts;
   py::class_<PyClass>(*m, "OfflineTts")
       .def(py::init<const OfflineTtsConfig &>(), py::arg("config"))
-      .def("generate", &PyClass::Generate, py::arg("text"), py::arg("sid") = 0,
-           py::arg("speed") = 1.0, py::call_guard<py::gil_scoped_release>());
+      .def_property_readonly("sample_rate", &PyClass::SampleRate)
+      .def(
+          "generate",
+          [](const PyClass &self, const std::string &text, int64_t sid,
+             float speed, std::function<void(py::array_t<float>)> callback)
+              -> GeneratedAudio {
+            if (!callback) {
+              return self.Generate(text, sid, speed);
+            }
+
+            std::function<void(const float *, int32_t)> callback_wrapper =
+                [callback](const float *samples, int32_t n) {
+                  // CAUTION(fangjun): we have to copy samples since it is
+                  // freed once the call back returns.
+
+                  pybind11::gil_scoped_acquire acquire;
+
+                  pybind11::array_t<float> array(n);
+                  py::buffer_info buf = array.request();
+                  auto p = static_cast<float *>(buf.ptr);
+                  std::copy(samples, samples + n, p);
+                  callback(array);
+                };
+
+            return self.Generate(text, sid, speed, callback_wrapper);
+          },
+          py::arg("text"), py::arg("sid") = 0, py::arg("speed") = 1.0,
+          py::arg("callback") = py::none(),
+          py::call_guard<py::gil_scoped_release>());
 }
 
 }  // namespace sherpa_onnx

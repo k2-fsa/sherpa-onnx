@@ -143,6 +143,7 @@ class BuildExtension(build_ext):
         binaries += ["sherpa-onnx-vad-microphone"]
         binaries += ["sherpa-onnx-vad-microphone-offline-asr"]
         binaries += ["sherpa-onnx-offline-tts"]
+        binaries += ["sherpa-onnx-offline-tts-play"]
 
         if is_windows():
             binaries += ["kaldi-native-fbank-core.dll"]

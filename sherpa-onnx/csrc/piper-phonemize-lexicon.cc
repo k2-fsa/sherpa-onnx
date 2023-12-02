@@ -95,7 +95,8 @@ static std::vector<int64_t> PhonemesToIds(
       ans.push_back(token2id.at(p));
       ans.push_back(pad);
     } else {
-      SHERPA_ONNX_LOGE("Skip unkown phonemes. Unicode codepoint: \\U+%04x.", p);
+      SHERPA_ONNX_LOGE("Skip unknown phonemes. Unicode codepoint: \\U+%04x.",
+                       static_cast<uint32_t>(p));
     }
   }
   ans.push_back(eos);

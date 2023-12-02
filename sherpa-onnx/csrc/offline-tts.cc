@@ -65,9 +65,12 @@ OfflineTts::OfflineTts(AAssetManager *mgr, const OfflineTtsConfig &config)
 
 OfflineTts::~OfflineTts() = default;
 
-GeneratedAudio OfflineTts::Generate(const std::string &text, int64_t sid /*=0*/,
-                                    float speed /*= 1.0*/) const {
-  return impl_->Generate(text, sid, speed);
+GeneratedAudio OfflineTts::Generate(
+    const std::string &text, int64_t sid /*=0*/, float speed /*= 1.0*/,
+    GeneratedAudioCallback callback /*= nullptr*/) const {
+  return impl_->Generate(text, sid, speed, callback);
 }
+
+int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }
 
 }  // namespace sherpa_onnx

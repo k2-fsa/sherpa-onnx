@@ -633,6 +633,9 @@ SHERPA_ONNX_API typedef struct SherpaOnnxGeneratedAudio {
   int32_t sample_rate;
 } SherpaOnnxGeneratedAudio;
 
+typedef void (*SherpaOnnxGeneratedAudioCallback)(const float *samples,
+                                                 int32_t n);
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTts SherpaOnnxOfflineTts;
 
 // Create an instance of offline TTS. The user has to use DestroyOfflineTts()
@@ -643,12 +646,25 @@ SHERPA_ONNX_API SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
 // Free the pointer returned by CreateOfflineTts()
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTts(SherpaOnnxOfflineTts *tts);
 
+// Return the sample rate of the current TTS object
+SHERPA_ONNX_API int32_t
+SherpaOnnxOfflineTtsSampleRate(const SherpaOnnxOfflineTts *tts);
+
 // Generate audio from the given text and speaker id (sid).
-// The user has to use DestroyOfflineTtsGeneratedAudio() to free the returned
-// pointer to avoid memory leak.
+// The user has to use DestroyOfflineTtsGeneratedAudio() to free the
+// returned pointer to avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid,
     float speed);
+
+// callback is called whenever SherpaOnnxOfflineTtsConfig.max_num_sentences
+// sentences have been processed. The pointer passed to the callback
+// is freed once the callback is returned. So the caller should not keep
+// a reference to it.
+SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *
+SherpaOnnxOfflineTtsGenerateWithCallback(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
+    SherpaOnnxGeneratedAudioCallback callback);
 
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p);

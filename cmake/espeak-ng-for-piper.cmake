@@ -5,6 +5,7 @@ function(download_espeak_ng_for_piper)
   set(espeak_ng_URL2 "")
   set(espeak_ng_HASH "SHA256=8a48251e6926133dd91fcf6cb210c7c2e290a9b578d269446e2d32d710b0dfa0")
 
+  set(BUILD_ESPEAK_NG_TESTS OFF CACHE BOOL "" FORCE)
   set(USE_ASYNC OFF CACHE BOOL "" FORCE)
   set(USE_MBROLA OFF CACHE BOOL "" FORCE)
   set(USE_LIBSONIC OFF CACHE BOOL "" FORCE)
@@ -106,10 +107,12 @@ function(download_espeak_ng_for_piper)
   if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
     install(TARGETS
       espeak-ng
+      ucd
     DESTINATION ..)
   else()
     install(TARGETS
       espeak-ng
+      ucd
     DESTINATION lib)
   endif()
 
@@ -120,6 +123,7 @@ function(download_espeak_ng_for_piper)
   if(WIN32 AND BUILD_SHARED_LIBS)
     install(TARGETS
       espeak-ng
+      ucd
     DESTINATION bin)
   endif()
 endfunction()
