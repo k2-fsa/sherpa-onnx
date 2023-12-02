@@ -113,9 +113,6 @@ if(APPLE)
   )
 endif()
 
-if(NOT WIN32)
-  target_link_libraries(sherpa-onnx-core -pthread)
-endif()
 
 if(ANDROID_NDK)
   target_link_libraries(sherpa-onnx-core android log)
@@ -142,8 +139,10 @@ if(SHERPA_ONNX_ENABLE_GPU)
   )
 endif()
 
-target_link_libraries(sherpa-onnx-core piper_phonemize)
-
+target_link_libraries(sherpa-onnx-core piper_phonemize -pthread)
+ if(NOT WIN32) 
+   target_link_libraries(sherpa-onnx-core -pthread) 
+ endif() 
 if(SHERPA_ONNX_ENABLE_CHECK)
   target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
 
