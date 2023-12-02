@@ -53,7 +53,8 @@ struct GeneratedAudio {
 
 class OfflineTtsImpl;
 
-using GeneratedAudioCallback = void (*)(const float *samples, int32_t n);
+using GeneratedAudioCallback =
+    std::function<void(const float * /*samples*/, int32_t /*n*/)>;
 
 class OfflineTts {
  public:

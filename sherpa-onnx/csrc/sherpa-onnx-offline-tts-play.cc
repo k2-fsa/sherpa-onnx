@@ -39,6 +39,10 @@ static bool g_stopped = false;
 static bool g_killed = false;
 
 static void Handler(int32_t /*sig*/) {
+  if (g_killed) {
+    exit(0);
+  }
+
   g_killed = true;
   fprintf(stderr, "\nCaught Ctrl + C. Exiting\n");
 }

@@ -646,9 +646,13 @@ SHERPA_ONNX_API SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
 // Free the pointer returned by CreateOfflineTts()
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTts(SherpaOnnxOfflineTts *tts);
 
+// Return the sample rate of the current TTS object
+SHERPA_ONNX_API int32_t
+SherpaOnnxOfflineTtsSampleRate(const SherpaOnnxOfflineTts *tts);
+
 // Generate audio from the given text and speaker id (sid).
-// The user has to use DestroyOfflineTtsGeneratedAudio() to free the returned
-// pointer to avoid memory leak.
+// The user has to use DestroyOfflineTtsGeneratedAudio() to free the
+// returned pointer to avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid,
     float speed);

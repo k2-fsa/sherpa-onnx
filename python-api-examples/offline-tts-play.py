@@ -6,9 +6,8 @@
 This file demonstrates how to use sherpa-onnx Python API to generate audio
 from text, i.e., text-to-speech.
 
-
-Different from ./offline-tts-play.py, this file does not play back the
-generated audio.
+Different from ./offline-tts.py, this file plays back the generated audio
+while the model is still generating.
 
 Usage:
 
@@ -17,7 +16,7 @@ Example (1/2)
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 tar xf vits-piper-en_US-amy-low.tar.bz2
 
-python3 ./python-api-examples/offline-tts.py \
+python3 ./python-api-examples/offline-tts-play.py \
  --vits-model=./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
  --vits-tokens=./vits-piper-en_US-amy-low/tokens.txt \
  --vits-data-dir=./vits-piper-en_US-amy-low/espeak-ng-data \
@@ -29,7 +28,7 @@ Example (2/2)
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
 tar xvf vits-zh-aishell3.tar.bz2
 
-python3 ./python-api-examples/offline-tts.py \
+python3 ./python-api-examples/offline-tts-play.py \
  --vits-model=./vits-aishell3.onnx \
  --vits-lexicon=./lexicon.txt \
  --vits-tokens=./tokens.txt \
@@ -44,14 +43,28 @@ https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 Please see
 https://k2-fsa.github.io/sherpa/onnx/tts/index.html
 for details.
-
 """
 
 import argparse
+import logging
+import queue
+import sys
+import threading
 import time
 
+import numpy as np
 import sherpa_onnx
 import soundfile as sf
+
+try:
+    import sounddevice as sd
+except ImportError:
+    print("Please install sounddevice first. You can use")
+    print()
+    print("  pip install sounddevice")
+    print()
+    print("to install it")
+    sys.exit(-1)
 
 
 def get_args():
@@ -92,17 +105,6 @@ def get_args():
         type=str,
         default="",
         help="Path to rule.fst",
-    )
-
-    parser.add_argument(
-        "--max-num-sentences",
-        type=int,
-        default=2,
-        help="""Max number of sentences in a batch to avoid OOM if the input
-        text is very long. Set it to -1 to process all the sentences in a
-        single batch. A smaller value does not mean it is slower compared
-        to a larger one on CPU.
-        """,
     )
 
     parser.add_argument(
@@ -159,6 +161,108 @@ def get_args():
     return parser.parse_args()
 
 
+# buffer saves audio samples to be played
+buffer = queue.Queue()
+
+# started is set to True once generated_audio_callback is called.
+started = False
+
+# stopped is set to True once all the text has been processed
+stopped = False
+
+# killed is set to True once ctrl + C is pressed
+killed = False
+
+# Note: When started is True, and stopped is True, and buffer is empty,
+# we will exit the program since all audio samples have been played.
+
+sample_rate = None
+
+event = threading.Event()
+
+
+def generated_audio_callback(samples: np.ndarray):
+    """This function is called whenever max_num_sentences sentences
+    have been processed.
+
+    Note that it is passed to C++ and is invoked in C++.
+
+    Args:
+      samples:
+        A 1-D np.float32 array containing audio samples
+    """
+    buffer.put(samples)
+    global started
+
+    if started is False:
+        logging.info("Start playing ...")
+    started = True
+
+
+# see https://python-sounddevice.readthedocs.io/en/0.4.6/api/streams.html#sounddevice.OutputStream
+def play_audio_callback(
+    outdata: np.ndarray, frames: int, time, status: sd.CallbackFlags
+):
+    if killed or (started and buffer.empty() and stopped):
+        event.set()
+
+    # outdata is of shape (frames, num_channels)
+    if buffer.empty():
+        outdata.fill(0)
+        return
+
+    n = 0
+    while n < frames and not buffer.empty():
+        remaining = frames - n
+        k = buffer.queue[0].shape[0]
+
+        if remaining <= k:
+            outdata[n:, 0] = buffer.queue[0][:remaining]
+            buffer.queue[0] = buffer.queue[0][remaining:]
+            n = frames
+            if buffer.queue[0].shape[0] == 0:
+                buffer.get()
+
+            break
+
+        outdata[n : n + k, 0] = buffer.get()
+        n += k
+
+    if n < frames:
+        outdata[n:, 0] = 0
+
+
+# Please see
+# https://python-sounddevice.readthedocs.io/en/0.4.6/usage.html#device-selection
+# for how to select a device
+def play_audio():
+    if False:
+        # This if branch can be safely removed. It is here to show you how to
+        # change the default output device in case you need that.
+        devices = sd.query_devices()
+        print(devices)
+
+        # sd.default.device[1] is the output device, if you want to
+        # select a different device, say, 3, as the output device, please
+        # use self.default.device[1] = 3
+
+        default_output_device_idx = sd.default.device[1]
+        print(
+            f'Use default output device: {devices[default_output_device_idx]["name"]}'
+        )
+
+    with sd.OutputStream(
+        channels=1,
+        callback=play_audio_callback,
+        dtype="float32",
+        samplerate=sample_rate,
+        blocksize=1024,
+    ):
+        event.wait()
+
+    logging.info("Exiting ...")
+
+
 def main():
     args = get_args()
     print(args)
@@ -176,16 +280,34 @@ def main():
             num_threads=args.num_threads,
         ),
         rule_fsts=args.tts_rule_fsts,
-        max_num_sentences=args.max_num_sentences,
+        max_num_sentences=1,
     )
+
     if not tts_config.validate():
         raise ValueError("Please check your config")
 
+    logging.info("Loading model ...")
     tts = sherpa_onnx.OfflineTts(tts_config)
+    logging.info("Loading model done.")
 
+    global sample_rate
+    sample_rate = tts.sample_rate
+
+    play_back_thread = threading.Thread(target=play_audio)
+    play_back_thread.start()
+
+    logging.info("Start generating ...")
     start = time.time()
-    audio = tts.generate(args.text, sid=args.sid, speed=args.speed)
+    audio = tts.generate(
+        args.text,
+        sid=args.sid,
+        speed=args.speed,
+        callback=generated_audio_callback,
+    )
     end = time.time()
+    logging.info("Finished generating!")
+    global stopped
+    stopped = True
 
     if len(audio.samples) == 0:
         print("Error in generating audios. Please read previous error messages.")
@@ -201,12 +323,27 @@ def main():
         samplerate=audio.sample_rate,
         subtype="PCM_16",
     )
-    print(f"Saved to {args.output_filename}")
-    print(f"The text is '{args.text}'")
-    print(f"Elapsed seconds: {elapsed_seconds:.3f}")
-    print(f"Audio duration in seconds: {audio_duration:.3f}")
-    print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
+    logging.info(f"The text is '{args.text}'")
+    logging.info(f"Elapsed seconds: {elapsed_seconds:.3f}")
+    logging.info(f"Audio duration in seconds: {audio_duration:.3f}")
+    logging.info(
+        f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}"
+    )
+
+    logging.info(f"***  Saved to {args.output_filename} ***")
+
+    print("\n   >>>>>>>>> You can safely press ctrl + C to stop the play <<<<<<<<<<\n")
+
+    play_back_thread.join()
 
 
 if __name__ == "__main__":
-    main()
+    formatter = "%(asctime)s %(levelname)s [%(filename)s:%(lineno)d] %(message)s"
+
+    logging.basicConfig(format=formatter, level=logging.INFO)
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\nCaught Ctrl + C. Exiting")
+        killed = True
+        sys.exit(0)
