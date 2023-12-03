@@ -29,35 +29,19 @@ class Lexicon : public OfflineTtsFrontend {
   // Note: for models from piper, we won't use this class.
   Lexicon(const std::string &lexicon, const std::string &tokens,
           const std::string &punctuations, const std::string &language,
-          bool debug = false, bool is_piper = false);
+          bool debug = false);
 
 #if __ANDROID_API__ >= 9
   Lexicon(AAssetManager *mgr, const std::string &lexicon,
           const std::string &tokens, const std::string &punctuations,
-          const std::string &language, bool debug = false,
-          bool is_piper = false);
+          const std::string &language, bool debug = false);
 #endif
 
   std::vector<std::vector<int64_t>> ConvertTextToTokenIds(
       const std::string &text, const std::string &voice = "") const override;
 
  private:
-  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsGerman(
-      const std::string &text) const {
-    return ConvertTextToTokenIdsEnglish(text);
-  }
-
-  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsSpanish(
-      const std::string &text) const {
-    return ConvertTextToTokenIdsEnglish(text);
-  }
-
-  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsFrench(
-      const std::string &text) const {
-    return ConvertTextToTokenIdsEnglish(text);
-  }
-
-  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsEnglish(
+  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsNotChinese(
       const std::string &text) const;
 
   std::vector<std::vector<int64_t>> ConvertTextToTokenIdsChinese(
@@ -70,10 +54,7 @@ class Lexicon : public OfflineTtsFrontend {
 
  private:
   enum class Language {
-    kEnglish,
-    kGerman,
-    kSpanish,
-    kFrench,
+    kNotChinese,
     kChinese,
     kUnknown,
   };
@@ -84,7 +65,6 @@ class Lexicon : public OfflineTtsFrontend {
   std::unordered_map<std::string, int32_t> token2id_;
   Language language_;
   bool debug_;
-  bool is_piper_;
 
   // for Chinese polyphones
   std::unique_ptr<std::regex> pattern_;

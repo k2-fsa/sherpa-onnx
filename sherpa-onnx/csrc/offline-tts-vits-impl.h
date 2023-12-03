@@ -195,8 +195,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     } else {
       frontend_ = std::make_unique<Lexicon>(
           mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
-          model_->Punctuations(), model_->Language(), config_.model.debug,
-          model_->IsPiper());
+          model_->Punctuations(), model_->Language(), config_.model.debug);
     }
   }
 #endif
@@ -208,8 +207,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     } else {
       frontend_ = std::make_unique<Lexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,
-          model_->Punctuations(), model_->Language(), config_.model.debug,
-          model_->IsPiper());
+          model_->Punctuations(), model_->Language(), config_.model.debug);
     }
   }
 
