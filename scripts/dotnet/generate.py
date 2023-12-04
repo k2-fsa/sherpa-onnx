@@ -33,12 +33,18 @@ def get_dict():
 
 def process_linux(s):
     libs = [
+        "libespeak-ng.so",
+        "libkaldi-decoder-core.so",
         "libkaldi-native-fbank-core.so",
-        "libonnxruntime.so.1.16.2",
+        "libonnxruntime.so.1.16.3",
+        "libpiper_phonemize.so.1",
         "libsherpa-onnx-c-api.so",
         "libsherpa-onnx-core.so",
+        "libsherpa-onnx-fst.so.6",
+        "libsherpa-onnx-kaldifst-core.so",
+        "libucd.so",
     ]
-    prefix = f"{SHERPA_ONNX_DIR}/linux/sherpa_onnx/lib/"
+    prefix = "/tmp/linux/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
@@ -55,12 +61,18 @@ def process_linux(s):
 
 def process_macos(s):
     libs = [
+        "libespeak-ng.dylib",
+        "libkaldi-decoder-core.dylib",
         "libkaldi-native-fbank-core.dylib",
-        "libonnxruntime.1.16.2.dylib",
+        "libonnxruntime.1.16.3.dylib",
+        "libpiper_phonemize.1.dylib",
         "libsherpa-onnx-c-api.dylib",
         "libsherpa-onnx-core.dylib",
+        "libsherpa-onnx-fst.6.dylib",
+        "libsherpa-onnx-kaldifst-core.dylib",
+        "libucd.dylib",
     ]
-    prefix = f"{SHERPA_ONNX_DIR}/macos/sherpa_onnx/lib/"
+    prefix = f"/tmp/macos/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
@@ -77,30 +89,23 @@ def process_macos(s):
 
 def process_windows(s):
     libs = [
+        "espeak-ng.dll",
+        "kaldi-decoder-core.dll",
         "kaldi-native-fbank-core.dll",
         "onnxruntime.dll",
+        "piper_phonemize.dll",
         "sherpa-onnx-c-api.dll",
         "sherpa-onnx-core.dll",
+        "sherpa-onnx-fst.lib",
+        "sherpa-onnx-kaldifst-core.lib",
+        "ucd.dll",
     ]
 
     version = get_version()
 
-    prefix1 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/lib/"
-    prefix2 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx/"
-    prefix3 = f"{SHERPA_ONNX_DIR}/windows/"
-    prefix4 = f"{SHERPA_ONNX_DIR}/windows/sherpa_onnx-{version}.data/data/bin/"
-    print(prefix1, prefix2, prefix3, prefix4)
-
-    lib_list = []
-    for lib in libs:
-        for prefix in [prefix1, prefix2, prefix3, prefix4]:
-            f = Path(prefix) / lib
-            if f.is_file():
-                lib_list.append(str(f))
-                break
-
-    print("lib_list", lib_list)
-    libs = "\n      ;".join(lib_list)
+    prefix = "/tmp/windows/"
+    libs = [prefix + lib for lib in libs]
+    libs = "\n      ;".join(libs)
 
     d = get_dict()
     d["dotnet_rid"] = "win-x64"

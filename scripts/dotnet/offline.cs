@@ -138,6 +138,8 @@ namespace SherpaOnnx
 
       DecodingMethod = "greedy_search";
       MaxActivePaths = 4;
+      HotwordsFile = "";
+      HotwordsScore = 1.5F;
 
     }
     public FeatureConfig FeatConfig;
@@ -148,6 +150,11 @@ namespace SherpaOnnx
     public string DecodingMethod;
 
     public int MaxActivePaths;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string HotwordsFile;
+
+    public float HotwordsScore;
   }
 
   public class OfflineRecognizerResult
