@@ -4,27 +4,12 @@ on:
   push:
     branches:
       - master
-    paths:
-      - '.github/workflows/test-dot-net'
-      - 'dotnet-examples/**'
 
   pull_request:
     branches:
       - master
-    paths:
-      - '.github/workflows/test-dot-net'
-      - 'dotnet-examples/**'
 
   workflow_dispatch:
-
-  schedule:
-    # minute (0-59)
-    # hour (0-23)
-    # day of the month (1-31)
-    # month (1-12)
-    # day of the week (0-6)
-    # nightly build at 23:50 UTC time every day
-    - cron: "50 23 * * *"
 
 concurrency:
   group: test-dot-net
@@ -34,30 +19,123 @@ permissions:
   contents: read
 
 jobs:
-  test-dot-net:
+  build-libs:
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.8"]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup .NET Core 3.1
-        uses: actions/setup-dotnet@v1
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
         with:
-          dotnet-version: 3.1.x
+          key: ${{ matrix.os }}-release-shared
 
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+          cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build . --target install --config Release
+
+      - uses: actions/upload-artifact@v3
         with:
-          dotnet-version: 6.0.x
+          name: ${{ matrix.os }}
+          path: ./build/install/lib/
+
+  test-dot-net:
+    runs-on: ${{ matrix.os }}
+    needs: [build-libs]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip Jinja2
+
+      - name: Retrieve artifact from ubuntu-latest
+        uses: actions/download-artifact@v2
+        with:
+          name: ubuntu-latest
+          path: /tmp/linux
+
+      - name: Retrieve artifact from macos-latest
+        uses: actions/download-artifact@v2
+        with:
+          name: macos-latest
+          path: /tmp/macos
+
+      - name: Retrieve artifact from windows-latest
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-latest
+          path: /tmp/windows
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: |
+            6.0.x
+            7.0.x
 
       - name: Check dotnet
         run: dotnet --info
+
+      - name: Display files
+        shell: bash
+        run: |
+          echo "----------/tmp/----------"
+          ls -lh /tmp/
+
+          echo "----------/tmp/linux----------"
+          ls -lh /tmp/linux
+
+          echo "----------/tmp/macos----------"
+          ls -lh /tmp/macos
+
+          echo "----------/tmp/windows----------"
+          ls -lh /tmp/windows
+
+      - name: Build
+        shell: bash
+        run: |
+          cd scripts/dotnet
+          ./run.sh
+
+      - name: Copy files
+        shell: bash
+        run: |
+          cp -v scripts/dotnet/examples/offline-decode-files.csproj dotnet-examples/offline-decode-files/
+          cp -v scripts/dotnet/examples/online-decode-files.csproj dotnet-examples/online-decode-files/
+          cp -v scripts/dotnet/examples/speech-recognition-from-microphone.csproj dotnet-examples/speech-recognition-from-microphone/
+
+          ls -lh /tmp
 
       - name: Decode a file
         shell: bash
