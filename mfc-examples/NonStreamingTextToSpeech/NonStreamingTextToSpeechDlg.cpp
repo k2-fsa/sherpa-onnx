@@ -431,8 +431,8 @@ void CNonStreamingTextToSpeechDlg::Init() {
     ok = false;
   }
 
-  if (!Exists("./lexicon.txt")) {
-    error_message += "Cannot find ./lexicon.txt\r\n";
+  if (!Exists("./lexicon.txt") && !Exists("./espeak-ng-data/phontab")) {
+    error_message += "Cannot find espeak-ng-data directory or ./lexicon.txt\r\n";
     ok = false;
   }
 
@@ -445,21 +445,17 @@ void CNonStreamingTextToSpeechDlg::Init() {
     generate_btn_.EnableWindow(FALSE);
     error_message +=
         "\r\nPlease refer to\r\n"
-        "https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html";
+        "https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models";
     error_message += "\r\nto download models.\r\n";
-    error_message += "\r\nWe given an example below\r\n\r\n";
+    error_message += "\r\nWe give an example below\r\n\r\n";
     error_message +=
-        "wget -O model.onnx "
-        "https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/"
-        "vits-aishell3.onnx\r\n";
-    error_message +=
-        "wget  "
-        "https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/"
-        "lexicon.txt\r\n";
-    error_message +=
-        "wget  "
-        "https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/"
-        "tokens.txt\r\n";
+        "1. Download vits-piper-en_US-amy-low.tar.bz2 from the following URL\r\n\r\n"
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2\r\n\r\n"
+        "2. Uncompress it and you will get a directory vits-piper-en_US-amy-low \r\n\r\n"
+        "3. Switch to the directory vits-piper-en_US-amy-low \r\n\r\n"
+        "4. Rename en_US-amy-low.onnx to model.onnx \r\n\r\n"
+        "5. Copy the current exe to the directory vits-piper-en_US-amy-low\r\n\r\n"
+        "6. Done! You can now run the exe in the directory vits-piper-en_US-amy-low\r\n\r\n";
 
     AppendLineToMultilineEditCtrl(my_hint_, error_message);
     return;
@@ -472,7 +468,11 @@ void CNonStreamingTextToSpeechDlg::Init() {
   config.model.num_threads = 2;
   config.model.provider = "cpu";
   config.model.vits.model = "./model.onnx";
-  config.model.vits.lexicon = "./lexicon.txt";
+  if (Exists("./espeak-ng-data/phontab")) {
+    config.model.vits.data_dir = "./espeak-ng-data";
+  } else {
+    config.model.vits.lexicon = "./lexicon.txt";
+  }
   config.model.vits.tokens = "./tokens.txt";
 
   tts_ = SherpaOnnxCreateOfflineTts(&config);
