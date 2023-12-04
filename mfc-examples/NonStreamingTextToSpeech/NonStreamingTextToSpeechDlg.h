@@ -6,6 +6,16 @@
 
 #include "sherpa-onnx/c-api/c-api.h"
 
+#include <memory>
+#include <thread>
+
+#include "portaudio.h"
+
+class Microphone {
+ public:
+  Microphone();
+  ~Microphone();
+};
 
 // CNonStreamingTextToSpeechDlg dialog
 class CNonStreamingTextToSpeechDlg : public CDialogEx
@@ -34,16 +44,21 @@ protected:
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
-       public:
-        CEdit my_hint_;
-        CEdit speaker_id_;
-        CEdit speed_;
-        void Init();
-        void InitHint();
-        CButton generate_btn_;
-        afx_msg void OnBnClickedOk();
+public:
+	CEdit my_hint_;
+	CEdit speaker_id_;
+	CEdit speed_;
+	void Init();
+	void InitHint();
+	CButton generate_btn_;
+	afx_msg void OnBnClickedOk();
 
-		SherpaOnnxOfflineTts *tts_;
-        CEdit my_text_;
-                CEdit output_filename_;
+	SherpaOnnxOfflineTts *tts_ = nullptr;
+	CEdit my_text_;
+	CEdit output_filename_;
+
+private:
+    Microphone mic_;
+	std::unique_ptr<std::thread> play_thread_;
+
 };

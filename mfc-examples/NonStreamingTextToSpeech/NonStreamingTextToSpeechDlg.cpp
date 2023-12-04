@@ -9,13 +9,183 @@
 #include "afxdialogex.h"
 
 #include <fstream>
+#include <mutex>  // NOLINT
+#include <queue>
 #include <stdexcept>
 #include <string>
+#include <thread>  // NOLINT
 #include <vector>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+
+Microphone::Microphone() {
+  PaError err = Pa_Initialize();
+  if (err != paNoError) {
+    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
+    exit(-2);
+  }
+}
+
+Microphone::~Microphone() {
+  PaError err = Pa_Terminate();
+  if (err != paNoError) {
+    fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
+    exit(-2);
+  }
+}
+
+// NOTE(fangjun): Code is copied from
+// https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/csrc/sherpa-onnx-offline-tts-play.cc#L22
+static std::condition_variable g_cv;
+static std::mutex g_cv_m;
+
+struct Samples {
+  std::vector<float> data;
+  int32_t consumed = 0;
+};
+
+struct Buffer {
+  std::queue<Samples> samples;
+  std::mutex mutex;
+};
+
+static Buffer g_buffer;
+
+static bool g_started = false;
+static bool g_stopped = false;
+static bool g_killed = false;
+
+static void AudioGeneratedCallback(const float *s, int32_t n) {
+  if (n > 0) {
+    Samples samples;
+    samples.data = std::vector<float>{s, s + n};
+
+    std::lock_guard<std::mutex> lock(g_buffer.mutex);
+    g_buffer.samples.push(std::move(samples));
+    g_started = true;
+  }
+}
+
+static int PlayCallback(const void * /*in*/, void *out,
+                        unsigned long _n,  // NOLINT
+                        const PaStreamCallbackTimeInfo * /*time_info*/,
+                        PaStreamCallbackFlags /*status_flags*/,
+                        void * /*user_data*/) {
+  int32_t n = static_cast<int32_t>(_n);
+  if (g_killed) {
+    return paComplete;
+  }
+
+  float *pout = reinterpret_cast<float *>(out);
+  std::lock_guard<std::mutex> lock(g_buffer.mutex);
+
+  if (g_buffer.samples.empty()) {
+    if (g_stopped) {
+      // no more data is available and we have processed all of the samples
+      return paComplete;
+    }
+
+    // The current sentence is so long, though very unlikely, that
+    // the model has not finished processing it yet.
+    std::fill_n(pout, n, 0);
+
+    return paContinue;
+  }
+
+  int32_t k = 0;
+  for (; k < n && !g_buffer.samples.empty();) {
+    int32_t this_block = n - k;
+
+    auto &p = g_buffer.samples.front();
+
+    int32_t remaining = static_cast<int32_t>(p.data.size()) - p.consumed;
+
+    if (this_block <= remaining) {
+      std::copy(p.data.begin() + p.consumed,
+                p.data.begin() + p.consumed + this_block, pout + k);
+      p.consumed += this_block;
+
+      k = n;
+
+      if (p.consumed == p.data.size()) {
+        g_buffer.samples.pop();
+      }
+      break;
+    }
+
+    std::copy(p.data.begin() + p.consumed, p.data.end(), pout + k);
+    k += static_cast<int32_t>(p.data.size()) - p.consumed;
+    g_buffer.samples.pop();
+  }
+
+  if (k < n) {
+    std::fill_n(pout + k, n - k, 0);
+  }
+
+  if (g_stopped && g_buffer.samples.empty()) {
+    return paComplete;
+  }
+
+  return paContinue;
+}
+
+static void PlayCallbackFinished(void *userData) { g_cv.notify_all(); }
+
+static void StartPlayback(int32_t sample_rate) {
+  int32_t frames_per_buffer = 1024;
+  PaStreamParameters outputParameters;
+  PaStream *stream;
+  PaError err;
+
+  outputParameters.device =
+      Pa_GetDefaultOutputDevice(); /* default output device */
+
+  outputParameters.channelCount = 1;         /* stereo output */
+  outputParameters.sampleFormat = paFloat32; /* 32 bit floating point output */
+  outputParameters.suggestedLatency =
+      Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+  outputParameters.hostApiSpecificStreamInfo = nullptr;
+
+  err = Pa_OpenStream(&stream, nullptr, /* no input */
+                      &outputParameters, sample_rate, frames_per_buffer,
+                      paClipOff,  // we won't output out of range samples so
+                                  //   don't bother clipping them
+                      PlayCallback, nullptr);
+  if (err != paNoError) {
+    fprintf(stderr, "%d portaudio error: %s\n", __LINE__, Pa_GetErrorText(err));
+    return;
+  }
+
+  err = Pa_SetStreamFinishedCallback(stream, &PlayCallbackFinished);
+  if (err != paNoError) {
+    fprintf(stderr, "%d portaudio error: %s\n", __LINE__, Pa_GetErrorText(err));
+    return;
+  }
+
+  err = Pa_StartStream(stream);
+  if (err != paNoError) {
+    fprintf(stderr, "%d portaudio error: %s\n", __LINE__, Pa_GetErrorText(err));
+    return;
+  }
+
+  std::unique_lock<std::mutex> lock(g_cv_m);
+  while (!g_killed && !g_stopped &&
+         (!g_started || (g_started && !g_buffer.samples.empty()))) {
+    g_cv.wait(lock);
+  }
+
+  err = Pa_StopStream(stream);
+  if (err != paNoError) {
+    return;
+  }
+
+  err = Pa_CloseStream(stream);
+  if (err != paNoError) {
+    return;
+  }
+}
 
 
 // CAboutDlg dialog used for App About
@@ -261,8 +431,8 @@ void CNonStreamingTextToSpeechDlg::Init() {
     ok = false;
   }
 
-  if (!Exists("./lexicon.txt")) {
-    error_message += "Cannot find ./lexicon.txt\r\n";
+  if (!Exists("./lexicon.txt") && !Exists("./espeak-ng-data/phontab")) {
+    error_message += "Cannot find espeak-ng-data directory or ./lexicon.txt\r\n";
     ok = false;
   }
 
@@ -275,21 +445,17 @@ void CNonStreamingTextToSpeechDlg::Init() {
     generate_btn_.EnableWindow(FALSE);
     error_message +=
         "\r\nPlease refer to\r\n"
-        "https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/index.html";
+        "https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models";
     error_message += "\r\nto download models.\r\n";
-    error_message += "\r\nWe given an example below\r\n\r\n";
+    error_message += "\r\nWe give an example below\r\n\r\n";
     error_message +=
-        "wget -O model.onnx "
-        "https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/"
-        "vits-aishell3.onnx\r\n";
-    error_message +=
-        "wget  "
-        "https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/"
-        "lexicon.txt\r\n";
-    error_message +=
-        "wget  "
-        "https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/"
-        "tokens.txt\r\n";
+        "1. Download vits-piper-en_US-amy-low.tar.bz2 from the following URL\r\n\r\n"
+        "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2\r\n\r\n"
+        "2. Uncompress it and you will get a directory vits-piper-en_US-amy-low \r\n\r\n"
+        "3. Switch to the directory vits-piper-en_US-amy-low \r\n\r\n"
+        "4. Rename en_US-amy-low.onnx to model.onnx \r\n\r\n"
+        "5. Copy the current exe to the directory vits-piper-en_US-amy-low\r\n\r\n"
+        "6. Done! You can now run the exe in the directory vits-piper-en_US-amy-low\r\n\r\n";
 
     AppendLineToMultilineEditCtrl(my_hint_, error_message);
     return;
@@ -299,10 +465,14 @@ void CNonStreamingTextToSpeechDlg::Init() {
   SherpaOnnxOfflineTtsConfig config;
   memset(&config, 0, sizeof(config));
   config.model.debug = 0;
-  config.model.num_threads = 1;
+  config.model.num_threads = 2;
   config.model.provider = "cpu";
   config.model.vits.model = "./model.onnx";
-  config.model.vits.lexicon = "./lexicon.txt";
+  if (Exists("./espeak-ng-data/phontab")) {
+    config.model.vits.data_dir = "./espeak-ng-data";
+  } else {
+    config.model.vits.lexicon = "./lexicon.txt";
+  }
   config.model.vits.tokens = "./tokens.txt";
 
   tts_ = SherpaOnnxCreateOfflineTts(&config);
@@ -321,7 +491,6 @@ void CNonStreamingTextToSpeechDlg::Init() {
  }
 
 void CNonStreamingTextToSpeechDlg::OnBnClickedOk() {
-  // TODO: Add your control notification handler code here
   CString s;
   speaker_id_.GetWindowText(s);
   int speaker_id = _ttoi(s);
@@ -338,25 +507,51 @@ void CNonStreamingTextToSpeechDlg::OnBnClickedOk() {
   }
 
   my_text_.GetWindowText(s);
+
   std::string ss = ToString(s);
   if (ss.empty()) {
     AfxMessageBox(Utf8ToUtf16("Please input your text").c_str(), MB_OK);
     return;
   }
 
+  if (play_thread_) {
+    g_killed = true;
+    g_stopped = true;
+    if (play_thread_->joinable()) {
+      play_thread_->join();
+    }
+  }
+
+  g_killed = false;
+  g_stopped = false;
+  g_started = false;
+  g_buffer.samples = {};
+
+  // Caution(fangjun): It is not efficient to re-create the thread. We use this approach
+  // for simplicity
+  play_thread_ = std::make_unique<std::thread>(StartPlayback, SherpaOnnxOfflineTtsSampleRate(tts_));
+
+  generate_btn_.EnableWindow(FALSE);
+
   const SherpaOnnxGeneratedAudio *audio =
-      SherpaOnnxOfflineTtsGenerate(tts_, ss.c_str(), speaker_id, speed);
+      SherpaOnnxOfflineTtsGenerateWithCallback(tts_, ss.c_str(), speaker_id, speed, &AudioGeneratedCallback);
+
+  generate_btn_.EnableWindow(TRUE);
+
   output_filename_.GetWindowText(s);
   std::string filename = ToString(s);
+
   int ok = SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate,
                     filename.c_str());
 
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
 
   if (ok) {
-    AfxMessageBox(Utf8ToUtf16(std::string("Saved to ") + filename + " successfully").c_str(), MB_OK);
+    // AfxMessageBox(Utf8ToUtf16(std::string("Saved to ") + filename + " successfully").c_str(), MB_OK);
+    AppendLineToMultilineEditCtrl(my_hint_, std::string("Saved to ") + filename + " successfully");
   } else {
-    AfxMessageBox(Utf8ToUtf16(std::string("Failed to save to ") + filename).c_str(), MB_OK);
+    // AfxMessageBox(Utf8ToUtf16(std::string("Failed to save to ") + filename).c_str(), MB_OK);
+    AppendLineToMultilineEditCtrl(my_hint_, std::string("Failed to saved to ") + filename);
   }
 
   //CDialogEx::OnOK();
