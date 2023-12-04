@@ -4,27 +4,12 @@ on:
   push:
     branches:
       - master
-    paths:
-      - '.github/workflows/test-dot-net'
-      - 'dotnet-examples/**'
 
   pull_request:
     branches:
       - master
-    paths:
-      - '.github/workflows/test-dot-net'
-      - 'dotnet-examples/**'
 
   workflow_dispatch:
-
-  schedule:
-    # minute (0-59)
-    # hour (0-23)
-    # day of the month (1-31)
-    # month (1-12)
-    # day of the week (0-6)
-    # nightly build at 23:50 UTC time every day
-    - cron: "50 23 * * *"
 
 concurrency:
   group: test-dot-net
@@ -39,25 +24,61 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest]
+        python-version: ["3.8"]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Setup .NET Core 3.1
-        uses: actions/setup-dotnet@v1
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
         with:
-          dotnet-version: 3.1.x
+          python-version: ${{ matrix.python-version }}
 
-      - name: Setup .NET 6.0
-        uses: actions/setup-dotnet@v1
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip Jinja2
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install ..
+          make -j install
+          mkdir -p /tmp/linux
+
+          cp -v ./install/lib/*so* /tmp/linux/
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: |
+            6.0.x
+            7.0.x
 
       - name: Check dotnet
         run: dotnet --info
+
+      - name: Build
+        shell: bash
+        run: |
+          cd scripts/dotnet
+          ./run.sh
+
+          ls -lh /tmp
+
+      - name: Copy files
+        shell: bash
+        run: |
+          cp -v scripts/dotnet/examples/offline-decode-files.csproj dotnet-examples/offline-decode-files/
+          cp -v scripts/dotnet/examples/online-decode-files.csproj dotnet-examples/online-decode-files/
+          cp -v scripts/dotnet/examples/speech-recognition-from-microphone.csproj dotnet-examples/speech-recognition-from-microphone/
+
+          ls -lh /tmp
 
       - name: Decode a file
         shell: bash
