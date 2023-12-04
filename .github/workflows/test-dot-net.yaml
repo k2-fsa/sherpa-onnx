@@ -19,8 +19,45 @@ permissions:
   contents: read
 
 jobs:
+  build-libs:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-release-shared
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+          cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build . --target install --config Release
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}
+          path: ./build/install/lib/
+
   test-dot-net:
     runs-on: ${{ matrix.os }}
+    needs: [build-libs]
     strategy:
       fail-fast: false
       matrix:
@@ -42,6 +79,24 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip Jinja2
 
+      - name: Retrieve artifact from ubuntu-latest
+        uses: actions/download-artifact@v2
+        with:
+          name: ubuntu-latest
+          path: /tmp/linux
+
+      - name: Retrieve artifact from macos-latest
+        uses: actions/download-artifact@v2
+        with:
+          name: macos-latest
+          path: /tmp/macos
+
+      - name: Retrieve artifact from windows-latest
+        uses: actions/download-artifact@v2
+        with:
+          name: windows-latest
+          path: /tmp/windows
+
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
@@ -52,13 +107,26 @@ jobs:
       - name: Check dotnet
         run: dotnet --info
 
+      - name: Display files
+        shell: bash
+        run: |
+          echo "----------/tmp/----------"
+          ls -lh /tmp/
+
+          echo "----------/tmp/linux----------"
+          ls -lh /tmp/linux
+
+          echo "----------/tmp/macos----------"
+          ls -lh /tmp/macos
+
+          echo "----------/tmp/windows----------"
+          ls -lh /tmp/windows
+
       - name: Build
         shell: bash
         run: |
           cd scripts/dotnet
           ./run.sh
-
-          ls -lh /tmp
 
       - name: Copy files
         shell: bash
