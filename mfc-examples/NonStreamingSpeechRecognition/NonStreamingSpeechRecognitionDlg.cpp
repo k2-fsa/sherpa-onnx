@@ -214,7 +214,7 @@ void CNonStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     param.sampleFormat = paFloat32;
     param.suggestedLatency = info->defaultLowInputLatency;
     param.hostApiSpecificStreamInfo = nullptr;
-    float sample_rate = config_.feat_config.sample_rate;
+    float sample_rate = static_cast<float>(config_.feat_config.sample_rate);
     pa_stream_ = nullptr;
     PaError err =
         Pa_OpenStream(&pa_stream_, &param, nullptr, /* &outputParameters, */
@@ -259,7 +259,7 @@ void CNonStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     SherpaOnnxOfflineStream *stream = CreateOfflineStream(recognizer_);
 
     AcceptWaveformOffline(stream, config_.feat_config.sample_rate,
-                          samples_.data(), samples_.size());
+                          samples_.data(), static_cast<int32_t>(samples_.size()));
     DecodeOfflineStream(recognizer_, stream);
     auto r = GetOfflineStreamResult(stream);
     results_.emplace_back(r->text);
