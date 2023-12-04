@@ -33,38 +33,42 @@ if [ ! -f /tmp/linux/libsherpa-onnx-core.so ]; then
   cd ..
 fi
 
-echo "---macOS x86_64---"
-cd macos
-mkdir wheel
-cd wheel
-curl -OL https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_10_14_x86_64.whl
-unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_10_14_x86_64.whl
-cp -v sherpa_onnx/lib/*.dylib ../
+if [ ! -f /tmp/macos/libsherpa-onnx-core.dylib ]; then
+  echo "---macOS x86_64---"
+  cd macos
+  mkdir wheel
+  cd wheel
+  curl -OL https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_10_14_x86_64.whl
+  unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_10_14_x86_64.whl
+  cp -v sherpa_onnx/lib/*.dylib ../
 
-cd ..
+  cd ..
 
-rm -v libcargs.dylib
-rm -v libonnxruntime.dylib
-rm -v libpiper_phonemize.1.2.0.dylib libpiper_phonemize.dylib
-rm -v libsherpa-onnx-fst.dylib
-rm -rf wheel
-ls -lh
-cd ..
+  rm -v libcargs.dylib
+  rm -v libonnxruntime.dylib
+  rm -v libpiper_phonemize.1.2.0.dylib libpiper_phonemize.dylib
+  rm -v libsherpa-onnx-fst.dylib
+  rm -rf wheel
+  ls -lh
+  cd ..
+fi
 
 
-echo "---windows x64---"
-cd windows
-mkdir wheel
-cd wheel
-curl -OL https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
-unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
-cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../
-cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.lib ../
-cd ..
+if [ ! -f /tmp/windows/libsherpa-onnx-core.dll ]; then
+  echo "---windows x64---"
+  cd windows
+  mkdir wheel
+  cd wheel
+  curl -OL https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
+  unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
+  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../
+  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.lib ../
+  cd ..
 
-rm -rf wheel
-ls -lh
-cd ..
+  rm -rf wheel
+  ls -lh
+  cd ..
+fi
 
 popd
 
