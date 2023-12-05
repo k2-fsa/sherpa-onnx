@@ -311,6 +311,9 @@ def main():
 
     if len(audio.samples) == 0:
         print("Error in generating audios. Please read previous error messages.")
+        global killed
+        killed = True
+        play_back_thread.join()
         return
 
     elapsed_seconds = end - start

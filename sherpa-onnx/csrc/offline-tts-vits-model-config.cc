@@ -46,7 +46,8 @@ bool OfflineTtsVitsModelConfig::Validate() const {
 
   if (data_dir.empty()) {
     if (lexicon.empty()) {
-      SHERPA_ONNX_LOGE("Please provide --vits-lexicon");
+      SHERPA_ONNX_LOGE(
+          "Please provide --vits-lexicon if you leave --vits-data-dir empty");
       return false;
     }
 

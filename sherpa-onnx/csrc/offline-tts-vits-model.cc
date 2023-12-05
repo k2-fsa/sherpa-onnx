@@ -38,22 +38,14 @@ class OfflineTtsVitsModel::Impl {
 #endif
 
   Ort::Value Run(Ort::Value x, int64_t sid, float speed) {
-    if (is_piper_) {
-      return RunVitsPiper(std::move(x), sid, speed);
+    if (meta_data_.is_piper || meta_data_.is_coqui) {
+      return RunVitsPiperOrCoqui(std::move(x), sid, speed);
     }
 
     return RunVits(std::move(x), sid, speed);
   }
 
-  int32_t SampleRate() const { return sample_rate_; }
-
-  bool AddBlank() const { return add_blank_; }
-
-  std::string Punctuations() const { return punctuations_; }
-  std::string Language() const { return language_; }
-  std::string Voice() const { return voice_; }
-  bool IsPiper() const { return is_piper_; }
-  int32_t NumSpeakers() const { return num_speakers_; }
+  const OfflineTtsVitsModelMetaData &GetMetaData() const { return meta_data_; }
 
  private:
   void Init(void *model_data, size_t model_data_length) {
@@ -70,27 +62,52 @@ class OfflineTtsVitsModel::Impl {
       std::ostringstream os;
       os << "---vits model---\n";
       PrintModelMetadata(os, meta_data);
+
+      os << "----------input names----------\n";
+      int32_t i = 0;
+      for (const auto &s : input_names_) {
+        os << i << " " << s << "\n";
+        ++i;
+      }
+      os << "----------output names----------\n";
+      i = 0;
+      for (const auto &s : output_names_) {
+        os << i << " " << s << "\n";
+        ++i;
+      }
+
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
-    SHERPA_ONNX_READ_META_DATA(sample_rate_, "sample_rate");
-    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(add_blank_, "add_blank", 0);
-    SHERPA_ONNX_READ_META_DATA(num_speakers_, "n_speakers");
-    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(punctuations_, "punctuation",
-                                                "");
-    SHERPA_ONNX_READ_META_DATA_STR(language_, "language");
-    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(voice_, "voice", "");
+    SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.add_blank, "add_blank",
+                                            0);
+    SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.punctuations,
+                                                "punctuation", "");
+    SHERPA_ONNX_READ_META_DATA_STR(meta_data_.language, "language");
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice", "");
+
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.blank_id, "blank_id", 0);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.bos_id, "bos_id", 0);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.eos_id, "eos_id", 0);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.use_eos_bos,
+                                            "use_eos_bos", 0);
 
     std::string comment;
     SHERPA_ONNX_READ_META_DATA_STR(comment, "comment");
-    if (comment.find("piper") != std::string::npos ||
-        comment.find("coqui") != std::string::npos) {
-      is_piper_ = true;
+
+    if (comment.find("piper") != std::string::npos) {
+      meta_data_.is_piper = true;
+    }
+
+    if (comment.find("coqui") != std::string::npos) {
+      meta_data_.is_coqui = true;
     }
   }
 
-  Ort::Value RunVitsPiper(Ort::Value x, int64_t sid, float speed) {
+  Ort::Value RunVitsPiperOrCoqui(Ort::Value x, int64_t sid, float speed) {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -213,14 +230,7 @@ class OfflineTtsVitsModel::Impl {
   std::vector<std::string> output_names_;
   std::vector<const char *> output_names_ptr_;
 
-  int32_t sample_rate_;
-  int32_t add_blank_;
-  int32_t num_speakers_;
-  std::string punctuations_;
-  std::string language_;
-  std::string voice_;
-
-  bool is_piper_ = false;
+  OfflineTtsVitsModelMetaData meta_data_;
 };
 
 OfflineTtsVitsModel::OfflineTtsVitsModel(const OfflineTtsModelConfig &config)
@@ -239,21 +249,8 @@ Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, int64_t sid /*=0*/,
   return impl_->Run(std::move(x), sid, speed);
 }
 
-int32_t OfflineTtsVitsModel::SampleRate() const { return impl_->SampleRate(); }
-
-bool OfflineTtsVitsModel::AddBlank() const { return impl_->AddBlank(); }
-
-std::string OfflineTtsVitsModel::Punctuations() const {
-  return impl_->Punctuations();
-}
-
-std::string OfflineTtsVitsModel::Language() const { return impl_->Language(); }
-std::string OfflineTtsVitsModel::Voice() const { return impl_->Voice(); }
-
-bool OfflineTtsVitsModel::IsPiper() const { return impl_->IsPiper(); }
-
-int32_t OfflineTtsVitsModel::NumSpeakers() const {
-  return impl_->NumSpeakers();
+const OfflineTtsVitsModelMetaData &OfflineTtsVitsModel::GetMetaData() const {
+  return impl_->GetMetaData();
 }
 
 }  // namespace sherpa_onnx
