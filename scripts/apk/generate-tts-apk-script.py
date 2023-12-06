@@ -238,8 +238,8 @@ def main():
     template = environment.from_string(s)
     d = dict()
 
-    all_model_list = get_vits_models()
-    all_model_list += get_piper_models()
+    #  all_model_list = get_vits_models()
+    all_model_list = get_piper_models()
     all_model_list += get_coqui_models()
 
     num_models = len(all_model_list)
