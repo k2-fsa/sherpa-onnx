@@ -15,25 +15,28 @@
 #endif
 
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
+#include "sherpa-onnx/csrc/offline-tts-vits-model-metadata.h"
 
 namespace sherpa_onnx {
 
 class PiperPhonemizeLexicon : public OfflineTtsFrontend {
  public:
-  PiperPhonemizeLexicon(const std::string &tokens, const std::string &data_dir);
+  PiperPhonemizeLexicon(const std::string &tokens, const std::string &data_dir,
+                        const OfflineTtsVitsModelMetaData &meta_data);
 
 #if __ANDROID_API__ >= 9
   PiperPhonemizeLexicon(AAssetManager *mgr, const std::string &tokens,
-                        const std::string &data_dir);
+                        const std::string &data_dir,
+                        const OfflineTtsVitsModelMetaData &meta_data);
 #endif
 
   std::vector<std::vector<int64_t>> ConvertTextToTokenIds(
       const std::string &text, const std::string &voice = "") const override;
 
  private:
-  std::string data_dir_;
   // map unicode codepoint to an integer ID
   std::unordered_map<char32_t, int32_t> token2id_;
+  OfflineTtsVitsModelMetaData meta_data_;
 };
 
 }  // namespace sherpa_onnx

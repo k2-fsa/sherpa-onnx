@@ -33,6 +33,23 @@ class TtsModel:
     data_dir: Optional[str] = None
 
 
+def get_coqui_models() -> List[TtsModel]:
+    # English (coqui-ai/TTS)
+    models = [
+        TtsModel(model_dir="vits-coqui-en-ljspeech"),
+        TtsModel(model_dir="vits-coqui-en-ljspeech-neon"),
+        TtsModel(model_dir="vits-coqui-en-vctk"),
+        #  TtsModel(model_dir="vits-coqui-en-jenny"),
+    ]
+
+    for m in models:
+        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+        m.model_name = "model.onnx"
+        m.lang = "en"
+
+    return models
+
+
 def get_piper_models() -> List[TtsModel]:
     models = [
         TtsModel(model_dir="vits-piper-ar_JO-kareem-low"),
@@ -137,6 +154,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-vi_VN-vivos-x_low"),
         TtsModel(model_dir="vits-piper-zh_CN-huayan-medium"),
     ]
+
     for m in models:
         m.data_dir = m.model_dir + "/" + "espeak-ng-data"
         m.model_name = m.model_dir[len("vits-piper-") :] + ".onnx"
@@ -145,7 +163,7 @@ def get_piper_models() -> List[TtsModel]:
     return models
 
 
-def get_all_models() -> List[TtsModel]:
+def get_vits_models() -> List[TtsModel]:
     return [
         # Chinese
         TtsModel(
@@ -202,12 +220,6 @@ def get_all_models() -> List[TtsModel]:
             lang="zh",
             rule_fsts="vits-zh-hf-theresa/rule.fst",
         ),
-        # English (coqui-ai/TTS)
-        # fmt: off
-        TtsModel(model_dir="vits-coqui-en-ljspeech", model_name="model.onnx", lang="en"),
-        TtsModel(model_dir="vits-coqui-en-ljspeech-neon", model_name="model.onnx", lang="en"),
-        TtsModel(model_dir="vits-coqui-en-vctk", model_name="model.onnx", lang="en"),
-        #  TtsModel(model_dir="vits-coqui-en-jenny", model_name="model.onnx", lang="en"),
         # English (US)
         TtsModel(model_dir="vits-vctk", model_name="vits-vctk.onnx", lang="en"),
         TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
@@ -225,8 +237,11 @@ def main():
         s = f.read()
     template = environment.from_string(s)
     d = dict()
-    #  all_model_list = get_all_models()
+
+    #  all_model_list = get_vits_models()
     all_model_list = get_piper_models()
+    all_model_list += get_coqui_models()
+
     num_models = len(all_model_list)
 
     num_per_runner = num_models // total

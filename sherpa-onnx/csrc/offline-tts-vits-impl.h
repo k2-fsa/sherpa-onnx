@@ -69,12 +69,16 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   }
 #endif
 
-  int32_t SampleRate() const override { return model_->SampleRate(); }
+  int32_t SampleRate() const override {
+    return model_->GetMetaData().sample_rate;
+  }
 
   GeneratedAudio Generate(
       const std::string &_text, int64_t sid = 0, float speed = 1.0,
       GeneratedAudioCallback callback = nullptr) const override {
-    int32_t num_speakers = model_->NumSpeakers();
+    const auto &meta_data = model_->GetMetaData();
+    int32_t num_speakers = meta_data.num_speakers;
+
     if (num_speakers == 0 && sid != 0) {
       SHERPA_ONNX_LOGE(
           "This is a single-speaker model and supports only sid 0. Given sid: "
@@ -105,14 +109,14 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     }
 
     std::vector<std::vector<int64_t>> x =
-        frontend_->ConvertTextToTokenIds(text, model_->Voice());
+        frontend_->ConvertTextToTokenIds(text, meta_data.voice);
 
     if (x.empty() || (x.size() == 1 && x[0].empty())) {
       SHERPA_ONNX_LOGE("Failed to convert %s to token IDs", text.c_str());
       return {};
     }
 
-    if (model_->AddBlank() && config_.model.vits.data_dir.empty()) {
+    if (meta_data.add_blank && config_.model.vits.data_dir.empty()) {
       for (auto &k : x) {
         k = AddBlank(k);
       }
@@ -189,25 +193,33 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
  private:
 #if __ANDROID_API__ >= 9
   void InitFrontend(AAssetManager *mgr) {
-    if (model_->IsPiper() && !config_.model.vits.data_dir.empty()) {
+    const auto &meta_data = model_->GetMetaData();
+
+    if ((meta_data.is_piper || meta_data.is_coqui) &&
+        !config_.model.vits.data_dir.empty()) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
-          mgr, config_.model.vits.tokens, config_.model.vits.data_dir);
+          mgr, config_.model.vits.tokens, config_.model.vits.data_dir,
+          meta_data);
     } else {
       frontend_ = std::make_unique<Lexicon>(
           mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
-          model_->Punctuations(), model_->Language(), config_.model.debug);
+          meta_data.punctuations, meta_data.language, config_.model.debug);
     }
   }
 #endif
 
   void InitFrontend() {
-    if (model_->IsPiper() && !config_.model.vits.data_dir.empty()) {
+    const auto &meta_data = model_->GetMetaData();
+
+    if ((meta_data.is_piper || meta_data.is_coqui) &&
+        !config_.model.vits.data_dir.empty()) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
-          config_.model.vits.tokens, config_.model.vits.data_dir);
+          config_.model.vits.tokens, config_.model.vits.data_dir,
+          model_->GetMetaData());
     } else {
       frontend_ = std::make_unique<Lexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,
-          model_->Punctuations(), model_->Language(), config_.model.debug);
+          meta_data.punctuations, meta_data.language, config_.model.debug);
     }
   }
 
@@ -256,7 +268,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     const float *p = audio.GetTensorData<float>();
 
     GeneratedAudio ans;
-    ans.sample_rate = model_->SampleRate();
+    ans.sample_rate = model_->GetMetaData().sample_rate;
     ans.samples = std::vector<float>(p, p + total);
     return ans;
   }
