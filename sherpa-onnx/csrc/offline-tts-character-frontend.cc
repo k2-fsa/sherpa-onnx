@@ -96,7 +96,7 @@ OfflineTtsCharacterFrontend::OfflineTtsCharacterFrontend(
 
 std::vector<std::vector<int64_t>>
 OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
-    const std::string &text, const std::string &voice /*= ""*/) const {
+    const std::string &_text, const std::string &voice /*= ""*/) const {
   // see
   // https://github.com/coqui-ai/TTS/blob/dev/TTS/tts/utils/text/tokenizer.py#L87
   int32_t use_eos_bos = meta_data_.use_eos_bos;
@@ -105,8 +105,10 @@ OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
   int32_t blank_id = meta_data_.blank_id;
   int32_t add_blank = meta_data_.add_blank;
 
-  // Note: No need to convert text to lowercase since tokens.txt
-  // is assumed to contain both lowercase and uppercase tokens.
+  std::string text(_text.size(), 0);
+  std::transform(_text.begin(), _text.end(), text.begin(),
+                 [](auto c) { return std::tolower(c); });
+
   std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
   std::u32string s = conv.from_bytes(text);
 
