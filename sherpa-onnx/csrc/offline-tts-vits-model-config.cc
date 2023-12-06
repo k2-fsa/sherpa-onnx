@@ -44,19 +44,7 @@ bool OfflineTtsVitsModelConfig::Validate() const {
     return false;
   }
 
-  if (data_dir.empty()) {
-    if (lexicon.empty()) {
-      SHERPA_ONNX_LOGE(
-          "Please provide --vits-lexicon if you leave --vits-data-dir empty");
-      return false;
-    }
-
-    if (!FileExists(lexicon)) {
-      SHERPA_ONNX_LOGE("--vits-lexicon: %s does not exist", lexicon.c_str());
-      return false;
-    }
-
-  } else {
+  if (!data_dir.empty()) {
     if (!FileExists(data_dir + "/phontab")) {
       SHERPA_ONNX_LOGE("%s/phontab does not exist. Skipping test",
                        data_dir.c_str());
