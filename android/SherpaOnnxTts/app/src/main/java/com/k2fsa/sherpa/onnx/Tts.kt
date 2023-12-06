@@ -23,7 +23,7 @@ data class OfflineTtsModelConfig(
 data class OfflineTtsConfig(
     var model: OfflineTtsModelConfig,
     var ruleFsts: String = "",
-    var maxNumSentences: Int = 2,
+    var maxNumSentences: Int = 1,
 )
 
 class GeneratedAudio(
