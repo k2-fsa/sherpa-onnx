@@ -431,15 +431,12 @@ void CNonStreamingTextToSpeechDlg::Init() {
     ok = false;
   }
 
-  if (!Exists("./lexicon.txt") && !Exists("./espeak-ng-data/phontab")) {
-    error_message += "Cannot find espeak-ng-data directory or ./lexicon.txt\r\n";
-    ok = false;
-  }
-
   if (!Exists("./tokens.txt")) {
     error_message += "Cannot find ./tokens.txt\r\n";
     ok = false;
   }
+  // it is OK to leave lexicon.txt and espeak-ng-data empty
+  // since models using characters don't need them
 
   if (!ok) {
     generate_btn_.EnableWindow(FALSE);
@@ -470,7 +467,7 @@ void CNonStreamingTextToSpeechDlg::Init() {
   config.model.vits.model = "./model.onnx";
   if (Exists("./espeak-ng-data/phontab")) {
     config.model.vits.data_dir = "./espeak-ng-data";
-  } else {
+  } else if (Exists("./lexicon.txt")) {
     config.model.vits.lexicon = "./lexicon.txt";
   }
   config.model.vits.tokens = "./tokens.txt";
