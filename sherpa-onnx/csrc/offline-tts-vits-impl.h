@@ -18,6 +18,7 @@
 #include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-tts-character-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-model.h"
@@ -116,7 +117,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       return {};
     }
 
-    if (meta_data.add_blank && config_.model.vits.data_dir.empty()) {
+    // TODO(fangjun): add blank inside the frontend, not here
+    if (meta_data.add_blank && config_.model.vits.data_dir.empty() &&
+        meta_data.frontend != "characters") {
       for (auto &k : x) {
         k = AddBlank(k);
       }
@@ -195,12 +198,22 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   void InitFrontend(AAssetManager *mgr) {
     const auto &meta_data = model_->GetMetaData();
 
-    if ((meta_data.is_piper || meta_data.is_coqui) &&
-        !config_.model.vits.data_dir.empty()) {
+    if (meta_data.frontend == "characters") {
+      frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
+          mgr, config_.model.vits.tokens, meta_data);
+    } else if ((meta_data.is_piper || meta_data.is_coqui) &&
+               !config_.model.vits.data_dir.empty()) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           mgr, config_.model.vits.tokens, config_.model.vits.data_dir,
           meta_data);
     } else {
+      if (config_.model.vits.lexicon.empty()) {
+        SHERPA_ONNX_LOGE(
+            "Not a model using characters as modeling unit. Please provide "
+            "--vits-lexicon if you leave --vits-data-dir empty");
+        exit(-1);
+      }
+
       frontend_ = std::make_unique<Lexicon>(
           mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
           meta_data.punctuations, meta_data.language, config_.model.debug);
@@ -211,12 +224,21 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   void InitFrontend() {
     const auto &meta_data = model_->GetMetaData();
 
-    if ((meta_data.is_piper || meta_data.is_coqui) &&
-        !config_.model.vits.data_dir.empty()) {
+    if (meta_data.frontend == "characters") {
+      frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
+          config_.model.vits.tokens, meta_data);
+    } else if ((meta_data.is_piper || meta_data.is_coqui) &&
+               !config_.model.vits.data_dir.empty()) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           config_.model.vits.tokens, config_.model.vits.data_dir,
           model_->GetMetaData());
     } else {
+      if (config_.model.vits.lexicon.empty()) {
+        SHERPA_ONNX_LOGE(
+            "Not a model using characters as modeling unit. Please provide "
+            "--vits-lexicon if you leave --vits-data-dir empty");
+        exit(-1);
+      }
       frontend_ = std::make_unique<Lexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,
           meta_data.punctuations, meta_data.language, config_.model.debug);

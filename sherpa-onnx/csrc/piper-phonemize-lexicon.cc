@@ -123,7 +123,6 @@ static std::vector<int64_t> CoquiPhonemesToIds(
   int32_t blank_id = meta_data.blank_id;
   int32_t add_blank = meta_data.add_blank;
   int32_t comma_id = token2id.at(',');
-  SHERPA_ONNX_LOGE("comma id: %d", comma_id);
 
   std::vector<int64_t> ans;
   if (add_blank) {

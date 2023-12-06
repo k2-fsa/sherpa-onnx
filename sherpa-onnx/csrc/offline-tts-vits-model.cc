@@ -87,13 +87,18 @@ class OfflineTtsVitsModel::Impl {
     SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.punctuations,
                                                 "punctuation", "");
     SHERPA_ONNX_READ_META_DATA_STR(meta_data_.language, "language");
+
     SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice", "");
+
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.frontend, "frontend",
+                                                "");
 
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.blank_id, "blank_id", 0);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.bos_id, "bos_id", 0);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.eos_id, "eos_id", 0);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.use_eos_bos,
                                             "use_eos_bos", 0);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.pad_id, "pad_id", 0);
 
     std::string comment;
     SHERPA_ONNX_READ_META_DATA_STR(comment, "comment");
@@ -142,14 +147,23 @@ class OfflineTtsVitsModel::Impl {
     Ort::Value sid_tensor =
         Ort::Value::CreateTensor(memory_info, &sid, 1, &sid_shape, 1);
 
+    int64_t lang_id_shape = 1;
+    int64_t lang_id = 0;
+    Ort::Value lang_id_tensor =
+        Ort::Value::CreateTensor(memory_info, &lang_id, 1, &lang_id_shape, 1);
+
     std::vector<Ort::Value> inputs;
-    inputs.reserve(4);
+    inputs.reserve(5);
     inputs.push_back(std::move(x));
     inputs.push_back(std::move(x_length));
     inputs.push_back(std::move(scales_tensor));
 
-    if (input_names_.size() == 4 && input_names_.back() == "sid") {
+    if (input_names_.size() >= 4 && input_names_[3] == "sid") {
       inputs.push_back(std::move(sid_tensor));
+    }
+
+    if (input_names_.size() >= 5 && input_names_[4] == "langid") {
+      inputs.push_back(std::move(lang_id_tensor));
     }
 
     auto out =
