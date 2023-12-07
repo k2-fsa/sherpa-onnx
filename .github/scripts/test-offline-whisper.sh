@@ -16,8 +16,12 @@ which $EXE
 names=(
 tiny.en
 base.en
-# small.en
-# medium.en
+small.en
+medium.en
+tiny
+base
+small
+medium
 )
 
 for name in ${names[@]}; do

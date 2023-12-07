@@ -107,6 +107,16 @@ jobs:
           name: release-static
           path: build/bin/*
 
+      - name: Test offline Whisper
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          readelf -d build/bin/sherpa-onnx-offline
+
+          .github/scripts/test-offline-whisper.sh
+
       - name: Test online CTC
         shell: bash
         run: |
@@ -138,16 +148,6 @@ jobs:
           export EXE=sherpa-onnx
 
           .github/scripts/test-online-paraformer.sh
-
-      - name: Test offline Whisper
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
-
-          readelf -d build/bin/sherpa-onnx-offline
-
-          .github/scripts/test-offline-whisper.sh
 
       - name: Test offline transducer
         shell: bash
