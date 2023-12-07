@@ -44,7 +44,7 @@ jobs:
             ls -lh
           fi
           python3 ./export-onnx.py --model ${{ matrix.model }}
-          python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
+          # python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
 
           ls -lh
 
@@ -65,15 +65,17 @@ jobs:
           git config --global user.name "Fangjun Kuang"
 
           GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} huggingface
+          rm huggingface/*.onnx
+          rm huggingface/*.ort
 
-          cp *.onnx ./huggingface
-          cp *.ort ./huggingface
-          cp *tokens.txt ./huggingface
+          cp -v *.onnx ./huggingface
+          # cp *.ort ./huggingface
+          cp -v *tokens.txt ./huggingface
 
           cd huggingface
 
           if [[ $model == distil-medium.en ]]; then
-            mkdir test_wavs
+            mkdir -p test_wavs
             cd test_wavs
             wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/0.wav
             wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/1.wav
@@ -86,7 +88,7 @@ jobs:
           git status
           ls -lh
           git lfs track "*.onnx"
-          git lfs track "*.ort"
+          # git lfs track "*.ort"
           git add .
           git commit -m "upload ${{ matrix.model }}"
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} main
