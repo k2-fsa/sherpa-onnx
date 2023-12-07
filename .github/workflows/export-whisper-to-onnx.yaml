@@ -80,13 +80,20 @@ jobs:
           ls -lh $src
           echo "--------------------"
 
-          tar cjvf ./$src.tar.bz2 $src
+          if [[ $model == large || $model == large-v1 || $model == large-v2 ]]; then
+            tar cvjf $src.tar.bz2 $src
+          else
+            tar cvjf - $src | split --bytes=1024MB - $src.tar.bz2.
+            # cat $src.tar.gz.* | tar xzvf -
+          fi
+          ls -lh
+
 
       - name: Release
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          file: ./*.tar.bz2
+          file: ./*.tar*
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
@@ -105,14 +112,21 @@ jobs:
           GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} huggingface
           rm -rf huggingface/*
 
-          cp -av $src/* ./huggingface/
+          if [[ $model == large || $model == large-v1 || $model == large-v2 ]]; then
+            mv $src.tar* ./huggingface
+          else
+            cp -v $src/*.onnx ./huggingface
+            cp -v $src/*tokens* ./huggingface
+            cp -av $src/test_wavs ./huggingface
+          fi
 
           cd huggingface
 
           git status
           ls -lh
-          git lfs track "*.onnx"
-          # git lfs track "*.ort"
+          git lfs track "*gz*"
+          git lfs track "*onnx*"
+
           git add .
           git commit -m "upload ${{ matrix.model }}"
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} main
