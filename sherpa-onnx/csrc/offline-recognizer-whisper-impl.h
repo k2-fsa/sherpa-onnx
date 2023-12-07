@@ -115,7 +115,27 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 
     NormalizeFeatures(f.data(), num_frames, feat_dim);
 
-    std::array<int64_t, 3> shape{1, max_num_frames, feat_dim};
+    // note that 50 is an experience value.
+    // see also ../../scripts/whisper/test.py
+    //
+    // You can replace 50 by other values, say, 100.
+    //
+    // Since we have removed the 30 seconds constraint, we need
+    // tail_padding_frames so that whisper is able to detect the eot token.
+    int32_t tail_padding_frames = 50;
+    if (model_->IsMultiLingual()) {
+      // 300 is an experience value. If it throws, please use a larger value.
+      tail_padding_frames = 300;
+    }
+
+    if (config_.model_config.whisper.tail_paddings > 0) {
+      tail_padding_frames = config_.model_config.whisper.tail_paddings;
+    }
+
+    int32_t actual_frames =
+        std::min(num_frames + tail_padding_frames, max_num_frames);
+
+    std::array<int64_t, 3> shape{1, actual_frames, feat_dim};
 
     Ort::Value mel = Ort::Value::CreateTensor<float>(
         model_->Allocator(), shape.data(), shape.size());
@@ -123,7 +143,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     std::copy(f.begin(), f.end(), p_mel);
 
     memset(p_mel + f.size(), 0,
-           (max_num_frames - num_frames) * feat_dim * sizeof(float));
+           (actual_frames - num_frames) * feat_dim * sizeof(float));
     mel = Transpose12(model_->Allocator(), &mel);
 
     try {

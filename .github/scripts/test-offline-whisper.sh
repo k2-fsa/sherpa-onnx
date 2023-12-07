@@ -16,8 +16,12 @@ which $EXE
 names=(
 tiny.en
 base.en
-# small.en
-# medium.en
+small.en
+medium.en
+tiny
+base
+small
+medium
 )
 
 for name in ${names[@]}; do
@@ -33,8 +37,8 @@ for name in ${names[@]}; do
   GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
   pushd $repo
   git lfs pull --include "*.onnx"
-  git lfs pull --include "*.ort"
-  ls -lh *.{onnx,ort}
+  # git lfs pull --include "*.ort"
+  ls -lh *.onnx
   popd
 
   log "test fp32 onnx"
@@ -43,6 +47,7 @@ for name in ${names[@]}; do
     --tokens=$repo/${name}-tokens.txt \
     --whisper-encoder=$repo/${name}-encoder.onnx \
     --whisper-decoder=$repo/${name}-decoder.onnx \
+    --whisper-tail-paddings=500 \
     --num-threads=2 \
     $repo/test_wavs/0.wav \
     $repo/test_wavs/1.wav \
@@ -54,28 +59,7 @@ for name in ${names[@]}; do
     --tokens=$repo/${name}-tokens.txt \
     --whisper-encoder=$repo/${name}-encoder.int8.onnx \
     --whisper-decoder=$repo/${name}-decoder.int8.onnx \
-    --num-threads=2 \
-    $repo/test_wavs/0.wav \
-    $repo/test_wavs/1.wav \
-    $repo/test_wavs/8k.wav
-
-  log "test fp32 ort"
-
-  time $EXE \
-    --tokens=$repo/${name}-tokens.txt \
-    --whisper-encoder=$repo/${name}-encoder.ort \
-    --whisper-decoder=$repo/${name}-decoder.ort \
-    --num-threads=2 \
-    $repo/test_wavs/0.wav \
-    $repo/test_wavs/1.wav \
-    $repo/test_wavs/8k.wav
-
-  log "test int8 ort"
-
-  time $EXE \
-    --tokens=$repo/${name}-tokens.txt \
-    --whisper-encoder=$repo/${name}-encoder.int8.ort \
-    --whisper-decoder=$repo/${name}-decoder.int8.ort \
+    --whisper-tail-paddings=500 \
     --num-threads=2 \
     $repo/test_wavs/0.wav \
     $repo/test_wavs/1.wav \

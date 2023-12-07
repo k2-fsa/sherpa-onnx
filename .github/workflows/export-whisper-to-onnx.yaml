@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
+        os: [ubuntu-latest]
         model: ["distil-medium.en", "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2"]
         python-version: ["3.8"]
 
@@ -44,7 +44,7 @@ jobs:
             ls -lh
           fi
           python3 ./export-onnx.py --model ${{ matrix.model }}
-          python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
+          # python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
 
           ls -lh
 
@@ -52,41 +52,61 @@ jobs:
             ls -lh ~/.cache/whisper
           fi
 
+          src=sherpa-onnx-whisper-${{ matrix.model }}
+
+          mkdir $src
+          cp *.onnx $src/
+          cp *tokens.txt $src
+
+          cd $src
+          mkdir -p test_wavs
+          cd test_wavs
+          wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/0.wav
+          wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/1.wav
+          wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/8k.wav
+          wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/trans.txt
+          cd ../..
+          mv $src ../..
+
+          cd ../..
+          echo "--------------------"
+          ls -lh
+          ls -lh $src
+          echo "--------------------"
+
+          tar cjvf ./$src.tar.bz2 $src
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
       - name: Publish ${{ matrix.model }} to huggingface
         shell: bash
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          model=${{ matrix.model }}
-
-          cd scripts/whisper
+          src=sherpa-onnx-whisper-${{ matrix.model }}
 
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
 
           GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} huggingface
+          rm -rf huggingface/*
 
-          cp *.onnx ./huggingface
-          cp *.ort ./huggingface
-          cp *tokens.txt ./huggingface
+          cp -av $src/* ./huggingface/
 
           cd huggingface
-
-          if [[ $model == distil-medium.en ]]; then
-            mkdir test_wavs
-            cd test_wavs
-            wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/0.wav
-            wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/1.wav
-            wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/8k.wav
-            wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/trans.txt
-            git add .
-            cd ..
-          fi
 
           git status
           ls -lh
           git lfs track "*.onnx"
-          git lfs track "*.ort"
+          # git lfs track "*.ort"
           git add .
           git commit -m "upload ${{ matrix.model }}"
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} main
