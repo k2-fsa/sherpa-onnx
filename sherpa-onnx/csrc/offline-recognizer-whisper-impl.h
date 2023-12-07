@@ -106,11 +106,12 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     std::vector<float> f = s->GetFrames();
     int32_t num_frames = f.size() / feat_dim;
 
-    if (num_frames > max_num_frames) {
+    // we use 50 here so that there will be some zero tail paddings
+    if (num_frames >= max_num_frames - 50) {
       SHERPA_ONNX_LOGE(
           "Only waves less than 30 seconds are supported. We process only the "
           "first 30 seconds and discard the remaining data");
-      num_frames = max_num_frames;
+      num_frames = max_num_frames - 50;
     }
 
     NormalizeFeatures(f.data(), num_frames, feat_dim);
@@ -140,7 +141,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     Ort::Value mel = Ort::Value::CreateTensor<float>(
         model_->Allocator(), shape.data(), shape.size());
     float *p_mel = mel.GetTensorMutableData<float>();
-    std::copy(f.begin(), f.end(), p_mel);
+    std::copy(f.data(), f.data() + actual_frames * feat_dim, p_mel);
 
     memset(p_mel + f.size(), 0,
            (actual_frames - num_frames) * feat_dim * sizeof(float));
