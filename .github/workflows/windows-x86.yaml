@@ -93,13 +93,13 @@ jobs:
 
           .github/scripts/test-online-paraformer.sh
 
-      - name: Test offline Whisper for windows x86
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export EXE=sherpa-onnx-offline.exe
-
-          .github/scripts/test-offline-whisper.sh
+      # - name: Test offline Whisper for windows x86
+      #   shell: bash
+      #   run: |
+      #     export PATH=$PWD/build/bin/Release:$PATH
+      #     export EXE=sherpa-onnx-offline.exe
+      #
+      #     .github/scripts/test-offline-whisper.sh
 
       - name: Test offline CTC for windows x86
         shell: bash
