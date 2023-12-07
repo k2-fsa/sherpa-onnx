@@ -128,6 +128,10 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
       tail_padding_frames = 300;
     }
 
+    if (config_.model_config.whisper.tail_paddings > 0) {
+      tail_padding_frames = config_.model_config.whisper.tail_paddings;
+    }
+
     int32_t actual_frames =
         std::min(num_frames + tail_padding_frames, max_num_frames);
 

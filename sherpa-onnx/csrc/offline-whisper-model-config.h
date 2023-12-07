@@ -28,12 +28,26 @@ struct OfflineWhisperModelConfig {
   // Note: For non-multilingual models, it supports only "transcribe"
   std::string task = "transcribe";
 
+  // Number of tail padding frames.
+  //
+  // Since we remove the 30-second constraint, we need to add some paddings
+  // at the end.
+  //
+  // Recommended values:
+  //   - 50 for English models
+  //   - 300 for multilingual models
+  int32_t tail_paddings = -1;
+
   OfflineWhisperModelConfig() = default;
   OfflineWhisperModelConfig(const std::string &encoder,
                             const std::string &decoder,
                             const std::string &language,
-                            const std::string &task)
-      : encoder(encoder), decoder(decoder), language(language), task(task) {}
+                            const std::string &task, int32_t tail_paddings)
+      : encoder(encoder),
+        decoder(decoder),
+        language(language),
+        task(task),
+        tail_paddings(tail_paddings) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
