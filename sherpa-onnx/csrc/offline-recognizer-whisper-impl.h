@@ -120,9 +120,14 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     //
     // You can replace 50 by other values, say, 100.
     //
-    // Since we have removed the 30 seconds contraint, we need
+    // Since we have removed the 30 seconds constraint, we need
     // tail_padding_frames so that whisper is able to detect the eot token.
     int32_t tail_padding_frames = 50;
+    if (model_->IsMultiLingual()) {
+      // 200 is an experience value. If it throws, please use a larger value.
+      tail_padding_frames = 200;
+    }
+
     int32_t actual_frames =
         std::min(num_frames + tail_padding_frames, max_num_frames);
 
