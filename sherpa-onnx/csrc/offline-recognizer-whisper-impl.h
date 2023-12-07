@@ -124,8 +124,8 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     // tail_padding_frames so that whisper is able to detect the eot token.
     int32_t tail_padding_frames = 50;
     if (model_->IsMultiLingual()) {
-      // 200 is an experience value. If it throws, please use a larger value.
-      tail_padding_frames = 200;
+      // 300 is an experience value. If it throws, please use a larger value.
+      tail_padding_frames = 300;
     }
 
     int32_t actual_frames =

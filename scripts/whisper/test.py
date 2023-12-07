@@ -259,7 +259,7 @@ def compute_features(filename: str) -> torch.Tensor:
     # You can use another value instead of 50.
     mel = torch.nn.functional.pad(mel, (0, 0, 0, 50), "constant", 0)
     # Note that if it throws for a multilingual model,
-    # please use a larger value, say 200
+    # please use a larger value, say 300
 
     target = 3000
     if mel.shape[0] > target:
