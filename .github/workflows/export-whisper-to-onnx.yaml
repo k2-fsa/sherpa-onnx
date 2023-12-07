@@ -15,8 +15,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        model: ["distil-medium.en", "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2"]
+        os: [macos-latest]
+        # model: ["distil-medium.en", "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2"]
+        model: ["large", "large-v1", "large-v2"]
         python-version: ["3.8"]
 
     steps:
@@ -50,15 +51,19 @@ jobs:
 
           if [[ $model != distil-medium.en ]]; then
             ls -lh ~/.cache/whisper
+            rm -rf ~/.cache/whisper
           fi
 
           src=sherpa-onnx-whisper-${{ matrix.model }}
 
-          mkdir $src
-          cp *.onnx $src/
-          cp *tokens.txt $src
+          cd ..
+          mv whisper $src
+
+          echo "------------------------------"
 
           cd $src
+          du -h -d1 .
+          ls -lh
           mkdir -p test_wavs
           cd test_wavs
           wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/0.wav
@@ -66,9 +71,10 @@ jobs:
           wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/8k.wav
           wget -q https://huggingface.co/csukuangfj/sherpa-onnx-whisper-medium.en/resolve/main/test_wavs/trans.txt
           cd ../..
-          mv $src ../..
+          mv $src ../
+          echo "pwd: $PWD"
 
-          cd ../..
+          cd ../
           echo "--------------------"
           ls -lh
           ls -lh $src
