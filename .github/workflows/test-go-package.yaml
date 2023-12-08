@@ -95,6 +95,11 @@ jobs:
           ./run-vits-zh-aishell3.sh
           rm -rf vits-zh-aishell3
 
+          echo "Test vits-piper-en_US-lessac-medium"
+          git clone https://huggingface.co/csukuangfj/vits-piper-en_US-lessac-medium
+          ./run-vits-piper-en_US-lessac-medium.sh
+          rm -rf vits-piper-en_US-lessac-medium
+
           ls -lh *.wav
           cp *.wav ../../tts-waves/
 

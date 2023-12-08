@@ -26,7 +26,7 @@ func main() {
 	flag.IntVar(&config.Model.Debug, "debug", 0, "Whether to show debug message")
 	flag.StringVar(&config.Model.Provider, "provider", "cpu", "Provider to use")
 	flag.StringVar(&config.RuleFsts, "tts-rule-fsts", "", "Path to rule.fst")
-	flag.StringVar(&config.MaxNumSentences, "tts-max-num-sentences", 1, "Batch size")
+	flag.IntVar(&config.MaxNumSentences, "tts-max-num-sentences", 1, "Batch size")
 
 	flag.IntVar(&sid, "sid", 0, "Speaker ID. Used only for multi-speaker models")
 	flag.StringVar(&filename, "output-filename", "./generated.wav", "Filename to save the generated audio")
