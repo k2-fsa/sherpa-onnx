@@ -83,10 +83,6 @@ function osx() {
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_10_14_x86_64.whl
 
   cp -v sherpa_onnx/lib/*.dylib $dst/
-  rm -v $dst/libonnxruntime.dylib
-  rm -v $dst/libcargs.dylib
-  rm -v $dst/libsherpa-onnx-fst.dylib
-  rm -v $dst/libsherpa-onnx-portaudio.dylib
 
   cd ..
   rm -rf t
@@ -101,10 +97,6 @@ function osx() {
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_arm64.whl
 
   cp -v sherpa_onnx/lib/*.dylib $dst/
-  rm -v $dst/libonnxruntime.dylib
-  rm -v $dst/libcargs.dylib
-  rm -v $dst/libsherpa-onnx-fst.dylib
-  rm -v $dst/libsherpa-onnx-portaudio.dylib
 
   cd ..
   rm -rf t
