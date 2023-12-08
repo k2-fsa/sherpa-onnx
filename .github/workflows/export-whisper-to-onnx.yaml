@@ -81,10 +81,13 @@ jobs:
           echo "--------------------"
 
           if [[ $model == large || $model == large-v1 || $model == large-v2 ]]; then
+            #tar cvjf - $src | split --bytes=1024MB - $src.tar.bz2.
             tar cvjf $src.tar.bz2 $src
-          else
-            tar cvjf - $src | split --bytes=1024MB - $src.tar.bz2.
+            split -b 1G $src.tar.bz2 $src.tar.bz2.
+            rm $src.tar.bz2
             # cat $src.tar.gz.* | tar xzvf -
+          else
+            tar cvjf $src.tar.bz2 $src
           fi
           ls -lh
 
