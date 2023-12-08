@@ -22,6 +22,8 @@ tiny
 base
 small
 medium
+distil-medium.en
+distil-small.en
 )
 
 for name in ${names[@]}; do

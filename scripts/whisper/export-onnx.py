@@ -44,7 +44,7 @@ def get_args():
             "tiny", "tiny.en", "base", "base.en",
             "small", "small.en", "medium", "medium.en",
             "large", "large-v1", "large-v2",
-            "distil-medium.en",
+            "distil-medium.en", "distil-small.en", "distil-large-v2"
             ],
         # fmt: on
     )
@@ -311,6 +311,32 @@ def main():
                 You can use the following command to do that:
 
                 wget -O distil-medium-en-original-model.bin https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin
+            """
+            )
+        model = whisper.load_model(filename)
+    elif name == "distil-large-v2":
+        filename = "./distil-large-v2-original-model.bin"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/distil-whisper/distil-large-v2
+                to download original-model.bin
+                You can use the following command to do that:
+
+                wget -O distil-large-v2-original-model.bin https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin
+            """
+            )
+        model = whisper.load_model(filename)
+    elif name == "distil-small.en":
+        filename = "./distil-small-en-original-model.bin"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/distil-whisper/distil-small.en
+                to download original-model.bin
+                You can use the following command to do that:
+
+                wget -O distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
             """
             )
         model = whisper.load_model(filename)

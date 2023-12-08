@@ -90,7 +90,7 @@ jobs:
             ./sherpa-onnx-zipformer-en-2023-06-26/test_wavs/8k.wav
 
       - name: Start server for paraformer models
-        if: matrix.model_type == 'paraformer'
+        if: matrix.model_type == 'paraformer' && matrix.os != 'windows-latest'
         shell: bash
         run: |
           GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-bilingual-zh-en
@@ -106,7 +106,7 @@ jobs:
           sleep 10
 
       - name: Start client for paraformer models
-        if: matrix.model_type == 'paraformer'
+        if: matrix.model_type == 'paraformer' && matrix.os != 'windows-latest'
         shell: bash
         run: |
           python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \

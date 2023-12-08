@@ -209,7 +209,7 @@ class OnnxModel:
         logits = logits.reshape(-1)
         mask = torch.ones(logits.shape[0], dtype=torch.int64)
         mask[self.all_language_tokens] = 0
-        logits[mask] = float("-inf")
+        logits[mask != 0] = float("-inf")
         lang_id = logits.argmax().item()
         print("detected language: ", self.id2lang[lang_id])
         return lang_id
@@ -263,7 +263,9 @@ def compute_features(filename: str) -> torch.Tensor:
 
     target = 3000
     if mel.shape[0] > target:
-        mel = mel[:target]
+        # -50 so that there are some zero tail paddings.
+        mel = mel[: target - 50]
+        mel = torch.nn.functional.pad(mel, (0, 0, 0, 50), "constant", 0)
 
     # We don't need to pad it to 30 seconds now!
     #  mel = torch.nn.functional.pad(mel, (0, 0, 0, target - mel.shape[0]), "constant", 0)
