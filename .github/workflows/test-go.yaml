@@ -65,6 +65,8 @@ jobs:
         run: |
           mkdir tts-waves
 
+          cp -v go-api-examples/non-streaming-tts/*.sh scripts/go/_internal/non-streaming-tts/
+
           cd scripts/go/_internal/non-streaming-tts/
           ls -lh
           go mod tidy
@@ -89,6 +91,11 @@ jobs:
           ./run-vits-zh-aishell3.sh
           rm -rf vits-zh-aishell3
 
+          echo "Test vits-piper-en_US-lessac-medium"
+          git clone https://huggingface.co/csukuangfj/vits-piper-en_US-lessac-medium
+          ./run-vits-piper-en_US-lessac-medium.sh
+          rm -rf vits-piper-en_US-lessac-medium
+
           cp *.wav ../../../../tts-waves/
 
       - uses: actions/upload-artifact@v3
@@ -99,6 +106,8 @@ jobs:
       - name: Test non-streaming decoding files (macOS)
         shell: bash
         run: |
+          cp -v go-api-examples/non-streaming-decode-files/*.sh scripts/go/_internal/non-streaming-decode-files/
+
           cd scripts/go/_internal/non-streaming-decode-files/
           ls -lh
           go mod tidy
@@ -139,6 +148,7 @@ jobs:
       - name: Test streaming decoding files
         shell: bash
         run: |
+          cp -v go-api-examples/streaming-decode-files/*.sh scripts/go/_internal/streaming-decode-files
           cd scripts/go/_internal/streaming-decode-files
           ls -lh
           go mod tidy

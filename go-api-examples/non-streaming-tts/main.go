@@ -16,6 +16,7 @@ func main() {
 	flag.StringVar(&config.Model.Vits.Model, "vits-model", "", "Path to the vits ONNX model")
 	flag.StringVar(&config.Model.Vits.Lexicon, "vits-lexicon", "", "Path to lexicon.txt")
 	flag.StringVar(&config.Model.Vits.Tokens, "vits-tokens", "", "Path to tokens.txt")
+	flag.StringVar(&config.Model.Vits.DataDir, "vits-data-dir", "", "Path to espeak-ng-data")
 
 	flag.Float32Var(&config.Model.Vits.NoiseScale, "vits-noise-scale", 0.667, "noise_scale for VITS")
 	flag.Float32Var(&config.Model.Vits.NoiseScaleW, "vits-noise-scale-w", 0.8, "noise_scale_w for VITS")
@@ -24,6 +25,8 @@ func main() {
 	flag.IntVar(&config.Model.NumThreads, "num-threads", 1, "Number of threads for computing")
 	flag.IntVar(&config.Model.Debug, "debug", 0, "Whether to show debug message")
 	flag.StringVar(&config.Model.Provider, "provider", "cpu", "Provider to use")
+	flag.StringVar(&config.RuleFsts, "tts-rule-fsts", "", "Path to rule.fst")
+	flag.IntVar(&config.MaxNumSentences, "tts-max-num-sentences", 1, "Batch size")
 
 	flag.IntVar(&sid, "sid", 0, "Speaker ID. Used only for multi-speaker models")
 	flag.StringVar(&filename, "output-filename", "./generated.wav", "Filename to save the generated audio")

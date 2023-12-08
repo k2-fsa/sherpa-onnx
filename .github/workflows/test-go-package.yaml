@@ -95,6 +95,11 @@ jobs:
           ./run-vits-zh-aishell3.sh
           rm -rf vits-zh-aishell3
 
+          echo "Test vits-piper-en_US-lessac-medium"
+          git clone https://huggingface.co/csukuangfj/vits-piper-en_US-lessac-medium
+          ./run-vits-piper-en_US-lessac-medium.sh
+          rm -rf vits-piper-en_US-lessac-medium
+
           ls -lh *.wav
           cp *.wav ../../tts-waves/
 
@@ -133,6 +138,11 @@ jobs:
           ./run-vits-zh-aishell3.sh
           rm -rf vits-zh-aishell3
 
+          echo "Test vits-piper-en_US-lessac-medium"
+          git clone https://huggingface.co/csukuangfj/vits-piper-en_US-lessac-medium
+          ./run-vits-piper-en_US-lessac-medium.sh
+          rm -rf vits-piper-en_US-lessac-medium
+
           ls -lh *.wav
           cp *.wav ../../tts-waves/
 
@@ -140,6 +150,7 @@ jobs:
         if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
         shell: bash
         run: |
+          mkdir tts-waves
           cd go-api-examples/non-streaming-tts
           ls -lh
           go mod tidy
@@ -177,6 +188,11 @@ jobs:
           git clone https://huggingface.co/csukuangfj/vits-zh-aishell3
           ./run-vits-zh-aishell3.sh
           rm -rf vits-zh-aishell3
+
+          echo "Test vits-piper-en_US-lessac-medium"
+          git clone https://huggingface.co/csukuangfj/vits-piper-en_US-lessac-medium
+          ./run-vits-piper-en_US-lessac-medium.sh
+          rm -rf vits-piper-en_US-lessac-medium
 
           ls -lh *.wav
           cp *.wav ../../tts-waves/
