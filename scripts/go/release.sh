@@ -14,6 +14,60 @@ echo "SHERPA_ONNX_DIR: $SHERPA_ONNX_DIR"
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" $SHERPA_ONNX_DIR/CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
+function linux() {
+  echo "Process linux-x64"
+  git clone git@github.com:k2-fsa/sherpa-onnx-go-linux.git
+  cp -v ./sherpa_onnx.go ./sherpa-onnx-go-linux/
+  cp -v ./_internal/c-api.h ./sherpa-onnx-go-linux/
+
+  rm -rf sherpa-onnx-go-linux/lib/x86_64-unknown-linux-gnu/lib*
+  dst=$(realpath sherpa-onnx-go-linux/lib/x86_64-unknown-linux-gnu)
+  mkdir t
+  cd t
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+
+  cp -v sherpa_onnx/lib/*.so* $dst
+
+  cd ..
+  rm -rf t
+
+  rm -rf sherpa-onnx-go-linux/lib/aarch64-unknown-linux-gnu/lib*
+  dst=$(realpath sherpa-onnx-go-linux/lib/aarch64-unknown-linux-gnu)
+  mkdir t
+  cd t
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+
+  cp -v sherpa_onnx/lib/*.so* $dst
+
+  cd ..
+  rm -rf t
+
+  rm -rf sherpa-onnx-go-linux/lib/arm-unknown-linux-gnueabihf/lib*
+  dst=$(realpath sherpa-onnx-go-linux/lib/arm-unknown-linux-gnueabihf)
+  mkdir t
+  cd t
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
+  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
+
+  cp -v sherpa_onnx/lib/*.so* $dst
+
+  cd ..
+  rm -rf t
+
+  echo "------------------------------"
+  cd sherpa-onnx-go-linux
+  git status
+  git add .
+  git commit -m "Release $SHERPA_ONNX_VERSION" && \
+  git push && \
+  git tag $SHERPA_ONNX_VERSION && \
+  git push origin $SHERPA_ONNX_VERSION || true
+  cd ..
+  rm -rf sherpa-onnx-go-linux
+}
+
 function osx() {
   echo "Process osx-x64"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-macos.git
@@ -58,15 +112,16 @@ function osx() {
   cd sherpa-onnx-go-macos
   git status
   git add .
-  git commit -m "Release $SHERPA_ONNX_VERSION"
-  git push
-  git tag $SHERPA_ONNX_VERSION
-  git push origin $SHERPA_ONNX_VERSION
+  git commit -m "Release $SHERPA_ONNX_VERSION" && \
+  git push && \
+  git tag $SHERPA_ONNX_VERSION && \
+  git push origin $SHERPA_ONNX_VERSION || true
   cd ..
   rm -rf sherpa-onnx-go-macos
 }
 
 
+linux
 osx
 
 
