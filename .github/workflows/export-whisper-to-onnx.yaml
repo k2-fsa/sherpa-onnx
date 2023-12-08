@@ -16,8 +16,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        # model: ["distil-medium.en", "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2"]
-        model: ["large", "large-v1", "large-v2"]
+        # model: ["distil-medium.en", "distil-small.en", "distil-large-v2", "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2"]
+        model: ["distil-small.en", "distil-large-v2"]
         python-version: ["3.8"]
 
     steps:
@@ -43,16 +43,22 @@ jobs:
           if [[ $model == distil-medium.en ]]; then
             wget -q -O distil-medium-en-original-model.bin https://huggingface.co/distil-whisper/distil-medium.en/resolve/main/original-model.bin
             ls -lh
+          elif [[ $model == distil-large-v2 ]]; then
+            wget -q -O distil-large-v2-original-model.bin https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin
+            ls -lh
+          elif [[ $model == distil-small.en ]]; then
+            wget -q -O distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
+            ls -lh
           fi
           python3 ./export-onnx.py --model ${{ matrix.model }}
           # python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
 
           ls -lh
 
-          if [[ $model != distil-medium.en ]]; then
-            ls -lh ~/.cache/whisper
-            rm -rf ~/.cache/whisper
-          fi
+          ls -lh ~/.cache/whisper || true
+          ls -lh distil*original-model.bin || true
+          rm -rf ~/.cache/whisper
+          rm -f distil*original-model.bin
 
           src=sherpa-onnx-whisper-${{ matrix.model }}
 
@@ -80,12 +86,12 @@ jobs:
           ls -lh $src
           echo "--------------------"
 
-          if [[ $model == large || $model == large-v1 || $model == large-v2 ]]; then
+          if [[ $model == large || $model == large-v1 || $model == large-v2 || $model == distil-large-v2 ]]; then
             #tar cvjf - $src | split --bytes=1024MB - $src.tar.bz2.
             tar cvjf $src.tar.bz2 $src
             split -b 1G $src.tar.bz2 $src.tar.bz2.
             rm $src.tar.bz2
-            # cat $src.tar.gz.* | tar xzvf -
+            # cat $src.tar.gz.* | tar xjf -
           else
             tar cvjf $src.tar.bz2 $src
           fi
@@ -115,7 +121,7 @@ jobs:
           GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} huggingface
           rm -rf huggingface/*
 
-          if [[ $model == large || $model == large-v1 || $model == large-v2 ]]; then
+          if [[ $model == large || $model == large-v1 || $model == large-v2 || $model == distil-large-v2 ]]; then
             mv $src.tar* ./huggingface
           else
             cp -v $src/*.onnx ./huggingface
