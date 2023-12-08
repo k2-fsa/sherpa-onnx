@@ -60,7 +60,7 @@ function linux() {
   cd sherpa-onnx-go-linux
   git status
   git add .
-  git commit -m "Release $SHERPA_ONNX_VERSION" && \
+  git commit -m "Release v$SHERPA_ONNX_VERSION" && \
   git push && \
   git tag v$SHERPA_ONNX_VERSION && \
   git push origin v$SHERPA_ONNX_VERSION || true
@@ -104,7 +104,7 @@ function osx() {
   cd sherpa-onnx-go-macos
   git status
   git add .
-  git commit -m "Release $SHERPA_ONNX_VERSION" && \
+  git commit -m "Release v$SHERPA_ONNX_VERSION" && \
   git push && \
   git tag v$SHERPA_ONNX_VERSION && \
   git push origin v$SHERPA_ONNX_VERSION || true
@@ -147,7 +147,7 @@ function windows() {
   cd sherpa-onnx-go-windows
   git status
   git add .
-  git commit -m "Release $SHERPA_ONNX_VERSION" && \
+  git commit -m "Release v$SHERPA_ONNX_VERSION" && \
   git push && \
   git tag v$SHERPA_ONNX_VERSION && \
   git push origin v$SHERPA_ONNX_VERSION || true
