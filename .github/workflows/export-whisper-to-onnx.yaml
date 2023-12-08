@@ -16,8 +16,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        # model: ["distil-medium.en", "distil-small.en", "distil-large-v2", "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2"]
-        model: ["distil-small.en", "distil-large-v2"]
+        # model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2", "distil-large-v2"]
+        model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium"]
         python-version: ["3.8"]
 
     steps:
