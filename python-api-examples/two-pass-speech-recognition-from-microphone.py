@@ -195,6 +195,17 @@ def add_second_pass_whisper_model_args(parser: argparse.ArgumentParser):
         """,
     )
 
+    parser.add_argument(
+        "--second-whisper-tail-paddings",
+        default=-1,
+        type=int,
+        help="""Number of tail padding frames.
+        We have removed the 30-second constraint from whisper, so you need to
+        choose the amount of tail padding frames by yourself.
+        Use -1 to use a default value for tail padding.
+        """,
+    )
+
 
 def add_second_pass_non_streaming_model_args(parser: argparse.ArgumentParser):
     add_second_pass_transducer_model_args(parser)
@@ -314,6 +325,7 @@ def create_second_pass_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             decoding_method="greedy_search",
             language=args.second_whisper_language,
             task=args.second_whisper_task,
+            tail_paddings=args.second_whisper_tail_paddings,
         )
     else:
         raise ValueError("Please specify at least one model for the second pass")

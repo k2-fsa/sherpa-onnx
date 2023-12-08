@@ -167,6 +167,17 @@ def get_args():
     )
 
     parser.add_argument(
+        "--whisper-tail-paddings",
+        default=-1,
+        type=int,
+        help="""Number of tail padding frames.
+        We have removed the 30-second constraint from whisper, so you need to
+        choose the amount of tail padding frames by yourself.
+        Use -1 to use a default value for tail padding.
+        """,
+    )
+
+    parser.add_argument(
         "--decoding-method",
         type=str,
         default="greedy_search",
@@ -256,6 +267,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             debug=args.debug,
             language=args.whisper_language,
             task=args.whisper_task,
+            tail_paddings=args.whisper_tail_paddings,
         )
     else:
         raise ValueError("Please specify at least one model")
