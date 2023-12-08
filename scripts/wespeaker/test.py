@@ -85,7 +85,7 @@ def compute_features(samples: np.ndarray, sample_rate: int) -> np.ndarray:
     opts.mel_opts.debug_mel = False
 
     fbank = knf.OnlineFbank(opts)
-    fbank.accept_waveform(sample_rate, samples.tolist())
+    fbank.accept_waveform(sample_rate, samples)
     fbank.input_finished()
 
     features = []
