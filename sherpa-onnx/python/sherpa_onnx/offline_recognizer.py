@@ -261,6 +261,7 @@ class OfflineRecognizer(object):
         decoding_method: str = "greedy_search",
         debug: bool = False,
         provider: str = "cpu",
+        tail_paddings: int = -1,
     ):
         """
         Please refer to
@@ -305,6 +306,7 @@ class OfflineRecognizer(object):
                 decoder=decoder,
                 language=language,
                 task=task,
+                tail_paddings=tail_paddings,
             ),
             tokens=tokens,
             num_threads=num_threads,
