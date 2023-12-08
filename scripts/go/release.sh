@@ -106,8 +106,11 @@ function osx() {
   git add .
   git commit -m "Release v$SHERPA_ONNX_VERSION" && \
   git push && \
-  git tag v$SHERPA_ONNX_VERSION && \
-  git push origin v$SHERPA_ONNX_VERSION || true
+  git tag v1.9.2-alpha.2 && \
+  git push origin v1.9.2-alpha.2 || true
+
+  # git tag v$SHERPA_ONNX_VERSION && \
+  # git push origin v$SHERPA_ONNX_VERSION || true
   cd ..
   rm -rf sherpa-onnx-go-macos
 }
