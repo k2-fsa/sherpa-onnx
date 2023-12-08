@@ -5,7 +5,79 @@ set -ex
 git config --global user.email "csukuangfj@gmail.com"
 git config --global user.name "Fangjun Kuang"
 
-SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SHERPA_ONNX_DIR=$(realpath $SCRIPT_DIR/../..)
+echo "SCRIPT_DIR: $SCRIPT_DIR"
+echo "SHERPA_ONNX_DIR: $SHERPA_ONNX_DIR"
+
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" $SHERPA_ONNX_DIR/CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+function osx() {
+  echo "Process osx-x64"
+  git clone git@github.com:k2-fsa/sherpa-onnx-go-macos.git
+  cp -v ./sherpa_onnx.go ./sherpa-onnx-go-macos/
+  cp -v ./_internal/c-api.h ./sherpa-onnx-go-macos/
+
+  rm -rf sherpa-onnx-go-macos/lib/x86_64-apple-darwin/lib*
+  dst=$(realpath sherpa-onnx-go-macos/lib/x86_64-apple-darwin/)
+
+  mkdir t
+  cd t
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_10_14_x86_64.whl
+  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_10_14_x86_64.whl
+
+  cp -v sherpa_onnx/lib/*.dylib $dst/
+  rm -v $dst/libonnxruntime.dylib
+  rm -v $dst/libcargs.dylib
+  rm -v $dst/libsherpa-onnx-fst.dylib
+  rm -v $dst/libsherpa-onnx-portaudio.dylib
+
+  cd ..
+  rm -rf t
+
+  echo "process macos arm64"
+  rm -rf sherpa-onnx-go-macos/lib/aarch64-apple-darwin/lib*
+  dst=$(realpath sherpa-onnx-go-macos/lib/aarch64-apple-darwin)
+
+  mkdir t
+  cd t
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_arm64.whl
+  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_arm64.whl
+
+  cp -v sherpa_onnx/lib/*.dylib $dst/
+  rm -v $dst/libonnxruntime.dylib
+  rm -v $dst/libcargs.dylib
+  rm -v $dst/libsherpa-onnx-fst.dylib
+  rm -v $dst/libsherpa-onnx-portaudio.dylib
+
+  cd ..
+  rm -rf t
+  echo "------------------------------"
+  cd sherpa-onnx-go-macos
+  git status
+  git add .
+  git commit -m "Release $SHERPA_ONNX_VERSION"
+  git push
+  git tag $SHERPA_ONNX_VERSION
+  git push origin $SHERPA_ONNX_VERSION
+  cd ..
+  rm -rf sherpa-onnx-go-macos
+}
+
+
+osx
+
+
+
+
+
+
+
+if false; then
+
+
 
 echo "========================================================================="
 
@@ -144,6 +216,7 @@ git push origin $new_tag || true
 popd
 
 echo "========================================================================="
-
+fi
 
 rm -fv ~/.ssh/github
+

@@ -503,6 +503,7 @@ type OfflineTtsVitsModelConfig struct {
 	Model       string  // Path to the VITS onnx model
 	Lexicon     string  // Path to lexicon.txt
 	Tokens      string  // Path to tokens.txt
+	DataDir     string  // Path to tokens.txt
 	NoiseScale  float32 // noise scale for vits models. Please use 0.667 in general
 	NoiseScaleW float32 // noise scale for vits models. Please use 0.8 in general
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
@@ -522,7 +523,9 @@ type OfflineTtsModelConfig struct {
 }
 
 type OfflineTtsConfig struct {
-	Model OfflineTtsModelConfig
+	Model           OfflineTtsModelConfig
+	RuleFsts        string
+	MaxNumSentences int
 }
 
 type GeneratedAudio struct {
@@ -547,6 +550,12 @@ func DeleteOfflineTts(tts *OfflineTts) {
 // the returned tts to avoid memory leak
 func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c := C.struct_SherpaOnnxOfflineTtsConfig{}
+
+	c.rule_fsts = C.CString(config.RuleFsts)
+	defer C.free(unsafe.Pointer(c.rule_fsts))
+
+	c.max_num_sentences = C.int(config.MaxNumSentences)
+
 	c.model.vits.model = C.CString(config.Model.Vits.Model)
 	defer C.free(unsafe.Pointer(c.model.vits.model))
 
@@ -555,6 +564,9 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 
 	c.model.vits.tokens = C.CString(config.Model.Vits.Tokens)
 	defer C.free(unsafe.Pointer(c.model.vits.tokens))
+
+	c.model.vits.data_dir = C.CString(config.Model.Vits.DataDir)
+	defer C.free(unsafe.Pointer(c.model.vits.data_dir))
 
 	c.model.vits.noise_scale = C.float(config.Model.Vits.NoiseScale)
 	c.model.vits.noise_scale_w = C.float(config.Model.Vits.NoiseScaleW)
