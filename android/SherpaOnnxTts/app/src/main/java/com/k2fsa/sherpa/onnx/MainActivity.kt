@@ -1,7 +1,7 @@
 package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
-import android.media.MediaPlayer
+import android.media.*
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -23,6 +23,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var generate: Button
     private lateinit var play: Button
 
+    // see
+    // https://developer.android.com/reference/kotlin/android/media/AudioTrack
+    private lateinit var track: AudioTrack
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -30,6 +34,10 @@ class MainActivity : AppCompatActivity() {
         Log.i(TAG, "Start to initialize TTS")
         initTts()
         Log.i(TAG, "Finish initializing TTS")
+
+        Log.i(TAG, "Start to initialize AudioTrack")
+        initAudioTrack()
+        Log.i(TAG, "Finish initializing AudioTrack")
 
         text = findViewById(R.id.text)
         sid = findViewById(R.id.sid)
@@ -49,6 +57,33 @@ class MainActivity : AppCompatActivity() {
         text.setText(sampleText)
 
         play.isEnabled = false
+    }
+
+    private fun initAudioTrack() {
+        val sampleRate = tts.sampleRate()
+        val bufLength = (sampleRate * 0.1).toInt()
+        Log.i(TAG, "sampleRate: ${sampleRate}, buffLength: ${bufLength}")
+
+        val attr = AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .build()
+
+        val format = AudioFormat.Builder()
+            .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
+            .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+            .setSampleRate(sampleRate)
+            .build()
+
+        track = AudioTrack(
+            attr, format, bufLength, AudioTrack.MODE_STREAM,
+            AudioManager.AUDIO_SESSION_ID_GENERATE
+        )
+        track.play()
+    }
+
+    // this function is called from C++
+    private fun callback(samples: FloatArray) {
+        track.write(samples, 0, samples.size, AudioTrack.WRITE_BLOCKING)
     }
 
     private fun onClickGenerate() {
@@ -79,16 +114,28 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        play.isEnabled = false
-        val audio = tts.generate(text = textStr, sid = sidInt, speed = speedFloat)
+        track.pause()
+        track.flush()
+        track.play()
 
-        val filename = application.filesDir.absolutePath + "/generated.wav"
-        val ok = audio.samples.size > 0 && audio.save(filename)
-        if (ok) {
-            play.isEnabled = true
-            // Play automatically after generation
-            onClickPlay()
-        }
+        play.isEnabled = false
+        Thread {
+            val audio = tts.generateWithCallback(
+                text = textStr,
+                sid = sidInt,
+                speed = speedFloat,
+                callback = this::callback
+            )
+
+            val filename = application.filesDir.absolutePath + "/generated.wav"
+            val ok = audio.samples.size > 0 && audio.save(filename)
+            if (ok) {
+                runOnUiThread {
+                    play.isEnabled = true
+                    track.stop()
+                }
+            }
+        }.start()
     }
 
     private fun onClickPlay() {
