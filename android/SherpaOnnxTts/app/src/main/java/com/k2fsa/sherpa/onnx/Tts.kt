@@ -54,12 +54,27 @@ class OfflineTts(
         }
     }
 
+    fun sampleRate() = getSampleRate(ptr)
+
     fun generate(
         text: String,
         sid: Int = 0,
         speed: Float = 1.0f
     ): GeneratedAudio {
         var objArray = generateImpl(ptr, text = text, sid = sid, speed = speed)
+        return GeneratedAudio(
+            samples = objArray[0] as FloatArray,
+            sampleRate = objArray[1] as Int
+        )
+    }
+
+    fun generateWithCallback(
+        text: String,
+        sid: Int = 0,
+        speed: Float = 1.0f,
+        callback: (samples: FloatArray) -> Unit
+    ): GeneratedAudio {
+        var objArray = generateWithCallbackImpl(ptr, text = text, sid = sid, speed = speed, callback=callback)
         return GeneratedAudio(
             samples = objArray[0] as FloatArray,
             sampleRate = objArray[1] as Int
@@ -97,6 +112,7 @@ class OfflineTts(
     ): Long
 
     private external fun delete(ptr: Long)
+    private external fun getSampleRate(ptr: Long): Int
 
     // The returned array has two entries:
     //  - the first entry is an 1-D float array containing audio samples.
@@ -107,6 +123,14 @@ class OfflineTts(
         text: String,
         sid: Int = 0,
         speed: Float = 1.0f
+    ): Array<Any>
+
+    external fun generateWithCallbackImpl(
+        ptr: Long,
+        text: String,
+        sid: Int = 0,
+        speed: Float = 1.0f,
+        callback: (samples: FloatArray) -> Unit
     ): Array<Any>
 
     companion object {
