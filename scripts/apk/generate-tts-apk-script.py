@@ -172,57 +172,57 @@ def get_vits_models() -> List[TtsModel]:
             lang="zh",
             rule_fsts="vits-zh-aishell3/rule.fst",
         ),
-        TtsModel(
-            model_dir="vits-zh-hf-doom",
-            model_name="doom.onnx",
-            lang="zh",
-            rule_fsts="vits-zh-hf-doom/rule.fst",
-        ),
-        TtsModel(
-            model_dir="vits-zh-hf-echo",
-            model_name="echo.onnx",
-            lang="zh",
-            rule_fsts="vits-zh-hf-echo/rule.fst",
-        ),
-        TtsModel(
-            model_dir="vits-zh-hf-zenyatta",
-            model_name="zenyatta.onnx",
-            lang="zh",
-            rule_fsts="vits-zh-hf-zenyatta/rule.fst",
-        ),
-        TtsModel(
-            model_dir="vits-zh-hf-abyssinvoker",
-            model_name="abyssinvoker.onnx",
-            lang="zh",
-            rule_fsts="vits-zh-hf-abyssinvoker/rule.fst",
-        ),
-        TtsModel(
-            model_dir="vits-zh-hf-keqing",
-            model_name="keqing.onnx",
-            lang="zh",
-            rule_fsts="vits-zh-hf-keqing/rule.fst",
-        ),
-        TtsModel(
-            model_dir="vits-zh-hf-eula",
-            model_name="eula.onnx",
-            lang="zh",
-            rule_fsts="vits-zh-hf-eula/rule.fst",
-        ),
-        TtsModel(
-            model_dir="vits-zh-hf-bronya",
-            model_name="bronya.onnx",
-            lang="zh",
-            rule_fsts="vits-zh-hf-bronya/rule.fst",
-        ),
-        TtsModel(
-            model_dir="vits-zh-hf-theresa",
-            model_name="theresa.onnx",
-            lang="zh",
-            rule_fsts="vits-zh-hf-theresa/rule.fst",
-        ),
+        #  TtsModel(
+        #      model_dir="vits-zh-hf-doom",
+        #      model_name="doom.onnx",
+        #      lang="zh",
+        #      rule_fsts="vits-zh-hf-doom/rule.fst",
+        #  ),
+        #  TtsModel(
+        #      model_dir="vits-zh-hf-echo",
+        #      model_name="echo.onnx",
+        #      lang="zh",
+        #      rule_fsts="vits-zh-hf-echo/rule.fst",
+        #  ),
+        #  TtsModel(
+        #      model_dir="vits-zh-hf-zenyatta",
+        #      model_name="zenyatta.onnx",
+        #      lang="zh",
+        #      rule_fsts="vits-zh-hf-zenyatta/rule.fst",
+        #  ),
+        #  TtsModel(
+        #      model_dir="vits-zh-hf-abyssinvoker",
+        #      model_name="abyssinvoker.onnx",
+        #      lang="zh",
+        #      rule_fsts="vits-zh-hf-abyssinvoker/rule.fst",
+        #  ),
+        #  TtsModel(
+        #      model_dir="vits-zh-hf-keqing",
+        #      model_name="keqing.onnx",
+        #      lang="zh",
+        #      rule_fsts="vits-zh-hf-keqing/rule.fst",
+        #  ),
+        #  TtsModel(
+        #      model_dir="vits-zh-hf-eula",
+        #      model_name="eula.onnx",
+        #      lang="zh",
+        #      rule_fsts="vits-zh-hf-eula/rule.fst",
+        #  ),
+        #  TtsModel(
+        #      model_dir="vits-zh-hf-bronya",
+        #      model_name="bronya.onnx",
+        #      lang="zh",
+        #      rule_fsts="vits-zh-hf-bronya/rule.fst",
+        #  ),
+        #  TtsModel(
+        #      model_dir="vits-zh-hf-theresa",
+        #      model_name="theresa.onnx",
+        #      lang="zh",
+        #      rule_fsts="vits-zh-hf-theresa/rule.fst",
+        #  ),
         # English (US)
         TtsModel(model_dir="vits-vctk", model_name="vits-vctk.onnx", lang="en"),
-        TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
+        #  TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
         # fmt: on
     ]
 
@@ -238,8 +238,8 @@ def main():
     template = environment.from_string(s)
     d = dict()
 
-    #  all_model_list = get_vits_models()
-    all_model_list = get_piper_models()
+    all_model_list = get_vits_models()
+    all_model_list += get_piper_models()
     all_model_list += get_coqui_models()
 
     num_models = len(all_model_list)
