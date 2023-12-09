@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initAudioTrack() {
         val sampleRate = tts.sampleRate()
-        val bufLength = (sampleRate * 2.5).toInt()
+        val bufLength = (sampleRate * 0.1).toInt()
         Log.i(TAG, "sampleRate: ${sampleRate}, buffLength: ${bufLength}")
 
         val attr = AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
