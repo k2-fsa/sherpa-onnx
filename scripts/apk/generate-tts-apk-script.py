@@ -250,11 +250,16 @@ def main():
 
     start = index * num_per_runner
     end = start + num_per_runner
-    if index == args.total - 1:
-        end = num_models
+
+    remaining = num_models - args.total * num_per_runner
 
     print(f"{index}/{total}: {start}-{end}/{num_models}")
     d["tts_model_list"] = all_model_list[start:end]
+    if index < remaining:
+        s = args.total * num_per_runner + index
+        d["tts_model_list"].append(all_model_list[s])
+        print(f"{s}/{num_models}")
+
     s = template.render(**d)
     with open("./build-apk-tts.sh", "w") as f:
         print(s, file=f)
