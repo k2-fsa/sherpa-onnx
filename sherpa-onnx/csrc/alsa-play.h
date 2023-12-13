@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/sherpa-alsa-play.h
+// sherpa-onnx/csrc/alsa-play.h
 //
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
