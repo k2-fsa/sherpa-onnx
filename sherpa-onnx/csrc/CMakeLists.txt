@@ -209,12 +209,20 @@ if(SHERPA_ONNX_HAS_ALSA)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
   target_link_libraries(sherpa-onnx-alsa sherpa-onnx-core)
 
+  add_executable(sherpa-onnx-offline-tts-play-alsa sherpa-onnx-offline-tts-play-alsa.cc alsa-play.cc)
+  target_link_libraries(sherpa-onnx-offline-tts-play-alsa sherpa-onnx-core)
+
   if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})
     target_link_libraries(sherpa-onnx-alsa -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
+    target_link_libraries(sherpa-onnx-offline-tts-play-alsa -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
   else()
     target_link_libraries(sherpa-onnx-alsa asound)
+    target_link_libraries(sherpa-onnx-offline-tts-play-alsa asound)
   endif()
-  install(TARGETS sherpa-onnx-alsa DESTINATION bin)
+  install(TARGETS
+    sherpa-onnx-alsa
+    sherpa-onnx-offline-tts-play-alsa
+    DESTINATION bin)
 endif()
 
 if(SHERPA_ONNX_ENABLE_PORTAUDIO)
