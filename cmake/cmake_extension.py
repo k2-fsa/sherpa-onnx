@@ -144,6 +144,8 @@ class BuildExtension(build_ext):
         binaries += ["sherpa-onnx-vad-microphone-offline-asr"]
         binaries += ["sherpa-onnx-offline-tts"]
         binaries += ["sherpa-onnx-offline-tts-play"]
+        binaries += ["sherpa-onnx-alsa"]
+        binaries += ["sherpa-onnx-offline-tts-play-alsa"]
 
         if is_windows():
             binaries += ["kaldi-native-fbank-core.dll"]
@@ -165,6 +167,11 @@ class BuildExtension(build_ext):
                 src_file = install_dir / "lib" / (f + suffix)
             if not src_file.is_file():
                 src_file = install_dir / ".." / (f + suffix)
+
+            if not src_file.is_file() and 'alsa' in f:
+                print(f'Skipping {f}')
+                continue
+
             print(f"Copying {src_file} to {out_bin_dir}/")
             shutil.copy(f"{src_file}", f"{out_bin_dir}/")
 
