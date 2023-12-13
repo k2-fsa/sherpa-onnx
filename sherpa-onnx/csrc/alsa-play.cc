@@ -6,11 +6,12 @@
 
 #include "sherpa-onnx/csrc/alsa-play.h"
 
+#include <algorithm>
+
 namespace sherpa_onnx {
 
 AlsaPlay::AlsaPlay(const char *device_name, int32_t sample_rate) {
-  int32_t err =
-      snd_pcm_open(&handle_, device_name, SND_PCM_STREAM_PLAYBACK, 0);
+  int32_t err = snd_pcm_open(&handle_, device_name, SND_PCM_STREAM_PLAYBACK, 0);
 
   if (err) {
     fprintf(stderr, "Unable to open: %s. %s\n", device_name, snd_strerror(err));
@@ -21,10 +22,10 @@ AlsaPlay::AlsaPlay(const char *device_name, int32_t sample_rate) {
 }
 
 AlsaPlay::~AlsaPlay() {
-  if(handle_) {
+  if (handle_) {
     int32_t err = snd_pcm_close(handle_);
     if (err < 0) {
-        printf("Failed to close pcm: %s\n", snd_strerror(err));
+      printf("Failed to close pcm: %s\n", snd_strerror(err));
     }
   }
 }
@@ -38,10 +39,12 @@ void AlsaPlay::SetParameters(int32_t sample_rate) {
   snd_pcm_hw_params_alloca(&params);
   snd_pcm_hw_params_any(handle_, params);
 
-  int32_t err = snd_pcm_hw_params_set_access(handle_, params, SND_PCM_ACCESS_RW_INTERLEAVED);
+  int32_t err = snd_pcm_hw_params_set_access(handle_, params,
+                                             SND_PCM_ACCESS_RW_INTERLEAVED);
   if (err < 0) {
-      printf("SND_PCM_ACCESS_RW_INTERLEAVED is not supported: %s\n", snd_strerror(err));
-      exit(-1);
+    printf("SND_PCM_ACCESS_RW_INTERLEAVED is not supported: %s\n",
+           snd_strerror(err));
+    exit(-1);
   }
 
   err = snd_pcm_hw_params_set_format(handle_, params, SND_PCM_FORMAT_S16_LE);
@@ -51,10 +54,10 @@ void AlsaPlay::SetParameters(int32_t sample_rate) {
     exit(-1);
   }
 
-	err = snd_pcm_hw_params_set_channels(handle_, params, 1);
+  err = snd_pcm_hw_params_set_channels(handle_, params, 1);
 
-	if (err < 0) {
-		printf("Can't set channel number to 1: %s\n", snd_strerror(err));
+  if (err < 0) {
+    printf("Can't set channel number to 1: %s\n", snd_strerror(err));
   }
 
   uint32_t rate = sample_rate;
@@ -63,9 +66,9 @@ void AlsaPlay::SetParameters(int32_t sample_rate) {
     printf("Can't set rate to %d. %s\n", rate, snd_strerror(err));
   }
 
-	err = snd_pcm_hw_params(handle_, params);
-	if (err < 0) {
-		printf("Can't set hardware parameters. %s\n", snd_strerror(err));
+  err = snd_pcm_hw_params(handle_, params);
+  if (err < 0) {
+    printf("Can't set hardware parameters. %s\n", snd_strerror(err));
     exit(-1);
   }
 
@@ -84,8 +87,7 @@ void AlsaPlay::SetParameters(int32_t sample_rate) {
 
     int32_t lowpass_filter_width = 6;
     resampler_ = std::make_unique<LinearResample>(
-        sample_rate, actual_sample_rate, lowpass_cutoff,
-        lowpass_filter_width);
+        sample_rate, actual_sample_rate, lowpass_cutoff, lowpass_filter_width);
   }
 
   snd_pcm_uframes_t frames;
@@ -93,9 +95,9 @@ void AlsaPlay::SetParameters(int32_t sample_rate) {
   buf_.resize(frames);
 }
 
-void AlsaPlay::Play(const std::vector<float>& samples) {
+void AlsaPlay::Play(const std::vector<float> &samples) {
   std::vector<float> tmp;
-  const float* p = samples.data();
+  const float *p = samples.data();
   int32_t num_samples = samples.size();
   if (resampler_) {
     resampler_->Resample(samples.data(), samples.size(), false, &tmp);
@@ -139,12 +141,10 @@ void AlsaPlay::Play(const std::vector<float>& samples) {
 void AlsaPlay::Drain() {
   int32_t err = snd_pcm_drain(handle_);
   if (err < 0) {
-      printf("Failed to drain pcm. %s\n", snd_strerror(err));
+    printf("Failed to drain pcm. %s\n", snd_strerror(err));
   }
 }
 
-}
+}  // namespace sherpa_onnx
 
-#endif // SHERPA_ONNX_ENABLE_ALSA
-
-
+#endif  // SHERPA_ONNX_ENABLE_ALSA

@@ -6,7 +6,6 @@
 // https://www.alsa-project.org/alsa-doc/alsa-lib/group___p_c_m___h_w___params.html
 // https://www.alsa-project.org/alsa-doc/alsa-lib/group___p_c_m.html
 
-
 #include <signal.h>
 
 #include <algorithm>
@@ -18,10 +17,10 @@
 #include <thread>  // NOLINT
 #include <vector>
 
+#include "sherpa-onnx/csrc/alsa-play.h"
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
-#include "sherpa-onnx/csrc/alsa-play.h"
 
 static std::condition_variable g_cv;
 static std::mutex g_cv_m;
@@ -48,17 +47,17 @@ static void Handler(int32_t /*sig*/) {
 static void AudioGeneratedCallback(const float *s, int32_t n) {
   if (n > 0) {
     std::lock_guard<std::mutex> lock(g_buffer.mutex);
-    g_buffer.samples.push({s, s+n});
+    g_buffer.samples.push({s, s + n});
     g_cv.notify_all();
   }
 }
 
-static void StartPlayback(const std::string& device_name, int32_t sample_rate) {
+static void StartPlayback(const std::string &device_name, int32_t sample_rate) {
   sherpa_onnx::AlsaPlay alsa(device_name.c_str(), sample_rate);
 
   std::unique_lock<std::mutex> lock(g_cv_m);
   while (!g_killed && !g_stopped) {
-    while(!g_buffer.samples.empty()) {
+    while (!g_buffer.samples.empty()) {
       auto &p = g_buffer.samples.front();
       alsa.Play(p);
       g_buffer.samples.pop();
@@ -72,7 +71,7 @@ static void StartPlayback(const std::string& device_name, int32_t sample_rate) {
   }
 
   if (g_stopped) {
-    while(!g_buffer.samples.empty()) {
+    while (!g_buffer.samples.empty()) {
       auto &p = g_buffer.samples.front();
       alsa.Play(p);
       g_buffer.samples.pop();

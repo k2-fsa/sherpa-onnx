@@ -9,8 +9,8 @@
 #include <memory>
 #include <vector>
 
-#include "sherpa-onnx/csrc/resample.h"
 #include "alsa/asoundlib.h"
+#include "sherpa-onnx/csrc/resample.h"
 
 namespace sherpa_onnx {
 
@@ -18,7 +18,7 @@ class AlsaPlay {
  public:
   AlsaPlay(const char *device_name, int32_t sample_rate);
   ~AlsaPlay();
-  void Play(const std::vector<float>& samples);
+  void Play(const std::vector<float> &samples);
 
   // wait for all the samples to be played
   void Drain();
@@ -32,7 +32,6 @@ class AlsaPlay {
   std::vector<int16_t> buf_;
 };
 
-}
+}  // namespace sherpa_onnx
 
-#endif // SHERPA_ONNX_CSRC_ALSA_PLAY_H_
-
+#endif  // SHERPA_ONNX_CSRC_ALSA_PLAY_H_
