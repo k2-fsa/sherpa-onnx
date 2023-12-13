@@ -97,6 +97,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-en_US-ryan-high"),
         TtsModel(model_dir="vits-piper-en_US-ryan-low"),
         TtsModel(model_dir="vits-piper-en_US-ryan-medium"),
+        TtsModel(model_dir="vits-piper-es-glados-medium"),
         TtsModel(model_dir="vits-piper-es_ES-carlfm-x_low"),
         TtsModel(model_dir="vits-piper-es_ES-davefx-medium"),
         TtsModel(model_dir="vits-piper-es_ES-mls_10246-low"),
@@ -159,7 +160,7 @@ def get_piper_models() -> List[TtsModel]:
     for m in models:
         m.data_dir = m.model_dir + "/" + "espeak-ng-data"
         m.model_name = m.model_dir[len("vits-piper-") :] + ".onnx"
-        m.lang = "en"
+        m.lang = m.model_dir.split("-")[2][:2]
 
     return models
 
