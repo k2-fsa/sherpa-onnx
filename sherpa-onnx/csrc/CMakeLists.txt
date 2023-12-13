@@ -207,14 +207,42 @@ install(
 
 if(SHERPA_ONNX_HAS_ALSA)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
-  target_link_libraries(sherpa-onnx-alsa sherpa-onnx-core)
+  add_executable(sherpa-onnx-offline-tts-play-alsa sherpa-onnx-offline-tts-play-alsa.cc alsa-play.cc)
 
-  if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})
-    target_link_libraries(sherpa-onnx-alsa -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
-  else()
-    target_link_libraries(sherpa-onnx-alsa asound)
+  set(exes
+    sherpa-onnx-alsa
+    sherpa-onnx-offline-tts-play-alsa
+  )
+  foreach(exe IN LISTS exes)
+    target_link_libraries(${exe} sherpa-onnx-core)
+  endforeach()
+
+  foreach(exe IN LISTS exes)
+    if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})
+      target_link_libraries(${exe} -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
+    else()
+      target_link_libraries(${exe} asound)
+    endif()
+  endforeach()
+
+  if(NOT WIN32)
+    foreach(exe IN LISTS exes)
+      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
+      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
+    endforeach()
+
+    if(SHERPA_ONNX_ENABLE_PYTHON)
+      foreach(exe IN LISTS exes)
+        target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+      endforeach()
+    endif()
   endif()
-  install(TARGETS sherpa-onnx-alsa DESTINATION bin)
+
+  install(
+    TARGETS ${exes}
+    DESTINATION
+      bin
+  )
 endif()
 
 if(SHERPA_ONNX_ENABLE_PORTAUDIO)

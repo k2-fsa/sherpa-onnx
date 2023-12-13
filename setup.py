@@ -60,6 +60,8 @@ def get_binaries_to_install():
     binaries += ["sherpa-onnx-vad-microphone-offline-asr"]
     binaries += ["sherpa-onnx-offline-tts"]
     binaries += ["sherpa-onnx-offline-tts-play"]
+    binaries += ["sherpa-onnx-alsa"]
+    binaries += ["sherpa-onnx-offline-tts-play-alsa"]
     if is_windows():
         binaries += ["kaldi-native-fbank-core.dll"]
         binaries += ["sherpa-onnx-c-api.dll"]

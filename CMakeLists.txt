@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(sherpa-onnx)
 
-set(SHERPA_ONNX_VERSION "1.9.3")
+set(SHERPA_ONNX_VERSION "1.9.4")
 
 # Disable warning about
 #
@@ -106,10 +106,23 @@ endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "C++ Standard version: ${CMAKE_CXX_STANDARD}")
 
+
 include(CheckIncludeFileCXX)
-check_include_file_cxx(alsa/asoundlib.h SHERPA_ONNX_HAS_ALSA)
-if(SHERPA_ONNX_HAS_ALSA)
-  add_definitions(-DSHERPA_ONNX_ENABLE_ALSA=1)
+
+if(UNIX AND NOT APPLE)
+  check_include_file_cxx(alsa/asoundlib.h SHERPA_ONNX_HAS_ALSA)
+  if(SHERPA_ONNX_HAS_ALSA)
+    add_definitions(-DSHERPA_ONNX_ENABLE_ALSA=1)
+  else()
+    message(WARNING "\
+Could not find alsa/asoundlib.h !
+We won't build sherpa-ncnn-alsa
+To fix that, please do:
+  (1) sudo apt-get install alsa-utils libasound2-dev
+  (2) rm -rf build
+  (3) re-try
+  ")
+  endif()
 endif()
 
 check_include_file_cxx(cxxabi.h SHERPA_ONNX_HAVE_CXXABI_H)
