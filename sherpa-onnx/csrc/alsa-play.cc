@@ -106,7 +106,6 @@ void AlsaPlay::Play(const std::vector<float>& samples) {
   int32_t frames = buf_.size();
   int32_t i = 0;
   for (; i + frames < num_samples; i += frames) {
-    printf("%d/%d\n",i, num_samples);
     for (int32_t k = 0; k != frames; ++k) {
       buf_[k] = p[i + k] * 32767;
     }
