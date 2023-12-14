@@ -26,6 +26,18 @@ def is_windows():
     return platform.system() == "Windows"
 
 
+def is_linux():
+    return platform.system() == "Linux"
+
+
+def is_arm64():
+    return platform.machine() in ["arm64", "aarch64"]
+
+
+def is_x86():
+    return platform.machine() in ["i386", "i686", "x86_64"]
+
+
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
@@ -144,8 +156,10 @@ class BuildExtension(build_ext):
         binaries += ["sherpa-onnx-vad-microphone-offline-asr"]
         binaries += ["sherpa-onnx-offline-tts"]
         binaries += ["sherpa-onnx-offline-tts-play"]
-        binaries += ["sherpa-onnx-alsa"]
-        binaries += ["sherpa-onnx-offline-tts-play-alsa"]
+
+        if is_linux() and (is_arm64() or is_x86()):
+            binaries += ["sherpa-onnx-alsa"]
+            binaries += ["sherpa-onnx-offline-tts-play-alsa"]
 
         if is_windows():
             binaries += ["kaldi-native-fbank-core.dll"]
@@ -167,10 +181,6 @@ class BuildExtension(build_ext):
                 src_file = install_dir / "lib" / (f + suffix)
             if not src_file.is_file():
                 src_file = install_dir / ".." / (f + suffix)
-
-            if not src_file.is_file() and 'alsa' in f:
-                print(f'Skipping {f}')
-                continue
 
             print(f"Copying {src_file} to {out_bin_dir}/")
             shutil.copy(f"{src_file}", f"{out_bin_dir}/")

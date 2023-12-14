@@ -12,6 +12,9 @@ from cmake.cmake_extension import (
     bdist_wheel,
     cmake_extension,
     is_windows,
+    is_linux,
+    is_arm64,
+    is_x86,
 )
 
 
@@ -60,8 +63,11 @@ def get_binaries_to_install():
     binaries += ["sherpa-onnx-vad-microphone-offline-asr"]
     binaries += ["sherpa-onnx-offline-tts"]
     binaries += ["sherpa-onnx-offline-tts-play"]
-    binaries += ["sherpa-onnx-alsa"]
-    binaries += ["sherpa-onnx-offline-tts-play-alsa"]
+
+    if is_linux() and (is_arm64() or is_x86()):
+        binaries += ["sherpa-onnx-alsa"]
+        binaries += ["sherpa-onnx-offline-tts-play-alsa"]
+
     if is_windows():
         binaries += ["kaldi-native-fbank-core.dll"]
         binaries += ["sherpa-onnx-c-api.dll"]
