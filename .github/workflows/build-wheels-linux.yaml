@@ -33,10 +33,19 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.15.0
         env:
+          CIBW_BEFORE_ALL: |
+            git clone --depth 1 https://github.com/alsa-project/alsa-lib
+            cd alsa-lib
+            ./gitcompile
+            cd ..
+            echo "PWD"
+            ls -lh /project/alsa-lib/src/.libs
+
+          CIBW_ENVIRONMENT: CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR SHERPA_ONNX_MAKE_ARGS="VERBOSE=1"
+
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
-          CIBW_ENVIRONMENT_LINUX: LD_LIBRARY_PATH='/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib'
 
       - name: Display wheels
         shell: bash
