@@ -223,7 +223,14 @@ std::vector<std::vector<int64_t>> PiperPhonemizeLexicon::ConvertTextToTokenIds(
   config.voice = voice;  // e.g., voice is en-us
 
   std::vector<std::vector<piper::Phoneme>> phonemes;
-  piper::phonemize_eSpeak(text, config, phonemes);
+
+  static std::mutex espeak_mutex;
+  {
+    std::lock_guard<std::mutex> lock(espeak_mutex);
+
+    // keep multi threads from calling into piper::phonemize_eSpeak
+    piper::phonemize_eSpeak(text, config, phonemes);
+  }
 
   std::vector<std::vector<int64_t>> ans;
 
