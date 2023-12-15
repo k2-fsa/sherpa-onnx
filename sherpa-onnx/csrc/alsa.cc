@@ -144,6 +144,24 @@ const std::vector<float> &Alsa::Read(int32_t num_samples) {
 
   // count is in frames. Each frame contains actual_channel_count_ samples
   int32_t count = snd_pcm_readi(capture_handle_, samples_.data(), num_samples);
+  if (count == -EPIPE) {
+    static int32_t n = 0;
+    if (++n > 5) {
+      fprintf(
+          stderr,
+          "Too many overruns. It is very likely that the RTF on your board is "
+          "larger than 1. Please use ./bin/sherpa-onnx to compute the RTF.\n");
+      exit(-1);
+    }
+    fprintf(stderr, "XRUN.\n");
+    snd_pcm_prepare(capture_handle_);
+
+    static std::vector<float> tmp;
+    return tmp;
+  } else if (count < 0) {
+    fprintf(stderr, "Can't read PCM device: %s\n", snd_strerror(count));
+    exit(-1);
+  }
 
   samples_.resize(count * actual_channel_count_);
 
