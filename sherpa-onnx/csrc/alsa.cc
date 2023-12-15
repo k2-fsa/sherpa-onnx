@@ -154,8 +154,10 @@ const std::vector<float> &Alsa::Read(int32_t num_samples) {
       exit(-1);
     }
     fprintf(stderr, "XRUN.\n");
-    snd_pcm_prepare(handle_);
-    return {};
+    snd_pcm_prepare(capture_handle_);
+
+    static std::vector<float> tmp;
+    return tmp;
   } else if (count < 0) {
     fprintf(stderr, "Can't read PCM device: %s\n", snd_strerror(count));
     exit(-1);
