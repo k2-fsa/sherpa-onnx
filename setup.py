@@ -11,10 +11,8 @@ from cmake.cmake_extension import (
     BuildExtension,
     bdist_wheel,
     cmake_extension,
+    enable_alsa,
     is_windows,
-    is_linux,
-    is_arm64,
-    is_x86,
 )
 
 
@@ -64,7 +62,7 @@ def get_binaries_to_install():
     binaries += ["sherpa-onnx-offline-tts"]
     binaries += ["sherpa-onnx-offline-tts-play"]
 
-    if is_linux() and (is_arm64() or is_x86()):
+    if enable_alsa():
         binaries += ["sherpa-onnx-alsa"]
         binaries += ["sherpa-onnx-offline-tts-play-alsa"]
 
