@@ -104,7 +104,7 @@ as the device_name.
 
   int32_t segment_index = 0;
   while (!stop) {
-    const std::vector<float> samples = alsa.Read(chunk);
+    const std::vector<float> &samples = alsa.Read(chunk);
 
     stream->AcceptWaveform(expected_sample_rate, samples.data(),
                            samples.size());
