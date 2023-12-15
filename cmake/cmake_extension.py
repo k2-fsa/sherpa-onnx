@@ -38,6 +38,11 @@ def is_x86():
     return platform.machine() in ["i386", "i686", "x86_64"]
 
 
+def enable_alsa():
+    build_alsa = os.environ.get("SHERPA_ONNX_ENABLE_ALSA", None)
+    return build_alsa and is_linux() and (is_arm64() or is_x86())
+
+
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
@@ -157,7 +162,7 @@ class BuildExtension(build_ext):
         binaries += ["sherpa-onnx-offline-tts"]
         binaries += ["sherpa-onnx-offline-tts-play"]
 
-        if is_linux() and (is_arm64() or is_x86()):
+        if enable_alsa():
             binaries += ["sherpa-onnx-alsa"]
             binaries += ["sherpa-onnx-offline-tts-play-alsa"]
 

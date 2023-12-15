@@ -41,7 +41,7 @@ jobs:
             echo "PWD"
             ls -lh /project/alsa-lib/src/.libs
 
-          CIBW_ENVIRONMENT: CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR SHERPA_ONNX_MAKE_ARGS="VERBOSE=1"
+          CIBW_ENVIRONMENT: CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR SHERPA_ONNX_MAKE_ARGS="VERBOSE=1" SHERPA_ONNX_ENABLE_ALSA=1
 
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
