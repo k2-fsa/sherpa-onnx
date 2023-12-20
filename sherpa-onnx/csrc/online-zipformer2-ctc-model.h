@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/online-wenet-ctc-model.h
+// sherpa-onnx/csrc/online-zipformer2-ctc-model.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_ONLINE_WENET_CTC_MODEL_H_
-#define SHERPA_ONNX_CSRC_ONLINE_WENET_CTC_MODEL_H_
+#ifndef SHERPA_ONNX_CSRC_ONLINE_ZIPFORMER2_CTC_MODEL_H_
+#define SHERPA_ONNX_CSRC_ONLINE_ZIPFORMER2_CTC_MODEL_H_
 
 #include <memory>
 #include <utility>
@@ -19,20 +19,21 @@
 
 namespace sherpa_onnx {
 
-class OnlineWenetCtcModel : public OnlineCtcModel {
+class OnlineZipformer2CtcModel : public OnlineCtcModel {
  public:
-  explicit OnlineWenetCtcModel(const OnlineModelConfig &config);
+  explicit OnlineZipformer2CtcModel(const OnlineModelConfig &config);
 
 #if __ANDROID_API__ >= 9
-  OnlineWenetCtcModel(AAssetManager *mgr, const OnlineModelConfig &config);
+  OnlineZipformer2CtcModel(AAssetManager *mgr, const OnlineModelConfig &config);
 #endif
 
-  ~OnlineWenetCtcModel() override;
+  ~OnlineZipformer2CtcModel() override;
 
-  // A list of 3 tensors:
-  //  - attn_cache
-  //  - conv_cache
-  //  - offset
+  // A list of tensors.
+  // See also
+  // https://github.com/k2-fsa/icefall/pull/1413
+  // and
+  // https://github.com/k2-fsa/icefall/pull/1415
   std::vector<Ort::Value> GetInitStates() const override;
 
   std::vector<Ort::Value> StackStates(
@@ -69,8 +70,6 @@ class OnlineWenetCtcModel : public OnlineCtcModel {
   // before we process the next chunk.
   int32_t ChunkShift() const override;
 
-  bool SupportBatchProcessing() const override { return false; }
-
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;
@@ -78,4 +77,4 @@ class OnlineWenetCtcModel : public OnlineCtcModel {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_ONLINE_WENET_CTC_MODEL_H_
+#endif  // SHERPA_ONNX_CSRC_ONLINE_ZIPFORMER2_CTC_MODEL_H_

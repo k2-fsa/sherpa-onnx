@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/online-paraformer-model.cc
+// sherpa-onnx/csrc/online-wenet-ctc-model.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
@@ -237,6 +237,23 @@ OrtAllocator *OnlineWenetCtcModel::Allocator() const {
 
 std::vector<Ort::Value> OnlineWenetCtcModel::GetInitStates() const {
   return impl_->GetInitStates();
+}
+
+std::vector<Ort::Value> OnlineWenetCtcModel::StackStates(
+    std::vector<std::vector<Ort::Value>> states) const {
+  if (states.size() != 1) {
+    SHERPA_ONNX_LOGE("wenet CTC model supports only batch_size==1. Given: %d",
+                     static_cast<int32_t>(states.size()));
+  }
+
+  return std::move(states[0]);
+}
+
+std::vector<std::vector<Ort::Value>> OnlineWenetCtcModel::UnStackStates(
+    std::vector<Ort::Value> states) const {
+  std::vector<std::vector<Ort::Value>> ans(1);
+  ans[0] = std::move(states);
+  return ans;
 }
 
 }  // namespace sherpa_onnx

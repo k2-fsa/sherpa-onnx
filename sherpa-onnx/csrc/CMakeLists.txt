@@ -70,6 +70,8 @@ set(sources
   online-wenet-ctc-model-config.cc
   online-wenet-ctc-model.cc
   online-zipformer-transducer-model.cc
+  online-zipformer2-ctc-model-config.cc
+  online-zipformer2-ctc-model.cc
   online-zipformer2-transducer-model.cc
   onnx-utils.cc
   packed-sequence.cc

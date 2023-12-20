@@ -12,6 +12,9 @@
 namespace sherpa_onnx {
 
 struct OnlineCtcDecoderResult {
+  /// Number of frames after subsampling we have decoded so far
+  int32_t frame_offset = 0;
+
   /// The decoded token IDs
   std::vector<int64_t> tokens;
 
