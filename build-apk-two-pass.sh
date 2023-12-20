@@ -74,11 +74,11 @@ git lfs pull --include "*.onnx"
 
 # remove .git to save spaces
 rm -rf .git
-rm README.md
+rm -fv README.md
 rm -rf test_wavs
 rm .gitattributes
 
-rm *.ort
+rm -fv *.ort
 rm tiny.en-encoder.onnx
 rm tiny.en-decoder.onnx
 

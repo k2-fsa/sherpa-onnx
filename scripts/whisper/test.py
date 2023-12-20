@@ -82,6 +82,7 @@ class OnnxModel:
         self.encoder = ort.InferenceSession(
             encoder,
             sess_options=self.session_opts,
+            providers=["CPUExecutionProvider"],
         )
 
         meta = self.encoder.get_modelmeta().custom_metadata_map
@@ -113,6 +114,7 @@ class OnnxModel:
         self.decoder = ort.InferenceSession(
             decoder,
             sess_options=self.session_opts,
+            providers=["CPUExecutionProvider"],
         )
 
     def run_encoder(

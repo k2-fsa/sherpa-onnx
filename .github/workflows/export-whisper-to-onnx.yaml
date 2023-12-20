@@ -31,7 +31,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          python3 -m pip install torch==1.13.0 -f https://download.pytorch.org/whl/cpu/torch_stable.html
+          python3 -m pip install torch==1.13.0 torchaudio==0.13.0 -f https://download.pytorch.org/whl/cpu/torch_stable.html
           python3 -m pip install openai-whisper==20230314 onnxruntime onnx
 
       - name: export ${{ matrix.model }}
@@ -107,6 +107,19 @@ jobs:
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: asr-models
+
+      - name: Test ${{ matrix.model }}
+        shell: bash
+        run: |
+          python3 -m pip install kaldi-native-fbank
+          git checkout .
+          model=${{ matrix.model }}
+          src=sherpa-onnx-whisper-$model
+          python3 scripts/whisper/test.py \
+            --encoder $src/$model-encoder.int8.onnx \
+            --decoder $src/$model-decoder.int8.onnx \
+            --tokens $src/$model-tokens.txt \
+            $src/test_wavs/0.wav
 
       - name: Publish ${{ matrix.model }} to huggingface
         shell: bash
