@@ -108,6 +108,17 @@ jobs:
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: asr-models
 
+      - name: Test tiny.en
+        if: matrix.model == 'tiny.en'
+        shell: bash
+        run: |
+          src=sherpa-onnx-whisper-tiny.en
+          python3 srcipts/whisper/test.py \
+            --encoder $src/tiny.en-encoder.int8.onnx \
+            --decoder $src/tiny.en-decoder.int8.onnx \
+            --tokens $src/tiny.en-tokens.txt \
+            $src/test_wavs/0.wav
+
       - name: Publish ${{ matrix.model }} to huggingface
         shell: bash
         env:
