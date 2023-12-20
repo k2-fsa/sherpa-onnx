@@ -40,7 +40,8 @@ void PybindOfflineRecognizer(py::module *m) {
 
   using PyClass = OfflineRecognizer;
   py::class_<PyClass>(*m, "OfflineRecognizer")
-      .def(py::init<const OfflineRecognizerConfig &>(), py::arg("config"))
+      .def(py::init<const OfflineRecognizerConfig &>(), py::arg("config"),
+           py::call_guard<py::gil_scoped_release>())
       .def(
           "create_stream",
           [](const PyClass &self) { return self.CreateStream(); },
