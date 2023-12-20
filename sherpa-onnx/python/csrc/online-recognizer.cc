@@ -53,7 +53,8 @@ void PybindOnlineRecognizer(py::module *m) {
 
   using PyClass = OnlineRecognizer;
   py::class_<PyClass>(*m, "OnlineRecognizer")
-      .def(py::init<const OnlineRecognizerConfig &>(), py::arg("config"))
+      .def(py::init<const OnlineRecognizerConfig &>(), py::arg("config"),
+           py::call_guard<py::gil_scoped_release>())
       .def(
           "create_stream",
           [](const PyClass &self) { return self.CreateStream(); },
