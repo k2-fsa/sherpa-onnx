@@ -26,6 +26,8 @@ int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
 Usage:
 
+(1) Streaming transducer
+
   ./bin/sherpa-onnx \
     --tokens=/path/to/tokens.txt \
     --encoder=/path/to/encoder.onnx \
@@ -35,6 +37,30 @@ Usage:
     --num-threads=2 \
     --decoding-method=greedy_search \
     /path/to/foo.wav [bar.wav foobar.wav ...]
+
+(2) Streaming zipformer2 CTC
+
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+  tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+
+  ./bin/sherpa-onnx \
+    --debug=1 \
+    --zipformer2-ctc-model=./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.int8.onnx \
+    --tokens=./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt \
+    ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000000.wav \
+    ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000001.wav \
+    ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000002.wav
+
+(3) Streaming paraformer
+
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+  tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+
+  ./bin/sherpa-onnx \
+    --tokens=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt \
+    --paraformer-encoder=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.onnx \
+    --paraformer-decoder=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.onnx \
+    ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/0.wav
 
 Note: It supports decoding multiple files in batches
 
