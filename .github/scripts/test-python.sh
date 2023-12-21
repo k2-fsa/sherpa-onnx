@@ -8,6 +8,20 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+mkdir -p /tmp/icefall-models
+dir=/tmp/icefall-models
+
+pushd $dir
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+popd
+
+python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
+
+rm -rf $dir/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
+
+
 wenet_models=(
 sherpa-onnx-zh-wenet-aishell
 sherpa-onnx-zh-wenet-aishell2
@@ -17,8 +31,6 @@ sherpa-onnx-en-wenet-librispeech
 sherpa-onnx-en-wenet-gigaspeech
 )
 
-mkdir -p /tmp/icefall-models
-dir=/tmp/icefall-models
 
 for name in ${wenet_models[@]}; do
   repo_url=https://huggingface.co/csukuangfj/$name
