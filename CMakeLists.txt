@@ -21,6 +21,7 @@ option(SHERPA_ONNX_ENABLE_C_API "Whether to build C API" ON)
 option(SHERPA_ONNX_ENABLE_WEBSOCKET "Whether to build webscoket server/client" ON)
 option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime GPU support" OFF)
 option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically. Used only when BUILD_SHARED_LIBS is OFF on Linux" ON)
+option(SHERPA_ONNX_ENABLE_TTS "Whether to build with TTS capability" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -99,6 +100,8 @@ message(STATUS "SHERPA_ONNX_ENABLE_JNI ${SHERPA_ONNX_ENABLE_JNI}")
 message(STATUS "SHERPA_ONNX_ENABLE_C_API ${SHERPA_ONNX_ENABLE_C_API}")
 message(STATUS "SHERPA_ONNX_ENABLE_WEBSOCKET ${SHERPA_ONNX_ENABLE_WEBSOCKET}")
 message(STATUS "SHERPA_ONNX_ENABLE_GPU ${SHERPA_ONNX_ENABLE_GPU}")
+message(STATUS "SHERPA_ONNX_ENABLE_TTS ${SHERPA_ONNX_ENABLE_TTS}")
+
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
@@ -193,10 +196,12 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
   include(asio)
 endif()
 
-include(espeak-ng-for-piper)
-set(ESPEAK_NG_DIR ${espeak_ng_SOURCE_DIR})
-message(STATUS "ESPEAK_NG_DIR: ${ESPEAK_NG_DIR}")
-include(piper-phonemize)
+if(SHERPA_ONNX_ENABLE_TTS)
+  include(espeak-ng-for-piper)
+  set(ESPEAK_NG_DIR ${espeak_ng_SOURCE_DIR})
+  message(STATUS "ESPEAK_NG_DIR: ${ESPEAK_NG_DIR}")
+  include(piper-phonemize)
+endif()
 
 add_subdirectory(sherpa-onnx)
 

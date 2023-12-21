@@ -1,6 +1,6 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
-pybind11_add_module(_sherpa_onnx
+set(sources
   circular-buffer.cc
   display.cc
   endpoint.cc
@@ -14,9 +14,6 @@ pybind11_add_module(_sherpa_onnx
   offline-stream.cc
   offline-tdnn-model-config.cc
   offline-transducer-model-config.cc
-  offline-tts-model-config.cc
-  offline-tts-vits-model-config.cc
-  offline-tts.cc
   offline-wenet-ctc-model-config.cc
   offline-whisper-model-config.cc
   offline-zipformer-ctc-model-config.cc
@@ -33,6 +30,16 @@ pybind11_add_module(_sherpa_onnx
   vad-model.cc
   voice-activity-detector.cc
 )
+
+if(SHERPA_ONNX_ENABLE_TTS)
+  list(APPEND sources
+    offline-tts-model-config.cc
+    offline-tts-vits-model-config.cc
+    offline-tts.cc
+  )
+endif()
+
+pybind11_add_module(_sherpa_onnx ${sources})
 
 if(APPLE)
   execute_process(

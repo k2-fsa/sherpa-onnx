@@ -600,6 +600,8 @@ SHERPA_ONNX_API void SherpaOnnxDestroySpeechSegment(
 SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorReset(
     SherpaOnnxVoiceActivityDetector *p);
 
+#if defined(SHERPA_ONNX_ENABLE_TTS)
+
 // ============================================================
 // For offline Text-to-Speech (i.e., non-streaming TTS)
 // ============================================================
@@ -676,6 +678,8 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
 SHERPA_ONNX_API int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
                                             int32_t sample_rate,
                                             const char *filename);
+
+#endif  // SHERPA_ONNX_ENABLE_TTS
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop

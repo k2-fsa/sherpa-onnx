@@ -41,7 +41,6 @@ set(sources
   offline-transducer-model-config.cc
   offline-transducer-model.cc
   offline-transducer-modified-beam-search-decoder.cc
-  offline-tts-character-frontend.cc
   offline-wenet-ctc-model-config.cc
   offline-wenet-ctc-model.cc
   offline-whisper-greedy-search-decoder.cc
@@ -75,7 +74,6 @@ set(sources
   packed-sequence.cc
   pad-sequence.cc
   parse-options.cc
-  piper-phonemize-lexicon.cc
   provider.cc
   resample.cc
   session.cc
@@ -94,15 +92,20 @@ set(sources
   wave-reader.cc
 )
 
-list(APPEND sources
-  lexicon.cc
-  offline-tts-impl.cc
-  offline-tts-model-config.cc
-  offline-tts-vits-model-config.cc
-  offline-tts-vits-model.cc
-  offline-tts.cc
-  wave-writer.cc
-)
+
+if(SHERPA_ONNX_ENABLE_TTS)
+  list(APPEND sources
+    lexicon.cc
+    offline-tts-character-frontend.cc
+    offline-tts-impl.cc
+    offline-tts-model-config.cc
+    offline-tts-vits-model-config.cc
+    offline-tts-vits-model.cc
+    offline-tts.cc
+    wave-writer.cc
+    piper-phonemize-lexicon.cc
+  )
+endif()
 
 if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
@@ -143,7 +146,9 @@ if(SHERPA_ONNX_ENABLE_GPU)
   )
 endif()
 
-target_link_libraries(sherpa-onnx-core piper_phonemize)
+if(SHERPA_ONNX_ENABLE_TTS)
+  target_link_libraries(sherpa-onnx-core piper_phonemize)
+endif()
 
 if(SHERPA_ONNX_ENABLE_CHECK)
   target_compile_definitions(sherpa-onnx-core PUBLIC SHERPA_ONNX_ENABLE_CHECK=1)
@@ -164,14 +169,22 @@ endif()
 add_executable(sherpa-onnx sherpa-onnx.cc)
 add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
 add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
-add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
+
+if(SHERPA_ONNX_ENABLE_TTS)
+  add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
+endif()
 
 set(main_exes
   sherpa-onnx
   sherpa-onnx-offline
   sherpa-onnx-offline-parallel
-  sherpa-onnx-offline-tts
 )
+
+if(SHERPA_ONNX_ENABLE_TTS)
+  list(APPEND main_exes
+    sherpa-onnx-offline-tts
+  )
+endif()
 
 foreach(exe IN LISTS main_exes)
   target_link_libraries(${exe} sherpa-onnx-core)
@@ -207,12 +220,21 @@ install(
 
 if(SHERPA_ONNX_HAS_ALSA)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
-  add_executable(sherpa-onnx-offline-tts-play-alsa sherpa-onnx-offline-tts-play-alsa.cc alsa-play.cc)
+
+  if(SHERPA_ONNX_ENABLE_TTS)
+    add_executable(sherpa-onnx-offline-tts-play-alsa sherpa-onnx-offline-tts-play-alsa.cc alsa-play.cc)
+  endif()
 
   set(exes
     sherpa-onnx-alsa
-    sherpa-onnx-offline-tts-play-alsa
   )
+
+  if(SHERPA_ONNX_ENABLE_TTS)
+    list(APPEND exes
+      sherpa-onnx-offline-tts-play-alsa
+    )
+  endif()
+
   foreach(exe IN LISTS exes)
     target_link_libraries(${exe} sherpa-onnx-core)
   endforeach()
@@ -246,10 +268,12 @@ if(SHERPA_ONNX_HAS_ALSA)
 endif()
 
 if(SHERPA_ONNX_ENABLE_PORTAUDIO)
-  add_executable(sherpa-onnx-offline-tts-play
-    sherpa-onnx-offline-tts-play.cc
-    microphone.cc
-  )
+  if(SHERPA_ONNX_ENABLE_TTS)
+    add_executable(sherpa-onnx-offline-tts-play
+      sherpa-onnx-offline-tts-play.cc
+      microphone.cc
+    )
+  endif()
 
   add_executable(sherpa-onnx-microphone
     sherpa-onnx-microphone.cc
@@ -278,12 +302,18 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   endif()
 
   set(exes
-    sherpa-onnx-offline-tts-play
     sherpa-onnx-microphone
     sherpa-onnx-microphone-offline
     sherpa-onnx-vad-microphone
     sherpa-onnx-vad-microphone-offline-asr
   )
+
+  if(SHERPA_ONNX_ENABLE_TTS)
+    list(APPEND exes
+      sherpa-onnx-offline-tts-play
+    )
+  endif()
+
   foreach(exe IN LISTS exes)
     target_link_libraries(${exe} ${PA_LIB} sherpa-onnx-core)
   endforeach()
@@ -377,13 +407,18 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     context-graph-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
-    piper-phonemize-test.cc
     slice-test.cc
     stack-test.cc
     transpose-test.cc
     unbind-test.cc
     utfcpp-test.cc
   )
+
+  if(SHERPA_ONNX_ENABLE_TTS)
+    list(APPEND sherpa_onnx_test_srcs
+      piper-phonemize-test.cc
+    )
+  endif()
 
   function(sherpa_onnx_add_test source)
     get_filename_component(name ${source} NAME_WE)
