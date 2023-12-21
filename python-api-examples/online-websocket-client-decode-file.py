@@ -25,6 +25,7 @@ https://github.com/k2-fsa/sherpa-onnx/blob/master/sherpa-onnx/csrc/online-websoc
 
 import argparse
 import asyncio
+import json
 import logging
 import wave
 
@@ -112,7 +113,7 @@ async def receive_results(socket: websockets.WebSocketServerProtocol):
     async for message in socket:
         if message != "Done!":
             last_message = message
-            logging.info(message)
+            logging.info(json.loads(message))
         else:
             break
     return last_message
@@ -151,7 +152,7 @@ async def run(
         await websocket.send("Done")
 
         decoding_results = await receive_task
-        logging.info(f"\nFinal result is:\n{decoding_results}")
+        logging.info(f"\nFinal result is:\n{json.loads(decoding_results)}")
 
 
 async def main():

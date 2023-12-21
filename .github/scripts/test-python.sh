@@ -12,15 +12,22 @@ mkdir -p /tmp/icefall-models
 dir=/tmp/icefall-models
 
 pushd $dir
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
 tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
 rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
 popd
+repo=$dir/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
+
+python3 ./python-api-examples/online-decode-files.py \
+  --tokens=$repo/tokens.txt \
+  --zipformer2-ctc=$repo/ctc-epoch-20-avg-1-chunk-16-left-128.onnx \
+  $repo/test_wavs/DEV_T0000000000.wav \
+  $repo/test_wavs/DEV_T0000000001.wav \
+  $repo/test_wavs/DEV_T0000000002.wav
 
 python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
 
 rm -rf $dir/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
-
 
 wenet_models=(
 sherpa-onnx-zh-wenet-aishell

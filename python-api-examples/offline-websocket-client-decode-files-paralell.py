@@ -27,6 +27,7 @@ Note: The server is implemented in C++.
 
 import argparse
 import asyncio
+import json
 import logging
 import wave
 from typing import Tuple
@@ -128,7 +129,7 @@ async def run(
             await websocket.send(buf)
 
         decoding_results = await websocket.recv()
-        logging.info(f"{wave_filename}\n{decoding_results}")
+        logging.info(f"{wave_filename}\n{json.loads(decoding_results)}")
 
         # to signal that the client has sent all the data
         await websocket.send("Done")
