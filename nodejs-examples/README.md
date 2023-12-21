@@ -188,6 +188,19 @@ tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 node ./test-online-transducer.js
 ```
 
+## ./test-online-zipformer2-ctc.js
+[./test-online-zipformer2-ctc.js](./test-online-zipformer2-ctc.js) demonstrates
+how to decode a file using a streaming zipformer2 CTC model. In the code
+we use [sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-ctc/zipformer-ctc-models.html#sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13-chinese).
+
+You can use the following command run it:
+
+```bash
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+node ./test-online-zipformer2-ctc.js
+```
+
 ## ./test-vad-microphone-offline-paraformer.js
 
 [./test-vad-microphone-offline-paraformer.js](./test-vad-microphone-offline-paraformer.js)
