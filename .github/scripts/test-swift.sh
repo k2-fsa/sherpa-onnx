@@ -22,6 +22,9 @@ cat /Users/fangjun/Desktop/Obama.srt
 ls -lh
 
 ./run-decode-file.sh
+rm decode-file
+sed -i.bak  '20d' ./decode-file.swift
+./run-decode-file.sh
 
 ./run-decode-file-non-streaming.sh
 

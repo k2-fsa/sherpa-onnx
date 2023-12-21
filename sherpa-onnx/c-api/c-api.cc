@@ -54,6 +54,9 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
   recognizer_config.model_config.paraformer.decoder =
       SHERPA_ONNX_OR(config->model_config.paraformer.decoder, "");
 
+  recognizer_config.model_config.zipformer2_ctc.model =
+      SHERPA_ONNX_OR(config->model_config.zipformer2_ctc.model, "");
+
   recognizer_config.model_config.tokens =
       SHERPA_ONNX_OR(config->model_config.tokens, "");
   recognizer_config.model_config.num_threads =

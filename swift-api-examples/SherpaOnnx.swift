@@ -60,6 +60,14 @@ func sherpaOnnxOnlineParaformerModelConfig(
   )
 }
 
+func sherpaOnnxOnlineZipformer2CtcModelConfig(
+  model: String = ""
+) -> SherpaOnnxOnlineZipformer2CtcModelConfig {
+  return SherpaOnnxOnlineZipformer2CtcModelConfig(
+    model: toCPointer(model)
+  )
+}
+
 /// Return an instance of SherpaOnnxOnlineModelConfig.
 ///
 /// Please refer to
@@ -75,6 +83,8 @@ func sherpaOnnxOnlineModelConfig(
   tokens: String,
   transducer: SherpaOnnxOnlineTransducerModelConfig = sherpaOnnxOnlineTransducerModelConfig(),
   paraformer: SherpaOnnxOnlineParaformerModelConfig = sherpaOnnxOnlineParaformerModelConfig(),
+  zipformer2Ctc: SherpaOnnxOnlineZipformer2CtcModelConfig =
+    sherpaOnnxOnlineZipformer2CtcModelConfig(),
   numThreads: Int = 1,
   provider: String = "cpu",
   debug: Int = 0,
@@ -83,6 +93,7 @@ func sherpaOnnxOnlineModelConfig(
   return SherpaOnnxOnlineModelConfig(
     transducer: transducer,
     paraformer: paraformer,
+    zipformer2_ctc: zipformer2Ctc,
     tokens: toCPointer(tokens),
     num_threads: Int32(numThreads),
     provider: toCPointer(provider),

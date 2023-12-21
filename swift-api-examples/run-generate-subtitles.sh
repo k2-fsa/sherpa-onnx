@@ -22,7 +22,7 @@ if [ ! -d ./sherpa-onnx-whisper-tiny.en ]; then
 fi
 if [ ! -f ./silero_vad.onnx ]; then
   echo "downloading silero_vad"
-  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 fi
 
 if [ ! -e ./generate-subtitles ]; then
