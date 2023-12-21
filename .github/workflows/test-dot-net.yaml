@@ -61,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest] #, windows-latest]
         python-version: ["3.8"]
 
     steps:
@@ -143,6 +143,7 @@ jobs:
           cd dotnet-examples/
 
           cd online-decode-files
+          ./run-zipformer2-ctc.sh
           ./run-transducer.sh
           ./run-paraformer.sh
 

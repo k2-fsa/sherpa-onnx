@@ -38,6 +38,9 @@ class OnlineDecodeFiles
     [Option("paraformer-decoder", Required = false, HelpText = "Path to paraformer decoder.onnx")]
     public string ParaformerDecoder { get; set; }
 
+    [Option("zipformer2-ctc", Required = false, HelpText = "Path to zipformer2 CTC onnx model")]
+    public string Zipformer2Ctc { get; set; }
+
     [Option("num-threads", Required = false, Default = 1, HelpText = "Number of threads for computation")]
     public int NumThreads { get; set; }
 
@@ -107,7 +110,19 @@ dotnet run \
   --files ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/0.wav \
   ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/1.wav
 
-(2) Streaming Paraformer models
+(2) Streaming Zipformer2 Ctc models
+
+dotnet run -c Release \
+  --tokens ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt \
+  --zipformer2-ctc ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.onnx \
+  --files ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000000.wav \
+  ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000001.wav \
+  ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000002.wav \
+  ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/TEST_MEETING_T0000000113.wav \
+  ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/TEST_MEETING_T0000000219.wav \
+  ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/TEST_MEETING_T0000000351.wav
+
+(3) Streaming Paraformer models
 dotnet run \
   --tokens=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt \
   --paraformer-encoder=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx \
@@ -121,6 +136,7 @@ dotnet run \
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/index.html
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/index.html
+https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-ctc/index.html
 to download pre-trained streaming models.
 ";
 
@@ -149,6 +165,8 @@ to download pre-trained streaming models.
 
     config.ModelConfig.Paraformer.Encoder = options.ParaformerEncoder;
     config.ModelConfig.Paraformer.Decoder = options.ParaformerDecoder;
+
+    config.ModelConfig.Zipformer2Ctc.Model = options.Zipformer2Ctc;
 
     config.ModelConfig.Tokens = options.Tokens;
     config.ModelConfig.Provider = options.Provider;
