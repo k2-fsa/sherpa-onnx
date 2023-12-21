@@ -13,7 +13,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
-  target_compile_definitions(sherpa-onnx-c-api PUBLIC SHERPA_ONNX_ENABLE_TTS=1)
+  target_compile_definitions(sherpa-onnx-c-api PUBLIC SHERPA_ONNX_DISABLE_TTS=1)
 endif()
 
 install(TARGETS sherpa-onnx-c-api DESTINATION lib)
