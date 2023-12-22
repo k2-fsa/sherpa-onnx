@@ -27,7 +27,6 @@ Note: The server is implemented in C++.
 
 import argparse
 import asyncio
-import json
 import logging
 import wave
 from typing import Tuple

@@ -19,7 +19,7 @@ log "------------------------------------------------------------"
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
 repo=$(basename -s .tar.bz2 $url)
-wget -qq $url
+curl -SL -O $url
 tar xvf $repo.tar.bz2
 rm $repo.tar.bz2
 
