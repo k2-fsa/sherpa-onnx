@@ -51,6 +51,13 @@ rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 node ./test-online-transducer.js
 rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+
+node ./test-online-zipformer2-ctc.js
+rm -rf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
+
 # offline tts
 
 curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2

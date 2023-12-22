@@ -61,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest] #, windows-latest]
         python-version: ["3.8"]
 
     steps:
@@ -70,7 +70,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -143,6 +143,7 @@ jobs:
           cd dotnet-examples/
 
           cd online-decode-files
+          ./run-zipformer2-ctc.sh
           ./run-transducer.sh
           ./run-paraformer.sh
 

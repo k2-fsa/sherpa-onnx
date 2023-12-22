@@ -107,6 +107,14 @@ jobs:
           name: release-static
           path: build/bin/*
 
+      - name: Test online CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-ctc.sh
+
       - name: Test offline Whisper
         shell: bash
         run: |
@@ -116,14 +124,6 @@ jobs:
           readelf -d build/bin/sherpa-onnx-offline
 
           .github/scripts/test-offline-whisper.sh
-
-      - name: Test online CTC
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx
-
-          .github/scripts/test-online-ctc.sh
 
       - name: Test offline CTC
         shell: bash

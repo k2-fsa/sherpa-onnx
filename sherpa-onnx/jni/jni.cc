@@ -262,20 +262,32 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(model_config_cls, "paraformer",
                         "Lcom/k2fsa/sherpa/onnx/OnlineParaformerModelConfig;");
   jobject paraformer_config = env->GetObjectField(model_config, fid);
-  jclass paraformer_config_config_cls = env->GetObjectClass(paraformer_config);
+  jclass paraformer_config_cls = env->GetObjectClass(paraformer_config);
 
-  fid = env->GetFieldID(paraformer_config_config_cls, "encoder",
-                        "Ljava/lang/String;");
+  fid = env->GetFieldID(paraformer_config_cls, "encoder", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(paraformer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.paraformer.encoder = p;
   env->ReleaseStringUTFChars(s, p);
 
-  fid = env->GetFieldID(paraformer_config_config_cls, "decoder",
-                        "Ljava/lang/String;");
+  fid = env->GetFieldID(paraformer_config_cls, "decoder", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(paraformer_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.paraformer.decoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  // streaming zipformer2 CTC
+  fid =
+      env->GetFieldID(model_config_cls, "zipformer2Ctc",
+                      "Lcom/k2fsa/sherpa/onnx/OnlineZipformer2CtcModelConfig;");
+  jobject zipformer2_ctc_config = env->GetObjectField(model_config, fid);
+  jclass zipformer2_ctc_config_cls = env->GetObjectClass(zipformer2_ctc_config);
+
+  fid =
+      env->GetFieldID(zipformer2_ctc_config_cls, "model", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(zipformer2_ctc_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.zipformer2_ctc.model = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "tokens", "Ljava/lang/String;");

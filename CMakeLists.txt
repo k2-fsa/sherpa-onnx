@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 project(sherpa-onnx)
 
-set(SHERPA_ONNX_VERSION "1.9.4")
+set(SHERPA_ONNX_VERSION "1.9.6")
 
 # Disable warning about
 #

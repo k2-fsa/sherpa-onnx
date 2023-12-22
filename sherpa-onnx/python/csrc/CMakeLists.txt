@@ -27,6 +27,7 @@ pybind11_add_module(_sherpa_onnx
   online-stream.cc
   online-transducer-model-config.cc
   online-wenet-ctc-model-config.cc
+  online-zipformer2-ctc-model-config.cc
   sherpa-onnx.cc
   silero-vad-model-config.cc
   vad-model-config.cc

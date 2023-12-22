@@ -25,7 +25,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
-        model_type: ["transducer", "paraformer"]
+        model_type: ["transducer", "paraformer", "zipformer2-ctc"]
 
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +38,7 @@ jobs:
           key: ${{ matrix.os }}-python-${{ matrix.python-version }}
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -57,6 +57,26 @@ jobs:
           python3 -m pip install --no-deps --verbose .
           python3 -m pip install websockets
 
+      - name: Start server for zipformer2 CTC models
+        if: matrix.model_type == 'zipformer2-ctc'
+        shell: bash
+        run: |
+          curl -O -L https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+
+          python3 ./python-api-examples/streaming_server.py \
+            --zipformer2-ctc ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.onnx \
+            --tokens=./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt &
+          echo "sleep 10 seconds to wait the server start"
+          sleep 10
+
+      - name: Start client for zipformer2 CTC models
+        if: matrix.model_type == 'zipformer2-ctc'
+        shell: bash
+        run: |
+          python3 ./python-api-examples/online-websocket-client-decode-file.py \
+            ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000000.wav
 
       - name: Start server for transducer models
         if: matrix.model_type == 'transducer'

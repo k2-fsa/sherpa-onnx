@@ -20,7 +20,8 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     return std::make_unique<OnlineRecognizerParaformerImpl>(config);
   }
 
-  if (!config.model_config.wenet_ctc.model.empty()) {
+  if (!config.model_config.wenet_ctc.model.empty() ||
+      !config.model_config.zipformer2_ctc.model.empty()) {
     return std::make_unique<OnlineRecognizerCtcImpl>(config);
   }
 
@@ -39,7 +40,8 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     return std::make_unique<OnlineRecognizerParaformerImpl>(mgr, config);
   }
 
-  if (!config.model_config.wenet_ctc.model.empty()) {
+  if (!config.model_config.wenet_ctc.model.empty() ||
+      !config.model_config.zipformer2_ctc.model.empty()) {
     return std::make_unique<OnlineRecognizerCtcImpl>(mgr, config);
   }
 

@@ -53,7 +53,7 @@ jobs:
           mkdir build
           cd build
           cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_SHARED_LIBS=ON -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF ..
-          make -j
+          make -j1
           cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
 
           cd ../scripts/go/_internal/
@@ -152,6 +152,14 @@ jobs:
           ls -lh
 
           git lfs install
+
+          echo "Test zipformer2 CTC"
+          wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+
+          ./run-zipformer2-ctc.sh
+          rm -rf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
 
           echo "Test transducer"
           git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26

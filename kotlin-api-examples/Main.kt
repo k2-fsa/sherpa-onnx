@@ -8,7 +8,8 @@ fun callback(samples: FloatArray): Unit {
 
 fun main() {
   testTts()
-  testAsr()
+  testAsr("transducer")
+  testAsr("zipformer2-ctc")
 }
 
 fun testTts() {
@@ -30,25 +31,43 @@ fun testTts() {
   audio.save(filename="test-en.wav")
 }
 
-fun testAsr() {
+fun testAsr(type: String) {
     var featConfig = FeatureConfig(
         sampleRate = 16000,
         featureDim = 80,
     )
 
-    // please refer to
-    // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
-    // to dowload pre-trained models
-    var modelConfig = OnlineModelConfig(
-        transducer = OnlineTransducerModelConfig(
-            encoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/encoder-epoch-99-avg-1.onnx",
-            decoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/decoder-epoch-99-avg-1.onnx",
-            joiner = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/joiner-epoch-99-avg-1.onnx",
-        ),
-        tokens = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/tokens.txt",
-        numThreads = 1,
-        debug = false,
-    )
+    var waveFilename: String
+    var modelConfig: OnlineModelConfig = when (type) {
+      "transducer" -> {
+        waveFilename = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/test_wavs/0.wav"
+        // please refer to
+        // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+        // to dowload pre-trained models
+        OnlineModelConfig(
+            transducer = OnlineTransducerModelConfig(
+                encoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/encoder-epoch-99-avg-1.onnx",
+                decoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/decoder-epoch-99-avg-1.onnx",
+                joiner = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/joiner-epoch-99-avg-1.onnx",
+            ),
+            tokens = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/tokens.txt",
+            numThreads = 1,
+            debug = false,
+        )
+      }
+      "zipformer2-ctc" -> {
+        waveFilename = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000000.wav"
+        OnlineModelConfig(
+            zipformer2Ctc = OnlineZipformer2CtcModelConfig(
+                model = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.onnx",
+            ),
+            tokens = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt",
+            numThreads = 1,
+            debug = false,
+        )
+      }
+      else -> throw IllegalArgumentException(type)
+    }
 
     var endpointConfig = EndpointConfig()
 
@@ -69,7 +88,7 @@ fun testAsr() {
     )
 
     var objArray = WaveReader.readWaveFromFile(
-        filename = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/test_wavs/0.wav",
+        filename = waveFilename,
     )
     var samples: FloatArray = objArray[0] as FloatArray
     var sampleRate: Int = objArray[1] as Int
