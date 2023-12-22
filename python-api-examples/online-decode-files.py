@@ -37,7 +37,7 @@ git lfs pull --include "*.onnx"
   ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/3.wav \
   ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/8k.wav
 
-(3) Streaming Zipformer2 CTC from WeNet
+(3) Streaming Zipformer2 CTC
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
 tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2

@@ -28,7 +28,7 @@ struct OnlineModelConfig {
   //  - lstm, lstm transducer from icefall
   //  - zipformer, zipformer transducer from icefall
   //  - zipformer2, zipformer2 transducer or CTC from icefall
-  //  - wenet_ctc, wenet CTC model from icefall
+  //  - wenet_ctc, wenet CTC model
   //
   // All other values are invalid and lead to loading the model twice.
   std::string model_type;
