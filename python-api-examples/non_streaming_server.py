@@ -817,7 +817,7 @@ or <a href="/offline_record.html">/offline_record.html</a>
             stream.accept_waveform(sample_rate, samples)
 
             await self.compute_and_decode(stream)
-            result = stream.result.text
+            result = stream.result.text.decode("utf-8", "ignore")
             logging.info(f"result: {result}")
 
             if result:

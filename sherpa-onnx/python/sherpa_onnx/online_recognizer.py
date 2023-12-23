@@ -491,7 +491,7 @@ class OnlineRecognizer(object):
         return self.recognizer.is_ready(s)
 
     def get_result(self, s: OnlineStream) -> str:
-        return self.recognizer.get_result(s).text.strip()
+        return self.recognizer.get_result(s).text.decode("utf-8", "ignore").strip()
 
     def tokens(self, s: OnlineStream) -> List[str]:
         return self.recognizer.get_result(s).tokens

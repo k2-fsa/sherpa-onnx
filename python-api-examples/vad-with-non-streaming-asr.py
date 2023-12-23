@@ -335,7 +335,7 @@ def main():
                 vad.pop()
                 recognizer.decode_stream(stream)
 
-                text = stream.result.text.strip().lower()
+                text = stream.result.text.decode("utf-8", "ignore").strip().lower()
                 if len(text):
                     idx = len(texts)
                     texts.append(text)

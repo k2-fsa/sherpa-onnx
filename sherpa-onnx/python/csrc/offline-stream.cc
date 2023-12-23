@@ -24,7 +24,10 @@ static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
   using PyClass = OfflineRecognitionResult;
   py::class_<PyClass>(*m, "OfflineRecognitionResult")
       .def_property_readonly("text",
-                             [](const PyClass &self) { return self.text; })
+                             [](const PyClass &self) -> py::bytes {
+                               py::bytes bytes(self.text);
+                               return bytes;
+                             })
       .def_property_readonly("tokens",
                              [](const PyClass &self) { return self.tokens; })
       .def_property_readonly(

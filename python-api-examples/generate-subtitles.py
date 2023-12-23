@@ -419,7 +419,7 @@ def main():
 
         recognizer.decode_streams(streams)
         for seg, stream in zip(segments, streams):
-            seg.text = stream.result.text
+            seg.text = stream.result.text.decode("utf-8", "ignore")
             segment_list.append(seg)
 
     srt_filename = Path(args.sound_file).with_suffix(".srt")

@@ -344,7 +344,7 @@ def run_second_pass(
 
     recognizer.decode_stream(stream)
 
-    return stream.result.text
+    return stream.result.text.decode("utf-8", "ignore")
 
 
 def main():

@@ -42,6 +42,15 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
     }
     auto sym = sym_table[src.tokens[i]];
     text.append(sym);
+
+    if (sym.size() == 1 and sym[0] != ' ') {
+      // for byte bpe models
+      std::ostringstream os;
+      os << "<0x" << std::hex << std::uppercase << static_cast<uint8_t>(sym[0])
+         << ">";
+      sym = os.str();
+    }
+
     r.tokens.push_back(std::move(sym));
   }
   r.text = std::move(text);

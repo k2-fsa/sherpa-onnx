@@ -436,7 +436,7 @@ def main():
         streams.append(s)
 
     recognizer.decode_streams(streams)
-    results = [s.result.text for s in streams]
+    results = [s.result.text.decode("utf-8", "ignore") for s in streams]
     end_time = time.time()
     print("Done!")
 
