@@ -22,34 +22,55 @@ struct ContextState {
   float token_score;
   float node_score;
   float output_score;
+  int32_t level;
+  float ac_threshold;
   bool is_end;
+  std::string phrase;
   std::unordered_map<int32_t, std::unique_ptr<ContextState>> next;
   const ContextState *fail = nullptr;
   const ContextState *output = nullptr;
 
   ContextState() = default;
   ContextState(int32_t token, float token_score, float node_score,
-               float output_score, bool is_end)
+               float output_score, int32_t level = 0, float ac_threshold = 0.0f,
+               bool is_end = false, const std::string phrase = std::string())
       : token(token),
         token_score(token_score),
         node_score(node_score),
         output_score(output_score),
-        is_end(is_end) {}
+        level(level),
+        ac_threshold(ac_threshold),
+        is_end(is_end),
+        phrase(phrase) {}
 };
 
 class ContextGraph {
  public:
   ContextGraph() = default;
-  ContextGraph(const std::vector<std::vector<int32_t>> &token_ids,
-               float context_score)
-      : context_score_(context_score) {
-    root_ = std::make_unique<ContextState>(-1, 0, 0, 0, false);
+  ContextGraph(
+      const std::vector<std::vector<int32_t>> &token_ids, float context_score,
+      float ac_threshold,
+      const std::vector<float> &scores = std::vector<float>(),
+      const std::vector<std::string> &phrases = std::vector<std::string>(),
+      const std::vector<float> &ac_thresholds = std::vector<float>())
+      : context_score_(context_score), ac_threshold_(ac_threshold) {
+    root_ = std::make_unique<ContextState>(-1, 0, 0, 0);
     root_->fail = root_.get();
-    Build(token_ids);
+    Build(token_ids, scores, phrases, ac_thresholds);
   }
 
-  std::pair<float, const ContextState *> ForwardOneStep(
-      const ContextState *state, int32_t token_id) const;
+  ContextGraph(
+      const std::vector<std::vector<int32_t>> &token_ids, float context_score,
+      const std::vector<float> &scores = std::vector<float>(),
+      const std::vector<std::string> &phrases = std::vector<std::string>())
+      : ContextGraph(token_ids, context_score, 0.0f, scores, phrases,
+                     std::vector<float>()) {}
+
+  std::tuple<float, const ContextState *, const ContextState *> ForwardOneStep(
+      const ContextState *state, int32_t token_id,
+      bool strict_mode = true) const;
+  std::pair<bool, const ContextState *> IsMatched(
+      const ContextState *state) const;
   std::pair<float, const ContextState *> Finalize(
       const ContextState *state) const;
 
@@ -57,8 +78,12 @@ class ContextGraph {
 
  private:
   float context_score_;
+  float ac_threshold_;
   std::unique_ptr<ContextState> root_;
-  void Build(const std::vector<std::vector<int32_t>> &token_ids) const;
+  void Build(const std::vector<std::vector<int32_t>> &token_ids,
+             const std::vector<float> &scores,
+             const std::vector<std::string> &phrases,
+             const std::vector<float> &ac_thresholds) const;
   void FillFailOutput() const;
 };
 
