@@ -92,7 +92,7 @@ class OnlineStream {
    */
   const ContextGraphPtr &GetContextGraph() const;
 
-  // for streaming parformer
+  // for streaming paraformer
   std::vector<float> &GetParaformerFeatCache();
   std::vector<float> &GetParaformerEncoderOutCache();
   std::vector<float> &GetParaformerAlphaCache();

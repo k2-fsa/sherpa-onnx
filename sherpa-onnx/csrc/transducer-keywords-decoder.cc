@@ -1,11 +1,11 @@
-// sherpa-onnx/csrc/online-transducer-modified-beam-search-decoder.cc
+// sherpa-onnx/csrc/transducer-keywords-decoder.cc
 //
-// Copyright (c)  2023  Pingfeng Luo
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023-2024  Xiaomi Corporation
 
-#include "sherpa-onnx/csrc/online-transducer-modified-beam-search-decoder.h"
+#include "sherpa-onnx/csrc/transducer-keywords-decoder.h"
 
 #include <algorithm>
+#include <cmath>
 #include <utility>
 #include <vector>
 
@@ -14,63 +14,21 @@
 
 namespace sherpa_onnx {
 
-static void UseCachedDecoderOut(
-    const std::vector<int32_t> &hyps_row_splits,
-    const std::vector<OnlineTransducerDecoderResult> &results,
-    int32_t context_size, Ort::Value *decoder_out) {
-  std::vector<int64_t> shape =
-      decoder_out->GetTensorTypeAndShapeInfo().GetShape();
-
-  float *dst = decoder_out->GetTensorMutableData<float>();
-
-  int32_t batch_size = static_cast<int32_t>(results.size());
-  for (int32_t i = 0; i != batch_size; ++i) {
-    int32_t num_hyps = hyps_row_splits[i + 1] - hyps_row_splits[i];
-    if (num_hyps > 1 || !results[i].decoder_out) {
-      dst += num_hyps * shape[1];
-      continue;
-    }
-
-    const float *src = results[i].decoder_out.GetTensorData<float>();
-    std::copy(src, src + shape[1], dst);
-    dst += shape[1];
-  }
-}
-
-OnlineTransducerDecoderResult
-OnlineTransducerModifiedBeamSearchDecoder::GetEmptyResult() const {
+TransducerKeywordsResult TransducerKeywordsDecoder::GetEmptyResult() const {
   int32_t context_size = model_->ContextSize();
   int32_t blank_id = 0;  // always 0
-  OnlineTransducerDecoderResult r;
+  TransducerKeywordsResult r;
   std::vector<int64_t> blanks(context_size, -1);
   blanks.back() = blank_id;
 
   Hypotheses blank_hyp({{blanks, 0}});
   r.hyps = std::move(blank_hyp);
-  r.tokens = std::move(blanks);
   return r;
 }
 
-void OnlineTransducerModifiedBeamSearchDecoder::StripLeadingBlanks(
-    OnlineTransducerDecoderResult *r) const {
-  int32_t context_size = model_->ContextSize();
-  auto hyp = r->hyps.GetMostProbable(true);
-
-  std::vector<int64_t> tokens(hyp.ys.begin() + context_size, hyp.ys.end());
-  r->tokens = std::move(tokens);
-  r->timestamps = std::move(hyp.timestamps);
-  r->num_trailing_blanks = hyp.num_trailing_blanks;
-}
-
-void OnlineTransducerModifiedBeamSearchDecoder::Decode(
-    Ort::Value encoder_out,
-    std::vector<OnlineTransducerDecoderResult> *result) {
-  Decode(std::move(encoder_out), nullptr, result);
-}
-
-void OnlineTransducerModifiedBeamSearchDecoder::Decode(
+void TransducerKeywordsDecoder::Decode(
     Ort::Value encoder_out, OnlineStream **ss,
-    std::vector<OnlineTransducerDecoderResult> *result) {
+    std::vector<TransducerKeywordsResult> *result) {
   std::vector<int64_t> encoder_out_shape =
       encoder_out.GetTensorTypeAndShapeInfo().GetShape();
 
@@ -86,6 +44,9 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
 
   int32_t num_frames = static_cast<int32_t>(encoder_out_shape[1]);
   int32_t vocab_size = model_->VocabSize();
+  int32_t context_size = model_->ContextSize();
+  std::vector<int64_t> blanks(context_size, -1);
+  blanks.back() = 0;  // blank_id is hardcoded to 0
 
   std::vector<Hypotheses> cur;
   for (auto &r : *result) {
@@ -110,10 +71,6 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
 
     Ort::Value decoder_input = model_->BuildDecoderInput(prev);
     Ort::Value decoder_out = model_->RunDecoder(std::move(decoder_input));
-    if (t == 0) {
-      UseCachedDecoderOut(hyps_row_splits, *result, model_->ContextSize(),
-                          &decoder_out);
-    }
 
     Ort::Value cur_encoder_out =
         GetEncoderOutFrame(model_->Allocator(), &encoder_out, t);
@@ -125,13 +82,18 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
     float *p_logit = logit.GetTensorMutableData<float>();
     LogSoftmax(p_logit, vocab_size, num_hyps);
 
+    // The acoustic logprobs for current frame
+    std::vector<float> logprobs(vocab_size * num_hyps);
+    std::memcpy(logprobs.data(), p_logit,
+                sizeof(float) * vocab_size * num_hyps);
+
     // now p_logit contains log_softmax output, we rename it to p_logprob
     // to match what it actually contains
     float *p_logprob = p_logit;
 
     // add log_prob of each hypothesis to p_logprob before taking top_k
     for (int32_t i = 0; i != num_hyps; ++i) {
-      float log_prob = prev[i].log_prob + prev[i].lm_log_prob;
+      float log_prob = prev[i].log_prob;
       for (int32_t k = 0; k != vocab_size; ++k, ++p_logprob) {
         *p_logprob += log_prob;
       }
@@ -151,7 +113,6 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         int32_t new_token = k % vocab_size;
 
         Hypothesis new_hyp = prev[hyp_index];
-        const float prev_lm_log_prob = new_hyp.lm_log_prob;
         float context_score = 0;
         auto context_state = new_hyp.context_state;
 
@@ -160,24 +121,51 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         if (new_token != 0 && new_token != unk_id_) {
           new_hyp.ys.push_back(new_token);
           new_hyp.timestamps.push_back(t + frame_offset);
+          new_hyp.ys_probs.push_back(
+              exp(logprobs[hyp_index * vocab_size + new_token]));
+
           new_hyp.num_trailing_blanks = 0;
-          if (ss != nullptr && ss[b]->GetContextGraph() != nullptr) {
-            auto context_res = ss[b]->GetContextGraph()->ForwardOneStep(
-                context_state, new_token);
-            context_score = std::get<0>(context_res);
-            new_hyp.context_state = std::get<1>(context_res);
-          }
-          if (lm_) {
-            lm_->ComputeLMScore(lm_scale_, &new_hyp);
+          auto context_res = ss[b]->GetContextGraph()->ForwardOneStep(
+              context_state, new_token);
+          context_score = std::get<0>(context_res);
+          new_hyp.context_state = std::get<1>(context_res);
+          // Start matching from the start state, forget the decoder history.
+          if (new_hyp.context_state->token == -1) {
+            new_hyp.ys = blanks;
+            new_hyp.timestamps.clear();
+            new_hyp.ys_probs.clear();
           }
         } else {
           ++new_hyp.num_trailing_blanks;
         }
-        new_hyp.log_prob = p_logprob[k] + context_score -
-                           prev_lm_log_prob;  // log_prob only includes the
-                                              // score of the transducer
+        new_hyp.log_prob = p_logprob[k] + context_score;
         hyps.Add(std::move(new_hyp));
       }  // for (auto k : topk)
+
+      auto best_hyp = hyps.GetMostProbable(false);
+
+      auto status = ss[b]->GetContextGraph()->IsMatched(best_hyp.context_state);
+      bool matched = std::get<0>(status);
+      const ContextState *matched_state = std::get<1>(status);
+
+      if (matched) {
+        float ys_prob = 0.0;
+        for (size_t i = best_hyp.ys_probs.size() - 1;
+             i >= best_hyp.ys_probs.size() - matched_state->level; --i) {
+          ys_prob += best_hyp.ys_probs[i];
+        }
+        if (best_hyp.num_tailing_blanks > num_tailing_blanks_ &&
+            ys_prob >= matched_state->ac_threshold) {
+          auto &r = (*result)[b];
+          r.tokens = {best_hyp.ys.end() - matched_state->level,
+                      best_hyp.ys.end()};
+          r.timestamps = {best_hyp.timestamps.end() - matched_state->level,
+                          best_hyp.timestamps.end()};
+          r.keyword = matched_state->phrase;
+
+          hyps = Hypotheses({{blanks, 0, ss[b]->GetContextGraph()->Root()}});
+        }
+      }
       cur.push_back(std::move(hyps));
       p_logprob += (end - start) * vocab_size;
     }  // for (int32_t b = 0; b != batch_size; ++b)
@@ -185,24 +173,11 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
 
   for (int32_t b = 0; b != batch_size; ++b) {
     auto &hyps = cur[b];
-    auto best_hyp = hyps.GetMostProbable(true);
     auto &r = (*result)[b];
-
     r.hyps = std::move(hyps);
-    r.tokens = std::move(best_hyp.ys);
     r.num_trailing_blanks = best_hyp.num_trailing_blanks;
     r.frame_offset += num_frames;
   }
-}
-
-void OnlineTransducerModifiedBeamSearchDecoder::UpdateDecoderOut(
-    OnlineTransducerDecoderResult *result) {
-  if (result->tokens.size() == model_->ContextSize()) {
-    result->decoder_out = Ort::Value{nullptr};
-    return;
-  }
-  Ort::Value decoder_input = model_->BuildDecoderInput({*result});
-  result->decoder_out = model_->RunDecoder(std::move(decoder_input));
 }
 
 }  // namespace sherpa_onnx

@@ -26,7 +26,13 @@ namespace sherpa_onnx {
  *          otherwise returns false.
  */
 bool EncodeHotwords(std::istream &is, const SymbolTable &symbol_table,
-                    std::vector<std::vector<int32_t>> *hotwords);
+                    std::vector<std::vector<int32_t>> *hotwords_id);
+
+bool EncodeKeywords(std::istream &is, const SymbolTable &symbol_table,
+                    std::vector<std::vector<int32_t>> *keywords_id,
+                    std::vector<std::string> *keywords,
+                    std::vector<float> *boost_scores,
+                    std::vector<float> *threshold);
 
 }  // namespace sherpa_onnx
 
