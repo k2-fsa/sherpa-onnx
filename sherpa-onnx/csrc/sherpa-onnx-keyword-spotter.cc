@@ -76,7 +76,7 @@ for a list of pre-trained models to download.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
-  sherpa_onnx::OnlineRecognizerConfig config;
+  sherpa_onnx::KeywordSpotterConfig config;
 
   config.Register(&po);
 
@@ -93,7 +93,7 @@ for a list of pre-trained models to download.
     return -1;
   }
 
-  sherpa_onnx::OnlineRecognizer recognizer(config);
+  sherpa_onnx::KeywordSpotter keywordspotter(config);
 
   std::vector<Stream> ss;
 
@@ -115,7 +115,7 @@ for a list of pre-trained models to download.
 
     const float duration = samples.size() / static_cast<float>(sampling_rate);
 
-    auto s = recognizer.CreateStream();
+    auto s = keywordspotter.CreateStream();
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
     std::vector<float> tail_paddings(static_cast<int>(0.8 * sampling_rate));
@@ -133,7 +133,7 @@ for a list of pre-trained models to download.
     ready_streams.clear();
     for (auto &s : ss) {
       const auto p_ss = s.online_stream.get();
-      if (recognizer.IsReady(p_ss)) {
+      if (keywordspotter.IsReady(p_ss)) {
         ready_streams.push_back(p_ss);
       } else if (s.elapsed_seconds == 0) {
         const auto end = std::chrono::steady_clock::now();
@@ -149,7 +149,7 @@ for a list of pre-trained models to download.
       break;
     }
 
-    recognizer.DecodeStreams(ready_streams.data(), ready_streams.size());
+    keywordspotter.DecodeStreams(ready_streams.data(), ready_streams.size());
   }
 
   std::ostringstream os;
@@ -160,7 +160,7 @@ for a list of pre-trained models to download.
     os << po.GetArg(i) << "\n";
     os << std::setprecision(2) << "Elapsed seconds: " << s.elapsed_seconds
        << ", Real time factor (RTF): " << rtf << "\n";
-    const auto r = recognizer.GetResult(s.online_stream.get());
+    const auto r = keywordspotter.GetResult(s.online_stream.get());
     os << r.text << "\n";
     os << r.AsJsonString() << "\n\n";
   }
