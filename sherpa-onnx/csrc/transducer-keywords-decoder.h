@@ -33,34 +33,72 @@ struct TransducerKeywordsResult {
 
   TransducerKeywordsResult() : tokens{}, num_trailing_blanks(0), hyps{} {}
 
-  TransducerKeywordsResult(const TransducerKeywordsResult &other);
+  TransducerKeywordsResult(const TransducerKeywordsResult &other) {
+    *this = other;
+  };
 
-  TransducerKeywordsResult &operator=(const TransducerKeywordsResult &other);
+  TransducerKeywordsResult &operator=(const TransducerKeywordsResult &other) {
+    if (this == &other) {
+      return *this;
+    }
 
-  TransducerKeywordsResult(TransducerKeywordsResult &&other);
+    tokens = other.tokens;
+    num_trailing_blanks = other.num_trailing_blanks;
 
-  TransducerKeywordsResult &operator=(TransducerKeywordsResult &&other);
+    keyword = other.keyword;
+
+    hyps = other.hyps;
+
+    frame_offset = other.frame_offset;
+    timestamps = other.timestamps;
+
+    return *this;
+  }
+
+  TransducerKeywordsResult(TransducerKeywordsResult &&other) {
+    *this = std::move(other);
+  }
+
+  TransducerKeywordsResult &operator=(TransducerKeywordsResult &&other) {
+    if (this == &other) {
+      return *this;
+    }
+
+    tokens = std::move(other.tokens);
+    num_trailing_blanks = other.num_trailing_blanks;
+
+    keyword = other.keyword;
+
+    hyps = std::move(other.hyps);
+
+    frame_offset = other.frame_offset;
+    timestamps = std::move(other.timestamps);
+
+    return *this;
+  }
 };
 
 class TransducerKeywordsDecoder {
  public:
   TransducerKeywordsDecoder(OnlineTransducerModel *model,
                             int32_t max_active_paths,
-                            int32_t num_tailing_blanks)
+                            int32_t num_trailing_blanks, int32_t unk_id)
       : model_(model),
         max_active_paths_(max_active_paths),
-        num_tailing_blanks_(num_tailing_blanks) {}
+        num_trailing_blanks_(num_trailing_blanks),
+        unk_id_(unk_id) {}
 
-  TransducerDecoderResult GetEmptyResult() const;
+  TransducerKeywordsResult GetEmptyResult() const;
 
   void Decode(Ort::Value encoder_out, OnlineStream **ss,
-              std::vector<TransducerDecoderResult> *result);
+              std::vector<TransducerKeywordsResult> *result);
 
  private:
   OnlineTransducerModel *model_;  // Not owned
 
   int32_t max_active_paths_;
-  int32_t num_tailing_blanks_;
+  int32_t num_trailing_blanks_;
+  int32_t unk_id_;
 };
 
 }  // namespace sherpa_onnx

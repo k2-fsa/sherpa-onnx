@@ -64,11 +64,11 @@ struct KeywordSpotterConfig {
 
   int32_t max_active_paths = 4;
 
-  int32_t num_tailing_blanks = 8;
+  int32_t num_trailing_blanks = 8;
 
   float keywords_score = 1.5;
 
-  float keywords_threshold = 0.5;
+  float keywords_threshold = 0.35;
 
   std::string keywords_file;
 
@@ -78,7 +78,7 @@ struct KeywordSpotterConfig {
                        const OnlineModelConfig &model_config,
                        const EndpointConfig &endpoint_config,
                        bool enable_endpoint, int32_t max_active_paths,
-                       int32_t num_tailing_blanks, float keywords_score,
+                       int32_t num_trailing_blanks, float keywords_score,
                        float keywords_threshold,
                        const std::string &keywords_file)
       : feat_config(feat_config),
@@ -86,7 +86,7 @@ struct KeywordSpotterConfig {
         endpoint_config(endpoint_config),
         enable_endpoint(enable_endpoint),
         max_active_paths(max_active_paths),
-        num_tailing_blanks(num_tailing_blanks),
+        num_trailing_blanks(num_trailing_blanks),
         keywords_score(keywords_score),
         keywords_threshold(keywords_threshold),
         keywords_file(keywords_file) {}

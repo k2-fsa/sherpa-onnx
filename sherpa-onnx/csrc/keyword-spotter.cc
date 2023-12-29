@@ -77,14 +77,14 @@ void KeywordSpotterConfig::Register(ParseOptions *po) {
                "True to enable endpoint detection. False to disable it.");
   po->Register("max-active-paths", &max_active_paths,
                "beam size used in modified beam search.");
-  po->Register("num-tailing-blanks", &num_tailing_blanks,
-               "The number of tailing blanks should have after the keyword.");
+  po->Register("num-trailing-blanks", &num_trailing_blanks,
+               "The number of trailing blanks should have after the keyword.");
   po->Register("keywords-score", &keywords_score,
                "The bonus score for each token in context word/phrase.");
   po->Register("keywords-threshold", &keywords_threshold,
                "The acoustic threshold (probability) to trigger the keywords.");
   po->Register(
-      "keywords-file", &hotwords_file,
+      "keywords-file", &keywords_file,
       "The file containing keywords, one words/phrases per line, and for each"
       "phrase the bpe/cjkchar are separated by a space. For example: "
       "▁HE LL O ▁WORLD"
@@ -109,9 +109,9 @@ std::string KeywordSpotterConfig::ToString() const {
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
   os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ", ";
   os << "max_active_paths=" << max_active_paths << ", ";
-  os << "num_tailing_blanks=" << num_tailing_blanks << ", ";
+  os << "num_trailing_blanks=" << num_trailing_blanks << ", ";
   os << "keywords_score=" << keywords_score << ", ";
-  os << "keywords_threshold=" << keywords_shreshold << ", ";
+  os << "keywords_threshold=" << keywords_threshold << ", ";
   os << "keywords_file=\"" << keywords_file << "\", ";
 
   return os.str();

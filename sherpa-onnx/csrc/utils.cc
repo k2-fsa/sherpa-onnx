@@ -20,7 +20,7 @@ static bool EncodeBase(std::istream &is, const SymbolTable &symbol_table,
                        std::vector<std::string> *phrases,
                        std::vector<float> *scores,
                        std::vector<float> *thresholds) {
-  SHERPA_ONNX_CEHCK(ids != nullptr);
+  SHERPA_ONNX_CHECK(ids != nullptr);
   ids->clear();
 
   std::vector<int32_t> tmp_ids;
@@ -40,7 +40,6 @@ static bool EncodeBase(std::istream &is, const SymbolTable &symbol_table,
     std::string phrase = "";
 
     std::istringstream iss(line);
-    std::vector<std::string> syms;
     while (iss >> word) {
       if (word.size() >= 3) {
         // For BPE-based models, we replace ▁ with a space
@@ -77,26 +76,29 @@ static bool EncodeBase(std::istream &is, const SymbolTable &symbol_table,
       }
     }
     ids->push_back(std::move(tmp_ids));
-    if (scores != nullptr) {
-      if (has_scores) {
-        scores->swap(tmp_scores);
-      } else {
-        scores->clear();
-      }
+    tmp_scores.push_back(score);
+    tmp_phrases.push_back(phrase);
+    tmp_thresholds.push_back(threshold);
+  }
+  if (scores != nullptr) {
+    if (has_scores) {
+      scores->swap(tmp_scores);
+    } else {
+      scores->clear();
     }
-    if (phrases != nullptr) {
-      if (has_phrases) {
-        phrases->swap(tmp_phrases);
-      } else {
-        phrases->clear();
-      }
+  }
+  if (phrases != nullptr) {
+    if (has_phrases) {
+      *phrases = std::move(tmp_phrases);
+    } else {
+      phrases->clear();
     }
-    if (thresholds != nullptr) {
-      if (has_thresholds) {
-        thresholds->swap(tmp_thresholds);
-      } else {
-        thresholds->clear();
-      }
+  }
+  if (thresholds != nullptr) {
+    if (has_thresholds) {
+      thresholds->swap(tmp_thresholds);
+    } else {
+      thresholds->clear();
     }
   }
   return true;

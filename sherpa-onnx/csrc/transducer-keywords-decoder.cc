@@ -150,11 +150,12 @@ void TransducerKeywordsDecoder::Decode(
 
       if (matched) {
         float ys_prob = 0.0;
-        for (size_t i = best_hyp.ys_probs.size() - 1;
-             i >= best_hyp.ys_probs.size() - matched_state->level; --i) {
+        int32_t length = best_hyp.ys_probs.size();
+        for (int32_t i = 1; i <= matched_state->level; ++i) {
           ys_prob += best_hyp.ys_probs[i];
         }
-        if (best_hyp.num_tailing_blanks > num_tailing_blanks_ &&
+        ys_prob /= matched_state->level;
+        if (best_hyp.num_trailing_blanks > num_trailing_blanks_ &&
             ys_prob >= matched_state->ac_threshold) {
           auto &r = (*result)[b];
           r.tokens = {best_hyp.ys.end() - matched_state->level,
@@ -173,6 +174,7 @@ void TransducerKeywordsDecoder::Decode(
 
   for (int32_t b = 0; b != batch_size; ++b) {
     auto &hyps = cur[b];
+    auto best_hyp = hyps.GetMostProbable(false);
     auto &r = (*result)[b];
     r.hyps = std::move(hyps);
     r.num_trailing_blanks = best_hyp.num_trailing_blanks;

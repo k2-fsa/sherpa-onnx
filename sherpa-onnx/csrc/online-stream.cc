@@ -51,6 +51,11 @@ class OnlineStream::Impl {
 
   OnlineTransducerDecoderResult &GetResult() { return result_; }
 
+  void SetKeywordResult(const TransducerKeywordsResult &r) {
+    keyword_result_ = r;
+  }
+  TransducerKeywordsResult &GetKeywordResult() { return keyword_result_; }
+
   OnlineCtcDecoderResult &GetCtcResult() { return ctc_result_; }
 
   void SetCtcResult(const OnlineCtcDecoderResult &r) { ctc_result_ = r; }
@@ -93,6 +98,7 @@ class OnlineStream::Impl {
   int32_t start_frame_index_ = 0;     // never reset
   int32_t segment_ = 0;
   OnlineTransducerDecoderResult result_;
+  TransducerKeywordsResult keyword_result_;
   OnlineCtcDecoderResult ctc_result_;
   std::vector<Ort::Value> states_;  // states for transducer or ctc models
   std::vector<float> paraformer_feat_cache_;
@@ -147,6 +153,14 @@ void OnlineStream::SetResult(const OnlineTransducerDecoderResult &r) {
 
 OnlineTransducerDecoderResult &OnlineStream::GetResult() {
   return impl_->GetResult();
+}
+
+void OnlineStream::SetKeywordResult(const TransducerKeywordsResult &r) {
+  impl_->SetKeywordResult(r);
+}
+
+TransducerKeywordsResult &OnlineStream::GetKeywordResult() {
+  return impl_->GetKeywordResult();
 }
 
 OnlineCtcDecoderResult &OnlineStream::GetCtcResult() {

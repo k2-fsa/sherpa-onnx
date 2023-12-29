@@ -9,7 +9,7 @@
 namespace sherpa_onnx {
 
 std::unique_ptr<KeywordSpotterImpl> KeywordSpotterImpl::Create(
-    const KeywordSpotterImplConfig &config) {
+    const KeywordSpotterConfig &config) {
   if (!config.model_config.transducer.encoder.empty()) {
     return std::make_unique<KeywordSpotterTransducerImpl>(config);
   }

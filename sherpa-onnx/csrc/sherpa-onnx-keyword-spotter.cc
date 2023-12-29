@@ -161,7 +161,7 @@ for a list of pre-trained models to download.
     os << std::setprecision(2) << "Elapsed seconds: " << s.elapsed_seconds
        << ", Real time factor (RTF): " << rtf << "\n";
     const auto r = keywordspotter.GetResult(s.online_stream.get());
-    os << r.text << "\n";
+    os << r.keyword << "\n";
     os << r.AsJsonString() << "\n\n";
   }
 

@@ -30,7 +30,7 @@
 
 namespace sherpa_onnx {
 
-static KeywordResult Convert(const TransducerKeywordsDecoderResult &src,
+static KeywordResult Convert(const TransducerKeywordsResult &src,
                              const SymbolTable &sym_table, float frame_shift_ms,
                              int32_t subsampling_factor,
                              int32_t frames_since_start) {
@@ -69,7 +69,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     InitKeywords();
 
     decoder_ = std::make_unique<TransducerKeywordsDecoder>(
-        model_.get(), config_.max_active_paths, config_.num_tailing_blanks);
+        model_.get(), config_.max_active_paths, config_.num_trailing_blanks,
+        unk_id_);
   }
 
 #if __ANDROID_API__ >= 9
@@ -86,7 +87,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     InitKeywords(mgr);
 
     decoder_ = std::make_unique<TransducerKeywordsDecoder>(
-        model_.get(), config_.max_active_paths, config_.num_tailing_blanks);
+        model_.get(), config_.max_active_paths, config_.num_trailing_blanks,
+        unk_id_);
   }
 #endif
 
@@ -108,7 +110,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
 
     int32_t feature_dim = ss[0]->FeatureDim();
 
-    std::vector<TransducerKeywordsDecoderResult> results(n);
+    std::vector<TransducerKeywordsResult> results(n);
     std::vector<float> features_vec(n * chunk_size * feature_dim);
     std::vector<std::vector<Ort::Value>> states_vec(n);
     std::vector<int64_t> all_processed_frames(n);
@@ -126,7 +128,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       std::copy(features.begin(), features.end(),
                 features_vec.data() + i * chunk_size * feature_dim);
 
-      results[i] = std::move(ss[i]->GetResult());
+      results[i] = std::move(ss[i]->GetKeywordResult());
       states_vec[i] = std::move(ss[i]->GetStates());
       all_processed_frames[i] = num_processed_frames;
     }
@@ -158,13 +160,13 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
         model_->UnStackStates(pair.second);
 
     for (int32_t i = 0; i != n; ++i) {
-      ss[i]->SetResult(results[i]);
+      ss[i]->SetKeywordResult(results[i]);
       ss[i]->SetStates(std::move(next_states[i]));
     }
   }
 
   KeywordResult GetResult(OnlineStream *s) const override {
-    TransducerKeywordsResult decoder_result = s->GetResult();
+    TransducerKeywordsResult decoder_result = s->GetKeywordResult();
 
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
@@ -184,7 +186,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     float frame_shift_in_seconds = 0.01;
 
     // subsampling factor is 4
-    int32_t trailing_silence_frames = s->GetResult().num_trailing_blanks * 4;
+    int32_t trailing_silence_frames =
+        s->GetKeywordResult().num_trailing_blanks * 4;
 
     return endpoint_.IsEndpoint(num_processed_frames, trailing_silence_frames,
                                 frame_shift_in_seconds);
@@ -193,9 +196,9 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   void Reset(OnlineStream *s) const override {
     auto r = decoder_->GetEmptyResult();
     SHERPA_ONNX_CHECK_EQ(r.hyps.size(), 1);
-    r.hyps.begin()->second.context_state = stream->GetContextGraph()->Root();
+    r.hyps.begin()->second.context_state = s->GetContextGraph()->Root();
 
-    s->SetResult(r);
+    s->SetKeywordResult(r);
 
     // Note: We only update counters. The underlying audio samples
     // are not discarded.
@@ -255,7 +258,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     SHERPA_ONNX_CHECK(stream->GetContextGraph() != nullptr);
     r.hyps.begin()->second.context_state = stream->GetContextGraph()->Root();
 
-    stream->SetResult(r);
+    stream->SetKeywordResult(r);
     stream->SetStates(model_->GetEncoderInitStates());
   }
 
