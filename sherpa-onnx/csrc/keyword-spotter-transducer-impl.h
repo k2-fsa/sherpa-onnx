@@ -166,7 +166,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   }
 
   KeywordResult GetResult(OnlineStream *s) const override {
-    TransducerKeywordsResult decoder_result = s->GetKeywordResult();
+    TransducerKeywordsResult decoder_result = s->GetKeywordResult(true);
 
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;

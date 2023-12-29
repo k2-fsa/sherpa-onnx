@@ -79,7 +79,7 @@ class OnlineStream {
   OnlineTransducerDecoderResult &GetResult();
 
   void SetKeywordResult(const TransducerKeywordsResult &r);
-  TransducerKeywordsResult &GetKeywordResult();
+  TransducerKeywordsResult &GetKeywordResult(bool remove_duplicates = false);
 
   void SetCtcResult(const OnlineCtcDecoderResult &r);
   OnlineCtcDecoderResult &GetCtcResult();
