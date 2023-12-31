@@ -74,6 +74,10 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     return model_->GetMetaData().sample_rate;
   }
 
+  int32_t NumSpeakers() const override {
+    return model_->GetMetaData().num_speakers;
+  }
+
   GeneratedAudio Generate(
       const std::string &_text, int64_t sid = 0, float speed = 1.0,
       GeneratedAudioCallback callback = nullptr) const override {
