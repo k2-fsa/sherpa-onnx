@@ -88,7 +88,7 @@ object TtsEngine {
         // modelName = "vits-aishell3.onnx"
         // ruleFsts = "vits-zh-aishell3/rule.fst"
         // lexcion = "lexicon.txt"
-        // lang = "cmn"
+        // lang = "zho"
 
         if (dataDir != null) {
             val newDir = copyDataDir(modelDir!!)
