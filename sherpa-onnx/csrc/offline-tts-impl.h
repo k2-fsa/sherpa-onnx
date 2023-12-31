@@ -34,6 +34,10 @@ class OfflineTtsImpl {
 
   // Return the sample rate of the generated audio
   virtual int32_t SampleRate() const = 0;
+
+  // Number of supported speakers.
+  // If it supports only a single speaker, then it return 0 or 1.
+  virtual int32_t NumSpeakers() const = 0;
 };
 
 }  // namespace sherpa_onnx

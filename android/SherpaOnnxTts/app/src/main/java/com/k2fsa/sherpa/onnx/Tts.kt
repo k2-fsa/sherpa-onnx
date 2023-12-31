@@ -56,6 +56,8 @@ class OfflineTts(
 
     fun sampleRate() = getSampleRate(ptr)
 
+    fun numSpeakers() = getNumSpeakers(ptr)
+
     fun generate(
         text: String,
         sid: Int = 0,
@@ -113,6 +115,7 @@ class OfflineTts(
 
     private external fun delete(ptr: Long)
     private external fun getSampleRate(ptr: Long): Int
+    private external fun getNumSpeakers(ptr: Long): Int
 
     // The returned array has two entries:
     //  - the first entry is an 1-D float array containing audio samples.

@@ -73,4 +73,6 @@ GeneratedAudio OfflineTts::Generate(
 
 int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }
 
+int32_t OfflineTts::NumSpeakers() const { return impl_->NumSpeakers(); }
+
 }  // namespace sherpa_onnx

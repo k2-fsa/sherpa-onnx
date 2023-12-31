@@ -86,6 +86,10 @@ class OfflineTts {
   // Return the sample rate of the generated audio
   int32_t SampleRate() const;
 
+  // Number of supported speakers.
+  // If it supports only a single speaker, then it return 0 or 1.
+  int32_t NumSpeakers() const;
+
  private:
   std::unique_ptr<OfflineTtsImpl> impl_;
 };
