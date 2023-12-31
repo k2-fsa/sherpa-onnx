@@ -12,6 +12,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SherpaOnnxTtsEngine"
         tools:targetApi="31">
+
+        <service
+            android:name=".TtsService"
+            android:enabled="true"
+            android:label="@string/app_name"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.TTS_SERVICE" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data android:name="android.speech.tts"
+                android:resource="@xml/tts_engine" />
+        </service>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -21,6 +35,11 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.speech.tts.engine.CONFIGURE_ENGINE" />
+                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
     </application>

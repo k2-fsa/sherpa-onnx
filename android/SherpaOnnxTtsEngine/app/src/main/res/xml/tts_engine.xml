@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tts-engine xmlns:android="http://schemas.android.com/apk/res/android"
+    android:settingsActivity="com.k2fsa.sherpa.onnx.tts.engine.MainActivity"
+    >
+</tts-engine>
