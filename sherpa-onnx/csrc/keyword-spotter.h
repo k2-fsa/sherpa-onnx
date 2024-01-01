@@ -64,11 +64,11 @@ struct KeywordSpotterConfig {
 
   int32_t max_active_paths = 4;
 
-  int32_t num_trailing_blanks = 8;
+  int32_t num_trailing_blanks = 1;
 
-  float keywords_score = 1.5;
+  float keywords_score = 1.0;
 
-  float keywords_threshold = 0.35;
+  float keywords_threshold = 0.25;
 
   std::string keywords_file;
 
