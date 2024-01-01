@@ -18,7 +18,7 @@ log() {
 
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-log "Building TTS APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
+log "Building TTS engine APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
@@ -32,10 +32,11 @@ log "====================x86===================="
 mkdir -p apks
 
 {% for tts_model in tts_model_list %}
-pushd ./android/SherpaOnnxTts/app/src/main/assets/
+pushd ./android/SherpaOnnxTtsEngine/app/src/main/assets/
 model_dir={{ tts_model.model_dir }}
 model_name={{ tts_model.model_name }}
 lang={{ tts_model.lang }}
+lang_iso_639_3={{ tts_model.lang_iso_639_3 }}
 
 wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$model_dir.tar.bz2
 tar xf $model_dir.tar.bz2
@@ -45,20 +46,21 @@ popd
 # Now we are at the project root directory
 
 git checkout .
-pushd android/SherpaOnnxTts/app/src/main/java/com/k2fsa/sherpa/onnx
-sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
-sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./MainActivity.kt
+pushd android/SherpaOnnxTtsEngine/app/src/main/java/com/k2fsa/sherpa/onnx/tts/engine
+sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./TtsEngine.kt
+sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./TtsEngine.kt
+sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
 
 {% if tts_model.rule_fsts %}
   rule_fsts={{ tts_model.rule_fsts }}
-  sed -i.bak s%"ruleFsts = null"%"ruleFsts = \"$rule_fsts\""% ./MainActivity.kt
+  sed -i.bak s%"ruleFsts = null"%"ruleFsts = \"$rule_fsts\""% ./TtsEngine.kt
 {% endif %}
 
 {% if tts_model.data_dir %}
   data_dir={{ tts_model.data_dir }}
-  sed -i.bak s%"dataDir = null"%"dataDir = \"$data_dir\""% ./MainActivity.kt
+  sed -i.bak s%"dataDir = null"%"dataDir = \"$data_dir\""% ./TtsEngine.kt
 {% else %}
-  sed -i.bak s/"lexicon = null"/"lexicon = \"lexicon.txt\""/ ./MainActivity.kt
+  sed -i.bak s/"lexicon = null"/"lexicon = \"lexicon.txt\""/ ./TtsEngine.kt
 {% endif %}
 
 git diff
@@ -77,18 +79,18 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
 
   ls -lh ./build-android-$src_arch/install/lib/*.so
 
-  cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxTts/app/src/main/jniLibs/$arch/
+  cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxTtsEngine/app/src/main/jniLibs/$arch/
 
-  pushd ./android/SherpaOnnxTts
+  pushd ./android/SherpaOnnxTtsEngine
   ./gradlew build
   popd
 
-  mv android/SherpaOnnxTts/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-tts-$model_dir.apk
+  mv android/SherpaOnnxTtsEngine/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-tts-engine-$model_dir.apk
   ls -lh apks
-  rm -v ./android/SherpaOnnxTts/app/src/main/jniLibs/$arch/*.so
+  rm -v ./android/SherpaOnnxTtsEngine/app/src/main/jniLibs/$arch/*.so
 done
 
-rm -rf ./android/SherpaOnnxTts/app/src/main/assets/$model_dir
+rm -rf ./android/SherpaOnnxTtsEngine/app/src/main/assets/$model_dir
 {% endfor %}
 
 git checkout .

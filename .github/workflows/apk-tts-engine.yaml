@@ -1,27 +1,26 @@
-name: apk-tts
+name: apk-tts-engine
 
 on:
   push:
     branches:
       - apk-tts
-      - apk
     tags:
       - '*'
 
   workflow_dispatch:
 
 concurrency:
-  group: apk-tts-${{ github.ref }}
+  group: apk-tts-engine-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
-  apk_tts:
+  apk_tts_engine:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
-    name: apk for tts ${{ matrix.index }}/${{ matrix.total }}
+    name: apk for tts engine ${{ matrix.index }}/${{ matrix.total }}
     strategy:
       fail-fast: false
       matrix:
@@ -33,6 +32,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # https://github.com/actions/setup-java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -60,10 +65,10 @@ jobs:
 
           ./generate-tts-apk-script.py --total $total --index $index
 
-          chmod +x build-apk-tts.sh
-          mv -v ./build-apk-tts.sh ../..
+          chmod +x build-apk-tts-engine.sh
+          mv -v ./build-apk-tts-engine.sh ../..
 
-      - name: build APK
+      - name: build APK for TTS engine
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -71,9 +76,9 @@ jobs:
           cmake --version
 
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
-          ./build-apk-tts.sh
+          ./build-apk-tts-engine.sh
 
-      - name: Display APK
+      - name: Display APK for TTS engine
         shell: bash
         run: |
           ls -lh ./apks/
@@ -82,7 +87,7 @@ jobs:
       - uses: actions/upload-artifact@v3
         if: false
         with:
-          name: tts-apk
+          name: tts-engine-apk
           path: ./apks/*.apk
 
       - name: Publish to huggingface
@@ -108,9 +113,9 @@ jobs:
             git merge -m "merge remote" --ff origin main
 
             mkdir -p tts
-            cp -v ../apks/*.apk ./tts/
+            cp -v ../apks/*.apk ./tts-engine/
             git status
             git lfs track "*.apk"
             git add .
-            git commit -m "add more apks"
+            git commit -m "add more tts engine apks"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-apk main
