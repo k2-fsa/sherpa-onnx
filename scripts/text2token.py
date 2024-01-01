@@ -56,7 +56,10 @@ def get_args():
         "--tokens-type",
         type=str,
         required=True,
-        help="The type of modeling units, should be cjkchar, bpe or cjkchar+bpe",
+        help="""The type of modeling units, should be cjkchar, bpe, cjkchar+bpe, fpinyin or ppinyin.
+        fpinyin means full pinyin, each cjkchar has a pinyin(with tone).
+        ppinyin means partial pinyin, it splits pinyin into initial and final,
+        """,
     )
 
     parser.add_argument(
