@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - apk-tts
-      - tts-engine-apk
     tags:
       - '*'
 
