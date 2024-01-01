@@ -6,6 +6,9 @@ from typing import List, Optional
 
 import jinja2
 
+# pip install iso639-lang
+from iso639 import Lang
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -31,6 +34,12 @@ class TtsModel:
     lang: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
     data_dir: Optional[str] = None
+    lang_iso_639_3: str = ""
+
+
+def convert_lang_to_iso_639_3(models: List[TtsModel]):
+    for m in models:
+        m.lang_iso_639_3 = Lang(m.lang).pt3
 
 
 def get_coqui_models() -> List[TtsModel]:
@@ -234,15 +243,12 @@ def main():
     index = args.index
     total = args.total
     assert 0 <= index < total, (index, total)
-    environment = jinja2.Environment()
-    with open("./build-apk-tts.sh.in") as f:
-        s = f.read()
-    template = environment.from_string(s)
     d = dict()
 
     all_model_list = get_vits_models()
     all_model_list += get_piper_models()
     all_model_list += get_coqui_models()
+    convert_lang_to_iso_639_3(all_model_list)
 
     num_models = len(all_model_list)
 
@@ -262,9 +268,16 @@ def main():
         d["tts_model_list"].append(all_model_list[s])
         print(f"{s}/{num_models}")
 
-    s = template.render(**d)
-    with open("./build-apk-tts.sh", "w") as f:
-        print(s, file=f)
+    filename_list = ["./build-apk-tts.sh", "./build-apk-tts-engine.sh"]
+    for filename in filename_list:
+        environment = jinja2.Environment()
+        with open(f"{filename}.in") as f:
+            s = f.read()
+        template = environment.from_string(s)
+
+        s = template.render(**d)
+        with open(filename, "w") as f:
+            print(s, file=f)
 
 
 if __name__ == "__main__":
