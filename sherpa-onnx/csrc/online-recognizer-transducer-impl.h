@@ -6,8 +6,10 @@
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_IMPL_H_
 
 #include <algorithm>
+#include <ios>
 #include <memory>
 #include <regex>  // NOLINT
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -47,6 +49,15 @@ static OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
     auto sym = sym_table[i];
 
     r.text.append(sym);
+
+    if (sym.size() == 1 && sym[0] != ' ') {
+      // for byte bpe models
+      std::ostringstream os;
+      os << "<0x" << std::hex << std::uppercase
+         << (static_cast<int32_t>(sym[0]) & 0xff) << ">";
+      sym = os.str();
+    }
+
     r.tokens.push_back(std::move(sym));
   }
 
