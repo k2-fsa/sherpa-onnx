@@ -15,7 +15,11 @@ static void PybindOnlineRecognizerResult(py::module *m) {
   using PyClass = OnlineRecognizerResult;
   py::class_<PyClass>(*m, "OnlineRecognizerResult")
       .def_property_readonly(
-          "text", [](PyClass &self) -> std::string { return self.text; })
+          "text",
+          [](PyClass &self) -> py::str {
+            return py::str(PyUnicode_DecodeUTF8(self.text.c_str(),
+                                                self.text.size(), "ignore"));
+          })
       .def_property_readonly(
           "tokens",
           [](PyClass &self) -> std::vector<std::string> { return self.tokens; })
