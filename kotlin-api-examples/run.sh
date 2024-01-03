@@ -51,3 +51,21 @@ kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt fak
 ls -lh main.jar
 
 java -Djava.library.path=../build/lib -jar main.jar
+
+# For two-pass
+
+if [ ! -f ./sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/encoder-epoch-99-avg-1.int8.onnx ]; then
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+  tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+  rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+fi
+
+if [ ! -f ./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx ]; then
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+  tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+  rm sherpa-onnx-whisper-tiny.en.tar.bz2
+fi
+
+kotlinc-jvm -include-runtime -d 2pass.jar test-2pass.kt WaveReader.kt SherpaOnnx2Pass.kt faked-asset-manager.kt
+ls -lh 2pass.jar
+java -Djava.library.path=../build/lib -jar 2pass.jar
