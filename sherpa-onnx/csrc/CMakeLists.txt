@@ -99,6 +99,7 @@ set(sources
 # speaker embedding extractor
 list(APPEND sources
   speaker-embedding-extractor-impl.cc
+  speaker-embedding-extractor-wespeaker-model.cc
   speaker-embedding-extractor.cc
 )
 
