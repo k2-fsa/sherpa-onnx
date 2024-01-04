@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/speaker-embedding-extractor.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 
 namespace sherpa_onnx {

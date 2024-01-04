@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
@@ -47,7 +49,7 @@ std::string SpeakerEmbeddingExtractorConfig::ToString() const {
   os << "provider=\"" << provider << "\")";
 
   return os.str();
-};
+}
 
 SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
     const SpeakerEmbeddingExtractorConfig &config)

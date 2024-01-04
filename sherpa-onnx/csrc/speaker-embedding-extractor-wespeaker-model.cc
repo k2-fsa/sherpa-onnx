@@ -4,6 +4,10 @@
 
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-model.h"
 
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"

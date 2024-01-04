@@ -6,6 +6,8 @@
 #define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_WESPEAKER_IMPL_H_
 #include <algorithm>
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-model.h"
