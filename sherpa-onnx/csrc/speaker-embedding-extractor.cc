@@ -61,6 +61,10 @@ std::unique_ptr<OnlineStream> SpeakerEmbeddingExtractor::CreateStream() const {
   return impl_->CreateStream();
 }
 
+bool SpeakerEmbeddingExtractor::IsReady(OnlineStream *s) const {
+  return impl_->IsReady(s);
+}
+
 std::vector<float> SpeakerEmbeddingExtractor::Compute(OnlineStream *s) const {
   return impl_->Compute(s);
 }

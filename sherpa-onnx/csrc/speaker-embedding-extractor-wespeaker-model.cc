@@ -57,6 +57,8 @@ class SpeakerEmbeddingExtractorWeSpeakerModel::Impl {
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(meta_data_.output_dim, "output_dim");
     SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
+    SHERPA_ONNX_READ_META_DATA(meta_data_.normalize_features,
+                               "normalize_features");
     SHERPA_ONNX_READ_META_DATA_STR(meta_data_.language, "language");
 
     std::string framework;
@@ -87,7 +89,8 @@ class SpeakerEmbeddingExtractorWeSpeakerModel::Impl {
 
 SpeakerEmbeddingExtractorWeSpeakerModel::
     SpeakerEmbeddingExtractorWeSpeakerModel(
-        const SpeakerEmbeddingExtractorConfig &config) {}
+        const SpeakerEmbeddingExtractorConfig &config)
+    : impl_(std::make_unique<Impl>(config)) {}
 
 SpeakerEmbeddingExtractorWeSpeakerModel::
     ~SpeakerEmbeddingExtractorWeSpeakerModel() = default;

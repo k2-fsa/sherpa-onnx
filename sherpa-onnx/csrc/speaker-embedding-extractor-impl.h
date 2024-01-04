@@ -21,6 +21,8 @@ class SpeakerEmbeddingExtractorImpl {
 
   virtual std::unique_ptr<OnlineStream> CreateStream() const = 0;
 
+  virtual bool IsReady(OnlineStream *s) const = 0;
+
   virtual std::vector<float> Compute(OnlineStream *s) const = 0;
 };
 

@@ -47,8 +47,14 @@ class SpeakerEmbeddingExtractor {
   // Create a stream to accept audio samples and compute features
   std::unique_ptr<OnlineStream> CreateStream() const;
 
+  // Return true if there are feature frames in OnlineStream that
+  // can be used to compute embeddings.
+  bool IsReady(OnlineStream *s) const;
+
   // Compute the speaker embedding from the available unprocessed features
   // of the given stream
+  //
+  // You have to ensure IsReady(s) returns true before you call this method.
   std::vector<float> Compute(OnlineStream *s) const;
 
  private:
