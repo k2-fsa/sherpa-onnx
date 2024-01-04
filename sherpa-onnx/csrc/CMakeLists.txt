@@ -96,6 +96,12 @@ set(sources
   wave-reader.cc
 )
 
+# speaker embedding extractor
+list(APPEND sources
+  speaker-embedding-extractor-impl.cc
+  speaker-embedding-extractor.cc
+)
+
 list(APPEND sources
   lexicon.cc
   offline-tts-impl.cc

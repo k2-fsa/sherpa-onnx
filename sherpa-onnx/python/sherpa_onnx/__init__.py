@@ -8,6 +8,8 @@ from _sherpa_onnx import (
     OfflineTtsVitsModelConfig,
     OnlineStream,
     SileroVadModelConfig,
+    SpeakerEmbeddingExtractor,
+    SpeakerEmbeddingExtractorConfig,
     SpeechSegment,
     VadModel,
     VadModelConfig,
