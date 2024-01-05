@@ -140,6 +140,62 @@ class SherpaOnnxVad {
   VoiceActivityDetector vad_;
 };
 
+class SherpaOnnxKws {
+ public:
+#if __ANDROID_API__ >= 9
+  SherpaOnnxKws(AAssetManager *mgr, const KeywordSpotterConfig &config)
+      : keyword_spotter_(mgr, config),
+        stream_(keyword_spotter_.CreateStream()) {}
+#endif
+
+  explicit SherpaOnnxKws(const KeywordSpotterConfig &config)
+      : keyword_spotter_(config), stream_(keyword_spotter_.CreateStream()) {}
+
+  void AcceptWaveform(int32_t sample_rate, const float *samples, int32_t n) {
+    if (input_sample_rate_ == -1) {
+      input_sample_rate_ = sample_rate;
+    }
+
+    stream_->AcceptWaveform(sample_rate, samples, n);
+  }
+
+  void InputFinished() const {
+    std::vector<float> tail_padding(input_sample_rate_ * 0.6, 0);
+    stream_->AcceptWaveform(input_sample_rate_, tail_padding.data(),
+                            tail_padding.size());
+    stream_->InputFinished();
+  }
+
+  std::string GetKeyword() const {
+    auto result = keyword_spotter_.GetResult(stream_.get());
+    return result.keyword;
+  }
+
+  const std::vector<std::string> GetTokens() const {
+    auto result = keyword_spotter_.GetResult(stream_.get());
+    return result.tokens;
+  }
+
+  bool IsEndpoint() const { return keyword_spotter_.IsEndpoint(stream_.get()); }
+
+  bool IsReady() const { return keyword_spotter_.IsReady(stream_.get()); }
+
+  void Reset(bool recreate) {
+    if (recreate) {
+      stream_ = keyword_spotter_.CreateStream();
+    } else {
+      keyword_spotter_.Reset(stream_.get());
+    }
+  }
+
+  void Decode() const { keyword_spotter_.DecodeStream(stream_.get()); }
+
+ private:
+  KeywordSpotter keyword_spotter_;
+  std::unique_ptr<OnlineStream> stream_;
+  int32_t input_sample_rate_ = -1;
+};
+
 static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   OnlineRecognizerConfig ans;
 
@@ -452,6 +508,151 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   s = (jstring)env->GetObjectField(whisper_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model_config.whisper.decoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  return ans;
+}
+
+static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config) {
+  KeywordSpotterConfig ans;
+
+  jclass cls = env->GetObjectClass(config);
+  jfieldID fid;
+
+  // https://docs.oracle.com/javase/7/docs/technotes/guides/jni/spec/types.html
+  // https://courses.cs.washington.edu/courses/cse341/99wi/java/tutorial/native1.1/implementing/field.html
+
+  //---------- decoding ----------
+  fid = env->GetFieldID(cls, "maxActivePaths", "I");
+  ans.max_active_paths = env->GetIntField(config, fid);
+
+  fid = env->GetFieldID(cls, "keywordsFile", "Ljava/lang/String;");
+  jstring s = (jstring)env->GetObjectField(config, fid);
+  const char *p = env->GetStringUTFChars(s, nullptr);
+  ans.keywords_file = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(cls, "keywordsScore", "F");
+  ans.keywords_score = env->GetFloatField(config, fid);
+
+  fid = env->GetFieldID(cls, "keywordsThreshold", "F");
+  ans.keywords_threshold = env->GetFloatField(config, fid);
+
+  fid = env->GetFieldID(cls, "numTrailingBlanks", "I");
+  ans.num_trailing_blanks = env->GetIntField(config, fid);
+
+  //---------- feat config ----------
+  fid = env->GetFieldID(cls, "featConfig",
+                        "Lcom/k2fsa/sherpa/onnx/FeatureConfig;");
+  jobject feat_config = env->GetObjectField(config, fid);
+  jclass feat_config_cls = env->GetObjectClass(feat_config);
+
+  fid = env->GetFieldID(feat_config_cls, "sampleRate", "I");
+  ans.feat_config.sampling_rate = env->GetIntField(feat_config, fid);
+
+  fid = env->GetFieldID(feat_config_cls, "featureDim", "I");
+  ans.feat_config.feature_dim = env->GetIntField(feat_config, fid);
+
+  //---------- enable endpoint ----------
+  fid = env->GetFieldID(cls, "enableEndpoint", "Z");
+  ans.enable_endpoint = env->GetBooleanField(config, fid);
+
+  //---------- endpoint_config ----------
+
+  fid = env->GetFieldID(cls, "endpointConfig",
+                        "Lcom/k2fsa/sherpa/onnx/EndpointConfig;");
+  jobject endpoint_config = env->GetObjectField(config, fid);
+  jclass endpoint_config_cls = env->GetObjectClass(endpoint_config);
+
+  fid = env->GetFieldID(endpoint_config_cls, "rule1",
+                        "Lcom/k2fsa/sherpa/onnx/EndpointRule;");
+  jobject rule1 = env->GetObjectField(endpoint_config, fid);
+  jclass rule_class = env->GetObjectClass(rule1);
+
+  fid = env->GetFieldID(endpoint_config_cls, "rule2",
+                        "Lcom/k2fsa/sherpa/onnx/EndpointRule;");
+  jobject rule2 = env->GetObjectField(endpoint_config, fid);
+
+  fid = env->GetFieldID(endpoint_config_cls, "rule3",
+                        "Lcom/k2fsa/sherpa/onnx/EndpointRule;");
+  jobject rule3 = env->GetObjectField(endpoint_config, fid);
+
+  fid = env->GetFieldID(rule_class, "mustContainNonSilence", "Z");
+  ans.endpoint_config.rule1.must_contain_nonsilence =
+      env->GetBooleanField(rule1, fid);
+  ans.endpoint_config.rule2.must_contain_nonsilence =
+      env->GetBooleanField(rule2, fid);
+  ans.endpoint_config.rule3.must_contain_nonsilence =
+      env->GetBooleanField(rule3, fid);
+
+  fid = env->GetFieldID(rule_class, "minTrailingSilence", "F");
+  ans.endpoint_config.rule1.min_trailing_silence =
+      env->GetFloatField(rule1, fid);
+  ans.endpoint_config.rule2.min_trailing_silence =
+      env->GetFloatField(rule2, fid);
+  ans.endpoint_config.rule3.min_trailing_silence =
+      env->GetFloatField(rule3, fid);
+
+  fid = env->GetFieldID(rule_class, "minUtteranceLength", "F");
+  ans.endpoint_config.rule1.min_utterance_length =
+      env->GetFloatField(rule1, fid);
+  ans.endpoint_config.rule2.min_utterance_length =
+      env->GetFloatField(rule2, fid);
+  ans.endpoint_config.rule3.min_utterance_length =
+      env->GetFloatField(rule3, fid);
+
+  //---------- model config ----------
+  fid = env->GetFieldID(cls, "modelConfig",
+                        "Lcom/k2fsa/sherpa/onnx/OnlineModelConfig;");
+  jobject model_config = env->GetObjectField(config, fid);
+  jclass model_config_cls = env->GetObjectClass(model_config);
+
+  // transducer
+  fid = env->GetFieldID(model_config_cls, "transducer",
+                        "Lcom/k2fsa/sherpa/onnx/OnlineTransducerModelConfig;");
+  jobject transducer_config = env->GetObjectField(model_config, fid);
+  jclass transducer_config_cls = env->GetObjectClass(transducer_config);
+
+  fid = env->GetFieldID(transducer_config_cls, "encoder", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(transducer_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.transducer.encoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(transducer_config_cls, "decoder", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(transducer_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.transducer.decoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(transducer_config_cls, "joiner", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(transducer_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.transducer.joiner = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(model_config_cls, "tokens", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.tokens = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(model_config_cls, "numThreads", "I");
+  ans.model_config.num_threads = env->GetIntField(model_config, fid);
+
+  fid = env->GetFieldID(model_config_cls, "debug", "Z");
+  ans.model_config.debug = env->GetBooleanField(model_config, fid);
+
+  fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.provider = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(model_config_cls, "modelType", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.model_type = p;
   env->ReleaseStringUTFChars(s, p);
 
   return ans;
@@ -1000,6 +1201,124 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT jobjectArray JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_getTokens(
     JNIEnv *env, jobject /*obj*/, jlong ptr) {
   auto tokens = reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr)->GetTokens();
+  int32_t size = tokens.size();
+  jclass stringClass = env->FindClass("java/lang/String");
+
+  // convert C++ list into jni string array
+  jobjectArray result = env->NewObjectArray(size, stringClass, NULL);
+  for (int32_t i = 0; i < size; i++) {
+    // Convert the C++ string to a C string
+    const char *cstr = tokens[i].c_str();
+
+    // Convert the C string to a jstring
+    jstring jstr = env->NewStringUTF(cstr);
+
+    // Set the array element
+    env->SetObjectArrayElement(result, i, jstr);
+  }
+
+  return result;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_new(
+    JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
+#if __ANDROID_API__ >= 9
+  AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
+  if (!mgr) {
+    SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+  }
+#endif
+  auto config = sherpa_onnx::GetKwsConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  auto model = new sherpa_onnx::SherpaOnnxKws(
+#if __ANDROID_API__ >= 9
+      mgr,
+#endif
+      config);
+
+  return (jlong)model;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_newFromFile(
+    JNIEnv *env, jobject /*obj*/, jobject _config) {
+  auto config = sherpa_onnx::GetKwsConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  auto model = new sherpa_onnx::SherpaOnnxKws(config);
+
+  return (jlong)model;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_delete(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  delete reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_reset(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jboolean recreate) {
+  auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr);
+  model->Reset(recreate);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_isReady(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr);
+  return model->IsReady();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_isEndpoint(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr);
+  return model->IsEndpoint();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_decode(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr);
+  model->Decode();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_acceptWaveform(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jfloatArray samples,
+    jint sample_rate) {
+  auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr);
+
+  jfloat *p = env->GetFloatArrayElements(samples, nullptr);
+  jsize n = env->GetArrayLength(samples);
+
+  model->AcceptWaveform(sample_rate, p, n);
+
+  env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_inputFinished(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr)->InputFinished();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jstring JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_getKeyword(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  // see
+  // https://stackoverflow.com/questions/11621449/send-c-string-to-java-via-jni
+  auto text = reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr)->GetKeyword();
+  return env->NewStringUTF(text.c_str());
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jobjectArray JNICALL
+Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_getTokens(JNIEnv *env, jobject /*obj*/,
+                                                   jlong ptr) {
+  auto tokens =
+      reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr)->GetTokens();
   int32_t size = tokens.size();
   jclass stringClass = env->FindClass("java/lang/String");
 
