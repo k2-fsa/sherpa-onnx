@@ -1,0 +1,121 @@
+name: apk-tts-engine
+
+on:
+  push:
+    branches:
+      - apk-tts
+    tags:
+      - '*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: apk-tts-engine-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  apk_tts_engine:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ${{ matrix.os }}
+    name: apk for tts engine ${{ matrix.index }}/${{ matrix.total }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        total: ["40"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", "31", "32", "33", "34", "35", "36", "37", "38", "39"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # https://github.com/actions/setup-java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-android
+
+      - name: Display NDK HOME
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
+          ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2 iso639-lang
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/apk
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-tts-apk-script.py --total $total --index $index
+
+          chmod +x build-apk-tts-engine.sh
+          mv -v ./build-apk-tts-engine.sh ../..
+
+      - name: build APK for TTS engine
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-apk-tts-engine.sh
+
+      - name: Display APK for TTS engine
+        shell: bash
+        run: |
+          ls -lh ./apks/
+          du -h -d1 .
+
+      - uses: actions/upload-artifact@v3
+        if: false
+        with:
+          name: tts-engine-apk
+          path: ./apks/*.apk
+
+      - name: Publish to huggingface
+        if: true
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-apk huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            mkdir -p tts
+            cp -v ../apks/*.apk ./tts-engine/
+            git status
+            git lfs track "*.apk"
+            git add .
+            git commit -m "add more tts engine apks"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-apk main

@@ -726,6 +726,8 @@ class SherpaOnnxOfflineTts {
 
   int32_t SampleRate() const { return tts_.SampleRate(); }
 
+  int32_t NumSpeakers() const { return tts_.NumSpeakers(); }
+
  private:
   OfflineTts tts_;
 };
@@ -852,6 +854,13 @@ JNIEXPORT jint JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_getSampleRate(
     JNIEnv *env, jobject /*obj*/, jlong ptr) {
   return reinterpret_cast<sherpa_onnx::SherpaOnnxOfflineTts *>(ptr)
       ->SampleRate();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jint JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_getNumSpeakers(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  return reinterpret_cast<sherpa_onnx::SherpaOnnxOfflineTts *>(ptr)
+      ->NumSpeakers();
 }
 
 // see

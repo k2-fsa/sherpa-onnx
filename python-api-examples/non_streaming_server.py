@@ -862,6 +862,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             max_active_paths=args.max_active_paths,
             hotwords_file=args.hotwords_file,
             hotwords_score=args.hotwords_score,
+            provider=args.provider,
         )
     elif args.paraformer:
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
@@ -879,6 +880,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             sample_rate=args.sample_rate,
             feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
+            provider=args.provider,
         )
     elif args.nemo_ctc:
         assert len(args.wenet_ctc) == 0, args.wenet_ctc
@@ -895,6 +897,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             sample_rate=args.sample_rate,
             feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
+            provider=args.provider,
         )
     elif args.wenet_ctc:
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
@@ -910,6 +913,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             sample_rate=args.sample_rate,
             feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
+            provider=args.provider,
         )
     elif args.whisper_encoder:
         assert len(args.tdnn_model) == 0, args.tdnn_model
@@ -925,6 +929,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             language=args.whisper_language,
             task=args.whisper_task,
             tail_paddings=args.whisper_tail_paddings,
+            provider=args.provider,
         )
     elif args.tdnn_model:
         assert_file_exists(args.tdnn_model)
@@ -936,6 +941,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             feature_dim=args.feat_dim,
             num_threads=args.num_threads,
             decoding_method=args.decoding_method,
+            provider=args.provider,
         )
     else:
         raise ValueError("Please specify at least one model")
