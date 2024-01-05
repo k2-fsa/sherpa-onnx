@@ -21,6 +21,7 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#include "sherpa-onnx/csrc/keyword-spotter.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/offline-tts.h"

@@ -20,7 +20,7 @@ cd $dir
 #   -DANDROID
 
 if [ -z $ANDROID_NDK ]; then
-  ANDROID_NDK=/ceph-fj/fangjun/software/android-sdk/ndk/21.0.6113669
+  ANDROID_NDK=/star-kw/kangwei/dev_tools/android_sdk/ndk/21.0.6113669
   # or use
   # ANDROID_NDK=/ceph-fj/fangjun/software/android-ndk
   #
@@ -89,7 +89,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DANDROID_PLATFORM=android-21 ..
 
 # make VERBOSE=1 -j4
-make -j4
+make -j10
 make install/strip
 cp -fv android-onnxruntime-libs/jni/arm64-v8a/libonnxruntime.so install/lib
 rm -rf install/lib/pkgconfig
