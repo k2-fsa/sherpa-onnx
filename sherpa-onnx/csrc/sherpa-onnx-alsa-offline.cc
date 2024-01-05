@@ -10,6 +10,7 @@
 #include <cctype>  // std::tolower
 #include <mutex>   // NOLINT
 #include <thread>  // NOLINT
+#include <chrono> // NOLINT
 
 #include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -93,14 +94,16 @@ Usage:
     --decoder=/path/to/decoder.onnx \
     --joiner=/path/to/joiner.onnx \
     --num-threads=2 \
-    --decoding-method=greedy_search
+    --decoding-method=greedy_search \
+    device_name
 
 (2) Paraformer from FunASR
 
   ./bin/sherpa-onnx-alsa-offline \
     --tokens=/path/to/tokens.txt \
     --paraformer=/path/to/model.onnx \
-    --num-threads=1
+    --num-threads=1 \
+    device_name
 
 (3) Whisper models
 
@@ -108,11 +111,34 @@ Usage:
     --whisper-encoder=./sherpa-onnx-whisper-base.en/base.en-encoder.int8.onnx \
     --whisper-decoder=./sherpa-onnx-whisper-base.en/base.en-decoder.int8.onnx \
     --tokens=./sherpa-onnx-whisper-base.en/base.en-tokens.txt \
-    --num-threads=1
+    --num-threads=1 \
+    device_name
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 for a list of pre-trained models to download.
+
+The device name specifies which microphone to use in case there are several
+on you system. You can use
+
+  arecord -l
+
+to find all available microphones on your computer. For instance, if it outputs
+
+**** List of CAPTURE Hardware Devices ****
+card 3: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+and if you want to select card 3 and the device 0 on that card, please use:
+
+  hw:3,0
+
+or
+
+  plughw:3,0
+
+as the device_name.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
@@ -120,7 +146,8 @@ for a list of pre-trained models to download.
   config.Register(&po);
 
   po.Read(argc, argv);
-  if (po.NumArgs() != 0) {
+  if (po.NumArgs() != 1) {
+    fprintf(stderr, "Please provide only 1 argument: the device name\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
   }
@@ -135,6 +162,9 @@ for a list of pre-trained models to download.
   SHERPA_ONNX_LOGE("Creating recognizer ...");
   sherpa_onnx::OfflineRecognizer recognizer(config);
   SHERPA_ONNX_LOGE("Recognizer created!");
+
+  std::string device_name = po.GetArg(1);
+  fprintf(stderr, "Use recording device: %s\n", device_name.c_str());
 
   int32_t sample_rate = config.feat_config.sampling_rate;
 
@@ -166,7 +196,8 @@ for a list of pre-trained models to download.
       }
     }
 
-    Pa_Sleep(20);  // sleep for 20ms
+    using namespace std::chrono_literals;
+    std::this_thread::sleep_for(20ms); // sleep for 20ms
   }
   t.join();
   t2.join();
