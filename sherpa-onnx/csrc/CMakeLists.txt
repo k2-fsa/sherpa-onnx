@@ -210,9 +210,11 @@ install(
 if(SHERPA_ONNX_HAS_ALSA)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
   add_executable(sherpa-onnx-offline-tts-play-alsa sherpa-onnx-offline-tts-play-alsa.cc alsa-play.cc)
+  add_executable(sherpa-onnx-alsa-offline sherpa-onnx-alsa-offline.cc alsa.cc)
 
   set(exes
     sherpa-onnx-alsa
+    sherpa-onnx-alsa-offline
     sherpa-onnx-offline-tts-play-alsa
   )
   foreach(exe IN LISTS exes)
