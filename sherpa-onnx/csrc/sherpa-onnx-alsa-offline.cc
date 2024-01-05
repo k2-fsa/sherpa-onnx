@@ -1,6 +1,6 @@
-// sherpa-onnx/csrc/sherpa-onnx-microphone-offline.cc
+// sherpa-onnx/csrc/sherpa-onnx-alsa-offline.cc
 //
-// Copyright (c)  2022-2023  Xiaomi Corporation
+// Copyright (c)  2022-2024  Xiaomi Corporation
 
 #include <signal.h>
 #include <stdio.h>
@@ -8,9 +8,9 @@
 
 #include <algorithm>
 #include <cctype>  // std::tolower
+#include <chrono>  // NOLINT
 #include <mutex>   // NOLINT
 #include <thread>  // NOLINT
-#include <chrono> // NOLINT
 
 #include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -197,7 +197,7 @@ as the device_name.
     }
 
     using namespace std::chrono_literals;
-    std::this_thread::sleep_for(20ms); // sleep for 20ms
+    std::this_thread::sleep_for(20ms);  // sleep for 20ms
   }
   t.join();
   t2.join();
