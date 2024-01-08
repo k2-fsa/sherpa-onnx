@@ -42,7 +42,7 @@ if [ ! -d $repo ]; then
 
   # remove .git to save spaces
   rm -rf .git
-  rm README.md configuration.json .gitattribute
+  rm README.md configuration.json .gitattributes
   rm -rfv test_wavs
   ls -lh
   popd
@@ -98,7 +98,7 @@ if [ ! -d $repo ]; then
   # remove .git to save spaces
   rm -rf .git
   rm *.int8.onnx
-  rm README.md configuration.json .gitattribute
+  rm README.md configuration.json .gitattributes
   rm -rfv test_wavs
   ls -lh
   popd

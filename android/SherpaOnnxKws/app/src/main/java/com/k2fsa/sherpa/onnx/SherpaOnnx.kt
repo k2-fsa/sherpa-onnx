@@ -122,7 +122,7 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
         }
 
         1 -> {
-            val modelDir = "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01"
+            val modelDir = "sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01"
             return OnlineModelConfig(
                 transducer = OnlineTransducerModelConfig(
                     encoder = "$modelDir/encoder-epoch-12-avg-2-chunk-16-left-64.onnx",
