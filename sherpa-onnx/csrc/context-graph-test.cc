@@ -64,8 +64,8 @@ TEST(ContextGraph, Benchmark) {
     auto stop = std::chrono::high_resolution_clock::now();
     auto duration =
         std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-    SHERPA_ONNX_LOGE("Construct context graph for %d item takes %ld us.", num,
-                     duration.count());
+    SHERPA_ONNX_LOGE("Construct context graph for %d item takes %d us.", num,
+                     static_cast<int32_t>(duration.count()));
   }
 }
 

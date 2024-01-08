@@ -4,7 +4,9 @@
 
 #ifndef SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_IMPL_H_
 #define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_IMPL_H_
+
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
