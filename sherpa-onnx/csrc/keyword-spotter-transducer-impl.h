@@ -67,8 +67,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   explicit KeywordSpotterTransducerImpl(const KeywordSpotterConfig &config)
       : config_(config),
         model_(OnlineTransducerModel::Create(config.model_config)),
-        sym_(config.model_config.tokens),
-        endpoint_(config_.endpoint_config) {
+        sym_(config.model_config.tokens) {
     if (sym_.contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
@@ -85,8 +84,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
                                         const KeywordSpotterConfig &config)
       : config_(config),
         model_(OnlineTransducerModel::Create(mgr, config.model_config)),
-        sym_(mgr, config.model_config.tokens),
-        endpoint_(config_.endpoint_config) {
+        sym_(mgr, config.model_config.tokens) {
     if (sym_.contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
@@ -182,36 +180,6 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
                    s->GetNumFramesSinceStart());
   }
 
-  bool IsEndpoint(OnlineStream *s) const override {
-    if (!config_.enable_endpoint) {
-      return false;
-    }
-
-    int32_t num_processed_frames = s->GetNumProcessedFrames();
-
-    // frame shift is 10 milliseconds
-    float frame_shift_in_seconds = 0.01;
-
-    // subsampling factor is 4
-    int32_t trailing_silence_frames =
-        s->GetKeywordResult().num_trailing_blanks * 4;
-
-    return endpoint_.IsEndpoint(num_processed_frames, trailing_silence_frames,
-                                frame_shift_in_seconds);
-  }
-
-  void Reset(OnlineStream *s) const override {
-    auto r = decoder_->GetEmptyResult();
-    SHERPA_ONNX_CHECK_EQ(r.hyps.size(), 1);
-    r.hyps.begin()->second.context_state = s->GetContextGraph()->Root();
-
-    s->SetKeywordResult(r);
-
-    // Note: We only update counters. The underlying audio samples
-    // are not discarded.
-    s->Reset();
-  }
-
  private:
   void InitKeywords() {
     // each line in keywords_file contains space-separated words
@@ -279,7 +247,6 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   std::unique_ptr<OnlineTransducerModel> model_;
   std::unique_ptr<TransducerKeywordsDecoder> decoder_;
   SymbolTable sym_;
-  Endpoint endpoint_;
   int32_t unk_id_ = -1;
 };
 

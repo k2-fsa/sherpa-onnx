@@ -3,18 +3,6 @@ package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
 
-data class EndpointRule(
-    var mustContainNonSilence: Boolean,
-    var minTrailingSilence: Float,
-    var minUtteranceLength: Float,
-)
-
-data class EndpointConfig(
-    var rule1: EndpointRule = EndpointRule(false, 2.4f, 0.0f),
-    var rule2: EndpointRule = EndpointRule(true, 1.4f, 0.0f),
-    var rule3: EndpointRule = EndpointRule(false, 0.0f, 20.0f)
-)
-
 data class OnlineTransducerModelConfig(
     var encoder: String = "",
     var decoder: String = "",
@@ -38,8 +26,6 @@ data class FeatureConfig(
 data class KeywordSpotterConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineModelConfig,
-    var endpointConfig: EndpointConfig = EndpointConfig(),
-    var enableEndpoint: Boolean = true,
     var maxActivePaths: Int = 4,
     var keywordsFile: String = "keywords.txt",
     var keywordsScore: Float = 1.5f,
@@ -69,9 +55,7 @@ class SherpaOnnxKws(
         acceptWaveform(ptr, samples, sampleRate)
 
     fun inputFinished() = inputFinished(ptr)
-    fun reset(recreate: Boolean = false) = reset(ptr, recreate = recreate)
     fun decode() = decode(ptr)
-    fun isEndpoint(): Boolean = isEndpoint(ptr)
     fun isReady(): Boolean = isReady(ptr)
 
     val keyword: String
@@ -91,9 +75,7 @@ class SherpaOnnxKws(
     private external fun acceptWaveform(ptr: Long, samples: FloatArray, sampleRate: Int)
     private external fun inputFinished(ptr: Long)
     private external fun getKeyword(ptr: Long): String
-    private external fun reset(ptr: Long, recreate: Boolean)
     private external fun decode(ptr: Long)
-    private external fun isEndpoint(ptr: Long): Boolean
     private external fun isReady(ptr: Long): Boolean
 
     companion object {
@@ -154,12 +136,4 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
 
     }
     return null;
-}
-
-fun getEndpointConfig(): EndpointConfig {
-    return EndpointConfig(
-        rule1 = EndpointRule(false, 2.4f, 0.0f),
-        rule2 = EndpointRule(true, 1.4f, 0.0f),
-        rule3 = EndpointRule(false, 0.0f, 20.0f)
-    )
 }

@@ -14,7 +14,6 @@
 #include "android/asset_manager_jni.h"
 #endif
 
-#include "sherpa-onnx/csrc/endpoint.h"
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/online-stream.h"
@@ -59,8 +58,6 @@ struct KeywordResult {
 struct KeywordSpotterConfig {
   FeatureExtractorConfig feat_config;
   OnlineModelConfig model_config;
-  EndpointConfig endpoint_config;
-  bool enable_endpoint = true;
 
   int32_t max_active_paths = 4;
 
@@ -76,15 +73,11 @@ struct KeywordSpotterConfig {
 
   KeywordSpotterConfig(const FeatureExtractorConfig &feat_config,
                        const OnlineModelConfig &model_config,
-                       const EndpointConfig &endpoint_config,
-                       bool enable_endpoint, int32_t max_active_paths,
-                       int32_t num_trailing_blanks, float keywords_score,
-                       float keywords_threshold,
+                       int32_t max_active_paths, int32_t num_trailing_blanks,
+                       float keywords_score, float keywords_threshold,
                        const std::string &keywords_file)
       : feat_config(feat_config),
         model_config(model_config),
-        endpoint_config(endpoint_config),
-        enable_endpoint(enable_endpoint),
         max_active_paths(max_active_paths),
         num_trailing_blanks(num_trailing_blanks),
         keywords_score(keywords_score),
@@ -134,15 +127,6 @@ class KeywordSpotter {
   void DecodeStreams(OnlineStream **ss, int32_t n) const;
 
   KeywordResult GetResult(OnlineStream *s) const;
-
-  // Return true if we detect an endpoint for this stream.
-  // Note: If this function returns true, you usually want to
-  // invoke Reset(s).
-  bool IsEndpoint(OnlineStream *s) const;
-
-  // Clear the state of this stream. If IsEndpoint(s) returns true,
-  // after calling this function, IsEndpoint(s) will return false
-  void Reset(OnlineStream *s) const;
 
  private:
   std::unique_ptr<KeywordSpotterImpl> impl_;

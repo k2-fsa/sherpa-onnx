@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">ASR with Next-gen Kaldi</string>
-    <string name="hint">Click the Start button to play speech-to-text with Next-gen Kaldi.
+    <string name="app_name">KWS with Next-gen Kaldi</string>
+    <string name="hint">Click the Start button to play keyword spotting with Next-gen Kaldi.
         \n
         \n\n\n
         The source code and pre-trained models are publicly available.

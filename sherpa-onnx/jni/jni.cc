@@ -177,17 +177,7 @@ class SherpaOnnxKws {
     return result.tokens;
   }
 
-  bool IsEndpoint() const { return keyword_spotter_.IsEndpoint(stream_.get()); }
-
   bool IsReady() const { return keyword_spotter_.IsReady(stream_.get()); }
-
-  void Reset(bool recreate) {
-    if (recreate) {
-      stream_ = keyword_spotter_.CreateStream();
-    } else {
-      keyword_spotter_.Reset(stream_.get());
-    }
-  }
 
   void Decode() const { keyword_spotter_.DecodeStream(stream_.get()); }
 
@@ -553,54 +543,6 @@ static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config) {
 
   fid = env->GetFieldID(feat_config_cls, "featureDim", "I");
   ans.feat_config.feature_dim = env->GetIntField(feat_config, fid);
-
-  //---------- enable endpoint ----------
-  fid = env->GetFieldID(cls, "enableEndpoint", "Z");
-  ans.enable_endpoint = env->GetBooleanField(config, fid);
-
-  //---------- endpoint_config ----------
-
-  fid = env->GetFieldID(cls, "endpointConfig",
-                        "Lcom/k2fsa/sherpa/onnx/EndpointConfig;");
-  jobject endpoint_config = env->GetObjectField(config, fid);
-  jclass endpoint_config_cls = env->GetObjectClass(endpoint_config);
-
-  fid = env->GetFieldID(endpoint_config_cls, "rule1",
-                        "Lcom/k2fsa/sherpa/onnx/EndpointRule;");
-  jobject rule1 = env->GetObjectField(endpoint_config, fid);
-  jclass rule_class = env->GetObjectClass(rule1);
-
-  fid = env->GetFieldID(endpoint_config_cls, "rule2",
-                        "Lcom/k2fsa/sherpa/onnx/EndpointRule;");
-  jobject rule2 = env->GetObjectField(endpoint_config, fid);
-
-  fid = env->GetFieldID(endpoint_config_cls, "rule3",
-                        "Lcom/k2fsa/sherpa/onnx/EndpointRule;");
-  jobject rule3 = env->GetObjectField(endpoint_config, fid);
-
-  fid = env->GetFieldID(rule_class, "mustContainNonSilence", "Z");
-  ans.endpoint_config.rule1.must_contain_nonsilence =
-      env->GetBooleanField(rule1, fid);
-  ans.endpoint_config.rule2.must_contain_nonsilence =
-      env->GetBooleanField(rule2, fid);
-  ans.endpoint_config.rule3.must_contain_nonsilence =
-      env->GetBooleanField(rule3, fid);
-
-  fid = env->GetFieldID(rule_class, "minTrailingSilence", "F");
-  ans.endpoint_config.rule1.min_trailing_silence =
-      env->GetFloatField(rule1, fid);
-  ans.endpoint_config.rule2.min_trailing_silence =
-      env->GetFloatField(rule2, fid);
-  ans.endpoint_config.rule3.min_trailing_silence =
-      env->GetFloatField(rule3, fid);
-
-  fid = env->GetFieldID(rule_class, "minUtteranceLength", "F");
-  ans.endpoint_config.rule1.min_utterance_length =
-      env->GetFloatField(rule1, fid);
-  ans.endpoint_config.rule2.min_utterance_length =
-      env->GetFloatField(rule2, fid);
-  ans.endpoint_config.rule3.min_utterance_length =
-      env->GetFloatField(rule3, fid);
 
   //---------- model config ----------
   fid = env->GetFieldID(cls, "modelConfig",
@@ -1267,24 +1209,10 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_delete(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_reset(
-    JNIEnv *env, jobject /*obj*/, jlong ptr, jboolean recreate) {
-  auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr);
-  model->Reset(recreate);
-}
-
-SHERPA_ONNX_EXTERN_C
 JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_isReady(
     JNIEnv *env, jobject /*obj*/, jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr);
   return model->IsReady();
-}
-
-SHERPA_ONNX_EXTERN_C
-JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_isEndpoint(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
-  auto model = reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr);
-  return model->IsEndpoint();
 }
 
 SHERPA_ONNX_EXTERN_C

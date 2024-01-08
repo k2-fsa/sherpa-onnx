@@ -71,10 +71,7 @@ std::string KeywordResult::AsJsonString() const {
 void KeywordSpotterConfig::Register(ParseOptions *po) {
   feat_config.Register(po);
   model_config.Register(po);
-  endpoint_config.Register(po);
 
-  po->Register("enable-endpoint", &enable_endpoint,
-               "True to enable endpoint detection. False to disable it.");
   po->Register("max-active-paths", &max_active_paths,
                "beam size used in modified beam search.");
   po->Register("num-trailing-blanks", &num_trailing_blanks,
@@ -106,8 +103,6 @@ std::string KeywordSpotterConfig::ToString() const {
   os << "KeywordSpotterConfig(";
   os << "feat_config=" << feat_config.ToString() << ", ";
   os << "model_config=" << model_config.ToString() << ", ";
-  os << "endpoint_config=" << endpoint_config.ToString() << ", ";
-  os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ", ";
   os << "max_active_paths=" << max_active_paths << ", ";
   os << "num_trailing_blanks=" << num_trailing_blanks << ", ";
   os << "keywords_score=" << keywords_score << ", ";
@@ -143,11 +138,5 @@ void KeywordSpotter::DecodeStreams(OnlineStream **ss, int32_t n) const {
 KeywordResult KeywordSpotter::GetResult(OnlineStream *s) const {
   return impl_->GetResult(s);
 }
-
-bool KeywordSpotter::IsEndpoint(OnlineStream *s) const {
-  return impl_->IsEndpoint(s);
-}
-
-void KeywordSpotter::Reset(OnlineStream *s) const { impl_->Reset(s); }
 
 }  // namespace sherpa_onnx

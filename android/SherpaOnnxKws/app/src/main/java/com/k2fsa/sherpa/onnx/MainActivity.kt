@@ -87,7 +87,6 @@ class MainActivity : AppCompatActivity() {
             audioRecord!!.startRecording()
             recordButton.setText(R.string.stop)
             isRecording = true
-            model.reset(true)
             textView.text = ""
             lastText = ""
             idx = 0
@@ -122,7 +121,6 @@ class MainActivity : AppCompatActivity() {
                     model.decode()
                 }
 
-                val isEndpoint = model.isEndpoint()
                 val text = model.keyword
 
                 var textToDisplay = lastText;
@@ -177,8 +175,6 @@ class MainActivity : AppCompatActivity() {
         val config = KeywordSpotterConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
             modelConfig = getModelConfig(type = type)!!,
-            endpointConfig = getEndpointConfig(),
-            enableEndpoint = true,
         )
 
         model = SherpaOnnxKws(

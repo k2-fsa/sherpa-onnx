@@ -34,10 +34,6 @@ class KeywordSpotterImpl {
   virtual void DecodeStreams(OnlineStream **ss, int32_t n) const = 0;
 
   virtual KeywordResult GetResult(OnlineStream *s) const = 0;
-
-  virtual bool IsEndpoint(OnlineStream *s) const = 0;
-
-  virtual void Reset(OnlineStream *s) const = 0;
 };
 
 }  // namespace sherpa_onnx
