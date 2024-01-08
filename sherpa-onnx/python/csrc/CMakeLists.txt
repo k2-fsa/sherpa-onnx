@@ -31,6 +31,7 @@ pybind11_add_module(_sherpa_onnx
   sherpa-onnx.cc
   silero-vad-model-config.cc
   speaker-embedding-extractor.cc
+  speaker-embedding-manager.cc
   vad-model-config.cc
   vad-model.cc
   voice-activity-detector.cc
