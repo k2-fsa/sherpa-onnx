@@ -38,10 +38,17 @@ static KeywordResult Convert(const TransducerKeywordsResult &src,
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
   r.keyword = src.keyword;
+  bool from_tokens = src.keyword.size() == 0;
 
   for (auto i : src.tokens) {
     auto sym = sym_table[i];
+    if (from_tokens) {
+      r.keyword.append(sym);
+    }
     r.tokens.push_back(std::move(sym));
+  }
+  if (from_tokens && r.keyword.size()) {
+    r.keyword = r.keyword.substr(1);
   }
 
   float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;

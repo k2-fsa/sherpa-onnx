@@ -21,44 +21,42 @@ log "Building keyword spotting APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
 log "====================armv7-eabi================"
-#./build-android-armv7-eabi.sh
+./build-android-armv7-eabi.sh
 log "====================x86-64===================="
-#./build-android-x86-64.sh
+./build-android-x86-64.sh
 log "====================x86===================="
-#./build-android-x86.sh
-
+./build-android-x86.sh
 
 mkdir -p apks
 
-log "https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.git"
-
 # Download the model
-repo_url=https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.git
-#log "Start testing ${repo_url}"
-##repo=$(basename $repo_url)
-#repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
-#log "Download pretrained model and test-data from $repo_url"
-#GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-#pushd $repo
-#git lfs pull --include "*.onnx"
-#
-## remove .git to save spaces
-#rm -rf .git
-#rm README.md
-#rm -rfv test_wavs
-#ls -lh
-#popd
-#
-#mv -v $repo ./android/SherpaOnnxKws/app/src/main/assets/
-tree ./android/SherpaOnnxKws/app/src/main/assets/
+repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
-pushd android/SherpaOnnxKws/app/src/main/java/com/k2fsa/sherpa/onnx
-#sed -i.bak s/"type = 0"/"type = 6"/ ./MainActivity.kt
-#git diff
+if [ ! -d $repo ]; then
+  repo_url=https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.git
+  log "Start testing ${repo_url}"
+  log "Download pretrained model and test-data from $repo_url"
+  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+  pushd $repo
+  git lfs pull --include "*.onnx"
+
+  # remove .git to save spaces
+  rm -rf .git
+  rm README.md configuration.json .gitattribute
+  rm -rfv test_wavs
+  ls -lh
+  popd
+
+  mv -v $repo ./android/SherpaOnnxKws/app/src/main/assets/
+fi
+
+pushd ./android/SherpaOnnxKws/app/src/main/assets/
+cp $repo/keywords.txt .
 popd
 
-#for arch in arm64-v8a armeabi-v7a x86_64 x86; do
-for arch in arm64-v8a; do
+tree ./android/SherpaOnnxKws/app/src/main/assets/
+
+for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   log "------------------------------------------------------------"
   log "build apk for $arch"
   log "------------------------------------------------------------"
@@ -77,11 +75,72 @@ for arch in arm64-v8a; do
   ./gradlew build
   popd
 
-  mv android/SherpaOnnxKws/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch.apk
+  mv android/SherpaOnnxKws/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-kws-${SHERPA_ONNX_VERSION}-$arch.apk
   ls -lh apks
-  #rm -v ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/*.so
+  rm -v ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/*.so
 done
 
-#git checkout .
+git checkout .
 
-#rm -rf ./android/SherpaOnnxKws/app/src/main/assets/$repo
+rm -rf ./android/SherpaOnnxKws/app/src/main/assets/$repo
+
+# English model
+repo=sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01
+
+if [ ! -d $repo ]; then
+  repo_url=https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.git
+  log "Start testing ${repo_url}"
+  log "Download pretrained model and test-data from $repo_url"
+  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+  pushd $repo
+  git lfs pull --include "*.onnx"
+
+  # remove .git to save spaces
+  rm -rf .git
+  rm *.int8.onnx
+  rm README.md configuration.json .gitattribute
+  rm -rfv test_wavs
+  ls -lh
+  popd
+
+  mv -v $repo ./android/SherpaOnnxKws/app/src/main/assets/
+fi
+
+pushd ./android/SherpaOnnxKws/app/src/main/assets/
+cp $repo/keywords.txt .
+popd
+
+tree ./android/SherpaOnnxKws/app/src/main/assets/
+
+pushd android/SherpaOnnxKws/app/src/main/java/com/k2fsa/sherpa/onnx
+sed -i.bak s/"type = 0"/"type = 1"/ ./MainActivity.kt
+git diff
+popd
+
+for arch in arm64-v8a armeabi-v7a x86_64 x86; do
+  log "------------------------------------------------------------"
+  log "build apk for $arch"
+  log "------------------------------------------------------------"
+  src_arch=$arch
+  if [ $arch == "armeabi-v7a" ]; then
+    src_arch=armv7-eabi
+  elif [ $arch == "x86_64" ]; then
+    src_arch=x86-64
+  fi
+
+  ls -lh ./build-android-$src_arch/install/lib/*.so
+
+  cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/
+
+  pushd ./android/SherpaOnnxKws
+  ./gradlew build
+  popd
+
+  mv android/SherpaOnnxKws/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-kws-${SHERPA_ONNX_VERSION}-$arch-en.apk
+  ls -lh apks
+  rm -v ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/*.so
+done
+
+git checkout .
+
+rm -rf ./android/SherpaOnnxKws/app/src/main/assets/$repo

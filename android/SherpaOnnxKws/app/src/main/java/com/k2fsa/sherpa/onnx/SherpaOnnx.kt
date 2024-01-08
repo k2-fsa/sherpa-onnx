@@ -117,33 +117,11 @@ to add your own. (It should be straightforward to add a new model
 by following the code)
 
 @param type
-0 - sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
-    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/zipformer-transducer-models.html#sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-bilingual-chinese-english
+0 - sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01 (Chinese)
+    https://www.modelscope.cn/models/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/summary
 
-1 - csukuangfj/sherpa-onnx-lstm-zh-2023-02-20 (Chinese)
-
-    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/lstm-transducer-models.html#csukuangfj-sherpa-onnx-lstm-zh-2023-02-20-chinese
-
-2 - csukuangfj/sherpa-onnx-lstm-en-2023-02-17 (English)
-    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/lstm-transducer-models.html#csukuangfj-sherpa-onnx-lstm-en-2023-02-17-english
-
-3,4 - pkufool/icefall-asr-zipformer-streaming-wenetspeech-20230615
-    https://huggingface.co/pkufool/icefall-asr-zipformer-streaming-wenetspeech-20230615
-    3 - int8 encoder
-    4 - float32 encoder
-
-5 - csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
-    https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
-
-6 - sherpa-onnx-streaming-zipformer-en-2023-06-26
-    https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
-
-7 - shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14 (French)
-    https://huggingface.co/shaojieli/sherpa-onnx-streaming-zipformer-fr-2023-04-14
-
-8 - csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 (Bilingual, Chinese + English)
-    https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
-    encoder int8, decoder/joiner float32
+1 - sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01 (English)
+    https://www.modelscope.cn/models/pkufool/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01/summary
 
  */
 fun getModelConfig(type: Int): OnlineModelConfig? {
@@ -162,14 +140,14 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
         }
 
         1 -> {
-            val modelDir = "icefall-asr-zipformer-streaming-wenetspeech-20230615"
+            val modelDir = "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01"
             return OnlineModelConfig(
                 transducer = OnlineTransducerModelConfig(
-                    encoder = "$modelDir/exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx",
-                    decoder = "$modelDir/exp/decoder-epoch-12-avg-4-chunk-16-left-128.onnx",
-                    joiner = "$modelDir/exp/joiner-epoch-12-avg-4-chunk-16-left-128.onnx",
+                    encoder = "$modelDir/encoder-epoch-12-avg-2-chunk-16-left-64.onnx",
+                    decoder = "$modelDir/decoder-epoch-12-avg-2-chunk-16-left-64.onnx",
+                    joiner = "$modelDir/joiner-epoch-12-avg-2-chunk-16-left-64.onnx",
                 ),
-                tokens = "$modelDir/data/lang_char/tokens.txt",
+                tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer2",
             )
         }
