@@ -40,7 +40,9 @@ class VoiceActivityDetector::Impl {
 
     for (int32_t i = 0; i != k; ++i, p += window_size) {
       buffer_.Push(p, window_size);
-      is_speech = is_speech || model_->IsSpeech(p, window_size);
+      // NOTE(fangjun): Please don't use a very large n.
+      bool this_window_is_speech = model_->IsSpeech(p, window_size);
+      is_speech = is_speech || this_window_is_speech;
     }
 
     last_ = std::vector<float>(
@@ -102,6 +104,8 @@ class VoiceActivityDetector::Impl {
 
   bool IsSpeechDetected() const { return start_ != -1; }
 
+  const VadModelConfig &GetConfig() const { return config_; }
+
  private:
   std::queue<SpeechSegment> segments_;
 
@@ -144,6 +148,10 @@ void VoiceActivityDetector::Reset() { impl_->Reset(); }
 
 bool VoiceActivityDetector::IsSpeechDetected() const {
   return impl_->IsSpeechDetected();
+}
+
+const VadModelConfig &VoiceActivityDetector::GetConfig() const {
+  return impl_->GetConfig();
 }
 
 }  // namespace sherpa_onnx
