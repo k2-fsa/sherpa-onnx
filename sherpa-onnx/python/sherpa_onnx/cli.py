@@ -47,12 +47,26 @@ def encode_text(
     Encode the texts given by the INPUT to tokens and write the results to the OUTPUT.
     """
     texts = []
+    # extra information like boosting score (start with :), triggering threshold (start with #)
+    # original keyword (start with @)
+    extra_info = []
     with open(input, "r", encoding="utf8") as f:
         for line in f:
-            texts.append(line.strip())
+            extra = []
+            text = []
+            toks = line.strip().split()
+            for tok in toks:
+                if tok[0] == ":" or tok[0] == "#" or tok[0] == "@":
+                    extra.append(tok)
+                else:
+                    text.append(tok)
+            texts.append(" ".join(text))
+            extra_info.append(extra)
+
     encoded_texts = text2token(
         texts, tokens=tokens, tokens_type=tokens_type, bpe_model=bpe_model
     )
     with open(output, "w", encoding="utf8") as f:
-        for txt in encoded_texts:
+        for i, txt in enumerate(encoded_texts):
+            txt += extra_info[i]
             f.write(" ".join(txt) + "\n")
