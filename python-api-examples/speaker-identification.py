@@ -42,8 +42,8 @@ python3 ./python-api-examples/speaker-identification.py \
   --model ./zh_cnceleb_resnet34.onnx
 """
 import argparse
-import threading
 import queue
+import threading
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple
