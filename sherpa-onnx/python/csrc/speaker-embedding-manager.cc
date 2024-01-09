@@ -16,6 +16,7 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
   py::class_<PyClass>(*m, "SpeakerEmbeddingManager")
       .def(py::init<int32_t>(), py::arg("dim"),
            py::call_guard<py::gil_scoped_release>())
+      .def_property_readonly("num_speakers", &PyClass::NumSpeakers)
       .def(
           "add",
           [](const PyClass &self, const std::string &name,

@@ -34,7 +34,7 @@ class SpeakerEmbeddingManager {
    */
   bool Remove(const std::string &name) const;
 
-  /** It is for speaker recognition.
+  /** It is for speaker identification.
    *
    * It computes the cosine similarity between and given embedding and all
    * other embeddings and find the embedding that has the largest score

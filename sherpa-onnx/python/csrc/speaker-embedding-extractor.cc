@@ -33,9 +33,12 @@ void PybindSpeakerEmbeddingExtractor(py::module *m) {
       .def(py::init<const SpeakerEmbeddingExtractorConfig &>(),
            py::arg("config"), py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("dim", &PyClass::Dim)
-      .def("create_stream", &PyClass::CreateStream)
-      .def("compute", &PyClass::Compute)
-      .def("is_ready", &PyClass::IsReady);
+      .def("create_stream", &PyClass::CreateStream,
+           py::call_guard<py::gil_scoped_release>())
+      .def("compute", &PyClass::Compute,
+           py::call_guard<py::gil_scoped_release>())
+      .def("is_ready", &PyClass::IsReady,
+           py::call_guard<py::gil_scoped_release>());
 }
 
 }  // namespace sherpa_onnx

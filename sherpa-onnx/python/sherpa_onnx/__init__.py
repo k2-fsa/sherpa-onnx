@@ -10,6 +10,7 @@ from _sherpa_onnx import (
     SileroVadModelConfig,
     SpeakerEmbeddingExtractor,
     SpeakerEmbeddingExtractorConfig,
+    SpeakerEmbeddingManager,
     SpeechSegment,
     VadModel,
     VadModelConfig,
