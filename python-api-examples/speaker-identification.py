@@ -7,11 +7,11 @@ Usage:
 
 (1) Prepare a text file containing speaker related files.
 
-Each line in the text file containing two columns. The first column is the
+Each line in the text file contains two columns. The first column is the
 speaker name, while the second column contains the wave file of the speaker.
 
-If the text file contains multiple wave files for a speaker, then the embeddings
-of these files are averaged.
+If the text file contains multiple wave files for the same speaker, then the
+embeddings of these files are averaged.
 
 An example text file is given below:
 
@@ -21,11 +21,11 @@ An example text file is given below:
     foobar /path/to/d.wav
 
 Each wave file should contain only a single channel; the sample format
-should be int16_t
+should be int16_t; the sample rate can be arbitrary.
 
 (2) Download a model for computing speaker embeddings
 
-please visit
+Please visit
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
 to download a model. An example is given below:
 
