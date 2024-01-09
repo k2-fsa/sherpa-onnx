@@ -18,6 +18,8 @@
 #include "sherpa-onnx/python/csrc/online-model-config.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
 #include "sherpa-onnx/python/csrc/online-stream.h"
+#include "sherpa-onnx/python/csrc/speaker-embedding-extractor.h"
+#include "sherpa-onnx/python/csrc/speaker-embedding-manager.h"
 #include "sherpa-onnx/python/csrc/vad-model-config.h"
 #include "sherpa-onnx/python/csrc/vad-model.h"
 #include "sherpa-onnx/python/csrc/voice-activity-detector.h"
@@ -48,6 +50,8 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindVoiceActivityDetector(&m);
 
   PybindOfflineTts(&m);
+  PybindSpeakerEmbeddingExtractor(&m);
+  PybindSpeakerEmbeddingManager(&m);
 }
 
 }  // namespace sherpa_onnx

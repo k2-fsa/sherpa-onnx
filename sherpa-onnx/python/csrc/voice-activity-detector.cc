@@ -32,6 +32,7 @@ void PybindVoiceActivityDetector(py::module *m) {
             self.AcceptWaveform(samples.data(), samples.size());
           },
           py::arg("samples"), py::call_guard<py::gil_scoped_release>())
+      .def_property_readonly("config", &PyClass::GetConfig)
       .def("empty", &PyClass::Empty, py::call_guard<py::gil_scoped_release>())
       .def("pop", &PyClass::Pop, py::call_guard<py::gil_scoped_release>())
       .def("is_speech_detected", &PyClass::IsSpeechDetected,

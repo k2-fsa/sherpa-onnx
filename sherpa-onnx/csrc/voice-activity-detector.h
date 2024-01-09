@@ -43,6 +43,8 @@ class VoiceActivityDetector {
 
   void Reset();
 
+  const VadModelConfig &GetConfig() const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

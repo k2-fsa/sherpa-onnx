@@ -96,6 +96,14 @@ set(sources
   wave-reader.cc
 )
 
+# speaker embedding extractor
+list(APPEND sources
+  speaker-embedding-extractor-impl.cc
+  speaker-embedding-extractor-wespeaker-model.cc
+  speaker-embedding-extractor.cc
+  speaker-embedding-manager.cc
+)
+
 list(APPEND sources
   lexicon.cc
   offline-tts-impl.cc
@@ -385,6 +393,10 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     transpose-test.cc
     unbind-test.cc
     utfcpp-test.cc
+  )
+
+  list(APPEND sherpa_onnx_test_srcs
+    speaker-embedding-manager-test.cc
   )
 
   function(sherpa_onnx_add_test source)
