@@ -6,17 +6,12 @@ import json
 import os
 import pathlib
 import re
-import sys
 from typing import Dict
 
-import torch
-from modelscope.hub.snapshot_download import snapshot_download
-
-sys.path.insert(0, "/tmp/3D-Speaker")
-sys.path.insert(0, "/tmp/3D-Speaker/speakerlab/bin")
-
 import onnx
+import torch
 from infer_sv import supports
+from modelscope.hub.snapshot_download import snapshot_download
 from speakerlab.utils.builder import dynamic_import
 
 
