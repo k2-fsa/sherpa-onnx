@@ -1,25 +1,25 @@
-// sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-model.h
+// sherpa-onnx/csrc/speaker-embedding-extractor-model.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_WESPEAKER_MODEL_H_
-#define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_WESPEAKER_MODEL_H_
+#ifndef SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_MODEL_H_
+#define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_MODEL_H_
 
 #include <memory>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
-#include "sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-model-metadata.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor-model-metadata.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 
 namespace sherpa_onnx {
 
-class SpeakerEmbeddingExtractorWeSpeakerModel {
+class SpeakerEmbeddingExtractorModel {
  public:
-  explicit SpeakerEmbeddingExtractorWeSpeakerModel(
+  explicit SpeakerEmbeddingExtractorModel(
       const SpeakerEmbeddingExtractorConfig &config);
 
-  ~SpeakerEmbeddingExtractorWeSpeakerModel();
+  ~SpeakerEmbeddingExtractorModel();
 
-  const SpeakerEmbeddingExtractorWeSpeakerModelMetaData &GetMetaData() const;
+  const SpeakerEmbeddingExtractorModelMetaData &GetMetaData() const;
 
   /**
    * @param x A float32 tensor of shape (N, T, C)
@@ -34,4 +34,4 @@ class SpeakerEmbeddingExtractorWeSpeakerModel {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_WESPEAKER_MODEL_H_
+#endif  // SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_MODEL_H_
