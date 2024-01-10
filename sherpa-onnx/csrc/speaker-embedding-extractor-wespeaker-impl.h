@@ -27,7 +27,7 @@ class SpeakerEmbeddingExtractorWeSpeakerImpl
     FeatureExtractorConfig feat_config;
     auto meta_data = model_.GetMetaData();
     feat_config.sampling_rate = meta_data.sample_rate;
-    feat_config.normalize_samples = meta_data.normalize_features;
+    feat_config.normalize_samples = meta_data.normalize_samples;
 
     return std::make_unique<OnlineStream>(feat_config);
   }
