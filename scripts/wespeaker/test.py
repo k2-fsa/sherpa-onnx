@@ -54,8 +54,6 @@ def read_wavefile(filename, expected_sample_rate: int = 16000) -> np.ndarray:
     """
     filename = str(filename)
     with wave.open(filename) as f:
-        # Note: If wave_file_sample_rate is different from
-        # recognizer.sample_rate, we will do resampling inside sherpa-ncnn
         wave_file_sample_rate = f.getframerate()
         assert wave_file_sample_rate == expected_sample_rate, (
             wave_file_sample_rate,
@@ -104,7 +102,7 @@ class OnnxModel:
     ):
         session_opts = ort.SessionOptions()
         session_opts.inter_op_num_threads = 1
-        session_opts.intra_op_num_threads = 4
+        session_opts.intra_op_num_threads = 1
 
         self.session_opts = session_opts
 
@@ -114,7 +112,7 @@ class OnnxModel:
         )
 
         meta = self.model.get_modelmeta().custom_metadata_map
-        self.normalize_features = int(meta["normalize_features"])
+        self.normalize_samples = int(meta["normalize_samples"])
         self.sample_rate = int(meta["sample_rate"])
         self.output_dim = int(meta["output_dim"])
 
@@ -151,7 +149,7 @@ def main():
     wave1 = read_wavefile(file1, model.sample_rate)
     wave2 = read_wavefile(file2, model.sample_rate)
 
-    if not model.normalize_features:
+    if not model.normalize_samples:
         wave1 = wave1 * 32768
         wave2 = wave2 * 32768
 

@@ -12,7 +12,7 @@ namespace sherpa_onnx {
 struct SpeakerEmbeddingExtractorWeSpeakerModelMetaData {
   int32_t output_dim = 0;
   int32_t sample_rate = 0;
-  int32_t normalize_features = 0;
+  int32_t normalize_samples = 0;
   std::string language;
 };
 
