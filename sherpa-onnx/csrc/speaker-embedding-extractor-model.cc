@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/speaker-embedding-extractor-model.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023-2024  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-model.h"
 
@@ -11,7 +11,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
-#include "sherpa-onnx/csrc/speaker-embedding-extractor-model-metadata.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor-model-meta-data.h"
 
 namespace sherpa_onnx {
 
@@ -70,7 +70,7 @@ class SpeakerEmbeddingExtractorModel::Impl {
 
     std::string framework;
     SHERPA_ONNX_READ_META_DATA_STR(framework, "framework");
-    if (framework != "wespeaker" || framework != "3d-speaker") {
+    if (framework != "wespeaker" && framework != "3d-speaker") {
       SHERPA_ONNX_LOGE("Expect a wespeaker or a 3d-speaker model, given: %s",
                        framework.c_str());
       exit(-1);

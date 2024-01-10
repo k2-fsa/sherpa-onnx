@@ -5,7 +5,7 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
-#include "sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-impl.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor-general-impl.h"
 
 namespace sherpa_onnx {
 
@@ -13,6 +13,7 @@ namespace {
 
 enum class ModelType {
   kWeSpeaker,
+  k3dSpeaker,
   kUnkown,
 };
 
@@ -49,6 +50,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
   if (model_type.get() == std::string("wespeaker")) {
     return ModelType::kWeSpeaker;
+  } else if (model_type.get() == std::string("3d-speaker")) {
+    return ModelType::k3dSpeaker;
   } else {
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
     return ModelType::kUnkown;
@@ -68,7 +71,9 @@ SpeakerEmbeddingExtractorImpl::Create(
 
   switch (model_type) {
     case ModelType::kWeSpeaker:
-      return std::make_unique<SpeakerEmbeddingExtractorWeSpeakerImpl>(config);
+      // fall through
+    case ModelType::k3dSpeaker:
+      return std::make_unique<SpeakerEmbeddingExtractorGeneralImpl>(config);
     case ModelType::kUnkown:
       SHERPA_ONNX_LOGE(
           "Unknown model type in for speaker embedding extractor!");

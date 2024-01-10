@@ -1,23 +1,23 @@
-// sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-impl.h
+// sherpa-onnx/csrc/speaker-embedding-extractor-general-impl.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_WESPEAKER_IMPL_H_
-#define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_WESPEAKER_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_GENERAL_IMPL_H_
+#define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_GENERAL_IMPL_H_
 #include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
-#include "sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-model.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor-model.h"
 
 namespace sherpa_onnx {
 
-class SpeakerEmbeddingExtractorWeSpeakerImpl
+class SpeakerEmbeddingExtractorGeneralImpl
     : public SpeakerEmbeddingExtractorImpl {
  public:
-  explicit SpeakerEmbeddingExtractorWeSpeakerImpl(
+  explicit SpeakerEmbeddingExtractorGeneralImpl(
       const SpeakerEmbeddingExtractorConfig &config)
       : model_(config) {}
 
@@ -71,9 +71,9 @@ class SpeakerEmbeddingExtractorWeSpeakerImpl
   }
 
  private:
-  SpeakerEmbeddingExtractorWeSpeakerModel model_;
+  SpeakerEmbeddingExtractorModel model_;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_WESPEAKER_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_GENERAL_IMPL_H_
