@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import pathlib
+import re
+import sys
+
+import torch
+from modelscope.hub.snapshot_download import snapshot_download
+
+sys.path.insert(0, "/tmp/3D-Speaker")
+sys.path.insert(0, "/tmp/3D-Speaker/speakerlab/bin")
+
+from infer_sv import supports
+from speakerlab.utils.builder import dynamic_import
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--model",
+        type=str,
+        required=True,
+        choices=[
+            "speech_campplus_sv_en_voxceleb_16k",
+            "speech_campplus_sv_zh-cn_16k-common",
+            "speech_eres2net_sv_en_voxceleb_16k",
+            "speech_eres2net_sv_zh-cn_16k-common",
+            "speech_eres2net_base_200k_sv_zh-cn_16k-common",
+            "speech_eres2net_base_sv_zh-cn_3dspeaker_16k",
+            "speech_eres2net_large_sv_zh-cn_3dspeaker_16k",
+        ],
+    )
+    return parser.parse_args()
+
+
+@torch.no_grad()
+def main():
+    args = get_args()
+    local_model_dir = "pretrained"
+    model_id = f"damo/{args.model}"
+    conf = supports[model_id]
+    cache_dir = snapshot_download(
+        model_id,
+        revision=conf["revision"],
+    )
+    cache_dir = pathlib.Path(cache_dir)
+
+    save_dir = os.path.join(local_model_dir, model_id.split("/")[1])
+    save_dir = pathlib.Path(save_dir)
+    save_dir.mkdir(exist_ok=True, parents=True)
+
+    download_files = ["examples", conf["model_pt"]]
+    for src in cache_dir.glob("*"):
+        if re.search("|".join(download_files), src.name):
+            dst = save_dir / src.name
+            try:
+                dst.unlink()
+            except FileNotFoundError:
+                pass
+            dst.symlink_to(src)
+    pretrained_model = save_dir / conf["model_pt"]
+    pretrained_state = torch.load(pretrained_model, map_location="cpu")
+
+    model = conf["model"]
+    embedding_model = dynamic_import(model["obj"])(**model["args"])
+    embedding_model.load_state_dict(pretrained_state)
+    embedding_model.eval()
+
+    T = 100
+    C = 80
+    x = torch.rand(1, T, C)
+    y = embedding_model(x)
+    filename = f"{args.model}.onnx"
+    torch.onnx.export(
+        embedding_model,
+        x,
+        filename,
+        opset_version=13,
+        input_names=["x"],
+        output_names=["embedding"],
+        dynamic_axes={
+            "x": {0: "N", 1: "T"},
+            "embeddings": {0: "N"},
+        },
+    )
+
+
+main()
