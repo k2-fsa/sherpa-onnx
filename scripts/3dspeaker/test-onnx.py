@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright      2023  Xiaomi Corp.        (authors: Fangjun Kuang)
+# Copyright      2023-2024  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 """
 This script computes speaker similarity score in the range [0-1]
@@ -77,7 +77,7 @@ def compute_features(samples: np.ndarray, sample_rate: int) -> np.ndarray:
     opts = knf.FbankOptions()
     opts.frame_opts.dither = 0
     opts.frame_opts.samp_freq = sample_rate
-    opts.frame_opts.snip_edges = False
+    opts.frame_opts.snip_edges = True
 
     opts.mel_opts.num_bins = 80
     opts.mel_opts.debug_mel = False
@@ -115,6 +115,7 @@ class OnnxModel:
         self.normalize_samples = int(meta["normalize_samples"])
         self.sample_rate = int(meta["sample_rate"])
         self.output_dim = int(meta["output_dim"])
+        self.feature_normalize_type = meta["feature_normalize_type"]
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         """
@@ -138,6 +139,7 @@ class OnnxModel:
 
 def main():
     args = get_args()
+    print(args)
     filename = Path(args.model)
     file1 = Path(args.file1)
     file2 = Path(args.file2)
@@ -155,6 +157,10 @@ def main():
 
     features1 = compute_features(wave1, model.sample_rate)
     features2 = compute_features(wave2, model.sample_rate)
+
+    if model.feature_normalize_type == "global-mean":
+        features1 -= features1.mean(axis=0, keepdims=True)
+        features2 -= features2.mean(axis=0, keepdims=True)
 
     output1 = model(features1)
     output2 = model(features2)
