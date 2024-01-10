@@ -1,9 +1,6 @@
 name: export-3dspeaker-to-onnx
 
 on:
-  push:
-    branches:
-      - 3d-speaker
   workflow_dispatch:
 
 concurrency:
