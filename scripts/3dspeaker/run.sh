@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -ex
+set -e
 
 function install_3d_speaker() {
   echo "Install 3D-Speaker"
@@ -17,14 +17,15 @@ export PYTHONPATH=$PWD/3D-Speaker:$PYTHONPATH
 export PYTHONPATH=$PWD/3D-Speaker/speakerlab/bin:$PYTHONPATH
 
 models=(
-# speech_campplus_sv_en_voxceleb_16k
+speech_campplus_sv_en_voxceleb_16k
 speech_campplus_sv_zh-cn_16k-common
-# speech_eres2net_sv_en_voxceleb_16k
-# speech_eres2net_sv_zh-cn_16k-common
-# speech_eres2net_base_200k_sv_zh-cn_16k-common
-# speech_eres2net_base_sv_zh-cn_3dspeaker_16k
-# speech_eres2net_large_sv_zh-cn_3dspeaker_16k
+speech_eres2net_sv_en_voxceleb_16k
+speech_eres2net_sv_zh-cn_16k-common
+speech_eres2net_base_200k_sv_zh-cn_16k-common
+speech_eres2net_base_sv_zh-cn_3dspeaker_16k
+speech_eres2net_large_sv_zh-cn_3dspeaker_16k
 )
 for model in ${models[@]}; do
+  echo "--------------------$model--------------------"
   python3 ./export-onnx.py --model $model
 done

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import os
 import pathlib
 import re
 import sys
+from typing import Dict
 
 import torch
 from modelscope.hub.snapshot_download import snapshot_download
@@ -12,8 +14,27 @@ from modelscope.hub.snapshot_download import snapshot_download
 sys.path.insert(0, "/tmp/3D-Speaker")
 sys.path.insert(0, "/tmp/3D-Speaker/speakerlab/bin")
 
+import onnx
 from infer_sv import supports
 from speakerlab.utils.builder import dynamic_import
+
+
+def add_meta_data(filename: str, meta_data: Dict[str, str]):
+    """Add meta data to an ONNX model. It is changed in-place.
+
+    Args:
+      filename:
+        Filename of the ONNX model to be changed.
+      meta_data:
+        Key-value pairs.
+    """
+    model = onnx.load(filename)
+    for key, value in meta_data.items():
+        meta = model.metadata_props.add()
+        meta.key = key
+        meta.value = str(value)
+
+    onnx.save(model, filename)
 
 
 def get_args():
@@ -68,10 +89,13 @@ def main():
     embedding_model.load_state_dict(pretrained_state)
     embedding_model.eval()
 
+    with open(f"{cache_dir}/configuration.json") as f:
+        json_config = json.loads(f.read())
+        print(json_config)
+
     T = 100
     C = 80
     x = torch.rand(1, T, C)
-    y = embedding_model(x)
     filename = f"{args.model}.onnx"
     torch.onnx.export(
         embedding_model,
@@ -85,6 +109,42 @@ def main():
             "embeddings": {0: "N"},
         },
     )
+
+    # all models from 3d-speaker expect input samples in the range
+    # [-1, 1]
+    normalize_samples = 1
+
+    # all models from 3d-speaker normalize the features by the global mean
+    feature_normalize_type = "global-mean"
+    sample_rate = json_config["model"]["model_config"]["sample_rate"]
+
+    feat_dim = conf["model"]["args"]["feat_dim"]
+    assert feat_dim == 80, feat_dim
+
+    output_dim = conf["model"]["args"]["embedding_size"]
+
+    if "zh-cn" in args.model:
+        language = "Chinese"
+    elif "en" in args.model:
+        language = "English"
+    else:
+        raise ValueError(f"Unsupported language for model {args.model}")
+
+    comment = f"This model is from damo/{args.model}"
+    url = f"https://www.modelscope.cn/models/damo/{args.model}/summary"
+
+    meta_data = {
+        "framework": "3d-speaker",
+        "language": language,
+        "url": url,
+        "comment": comment,
+        "sample_rate": sample_rate,
+        "output_dim": output_dim,
+        "normalize_samples": normalize_samples,
+        "feature_normalize_type": feature_normalize_type,
+    }
+    print(meta_data)
+    add_meta_data(filename=filename, meta_data=meta_data)
 
 
 main()
