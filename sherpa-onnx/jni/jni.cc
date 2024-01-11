@@ -167,7 +167,7 @@ class SherpaOnnxKws {
     stream_->InputFinished();
   }
 
-  bool SetKeywords(const std::string& keywords) {
+  bool SetKeywords(const std::string &keywords) {
     auto stream = keyword_spotter_.CreateStream(keywords);
     if (stream == nullptr) {
       return false;
@@ -1264,12 +1264,13 @@ JNIEXPORT jstring JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_getKeyword(
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_setKeywords(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring keywords) {
-
   const char *p_keywords = env->GetStringUTFChars(keywords, nullptr);
 
   std::string keywords_str = p_keywords;
 
-  bool status = reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr)->SetKeywords(keywords_str);
+  bool status =
+      reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr)->SetKeywords(
+          keywords_str);
   env->ReleaseStringUTFChars(keywords, p_keywords);
   return status;
 }

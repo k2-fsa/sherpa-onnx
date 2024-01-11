@@ -105,7 +105,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   }
 
   std::unique_ptr<OnlineStream> CreateStream(
-      const std::string& keywords) const override {
+      const std::string &keywords) const override {
     auto kws = std::regex_replace(keywords, std::regex("/"), "\n");
     std::istringstream is(kws);
 
@@ -123,7 +123,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     int32_t num_kws = current_ids.size();
     int32_t num_default_kws = keywords_id_.size();
 
-    current_ids.insert(current_ids.end(), keywords_id_.begin(), keywords_id_.end());
+    current_ids.insert(current_ids.end(), keywords_id_.begin(),
+                       keywords_id_.end());
 
     if (!current_kws.empty() && !keywords_.empty()) {
       current_kws.insert(current_kws.end(), keywords_.begin(), keywords_.end());
@@ -137,23 +138,31 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     }
 
     if (!current_scores.empty() && !boost_scores_.empty()) {
-      current_scores.insert(current_scores.end(), boost_scores_.begin(), boost_scores_.end());
+      current_scores.insert(current_scores.end(), boost_scores_.begin(),
+                            boost_scores_.end());
     } else if (!current_scores.empty() && boost_scores_.empty()) {
-      current_scores.insert(current_scores.end(), num_default_kws, config_.keywords_score);
+      current_scores.insert(current_scores.end(), num_default_kws,
+                            config_.keywords_score);
     } else if (current_scores.empty() && !boost_scores_.empty()) {
-      current_scores.insert(current_scores.end(), num_kws, config_.keywords_score);
-      current_scores.insert(current_scores.end(), boost_scores_.begin(), boost_scores_.end());
+      current_scores.insert(current_scores.end(), num_kws,
+                            config_.keywords_score);
+      current_scores.insert(current_scores.end(), boost_scores_.begin(),
+                            boost_scores_.end());
     } else {
       // Do nothing.
     }
 
     if (!current_thresholds.empty() && !thresholds_.empty()) {
-      current_thresholds.insert(current_thresholds.end(), thresholds_.begin(), thresholds_.end());
+      current_thresholds.insert(current_thresholds.end(), thresholds_.begin(),
+                                thresholds_.end());
     } else if (!current_thresholds.empty() && thresholds_.empty()) {
-      current_thresholds.insert(current_thresholds.end(), num_default_kws, config_.keywords_threshold);
+      current_thresholds.insert(current_thresholds.end(), num_default_kws,
+                                config_.keywords_threshold);
     } else if (current_thresholds.empty() && !thresholds_.empty()) {
-      current_thresholds.insert(current_thresholds.end(), num_kws, config_.keywords_threshold);
-      current_thresholds.insert(current_thresholds.end(), thresholds_.begin(), thresholds_.end());
+      current_thresholds.insert(current_thresholds.end(), num_kws,
+                                config_.keywords_threshold);
+      current_thresholds.insert(current_thresholds.end(), thresholds_.begin(),
+                                thresholds_.end());
     } else {
       // Do nothing.
     }
