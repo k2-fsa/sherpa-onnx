@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "Eigen/Dense"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-model.h"
 
@@ -25,7 +26,7 @@ class SpeakerEmbeddingExtractorGeneralImpl
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     FeatureExtractorConfig feat_config;
-    auto meta_data = model_.GetMetaData();
+    const auto &meta_data = model_.GetMetaData();
     feat_config.sampling_rate = meta_data.sample_rate;
     feat_config.normalize_samples = meta_data.normalize_samples;
 
@@ -52,6 +53,17 @@ class SpeakerEmbeddingExtractorGeneralImpl
 
     int32_t feat_dim = features.size() / num_frames;
 
+    const auto &meta_data = model_.GetMetaData();
+    if (!meta_data.feature_normalize_type.empty()) {
+      if (meta_data.feature_normalize_type == "global-mean") {
+        SubtractGlobalMean(features.data(), num_frames, feat_dim);
+      } else {
+        SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %s",
+                         meta_data.feature_normalize_type.c_str());
+        exit(-1);
+      }
+    }
+
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -68,6 +80,16 @@ class SpeakerEmbeddingExtractorGeneralImpl
               embedding.GetTensorData<float>() + ans.size(), ans.begin());
 
     return ans;
+  }
+
+ private:
+  void SubtractGlobalMean(float *p, int32_t num_frames,
+                          int32_t feat_dim) const {
+    auto m = Eigen::Map<
+        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(
+        p, num_frames, feat_dim);
+
+    m = m.rowwise() - m.colwise().mean();
   }
 
  private:
