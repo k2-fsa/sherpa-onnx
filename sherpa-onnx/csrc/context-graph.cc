@@ -4,8 +4,11 @@
 
 #include "sherpa-onnx/csrc/context-graph.h"
 
+#include <algorithm>
 #include <cassert>
 #include <queue>
+#include <string>
+#include <tuple>
 #include <utility>
 
 #include "sherpa-onnx/csrc/macros.h"
