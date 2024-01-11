@@ -107,6 +107,18 @@ class KeywordSpotter {
    */
   std::unique_ptr<OnlineStream> CreateStream() const;
 
+  /** Create a stream for decoding.
+   *
+   *  @param The keywords for this string, it might contain several keywords,
+   *         the keywords are separated by "/". In each of the keywords, there
+   *         are cjkchars or bpes, the bpe/cjkchar are separated by space (" ").
+   *         For example, keywords I LOVE YOU and HELLO WORLD, looks like:
+   *
+   *         "▁I ▁LOVE ▁YOU/▁HE LL O ▁WORLD"
+   */
+  std::unique_ptr<OnlineStream> CreateStream(
+      const std::string &keywords) const;
+
   /**
    * Return true if the given stream has enough frames for decoding.
    * Return false otherwise

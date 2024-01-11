@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
 import android.util.Log
 import android.widget.Button
+import android.widget.EditText
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -25,6 +26,7 @@ class MainActivity : AppCompatActivity() {
     private var audioRecord: AudioRecord? = null
     private lateinit var recordButton: Button
     private lateinit var textView: TextView
+    private lateinit var inputText: EditText
     private var recordingThread: Thread? = null
 
     private val audioSource = MediaRecorder.AudioSource.MIC
@@ -74,6 +76,8 @@ class MainActivity : AppCompatActivity() {
 
         textView = findViewById(R.id.my_text)
         textView.movementMethod = ScrollingMovementMethod()
+
+        inputText = findViewById(R.id.input_text)
     }
 
     private fun onclick() {
@@ -90,6 +94,14 @@ class MainActivity : AppCompatActivity() {
             textView.text = ""
             lastText = ""
             idx = 0
+
+            var keywords = inputText.text.toString()
+            Log.i(TAG, keywords)
+            keywords = keywords.replace("\n", "/")
+            val status = model.setKeywords(keywords)
+            if (!status) {
+                Log.i(TAG, "Failed to setKeywords.")
+            }
 
             recordingThread = thread(true) {
                 processSamples()
@@ -129,9 +141,9 @@ class MainActivity : AppCompatActivity() {
                     if (lastText.isBlank()) {
                         textToDisplay = "${idx}: ${text}"
                     } else {
-                        textToDisplay = "${lastText}\n${idx}: ${text}"
+                        textToDisplay = "${idx}: ${text}\n${lastText}"
                     }
-                    lastText = "${lastText}\n${idx}: ${text}"
+                    lastText = "${idx}: ${text}\n${lastText}"
                     idx += 1
                 }
 

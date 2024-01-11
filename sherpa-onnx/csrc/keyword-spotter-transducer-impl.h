@@ -104,6 +104,70 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     return stream;
   }
 
+  std::unique_ptr<OnlineStream> CreateStream(
+      const std::string& keywords) const override {
+    auto kws = std::regex_replace(keywords, std::regex("/"), "\n");
+    std::istringstream is(kws);
+
+    std::vector<std::vector<int32_t>> current_ids;
+    std::vector<std::string> current_kws;
+    std::vector<float> current_scores;
+    std::vector<float> current_thresholds;
+
+    if (!EncodeKeywords(is, sym_, &current_ids, &current_kws, &current_scores,
+                        &current_thresholds)) {
+      SHERPA_ONNX_LOGE("Encode keywords failed.");
+      return nullptr;
+    }
+
+    int32_t num_kws = current_ids.size();
+    int32_t num_default_kws = keywords_id_.size();
+
+    current_ids.insert(current_ids.end(), keywords_id_.begin(), keywords_id_.end());
+
+    if (!current_kws.empty() && !keywords_.empty()) {
+      current_kws.insert(current_kws.end(), keywords_.begin(), keywords_.end());
+    } else if (!current_kws.empty() && keywords_.empty()) {
+      current_kws.insert(current_kws.end(), num_default_kws, std::string());
+    } else if (current_kws.empty() && !keywords_.empty()) {
+      current_kws.insert(current_kws.end(), num_kws, std::string());
+      current_kws.insert(current_kws.end(), keywords_.begin(), keywords_.end());
+    } else {
+      // Do nothing.
+    }
+
+    if (!current_scores.empty() && !boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), boost_scores_.begin(), boost_scores_.end());
+    } else if (!current_scores.empty() && boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), num_default_kws, config_.keywords_score);
+    } else if (current_scores.empty() && !boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), num_kws, config_.keywords_score);
+      current_scores.insert(current_scores.end(), boost_scores_.begin(), boost_scores_.end());
+    } else {
+      // Do nothing.
+    }
+
+    if (!current_thresholds.empty() && !thresholds_.empty()) {
+      current_thresholds.insert(current_thresholds.end(), thresholds_.begin(), thresholds_.end());
+    } else if (!current_thresholds.empty() && thresholds_.empty()) {
+      current_thresholds.insert(current_thresholds.end(), num_default_kws, config_.keywords_threshold);
+    } else if (current_thresholds.empty() && !thresholds_.empty()) {
+      current_thresholds.insert(current_thresholds.end(), num_kws, config_.keywords_threshold);
+      current_thresholds.insert(current_thresholds.end(), thresholds_.begin(), thresholds_.end());
+    } else {
+      // Do nothing.
+    }
+
+    auto keywords_graph = std::make_shared<ContextGraph>(
+        current_ids, config_.keywords_score, config_.keywords_threshold,
+        current_scores, current_kws, current_thresholds);
+
+    auto stream =
+        std::make_unique<OnlineStream>(config_.feat_config, keywords_graph);
+    InitOnlineStream(stream.get());
+    return stream;
+  }
+
   bool IsReady(OnlineStream *s) const override {
     return s->GetNumProcessedFrames() + model_->ChunkSize() <
            s->NumFramesReady();

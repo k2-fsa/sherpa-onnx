@@ -6,6 +6,7 @@
         The source code and pre-trained models are publicly available.
         Please see https://github.com/k2-fsa/sherpa-onnx for details.
     </string>
+    <string name="keyword_hint">Input your keywords here, one keyword perline.</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
 </resources>

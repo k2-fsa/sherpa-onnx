@@ -29,6 +29,9 @@ class KeywordSpotterImpl {
 
   virtual std::unique_ptr<OnlineStream> CreateStream() const = 0;
 
+  virtual std::unique_ptr<OnlineStream> CreateStream(
+      const std::string& keywords) const = 0;
+
   virtual bool IsReady(OnlineStream *s) const = 0;
 
   virtual void DecodeStreams(OnlineStream **ss, int32_t n) const = 0;

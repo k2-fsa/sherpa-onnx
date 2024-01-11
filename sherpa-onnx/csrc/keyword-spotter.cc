@@ -127,6 +127,11 @@ std::unique_ptr<OnlineStream> KeywordSpotter::CreateStream() const {
   return impl_->CreateStream();
 }
 
+std::unique_ptr<OnlineStream> KeywordSpotter::CreateStream(
+    const std::string& keywords) const {
+  return impl_->CreateStream(keywords);
+}
+
 bool KeywordSpotter::IsReady(OnlineStream *s) const {
   return impl_->IsReady(s);
 }
