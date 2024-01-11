@@ -42,7 +42,7 @@ jobs:
           ls -lh /tmp/packages
 
       - name: publish .Net packages to nuget.org
-        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
         shell: bash
         env:
           API_KEY: ${{ secrets.NUGET_API_KEY }}
