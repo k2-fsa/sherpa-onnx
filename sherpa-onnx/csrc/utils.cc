@@ -54,15 +54,15 @@ static bool EncodeBase(std::istream &is, const SymbolTable &symbol_table,
         tmp_ids.push_back(id);
       } else {
         switch (word[0]) {
-          case ':':
+          case ':':  // boosting score for current keyword
             score = std::stof(word.substr(1));
             has_scores = true;
             break;
-          case '#':
+          case '#':  // triggering threshold (probability) for current keyword
             threshold = std::stof(word.substr(1));
             has_thresholds = true;
             break;
-          case '@':
+          case '@':  // the original keyword string
             phrase = word.substr(1);
             has_phrases = true;
             break;

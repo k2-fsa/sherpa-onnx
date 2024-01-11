@@ -45,6 +45,34 @@ def encode_text(
 ):
     """
     Encode the texts given by the INPUT to tokens and write the results to the OUTPUT.
+    Each line in the texts contains the original phrase, it might also contain some
+    extra items, for example, the boosting score (startting with :), the triggering
+    threshold (startting with #, only used in keyword spotting task) and the original
+    phrase (startting with @). Note: the extra items will be kept same in the output.
+
+    example input 1 (tokens_type = ppinyin):
+
+    小爱同学 :2.0 #0.6 @小爱同学
+    你好问问 :3.5 @你好问问
+    小艺小艺 #0.6 @小艺小艺
+
+    example output 1:
+
+    x iǎo ài t óng x ué :2.0 #0.6 @小爱同学
+    n ǐ h ǎo w èn w èn :3.5 @你好问问
+    x iǎo y ì x iǎo y ì #0.6 @小艺小艺
+
+    example input 2 (tokens_type = bpe):
+
+    HELLO WORLD :1.5 #0.4
+    HI GOOGLE :2.0 #0.8
+    HEY SIRI #0.35
+
+    example output 2:
+
+    ▁HE LL O ▁WORLD :1.5 #0.4
+    ▁HI ▁GO O G LE :2.0 #0.8
+    ▁HE Y ▁S I RI #0.35
     """
     texts = []
     # extra information like boosting score (start with :), triggering threshold (start with #)

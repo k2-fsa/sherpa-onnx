@@ -23,7 +23,7 @@
 namespace sherpa_onnx {
 
 struct KeywordResult {
-  /// Recognition results.
+  /// The triggered keyword.
   /// For English, it consists of space separated words.
   /// For Chinese, it consists of Chinese words without spaces.
   /// Example 1: "hello world"
