@@ -76,6 +76,7 @@ jobs:
       - name: Test sherpa-onnx
         shell: bash
         run: |
+          .github/scripts/test-speaker-recognition-python.sh
           .github/scripts/test-python.sh
 
       - uses: actions/upload-artifact@v3
