@@ -5,6 +5,8 @@
 #ifndef SHERPA_ONNX_CSRC_TRANSDUCER_KEYWORDS_DECODER_H_
 #define SHERPA_ONNX_CSRC_TRANSDUCER_KEYWORDS_DECODER_H_
 
+#include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-stream.h"
@@ -35,7 +37,7 @@ struct TransducerKeywordsResult {
 
   TransducerKeywordsResult(const TransducerKeywordsResult &other) {
     *this = other;
-  };
+  }
 
   TransducerKeywordsResult &operator=(const TransducerKeywordsResult &other) {
     if (this == &other) {

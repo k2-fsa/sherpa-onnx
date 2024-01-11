@@ -6,6 +6,8 @@
 #define SHERPA_ONNX_CSRC_CONTEXT_GRAPH_H_
 
 #include <memory>
+#include <string>
+#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
