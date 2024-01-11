@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-model.cc
+// sherpa-onnx/csrc/speaker-embedding-extractor-model.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023-2024  Xiaomi Corporation
 
-#include "sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-model.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor-model.h"
 
 #include <string>
 #include <utility>
@@ -11,11 +11,11 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
-#include "sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-model-metadata.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor-model-meta-data.h"
 
 namespace sherpa_onnx {
 
-class SpeakerEmbeddingExtractorWeSpeakerModel::Impl {
+class SpeakerEmbeddingExtractorModel::Impl {
  public:
   explicit Impl(const SpeakerEmbeddingExtractorConfig &config)
       : config_(config),
@@ -37,7 +37,7 @@ class SpeakerEmbeddingExtractorWeSpeakerModel::Impl {
     return std::move(outputs[0]);
   }
 
-  const SpeakerEmbeddingExtractorWeSpeakerModelMetaData &GetMetaData() const {
+  const SpeakerEmbeddingExtractorModelMetaData &GetMetaData() const {
     return meta_data_;
   }
 
@@ -65,10 +65,13 @@ class SpeakerEmbeddingExtractorWeSpeakerModel::Impl {
                                "normalize_samples");
     SHERPA_ONNX_READ_META_DATA_STR(meta_data_.language, "language");
 
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(
+        meta_data_.feature_normalize_type, "feature_normalize_type", "");
+
     std::string framework;
     SHERPA_ONNX_READ_META_DATA_STR(framework, "framework");
-    if (framework != "wespeaker") {
-      SHERPA_ONNX_LOGE("Expect a wespeaker model, given: %s",
+    if (framework != "wespeaker" && framework != "3d-speaker") {
+      SHERPA_ONNX_LOGE("Expect a wespeaker or a 3d-speaker model, given: %s",
                        framework.c_str());
       exit(-1);
     }
@@ -88,24 +91,21 @@ class SpeakerEmbeddingExtractorWeSpeakerModel::Impl {
   std::vector<std::string> output_names_;
   std::vector<const char *> output_names_ptr_;
 
-  SpeakerEmbeddingExtractorWeSpeakerModelMetaData meta_data_;
+  SpeakerEmbeddingExtractorModelMetaData meta_data_;
 };
 
-SpeakerEmbeddingExtractorWeSpeakerModel::
-    SpeakerEmbeddingExtractorWeSpeakerModel(
-        const SpeakerEmbeddingExtractorConfig &config)
+SpeakerEmbeddingExtractorModel::SpeakerEmbeddingExtractorModel(
+    const SpeakerEmbeddingExtractorConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-SpeakerEmbeddingExtractorWeSpeakerModel::
-    ~SpeakerEmbeddingExtractorWeSpeakerModel() = default;
+SpeakerEmbeddingExtractorModel::~SpeakerEmbeddingExtractorModel() = default;
 
-const SpeakerEmbeddingExtractorWeSpeakerModelMetaData &
-SpeakerEmbeddingExtractorWeSpeakerModel::GetMetaData() const {
+const SpeakerEmbeddingExtractorModelMetaData &
+SpeakerEmbeddingExtractorModel::GetMetaData() const {
   return impl_->GetMetaData();
 }
 
-Ort::Value SpeakerEmbeddingExtractorWeSpeakerModel::Compute(
-    Ort::Value x) const {
+Ort::Value SpeakerEmbeddingExtractorModel::Compute(Ort::Value x) const {
   return impl_->Compute(std::move(x));
 }
 

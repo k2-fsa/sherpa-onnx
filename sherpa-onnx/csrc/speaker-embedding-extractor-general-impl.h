@@ -1,23 +1,24 @@
-// sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-impl.h
+// sherpa-onnx/csrc/speaker-embedding-extractor-general-impl.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_WESPEAKER_IMPL_H_
-#define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_WESPEAKER_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_GENERAL_IMPL_H_
+#define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_GENERAL_IMPL_H_
 #include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
 
+#include "Eigen/Dense"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
-#include "sherpa-onnx/csrc/speaker-embedding-extractor-wespeaker-model.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor-model.h"
 
 namespace sherpa_onnx {
 
-class SpeakerEmbeddingExtractorWeSpeakerImpl
+class SpeakerEmbeddingExtractorGeneralImpl
     : public SpeakerEmbeddingExtractorImpl {
  public:
-  explicit SpeakerEmbeddingExtractorWeSpeakerImpl(
+  explicit SpeakerEmbeddingExtractorGeneralImpl(
       const SpeakerEmbeddingExtractorConfig &config)
       : model_(config) {}
 
@@ -25,7 +26,7 @@ class SpeakerEmbeddingExtractorWeSpeakerImpl
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     FeatureExtractorConfig feat_config;
-    auto meta_data = model_.GetMetaData();
+    const auto &meta_data = model_.GetMetaData();
     feat_config.sampling_rate = meta_data.sample_rate;
     feat_config.normalize_samples = meta_data.normalize_samples;
 
@@ -52,6 +53,17 @@ class SpeakerEmbeddingExtractorWeSpeakerImpl
 
     int32_t feat_dim = features.size() / num_frames;
 
+    const auto &meta_data = model_.GetMetaData();
+    if (!meta_data.feature_normalize_type.empty()) {
+      if (meta_data.feature_normalize_type == "global-mean") {
+        SubtractGlobalMean(features.data(), num_frames, feat_dim);
+      } else {
+        SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %s",
+                         meta_data.feature_normalize_type.c_str());
+        exit(-1);
+      }
+    }
+
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -71,9 +83,19 @@ class SpeakerEmbeddingExtractorWeSpeakerImpl
   }
 
  private:
-  SpeakerEmbeddingExtractorWeSpeakerModel model_;
+  void SubtractGlobalMean(float *p, int32_t num_frames,
+                          int32_t feat_dim) const {
+    auto m = Eigen::Map<
+        Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(
+        p, num_frames, feat_dim);
+
+    m = m.rowwise() - m.colwise().mean();
+  }
+
+ private:
+  SpeakerEmbeddingExtractorModel model_;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_WESPEAKER_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_GENERAL_IMPL_H_
