@@ -41,8 +41,12 @@ class FeatureExtractor::Impl {
  public:
   explicit Impl(const FeatureExtractorConfig &config) : config_(config) {
     opts_.frame_opts.dither = 0;
-    opts_.frame_opts.snip_edges = false;
+    opts_.frame_opts.snip_edges = config.snip_edges;
     opts_.frame_opts.samp_freq = config.sampling_rate;
+    opts_.frame_opts.frame_shift_ms = config.frame_shift_ms;
+    opts_.frame_opts.frame_length_ms = config.frame_length_ms;
+    opts_.frame_opts.remove_dc_offset = config.remove_dc_offset;
+    opts_.frame_opts.window_type = config.window_type;
 
     opts_.mel_opts.num_bins = config.feature_dim;
 
@@ -51,6 +55,9 @@ class FeatureExtractor::Impl {
     // and
     // https://github.com/k2-fsa/sherpa-onnx/issues/514
     opts_.mel_opts.high_freq = -400;
+
+    opts_.mel_opts.low_freq = config.low_freq;
+    opts_.mel_opts.is_librosa = config.is_librosa;
 
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
   }

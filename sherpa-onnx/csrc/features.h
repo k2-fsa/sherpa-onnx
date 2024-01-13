@@ -28,6 +28,14 @@ struct FeatureExtractorConfig {
   // If false, we will multiply the inputs by 32768
   bool normalize_samples = true;
 
+  bool snip_edges = false;
+  float frame_shift_ms = 10.0f;   // in milliseconds.
+  float frame_length_ms = 25.0f;  // in milliseconds.
+  int32_t low_freq = 20;
+  bool is_librosa = false;
+  bool remove_dc_offset = true;       // Subtract mean of wave before FFT.
+  std::string window_type = "povey";  // e.g. Hamming window
+
   std::string ToString() const;
 
   void Register(ParseOptions *po);

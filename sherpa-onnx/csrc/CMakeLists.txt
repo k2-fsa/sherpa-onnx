@@ -100,6 +100,7 @@ set(sources
 list(APPEND sources
   speaker-embedding-extractor-impl.cc
   speaker-embedding-extractor-model.cc
+  speaker-embedding-extractor-nemo-model.cc
   speaker-embedding-extractor.cc
   speaker-embedding-manager.cc
 )
