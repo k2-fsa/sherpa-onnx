@@ -57,5 +57,19 @@ done
 ls -lh
 popd
 
+log "Download NeMo models"
+model_dir=$d/nemo
+mkdir -p $model_dir
+pushd $model_dir
+models=(
+nemo_en_titanet_large.onnx
+nemo_en_titanet_small.onnx
+nemo_en_speakerverification_speakernet.onnx
+)
+for m in ${models[@]}; do
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$m
+done
+ls -lh
+popd
 
 python3 sherpa-onnx/python/tests/test_speaker_recognition.py --verbose

@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/speaker-embedding-manager.h
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2024  Xiaomi Corporation
 
 #ifndef SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_MANAGER_H_
 #define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_MANAGER_H_

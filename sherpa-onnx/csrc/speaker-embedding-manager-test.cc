@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/speaker-embedding-manager-test.cc
 //
-// Copyright (c) 2023 Jingzhao Ou (jingzhao.ou@gmail.com)
+// Copyright (c) 2024 Jingzhao Ou (jingzhao.ou@gmail.com)
 
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
 
