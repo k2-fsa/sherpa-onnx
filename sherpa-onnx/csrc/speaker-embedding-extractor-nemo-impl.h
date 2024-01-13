@@ -1,9 +1,9 @@
-// sherpa-onnx/csrc/speaker-embedding-extractor-general-impl.h
+// sherpa-onnx/csrc/speaker-embedding-extractor-nemo-impl.h
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_GENERAL_IMPL_H_
-#define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_GENERAL_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_NEMO_IMPL_H_
+#define SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_NEMO_IMPL_H_
 #include <algorithm>
 #include <memory>
 #include <utility>
@@ -11,14 +11,14 @@
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
-#include "sherpa-onnx/csrc/speaker-embedding-extractor-model.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor-nemo-model.h"
+#include "sherpa-onnx/csrc/transpose.h"
 
 namespace sherpa_onnx {
 
-class SpeakerEmbeddingExtractorGeneralImpl
-    : public SpeakerEmbeddingExtractorImpl {
+class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
  public:
-  explicit SpeakerEmbeddingExtractorGeneralImpl(
+  explicit SpeakerEmbeddingExtractorNeMoImpl(
       const SpeakerEmbeddingExtractorConfig &config)
       : model_(config) {}
 
@@ -28,7 +28,15 @@ class SpeakerEmbeddingExtractorGeneralImpl
     FeatureExtractorConfig feat_config;
     const auto &meta_data = model_.GetMetaData();
     feat_config.sampling_rate = meta_data.sample_rate;
-    feat_config.normalize_samples = meta_data.normalize_samples;
+    feat_config.feature_dim = meta_data.feat_dim;
+    feat_config.normalize_samples = true;
+    feat_config.snip_edges = true;
+    feat_config.frame_shift_ms = meta_data.window_stride_ms;
+    feat_config.frame_length_ms = meta_data.window_size_ms;
+    feat_config.low_freq = 0;
+    feat_config.is_librosa = true;
+    feat_config.remove_dc_offset = false;
+    feat_config.window_type = meta_data.window_type;
 
     return std::make_unique<OnlineStream>(feat_config);
   }
@@ -55,13 +63,18 @@ class SpeakerEmbeddingExtractorGeneralImpl
 
     const auto &meta_data = model_.GetMetaData();
     if (!meta_data.feature_normalize_type.empty()) {
-      if (meta_data.feature_normalize_type == "global-mean") {
-        SubtractGlobalMean(features.data(), num_frames, feat_dim);
+      if (meta_data.feature_normalize_type == "per_feature") {
+        NormalizePerFeature(features.data(), num_frames, feat_dim);
       } else {
         SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %s",
                          meta_data.feature_normalize_type.c_str());
         exit(-1);
       }
+    }
+
+    if (num_frames % 16 != 0) {
+      int32_t pad = 16 - num_frames % 16;
+      features.resize((num_frames + pad) * feat_dim);
     }
 
     auto memory_info =
@@ -71,7 +84,16 @@ class SpeakerEmbeddingExtractorGeneralImpl
     Ort::Value x =
         Ort::Value::CreateTensor(memory_info, features.data(), features.size(),
                                  x_shape.data(), x_shape.size());
-    Ort::Value embedding = model_.Compute(std::move(x));
+
+    x = Transpose12(model_.Allocator(), &x);
+
+    int64_t x_lens = num_frames;
+    std::array<int64_t, 1> x_lens_shape{1};
+    Ort::Value x_lens_tensor = Ort::Value::CreateTensor(
+        memory_info, &x_lens, 1, x_lens_shape.data(), x_lens_shape.size());
+
+    Ort::Value embedding =
+        model_.Compute(std::move(x), std::move(x_lens_tensor));
     std::vector<int64_t> embedding_shape =
         embedding.GetTensorTypeAndShapeInfo().GetShape();
 
@@ -83,19 +105,24 @@ class SpeakerEmbeddingExtractorGeneralImpl
   }
 
  private:
-  void SubtractGlobalMean(float *p, int32_t num_frames,
-                          int32_t feat_dim) const {
+  void NormalizePerFeature(float *p, int32_t num_frames,
+                           int32_t feat_dim) const {
     auto m = Eigen::Map<
         Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>(
         p, num_frames, feat_dim);
 
-    m = m.rowwise() - m.colwise().mean();
+    auto EX = m.colwise().mean();
+    auto EX2 = m.array().pow(2).colwise().sum() / num_frames;
+    auto variance = EX2 - EX.array().pow(2);
+    auto stddev = variance.array().sqrt();
+
+    m = (m.rowwise() - EX).array().rowwise() / stddev.array();
   }
 
  private:
-  SpeakerEmbeddingExtractorModel model_;
+  SpeakerEmbeddingExtractorNeMoModel model_;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_GENERAL_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_SPEAKER_EMBEDDING_EXTRACTOR_NEMO_IMPL_H_

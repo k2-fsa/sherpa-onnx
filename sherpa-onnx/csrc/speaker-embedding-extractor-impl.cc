@@ -1,11 +1,12 @@
 // sherpa-onnx/csrc/speaker-embedding-extractor-impl.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2024  Xiaomi Corporation
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-general-impl.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor-nemo-impl.h"
 
 namespace sherpa_onnx {
 
@@ -14,6 +15,7 @@ namespace {
 enum class ModelType {
   kWeSpeaker,
   k3dSpeaker,
+  kNeMo,
   kUnkown,
 };
 
@@ -52,6 +54,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kWeSpeaker;
   } else if (model_type.get() == std::string("3d-speaker")) {
     return ModelType::k3dSpeaker;
+  } else if (model_type.get() == std::string("nemo")) {
+    return ModelType::kNeMo;
   } else {
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
     return ModelType::kUnkown;
@@ -74,6 +78,8 @@ SpeakerEmbeddingExtractorImpl::Create(
       // fall through
     case ModelType::k3dSpeaker:
       return std::make_unique<SpeakerEmbeddingExtractorGeneralImpl>(config);
+    case ModelType::kNeMo:
+      return std::make_unique<SpeakerEmbeddingExtractorNeMoImpl>(config);
     case ModelType::kUnkown:
       SHERPA_ONNX_LOGE(
           "Unknown model type in for speaker embedding extractor!");
