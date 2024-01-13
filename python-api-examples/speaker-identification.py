@@ -29,7 +29,7 @@ Please visit
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
 to download a model. An example is given below:
 
-    wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/zh_cnceleb_resnet34.onnx
+    wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/wespeaker_zh_cnceleb_resnet34.onnx
 
 Note that `zh` means Chinese, while `en` means English.
 
@@ -39,7 +39,7 @@ Assume the filename of the text file is speaker.txt.
 
 python3 ./python-api-examples/speaker-identification.py \
   --speaker-file ./speaker.txt \
-  --model ./zh_cnceleb_resnet34.onnx
+  --model ./wespeaker_zh_cnceleb_resnet34.onnx
 """
 import argparse
 import queue

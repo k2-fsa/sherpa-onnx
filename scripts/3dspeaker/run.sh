@@ -60,4 +60,6 @@ for model in ${models[@]}; do
     --model ${model}.onnx \
     --file1 ./speaker1_a_en_16k.wav \
     --file2 ./speaker2_a_en_16k.wav
+
+  mv ${model}.onnx 3dspeaker_${model}.onnx
 done
