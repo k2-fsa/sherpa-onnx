@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -e
+set -ex
 
 log() {
   # This function is from espnet
@@ -21,18 +21,19 @@ model_dir=$d/wespeaker
 mkdir -p $model_dir
 pushd $model_dir
 models=(
-en_voxceleb_CAM++.onnx
-en_voxceleb_CAM++_LM.onnx
-en_voxceleb_resnet152_LM.onnx
-en_voxceleb_resnet221_LM.onnx
-en_voxceleb_resnet293_LM.onnx
-en_voxceleb_resnet34.onnx
-en_voxceleb_resnet34_LM.onnx
-zh_cnceleb_resnet34.onnx
-zh_cnceleb_resnet34_LM.onnx
+wespeaker_en_voxceleb_CAM++.onnx
+wespeaker_en_voxceleb_CAM++_LM.onnx
+wespeaker_en_voxceleb_resnet152_LM.onnx
+wespeaker_en_voxceleb_resnet221_LM.onnx
+wespeaker_en_voxceleb_resnet293_LM.onnx
+wespeaker_en_voxceleb_resnet34.onnx
+wespeaker_en_voxceleb_resnet34_LM.onnx
+wespeaker_zh_cnceleb_resnet34.onnx
+wespeaker_zh_cnceleb_resnet34_LM.onnx
 )
 for m in ${models[@]}; do
   wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$m
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/wespeaker_en_voxceleb_CAM++_LM.onnx
 done
 ls -lh
 popd
@@ -42,13 +43,13 @@ model_dir=$d/3dspeaker
 mkdir -p $model_dir
 pushd $model_dir
 models=(
-speech_campplus_sv_en_voxceleb_16k.onnx
-speech_campplus_sv_zh-cn_16k-common.onnx
-speech_eres2net_base_200k_sv_zh-cn_16k-common.onnx
-speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
-speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx
-speech_eres2net_sv_en_voxceleb_16k.onnx
-speech_eres2net_sv_zh-cn_16k-common.onnx
+3dspeaker_speech_campplus_sv_en_voxceleb_16k.onnx
+3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx
+3dspeaker_speech_eres2net_base_200k_sv_zh-cn_16k-common.onnx
+3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx
+3dspeaker_speech_eres2net_sv_en_voxceleb_16k.onnx
+3dspeaker_speech_eres2net_sv_zh-cn_16k-common.onnx
 )
 for m in ${models[@]}; do
   wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$m
