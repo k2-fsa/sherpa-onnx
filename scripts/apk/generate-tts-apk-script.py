@@ -109,8 +109,8 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-es-glados-medium"),
         TtsModel(model_dir="vits-piper-es_ES-carlfm-x_low"),
         TtsModel(model_dir="vits-piper-es_ES-davefx-medium"),
-        TtsModel(model_dir="vits-piper-es_ES-mls_10246-low"),
-        TtsModel(model_dir="vits-piper-es_ES-mls_9972-low"),
+        #  TtsModel(model_dir="vits-piper-es_ES-mls_10246-low"),
+        #  TtsModel(model_dir="vits-piper-es_ES-mls_9972-low"),
         TtsModel(model_dir="vits-piper-es_ES-sharvard-medium"),
         TtsModel(model_dir="vits-piper-es_MX-ald-medium"),
         TtsModel(model_dir="vits-piper-fi_FI-harri-low"),
@@ -143,7 +143,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-pl_PL-darkman-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-gosia-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-mc_speech-medium"),
-        TtsModel(model_dir="vits-piper-pl_PL-mls_6892-low"),
+        #  TtsModel(model_dir="vits-piper-pl_PL-mls_6892-low"),
         TtsModel(model_dir="vits-piper-pt_BR-edresson-low"),
         TtsModel(model_dir="vits-piper-pt_BR-faber-medium"),
         TtsModel(model_dir="vits-piper-pt_PT-tugao-medium"),
@@ -169,6 +169,29 @@ def get_piper_models() -> List[TtsModel]:
     for m in models:
         m.data_dir = m.model_dir + "/" + "espeak-ng-data"
         m.model_name = m.model_dir[len("vits-piper-") :] + ".onnx"
+        m.lang = m.model_dir.split("-")[2][:2]
+
+    return models
+
+
+def get_mimic3_models() -> List[TtsModel]:
+    models = [
+        TtsModel(model_dir="vits-mimic3-af_ZA-google-nwu_low"),
+        TtsModel(model_dir="vits-mimic3-bn-multi_low"),
+        TtsModel(model_dir="vits-mimic3-es_ES-m-ailabs_low"),
+        TtsModel(model_dir="vits-mimic3-fa-haaniye_low"),
+        TtsModel(model_dir="vits-mimic3-fi_FI-harri-tapani-ylilammi_low"),
+        TtsModel(model_dir="vits-mimic3-gu_IN-cmu-indic_low"),
+        TtsModel(model_dir="vits-mimic3-hu_HU-diana-majlinger_low"),
+        TtsModel(model_dir="vits-mimic3-ko_KO-kss_low"),
+        TtsModel(model_dir="vits-mimic3-ne_NP-ne-google_low"),
+        TtsModel(model_dir="vits-mimic3-pl_PL-m-ailabs_low"),
+        TtsModel(model_dir="vits-mimic3-tn_ZA-google-nwu_low"),
+        TtsModel(model_dir="vits-mimic3-vi_VN-vais1000_low"),
+    ]
+    for m in models:
+        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+        m.model_name = m.model_dir[len("vits-mimic3-") :] + ".onnx"
         m.lang = m.model_dir.split("-")[2][:2]
 
     return models
@@ -247,6 +270,7 @@ def main():
 
     all_model_list = get_vits_models()
     all_model_list += get_piper_models()
+    all_model_list += get_mimic3_models()
     all_model_list += get_coqui_models()
     convert_lang_to_iso_639_3(all_model_list)
 
