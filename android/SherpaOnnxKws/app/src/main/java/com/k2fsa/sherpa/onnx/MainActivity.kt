@@ -108,9 +108,9 @@ class MainActivity : AppCompatActivity() {
             val status = model.reset(keywords)
             if (!status) {
                 Log.i(TAG, "Failed to reset with keywords.")
-                val message = "Failed to setKeywords :\n ${keywords}, \n"
-                            + "The stream is not reset, \n"
-                            + "please change the keywords and try again."
+                val message = """Failed to setKeywords :\n ${keywords}, \n
+                                 The stream is not reset, \n
+                                 please change the keywords and try again."""
                 Toast.makeText(this, message, Toast.LENGTH_LONG).show();
             }
 
