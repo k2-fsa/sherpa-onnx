@@ -107,6 +107,14 @@ jobs:
           name: release-static
           path: build/bin/*
 
+      - name: Test transducer kws
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-keyword-spotter
+
+          .github/scripts/test-kws.sh
+
       - name: Test online CTC
         shell: bash
         run: |

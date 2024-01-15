@@ -32,52 +32,6 @@ struct TransducerKeywordsResult {
 
   // used only in modified beam_search
   Hypotheses hyps;
-
-  TransducerKeywordsResult() : tokens{}, num_trailing_blanks(0), hyps{} {}
-
-  TransducerKeywordsResult(const TransducerKeywordsResult &other) {
-    *this = other;
-  }
-
-  TransducerKeywordsResult &operator=(const TransducerKeywordsResult &other) {
-    if (this == &other) {
-      return *this;
-    }
-
-    tokens = other.tokens;
-    num_trailing_blanks = other.num_trailing_blanks;
-
-    keyword = other.keyword;
-
-    hyps = other.hyps;
-
-    frame_offset = other.frame_offset;
-    timestamps = other.timestamps;
-
-    return *this;
-  }
-
-  TransducerKeywordsResult(TransducerKeywordsResult &&other) {
-    *this = std::move(other);
-  }
-
-  TransducerKeywordsResult &operator=(TransducerKeywordsResult &&other) {
-    if (this == &other) {
-      return *this;
-    }
-
-    tokens = std::move(other.tokens);
-    num_trailing_blanks = other.num_trailing_blanks;
-
-    keyword = other.keyword;
-
-    hyps = std::move(other.hyps);
-
-    frame_offset = other.frame_offset;
-    timestamps = std::move(other.timestamps);
-
-    return *this;
-  }
 };
 
 class TransducerKeywordsDecoder {

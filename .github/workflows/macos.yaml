@@ -98,6 +98,14 @@ jobs:
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
 
+      - name: Test transducer kws
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-keyword-spotter
+
+          .github/scripts/test-kws.sh
+
       - name: Test online CTC
         shell: bash
         run: |
@@ -105,7 +113,6 @@ jobs:
           export EXE=sherpa-onnx
 
           .github/scripts/test-online-ctc.sh
-
 
       - name: Test offline TTS
         shell: bash
