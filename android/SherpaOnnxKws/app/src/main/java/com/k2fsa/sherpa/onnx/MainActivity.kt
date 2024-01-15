@@ -108,10 +108,7 @@ class MainActivity : AppCompatActivity() {
             val status = model.reset(keywords)
             if (!status) {
                 Log.i(TAG, "Failed to reset with keywords.")
-                val message = """Failed to setKeywords :\n ${keywords}, \n
-                                 The stream is not reset, \n
-                                 please change the keywords and try again."""
-                Toast.makeText(this, message, Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Failed to set keywords.", Toast.LENGTH_LONG).show();
             }
 
             recordingThread = thread(true) {
@@ -193,7 +190,7 @@ class MainActivity : AppCompatActivity() {
         // Please change getModelConfig() to add new models
         // See https://k2-fsa.github.io/sherpa/onnx/kws/pretrained_models/index.html
         // for a list of available models
-        val type = 1
+        val type = 0
         println("Select model type ${type}")
         val config = KeywordSpotterConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
