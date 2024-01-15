@@ -26,7 +26,7 @@ Usage:
 
 (1) Streaming transducer
 
-  ./bin/sherpa-onnx \
+  ./bin/sherpa-onnx-keyword-spotter \
     --tokens=/path/to/tokens.txt \
     --encoder=/path/to/encoder.onnx \
     --decoder=/path/to/decoder.onnx \
@@ -66,7 +66,7 @@ for a list of pre-trained models to download.
     return -1;
   }
 
-  sherpa_onnx::KeywordSpotter keywordspotter(config);
+  sherpa_onnx::KeywordSpotter keyword_spotter(config);
 
   std::vector<Stream> ss;
 
@@ -83,7 +83,7 @@ for a list of pre-trained models to download.
       return -1;
     }
 
-    auto s = keywordspotter.CreateStream();
+    auto s = keyword_spotter.CreateStream();
     s->AcceptWaveform(sampling_rate, samples.data(), samples.size());
 
     std::vector<float> tail_paddings(static_cast<int>(0.8 * sampling_rate));
@@ -101,22 +101,22 @@ for a list of pre-trained models to download.
     ready_streams.clear();
     for (auto &s : ss) {
       const auto p_ss = s.online_stream.get();
-      if (keywordspotter.IsReady(p_ss)) {
+      if (keyword_spotter.IsReady(p_ss)) {
         ready_streams.push_back(p_ss);
       }
       std::ostringstream os;
-      const auto r = keywordspotter.GetResult(p_ss);
+      const auto r = keyword_spotter.GetResult(p_ss);
       if (!r.keyword.empty()) {
         os << s.filename << "\n";
         os << r.AsJsonString() << "\n\n";
-        std::cerr << os.str();
+        fprintf(stderr, "%s", os.str().c_str());
       }
     }
 
     if (ready_streams.empty()) {
       break;
     }
-    keywordspotter.DecodeStreams(ready_streams.data(), ready_streams.size());
+    keyword_spotter.DecodeStreams(ready_streams.data(), ready_streams.size());
   }
   return 0;
 }

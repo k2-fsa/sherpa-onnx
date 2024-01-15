@@ -7,6 +7,7 @@
 #include <assert.h>
 
 #include <algorithm>
+#include <fstream>
 #include <iomanip>
 #include <memory>
 #include <sstream>
@@ -82,7 +83,7 @@ void KeywordSpotterConfig::Register(ParseOptions *po) {
                "The acoustic threshold (probability) to trigger the keywords.");
   po->Register(
       "keywords-file", &keywords_file,
-      "The file containing keywords, one words/phrases per line, and for each"
+      "The file containing keywords, one word/phrase per line, and for each"
       "phrase the bpe/cjkchar are separated by a space. For example: "
       "▁HE LL O ▁WORLD"
       "你 好 世 界");
@@ -91,6 +92,10 @@ void KeywordSpotterConfig::Register(ParseOptions *po) {
 bool KeywordSpotterConfig::Validate() const {
   if (keywords_file.empty()) {
     SHERPA_ONNX_LOGE("Please provide --keywords-file.");
+    return false;
+  }
+  if (!std::ifstream(keywords_file.c_str()).good()) {
+    SHERPA_ONNX_LOGE("Keywords file %s does not exist.", keywords_file.c_str());
     return false;
   }
 
@@ -107,7 +112,7 @@ std::string KeywordSpotterConfig::ToString() const {
   os << "num_trailing_blanks=" << num_trailing_blanks << ", ";
   os << "keywords_score=" << keywords_score << ", ";
   os << "keywords_threshold=" << keywords_threshold << ", ";
-  os << "keywords_file=\"" << keywords_file << "\", ";
+  os << "keywords_file=\"" << keywords_file << "\")";
 
   return os.str();
 }
@@ -128,7 +133,7 @@ std::unique_ptr<OnlineStream> KeywordSpotter::CreateStream() const {
 }
 
 std::unique_ptr<OnlineStream> KeywordSpotter::CreateStream(
-    const std::string& keywords) const {
+    const std::string &keywords) const {
   return impl_->CreateStream(keywords);
 }
 

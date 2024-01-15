@@ -57,7 +57,7 @@ class SherpaOnnxKws(
     fun inputFinished() = inputFinished(ptr)
     fun decode() = decode(ptr)
     fun isReady(): Boolean = isReady(ptr)
-    fun setKeywords(keywords: String): Boolean = setKeywords(ptr, keywords)
+    fun reset(keywords: String): Boolean = reset(ptr, keywords)
 
     val keyword: String
         get() = getKeyword(ptr)
@@ -76,7 +76,7 @@ class SherpaOnnxKws(
     private external fun acceptWaveform(ptr: Long, samples: FloatArray, sampleRate: Int)
     private external fun inputFinished(ptr: Long)
     private external fun getKeyword(ptr: Long): String
-    private external fun setKeywords(ptr: Long, keywords: String): Boolean
+    private external fun reset(ptr: Long, keywords: String): Boolean
     private external fun decode(ptr: Long)
     private external fun isReady(ptr: Long): Boolean
 

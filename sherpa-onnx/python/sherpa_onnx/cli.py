@@ -28,7 +28,9 @@ def cli():
 )
 @click.option(
     "--tokens-type",
-    type=str,
+    type=click.Choice(
+        ["cjkchar", "bpe", "cjkchar+bpe", "fpinyin", "ppinyin"], case_sensitive=True
+    ),
     required=True,
     help="""The type of modeling units, should be cjkchar, bpe, cjkchar+bpe, fpinyin or ppinyin.
     fpinyin means full pinyin, each cjkchar has a pinyin(with tone).

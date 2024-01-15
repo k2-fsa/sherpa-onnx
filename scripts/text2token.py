@@ -48,7 +48,7 @@ def get_args():
         Each line in the texts contains the original phrase, it might also contain some
         extra items, for example, the boosting score (startting with :), the triggering
         threshold (startting with #, only used in keyword spotting task) and the original
-        phrase (startting with @). Note: the extra items will be kept same in the output.
+        phrase (startting with @). Note: extra items will be kept in the output.
 
         example input 1 (tokens_type = ppinyin):
 
@@ -87,6 +87,7 @@ def get_args():
         "--tokens-type",
         type=str,
         required=True,
+        choices=["cjkchar", "bpe", "cjkchar+bpe", "fpinyin", "ppinyin"],
         help="""The type of modeling units, should be cjkchar, bpe, cjkchar+bpe, fpinyin or ppinyin.
         fpinyin means full pinyin, each cjkchar has a pinyin(with tone).
         ppinyin means partial pinyin, it splits pinyin into initial and final,

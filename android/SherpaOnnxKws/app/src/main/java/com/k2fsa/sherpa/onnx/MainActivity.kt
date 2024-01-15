@@ -11,6 +11,7 @@ import android.util.Log
 import android.widget.Button
 import android.widget.EditText
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.k2fsa.sherpa.onnx.*
@@ -96,11 +97,20 @@ class MainActivity : AppCompatActivity() {
             idx = 0
 
             var keywords = inputText.text.toString()
+
             Log.i(TAG, keywords)
             keywords = keywords.replace("\n", "/")
-            val status = model.setKeywords(keywords)
+            // If keywords is a empty string, it just resets the decoding stream
+            // always returns true in this case.
+            // If keywords is not empty, it will create a new decoding stream with
+            // the given keywords appended to the default keywords.
+            // Return false if errors occurs when adding keywords, otherwise true.
+            val status = model.reset(keywords)
             if (!status) {
-                Log.i(TAG, "Failed to setKeywords.")
+                Log.i(TAG, "Failed to reset with keywords.")
+                Toast.makeText(MainActivity.this,
+                "Failed to setKeywords : ${keywords}, The stream is not reset, please try again.",
+                Toast.LENGTH_LONG).show();
             }
 
             recordingThread = thread(true) {
@@ -180,7 +190,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun initModel() {
         // Please change getModelConfig() to add new models
-        // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+        // See https://k2-fsa.github.io/sherpa/onnx/kws/pretrained_models/index.html
         // for a list of available models
         val type = 0
         println("Select model type ${type}")

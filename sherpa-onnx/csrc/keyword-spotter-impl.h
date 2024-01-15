@@ -9,8 +9,12 @@
 #include <string>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/keyword-spotter.h"
-#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 
 namespace sherpa_onnx {
@@ -30,7 +34,7 @@ class KeywordSpotterImpl {
   virtual std::unique_ptr<OnlineStream> CreateStream() const = 0;
 
   virtual std::unique_ptr<OnlineStream> CreateStream(
-      const std::string& keywords) const = 0;
+      const std::string &keywords) const = 0;
 
   virtual bool IsReady(OnlineStream *s) const = 0;
 

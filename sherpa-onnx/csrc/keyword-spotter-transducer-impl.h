@@ -38,7 +38,7 @@ static KeywordResult Convert(const TransducerKeywordsResult &src,
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
   r.keyword = src.keyword;
-  bool from_tokens = src.keyword.size() == 0;
+  bool from_tokens = src.keyword.empty();
 
   for (auto i : src.tokens) {
     auto sym = sym_table[i];
@@ -64,7 +64,7 @@ static KeywordResult Convert(const TransducerKeywordsResult &src,
 
 class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
  public:
-  explicit KeywordSpotterTransducerImpl(const KeywordSpotterConfig &config)
+  KeywordSpotterTransducerImpl(const KeywordSpotterConfig &config)
       : config_(config),
         model_(OnlineTransducerModel::Create(config.model_config)),
         sym_(config.model_config.tokens) {
@@ -116,7 +116,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
 
     if (!EncodeKeywords(is, sym_, &current_ids, &current_kws, &current_scores,
                         &current_thresholds)) {
-      SHERPA_ONNX_LOGE("Encode keywords failed.");
+      SHERPA_ONNX_LOGE("Encode keywords %s failed.", keywords.c_str());
       return nullptr;
     }
 
@@ -254,6 +254,17 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   }
 
  private:
+  void InitKeywords(std::istream &is) {
+    if (!EncodeKeywords(is, sym_, &keywords_id_, &keywords_, &boost_scores_,
+                        &thresholds_)) {
+      SHERPA_ONNX_LOGE("Encode keywords failed.");
+      exit(-1);
+    }
+    keywords_graph_ = std::make_shared<ContextGraph>(
+        keywords_id_, config_.keywords_score, config_.keywords_threshold,
+        boost_scores_, keywords_, thresholds_);
+  }
+
   void InitKeywords() {
     // each line in keywords_file contains space-separated words
 
@@ -263,15 +274,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
                        config_.keywords_file.c_str());
       exit(-1);
     }
-
-    if (!EncodeKeywords(is, sym_, &keywords_id_, &keywords_, &boost_scores_,
-                        &thresholds_)) {
-      SHERPA_ONNX_LOGE("Encode keywords failed.");
-      exit(-1);
-    }
-    keywords_graph_ = std::make_shared<ContextGraph>(
-        keywords_id_, config_.keywords_score, config_.keywords_threshold,
-        boost_scores_, keywords_, thresholds_);
+    InitKeywords(is);
   }
 
 #if __ANDROID_API__ >= 9
@@ -283,19 +286,11 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     std::istrstream is(buf.data(), buf.size());
 
     if (!is) {
-      SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
+      SHERPA_ONNX_LOGE("Open keywords file failed: %s",
                        config_.keywords_file.c_str());
       exit(-1);
     }
-
-    if (!EncodeKeywords(is, sym_, &keywords_id_, &keywords_, &boost_scores_,
-                        &thresholds_)) {
-      SHERPA_ONNX_LOGE("Encode keywords failed.");
-      exit(-1);
-    }
-    keywords_graph_ = std::make_shared<ContextGraph>(
-        keywords_id_, config_.keywords_score, config_.keywords_threshold,
-        boost_scores_, keywords_, thresholds_);
+    InitKeywords(is);
   }
 #endif
 

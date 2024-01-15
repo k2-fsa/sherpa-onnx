@@ -116,8 +116,7 @@ class KeywordSpotter {
    *
    *         "▁I ▁LOVE ▁YOU/▁HE LL O ▁WORLD"
    */
-  std::unique_ptr<OnlineStream> CreateStream(
-      const std::string &keywords) const;
+  std::unique_ptr<OnlineStream> CreateStream(const std::string &keywords) const;
 
   /**
    * Return true if the given stream has enough frames for decoding.

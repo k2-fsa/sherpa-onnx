@@ -32,7 +32,7 @@ mkdir -p apks
 # Download the model
 repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
-if [ ! -d $repo ]; then
+if [ ! -d ./android/SherpaOnnxKws/app/src/main/assets/$repo ]; then
   repo_url=https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.git
   log "Start testing ${repo_url}"
   log "Download pretrained model and test-data from $repo_url"
@@ -75,7 +75,7 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   ./gradlew build
   popd
 
-  mv android/SherpaOnnxKws/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-kws-${SHERPA_ONNX_VERSION}-$arch.apk
+  mv android/SherpaOnnxKws/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-kws-wenetspeech-zh-${SHERPA_ONNX_VERSION}-$arch.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/*.so
 done
@@ -87,7 +87,7 @@ rm -rf ./android/SherpaOnnxKws/app/src/main/assets/$repo
 # English model
 repo=sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01
 
-if [ ! -d $repo ]; then
+if [ ! -d ./android/SherpaOnnxKws/app/src/main/assets/$repo ]; then
   repo_url=https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.git
   log "Start testing ${repo_url}"
   log "Download pretrained model and test-data from $repo_url"
@@ -136,7 +136,7 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   ./gradlew build
   popd
 
-  mv android/SherpaOnnxKws/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-kws-${SHERPA_ONNX_VERSION}-$arch-en.apk
+  mv android/SherpaOnnxKws/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-kws-gigaspeech-en-${SHERPA_ONNX_VERSION}-$arch.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/*.so
 done

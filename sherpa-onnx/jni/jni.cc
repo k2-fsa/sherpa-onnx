@@ -167,13 +167,24 @@ class SherpaOnnxKws {
     stream_->InputFinished();
   }
 
-  bool SetKeywords(const std::string &keywords) {
-    auto stream = keyword_spotter_.CreateStream(keywords);
-    if (stream == nullptr) {
-      return false;
-    } else {
-      stream_ = std::move(stream);
+  // If keywords is a empty string, it just recreate the decoding stream
+  // always returns true in this case.
+  // If keywords is not empty, it will create a new decoding stream with
+  // the given keywords appended to the default keywords.
+  // Return false if errors occurs when adding keywords, otherwise true.
+  bool Reset(const std::string &keywords = {}) {
+    if (keywords.empty()) {
+      stream_ = keyword_spotter_.CreateStream();
       return true;
+    } else {
+      auto stream = keyword_spotter_.CreateStream(keywords);
+      // Set new keywords failed, the stream_ will not be updated.
+      if (stream == nullptr) {
+        return false;
+      } else {
+        stream_ = std::move(stream);
+        return true;
+      }
     }
   }
 
@@ -182,7 +193,7 @@ class SherpaOnnxKws {
     return result.keyword;
   }
 
-  const std::vector<std::string> GetTokens() const {
+  std::vector<std::string> GetTokens() const {
     auto result = keyword_spotter_.GetResult(stream_.get());
     return result.tokens;
   }
@@ -1167,7 +1178,7 @@ JNIEXPORT jobjectArray JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_getTokens(
   jclass stringClass = env->FindClass("java/lang/String");
 
   // convert C++ list into jni string array
-  jobjectArray result = env->NewObjectArray(size, stringClass, NULL);
+  jobjectArray result = env->NewObjectArray(size, stringClass, nullptr);
   for (int32_t i = 0; i < size; i++) {
     // Convert the C++ string to a C string
     const char *cstr = tokens[i].c_str();
@@ -1262,15 +1273,14 @@ JNIEXPORT jstring JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_getKeyword(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_setKeywords(
+JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_reset(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring keywords) {
   const char *p_keywords = env->GetStringUTFChars(keywords, nullptr);
 
   std::string keywords_str = p_keywords;
 
   bool status =
-      reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr)->SetKeywords(
-          keywords_str);
+      reinterpret_cast<sherpa_onnx::SherpaOnnxKws *>(ptr)->Reset(keywords_str);
   env->ReleaseStringUTFChars(keywords, p_keywords);
   return status;
 }
@@ -1285,7 +1295,7 @@ Java_com_k2fsa_sherpa_onnx_SherpaOnnxKws_getTokens(JNIEnv *env, jobject /*obj*/,
   jclass stringClass = env->FindClass("java/lang/String");
 
   // convert C++ list into jni string array
-  jobjectArray result = env->NewObjectArray(size, stringClass, NULL);
+  jobjectArray result = env->NewObjectArray(size, stringClass, nullptr);
   for (int32_t i = 0; i < size; i++) {
     // Convert the C++ string to a C string
     const char *cstr = tokens[i].c_str();
