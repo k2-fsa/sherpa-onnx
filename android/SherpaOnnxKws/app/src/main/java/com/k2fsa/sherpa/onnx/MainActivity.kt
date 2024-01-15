@@ -109,7 +109,10 @@ class MainActivity : AppCompatActivity() {
             if (!status) {
                 Log.i(TAG, "Failed to reset with keywords.")
                 Toast.makeText(this,
-                "Failed to setKeywords : ${keywords}, The stream is not reset, please try again.",
+                """Failed to setKeywords :\n ${keywords}, \n
+                The stream is not reset, \n
+                please change the keywords and try again.
+                """,
                 Toast.LENGTH_LONG).show();
             }
 
