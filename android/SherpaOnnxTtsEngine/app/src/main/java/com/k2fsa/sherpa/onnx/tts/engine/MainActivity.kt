@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -32,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.k2fsa.sherpa.onnx.tts.engine.ui.theme.SherpaOnnxTtsEngineTheme
@@ -65,10 +67,14 @@ class MainActivity : ComponentActivity() {
                                 }
                                 var testText by remember { mutableStateOf("") }
 
-                                OutlinedTextField(value = testText,
+                                OutlinedTextField(
+                                    value = testText,
                                     onValueChange = { testText = it },
-                                            label = { Text ("Test text") },
-                                    modifier = Modifier.fillMaxWidth().wrapContentHeight().padding(16.dp),
+                                    label = { Text("Test text") },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .wrapContentHeight()
+                                        .padding(16.dp),
                                     singleLine = false,
                                 )
 
@@ -76,11 +82,16 @@ class MainActivity : ComponentActivity() {
                                 if (numSpeakers > 1) {
                                     Row {
                                         Text("Speaker ID: (0-${numSpeakers - 1})")
-                                        Slider(
-                                            value = TtsEngine.speakerIdState.value.toFloat(),
-                                            onValueChange = { TtsEngine.speakerId = it.toInt() },
-                                            valueRange = 0.0f..(numSpeakers - 1).toFloat(),
-                                            steps = 1
+                                        OutlinedTextField(
+                                            value = TtsEngine.speakerIdState.value.toString(),
+                                            onValueChange = {
+                                                if (it.isEmpty() || it.isBlank()) {
+                                                    TtsEngine.speakerId = 0
+                                                } else {
+                                                    TtsEngine.speakerId = it.toString().toInt()
+                                                }
+                                            },
+                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                                         )
                                     }
                                 }

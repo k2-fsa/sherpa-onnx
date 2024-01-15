@@ -81,11 +81,11 @@ class TtsService : TextToSpeechService() {
     override fun onLoadLanguage(_lang: String?, _country: String?, _variant: String?): Int {
         val lang = _lang ?: ""
 
-        if (lang == TtsEngine.lang) {
+        return if (lang == TtsEngine.lang) {
             TtsEngine.createTts(application)
-            return TextToSpeech.LANG_AVAILABLE
+            TextToSpeech.LANG_AVAILABLE
         } else {
-            return TextToSpeech.LANG_NOT_SUPPORTED
+            TextToSpeech.LANG_NOT_SUPPORTED
         }
     }
 
