@@ -87,7 +87,7 @@ object TtsEngine {
         // modelDir = "vits-zh-aishell3"
         // modelName = "vits-aishell3.onnx"
         // ruleFsts = "vits-zh-aishell3/rule.fst"
-        // lexcion = "lexicon.txt"
+        // lexicon = "lexicon.txt"
         // lang = "zho"
 
         if (dataDir != null) {
