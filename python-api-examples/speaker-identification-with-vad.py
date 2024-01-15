@@ -2,7 +2,7 @@
 
 """
 This script shows how to use Python APIs for speaker identification with
-a microphone.
+a microphone and a VAD model
 
 Usage:
 
@@ -34,18 +34,26 @@ to download a model. An example is given below:
 
 Note that `zh` means Chinese, while `en` means English.
 
-(3) Run this script
+(3) Download the VAD model
+Please visit
+https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx
+to download silero_vad.onnx
+
+For instance,
+
+wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
+
+(4) Run this script
 
 Assume the filename of the text file is speaker.txt.
 
-python3 ./python-api-examples/speaker-identification.py \
+python3 ./python-api-examples/speaker-identification-with-vad.py \
+  --silero-vad-model=/path/to/silero_vad.onnx \
   --speaker-file ./speaker.txt \
   --model ./wespeaker_zh_cnceleb_resnet34.onnx
 """
 import argparse
-import queue
 import sys
-import threading
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -82,7 +90,14 @@ def get_args():
         "--model",
         type=str,
         required=True,
-        help="Path to the model file.",
+        help="Path to the speaker embedding model file.",
+    )
+
+    parser.add_argument(
+        "--silero-vad-model",
+        type=str,
+        required=True,
+        help="Path to silero_vad.onnx",
     )
 
     parser.add_argument("--threshold", type=float, default=0.6)
@@ -174,19 +189,7 @@ def compute_speaker_embedding(
     return ans / len(filenames)
 
 
-g_buffer = queue.Queue()
-g_stop = False
 g_sample_rate = 16000
-g_read_mic_thread = None
-
-
-def read_mic():
-    print("Please speak!")
-    samples_per_read = int(0.1 * g_sample_rate)  # 0.1 second = 100 ms
-    with sd.InputStream(channels=1, dtype="float32", samplerate=g_sample_rate) as s:
-        while not g_stop:
-            samples, _ = s.read(samples_per_read)  # a blocking read
-            g_buffer.put(samples)
 
 
 def main():
@@ -205,6 +208,17 @@ def main():
         if not status:
             raise RuntimeError(f"Failed to register speaker {name}")
 
+    vad_config = sherpa_onnx.VadModelConfig()
+    vad_config.silero_vad.model = args.silero_vad_model
+    vad_config.silero_vad.min_silence_duration = 0.25
+    vad_config.silero_vad.min_speech_duration = 0.25
+    vad_config.sample_rate = g_sample_rate
+
+    window_size = vad_config.silero_vad.window_size
+    vad = sherpa_onnx.VoiceActivityDetector(vad_config, buffer_size_in_seconds=100)
+
+    samples_per_read = int(0.1 * g_sample_rate)  # 0.1 second = 100 ms
+
     devices = sd.query_devices()
     if len(devices) == 0:
         print("No microphone devices found")
@@ -214,34 +228,39 @@ def main():
     default_input_device_idx = sd.default.device[0]
     print(f'Use default device: {devices[default_input_device_idx]["name"]}')
 
-    global g_stop
-    global g_read_mic_thread
-    while True:
-        key = input("Press Enter to start recording")
-        if key.lower() in ("q", "quit"):
-            g_stop = True
-            break
+    print("Started! Please speak")
 
-        g_stop = False
-        g_buffer.queue.clear()
-        g_read_mic_thread = threading.Thread(target=read_mic)
-        g_read_mic_thread.start()
-        input("Press Enter to stop recording")
-        g_stop = True
-        g_read_mic_thread.join()
-        print("Compute embedding")
-        stream = extractor.create_stream()
-        while not g_buffer.empty():
-            samples = g_buffer.get()
-            stream.accept_waveform(sample_rate=g_sample_rate, waveform=samples)
-        stream.input_finished()
+    idx = 0
+    buffer = []
+    with sd.InputStream(channels=1, dtype="float32", samplerate=g_sample_rate) as s:
+        while True:
+            samples, _ = s.read(samples_per_read)  # a blocking read
+            samples = samples.reshape(-1)
+            buffer = np.concatenate([buffer, samples])
+            while len(buffer) > window_size:
+                vad.accept_waveform(buffer[:window_size])
+                buffer = buffer[window_size:]
 
-        embedding = extractor.compute(stream)
-        embedding = np.array(embedding)
-        name = manager.search(embedding, threshold=args.threshold)
-        if not name:
-            name = "unknown"
-        print(f"Predicted name: {name}")
+            while not vad.empty():
+                if len(vad.front.samples) < 0.5 * g_sample_rate:
+                    # this segment is too short, skip it
+                    vad.pop()
+                    continue
+                stream = extractor.create_stream()
+                stream.accept_waveform(
+                    sample_rate=g_sample_rate, waveform=vad.front.samples
+                )
+                vad.pop()
+                stream.input_finished()
+
+                print("Computing", end="")
+                embedding = extractor.compute(stream)
+                embedding = np.array(embedding)
+                name = manager.search(embedding, threshold=args.threshold)
+                if not name:
+                    name = "unknown"
+                print(f"\r{idx}: Predicted name: {name}")
+                idx += 1
 
 
 if __name__ == "__main__":
@@ -249,6 +268,3 @@ if __name__ == "__main__":
         main()
     except KeyboardInterrupt:
         print("\nCaught Ctrl + C. Exiting")
-        g_stop = True
-        if g_read_mic_thread.is_alive():
-            g_read_mic_thread.join()
