@@ -2,8 +2,6 @@
 //
 // Copyright (c)  2023-2024  Xiaomi Corporation
 
-#include "sherpa-onnx/csrc/transducer-keywords-decoder.h"
-
 #include <algorithm>
 #include <cmath>
 #include <utility>
@@ -11,13 +9,14 @@
 
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/transducer-keyword-decoder.h"
 
 namespace sherpa_onnx {
 
-TransducerKeywordsResult TransducerKeywordsDecoder::GetEmptyResult() const {
+TransducerKeywordResult TransducerKeywordDecoder::GetEmptyResult() const {
   int32_t context_size = model_->ContextSize();
   int32_t blank_id = 0;  // always 0
-  TransducerKeywordsResult r;
+  TransducerKeywordResult r;
   std::vector<int64_t> blanks(context_size, -1);
   blanks.back() = blank_id;
 
@@ -26,17 +25,17 @@ TransducerKeywordsResult TransducerKeywordsDecoder::GetEmptyResult() const {
   return r;
 }
 
-void TransducerKeywordsDecoder::Decode(
+void TransducerKeywordDecoder::Decode(
     Ort::Value encoder_out, OnlineStream **ss,
-    std::vector<TransducerKeywordsResult> *result) {
+    std::vector<TransducerKeywordResult> *result) {
   std::vector<int64_t> encoder_out_shape =
       encoder_out.GetTensorTypeAndShapeInfo().GetShape();
 
   if (encoder_out_shape[0] != result->size()) {
-    fprintf(stderr,
-            "Size mismatch! encoder_out.size(0) %d, result.size(0): %d\n",
-            static_cast<int32_t>(encoder_out_shape[0]),
-            static_cast<int32_t>(result->size()));
+    SHERPA_ONNX_LOGE(
+        "Size mismatch! encoder_out.size(0) %d, result.size(0): %d\n",
+        static_cast<int32_t>(encoder_out_shape[0]),
+        static_cast<int32_t>(result->size()));
     exit(-1);
   }
 

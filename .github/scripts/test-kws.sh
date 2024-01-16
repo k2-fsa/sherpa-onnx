@@ -36,7 +36,7 @@ time $EXE \
   --keywords-file=$repo/test_wavs/test_keywords.txt \
   --max-active-paths=4 \
   --num-threads=4 \
-  $repo/test_wavs/3.wav $reop/test_wavs/4.wav $repo/test_wavs/5.wav $repo/test_wavs/6.wav
+  $repo/test_wavs/3.wav $repo/test_wavs/4.wav $repo/test_wavs/5.wav $repo/test_wavs/6.wav
 
 rm -rf $repo
 
@@ -63,6 +63,6 @@ time $EXE \
   --keywords-file=$repo/test_wavs/test_keywords.txt \
   --max-active-paths=4 \
   --num-threads=4 \
-  $repo/test_wavs/0.wav $reop/test_wavs/1.wav
+  $repo/test_wavs/0.wav $repo/test_wavs/1.wav
 
 rm -rf $repo

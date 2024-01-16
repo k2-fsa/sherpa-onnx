@@ -14,11 +14,11 @@
 #include "sherpa-onnx/csrc/online-ctc-decoder.h"
 #include "sherpa-onnx/csrc/online-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
-#include "sherpa-onnx/csrc/transducer-keywords-decoder.h"
+#include "sherpa-onnx/csrc/transducer-keyword-decoder.h"
 
 namespace sherpa_onnx {
 
-class TransducerKeywordsResult;
+class TransducerKeywordResult;
 class OnlineStream {
  public:
   explicit OnlineStream(const FeatureExtractorConfig &config = {},
@@ -78,8 +78,8 @@ class OnlineStream {
   void SetResult(const OnlineTransducerDecoderResult &r);
   OnlineTransducerDecoderResult &GetResult();
 
-  void SetKeywordResult(const TransducerKeywordsResult &r);
-  TransducerKeywordsResult &GetKeywordResult(bool remove_duplicates = false);
+  void SetKeywordResult(const TransducerKeywordResult &r);
+  TransducerKeywordResult &GetKeywordResult(bool remove_duplicates = false);
 
   void SetCtcResult(const OnlineCtcDecoderResult &r);
   OnlineCtcDecoderResult &GetCtcResult();

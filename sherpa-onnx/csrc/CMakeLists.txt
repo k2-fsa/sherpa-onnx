@@ -89,7 +89,7 @@ set(sources
   stack.cc
   symbol-table.cc
   text-utils.cc
-  transducer-keywords-decoder.cc
+  transducer-keyword-decoder.cc
   transpose.cc
   unbind.cc
   utils.cc

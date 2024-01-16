@@ -2,8 +2,8 @@
 //
 // Copyright (c)  2023-2024  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_TRANSDUCER_KEYWORDS_DECODER_H_
-#define SHERPA_ONNX_CSRC_TRANSDUCER_KEYWORDS_DECODER_H_
+#ifndef SHERPA_ONNX_CSRC_TRANSDUCER_KEYWORD_DECODER_H_
+#define SHERPA_ONNX_CSRC_TRANSDUCER_KEYWORD_DECODER_H_
 
 #include <string>
 #include <utility>
@@ -14,7 +14,7 @@
 
 namespace sherpa_onnx {
 
-struct TransducerKeywordsResult {
+struct TransducerKeywordResult {
   /// Number of frames after subsampling we have decoded so far
   int32_t frame_offset = 0;
 
@@ -34,20 +34,20 @@ struct TransducerKeywordsResult {
   Hypotheses hyps;
 };
 
-class TransducerKeywordsDecoder {
+class TransducerKeywordDecoder {
  public:
-  TransducerKeywordsDecoder(OnlineTransducerModel *model,
-                            int32_t max_active_paths,
-                            int32_t num_trailing_blanks, int32_t unk_id)
+  TransducerKeywordDecoder(OnlineTransducerModel *model,
+                           int32_t max_active_paths,
+                           int32_t num_trailing_blanks, int32_t unk_id)
       : model_(model),
         max_active_paths_(max_active_paths),
         num_trailing_blanks_(num_trailing_blanks),
         unk_id_(unk_id) {}
 
-  TransducerKeywordsResult GetEmptyResult() const;
+  TransducerKeywordResult GetEmptyResult() const;
 
   void Decode(Ort::Value encoder_out, OnlineStream **ss,
-              std::vector<TransducerKeywordsResult> *result);
+              std::vector<TransducerKeywordResult> *result);
 
  private:
   OnlineTransducerModel *model_;  // Not owned
@@ -59,4 +59,4 @@ class TransducerKeywordsDecoder {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_TRANSDUCER_KEYWORDS_DECODER_H_
+#endif  // SHERPA_ONNX_CSRC_TRANSDUCER_KEYWORD_DECODER_H_

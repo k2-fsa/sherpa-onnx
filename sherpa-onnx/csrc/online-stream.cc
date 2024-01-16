@@ -51,10 +51,10 @@ class OnlineStream::Impl {
 
   OnlineTransducerDecoderResult &GetResult() { return result_; }
 
-  void SetKeywordResult(const TransducerKeywordsResult &r) {
+  void SetKeywordResult(const TransducerKeywordResult &r) {
     keyword_result_ = r;
   }
-  TransducerKeywordsResult &GetKeywordResult(bool remove_duplicates) {
+  TransducerKeywordResult &GetKeywordResult(bool remove_duplicates) {
     if (remove_duplicates) {
       if (!prev_keyword_result_.timestamps.empty() &&
           !keyword_result_.timestamps.empty() &&
@@ -112,9 +112,9 @@ class OnlineStream::Impl {
   int32_t start_frame_index_ = 0;     // never reset
   int32_t segment_ = 0;
   OnlineTransducerDecoderResult result_;
-  TransducerKeywordsResult prev_keyword_result_;
-  TransducerKeywordsResult keyword_result_;
-  TransducerKeywordsResult empty_keyword_result_;
+  TransducerKeywordResult prev_keyword_result_;
+  TransducerKeywordResult keyword_result_;
+  TransducerKeywordResult empty_keyword_result_;
   OnlineCtcDecoderResult ctc_result_;
   std::vector<Ort::Value> states_;  // states for transducer or ctc models
   std::vector<float> paraformer_feat_cache_;
@@ -171,11 +171,11 @@ OnlineTransducerDecoderResult &OnlineStream::GetResult() {
   return impl_->GetResult();
 }
 
-void OnlineStream::SetKeywordResult(const TransducerKeywordsResult &r) {
+void OnlineStream::SetKeywordResult(const TransducerKeywordResult &r) {
   impl_->SetKeywordResult(r);
 }
 
-TransducerKeywordsResult &OnlineStream::GetKeywordResult(
+TransducerKeywordResult &OnlineStream::GetKeywordResult(
     bool remove_duplicates /*=false*/) {
   return impl_->GetKeywordResult(remove_duplicates);
 }
