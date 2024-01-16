@@ -64,7 +64,7 @@ static KeywordResult Convert(const TransducerKeywordResult &src,
 
 class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
  public:
-  KeywordSpotterTransducerImpl(const KeywordSpotterConfig &config)
+  explicit KeywordSpotterTransducerImpl(const KeywordSpotterConfig &config)
       : config_(config),
         model_(OnlineTransducerModel::Create(config.model_config)),
         sym_(config.model_config.tokens) {
