@@ -56,45 +56,52 @@ class MainActivity : ComponentActivity() {
                         TopAppBar(title = { Text("Next-gen Kaldi: TTS") })
                     }) {
                         Box(modifier = Modifier.padding(it)) {
-                            Column {
-                                Row {
-                                    Text("Speed")
+                            Column(modifier = Modifier.padding(16.dp)) {
+                                Column {
+                                    Text("Speed " + String.format("%.1f", TtsEngine.speed))
                                     Slider(
                                         value = TtsEngine.speedState.value,
                                         onValueChange = { TtsEngine.speed = it },
-                                        valueRange = 0.2F..3.0F
+                                        valueRange = 0.2F..3.0F,
+                                        modifier = Modifier.fillMaxWidth()
                                     )
                                 }
                                 var testText by remember { mutableStateOf("") }
 
-                                OutlinedTextField(
-                                    value = testText,
-                                    onValueChange = { testText = it },
-                                    label = { Text("Test text") },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .wrapContentHeight()
-                                        .padding(16.dp),
-                                    singleLine = false,
-                                )
 
                                 val numSpeakers = TtsEngine.tts!!.numSpeakers()
                                 if (numSpeakers > 1) {
-                                    Row {
-                                        Text("Speaker ID: (0-${numSpeakers - 1})")
-                                        OutlinedTextField(
-                                            value = TtsEngine.speakerIdState.value.toString(),
-                                            onValueChange = {
-                                                if (it.isEmpty() || it.isBlank()) {
-                                                    TtsEngine.speakerId = 0
-                                                } else {
-                                                    TtsEngine.speakerId = it.toString().toInt()
-                                                }
-                                            },
-                                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                                        )
-                                    }
+                                    OutlinedTextField(
+                                        value = TtsEngine.speakerIdState.value.toString(),
+                                        onValueChange = {
+                                            if (it.isEmpty() || it.isBlank()) {
+                                                TtsEngine.speakerId = 0
+                                            } else {
+                                                TtsEngine.speakerId = it.toString().toInt()
+                                            }
+                                        },
+                                        label = {
+                                            Text("Speaker ID: (0-${numSpeakers - 1})")
+                                        },
+                                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(bottom = 16.dp)
+                                            .wrapContentHeight(),
+                                    )
                                 }
+
+                                OutlinedTextField(
+                                    value = testText,
+                                    onValueChange = { testText = it },
+                                    label = { Text("Please input your text here") },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(bottom = 16.dp)
+                                        .wrapContentHeight(),
+                                    singleLine = false,
+                                )
+
                                 Row {
                                     Button(
                                         modifier = Modifier.padding(20.dp),
