@@ -93,7 +93,7 @@ fun getFeatureConfig(sampleRate: Int, featureDim: Int): FeatureConfig {
 
 /*
 Please see
-https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+https://k2-fsa.github.io/sherpa/onnx/kws/pretrained_models/index.html
 for a list of pre-trained models.
 
 We only add a few here. Please change the following code
@@ -138,4 +138,25 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
 
     }
     return null;
+}
+
+/*
+ * Get the default keywords for each model.
+ * Caution: The types and modelDir should be the same as those in getModelConfig
+ * function above.
+ */ 
+fun getKeywordsFile(type: Int) : String {
+    when (type) {
+        0 -> {
+            val modelDir = "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01"
+            return "$modelDir/keywords.txt",
+        }
+
+        1 -> {
+            val modelDir = "sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01"
+            return "$modelDir/keywords.txt",
+        }
+
+    }
+    return "";
 }

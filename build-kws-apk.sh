@@ -42,6 +42,7 @@ if [ ! -d ./android/SherpaOnnxKws/app/src/main/assets/$repo ]; then
 
   # remove .git to save spaces
   rm -rf .git
+  rm *.int8.onnx
   rm README.md configuration.json .gitattributes
   rm -rfv test_wavs
   ls -lh
@@ -49,10 +50,6 @@ if [ ! -d ./android/SherpaOnnxKws/app/src/main/assets/$repo ]; then
 
   mv -v $repo ./android/SherpaOnnxKws/app/src/main/assets/
 fi
-
-pushd ./android/SherpaOnnxKws/app/src/main/assets/
-cp $repo/keywords.txt .
-popd
 
 tree ./android/SherpaOnnxKws/app/src/main/assets/
 
@@ -105,10 +102,6 @@ if [ ! -d ./android/SherpaOnnxKws/app/src/main/assets/$repo ]; then
 
   mv -v $repo ./android/SherpaOnnxKws/app/src/main/assets/
 fi
-
-pushd ./android/SherpaOnnxKws/app/src/main/assets/
-cp $repo/keywords.txt .
-popd
 
 tree ./android/SherpaOnnxKws/app/src/main/assets/
 

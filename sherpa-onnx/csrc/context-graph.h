@@ -35,7 +35,7 @@ struct ContextState {
   ContextState() = default;
   ContextState(int32_t token, float token_score, float node_score,
                float output_score, int32_t level = 0, float ac_threshold = 0.0f,
-               bool is_end = false, const std::string phrase = {})
+               bool is_end = false, const std::string &phrase = {})
       : token(token),
         token_score(token_score),
         node_score(node_score),

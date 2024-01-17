@@ -80,8 +80,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   }
 
 #if __ANDROID_API__ >= 9
-  explicit KeywordSpotterTransducerImpl(AAssetManager *mgr,
-                                        const KeywordSpotterConfig &config)
+  KeywordSpotterTransducerImpl(AAssetManager *mgr,
+                               const KeywordSpotterConfig &config)
       : config_(config),
         model_(OnlineTransducerModel::Create(mgr, config.model_config)),
         sym_(mgr, config.model_config.tokens) {

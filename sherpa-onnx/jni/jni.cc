@@ -167,11 +167,11 @@ class SherpaOnnxKws {
     stream_->InputFinished();
   }
 
-  // If keywords is a empty string, it just recreate the decoding stream
+  // If keywords is an empty string, it just recreates the decoding stream
   // always returns true in this case.
   // If keywords is not empty, it will create a new decoding stream with
   // the given keywords appended to the default keywords.
-  // Return false if errors occurs when adding keywords, otherwise true.
+  // Return false if errors occurred when adding keywords, true otherwise.
   bool Reset(const std::string &keywords = {}) {
     if (keywords.empty()) {
       stream_ = keyword_spotter_.CreateStream();

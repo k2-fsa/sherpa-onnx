@@ -83,6 +83,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun onclick() {
         if (!isRecording) {
+            var keywords = inputText.text.toString()
+
+            Log.i(TAG, keywords)
+            keywords = keywords.replace("\n", "/")
+            // If keywords is an empty string, it just resets the decoding stream
+            // always returns true in this case.
+            // If keywords is not empty, it will create a new decoding stream with
+            // the given keywords appended to the default keywords.
+            // Return false if errors occured when adding keywords, true otherwise.
+            val status = model.reset(keywords)
+            if (!status) {
+                Log.i(TAG, "Failed to reset with keywords.")
+                Toast.makeText(this, "Failed to set keywords.", Toast.LENGTH_LONG).show();
+                return
+            }
+
             val ret = initMicrophone()
             if (!ret) {
                 Log.e(TAG, "Failed to initialize microphone")
@@ -95,21 +111,6 @@ class MainActivity : AppCompatActivity() {
             textView.text = ""
             lastText = ""
             idx = 0
-
-            var keywords = inputText.text.toString()
-
-            Log.i(TAG, keywords)
-            keywords = keywords.replace("\n", "/")
-            // If keywords is a empty string, it just resets the decoding stream
-            // always returns true in this case.
-            // If keywords is not empty, it will create a new decoding stream with
-            // the given keywords appended to the default keywords.
-            // Return false if errors occurs when adding keywords, otherwise true.
-            val status = model.reset(keywords)
-            if (!status) {
-                Log.i(TAG, "Failed to reset with keywords.")
-                Toast.makeText(this, "Failed to set keywords.", Toast.LENGTH_LONG).show();
-            }
 
             recordingThread = thread(true) {
                 processSamples()
@@ -191,10 +192,11 @@ class MainActivity : AppCompatActivity() {
         // See https://k2-fsa.github.io/sherpa/onnx/kws/pretrained_models/index.html
         // for a list of available models
         val type = 0
-        println("Select model type ${type}")
+        Log.i(TAG, "Select model type ${type}")
         val config = KeywordSpotterConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
             modelConfig = getModelConfig(type = type)!!,
+            keywordsFile = getKeywordsFile(type = type)!!,
         )
 
         model = SherpaOnnxKws(
