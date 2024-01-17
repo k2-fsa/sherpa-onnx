@@ -149,12 +149,12 @@ fun getKeywordsFile(type: Int) : String {
     when (type) {
         0 -> {
             val modelDir = "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01"
-            return "$modelDir/keywords.txt",
+            return "$modelDir/keywords.txt"
         }
 
         1 -> {
             val modelDir = "sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01"
-            return "$modelDir/keywords.txt",
+            return "$modelDir/keywords.txt"
         }
 
     }
