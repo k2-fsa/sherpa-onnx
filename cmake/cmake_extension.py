@@ -151,6 +151,7 @@ class BuildExtension(build_ext):
         # Remember to also change setup.py
 
         binaries = ["sherpa-onnx"]
+        binaries += ["sherpa-onnx-keyword-spotter"]
         binaries += ["sherpa-onnx-offline"]
         binaries += ["sherpa-onnx-microphone"]
         binaries += ["sherpa-onnx-microphone-offline"]

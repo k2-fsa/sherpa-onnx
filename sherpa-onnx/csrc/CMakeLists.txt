@@ -19,6 +19,8 @@ set(sources
   features.cc
   file-utils.cc
   hypothesis.cc
+  keyword-spotter-impl.cc
+  keyword-spotter.cc
   offline-ctc-fst-decoder-config.cc
   offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
@@ -87,6 +89,7 @@ set(sources
   stack.cc
   symbol-table.cc
   text-utils.cc
+  transducer-keyword-decoder.cc
   transpose.cc
   unbind.cc
   utils.cc
@@ -173,12 +176,14 @@ if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
 endif()
 
 add_executable(sherpa-onnx sherpa-onnx.cc)
+add_executable(sherpa-onnx-keyword-spotter sherpa-onnx-keyword-spotter.cc)
 add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
 add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
 add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
 
 set(main_exes
   sherpa-onnx
+  sherpa-onnx-keyword-spotter
   sherpa-onnx-offline
   sherpa-onnx-offline-parallel
   sherpa-onnx-offline-tts
