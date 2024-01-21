@@ -104,6 +104,10 @@ class SpeakerEmbeddingManager::Impl {
     return true;
   }
 
+  bool Contains(const std::string &name) const {
+    return name2row_.count(name) > 0;
+  }
+
   int32_t NumSpeakers() const { return embedding_matrix_.rows(); }
 
  private:
@@ -139,6 +143,10 @@ bool SpeakerEmbeddingManager::Verify(const std::string &name, const float *p,
 
 int32_t SpeakerEmbeddingManager::NumSpeakers() const {
   return impl_->NumSpeakers();
+}
+
+bool SpeakerEmbeddingManager::Contains(const std::string &name) const {
+  return impl_->Contains(name);
 }
 
 }  // namespace sherpa_onnx

@@ -18,6 +18,12 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
            py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("num_speakers", &PyClass::NumSpeakers)
       .def(
+          "__contains__",
+          [](const PyClass &self, const std::string &name) -> bool {
+            return self.Contains(name);
+          },
+          py::arg("name"), py::call_guard<py::gil_scoped_release>())
+      .def(
           "add",
           [](const PyClass &self, const std::string &name,
              const std::vector<float> &v) -> bool {
