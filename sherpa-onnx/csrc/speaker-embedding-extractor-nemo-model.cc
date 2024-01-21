@@ -28,6 +28,19 @@ class SpeakerEmbeddingExtractorNeMoModel::Impl {
     }
   }
 
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_ERROR),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    {
+      auto buf = ReadFile(mgr, config.model);
+      Init(buf.data(), buf.size());
+    }
+  }
+#endif
+
   Ort::Value Compute(Ort::Value x, Ort::Value x_lens) const {
     std::array<Ort::Value, 2> inputs = {std::move(x), std::move(x_lens)};
 
@@ -105,6 +118,12 @@ class SpeakerEmbeddingExtractorNeMoModel::Impl {
 SpeakerEmbeddingExtractorNeMoModel::SpeakerEmbeddingExtractorNeMoModel(
     const SpeakerEmbeddingExtractorConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+SpeakerEmbeddingExtractorNeMoModel::SpeakerEmbeddingExtractorNeMoModel(
+    AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
 
 SpeakerEmbeddingExtractorNeMoModel::~SpeakerEmbeddingExtractorNeMoModel() =
     default;

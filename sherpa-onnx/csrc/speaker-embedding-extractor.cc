@@ -55,6 +55,12 @@ SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
     const SpeakerEmbeddingExtractorConfig &config)
     : impl_(SpeakerEmbeddingExtractorImpl::Create(config)) {}
 
+#if __ANDROID_API__ >= 9
+SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
+    AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config)
+    : impl_(SpeakerEmbeddingExtractorImpl::Create(mgr, config)) {}
+#endif
+
 SpeakerEmbeddingExtractor::~SpeakerEmbeddingExtractor() = default;
 
 int32_t SpeakerEmbeddingExtractor::Dim() const { return impl_->Dim(); }
