@@ -27,6 +27,7 @@
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
@@ -207,6 +208,51 @@ class SherpaOnnxKws {
   std::unique_ptr<OnlineStream> stream_;
   int32_t input_sample_rate_ = -1;
 };
+
+class SherpaOnnxSpeakerEmbeddingExtractor {
+ public:
+#if __ANDROID_API__ >= 9
+  SherpaOnnxSpeakerEmbeddingExtractor(
+      AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config)
+      : extractor_(mgr, config), stream_(extractor_.CreateStream()) {}
+#endif
+
+  explicit SherpaOnnxSpeakerEmbeddingExtractor(
+      const SpeakerEmbeddingExtractorConfig &config)
+      : extractor_(config), stream_(extractor_.CreateStream()) {}
+
+  int32_t Dim() const { return extractor_.Dim(); }
+
+  bool IsReady() const { return extractor_.IsReady(stream_.get()); }
+
+  std::vector<float> Compute() const {
+    return extractor_.Compute(stream_.get());
+  }
+
+  void Reset() { stream_ = extractor_.CreateStream(); }
+
+  void InputFinished() const { stream_->InputFinished(); }
+
+ private:
+  SpeakerEmbeddingExtractor extractor_;
+  std::unique_ptr<OnlineStream> stream_;
+};
+
+static SpeakerEmbeddingExtractorConfig GetSpeakerEmbeddingExtractorConfig(
+    JNIEnv *env, jobject config) {
+  SpeakerEmbeddingExtractorConfig ans;
+
+  jclass cls = env->GetObjectClass(config);
+
+  jfieldID fid = env->GetFieldID(cls, "model", "Ljava/lang/String;");
+  jstring s = (jstring)env->GetObjectField(config, fid);
+  const char *p = env->GetStringUTFChars(s, nullptr);
+
+  ans.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  return ans;
+}
 
 static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   OnlineRecognizerConfig ans;
@@ -772,6 +818,32 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
 }  // namespace sherpa_onnx
 
 SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL
+Java_com_k2fsa_sherpa_onnx_speaker_identification_SpeakerEmbeddingExtractor_new(
+    JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
+#if __ANDROID_API__ >= 9
+  AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
+  if (!mgr) {
+    SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+  }
+#endif
+  auto config = sherpa_onnx::GetSpeakerEmbeddingExtractorConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
+  if (!config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+  }
+
+  auto tts = new sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractor(
+#if __ANDROID_API__ >= 9
+      mgr,
+#endif
+      config);
+
+  return (jlong)tts;
+}
+
+SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_new(
     JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
 #if __ANDROID_API__ >= 9
@@ -784,7 +856,7 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_new(
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
   if (!config.Validate()) {
-    SHERPA_ONNX_LOGE("Erros found in config!");
+    SHERPA_ONNX_LOGE("Errors found in config!");
   }
 
   auto tts = new sherpa_onnx::SherpaOnnxOfflineTts(
