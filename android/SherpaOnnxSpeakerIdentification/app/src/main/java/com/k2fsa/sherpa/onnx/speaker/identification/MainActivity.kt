@@ -1,6 +1,10 @@
 package com.k2fsa.sherpa.onnx.speaker.identification
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Column
@@ -21,6 +25,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -33,7 +38,11 @@ import com.k2fsa.sherpa.onnx.speaker.identification.screens.RegisterScreen
 import com.k2fsa.sherpa.onnx.speaker.identification.screens.ViewScreen
 import com.k2fsa.sherpa.onnx.speaker.identification.ui.theme.SherpaOnnxSpeakerIdentificationTheme
 
+const val TAG = "sherpa-onnx-speaker"
+private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
+
 class MainActivity : ComponentActivity() {
+    private val permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -47,6 +56,35 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
+    }
+
+    @Deprecated("Deprecated in Java")
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        val permissionToRecordAccepted = if (requestCode == REQUEST_RECORD_AUDIO_PERMISSION) {
+            grantResults[0] == PackageManager.PERMISSION_GRANTED
+        } else {
+            false
+        }
+
+        if (!permissionToRecordAccepted) {
+            Log.e(TAG, "Audio record is disallowed")
+            Toast.makeText(
+                this,
+                "This App needs access to the microphone",
+                Toast.LENGTH_SHORT
+            )
+                .show()
+            finish()
+        }
+
+        Log.i(TAG, "Audio record is permitted")
     }
 }
 

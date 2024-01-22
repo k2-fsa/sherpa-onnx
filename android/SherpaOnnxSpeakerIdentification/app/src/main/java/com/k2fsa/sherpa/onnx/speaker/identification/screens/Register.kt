@@ -1,14 +1,204 @@
 package com.k2fsa.sherpa.onnx.speaker.identification.screens
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioRecord
+import android.media.AudioTrack
+import android.media.MediaRecorder
+import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.core.app.ActivityCompat
+import com.k2fsa.sherpa.onnx.speaker.identification.R
+import com.k2fsa.sherpa.onnx.speaker.identification.TAG
+import kotlin.concurrent.thread
+
+private var audioRecord: AudioRecord? = null
+
+private var sampleList: MutableList<FloatArray>? = null
+
+@Preview
+@Composable
+fun RegisterScreen(modifier: Modifier = Modifier) {
+    val activity = LocalContext.current as Activity
+
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        var speakerName by remember { mutableStateOf("") }
+        val onSpeakerNameChange = { newName: String -> speakerName = newName }
+
+        var isStarted by remember { mutableStateOf(false) }
+        val onRecordButtonClick: () -> Unit = {
+            isStarted = !isStarted
+
+            if (isStarted) {
+                if (ActivityCompat.checkSelfPermission(
+                        activity,
+                        Manifest.permission.RECORD_AUDIO
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    Log.i(TAG, "Recording is not allowed")
+                } else {
+                    // recording is allowed
+                    val audioSource = MediaRecorder.AudioSource.MIC
+                    val sampleRateInHz = 16000
+                    val channelConfig = AudioFormat.CHANNEL_IN_MONO
+                    val audioFormat = AudioFormat.ENCODING_PCM_16BIT
+                    val numBytes =
+                        AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat)
+
+                    audioRecord = AudioRecord(
+                        audioSource,
+                        sampleRateInHz,
+                        AudioFormat.CHANNEL_IN_MONO,
+                        AudioFormat.ENCODING_PCM_16BIT,
+                        numBytes * 2 // a sample has two bytes as we are using 16-bit PCM
+                    )
+
+                    sampleList = null
+
+                    // recording is started here
+                    thread(true) {
+                        Log.i(TAG, "processing samples")
+
+                        val interval = 0.1 // i.e., 100 ms
+                        val bufferSize = (interval * sampleRateInHz).toInt() // in samples
+                        val buffer = ShortArray(bufferSize)
+                        audioRecord?.let {
+                            it.startRecording()
+
+                            while (isStarted) {
+                                val ret = audioRecord?.read(buffer, 0, buffer.size)
+                                ret?.let { n ->
+                                    val samples = FloatArray(n) { buffer[it] / 32768.0f }
+                                    if (sampleList == null) {
+                                        sampleList = mutableListOf(samples)
+                                    } else {
+                                        sampleList?.add(samples)
+                                    }
+                                }
+                            }
+                        }
+
+                        Log.i(TAG, "Recording is stopped. ${sampleList?.count()}")
+                    }
+                }
+            } else {
+                // recording is stopped here
+                audioRecord?.stop()
+                audioRecord?.release()
+                audioRecord = null
+
+                Log.i(TAG, "Start to play the recorded samples")
+                val sampleRate = 16000
+                val bufLength = AudioTrack.getMinBufferSize(
+                    sampleRate,
+                    AudioFormat.CHANNEL_OUT_MONO,
+                    AudioFormat.ENCODING_PCM_FLOAT
+                )
+                Log.i(TAG, "sampleRate: ${sampleRate}, buffLength: ${bufLength}")
+
+                val attr =
+                    AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .build()
+
+                val format = AudioFormat.Builder()
+                    .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .setSampleRate(sampleRate)
+                    .build()
+
+                val track = AudioTrack(
+                    attr, format, bufLength, AudioTrack.MODE_STREAM,
+                    AudioManager.AUDIO_SESSION_ID_GENERATE
+                )
+                track.play()
+
+                for (samples in sampleList!!) {
+                    track.write(samples, 0, samples.size, AudioTrack.WRITE_BLOCKING)
+                }
+                track.stop()
+                track.release()
+                Log.i(TAG, "released audio track")
+
+                // play the recorded audio to check that the recording is working
+            }
+        }
+
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            SpeakerNameRow(speakerName = speakerName, onValueChange = onSpeakerNameChange)
+            RegisterSpeakerButtonRow(
+                modifier,
+                isStarted = isStarted,
+                onButtonClick = onRecordButtonClick,
+            )
+        }
+    }
+}
 
 @Composable
-fun RegisterScreen() {
-    Box(modifier= Modifier.fillMaxSize()) {
-        Text("Register")
+fun SpeakerNameRow(
+    modifier: Modifier = Modifier,
+    speakerName: String,
+    onValueChange: (String) -> Unit
+) {
+    OutlinedTextField(
+        value = speakerName,
+        onValueChange = onValueChange,
+        label = {
+            Text("Please input the speaker name")
+        },
+        singleLine = true,
+        modifier = modifier.fillMaxWidth().padding(8.dp)
+    )
+}
+
+@Composable
+fun RegisterSpeakerButtonRow(
+    modifier: Modifier = Modifier,
+    isStarted: Boolean,
+    onButtonClick: () -> Unit,
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center,
+    ) {
+        Button(onClick = onButtonClick) {
+            Text(text = stringResource(if (isStarted) R.string.stop else R.string.start))
+        }
+
+        Spacer(modifier = Modifier.width(24.dp))
+
+        Button(onClick = {}) {
+            Text(text = stringResource(id = R.string.add))
+        }
     }
 }
