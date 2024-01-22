@@ -4,13 +4,11 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.PackageManager
-import android.media.AudioAttributes
 import android.media.AudioFormat
-import android.media.AudioManager
 import android.media.AudioRecord
-import android.media.AudioTrack
 import android.media.MediaRecorder
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
+import com.k2fsa.sherpa.onnx.SpeakerRecognition
 import com.k2fsa.sherpa.onnx.speaker.identification.R
 import com.k2fsa.sherpa.onnx.speaker.identification.TAG
 import kotlin.concurrent.thread
@@ -45,9 +44,9 @@ private var audioRecord: AudioRecord? = null
 
 private var sampleList: MutableList<FloatArray>? = null
 
-private var allSampleList: MutableList<MutableList<FloatArray>>? = null
+private var embeddingList: MutableList<FloatArray>? = null
 
-private var number = 0
+val sampleRateInHz = 16000
 
 @SuppressLint("UnrememberedMutableState")
 @Preview
@@ -59,11 +58,10 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
     if (firstTime) {
         firstTime = false
         // clear states
-
-        number = 0
+        embeddingList = null
     }
 
-    var numberAudio by mutableStateOf(number)
+    val numberAudio: Int by mutableStateOf(embeddingList?.count() ?: 0)
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -73,7 +71,7 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
         val onSpeakerNameChange = { newName: String -> speakerName = newName }
 
         var isStarted by remember { mutableStateOf(false) }
-        val onRecordButtonClick: () -> Unit = {
+        val onRecordingButtonClick: () -> Unit = {
             isStarted = !isStarted
 
             if (isStarted) {
@@ -86,7 +84,6 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
                 } else {
                     // recording is allowed
                     val audioSource = MediaRecorder.AudioSource.MIC
-                    val sampleRateInHz = 16000
                     val channelConfig = AudioFormat.CHANNEL_IN_MONO
                     val audioFormat = AudioFormat.ENCODING_PCM_16BIT
                     val numBytes =
@@ -127,7 +124,6 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
 
                         Log.i(TAG, "Recording is stopped. ${sampleList?.count()}")
 
-                        ++number
                     }
                 }
             } else {
@@ -136,40 +132,59 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
                 audioRecord?.release()
                 audioRecord = null
 
-                Log.i(TAG, "Start to play the recorded samples")
-                val sampleRate = 16000
-                val bufLength = AudioTrack.getMinBufferSize(
-                    sampleRate,
-                    AudioFormat.CHANNEL_OUT_MONO,
-                    AudioFormat.ENCODING_PCM_FLOAT
-                )
-                Log.i(TAG, "sampleRate: ${sampleRate}, buffLength: ${bufLength}")
-
-                val attr =
-                    AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .build()
-
-                val format = AudioFormat.Builder()
-                    .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
-                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                    .setSampleRate(sampleRate)
-                    .build()
-
-                val track = AudioTrack(
-                    attr, format, bufLength, AudioTrack.MODE_STREAM,
-                    AudioManager.AUDIO_SESSION_ID_GENERATE
-                )
-                track.play()
-
-                for (samples in sampleList!!) {
-                    track.write(samples, 0, samples.size, AudioTrack.WRITE_BLOCKING)
+                sampleList?.let {
+                    val stream = SpeakerRecognition.extractor.createStream()
+                    for (samples in it) {
+                        stream.acceptWaveform(samples=samples, sampleRate=sampleRateInHz)
+                    }
+                    stream.inputFinished()
+                    if(SpeakerRecognition.extractor.isReady(stream)) {
+                        val embedding = SpeakerRecognition.extractor.compute(stream)
+                        if(embeddingList == null) {
+                            embeddingList = mutableListOf(embedding)
+                        } else {
+                            embeddingList?.add(embedding)
+                        }
+                    }
                 }
-                track.stop()
-                track.release()
-                Log.i(TAG, "released audio track")
+            }
+        }
 
-                // play the recorded audio to check that the recording is working
+        val onAddButtonClick: () -> Unit = {
+            if(speakerName.isEmpty() || speakerName.isBlank()) {
+                Toast.makeText(
+                    activity,
+                    "please input a speaker name",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else if(SpeakerRecognition.manager.contains(speakerName.trim())) {
+                Toast.makeText(
+                    activity,
+                    "A speaker with $speakerName already exists. Please choose a new name",
+                    Toast.LENGTH_SHORT
+                ).show()
+            } else {
+                val ok = SpeakerRecognition.manager.add(speakerName.trim(), embedding = embeddingList!!.toTypedArray())
+                if(ok) {
+                    Log.i(TAG, "Added ${speakerName.trim()} successfully")
+                    Toast.makeText(
+                        activity,
+                        "Added ${speakerName.trim()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    embeddingList = null
+                    sampleList = null
+                    speakerName = ""
+                    firstTime = true
+                } else {
+                    Log.i(TAG, "Failed to add ${speakerName.trim()}")
+                    Toast.makeText(
+                        activity,
+                        "Failed to add ${speakerName.trim()}",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }
 
@@ -184,7 +199,8 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
             RegisterSpeakerButtonRow(
                 modifier,
                 isStarted = isStarted,
-                onButtonClick = onRecordButtonClick,
+                onRecordingButtonClick = onRecordingButtonClick,
+                onAddButtonClick = onAddButtonClick,
             )
         }
     }
@@ -209,23 +225,29 @@ fun SpeakerNameRow(
     )
 }
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun RegisterSpeakerButtonRow(
     modifier: Modifier = Modifier,
     isStarted: Boolean,
-    onButtonClick: () -> Unit,
+    onRecordingButtonClick: () -> Unit,
+    onAddButtonClick: () -> Unit,
 ) {
+    val numberAudio: Int by mutableStateOf(embeddingList?.count() ?: 0)
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.Center,
     ) {
-        Button(onClick = onButtonClick) {
+        Button(onClick = onRecordingButtonClick) {
             Text(text = stringResource(if (isStarted) R.string.stop else R.string.start))
         }
 
         Spacer(modifier = Modifier.width(24.dp))
 
-        Button(onClick = {}) {
+        Button(
+            enabled = numberAudio > 0,
+            onClick = onAddButtonClick,
+        ) {
             Text(text = stringResource(id = R.string.add))
         }
     }

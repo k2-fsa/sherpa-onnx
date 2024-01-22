@@ -32,6 +32,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.k2fsa.sherpa.onnx.SpeakerRecognition
 import com.k2fsa.sherpa.onnx.speaker.identification.screens.HelpScreen
 import com.k2fsa.sherpa.onnx.speaker.identification.screens.HomeScreen
 import com.k2fsa.sherpa.onnx.speaker.identification.screens.RegisterScreen
@@ -59,6 +60,7 @@ class MainActivity : ComponentActivity() {
 
         ActivityCompat.requestPermissions(this, permissions, REQUEST_RECORD_AUDIO_PERMISSION)
 
+        SpeakerRecognition.initExtractor(this.assets)
     }
 
     @Deprecated("Deprecated in Java")

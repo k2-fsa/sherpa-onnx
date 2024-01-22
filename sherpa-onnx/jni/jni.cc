@@ -234,7 +234,7 @@ class SherpaOnnxSpeakerEmbeddingExtractor {
 #if __ANDROID_API__ >= 9
   SherpaOnnxSpeakerEmbeddingExtractor(
       AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config)
-      : extractor_(mgr, config), stream_(extractor_.CreateStream()) {}
+      : extractor_(mgr, config) {}
 #endif
 
   explicit SherpaOnnxSpeakerEmbeddingExtractor(
@@ -865,11 +865,7 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_new(JNIEnv *env,
   }
 #endif
   auto config = sherpa_onnx::GetSpeakerEmbeddingExtractorConfig(env, _config);
-  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
-
-  if (!config.Validate()) {
-    SHERPA_ONNX_LOGE("Errors found in config!");
-  }
+  SHERPA_ONNX_LOGE("new config:\n%s", config.ToString().c_str());
 
   auto extractor = new sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractor(
 #if __ANDROID_API__ >= 9
@@ -885,7 +881,7 @@ JNIEXPORT jlong JNICALL
 Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
   auto config = sherpa_onnx::GetSpeakerEmbeddingExtractorConfig(env, _config);
-  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  SHERPA_ONNX_LOGE("newFromFile config:\n%s", config.ToString().c_str());
 
   if (!config.Validate()) {
     SHERPA_ONNX_LOGE("Errors found in config!");
@@ -1160,7 +1156,7 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_numSpeakers(JNIEnv *env,
                                                                jobject /*obj*/,
                                                                jlong ptr) {
   auto manager = reinterpret_cast<sherpa_onnx::SpeakerEmbeddingManager *>(ptr);
-  return manager->Dim();
+  return manager->NumSpeakers();
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -1174,10 +1170,6 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_new(
 #endif
   auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
-
-  if (!config.Validate()) {
-    SHERPA_ONNX_LOGE("Errors found in config!");
-  }
 
   auto tts = new sherpa_onnx::SherpaOnnxOfflineTts(
 #if __ANDROID_API__ >= 9

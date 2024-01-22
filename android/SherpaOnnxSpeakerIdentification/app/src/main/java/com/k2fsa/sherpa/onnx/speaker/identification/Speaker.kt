@@ -1,6 +1,8 @@
 package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
+import android.util.Log
+import com.k2fsa.sherpa.onnx.speaker.identification.TAG
 
 
 data class SpeakerEmbeddingExtractorConfig(
@@ -11,7 +13,8 @@ data class SpeakerEmbeddingExtractorConfig(
 )
 
 class SpeakerEmbeddingExtractorStream(var ptr: Long) {
-    fun acceptWaveform(samples: FloatArray, sampleRate: Int) = acceptWaveform(ptr, samples, sampleRate)
+    fun acceptWaveform(samples: FloatArray, sampleRate: Int) =
+        acceptWaveform(ptr, samples, sampleRate)
 
     fun inputFinished() = inputFinished(ptr)
 
@@ -28,6 +31,7 @@ class SpeakerEmbeddingExtractorStream(var ptr: Long) {
     private external fun inputFinished(ptr: Long)
 
     private external fun delete(ptr: Long)
+
     companion object {
         init {
             System.loadLibrary("sherpa-onnx-jni")
@@ -108,7 +112,9 @@ class SpeakerEmbeddingManager(val dim: Int) {
     fun add(name: String, embedding: Array<FloatArray>) = addList(ptr, name, embedding)
     fun remove(name: String) = remove(ptr, name)
     fun search(embedding: FloatArray, threshold: Float) = search(ptr, embedding, threshold)
-    fun verify(name: String, embedding: FloatArray, threshold: Float) = verify(ptr, name, embedding, threshold)
+    fun verify(name: String, embedding: FloatArray, threshold: Float) =
+        verify(ptr, name, embedding, threshold)
+
     fun contains(name: String) = contains(ptr, name)
     fun numSpeakers() = numSpeakers(ptr)
 
@@ -118,13 +124,62 @@ class SpeakerEmbeddingManager(val dim: Int) {
     private external fun addList(ptr: Long, name: String, embedding: Array<FloatArray>): Boolean
     private external fun remove(ptr: Long, name: String): Boolean
     private external fun search(ptr: Long, embedding: FloatArray, threshold: Float): String
-    private external fun verify(ptr: Long, name: String, embedding: FloatArray, threshold: Float): Boolean
+    private external fun verify(
+        ptr: Long,
+        name: String,
+        embedding: FloatArray,
+        threshold: Float
+    ): Boolean
+
     private external fun contains(ptr: Long, name: String): Boolean
     private external fun numSpeakers(ptr: Long): Int
 
     companion object {
         init {
             System.loadLibrary("sherpa-onnx-jni")
+        }
+    }
+}
+
+// Please download the model file from
+// https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
+// and put it inside the assets directory.
+//
+// Please don't put it in a subdirectory of assets
+private val modelName = "3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx"
+
+object SpeakerRecognition {
+    var _extractor: SpeakerEmbeddingExtractor? = null
+    var _manager: SpeakerEmbeddingManager? = null
+
+    val extractor: SpeakerEmbeddingExtractor
+        get() {
+            return _extractor!!
+        }
+
+    val manager: SpeakerEmbeddingManager
+        get() {
+            return _manager!!
+        }
+
+    fun initExtractor(assetManager: AssetManager? = null) {
+        synchronized(this) {
+            if (_extractor != null) {
+                return
+            }
+            Log.i(TAG, "Initializing speaker embedding extractor")
+
+            _extractor = SpeakerEmbeddingExtractor(
+                assetManager = assetManager,
+                config = SpeakerEmbeddingExtractorConfig(
+                    model = modelName,
+                    numThreads = 2,
+                    debug = false,
+                    provider = "cpu",
+                )
+            )
+
+            _manager = SpeakerEmbeddingManager(dim=_extractor!!.dim())
         }
     }
 }
