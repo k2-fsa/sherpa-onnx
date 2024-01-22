@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "Eigen/Dense"
+#include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
@@ -29,6 +30,51 @@ class SpeakerEmbeddingManager::Impl {
     std::copy(p, p + dim_, &embedding_matrix_.bottomRows(1)(0, 0));
 
     embedding_matrix_.bottomRows(1).normalize();  // inplace
+
+    name2row_[name] = embedding_matrix_.rows() - 1;
+    row2name_[embedding_matrix_.rows() - 1] = name;
+
+    return true;
+  }
+
+  bool Add(const std::string &name,
+           const std::vector<std::vector<float>> &embedding_list) {
+    if (name2row_.count(name)) {
+      // a speaker with the same name already exists
+      return false;
+    }
+
+    if (embedding_list.empty()) {
+      SHERPA_ONNX_LOGE("Empty list of embeddings");
+      return false;
+    }
+
+    for (const auto &x : embedding_list) {
+      if (x.size() != dim_) {
+        SHERPA_ONNX_LOGE("Given dim: %d, expected dim: %d",
+                         static_cast<int32_t>(x.size()), dim_);
+        return false;
+      }
+    }
+
+    // compute the average
+    Eigen::VectorXf v = Eigen::Map<Eigen::VectorXf>(
+        const_cast<float *>(embedding_list[0].data()), dim_);
+    int32_t i = -1;
+    for (const auto &x : embedding_list) {
+      ++i;
+      if (i == 0) {
+        continue;
+      }
+      v += Eigen::Map<Eigen::VectorXf>(const_cast<float *>(x.data()), dim_);
+    }
+
+    // no need to compute the mean since we are going to normalize it anyway
+    /* v /= embedding_list.size(); */
+    v.normalize();
+
+    embedding_matrix_.conservativeResize(embedding_matrix_.rows() + 1, dim_);
+    embedding_matrix_.bottomRows(1) = v;
 
     name2row_[name] = embedding_matrix_.rows() - 1;
     row2name_[embedding_matrix_.rows() - 1] = name;
@@ -125,6 +171,12 @@ SpeakerEmbeddingManager::~SpeakerEmbeddingManager() = default;
 bool SpeakerEmbeddingManager::Add(const std::string &name,
                                   const float *p) const {
   return impl_->Add(name, p);
+}
+
+bool SpeakerEmbeddingManager::Add(
+    const std::string &name,
+    const std::vector<std::vector<float>> &embedding_list) const {
+  return impl_->Add(name, embedding_list);
 }
 
 bool SpeakerEmbeddingManager::Remove(const std::string &name) const {
