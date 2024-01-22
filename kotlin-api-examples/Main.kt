@@ -7,9 +7,41 @@ fun callback(samples: FloatArray): Unit {
 }
 
 fun main() {
+  testSpeakerRecognition()
   testTts()
   testAsr("transducer")
   testAsr("zipformer2-ctc")
+}
+
+fun computeEmbedding(extractor: SpeakerEmbeddingExtractor, filename: String): FloatArray {
+    var objArray = WaveReader.readWaveFromFile(
+        filename = filename,
+    )
+    var samples: FloatArray = objArray[0] as FloatArray
+    var sampleRate: Int = objArray[1] as Int
+
+    val stream = extractor.createStream()
+    stream.acceptWaveform(sampleRate = sampleRate, samples=samples)
+    stream.inputFinished()
+    check(extractor.isReady(stream))
+
+    val embedding = extractor.compute(stream)
+
+    stream.release()
+
+    return embedding
+}
+
+fun testSpeakerRecognition() {
+    val config = SpeakerEmbeddingExtractorConfig(
+        model="./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx",
+        )
+    val extractor = SpeakerEmbeddingExtractor(config = config)
+
+    val embedding1a = computeEmbedding(extractor, "./speaker1_a_cn_16k.wav")
+    val embedding2a = computeEmbedding(extractor, "./speaker2_a_cn_16k.wav")
+    val embedding1b = computeEmbedding(extractor, "./speaker1_b_cn_16k.wav")
+    println(embedding1a.count())
 }
 
 fun testTts() {

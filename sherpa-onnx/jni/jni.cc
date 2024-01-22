@@ -209,6 +209,25 @@ class SherpaOnnxKws {
   int32_t input_sample_rate_ = -1;
 };
 
+class SherpaOnnxSpeakerEmbeddingExtractorStream {
+ public:
+  explicit SherpaOnnxSpeakerEmbeddingExtractorStream(
+      std::unique_ptr<OnlineStream> stream)
+      : stream_(std::move(stream)) {}
+
+  void AcceptWaveform(int32_t sample_rate, const float *samples,
+                      int32_t n) const {
+    stream_->AcceptWaveform(sample_rate, samples, n);
+  }
+
+  void InputFinished() const { stream_->InputFinished(); }
+
+  OnlineStream *Get() const { return stream_.get(); }
+
+ private:
+  std::unique_ptr<OnlineStream> stream_;
+};
+
 class SherpaOnnxSpeakerEmbeddingExtractor {
  public:
 #if __ANDROID_API__ >= 9
@@ -219,23 +238,26 @@ class SherpaOnnxSpeakerEmbeddingExtractor {
 
   explicit SherpaOnnxSpeakerEmbeddingExtractor(
       const SpeakerEmbeddingExtractorConfig &config)
-      : extractor_(config), stream_(extractor_.CreateStream()) {}
+      : extractor_(config) {}
 
   int32_t Dim() const { return extractor_.Dim(); }
 
-  bool IsReady() const { return extractor_.IsReady(stream_.get()); }
-
-  std::vector<float> Compute() const {
-    return extractor_.Compute(stream_.get());
+  bool IsReady(const SherpaOnnxSpeakerEmbeddingExtractorStream *stream) const {
+    return extractor_.IsReady(stream->Get());
   }
 
-  void Reset() { stream_ = extractor_.CreateStream(); }
+  SherpaOnnxSpeakerEmbeddingExtractorStream *CreateStream() const {
+    return new SherpaOnnxSpeakerEmbeddingExtractorStream(
+        extractor_.CreateStream());
+  }
 
-  void InputFinished() const { stream_->InputFinished(); }
+  std::vector<float> Compute(
+      const SherpaOnnxSpeakerEmbeddingExtractorStream *stream) const {
+    return extractor_.Compute(stream->Get());
+  }
 
  private:
   SpeakerEmbeddingExtractor extractor_;
-  std::unique_ptr<OnlineStream> stream_;
 };
 
 static SpeakerEmbeddingExtractorConfig GetSpeakerEmbeddingExtractorConfig(
@@ -249,6 +271,18 @@ static SpeakerEmbeddingExtractorConfig GetSpeakerEmbeddingExtractorConfig(
   const char *p = env->GetStringUTFChars(s, nullptr);
 
   ans.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(cls, "numThreads", "I");
+  ans.num_threads = env->GetIntField(config, fid);
+
+  fid = env->GetFieldID(cls, "debug", "Z");
+  ans.debug = env->GetBooleanField(config, fid);
+
+  fid = env->GetFieldID(cls, "provider", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.provider = p;
   env->ReleaseStringUTFChars(s, p);
 
   return ans;
@@ -819,8 +853,10 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
-Java_com_k2fsa_sherpa_onnx_speaker_identification_SpeakerEmbeddingExtractor_new(
-    JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_new(JNIEnv *env,
+                                                         jobject /*obj*/,
+                                                         jobject asset_manager,
+                                                         jobject _config) {
 #if __ANDROID_API__ >= 9
   AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
   if (!mgr) {
@@ -834,13 +870,111 @@ Java_com_k2fsa_sherpa_onnx_speaker_identification_SpeakerEmbeddingExtractor_new(
     SHERPA_ONNX_LOGE("Errors found in config!");
   }
 
-  auto tts = new sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractor(
+  auto extractor = new sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractor(
 #if __ANDROID_API__ >= 9
       mgr,
 #endif
       config);
 
-  return (jlong)tts;
+  return (jlong)extractor;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_newFromFile(
+    JNIEnv *env, jobject /*obj*/, jobject _config) {
+  auto config = sherpa_onnx::GetSpeakerEmbeddingExtractorConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
+  if (!config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+  }
+
+  auto extractor = new sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractor(config);
+
+  return (jlong)extractor;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_delete(JNIEnv *env,
+                                                            jobject /*obj*/,
+                                                            jlong ptr) {
+  delete reinterpret_cast<sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractor *>(
+      ptr);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_createStream(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  auto stream =
+      reinterpret_cast<sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractor *>(ptr)
+          ->CreateStream();
+
+  return (jlong)stream;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jboolean JNICALL
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_isReady(JNIEnv *env,
+                                                             jobject /*obj*/,
+                                                             jlong ptr,
+                                                             jlong stream_ptr) {
+  auto extractor =
+      reinterpret_cast<sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractor *>(ptr);
+  auto stream = reinterpret_cast<
+      sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractorStream *>(stream_ptr);
+  return extractor->IsReady(stream);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jfloatArray JNICALL
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_compute(JNIEnv *env,
+                                                             jobject /*obj*/,
+                                                             jlong ptr,
+                                                             jlong stream_ptr) {
+  auto extractor =
+      reinterpret_cast<sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractor *>(ptr);
+  auto stream = reinterpret_cast<
+      sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractorStream *>(stream_ptr);
+
+  std::vector<float> embedding = extractor->Compute(stream);
+  jfloatArray embedding_arr = env->NewFloatArray(embedding.size());
+  env->SetFloatArrayRegion(embedding_arr, 0, embedding.size(),
+                           embedding.data());
+  return embedding_arr;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractorStream_delete(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  delete reinterpret_cast<
+      sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractorStream *>(ptr);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractorStream_acceptWaveform(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jfloatArray samples,
+    jint sample_rate) {
+  auto stream = reinterpret_cast<
+      sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractorStream *>(ptr);
+
+  jfloat *p = env->GetFloatArrayElements(samples, nullptr);
+  jsize n = env->GetArrayLength(samples);
+  stream->AcceptWaveform(sample_rate, p, n);
+  env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractorStream_inputFinished(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  auto stream = reinterpret_cast<
+      sherpa_onnx::SherpaOnnxSpeakerEmbeddingExtractorStream *>(ptr);
+  stream->InputFinished();
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -873,6 +1007,11 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
   auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
+  if (!config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors found in config!");
+  }
+
   auto tts = new sherpa_onnx::SherpaOnnxOfflineTts(config);
 
   return (jlong)tts;

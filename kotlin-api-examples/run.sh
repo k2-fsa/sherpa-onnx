@@ -29,6 +29,22 @@ export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
 
 cd ../kotlin-api-examples
 
+if [ ! -f ./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx ]; then
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx
+fi
+
+if [ ! -f ./speaker1_a_cn_16k.wav ]; then
+  wget -q https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_a_cn_16k.wav
+fi
+
+if [ ! -f ./speaker1_b_cn_16k.wav ]; then
+  wget -q https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_b_cn_16k.wav
+fi
+
+if [ ! -f ./speaker2_a_cn_16k.wav ]; then
+  wget -q https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker2_a_cn_16k.wav
+fi
+
 if [ ! -f ./sherpa-onnx-streaming-zipformer-en-2023-02-21/tokens.txt ]; then
   git lfs install
   git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21
@@ -46,7 +62,7 @@ if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
   rm vits-piper-en_US-amy-low.tar.bz2
 fi
 
-kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt faked-asset-manager.kt Tts.kt
+kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt faked-asset-manager.kt Tts.kt Speaker.kt
 
 ls -lh main.jar
 

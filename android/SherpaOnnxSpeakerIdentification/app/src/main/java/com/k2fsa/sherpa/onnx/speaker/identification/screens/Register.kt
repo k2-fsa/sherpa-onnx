@@ -1,6 +1,7 @@
 package com.k2fsa.sherpa.onnx.speaker.identification.screens
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.pm.PackageManager
 import android.media.AudioAttributes
@@ -20,6 +21,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
@@ -42,10 +45,25 @@ private var audioRecord: AudioRecord? = null
 
 private var sampleList: MutableList<FloatArray>? = null
 
+private var allSampleList: MutableList<MutableList<FloatArray>>? = null
+
+private var number = 0
+
+@SuppressLint("UnrememberedMutableState")
 @Preview
 @Composable
 fun RegisterScreen(modifier: Modifier = Modifier) {
     val activity = LocalContext.current as Activity
+
+    var firstTime by remember { mutableStateOf(true) }
+    if (firstTime) {
+        firstTime = false
+        // clear states
+
+        number = 0
+    }
+
+    var numberAudio by mutableStateOf(number)
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -108,6 +126,8 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
                         }
 
                         Log.i(TAG, "Recording is stopped. ${sampleList?.count()}")
+
+                        ++number
                     }
                 }
             } else {
@@ -155,6 +175,12 @@ fun RegisterScreen(modifier: Modifier = Modifier) {
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             SpeakerNameRow(speakerName = speakerName, onValueChange = onSpeakerNameChange)
+            Text(
+                "Number of recordings: ${numberAudio}",
+                modifier = modifier.padding(24.dp),
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold,
+            )
             RegisterSpeakerButtonRow(
                 modifier,
                 isStarted = isStarted,
@@ -177,7 +203,9 @@ fun SpeakerNameRow(
             Text("Please input the speaker name")
         },
         singleLine = true,
-        modifier = modifier.fillMaxWidth().padding(8.dp)
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp)
     )
 }
 
