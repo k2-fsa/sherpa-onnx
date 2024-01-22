@@ -58,7 +58,7 @@ class SpeakerEmbeddingManager::Impl {
     }
 
     // compute the average
-    Eigen::VectorXf v = Eigen::Map<Eigen::VectorXf>(
+    Eigen::RowVectorXf v = Eigen::Map<Eigen::RowVectorXf>(
         const_cast<float *>(embedding_list[0].data()), dim_);
     int32_t i = -1;
     for (const auto &x : embedding_list) {
@@ -66,11 +66,12 @@ class SpeakerEmbeddingManager::Impl {
       if (i == 0) {
         continue;
       }
-      v += Eigen::Map<Eigen::VectorXf>(const_cast<float *>(x.data()), dim_);
+      v += Eigen::Map<Eigen::RowVectorXf>(const_cast<float *>(x.data()), dim_);
     }
 
     // no need to compute the mean since we are going to normalize it anyway
-    /* v /= embedding_list.size(); */
+    // v /= embedding_list.size();
+
     v.normalize();
 
     embedding_matrix_.conservativeResize(embedding_matrix_.rows() + 1, dim_);
@@ -156,6 +157,8 @@ class SpeakerEmbeddingManager::Impl {
 
   int32_t NumSpeakers() const { return embedding_matrix_.rows(); }
 
+  int32_t Dim() const { return dim_; }
+
  private:
   int32_t dim_;
   FloatMatrix embedding_matrix_;
@@ -196,6 +199,8 @@ bool SpeakerEmbeddingManager::Verify(const std::string &name, const float *p,
 int32_t SpeakerEmbeddingManager::NumSpeakers() const {
   return impl_->NumSpeakers();
 }
+
+int32_t SpeakerEmbeddingManager::Dim() const { return impl_->Dim(); }
 
 bool SpeakerEmbeddingManager::Contains(const std::string &name) const {
   return impl_->Contains(name);

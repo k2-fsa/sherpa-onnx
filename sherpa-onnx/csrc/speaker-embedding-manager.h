@@ -79,6 +79,8 @@ class SpeakerEmbeddingManager {
 
   int32_t NumSpeakers() const;
 
+  int32_t Dim() const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;
