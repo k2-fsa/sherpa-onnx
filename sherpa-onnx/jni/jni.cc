@@ -1160,6 +1160,27 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_numSpeakers(JNIEnv *env,
 }
 
 SHERPA_ONNX_EXTERN_C
+JNIEXPORT jobjectArray JNICALL
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_allSpeakerNames(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  auto manager = reinterpret_cast<sherpa_onnx::SpeakerEmbeddingManager *>(ptr);
+  std::vector<std::string> all_speakers = manager->GetAllSpeakers();
+
+  jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
+      all_speakers.size(), env->FindClass("java/lang/String"), nullptr);
+
+  int32_t i = 0;
+  for (auto &s : all_speakers) {
+    jstring js = env->NewStringUTF(s.c_str());
+    env->SetObjectArrayElement(obj_arr, i, js);
+
+    ++i;
+  }
+
+  return obj_arr;
+}
+
+SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_new(
     JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
 #if __ANDROID_API__ >= 9

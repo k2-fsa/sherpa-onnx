@@ -81,6 +81,9 @@ class SpeakerEmbeddingManager {
 
   int32_t Dim() const;
 
+  // Return a list of speaker names
+  std::vector<std::string> GetAllSpeakers() const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

@@ -118,6 +118,8 @@ class SpeakerEmbeddingManager(val dim: Int) {
     fun contains(name: String) = contains(ptr, name)
     fun numSpeakers() = numSpeakers(ptr)
 
+    fun allSpeakerNames() = allSpeakerNames(ptr)
+
     private external fun new(dim: Int): Long
     private external fun delete(ptr: Long): Unit
     private external fun add(ptr: Long, name: String, embedding: FloatArray): Boolean
@@ -133,6 +135,8 @@ class SpeakerEmbeddingManager(val dim: Int) {
 
     private external fun contains(ptr: Long, name: String): Boolean
     private external fun numSpeakers(ptr: Long): Int
+
+    private external fun allSpeakerNames(ptr: Long): Array<String>
 
     companion object {
         init {
@@ -179,7 +183,7 @@ object SpeakerRecognition {
                 )
             )
 
-            _manager = SpeakerEmbeddingManager(dim=_extractor!!.dim())
+            _manager = SpeakerEmbeddingManager(dim = _extractor!!.dim())
         }
     }
 }
