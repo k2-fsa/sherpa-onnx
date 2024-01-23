@@ -17,16 +17,13 @@ log "------------------------------------------------------------"
 log "Run Chinese keyword spotting (Wenetspeech）"
 log "------------------------------------------------------------"
 
-repo_url=https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.git
+repo_url=https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
 log "Start testing ${repo_url}"
 repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
-log "Download pretrained model and test-data from $repo_url"
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+log "Download pretrained model and test-data from $repo_url"
+wget $repo_url
+tar jxvf ${repo}.tar.bz
 
 time $EXE \
   --tokens=$repo/tokens.txt \
@@ -39,21 +36,19 @@ time $EXE \
   $repo/test_wavs/3.wav $repo/test_wavs/4.wav $repo/test_wavs/5.wav $repo/test_wavs/6.wav
 
 rm -rf $repo
+rm -rf ${repo}.tar.bz
 
 log "------------------------------------------------------------"
 log "Run English keyword spotting (Gigaspeech）"
 log "------------------------------------------------------------"
 
-repo_url=https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.git
+repo_url=https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
 log "Start testing ${repo_url}"
 repo=sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01
-log "Download pretrained model and test-data from $repo_url"
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+log "Download pretrained model and test-data from $repo_url"
+wget $repo_url
+tar jxvf ${ropo}.tar.bz
 
 time $EXE \
   --tokens=$repo/tokens.txt \
@@ -66,3 +61,4 @@ time $EXE \
   $repo/test_wavs/0.wav $repo/test_wavs/1.wav
 
 rm -rf $repo
+rm -rf ${repo}.tar.bz
