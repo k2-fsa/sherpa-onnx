@@ -58,6 +58,7 @@ void PybindOfflineModelConfig(py::module *m) {
       .def_readwrite("debug", &PyClass::debug)
       .def_readwrite("provider", &PyClass::provider)
       .def_readwrite("model_type", &PyClass::model_type)
+      .def("validate", &PyClass::Validate)
       .def("__str__", &PyClass::ToString);
 }
 

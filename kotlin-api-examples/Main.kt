@@ -7,8 +7,65 @@ fun callback(samples: FloatArray): Unit {
 }
 
 fun main() {
+  testSpeakerRecognition()
   testTts()
-  testAsr()
+  testAsr("transducer")
+  testAsr("zipformer2-ctc")
+}
+
+fun computeEmbedding(extractor: SpeakerEmbeddingExtractor, filename: String): FloatArray {
+    var objArray = WaveReader.readWaveFromFile(
+        filename = filename,
+    )
+    var samples: FloatArray = objArray[0] as FloatArray
+    var sampleRate: Int = objArray[1] as Int
+
+    val stream = extractor.createStream()
+    stream.acceptWaveform(sampleRate = sampleRate, samples=samples)
+    stream.inputFinished()
+    check(extractor.isReady(stream))
+
+    val embedding = extractor.compute(stream)
+
+    stream.release()
+
+    return embedding
+}
+
+fun testSpeakerRecognition() {
+    val config = SpeakerEmbeddingExtractorConfig(
+        model="./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx",
+        )
+    val extractor = SpeakerEmbeddingExtractor(config = config)
+
+    val embedding1a = computeEmbedding(extractor, "./speaker1_a_cn_16k.wav")
+    val embedding2a = computeEmbedding(extractor, "./speaker2_a_cn_16k.wav")
+    val embedding1b = computeEmbedding(extractor, "./speaker1_b_cn_16k.wav")
+
+    var manager = SpeakerEmbeddingManager(extractor.dim())
+    var ok = manager.add(name = "speaker1", embedding=embedding1a)
+    check(ok)
+
+    manager.add(name = "speaker2", embedding=embedding2a)
+    check(ok)
+
+    var name = manager.search(embedding=embedding1b, threshold=0.5f)
+    check(name == "speaker1")
+
+    manager.release()
+
+    manager = SpeakerEmbeddingManager(extractor.dim())
+    val embeddingList = mutableListOf(embedding1a, embedding1b)
+    ok = manager.add(name = "s1", embedding=embeddingList.toTypedArray())
+    check(ok)
+
+    name = manager.search(embedding=embedding1b, threshold=0.5f)
+    check(name == "s1")
+
+    name = manager.search(embedding=embedding2a, threshold=0.5f)
+    check(name.length == 0)
+
+    manager.release()
 }
 
 fun testTts() {
@@ -30,25 +87,43 @@ fun testTts() {
   audio.save(filename="test-en.wav")
 }
 
-fun testAsr() {
+fun testAsr(type: String) {
     var featConfig = FeatureConfig(
         sampleRate = 16000,
         featureDim = 80,
     )
 
-    // please refer to
-    // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
-    // to dowload pre-trained models
-    var modelConfig = OnlineModelConfig(
-        transducer = OnlineTransducerModelConfig(
-            encoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/encoder-epoch-99-avg-1.onnx",
-            decoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/decoder-epoch-99-avg-1.onnx",
-            joiner = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/joiner-epoch-99-avg-1.onnx",
-        ),
-        tokens = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/tokens.txt",
-        numThreads = 1,
-        debug = false,
-    )
+    var waveFilename: String
+    var modelConfig: OnlineModelConfig = when (type) {
+      "transducer" -> {
+        waveFilename = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/test_wavs/0.wav"
+        // please refer to
+        // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+        // to dowload pre-trained models
+        OnlineModelConfig(
+            transducer = OnlineTransducerModelConfig(
+                encoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/encoder-epoch-99-avg-1.onnx",
+                decoder = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/decoder-epoch-99-avg-1.onnx",
+                joiner = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/joiner-epoch-99-avg-1.onnx",
+            ),
+            tokens = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/tokens.txt",
+            numThreads = 1,
+            debug = false,
+        )
+      }
+      "zipformer2-ctc" -> {
+        waveFilename = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000000.wav"
+        OnlineModelConfig(
+            zipformer2Ctc = OnlineZipformer2CtcModelConfig(
+                model = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.onnx",
+            ),
+            tokens = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt",
+            numThreads = 1,
+            debug = false,
+        )
+      }
+      else -> throw IllegalArgumentException(type)
+    }
 
     var endpointConfig = EndpointConfig()
 
@@ -69,7 +144,7 @@ fun testAsr() {
     )
 
     var objArray = WaveReader.readWaveFromFile(
-        filename = "./sherpa-onnx-streaming-zipformer-en-2023-02-21/test_wavs/0.wav",
+        filename = waveFilename,
     )
     var samples: FloatArray = objArray[0] as FloatArray
     var sampleRate: Int = objArray[1] as Int

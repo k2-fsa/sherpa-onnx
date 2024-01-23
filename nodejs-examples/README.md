@@ -85,7 +85,7 @@ npm install wav naudiodon2
 how to decode a file with a NeMo CTC model. In the code we use
 [stt_en_conformer_ctc_small](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/nemo/english.html#stt-en-conformer-ctc-small).
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-conformer-small.tar.bz2
@@ -99,7 +99,7 @@ node ./test-offline-nemo-ctc.js
 how to decode a file with a non-streaming Paraformer model. In the code we use
 [sherpa-onnx-paraformer-zh-2023-03-28](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-03-28-chinese).
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
@@ -113,7 +113,7 @@ node ./test-offline-paraformer.js
 how to decode a file with a non-streaming transducer model. In the code we use
 [sherpa-onnx-zipformer-en-2023-06-26](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/zipformer-transducer-models.html#csukuangfj-sherpa-onnx-zipformer-en-2023-06-26-english).
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
@@ -126,7 +126,7 @@ node ./test-offline-transducer.js
 how to decode a file with a Whisper model. In the code we use
 [sherpa-onnx-whisper-tiny.en](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html).
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
@@ -140,7 +140,7 @@ demonstrates how to do real-time speech recognition from microphone
 with a streaming Paraformer model. In the code we use
 [sherpa-onnx-streaming-paraformer-bilingual-zh-en](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-streaming-paraformer-bilingual-zh-en-chinese-english).
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
@@ -153,7 +153,7 @@ node ./test-online-paraformer-microphone.js
 how to decode a file using a streaming Paraformer model. In the code we use
 [sherpa-onnx-streaming-paraformer-bilingual-zh-en](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-streaming-paraformer-bilingual-zh-en-chinese-english).
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
@@ -167,7 +167,7 @@ demonstrates how to do real-time speech recognition with microphone using a stre
 we use [sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/zipformer-transducer-models.html#csukuangfj-sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-bilingual-chinese-english).
 
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
@@ -180,12 +180,25 @@ node ./test-online-transducer-microphone.js
 how to decode a file using a streaming transducer model. In the code
 we use [sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/zipformer-transducer-models.html#csukuangfj-sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20-bilingual-chinese-english).
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 node ./test-online-transducer.js
+```
+
+## ./test-online-zipformer2-ctc.js
+[./test-online-zipformer2-ctc.js](./test-online-zipformer2-ctc.js) demonstrates
+how to decode a file using a streaming zipformer2 CTC model. In the code
+we use [sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-ctc/zipformer-ctc-models.html#sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13-chinese).
+
+You can use the following command to run it:
+
+```bash
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+node ./test-online-zipformer2-ctc.js
 ```
 
 ## ./test-vad-microphone-offline-paraformer.js
@@ -194,7 +207,7 @@ node ./test-online-transducer.js
 demonstrates how to use [silero-vad](https://github.com/snakers4/silero-vad)
 with non-streaming Paraformer for speech recognition from microphone.
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
@@ -209,7 +222,7 @@ node ./test-vad-microphone-offline-paraformer.js
 demonstrates how to use [silero-vad](https://github.com/snakers4/silero-vad)
 with a non-streaming transducer model for speech recognition from microphone.
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
@@ -224,7 +237,7 @@ node ./test-vad-microphone-offline-transducer.js
 demonstrates how to use [silero-vad](https://github.com/snakers4/silero-vad)
 with whisper for speech recognition from microphone.
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
@@ -238,7 +251,7 @@ node ./test-vad-microphone-offline-whisper.js
 [./test-vad-microphone.js](./test-vad-microphone.js)
 demonstrates how to use [silero-vad](https://github.com/snakers4/silero-vad).
 
-You can use the following command run it:
+You can use the following command to run it:
 
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx

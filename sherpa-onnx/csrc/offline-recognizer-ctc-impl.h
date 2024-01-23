@@ -5,7 +5,9 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CTC_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_CTC_IMPL_H_
 
+#include <ios>
 #include <memory>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -42,6 +44,15 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
     }
     auto sym = sym_table[src.tokens[i]];
     text.append(sym);
+
+    if (sym.size() == 1 && sym[0] != ' ') {
+      // for byte bpe models
+      std::ostringstream os;
+      os << "<0x" << std::hex << std::uppercase
+         << (static_cast<int32_t>(sym[0]) & 0xff) << ">";
+      sym = os.str();
+    }
+
     r.tokens.push_back(std::move(sym));
   }
   r.text = std::move(text);

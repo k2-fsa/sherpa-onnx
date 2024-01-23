@@ -49,12 +49,17 @@ void OnlineCtcGreedySearchDecoder::Decode(
 
       if (y != blank_id_ && y != prev_id) {
         r.tokens.push_back(y);
-        r.timestamps.push_back(t);
+        r.timestamps.push_back(t + r.frame_offset);
       }
 
       prev_id = y;
     }  // for (int32_t t = 0; t != num_frames; ++t) {
   }    // for (int32_t b = 0; b != batch_size; ++b)
+
+  // Update frame_offset
+  for (auto &r : *results) {
+    r.frame_offset += num_frames;
+  }
 }
 
 }  // namespace sherpa_onnx

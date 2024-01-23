@@ -6,6 +6,9 @@ from typing import List, Optional
 
 import jinja2
 
+# pip install iso639-lang
+from iso639 import Lang
+
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -31,6 +34,12 @@ class TtsModel:
     lang: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
     data_dir: Optional[str] = None
+    lang_iso_639_3: str = ""
+
+
+def convert_lang_to_iso_639_3(models: List[TtsModel]):
+    for m in models:
+        m.lang_iso_639_3 = Lang(m.lang).pt3
 
 
 def get_coqui_models() -> List[TtsModel]:
@@ -100,10 +109,11 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-es-glados-medium"),
         TtsModel(model_dir="vits-piper-es_ES-carlfm-x_low"),
         TtsModel(model_dir="vits-piper-es_ES-davefx-medium"),
-        TtsModel(model_dir="vits-piper-es_ES-mls_10246-low"),
-        TtsModel(model_dir="vits-piper-es_ES-mls_9972-low"),
+        #  TtsModel(model_dir="vits-piper-es_ES-mls_10246-low"),
+        #  TtsModel(model_dir="vits-piper-es_ES-mls_9972-low"),
         TtsModel(model_dir="vits-piper-es_ES-sharvard-medium"),
         TtsModel(model_dir="vits-piper-es_MX-ald-medium"),
+        TtsModel(model_dir="vits-piper-fa_IR-amir-medium"),
         TtsModel(model_dir="vits-piper-fi_FI-harri-low"),
         TtsModel(model_dir="vits-piper-fi_FI-harri-medium"),
         TtsModel(model_dir="vits-piper-fr_FR-siwis-low"),
@@ -134,7 +144,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-pl_PL-darkman-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-gosia-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-mc_speech-medium"),
-        TtsModel(model_dir="vits-piper-pl_PL-mls_6892-low"),
+        #  TtsModel(model_dir="vits-piper-pl_PL-mls_6892-low"),
         TtsModel(model_dir="vits-piper-pt_BR-edresson-low"),
         TtsModel(model_dir="vits-piper-pt_BR-faber-medium"),
         TtsModel(model_dir="vits-piper-pt_PT-tugao-medium"),
@@ -143,6 +153,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-ru_RU-dmitri-medium"),
         TtsModel(model_dir="vits-piper-ru_RU-irina-medium"),
         TtsModel(model_dir="vits-piper-ru_RU-ruslan-medium"),
+        TtsModel(model_dir="vits-piper-sl_SI-artur-medium"),
         TtsModel(model_dir="vits-piper-sk_SK-lili-medium"),
         TtsModel(model_dir="vits-piper-sr_RS-serbski_institut-medium"),
         TtsModel(model_dir="vits-piper-sv_SE-nst-medium"),
@@ -160,6 +171,29 @@ def get_piper_models() -> List[TtsModel]:
     for m in models:
         m.data_dir = m.model_dir + "/" + "espeak-ng-data"
         m.model_name = m.model_dir[len("vits-piper-") :] + ".onnx"
+        m.lang = m.model_dir.split("-")[2][:2]
+
+    return models
+
+
+def get_mimic3_models() -> List[TtsModel]:
+    models = [
+        TtsModel(model_dir="vits-mimic3-af_ZA-google-nwu_low"),
+        TtsModel(model_dir="vits-mimic3-bn-multi_low"),
+        TtsModel(model_dir="vits-mimic3-es_ES-m-ailabs_low"),
+        TtsModel(model_dir="vits-mimic3-fa-haaniye_low"),
+        TtsModel(model_dir="vits-mimic3-fi_FI-harri-tapani-ylilammi_low"),
+        TtsModel(model_dir="vits-mimic3-gu_IN-cmu-indic_low"),
+        TtsModel(model_dir="vits-mimic3-hu_HU-diana-majlinger_low"),
+        TtsModel(model_dir="vits-mimic3-ko_KO-kss_low"),
+        TtsModel(model_dir="vits-mimic3-ne_NP-ne-google_low"),
+        TtsModel(model_dir="vits-mimic3-pl_PL-m-ailabs_low"),
+        TtsModel(model_dir="vits-mimic3-tn_ZA-google-nwu_low"),
+        TtsModel(model_dir="vits-mimic3-vi_VN-vais1000_low"),
+    ]
+    for m in models:
+        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+        m.model_name = m.model_dir[len("vits-mimic3-") :] + ".onnx"
         m.lang = m.model_dir.split("-")[2][:2]
 
     return models
@@ -234,15 +268,13 @@ def main():
     index = args.index
     total = args.total
     assert 0 <= index < total, (index, total)
-    environment = jinja2.Environment()
-    with open("./build-apk-tts.sh.in") as f:
-        s = f.read()
-    template = environment.from_string(s)
     d = dict()
 
     all_model_list = get_vits_models()
     all_model_list += get_piper_models()
+    all_model_list += get_mimic3_models()
     all_model_list += get_coqui_models()
+    convert_lang_to_iso_639_3(all_model_list)
 
     num_models = len(all_model_list)
 
@@ -262,9 +294,16 @@ def main():
         d["tts_model_list"].append(all_model_list[s])
         print(f"{s}/{num_models}")
 
-    s = template.render(**d)
-    with open("./build-apk-tts.sh", "w") as f:
-        print(s, file=f)
+    filename_list = ["./build-apk-tts.sh", "./build-apk-tts-engine.sh"]
+    for filename in filename_list:
+        environment = jinja2.Environment()
+        with open(f"{filename}.in") as f:
+            s = f.read()
+        template = environment.from_string(s)
+
+        s = template.render(**d)
+        with open(filename, "w") as f:
+            print(s, file=f)
 
 
 if __name__ == "__main__":

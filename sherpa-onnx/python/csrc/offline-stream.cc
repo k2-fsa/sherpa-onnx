@@ -23,8 +23,12 @@ Args:
 static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
   using PyClass = OfflineRecognitionResult;
   py::class_<PyClass>(*m, "OfflineRecognitionResult")
-      .def_property_readonly("text",
-                             [](const PyClass &self) { return self.text; })
+      .def_property_readonly(
+          "text",
+          [](const PyClass &self) -> py::str {
+            return py::str(PyUnicode_DecodeUTF8(self.text.c_str(),
+                                                self.text.size(), "ignore"));
+          })
       .def_property_readonly("tokens",
                              [](const PyClass &self) { return self.tokens; })
       .def_property_readonly(

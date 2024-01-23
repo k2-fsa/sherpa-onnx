@@ -25,9 +25,14 @@ data class OnlineParaformerModelConfig(
     var decoder: String = "",
 )
 
+data class OnlineZipformer2CtcModelConfig(
+    var model: String = "",
+)
+
 data class OnlineModelConfig(
     var transducer: OnlineTransducerModelConfig = OnlineTransducerModelConfig(),
     var paraformer: OnlineParaformerModelConfig = OnlineParaformerModelConfig(),
+    var zipformer2Ctc: OnlineZipformer2CtcModelConfig = OnlineZipformer2CtcModelConfig(),
     var tokens: String,
     var numThreads: Int = 1,
     var debug: Boolean = false,

@@ -51,6 +51,7 @@ def get_binaries_to_install():
 
     # Remember to also change cmake/cmake_extension.py
     binaries = ["sherpa-onnx"]
+    binaries += ["sherpa-onnx-keyword-spotter"]
     binaries += ["sherpa-onnx-offline"]
     binaries += ["sherpa-onnx-microphone"]
     binaries += ["sherpa-onnx-microphone-offline"]

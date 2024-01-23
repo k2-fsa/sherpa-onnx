@@ -138,6 +138,12 @@ def add_model_args(parser: argparse.ArgumentParser):
     )
 
     parser.add_argument(
+        "--zipformer2-ctc",
+        type=str,
+        help="Path to the model file from zipformer2 ctc",
+    )
+
+    parser.add_argument(
         "--wenet-ctc",
         type=str,
         help="Path to the model.onnx from WeNet",
@@ -395,6 +401,20 @@ def create_recognizer(args) -> sherpa_onnx.OnlineRecognizer:
             tokens=args.tokens,
             encoder=args.paraformer_encoder,
             decoder=args.paraformer_decoder,
+            num_threads=args.num_threads,
+            sample_rate=args.sample_rate,
+            feature_dim=args.feat_dim,
+            decoding_method=args.decoding_method,
+            enable_endpoint_detection=args.use_endpoint != 0,
+            rule1_min_trailing_silence=args.rule1_min_trailing_silence,
+            rule2_min_trailing_silence=args.rule2_min_trailing_silence,
+            rule3_min_utterance_length=args.rule3_min_utterance_length,
+            provider=args.provider,
+        )
+    elif args.zipformer2_ctc:
+        recognizer = sherpa_onnx.OnlineRecognizer.from_zipformer2_ctc(
+            tokens=args.tokens,
+            model=args.zipformer2_ctc,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,
             feature_dim=args.feat_dim,
@@ -748,6 +768,8 @@ def check_args(args):
 
         assert args.paraformer_encoder is None, args.paraformer_encoder
         assert args.paraformer_decoder is None, args.paraformer_decoder
+        assert args.zipformer2_ctc is None, args.zipformer2_ctc
+        assert args.wenet_ctc is None, args.wenet_ctc
     elif args.paraformer_encoder:
         assert Path(
             args.paraformer_encoder
@@ -756,6 +778,10 @@ def check_args(args):
         assert Path(
             args.paraformer_decoder
         ).is_file(), f"{args.paraformer_decoder} does not exist"
+    elif args.zipformer2_ctc:
+        assert Path(
+            args.zipformer2_ctc
+        ).is_file(), f"{args.zipformer2_ctc} does not exist"
     elif args.wenet_ctc:
         assert Path(args.wenet_ctc).is_file(), f"{args.wenet_ctc} does not exist"
     else:

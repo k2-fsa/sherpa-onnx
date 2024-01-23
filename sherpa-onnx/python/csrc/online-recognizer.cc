@@ -15,7 +15,11 @@ static void PybindOnlineRecognizerResult(py::module *m) {
   using PyClass = OnlineRecognizerResult;
   py::class_<PyClass>(*m, "OnlineRecognizerResult")
       .def_property_readonly(
-          "text", [](PyClass &self) -> std::string { return self.text; })
+          "text",
+          [](PyClass &self) -> py::str {
+            return py::str(PyUnicode_DecodeUTF8(self.text.c_str(),
+                                                self.text.size(), "ignore"));
+          })
       .def_property_readonly(
           "tokens",
           [](PyClass &self) -> std::vector<std::string> { return self.tokens; })
@@ -53,7 +57,8 @@ void PybindOnlineRecognizer(py::module *m) {
 
   using PyClass = OnlineRecognizer;
   py::class_<PyClass>(*m, "OnlineRecognizer")
-      .def(py::init<const OnlineRecognizerConfig &>(), py::arg("config"))
+      .def(py::init<const OnlineRecognizerConfig &>(), py::arg("config"),
+           py::call_guard<py::gil_scoped_release>())
       .def(
           "create_stream",
           [](const PyClass &self) { return self.CreateStream(); },

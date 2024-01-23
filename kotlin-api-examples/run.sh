@@ -29,9 +29,31 @@ export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
 
 cd ../kotlin-api-examples
 
+if [ ! -f ./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx ]; then
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx
+fi
+
+if [ ! -f ./speaker1_a_cn_16k.wav ]; then
+  wget -q https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_a_cn_16k.wav
+fi
+
+if [ ! -f ./speaker1_b_cn_16k.wav ]; then
+  wget -q https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_b_cn_16k.wav
+fi
+
+if [ ! -f ./speaker2_a_cn_16k.wav ]; then
+  wget -q https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker2_a_cn_16k.wav
+fi
+
 if [ ! -f ./sherpa-onnx-streaming-zipformer-en-2023-02-21/tokens.txt ]; then
   git lfs install
   git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21
+fi
+
+if [ ! -d ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13 ]; then
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+  tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+  rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
 fi
 
 if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
@@ -40,8 +62,26 @@ if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
   rm vits-piper-en_US-amy-low.tar.bz2
 fi
 
-kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt faked-asset-manager.kt Tts.kt
+kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt faked-asset-manager.kt Tts.kt Speaker.kt
 
 ls -lh main.jar
 
 java -Djava.library.path=../build/lib -jar main.jar
+
+# For two-pass
+
+if [ ! -f ./sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/encoder-epoch-99-avg-1.int8.onnx ]; then
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+  tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+  rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+fi
+
+if [ ! -f ./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx ]; then
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+  tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+  rm sherpa-onnx-whisper-tiny.en.tar.bz2
+fi
+
+kotlinc-jvm -include-runtime -d 2pass.jar test-2pass.kt WaveReader.kt SherpaOnnx2Pass.kt faked-asset-manager.kt
+ls -lh 2pass.jar
+java -Djava.library.path=../build/lib -jar 2pass.jar

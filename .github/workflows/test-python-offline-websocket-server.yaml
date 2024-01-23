@@ -38,14 +38,14 @@ jobs:
           key: ${{ matrix.os }}-python-${{ matrix.python-version }}
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy sentencepiece
+          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece
 
       - name: Install sherpa-onnx
         shell: bash

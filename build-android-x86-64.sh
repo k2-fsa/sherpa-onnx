@@ -20,9 +20,9 @@ cd $dir
 #   -DANDROID
 
 if [ -z $ANDROID_NDK ]; then
-  ANDROID_NDK=/ceph-fj/fangjun/software/android-sdk/ndk/21.0.6113669
+  ANDROID_NDK=/star-fj/fangjun/software/android-sdk/ndk/22.1.7171670
   # or use
-  # ANDROID_NDK=/ceph-fj/fangjun/software/android-ndk
+  # ANDROID_NDK=/star-fj/fangjun/software/android-ndk
   #
   # Inside the $ANDROID_NDK directory, you can find a binary ndk-build
   # and some other files like the file "build/cmake/android.toolchain.cmake"

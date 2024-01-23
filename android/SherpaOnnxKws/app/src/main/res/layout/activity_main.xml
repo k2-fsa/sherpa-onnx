@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <EditText
+            android:id="@+id/input_text"
+            android:layout_width="match_parent"
+            android:layout_height="320dp"
+            android:layout_weight="2.5"
+            android:hint="@string/keyword_hint"
+            android:scrollbars="vertical"
+            android:text=""
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/my_text"
+            android:layout_width="match_parent"
+            android:layout_height="443dp"
+            android:layout_weight="2.5"
+            android:padding="24dp"
+            android:scrollbars="vertical"
+            android:singleLine="false"
+            android:text="@string/hint"
+            android:textSize="15dp" />
+
+        <Button
+            android:id="@+id/record_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_weight="0.5"
+            android:text="@string/start" />
+
+    </LinearLayout>
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>

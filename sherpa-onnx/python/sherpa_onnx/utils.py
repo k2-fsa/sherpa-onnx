@@ -6,6 +6,9 @@ from typing import List, Optional, Union
 
 import sentencepiece as spm
 
+from pypinyin import pinyin
+from pypinyin.contrib.tone_convert import to_initials, to_finals_tone
+
 
 def text2token(
     texts: List[str],
@@ -23,7 +26,9 @@ def text2token(
       tokens:
         The path of the tokens.txt.
       tokens_type:
-        The valid values are cjkchar, bpe, cjkchar+bpe.
+        The valid values are cjkchar, bpe, cjkchar+bpe, fpinyin, ppinyin.
+        fpinyin means full pinyin, each cjkchar has a pinyin(with tone).
+        ppinyin means partial pinyin, it splits pinyin into initial and final,
       bpe_model:
         The path of the bpe model. Only required when tokens_type is bpe or
         cjkchar+bpe.
@@ -53,6 +58,24 @@ def text2token(
         texts_list = [list("".join(text.split())) for text in texts]
     elif tokens_type == "bpe":
         texts_list = sp.encode(texts, out_type=str)
+    elif "pinyin" in tokens_type:
+        for txt in texts:
+            py = [x[0] for x in pinyin(txt)]
+            if "ppinyin" == tokens_type:
+                res = []
+                for x in py:
+                    initial = to_initials(x, strict=False)
+                    final = to_finals_tone(x, strict=False)
+                    if initial == "" and final == "":
+                        res.append(x)
+                    else:
+                        if initial != "":
+                            res.append(initial)
+                        if final != "":
+                            res.append(final)
+                texts_list.append(res)
+            else:
+                texts_list.append(py)
     else:
         assert (
             tokens_type == "cjkchar+bpe"

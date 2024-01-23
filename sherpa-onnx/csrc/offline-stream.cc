@@ -83,6 +83,12 @@ class OfflineStream::Impl {
     opts_.frame_opts.samp_freq = config.sampling_rate;
     opts_.mel_opts.num_bins = config.feature_dim;
 
+    // Please see
+    // https://github.com/lhotse-speech/lhotse/blob/master/lhotse/features/fbank.py#L27
+    // and
+    // https://github.com/k2-fsa/sherpa-onnx/issues/514
+    opts_.mel_opts.high_freq = -400;
+
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
   }
 

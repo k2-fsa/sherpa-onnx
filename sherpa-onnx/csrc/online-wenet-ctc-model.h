@@ -35,6 +35,12 @@ class OnlineWenetCtcModel : public OnlineCtcModel {
   //  - offset
   std::vector<Ort::Value> GetInitStates() const override;
 
+  std::vector<Ort::Value> StackStates(
+      std::vector<std::vector<Ort::Value>> states) const override;
+
+  std::vector<std::vector<Ort::Value>> UnStackStates(
+      std::vector<Ort::Value> states) const override;
+
   /**
    *
    * @param x A 3-D tensor of shape (N, T, C). N has to be 1.
@@ -62,6 +68,8 @@ class OnlineWenetCtcModel : public OnlineCtcModel {
   // ChunkLength() frames, we advance by ChunkShift() frames
   // before we process the next chunk.
   int32_t ChunkShift() const override;
+
+  bool SupportBatchProcessing() const override { return false; }
 
  private:
   class Impl;

@@ -13,3 +13,8 @@ for usage.
 
 - [SherpaOnnxVadAsr](./SherpaOnnxVadAsr) It uses a VAD with a non-streaming
   ASR model.
+
+- [SherpaOnnxTts](./SherpaOnnxTts) It is for standalone text-to-speech.
+
+- [SherpaOnnxTtsEngine](./SherpaOnnxTtsEngine) It is for text-to-speech engine;
+   you can use it to replace the system TTS engine.

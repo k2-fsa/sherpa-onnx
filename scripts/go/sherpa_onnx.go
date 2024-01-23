@@ -65,6 +65,13 @@ type OnlineParaformerModelConfig struct {
 	Decoder string // Path to the decoder model.
 }
 
+// Please refer to
+// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-ctc/index.html
+// to download pre-trained models
+type OnlineZipformer2CtcModelConfig struct {
+	Model string // Path to the onnx model
+}
+
 // Configuration for online/streaming models
 //
 // Please refer to
@@ -72,13 +79,14 @@ type OnlineParaformerModelConfig struct {
 // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/index.html
 // to download pre-trained models
 type OnlineModelConfig struct {
-	Transducer OnlineTransducerModelConfig
-	Paraformer OnlineParaformerModelConfig
-	Tokens     string // Path to tokens.txt
-	NumThreads int    // Number of threads to use for neural network computation
-	Provider   string // Optional. Valid values are: cpu, cuda, coreml
-	Debug      int    // 1 to show model meta information while loading it.
-	ModelType  string // Optional. You can specify it for faster model initialization
+	Transducer    OnlineTransducerModelConfig
+	Paraformer    OnlineParaformerModelConfig
+	Zipformer2Ctc OnlineZipformer2CtcModelConfig
+	Tokens        string // Path to tokens.txt
+	NumThreads    int    // Number of threads to use for neural network computation
+	Provider      string // Optional. Valid values are: cpu, cuda, coreml
+	Debug         int    // 1 to show model meta information while loading it.
+	ModelType     string // Optional. You can specify it for faster model initialization
 }
 
 // Configuration for the feature extractor
@@ -156,6 +164,9 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 
 	c.model_config.paraformer.decoder = C.CString(config.ModelConfig.Paraformer.Decoder)
 	defer C.free(unsafe.Pointer(c.model_config.paraformer.decoder))
+
+	c.model_config.zipformer2_ctc.model = C.CString(config.ModelConfig.Zipformer2Ctc.Model)
+	defer C.free(unsafe.Pointer(c.model_config.zipformer2_ctc.model))
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))

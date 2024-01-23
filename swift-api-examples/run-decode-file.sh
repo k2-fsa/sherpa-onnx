@@ -20,6 +20,12 @@ if [ ! -d ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 ]; then
   rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 fi
 
+if [ ! -d ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13 ]; then
+  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+  tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+  rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+fi
+
 if [ ! -e ./decode-file ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \

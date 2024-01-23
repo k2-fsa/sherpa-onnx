@@ -48,8 +48,10 @@ void PybindOfflineTts(py::module *m) {
 
   using PyClass = OfflineTts;
   py::class_<PyClass>(*m, "OfflineTts")
-      .def(py::init<const OfflineTtsConfig &>(), py::arg("config"))
+      .def(py::init<const OfflineTtsConfig &>(), py::arg("config"),
+           py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("sample_rate", &PyClass::SampleRate)
+      .def_property_readonly("num_speakers", &PyClass::NumSpeakers)
       .def(
           "generate",
           [](const PyClass &self, const std::string &text, int64_t sid,

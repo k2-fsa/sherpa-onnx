@@ -24,13 +24,15 @@ void PybindVoiceActivityDetector(py::module *m) {
   using PyClass = VoiceActivityDetector;
   py::class_<PyClass>(*m, "VoiceActivityDetector")
       .def(py::init<const VadModelConfig &, float>(), py::arg("config"),
-           py::arg("buffer_size_in_seconds") = 60)
+           py::arg("buffer_size_in_seconds") = 60,
+           py::call_guard<py::gil_scoped_release>())
       .def(
           "accept_waveform",
           [](PyClass &self, const std::vector<float> &samples) {
             self.AcceptWaveform(samples.data(), samples.size());
           },
           py::arg("samples"), py::call_guard<py::gil_scoped_release>())
+      .def_property_readonly("config", &PyClass::GetConfig)
       .def("empty", &PyClass::Empty, py::call_guard<py::gil_scoped_release>())
       .def("pop", &PyClass::Pop, py::call_guard<py::gil_scoped_release>())
       .def("is_speech_detected", &PyClass::IsSpeechDetected,

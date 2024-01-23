@@ -13,24 +13,47 @@ extension AVAudioPCMBuffer {
 }
 
 func run() {
-  let encoder =
-    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx"
-  let decoder =
-    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx"
-  let joiner =
-    "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx"
-  let tokens = "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt"
+  var modelConfig: SherpaOnnxOnlineModelConfig
+  var modelType = "zipformer2-ctc"
+  var filePath: String
 
-  let transducerConfig = sherpaOnnxOnlineTransducerModelConfig(
-    encoder: encoder,
-    decoder: decoder,
-    joiner: joiner
-  )
+  modelType = "transducer"
 
-  let modelConfig = sherpaOnnxOnlineModelConfig(
-    tokens: tokens,
-    transducer: transducerConfig
-  )
+  if modelType == "transducer" {
+    filePath = "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/1.wav"
+    let encoder =
+      "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx"
+    let decoder =
+      "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx"
+    let joiner =
+      "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx"
+    let tokens = "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt"
+
+    let transducerConfig = sherpaOnnxOnlineTransducerModelConfig(
+      encoder: encoder,
+      decoder: decoder,
+      joiner: joiner
+    )
+
+    modelConfig = sherpaOnnxOnlineModelConfig(
+      tokens: tokens,
+      transducer: transducerConfig
+    )
+  } else {
+    filePath =
+      "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000000.wav"
+    let model =
+      "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.onnx"
+    let tokens = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt"
+    let zipfomer2CtcModelConfig = sherpaOnnxOnlineZipformer2CtcModelConfig(
+      model: model
+    )
+
+    modelConfig = sherpaOnnxOnlineModelConfig(
+      tokens: tokens,
+      zipformer2Ctc: zipfomer2CtcModelConfig
+    )
+  }
 
   let featConfig = sherpaOnnxFeatureConfig(
     sampleRate: 16000,
@@ -43,7 +66,6 @@ func run() {
 
   let recognizer = SherpaOnnxRecognizer(config: &config)
 
-  let filePath = "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/1.wav"
   let fileURL: NSURL = NSURL(fileURLWithPath: filePath)
   let audioFile = try! AVAudioFile(forReading: fileURL as URL)
 

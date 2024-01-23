@@ -66,9 +66,17 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineParaformerModelConfig {
   const char *decoder;
 } SherpaOnnxOnlineParaformerModelConfig;
 
-SHERPA_ONNX_API typedef struct SherpaOnnxModelConfig {
+// Please visit
+// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-ctc/zipformer-ctc-models.html#
+// to download pre-trained streaming zipformer2 ctc models
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineZipformer2CtcModelConfig {
+  const char *model;
+} SherpaOnnxOnlineZipformer2CtcModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineModelConfig {
   SherpaOnnxOnlineTransducerModelConfig transducer;
   SherpaOnnxOnlineParaformerModelConfig paraformer;
+  SherpaOnnxOnlineZipformer2CtcModelConfig zipformer2_ctc;
   const char *tokens;
   int32_t num_threads;
   const char *provider;

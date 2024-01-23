@@ -48,7 +48,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip jinja2
+          python3 -m pip install --upgrade pip jinja2 iso639-lang
 
       - name: Generate build script
         shell: bash

@@ -24,7 +24,7 @@ ls -lh
   --file1 ./wespeaker-models/test_wavs/00001_spk1.wav \
   --file2 ./wespeaker-models/test_wavs/00010_spk2.wav
 
-mv voxceleb_resnet34.onnx en_voxceleb_resnet34.onnx
+mv voxceleb_resnet34.onnx wespeaker_en_voxceleb_resnet34.onnx
 
 ./add_meta_data.py \
   --model ./voxceleb_resnet34_LM.onnx \
@@ -38,7 +38,7 @@ mv voxceleb_resnet34.onnx en_voxceleb_resnet34.onnx
   --file1 ./wespeaker-models/test_wavs/00001_spk1.wav \
   --file2 ./wespeaker-models/test_wavs/00010_spk2.wav
 
-mv voxceleb_resnet34_LM.onnx en_voxceleb_resnet34_LM.onnx
+mv voxceleb_resnet34_LM.onnx wespeaker_en_voxceleb_resnet34_LM.onnx
 
 ./add_meta_data.py \
   --model ./voxceleb_resnet152_LM.onnx \
@@ -53,7 +53,7 @@ mv voxceleb_resnet34_LM.onnx en_voxceleb_resnet34_LM.onnx
   --file1 ./wespeaker-models/test_wavs/00001_spk1.wav \
   --file2 ./wespeaker-models/test_wavs/00010_spk2.wav
 
-mv voxceleb_resnet152_LM.onnx en_voxceleb_resnet152_LM.onnx
+mv voxceleb_resnet152_LM.onnx wespeaker_en_voxceleb_resnet152_LM.onnx
 
 ./add_meta_data.py \
   --model ./voxceleb_resnet221_LM.onnx \
@@ -68,7 +68,7 @@ mv voxceleb_resnet152_LM.onnx en_voxceleb_resnet152_LM.onnx
   --file1 ./wespeaker-models/test_wavs/00001_spk1.wav \
   --file2 ./wespeaker-models/test_wavs/00010_spk2.wav
 
-mv voxceleb_resnet221_LM.onnx en_voxceleb_resnet221_LM.onnx
+mv voxceleb_resnet221_LM.onnx wespeaker_en_voxceleb_resnet221_LM.onnx
 
 ./add_meta_data.py \
   --model ./voxceleb_resnet293_LM.onnx \
@@ -83,7 +83,7 @@ mv voxceleb_resnet221_LM.onnx en_voxceleb_resnet221_LM.onnx
   --file1 ./wespeaker-models/test_wavs/00001_spk1.wav \
   --file2 ./wespeaker-models/test_wavs/00010_spk2.wav
 
-mv voxceleb_resnet293_LM.onnx en_voxceleb_resnet293_LM.onnx
+mv voxceleb_resnet293_LM.onnx wespeaker_en_voxceleb_resnet293_LM.onnx
 
 ./add_meta_data.py \
   --model ./voxceleb_CAM++.onnx \
@@ -98,7 +98,7 @@ mv voxceleb_resnet293_LM.onnx en_voxceleb_resnet293_LM.onnx
   --file1 ./wespeaker-models/test_wavs/00001_spk1.wav \
   --file2 ./wespeaker-models/test_wavs/00010_spk2.wav
 
-mv voxceleb_CAM++.onnx en_voxceleb_CAM++.onnx
+mv voxceleb_CAM++.onnx wespeaker_en_voxceleb_CAM++.onnx
 
 ./add_meta_data.py \
   --model ./voxceleb_CAM++_LM.onnx \
@@ -113,20 +113,20 @@ mv voxceleb_CAM++.onnx en_voxceleb_CAM++.onnx
   --file1 ./wespeaker-models/test_wavs/00001_spk1.wav \
   --file2 ./wespeaker-models/test_wavs/00010_spk2.wav
 
-mv voxceleb_CAM++_LM.onnx en_voxceleb_CAM++_LM.onnx
+mv voxceleb_CAM++_LM.onnx wespeaker_en_voxceleb_CAM++_LM.onnx
 
 ./add_meta_data.py \
   --model ./cnceleb_resnet34.onnx \
   --language Chinese \
   --url https://wespeaker-1256283475.cos.ap-shanghai.myqcloud.com/models/cnceleb/cnceleb_resnet34.onnx
 
-mv cnceleb_resnet34.onnx zh_cnceleb_resnet34.onnx
+mv cnceleb_resnet34.onnx wespeaker_zh_cnceleb_resnet34.onnx
 
 ./add_meta_data.py \
   --model ./cnceleb_resnet34_LM.onnx \
   --language Chinese \
   --url https://wespeaker-1256283475.cos.ap-shanghai.myqcloud.com/models/cnceleb/cnceleb_resnet34_LM.onnx
 
-mv cnceleb_resnet34_LM.onnx zh_cnceleb_resnet34_LM.onnx
+mv cnceleb_resnet34_LM.onnx wespeaker_zh_cnceleb_resnet34_LM.onnx
 
 ls -lh

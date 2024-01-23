@@ -51,12 +51,25 @@ namespace SherpaOnnx
   }
 
   [StructLayout(LayoutKind.Sequential)]
+  public struct OnlineZipformer2CtcModelConfig
+  {
+    public OnlineZipformer2CtcModelConfig()
+    {
+      Model = "";
+    }
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Model;
+  }
+
+  [StructLayout(LayoutKind.Sequential)]
   public struct OnlineModelConfig
   {
     public OnlineModelConfig()
     {
       Transducer = new OnlineTransducerModelConfig();
       Paraformer = new OnlineParaformerModelConfig();
+      Zipformer2Ctc = new OnlineZipformer2CtcModelConfig();
       Tokens = "";
       NumThreads = 1;
       Provider = "cpu";
@@ -66,6 +79,7 @@ namespace SherpaOnnx
 
     public OnlineTransducerModelConfig Transducer;
     public OnlineParaformerModelConfig Paraformer;
+    public OnlineZipformer2CtcModelConfig Zipformer2Ctc;
 
     [MarshalAs(UnmanagedType.LPStr)]
     public string Tokens;

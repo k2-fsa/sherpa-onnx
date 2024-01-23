@@ -41,9 +41,14 @@ const SherpaOnnxOnlineParaformerModelConfig = StructType({
   "decoder" : cstring,
 });
 
+const SherpaOnnxOnlineZipformer2CtcModelConfig = StructType({
+  "model" : cstring,
+});
+
 const SherpaOnnxOnlineModelConfig = StructType({
   "transducer" : SherpaOnnxOnlineTransducerModelConfig,
   "paraformer" : SherpaOnnxOnlineParaformerModelConfig,
+  "zipformer2Ctc" : SherpaOnnxOnlineZipformer2CtcModelConfig,
   "tokens" : cstring,
   "numThreads" : int32_t,
   "provider" : cstring,
@@ -663,6 +668,7 @@ const OnlineModelConfig = SherpaOnnxOnlineModelConfig;
 const FeatureConfig = SherpaOnnxFeatureConfig;
 const OnlineRecognizerConfig = SherpaOnnxOnlineRecognizerConfig;
 const OnlineParaformerModelConfig = SherpaOnnxOnlineParaformerModelConfig;
+const OnlineZipformer2CtcModelConfig = SherpaOnnxOnlineZipformer2CtcModelConfig;
 
 // offline asr
 const OfflineTransducerModelConfig = SherpaOnnxOfflineTransducerModelConfig;
@@ -692,6 +698,7 @@ module.exports = {
   OnlineRecognizer,
   OnlineStream,
   OnlineParaformerModelConfig,
+  OnlineZipformer2CtcModelConfig,
 
   // offline asr
   OfflineRecognizer,
