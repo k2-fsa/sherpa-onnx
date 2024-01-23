@@ -26,9 +26,9 @@ def get_args():
 
 @dataclass
 class SpeakerIdentificationModel:
-    model_name: str,
-    short_name: str = "",
-    lang: str = "",
+    model_name: str
+    short_name: str = ""
+    lang: str = ""
     framework: str = ""
 
 
