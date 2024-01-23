@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - apk
-      - android-speaker-recognition-2
     tags:
       - '*'
 
@@ -33,6 +32,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      # https://github.com/actions/setup-java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
@@ -79,15 +84,15 @@ jobs:
           ls -lh ./apks/
           du -h -d1 .
 
-      - name: Release
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          file: ./apks/*.apk
-          overwrite: true
-          repo_name: k2-fsa/sherpa-onnx
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: speaker-recongition-models
+      # - name: Release
+      #   uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     file_glob: true
+      #     file: ./apks/*.apk
+      #     overwrite: true
+      #     repo_name: k2-fsa/sherpa-onnx
+      #     repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+      #     tag: speaker-recongition-models
 
       - name: Publish to huggingface
         if: true
