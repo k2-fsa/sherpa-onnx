@@ -17,6 +17,14 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
       .def(py::init<int32_t>(), py::arg("dim"),
            py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("num_speakers", &PyClass::NumSpeakers)
+      .def_property_readonly("dim", &PyClass::Dim)
+      .def_property_readonly("all_speakers", &PyClass::GetAllSpeakers)
+      .def(
+          "__contains__",
+          [](const PyClass &self, const std::string &name) -> bool {
+            return self.Contains(name);
+          },
+          py::arg("name"), py::call_guard<py::gil_scoped_release>())
       .def(
           "add",
           [](const PyClass &self, const std::string &name,
@@ -24,6 +32,14 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
             return self.Add(name, v.data());
           },
           py::arg("name"), py::arg("v"),
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "add",
+          [](const PyClass &self, const std::string &name,
+             const std::vector<std::vector<float>> &embedding_list) -> bool {
+            return self.Add(name, embedding_list);
+          },
+          py::arg("name"), py::arg("embedding_list"),
           py::call_guard<py::gil_scoped_release>())
       .def(
           "remove",

@@ -22,6 +22,12 @@ class SpeakerEmbeddingExtractorGeneralImpl
       const SpeakerEmbeddingExtractorConfig &config)
       : model_(config) {}
 
+#if __ANDROID_API__ >= 9
+  SpeakerEmbeddingExtractorGeneralImpl(
+      AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config)
+      : model_(mgr, config) {}
+#endif
+
   int32_t Dim() const override { return model_.GetMetaData().output_dim; }
 
   std::unique_ptr<OnlineStream> CreateStream() const override {

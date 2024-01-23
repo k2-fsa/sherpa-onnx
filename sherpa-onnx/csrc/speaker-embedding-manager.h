@@ -7,6 +7,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace sherpa_onnx {
 
@@ -25,6 +26,19 @@ class SpeakerEmbeddingManager {
    *         a speaker with the same `name`.
    */
   bool Add(const std::string &name, const float *p) const;
+
+  /** Add a list of embeddings of a speaker.
+   *
+   * @param name Name of the speaker
+   * @param embedding_list A list of embeddings. Each entry should be of size
+   *                       `dim`. The average of the list is the final
+   *                       embedding.
+   * @return Return true if added successfully. Return false if it failed.
+   *         At present, the only reason for a failure is that there is already
+   *         a speaker with the same `name`.
+   */
+  bool Add(const std::string &name,
+           const std::vector<std::vector<float>> &embedding_list) const;
 
   /* Remove a speaker by its name.
    *
@@ -60,7 +74,15 @@ class SpeakerEmbeddingManager {
    */
   bool Verify(const std::string &name, const float *p, float threshold) const;
 
+  // Return true if the given speaker already exists; return false otherwise.
+  bool Contains(const std::string &name) const;
+
   int32_t NumSpeakers() const;
+
+  int32_t Dim() const;
+
+  // Return a list of speaker names
+  std::vector<std::string> GetAllSpeakers() const;
 
  private:
   class Impl;

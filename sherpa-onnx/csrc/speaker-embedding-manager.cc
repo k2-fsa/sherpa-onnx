@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "Eigen/Dense"
+#include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
@@ -29,6 +30,52 @@ class SpeakerEmbeddingManager::Impl {
     std::copy(p, p + dim_, &embedding_matrix_.bottomRows(1)(0, 0));
 
     embedding_matrix_.bottomRows(1).normalize();  // inplace
+
+    name2row_[name] = embedding_matrix_.rows() - 1;
+    row2name_[embedding_matrix_.rows() - 1] = name;
+
+    return true;
+  }
+
+  bool Add(const std::string &name,
+           const std::vector<std::vector<float>> &embedding_list) {
+    if (name2row_.count(name)) {
+      // a speaker with the same name already exists
+      return false;
+    }
+
+    if (embedding_list.empty()) {
+      SHERPA_ONNX_LOGE("Empty list of embeddings");
+      return false;
+    }
+
+    for (const auto &x : embedding_list) {
+      if (x.size() != dim_) {
+        SHERPA_ONNX_LOGE("Given dim: %d, expected dim: %d",
+                         static_cast<int32_t>(x.size()), dim_);
+        return false;
+      }
+    }
+
+    // compute the average
+    Eigen::RowVectorXf v = Eigen::Map<Eigen::RowVectorXf>(
+        const_cast<float *>(embedding_list[0].data()), dim_);
+    int32_t i = -1;
+    for (const auto &x : embedding_list) {
+      ++i;
+      if (i == 0) {
+        continue;
+      }
+      v += Eigen::Map<Eigen::RowVectorXf>(const_cast<float *>(x.data()), dim_);
+    }
+
+    // no need to compute the mean since we are going to normalize it anyway
+    // v /= embedding_list.size();
+
+    v.normalize();
+
+    embedding_matrix_.conservativeResize(embedding_matrix_.rows() + 1, dim_);
+    embedding_matrix_.bottomRows(1) = v;
 
     name2row_[name] = embedding_matrix_.rows() - 1;
     row2name_[embedding_matrix_.rows() - 1] = name;
@@ -104,7 +151,23 @@ class SpeakerEmbeddingManager::Impl {
     return true;
   }
 
+  bool Contains(const std::string &name) const {
+    return name2row_.count(name) > 0;
+  }
+
   int32_t NumSpeakers() const { return embedding_matrix_.rows(); }
+
+  int32_t Dim() const { return dim_; }
+
+  std::vector<std::string> GetAllSpeakers() const {
+    std::vector<std::string> all_speakers;
+    for (const auto &p : name2row_) {
+      all_speakers.push_back(p.first);
+    }
+
+    std::stable_sort(all_speakers.begin(), all_speakers.end());
+    return all_speakers;
+  }
 
  private:
   int32_t dim_;
@@ -123,6 +186,12 @@ bool SpeakerEmbeddingManager::Add(const std::string &name,
   return impl_->Add(name, p);
 }
 
+bool SpeakerEmbeddingManager::Add(
+    const std::string &name,
+    const std::vector<std::vector<float>> &embedding_list) const {
+  return impl_->Add(name, embedding_list);
+}
+
 bool SpeakerEmbeddingManager::Remove(const std::string &name) const {
   return impl_->Remove(name);
 }
@@ -139,6 +208,16 @@ bool SpeakerEmbeddingManager::Verify(const std::string &name, const float *p,
 
 int32_t SpeakerEmbeddingManager::NumSpeakers() const {
   return impl_->NumSpeakers();
+}
+
+int32_t SpeakerEmbeddingManager::Dim() const { return impl_->Dim(); }
+
+bool SpeakerEmbeddingManager::Contains(const std::string &name) const {
+  return impl_->Contains(name);
+}
+
+std::vector<std::string> SpeakerEmbeddingManager::GetAllSpeakers() const {
+  return impl_->GetAllSpeakers();
 }
 
 }  // namespace sherpa_onnx

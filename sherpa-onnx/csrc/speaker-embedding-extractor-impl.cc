@@ -90,4 +90,35 @@ SpeakerEmbeddingExtractorImpl::Create(
   return nullptr;
 }
 
+#if __ANDROID_API__ >= 9
+std::unique_ptr<SpeakerEmbeddingExtractorImpl>
+SpeakerEmbeddingExtractorImpl::Create(
+    AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config) {
+  ModelType model_type = ModelType::kUnkown;
+
+  {
+    auto buffer = ReadFile(mgr, config.model);
+
+    model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
+  }
+
+  switch (model_type) {
+    case ModelType::kWeSpeaker:
+      // fall through
+    case ModelType::k3dSpeaker:
+      return std::make_unique<SpeakerEmbeddingExtractorGeneralImpl>(mgr,
+                                                                    config);
+    case ModelType::kNeMo:
+      return std::make_unique<SpeakerEmbeddingExtractorNeMoImpl>(mgr, config);
+    case ModelType::kUnkown:
+      SHERPA_ONNX_LOGE(
+          "Unknown model type in for speaker embedding extractor!");
+      return nullptr;
+  }
+
+  // unreachable code
+  return nullptr;
+}
+#endif
+
 }  // namespace sherpa_onnx

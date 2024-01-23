@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+#
+# Auto generated! Please DO NOT EDIT!
+
+# Please set the environment variable ANDROID_NDK
+# before running this script
+
+# Inside the $ANDROID_NDK directory, you can find a binary ndk-build
+# and some other files like the file "build/cmake/android.toolchain.cmake"
+
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+log "Building Speaker identification APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
+
+log "====================arm64-v8a================="
+./build-android-arm64-v8a.sh
+log "====================armv7-eabi================"
+./build-android-armv7-eabi.sh
+log "====================x86-64===================="
+./build-android-x86-64.sh
+log "====================x86===================="
+./build-android-x86.sh
+
+mkdir -p apks
+
+{% for model in model_list %}
+pushd ./android/SherpaOnnxSpeakerIdentification/app/src/main/assets/
+model_name={{ model.model_name }}
+short_name={{ model.short_name }}
+lang={{ model.lang }}
+framework={{ model.framework }}
+
+wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$model_name
+
+popd
+# Now we are at the project root directory
+
+git checkout .
+pushd android/SherpaOnnxSpeakerIdentification/app/src/main/java/com/k2fsa/sherpa/onnx/speaker/identification/
+sed -i.bak s/"private val modelName.*/private val modelName = \"$model_name\"/" ./Speaker.kt
+git diff
+popd
+
+for arch in arm64-v8a armeabi-v7a x86_64 x86; do
+  log "------------------------------------------------------------"
+  log "build tts apk for $arch"
+  log "------------------------------------------------------------"
+  src_arch=$arch
+  if [ $arch == "armeabi-v7a" ]; then
+    src_arch=armv7-eabi
+  elif [ $arch == "x86_64" ]; then
+    src_arch=x86-64
+  fi
+
+  ls -lh ./build-android-$src_arch/install/lib/*.so
+
+  cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxSpeakerIdentification/app/src/main/jniLibs/$arch/
+
+  pushd ./android/SherpaOnnxSpeakerIdentification
+  ./gradlew build
+  popd
+
+  mv android/SherpaOnnxSpeakerIdentification/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-speaker-identification-$framework-$short_name.apk
+  ls -lh apks
+  rm -v ./android/SherpaOnnxSpeakerIdentification/app/src/main/jniLibs/$arch/*.so
+done
+
+rm -rf ./android/SherpaOnnxSpeakerIdentification/app/src/main/assets/$model_name
+{% endfor %}
+
+git checkout .
+
+ls -lh apks/
