@@ -1,1 +1,2 @@
 build-apk-tts.sh
+!*.sh.in
