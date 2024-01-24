@@ -16,6 +16,7 @@ enum class Provider {
   kCPU = 0,     // CPUExecutionProvider
   kCUDA = 1,    // CUDAExecutionProvider
   kCoreML = 2,  // CoreMLExecutionProvider
+  kOpenVINO = 3, // OpenVINOExecutionProvider
 };
 
 /**

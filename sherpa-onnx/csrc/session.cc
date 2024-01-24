@@ -33,6 +33,17 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
   switch (p) {
     case Provider::kCPU:
       break;  // nothing to do for the CPU provider
+    case Provider::kOpenVINO:
+      {
+        // Using OPENVINO backend
+        OrtOpenVINOProviderOptions options;
+        options.device_type = "CPU_FP32"; //Other options are: GPU_FP32, GPU_FP16, MYRIAD_FP16
+        // std::cout << "OpenVINO device type is set to: " << options.device_type << std::endl;
+        fprintf(stderr, "--------------> Execution Provider: OpenVINO\n");
+        sess_opts.AppendExecutionProvider_OpenVINO(options);
+        fprintf(stderr, "<-------------- Execution Provider: OpenVINO\n");
+      }   
+      break;
     case Provider::kCUDA: {
       std::vector<std::string> available_providers =
           Ort::GetAvailableProviders();

@@ -78,6 +78,56 @@ file(COPY ${onnxruntime_SOURCE_DIR}/lib/onnxruntime.dll
     ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
 )
 
+if(SHERPA_ONNX_ENABLE_OPENVINO)
+
+# for onnxruntime_providers_openvino.dll
+
+find_library(location_onnxruntime_providers_openvino_lib onnxruntime_providers_openvino
+  PATHS
+  "${onnxruntime_SOURCE_DIR}/lib"
+  NO_CMAKE_SYSTEM_PATH
+)
+message(STATUS "location_onnxruntime_providers_openvino_lib: ${location_onnxruntime_providers_openvino_lib}")
+
+add_library(onnxruntime_providers_openvino SHARED IMPORTED)
+set_target_properties(onnxruntime_providers_openvino PROPERTIES
+  IMPORTED_LOCATION ${location_onnxruntime_providers_openvino_lib}
+  INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
+)
+
+set_property(TARGET onnxruntime_providers_openvino
+  PROPERTY
+    IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_openvino.lib"
+)
+
+# for onnxruntime_providers_shared.dll
+
+find_library(location_onnxruntime_providers_shared_lib onnxruntime_providers_shared
+  PATHS
+  "${onnxruntime_SOURCE_DIR}/lib"
+  NO_CMAKE_SYSTEM_PATH
+)
+message(STATUS "location_onnxruntime_providers_shared_lib: ${location_onnxruntime_providers_shared_lib}")
+add_library(onnxruntime_providers_shared SHARED IMPORTED)
+set_target_properties(onnxruntime_providers_shared PROPERTIES
+  IMPORTED_LOCATION ${location_onnxruntime_providers_shared_lib}
+  INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/include"
+)
+set_property(TARGET onnxruntime_providers_shared
+  PROPERTY
+    IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_shared.lib"
+)
+
+file(
+  COPY
+    ${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_openvino.dll
+    ${onnxruntime_SOURCE_DIR}/lib/onnxruntime_providers_shared.dll
+  DESTINATION
+    ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
+)
+
+endif()
+
 file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/lib/*.dll")
 
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
