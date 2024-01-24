@@ -23,8 +23,8 @@ set(onnxruntime_HASH "SHA256=b072f989d6315ac0e22dcb4771b083c5156d974a3496ac3504c
 # You can add more if you want.
 set(possible_file_locations
   $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.16.3.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-1.16.3.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-1.16.3.tgz
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-1.16.3.tgz
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-1.16.3.tgz
   /tmp/onnxruntime-linux-x64-1.16.3.tgz
   /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.16.3.tgz
 )

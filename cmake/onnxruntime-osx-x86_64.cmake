@@ -21,8 +21,8 @@ set(onnxruntime_HASH "SHA256=a395923ed91192e46bf50aec48d728dbf193dbd547ad50a231b
 # You can add more if you want.
 set(possible_file_locations
   $ENV{HOME}/Downloads/onnxruntime-osx-x86_64-1.16.3.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-x86_64-1.16.3.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-osx-x86_64-1.16.3.tgz
+  ${CMAKE_SOURCE_DIR}/onnxruntime-osx-x86_64-1.16.3.tgz
+  ${CMAKE_BINARY_DIR}/onnxruntime-osx-x86_64-1.16.3.tgz
   /tmp/onnxruntime-osx-x86_64-1.16.3.tgz
 )
 

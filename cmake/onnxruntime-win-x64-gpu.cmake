@@ -28,8 +28,8 @@ set(onnxruntime_HASH "SHA256=4facf5abd081accb64da0b4caa267d98e536427111f3246a3dd
 # You can add more if you want.
 set(possible_file_locations
   $ENV{HOME}/Downloads/onnxruntime-win-x64-gpu-1.16.3.zip
-  ${PROJECT_SOURCE_DIR}/onnxruntime-win-x64-gpu-1.16.3.zip
-  ${PROJECT_BINARY_DIR}/onnxruntime-win-x64-gpu-1.16.3.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-gpu-1.16.3.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-gpu-1.16.3.zip
   /tmp/onnxruntime-win-x64-gpu-1.16.3.zip
 )
 

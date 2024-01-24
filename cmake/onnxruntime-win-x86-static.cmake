@@ -24,8 +24,8 @@ set(onnxruntime_HASH "SHA256=b291d25be9b6214d1ed058635a1fcaf5bb49b996c3d77b1a60b
 # You can add more if you want.
 set(possible_file_locations
   $ENV{HOME}/Downloads/onnxruntime-win-x86-static_lib-1.16.3.tar.bz2
-  ${PROJECT_SOURCE_DIR}/onnxruntime-win-x86-static_lib-1.16.3.tar.bz2
-  ${PROJECT_BINARY_DIR}/onnxruntime-win-x86-static_lib-1.16.3.tar.bz2
+  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x86-static_lib-1.16.3.tar.bz2
+  ${CMAKE_BINARY_DIR}/onnxruntime-win-x86-static_lib-1.16.3.tar.bz2
   /tmp/onnxruntime-win-x86-static_lib-1.16.3.tar.bz2
 )
 

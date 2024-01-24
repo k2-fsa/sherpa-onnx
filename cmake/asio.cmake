@@ -9,8 +9,8 @@ function(download_asio)
   # please pre-download asio
   set(possible_file_locations
     $ENV{HOME}/Downloads/asio-asio-1-24-0.tar.gz
-    ${PROJECT_SOURCE_DIR}/asio-asio-1-24-0.tar.gz
-    ${PROJECT_BINARY_DIR}/asio-asio-1-24-0.tar.gz
+    ${CMAKE_SOURCE_DIR}/asio-asio-1-24-0.tar.gz
+    ${CMAKE_BINARY_DIR}/asio-asio-1-24-0.tar.gz
     /tmp/asio-asio-1-24-0.tar.gz
     /star-fj/fangjun/download/github/asio-asio-1-24-0.tar.gz
   )
