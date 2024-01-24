@@ -8,6 +8,7 @@ on:
       - '*'
     paths:
       - '.github/workflows/linux.yaml'
+      - '.github/scripts/test-kws.sh'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
@@ -24,6 +25,7 @@ on:
       - master
     paths:
       - '.github/workflows/linux.yaml'
+      - '.github/scripts/test-kws.sh'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
