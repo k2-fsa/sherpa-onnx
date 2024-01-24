@@ -19,8 +19,8 @@ function(download_espeak_ng_for_piper)
   # please pre-download kaldi-decoder
   set(possible_file_locations
     $ENV{HOME}/Downloads/espeak-ng-c58d2a4a88e9a291ca448f046e15c6188cbd3b3a.zip
-    ${PROJECT_SOURCE_DIR}/espeak-ng-c58d2a4a88e9a291ca448f046e15c6188cbd3b3a.zip
-    ${PROJECT_BINARY_DIR}/espeak-ng-c58d2a4a88e9a291ca448f046e15c6188cbd3b3a.zip
+    ${CMAKE_SOURCE_DIR}/espeak-ng-c58d2a4a88e9a291ca448f046e15c6188cbd3b3a.zip
+    ${CMAKE_BINARY_DIR}/espeak-ng-c58d2a4a88e9a291ca448f046e15c6188cbd3b3a.zip
     /tmp/espeak-ng-c58d2a4a88e9a291ca448f046e15c6188cbd3b3a.zip
     /star-fj/fangjun/download/github/espeak-ng-c58d2a4a88e9a291ca448f046e15c6188cbd3b3a.zip
   )

@@ -9,8 +9,8 @@ function(download_piper_phonemize)
   # please pre-download kaldi-decoder
   set(possible_file_locations
     $ENV{HOME}/Downloads/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
-    ${PROJECT_SOURCE_DIR}/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
-    ${PROJECT_BINARY_DIR}/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
+    ${CMAKE_SOURCE_DIR}/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
+    ${CMAKE_BINARY_DIR}/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
     /tmp/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
     /star-fj/fangjun/download/github/piper-phonemize-6383e46b62e94c5cafc0c6a6212249ed8b9ed8d0.zip
   )

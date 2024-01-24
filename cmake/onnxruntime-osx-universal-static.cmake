@@ -22,8 +22,8 @@ set(onnxruntime_HASH "SHA256=19e39beefbb6d103c1d4c5a2d64bfbd6dd4c21f37d6545170ce
 # You can add more if you want.
 set(possible_file_locations
   $ENV{HOME}/Downloads/onnxruntime-osx-universal2-static_lib-1.16.3.zip
-  ${PROJECT_SOURCE_DIR}/onnxruntime-osx-universal2-static_lib-1.16.3.zip
-  ${PROJECT_BINARY_DIR}/onnxruntime-osx-universal2-static_lib-1.16.3.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-osx-universal2-static_lib-1.16.3.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-osx-universal2-static_lib-1.16.3.zip
   /tmp/onnxruntime-osx-universal2-static_lib-1.16.3.zip
 )
 

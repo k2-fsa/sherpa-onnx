@@ -9,8 +9,8 @@ function(download_pybind11)
   # please pre-download pybind11
   set(possible_file_locations
     $ENV{HOME}/Downloads/pybind11-2.10.2.tar.gz
-    ${PROJECT_SOURCE_DIR}/pybind11-2.10.2.tar.gz
-    ${PROJECT_BINARY_DIR}/pybind11-2.10.2.tar.gz
+    ${CMAKE_SOURCE_DIR}/pybind11-2.10.2.tar.gz
+    ${CMAKE_BINARY_DIR}/pybind11-2.10.2.tar.gz
     /tmp/pybind11-2.10.2.tar.gz
     /star-fj/fangjun/download/github/pybind11-2.10.2.tar.gz
   )

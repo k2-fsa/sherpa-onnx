@@ -9,8 +9,8 @@ function(download_kaldifst)
   # please pre-download kaldifst
   set(possible_file_locations
     $ENV{HOME}/Downloads/kaldifst-1.7.9.tar.gz
-    ${PROJECT_SOURCE_DIR}/kaldifst-1.7.9.tar.gz
-    ${PROJECT_BINARY_DIR}/kaldifst-1.7.9.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldifst-1.7.9.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldifst-1.7.9.tar.gz
     /tmp/kaldifst-1.7.9.tar.gz
     /star-fj/fangjun/download/github/kaldifst-1.7.9.tar.gz
   )

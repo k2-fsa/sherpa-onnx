@@ -13,8 +13,8 @@ function(download_kaldi_native_fbank)
   # please pre-download kaldi-native-fbank
   set(possible_file_locations
     $ENV{HOME}/Downloads/kaldi-native-fbank-1.18.6.tar.gz
-    ${PROJECT_SOURCE_DIR}/kaldi-native-fbank-1.18.6.tar.gz
-    ${PROJECT_BINARY_DIR}/kaldi-native-fbank-1.18.6.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldi-native-fbank-1.18.6.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldi-native-fbank-1.18.6.tar.gz
     /tmp/kaldi-native-fbank-1.18.6.tar.gz
     /star-fj/fangjun/download/github/kaldi-native-fbank-1.18.6.tar.gz
   )

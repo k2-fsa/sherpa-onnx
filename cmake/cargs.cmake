@@ -9,8 +9,8 @@ function(download_cargs)
   # please pre-download cargs
   set(possible_file_locations
     $ENV{HOME}/Downloads/cargs-1.0.3.tar.gz
-    ${PROJECT_SOURCE_DIR}/cargs-1.0.3.tar.gz
-    ${PROJECT_BINARY_DIR}/cargs-1.0.3.tar.gz
+    ${CMAKE_SOURCE_DIR}/cargs-1.0.3.tar.gz
+    ${CMAKE_BINARY_DIR}/cargs-1.0.3.tar.gz
     /tmp/cargs-1.0.3.tar.gz
     /star-fj/fangjun/download/github/cargs-1.0.3.tar.gz
   )
