@@ -46,7 +46,10 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
     start += n;
     Ort::Value logit = model_->RunJoiner(std::move(cur_encoder_out),
                                          std::move(cur_decoder_out));
-    const float *p_logit = logit.GetTensorData<float>();
+    float *p_logit = logit.GetTensorMutableData<float>();
+    if (blank_penalty_ > 0.0) {
+      p_logit[0] -= blank_penalty_; // assuming blank id is 0
+    }
     bool emitted = false;
     for (int32_t i = 0; i != n; ++i) {
       auto y = static_cast<int32_t>(std::distance(
