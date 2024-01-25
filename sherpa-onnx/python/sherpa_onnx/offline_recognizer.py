@@ -82,6 +82,12 @@ class OfflineRecognizer(object):
           max_active_paths:
             Maximum number of active paths to keep. Used only when
             decoding_method is modified_beam_search.
+          hotwords_file:
+            The file containing hotwords, one words/phrases per line, and for each
+            phrase the bpe/cjkchar are separated by a space.
+          hotwords_score:
+            The hotword score of each token for biasing word/phrase. Used only if
+            hotwords_file is given with modified_beam_search as decoding method.
           blank_penalty:
             The penalty applied on blank symbol during decoding.
           debug:
