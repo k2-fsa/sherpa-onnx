@@ -22,7 +22,7 @@ log "Start testing ${repo_url}"
 repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
 log "Download pretrained model and test-data from $repo_url"
-wget $repo_url
+wget -qq $repo_url
 tar jxvf ${repo}.tar.bz
 
 time $EXE \
@@ -47,8 +47,8 @@ log "Start testing ${repo_url}"
 repo=sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01
 
 log "Download pretrained model and test-data from $repo_url"
-wget $repo_url
-tar jxvf ${ropo}.tar.bz
+wget -qq $repo_url
+tar jxvf ${repo}.tar.bz
 
 time $EXE \
   --tokens=$repo/tokens.txt \

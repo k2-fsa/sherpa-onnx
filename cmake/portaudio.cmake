@@ -10,8 +10,8 @@ function(download_portaudio)
   set(possible_file_locations
     $ENV{HOME}/Downloads/pa_stable_v190700_20210406.tgz
     $ENV{HOME}/asr/pa_stable_v190700_20210406.tgz
-    ${PROJECT_SOURCE_DIR}/pa_stable_v190700_20210406.tgz
-    ${PROJECT_BINARY_DIR}/pa_stable_v190700_20210406.tgz
+    ${CMAKE_SOURCE_DIR}/pa_stable_v190700_20210406.tgz
+    ${CMAKE_BINARY_DIR}/pa_stable_v190700_20210406.tgz
     /tmp/pa_stable_v190700_20210406.tgz
     /star-fj/fangjun/download/github/pa_stable_v190700_20210406.tgz
   )

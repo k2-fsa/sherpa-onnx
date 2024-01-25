@@ -13,8 +13,8 @@ function(download_kaldi_decoder)
   # please pre-download kaldi-decoder
   set(possible_file_locations
     $ENV{HOME}/Downloads/kaldi-decoder-0.2.3.tar.gz
-    ${PROJECT_SOURCE_DIR}/kaldi-decoder-0.2.3.tar.gz
-    ${PROJECT_BINARY_DIR}/kaldi-decoder-0.2.3.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldi-decoder-0.2.3.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldi-decoder-0.2.3.tar.gz
     /tmp/kaldi-decoder-0.2.3.tar.gz
     /star-fj/fangjun/download/github/kaldi-decoder-0.2.3.tar.gz
   )

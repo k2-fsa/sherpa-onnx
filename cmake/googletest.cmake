@@ -9,8 +9,8 @@ function(download_googltest)
   # please pre-download googletest
   set(possible_file_locations
     $ENV{HOME}/Downloads/googletest-1.13.0.tar.gz
-    ${PROJECT_SOURCE_DIR}/googletest-1.13.0.tar.gz
-    ${PROJECT_BINARY_DIR}/googletest-1.13.0.tar.gz
+    ${CMAKE_SOURCE_DIR}/googletest-1.13.0.tar.gz
+    ${CMAKE_BINARY_DIR}/googletest-1.13.0.tar.gz
     /tmp/googletest-1.13.0.tar.gz
     /star-fj/fangjun/download/github/googletest-1.13.0.tar.gz
   )

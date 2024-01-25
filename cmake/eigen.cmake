@@ -9,8 +9,8 @@ function(download_eigen)
   # please pre-download eigen
   set(possible_file_locations
     $ENV{HOME}/Downloads/eigen-3.4.0.tar.gz
-    ${PROJECT_SOURCE_DIR}/eigen-3.4.0.tar.gz
-    ${PROJECT_BINARY_DIR}/eigen-3.4.0.tar.gz
+    ${CMAKE_SOURCE_DIR}/eigen-3.4.0.tar.gz
+    ${CMAKE_BINARY_DIR}/eigen-3.4.0.tar.gz
     /tmp/eigen-3.4.0.tar.gz
     /star-fj/fangjun/download/github/eigen-3.4.0.tar.gz
   )

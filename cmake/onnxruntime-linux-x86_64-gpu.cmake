@@ -27,8 +27,8 @@ set(onnxruntime_HASH "SHA256=bbdc33367c056029b3ac0c042cbca2236b8f59a3a53b4daf234
 # You can add more if you want.
 set(possible_file_locations
   $ENV{HOME}/Downloads/onnxruntime-linux-x64-gpu-1.16.3.tgz
-  ${PROJECT_SOURCE_DIR}/onnxruntime-linux-x64-gpu-1.16.3.tgz
-  ${PROJECT_BINARY_DIR}/onnxruntime-linux-x64-gpu-1.16.3.tgz
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-gpu-1.16.3.tgz
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-gpu-1.16.3.tgz
   /tmp/onnxruntime-linux-x64-gpu-1.16.3.tgz
   /star-fj/fangjun/download/github/onnxruntime-linux-x64-gpu-1.16.3.tgz
 )

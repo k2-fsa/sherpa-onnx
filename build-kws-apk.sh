@@ -33,17 +33,17 @@ mkdir -p apks
 repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
 if [ ! -d ./android/SherpaOnnxKws/app/src/main/assets/$repo ]; then
-  repo_url=https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.git
-  log "Start testing ${repo_url}"
-  log "Download pretrained model and test-data from $repo_url"
-  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-  pushd $repo
-  git lfs pull --include "*.onnx"
 
-  # remove .git to save spaces
-  rm -rf .git
+  repo_url=https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
+  log "Start testing ${repo_url}"
+
+  log "Download pretrained model and test-data from $repo_url"
+  wget -qq $repo_url
+  tar jxvf ${repo}.tar.bz
+
+  pushd $repo
   rm *.int8.onnx
-  rm README.md configuration.json .gitattributes
+  rm README.md
   rm -rfv test_wavs
   ls -lh
   popd
@@ -85,17 +85,15 @@ rm -rf ./android/SherpaOnnxKws/app/src/main/assets/$repo
 repo=sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01
 
 if [ ! -d ./android/SherpaOnnxKws/app/src/main/assets/$repo ]; then
-  repo_url=https://www.modelscope.cn/pkufool/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.git
+  repo_url=https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
   log "Start testing ${repo_url}"
   log "Download pretrained model and test-data from $repo_url"
-  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-  pushd $repo
-  git lfs pull --include "*.onnx"
+  wget -qq $repo_url
+  tar jxvf ${repo}.tar.bz
 
-  # remove .git to save spaces
-  rm -rf .git
+  pushd $repo
   rm *.int8.onnx
-  rm README.md configuration.json .gitattributes
+  rm README.md
   rm -rfv test_wavs
   ls -lh
   popd
