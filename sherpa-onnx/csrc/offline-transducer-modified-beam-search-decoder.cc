@@ -98,8 +98,8 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
 
     float *p_logit = logit.GetTensorMutableData<float>();
     if (blank_penalty_ > 0.0) {
-      SubtractBlank(p_logit, vocab_size, num_hyps, 0, blank_penalty_); // assuming blank id is 0
-      // p_logit[:, 0] -= blank_penalty_ // assuming blank id is 0
+      // assuming blank id is 0
+      SubtractBlank(p_logit, vocab_size, num_hyps, 0, blank_penalty_);
     }
     LogSoftmax(p_logit, vocab_size, num_hyps);
 

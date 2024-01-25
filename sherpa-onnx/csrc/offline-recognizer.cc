@@ -31,7 +31,8 @@ void OfflineRecognizerConfig::Register(ParseOptions *po) {
   po->Register("blank-penalty", &blank_penalty,
                "The penalty applied on blank symbol during decoding. "
                "Note: It is a positive value. "
-               "Increasing value will lead to lower deletion at the cost of higher insertions. "
+               "Increasing value will lead to lower deletion at the cost"
+               "of higher insertions. "
                "Currently only applicable for transducer models.");
 
   po->Register(

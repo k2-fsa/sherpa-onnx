@@ -97,7 +97,8 @@ void LogSoftmax(T *in, int32_t w, int32_t h) {
 }
 
 template <typename T>
-void SubtractBlank(T *in, int32_t w, int32_t h, int32_t blank_idx, float blank_penalty) {
+void SubtractBlank(T *in, int32_t w, int32_t h,
+                   int32_t blank_idx, float blank_penalty) {
   for (int32_t i = 0; i != h; ++i) {
     in[blank_idx] -= blank_penalty;
     in += w;

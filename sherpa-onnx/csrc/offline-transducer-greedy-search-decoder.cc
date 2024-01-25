@@ -50,7 +50,7 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
     bool emitted = false;
     for (int32_t i = 0; i != n; ++i) {
       if (blank_penalty_ > 0.0) {
-        p_logit[0] -= blank_penalty_; // assuming blank id is 0
+        p_logit[0] -= blank_penalty_;  // assuming blank id is 0
       }
       auto y = static_cast<int32_t>(std::distance(
           static_cast<const float *>(p_logit),
