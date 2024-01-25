@@ -48,6 +48,7 @@ class OfflineRecognizer(object):
         max_active_paths: int = 4,
         hotwords_file: str = "",
         hotwords_score: float = 1.5,
+        blank_penalty: float = 0.0,
         debug: bool = False,
         provider: str = "cpu",
     ):
@@ -81,6 +82,8 @@ class OfflineRecognizer(object):
           max_active_paths:
             Maximum number of active paths to keep. Used only when
             decoding_method is modified_beam_search.
+          blank_penalty:
+            The penalty applied on blank symbol during decoding.
           debug:
             True to show debug messages.
           provider:
@@ -117,6 +120,7 @@ class OfflineRecognizer(object):
             decoding_method=decoding_method,
             hotwords_file=hotwords_file,
             hotwords_score=hotwords_score,
+            blank_penalty=blank_penalty,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
