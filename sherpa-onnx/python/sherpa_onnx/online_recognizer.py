@@ -100,6 +100,12 @@ class OnlineRecognizer(object):
           max_active_paths:
             Use only when decoding_method is modified_beam_search. It specifies
             the maximum number of active paths during beam search.
+          hotwords_file:
+            The file containing hotwords, one words/phrases per line, and for each
+            phrase the bpe/cjkchar are separated by a space.
+          hotwords_score:
+            The hotword score of each token for biasing word/phrase. Used only if
+            hotwords_file is given with modified_beam_search as decoding method.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
           model_type:
