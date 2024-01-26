@@ -1,6 +1,6 @@
 package com.k2fsa.sherpa.onnx.tts.engine
 
-import android.app.Application
+import android.content.Context
 import android.content.res.AssetManager
 import android.util.Log
 import androidx.compose.runtime.MutableState
@@ -19,7 +19,6 @@ object TtsEngine {
     // deu for German
     // cmn for Mandarin
     var lang: String? = null
-
 
 
     val speedState: MutableState<Float> = mutableStateOf(1.0F)
@@ -44,19 +43,7 @@ object TtsEngine {
     private var dataDir: String? = null
     private var assets: AssetManager? = null
 
-    private var application: Application? = null
-
-    fun createTts(application: Application) {
-        Log.i(TAG, "Init Next-gen Kaldi TTS")
-        if (tts == null) {
-            this.application = application
-            initTts()
-        }
-    }
-
-    private fun initTts() {
-        assets = application?.assets
-
+    init {
         // The purpose of such a design is to make the CI test easier
         // Please see
         // https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/apk/generate-tts-apk-script.py
@@ -89,9 +76,21 @@ object TtsEngine {
         // ruleFsts = "vits-zh-aishell3/rule.fst"
         // lexicon = "lexicon.txt"
         // lang = "zho"
+    }
+
+
+    fun createTts(context: Context) {
+        Log.i(TAG, "Init Next-gen Kaldi TTS")
+        if (tts == null) {
+            initTts(context)
+        }
+    }
+
+    private fun initTts(context: Context) {
+        assets = context.assets
 
         if (dataDir != null) {
-            val newDir = copyDataDir(modelDir!!)
+            val newDir = copyDataDir(context, modelDir!!)
             modelDir = newDir + "/" + modelDir
             dataDir = newDir + "/" + dataDir
             assets = null
@@ -107,28 +106,28 @@ object TtsEngine {
     }
 
 
-    private fun copyDataDir(dataDir: String): String {
+    private fun copyDataDir(context: Context, dataDir: String): String {
         println("data dir is $dataDir")
-        copyAssets(dataDir)
+        copyAssets(context, dataDir)
 
-        val newDataDir = application!!.getExternalFilesDir(null)!!.absolutePath
+        val newDataDir = context.getExternalFilesDir(null)!!.absolutePath
         println("newDataDir: $newDataDir")
         return newDataDir
     }
 
-    private fun copyAssets(path: String) {
+    private fun copyAssets(context: Context, path: String) {
         val assets: Array<String>?
         try {
-            assets = application!!.assets.list(path)
+            assets = context.assets.list(path)
             if (assets!!.isEmpty()) {
-                copyFile(path)
+                copyFile(context, path)
             } else {
-                val fullPath = "${application!!.getExternalFilesDir(null)}/$path"
+                val fullPath = "${context.getExternalFilesDir(null)}/$path"
                 val dir = File(fullPath)
                 dir.mkdirs()
                 for (asset in assets.iterator()) {
                     val p: String = if (path == "") "" else path + "/"
-                    copyAssets(p + asset)
+                    copyAssets(context, p + asset)
                 }
             }
         } catch (ex: IOException) {
@@ -136,10 +135,10 @@ object TtsEngine {
         }
     }
 
-    private fun copyFile(filename: String) {
+    private fun copyFile(context: Context, filename: String) {
         try {
-            val istream = application!!.assets.open(filename)
-            val newFilename = application!!.getExternalFilesDir(null).toString() + "/" + filename
+            val istream = context.assets.open(filename)
+            val newFilename = context.getExternalFilesDir(null).toString() + "/" + filename
             val ostream = FileOutputStream(newFilename)
             // Log.i(TAG, "Copying $filename to $newFilename")
             val buffer = ByteArray(1024)

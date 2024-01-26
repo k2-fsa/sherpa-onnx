@@ -56,10 +56,16 @@ Failed to get default language from engine com.k2fsa.sherpa.chapter5
 
 class TtsService : TextToSpeechService() {
     override fun onCreate() {
+        Log.i(TAG, "onCreate tts service")
         super.onCreate()
 
         // see https://github.com/Miserlou/Android-SDK-Samples/blob/master/TtsEngine/src/com/example/android/ttsengine/RobotSpeakTtsService.java#L68
         onLoadLanguage(TtsEngine.lang, "", "")
+    }
+
+    override fun onDestroy() {
+        Log.i(TAG, "onDestroy tts service")
+        super.onDestroy()
     }
 
     // https://developer.android.com/reference/kotlin/android/speech/tts/TextToSpeechService#onislanguageavailable
@@ -79,12 +85,15 @@ class TtsService : TextToSpeechService() {
 
     // https://developer.android.com/reference/kotlin/android/speech/tts/TextToSpeechService#onLoadLanguage(kotlin.String,%20kotlin.String,%20kotlin.String)
     override fun onLoadLanguage(_lang: String?, _country: String?, _variant: String?): Int {
+        Log.i(TAG, "onLoadLanguage: $_lang, $_country")
         val lang = _lang ?: ""
 
         return if (lang == TtsEngine.lang) {
+            Log.i(TAG, "creating tts, lang :$lang")
             TtsEngine.createTts(application)
             TextToSpeech.LANG_AVAILABLE
         } else {
+            Log.i(TAG, "lang $lang not supported, tts engine lang: ${TtsEngine.lang}")
             TextToSpeech.LANG_NOT_SUPPORTED
         }
     }
@@ -118,7 +127,7 @@ class TtsService : TextToSpeechService() {
             return
         }
 
-        val ttsCallback = {floatSamples: FloatArray ->
+        val ttsCallback = { floatSamples: FloatArray ->
             // convert FloatArray to ByteArray
             val samples = floatArrayToByteArray(floatSamples)
             val maxBufferSize: Int = callback.maxBufferSize
@@ -136,7 +145,7 @@ class TtsService : TextToSpeechService() {
             text = text,
             sid = TtsEngine.speakerId,
             speed = TtsEngine.speed,
-            callback=ttsCallback,
+            callback = ttsCallback,
         )
 
         callback.done()
