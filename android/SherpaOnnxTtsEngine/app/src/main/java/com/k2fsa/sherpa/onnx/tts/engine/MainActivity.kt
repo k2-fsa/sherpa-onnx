@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.k2fsa.sherpa.onnx.tts.engine.ui.theme.SherpaOnnxTtsEngineTheme
 import java.io.File
+import java.lang.NumberFormatException
 
 const val TAG = "sherpa-onnx-tts-engine"
 
@@ -77,7 +78,12 @@ class MainActivity : ComponentActivity() {
                                             if (it.isEmpty() || it.isBlank()) {
                                                 TtsEngine.speakerId = 0
                                             } else {
-                                                TtsEngine.speakerId = it.toString().toInt()
+                                                try {
+                                                    TtsEngine.speakerId = it.toString().toInt()
+                                                } catch (ex: NumberFormatException) {
+                                                    Log.i(TAG, "Invalid input: ${it}")
+                                                    TtsEngine.speakerId = 0
+                                                }
                                             }
                                         },
                                         label = {
