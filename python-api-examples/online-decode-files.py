@@ -217,6 +217,18 @@ def get_args():
     )
 
     parser.add_argument(
+        "--blank-penalty",
+        type=float,
+        default=0.0,
+        help="""
+        The penalty applied on blank symbol during decoding.
+        Note: It is a positive value that would be applied to logits like
+        this `logits[:, 0] -= blank_penalty` (suppose logits.shape is
+        [batch_size, vocab] and blank id is 0).
+        """,
+    )
+
+    parser.add_argument(
         "sound_files",
         type=str,
         nargs="+",
@@ -290,6 +302,7 @@ def main():
             lm_scale=args.lm_scale,
             hotwords_file=args.hotwords_file,
             hotwords_score=args.hotwords_score,
+            blank_penalty=args.blank_penalty,
         )
     elif args.zipformer2_ctc:
         recognizer = sherpa_onnx.OnlineRecognizer.from_zipformer2_ctc(

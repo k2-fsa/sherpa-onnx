@@ -241,6 +241,18 @@ def add_modified_beam_search_args(parser: argparse.ArgumentParser):
         """,
     )
 
+def add_blank_penalty_args(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--blank-penalty",
+        type=float,
+        default=0.0,
+        help="""
+        The penalty applied on blank symbol during decoding.
+        Note: It is a positive value that would be applied to logits like
+        this `logits[:, 0] -= blank_penalty` (suppose logits.shape is
+        [batch_size, vocab] and blank id is 0).
+        """,
+    )
 
 def add_endpointing_args(parser: argparse.ArgumentParser):
     parser.add_argument(
@@ -284,6 +296,7 @@ def get_args():
     add_decoding_args(parser)
     add_endpointing_args(parser)
     add_hotwords_args(parser)
+    add_blank_penalty_args(parser)
 
     parser.add_argument(
         "--port",
@@ -390,6 +403,7 @@ def create_recognizer(args) -> sherpa_onnx.OnlineRecognizer:
             max_active_paths=args.num_active_paths,
             hotwords_score=args.hotwords_score,
             hotwords_file=args.hotwords_file,
+            blank_penalty=args.blank_penalty,
             enable_endpoint_detection=args.use_endpoint != 0,
             rule1_min_trailing_silence=args.rule1_min_trailing_silence,
             rule2_min_trailing_silence=args.rule2_min_trailing_silence,
