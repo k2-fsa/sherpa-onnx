@@ -21,12 +21,14 @@ class OnlineTransducerModifiedBeamSearchDecoder
   OnlineTransducerModifiedBeamSearchDecoder(OnlineTransducerModel *model,
                                             OnlineLM *lm,
                                             int32_t max_active_paths,
-                                            float lm_scale, int32_t unk_id)
+                                            float lm_scale, int32_t unk_id,
+                                            float blank_penalty)
       : model_(model),
         lm_(lm),
         max_active_paths_(max_active_paths),
         lm_scale_(lm_scale),
-        unk_id_(unk_id) {}
+        unk_id_(unk_id),
+        blank_penalty_(blank_penalty) {}
 
   OnlineTransducerDecoderResult GetEmptyResult() const override;
 
@@ -47,6 +49,7 @@ class OnlineTransducerModifiedBeamSearchDecoder
   int32_t max_active_paths_;
   float lm_scale_;  // used only when lm_ is not nullptr
   int32_t unk_id_;
+  float blank_penalty_;
 };
 
 }  // namespace sherpa_onnx

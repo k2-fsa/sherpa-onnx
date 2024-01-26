@@ -48,6 +48,7 @@ class OnlineRecognizer(object):
         decoding_method: str = "greedy_search",
         max_active_paths: int = 4,
         hotwords_score: float = 1.5,
+        blank_penalty: float = 0.0,
         hotwords_file: str = "",
         provider: str = "cpu",
         model_type: str = "",
@@ -100,6 +101,8 @@ class OnlineRecognizer(object):
           max_active_paths:
             Use only when decoding_method is modified_beam_search. It specifies
             the maximum number of active paths during beam search.
+          blank_penalty:
+            The penalty applied on blank symbol during decoding.
           hotwords_file:
             The file containing hotwords, one words/phrases per line, and for each
             phrase the bpe/cjkchar are separated by a space.
@@ -172,6 +175,7 @@ class OnlineRecognizer(object):
             max_active_paths=max_active_paths,
             hotwords_score=hotwords_score,
             hotwords_file=hotwords_file,
+            blank_penalty=blank_penalty,
         )
 
         self.recognizer = _Recognizer(recognizer_config)

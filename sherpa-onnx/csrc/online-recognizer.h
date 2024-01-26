@@ -83,6 +83,8 @@ struct OnlineRecognizerConfig {
   float hotwords_score = 1.5;
   std::string hotwords_file;
 
+  float blank_penalty = 0.0;
+
   OnlineRecognizerConfig() = default;
 
   OnlineRecognizerConfig(const FeatureExtractorConfig &feat_config,
@@ -92,7 +94,8 @@ struct OnlineRecognizerConfig {
                          bool enable_endpoint,
                          const std::string &decoding_method,
                          int32_t max_active_paths,
-                         const std::string &hotwords_file, float hotwords_score)
+                         const std::string &hotwords_file, float hotwords_score,
+                         float blank_penalty)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
@@ -101,7 +104,8 @@ struct OnlineRecognizerConfig {
         decoding_method(decoding_method),
         max_active_paths(max_active_paths),
         hotwords_score(hotwords_score),
-        hotwords_file(hotwords_file) {}
+        hotwords_file(hotwords_file),
+        blank_penalty(blank_penalty) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
