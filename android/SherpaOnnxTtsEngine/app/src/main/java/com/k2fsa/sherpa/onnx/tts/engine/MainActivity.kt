@@ -9,6 +9,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -43,9 +44,13 @@ import java.lang.NumberFormatException
 const val TAG = "sherpa-onnx-tts-engine"
 
 class MainActivity : ComponentActivity() {
+    // TODO(fangjun): Save settings in ttsViewModel
+    private val ttsViewModel: TtsViewModel by viewModels()
+
+    private var mediaPlayer: MediaPlayer? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        TtsEngine.createTts(this.application)
+        TtsEngine.createTts(this)
         setContent {
             SherpaOnnxTtsEngineTheme {
                 // A surface container using the 'background' color from the theme
@@ -132,11 +137,12 @@ class MainActivity : ComponentActivity() {
                                                     audio.samples.size > 0 && audio.save(filename)
 
                                                 if (ok) {
-                                                    val mediaPlayer = MediaPlayer.create(
+                                                    stopMediaPlayer()
+                                                    mediaPlayer = MediaPlayer.create(
                                                         applicationContext,
                                                         Uri.fromFile(File(filename))
                                                     )
-                                                    mediaPlayer.start()
+                                                    mediaPlayer?.start()
                                                 } else {
                                                     Log.i(TAG, "Failed to generate or save audio")
                                                 }
@@ -161,5 +167,16 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onDestroy() {
+        stopMediaPlayer()
+        super.onDestroy()
+    }
+
+    private fun stopMediaPlayer() {
+        mediaPlayer?.stop()
+        mediaPlayer?.release()
+        mediaPlayer = null
     }
 }
