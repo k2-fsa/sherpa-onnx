@@ -4,10 +4,6 @@ import re
 from pathlib import Path
 from typing import List, Optional, Union
 
-import sentencepiece as spm
-
-from pypinyin import pinyin
-from pypinyin.contrib.tone_convert import to_initials, to_finals_tone
 
 
 def text2token(
@@ -38,6 +34,11 @@ def text2token(
       Return the encoded texts, it is a list of a list of token ids if output_ids
       is True, or it is a list of list of tokens.
     """
+    import sentencepiece as spm
+
+    from pypinyin import pinyin
+    from pypinyin.contrib.tone_convert import to_initials, to_finals_tone
+
     assert Path(tokens).is_file(), f"File not exists, {tokens}"
     tokens_table = {}
     with open(tokens, "r", encoding="utf-8") as f:
