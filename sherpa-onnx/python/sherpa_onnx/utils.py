@@ -4,8 +4,6 @@ import re
 from pathlib import Path
 from typing import List, Optional, Union
 
-
-
 def text2token(
     texts: List[str],
     tokens: str,
@@ -34,10 +32,22 @@ def text2token(
       Return the encoded texts, it is a list of a list of token ids if output_ids
       is True, or it is a list of list of tokens.
     """
-    import sentencepiece as spm
+    try:
+      import sentencepiece as spm
+    except ImportError:
+        print('Please run')
+        print('  pip install sentencepiece')
+        print('before you continue')
+        raise
 
-    from pypinyin import pinyin
-    from pypinyin.contrib.tone_convert import to_initials, to_finals_tone
+    try:
+        from pypinyin import pinyin
+        from pypinyin.contrib.tone_convert import to_initials, to_finals_tone
+    except ImportError:
+        print('Please run')
+        print('  pip install pypinyin')
+        print('before you continue')
+        raise
 
     assert Path(tokens).is_file(), f"File not exists, {tokens}"
     tokens_table = {}

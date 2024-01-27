@@ -1,7 +1,14 @@
 # Copyright (c)  2023  Xiaomi Corporation
 
 import logging
-import click
+try:
+    import click
+except ImportError:
+    print('Please run')
+    print('  pip install click')
+    print('before you continue')
+    raise
+
 from pathlib import Path
 from sherpa_onnx import text2token
 

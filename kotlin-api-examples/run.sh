@@ -62,7 +62,7 @@ if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
   rm vits-piper-en_US-amy-low.tar.bz2
 fi
 
-kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt faked-asset-manager.kt Tts.kt Speaker.kt
+kotlinc-jvm -include-runtime -d main.jar Main.kt WaveReader.kt SherpaOnnx.kt faked-asset-manager.kt Tts.kt Speaker.kt faked-log.kt
 
 ls -lh main.jar
 
