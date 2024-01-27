@@ -36,13 +36,6 @@ package_name = "sherpa-onnx"
 with open("sherpa-onnx/python/sherpa_onnx/__init__.py", "a") as f:
     f.write(f"__version__ = '{get_package_version()}'\n")
 
-install_requires = [
-    "numpy",
-    "sentencepiece==0.1.96; python_version < '3.11'",
-    "sentencepiece; python_version >= '3.11'",
-    "click>=7.1.1",
-]
-
 
 def get_binaries_to_install():
     bin_dir = Path("build") / "sherpa_onnx" / "bin"
@@ -91,7 +84,6 @@ def get_binaries_to_install():
 setuptools.setup(
     name=package_name,
     python_requires=">=3.6",
-    install_requires=install_requires,
     version=get_package_version(),
     author="The sherpa-onnx development team",
     author_email="dpovey@gmail.com",

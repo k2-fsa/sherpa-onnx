@@ -2,9 +2,8 @@ package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
 import android.util.Log
-import com.k2fsa.sherpa.onnx.speaker.identification.TAG
 
-
+private val TAG = "sherpa-onnx"
 data class SpeakerEmbeddingExtractorConfig(
     val model: String,
     var numThreads: Int = 1,
