@@ -48,8 +48,9 @@ jobs:
         shell: bash
         run: |
           pip install --verbose sherpa-onnx
+          # python3 -m pip install --verbose .
 
-      - name: Test sherp-onnx
+      - name: Test sherpa-onnx
         shell: bash
         run: |
           python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
@@ -68,8 +69,8 @@ jobs:
           export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.11.7/x64/bin:$PATH
 
-
           sherpa-onnx --help
+          sherpa-onnx-keyword-spotter --help
           sherpa-onnx-offline --help
           sherpa-onnx-offline-tts --help
 
