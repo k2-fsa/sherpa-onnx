@@ -11,6 +11,214 @@ namespace SherpaOnnx
 {
 
   [StructLayout(LayoutKind.Sequential)]
+  public struct OfflineTtsVitsModelConfig
+  {
+    public OfflineTtsVitsModelConfig()
+    {
+      Model = "";
+      Lexicon = "";
+      Tokens = "";
+      DataDir = "";
+
+      NoiseScale = 0.667F;
+      NoiseScaleW = 0.8F;
+      LengthScale = 1.0F;
+    }
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Model;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Lexicon;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Tokens;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string DataDir;
+
+    public float NoiseScale;
+    public float NoiseScaleW;
+    public float LengthScale;
+  }
+
+  [StructLayout(LayoutKind.Sequential)]
+  public struct OfflineTtsModelConfig
+  {
+    public OfflineTtsModelConfig()
+    {
+      Vits = new OfflineTtsVitsModelConfig();
+      NumThreads = 1;
+      Debug = 0;
+      Provider = "cpu";
+    }
+
+    public OfflineTtsVitsModelConfig Vits;
+    public int NumThreads;
+    public int Debug;
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Provider;
+  }
+
+  public struct OfflineTtsConfig
+  {
+    public OfflineTtsConfig()
+    {
+      Model = new OfflineTtsModelConfig();
+      RuleFsts = "";
+      MaxNumSentences = 1;
+    }
+    public OfflineTtsModelConfig Model;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string RuleFsts;
+
+    public int MaxNumSentences;
+  }
+
+  public class OfflineTtsGeneratedAudio
+  {
+    public OfflineTtsGeneratedAudio(IntPtr p)
+    {
+      _handle = new HandleRef(this, p);
+    }
+
+    public bool SaveToWaveFile(String filename)
+    {
+      Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
+      int status = SherpaOnnxWriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, filename);
+      return status == 1;
+    }
+
+    ~OfflineTtsGeneratedAudio()
+    {
+      Cleanup();
+    }
+
+    public void Dispose()
+    {
+      Cleanup();
+      // Prevent the object from being placed on the
+      // finalization queue
+      System.GC.SuppressFinalize(this);
+    }
+
+    private void Cleanup()
+    {
+      SherpaOnnxDestroyOfflineTtsGeneratedAudio(Handle);
+
+      // Don't permit the handle to be used again.
+      _handle = new HandleRef(this, IntPtr.Zero);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct Impl
+    {
+      public IntPtr Samples;
+      public int NumSamples;
+      public int SampleRate;
+    }
+
+    private HandleRef _handle;
+    public IntPtr Handle => _handle.Handle;
+
+    public int NumSamples
+    {
+      get
+      {
+        Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
+        return impl.NumSamples;
+      }
+    }
+
+    public int SampleRate
+    {
+      get
+      {
+        Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
+        return impl.SampleRate;
+      }
+    }
+
+    public float[] Samples
+    {
+      get
+      {
+        Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
+
+        float[] samples = new float[impl.NumSamples];
+        Marshal.Copy(impl.Samples, samples, 0, impl.NumSamples);
+        return samples;
+      }
+    }
+
+    [DllImport(Dll.Filename)]
+    private static extern void SherpaOnnxDestroyOfflineTtsGeneratedAudio(IntPtr handle);
+
+    [DllImport(Dll.Filename)]
+    private static extern int SherpaOnnxWriteWave(IntPtr samples, int n, int sample_rate, [MarshalAs(UnmanagedType.LPStr)] string filename);
+  }
+
+  public class OfflineTts : IDisposable
+  {
+    public OfflineTts(OfflineTtsConfig config)
+    {
+      IntPtr h = SherpaOnnxCreateOfflineTts(ref config);
+      _handle = new HandleRef(this, h);
+    }
+
+    public OfflineTtsGeneratedAudio Generate(String text, float speed, int speakerId)
+    {
+      IntPtr p = SherpaOnnxOfflineTtsGenerate(_handle.Handle, text, speakerId, speed);
+      return new OfflineTtsGeneratedAudio(p);
+    }
+
+    public void Dispose()
+    {
+      Cleanup();
+      // Prevent the object from being placed on the
+      // finalization queue
+      System.GC.SuppressFinalize(this);
+    }
+
+    ~OfflineTts()
+    {
+      Cleanup();
+    }
+
+    private void Cleanup()
+    {
+      SherpaOnnxDestroyOfflineTts(_handle.Handle);
+
+      // Don't permit the handle to be used again.
+      _handle = new HandleRef(this, IntPtr.Zero);
+    }
+
+    private HandleRef _handle;
+
+    public int SampleRate
+    {
+      get
+      {
+        return SherpaOnnxOfflineTtsSampleRate(_handle.Handle);
+      }
+    }
+
+    [DllImport(Dll.Filename)]
+    private static extern IntPtr SherpaOnnxCreateOfflineTts(ref OfflineTtsConfig config);
+
+    [DllImport(Dll.Filename)]
+    private static extern void SherpaOnnxDestroyOfflineTts(IntPtr handle);
+
+    [DllImport(Dll.Filename)]
+    private static extern int SherpaOnnxOfflineTtsSampleRate(IntPtr handle);
+
+    [DllImport(Dll.Filename)]
+    private static extern IntPtr SherpaOnnxOfflineTtsGenerate(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string text, int sid, float speed);
+  }
+
+
+
+  [StructLayout(LayoutKind.Sequential)]
   public struct OfflineTransducerModelConfig
   {
     public OfflineTransducerModelConfig()

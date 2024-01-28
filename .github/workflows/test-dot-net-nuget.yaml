@@ -55,3 +55,19 @@ jobs:
           ./run-zipformer.sh
           ./run-whisper.sh
           ./run-tdnn-yesno.sh
+
+          cd ../offline-tts
+          ./run-aishell3.sh
+          ./run-piper.sh
+          ls -lh
+
+          cd ../..
+
+          mkdir tts
+
+          cp dotnet-examples/offline-tts/*.wav ./tts
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: dot-net-tts-generated-test-files-${{ matrix.os }}
+          path: tts

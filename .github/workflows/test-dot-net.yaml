@@ -131,6 +131,7 @@ jobs:
       - name: Copy files
         shell: bash
         run: |
+          cp -v scripts/dotnet/examples/offline-tts.csproj dotnet-examples/offline-tts/
           cp -v scripts/dotnet/examples/offline-decode-files.csproj dotnet-examples/offline-decode-files/
           cp -v scripts/dotnet/examples/online-decode-files.csproj dotnet-examples/online-decode-files/
           cp -v scripts/dotnet/examples/speech-recognition-from-microphone.csproj dotnet-examples/speech-recognition-from-microphone/
@@ -153,3 +154,19 @@ jobs:
           ./run-zipformer.sh
           ./run-whisper.sh
           ./run-tdnn-yesno.sh
+
+          cd ../offline-tts
+          ./run-aishell3.sh
+          ./run-piper.sh
+          ls -lh
+
+          cd ../..
+
+          mkdir tts
+
+          cp dotnet-examples/offline-tts/*.wav ./tts
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: dot-net-tts-generated-test-files-${{ matrix.os }}
+          path: tts

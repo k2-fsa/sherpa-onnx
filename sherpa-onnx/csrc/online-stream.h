@@ -18,7 +18,7 @@
 
 namespace sherpa_onnx {
 
-class TransducerKeywordResult;
+struct TransducerKeywordResult;
 class OnlineStream {
  public:
   explicit OnlineStream(const FeatureExtractorConfig &config = {},
