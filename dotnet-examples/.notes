@@ -1,0 +1,9 @@
+# How to create a new project in this folder
+
+```bash
+mkdir offline-tts
+cd offline-tts
+dotnet new console
+cd ..
+dotnet sln ./sherpa-onnx.sln add ./offline-tts
+```
