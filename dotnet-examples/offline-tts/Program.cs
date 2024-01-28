@@ -47,13 +47,13 @@ class OfflineTtsDemo
     [Option("vits-model", Required = true, HelpText = "Path to VITS model")]
     public string Model { get; set; }
 
-    [Option("sid", Required = false, Default=0, HelpText = "Speaker ID")]
+    [Option("sid", Required = false, Default = 0, HelpText = "Speaker ID")]
     public int SpeakerId { get; set; }
 
     [Option("text", Required = true, HelpText = "Text to synthesize")]
     public string Text { get; set; }
 
-    [Option("output-filename", Required = true, Default="./generated.wav", HelpText = "Path to save the generated audio")]
+    [Option("output-filename", Required = true, Default = "./generated.wav", HelpText = "Path to save the generated audio")]
     public string OutputFilename { get; set; }
   }
 
@@ -126,8 +126,8 @@ to download more models.
     config.Model.NumThreads = 1;
     config.Model.Debug = options.Debug;
     config.Model.Provider = "cpu";
-    config.RuleFsts= options.RuleFsts;
-    config.MaxNumSentences= options.MaxNumSentences;
+    config.RuleFsts = options.RuleFsts;
+    config.MaxNumSentences = options.MaxNumSentences;
 
     OfflineTts tts = new OfflineTts(config);
     float speed = 1.0f / options.LengthScale;

@@ -84,9 +84,9 @@ namespace SherpaOnnx
 
     public bool SaveToWaveFile(String filename)
     {
-          Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
-          int status = SherpaOnnxWriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, filename);
-          return status == 1;
+      Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
+      int status = SherpaOnnxWriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, filename);
+      return status == 1;
     }
 
     ~OfflineTtsGeneratedAudio()
@@ -123,32 +123,32 @@ namespace SherpaOnnx
 
     public int NumSamples
     {
-        get
-        {
-          Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
-          return impl.NumSamples;
-        }
+      get
+      {
+        Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
+        return impl.NumSamples;
+      }
     }
 
     public int SampleRate
     {
-        get
-        {
-          Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
-          return impl.SampleRate;
-        }
+      get
+      {
+        Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
+        return impl.SampleRate;
+      }
     }
 
     public float[] Samples
     {
-        get
-        {
-            Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
+      get
+      {
+        Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
 
-            float[] samples = new float[impl.NumSamples];
-            Marshal.Copy(impl.Samples, samples, 0, impl.NumSamples);
-            return samples;
-        }
+        float[] samples = new float[impl.NumSamples];
+        Marshal.Copy(impl.Samples, samples, 0, impl.NumSamples);
+        return samples;
+      }
     }
 
     [DllImport(Dll.Filename)]
@@ -197,10 +197,10 @@ namespace SherpaOnnx
 
     public int SampleRate
     {
-        get
-        {
-          return SherpaOnnxOfflineTtsSampleRate(_handle.Handle);
-        }
+      get
+      {
+        return SherpaOnnxOfflineTtsSampleRate(_handle.Handle);
+      }
     }
 
     [DllImport(Dll.Filename)]
