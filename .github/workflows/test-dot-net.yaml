@@ -168,5 +168,5 @@ jobs:
 
       - uses: actions/upload-artifact@v3
         with:
-          name: dot-net-tts-generated-test-files
+          name: dot-net-tts-generated-test-files-${{ matrix.os }}
           path: tts
