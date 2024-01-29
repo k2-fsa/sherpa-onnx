@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
 if [ ! -f ./vits-zh-aishell3/vits-aishell3.onnx ]; then
-  wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
+  # wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
+  curl -OL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
   tar xf vits-zh-aishell3.tar.bz2
   rm vits-zh-aishell3.tar.bz2
 fi
