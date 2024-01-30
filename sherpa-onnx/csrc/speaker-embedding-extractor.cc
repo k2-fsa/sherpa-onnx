@@ -26,7 +26,7 @@ void SpeakerEmbeddingExtractorConfig::Register(ParseOptions *po) {
 
 bool SpeakerEmbeddingExtractorConfig::Validate() const {
   if (model.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --speaker-embedding-model");
+    SHERPA_ONNX_LOGE("Please provide --model");
     return false;
   }
 
