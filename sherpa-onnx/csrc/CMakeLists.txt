@@ -287,6 +287,11 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-microphone-offline-speaker-identification
+    sherpa-onnx-microphone-offline-speaker-identification.cc
+    microphone.cc
+  )
+
   if(BUILD_SHARED_LIBS)
     set(PA_LIB portaudio)
   else()
@@ -294,9 +299,10 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   endif()
 
   set(exes
-    sherpa-onnx-offline-tts-play
     sherpa-onnx-microphone
     sherpa-onnx-microphone-offline
+    sherpa-onnx-microphone-offline-speaker-identification
+    sherpa-onnx-offline-tts-play
     sherpa-onnx-vad-microphone
     sherpa-onnx-vad-microphone-offline-asr
   )

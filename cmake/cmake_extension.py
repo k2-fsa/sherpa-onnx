@@ -155,6 +155,7 @@ class BuildExtension(build_ext):
         binaries += ["sherpa-onnx-offline"]
         binaries += ["sherpa-onnx-microphone"]
         binaries += ["sherpa-onnx-microphone-offline"]
+        binaries += ["sherpa-onnx-microphone-offline-speaker-identification"]
         binaries += ["sherpa-onnx-online-websocket-server"]
         binaries += ["sherpa-onnx-offline-websocket-server"]
         binaries += ["sherpa-onnx-online-websocket-client"]
