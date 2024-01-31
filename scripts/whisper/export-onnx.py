@@ -44,7 +44,9 @@ def get_args():
             "tiny", "tiny.en", "base", "base.en",
             "small", "small.en", "medium", "medium.en",
             "large", "large-v1", "large-v2",
-            "distil-medium.en", "distil-small.en", "distil-large-v2"
+            "distil-medium.en", "distil-small.en", "distil-large-v2",
+            # for fine-tuned models from icefall
+            "medium-aishell",
             ],
         # fmt: on
     )
@@ -337,6 +339,19 @@ def main():
                 You can use the following command to do that:
 
                 wget -O distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
+            """
+            )
+        model = whisper.load_model(filename)
+    elif name == "medium-aishell":
+        filename = "./medium-aishell.pt"
+        if not Path(filename).is_file():
+            raise ValueError(
+                """
+                Please go to https://huggingface.co/yuekai/icefall_asr_aishell_whisper/tree/main/exp_medium
+                to download whisper-medium-aishell1-epoch-10-avg-4.pt
+                You can use the following command to do that:
+
+                wget -O medium-aishell.pt https://huggingface.co/yuekai/icefall_asr_aishell_whisper/resolve/main/exp_medium/whisper-medium-aishell1-epoch-10-avg-4.pt
             """
             )
         model = whisper.load_model(filename)

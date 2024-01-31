@@ -257,9 +257,9 @@ def compute_features(filename: str) -> torch.Tensor:
     mel = (log_spec + 4.0) / 4.0
     # mel (T, 80)
 
-    # We pad 50 frames at the end so that it is able to detect eot
-    # You can use another value instead of 50.
-    mel = torch.nn.functional.pad(mel, (0, 0, 0, 1000), "constant", 0)
+    # We pad 1500 frames at the end so that it is able to detect eot
+    # You can use another value instead of 1500.
+    mel = torch.nn.functional.pad(mel, (0, 0, 0, 1500), "constant", 0)
     # Note that if it throws for a multilingual model,
     # please use a larger value, say 300
 

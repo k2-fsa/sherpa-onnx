@@ -15,9 +15,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
+        os: [ubuntu-latest]
         # model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2", "distil-large-v2"]
-        model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium"]
+        model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "medium-aishell"]
         python-version: ["3.8"]
 
     steps:
@@ -49,9 +49,19 @@ jobs:
           elif [[ $model == distil-small.en ]]; then
             wget -q -O distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
             ls -lh
+          elif [[ $model == medium-aishell ]]; then
+            wget -q -O medium-aishell.pt https://huggingface.co/yuekai/icefall_asr_aishell_whisper/resolve/main/exp_medium/whisper-medium-aishell1-epoch-10-avg-4.pt
+            ls -lh
           fi
           python3 ./export-onnx.py --model ${{ matrix.model }}
           # python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
+          #
+          if [[ $model == medium-aishell ]]; then
+            ls -lh *.onnx
+            rm -fv medium-aishell-encoder.onnx
+            rm -fv medium-aishell-decoder.onnx
+          fi
+
 
           ls -lh
 
@@ -59,6 +69,7 @@ jobs:
           ls -lh distil*original-model.bin || true
           rm -rf ~/.cache/whisper
           rm -f distil*original-model.bin
+          rm -f medium-aishell.pt
 
           src=sherpa-onnx-whisper-${{ matrix.model }}
 
@@ -132,7 +143,10 @@ jobs:
           git config --global user.name "Fangjun Kuang"
 
           GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} huggingface
-          rm -rf huggingface/*
+
+          if [[ $model != medium-aishell ]]; then
+            rm -rf huggingface/*
+          fi
 
           if [[ $model == large || $model == large-v1 || $model == large-v2 || $model == distil-large-v2 ]]; then
             mv $src.tar* ./huggingface
