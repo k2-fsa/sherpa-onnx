@@ -59,6 +59,13 @@ void OnlineTransducerModifiedBeamSearchDecoder::StripLeadingBlanks(
   std::vector<int64_t> tokens(hyp.ys.begin() + context_size, hyp.ys.end());
   r->tokens = std::move(tokens);
   r->timestamps = std::move(hyp.timestamps);
+
+
+  // export per-token scores
+  r->ys_probs = std::move(hyp.ys_probs);
+  r->lm_probs = std::move(hyp.lm_probs);
+  r->context_scores = std::move(hyp.context_scores);
+
   r->num_trailing_blanks = hyp.num_trailing_blanks;
 }
 
@@ -142,6 +149,8 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
     }
     p_logprob = p_logit;  // we changed p_logprob in the above for loop
 
+    // KarelVesely: Sholud the context score be added already before taking topk tokens ?
+
     for (int32_t b = 0; b != batch_size; ++b) {
       int32_t frame_offset = (*result)[b].frame_offset;
       int32_t start = hyps_row_splits[b];
@@ -180,6 +189,20 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         new_hyp.log_prob = p_logprob[k] + context_score -
                            prev_lm_log_prob;  // log_prob only includes the
                                               // score of the transducer
+        // export the per-token log scores
+        {
+          const Hypothesis& prev_i = prev[hyp_index];
+          // subtract 'prev[i]' path scores, which were added before
+          // for getting topk tokens
+          float y_prob = p_logprob[k] - prev_i.log_prob - prev_i.lm_log_prob;
+          new_hyp.ys_probs.push_back(y_prob);
+
+          float lm_prob = new_hyp.lm_log_prob - prev_lm_log_prob;
+          new_hyp.lm_probs.push_back(lm_probs);
+
+          new_hyp.context_scores.push_back(context_score);
+        }
+
         hyps.Add(std::move(new_hyp));
       }  // for (auto k : topk)
       cur.push_back(std::move(hyps));

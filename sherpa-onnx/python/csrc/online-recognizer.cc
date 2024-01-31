@@ -28,7 +28,16 @@ static void PybindOnlineRecognizerResult(py::module *m) {
           [](PyClass &self) -> float { return self.start_time; })
       .def_property_readonly(
           "timestamps",
-          [](PyClass &self) -> std::vector<float> { return self.timestamps; });
+          [](PyClass &self) -> std::vector<float> { return self.timestamps; })
+      .def_property_readonly(
+          "ys_probs",
+          [](PyClass &self) -> std::vector<float> { return self.ys_probs; })
+      .def_property_readonly(
+          "lm_probs",
+          [](PyClass &self) -> std::vector<float> { return self.lm_probs; })
+      .def_property_readonly(
+          "context_scores",
+          [](PyClass &self) -> std::vector<float> { return self.context_scores; });
 }
 
 static void PybindOnlineRecognizerConfig(py::module *m) {

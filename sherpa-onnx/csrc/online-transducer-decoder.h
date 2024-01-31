@@ -26,6 +26,10 @@ struct OnlineTransducerDecoderResult {
   /// timestamps[i] contains the output frame index where tokens[i] is decoded.
   std::vector<int32_t> timestamps;
 
+  std::vector<float> ys_probs;
+  std::vector<float> lm_probs;
+  std::vector<float> context_scores;
+
   // Cache decoder_out for endpointing
   Ort::Value decoder_out;
 

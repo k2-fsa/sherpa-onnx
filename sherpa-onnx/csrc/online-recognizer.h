@@ -40,6 +40,10 @@ struct OnlineRecognizerResult {
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   std::vector<float> timestamps;
 
+  std::vector<float> ys_probs;
+  std::vector<float> lm_probs;
+  std::vector<float> context_scores;
+
   /// ID of this segment
   /// When an endpoint is detected, it is incremented
   int32_t segment = 0;

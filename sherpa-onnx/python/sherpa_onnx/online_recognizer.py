@@ -512,6 +512,15 @@ class OnlineRecognizer(object):
     def start_time(self, s: OnlineStream) -> float:
         return self.recognizer.get_result(s).start_time
 
+    def ys_probs(self, s: OnlineStream) -> List[float]:
+        return self.recognizer.get_result(s).ys_probs
+
+    def lm_probs(self, s: OnlineStream) -> List[float]:
+        return self.recognizer.get_result(s).lm_probs
+
+    def context_scores(self, s: OnlineStream) -> List[float]:
+        return self.recognizer.get_result(s).context_scores
+
     def is_endpoint(self, s: OnlineStream) -> bool:
         return self.recognizer.is_endpoint(s)
 
