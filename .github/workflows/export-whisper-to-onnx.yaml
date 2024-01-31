@@ -55,6 +55,13 @@ jobs:
           fi
           python3 ./export-onnx.py --model ${{ matrix.model }}
           # python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
+          #
+          if [[ $model == medium-aishell ]]; then
+            ls -lh *.onnx
+            rm -fv medium-aishell-encoder.onnx
+            rm -fv medium-aishell-decoder.onnx
+          fi
+
 
           ls -lh
 
