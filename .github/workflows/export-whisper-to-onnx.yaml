@@ -50,7 +50,7 @@ jobs:
             wget -q -O distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
             ls -lh
           elif [[ $model == medium-aishell ]]; then
-            wget -q -O medium-aishell.pt https://huggingface.co/yuekai/icefall_asr_aishell_whisper/resolve/main/exp_medium/epoch-10-avg-4.pt
+            wget -q -O medium-aishell.pt https://huggingface.co/yuekai/icefall_asr_aishell_whisper/resolve/main/exp_medium/whisper-medium-aishell1-epoch-10-avg-4.pt
             ls -lh
           fi
           python3 ./export-onnx.py --model ${{ matrix.model }}

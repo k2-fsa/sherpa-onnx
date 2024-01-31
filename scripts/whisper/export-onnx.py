@@ -348,10 +348,10 @@ def main():
             raise ValueError(
                 """
                 Please go to https://huggingface.co/yuekai/icefall_asr_aishell_whisper/tree/main/exp_medium
-                to download epoch-10-avg-4.pt
+                to download whisper-medium-aishell1-epoch-10-avg-4.pt
                 You can use the following command to do that:
 
-                wget -O medium-aishell.pt https://huggingface.co/yuekai/icefall_asr_aishell_whisper/resolve/main/exp_medium/epoch-10-avg-4.pt
+                wget -O medium-aishell.pt https://huggingface.co/yuekai/icefall_asr_aishell_whisper/resolve/main/exp_medium/whisper-medium-aishell1-epoch-10-avg-4.pt
             """
             )
         model = whisper.load_model(filename)
