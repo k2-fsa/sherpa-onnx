@@ -85,7 +85,7 @@ class SherpaOnnx(
         acceptWaveform(ptr, samples, sampleRate)
 
     fun inputFinished() = inputFinished(ptr)
-    fun reset(recreate: Boolean = false, hotWords: String) = reset(ptr, recreate, hotWords)
+    fun reset(recreate: Boolean = false, hotWords: String = "") = reset(ptr, recreate, hotWords)
     fun decode() = decode(ptr)
     fun isEndpoint(): Boolean = isEndpoint(ptr)
     fun isReady(): Boolean = isReady(ptr)
