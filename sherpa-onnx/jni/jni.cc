@@ -1525,8 +1525,7 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_reset(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jboolean recreate, jstring keywords) {
   auto model = reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr);
   const char *p_keywords = env->GetStringUTFChars(keywords, nullptr);
-  std::string keywords_str = p_keywords;
-  model->Reset(recreate, keywords_str);
+  model->Reset(recreate, p_keywords);
   env->ReleaseStringUTFChars(keywords, p_keywords);
 }
 

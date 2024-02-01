@@ -237,11 +237,11 @@ class SherpaOnnxRecognizer {
 
   /// Reset the recognizer, which clears the neural network model state
   /// and the state for decoding.
-  /// If hotWords is an empty string, it just recreates the decoding stream
-  /// If hotWords is not empty, it will create a new decoding stream with
-  /// the given hotWords appended to the default hotWords.
-  func reset(hotWords: String? = nil) {
-    guard let words = hotWords, !words.isEmpty else {
+  /// If hotwords is an empty string, it just recreates the decoding stream
+  /// If hotwords is not empty, it will create a new decoding stream with
+  /// the given hotWords appended to the default hotwords.
+  func reset(hotwords: String? = nil) {
+    guard let words = hotwords, !words.isEmpty else {
         Reset(recognizer, stream)
         return
     }
@@ -252,7 +252,7 @@ class SherpaOnnxRecognizer {
         objc_sync_enter(self)
         DestroyOnlineStream(stream)
         stream = newStream
-        objc_sync_enter(self)
+        objc_sync_exit(self)
     }
   }
 
