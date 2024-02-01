@@ -198,7 +198,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
           new_hyp.ys_probs.push_back(y_prob);
 
           float lm_prob = new_hyp.lm_log_prob - prev_lm_log_prob;
-          new_hyp.lm_probs.push_back(lm_probs);
+          new_hyp.lm_probs.push_back(lm_prob);
 
           new_hyp.context_scores.push_back(context_score);
         }
