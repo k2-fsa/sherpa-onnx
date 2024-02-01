@@ -85,7 +85,7 @@ class SherpaOnnx(
         acceptWaveform(ptr, samples, sampleRate)
 
     fun inputFinished() = inputFinished(ptr)
-    fun reset(recreate: Boolean = false, hotWords: String = "") = reset(ptr, recreate, hotWords)
+    fun reset(recreate: Boolean = false, hotwords: String = "") = reset(ptr, recreate, hotwords)
     fun decode() = decode(ptr)
     fun isEndpoint(): Boolean = isEndpoint(ptr)
     fun isReady(): Boolean = isReady(ptr)
@@ -110,7 +110,7 @@ class SherpaOnnx(
     private external fun acceptWaveform(ptr: Long, samples: FloatArray, sampleRate: Int)
     private external fun inputFinished(ptr: Long)
     private external fun getText(ptr: Long): String
-    private external fun reset(ptr: Long, recreate: Boolean, hotWords: String)
+    private external fun reset(ptr: Long, recreate: Boolean, hotwords: String)
     private external fun decode(ptr: Long)
     private external fun isEndpoint(ptr: Long): Boolean
     private external fun isReady(ptr: Long): Boolean

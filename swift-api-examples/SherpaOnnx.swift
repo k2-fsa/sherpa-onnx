@@ -247,7 +247,12 @@ class SherpaOnnxRecognizer {
     }
     
     words.withCString { cString in
-        stream = CreateOnlineStreamWithHotwords(recognizer, cString)
+        let newStream = CreateOnlineStreamWithHotwords(recognizer, cString)
+        // lock while release and replace stream
+        objc_sync_enter(self)
+        DestroyOnlineStream(stream)
+        stream = newStream
+        objc_sync_enter(self)
     }
   }
 

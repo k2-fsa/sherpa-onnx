@@ -91,6 +91,8 @@ class SherpaOnnx {
       // Set new keywords failed, the stream_ will not be updated.
       if (stream != nullptr) {
         stream_ = std::move(stream);
+      } else {
+        SHERPA_ONNX_LOGE("Failed to set keywords: %s", keywords.c_str());
       }
     }
   }
