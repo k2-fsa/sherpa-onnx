@@ -82,9 +82,9 @@ class SherpaOnnx {
   void Reset(bool recreate, const std::string &keywords = {}) {
     if (keywords.empty()) {
       if (recreate) {
-      stream_ = recognizer_.CreateStream();
+        stream_ = recognizer_.CreateStream();
       } else {
-      recognizer_.Reset(stream_.get());
+        recognizer_.Reset(stream_.get());
       }
     } else {
       auto stream = recognizer_.CreateStream(keywords);
@@ -1522,7 +1522,8 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxOffline_delete(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_reset(
-    JNIEnv *env, jobject /*obj*/, jlong ptr, jboolean recreate, jstring keywords) {
+    JNIEnv *env, jobject /*obj*/,
+    jlong ptr, jboolean recreate, jstring keywords) {
   auto model = reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr);
   const char *p_keywords = env->GetStringUTFChars(keywords, nullptr);
   model->Reset(recreate, p_keywords);
