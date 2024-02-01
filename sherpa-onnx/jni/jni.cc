@@ -76,11 +76,24 @@ class SherpaOnnx {
 
   bool IsReady() const { return recognizer_.IsReady(stream_.get()); }
 
-  void Reset(bool recreate) {
-    if (recreate) {
-      stream_ = recognizer_.CreateStream();
+  // If keywords is an empty string, it just recreates the decoding stream
+  // If keywords is not empty, it will create a new decoding stream with
+  // the given keywords appended to the default keywords.
+  void Reset(bool recreate, const std::string &keywords = {}) {
+    if (keywords.empty()) {
+      if (recreate) {
+        stream_ = recognizer_.CreateStream();
+      } else {
+        recognizer_.Reset(stream_.get());
+      }
     } else {
-      recognizer_.Reset(stream_.get());
+      auto stream = recognizer_.CreateStream(keywords);
+      // Set new keywords failed, the stream_ will not be updated.
+      if (stream != nullptr) {
+        stream_ = std::move(stream);
+      } else {
+        SHERPA_ONNX_LOGE("Failed to set keywords: %s", keywords.c_str());
+      }
     }
   }
 
@@ -1509,9 +1522,12 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxOffline_delete(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_reset(
-    JNIEnv *env, jobject /*obj*/, jlong ptr, jboolean recreate) {
+    JNIEnv *env, jobject /*obj*/,
+    jlong ptr, jboolean recreate, jstring keywords) {
   auto model = reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr);
-  model->Reset(recreate);
+  const char *p_keywords = env->GetStringUTFChars(keywords, nullptr);
+  model->Reset(recreate, p_keywords);
+  env->ReleaseStringUTFChars(keywords, p_keywords);
 }
 
 SHERPA_ONNX_EXTERN_C
