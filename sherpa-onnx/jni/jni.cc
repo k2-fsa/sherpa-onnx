@@ -77,10 +77,8 @@ class SherpaOnnx {
   bool IsReady() const { return recognizer_.IsReady(stream_.get()); }
 
   // If keywords is an empty string, it just recreates the decoding stream
-  // always returns true in this case.
   // If keywords is not empty, it will create a new decoding stream with
   // the given keywords appended to the default keywords.
-  // Return false if errors occurred when adding keywords, true otherwise.
   void Reset(bool recreate, const std::string &keywords = {}) {
     if (keywords.empty()) {
       if (recreate) {
