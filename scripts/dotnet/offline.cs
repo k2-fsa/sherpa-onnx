@@ -59,6 +59,7 @@ namespace SherpaOnnx
     public string Provider;
   }
 
+  [StructLayout(LayoutKind.Sequential)]
   public struct OfflineTtsConfig
   {
     public OfflineTtsConfig()
