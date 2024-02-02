@@ -503,6 +503,9 @@ class OnlineRecognizer(object):
     def get_result(self, s: OnlineStream) -> str:
         return self.recognizer.get_result(s).text.strip()
 
+    def get_result_as_json_string(self, s: OnlineStream) -> str:
+        return self.recognizer.get_result(s).as_json_string()
+
     def tokens(self, s: OnlineStream) -> List[str]:
         return self.recognizer.get_result(s).tokens
 

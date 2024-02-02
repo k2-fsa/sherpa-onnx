@@ -30,7 +30,8 @@ struct Hypothesis {
 
   // The acoustic probability for each token in ys.
   // Used for keyword spotting task.
-  // For transducer mofified beam-search, this is filled with log_posterior scores.
+  // For transducer mofified beam-search and greedy-search,
+  // this is filled with log_posterior scores.
   std::vector<float> ys_probs;
 
   // lm_probs[i] contains the lm score for each token in ys.

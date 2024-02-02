@@ -21,9 +21,9 @@ namespace sherpa_onnx {
 /// Helper for `OnlineRecognizerResult::AsJsonString()`
 template<typename T>
 const std::string& VecToString(const std::vector<T>& vec, int32_t precision = 6) {
-  std::ostringstrean oss;
+  std::ostringstream oss;
   oss << std::fixed << std::setprecision(precision);
-  oss << "[ " <<
+  oss << "[ ";
   std::string sep = "";
   for (auto item : vec) {
     oss << sep << item;
@@ -35,9 +35,11 @@ const std::string& VecToString(const std::vector<T>& vec, int32_t precision = 6)
 
 /// Helper for `OnlineRecognizerResult::AsJsonString()`
 template<>  // explicit specialization for T = std::string
-const std::string& VecToString<std::string>(const std::vector<T>& vec, int32_t) { // ignore 2nd arg
-  std::ostringstrean oss;
-  oss << "[ " <<
+const std::string& VecToString<std::string>(const std::vector<std::string>& vec,
+                                            int32_t) // ignore 2nd arg
+{
+  std::ostringstream oss;
+  oss << "[ ";
   std::string sep = "";
   for (auto item : vec) {
     oss << sep << "\"" << item << "\"";
