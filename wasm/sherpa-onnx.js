@@ -87,23 +87,59 @@ function initSherpaOnnxOfflineTtsModelConfig(config) {
   }
 }
 
+function initSherpaOnnxOfflineTtsConfig(config) {
+  let modelConfig =
+      initSherpaOnnxOfflineTtsModelConfig(config.offlineTtsModelConfig);
+  let len = modelConfig.len + 2 * 4;
+  let ptr = _malloc(len);
+
+  let offset = 0;
+  Module._CopyHeap(modelConfig.ptr, modelConfig.len, ptr + offset);
+  offset += modelConfig.len;
+
+  let ruleFstsLen = lengthBytesUTF8(config.ruleFsts) + 1;
+  let buffer = _malloc(ruleFstsLen);
+  stringToUTF8(config.ruleFsts, buffer, ruleFstsLen);
+  Module.setValue(ptr + offset, buffer, 'i8*');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.maxNumSentences, 'i32');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len, config: modelConfig,
+  }
+}
+
 function initSherpaOnnxOfflineTts() {
   let offlineTtsVitsModelConfig = {
     model: './model.onnx',
-    lexicon: './lexicon.txt',
+    lexicon: '',
     tokens: './tokens.txt',
     dataDir: './espeak-ng-data',
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0,
   };
-  let offlineTtsModelConfig = initSherpaOnnxOfflineTtsModelConfig({
+  let offlineTtsModelConfig = {
     offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
     numThreads: 1,
     debug: 1,
     provider: 'cpu',
-  })
+  };
+  let offlineTtsConfigObj = {
+    offlineTtsModelConfig: offlineTtsModelConfig,
+    ruleFsts: '',
+    maxNumSentences: 1,
+  }
+
+  let offlineTtsConfig = initSherpaOnnxOfflineTtsConfig(offlineTtsConfigObj)
+
   console.log(offlineTtsVitsModelConfig)
   console.log(offlineTtsModelConfig)
-  Module._MyPrint(offlineTtsModelConfig.ptr);
+  console.log(offlineTtsConfigObj)
+  Module._MyPrint(offlineTtsConfig.ptr);
+
+  let handle = Module._SherpaOnnxCreateOfflineTts(offlineTtsConfig.ptr);
+  freeConfig(offlineTtsConfig);
+  console.log(handle);
 }
