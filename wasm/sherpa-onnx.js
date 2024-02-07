@@ -3,6 +3,11 @@ function freeConfig(config) {
   if ('buffer' in config) {
     _free(config.buffer);
   }
+
+  if ('config' in config) {
+    freeConfig(config.config)
+  }
+
   _free(config.ptr);
 }
 
@@ -18,7 +23,7 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config) {
   let buffer = _malloc(n);
 
   let len = 7 * 4;
-  let ptr = _malloc(7 * 4);
+  let ptr = _malloc(len);
 
   let offset = 0;
   stringToUTF8(config.model, buffer + offset, modelLen);
@@ -55,8 +60,35 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config) {
   }
 }
 
+function initSherpaOnnxOfflineTtsModelConfig(config) {
+  let vitsModelConfig =
+      initSherpaOnnxOfflineTtsVitsModelConfig(config.offlineTtsVitsModelConfig);
+
+  let len = vitsModelConfig.len + 3 * 4;
+  let ptr = _malloc(len);
+
+  let offset = 0;
+  Module._CopyHeap(vitsModelConfig.ptr, vitsModelConfig.len, ptr + offset);
+  offset += vitsModelConfig.len;
+
+  Module.setValue(ptr + offset, config.numThreads, 'i32');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.debug, 'i32');
+  offset += 4;
+
+  let providerLen = lengthBytesUTF8(config.provider) + 1;
+  let buffer = _malloc(providerLen);
+  stringToUTF8(config.provider, buffer, providerLen);
+  Module.setValue(ptr + offset, buffer, 'i8*');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len, config: vitsModelConfig,
+  }
+}
+
 function initSherpaOnnxOfflineTts() {
-  let offlineTtsVitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig({
+  let offlineTtsVitsModelConfig = {
     model: './model.onnx',
     lexicon: './lexicon.txt',
     tokens: './tokens.txt',
@@ -64,7 +96,14 @@ function initSherpaOnnxOfflineTts() {
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0,
+  };
+  let offlineTtsModelConfig = initSherpaOnnxOfflineTtsModelConfig({
+    offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
+    numThreads: 1,
+    debug: 1,
+    provider: 'cpu',
   })
   console.log(offlineTtsVitsModelConfig)
-  Module._MyPrint(offlineTtsVitsModelConfig.ptr);
+  console.log(offlineTtsModelConfig)
+  Module._MyPrint(offlineTtsModelConfig.ptr);
 }
