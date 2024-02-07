@@ -1,0 +1,31 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width" />
+  <title>Next-gen Kaldi WebAssembly with sherpa-ncnn for ASR</title>
+  <style>
+    h1,div {
+      text-align: center;
+    }
+    textarea {
+      width:100%;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>
+    Next-gen Kaldi + WebAssembly<br/>
+    ASR Demo with <a href="https://github.com/k2-fsa/sherpa-ncnn">sherpa-ncnn</a>
+  </h1>
+  <div>
+    <span id="hint">Loading model ... ...</span>
+    <br/>
+    <br/>
+  </div>
+
+  <script src="app.js"></script>
+  <script src="sherpa-onnx.js"></script>
+  <script src="sherpa-onnx-wasm-main.js"></script>
+</body>
