@@ -157,6 +157,13 @@ if(SHERPA_ONNX_ENABLE_GPU)
   )
 endif()
 
+if(SHERPA_ONNX_ENABLE_OPENVINO)
+  target_link_libraries(sherpa-onnx-core
+    onnxruntime_providers_openvino
+    onnxruntime_providers_shared
+  )
+endif()
+
 target_link_libraries(sherpa-onnx-core piper_phonemize)
 
 if(SHERPA_ONNX_ENABLE_CHECK)
