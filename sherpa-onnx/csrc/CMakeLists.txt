@@ -223,10 +223,12 @@ install(
 
 if(SHERPA_ONNX_HAS_ALSA)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
+  add_executable(sherpa-onnx-keyword-spotter-alsa sherpa-onnx-keyword-spotter-alsa.cc alsa.cc)
   add_executable(sherpa-onnx-offline-tts-play-alsa sherpa-onnx-offline-tts-play-alsa.cc alsa-play.cc)
 
   set(exes
     sherpa-onnx-alsa
+    sherpa-onnx-keyword-spotter-alsa
     sherpa-onnx-offline-tts-play-alsa
   )
   foreach(exe IN LISTS exes)
@@ -267,6 +269,11 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-keyword-spotter-microphone
+    sherpa-onnx-keyword-spotter-microphone.cc
+    microphone.cc
+  )
+
   add_executable(sherpa-onnx-microphone
     sherpa-onnx-microphone.cc
     microphone.cc
@@ -300,6 +307,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
 
   set(exes
     sherpa-onnx-microphone
+    sherpa-onnx-keyword-spotter-microphone
     sherpa-onnx-microphone-offline
     sherpa-onnx-microphone-offline-speaker-identification
     sherpa-onnx-offline-tts-play
