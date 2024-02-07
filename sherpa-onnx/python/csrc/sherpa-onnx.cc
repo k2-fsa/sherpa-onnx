@@ -8,6 +8,7 @@
 #include "sherpa-onnx/python/csrc/display.h"
 #include "sherpa-onnx/python/csrc/endpoint.h"
 #include "sherpa-onnx/python/csrc/features.h"
+#include "sherpa-onnx/python/csrc/keyword-spotter.h"
 #include "sherpa-onnx/python/csrc/offline-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/python/csrc/offline-lm-config.h"
 #include "sherpa-onnx/python/csrc/offline-model-config.h"
@@ -35,6 +36,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindOnlineStream(&m);
   PybindEndpoint(&m);
   PybindOnlineRecognizer(&m);
+  PybindKeywordSpotter(&m);
 
   PybindDisplay(&m);
 
