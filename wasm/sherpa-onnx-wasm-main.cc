@@ -1,6 +1,8 @@
 // wasm/sherpa-onnx-wasm-main.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
+#include <stdio.h>
+
 #include <algorithm>
 #include <memory>
 

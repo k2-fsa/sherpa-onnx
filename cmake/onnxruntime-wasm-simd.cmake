@@ -10,19 +10,19 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "BUILD_SHARED_LIBS should be OFF for WebAssembly")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.3/onnxruntime-wasm-static_lib-simd-1.16.3.zip")
-set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.16.3/onnxruntime-wasm-static_lib-simd-1.16.3.zip")
-set(onnxruntime_HASH "SHA256=f2be5987fc6b53a8a8b80889c3a70fe82d36c3b0ab6c53121078cd3aa95dd6a4")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.0/onnxruntime-wasm-static_lib-simd-1.17.0.zip")
+set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.0/onnxruntime-wasm-static_lib-simd-1.17.0.zip")
+set(onnxruntime_HASH "SHA256=0ee6120d2ade093eff731af792fd137ac2db580eb2dc5b8bf39e0897b0d7afd9")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-wasm-static_lib-simd-1.16.3.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-wasm-static_lib-simd-1.16.3.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-wasm-static_lib-simd-1.16.3.zip
-  /tmp/onnxruntime-wasm-static_lib-simd-1.16.3.zip
-  /star-fj/fangjun/download/github/onnxruntime-wasm-static_lib-simd-1.16.3.zip
+  $ENV{HOME}/Downloads/onnxruntime-wasm-static_lib-simd-1.17.0.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-wasm-static_lib-simd-1.17.0.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-wasm-static_lib-simd-1.17.0.zip
+  /tmp/onnxruntime-wasm-static_lib-simd-1.17.0.zip
+  /star-fj/fangjun/download/github/onnxruntime-wasm-static_lib-simd-1.17.0.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
