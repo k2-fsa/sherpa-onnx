@@ -172,7 +172,7 @@ if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
   target_link_libraries(sherpa-onnx-core -ldl)
 endif()
 
-if(NOT WIN32 AND NOT SHERPA_ONNX_ENABLE_WASM AND NOT BUILD_SHARED_LIBS)
+if(NOT WIN32 AND NOT SHERPA_ONNX_ENABLE_WASM AND BUILD_SHARED_LIBS)
   target_link_libraries(sherpa-onnx-core -pthread)
 endif()
 
