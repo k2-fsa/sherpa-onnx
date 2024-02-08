@@ -16,6 +16,14 @@
     fprintf(stderr, "\n");                                               \
     __android_log_print(ANDROID_LOG_WARN, "sherpa-onnx", ##__VA_ARGS__); \
   } while (0)
+#elif SHERPA_ONNX_ENABLE_WASM
+#define SHERPA_ONNX_LOGE(...)                        \
+  do {                                               \
+    fprintf(stdout, "%s:%s:%d ", __FILE__, __func__, \
+            static_cast<int>(__LINE__));             \
+    fprintf(stdout, ##__VA_ARGS__);                  \
+    fprintf(stdout, "\n");                           \
+  } while (0)
 #else
 #define SHERPA_ONNX_LOGE(...)                        \
   do {                                               \

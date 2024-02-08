@@ -1,0 +1,107 @@
+name: wasm-simd-hf-space-en
+
+on:
+  push:
+    branches:
+      - wasm-2
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+
+concurrency:
+  group: wasm-simd-hf-space-en-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wasm-simd-hf-space-en:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install emsdk
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: View emsdk version
+        shell: bash
+        run: |
+          emcc -v
+          echo "--------------------"
+          emcc --check
+
+      - name: Download model files
+        shell: bash
+        run: |
+          cd wasm/assets
+          ls -lh
+          echo "----------"
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-libritts_r-medium.tar.bz2
+          tar xf vits-piper-en_US-libritts_r-medium.tar.bz2
+          rm vits-piper-en_US-libritts_r-medium.tar.bz2
+          mv vits-piper-en_US-libritts_r-medium/en_US-libritts_r-medium.onnx ./model.onnx
+          mv vits-piper-en_US-libritts_r-medium/tokens.txt ./
+          mv vits-piper-en_US-libritts_r-medium/espeak-ng-data ./
+          rm -rf vits-piper-en_US-libritts_r-medium
+
+          ls -lh
+
+      - name: Build sherpa-onnx for WebAssembly
+        shell: bash
+        run: |
+          ./build-wasm-simd.sh
+
+      - name: collect files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          mv build-wasm-simd/install/bin/wasm sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en
+          ls -lh sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en
+          tar cjfv sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en.tar.bz2 ./sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en
+
+      - name: Upload wasm files
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-wasm-simd-en
+          path: ./sherpa-onnx-wasm-simd-*.tar.bz2
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-en huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en/* .
+
+            git status
+            git lfs track "*.data"
+            git lfs track "*.wasm"
+            ls -lh
+
+            git add .
+            git commit -m "update model"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-en main

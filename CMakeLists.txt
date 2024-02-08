@@ -20,6 +20,8 @@ option(SHERPA_ONNX_ENABLE_JNI "Whether to build JNI internface" OFF)
 option(SHERPA_ONNX_ENABLE_C_API "Whether to build C API" ON)
 option(SHERPA_ONNX_ENABLE_WEBSOCKET "Whether to build webscoket server/client" ON)
 option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime GPU support" OFF)
+option(SHERPA_ONNX_ENABLE_WASM "Whether to enable WASM" OFF)
+option(SHERPA_ONNX_ENABLE_BINARY "Whether to build binaries" ON)
 option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically. Used only when BUILD_SHARED_LIBS is OFF on Linux" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -99,6 +101,10 @@ message(STATUS "SHERPA_ONNX_ENABLE_JNI ${SHERPA_ONNX_ENABLE_JNI}")
 message(STATUS "SHERPA_ONNX_ENABLE_C_API ${SHERPA_ONNX_ENABLE_C_API}")
 message(STATUS "SHERPA_ONNX_ENABLE_WEBSOCKET ${SHERPA_ONNX_ENABLE_WEBSOCKET}")
 message(STATUS "SHERPA_ONNX_ENABLE_GPU ${SHERPA_ONNX_ENABLE_GPU}")
+message(STATUS "SHERPA_ONNX_ENABLE_WASM ${SHERPA_ONNX_ENABLE_WASM}")
+if(SHERPA_ONNX_ENABLE_WASM)
+  add_definitions(-DSHERPA_ONNX_ENABLE_WASM=1)
+endif()
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
@@ -109,7 +115,7 @@ message(STATUS "C++ Standard version: ${CMAKE_CXX_STANDARD}")
 
 include(CheckIncludeFileCXX)
 
-if(UNIX AND NOT APPLE)
+if(UNIX AND NOT APPLE AND NOT SHERPA_ONNX_ENABLE_WASM)
   check_include_file_cxx(alsa/asoundlib.h SHERPA_ONNX_HAS_ALSA)
   if(SHERPA_ONNX_HAS_ALSA)
     add_definitions(-DSHERPA_ONNX_ENABLE_ALSA=1)
@@ -160,6 +166,11 @@ endif()
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/Modules)
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 
+if(SHERPA_ONNX_ENABLE_WASM)
+  # Enable it for debugging in case there is something wrong.
+  # string(APPEND CMAKE_CXX_FLAGS " -g4 -s ASSERTIONS=2 -s SAFE_HEAP=1 -s STACK_OVERFLOW_CHECK=1 ")
+endif()
+
 if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
   if(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY)
     message(STATUS "Link libstdc++ statically")
@@ -200,9 +211,14 @@ include(piper-phonemize)
 
 add_subdirectory(sherpa-onnx)
 
-if(SHERPA_ONNX_ENABLE_C_API)
+if(SHERPA_ONNX_ENABLE_C_API AND SHERPA_ONNX_ENABLE_BINARY)
   add_subdirectory(c-api-examples)
 endif()
+
+if(SHERPA_ONNX_ENABLE_WASM)
+  add_subdirectory(wasm)
+endif()
+
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
 
 if(NOT BUILD_SHARED_LIBS)

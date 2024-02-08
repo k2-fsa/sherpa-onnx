@@ -4,8 +4,9 @@ function(download_onnxruntime)
 
   message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
   message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
-
-  if(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
+  if(SHERPA_ONNX_ENABLE_WASM)
+      include(onnxruntime-wasm-simd)
+  elseif(CMAKE_SYSTEM_NAME STREQUAL Linux AND CMAKE_SYSTEM_PROCESSOR STREQUAL aarch64)
     if(BUILD_SHARED_LIBS)
       include(onnxruntime-linux-aarch64)
     else()

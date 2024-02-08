@@ -128,9 +128,6 @@ if(APPLE)
   )
 endif()
 
-if(NOT WIN32)
-  target_link_libraries(sherpa-onnx-core -pthread)
-endif()
 
 if(ANDROID_NDK)
   target_link_libraries(sherpa-onnx-core android log)
@@ -172,36 +169,42 @@ if(SHERPA_ONNX_ENABLE_CHECK)
 endif()
 
 if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
-  target_link_libraries(sherpa-onnx-core -pthread -ldl)
+  target_link_libraries(sherpa-onnx-core -ldl)
 endif()
 
-add_executable(sherpa-onnx sherpa-onnx.cc)
-add_executable(sherpa-onnx-keyword-spotter sherpa-onnx-keyword-spotter.cc)
-add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
-add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
-add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
+if(NOT WIN32 AND NOT SHERPA_ONNX_ENABLE_WASM AND CMAKE_SYSTEM_NAME STREQUAL Linux)
+  target_link_libraries(sherpa-onnx-core -pthread)
+endif()
 
-set(main_exes
-  sherpa-onnx
-  sherpa-onnx-keyword-spotter
-  sherpa-onnx-offline
-  sherpa-onnx-offline-parallel
-  sherpa-onnx-offline-tts
-)
+if(SHERPA_ONNX_ENABLE_BINARY)
+  add_executable(sherpa-onnx sherpa-onnx.cc)
+  add_executable(sherpa-onnx-keyword-spotter sherpa-onnx-keyword-spotter.cc)
+  add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
+  add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
+  add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
 
-foreach(exe IN LISTS main_exes)
-  target_link_libraries(${exe} sherpa-onnx-core)
-endforeach()
+  set(main_exes
+    sherpa-onnx
+    sherpa-onnx-keyword-spotter
+    sherpa-onnx-offline
+    sherpa-onnx-offline-parallel
+    sherpa-onnx-offline-tts
+  )
 
-if(NOT WIN32)
   foreach(exe IN LISTS main_exes)
-    target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
-    target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
-
-    if(SHERPA_ONNX_ENABLE_PYTHON)
-      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
-    endif()
+    target_link_libraries(${exe} sherpa-onnx-core)
   endforeach()
+
+  if(NOT WIN32)
+    foreach(exe IN LISTS main_exes)
+      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
+      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
+
+      if(SHERPA_ONNX_ENABLE_PYTHON)
+        target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
+      endif()
+    endforeach()
+  endif()
 endif()
 
 if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
@@ -214,14 +217,16 @@ if(WIN32 AND BUILD_SHARED_LIBS)
   install(TARGETS sherpa-onnx-core DESTINATION bin)
 endif()
 
-install(
-  TARGETS
-    ${main_exes}
-  DESTINATION
-    bin
-)
+if(SHERPA_ONNX_ENABLE_BINARY)
+  install(
+    TARGETS
+      ${main_exes}
+    DESTINATION
+      bin
+  )
+endif()
 
-if(SHERPA_ONNX_HAS_ALSA)
+if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
   add_executable(sherpa-onnx-offline-tts-play-alsa sherpa-onnx-offline-tts-play-alsa.cc alsa-play.cc)
 
@@ -261,7 +266,7 @@ if(SHERPA_ONNX_HAS_ALSA)
   )
 endif()
 
-if(SHERPA_ONNX_ENABLE_PORTAUDIO)
+if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-offline-tts-play
     sherpa-onnx-offline-tts-play.cc
     microphone.cc
@@ -330,7 +335,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO)
   )
 endif()
 
-if(SHERPA_ONNX_ENABLE_WEBSOCKET)
+if(SHERPA_ONNX_ENABLE_WEBSOCKET AND SHERPA_ONNX_ENABLE_BINARY)
   add_definitions(-DASIO_STANDALONE)
   add_definitions(-D_WEBSOCKETPP_CPP11_STL_)
 
