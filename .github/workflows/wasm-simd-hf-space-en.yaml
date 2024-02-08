@@ -95,11 +95,12 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
 
-            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_NCNN_VERSION}-en/* .
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en/* .
 
             git status
             git lfs track "*.data"
             git lfs track "*.wasm"
+            ls -lh
 
             git add .
             git commit -m "update model"
