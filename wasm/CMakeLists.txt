@@ -51,7 +51,6 @@ install(
     "index.html"
     "sherpa-onnx.js"
     "app.js"
-    "worker.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main>/sherpa-onnx-wasm-main.wasm"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main>/sherpa-onnx-wasm-main.data"
     # "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main>/sherpa-onnx-wasm-main.html"

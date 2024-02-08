@@ -138,7 +138,18 @@ function createAudioTag(generateAudio) {
 
 // this function is copied/modified from
 // https://gist.github.com/meziantou/edb7217fddfbb70e899e
-function toWav(samples, sampleRate) {
+function toWav(floatSamples, sampleRate) {
+  let samples = new Int16Array(floatSamples.length);
+  for (let i = 0; i < samples.length; ++i) {
+    let s = floatSamples[i];
+    if (s >= 1)
+      s = 1;
+    else if (s <= -1)
+      s = -1;
+
+    samples[i] = s * 32767;
+  }
+
   let buf = new ArrayBuffer(44 + samples.length * 2);
   var view = new DataView(buf);
 
