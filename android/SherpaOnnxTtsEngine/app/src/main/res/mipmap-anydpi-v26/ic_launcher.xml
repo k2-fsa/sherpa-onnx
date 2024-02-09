@@ -2,5 +2,7 @@
 <adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
     <background android:drawable="@drawable/ic_launcher_background" />
     <foreground android:drawable="@drawable/ic_launcher_foreground" />
-    <monochrome android:drawable="@drawable/ic_launcher_foreground" />
+	// Starting with Android 13 (API level 33), you can opt-in to providing a
+    // <monochrome> drawable.
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />
 </adaptive-icon>
