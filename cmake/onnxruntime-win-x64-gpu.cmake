@@ -19,18 +19,18 @@ if(NOT SHERPA_ONNX_ENABLE_GPU)
   message(FATAL_ERROR "This file is for NVIDIA GPU only. Given SHERPA_ONNX_ENABLE_GPU: ${SHERPA_ONNX_ENABLE_GPU}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-win-x64-gpu-1.16.3.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x64-gpu-1.16.3.zip")
-set(onnxruntime_HASH "SHA256=4facf5abd081accb64da0b4caa267d98e536427111f3246a3ddb09c6325756b9")
+set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.17.0/onnxruntime-win-x64-gpu-1.17.0.zip")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x64-gpu-1.17.0.zip")
+set(onnxruntime_HASH "SHA256=3c90a38769e2f7bdb088c00410de4895b07b7d53a7c80955f18989775c2a25e7")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-win-x64-gpu-1.16.3.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-gpu-1.16.3.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-gpu-1.16.3.zip
-  /tmp/onnxruntime-win-x64-gpu-1.16.3.zip
+  $ENV{HOME}/Downloads/onnxruntime-win-x64-gpu-1.17.0.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-gpu-1.17.0.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-gpu-1.17.0.zip
+  /tmp/onnxruntime-win-x64-gpu-1.17.0.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

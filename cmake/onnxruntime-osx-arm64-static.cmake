@@ -12,18 +12,18 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.16.3/onnxruntime-osx-arm64-static_lib-1.16.3.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-osx-arm64-static_lib-1.16.3.zip")
-set(onnxruntime_HASH "SHA256=0481532b262dac3d09845bf11dc8b93c493359947edc449e066f1943b820d789")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.0/onnxruntime-osx-arm64-static_lib-1.17.0.zip")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-osx-arm64-static_lib-1.17.0.zip")
+set(onnxruntime_HASH "SHA256=07798f7c91164e6870c438a3a1aeae0768b568bcefd71a3416a4c7a42837e31a")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-osx-arm64-static_lib-1.16.3.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-osx-arm64-static_lib-1.16.3.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-osx-arm64-static_lib-1.16.3.zip
-  /tmp/onnxruntime-osx-arm64-static_lib-1.16.3.zip
+  $ENV{HOME}/Downloads/onnxruntime-osx-arm64-static_lib-1.17.0.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-osx-arm64-static_lib-1.17.0.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-osx-arm64-static_lib-1.17.0.zip
+  /tmp/onnxruntime-osx-arm64-static_lib-1.17.0.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
