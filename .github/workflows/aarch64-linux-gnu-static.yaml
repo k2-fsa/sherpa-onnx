@@ -82,17 +82,16 @@ jobs:
         uses: actions/cache@v3
         with:
           path: toolchain
-          key: gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu.tar.xz
+          key: gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
 
       - name: Download toolchain
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          # wget wget https://armkeil.blob.core.windows.net/developer/Files/downloads/gnu-a/9.2-2019.12/binrel/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu.tar.xz
-          wget -qq https://huggingface.co/csukuangfj/sherpa-ncnn-toolchains/resolve/main/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu.tar.xz
+          wget -qq https://huggingface.co/csukuangfj/sherpa-ncnn-toolchains/resolve/main/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
 
           mkdir $GITHUB_WORKSPACE/toolchain
-          tar xf ./gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+          tar xf ./gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
 
       - name: Display toolchain info
         shell: bash

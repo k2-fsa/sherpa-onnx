@@ -82,35 +82,43 @@ jobs:
         uses: actions/cache@v3
         with:
           path: toolchain
-          key: gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu
+          key: gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
 
       - name: Download toolchain
         if: steps.cache-toolchain.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          wget https://releases.linaro.org/components/toolchain/binaries/latest-7/aarch64-linux-gnu/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
+          wget -qq https://huggingface.co/csukuangfj/sherpa-ncnn-toolchains/resolve/main/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
 
           mkdir $GITHUB_WORKSPACE/toolchain
-          tar xvf ./gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+          tar xf ./gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+
+      - name: Set environment variable
+        if: steps.cache-build-result.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          echo "$GITHUB_WORKSPACE/toolchain/bin"  >> "$GITHUB_PATH"
+          echo "$GITHUB_WORKSPACE/bin"  >> "$GITHUB_PATH"
+          ls -lh "$GITHUB_WORKSPACE/toolchain/bin"
+
+          echo "CC=aarch64-none-linux-gnu-gcc" >> "$GITHUB_ENV"
+          echo "CXX=aarch64-none-linux-gnu-g++" >> "$GITHUB_ENV"
 
       - name: Display toolchain info
         shell: bash
         run: |
-          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-          aarch64-linux-gnu-gcc --version
+          aarch64-none-linux-gnu-gcc --version
 
       - name: Display qemu-aarch64 -h
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-linux-gnu/libc
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-none-linux-gnu/libc
           qemu-aarch64 -h
 
       - name: build aarch64-linux-gnu
         shell: bash
         run: |
-          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
 
@@ -130,7 +138,7 @@ jobs:
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-linux-gnu/libc
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-none-linux-gnu/libc
 
           ls -lh ./build-aarch64-linux-gnu/bin
 
@@ -141,8 +149,7 @@ jobs:
       - name: Copy files
         shell: bash
         run: |
-          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-          aarch64-linux-gnu-strip --version
+          aarch64-none-linux-gnu-strip --version
 
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
@@ -157,7 +164,7 @@ jobs:
 
           ls -lh $dst/bin/
           echo "strip"
-          aarch64-linux-gnu-strip $dst/bin/*
+          aarch64-none-linux-gnu-strip $dst/bin/*
 
           tree $dst
 
