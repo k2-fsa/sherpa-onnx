@@ -15,18 +15,18 @@ if(NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-win-x86-1.16.3.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-1.16.3.zip")
-set(onnxruntime_HASH "SHA256=9731c6d43588b34fd9b74c704cbc2864ff4384820d7a7f177062c1524bea624b")
+set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.17.0/onnxruntime-win-x86-1.17.0.zip")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-1.17.0.zip")
+set(onnxruntime_HASH "SHA256=3f3214f99165d3282cc5647c5a18451aaaaf326599c7e98913ce6c50e50c6463")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-win-x86-1.16.3.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x86-1.16.3.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-win-x86-1.16.3.zip
-  /tmp/onnxruntime-win-x86-1.16.3.zip
+  $ENV{HOME}/Downloads/onnxruntime-win-x86-1.17.0.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x86-1.17.0.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-win-x86-1.17.0.zip
+  /tmp/onnxruntime-win-x86-1.17.0.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

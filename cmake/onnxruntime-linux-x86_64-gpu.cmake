@@ -18,19 +18,19 @@ if(NOT SHERPA_ONNX_ENABLE_GPU)
   message(FATAL_ERROR "This file is for NVIDIA GPU only. Given SHERPA_ONNX_ENABLE_GPU: ${SHERPA_ONNX_ENABLE_GPU}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-linux-x64-gpu-1.16.3.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-x64-gpu-1.16.3.tgz")
-set(onnxruntime_HASH "SHA256=bbdc33367c056029b3ac0c042cbca2236b8f59a3a53b4daf23432ef1d8bf52de")
+set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.17.0/onnxruntime-linux-x64-gpu-1.17.0.tgz")
+set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-x64-gpu-1.17.0.tgz")
+set(onnxruntime_HASH "SHA256=27cfa22af7301868b55220f8733361889286b30be0569a8f46abb63e90342180")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-gpu-1.16.3.tgz
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-gpu-1.16.3.tgz
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-gpu-1.16.3.tgz
-  /tmp/onnxruntime-linux-x64-gpu-1.16.3.tgz
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-gpu-1.16.3.tgz
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-gpu-1.17.0.tgz
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-gpu-1.17.0.tgz
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-gpu-1.17.0.tgz
+  /tmp/onnxruntime-linux-x64-gpu-1.17.0.tgz
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-gpu-1.17.0.tgz
 )
 
 foreach(f IN LISTS possible_file_locations)
