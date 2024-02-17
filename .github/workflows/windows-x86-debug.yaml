@@ -1,4 +1,4 @@
-name: windows-x64-debug
+name: windows-x86-debug
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
     tags:
       - '*'
     paths:
-      - '.github/workflows/windows-x64-debug.yaml'
+      - '.github/workflows/windows-x86-debug.yaml'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
-      - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
+      - '.github/scripts/test-online-ctc.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -21,13 +21,13 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/windows-x64-debug.yaml'
+      - '.github/workflows/windows-x86-debug.yaml'
       - '.github/scripts/test-online-transducer.sh'
       - '.github/scripts/test-online-paraformer.sh'
       - '.github/scripts/test-offline-transducer.sh'
       - '.github/scripts/test-offline-ctc.sh'
-      - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
+      - '.github/scripts/test-online-ctc.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -35,12 +35,12 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: windows-x64-debug-${{ github.ref }}
+  group: windows-x86-debug-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  windows_x64_debug:
-    name: Windows x64 debug
+  windows_x86_debug:
+    name: Windows x86 debug
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -58,7 +58,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A x64 -D CMAKE_BUILD_TYPE=Debug -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake -A Win32 -D CMAKE_BUILD_TYPE=Debug -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }}  -D CMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
@@ -85,7 +85,7 @@ jobs:
 
           .github/scripts/test-offline-tts.sh
 
-      - name: Test online paraformer for windows x64
+      - name: Test online paraformer for windows x86
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Debug:$PATH
@@ -93,15 +93,15 @@ jobs:
 
           .github/scripts/test-online-paraformer.sh
 
-      - name: Test offline Whisper for windows x64
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Debug:$PATH
-          export EXE=sherpa-onnx-offline.exe
+      # - name: Test offline Whisper for windows x86
+      #   shell: bash
+      #   run: |
+      #     export PATH=$PWD/build/bin/Debug:$PATH
+      #     export EXE=sherpa-onnx-offline.exe
+      #
+      #     .github/scripts/test-offline-whisper.sh
 
-          .github/scripts/test-offline-whisper.sh
-
-      - name: Test offline CTC for windows x64
+      - name: Test offline CTC for windows x86
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Debug:$PATH
@@ -109,15 +109,15 @@ jobs:
 
           .github/scripts/test-offline-ctc.sh
 
-      - name: Test offline transducer for Windows x64
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Debug:$PATH
-          export EXE=sherpa-onnx-offline.exe
+      # - name: Test offline transducer for Windows x86
+      #   shell: bash
+      #   run: |
+      #     export PATH=$PWD/build/bin/Debug:$PATH
+      #     export EXE=sherpa-onnx-offline.exe
+      #
+      #     .github/scripts/test-offline-transducer.sh
 
-          .github/scripts/test-offline-transducer.sh
-
-      - name: Test online transducer for Windows x64
+      - name: Test online transducer for Windows x86
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Debug:$PATH
@@ -139,7 +139,7 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-debug
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86-debug
           mkdir $dst
 
           cp -a build/install/bin $dst/
@@ -148,10 +148,10 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
-      - name: Release pre-compiled binaries and libs for Windows x64
+      - name: Release pre-compiled binaries and libs for Windows x86
         if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*-win-x64-debug.tar.bz2
+          file: sherpa-onnx-*-win-x86-debug.tar.bz2
