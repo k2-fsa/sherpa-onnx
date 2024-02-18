@@ -1,0 +1,78 @@
+name: windows-x64-debug
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - '*'
+    paths:
+      - '.github/workflows/windows-x64-debug.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-transducer.sh'
+      - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-online-ctc.sh'
+      - '.github/scripts/test-offline-tts.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/windows-x64-debug.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-transducer.sh'
+      - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-online-ctc.sh'
+      - '.github/scripts/test-offline-tts.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: windows-x64-debug-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows_x64_debug:
+    name: Windows x64 debug
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        shared_lib: [OFF]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -A x64 -D CMAKE_BUILD_TYPE=Debug -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+
+      - name: Build sherpa-onnx for windows
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --config Debug -- -m:2
+          cmake --build . --config Debug --target install -- -m:2
+
+          ls -lh ./bin/Debug/sherpa-onnx.exe
+
+      - name: Test online CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Debug:$PATH
+          export EXE=sherpa-onnx.exe
+
+          .github/scripts/test-online-ctc.sh

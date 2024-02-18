@@ -15,6 +15,10 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
+if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
+  message(FATAL_ERROR "This file is for building a release version on Windows x86")
+endif()
+
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.0/onnxruntime-win-x86-static_lib-1.17.0.tar.bz2")
 set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-static_lib-1.17.0.tar.bz2")
 set(onnxruntime_HASH "SHA256=3c40c53fef937452bf6cfbac1584875d5627bd908ca731d120642112526c8352")
