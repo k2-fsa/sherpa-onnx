@@ -40,13 +40,14 @@ concurrency:
 
 jobs:
   windows_x64_debug:
-    name: Windows x64 debug
+    name: Windows x64 ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest]
         shared_lib: [OFF]
+        build_type: [Debug, MinSizeRel, RelWithDebInfo]
 
     steps:
       - uses: actions/checkout@v4
@@ -58,21 +59,21 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A x64 -D CMAKE_BUILD_TYPE=Debug -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake -A x64 -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
         run: |
           cd build
-          cmake --build . --config Debug -- -m:2
-          cmake --build . --config Debug --target install -- -m:2
+          cmake --build . --config ${{ matrix.build_type }} -- -m:2
+          cmake --build . --config ${{ matrix.build_type }} --target install -- -m:2
 
-          ls -lh ./bin/Debug/sherpa-onnx.exe
+          ls -lh ./bin/${{ matrix.build_type }}/sherpa-onnx.exe
 
       - name: Test online CTC
         shell: bash
         run: |
-          export PATH=$PWD/build/bin/Debug:$PATH
+          export PATH=$PWD/build/bin/${{ matrix.build_type }}:$PATH
           export EXE=sherpa-onnx.exe
 
           .github/scripts/test-online-ctc.sh
