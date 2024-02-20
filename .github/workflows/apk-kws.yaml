@@ -29,6 +29,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # https://github.com/actions/setup-java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:

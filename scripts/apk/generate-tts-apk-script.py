@@ -290,7 +290,7 @@ def get_vits_models() -> List[TtsModel]:
         ),
         TtsModel(
             model_dir="vits-cantonese-hf-xiaomaiiwn",
-            model_name="its-cantonese-hf-xiaomaiiwn.onnx",
+            model_name="vits-cantonese-hf-xiaomaiiwn.onnx",
             lang="cantonese",
             lang_iso_639_3="yue",
             rule_fsts="vits-cantonese-hf-xiaomaiiwn/rule.fst",
