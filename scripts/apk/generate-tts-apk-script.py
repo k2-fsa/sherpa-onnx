@@ -39,7 +39,8 @@ class TtsModel:
 
 def convert_lang_to_iso_639_3(models: List[TtsModel]):
     for m in models:
-        m.lang_iso_639_3 = Lang(m.lang).pt3
+        if m.lang_iso_639_3 == "":
+            m.lang_iso_639_3 = Lang(m.lang).pt3
 
 
 def get_coqui_models() -> List[TtsModel]:
@@ -286,6 +287,13 @@ def get_vits_models() -> List[TtsModel]:
             model_name="vits-zh-hf-fanchen-unity.onnx",
             lang="zh",
             rule_fsts="vits-zh-hf-fanchen-unity/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-cantonese-hf-xiaomaiiwn",
+            model_name="its-cantonese-hf-xiaomaiiwn.onnx",
+            lang="cantonese",
+            lang_iso_639_3="yue",
+            rule_fsts="vits-cantonese-hf-xiaomaiiwn/rule.fst",
         ),
         # English (US)
         TtsModel(model_dir="vits-vctk", model_name="vits-vctk.onnx", lang="en"),
