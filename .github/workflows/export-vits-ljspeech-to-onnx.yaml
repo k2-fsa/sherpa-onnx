@@ -77,17 +77,17 @@ jobs:
           python3 ./test.py
           ls -lh *.wav
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: test-0.wav
           path: scripts/vits/test-0.wav
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: test-1.wav
           path: scripts/vits/test-1.wav
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: test-2.wav
           path: scripts/vits/test-2.wav

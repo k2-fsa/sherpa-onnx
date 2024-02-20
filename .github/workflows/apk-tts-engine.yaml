@@ -84,7 +84,7 @@ jobs:
           ls -lh ./apks/
           du -h -d1 .
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: false
         with:
           name: tts-engine-apk

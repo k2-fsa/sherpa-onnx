@@ -129,7 +129,7 @@ jobs:
           ls -lh build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: matrix.shared_lib == 'OFF' && matrix.build_type == 'Release'
         with:
           name: release-static
@@ -234,7 +234,7 @@ jobs:
           overwrite: true
           file: sherpa-onnx-*linux-x64.tar.bz2
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: tts-generated-test-files
           path: tts

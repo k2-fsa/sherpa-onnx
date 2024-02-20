@@ -35,7 +35,7 @@ jobs:
         with:
           key: ${{ matrix.os }}-${{ matrix.arch }}
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
           go-version: '>=1.12'
 
@@ -96,7 +96,7 @@ jobs:
 
           cp *.wav ../../../../tts-waves/
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: tts-waves
           path: tts-waves
