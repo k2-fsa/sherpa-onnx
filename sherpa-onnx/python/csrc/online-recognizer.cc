@@ -24,6 +24,9 @@ static void PybindOnlineRecognizerResult(py::module *m) {
           "tokens",
           [](PyClass &self) -> std::vector<std::string> { return self.tokens; })
       .def_property_readonly(
+          "start_time",
+          [](PyClass &self) -> float { return self.start_time; })
+      .def_property_readonly(
           "timestamps",
           [](PyClass &self) -> std::vector<float> { return self.timestamps; });
 }
