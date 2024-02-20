@@ -86,6 +86,8 @@ if(NOT BUILD_SHARED_LIBS AND MSVC)
           $<$<CONFIG:>:/MT> #---------|
           $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
           $<$<CONFIG:Release>:/MT> #--|
+          $<$<CONFIG:RelWithDebInfo>:/MT>
+          $<$<CONFIG:MinSizeRel>:/MT>
       )
   endif()
 endif()
