@@ -50,7 +50,7 @@ jobs:
           cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release ..
           cmake --build . --target install --config Release
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}
           path: ./build/install/lib/
@@ -70,7 +70,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -80,19 +80,19 @@ jobs:
           python3 -m pip install --upgrade pip Jinja2
 
       - name: Retrieve artifact from ubuntu-latest
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: ubuntu-latest
           path: /tmp/linux
 
       - name: Retrieve artifact from macos-latest
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: macos-latest
           path: /tmp/macos
 
       - name: Retrieve artifact from windows-latest
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v4
         with:
           name: windows-latest
           path: /tmp/windows

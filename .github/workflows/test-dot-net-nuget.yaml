@@ -67,7 +67,7 @@ jobs:
 
           cp dotnet-examples/offline-tts/*.wav ./tts
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: dot-net-tts-generated-test-files-${{ matrix.os }}
           path: tts

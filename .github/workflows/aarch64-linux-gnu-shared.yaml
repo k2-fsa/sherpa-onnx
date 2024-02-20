@@ -50,7 +50,7 @@ jobs:
 
       - name: cache-qemu
         id: cache-qemu
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: qemu-install
           key: qemu-aarch64-install-20220908
@@ -79,7 +79,7 @@ jobs:
 
       - name: cache-toolchain
         id: cache-toolchain
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: toolchain
           key: gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
@@ -170,7 +170,7 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: sherpa-onnx-linux-aarch64-shared
           path: sherpa-onnx-*linux-aarch64-shared.tar.bz2

@@ -57,7 +57,7 @@ jobs:
 
           ls -lh
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: sherpa-onnx-ios-libs
           path: ./build-ios
