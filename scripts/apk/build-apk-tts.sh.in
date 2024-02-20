@@ -80,6 +80,8 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxTts/app/src/main/jniLibs/$arch/
 
   pushd ./android/SherpaOnnxTts
+  sed -i.bak s/2048/9012/g ./gradle.properties
+  git diff ./gradle.properties
   ./gradlew build
   popd
 

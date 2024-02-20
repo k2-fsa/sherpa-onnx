@@ -117,14 +117,14 @@ message(STATUS "C++ Standard version: ${CMAKE_CXX_STANDARD}")
 
 include(CheckIncludeFileCXX)
 
-if(UNIX AND NOT APPLE AND NOT SHERPA_ONNX_ENABLE_WASM)
+if(UNIX AND NOT APPLE AND NOT SHERPA_ONNX_ENABLE_WASM AND NOT CMAKE_SYSTEM_NAME STREQUAL Android)
   check_include_file_cxx(alsa/asoundlib.h SHERPA_ONNX_HAS_ALSA)
   if(SHERPA_ONNX_HAS_ALSA)
     add_definitions(-DSHERPA_ONNX_ENABLE_ALSA=1)
   else()
     message(WARNING "\
 Could not find alsa/asoundlib.h !
-We won't build sherpa-ncnn-alsa
+We won't build sherpa-onnx-alsa
 To fix that, please do:
   (1) sudo apt-get install alsa-utils libasound2-dev
   (2) rm -rf build

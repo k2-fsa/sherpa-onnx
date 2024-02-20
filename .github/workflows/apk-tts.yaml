@@ -34,6 +34,12 @@ jobs:
         with:
           fetch-depth: 0
 
+      # https://github.com/actions/setup-java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -89,7 +95,7 @@ jobs:
         if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           max_attempts: 20
           timeout_seconds: 200

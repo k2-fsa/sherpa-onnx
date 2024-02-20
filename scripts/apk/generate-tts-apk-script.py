@@ -39,7 +39,8 @@ class TtsModel:
 
 def convert_lang_to_iso_639_3(models: List[TtsModel]):
     for m in models:
-        m.lang_iso_639_3 = Lang(m.lang).pt3
+        if m.lang_iso_639_3 == "":
+            m.lang_iso_639_3 = Lang(m.lang).pt3
 
 
 def get_coqui_models() -> List[TtsModel]:
@@ -209,54 +210,91 @@ def get_vits_models() -> List[TtsModel]:
             lang="zh",
             rule_fsts="vits-zh-aishell3/rule.fst",
         ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-doom",
-        #      model_name="doom.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-doom/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-echo",
-        #      model_name="echo.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-echo/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-zenyatta",
-        #      model_name="zenyatta.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-zenyatta/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-abyssinvoker",
-        #      model_name="abyssinvoker.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-abyssinvoker/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-keqing",
-        #      model_name="keqing.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-keqing/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-eula",
-        #      model_name="eula.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-eula/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-bronya",
-        #      model_name="bronya.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-bronya/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-theresa",
-        #      model_name="theresa.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-theresa/rule.fst",
-        #  ),
+        TtsModel(
+            model_dir="vits-zh-hf-doom",
+            model_name="doom.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-doom/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-echo",
+            model_name="echo.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-echo/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-zenyatta",
+            model_name="zenyatta.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-zenyatta/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-abyssinvoker",
+            model_name="abyssinvoker.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-abyssinvoker/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-keqing",
+            model_name="keqing.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-keqing/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-eula",
+            model_name="eula.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-eula/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-bronya",
+            model_name="bronya.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-bronya/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-theresa",
+            model_name="theresa.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-theresa/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-fanchen-wnj",
+            model_name="vits-zh-hf-fanchen-wnj.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-fanchen-wnj/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-fanchen-C",
+            model_name="vits-zh-hf-fanchen-C.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-fanchen-C/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-fanchen-ZhiHuiLaoZhe",
+            model_name="vits-zh-hf-fanchen-ZhiHuiLaoZhe.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-fanchen-ZhiHuiLaoZhe/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-fanchen-ZhiHuiLaoZhe_new",
+            model_name="vits-zh-hf-fanchen-ZhiHuiLaoZhe_new.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-fanchen-ZhiHuiLaoZhe_new/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-fanchen-unity",
+            model_name="vits-zh-hf-fanchen-unity.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-fanchen-unity/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-cantonese-hf-xiaomaiiwn",
+            model_name="vits-cantonese-hf-xiaomaiiwn.onnx",
+            lang="cantonese",
+            lang_iso_639_3="yue",
+            rule_fsts="vits-cantonese-hf-xiaomaiiwn/rule.fst",
+        ),
         # English (US)
         TtsModel(model_dir="vits-vctk", model_name="vits-vctk.onnx", lang="en"),
         #  TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
