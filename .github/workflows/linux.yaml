@@ -45,24 +45,50 @@ concurrency:
 
 jobs:
   linux:
-    name: ${{ matrix.build_type }} ${{ matrix.shared_lib }}
+    name: ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.shared_lib }} ${{ matrix.gcc_version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-20.04, ubuntu-22.04]
         build_type: [Release, Debug]
         shared_lib: [ON, OFF]
+        # see https://github.com/egor-tensin/setup-gcc
+        # 7-11 for ubuntu 20.04
+        # 9-12 for ubuntu 22.04
+        gcc_version: ["7", "8", "9", "10", "11", "12", "13"]
+        exclude:
+          - os: ubuntu-20.04
+            gcc_version: "12"
+          - os: ubuntu-22.04
+            gcc_version: "7"
+          - os: ubuntu-22.04
+            gcc_version: "8"
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Set up GCC ${{ matrix.gcc_version }}
+        uses: egor-tensin/setup-gcc@v1
+        with:
+          version: ${{ matrix.gcc_version }}
+          platform: x64
+
+      - name: Display gcc version ${{ matrix.gcc_version }}
+        shell: bash
+        run: |
+          which gcc
+          gcc --version
+
+          which g++
+          g++ --version
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-${{ matrix.build_type }}-shared-${{ matrix.shared_lib }}
+          key: ${{ matrix.os }}-${{ matrix.build_type }}-shared-${{ matrix.shared_lib }}-gcc-${{ matrix.gcc_version }}
 
       - name: Configure CMake
         shell: bash
