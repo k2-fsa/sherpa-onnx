@@ -509,6 +509,9 @@ class OnlineRecognizer(object):
     def timestamps(self, s: OnlineStream) -> List[float]:
         return self.recognizer.get_result(s).timestamps
 
+    def start_time(self, s: OnlineStream) -> float:
+        return self.recognizer.get_result(s).start_time
+
     def is_endpoint(self, s: OnlineStream) -> bool:
         return self.recognizer.is_endpoint(s)
 
