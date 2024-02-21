@@ -143,6 +143,8 @@ else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
 endif()
 
+target_link_libraries(sherpa-onnx-core -lm)
+
 if(NOT BUILD_SHARED_LIBS AND APPLE)
   target_link_libraries(sherpa-onnx-core "-framework Foundation")
 endif()
