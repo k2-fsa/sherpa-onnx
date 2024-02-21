@@ -1,9 +1,6 @@
-name: wasm-simd-hf-space-en
+name: wasm-simd-hf-space-en-tts
 
 on:
-  push:
-    branches:
-      - wasm-2
   release:
     types:
       - published
@@ -11,11 +8,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: wasm-simd-hf-space-en-${{ github.ref }}
+  group: wasm-simd-hf-space-en-tts-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  wasm-simd-hf-space-en:
+  wasm-simd-hf-space-en-tts:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -39,7 +36,7 @@ jobs:
       - name: Download model files
         shell: bash
         run: |
-          cd wasm/assets
+          cd wasm/tts/assets
           ls -lh
           echo "----------"
           wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-libritts_r-medium.tar.bz2
@@ -55,21 +52,21 @@ jobs:
       - name: Build sherpa-onnx for WebAssembly
         shell: bash
         run: |
-          ./build-wasm-simd.sh
+          ./build-wasm-simd-tts.sh
 
       - name: collect files
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          mv build-wasm-simd/install/bin/wasm sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en
-          ls -lh sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en
-          tar cjfv sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en.tar.bz2 ./sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en
+          mv build-wasm-simd-tts/install/bin/wasm sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts
+          ls -lh sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts
+          tar cjfv sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts.tar.bz2 ./sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts
 
       - name: Upload wasm files
         uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-wasm-simd-en
+          name: sherpa-onnx-wasm-simd-en-tts
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
 
       - name: Publish to huggingface
@@ -95,7 +92,7 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
 
-            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en/* .
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts/* .
 
             git status
             git lfs track "*.data"

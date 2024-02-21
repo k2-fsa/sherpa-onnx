@@ -1,0 +1,106 @@
+name: wasm-simd-hf-space-de-tts
+
+on:
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+
+concurrency:
+  group: wasm-simd-hf-space-de-tts-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wasm-simd-hf-space-de-tts:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install emsdk
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: View emsdk version
+        shell: bash
+        run: |
+          emcc -v
+          echo "--------------------"
+          emcc --check
+
+      - name: Download model files
+        shell: bash
+        run: |
+          cd wasm/tts/assets
+          ls -lh
+          echo "----------"
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-de_DE-thorsten_emotional-medium.tar.bz2
+          tar xf vits-piper-de_DE-thorsten_emotional-medium.tar.bz2
+          rm vits-piper-de_DE-thorsten_emotional-medium.tar.bz2
+
+          mv -v vits-piper-de_DE-thorsten_emotional-medium/de_DE-thorsten_emotional-medium.onnx ./model.onnx
+          mv -v vits-piper-de_DE-thorsten_emotional-medium/tokens.txt ./
+          mv vits-piper-de_DE-thorsten_emotional-medium/espeak-ng-data ./
+
+          rm -rf vits-piper-de_DE-thorsten_emotional-medium
+
+          ls -lh
+
+      - name: Build sherpa-onnx for WebAssembly
+        shell: bash
+        run: |
+          ./build-wasm-simd-tts.sh
+
+      - name: collect files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          mv build-wasm-simd-tts/install/bin/wasm sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-de-tts
+          ls -lh sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-de-tts
+          tar cjfv sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-de-tts.tar.bz2 ./sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-de-tts
+
+      - name: Upload wasm files
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-wasm-simd-de-tts
+          path: ./sherpa-onnx-wasm-simd-*.tar.bz2
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-de huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-de-tts/* .
+
+            git status
+            git lfs track "*.data"
+            git lfs track "*.wasm"
+            ls -lh
+
+            git add .
+            git commit -m "update model"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-de main
