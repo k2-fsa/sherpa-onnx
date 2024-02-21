@@ -89,7 +89,7 @@ jobs:
           git diff
           cp *.js ../scripts/nodejs
 
-      - uses: actions/setup-node@v3
+      - uses: actions/setup-node@v4
         with:
           node-version: 13
           registry-url: 'https://registry.npmjs.org'
