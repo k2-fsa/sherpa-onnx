@@ -18,7 +18,7 @@ rm -rf vits-piper-en_US-libritts_r-medium
 ```
 
 You should have the following files in `assets` before you can run
-`build-wasm-simd.sh`
+`build-wasm-simd-tts.sh`
 
 ```
 assets fangjun$ tree -L 1

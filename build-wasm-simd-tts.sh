@@ -31,8 +31,8 @@ if [ ! -f $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ]; then
   exit 1
 fi
 
-mkdir -p build-wasm-simd
-pushd build-wasm-simd
+mkdir -p build-wasm-simd-tts
+pushd build-wasm-simd-tts
 
 export SHERPA_ONNX_IS_USING_BUILD_WASM_SH=ON
 
@@ -51,6 +51,7 @@ cmake \
   -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
   -DSHERPA_ONNX_ENABLE_GPU=OFF \
   -DSHERPA_ONNX_ENABLE_WASM=ON \
+  -DSHERPA_ONNX_ENABLE_WASM_TTS=ON \
   -DSHERPA_ONNX_ENABLE_BINARY=OFF \
   -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
   ..
