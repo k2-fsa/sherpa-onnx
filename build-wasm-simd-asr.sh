@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Copyright (c)  2024  Xiaomi Corporation
 #
-# This script is to build sherpa-onnx for WebAssembly (TTS)
+# This script is to build sherpa-onnx for WebAssembly (ASR)
 
 set -ex
 
