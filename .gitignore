@@ -81,3 +81,6 @@ vits-piper-en_US-amy-low
 vits-piper-*-*-*
 log
 *.exe
+vits-piper-*
+vits-coqui-*
+vits-mms-*

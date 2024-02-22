@@ -38,9 +38,9 @@ install(TARGETS sherpa-onnx-wasm-asr-main DESTINATION bin/wasm/asr)
 install(
   FILES
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-asr-main>/sherpa-onnx-wasm-asr-main.js"
-    # "index.html"
-    # "sherpa-onnx.js"
-    # "app.js"
+    "index.html"
+    "sherpa-onnx.js"
+    "app.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-asr-main>/sherpa-onnx-wasm-asr-main.wasm"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-asr-main>/sherpa-onnx-wasm-asr-main.data"
   DESTINATION
