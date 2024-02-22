@@ -46,6 +46,33 @@ function initSherpaOnnxOnlineTransducerModelConfig(config) {
   }
 }
 
+function initSherpaOnnxOnlineParaformerModelConfig(config) {
+  let encoderLen = lengthBytesUTF8(config.encoder) + 1;
+  let decoderLen = lengthBytesUTF8(config.decoder) + 1;
+
+  let n = encoderLen + decoderLen;
+  let buffer = _malloc(n);
+
+  let len = 2 * 4;  // 2 pointers
+  let ptr = _malloc(len);
+
+  let offset = 0;
+  stringToUTF8(config.encoder, buffer + offset, encoderLen);
+  offset += encoderLen;
+
+  stringToUTF8(config.decoder, buffer + offset, decoderLen);
+
+  offset = 0;
+  setValue(ptr, buffer + offset, 'i8*');
+  offset += encoderLen;
+
+  setValue(ptr + 4, buffer + offset, 'i8*');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
 function initSherpaOnnxOnlineRecognizer() {
   let onlineTransducerModelConfig = {
     encoder: './encoder.onnx',
@@ -53,7 +80,16 @@ function initSherpaOnnxOnlineRecognizer() {
     joiner: './joiner.onnx',
   }
 
-  let config =
+  let onlineParaformerModelConfig = {
+    encoder: './paraformer-encoder.onnx',
+    decoder: './paraformer-decoder.onnx',
+  }
+
+  let transducer =
       initSherpaOnnxOnlineTransducerModelConfig(onlineTransducerModelConfig);
-  _MyPrint(config.ptr);
+
+  let paraformer =
+      initSherpaOnnxOnlineParaformerModelConfig(onlineParaformerModelConfig);
+
+  _MyPrint(transducer.ptr, paraformer.ptr);
 }
