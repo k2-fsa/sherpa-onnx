@@ -42,7 +42,7 @@ endif()
 
 add_executable(sherpa-onnx-wasm-main sherpa-onnx-wasm-main.cc)
 target_link_libraries(sherpa-onnx-wasm-main sherpa-onnx-c-api)
-install(TARGETS sherpa-onnx-wasm-main DESTINATION bin/wasm)
+install(TARGETS sherpa-onnx-wasm-main DESTINATION bin/wasm/tts)
 
 install(
   FILES
@@ -54,5 +54,5 @@ install(
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main>/sherpa-onnx-wasm-main.data"
     # "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main>/sherpa-onnx-wasm-main.html"
   DESTINATION
-    bin/wasm
+    bin/wasm/tts
 )
