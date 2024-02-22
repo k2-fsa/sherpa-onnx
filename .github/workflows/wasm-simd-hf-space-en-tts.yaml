@@ -69,6 +69,40 @@ jobs:
           name: sherpa-onnx-wasm-simd-en-tts
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
 
+      - name: Publish to ModelScope
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf ms
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://www.modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-en.git ms
+            cd ms
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts/* .
+
+            git status
+            git lfs track "*.data"
+            git lfs track "*.wasm"
+            ls -lh
+
+            git add .
+            git commit -m "update model"
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-en.git
+
       - name: Publish to huggingface
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
