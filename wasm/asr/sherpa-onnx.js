@@ -7,6 +7,18 @@ function freeConfig(config) {
     freeConfig(config.config)
   }
 
+  if ('transducer' in config) {
+    freeConfig(config.transducer)
+  }
+
+  if ('paraformer' in config) {
+    freeConfig(config.paraformer)
+  }
+
+  if ('ctc' in config) {
+    freeConfig(config.ctc)
+  }
+
   _free(config.ptr);
 }
 
@@ -89,6 +101,61 @@ function initSherpaOnnxOnlineZipformer2CtcModelConfig(config) {
   }
 }
 
+function initSherpaOnnxOnlineModelConfig(config) {
+  let transducer = initSherpaOnnxOnlineTransducerModelConfig(config.transducer);
+  let paraformer = initSherpaOnnxOnlineParaformerModelConfig(config.paraformer);
+  let ctc = initSherpaOnnxOnlineZipformer2CtcModelConfig(config.zipformer2Ctc);
+
+  let len = transducer.len + paraformer.len + ctc.len + 5 * 4;
+  let ptr = _malloc(len);
+
+  let offset = 0;
+  _CopyHeap(transducer.ptr, transducer.len, ptr + offset);
+  offset += transducer.len;
+
+  _CopyHeap(paraformer.ptr, paraformer.len, ptr + offset);
+  offset += paraformer.len;
+
+  _CopyHeap(ctc.ptr, ctc.len, ptr + offset);
+  offset += ctc.len;
+
+  let tokensLen = lengthBytesUTF8(config.tokens) + 1;
+  let providerLen = lengthBytesUTF8(config.provider) + 1;
+  let modelTypeLen = lengthBytesUTF8(config.modelType) + 1;
+  let bufferLen = tokensLen + providerLen + modelTypeLen;
+  let buffer = _malloc(bufferLen);
+
+  offset = 0;
+  stringToUTF8(config.tokens, buffer, tokensLen);
+  offset += tokensLen;
+
+  stringToUTF8(config.provider, buffer + offset, providerLen);
+  offset += providerLen;
+
+  stringToUTF8(config.modelType, buffer + offset, modelTypeLen);
+
+  offset = transducer.len + paraformer.len + ctc.len;
+  setValue(ptr + offset, buffer, 'i8*');  // tokens
+  offset += 4;
+
+  setValue(ptr + offset, config.numThreads, 'i32');
+  offset += 4;
+
+  setValue(ptr + offset, buffer + tokensLen, 'i8*');  // provider
+  offset += 4;
+
+  setValue(ptr + offset, config.debug, 'i32');
+  offset += 4;
+
+  setValue(ptr + offset, buffer + tokensLen + providerLen, 'i8*');  // modelType
+  offset += 4;
+
+  return {
+    buffer: buffer, ptr: ptr, len: len, transducer: transducer,
+        paraformer: paraformer, ctc: ctc
+  }
+}
+
 
 function initSherpaOnnxOnlineRecognizer() {
   let onlineTransducerModelConfig = {
@@ -106,15 +173,19 @@ function initSherpaOnnxOnlineRecognizer() {
     model: './ctc.onnx',
   }
 
+  let onlineModelConfig = {
+    transducer: onlineTransducerModelConfig,
+    paraformer: onlineParaformerModelConfig,
+    zipformer2Ctc: onlineZipformer2CtcModelConfig,
+    tokens: './tokens.txt',
+    numThreads: 1,
+    provider: 'cpu',
+    debug: 1,
+    modelType: '',
+  }
 
-  let transducer =
-      initSherpaOnnxOnlineTransducerModelConfig(onlineTransducerModelConfig);
+  let config = initSherpaOnnxOnlineModelConfig(onlineModelConfig);
 
-  let paraformer =
-      initSherpaOnnxOnlineParaformerModelConfig(onlineParaformerModelConfig);
-
-  let ctc = initSherpaOnnxOnlineZipformer2CtcModelConfig(
-      onlineZipformer2CtcModelConfig);
-
-  _MyPrint(transducer.ptr, paraformer.ptr, ctc.ptr);
+  _MyPrint(config.ptr);
+  freeConfig(config)
 }
