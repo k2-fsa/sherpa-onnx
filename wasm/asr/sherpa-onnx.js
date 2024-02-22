@@ -73,6 +73,23 @@ function initSherpaOnnxOnlineParaformerModelConfig(config) {
   }
 }
 
+function initSherpaOnnxOnlineZipformer2CtcModelConfig(config) {
+  let n = lengthBytesUTF8(config.model) + 1;
+  let buffer = _malloc(n);
+
+  let len = 1 * 4;  // 1 pointer
+  let ptr = _malloc(len);
+
+  stringToUTF8(config.model, buffer, n);
+
+  setValue(ptr, buffer, 'i8*');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
+
 function initSherpaOnnxOnlineRecognizer() {
   let onlineTransducerModelConfig = {
     encoder: './encoder.onnx',
@@ -85,11 +102,19 @@ function initSherpaOnnxOnlineRecognizer() {
     decoder: './paraformer-decoder.onnx',
   }
 
+  let onlineZipformer2CtcModelConfig = {
+    model: './ctc.onnx',
+  }
+
+
   let transducer =
       initSherpaOnnxOnlineTransducerModelConfig(onlineTransducerModelConfig);
 
   let paraformer =
       initSherpaOnnxOnlineParaformerModelConfig(onlineParaformerModelConfig);
 
-  _MyPrint(transducer.ptr, paraformer.ptr);
+  let ctc = initSherpaOnnxOnlineZipformer2CtcModelConfig(
+      onlineZipformer2CtcModelConfig);
+
+  _MyPrint(transducer.ptr, paraformer.ptr, ctc.ptr);
 }
