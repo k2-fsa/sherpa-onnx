@@ -45,14 +45,10 @@ sleep 1
 
 onnxruntime_version=1.17.0
 
-if [ ! -f $onnxruntime_version/jni/x86/libonnxruntime.so ]; then
-  mkdir -p $onnxruntime_version
-  pushd $onnxruntime_version
-  wget -q https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-android-${onnxruntime_version}.zip
-  unzip onnxruntime-android-${onnxruntime_version}.zip
-  rm onnxruntime-android-${onnxruntime_version}.zip
-  popd
-fi
+wget https://github.com/l3utterfly/jetified-onnxruntime-android-1.17.0/archive/refs/heads/main.zip
+unzip main.zip
+rm main.zip
+mv jetified-onnxruntime-android-1.17.0-main $onnxruntime_version
 
 export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/$onnxruntime_version/jni/x86/
 export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$dir/$onnxruntime_version/headers/
