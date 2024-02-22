@@ -57,3 +57,5 @@ cmake \
   ..
 make -j2
 make install
+
+ls -lh install/bin/wasm/tts

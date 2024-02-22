@@ -59,7 +59,7 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          mv build-wasm-simd-tts/install/bin/wasm sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts
+          mv build-wasm-simd-tts/install/bin/wasm/tts sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts
           ls -lh sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts
           tar cjfv sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts.tar.bz2 ./sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-tts
 
