@@ -34,14 +34,14 @@ Usage:
     --provider=cpu \
     --num-threads=2 \
     --decoding-method=greedy_search \
-    device_name \
+    device_name
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 for a list of pre-trained models to download.
 
 The device name specifies which microphone to use in case there are several
-on you system. You can use
+on your system. You can use
 
   arecord -l
 
