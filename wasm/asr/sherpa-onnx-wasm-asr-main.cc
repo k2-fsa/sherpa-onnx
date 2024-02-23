@@ -21,8 +21,10 @@ static_assert(sizeof(SherpaOnnxOnlineModelConfig) ==
                       sizeof(SherpaOnnxOnlineParaformerModelConfig) +
                       sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 5 * 4,
               "");
+static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 
-void MyPrint(SherpaOnnxOnlineModelConfig *config) {
+void MyPrint(SherpaOnnxOnlineModelConfig *config,
+             SherpaOnnxFeatureConfig *feat) {
   auto transducer_model_config = &config->transducer;
   auto paraformer_model_config = &config->paraformer;
   auto ctc_model_config = &config->zipformer2_ctc;
@@ -43,6 +45,10 @@ void MyPrint(SherpaOnnxOnlineModelConfig *config) {
   fprintf(stdout, "provider: %s\n", config->provider);
   fprintf(stdout, "debug: %d\n", config->debug);
   fprintf(stdout, "model type: %s\n", config->model_type);
+
+  fprintf(stdout, "----------feat config----------\n");
+  fprintf(stdout, "sample rate: %d\n", feat->sample_rate);
+  fprintf(stdout, "feat dim: %d\n", feat->feature_dim);
 }
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {

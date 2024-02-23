@@ -156,6 +156,15 @@ function initSherpaOnnxOnlineModelConfig(config) {
   }
 }
 
+function initSherpaOnnxFeatureConfig(config) {
+  let len = 2 * 4;  // 2 pointers
+  let ptr = _malloc(len);
+
+  setValue(ptr, config.sampleRate, 'i32');
+  setValue(ptr + 4, config.featureDim, 'i32');
+  return {ptr: ptr};
+}
+
 
 function initSherpaOnnxOnlineRecognizer() {
   let onlineTransducerModelConfig = {
@@ -184,8 +193,15 @@ function initSherpaOnnxOnlineRecognizer() {
     modelType: '',
   }
 
+  let featureConfig = {
+    sampleRate: 16000,
+    featureDim: 80,
+  }
+
+  let feat = initSherpaOnnxFeatureConfig(featureConfig);
   let config = initSherpaOnnxOnlineModelConfig(onlineModelConfig);
 
-  _MyPrint(config.ptr);
+  _MyPrint(config.ptr, feat.ptr);
   freeConfig(config)
+  freeConfig(feat)
 }
