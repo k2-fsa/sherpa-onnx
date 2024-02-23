@@ -41,7 +41,7 @@ https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 for a list of pre-trained models to download.
 
 The device name specifies which microphone to use in case there are several
-on you system. You can use
+on your system. You can use
 
   arecord -l
 

@@ -182,7 +182,7 @@ Note that `zh` means Chinese, while `en` means English.
     device_name
 
 The device name specifies which microphone to use in case there are several
-on you system. You can use
+on your system. You can use
 
   arecord -l
 
