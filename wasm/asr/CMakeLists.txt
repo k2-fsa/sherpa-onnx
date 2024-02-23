@@ -2,12 +2,26 @@ if(NOT $ENV{SHERPA_ONNX_IS_USING_BUILD_WASM_SH})
   message(FATAL_ERROR "Please use ./build-wasm-simd-asr.sh to build for wasm ASR")
 endif()
 
-if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/model.onnx")
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/encoder.onnx")
   # message(FATAL_ERROR "Please read ${CMAKE_CURRENT_SOURCE_DIR}/assets/README.md before you continue")
 endif()
 
 set(exported_functions
   MyPrint
+  # online ASR
+  AcceptWaveform
+  CreateOnlineRecognizer
+  CreateOnlineStream
+  DecodeOnlineStream
+  DestroyOnlineRecognizer
+  DestroyOnlineRecognizerResult
+  DestroyOnlineStream
+  GetOnlineStreamResult
+  InputFinished
+  IsEndpoint
+  IsOnlineStreamReady
+  Reset
+  #
 )
 set(mangled_exported_functions)
 foreach(x IN LISTS exported_functions)

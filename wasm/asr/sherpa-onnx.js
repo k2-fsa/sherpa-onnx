@@ -229,21 +229,42 @@ function initSherpaOnnxOnlineRecognizerConfig(config) {
 }
 
 
-function initSherpaOnnxOnlineRecognizer() {
+function createRecognizer() {
   let onlineTransducerModelConfig = {
-    encoder: './encoder.onnx',
-    decoder: './decoder.onnx',
-    joiner: './joiner.onnx',
+    encoder: '',
+    decoder: '',
+    joiner: '',
   }
 
   let onlineParaformerModelConfig = {
-    encoder: './paraformer-encoder.onnx',
-    decoder: './paraformer-decoder.onnx',
+    encoder: '',
+    decoder: '',
   }
 
   let onlineZipformer2CtcModelConfig = {
-    model: './ctc.onnx',
+    model: '',
   }
+
+  let type = 0;
+
+  switch (type) {
+    case 0:
+      // transducer
+      onlineTransducerModelConfig.encoder = './encoder.onnx';
+      onlineTransducerModelConfig.decoder = './decoder.onnx';
+      onlineTransducerModelConfig.joiner = './joiner.onnx';
+      break;
+    case 1:
+      // paraformer
+      onlineParaformerModelConfig.encoder = './encoder.onnx';
+      onlineParaformerModelConfig.decoder = './decoder.onnx';
+      break;
+    case 2:
+      // ctc
+      onlineZipformer2CtcModelConfig.model = './encoder.onnx';
+      break;
+  }
+
 
   let onlineModelConfig = {
     transducer: onlineTransducerModelConfig,
@@ -274,8 +295,87 @@ function initSherpaOnnxOnlineRecognizer() {
     hotwordsScore: 1.5,
   }
 
-  let config = initSherpaOnnxOnlineRecognizerConfig(recognizerConfig);
+  return new OnlineRecognizer(recognizerConfig);
+}
 
-  _MyPrint(config.ptr);
-  freeConfig(config)
+class OnlineStream {
+  constructor(handle) {
+    this.handle = handle;
+    this.pointer = null;  // buffer
+    this.n = 0;           // buffer size
+  }
+
+  free() {
+    if (this.handle) {
+      _DestroyOnlineStream(this.handle);
+      this.handle = null;
+      _free(this.pointer);
+      this.pointer = null;
+      this.n = 0;
+    }
+  }
+
+  /**
+   * @param sampleRate {Number}
+   * @param samples {Float32Array} Containing samples in the range [-1, 1]
+   */
+  acceptWaveform(sampleRate, samples) {
+    if (this.n < samples.length) {
+      _free(this.pointer);
+      this.pointer = _malloc(samples.length * samples.BYTES_PER_ELEMENT);
+      this.n = samples.length
+    }
+
+    Module.HEAPF32.set(samples, this.pointer / samples.BYTES_PER_ELEMENT);
+    _AcceptWaveform(this.handle, sampleRate, this.pointer, samples.length);
+  }
+
+  inputFinished() {
+    _InputFinished(this.handle);
+  }
+};
+
+class OnlineRecognizer {
+  constructor(configObj) {
+    let config = initSherpaOnnxOnlineRecognizerConfig(configObj)
+    let handle = _CreateOnlineRecognizer(config.ptr);
+
+    freeConfig(config);
+
+    this.handle = handle;
+  }
+
+  free() {
+    _DestroyOnlineRecognizer(this.handle);
+    this.handle = 0
+  }
+
+  createStream() {
+    let handle = _CreateOnlineStream(this.handle);
+    return new OnlineStream(handle);
+  }
+
+  isReady(stream) {
+    return _IsOnlineStreamReady(this.handle, stream.handle) == 1;
+  }
+
+  decode(stream) {
+    return _DecodeOnlineStream(this.handle, stream.handle);
+  }
+
+  isEndpoint(stream) {
+    return _IsEndpoint(this.handle, stream.handle) == 1;
+  }
+
+  reset(stream) {
+    _Reset(this.handle, stream.handle);
+  }
+
+  getResult(stream) {
+    let r = _GetOnlineStreamResult(this.handle, stream.handle);
+    let textPtr = getValue(r, 'i8*');
+    let text = UTF8ToString(textPtr);
+    _DestroyOnlineRecognizerResult(r);
+    return text;
+  }
 }
