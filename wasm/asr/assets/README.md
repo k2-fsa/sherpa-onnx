@@ -57,11 +57,15 @@ mv sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt ./
 
 rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
-cd ../../..
+cd ../
+
+sed -i.bak s/"type = 0"/"type = 1"/g ./sherpa-onnx.js
+sed -i.bak s/Zipformer/Paraformer/g ./index.html
+
+cd ../..
 
 ./build-wasm-simd-asr.sh
 ```
-
 
 You should have the following files in `assets` before you can run
 `build-wasm-simd-asr.sh`
