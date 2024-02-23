@@ -19,6 +19,14 @@ function freeConfig(config) {
     freeConfig(config.ctc)
   }
 
+  if ('feat' in config) {
+    freeConfig(config.feat)
+  }
+
+  if ('model' in config) {
+    freeConfig(config.model)
+  }
+
   _free(config.ptr);
 }
 
@@ -162,7 +170,62 @@ function initSherpaOnnxFeatureConfig(config) {
 
   setValue(ptr, config.sampleRate, 'i32');
   setValue(ptr + 4, config.featureDim, 'i32');
-  return {ptr: ptr};
+  return {ptr: ptr, len: len};
+}
+
+function initSherpaOnnxOnlineRecognizerConfig(config) {
+  let feat = initSherpaOnnxFeatureConfig(config.featConfig);
+  let model = initSherpaOnnxOnlineModelConfig(config.modelConfig);
+
+  let len = feat.len + model.len + 8 * 4;
+  let ptr = _malloc(len);
+
+  let offset = 0;
+  _CopyHeap(feat.ptr, feat.len, ptr + offset);
+  offset += feat.len;
+
+  _CopyHeap(model.ptr, model.len, ptr + offset);
+  offset += model.len;
+
+  let decodingMethodLen = lengthBytesUTF8(config.decodingMethod) + 1;
+  let hotwordsFileLen = lengthBytesUTF8(config.hotwordsFile) + 1;
+  let bufferLen = decodingMethodLen + hotwordsFileLen;
+  let buffer = _malloc(bufferLen);
+
+  offset = 0;
+  stringToUTF8(config.decodingMethod, buffer, decodingMethodLen);
+  offset += decodingMethodLen;
+
+  stringToUTF8(config.hotwordsFile, buffer + offset, hotwordsFileLen);
+
+  offset = feat.len + model.len;
+  setValue(ptr + offset, buffer, 'i8*');  // decoding method
+  offset += 4;
+
+  setValue(ptr + offset, config.maxActivePaths, 'i32');
+  offset += 4;
+
+  setValue(ptr + offset, config.enableEndpoint, 'i32');
+  offset += 4;
+
+  setValue(ptr + offset, config.rule1MinTrailingSilence, 'float');
+  offset += 4;
+
+  setValue(ptr + offset, config.rule2MinTrailingSilence, 'float');
+  offset += 4;
+
+  setValue(ptr + offset, config.rule3MinUtteranceLength, 'float');
+  offset += 4;
+
+  setValue(ptr + offset, buffer + decodingMethodLen, 'i8*');
+  offset += 4;
+
+  setValue(ptr + offset, config.hotwordsScore, 'float');
+  offset += 4;
+
+  return {
+    buffer: buffer, ptr: ptr, len: len, feat: feat, model: model
+  }
 }
 
 
@@ -198,10 +261,21 @@ function initSherpaOnnxOnlineRecognizer() {
     featureDim: 80,
   }
 
-  let feat = initSherpaOnnxFeatureConfig(featureConfig);
-  let config = initSherpaOnnxOnlineModelConfig(onlineModelConfig);
+  let recognizerConfig = {
+    featConfig: featureConfig,
+    modelConfig: onlineModelConfig,
+    decodingMethod: 'greedy_search',
+    maxActivePaths: 4,
+    enableEndpoint: 1,
+    rule1MinTrailingSilence: 2.4,
+    rule2MinTrailingSilence: 1.2,
+    rule3MinUtteranceLength: 20,
+    hotwordsFile: '',
+    hotwordsScore: 1.5,
+  }
 
-  _MyPrint(config.ptr, feat.ptr);
+  let config = initSherpaOnnxOnlineRecognizerConfig(recognizerConfig);
+
+  _MyPrint(config.ptr);
   freeConfig(config)
-  freeConfig(feat)
 }
