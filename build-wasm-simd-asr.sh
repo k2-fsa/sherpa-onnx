@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Copyright (c)  2024  Xiaomi Corporation
 #
-# This script is to build sherpa-onnx for WebAssembly (TTS)
+# This script is to build sherpa-onnx for WebAssembly (ASR)
 
 set -ex
 
@@ -31,8 +31,8 @@ if [ ! -f $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ]; then
   exit 1
 fi
 
-mkdir -p build-wasm-simd-tts
-pushd build-wasm-simd-tts
+mkdir -p build-wasm-simd-asr
+pushd build-wasm-simd-asr
 
 export SHERPA_ONNX_IS_USING_BUILD_WASM_SH=ON
 
@@ -51,11 +51,11 @@ cmake \
   -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
   -DSHERPA_ONNX_ENABLE_GPU=OFF \
   -DSHERPA_ONNX_ENABLE_WASM=ON \
-  -DSHERPA_ONNX_ENABLE_WASM_TTS=ON \
+  -DSHERPA_ONNX_ENABLE_WASM_ASR=ON \
   -DSHERPA_ONNX_ENABLE_BINARY=OFF \
   -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
   ..
 make -j2
 make install
 
-ls -lh install/bin/wasm/tts
+ls -lh install/bin/wasm/asr

@@ -111,11 +111,12 @@ void OnlineZipformer2TransducerModel::InitEncoder(void *model_data,
 
   if (config_.debug) {
     auto print = [](const std::vector<int32_t> &v, const char *name) {
-      fprintf(stderr, "%s: ", name);
+      std::ostringstream os;
+      os << name << ": ";
       for (auto i : v) {
-        fprintf(stderr, "%d ", i);
+        os << i << " ";
       }
-      fprintf(stderr, "\n");
+      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
     };
     print(encoder_dims_, "encoder_dims");
     print(query_head_dims_, "query_head_dims");

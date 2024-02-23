@@ -1,0 +1,142 @@
+name: wasm-simd-hf-space-en-asr-zipformer
+
+on:
+  release:
+    types:
+      - published
+
+  workflow_dispatch:
+
+concurrency:
+  group: wasm-simd-hf-space-en-asr-zipformer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wasm-simd-hf-space-en-asr-zipformer:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install emsdk
+        uses: mymindstorm/setup-emsdk@v14
+
+      - name: View emsdk version
+        shell: bash
+        run: |
+          emcc -v
+          echo "--------------------"
+          emcc --check
+
+      - name: Download model files
+        shell: bash
+        run: |
+          cd wasm/asr/assets
+          ls -lh
+          echo "----------"
+
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-en-2023-06-21.tar.bz2
+          mv sherpa-onnx-streaming-zipformer-en-2023-06-21/encoder-epoch-99-avg-1.int8.onnx encoder.onnx
+          mv sherpa-onnx-streaming-zipformer-en-2023-06-21/decoder-epoch-99-avg-1.onnx decoder.onnx
+          mv sherpa-onnx-streaming-zipformer-en-2023-06-21/joiner-epoch-99-avg-1.onnx joiner.onnx
+          mv sherpa-onnx-streaming-zipformer-en-2023-06-21/tokens.txt ./
+
+          rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-21
+
+          ls -lh
+
+      - name: Build sherpa-onnx for WebAssembly (ASR)
+        shell: bash
+        run: |
+          ./build-wasm-simd-asr.sh
+
+      - name: collect files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-en-asr-zipformer
+          mv build-wasm-simd-asr/install/bin/wasm/asr $dst
+          ls -lh $dst
+          tar cjfv ${dst}.tar.bz2 ./${dst}
+
+      - name: Upload wasm files
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-wasm-simd-en-asr-zipformer
+          path: ./sherpa-onnx-wasm-simd-*.tar.bz2
+
+      - name: Publish to ModelScope
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf ms
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-en.git ms
+            cd ms
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-*/* .
+
+            git status
+            git lfs track "*.data"
+            git lfs track "*.wasm"
+            ls -lh
+
+            git add .
+            git commit -m "update model"
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-en.git
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-en huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-*/* .
+
+            git status
+            git lfs track "*.data"
+            git lfs track "*.wasm"
+            ls -lh
+
+            git add .
+            git commit -m "update model"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-en main
