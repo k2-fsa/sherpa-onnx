@@ -3,7 +3,7 @@ name: wasm-simd-hf-space-zh-en-asr-paraformer
 on:
   push:
     branches:
-      - wasm-asr
+      - wasm-asr-2
   release:
     types:
       - published
