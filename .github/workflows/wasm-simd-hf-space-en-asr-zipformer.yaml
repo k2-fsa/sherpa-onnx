@@ -1,9 +1,6 @@
 name: wasm-simd-hf-space-en-asr-zipformer
 
 on:
-  push:
-    branches:
-      - wasm-asr-2
   release:
     types:
       - published
@@ -49,6 +46,7 @@ jobs:
           mv sherpa-onnx-streaming-zipformer-en-2023-06-21/encoder-epoch-99-avg-1.int8.onnx encoder.onnx
           mv sherpa-onnx-streaming-zipformer-en-2023-06-21/decoder-epoch-99-avg-1.onnx decoder.onnx
           mv sherpa-onnx-streaming-zipformer-en-2023-06-21/joiner-epoch-99-avg-1.onnx joiner.onnx
+          mv sherpa-onnx-streaming-zipformer-en-2023-06-21/tokens.txt ./
 
           rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-21
 
