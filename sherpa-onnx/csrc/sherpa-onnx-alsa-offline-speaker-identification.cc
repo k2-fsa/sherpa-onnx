@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/sherpa-onnx-microphone-offline-speaker-identification.cc
+// sherpa-onnx/csrc/sherpa-onnx-alsa-offline-speaker-identification.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
@@ -12,7 +12,7 @@
 #include <sstream>
 #include <thread>  // NOLINT
 
-#include "portaudio.h"  // NOLINT
+#include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/microphone.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
@@ -238,6 +238,8 @@ as the device_name.
     manager.Add(p.first, embedding_list);
   }
 
+  std::string device_name = po.GetArg(1);
+  fprintf(stderr, "Use recording device: %s\n", device_name.c_str());
   int32_t sample_rate = 16000;
 
   std::thread t(DetectKeyPress);
