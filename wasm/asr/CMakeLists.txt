@@ -3,7 +3,7 @@ if(NOT $ENV{SHERPA_ONNX_IS_USING_BUILD_WASM_SH})
 endif()
 
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/encoder.onnx")
-  # message(FATAL_ERROR "Please read ${CMAKE_CURRENT_SOURCE_DIR}/assets/README.md before you continue")
+  message(FATAL_ERROR "Please read ${CMAKE_CURRENT_SOURCE_DIR}/assets/README.md before you continue")
 endif()
 
 set(exported_functions
