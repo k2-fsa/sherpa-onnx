@@ -231,10 +231,12 @@ endif()
 if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
   add_executable(sherpa-onnx-offline-tts-play-alsa sherpa-onnx-offline-tts-play-alsa.cc alsa-play.cc)
+  add_executable(sherpa-onnx-alsa-offline-speaker-identification sherpa-onnx-alsa-offline-speaker-identification.cc alsa.cc)
 
   set(exes
     sherpa-onnx-alsa
     sherpa-onnx-offline-tts-play-alsa
+    sherpa-onnx-alsa-offline-speaker-identification
   )
   foreach(exe IN LISTS exes)
     target_link_libraries(${exe} sherpa-onnx-core)

@@ -34,7 +34,7 @@ Usage:
     --provider=cpu \
     --num-threads=2 \
     --decoding-method=greedy_search \
-    device_name \
+    device_name
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html

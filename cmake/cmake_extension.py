@@ -167,6 +167,7 @@ class BuildExtension(build_ext):
         if enable_alsa():
             binaries += ["sherpa-onnx-alsa"]
             binaries += ["sherpa-onnx-offline-tts-play-alsa"]
+            binaries += ["sherpa-onnx-alsa-offline-speaker-identification"]
 
         if is_windows():
             binaries += ["kaldi-native-fbank-core.dll"]
