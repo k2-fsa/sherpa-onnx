@@ -9,10 +9,11 @@ LIB_FILES = \
 	$(LIB_SRC_DIR)/OnlineLMConfig.java \
 	$(LIB_SRC_DIR)/OnlineTransducerModelConfig.java \
 	$(LIB_SRC_DIR)/OnlineParaformerModelConfig.java \
+	$(LIB_SRC_DIR)/OnlineZipformer2CtcModelConfig.java \
 	$(LIB_SRC_DIR)/OnlineModelConfig.java \
 	$(LIB_SRC_DIR)/OnlineRecognizerConfig.java \
 	$(LIB_SRC_DIR)/OnlineStream.java \
-	$(LIB_SRC_DIR)/OnlineRecognizer.java \
+	$(LIB_SRC_DIR)/OnlineRecognizer.java
 
 WEBSOCKET_DIR:= ./src/websocketsrv
 WEBSOCKET_FILES = \
@@ -42,10 +43,10 @@ vpath %.java src
 
 
 buildfile:
-		$(JAVAC) -cp lib/sherpaonnx.jar -d $(BUILD_DIR) -encoding UTF-8 src/$(EXAMPLE_FILE)
+	$(JAVAC) -cp lib/sherpaonnx.jar -d $(BUILD_DIR) -encoding UTF-8 src/$(EXAMPLE_FILE)
 
 buildmic:
-		$(JAVAC) -cp lib/sherpaonnx.jar -d $(BUILD_DIR) -encoding UTF-8 src/$(EXAMPLE_Mic)
+	$(JAVAC) -cp lib/sherpaonnx.jar -d $(BUILD_DIR) -encoding UTF-8 src/$(EXAMPLE_Mic)
 
 rebuild: clean all
 
@@ -63,8 +64,8 @@ clean:
 	mkdir -p $(BUILD_DIR)
 	mkdir -p ./lib
 
-runfile:
-		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeFile test.wav
+runfile: packjar buildfile
+	java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeFile test.wav
 
 runhotwords:
 		java -cp ./lib/sherpaonnx.jar:build $(RUNJFLAGS)  DecodeFile hotwords.wav
@@ -85,8 +86,7 @@ buildlib: $(LIB_FILES:.java=.class)
 
 
 %.class: %.java
-
-				$(JAVAC) -cp $(BUILD_DIR) -d $(BUILD_DIR) -encoding UTF-8 $<
+	$(JAVAC) -cp $(BUILD_DIR) -d $(BUILD_DIR) -encoding UTF-8 $<
 
 buildwebsocket: $(WEBSOCKET_FILES:.java=.class)
 
@@ -95,7 +95,7 @@ buildwebsocket: $(WEBSOCKET_FILES:.java=.class)
 
 				$(JAVAC) -cp $(BUILD_DIR):lib/slf4j-simple-1.7.25.jar:lib/slf4j-api-1.7.25.jar:lib/Java-WebSocket-1.5.3.jar:../lib/sherpaonnx.jar -d $(BUILD_DIR) -encoding UTF-8 $<
 
-packjar:
-				jar cvfe lib/sherpaonnx.jar . -C $(BUILD_DIR) .
+packjar: buildlib
+	jar cvfe lib/sherpaonnx.jar . -C $(BUILD_DIR) .
 
 all: clean buildlib packjar buildfile buildmic downjar buildwebsocket

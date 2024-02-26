@@ -7,6 +7,7 @@ package com.k2fsa.sherpa.onnx;
 public class OnlineModelConfig {
     private final OnlineParaformerModelConfig paraformer;
     private final OnlineTransducerModelConfig transducer;
+    private final OnlineZipformer2CtcModelConfig zipformer2Ctc;
     private final String tokens;
     private final int numThreads;
     private final boolean debug;
@@ -19,7 +20,9 @@ public class OnlineModelConfig {
             boolean debug,
             String modelType,
             OnlineParaformerModelConfig paraformer,
-            OnlineTransducerModelConfig transducer) {
+            OnlineTransducerModelConfig transducer,
+            OnlineZipformer2CtcModelConfig zipformer2Ctc
+            ) {
 
         this.tokens = tokens;
         this.numThreads = numThreads;
@@ -27,6 +30,7 @@ public class OnlineModelConfig {
         this.modelType = modelType;
         this.paraformer = paraformer;
         this.transducer = transducer;
+        this.zipformer2Ctc = zipformer2Ctc;
     }
 
     public OnlineParaformerModelConfig getParaformer() {

@@ -77,6 +77,7 @@ public class OnlineRecognizer {
                             proMap.getOrDefault("encoder", "").trim(),
                             proMap.getOrDefault("decoder", "").trim(),
                             proMap.getOrDefault("joiner", "").trim());
+            OnlineZipformer2CtcModelConfig zipformer2CtcConfig = new OnlineZipformer2CtcModelConfig("");
             OnlineModelConfig modelCfg =
                     new OnlineModelConfig(
                             proMap.getOrDefault("tokens", "").trim(),
@@ -84,7 +85,7 @@ public class OnlineRecognizer {
                             false,
                             proMap.getOrDefault("model_type", "zipformer").trim(),
                             modelParaCfg,
-                            modelTranCfg);
+                            modelTranCfg, zipformer2CtcConfig);
             FeatureConfig featConfig =
                     new FeatureConfig(
                             sampleRate, Integer.parseInt(proMap.getOrDefault("feature_dim", "80").trim()));
@@ -142,6 +143,7 @@ public class OnlineRecognizer {
                             proMap.getOrDefault("encoder", "").trim(),
                             proMap.getOrDefault("decoder", "").trim(),
                             proMap.getOrDefault("joiner", "").trim());
+            OnlineZipformer2CtcModelConfig zipformer2CtcConfig = new OnlineZipformer2CtcModelConfig("");
 
             OnlineModelConfig modelCfg =
                     new OnlineModelConfig(
@@ -150,7 +152,7 @@ public class OnlineRecognizer {
                             false,
                             proMap.getOrDefault("model_type", "zipformer").trim(),
                             modelParaCfg,
-                            modelTranCfg);
+                            modelTranCfg, zipformer2CtcConfig);
             FeatureConfig featConfig =
                     new FeatureConfig(
                             sampleRate, Integer.parseInt(proMap.getOrDefault("feature_dim", "80").trim()));
@@ -207,8 +209,9 @@ public class OnlineRecognizer {
         OnlineParaformerModelConfig modelParaCfg = new OnlineParaformerModelConfig(encoder, decoder);
         OnlineTransducerModelConfig modelTranCfg =
                 new OnlineTransducerModelConfig(encoder, decoder, joiner);
+        OnlineZipformer2CtcModelConfig zipformer2CtcConfig = new OnlineZipformer2CtcModelConfig("");
         OnlineModelConfig modelCfg =
-                new OnlineModelConfig(tokens, numThreads, false, modelType, modelParaCfg, modelTranCfg);
+                new OnlineModelConfig(tokens, numThreads, false, modelType, modelParaCfg, modelTranCfg, zipformer2CtcConfig);
         FeatureConfig featConfig = new FeatureConfig(sampleRate, featureDim);
         OnlineLMConfig onlineLmConfig = new OnlineLMConfig(lm_model, lm_scale);
         OnlineRecognizerConfig rcgCfg =
