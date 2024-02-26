@@ -5,19 +5,19 @@
 package com.k2fsa.sherpa.onnx;
 
 public class OnlineParaformerModelConfig {
-  private final String encoder;
-  private final String decoder;
+    private final String encoder;
+    private final String decoder;
 
-  public OnlineParaformerModelConfig(String encoder, String decoder) {
-    this.encoder = encoder;
-    this.decoder = decoder;
-  }
+    public OnlineParaformerModelConfig(String encoder, String decoder) {
+        this.encoder = encoder;
+        this.decoder = decoder;
+    }
 
-  public String getEncoder() {
-    return encoder;
-  }
+    public String getEncoder() {
+        return encoder;
+    }
 
-  public String getDecoder() {
-    return decoder;
-  }
+    public String getDecoder() {
+        return decoder;
+    }
 }

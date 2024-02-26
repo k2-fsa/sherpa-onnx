@@ -1522,8 +1522,8 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnxOffline_delete(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_SherpaOnnx_reset(
-    JNIEnv *env, jobject /*obj*/,
-    jlong ptr, jboolean recreate, jstring keywords) {
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jboolean recreate,
+    jstring keywords) {
   auto model = reinterpret_cast<sherpa_onnx::SherpaOnnx *>(ptr);
   const char *p_keywords = env->GetStringUTFChars(keywords, nullptr);
   model->Reset(recreate, p_keywords);
