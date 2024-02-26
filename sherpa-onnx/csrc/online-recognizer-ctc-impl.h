@@ -38,8 +38,10 @@ static OnlineRecognizerResult Convert(const OnlineCtcDecoderResult &src,
 
     r.text.append(sym);
 
-    if (sym.size() == 1 && sym[0] != ' ') {
+    if (sym.size() == 1 && (sym[0] < 0x20 || sym[0] > 0x7e)) {
       // for byte bpe models
+      // (but don't rewrite printable characters 0x20..0x7e,
+      //  which collide with standard BPE units)
       std::ostringstream os;
       os << "<0x" << std::hex << std::uppercase
          << (static_cast<int32_t>(sym[0]) & 0xff) << ">";

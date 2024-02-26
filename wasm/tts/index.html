@@ -1,0 +1,46 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width" />
+  <title>Next-gen Kaldi WebAssembly with sherpa-onnx for Text-to-speech</title>
+  <style>
+    h1,div {
+      text-align: center;
+    }
+    textarea {
+      width:100%;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>
+    Next-gen Kaldi + WebAssembly<br/>
+    Text-to-speech Demo with <a href="https://github.com/k2-fsa/sherpa-onnx">sherpa-onnx</a>
+  </h1>
+  <div>
+    <span id="hint">Loading model ... ...</span>
+    <br/>
+    <br/>
+    <label for="speakerId" id="speakerIdLabel">Speaker ID: </label>
+    <input type="text" id="speakerId" name="speakerId" value="0" />
+    <br/>
+    <br/>
+    <label for="speed" id="speedLabel">Speed: </label>
+    <input type="range" id="speed" name="speed" min="0.4" max="3.5" step="0.1" value="1.0" />
+    <span id="speedValue"></span>
+    <br/>
+    <br/>
+    <textarea id="text" rows="10" placeholder="Please enter your text here and click the Generate button"></textarea>
+    <br/>
+    <br/>
+    <button id="generateBtn" disabled>Generate</button>
+  </div>
+  <section flex="1" overflow="auto" id="sound-clips">
+  </section>
+
+  <script src="app.js"></script>
+  <script src="sherpa-onnx.js"></script>
+  <script src="sherpa-onnx-wasm-main.js"></script>
+</body>

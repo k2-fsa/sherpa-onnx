@@ -104,19 +104,19 @@ jobs:
           ls -lh
 
       - name: Upload artifact tts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: non-streaming-tts-${{ matrix.arch }}
           path: ./mfc-examples/${{ matrix.arch }}/sherpa-onnx-non-streaming-tts-*.exe
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: streaming-speech-recognition-${{ matrix.arch }}
           path: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-streaming-asr-*.exe
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: non-streaming-speech-recognition-${{ matrix.arch }}
           path: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-non-streaming-asr-*.exe

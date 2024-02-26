@@ -12,4 +12,3 @@ install(TARGETS sherpa-onnx-c-api DESTINATION lib)
 install(FILES c-api.h
   DESTINATION include/sherpa-onnx/c-api
 )
-

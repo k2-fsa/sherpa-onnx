@@ -93,10 +93,14 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
         Repeat(model_->Allocator(), &cur_encoder_out, hyps_row_splits);
     // now cur_encoder_out is of shape (num_hyps, joiner_dim)
 
-    Ort::Value logit = model_->RunJoiner(
-        std::move(cur_encoder_out), View(&decoder_out));
+    Ort::Value logit =
+        model_->RunJoiner(std::move(cur_encoder_out), View(&decoder_out));
 
     float *p_logit = logit.GetTensorMutableData<float>();
+    if (blank_penalty_ > 0.0) {
+      // assuming blank id is 0
+      SubtractBlank(p_logit, vocab_size, num_hyps, 0, blank_penalty_);
+    }
     LogSoftmax(p_logit, vocab_size, num_hyps);
 
     // now p_logit contains log_softmax output, we rename it to p_logprob
@@ -134,8 +138,8 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
           if (context_graphs[i] != nullptr) {
             auto context_res =
                 context_graphs[i]->ForwardOneStep(context_state, new_token);
-            context_score = context_res.first;
-            new_hyp.context_state = context_res.second;
+            context_score = std::get<0>(context_res);
+            new_hyp.context_state = std::get<1>(context_res);
           }
         }
 

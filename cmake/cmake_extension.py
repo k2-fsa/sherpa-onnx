@@ -151,9 +151,11 @@ class BuildExtension(build_ext):
         # Remember to also change setup.py
 
         binaries = ["sherpa-onnx"]
+        binaries += ["sherpa-onnx-keyword-spotter"]
         binaries += ["sherpa-onnx-offline"]
         binaries += ["sherpa-onnx-microphone"]
         binaries += ["sherpa-onnx-microphone-offline"]
+        binaries += ["sherpa-onnx-microphone-offline-speaker-identification"]
         binaries += ["sherpa-onnx-online-websocket-server"]
         binaries += ["sherpa-onnx-offline-websocket-server"]
         binaries += ["sherpa-onnx-online-websocket-client"]
@@ -165,6 +167,7 @@ class BuildExtension(build_ext):
         if enable_alsa():
             binaries += ["sherpa-onnx-alsa"]
             binaries += ["sherpa-onnx-offline-tts-play-alsa"]
+            binaries += ["sherpa-onnx-alsa-offline-speaker-identification"]
 
         if is_windows():
             binaries += ["kaldi-native-fbank-core.dll"]

@@ -36,13 +36,6 @@ package_name = "sherpa-onnx"
 with open("sherpa-onnx/python/sherpa_onnx/__init__.py", "a") as f:
     f.write(f"__version__ = '{get_package_version()}'\n")
 
-install_requires = [
-    "numpy",
-    "sentencepiece==0.1.96; python_version < '3.11'",
-    "sentencepiece; python_version >= '3.11'",
-    "click>=7.1.1",
-]
-
 
 def get_binaries_to_install():
     bin_dir = Path("build") / "sherpa_onnx" / "bin"
@@ -51,9 +44,11 @@ def get_binaries_to_install():
 
     # Remember to also change cmake/cmake_extension.py
     binaries = ["sherpa-onnx"]
+    binaries += ["sherpa-onnx-keyword-spotter"]
     binaries += ["sherpa-onnx-offline"]
     binaries += ["sherpa-onnx-microphone"]
     binaries += ["sherpa-onnx-microphone-offline"]
+    binaries += ["sherpa-onnx-microphone-offline-speaker-identification"]
     binaries += ["sherpa-onnx-online-websocket-server"]
     binaries += ["sherpa-onnx-offline-websocket-server"]
     binaries += ["sherpa-onnx-online-websocket-client"]
@@ -65,6 +60,7 @@ def get_binaries_to_install():
     if enable_alsa():
         binaries += ["sherpa-onnx-alsa"]
         binaries += ["sherpa-onnx-offline-tts-play-alsa"]
+        binaries += ["sherpa-onnx-alsa-offline-speaker-identification"]
 
     if is_windows():
         binaries += ["kaldi-native-fbank-core.dll"]
@@ -90,7 +86,6 @@ def get_binaries_to_install():
 setuptools.setup(
     name=package_name,
     python_requires=">=3.6",
-    install_requires=install_requires,
     version=get_package_version(),
     author="The sherpa-onnx development team",
     author_email="dpovey@gmail.com",

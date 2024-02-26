@@ -1,0 +1,205 @@
+name: riscv64-linux
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/riscv64-linux.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'toolchains/riscv64-linux-gnu.toolchain.cmake'
+      - 'build-riscv64-linux-gnu.sh'
+    tags:
+      - '*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/riscv64-linux.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'toolchains/riscv64-linux-gnu.toolchain.cmake'
+      - 'build-riscv64-linux-gnu.sh'
+
+  workflow_dispatch:
+
+concurrency:
+  group: riscv64-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  riscv64_linux:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.lib_type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        lib_type: [static, shared]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-riscv64-${{ matrix.lib_type }}
+
+      - name: cache-qemu
+        id: cache-qemu
+        uses: actions/cache@v4
+        with:
+          path: qemu-install
+          key: qemu-riscv-install-20240225
+
+      - name: install-qemu-build-deps
+        if: steps.cache-qemu.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get install autoconf automake autotools-dev ninja-build
+
+      - name: checkout-qemu
+        if: steps.cache-qemu.outputs.cache-hit != 'true'
+        uses: actions/checkout@v3
+        with:
+          repository: qemu/qemu
+          path: qemu
+
+      - name: qemu
+        if: steps.cache-qemu.outputs.cache-hit != 'true'
+        run: |
+          cd qemu
+          ./configure --prefix=$GITHUB_WORKSPACE/qemu-install --target-list=riscv64-linux-user --disable-system
+          make -j2
+          make install
+          ls -lh $GITHUB_WORKSPACE/qemu-install
+          ls -lh $GITHUB_WORKSPACE/qemu-install/bin
+
+      - name: cache-toolchain
+        id: cache-toolchain
+        uses: actions/cache@v4
+        with:
+          path: toolchain
+          key: riscv64-glibc-ubuntu-20.04-gcc-nightly-2023.10.17-nightly
+
+      - name: Download toolchain
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          mkdir $GITHUB_WORKSPACE/toolchain
+          wget -q https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2023.10.17/riscv64-glibc-ubuntu-20.04-gcc-nightly-2023.10.17-nightly.tar.gz
+          tar xvf ./riscv64-glibc-ubuntu-20.04-gcc-nightly-2023.10.17-nightly.tar.gz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+
+      - name: Display toolchain info
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          riscv64-unknown-linux-gnu-gcc --version
+
+      - name: Display qemu-riscv64 -h
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
+          qemu-riscv64 -h
+
+      - name: build riscv64-linux
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cmake --version
+
+          lib_type=${{ matrix.lib_type }}
+
+          if [[ $lib_type == "shared" ]]; then
+            export BUILD_SHARED_LIBS=ON
+          else
+            export BUILD_SHARED_LIBS=OFF
+          fi
+
+          ./build-riscv64-linux-gnu.sh
+
+          ls -lh build-riscv64-linux-gnu/bin
+          ls -lh build-riscv64-linux-gnu/lib
+
+          file build-riscv64-linux-gnu/bin/sherpa-onnx
+
+      - name: Test sherpa-onnx
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/sysroot
+
+          ls -lh ./build-riscv64-linux-gnu/bin
+
+          echo "----------sherpa-onnx----------"
+          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx --help
+          readelf -d ./build-riscv64-linux-gnu/bin/sherpa-onnx
+
+          echo "----------sherpa-onnx-offline----------"
+          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline --help
+          readelf -d ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline
+
+          echo "----------sherpa-onnx-offline-tts----------"
+          qemu-riscv64 ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline-tts --help
+          readelf -d ./build-riscv64-linux-gnu/bin/sherpa-onnx-offline-tts
+
+      - name: Copy files
+        shell: bash
+        run: |
+          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
+          riscv64-unknown-linux-gnu-strip --version
+
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-riscv64-${{ matrix.lib_type }}
+          mkdir $dst
+
+          ls -lh build-riscv64-linux-gnu/install/lib
+
+          cp -a build-riscv64-linux-gnu/install/bin $dst/
+          ls -lh $dst/bin/*
+          riscv64-unknown-linux-gnu-strip $dst/bin/*
+          ls -lh $dst
+
+          lib_type=${{ matrix.lib_type }}
+          if [[ $lib_type == "shared" ]]; then
+            cp -a build-riscv64-linux-gnu/install/lib $dst/
+            rm -fv $dst/lib/libasound.so
+            rm -fv $dst/lib/libonnxruntime.so
+            rm -fv $dst/lib/libsherpa-onnx-fst.so
+          fi
+
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.lib_type == 'shared'
+        with:
+          name: sherpa-onnx-linux-riscv64-shared
+          path: sherpa-onnx-*linux-riscv64-shared.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.lib_type == 'static'
+        with:
+          name: sherpa-onnx-linux-riscv64-static
+          path: sherpa-onnx-*linux-riscv64-static.tar.bz2
+
+      - name: Release pre-compiled binaries and libs for riscv64 linux ${{ matrix.lib_type }}
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-riscv64*.tar.bz2

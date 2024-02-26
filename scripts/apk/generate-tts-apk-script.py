@@ -39,7 +39,8 @@ class TtsModel:
 
 def convert_lang_to_iso_639_3(models: List[TtsModel]):
     for m in models:
-        m.lang_iso_639_3 = Lang(m.lang).pt3
+        if m.lang_iso_639_3 == "":
+            m.lang_iso_639_3 = Lang(m.lang).pt3
 
 
 def get_coqui_models() -> List[TtsModel]:
@@ -109,10 +110,12 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-es-glados-medium"),
         TtsModel(model_dir="vits-piper-es_ES-carlfm-x_low"),
         TtsModel(model_dir="vits-piper-es_ES-davefx-medium"),
-        TtsModel(model_dir="vits-piper-es_ES-mls_10246-low"),
-        TtsModel(model_dir="vits-piper-es_ES-mls_9972-low"),
+        #  TtsModel(model_dir="vits-piper-es_ES-mls_10246-low"),
+        #  TtsModel(model_dir="vits-piper-es_ES-mls_9972-low"),
         TtsModel(model_dir="vits-piper-es_ES-sharvard-medium"),
         TtsModel(model_dir="vits-piper-es_MX-ald-medium"),
+        TtsModel(model_dir="vits-piper-fa_IR-amir-medium"),
+        TtsModel(model_dir="vits-piper-fa_IR-gyro-medium"),
         TtsModel(model_dir="vits-piper-fi_FI-harri-low"),
         TtsModel(model_dir="vits-piper-fi_FI-harri-medium"),
         TtsModel(model_dir="vits-piper-fr_FR-siwis-low"),
@@ -143,7 +146,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-pl_PL-darkman-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-gosia-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-mc_speech-medium"),
-        TtsModel(model_dir="vits-piper-pl_PL-mls_6892-low"),
+        #  TtsModel(model_dir="vits-piper-pl_PL-mls_6892-low"),
         TtsModel(model_dir="vits-piper-pt_BR-edresson-low"),
         TtsModel(model_dir="vits-piper-pt_BR-faber-medium"),
         TtsModel(model_dir="vits-piper-pt_PT-tugao-medium"),
@@ -152,6 +155,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-ru_RU-dmitri-medium"),
         TtsModel(model_dir="vits-piper-ru_RU-irina-medium"),
         TtsModel(model_dir="vits-piper-ru_RU-ruslan-medium"),
+        TtsModel(model_dir="vits-piper-sl_SI-artur-medium"),
         TtsModel(model_dir="vits-piper-sk_SK-lili-medium"),
         TtsModel(model_dir="vits-piper-sr_RS-serbski_institut-medium"),
         TtsModel(model_dir="vits-piper-sv_SE-nst-medium"),
@@ -174,6 +178,29 @@ def get_piper_models() -> List[TtsModel]:
     return models
 
 
+def get_mimic3_models() -> List[TtsModel]:
+    models = [
+        TtsModel(model_dir="vits-mimic3-af_ZA-google-nwu_low"),
+        TtsModel(model_dir="vits-mimic3-bn-multi_low"),
+        TtsModel(model_dir="vits-mimic3-es_ES-m-ailabs_low"),
+        TtsModel(model_dir="vits-mimic3-fa-haaniye_low"),
+        TtsModel(model_dir="vits-mimic3-fi_FI-harri-tapani-ylilammi_low"),
+        TtsModel(model_dir="vits-mimic3-gu_IN-cmu-indic_low"),
+        TtsModel(model_dir="vits-mimic3-hu_HU-diana-majlinger_low"),
+        TtsModel(model_dir="vits-mimic3-ko_KO-kss_low"),
+        TtsModel(model_dir="vits-mimic3-ne_NP-ne-google_low"),
+        TtsModel(model_dir="vits-mimic3-pl_PL-m-ailabs_low"),
+        TtsModel(model_dir="vits-mimic3-tn_ZA-google-nwu_low"),
+        TtsModel(model_dir="vits-mimic3-vi_VN-vais1000_low"),
+    ]
+    for m in models:
+        m.data_dir = m.model_dir + "/" + "espeak-ng-data"
+        m.model_name = m.model_dir[len("vits-mimic3-") :] + ".onnx"
+        m.lang = m.model_dir.split("-")[2][:2]
+
+    return models
+
+
 def get_vits_models() -> List[TtsModel]:
     return [
         # Chinese
@@ -183,54 +210,91 @@ def get_vits_models() -> List[TtsModel]:
             lang="zh",
             rule_fsts="vits-zh-aishell3/rule.fst",
         ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-doom",
-        #      model_name="doom.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-doom/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-echo",
-        #      model_name="echo.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-echo/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-zenyatta",
-        #      model_name="zenyatta.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-zenyatta/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-abyssinvoker",
-        #      model_name="abyssinvoker.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-abyssinvoker/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-keqing",
-        #      model_name="keqing.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-keqing/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-eula",
-        #      model_name="eula.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-eula/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-bronya",
-        #      model_name="bronya.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-bronya/rule.fst",
-        #  ),
-        #  TtsModel(
-        #      model_dir="vits-zh-hf-theresa",
-        #      model_name="theresa.onnx",
-        #      lang="zh",
-        #      rule_fsts="vits-zh-hf-theresa/rule.fst",
-        #  ),
+        TtsModel(
+            model_dir="vits-zh-hf-doom",
+            model_name="doom.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-doom/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-echo",
+            model_name="echo.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-echo/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-zenyatta",
+            model_name="zenyatta.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-zenyatta/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-abyssinvoker",
+            model_name="abyssinvoker.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-abyssinvoker/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-keqing",
+            model_name="keqing.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-keqing/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-eula",
+            model_name="eula.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-eula/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-bronya",
+            model_name="bronya.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-bronya/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-theresa",
+            model_name="theresa.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-theresa/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-fanchen-wnj",
+            model_name="vits-zh-hf-fanchen-wnj.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-fanchen-wnj/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-fanchen-C",
+            model_name="vits-zh-hf-fanchen-C.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-fanchen-C/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-fanchen-ZhiHuiLaoZhe",
+            model_name="vits-zh-hf-fanchen-ZhiHuiLaoZhe.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-fanchen-ZhiHuiLaoZhe/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-fanchen-ZhiHuiLaoZhe_new",
+            model_name="vits-zh-hf-fanchen-ZhiHuiLaoZhe_new.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-fanchen-ZhiHuiLaoZhe_new/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-zh-hf-fanchen-unity",
+            model_name="vits-zh-hf-fanchen-unity.onnx",
+            lang="zh",
+            rule_fsts="vits-zh-hf-fanchen-unity/rule.fst",
+        ),
+        TtsModel(
+            model_dir="vits-cantonese-hf-xiaomaiiwn",
+            model_name="vits-cantonese-hf-xiaomaiiwn.onnx",
+            lang="cantonese",
+            lang_iso_639_3="yue",
+            rule_fsts="vits-cantonese-hf-xiaomaiiwn/rule.fst",
+        ),
         # English (US)
         TtsModel(model_dir="vits-vctk", model_name="vits-vctk.onnx", lang="en"),
         #  TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
@@ -247,6 +311,7 @@ def main():
 
     all_model_list = get_vits_models()
     all_model_list += get_piper_models()
+    all_model_list += get_mimic3_models()
     all_model_list += get_coqui_models()
     convert_lang_to_iso_639_3(all_model_list)
 

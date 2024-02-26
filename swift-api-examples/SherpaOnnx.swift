@@ -188,7 +188,7 @@ class SherpaOnnxOnlineRecongitionResult {
 class SherpaOnnxRecognizer {
   /// A pointer to the underlying counterpart in C
   let recognizer: OpaquePointer!
-  let stream: OpaquePointer!
+  var stream: OpaquePointer!
 
   /// Constructor taking a model config
   init(
@@ -237,8 +237,23 @@ class SherpaOnnxRecognizer {
 
   /// Reset the recognizer, which clears the neural network model state
   /// and the state for decoding.
-  func reset() {
-    Reset(recognizer, stream)
+  /// If hotwords is an empty string, it just recreates the decoding stream
+  /// If hotwords is not empty, it will create a new decoding stream with
+  /// the given hotWords appended to the default hotwords.
+  func reset(hotwords: String? = nil) {
+    guard let words = hotwords, !words.isEmpty else {
+        Reset(recognizer, stream)
+        return
+    }
+    
+    words.withCString { cString in
+        let newStream = CreateOnlineStreamWithHotwords(recognizer, cString)
+        // lock while release and replace stream
+        objc_sync_enter(self)
+        DestroyOnlineStream(stream)
+        stream = newStream
+        objc_sync_exit(self)
+    }
   }
 
   /// Signal that no more audio samples would be available.

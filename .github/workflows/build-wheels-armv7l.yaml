@@ -87,7 +87,7 @@ jobs:
         if: matrix.python-version == '3.8'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           max_attempts: 20
           timeout_seconds: 200
@@ -113,7 +113,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
 
       - name: Upload wheel
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sherpa_onnx-${{ env.SHERPA_ONNX_VERSION }}-cp${{ env.PYTHON_VERSION }}-cp${{ env.PYTHON_VERSION }}-linux_armv7l.whl.zip
           path: ./wheelhouse/*.whl

@@ -84,7 +84,7 @@ jobs:
           ls -lh ./apks/
           du -h -d1 .
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: false
         with:
           name: tts-engine-apk
@@ -94,7 +94,7 @@ jobs:
         if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           max_attempts: 20
           timeout_seconds: 200

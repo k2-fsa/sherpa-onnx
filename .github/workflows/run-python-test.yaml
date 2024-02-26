@@ -55,14 +55,14 @@ jobs:
           key: ${{ matrix.os }}-python-${{ matrix.python-version }}
 
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy sentencepiece==0.1.96 soundfile
+          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece==0.1.96 soundfile
 
       - name: Install sherpa-onnx
         shell: bash
@@ -76,9 +76,10 @@ jobs:
       - name: Test sherpa-onnx
         shell: bash
         run: |
+          .github/scripts/test-speaker-recognition-python.sh
           .github/scripts/test-python.sh
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: tts-generated-test-files
+          name: tts-generated-test-files-${{ matrix.os }}-${{ matrix.python-version }}
           path: tts

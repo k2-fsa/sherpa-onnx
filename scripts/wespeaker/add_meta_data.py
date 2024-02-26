@@ -124,7 +124,7 @@ def main():
 
     # all models from wespeaker expect input samples in the range
     # [-32768, 32767]
-    normalize_features = 0
+    normalize_samples = 0
 
     meta_data = {
         "framework": "wespeaker",
@@ -133,7 +133,7 @@ def main():
         "comment": comment,
         "sample_rate": sample_rate,
         "output_dim": output_dim,
-        "normalize_features": normalize_features,
+        "normalize_samples": normalize_samples,
     }
     print(meta_data)
     add_meta_data(filename=str(model), meta_data=meta_data)

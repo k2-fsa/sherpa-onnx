@@ -51,7 +51,7 @@ jobs:
 
       - name: cache-qemu
         id: cache-qemu
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: qemu-install
           key: qemu-arm-install-20220907
@@ -80,7 +80,7 @@ jobs:
 
       - name: cache-toolchain
         id: cache-toolchain
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: toolchain
           key: gcc-arm-9.2-2019.12-x86_64-arm-none-linux-gnueabihf
@@ -177,13 +177,13 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: matrix.lib_type == 'shared'
         with:
           name: sherpa-onnx-linux-arm-gnueabihf-shared
           path: sherpa-onnx-*linux-arm-gnueabihf-shared.tar.bz2
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: matrix.lib_type == 'static'
         with:
           name: sherpa-onnx-linux-arm-gnueabihf-static

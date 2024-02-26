@@ -28,6 +28,10 @@ struct Hypothesis {
   // on which ys[i] is decoded.
   std::vector<int32_t> timestamps;
 
+  // The acoustic probability for each token in ys.
+  // Only used for keyword spotting task.
+  std::vector<float> ys_probs;
+
   // The total score of ys in log space.
   // It contains only acoustic scores
   double log_prob = 0;

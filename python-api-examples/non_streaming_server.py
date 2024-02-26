@@ -383,6 +383,19 @@ def add_hotwords_args(parser: argparse.ArgumentParser):
         """,
     )
 
+def add_blank_penalty_args(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--blank-penalty",
+        type=float,
+        default=0.0,
+        help="""
+        The penalty applied on blank symbol during decoding.
+        Note: It is a positive value that would be applied to logits like
+        this `logits[:, 0] -= blank_penalty` (suppose logits.shape is
+        [batch_size, vocab] and blank id is 0).
+        """,
+    )
+
 
 def check_args(args):
     if not Path(args.tokens).is_file():
@@ -414,6 +427,7 @@ def get_args():
     add_feature_config_args(parser)
     add_decoding_args(parser)
     add_hotwords_args(parser)
+    add_blank_penalty_args(parser)
 
     parser.add_argument(
         "--port",
@@ -862,6 +876,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             max_active_paths=args.max_active_paths,
             hotwords_file=args.hotwords_file,
             hotwords_score=args.hotwords_score,
+            blank_penalty=args.blank_penalty,
             provider=args.provider,
         )
     elif args.paraformer:

@@ -81,6 +81,12 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
                "True to enable endpoint detection. False to disable it.");
   po->Register("max-active-paths", &max_active_paths,
                "beam size used in modified beam search.");
+  po->Register("blank-penalty", &blank_penalty,
+               "The penalty applied on blank symbol during decoding. "
+               "Note: It is a positive value. "
+               "Increasing value will lead to lower deletion at the cost"
+               "of higher insertions. "
+               "Currently only applicable for transducer models.");
   po->Register("hotwords-score", &hotwords_score,
                "The bonus score for each token in context word/phrase. "
                "Used only when decoding_method is modified_beam_search");
@@ -131,7 +137,8 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "max_active_paths=" << max_active_paths << ", ";
   os << "hotwords_score=" << hotwords_score << ", ";
   os << "hotwords_file=\"" << hotwords_file << "\", ";
-  os << "decoding_method=\"" << decoding_method << "\")";
+  os << "decoding_method=\"" << decoding_method << "\", ";
+  os << "blank_penalty=" << blank_penalty << ")";
 
   return os.str();
 }

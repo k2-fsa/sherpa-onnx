@@ -37,7 +37,7 @@ card 3: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
 
 and if you want to select card 3 and the device 0 on that card, please use:
 
-  hw:3,0
+  plughw:3,0
 
   )";
 

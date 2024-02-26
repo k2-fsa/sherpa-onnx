@@ -20,9 +20,9 @@ cd $dir
 #   -DANDROID
 
 if [ -z $ANDROID_NDK ]; then
-  ANDROID_NDK=/ceph-fj/fangjun/software/android-sdk/ndk/21.0.6113669
+  ANDROID_NDK=/star-fj/fangjun/software/android-sdk/ndk/22.1.7171670
   # or use
-  # ANDROID_NDK=/ceph-fj/fangjun/software/android-ndk
+  # ANDROID_NDK=/star-fj/fangjun/software/android-ndk
   #
   # Inside the $ANDROID_NDK directory, you can find a binary ndk-build
   # and some other files like the file "build/cmake/android.toolchain.cmake"
@@ -43,31 +43,19 @@ fi
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 
-onnxruntime_version=v1.16.3
+onnxruntime_version=1.17.0
 
-if [ ! -f ./android-onnxruntime-libs/$onnxruntime_version/jni/armeabi-v7a/libonnxruntime.so ]; then
-  if [ ! -d android-onnxruntime-libs ]; then
-    GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/android-onnxruntime-libs
-  fi
-  pushd android-onnxruntime-libs
-  git lfs pull --include "$onnxruntime_version/jni/armeabi-v7a/libonnxruntime.so"
-  ln -s $onnxruntime_version/jni .
-  ln -s $onnxruntime_version/headers .
+if [ ! -f $onnxruntime_version/jni/armeabi-v7a/libonnxruntime.so ]; then
+  mkdir -p $onnxruntime_version
+  pushd $onnxruntime_version
+  wget -q https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-android-${onnxruntime_version}.zip
+  unzip onnxruntime-android-${onnxruntime_version}.zip
+  rm onnxruntime-android-${onnxruntime_version}.zip
   popd
 fi
 
-ls -l ./android-onnxruntime-libs/jni/armeabi-v7a/libonnxruntime.so
-
-# check filesize
-filesize=$(ls -l ./android-onnxruntime-libs/jni/armeabi-v7a/libonnxruntime.so  | tr -s " " " " | cut -d " " -f 5)
-if (( $filesize < 1000 )); then
-  ls -lh ./android-onnxruntime-libs/jni/armeabi-v7a/libonnxruntime.so
-  echo "Please use: git lfs pull to download libonnxruntime.so"
-  exit 1
-fi
-
-export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/android-onnxruntime-libs/jni/armeabi-v7a/
-export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$dir/android-onnxruntime-libs/headers/
+export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/$onnxruntime_version/jni/armeabi-v7a/
+export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$dir/$onnxruntime_version/headers/
 
 echo "SHERPA_ONNXRUNTIME_LIB_DIR: $SHERPA_ONNXRUNTIME_LIB_DIR"
 echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
@@ -91,5 +79,5 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
 # make VERBOSE=1 -j4
 make -j4
 make install/strip
-cp -fv android-onnxruntime-libs/jni/armeabi-v7a/libonnxruntime.so install/lib
+cp -fv $onnxruntime_version/jni/armeabi-v7a/libonnxruntime.so install/lib
 rm -rf install/lib/pkgconfig

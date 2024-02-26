@@ -30,6 +30,8 @@ pybind11_add_module(_sherpa_onnx
   online-zipformer2-ctc-model-config.cc
   sherpa-onnx.cc
   silero-vad-model-config.cc
+  speaker-embedding-extractor.cc
+  speaker-embedding-manager.cc
   vad-model-config.cc
   vad-model.cc
   voice-activity-detector.cc
