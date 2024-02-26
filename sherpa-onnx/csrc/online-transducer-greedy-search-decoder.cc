@@ -148,12 +148,11 @@ void OnlineTransducerGreedySearchDecoder::Decode(
         LogSoftmax(p_logit, vocab_size);  // renormalize probabilities,
                                           // save time by doing it only for
                                           // emitted symbols
-        float *p_logprob = p_logit;  // rename p_logit as p_logprob,
-                                     // now it contains normalized
-                                     // probability
+        const float *p_logprob = p_logit;  // rename p_logit as p_logprob,
+                                           // now it contains normalized
+                                           // probability
         r.ys_probs.push_back(p_logprob[y]);
       }
-
     }
     if (emitted) {
       Ort::Value decoder_input = model_->BuildDecoderInput(*result);

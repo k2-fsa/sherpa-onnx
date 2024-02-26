@@ -190,17 +190,22 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         if (new_token != 0 && new_token != unk_id_) {
           const Hypothesis& prev_i = prev[hyp_index];
           // subtract 'prev[i]' path scores, which were added before
-          // for getting topk tokens
+          // getting topk tokens
           float y_prob = p_logprob[k] - prev_i.log_prob - prev_i.lm_log_prob;
           new_hyp.ys_probs.push_back(y_prob);
 
-          float lm_prob = new_hyp.lm_log_prob - prev_lm_log_prob;
-          if (lm_scale_ != 0.0) {
-            lm_prob /= lm_scale_;  // remove lm-scale
+          if (lm_) {  // export only when LM is used
+            float lm_prob = new_hyp.lm_log_prob - prev_lm_log_prob;
+            if (lm_scale_ != 0.0) {
+              lm_prob /= lm_scale_;  // remove lm-scale
+            }
+            new_hyp.lm_probs.push_back(lm_prob);
           }
-          new_hyp.lm_probs.push_back(lm_prob);
 
-          new_hyp.context_scores.push_back(context_score);
+          // export only when `ContextGraph` is used
+          if (ss != nullptr && ss[b]->GetContextGraph() != nullptr) {
+            new_hyp.context_scores.push_back(context_score);
+          }
         }
 
         hyps.Add(std::move(new_hyp));

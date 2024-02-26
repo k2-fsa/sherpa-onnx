@@ -20,12 +20,12 @@ namespace sherpa_onnx {
 
 /// Helper for `OnlineRecognizerResult::AsJsonString()`
 template<typename T>
-const std::string& VecToString(const std::vector<T>& vec, int32_t precision = 6) {
+std::string VecToString(const std::vector<T>& vec, int32_t precision = 6) {
   std::ostringstream oss;
   oss << std::fixed << std::setprecision(precision);
   oss << "[ ";
   std::string sep = "";
-  for (auto item : vec) {
+  for (const auto& item : vec) {
     oss << sep << item;
     sep = ", ";
   }
@@ -35,13 +35,12 @@ const std::string& VecToString(const std::vector<T>& vec, int32_t precision = 6)
 
 /// Helper for `OnlineRecognizerResult::AsJsonString()`
 template<>  // explicit specialization for T = std::string
-const std::string& VecToString<std::string>(const std::vector<std::string>& vec,
-                                            int32_t) // ignore 2nd arg
-{
+std::string VecToString<std::string>(const std::vector<std::string>& vec,
+                                     int32_t) {  // ignore 2nd arg
   std::ostringstream oss;
   oss << "[ ";
   std::string sep = "";
-  for (auto item : vec) {
+  for (const auto& item : vec) {
     oss << sep << "\"" << item << "\"";
     sep = ", ";
   }
@@ -57,9 +56,10 @@ std::string OnlineRecognizerResult::AsJsonString() const {
   os << "\"timestamps\": " << VecToString(timestamps, 2) << ", ";
   os << "\"ys_probs\": " << VecToString(ys_probs, 6) << ", ";
   os << "\"lm_probs\": " << VecToString(lm_probs, 6) << ", ";
-  os << "\"constext_scores\": " << VecToString(context_scores, 6) << ", ";
+  os << "\"context_scores\": " << VecToString(context_scores, 6) << ", ";
   os << "\"segment\": " << segment << ", ";
-  os << "\"start_time\": " << std::fixed << std::setprecision(2) << start_time  << ", ";
+  os << "\"start_time\": " << std::fixed << std::setprecision(2)
+     << start_time  << ", ";
   os << "\"is_final\": " << (is_final ? "true" : "false");
   os << "}";
   return os.str();

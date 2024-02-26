@@ -37,17 +37,16 @@ static void PybindOnlineRecognizerResult(py::module *m) {
           [](PyClass &self) -> std::vector<float> { return self.lm_probs; })
       .def_property_readonly(
           "context_scores",
-          [](PyClass &self) -> std::vector<float> { return self.context_scores; })
-       .def_property_readonly(
+          [](PyClass &self) -> std::vector<float> {
+            return self.context_scores;
+      })
+      .def_property_readonly(
           "segment",
           [](PyClass &self) -> int32_t { return self.segment; })
-       .def_property_readonly(
-          "start_time",
-          [](PyClass &self) -> float { return self.start_time; })
-       .def_property_readonly(
+      .def_property_readonly(
           "is_final",
           [](PyClass &self) -> bool { return self.is_final; })
-       .def("as_json_string", &PyClass::AsJsonString,
+      .def("as_json_string", &PyClass::AsJsonString,
             py::call_guard<py::gil_scoped_release>());
 }
 

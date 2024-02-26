@@ -42,7 +42,9 @@ struct OnlineRecognizerResult {
 
   std::vector<float> ys_probs;  //< log-prob scores from ASR model
   std::vector<float> lm_probs;  //< log-prob scores from language model
-  std::vector<float> context_scores;  //< log-domain scores from "hot-phrase" contextual boosting
+                                //
+  /// log-domain scores from "hot-phrase" contextual boosting
+  std::vector<float> context_scores;
 
   /// ID of this segment
   /// When an endpoint is detected, it is incremented
