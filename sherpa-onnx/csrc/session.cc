@@ -25,6 +25,13 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
   sess_opts.SetIntraOpNumThreads(num_threads);
   sess_opts.SetInterOpNumThreads(num_threads);
 
+  std::vector<std::string> available_providers = Ort::GetAvailableProviders();
+  std::ostringstream os;
+  for (const auto &aa : available_providers) {
+    os << aa << ", ";
+  }
+  SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+
   // Other possible options
   // sess_opts.SetGraphOptimizationLevel(ORT_ENABLE_EXTENDED);
   // sess_opts.SetLogSeverityLevel(ORT_LOGGING_LEVEL_VERBOSE);
@@ -33,6 +40,18 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
   switch (p) {
     case Provider::kCPU:
       break;  // nothing to do for the CPU provider
+    case Provider::kXnnpack: {
+      std::vector<std::string> available_providers =
+          Ort::GetAvailableProviders();
+      if (std::find(available_providers.begin(), available_providers.end(),
+                    "XnnpackExecutionProvider") != available_providers.end()) {
+        sess_opts.AppendExecutionProvider("XNNPACK");
+      } else {
+        SHERPA_ONNX_LOGE(
+            "XnnpackExecutionProvider is not available. Fallback to cpu!");
+      }
+      break;
+    }
     case Provider::kCUDA: {
       std::vector<std::string> available_providers =
           Ort::GetAvailableProviders();
