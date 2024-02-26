@@ -59,6 +59,7 @@ def get_binaries_to_install():
 
     if enable_alsa():
         binaries += ["sherpa-onnx-alsa"]
+        binaries += ["sherpa-onnx-alsa-offline"]
         binaries += ["sherpa-onnx-offline-tts-play-alsa"]
         binaries += ["sherpa-onnx-alsa-offline-speaker-identification"]
 

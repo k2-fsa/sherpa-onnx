@@ -166,6 +166,7 @@ class BuildExtension(build_ext):
 
         if enable_alsa():
             binaries += ["sherpa-onnx-alsa"]
+            binaries += ["sherpa-onnx-alsa-offline"]
             binaries += ["sherpa-onnx-offline-tts-play-alsa"]
             binaries += ["sherpa-onnx-alsa-offline-speaker-identification"]
 
