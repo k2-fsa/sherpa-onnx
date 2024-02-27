@@ -27,10 +27,9 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
 
   std::vector<std::string> available_providers = Ort::GetAvailableProviders();
   std::ostringstream os;
-  for (const auto &aa : available_providers) {
-    os << aa << ", ";
+  for (const auto &ep : available_providers) {
+    os << ep << ", ";
   }
-  SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
 
   // Other possible options
   // sess_opts.SetGraphOptimizationLevel(ORT_ENABLE_EXTENDED);
@@ -47,8 +46,8 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
                     "XnnpackExecutionProvider") != available_providers.end()) {
         sess_opts.AppendExecutionProvider("XNNPACK");
       } else {
-        SHERPA_ONNX_LOGE(
-            "XnnpackExecutionProvider is not available. Fallback to cpu!");
+        SHERPA_ONNX_LOGE("Available providers: %s. Fallback to cpu!",
+                         os.str().c_str());
       }
       break;
     }
@@ -66,8 +65,9 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
         sess_opts.AppendExecutionProvider_CUDA(options);
       } else {
         SHERPA_ONNX_LOGE(
-            "Please compile with -DSHERPA_ONNX_ENABLE_GPU=ON. Fallback to "
-            "cpu!");
+            "Please compile with -DSHERPA_ONNX_ENABLE_GPU=ON. Available "
+            "providers: %s. Fallback to cpu!",
+            os.str().c_str());
       }
       break;
     }
