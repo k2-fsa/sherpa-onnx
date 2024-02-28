@@ -1,6 +1,7 @@
 build
 *.zip
 *.tgz
+*.sw?
 onnxruntime-*
 icefall-*
 run.sh
