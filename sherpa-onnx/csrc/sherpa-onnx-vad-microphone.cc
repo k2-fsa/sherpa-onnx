@@ -43,8 +43,8 @@ This program shows how to use VAD in sherpa-onnx.
 
   ./bin/sherpa-onnx-vad-microphone \
     --silero-vad-model=/path/to/silero_vad.onnx \
-    --provider=cpu \
-    --num-threads=1
+    --vad-provider=cpu \
+    --vad-num-threads=1
 
 Please download silero_vad.onnx from
 https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx

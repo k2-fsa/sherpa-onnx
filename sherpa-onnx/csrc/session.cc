@@ -40,8 +40,6 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
     case Provider::kCPU:
       break;  // nothing to do for the CPU provider
     case Provider::kXnnpack: {
-      std::vector<std::string> available_providers =
-          Ort::GetAvailableProviders();
       if (std::find(available_providers.begin(), available_providers.end(),
                     "XnnpackExecutionProvider") != available_providers.end()) {
         sess_opts.AppendExecutionProvider("XNNPACK");
@@ -52,8 +50,6 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
       break;
     }
     case Provider::kCUDA: {
-      std::vector<std::string> available_providers =
-          Ort::GetAvailableProviders();
       if (std::find(available_providers.begin(), available_providers.end(),
                     "CUDAExecutionProvider") != available_providers.end()) {
         // The CUDA provider is available, proceed with setting the options
