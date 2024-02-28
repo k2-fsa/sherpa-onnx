@@ -16,7 +16,7 @@ endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-riscv64-1.18.0.zip")
 set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-riscv64-1.18.0.zip")
-set(onnxruntime_HASH "SHA256=87ef36dbba28ee332069e7e511dcb409913bdeeed231b45172fe200d71c690a2")
+set(onnxruntime_HASH "SHA256=81a11b54d1d71f4b3161b00cba8576a07594abd218aa5c0d82382960ada06092")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
