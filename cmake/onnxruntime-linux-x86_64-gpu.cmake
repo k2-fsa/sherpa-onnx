@@ -19,7 +19,7 @@ if(NOT SHERPA_ONNX_ENABLE_GPU)
 endif()
 
 set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.17.0/onnxruntime-linux-x64-gpu-1.17.0.tgz")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-x64-gpu-1.17.0.tgz")
+set(onnxruntime_URL2 "https://hub.nuaa.cf/microsoft/onnxruntime/releases/download/v1.17.0/onnxruntime-linux-x64-gpu-1.17.0.tgz")
 set(onnxruntime_HASH "SHA256=27cfa22af7301868b55220f8733361889286b30be0569a8f46abb63e90342180")
 
 # If you don't have access to the Internet,

@@ -15,7 +15,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.0/onnxruntime-linux-aarch64-static_lib-1.17.0.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-static_lib-1.17.0.zip")
+set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.0/onnxruntime-linux-aarch64-static_lib-1.17.0.zip")
 set(onnxruntime_HASH "SHA256=8be35fa5d4c9cc42075bf90d1a095a44ab6bf4fc7306141aa1169fa49b382cc2")
 
 # If you don't have access to the Internet,
