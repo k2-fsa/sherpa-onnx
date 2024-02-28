@@ -16,7 +16,7 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.17.0/onnxruntime-win-x86-1.17.0.zip")
-set(onnxruntime_URL2 "https://huggingface.co/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-1.17.0.zip")
+set(onnxruntime_URL2 "https://hub.nuaa.cf/microsoft/onnxruntime/releases/download/v1.17.0/onnxruntime-win-x86-1.17.0.zip")
 set(onnxruntime_HASH "SHA256=3f3214f99165d3282cc5647c5a18451aaaaf326599c7e98913ce6c50e50c6463")
 
 # If you don't have access to the Internet,
