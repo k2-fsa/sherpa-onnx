@@ -83,7 +83,6 @@ def get_args():
     parser.add_argument(
         "--keywords-file",
         type=str,
-        default="",
         help="""
         The file containing keywords, one words/phrases per line, and for each
         phrase the bpe/cjkchar/pinyin are separated by a space. For example:

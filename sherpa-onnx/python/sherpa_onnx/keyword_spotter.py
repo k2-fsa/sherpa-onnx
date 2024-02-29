@@ -19,7 +19,7 @@ def _assert_file_exists(f: str):
 
 
 class KeywordSpotter(object):
-    """A class for streaming speech recognition.
+    """A class for keyword spotting.
 
     Please refer to the following files for usages
      - https://github.com/k2-fsa/sherpa-onnx/blob/master/python-api-examples/keyword-spotter.py
@@ -32,11 +32,11 @@ class KeywordSpotter(object):
         encoder: str,
         decoder: str,
         joiner: str,
+        keywords_file: str,
         num_threads: int = 2,
         sample_rate: float = 16000,
         feature_dim: int = 80,
         max_active_paths: int = 4,
-        keywords_file: str = "",
         keywords_score: float = 1.5,
         keywords_threshold: float = 0.35,
         num_tailing_blanks: int = 1,
@@ -61,6 +61,9 @@ class KeywordSpotter(object):
             Path to ``decoder.onnx``.
           joiner:
             Path to ``joiner.onnx``.
+          keywords_file:
+            The file containing keywords, one word/phrase per line, and for each
+            phrase the bpe/cjkchar/pinyin are separated by a space.
           num_threads:
             Number of threads for neural network computation.
           sample_rate:
@@ -70,14 +73,16 @@ class KeywordSpotter(object):
           max_active_paths:
             Use only when decoding_method is modified_beam_search. It specifies
             the maximum number of active paths during beam search.
-          keywords_file:
-            The file containing hotwords, one words/phrases per line, and for each
-            phrase the bpe/cjkchar are separated by a space.
           keywords_score:
-            The hotword score of each token for biasing word/phrase. Used only if
-            hotwords_file is given with modified_beam_search as decoding method.
+            The boosting score of each token for keywords. The larger the easier to
+            survive beam search.
           keywords_threshold:
+            The trigger threshold (i.e. probability) of the keyword. The larger the
+            harder to trigger.
           num_tailing_blanks:
+            The number of tailing blanks a keyword should be followed. Setting
+            to a larger value (e.g. 8) when your keywords has overlapping tokens
+            between each other.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
         """
@@ -107,13 +112,13 @@ class KeywordSpotter(object):
         )
 
         keywords_spotter_config = KeywordSpotterConfig(
-            feat_config,
-            model_config,
-            max_active_paths,
-            num_tailing_blanks,
-            keywords_score,
-            keywords_threshold,
-            keywords_file,
+            feat_config=feat_config,
+            model_config=model_config,
+            max_active_paths=max_active_paths,
+            num_tailing_blanks=num_tailing_blanks,
+            keywords_score=keywords_score,
+            keywords_threshold=keywords_threshold,
+            keywords_file=keywords_file,
         )
         self.keyword_spotter = _KeywordSpotter(keywords_spotter_config)
 
@@ -121,7 +126,7 @@ class KeywordSpotter(object):
         if keywords is None:
             return self.keyword_spotter.create_stream()
         else:
-            return self.keyword_spotter.create_stream(hotwords)
+            return self.keyword_spotter.create_stream(keywords)
 
     def decode_stream(self, s: OnlineStream):
         self.keyword_spotter.decode_stream(s)

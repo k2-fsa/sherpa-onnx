@@ -98,7 +98,6 @@ def get_args():
     parser.add_argument(
         "--keywords-file",
         type=str,
-        default="",
         help="""
         The file containing keywords, one words/phrases per line, and for each
         phrase the bpe/cjkchar/pinyin are separated by a space. For example:
@@ -126,17 +125,6 @@ def get_args():
         The trigger threshold (i.e. probability) of the keyword. The larger the
         harder to trigger.
         """,
-    )
-
-    parser.add_argument(
-        "sound_files",
-        type=str,
-        nargs="+",
-        help="The input sound file(s) to decode. Each file must be of WAVE"
-        "format with a single channel, and each sample has 16-bit, "
-        "i.e., int16_t. "
-        "The sample rate of the file can be arbitrary and does not need to "
-        "be 16 kHz",
     )
 
     return parser.parse_args()
