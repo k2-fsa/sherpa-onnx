@@ -318,7 +318,7 @@ popd
 repo=$dir/$repo
 ls -lh $repo
 
-python3 ./python-api-examples/keyword_spotter.py \
+python3 ./python-api-examples/keyword-spotter.py \
   --tokens=$repo/tokens.txt \
   --encoder=$repo/encoder-epoch-12-avg-2-chunk-16-left-64.onnx \
   --decoder=$repo/decoder-epoch-12-avg-2-chunk-16-left-64.onnx \
@@ -338,7 +338,7 @@ popd
 repo=$dir/$repo
 ls -lh $repo
 
-python3 ./python-api-examples/keyword_spotter.py \
+python3 ./python-api-examples/keyword-spotter.py \
   --tokens=$repo/tokens.txt \
   --encoder=$repo/encoder-epoch-12-avg-2-chunk-16-left-64.onnx \
   --decoder=$repo/decoder-epoch-12-avg-2-chunk-16-left-64.onnx \
