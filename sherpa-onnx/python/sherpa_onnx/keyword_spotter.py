@@ -37,9 +37,9 @@ class KeywordSpotter(object):
         sample_rate: float = 16000,
         feature_dim: int = 80,
         max_active_paths: int = 4,
-        keywords_score: float = 1.5,
-        keywords_threshold: float = 0.35,
-        num_tailing_blanks: int = 1,
+        keywords_score: float = 1.0,
+        keywords_threshold: float = 0.25,
+        num_trailing_blanks: int = 1,
         provider: str = "cpu",
     ):
         """
@@ -79,8 +79,8 @@ class KeywordSpotter(object):
           keywords_threshold:
             The trigger threshold (i.e. probability) of the keyword. The larger the
             harder to trigger.
-          num_tailing_blanks:
-            The number of tailing blanks a keyword should be followed. Setting
+          num_trailing_blanks:
+            The number of trailing blanks a keyword should be followed. Setting
             to a larger value (e.g. 8) when your keywords has overlapping tokens
             between each other.
           provider:
@@ -115,7 +115,7 @@ class KeywordSpotter(object):
             feat_config=feat_config,
             model_config=model_config,
             max_active_paths=max_active_paths,
-            num_tailing_blanks=num_tailing_blanks,
+            num_trailing_blanks=num_trailing_blanks,
             keywords_score=keywords_score,
             keywords_threshold=keywords_threshold,
             keywords_file=keywords_file,

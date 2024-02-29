@@ -71,10 +71,10 @@ def get_args():
     )
 
     parser.add_argument(
-        "--num-tailing-blanks",
+        "--num-trailing-blanks",
         type=int,
         default=1,
-        help="""The number of tailing blanks a keyword should be followed. Setting
+        help="""The number of trailing blanks a keyword should be followed. Setting
         to a larger value (e.g. 8) when your keywords has overlapping tokens
         between each other.
         """,
@@ -95,7 +95,7 @@ def get_args():
     parser.add_argument(
         "--keywords-score",
         type=float,
-        default=1.5,
+        default=1.0,
         help="""
         The boosting score of each token for keywords. The larger the easier to
         survive beam search.
@@ -105,7 +105,7 @@ def get_args():
     parser.add_argument(
         "--keywords-threshold",
         type=float,
-        default=0.35,
+        default=0.25,
         help="""
         The trigger threshold (i.e. probability) of the keyword. The larger the
         harder to trigger.
@@ -182,7 +182,7 @@ def main():
         keywords_file=args.keywords_file,
         keywords_score=args.keywords_score,
         keywords_threshold=args.keywords_threshold,
-        num_tailing_blanks=args.num_tailing_blanks,
+        num_trailing_blanks=args.num_trailing_blanks,
         provider=args.provider,
     )
 
@@ -208,15 +208,19 @@ def main():
 
         streams.append(s)
 
+    results = [""] * len(streams)
     while True:
         ready_list = []
-        for s in streams:
+        for i, s in enumerate(streams):
             if keyword_spotter.is_ready(s):
                 ready_list.append(s)
+            r = keyword_spotter.get_result(s)
+            if r:
+                results[i] += "f{r}/"
+                print(f"{r} is detected.")
         if len(ready_list) == 0:
             break
         keyword_spotter.decode_streams(ready_list)
-    results = [keyword_spotter.get_result(s) for s in streams]
     end_time = time.time()
     print("Done!")
 
