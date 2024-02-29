@@ -11,6 +11,7 @@
 
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/display.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
@@ -90,7 +91,7 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
       SHERPA_ONNX_OR(config->hotwords_score, 1.5);
 
   if (config->model_config.debug) {
-    fprintf(stderr, "%s\n", recognizer_config.ToString().c_str());
+    SHERPA_ONNX_LOGE("%s\n", recognizer_config.ToString().c_str());
   }
 
   SherpaOnnxOnlineRecognizer *recognizer = new SherpaOnnxOnlineRecognizer;
@@ -320,7 +321,7 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
       SHERPA_ONNX_OR(config->hotwords_score, 1.5);
 
   if (config->model_config.debug) {
-    fprintf(stderr, "%s\n", recognizer_config.ToString().c_str());
+    SHERPA_ONNX_LOGE("%s", recognizer_config.ToString().c_str());
   }
 
   SherpaOnnxOfflineRecognizer *recognizer = new SherpaOnnxOfflineRecognizer;
@@ -476,7 +477,7 @@ SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
   vad_config.debug = SHERPA_ONNX_OR(config->debug, false);
 
   if (vad_config.debug) {
-    fprintf(stderr, "%s\n", vad_config.ToString().c_str());
+    SHERPA_ONNX_LOGE("%s", vad_config.ToString().c_str());
   }
 
   SherpaOnnxVoiceActivityDetector *p = new SherpaOnnxVoiceActivityDetector;
@@ -566,7 +567,7 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
   tts_config.max_num_sentences = SHERPA_ONNX_OR(config->max_num_sentences, 2);
 
   if (tts_config.model.debug) {
-    fprintf(stderr, "%s\n", tts_config.ToString().c_str());
+    SHERPA_ONNX_LOGE("%s\n", tts_config.ToString().c_str());
   }
 
   SherpaOnnxOfflineTts *tts = new SherpaOnnxOfflineTts;
@@ -580,6 +581,10 @@ void SherpaOnnxDestroyOfflineTts(SherpaOnnxOfflineTts *tts) { delete tts; }
 
 int32_t SherpaOnnxOfflineTtsSampleRate(const SherpaOnnxOfflineTts *tts) {
   return tts->impl->SampleRate();
+}
+
+int32_t SherpaOnnxOfflineTtsNumSpeakers(const SherpaOnnxOfflineTts *tts) {
+  return tts->impl->NumSpeakers();
 }
 
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(

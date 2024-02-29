@@ -40,6 +40,12 @@ struct OnlineRecognizerResult {
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   std::vector<float> timestamps;
 
+  std::vector<float> ys_probs;  //< log-prob scores from ASR model
+  std::vector<float> lm_probs;  //< log-prob scores from language model
+                                //
+  /// log-domain scores from "hot-phrase" contextual boosting
+  std::vector<float> context_scores;
+
   /// ID of this segment
   /// When an endpoint is detected, it is incremented
   int32_t segment = 0;
@@ -58,6 +64,9 @@ struct OnlineRecognizerResult {
    *     "text": "The recognition result",
    *     "tokens": [x, x, x],
    *     "timestamps": [x, x, x],
+   *     "ys_probs": [x, x, x],
+   *     "lm_probs": [x, x, x],
+   *     "context_scores": [x, x, x],
    *     "segment": x,
    *     "start_time": x,
    *     "is_final": true|false

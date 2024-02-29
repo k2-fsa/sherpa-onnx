@@ -5,19 +5,19 @@
 package com.k2fsa.sherpa.onnx;
 
 public class FeatureConfig {
-  private final int sampleRate;
-  private final int featureDim;
+    private final int sampleRate;
+    private final int featureDim;
 
-  public FeatureConfig(int sampleRate, int featureDim) {
-    this.sampleRate = sampleRate;
-    this.featureDim = featureDim;
-  }
+    public FeatureConfig(int sampleRate, int featureDim) {
+        this.sampleRate = sampleRate;
+        this.featureDim = featureDim;
+    }
 
-  public int getSampleRate() {
-    return sampleRate;
-  }
+    public int getSampleRate() {
+        return sampleRate;
+    }
 
-  public int getFeatureDim() {
-    return featureDim;
-  }
+    public int getFeatureDim() {
+        return featureDim;
+    }
 }

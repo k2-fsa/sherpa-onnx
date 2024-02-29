@@ -658,6 +658,10 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTts(SherpaOnnxOfflineTts *tts);
 SHERPA_ONNX_API int32_t
 SherpaOnnxOfflineTtsSampleRate(const SherpaOnnxOfflineTts *tts);
 
+// Return the number of speakers of the current TTS object
+SHERPA_ONNX_API int32_t
+SherpaOnnxOfflineTtsNumSpeakers(const SherpaOnnxOfflineTts *tts);
+
 // Generate audio from the given text and speaker id (sid).
 // The user has to use DestroyOfflineTtsGeneratedAudio() to free the
 // returned pointer to avoid memory leak.

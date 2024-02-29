@@ -22,7 +22,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -36,7 +36,7 @@ jobs:
       - name: Publish to huggingface (aishell)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        uses: nick-fields/retry@v2
+        uses: nick-fields/retry@v3
         with:
           max_attempts: 20
           timeout_seconds: 200
