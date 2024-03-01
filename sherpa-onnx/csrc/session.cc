@@ -15,6 +15,10 @@
 #include "coreml_provider_factory.h"  // NOLINT
 #endif
 
+#if __ANDROID_API__ >= 27
+#include "nnapi_provider_factory.h"
+#endif
+
 namespace sherpa_onnx {
 
 static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
@@ -74,6 +78,38 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
                                                             coreml_flags);
 #else
       SHERPA_ONNX_LOGE("CoreML is for Apple only. Fallback to cpu!");
+#endif
+      break;
+    }
+    case Provider::kNNAPI: {
+#if __ANDROID_API__ >= 27
+      SHERPA_ONNX_LOGE("Current API level %d ", (int32_t)__ANDROID_API__);
+
+      // Please see
+      // https://onnxruntime.ai/docs/execution-providers/NNAPI-ExecutionProvider.html#usage
+      // to enable different flags
+      uint32_t nnapi_flags = 0;
+      // nnapi_flags |= NNAPI_FLAG_USE_FP16;
+      // nnapi_flags |= NNAPI_FLAG_CPU_DISABLED;
+      OrtStatus *status = OrtSessionOptionsAppendExecutionProvider_Nnapi(
+          sess_opts, nnapi_flags);
+
+      if (status) {
+        const auto &api = Ort::GetApi();
+        const char *msg = api.GetErrorMessage(status);
+        SHERPA_ONNX_LOGE(
+            "Failed to enable NNAPI: %s. Available providers: %s. Fallback to "
+            "cpu",
+            msg, os.str().c_str());
+        api.ReleaseStatus(status);
+      } else {
+        SHERPA_ONNX_LOGE("Use nnapi");
+      }
+#else
+      SHERPA_ONNX_LOGE(
+          "Android NNAPI requires API level >= 27. Current API level %d "
+          "Fallback to cpu!",
+          (int32_t)__ANDROID_API__);
 #endif
       break;
     }
