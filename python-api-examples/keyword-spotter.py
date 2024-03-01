@@ -216,7 +216,7 @@ def main():
                 ready_list.append(s)
             r = keyword_spotter.get_result(s)
             if r:
-                results[i] += "f{r}/"
+                results[i] += f"{r}/"
                 print(f"{r} is detected.")
         if len(ready_list) == 0:
             break
