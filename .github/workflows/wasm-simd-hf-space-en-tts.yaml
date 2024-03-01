@@ -70,6 +70,7 @@ jobs:
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
 
       - name: Publish to ModelScope
+        if: false
         env:
           MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
         uses: nick-fields/retry@v2

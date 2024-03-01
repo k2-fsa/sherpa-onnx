@@ -1,4 +1,4 @@
-name: wasm-simd-hf-space-zh-en-asr-paraformer
+name: wasm-simd-hf-space-zh-cantonese-en-asr-paraformer
 
 on:
   release:
