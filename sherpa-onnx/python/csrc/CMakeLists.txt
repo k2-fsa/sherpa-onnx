@@ -5,6 +5,7 @@ pybind11_add_module(_sherpa_onnx
   display.cc
   endpoint.cc
   features.cc
+  keyword-spotter.cc
   offline-ctc-fst-decoder-config.cc
   offline-lm-config.cc
   offline-model-config.cc

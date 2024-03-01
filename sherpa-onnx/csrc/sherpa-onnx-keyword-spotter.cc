@@ -12,7 +12,6 @@
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
-#include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 typedef struct {

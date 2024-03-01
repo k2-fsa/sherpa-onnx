@@ -230,12 +230,14 @@ endif()
 
 if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
+  add_executable(sherpa-onnx-keyword-spotter-alsa sherpa-onnx-keyword-spotter-alsa.cc alsa.cc)
   add_executable(sherpa-onnx-offline-tts-play-alsa sherpa-onnx-offline-tts-play-alsa.cc alsa-play.cc)
   add_executable(sherpa-onnx-alsa-offline sherpa-onnx-alsa-offline.cc alsa.cc)
   add_executable(sherpa-onnx-alsa-offline-speaker-identification sherpa-onnx-alsa-offline-speaker-identification.cc alsa.cc)
 
   set(exes
     sherpa-onnx-alsa
+    sherpa-onnx-keyword-spotter-alsa
     sherpa-onnx-alsa-offline
     sherpa-onnx-offline-tts-play-alsa
     sherpa-onnx-alsa-offline-speaker-identification
@@ -278,6 +280,11 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-keyword-spotter-microphone
+    sherpa-onnx-keyword-spotter-microphone.cc
+    microphone.cc
+  )
+
   add_executable(sherpa-onnx-microphone
     sherpa-onnx-microphone.cc
     microphone.cc
@@ -311,6 +318,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
 
   set(exes
     sherpa-onnx-microphone
+    sherpa-onnx-keyword-spotter-microphone
     sherpa-onnx-microphone-offline
     sherpa-onnx-microphone-offline-speaker-identification
     sherpa-onnx-offline-tts-play

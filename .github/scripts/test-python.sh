@@ -293,3 +293,61 @@ git clone https://github.com/pkufool/sherpa-test-data /tmp/sherpa-test-data
 python3 sherpa-onnx/python/tests/test_text2token.py --verbose
 
 rm -rf /tmp/sherpa-test-data
+
+mkdir -p /tmp/onnx-models
+dir=/tmp/onnx-models
+
+log "Test keyword spotting models"
+
+python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
+sherpa_onnx_version=$(python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)")
+
+echo "sherpa_onnx version: $sherpa_onnx_version"
+
+pwd
+ls -lh
+
+repo=sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01
+log "Start testing ${repo}"
+
+pushd $dir
+wget -qq https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
+tar xf sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
+popd
+
+repo=$dir/$repo
+ls -lh $repo
+
+python3 ./python-api-examples/keyword-spotter.py \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-12-avg-2-chunk-16-left-64.onnx \
+  --decoder=$repo/decoder-epoch-12-avg-2-chunk-16-left-64.onnx \
+  --joiner=$repo/joiner-epoch-12-avg-2-chunk-16-left-64.onnx \
+  --keywords-file=$repo/test_wavs/test_keywords.txt \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav
+
+repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
+log "Start testing ${repo}"
+
+pushd $dir
+wget -qq https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
+tar xf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
+popd
+
+repo=$dir/$repo
+ls -lh $repo
+
+python3 ./python-api-examples/keyword-spotter.py \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-12-avg-2-chunk-16-left-64.onnx \
+  --decoder=$repo/decoder-epoch-12-avg-2-chunk-16-left-64.onnx \
+  --joiner=$repo/joiner-epoch-12-avg-2-chunk-16-left-64.onnx \
+  --keywords-file=$repo/test_wavs/test_keywords.txt \
+  $repo/test_wavs/3.wav \
+  $repo/test_wavs/4.wav \
+  $repo/test_wavs/5.wav
+
+python3 sherpa-onnx/python/tests/test_keyword_spotter.py --verbose
+
+rm -r $dir
