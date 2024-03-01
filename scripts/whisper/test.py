@@ -270,7 +270,7 @@ def compute_features(filename: str) -> torch.Tensor:
         mel = torch.nn.functional.pad(mel, (0, 0, 0, 50), "constant", 0)
 
     # We don't need to pad it to 30 seconds now!
-    mel = torch.nn.functional.pad(mel, (0, 0, 0, target - mel.shape[0]), "constant", 0)
+    #  mel = torch.nn.functional.pad(mel, (0, 0, 0, target - mel.shape[0]), "constant", 0)
 
     mel = mel.t().unsqueeze(0)
 
