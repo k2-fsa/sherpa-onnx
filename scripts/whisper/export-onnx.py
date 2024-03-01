@@ -101,7 +101,7 @@ def modified_audio_encoder_forward(self: AudioEncoder, x: torch.Tensor):
     return x
 
 
-AudioEncoder.forward = modified_audio_encoder_forward
+#  AudioEncoder.forward = modified_audio_encoder_forward
 
 
 class AudioEncoderTensorCache(nn.Module):
