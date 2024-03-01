@@ -76,8 +76,42 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DANDROID_ABI="arm64-v8a" \
     -DANDROID_PLATFORM=android-21 ..
 
+# Please use -DANDROID_PLATFORM=android-27 if you want to use Android NNAPI
+
 # make VERBOSE=1 -j4
 make -j4
 make install/strip
 cp -fv $onnxruntime_version/jni/arm64-v8a/libonnxruntime.so install/lib
 rm -rf install/lib/pkgconfig
+
+# To run the generated binaries on Android, please use the following steps.
+#
+#
+# 1. Copy sherpa-onnx and its dependencies to Android
+#
+#   cd build-android-arm64-v8a/install/lib
+#   adb push ./lib*.so /data/local/tmp
+#   cd ../bin
+#   adb push ./sherpa-onnx /data/local/tmp
+#
+# 2. Login into Android
+#
+#   adb shell
+#   cd /data/local/tmp
+#   ./sherpa-onnx
+#
+# which shows the following error log:
+#
+#  CANNOT LINK EXECUTABLE "./sherpa-onnx": library "libsherpa-onnx-core.so" not found: needed by main executable
+#
+# Please run:
+#
+#  export LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH
+#
+# and then you can run:
+#
+#  ./sherpa-onnx
+#
+# It should show the help message of sherpa-onnx.
+#
+# Please use the above approach to copy model files to your phone.
