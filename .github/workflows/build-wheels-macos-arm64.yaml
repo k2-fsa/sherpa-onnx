@@ -62,6 +62,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
+          name: wheel-${{ matrix.python-version }}
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface

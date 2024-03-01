@@ -31,7 +31,7 @@ jobs:
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.15.0
+        uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BEFORE_ALL: |
             git clone --depth 1 https://github.com/alsa-project/alsa-lib
@@ -73,6 +73,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
+          name: wheel-${{ matrix.python-version }}
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface
