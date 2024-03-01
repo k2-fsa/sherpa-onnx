@@ -105,11 +105,13 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
       } else {
         SHERPA_ONNX_LOGE("Use nnapi");
       }
-#else
+#elif defined(__ANDROID_API__)
       SHERPA_ONNX_LOGE(
           "Android NNAPI requires API level >= 27. Current API level %d "
           "Fallback to cpu!",
           (int32_t)__ANDROID_API__);
+#else
+      SHERPA_ONNX_LOGE("NNAPI is for Android only. Fallback to cpu");
 #endif
       break;
     }

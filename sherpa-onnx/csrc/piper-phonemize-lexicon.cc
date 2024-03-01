@@ -236,7 +236,7 @@ std::vector<std::vector<int64_t>> PiperPhonemizeLexicon::ConvertTextToTokenIds(
 
   std::vector<int64_t> phoneme_ids;
 
-  if (meta_data_.is_piper) {
+  if (meta_data_.is_piper || meta_data_.is_icefall) {
     for (const auto &p : phonemes) {
       phoneme_ids = PiperPhonemesToIds(token2id_, p);
       ans.push_back(std::move(phoneme_ids));
