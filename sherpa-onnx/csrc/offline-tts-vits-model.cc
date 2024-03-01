@@ -110,6 +110,10 @@ class OfflineTtsVitsModel::Impl {
     if (comment.find("coqui") != std::string::npos) {
       meta_data_.is_coqui = true;
     }
+
+    if (comment.find("icefall") != std::string::npos) {
+      meta_data_.is_icefall = true;
+    }
   }
 
   Ort::Value RunVitsPiperOrCoqui(Ort::Value x, int64_t sid, float speed) {

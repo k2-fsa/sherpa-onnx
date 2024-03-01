@@ -20,6 +20,7 @@ struct OfflineTtsVitsModelMetaData {
 
   bool is_piper = false;
   bool is_coqui = false;
+  bool is_icefall = false;
 
   // the following options are for models from coqui-ai/TTS
   int32_t blank_id = 0;
