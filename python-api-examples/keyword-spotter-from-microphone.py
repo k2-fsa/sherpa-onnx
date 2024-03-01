@@ -163,7 +163,7 @@ def main():
         keywords_file=args.keywords_file,
         keywords_score=args.keywords_score,
         keywords_threshold=args.keywords_threshold,
-        num_tailing_blanks=args.rnum_tailing_blanks,
+        num_trailing_blanks=args.num_trailing_blanks,
         provider=args.provider,
     )
 
