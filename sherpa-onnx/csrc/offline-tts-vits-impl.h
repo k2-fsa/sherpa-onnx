@@ -205,7 +205,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (meta_data.frontend == "characters") {
       frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
           mgr, config_.model.vits.tokens, meta_data);
-    } else if ((meta_data.is_piper || meta_data.is_coqui) &&
+    } else if ((meta_data.is_piper || meta_data.is_coqui ||
+                meta_data.is_icefall) &&
                !config_.model.vits.data_dir.empty()) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           mgr, config_.model.vits.tokens, config_.model.vits.data_dir,
@@ -231,7 +232,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (meta_data.frontend == "characters") {
       frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
           config_.model.vits.tokens, meta_data);
-    } else if ((meta_data.is_piper || meta_data.is_coqui) &&
+    } else if ((meta_data.is_piper || meta_data.is_coqui ||
+                meta_data.is_icefall) &&
                !config_.model.vits.data_dir.empty()) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
           config_.model.vits.tokens, config_.model.vits.data_dir,
