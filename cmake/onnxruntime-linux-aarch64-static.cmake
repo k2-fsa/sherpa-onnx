@@ -14,19 +14,19 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.0/onnxruntime-linux-aarch64-static_lib-1.17.0.zip")
-set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.0/onnxruntime-linux-aarch64-static_lib-1.17.0.zip")
-set(onnxruntime_HASH "SHA256=8be35fa5d4c9cc42075bf90d1a095a44ab6bf4fc7306141aa1169fa49b382cc2")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-aarch64-static_lib-1.17.1.zip")
+set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-aarch64-static_lib-1.17.1.zip")
+set(onnxruntime_HASH "SHA256=831b9a3869501040b4399de85f34c4f170e2bcbd41881edaeb553f8dc4080985")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-static_lib-1.17.0.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-aarch64-static_lib-1.17.0.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-aarch64-static_lib-1.17.0.zip
-  /tmp/onnxruntime-linux-aarch64-static_lib-1.17.0.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-static_lib-1.17.0.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-static_lib-1.17.1.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-aarch64-static_lib-1.17.1.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-aarch64-static_lib-1.17.1.zip
+  /tmp/onnxruntime-linux-aarch64-static_lib-1.17.1.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-static_lib-1.17.1.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
