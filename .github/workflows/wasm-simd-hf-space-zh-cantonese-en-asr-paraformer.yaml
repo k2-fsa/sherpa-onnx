@@ -1,4 +1,4 @@
-name: wasm-simd-hf-space-zh-en-asr-zipformer
+name: wasm-simd-hf-space-zh-cantonese-en-asr-paraformer
 
 on:
   release:
@@ -8,11 +8,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: wasm-simd-hf-space-zh-en-asr-zipformer-${{ github.ref }}
+  group: wasm-simd-hf-space-zh-cantonese-en-asr-paraformer-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  wasm-simd-hf-space-zh-en-asr-zipformer:
+  wasm-simd-hf-space-zh-cantonese-en-asr-paraformer:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -39,16 +39,25 @@ jobs:
           cd wasm/asr/assets
           ls -lh
           echo "----------"
-          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          mv sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx encoder.onnx
-          mv sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx decoder.onnx
-          mv sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx joiner.onnx
-          mv sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt ./
-          rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/
+
+          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en.tar.bz2
+          tar xvf sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en.tar.bz2
+          rm sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en.tar.bz2
+
+          mv sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en/encoder.int8.onnx encoder.onnx
+          mv sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en/decoder.int8.onnx decoder.onnx
+          mv sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en/tokens.txt ./
+
+          rm -rf sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en
 
           ls -lh
+
+          cd ../
+
+          sed -i.bak s/"type = 0"/"type = 1"/g ./sherpa-onnx.js
+          sed -i.bak s/Zipformer/Paraformer/g ./index.html
+
+          git diff
 
       - name: Build sherpa-onnx for WebAssembly (ASR)
         shell: bash
@@ -60,7 +69,7 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-zh-en-asr-zipformer
+          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-zh-cantonese-en-asr-paraformer
           mv build-wasm-simd-asr/install/bin/wasm/asr $dst
           ls -lh $dst
           tar cjfv ${dst}.tar.bz2 ./${dst}
@@ -68,43 +77,8 @@ jobs:
       - name: Upload wasm files
         uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-wasm-simd-zh-en-asr-zipformer
+          name: sherpa-onnx-wasm-simd-zh-cantonese-en-asr-paraformer
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
-
-      - name: Publish to ModelScope
-        if: false
-        env:
-          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
-        uses: nick-fields/retry@v2
-        with:
-          max_attempts: 20
-          timeout_seconds: 200
-          shell: bash
-          command: |
-            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
-
-            git config --global user.email "csukuangfj@gmail.com"
-            git config --global user.name "Fangjun Kuang"
-
-            rm -rf ms
-            export GIT_LFS_SKIP_SMUDGE=1
-
-            git clone https://www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en.git ms
-            cd ms
-            git fetch
-            git pull
-            git merge -m "merge remote" --ff origin main
-
-            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-*/* .
-
-            git status
-            git lfs track "*.data"
-            git lfs track "*.wasm"
-            ls -lh
-
-            git add .
-            git commit -m "update model"
-            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en.git
 
       - name: Publish to huggingface
         env:
@@ -123,7 +97,7 @@ jobs:
             rm -rf huggingface
             export GIT_LFS_SKIP_SMUDGE=1
 
-            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en huggingface
+            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer huggingface
             cd huggingface
             git fetch
             git pull
@@ -138,4 +112,41 @@ jobs:
 
             git add .
             git commit -m "update model"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en main
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer main
+
+      - name: Publish to ModelScope
+        if: false
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 10
+          timeout_seconds: 600
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf ms
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer.git ms
+            cd ms
+            git config lfs.locksverify true
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-*/* .
+
+            git status
+            git lfs track "*.data"
+            git lfs track "*.wasm"
+            ls -lh
+
+            git add .
+            git commit -m "update model"
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer.git
+
