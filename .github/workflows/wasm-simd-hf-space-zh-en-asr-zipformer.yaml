@@ -72,7 +72,7 @@ jobs:
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
 
       - name: Publish to ModelScope
-        if: false
+        # if: false
         env:
           MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
         uses: nick-fields/retry@v2
@@ -91,6 +91,8 @@ jobs:
 
             git clone https://www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en.git ms
             cd ms
+            rm -fv *.js
+            rm -fv *.data
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
@@ -125,6 +127,8 @@ jobs:
 
             git clone https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en huggingface
             cd huggingface
+            rm -fv *.js
+            rm -fv *.data
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
