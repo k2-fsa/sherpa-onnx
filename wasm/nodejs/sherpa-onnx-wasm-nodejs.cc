@@ -1,4 +1,4 @@
-// wasm/sherpa-onnx-wasm-main-tts.cc
+// wasm/sherpa-onnx-wasm-main-nodejs.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
 #include <stdio.h>
@@ -8,20 +8,9 @@
 
 #include "sherpa-onnx/c-api/c-api.h"
 
-// see also
-// https://emscripten.org/docs/porting/connecting_cpp_and_javascript/Interacting-with-code.html
-
 extern "C" {
 
-static_assert(sizeof(SherpaOnnxOfflineTtsVitsModelConfig) == 7 * 4, "");
-static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
-                  sizeof(SherpaOnnxOfflineTtsVitsModelConfig) + 3 * 4,
-              "");
-static_assert(sizeof(SherpaOnnxOfflineTtsConfig) ==
-                  sizeof(SherpaOnnxOfflineTtsModelConfig) + 2 * 4,
-              "");
-
-void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
+void MyPrintOfflineTtsConfig(SherpaOnnxOfflineTtsConfig *tts_config) {
   auto tts_model_config = &tts_config->model;
   auto vits_model_config = &tts_model_config->vits;
   fprintf(stdout, "----------vits model config----------\n");
@@ -42,6 +31,8 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "rule_fsts: %s\n", tts_config->rule_fsts);
   fprintf(stdout, "max num sentences: %d\n", tts_config->max_num_sentences);
 }
+
+void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {}
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {
   std::copy(src, src + num_bytes, dst);

@@ -1,4 +1,4 @@
-// wasm/sherpa-onnx-wasm-asr-main.cc
+// wasm/sherpa-onnx-wasm-main-asr.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
 #include <stdio.h>
