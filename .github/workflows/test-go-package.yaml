@@ -432,5 +432,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tts-waves
+          name: tts-waves-${{ matrix.os }}-${{ matrix.arch }}
           path: tts-waves
