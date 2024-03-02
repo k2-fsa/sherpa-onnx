@@ -45,18 +45,18 @@ if (NOT CMAKE_EXECUTABLE_SUFFIX STREQUAL ".js")
 endif()
 # set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
-add_executable(sherpa-onnx-wasm-asr-main sherpa-onnx-wasm-asr-main.cc)
-target_link_libraries(sherpa-onnx-wasm-asr-main sherpa-onnx-c-api)
-install(TARGETS sherpa-onnx-wasm-asr-main DESTINATION bin/wasm/asr)
+add_executable(sherpa-onnx-wasm-main-asr sherpa-onnx-wasm-main-asr.cc)
+target_link_libraries(sherpa-onnx-wasm-main-asr sherpa-onnx-c-api)
+install(TARGETS sherpa-onnx-wasm-main-asr DESTINATION bin/wasm/asr)
 
 install(
   FILES
-    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-asr-main>/sherpa-onnx-wasm-asr-main.js"
+    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-asr>/sherpa-onnx-wasm-main-asr.js"
     "index.html"
-    "sherpa-onnx.js"
-    "app.js"
-    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-asr-main>/sherpa-onnx-wasm-asr-main.wasm"
-    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-asr-main>/sherpa-onnx-wasm-asr-main.data"
+    "sherpa-onnx-asr.js"
+    "app-asr.js"
+    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-asr>/sherpa-onnx-wasm-main-asr.wasm"
+    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-asr>/sherpa-onnx-wasm-main-asr.data"
   DESTINATION
     bin/wasm/asr
 )

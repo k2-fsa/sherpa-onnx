@@ -40,19 +40,18 @@ if (NOT CMAKE_EXECUTABLE_SUFFIX STREQUAL ".js")
 endif()
 # set(CMAKE_EXECUTABLE_SUFFIX ".html")
 
-add_executable(sherpa-onnx-wasm-main sherpa-onnx-wasm-main.cc)
-target_link_libraries(sherpa-onnx-wasm-main sherpa-onnx-c-api)
-install(TARGETS sherpa-onnx-wasm-main DESTINATION bin/wasm/tts)
+add_executable(sherpa-onnx-wasm-main-tts sherpa-onnx-wasm-main-tts.cc)
+target_link_libraries(sherpa-onnx-wasm-main-tts sherpa-onnx-c-api)
+install(TARGETS sherpa-onnx-wasm-main-tts DESTINATION bin/wasm/tts)
 
 install(
   FILES
-    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main>/sherpa-onnx-wasm-main.js"
+    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-tts>/sherpa-onnx-wasm-main-tts.js"
     "index.html"
-    "sherpa-onnx.js"
-    "app.js"
-    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main>/sherpa-onnx-wasm-main.wasm"
-    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main>/sherpa-onnx-wasm-main.data"
-    # "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main>/sherpa-onnx-wasm-main.html"
+    "sherpa-onnx-tts.js"
+    "app-tts.js"
+    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-tts>/sherpa-onnx-wasm-main-tts.wasm"
+    "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-tts>/sherpa-onnx-wasm-main-tts.data"
   DESTINATION
     bin/wasm/tts
 )
