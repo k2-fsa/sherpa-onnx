@@ -14,19 +14,19 @@ if(NOT BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL   "https://github.com/microsoft/onnxruntime/releases/download/v1.17.0/onnxruntime-linux-x64-1.17.0.tgz")
-set(onnxruntime_URL2  "https://hub.nuaa.cf/microsoft/onnxruntime/releases/download/v1.17.0/onnxruntime-linux-x64-1.17.0.tgz")
-set(onnxruntime_HASH "SHA256=efc344d54d1969446ff5d3e55b54e205c6579c06333ecf1d34a04215eefae7c6")
+set(onnxruntime_URL   "https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz")
+set(onnxruntime_URL2  "https://hub.nuaa.cf/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-linux-x64-1.17.1.tgz")
+set(onnxruntime_HASH "SHA256=89b153af88746665909c758a06797175ae366280cbf25502c41eb5955f9a555e")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.17.0.tgz
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-1.17.0.tgz
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-1.17.0.tgz
-  /tmp/onnxruntime-linux-x64-1.17.0.tgz
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.17.0.tgz
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-1.17.1.tgz
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-1.17.1.tgz
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-1.17.1.tgz
+  /tmp/onnxruntime-linux-x64-1.17.1.tgz
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-1.17.1.tgz
 )
 
 foreach(f IN LISTS possible_file_locations)
