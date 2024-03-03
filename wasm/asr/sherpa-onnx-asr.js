@@ -1,161 +1,165 @@
-function freeConfig(config) {
+function freeConfig(config, Module) {
   if ('buffer' in config) {
-    _free(config.buffer);
+    Module._free(config.buffer);
   }
 
   if ('config' in config) {
-    freeConfig(config.config)
+    freeConfig(config.config, Module)
   }
 
   if ('transducer' in config) {
-    freeConfig(config.transducer)
+    freeConfig(config.transducer, Module)
   }
 
   if ('paraformer' in config) {
-    freeConfig(config.paraformer)
+    freeConfig(config.paraformer, Module)
   }
 
   if ('ctc' in config) {
-    freeConfig(config.ctc)
+    freeConfig(config.ctc, Module)
   }
 
   if ('feat' in config) {
-    freeConfig(config.feat)
+    freeConfig(config.feat, Module)
   }
 
   if ('model' in config) {
-    freeConfig(config.model)
+    freeConfig(config.model, Module)
   }
 
-  _free(config.ptr);
+  Module._free(config.ptr);
 }
 
 // The user should free the returned pointers
-function initSherpaOnnxOnlineTransducerModelConfig(config) {
-  let encoderLen = lengthBytesUTF8(config.encoder) + 1;
-  let decoderLen = lengthBytesUTF8(config.decoder) + 1;
-  let joinerLen = lengthBytesUTF8(config.joiner) + 1;
+function initSherpaOnnxOnlineTransducerModelConfig(config, Module) {
+  let encoderLen = Module.lengthBytesUTF8(config.encoder) + 1;
+  let decoderLen = Module.lengthBytesUTF8(config.decoder) + 1;
+  let joinerLen = Module.lengthBytesUTF8(config.joiner) + 1;
 
   let n = encoderLen + decoderLen + joinerLen;
 
-  let buffer = _malloc(n);
+  let buffer = Module._malloc(n);
 
   let len = 3 * 4;  // 3 pointers
-  let ptr = _malloc(len);
+  let ptr = Module._malloc(len);
 
   let offset = 0;
-  stringToUTF8(config.encoder, buffer + offset, encoderLen);
+  Module.stringToUTF8(config.encoder, buffer + offset, encoderLen);
   offset += encoderLen;
 
-  stringToUTF8(config.decoder, buffer + offset, decoderLen);
+  Module.stringToUTF8(config.decoder, buffer + offset, decoderLen);
   offset += decoderLen;
 
-  stringToUTF8(config.joiner, buffer + offset, joinerLen);
+  Module.stringToUTF8(config.joiner, buffer + offset, joinerLen);
 
   offset = 0;
-  setValue(ptr, buffer + offset, 'i8*');
+  Module.setValue(ptr, buffer + offset, 'i8*');
   offset += encoderLen;
 
-  setValue(ptr + 4, buffer + offset, 'i8*');
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
   offset += decoderLen;
 
-  setValue(ptr + 8, buffer + offset, 'i8*');
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
 
   return {
     buffer: buffer, ptr: ptr, len: len,
   }
 }
 
-function initSherpaOnnxOnlineParaformerModelConfig(config) {
-  let encoderLen = lengthBytesUTF8(config.encoder) + 1;
-  let decoderLen = lengthBytesUTF8(config.decoder) + 1;
+function initSherpaOnnxOnlineParaformerModelConfig(config, Module) {
+  let encoderLen = Module.lengthBytesUTF8(config.encoder) + 1;
+  let decoderLen = Module.lengthBytesUTF8(config.decoder) + 1;
 
   let n = encoderLen + decoderLen;
-  let buffer = _malloc(n);
+  let buffer = Module._malloc(n);
 
   let len = 2 * 4;  // 2 pointers
-  let ptr = _malloc(len);
+  let ptr = Module._malloc(len);
 
   let offset = 0;
-  stringToUTF8(config.encoder, buffer + offset, encoderLen);
+  Module.stringToUTF8(config.encoder, buffer + offset, encoderLen);
   offset += encoderLen;
 
-  stringToUTF8(config.decoder, buffer + offset, decoderLen);
+  Module.stringToUTF8(config.decoder, buffer + offset, decoderLen);
 
   offset = 0;
-  setValue(ptr, buffer + offset, 'i8*');
+  Module.setValue(ptr, buffer + offset, 'i8*');
   offset += encoderLen;
 
-  setValue(ptr + 4, buffer + offset, 'i8*');
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
 
   return {
     buffer: buffer, ptr: ptr, len: len,
   }
 }
 
-function initSherpaOnnxOnlineZipformer2CtcModelConfig(config) {
-  let n = lengthBytesUTF8(config.model) + 1;
-  let buffer = _malloc(n);
+function initSherpaOnnxOnlineZipformer2CtcModelConfig(config, Module) {
+  let n = Module.lengthBytesUTF8(config.model) + 1;
+  let buffer = Module._malloc(n);
 
   let len = 1 * 4;  // 1 pointer
-  let ptr = _malloc(len);
+  let ptr = Module._malloc(len);
 
-  stringToUTF8(config.model, buffer, n);
+  Module.stringToUTF8(config.model, buffer, n);
 
-  setValue(ptr, buffer, 'i8*');
+  Module.setValue(ptr, buffer, 'i8*');
 
   return {
     buffer: buffer, ptr: ptr, len: len,
   }
 }
 
-function initSherpaOnnxOnlineModelConfig(config) {
-  let transducer = initSherpaOnnxOnlineTransducerModelConfig(config.transducer);
-  let paraformer = initSherpaOnnxOnlineParaformerModelConfig(config.paraformer);
-  let ctc = initSherpaOnnxOnlineZipformer2CtcModelConfig(config.zipformer2Ctc);
+function initSherpaOnnxOnlineModelConfig(config, Module) {
+  let transducer =
+      initSherpaOnnxOnlineTransducerModelConfig(config.transducer, Module);
+  let paraformer =
+      initSherpaOnnxOnlineParaformerModelConfig(config.paraformer, Module);
+  let ctc = initSherpaOnnxOnlineZipformer2CtcModelConfig(
+      config.zipformer2Ctc, Module);
 
   let len = transducer.len + paraformer.len + ctc.len + 5 * 4;
-  let ptr = _malloc(len);
+  let ptr = Module._malloc(len);
 
   let offset = 0;
-  _CopyHeap(transducer.ptr, transducer.len, ptr + offset);
+  Module._CopyHeap(transducer.ptr, transducer.len, ptr + offset);
   offset += transducer.len;
 
-  _CopyHeap(paraformer.ptr, paraformer.len, ptr + offset);
+  Module._CopyHeap(paraformer.ptr, paraformer.len, ptr + offset);
   offset += paraformer.len;
 
-  _CopyHeap(ctc.ptr, ctc.len, ptr + offset);
+  Module._CopyHeap(ctc.ptr, ctc.len, ptr + offset);
   offset += ctc.len;
 
-  let tokensLen = lengthBytesUTF8(config.tokens) + 1;
-  let providerLen = lengthBytesUTF8(config.provider) + 1;
-  let modelTypeLen = lengthBytesUTF8(config.modelType) + 1;
+  let tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
+  let providerLen = Module.lengthBytesUTF8(config.provider) + 1;
+  let modelTypeLen = Module.lengthBytesUTF8(config.modelType) + 1;
   let bufferLen = tokensLen + providerLen + modelTypeLen;
-  let buffer = _malloc(bufferLen);
+  let buffer = Module._malloc(bufferLen);
 
   offset = 0;
-  stringToUTF8(config.tokens, buffer, tokensLen);
+  Module.stringToUTF8(config.tokens, buffer, tokensLen);
   offset += tokensLen;
 
-  stringToUTF8(config.provider, buffer + offset, providerLen);
+  Module.stringToUTF8(config.provider, buffer + offset, providerLen);
   offset += providerLen;
 
-  stringToUTF8(config.modelType, buffer + offset, modelTypeLen);
+  Module.stringToUTF8(config.modelType, buffer + offset, modelTypeLen);
 
   offset = transducer.len + paraformer.len + ctc.len;
-  setValue(ptr + offset, buffer, 'i8*');  // tokens
+  Module.setValue(ptr + offset, buffer, 'i8*');  // tokens
   offset += 4;
 
-  setValue(ptr + offset, config.numThreads, 'i32');
+  Module.setValue(ptr + offset, config.numThreads, 'i32');
   offset += 4;
 
-  setValue(ptr + offset, buffer + tokensLen, 'i8*');  // provider
+  Module.setValue(ptr + offset, buffer + tokensLen, 'i8*');  // provider
   offset += 4;
 
-  setValue(ptr + offset, config.debug, 'i32');
+  Module.setValue(ptr + offset, config.debug, 'i32');
   offset += 4;
 
-  setValue(ptr + offset, buffer + tokensLen + providerLen, 'i8*');  // modelType
+  Module.setValue(
+      ptr + offset, buffer + tokensLen + providerLen, 'i8*');  // modelType
   offset += 4;
 
   return {
@@ -164,63 +168,63 @@ function initSherpaOnnxOnlineModelConfig(config) {
   }
 }
 
-function initSherpaOnnxFeatureConfig(config) {
+function initSherpaOnnxFeatureConfig(config, Module) {
   let len = 2 * 4;  // 2 pointers
-  let ptr = _malloc(len);
+  let ptr = Module._malloc(len);
 
-  setValue(ptr, config.sampleRate, 'i32');
-  setValue(ptr + 4, config.featureDim, 'i32');
+  Module.setValue(ptr, config.sampleRate, 'i32');
+  Module.setValue(ptr + 4, config.featureDim, 'i32');
   return {ptr: ptr, len: len};
 }
 
-function initSherpaOnnxOnlineRecognizerConfig(config) {
-  let feat = initSherpaOnnxFeatureConfig(config.featConfig);
-  let model = initSherpaOnnxOnlineModelConfig(config.modelConfig);
+function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
+  let feat = initSherpaOnnxFeatureConfig(config.featConfig, Module);
+  let model = initSherpaOnnxOnlineModelConfig(config.modelConfig, Module);
 
   let len = feat.len + model.len + 8 * 4;
-  let ptr = _malloc(len);
+  let ptr = Module._malloc(len);
 
   let offset = 0;
-  _CopyHeap(feat.ptr, feat.len, ptr + offset);
+  Module._CopyHeap(feat.ptr, feat.len, ptr + offset);
   offset += feat.len;
 
-  _CopyHeap(model.ptr, model.len, ptr + offset);
+  Module._CopyHeap(model.ptr, model.len, ptr + offset);
   offset += model.len;
 
-  let decodingMethodLen = lengthBytesUTF8(config.decodingMethod) + 1;
-  let hotwordsFileLen = lengthBytesUTF8(config.hotwordsFile) + 1;
+  let decodingMethodLen = Module.lengthBytesUTF8(config.decodingMethod) + 1;
+  let hotwordsFileLen = Module.lengthBytesUTF8(config.hotwordsFile) + 1;
   let bufferLen = decodingMethodLen + hotwordsFileLen;
-  let buffer = _malloc(bufferLen);
+  let buffer = Module._malloc(bufferLen);
 
   offset = 0;
-  stringToUTF8(config.decodingMethod, buffer, decodingMethodLen);
+  Module.stringToUTF8(config.decodingMethod, buffer, decodingMethodLen);
   offset += decodingMethodLen;
 
-  stringToUTF8(config.hotwordsFile, buffer + offset, hotwordsFileLen);
+  Module.stringToUTF8(config.hotwordsFile, buffer + offset, hotwordsFileLen);
 
   offset = feat.len + model.len;
-  setValue(ptr + offset, buffer, 'i8*');  // decoding method
+  Module.setValue(ptr + offset, buffer, 'i8*');  // decoding method
   offset += 4;
 
-  setValue(ptr + offset, config.maxActivePaths, 'i32');
+  Module.setValue(ptr + offset, config.maxActivePaths, 'i32');
   offset += 4;
 
-  setValue(ptr + offset, config.enableEndpoint, 'i32');
+  Module.setValue(ptr + offset, config.enableEndpoint, 'i32');
   offset += 4;
 
-  setValue(ptr + offset, config.rule1MinTrailingSilence, 'float');
+  Module.setValue(ptr + offset, config.rule1MinTrailingSilence, 'float');
   offset += 4;
 
-  setValue(ptr + offset, config.rule2MinTrailingSilence, 'float');
+  Module.setValue(ptr + offset, config.rule2MinTrailingSilence, 'float');
   offset += 4;
 
-  setValue(ptr + offset, config.rule3MinUtteranceLength, 'float');
+  Module.setValue(ptr + offset, config.rule3MinUtteranceLength, 'float');
   offset += 4;
 
-  setValue(ptr + offset, buffer + decodingMethodLen, 'i8*');
+  Module.setValue(ptr + offset, buffer + decodingMethodLen, 'i8*');
   offset += 4;
 
-  setValue(ptr + offset, config.hotwordsScore, 'float');
+  Module.setValue(ptr + offset, config.hotwordsScore, 'float');
   offset += 4;
 
   return {
@@ -229,21 +233,21 @@ function initSherpaOnnxOnlineRecognizerConfig(config) {
 }
 
 
-function createRecognizer() {
+function createOnlineRecognizer(Module, myConfig) {
   let onlineTransducerModelConfig = {
     encoder: '',
     decoder: '',
     joiner: '',
-  }
+  };
 
   let onlineParaformerModelConfig = {
     encoder: '',
     decoder: '',
-  }
+  };
 
   let onlineZipformer2CtcModelConfig = {
     model: '',
-  }
+  };
 
   let type = 0;
 
@@ -275,12 +279,12 @@ function createRecognizer() {
     provider: 'cpu',
     debug: 1,
     modelType: '',
-  }
+  };
 
   let featureConfig = {
     sampleRate: 16000,
     featureDim: 80,
-  }
+  };
 
   let recognizerConfig = {
     featConfig: featureConfig,
@@ -293,23 +297,27 @@ function createRecognizer() {
     rule3MinUtteranceLength: 20,
     hotwordsFile: '',
     hotwordsScore: 1.5,
+  };
+  if (myConfig) {
+    recognizerConfig = myConfig;
   }
 
-  return new OnlineRecognizer(recognizerConfig);
+  return new OnlineRecognizer(recognizerConfig, Module);
 }
 
 class OnlineStream {
-  constructor(handle) {
+  constructor(handle, Module) {
     this.handle = handle;
     this.pointer = null;  // buffer
     this.n = 0;           // buffer size
+    this.Module = Module;
   }
 
   free() {
     if (this.handle) {
-      _DestroyOnlineStream(this.handle);
+      this.Module._DestroyOnlineStream(this.handle);
       this.handle = null;
-      _free(this.pointer);
+      this.Module._free(this.pointer);
       this.pointer = null;
       this.n = 0;
     }
@@ -321,61 +329,77 @@ class OnlineStream {
    */
   acceptWaveform(sampleRate, samples) {
     if (this.n < samples.length) {
-      _free(this.pointer);
-      this.pointer = _malloc(samples.length * samples.BYTES_PER_ELEMENT);
+      this.Module._free(this.pointer);
+      this.pointer =
+          this.Module._malloc(samples.length * samples.BYTES_PER_ELEMENT);
       this.n = samples.length
     }
 
-    Module.HEAPF32.set(samples, this.pointer / samples.BYTES_PER_ELEMENT);
-    _AcceptWaveform(this.handle, sampleRate, this.pointer, samples.length);
+    this.Module.HEAPF32.set(samples, this.pointer / samples.BYTES_PER_ELEMENT);
+    this.Module._AcceptWaveform(
+        this.handle, sampleRate, this.pointer, samples.length);
   }
 
   inputFinished() {
-    _InputFinished(this.handle);
+    this.Module._InputFinished(this.handle);
   }
 };
 
 class OnlineRecognizer {
-  constructor(configObj) {
-    let config = initSherpaOnnxOnlineRecognizerConfig(configObj)
-    let handle = _CreateOnlineRecognizer(config.ptr);
+  constructor(configObj, Module) {
+    this.config = configObj;
+    let config = initSherpaOnnxOnlineRecognizerConfig(configObj, Module)
+    let handle = Module._CreateOnlineRecognizer(config.ptr);
 
-    freeConfig(config);
+    freeConfig(config, Module);
 
     this.handle = handle;
+    this.Module = Module;
   }
 
   free() {
-    _DestroyOnlineRecognizer(this.handle);
+    this.Module._DestroyOnlineRecognizer(this.handle);
     this.handle = 0
   }
 
   createStream() {
-    let handle = _CreateOnlineStream(this.handle);
-    return new OnlineStream(handle);
+    let handle = this.Module._CreateOnlineStream(this.handle);
+    return new OnlineStream(handle, this.Module);
   }
 
   isReady(stream) {
-    return _IsOnlineStreamReady(this.handle, stream.handle) == 1;
+    return this.Module._IsOnlineStreamReady(this.handle, stream.handle) == 1;
   }
 
   decode(stream) {
-    return _DecodeOnlineStream(this.handle, stream.handle);
+    return this.Module._DecodeOnlineStream(this.handle, stream.handle);
   }
 
   isEndpoint(stream) {
-    return _IsEndpoint(this.handle, stream.handle) == 1;
+    return this.Module._IsEndpoint(this.handle, stream.handle) == 1;
   }
 
   reset(stream) {
-    _Reset(this.handle, stream.handle);
+    this.Module._Reset(this.handle, stream.handle);
   }
 
   getResult(stream) {
-    let r = _GetOnlineStreamResult(this.handle, stream.handle);
-    let textPtr = getValue(r, 'i8*');
-    let text = UTF8ToString(textPtr);
-    _DestroyOnlineRecognizerResult(r);
+    console.log('here1');
+    let r = this.Module._GetOnlineStreamResult(this.handle, stream.handle);
+    console.log('here2');
+    let textPtr = this.Module.getValue(r, 'i8*');
+    console.log('here3');
+    let text = this.Module.UTF8ToString(textPtr);
+    console.log('here4');
+    this.Module._DestroyOnlineRecognizerResult(r);
+    console.log('here5');
     return text;
   }
+}
+
+if (typeof process == 'object' && typeof process.versions == 'object' &&
+    typeof process.versions.node == 'string') {
+  module.exports = {
+    createOnlineRecognizer,
+  };
 }
