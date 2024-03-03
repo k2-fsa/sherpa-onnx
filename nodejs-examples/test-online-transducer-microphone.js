@@ -5,39 +5,60 @@ const portAudio = require('naudiodon2');
 
 const sherpa_onnx = require('sherpa-onnx');
 
-function createRecognizer() {
-  const featConfig = new sherpa_onnx.FeatureConfig();
-  featConfig.sampleRate = 16000;
-  featConfig.featureDim = 80;
+function createOnlineRecognizer() {
+  let onlineTransducerModelConfig = {
+    encoder:
+        './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx',
+    decoder:
+        './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx',
+    joiner:
+        './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx',
+  };
 
-  // test online recognizer
-  const transducer = new sherpa_onnx.OnlineTransducerModelConfig();
-  transducer.encoder =
-      './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx';
-  transducer.decoder =
-      './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx';
-  transducer.joiner =
-      './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx';
-  const tokens =
-      './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt';
+  let onlineParaformerModelConfig = {
+    encoder: '',
+    decoder: '',
+  };
 
-  const modelConfig = new sherpa_onnx.OnlineModelConfig();
-  modelConfig.transducer = transducer;
-  modelConfig.tokens = tokens;
-  modelConfig.modelType = 'zipformer';
+  let onlineZipformer2CtcModelConfig = {
+    model: '',
+  };
 
-  const recognizerConfig = new sherpa_onnx.OnlineRecognizerConfig();
-  recognizerConfig.featConfig = featConfig;
-  recognizerConfig.modelConfig = modelConfig;
-  recognizerConfig.decodingMethod = 'greedy_search';
-  recognizerConfig.enableEndpoint = 1;
+  let onlineModelConfig = {
+    transducer: onlineTransducerModelConfig,
+    paraformer: onlineParaformerModelConfig,
+    zipformer2Ctc: onlineZipformer2CtcModelConfig,
+    tokens:
+        './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt',
+    numThreads: 1,
+    provider: 'cpu',
+    debug: 1,
+    modelType: 'zipformer',
+  };
 
-  const recognizer = new sherpa_onnx.OnlineRecognizer(recognizerConfig);
-  return recognizer;
+  let featureConfig = {
+    sampleRate: 16000,
+    featureDim: 80,
+  };
+
+  let recognizerConfig = {
+    featConfig: featureConfig,
+    modelConfig: onlineModelConfig,
+    decodingMethod: 'greedy_search',
+    maxActivePaths: 4,
+    enableEndpoint: 1,
+    rule1MinTrailingSilence: 2.4,
+    rule2MinTrailingSilence: 1.2,
+    rule3MinUtteranceLength: 20,
+    hotwordsFile: '',
+    hotwordsScore: 1.5,
+  };
+
+  return sherpa_onnx.createOnlineRecognizer(recognizerConfig);
 }
-recognizer = createRecognizer();
-stream = recognizer.createStream();
-display = new sherpa_onnx.Display(50);
+
+const recognizer = createOnlineRecognizer();
+const stream = recognizer.createStream();
 
 let lastText = '';
 let segmentIndex = 0;
@@ -63,11 +84,11 @@ ai.on('data', data => {
   }
 
   const isEndpoint = recognizer.isEndpoint(stream);
-  const text = recognizer.getResult(stream).text;
+  const text = recognizer.getResult(stream);
 
   if (text.length > 0 && lastText != text) {
     lastText = text;
-    display.print(segmentIndex, lastText);
+    console.log(segmentIndex, lastText);
   }
   if (isEndpoint) {
     if (text.length > 0) {

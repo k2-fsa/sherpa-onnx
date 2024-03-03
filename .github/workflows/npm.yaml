@@ -48,10 +48,6 @@ jobs:
         shell: bash
         run: |
           node --version
-          # npm --version
-          # cd nodejs-examples
-
-          # npm --version
 
       - name: Build nodejs package
         shell: bash
@@ -64,7 +60,6 @@ jobs:
 
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
           echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
-          SHERPA_ONNX_VERSION=0.9.10
 
           cd scripts/nodejs
 

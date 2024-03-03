@@ -6,32 +6,58 @@ const wav = require('wav');
 
 const sherpa_onnx = require('sherpa-onnx');
 
-function createRecognizer() {
-  const featConfig = new sherpa_onnx.FeatureConfig();
-  featConfig.sampleRate = 16000;
-  featConfig.featureDim = 80;
+function createOnlineRecognizer() {
+  let onlineTransducerModelConfig = {
+    encoder: '',
+    decoder: '',
+    joiner: '',
+  };
 
-  // test online recognizer
-  const zipformer2Ctc = new sherpa_onnx.OnlineZipformer2CtcModelConfig();
-  zipformer2Ctc.model =
-      './sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.onnx';
-  const tokens =
-      './sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt';
+  let onlineParaformerModelConfig = {
+    encoder: '',
+    decoder: '',
+  };
 
-  const modelConfig = new sherpa_onnx.OnlineModelConfig();
-  modelConfig.zipformer2Ctc = zipformer2Ctc;
-  modelConfig.tokens = tokens;
+  let onlineZipformer2CtcModelConfig = {
+    model:
+        './sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.onnx',
+  };
 
-  const recognizerConfig = new sherpa_onnx.OnlineRecognizerConfig();
-  recognizerConfig.featConfig = featConfig;
-  recognizerConfig.modelConfig = modelConfig;
-  recognizerConfig.decodingMethod = 'greedy_search';
+  let onlineModelConfig = {
+    transducer: onlineTransducerModelConfig,
+    paraformer: onlineParaformerModelConfig,
+    zipformer2Ctc: onlineZipformer2CtcModelConfig,
+    tokens:
+        './sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt',
+    numThreads: 1,
+    provider: 'cpu',
+    debug: 1,
+    modelType: '',
+  };
 
-  recognizer = new sherpa_onnx.OnlineRecognizer(recognizerConfig);
-  return recognizer;
+  let featureConfig = {
+    sampleRate: 16000,
+    featureDim: 80,
+  };
+
+  let recognizerConfig = {
+    featConfig: featureConfig,
+    modelConfig: onlineModelConfig,
+    decodingMethod: 'greedy_search',
+    maxActivePaths: 4,
+    enableEndpoint: 1,
+    rule1MinTrailingSilence: 2.4,
+    rule2MinTrailingSilence: 1.2,
+    rule3MinUtteranceLength: 20,
+    hotwordsFile: '',
+    hotwordsScore: 1.5,
+  };
+
+  return sherpa_onnx.createOnlineRecognizer(recognizerConfig);
 }
-recognizer = createRecognizer();
-stream = recognizer.createStream();
+
+const recognizer = createOnlineRecognizer();
+const stream = recognizer.createStream();
 
 const waveFilename =
     './sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/DEV_T0000000000.wav';
@@ -45,8 +71,8 @@ function decode(samples) {
   while (recognizer.isReady(stream)) {
     recognizer.decode(stream);
   }
-  const r = recognizer.getResult(stream);
-  console.log(r.text);
+  const text = recognizer.getResult(stream);
+  console.log(text);
 }
 
 reader.on('format', ({audioFormat, bitDepth, channels, sampleRate}) => {
