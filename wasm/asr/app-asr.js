@@ -45,7 +45,7 @@ Module.onRuntimeInitialized = function() {
 
   startBtn.disabled = false;
 
-  recognizer = createRecognizer();
+  recognizer = createOnlineRecognizer(Module);
   console.log('recognizer is created!', recognizer);
 };
 

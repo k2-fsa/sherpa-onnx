@@ -1,4 +1,4 @@
-// Copyright (c)  2023  Xiaomi Corporation (authors: Fangjun Kuang)
+// Copyright (c)  2023-2024  Xiaomi Corporation (authors: Fangjun Kuang)
 //
 const fs = require('fs');
 const {Readable} = require('stream');
@@ -6,32 +6,58 @@ const wav = require('wav');
 
 const sherpa_onnx = require('sherpa-onnx');
 
-function createRecognizer() {
-  const featConfig = new sherpa_onnx.FeatureConfig();
-  featConfig.sampleRate = 16000;
-  featConfig.featureDim = 80;
+function createOfflineRecognizer() {
+  let featConfig = {
+    sampleRate: 16000,
+    featureDim: 80,
+  };
 
-  // test online recognizer
-  const nemoCtc = new sherpa_onnx.OfflineNemoEncDecCtcModelConfig();
-  nemoCtc.model = './sherpa-onnx-nemo-ctc-en-conformer-small/model.int8.onnx';
-  const tokens = './sherpa-onnx-nemo-ctc-en-conformer-small/tokens.txt';
+  let modelConfig = {
+    transducer: {
+      encoder: '',
+      decoder: '',
+      joiner: '',
+    },
+    paraformer: {
+      model: '',
+    },
+    nemoCtc: {
+      model: './sherpa-onnx-nemo-ctc-en-conformer-small/model.int8.onnx',
+    },
+    whisper: {
+      encoder: '',
+      decoder: '',
+    },
+    tdnn: {
+      model: '',
+    },
+    tokens: './sherpa-onnx-nemo-ctc-en-conformer-small/tokens.txt',
+    numThreads: 1,
+    debug: 0,
+    provider: 'cpu',
+    modelType: 'nemo_ctc',
+  };
 
-  const modelConfig = new sherpa_onnx.OfflineModelConfig();
-  modelConfig.nemoCtc = nemoCtc;
-  modelConfig.tokens = tokens;
-  modelConfig.modelType = 'nemo_ctc';
+  let lmConfig = {
+    model: '',
+    scale: 1.0,
+  };
 
-  const recognizerConfig = new sherpa_onnx.OfflineRecognizerConfig();
-  recognizerConfig.featConfig = featConfig;
-  recognizerConfig.modelConfig = modelConfig;
-  recognizerConfig.decodingMethod = 'greedy_search';
+  let config = {
+    featConfig: featConfig,
+    modelConfig: modelConfig,
+    lmConfig: lmConfig,
+    decodingMethod: 'greedy_search',
+    maxActivePaths: 4,
+    hotwordsFile: '',
+    hotwordsScore: 1.5,
+  };
 
-  const recognizer = new sherpa_onnx.OfflineRecognizer(recognizerConfig);
-  return recognizer;
+  return sherpa_onnx.createOfflineRecognizer(config);
 }
 
-recognizer = createRecognizer();
-stream = recognizer.createStream();
+const recognizer = createOfflineRecognizer();
+const stream = recognizer.createStream();
 
 const waveFilename =
     './sherpa-onnx-nemo-ctc-en-conformer-small/test_wavs/0.wav';
@@ -72,8 +98,8 @@ fs.createReadStream(waveFilename, {highWaterMark: 4096})
 
       stream.acceptWaveform(recognizer.config.featConfig.sampleRate, flattened);
       recognizer.decode(stream);
-      const r = recognizer.getResult(stream);
-      console.log(r.text);
+      const text = recognizer.getResult(stream);
+      console.log(text);
 
       stream.free();
       recognizer.free();

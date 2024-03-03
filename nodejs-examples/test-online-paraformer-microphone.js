@@ -5,37 +5,58 @@ console.log(portAudio.getDevices());
 
 const sherpa_onnx = require('sherpa-onnx');
 
-function createRecognizer() {
-  const featConfig = new sherpa_onnx.FeatureConfig();
-  featConfig.sampleRate = 16000;
-  featConfig.featureDim = 80;
+function createOnlineRecognizer() {
+  let onlineTransducerModelConfig = {
+    encoder: '',
+    decoder: '',
+    joiner: '',
+  };
 
-  const paraformer = new sherpa_onnx.OnlineParaformerModelConfig();
-  paraformer.encoder =
-      './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx';
-  paraformer.decoder =
-      './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx';
-  const tokens =
-      './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt';
+  let onlineParaformerModelConfig = {
+    encoder:
+        './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx',
+    decoder:
+        './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx',
+  };
 
-  const modelConfig = new sherpa_onnx.OnlineModelConfig();
-  modelConfig.paraformer = paraformer;
-  modelConfig.tokens = tokens;
-  modelConfig.modelType = 'paraformer';
+  let onlineZipformer2CtcModelConfig = {
+    model: '',
+  };
 
-  const recognizerConfig = new sherpa_onnx.OnlineRecognizerConfig();
-  recognizerConfig.featConfig = featConfig;
-  recognizerConfig.modelConfig = modelConfig;
-  recognizerConfig.decodingMethod = 'greedy_search';
-  recognizerConfig.enableEndpoint = 1;
+  let onlineModelConfig = {
+    transducer: onlineTransducerModelConfig,
+    paraformer: onlineParaformerModelConfig,
+    zipformer2Ctc: onlineZipformer2CtcModelConfig,
+    tokens: './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt',
+    numThreads: 1,
+    provider: 'cpu',
+    debug: 1,
+    modelType: 'paraformer',
+  };
 
-  const recognizer = new sherpa_onnx.OnlineRecognizer(recognizerConfig);
-  return recognizer;
+  let featureConfig = {
+    sampleRate: 16000,
+    featureDim: 80,
+  };
+
+  let recognizerConfig = {
+    featConfig: featureConfig,
+    modelConfig: onlineModelConfig,
+    decodingMethod: 'greedy_search',
+    maxActivePaths: 4,
+    enableEndpoint: 1,
+    rule1MinTrailingSilence: 2.4,
+    rule2MinTrailingSilence: 1.2,
+    rule3MinUtteranceLength: 20,
+    hotwordsFile: '',
+    hotwordsScore: 1.5,
+  };
+
+  return sherpa_onnx.createOnlineRecognizer(recognizerConfig);
 }
-recognizer = createRecognizer();
-stream = recognizer.createStream();
 
-display = new sherpa_onnx.Display(50);
+const recognizer = createOnlineRecognizer();
+const stream = recognizer.createStream();
 
 let lastText = '';
 let segmentIndex = 0;
@@ -61,11 +82,11 @@ ai.on('data', data => {
   }
 
   const isEndpoint = recognizer.isEndpoint(stream);
-  const text = recognizer.getResult(stream).text;
+  const text = recognizer.getResult(stream);
 
   if (text.length > 0 && lastText != text) {
     lastText = text;
-    display.print(segmentIndex, lastText);
+    console.log(segmentIndex, lastText);
   }
   if (isEndpoint) {
     if (text.length > 0) {

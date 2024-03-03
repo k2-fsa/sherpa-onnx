@@ -40,7 +40,6 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 13
           registry-url: 'https://registry.npmjs.org'
 
       - name: Display node version

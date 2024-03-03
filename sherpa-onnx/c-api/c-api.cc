@@ -94,6 +94,11 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
     SHERPA_ONNX_LOGE("%s\n", recognizer_config.ToString().c_str());
   }
 
+  if (!recognizer_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config!");
+    return nullptr;
+  }
+
   SherpaOnnxOnlineRecognizer *recognizer = new SherpaOnnxOnlineRecognizer;
 
   recognizer->impl =
@@ -324,6 +329,11 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
     SHERPA_ONNX_LOGE("%s", recognizer_config.ToString().c_str());
   }
 
+  if (!recognizer_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config");
+    return nullptr;
+  }
+
   SherpaOnnxOfflineRecognizer *recognizer = new SherpaOnnxOfflineRecognizer;
 
   recognizer->impl =
@@ -480,6 +490,11 @@ SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
     SHERPA_ONNX_LOGE("%s", vad_config.ToString().c_str());
   }
 
+  if (!vad_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config");
+    return nullptr;
+  }
+
   SherpaOnnxVoiceActivityDetector *p = new SherpaOnnxVoiceActivityDetector;
   p->impl = std::make_unique<sherpa_onnx::VoiceActivityDetector>(
       vad_config, buffer_size_in_seconds);
@@ -568,6 +583,11 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
 
   if (tts_config.model.debug) {
     SHERPA_ONNX_LOGE("%s\n", tts_config.ToString().c_str());
+  }
+
+  if (!tts_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config");
+    return nullptr;
   }
 
   SherpaOnnxOfflineTts *tts = new SherpaOnnxOfflineTts;

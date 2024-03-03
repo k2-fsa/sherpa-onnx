@@ -22,7 +22,7 @@ Module.onRuntimeInitialized = function() {
   console.log('Model files downloaded!');
 
   console.log('Initializing tts ......');
-  tts = initSherpaOnnxOfflineTts()
+  tts = createOfflineTts(Module)
   if (tts.numSpeakers > 1) {
     speakerIdLabel.innerHTML = `Speaker ID (0 - ${tts.numSpeakers - 1}):`;
   }

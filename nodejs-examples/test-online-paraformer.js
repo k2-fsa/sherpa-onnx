@@ -6,34 +6,58 @@ const wav = require('wav');
 
 const sherpa_onnx = require('sherpa-onnx');
 
-function createRecognizer() {
-  const featConfig = new sherpa_onnx.FeatureConfig();
-  featConfig.sampleRate = 16000;
-  featConfig.featureDim = 80;
+function createOnlineRecognizer() {
+  let onlineTransducerModelConfig = {
+    encoder: '',
+    decoder: '',
+    joiner: '',
+  };
 
-  const paraformer = new sherpa_onnx.OnlineParaformerModelConfig();
-  paraformer.encoder =
-      './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.onnx';
-  paraformer.decoder =
-      './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.onnx';
-  const tokens =
-      './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt';
+  let onlineParaformerModelConfig = {
+    encoder:
+        './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx',
+    decoder:
+        './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx',
+  };
 
-  const modelConfig = new sherpa_onnx.OnlineModelConfig();
-  modelConfig.paraformer = paraformer;
-  modelConfig.tokens = tokens;
-  modelConfig.modelType = 'paraformer';
+  let onlineZipformer2CtcModelConfig = {
+    model: '',
+  };
 
-  const recognizerConfig = new sherpa_onnx.OnlineRecognizerConfig();
-  recognizerConfig.featConfig = featConfig;
-  recognizerConfig.modelConfig = modelConfig;
-  recognizerConfig.decodingMethod = 'greedy_search';
+  let onlineModelConfig = {
+    transducer: onlineTransducerModelConfig,
+    paraformer: onlineParaformerModelConfig,
+    zipformer2Ctc: onlineZipformer2CtcModelConfig,
+    tokens: './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt',
+    numThreads: 1,
+    provider: 'cpu',
+    debug: 1,
+    modelType: 'paraformer',
+  };
 
-  const recognizer = new sherpa_onnx.OnlineRecognizer(recognizerConfig);
-  return recognizer;
+  let featureConfig = {
+    sampleRate: 16000,
+    featureDim: 80,
+  };
+
+  let recognizerConfig = {
+    featConfig: featureConfig,
+    modelConfig: onlineModelConfig,
+    decodingMethod: 'greedy_search',
+    maxActivePaths: 4,
+    enableEndpoint: 1,
+    rule1MinTrailingSilence: 2.4,
+    rule2MinTrailingSilence: 1.2,
+    rule3MinUtteranceLength: 20,
+    hotwordsFile: '',
+    hotwordsScore: 1.5,
+  };
+
+  return sherpa_onnx.createOnlineRecognizer(recognizerConfig);
 }
-recognizer = createRecognizer();
-stream = recognizer.createStream();
+
+const recognizer = createOnlineRecognizer();
+const stream = recognizer.createStream();
 
 const waveFilename =
     './sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/0.wav';
@@ -47,8 +71,8 @@ function decode(samples) {
   while (recognizer.isReady(stream)) {
     recognizer.decode(stream);
   }
-  const r = recognizer.getResult(stream);
-  console.log(r.text);
+  const text = recognizer.getResult(stream);
+  console.log(text);
 }
 
 reader.on('format', ({audioFormat, bitDepth, channels, sampleRate}) => {

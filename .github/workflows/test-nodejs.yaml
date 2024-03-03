@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest] #, windows-2019]
+        os: [ubuntu-latest] #, macos-latest] #, windows-2019]
         python-version: ["3.8"]
 
     steps:
@@ -32,49 +32,38 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-Release-ON
+      - name: Install emsdk
+        uses: mymindstorm/setup-emsdk@v14
 
-      - name: Configure CMake
+      - name: View emsdk version
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
-
-          mkdir build
-          cd build
-          cmake -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install ..
-          cmake --build . --target install --config Release
-
-          ls -lh install/lib
+          emcc -v
+          echo "--------------------"
+          emcc --check
 
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Copy files
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Display node version
         shell: bash
         run: |
-          os=${{ matrix.os }}
-          if [[ $os == 'ubuntu-latest' ]]; then
-            mkdir -p scripts/nodejs/lib/linux-x64
-            dst=scripts/nodejs/lib/linux-x64
-          elif [[ $os == 'macos-latest' ]]; then
-            mkdir -p scripts/nodejs/lib/osx-x64
-            dst=scripts/nodejs/lib/osx-x64
-          elif [[ $os == 'windows-2019' ]]; then
-            mkdir -p scripts/nodejs/lib/win-x64
-            dst=scripts/nodejs/lib/win-x64
-          fi
-          ls -lh build/install/lib/
+          node --version
 
-          rm -rf build/install/lib/pkgconfig
-
-          cp -v build/install/lib/* $dst/
+      - name: Build nodejs package
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          ./build-wasm-simd-nodejs.sh
+          cp -v build-wasm-simd-nodejs/install/bin/wasm/nodejs/*.js ./scripts/nodejs/
+          cp -v build-wasm-simd-nodejs/install/bin/wasm/nodejs/*.wasm ./scripts/nodejs/
 
       - name: replace files
         shell: bash
@@ -88,17 +77,6 @@ jobs:
           done
           git diff
           cp *.js ../scripts/nodejs
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 13
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Display node version
-        shell: bash
-        run: |
-          node --version
-          npm --version
 
       - name: Run tests
         shell: bash
