@@ -32,9 +32,12 @@ function createOfflineTts() {
 const tts = createOfflineTts();
 const speakerId = 0;
 const speed = 1.0;
-const audio = tts.generate(
-    '“Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.”',
-    speakerId, speed);
+const audio = tts.generate({
+  text:
+      '“Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.”',
+  sid: speakerId,
+  speed: speed
+});
 
 tts.save('./test-en.wav', audio);
 console.log('Saved to test-en.wav successfully.');

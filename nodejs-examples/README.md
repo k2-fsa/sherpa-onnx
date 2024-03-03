@@ -51,13 +51,7 @@ node ./test-offline-tts-zh.js
 # Speech-to-text
 
 In the following, we demonstrate how to decode files and how to perform
-speech recognition with a microphone with `nodejs`. We need to install two additional
-npm packages:
-
-
-```bash
-npm install wav naudiodon2
-```
+speech recognition with a microphone with `nodejs`.
 
 ## ./test-offline-nemo-ctc.js
 
