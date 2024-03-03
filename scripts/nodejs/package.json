@@ -1,7 +1,7 @@
 {
-  "name": "sherpa-onnx2",
-  "version": "1.8.10",
-  "description": "Real-time speech recognition with Next-gen Kaldi",
+  "name": "sherpa-onnx",
+  "version": "SHERPA_ONNX_VERSION",
+  "description": "Speech-to-text and text-to-speech using Next-gen Kaldi without internet connection",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -11,15 +11,30 @@
     "url": "git+https://github.com/k2-fsa/sherpa-onnx.git"
   },
   "keywords": [
-    "speech-to-text",
-    "text-to-speech",
+    "speech to text",
+    "text to speech",
+    "transcription",
     "real-time speech recognition",
-    "without internet connect",
+    "without internet connection",
     "embedded systems",
     "open source",
     "zipformer",
     "asr",
-    "speech"
+    "tts",
+    "stt",
+    "c++",
+    "onnxruntime",
+    "onnx",
+    "ai",
+    "next-gen kaldi",
+    "offline",
+    "privacy",
+    "open source",
+    "streaming speech recognition",
+    "speech",
+    "recognition",
+    "WebAssembly",
+    "wasm"
   ],
   "author": "The next-gen Kaldi team",
   "license": "Apache-2.0",
@@ -28,10 +43,5 @@
   },
   "homepage": "https://github.com/k2-fsa/sherpa-onnx#readme",
   "dependencies": {
-    "ffi-napi": "^4.0.3",
-    "npm": "^6.14.18",
-    "ref-array-napi": "^1.2.2",
-    "ref-napi": "^3.0.3",
-    "ref-struct-napi": "^1.1.1"
   }
 }

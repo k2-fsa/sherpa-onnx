@@ -171,7 +171,7 @@ class OfflineTts {
   }
 }
 
-function initSherpaOnnxOfflineTts(Module, myConfig) {
+function createOfflineTts(Module, myConfig) {
   const offlineTtsVitsModelConfig = {
     model: './model.onnx',
     lexicon: '',
@@ -203,6 +203,6 @@ function initSherpaOnnxOfflineTts(Module, myConfig) {
 if (typeof process == 'object' && typeof process.versions == 'object' &&
     typeof process.versions.node == 'string') {
   module.exports = {
-    initSherpaOnnxOfflineTts,
+    createOfflineTts,
   };
 }
