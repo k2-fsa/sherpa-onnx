@@ -2,38 +2,18 @@
 
 This directory contains nodejs examples for [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx).
 
-Before you continue, please first install the npm package `sherpa-onnx` by
+Before you continue, please first run
 
 ```bash
-npm install sherpa-onnx
+cd ./nodejs-examples
+
+npm i
 ```
 
 In the following, we describe how to use [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)
 for text-to-speech and speech-to-text.
 
-**Caution**: If you get the following error:
-```
-/Users/fangjun/open-source/sherpa-onnx/nodejs-examples/node_modules/ffi-napi/lib/dynamic_library.js:67
-    if (match = err.match(/^(([^ \t()])+\.so([^ \t:()])*):([ \t])*/)) {
-                    ^
-
-TypeError: Cannot read properties of null (reading 'match')
-    at new DynamicLibrary (/Users/fangjun/open-source/sherpa-onnx/nodejs-examples/node_modules/ffi-napi/lib/dynamic_library.js:67:21)
-    at Object.Library (/Users/fangjun/open-source/sherpa-onnx/nodejs-examples/node_modules/ffi-napi/lib/library.js:47:10)
-    at Object.<anonymous> (/Users/fangjun/open-source/sherpa-onnx/nodejs-examples/node_modules/sherpa-onnx3/index.js:268:28)
-    at Module._compile (node:internal/modules/cjs/loader:1376:14)
-    at Module._extensions..js (node:internal/modules/cjs/loader:1435:10)
-    at Module.load (node:internal/modules/cjs/loader:1207:32)
-    at Module._load (node:internal/modules/cjs/loader:1023:12)
-    at Module.require (node:internal/modules/cjs/loader:1235:19)
-    at require (node:internal/modules/helpers:176:18)
-    at Object.<anonymous> (/Users/fangjun/open-source/sherpa-onnx/nodejs-examples/test-offline-tts-zh.js:3:21)
-```
-
-Please downgrade your node to version v13.14.0. See also
-https://github.com/node-ffi-napi/node-ffi-napi/issues/244
-and
-https://github.com/node-ffi-napi/node-ffi-napi/issues/97 .
+Note: You need `Node >= 18`.
 
 # Text-to-speech
 
