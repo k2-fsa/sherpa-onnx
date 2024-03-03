@@ -3,9 +3,8 @@ if(NOT $ENV{SHERPA_ONNX_IS_USING_BUILD_WASM_SH})
 endif()
 
 set(exported_functions
-  MyPrintOfflineTtsConfig
-  MyPrint
   #tts
+  PrintOfflineTtsConfig
   SherpaOnnxCreateOfflineTts
   SherpaOnnxDestroyOfflineTts
   SherpaOnnxDestroyOfflineTtsGeneratedAudio
@@ -28,7 +27,18 @@ set(exported_functions
   IsOnlineStreamReady
   Reset
   # non-streaming ASR
+  PrintOfflineRecognizerConfig
+  CreateOfflineRecognizer
+  DestroyOfflineRecognizer
+  CreateOfflineStream
+  DestroyOfflineStream
+  AcceptWaveformOffline
+  DecodeOfflineStream
+  DecodeMultipleOfflineStreams
+  GetOfflineStreamResult
+  DestroyOfflineRecognizerResult
 )
+
 
 set(mangled_exported_functions)
 foreach(x IN LISTS exported_functions)

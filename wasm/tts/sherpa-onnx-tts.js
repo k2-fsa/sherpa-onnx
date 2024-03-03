@@ -13,17 +13,17 @@ function freeConfig(config, Module) {
 
 // The user should free the returned pointers
 function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
-  let modelLen = Module.lengthBytesUTF8(config.model) + 1;
-  let lexiconLen = Module.lengthBytesUTF8(config.lexicon) + 1;
-  let tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
-  let dataDirLen = Module.lengthBytesUTF8(config.dataDir) + 1;
+  const modelLen = Module.lengthBytesUTF8(config.model) + 1;
+  const lexiconLen = Module.lengthBytesUTF8(config.lexicon) + 1;
+  const tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
+  const dataDirLen = Module.lengthBytesUTF8(config.dataDir) + 1;
 
-  let n = modelLen + lexiconLen + tokensLen + dataDirLen;
+  const n = modelLen + lexiconLen + tokensLen + dataDirLen;
 
-  let buffer = Module._malloc(n);
+  const buffer = Module._malloc(n);
 
-  let len = 7 * 4;
-  let ptr = Module._malloc(len);
+  const len = 7 * 4;
+  const ptr = Module._malloc(len);
 
   let offset = 0;
   Module.stringToUTF8(config.model, buffer + offset, modelLen);
@@ -61,11 +61,11 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
 }
 
 function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
-  let vitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig(
+  const vitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig(
       config.offlineTtsVitsModelConfig, Module);
 
-  let len = vitsModelConfig.len + 3 * 4;
-  let ptr = Module._malloc(len);
+  const len = vitsModelConfig.len + 3 * 4;
+  const ptr = Module._malloc(len);
 
   let offset = 0;
   Module._CopyHeap(vitsModelConfig.ptr, vitsModelConfig.len, ptr + offset);
@@ -77,8 +77,8 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   Module.setValue(ptr + offset, config.debug, 'i32');
   offset += 4;
 
-  let providerLen = Module.lengthBytesUTF8(config.provider) + 1;
-  let buffer = Module._malloc(providerLen);
+  const providerLen = Module.lengthBytesUTF8(config.provider) + 1;
+  const buffer = Module._malloc(providerLen);
   Module.stringToUTF8(config.provider, buffer, providerLen);
   Module.setValue(ptr + offset, buffer, 'i8*');
 
@@ -88,17 +88,17 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
 }
 
 function initSherpaOnnxOfflineTtsConfig(config, Module) {
-  let modelConfig =
+  const modelConfig =
       initSherpaOnnxOfflineTtsModelConfig(config.offlineTtsModelConfig, Module);
-  let len = modelConfig.len + 2 * 4;
-  let ptr = Module._malloc(len);
+  const len = modelConfig.len + 2 * 4;
+  const ptr = Module._malloc(len);
 
   let offset = 0;
   Module._CopyHeap(modelConfig.ptr, modelConfig.len, ptr + offset);
   offset += modelConfig.len;
 
-  let ruleFstsLen = Module.lengthBytesUTF8(config.ruleFsts) + 1;
-  let buffer = Module._malloc(ruleFstsLen);
+  const ruleFstsLen = Module.lengthBytesUTF8(config.ruleFsts) + 1;
+  const buffer = Module._malloc(ruleFstsLen);
   Module.stringToUTF8(config.ruleFsts, buffer, ruleFstsLen);
   Module.setValue(ptr + offset, buffer, 'i8*');
   offset += 4;
@@ -113,8 +113,8 @@ function initSherpaOnnxOfflineTtsConfig(config, Module) {
 class OfflineTts {
   constructor(configObj, Module) {
     console.log(configObj)
-    let config = initSherpaOnnxOfflineTtsConfig(configObj, Module)
-    let handle = Module._SherpaOnnxCreateOfflineTts(config.ptr);
+    const config = initSherpaOnnxOfflineTtsConfig(configObj, Module)
+    const handle = Module._SherpaOnnxCreateOfflineTts(config.ptr);
 
     freeConfig(config, Module);
 
@@ -135,18 +135,18 @@ class OfflineTts {
   //   speed: 1.0
   // }
   generate(config) {
-    let textLen = this.Module.lengthBytesUTF8(config.text) + 1;
-    let textPtr = this.Module._malloc(textLen);
+    const textLen = this.Module.lengthBytesUTF8(config.text) + 1;
+    const textPtr = this.Module._malloc(textLen);
     this.Module.stringToUTF8(config.text, textPtr, textLen);
 
-    let h = this.Module._SherpaOnnxOfflineTtsGenerate(
+    const h = this.Module._SherpaOnnxOfflineTtsGenerate(
         this.handle, textPtr, config.sid, config.speed);
 
-    let numSamples = this.Module.HEAP32[h / 4 + 1];
-    let sampleRate = this.Module.HEAP32[h / 4 + 2];
+    const numSamples = this.Module.HEAP32[h / 4 + 1];
+    const sampleRate = this.Module.HEAP32[h / 4 + 2];
 
-    let samplesPtr = this.Module.HEAP32[h / 4] / 4;
-    let samples = new Float32Array(numSamples);
+    const samplesPtr = this.Module.HEAP32[h / 4] / 4;
+    const samples = new Float32Array(numSamples);
     for (let i = 0; i < numSamples; i++) {
       samples[i] = this.Module.HEAPF32[samplesPtr + i];
     }
@@ -155,15 +155,15 @@ class OfflineTts {
     return {samples: samples, sampleRate: sampleRate};
   }
   save(filename, audio) {
-    let samples = audio.samples;
-    let sampleRate = audio.sampleRate;
-    let ptr = this.Module._malloc(samples.length * 4);
+    const samples = audio.samples;
+    const sampleRate = audio.sampleRate;
+    const ptr = this.Module._malloc(samples.length * 4);
     for (let i = 0; i < samples.length; i++) {
       this.Module.HEAPF32[ptr / 4 + i] = samples[i];
     }
 
-    let filenameLen = this.Module.lengthBytesUTF8(filename) + 1;
-    let buffer = this.Module._malloc(filenameLen);
+    const filenameLen = this.Module.lengthBytesUTF8(filename) + 1;
+    const buffer = this.Module._malloc(filenameLen);
     this.Module.stringToUTF8(filename, buffer, filenameLen);
     this.Module._SherpaOnnxWriteWave(ptr, samples.length, sampleRate, buffer);
     this.Module._free(buffer);
@@ -172,7 +172,7 @@ class OfflineTts {
 }
 
 function initSherpaOnnxOfflineTts(Module, myConfig) {
-  let offlineTtsVitsModelConfig = {
+  const offlineTtsVitsModelConfig = {
     model: './model.onnx',
     lexicon: '',
     tokens: './tokens.txt',
@@ -181,7 +181,7 @@ function initSherpaOnnxOfflineTts(Module, myConfig) {
     noiseScaleW: 0.8,
     lengthScale: 1.0,
   };
-  let offlineTtsModelConfig = {
+  const offlineTtsModelConfig = {
     offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
     numThreads: 1,
     debug: 1,
