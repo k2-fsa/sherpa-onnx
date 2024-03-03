@@ -1,4 +1,4 @@
-// Copyright (c)  2023  Xiaomi Corporation (authors: Fangjun Kuang)
+// Copyright (c)  2023-2024  Xiaomi Corporation (authors: Fangjun Kuang)
 //
 const fs = require('fs');
 const {Readable} = require('stream');
@@ -33,7 +33,7 @@ function createOfflineRecognizer() {
     },
     tokens: './sherpa-onnx-nemo-ctc-en-conformer-small/tokens.txt',
     numThreads: 1,
-    debug: 1,
+    debug: 0,
     provider: 'cpu',
     modelType: 'nemo_ctc',
   };
@@ -53,10 +53,10 @@ function createOfflineRecognizer() {
     hotwordsScore: 1.5,
   };
 
-  return new sherpa_onnx_asr.OfflineRecognizer(config, wasmModule);
+  return sherpa_onnx.createOfflineRecognizer(config);
 }
 
-const recognizer = createRecognizer();
+const recognizer = createOfflineRecognizer();
 const stream = recognizer.createStream();
 
 const waveFilename =
@@ -98,8 +98,8 @@ fs.createReadStream(waveFilename, {highWaterMark: 4096})
 
       stream.acceptWaveform(recognizer.config.featConfig.sampleRate, flattened);
       recognizer.decode(stream);
-      const r = recognizer.getResult(stream);
-      console.log(r.text);
+      const text = recognizer.getResult(stream);
+      console.log(text);
 
       stream.free();
       recognizer.free();

@@ -10,7 +10,7 @@ function createOnlineRecognizer(config) {
 }
 
 function createOfflineRecognizer(config) {
-  return sherpa_onnx_asr.createOfflineRecognizer(wasmModule, config);
+  return new sherpa_onnx_asr.OfflineRecognizer(config, wasmModule);
 }
 
 function createOfflineTts(config) {
