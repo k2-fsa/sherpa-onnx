@@ -16,7 +16,7 @@ endif()
 
 # set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-riscv64-1.18.0.zip")
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.14.1/onnxruntime-linux-riscv64-glibc2_17-Release-1.14.1.zip")
-set(onnxruntime_URL  "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.14.1/onnxruntime-linux-riscv64-glibc2_17-Release-1.14.1.zip")
+set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.14.1/onnxruntime-linux-riscv64-glibc2_17-Release-1.14.1.zip")
 set(onnxruntime_HASH "SHA256=c2cbc5af081ff82f46640befd85433811486daaf28e702163c6e4e75020fde81")
 
 # If you don't have access to the Internet,
