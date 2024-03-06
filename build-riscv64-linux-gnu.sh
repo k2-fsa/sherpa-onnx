@@ -43,8 +43,8 @@ export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
 export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
 
 if [[ x"$BUILD_SHARED_LIBS" == x"" ]]; then
-  # By default, use static link
-  BUILD_SHARED_LIBS=OFF
+  # By default, use shared libraries
+  BUILD_SHARED_LIBS=ON
 fi
 
 cmake \
