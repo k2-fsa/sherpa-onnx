@@ -17,13 +17,14 @@ concurrency:
 
 jobs:
   build_wheels_aarch64:
-    name: ${{ matrix.python-version }}
+    name: ${{ matrix.manylinux }} ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
+        manylinux: [manylinux2014, manylinux_2_28]
 
     steps:
       - uses: actions/checkout@v4
@@ -51,7 +52,7 @@ jobs:
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ARCHS_LINUX: aarch64
-          CIBW_MANYLINUX_AARCH64_IMAGE: quay.io/pypa/manylinux_2_28_aarch64
+          CIBW_MANYLINUX_AARCH64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_aarch64
           # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.
           # manylinux_2_24 is no longer supported
 
@@ -63,7 +64,7 @@ jobs:
           ls -lh ./wheelhouse/*.whl
 
       - name: Publish to huggingface
-        if: matrix.python-version == 'cp38'
+        if: matrix.python-version == 'cp38' && matrix.manylinux == 'manylinux_2_28'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -93,7 +94,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel-${{ matrix.python-version }}
+          name: wheel-${{ matrix.python-version }}-${{ matrix.manylinux }}
           path: ./wheelhouse/*.whl
 
       - name: Publish wheels to PyPI
