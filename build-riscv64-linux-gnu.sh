@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -ex
 
 if ! command -v riscv64-unknown-linux-gnu-g++  &> /dev/null; then
   echo "Please install the toolchain first."
