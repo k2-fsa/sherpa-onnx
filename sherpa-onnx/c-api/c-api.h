@@ -494,7 +494,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxKeywordResult {
 
   /// timestamps.size() == tokens.size()
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
-  float* timestamps;
+  const float* timestamps;
 
   /// Starting time of this segment.
   /// When an endpoint is detected, it will change
@@ -511,7 +511,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxKeywordResult {
    *   }
    */
   const char* json;
-}SherpaOnnxKeywordResult ;
+} SherpaOnnxKeywordResult;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxKeywordSpotterConfig {
   SherpaOnnxFeatureConfig feat_config;
@@ -521,7 +521,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxKeywordSpotterConfig {
   float keywords_score;
   float keywords_threshold;
   const char* keywords_file;
-}SherpaOnnxKeywordSpotterConfig ;
+} SherpaOnnxKeywordSpotterConfig ;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxKeywordSpotter
     SherpaOnnxKeywordSpotter;

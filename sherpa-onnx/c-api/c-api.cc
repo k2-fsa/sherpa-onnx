@@ -473,6 +473,11 @@ SherpaOnnxKeywordSpotter* CreateKeywordSpotter(
     SHERPA_ONNX_LOGE("%s\n", spotter_config.ToString().c_str());
   }
 
+  if (!spotter_config.Validate()) { 
+    SHERPA_ONNX_LOGE("Errors in config!"); 
+    return nullptr; 
+  }
+
   SherpaOnnxKeywordSpotter* spotter = new SherpaOnnxKeywordSpotter;
 
   spotter->impl =
@@ -506,8 +511,8 @@ void DecodeMultipleKeywordStreams(
     SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream **streams,
     int32_t n) {
   std::vector<sherpa_onnx::OnlineStream*> ss(n);
-  for(int32_t i=0; i!=n; ++i) {
-    ss[i] = streams[i]->impl.get();
+  for (int32_t i = 0; i != n; ++i) {
+      ss[i] = streams[i]->impl.get();
   }
   spotter->impl->DecodeStreams(ss.data(), n);
 }
