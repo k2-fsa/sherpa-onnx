@@ -173,7 +173,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
           new_hyp.num_trailing_blanks = 0;
           if (ss != nullptr && ss[b]->GetContextGraph() != nullptr) {
             auto context_res = ss[b]->GetContextGraph()->ForwardOneStep(
-                context_state, new_token);
+                context_state, new_token, false /*strict mode*/);
             context_score = std::get<0>(context_res);
             new_hyp.context_state = std::get<1>(context_res);
           }
