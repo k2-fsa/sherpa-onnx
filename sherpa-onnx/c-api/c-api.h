@@ -494,7 +494,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxKeywordResult {
 
   /// timestamps.size() == tokens.size()
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
-  const float* timestamps;
+  float* timestamps;
 
   /// Starting time of this segment.
   /// When an endpoint is detected, it will change

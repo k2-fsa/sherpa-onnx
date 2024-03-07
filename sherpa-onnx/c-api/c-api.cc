@@ -519,7 +519,7 @@ void DecodeMultipleKeywordStreams(
 
 const SherpaOnnxKeywordResult *GetKeywordResult(
     SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream *stream) {
-  sherpa_onnx::KeywordResult result =
+  const sherpa_onnx::KeywordResult& result =
       spotter->impl->GetResult(stream->impl.get());
   const auto &keyword = result.keyword;
 
@@ -565,7 +565,7 @@ const SherpaOnnxKeywordResult *GetKeywordResult(
     r->tokens_arr = tokens_temp;
 
     if (!result.timestamps.empty()) {
-      r->timestamps = new float[r->count];
+      r->timestamps = new float[result.timestamps.size()];
       std::copy(result.timestamps.begin(), result.timestamps.end(),
                 r->timestamps);
     } else {
