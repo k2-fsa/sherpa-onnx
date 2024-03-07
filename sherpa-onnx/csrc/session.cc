@@ -9,6 +9,7 @@
 #include <utility>
 #include <vector>
 
+#include "onnxruntime_c_api.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/provider.h"
 #if defined(__APPLE__)
@@ -113,6 +114,37 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
 #else
       SHERPA_ONNX_LOGE("NNAPI is for Android only. Fallback to cpu");
 #endif
+      break;
+    }
+
+    case Provider::kShl: {
+#if defined(SHERPA_ONNX_ENABLE_SHL)
+      if (std::find(available_providers.begin(), available_providers.end(),
+                    "ShlExecutionProvider") != available_providers.end()) {
+        // sess_opts.AppendExecutionProvider_SHL({});
+
+        const auto &api = Ort::GetApi();
+        OrtStatus *status =
+            api.OrtSessionOptionsAppendExecutionProvider_Shl(sess_opts, "");
+
+        if (status) {
+          const char *msg = api.GetErrorMessage(status);
+          SHERPA_ONNX_LOGE(
+              "Failed to enable Shl: %s. Available providers: %s. Fallback "
+              "to "
+              "cpu",
+              msg, os.str().c_str());
+          api.ReleaseStatus(status);
+        } else {
+          SHERPA_ONNX_LOGE("Use Shl");
+        }
+      } else
+#endif
+      {
+        SHERPA_ONNX_LOGE("Available providers: %s. Fallback to cpu!",
+                         os.str().c_str());
+      }
+
       break;
     }
   }
