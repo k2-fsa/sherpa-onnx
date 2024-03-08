@@ -75,6 +75,9 @@ data class OfflineParaformerModelConfig(
 data class OfflineWhisperModelConfig(
     var encoder: String = "",
     var decoder: String = "",
+    var language: String = "en", // Used with multilingual model
+    var task: String = "transcribe", // transcribe or translate
+    var tailPaddings: Int = 1000, // Padding added at the end of the samples
 )
 
 data class OfflineModelConfig(
