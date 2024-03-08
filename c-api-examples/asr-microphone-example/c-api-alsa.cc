@@ -1,14 +1,11 @@
-// c-api-examples/decode-file-c-api.c
-//
-// Copyright (c)  2023  Xiaomi Corporation
-
-// This file shows how to use sherpa-onnx C API
-// to decode a file.
+// c-api-examples/asr-microphone-example/c-api-alsa.cc
+// Copyright (c)  2022-2024  Xiaomi Corporation
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+#include "c-api-examples/asr-microphone-example/alsa.h"
 #include "cargs.h"
 #include "sherpa-onnx/c-api/c-api.h"
 
@@ -69,27 +66,35 @@ static struct cag_option options[] = {
 };
 
 const char *kUsage =
-    "\n"
-    "Usage:\n "
-    "  ./bin/decode-file-c-api \\\n"
-    "    --tokens=/path/to/tokens.txt \\\n"
-    "    --encoder=/path/to/encoder.onnx \\\n"
-    "    --decoder=/path/to/decoder.onnx \\\n"
-    "    --joiner=/path/to/joiner.onnx \\\n"
-    "    --provider=cpu \\\n"
-    "    /path/to/foo.wav\n"
-    "\n\n"
-    "Default num_threads is 1.\n"
-    "Valid decoding_method: greedy_search (default), modified_beam_search\n\n"
-    "Valid provider: cpu (default), cuda, coreml\n\n"
-    "Please refer to \n"
-    "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/"
-    "index.html\n"
-    "for a list of pre-trained models to download.\n"
-    "\n"
-    "Note that this file supports only streaming transducer models.\n";
+    R"(
+Usage:
+  ./bin/c-api-alsa \
+    --tokens=/path/to/tokens.txt \
+    --encoder=/path/to/encoder.onnx \
+    --decoder=/path/to/decoder.onnx \
+    --joiner=/path/to/decoder.onnx \
+    device_name
 
-int32_t main(int32_t argc, char *argv[]) {
+The device name specifies which microphone to use in case there are several
+on your system. You can use
+
+  arecord -l
+
+to find all available microphones on your computer. For instance, if it outputs
+
+**** List of CAPTURE Hardware Devices ****
+card 3: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+and if you want to select card 3 and the device 0 on that card, please use:
+
+  plughw:3,0
+
+as the device_name.
+)";
+
+int main() {
   if (argc < 6) {
     fprintf(stderr, "%s\n", kUsage);
     exit(0);
@@ -168,71 +173,10 @@ int32_t main(int32_t argc, char *argv[]) {
   SherpaOnnxDisplay *display = CreateDisplay(50);
   int32_t segment_id = 0;
 
-  const char *wav_filename = argv[context.index];
-  FILE *fp = fopen(wav_filename, "rb");
-  if (!fp) {
-    fprintf(stderr, "Failed to open %s\n", wav_filename);
-    return -1;
-  }
+  const char *device_name = argv[context.index];
+  fprintf(stderr, "device_name: %s\n", device_name);
 
-  // Assume the wave header occupies 44 bytes.
-  fseek(fp, 44, SEEK_SET);
-
-  // simulate streaming
-
-#define N 3200  // 0.2 s. Sample rate is fixed to 16 kHz
-
-  int16_t buffer[N];
-  float samples[N];
-
-  while (!feof(fp)) {
-    size_t n = fread((void *)buffer, sizeof(int16_t), N, fp);
-    if (n > 0) {
-      for (size_t i = 0; i != n; ++i) {
-        samples[i] = buffer[i] / 32768.;
-      }
-      AcceptWaveform(stream, 16000, samples, n);
-      while (IsOnlineStreamReady(recognizer, stream)) {
-        DecodeOnlineStream(recognizer, stream);
-      }
-
-      const SherpaOnnxOnlineRecognizerResult *r =
-          GetOnlineStreamResult(recognizer, stream);
-
-      if (strlen(r->text)) {
-        SherpaOnnxPrint(display, segment_id, r->text);
-      }
-
-      if (IsEndpoint(recognizer, stream)) {
-        if (strlen(r->text)) {
-          ++segment_id;
-        }
-        Reset(recognizer, stream);
-      }
-
-      DestroyOnlineRecognizerResult(r);
-    }
-  }
-  fclose(fp);
-
-  // add some tail padding
-  float tail_paddings[4800] = {0};  // 0.3 seconds at 16 kHz sample rate
-  AcceptWaveform(stream, 16000, tail_paddings, 4800);
-
-  InputFinished(stream);
-  while (IsOnlineStreamReady(recognizer, stream)) {
-    DecodeOnlineStream(recognizer, stream);
-  }
-
-  const SherpaOnnxOnlineRecognizerResult *r =
-      GetOnlineStreamResult(recognizer, stream);
-
-  if (strlen(r->text)) {
-    SherpaOnnxPrint(display, segment_id, r->text);
-  }
-
-  DestroyOnlineRecognizerResult(r);
-
+  // free allocated resources
   DestroyDisplay(display);
   DestroyOnlineStream(stream);
   DestroyOnlineRecognizer(recognizer);
