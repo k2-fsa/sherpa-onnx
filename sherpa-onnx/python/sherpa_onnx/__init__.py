@@ -1,4 +1,5 @@
 from _sherpa_onnx import (
+    Alsa,
     CircularBuffer,
     Display,
     OfflineStream,

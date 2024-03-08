@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/python/csrc/sherpa-onnx.h"
 
+#include "sherpa-onnx/python/csrc/alsa.h"
 #include "sherpa-onnx/python/csrc/circular-buffer.h"
 #include "sherpa-onnx/python/csrc/display.h"
 #include "sherpa-onnx/python/csrc/endpoint.h"
@@ -54,6 +55,8 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindOfflineTts(&m);
   PybindSpeakerEmbeddingExtractor(&m);
   PybindSpeakerEmbeddingManager(&m);
+
+  PybindAlsa(&m);
 }
 
 }  // namespace sherpa_onnx
