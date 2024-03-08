@@ -210,7 +210,8 @@ function createKws(Module, myConfig) {
     numTrailingBlanks: 1,
     keywordsScore: 1.0,
     keywordsThreshold: 0.25,
-    keywords: "x iǎo s ài @小赛"
+    keywords: "x iǎo ài t óng x ué @小爱同学\n" +
+        "j ūn g ē n iú b ī @军哥牛逼"
   };
 
   if (myConfig) {
