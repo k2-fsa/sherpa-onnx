@@ -629,7 +629,8 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(whisper_config_cls, "tailPaddings", "I");
-  ans.model_config.whisper.tail_paddings = env->GetIntField(whisper_config, fid);
+  ans.model_config.whisper.tail_paddings = env->GetIntField(whisper_config,
+                                                            fid);
 
   return ans;
 }
