@@ -1,6 +1,6 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
-pybind11_add_module(_sherpa_onnx
+set(srcs
   circular-buffer.cc
   display.cc
   endpoint.cc
@@ -37,6 +37,13 @@ pybind11_add_module(_sherpa_onnx
   vad-model.cc
   voice-activity-detector.cc
 )
+if(SHERPA_ONNX_HAS_ALSA)
+  list(APPEND srcs ${CMAKE_SOURCE_DIR}/sherpa-onnx/csrc/alsa.cc alsa.cc)
+else()
+  list(APPEND srcs faked-alsa.cc)
+endif()
+
+pybind11_add_module(_sherpa_onnx ${srcs})
 
 if(APPLE)
   execute_process(
@@ -53,6 +60,14 @@ if(NOT WIN32)
 endif()
 
 target_link_libraries(_sherpa_onnx PRIVATE sherpa-onnx-core)
+
+if(SHERPA_ONNX_HAS_ALSA)
+  if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})
+    target_link_libraries(_sherpa_onnx PRIVATE -L$ENV{SHERPA_ONNX_ALSA_LIB_DIR} -lasound)
+  else()
+    target_link_libraries(_sherpa_onnx PRIVATE asound)
+  endif()
+endif()
 
 install(TARGETS _sherpa_onnx
   DESTINATION ../

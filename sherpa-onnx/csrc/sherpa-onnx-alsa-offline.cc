@@ -192,8 +192,8 @@ as the device_name.
       }
     }
 
-    using namespace std::chrono_literals;
-    std::this_thread::sleep_for(20ms);  // sleep for 20ms
+    using namespace std::chrono_literals;  // NOLINT
+    std::this_thread::sleep_for(20ms);     // sleep for 20ms
   }
   t.join();
   t2.join();

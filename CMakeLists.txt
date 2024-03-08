@@ -146,6 +146,7 @@ include(CheckIncludeFileCXX)
 if(UNIX AND NOT APPLE AND NOT SHERPA_ONNX_ENABLE_WASM AND NOT CMAKE_SYSTEM_NAME STREQUAL Android)
   check_include_file_cxx(alsa/asoundlib.h SHERPA_ONNX_HAS_ALSA)
   if(SHERPA_ONNX_HAS_ALSA)
+    message(STATUS "With Alsa")
     add_definitions(-DSHERPA_ONNX_ENABLE_ALSA=1)
   else()
     message(WARNING "\
