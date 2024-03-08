@@ -188,15 +188,15 @@ int32_t main(int32_t argc, char *argv[]) {
   SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&config);
   SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
 
-
-
   SherpaOnnxDisplay *display = CreateDisplay(50);
   int32_t segment_id = 0;
 
   const char *device_name = argv[context.index];
   sherpa_onnx::Alsa alsa(device_name);
   fprintf(stderr, "Use recording device: %s\n", device_name);
-  fprintf(stderr, "Please \033[32m\033[1mspeak\033[0m! Press \033[31m\033[1mCtrl + C\033[0m to exit\n");
+  fprintf(stderr,
+          "Please \033[32m\033[1mspeak\033[0m! Press \033[31m\033[1mCtrl + "
+          "C\033[0m to exit\n");
 
   int32_t expected_sample_rate = 16000;
 
@@ -214,7 +214,8 @@ int32_t main(int32_t argc, char *argv[]) {
 
   while (!stop) {
     const std::vector<float> &samples = alsa.Read(chunk);
-    AcceptWaveform(stream, expected_sample_rate, samples.data(), samples.size());
+    AcceptWaveform(stream, expected_sample_rate, samples.data(),
+                   samples.size());
     while (IsOnlineStreamReady(recognizer, stream)) {
       DecodeOnlineStream(recognizer, stream);
     }
