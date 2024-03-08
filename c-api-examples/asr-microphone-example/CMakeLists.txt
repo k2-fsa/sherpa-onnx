@@ -1,5 +1,5 @@
 
-add_executable(c-api-alsa c-api-alsa.c alsa.cc)
+add_executable(c-api-alsa c-api-alsa.cc alsa.cc)
 target_link_libraries(c-api-alsa sherpa-onnx-c-api cargs)
 
 if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})

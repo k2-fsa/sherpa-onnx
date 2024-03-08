@@ -1,9 +1,15 @@
 // c-api-examples/asr-microphone-example/c-api-alsa.cc
 // Copyright (c)  2022-2024  Xiaomi Corporation
 
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <algorithm>
+#include <cctype>  // std::tolower
+#include <cstdint>
+#include <string>
 
 #include "c-api-examples/asr-microphone-example/alsa.h"
 
@@ -97,11 +103,20 @@ and if you want to select card 3 and the device 0 on that card, please use:
 as the device_name.
 )";
 
-int main() {
+bool stop = false;
+
+static void Handler(int sig) {
+  stop = true;
+  fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
+}
+
+int32_t main(int32_t argc, char *argv[]) {
   if (argc < 6) {
     fprintf(stderr, "%s\n", kUsage);
     exit(0);
   }
+
+  signal(SIGINT, Handler);
 
   SherpaOnnxOnlineRecognizerConfig config;
   memset(&config, 0, sizeof(config));
@@ -173,11 +188,60 @@ int main() {
   SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&config);
   SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
 
+
+
   SherpaOnnxDisplay *display = CreateDisplay(50);
   int32_t segment_id = 0;
 
   const char *device_name = argv[context.index];
-  fprintf(stderr, "device_name: %s\n", device_name);
+  sherpa_onnx::Alsa alsa(device_name);
+  fprintf(stderr, "Use recording device: %s\n", device_name);
+  fprintf(stderr, "Please \033[32m\033[1mspeak\033[0m! Press \033[31m\033[1mCtrl + C\033[0m to exit\n");
+
+  int32_t expected_sample_rate = 16000;
+
+  if (alsa.GetExpectedSampleRate() != expected_sample_rate) {
+    fprintf(stderr, "sample rate: %d != %d\n", alsa.GetExpectedSampleRate(),
+            expected_sample_rate);
+    exit(-1);
+  }
+
+  int32_t chunk = 0.1 * alsa.GetActualSampleRate();
+
+  std::string last_text;
+
+  int32_t segment_index = 0;
+
+  while (!stop) {
+    const std::vector<float> &samples = alsa.Read(chunk);
+    AcceptWaveform(stream, expected_sample_rate, samples.data(), samples.size());
+    while (IsOnlineStreamReady(recognizer, stream)) {
+      DecodeOnlineStream(recognizer, stream);
+    }
+
+    const SherpaOnnxOnlineRecognizerResult *r =
+        GetOnlineStreamResult(recognizer, stream);
+
+    std::string text = r->text;
+    DestroyOnlineRecognizerResult(r);
+
+    if (!text.empty() && last_text != text) {
+      last_text = text;
+
+      std::transform(text.begin(), text.end(), text.begin(),
+                     [](auto c) { return std::tolower(c); });
+
+      SherpaOnnxPrint(display, segment_index, text.c_str());
+      fflush(stderr);
+    }
+
+    if (IsEndpoint(recognizer, stream)) {
+      if (!text.empty()) {
+        ++segment_index;
+      }
+      Reset(recognizer, stream);
+    }
+  }
 
   // free allocated resources
   DestroyDisplay(display);
