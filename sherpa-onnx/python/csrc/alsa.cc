@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/alsa.h"
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/alsa.h"
 
 namespace sherpa_onnx {

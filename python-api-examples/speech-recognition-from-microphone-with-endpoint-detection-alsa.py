@@ -3,7 +3,8 @@
 # Real-time speech recognition from a microphone with sherpa-onnx Python API
 # with endpoint detection.
 #
-# Note: This script uses ALSA and works only on Linux systems.
+# Note: This script uses ALSA and works only on Linux systems, especially
+# for embedding Linux systems and for running Linux on Windows using WSL.
 #
 # Please refer to
 # https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html

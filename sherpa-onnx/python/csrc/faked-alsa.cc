@@ -9,7 +9,7 @@ namespace sherpa_onnx {
 
 class FakedAlsa {
  public:
-  FakedAlsa(const char *) {
+  explicit FakedAlsa(const char *) {
     SHERPA_ONNX_LOGE("This function is for Linux only.");
 #if (SHERPA_ONNX_ENABLE_ALSA == 0) && (defined(__unix__) || defined(__unix))
     SHERPA_ONNX_LOGE(R"doc(

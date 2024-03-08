@@ -16,7 +16,7 @@
 #endif
 
 #if __ANDROID_API__ >= 27
-#include "nnapi_provider_factory.h"
+#include "nnapi_provider_factory.h"  // NOLINT
 #endif
 
 namespace sherpa_onnx {
