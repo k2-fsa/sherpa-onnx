@@ -98,11 +98,9 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
 #endif
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
-    SHERPA_ONNX_LOGE("test impl: create stream");
     auto stream =
         std::make_unique<OnlineStream>(config_.feat_config, keywords_graph_);
     InitOnlineStream(stream.get());
-    SHERPA_ONNX_LOGE("impl: create stream done");
     return stream;
   }
 
@@ -273,7 +271,6 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     // Due to the limitations of the wasm file system,
     // the keyword_file variable is directly parsed as a string of keywords
     // if WASM KWS on
-    SHERPA_ONNX_LOGE("SHERPA_ONNX_ENABLE_WASM_KWS ON : keyword is %s", config_.keywords_file.c_str());
     std::istringstream is(config_.keywords_file);
     InitKeywords(is);
 #else

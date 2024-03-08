@@ -710,10 +710,8 @@ SherpaOnnxOnlineKws *CreateOnlineKws(
 
 SherpaOnnxOnlineStream *CreateOnlineKwsStream(
     const SherpaOnnxOnlineKws *kws_recognizer) {
-  SHERPA_ONNX_LOGE("c-api.cc : create stream");
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(kws_recognizer->impl->CreateStream());
-  SHERPA_ONNX_LOGE("c-api.cc : create stream done");
   return stream;
 }
 
