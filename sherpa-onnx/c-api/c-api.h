@@ -521,7 +521,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxKeywordSpotterConfig {
   float keywords_score;
   float keywords_threshold;
   const char* keywords_file;
-} SherpaOnnxKeywordSpotterConfig ;
+} SherpaOnnxKeywordSpotterConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxKeywordSpotter
     SherpaOnnxKeywordSpotter;

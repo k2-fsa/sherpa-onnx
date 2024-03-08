@@ -473,9 +473,9 @@ SherpaOnnxKeywordSpotter* CreateKeywordSpotter(
     SHERPA_ONNX_LOGE("%s\n", spotter_config.ToString().c_str());
   }
 
-  if (!spotter_config.Validate()) { 
-    SHERPA_ONNX_LOGE("Errors in config!"); 
-    return nullptr; 
+  if (!spotter_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config!");
+    return nullptr;
   }
 
   SherpaOnnxKeywordSpotter* spotter = new SherpaOnnxKeywordSpotter;
