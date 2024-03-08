@@ -689,6 +689,115 @@ SHERPA_ONNX_API int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
                                             int32_t sample_rate,
                                             const char *filename);
 
+// ============================================================
+// For online KWS
+// ============================================================
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineKwsModelConfig {
+  SherpaOnnxOnlineTransducerModelConfig transducer;
+  const char *tokens;
+  int32_t num_threads;
+} SherpaOnnxOnlineKwsModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineKwsConfig {
+  SherpaOnnxFeatureConfig feat_config;
+  SherpaOnnxOnlineKwsModelConfig model_config;
+
+  /// Used only when decoding_method is modified_beam_search
+  /// Example value: 4
+  int32_t max_active_paths;
+  int32_t num_trailing_blanks;
+  float keywords_score;
+  float keywords_threshold;
+  /// Path to the keywords.
+  const char *keywords;
+} SherpaOnnxOnlineKwsConfig;
+
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineKwsResult {
+  // Recognized text
+  const char *keyword;
+
+  // Pointer to continuous memory which holds string based tokens
+  // which are separated by \0
+  const char *tokens;
+
+  // a pointer array containing the address of the first item in tokens
+  const char *const *tokens_arr;
+
+  // Pointer to continuous memory which holds timestamps
+  float *timestamps;
+
+  /** Return a json string.
+   *
+   * The returned string contains:
+   *   {
+   *     "keyword": "The kws keyword result",
+   *     "tokens": [x, x, x],
+   *     "timestamps": [x, x, x],
+   *   }
+   */
+  const char *json;
+} SherpaOnnxOnlineKwsResult;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineKws SherpaOnnxOnlineKws;
+
+/// @param config  Config for the kws recognizer.
+/// @return Return a pointer to the kws recognizer. The user has to invoke
+//          DestroyOnlineKws() to free it to avoid memory leak.
+SHERPA_ONNX_API SherpaOnnxOnlineKws *CreateOnlineKws(
+    const SherpaOnnxOnlineKwsConfig *config);
+
+SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineKwsStream(
+    const SherpaOnnxOnlineKws *kws_recognizer);
+
+/// Free a pointer returned by CreateOnlineKws()
+/// @param recognizer A pointer returned by CreateOnlineKws()
+SHERPA_ONNX_API void DestroyOnlineKws(
+    SherpaOnnxOnlineKws *recognizer);
+
+/// Destroy an online stream.
+/// @param stream A pointer returned by CreateOnlineStream()
+SHERPA_ONNX_API void DestroyOnlineKwsStream(SherpaOnnxOnlineStream *stream);
+
+/// Get the decoding results so far for an OnlineKwsStream.
+///
+/// @param recognizer A pointer returned by CreateOnlineKws().
+/// @param stream A pointer returned by CreateOnlineKwsStream().
+/// @return A pointer containing the result. The user has to invoke
+///         DestroyOnlineKwsResult() to free the returned pointer to
+///         avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxOnlineKwsResult *GetOnlineKwsStreamResult(
+    SherpaOnnxOnlineKws *recognizer, SherpaOnnxOnlineStream *stream);
+
+/// Destroy the pointer returned by GetOnlineKwsStreamResult().
+///
+/// @param r A pointer returned by GetOnlineKwsStreamResult()
+SHERPA_ONNX_API void DestroyOnlineKwsResult(
+    const SherpaOnnxOnlineKwsResult *r);
+
+/// Return 1 if there are enough number of feature frames for decoding.
+/// Return 0 otherwise.
+///
+/// @param kws_recognizer  A pointer returned by CreateOnlineKws
+/// @param stream  A pointer returned by CreateOnlineKwsStream
+SHERPA_ONNX_API int32_t IsOnlineKwsStreamReady(
+    SherpaOnnxOnlineKws *kws_recognizer, SherpaOnnxOnlineStream *stream);
+
+
+/// Call this function to run the neural network model and decoding.
+//
+/// Precondition for this function: IsOnlineStreamReady() MUST return 1.
+///
+/// Usage example:
+///
+///  while (IsOnlineKwsStreamReady(recognizer, stream)) {
+///     DecodeOnlineKwsStream(recognizer, stream);
+///  }
+///
+SHERPA_ONNX_API void DecodeOnlineKwsStream(SherpaOnnxOnlineKws *kws_recognizer,
+                                        SherpaOnnxOnlineStream *stream);
+
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
