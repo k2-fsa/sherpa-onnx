@@ -6,7 +6,10 @@
 #include <string.h>
 
 #include "c-api-examples/asr-microphone-example/alsa.h"
-#include "cargs.h"
+
+// NOTE: You don't need to use cargs.h in your own project.
+// We use it in this file to parse commandline arguments
+#include "cargs.h"  // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 
 static struct cag_option options[] = {
