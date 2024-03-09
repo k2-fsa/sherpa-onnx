@@ -644,6 +644,9 @@ SHERPA_ONNX_API typedef struct SherpaOnnxGeneratedAudio {
 typedef void (*SherpaOnnxGeneratedAudioCallback)(const float *samples,
                                                  int32_t n);
 
+typedef void (*SherpaOnnxGeneratedAudioCallbackWithArg)(const float *samples,
+                                                        int32_t n, void *arg);
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTts SherpaOnnxOfflineTts;
 
 // Create an instance of offline TTS. The user has to use DestroyOfflineTts()
@@ -677,6 +680,13 @@ SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *
 SherpaOnnxOfflineTtsGenerateWithCallback(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
     SherpaOnnxGeneratedAudioCallback callback);
+
+// Same as SherpaOnnxGeneratedAudioCallback but you can pass an additional
+// `void* arg` to the callback.
+SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *
+SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
+    SherpaOnnxGeneratedAudioCallbackWithArg callback, void *arg);
 
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p);
