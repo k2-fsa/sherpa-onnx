@@ -1,5 +1,5 @@
 if(NOT $ENV{SHERPA_ONNX_IS_USING_BUILD_WASM_SH})
-    message(FATAL_ERROR "Please use ./build-wasm-kws.sh to build for wasm KWS")
+    message(FATAL_ERROR "Please use ./build-wasm-simd-kws.sh to build for wasm KWS")
 endif()
 
 if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/decoder-epoch-12-avg-2-chunk-16-left-64.onnx")
