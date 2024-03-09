@@ -412,6 +412,189 @@ void DestroyOfflineRecognizerResult(
 }
 
 // ============================================================
+// For Keyword Spot
+// ============================================================
+
+struct SherpaOnnxKeywordSpotter {
+  std::unique_ptr<sherpa_onnx::KeywordSpotter> impl;
+};
+
+SherpaOnnxKeywordSpotter* CreateKeywordSpotter(
+    const SherpaOnnxKeywordSpotterConfig* config) {
+  sherpa_onnx::KeywordSpotterConfig spotter_config;
+
+  spotter_config.feat_config.sampling_rate =
+      SHERPA_ONNX_OR(config->feat_config.sample_rate, 16000);
+  spotter_config.feat_config.feature_dim =
+      SHERPA_ONNX_OR(config->feat_config.feature_dim, 80);
+
+  spotter_config.model_config.transducer.encoder =
+      SHERPA_ONNX_OR(config->model_config.transducer.encoder, "");
+  spotter_config.model_config.transducer.decoder =
+      SHERPA_ONNX_OR(config->model_config.transducer.decoder, "");
+  spotter_config.model_config.transducer.joiner =
+      SHERPA_ONNX_OR(config->model_config.transducer.joiner, "");
+
+  spotter_config.model_config.paraformer.encoder =
+      SHERPA_ONNX_OR(config->model_config.paraformer.encoder, "");
+  spotter_config.model_config.paraformer.decoder =
+      SHERPA_ONNX_OR(config->model_config.paraformer.decoder, "");
+
+  spotter_config.model_config.zipformer2_ctc.model =
+      SHERPA_ONNX_OR(config->model_config.zipformer2_ctc.model, "");
+
+  spotter_config.model_config.tokens =
+      SHERPA_ONNX_OR(config->model_config.tokens, "");
+  spotter_config.model_config.num_threads =
+      SHERPA_ONNX_OR(config->model_config.num_threads, 1);
+  spotter_config.model_config.provider =
+      SHERPA_ONNX_OR(config->model_config.provider, "cpu");
+  spotter_config.model_config.model_type =
+      SHERPA_ONNX_OR(config->model_config.model_type, "");
+  spotter_config.model_config.debug =
+      SHERPA_ONNX_OR(config->model_config.debug, 0);
+
+  spotter_config.max_active_paths =
+      SHERPA_ONNX_OR(config->max_active_paths, 4);
+
+  spotter_config.num_trailing_blanks =
+      SHERPA_ONNX_OR(config->num_trailing_blanks , 1);
+
+  spotter_config.keywords_score =
+      SHERPA_ONNX_OR(config->keywords_score, 1.0);
+
+  spotter_config.keywords_threshold =
+      SHERPA_ONNX_OR(config->keywords_threshold, 0.25);
+
+  spotter_config.keywords_file =
+      SHERPA_ONNX_OR(config->keywords_file, "");
+
+  if (config->model_config.debug) {
+    SHERPA_ONNX_LOGE("%s\n", spotter_config.ToString().c_str());
+  }
+
+  if (!spotter_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config!");
+    return nullptr;
+  }
+
+  SherpaOnnxKeywordSpotter* spotter = new SherpaOnnxKeywordSpotter;
+
+  spotter->impl =
+      std::make_unique<sherpa_onnx::KeywordSpotter>(spotter_config);
+
+  return spotter;
+}
+
+void DestroyKeywordSpotter(SherpaOnnxKeywordSpotter* spotter) {
+  delete spotter;
+}
+
+SherpaOnnxOnlineStream* CreateKeywordStream(
+    const SherpaOnnxKeywordSpotter* spotter) {
+  SherpaOnnxOnlineStream* stream =
+      new SherpaOnnxOnlineStream(spotter->impl->CreateStream());
+  return stream;
+}
+
+int32_t IsKeywordStreamReady(
+    SherpaOnnxKeywordSpotter* spotter, SherpaOnnxOnlineStream* stream) {
+  return spotter->impl->IsReady(stream->impl.get());
+}
+
+void DecodeKeywordStream(SherpaOnnxKeywordSpotter* spotter,
+                         SherpaOnnxOnlineStream* stream) {
+  return spotter->impl->DecodeStream(stream->impl.get());
+}
+
+void DecodeMultipleKeywordStreams(
+    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream **streams,
+    int32_t n) {
+  std::vector<sherpa_onnx::OnlineStream*> ss(n);
+  for (int32_t i = 0; i != n; ++i) {
+    ss[i] = streams[i]->impl.get();
+  }
+  spotter->impl->DecodeStreams(ss.data(), n);
+}
+
+const SherpaOnnxKeywordResult *GetKeywordResult(
+    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream *stream) {
+  const sherpa_onnx::KeywordResult& result =
+      spotter->impl->GetResult(stream->impl.get());
+  const auto &keyword = result.keyword;
+
+  auto r = new SherpaOnnxKeywordResult;
+  memset(r, 0, sizeof(SherpaOnnxKeywordResult));
+
+  r->start_time = result.start_time;
+
+  // copy keyword
+  r->keyword = new char[keyword.size() + 1];
+  std::copy(keyword.begin(), keyword.end(), const_cast<char *>(r->keyword));
+  const_cast<char *>(r->keyword)[keyword.size()] = 0;
+
+  // copy json
+  const auto &json = result.AsJsonString();
+  r->json = new char[json.size() + 1];
+  std::copy(json.begin(), json.end(), const_cast<char *>(r->json));
+  const_cast<char *>(r->json)[json.size()] = 0;
+
+  // copy tokens
+  auto count = result.tokens.size();
+  if (count > 0) {
+    size_t total_length = 0;
+    for (const auto &token : result.tokens) {
+      // +1 for the null character at the end of each token
+      total_length += token.size() + 1;
+    }
+
+    r->count = count;
+    // Each word ends with nullptr
+    r->tokens = new char[total_length];
+    memset(reinterpret_cast<void *>(const_cast<char *>(r->tokens)), 0,
+           total_length);
+    char **tokens_temp = new char *[r->count];
+    int32_t pos = 0;
+    for (int32_t i = 0; i < r->count; ++i) {
+      tokens_temp[i] = const_cast<char *>(r->tokens) + pos;
+      memcpy(reinterpret_cast<void *>(const_cast<char *>(r->tokens + pos)),
+             result.tokens[i].c_str(), result.tokens[i].size());
+      // +1 to move past the null character
+      pos += result.tokens[i].size() + 1;
+    }
+    r->tokens_arr = tokens_temp;
+
+    if (!result.timestamps.empty()) {
+      r->timestamps = new float[result.timestamps.size()];
+      std::copy(result.timestamps.begin(), result.timestamps.end(),
+                r->timestamps);
+    } else {
+      r->timestamps = nullptr;
+    }
+
+  } else {
+    r->count = 0;
+    r->timestamps = nullptr;
+    r->tokens = nullptr;
+    r->tokens_arr = nullptr;
+  }
+
+  return r;
+}
+
+void DestroyKeywordResult(const SherpaOnnxKeywordResult *r) {
+  if (r) {
+    delete[] r->keyword;
+    delete[] r->json;
+    delete[] r->tokens;
+    delete[] r->tokens_arr;
+    delete[] r->timestamps;
+    delete r;
+  }
+}
+
+
+// ============================================================
 // For VAD
 // ============================================================
 //
@@ -649,157 +832,3 @@ int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
                             int32_t sample_rate, const char *filename) {
   return sherpa_onnx::WriteWave(filename, sample_rate, samples, n);
 }
-
-struct SherpaOnnxOnlineKws {
-  std::unique_ptr<sherpa_onnx::KeywordSpotter> impl;
-};
-
-// ============================================================
-// For KWS
-// ============================================================
-//
-SherpaOnnxOnlineKws *CreateOnlineKws(
-    const SherpaOnnxOnlineKwsConfig *config) {
-
-  sherpa_onnx::KeywordSpotterConfig kws_config;
-
-  kws_config.feat_config.sampling_rate =
-      SHERPA_ONNX_OR(config->feat_config.sample_rate, 16000);
-
-  kws_config.feat_config.feature_dim =
-      SHERPA_ONNX_OR(config->feat_config.feature_dim, 80);
-
-  kws_config.model_config.transducer.encoder =
-      SHERPA_ONNX_OR(config->model_config.transducer.encoder, "");
-
-  kws_config.model_config.transducer.decoder =
-      SHERPA_ONNX_OR(config->model_config.transducer.decoder, "");
-
-  kws_config.model_config.transducer.joiner =
-      SHERPA_ONNX_OR(config->model_config.transducer.joiner, "");
-
-  kws_config.model_config.tokens =
-      SHERPA_ONNX_OR(config->model_config.tokens, "");
-
-  kws_config.model_config.num_threads =
-      SHERPA_ONNX_OR(config->model_config.num_threads, 1);
-
-  kws_config.max_active_paths =
-      SHERPA_ONNX_OR(config->max_active_paths, 4);
-
-  kws_config.num_trailing_blanks =
-      SHERPA_ONNX_OR(config->num_trailing_blanks, 1);
-
-  kws_config.num_trailing_blanks =
-      SHERPA_ONNX_OR(config->keywords_score, 1.0);
-
-  kws_config.keywords_threshold =
-      SHERPA_ONNX_OR(config->keywords_threshold, 0.25);
-
-  kws_config.keywords_file = SHERPA_ONNX_OR(config->keywords, "");
-
-  SHERPA_ONNX_LOGE("%s\n", kws_config.ToString().c_str());
-
-  SherpaOnnxOnlineKws *kws_recognizer = new SherpaOnnxOnlineKws;
-
-  kws_recognizer->impl =
-      std::make_unique<sherpa_onnx::KeywordSpotter>(kws_config);
-
-  return kws_recognizer;
-}
-
-SherpaOnnxOnlineStream *CreateOnlineKwsStream(
-    const SherpaOnnxOnlineKws *kws_recognizer) {
-  SherpaOnnxOnlineStream *stream =
-      new SherpaOnnxOnlineStream(kws_recognizer->impl->CreateStream());
-  return stream;
-}
-
-void DestroyOnlineKwsStream(SherpaOnnxOnlineStream *stream) { delete stream; }
-
-void DestroyOnlineKws(SherpaOnnxOnlineKws *recognizer) {
-  delete recognizer;
-}
-
-int32_t IsOnlineKwsStreamReady(SherpaOnnxOnlineKws *recognizer,
-                            SherpaOnnxOnlineStream *stream) {
-  return recognizer->impl->IsReady(stream->impl.get());
-}
-
-void DecodeOnlineKwsStream(SherpaOnnxOnlineKws *recognizer,
-                        SherpaOnnxOnlineStream *stream) {
-  recognizer->impl->DecodeStream(stream->impl.get());
-}
-
-const SherpaOnnxOnlineKwsResult *GetOnlineKwsStreamResult(
-    SherpaOnnxOnlineKws *recognizer, SherpaOnnxOnlineStream *stream) {
-  sherpa_onnx::KeywordResult result =
-      recognizer->impl->GetResult(stream->impl.get());
-  const auto &text = result.keyword;
-
-  auto r = new SherpaOnnxOnlineKwsResult;
-  memset(r, 0, sizeof(SherpaOnnxOnlineKwsResult));
-
-  // copy text
-  r->keyword = new char[text.size() + 1];
-  std::copy(text.begin(), text.end(), const_cast<char *>(r->keyword));
-  const_cast<char *>(r->keyword)[text.size()] = 0;
-
-  // copy json
-  const auto &json = result.AsJsonString();
-  r->json = new char[json.size() + 1];
-  std::copy(json.begin(), json.end(), const_cast<char *>(r->json));
-  const_cast<char *>(r->json)[json.size()] = 0;
-
-  // copy tokens
-  auto count = result.tokens.size();
-  if (count > 0) {
-    size_t total_length = 0;
-    for (const auto &token : result.tokens) {
-      // +1 for the null character at the end of each token
-      total_length += token.size() + 1;
-    }
-
-    // Each word ends with nullptr
-    r->tokens = new char[total_length];
-    memset(reinterpret_cast<void *>(const_cast<char *>(r->tokens)), 0,
-           total_length);
-    char **tokens_temp = new char *[count];
-    int32_t pos = 0;
-    for (int32_t i = 0; i < count; ++i) {
-      tokens_temp[i] = const_cast<char *>(r->tokens) + pos;
-      memcpy(reinterpret_cast<void *>(const_cast<char *>(r->tokens + pos)),
-             result.tokens[i].c_str(), result.tokens[i].size());
-      // +1 to move past the null character
-      pos += result.tokens[i].size() + 1;
-    }
-    r->tokens_arr = tokens_temp;
-
-    if (!result.timestamps.empty()) {
-      r->timestamps = new float[count];
-      std::copy(result.timestamps.begin(), result.timestamps.end(),
-                r->timestamps);
-    } else {
-      r->timestamps = nullptr;
-    }
-
-  } else {
-    r->timestamps = nullptr;
-    r->tokens = nullptr;
-    r->tokens_arr = nullptr;
-  }
-
-  return r;
-}
-
-void DestroyOnlineKwsResult(const SherpaOnnxOnlineKwsResult *r) {
-  if (r) {
-    delete[] r->keyword;
-    delete[] r->json;
-    delete[] r->tokens;
-    delete[] r->tokens_arr;
-    delete[] r->timestamps;
-    delete r;
-  }
-}
-
