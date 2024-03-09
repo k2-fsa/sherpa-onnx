@@ -636,6 +636,32 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallback(
   return ans;
 }
 
+const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
+    SherpaOnnxGeneratedAudioCallbackWithArg callback, void *arg) {
+  auto wrapper = [callback, arg](const float *samples, int32_t n) {
+    callback(samples, n, arg);
+  };
+
+  sherpa_onnx::GeneratedAudio audio =
+      tts->impl->Generate(text, sid, speed, wrapper);
+
+  if (audio.samples.empty()) {
+    return nullptr;
+  }
+
+  SherpaOnnxGeneratedAudio *ans = new SherpaOnnxGeneratedAudio;
+
+  float *samples = new float[audio.samples.size()];
+  std::copy(audio.samples.begin(), audio.samples.end(), samples);
+
+  ans->samples = samples;
+  ans->n = audio.samples.size();
+  ans->sample_rate = audio.sample_rate;
+
+  return ans;
+}
+
 void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     const SherpaOnnxGeneratedAudio *p) {
   if (p) {
