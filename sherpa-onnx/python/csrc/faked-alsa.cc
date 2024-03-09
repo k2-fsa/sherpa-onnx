@@ -43,5 +43,3 @@ void PybindAlsa(py::module *m) {
 }
 
 }  // namespace sherpa_onnx
-
-#endif  // SHERPA_ONNX_PYTHON_CSRC_FAKED_ALSA_H_
