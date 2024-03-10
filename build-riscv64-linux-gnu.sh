@@ -62,6 +62,7 @@ cmake \
   -DSHERPA_ONNX_ENABLE_JNI=OFF \
   -DSHERPA_ONNX_ENABLE_C_API=OFF \
   -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+  -DSHERPA_ONNX_ENABLE_SHL=ON \
   -DCMAKE_TOOLCHAIN_FILE=../toolchains/riscv64-linux-gnu.toolchain.cmake \
   ..
 
