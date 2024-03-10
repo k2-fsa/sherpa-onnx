@@ -473,10 +473,16 @@ SherpaOnnxKeywordSpotter* CreateKeywordSpotter(
     SHERPA_ONNX_LOGE("%s\n", spotter_config.ToString().c_str());
   }
 
+#ifndef SHERPA_ONNX_ENABLE_WASM_KWS
+  // due to the limitations of the wasm file system,
+  // keywords file will be packaged into the sherpa-onnx-wasm-kws-main.data file
+  // Solution: take keyword_file variable is directly
+  // parsed as a string of keywords
   if (!spotter_config.Validate()) {
     SHERPA_ONNX_LOGE("Errors in config!");
     return nullptr;
   }
+#endif
 
   SherpaOnnxKeywordSpotter* spotter = new SherpaOnnxKeywordSpotter;
 
