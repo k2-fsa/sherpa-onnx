@@ -266,7 +266,6 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   }
 
   void InitKeywords() {
-
 #ifdef SHERPA_ONNX_ENABLE_WASM_KWS
     // Due to the limitations of the wasm file system,
     // the keyword_file variable is directly parsed as a string of keywords
@@ -283,8 +282,6 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     }
     InitKeywords(is);
 #endif
-
-
   }
 
 #if __ANDROID_API__ >= 9
