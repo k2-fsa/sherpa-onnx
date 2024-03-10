@@ -38,14 +38,13 @@ set(exported_functions
   GetOfflineStreamResult
   DestroyOfflineRecognizerResult
   # online kws
-  CreateOnlineKws
-  CreateOnlineKwsStream
-  GetOnlineKwsStreamResult
-  DecodeOnlineKwsStream
-  DestroyOnlineKws
-  DestroyOnlineKwsResult
-  DestroyOnlineKwsStream
-  IsOnlineKwsStreamReady
+  CreateKeywordSpotter
+  DestroyKeywordSpotter
+  CreateKeywordStream
+  DecodeKeywordStream
+  GetKeywordResult
+  DestroyKeywordResult
+  IsKeywordStreamReady
 )
 
 
