@@ -9,14 +9,13 @@ endif()
 
 set(exported_functions
         AcceptWaveform
-        CreateOnlineKws
-        CreateOnlineKwsStream
-        GetOnlineKwsStreamResult
-        DecodeOnlineKwsStream
-        DestroyOnlineKws
-        DestroyOnlineKwsResult
-        DestroyOnlineKwsStream
-        IsOnlineKwsStreamReady
+        CreateKeywordSpotter
+        DestroyKeywordSpotter
+        CreateKeywordStream
+        DecodeKeywordStream
+        GetKeywordResult
+        DestroyKeywordResult
+        IsKeywordStreamReady
         InputFinished
 )
 set(mangled_exported_functions)

@@ -7,50 +7,89 @@ function freeConfig(config, Module) {
   Module._free(config.ptr);
 }
 
-// The user should free the returned pointers
-function initModelConfig(config, Module) {
 
-  let encoderBinLen = Module.lengthBytesUTF8(config.transducer.encoder) + 1;
-  let decoderBinLen = Module.lengthBytesUTF8(config.transducer.decoder) + 1;
-  let joinerBinLen = Module.lengthBytesUTF8(config.transducer.joiner) + 1;
+function initSherpaOnnxOnlineTransducerModelConfig(config, Module) {
+  const encoderLen = Module.lengthBytesUTF8(config.encoder) + 1;
+  const decoderLen = Module.lengthBytesUTF8(config.decoder) + 1;
+  const joinerLen = Module.lengthBytesUTF8(config.joiner) + 1;
 
-  let tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
+  const n = encoderLen + decoderLen + joinerLen;
 
-  let n = encoderBinLen + decoderBinLen + joinerBinLen + tokensLen;
+  const buffer = Module._malloc(n);
 
-  let buffer = Module._malloc(n);
-  let ptr = Module._malloc(4 * 5);
+  const len = 3 * 4;  // 3 pointers
+  const ptr = Module._malloc(len);
 
   let offset = 0;
-  Module.stringToUTF8(config.transducer.encoder, buffer + offset, encoderBinLen);
-  offset += encoderBinLen;
+  Module.stringToUTF8(config.encoder, buffer + offset, encoderLen);
+  offset += encoderLen;
 
-  Module.stringToUTF8(config.transducer.decoder, buffer + offset, decoderBinLen);
-  offset += encoderBinLen;
+  Module.stringToUTF8(config.decoder, buffer + offset, decoderLen);
+  offset += decoderLen;
 
-  Module.stringToUTF8(config.transducer.joiner, buffer + offset, joinerBinLen);
-  offset += joinerBinLen;
-
-  Module.stringToUTF8(config.tokens, buffer + offset, tokensLen);
-  offset += tokensLen;
+  Module.stringToUTF8(config.joiner, buffer + offset, joinerLen);
 
   offset = 0;
-  Module.setValue(ptr, buffer + offset, 'i8*');  // encoderBin
-  offset += encoderBinLen;
+  Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += encoderLen;
 
-  Module.setValue(ptr + 4, buffer + offset, 'i8*');  // decoderBin
-  offset += decoderBinLen;
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += decoderLen;
 
-  Module.setValue(ptr + 8, buffer + offset, 'i8*');  // joinerBin
-  offset += joinerBinLen;
-
-  Module.setValue(ptr + 12, buffer + offset, 'i8*');  // tokens
-  offset += tokensLen;
-
-  Module.setValue(ptr + 16, config.numThreads, 'i32');  // numThread
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
 
   return {
-    buffer: buffer, ptr: ptr, len: 20,
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
+// The user should free the returned pointers
+function initModelConfig(config, Module) {
+  const transducer =
+      initSherpaOnnxOnlineTransducerModelConfig(config.transducer, Module);
+  const paraformer_len = 2 * 4
+  const ctc_len = 1 * 4
+
+  const len = transducer.len + paraformer_len + ctc_len + 5 * 4;
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module._CopyHeap(transducer.ptr, transducer.len, ptr + offset);
+
+  const tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
+  const providerLen = Module.lengthBytesUTF8(config.provider) + 1;
+  const modelTypeLen = Module.lengthBytesUTF8(config.modelType) + 1;
+  const bufferLen = tokensLen + providerLen + modelTypeLen;
+  const buffer = Module._malloc(bufferLen);
+
+  offset = 0;
+  Module.stringToUTF8(config.tokens, buffer, tokensLen);
+  offset += tokensLen;
+
+  Module.stringToUTF8(config.provider, buffer + offset, providerLen);
+  offset += providerLen;
+
+  Module.stringToUTF8(config.modelType, buffer + offset, modelTypeLen);
+
+  offset = transducer.len + paraformer_len + ctc_len;
+  Module.setValue(ptr + offset, buffer, 'i8*');  // tokens
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.numThreads, 'i32');
+  offset += 4;
+
+  Module.setValue(ptr + offset, buffer + tokensLen, 'i8*');  // provider
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.debug, 'i32');
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset, buffer + tokensLen + providerLen, 'i8*');  // modelType
+  offset += 4;
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
   }
 }
 
@@ -147,7 +186,7 @@ class Kws {
   constructor(configObj, Module) {
     this.config = configObj;
     let config = initKwsConfig(configObj, Module)
-    let handle = Module._CreateOnlineKws(config.ptr);
+    let handle = Module._CreateKeywordSpotter(config.ptr);
 
 
     freeConfig(config.featConfig, Module);
@@ -159,29 +198,29 @@ class Kws {
   }
 
   free() {
-    this.Module._DestroyOnlineKws(this.handle);
+    this.Module._DestroyKeywordSpotter(this.handle);
     this.handle = 0
   }
 
   createStream() {
-    let handle = this.Module._CreateOnlineKwsStream(this.handle);
+    let handle = this.Module._CreateKeywordStream(this.handle);
     return new Stream(handle, this.Module);
   }
 
   isReady(stream) {
-    return this.Module._IsOnlineKwsStreamReady(this.handle, stream.handle) === 1;
+    return this.Module._IsKeywordStreamReady(this.handle, stream.handle) === 1;
   }
 
 
   decode(stream) {
-    return this.Module._DecodeOnlineKwsStream(this.handle, stream.handle);
+    return this.Module._DecodeKeywordStream(this.handle, stream.handle);
   }
 
   getResult(stream) {
-    let r = this.Module._GetOnlineKwsStreamResult(this.handle, stream.handle);
-    let jsonPtr = this.Module.getValue(r + 16, 'i8*');
+    let r = this.Module._GetKeywordResult(this.handle, stream.handle);
+    let jsonPtr = this.Module.getValue(r + 24, 'i8*');
     let json = this.Module.UTF8ToString(jsonPtr);
-    this.Module._DestroyOnlineKwsResult(r);
+    this.Module._DestroyKeywordResult(r);
     return JSON.parse(json);
   }
 }
@@ -195,7 +234,10 @@ function createKws(Module, myConfig) {
   let modelConfig = {
     transducer: transducerConfig,
     tokens: './tokens.txt',
-    numThreads: 1
+    provider: 'cpu',
+    modelType: "",
+    numThreads: 1,
+    debug: 1
   };
 
   let featConfig = {

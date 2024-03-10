@@ -19,9 +19,9 @@ static_assert(sizeof(SherpaOnnxOnlineModelConfig) ==
                       sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 5 * 4,
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
-static_assert(sizeof(SherpaOnnxOnlineKwsConfig) ==
+static_assert(sizeof(SherpaOnnxKeywordSpotterConfig) ==
                   sizeof(SherpaOnnxFeatureConfig) +
-                      sizeof(SherpaOnnxOnlineKwsModelConfig) + 5 * 4,
+                      sizeof(SherpaOnnxOnlineModelConfig) + 5 * 4,
               "");
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {
