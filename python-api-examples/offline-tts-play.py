@@ -180,6 +180,8 @@ sample_rate = None
 
 event = threading.Event()
 
+first_message_time = None
+
 
 def generated_audio_callback(samples: np.ndarray):
     """This function is called whenever max_num_sentences sentences
@@ -191,6 +193,10 @@ def generated_audio_callback(samples: np.ndarray):
       samples:
         A 1-D np.float32 array containing audio samples
     """
+    global first_message_time
+    if first_message_time is None:
+        first_message_time = time.time()
+
     buffer.put(samples)
     global started
 
@@ -297,14 +303,14 @@ def main():
     play_back_thread.start()
 
     logging.info("Start generating ...")
-    start = time.time()
+    start_time = time.time()
     audio = tts.generate(
         args.text,
         sid=args.sid,
         speed=args.speed,
         callback=generated_audio_callback,
     )
-    end = time.time()
+    end_time = time.time()
     logging.info("Finished generating!")
     global stopped
     stopped = True
@@ -316,7 +322,7 @@ def main():
         play_back_thread.join()
         return
 
-    elapsed_seconds = end - start
+    elapsed_seconds = end_time - start_time
     audio_duration = len(audio.samples) / audio.sample_rate
     real_time_factor = elapsed_seconds / audio_duration
 
@@ -327,6 +333,10 @@ def main():
         subtype="PCM_16",
     )
     logging.info(f"The text is '{args.text}'")
+    logging.info(
+        "Time in seconds to receive the first "
+        f"message: {first_message_time-start_time:.3f}"
+    )
     logging.info(f"Elapsed seconds: {elapsed_seconds:.3f}")
     logging.info(f"Audio duration in seconds: {audio_duration:.3f}")
     logging.info(
