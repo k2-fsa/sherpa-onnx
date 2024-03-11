@@ -94,10 +94,17 @@ bool KeywordSpotterConfig::Validate() const {
     SHERPA_ONNX_LOGE("Please provide --keywords-file.");
     return false;
   }
+
+#ifndef SHERPA_ONNX_ENABLE_WASM_KWS
+  // due to the limitations of the wasm file system,
+  // keywords file will be packaged into the sherpa-onnx-wasm-kws-main.data file
+  // Solution: take keyword_file variable is directly
+  // parsed as a string of keywords
   if (!std::ifstream(keywords_file.c_str()).good()) {
     SHERPA_ONNX_LOGE("Keywords file %s does not exist.", keywords_file.c_str());
     return false;
   }
+#endif
 
   return model_config.Validate();
 }
