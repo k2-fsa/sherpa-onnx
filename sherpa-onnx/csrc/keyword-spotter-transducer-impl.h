@@ -266,8 +266,14 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   }
 
   void InitKeywords() {
+#ifdef SHERPA_ONNX_ENABLE_WASM_KWS
+    // Due to the limitations of the wasm file system,
+    // the keyword_file variable is directly parsed as a string of keywords
+    // if WASM KWS on
+    std::istringstream is(config_.keywords_file);
+    InitKeywords(is);
+#else
     // each line in keywords_file contains space-separated words
-
     std::ifstream is(config_.keywords_file);
     if (!is) {
       SHERPA_ONNX_LOGE("Open keywords file failed: %s",
@@ -275,6 +281,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       exit(-1);
     }
     InitKeywords(is);
+#endif
   }
 
 #if __ANDROID_API__ >= 9

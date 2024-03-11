@@ -37,6 +37,14 @@ set(exported_functions
   DecodeMultipleOfflineStreams
   GetOfflineStreamResult
   DestroyOfflineRecognizerResult
+  # online kws
+  CreateKeywordSpotter
+  DestroyKeywordSpotter
+  CreateKeywordStream
+  DecodeKeywordStream
+  GetKeywordResult
+  DestroyKeywordResult
+  IsKeywordStreamReady
 )
 
 
@@ -69,6 +77,7 @@ install(
   FILES
   ${CMAKE_SOURCE_DIR}/wasm/asr/sherpa-onnx-asr.js
   ${CMAKE_SOURCE_DIR}/wasm/tts/sherpa-onnx-tts.js
+  ${CMAKE_SOURCE_DIR}/wasm/kws/sherpa-onnx-kws.js
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-nodejs>/sherpa-onnx-wasm-nodejs.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-nodejs>/sherpa-onnx-wasm-nodejs.wasm"
   DESTINATION

@@ -23,6 +23,7 @@ option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime GPU support" OFF)
 option(SHERPA_ONNX_ENABLE_WASM "Whether to enable WASM" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_TTS "Whether to enable WASM for TTS" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_ASR "Whether to enable WASM for ASR" OFF)
+option(SHERPA_ONNX_ENABLE_WASM_KWS "Whether to enable WASM for KWS" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_NODEJS "Whether to enable WASM for NodeJS" OFF)
 option(SHERPA_ONNX_ENABLE_BINARY "Whether to build binaries" ON)
 option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically. Used only when BUILD_SHARED_LIBS is OFF on Linux" ON)
@@ -133,6 +134,10 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_WASM)
   add_definitions(-DSHERPA_ONNX_ENABLE_WASM=1)
+endif()
+
+if(SHERPA_ONNX_ENABLE_WASM_KWS)
+  add_definitions(-DSHERPA_ONNX_ENABLE_WASM_KWS=1)
 endif()
 
 if(NOT CMAKE_CXX_STANDARD)

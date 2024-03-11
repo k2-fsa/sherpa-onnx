@@ -481,7 +481,7 @@ SherpaOnnxKeywordSpotter* CreateKeywordSpotter(
   SherpaOnnxKeywordSpotter* spotter = new SherpaOnnxKeywordSpotter;
 
   spotter->impl =
-    std::make_unique<sherpa_onnx::KeywordSpotter>(spotter_config);
+      std::make_unique<sherpa_onnx::KeywordSpotter>(spotter_config);
 
   return spotter;
 }
@@ -493,7 +493,7 @@ void DestroyKeywordSpotter(SherpaOnnxKeywordSpotter* spotter) {
 SherpaOnnxOnlineStream* CreateKeywordStream(
     const SherpaOnnxKeywordSpotter* spotter) {
   SherpaOnnxOnlineStream* stream =
-    new SherpaOnnxOnlineStream(spotter->impl->CreateStream());
+      new SherpaOnnxOnlineStream(spotter->impl->CreateStream());
   return stream;
 }
 
@@ -512,7 +512,7 @@ void DecodeMultipleKeywordStreams(
     int32_t n) {
   std::vector<sherpa_onnx::OnlineStream*> ss(n);
   for (int32_t i = 0; i != n; ++i) {
-      ss[i] = streams[i]->impl.get();
+    ss[i] = streams[i]->impl.get();
   }
   spotter->impl->DecodeStreams(ss.data(), n);
 }
@@ -592,7 +592,6 @@ void DestroyKeywordResult(const SherpaOnnxKeywordResult *r) {
     delete r;
   }
 }
-
 
 // ============================================================
 // For VAD
