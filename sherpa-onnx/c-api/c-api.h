@@ -474,6 +474,123 @@ SHERPA_ONNX_API void DestroyOfflineRecognizerResult(
     const SherpaOnnxOfflineRecognizerResult *r);
 
 // ============================================================
+// For Keyword Spot
+// ============================================================
+SHERPA_ONNX_API typedef struct SherpaOnnxKeywordResult {
+  /// The triggered keyword.
+  /// For English, it consists of space separated words.
+  /// For Chinese, it consists of Chinese words without spaces.
+  /// Example 1: "hello world"
+  /// Example 2: "你好世界"
+  const char* keyword;
+
+  /// Decoded results at the token level.
+  /// For instance, for BPE-based models it consists of a list of BPE tokens.
+  const char* tokens;
+
+  const char* const* tokens_arr;
+
+  int32_t count;
+
+  /// timestamps.size() == tokens.size()
+  /// timestamps[i] records the time in seconds when tokens[i] is decoded.
+  float* timestamps;
+
+  /// Starting time of this segment.
+  /// When an endpoint is detected, it will change
+  float start_time;
+
+  /** Return a json string.
+   *
+   * The returned string contains:
+   *   {
+   *     "keyword": "The triggered keyword",
+   *     "tokens": [x, x, x],
+   *     "timestamps": [x, x, x],
+   *     "start_time": x,
+   *   }
+   */
+  const char* json;
+} SherpaOnnxKeywordResult;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxKeywordSpotterConfig {
+  SherpaOnnxFeatureConfig feat_config;
+  SherpaOnnxOnlineModelConfig model_config;
+  int32_t max_active_paths;
+  int32_t num_trailing_blanks;
+  float keywords_score;
+  float keywords_threshold;
+  const char* keywords_file;
+} SherpaOnnxKeywordSpotterConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxKeywordSpotter
+    SherpaOnnxKeywordSpotter;
+
+/// @param config  Config for the keyword spotter.
+/// @return Return a pointer to the spotter. The user has to invoke
+///         DestroyKeywordSpotter() to free it to avoid memory leak.
+SHERPA_ONNX_API SherpaOnnxKeywordSpotter* CreateKeywordSpotter(
+    const SherpaOnnxKeywordSpotterConfig* config);
+
+/// Free a pointer returned by CreateKeywordSpotter()
+///
+/// @param p A pointer returned by CreateKeywordSpotter()
+SHERPA_ONNX_API void DestroyKeywordSpotter(
+    SherpaOnnxKeywordSpotter* spotter);
+
+/// Create an online stream for accepting wave samples.
+///
+/// @param spotter A pointer returned by CreateKeywordSpotter()
+/// @return Return a pointer to an OnlineStream. The user has to invoke
+///         DestroyOnlineStream() to free it to avoid memory leak.
+SHERPA_ONNX_API SherpaOnnxOnlineStream* CreateKeywordStream(
+    const SherpaOnnxKeywordSpotter* spotter);
+
+/// Return 1 if there are enough number of feature frames for decoding.
+/// Return 0 otherwise.
+///
+/// @param spotter A pointer returned by CreateKeywordSpotter
+/// @param stream  A pointer returned by CreateKeywordStream
+SHERPA_ONNX_API int32_t IsKeywordStreamReady(
+    SherpaOnnxKeywordSpotter* spotter, SherpaOnnxOnlineStream* stream);
+
+/// Call this function to run the neural network model and decoding.
+//
+/// Precondition for this function: IsKeywordStreamReady() MUST return 1.
+SHERPA_ONNX_API void DecodeKeywordStream(SherpaOnnxKeywordSpotter* spotter,
+                                         SherpaOnnxOnlineStream* stream);
+
+/// This function is similar to DecodeKeywordStream(). It decodes multiple
+/// OnlineStream in parallel.
+///
+/// Caution: The caller has to ensure each OnlineStream is ready, i.e.,
+/// IsKeywordStreamReady() for that stream should return 1.
+///
+/// @param spotter A pointer returned by CreateKeywordSpotter()
+/// @param streams  A pointer array containing pointers returned by
+///                 CreateKeywordStream()
+/// @param n  Number of elements in the given streams array.
+SHERPA_ONNX_API void DecodeMultipleKeywordStreams(
+    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream **streams,
+    int32_t n);
+
+/// Get the decoding results so far for an OnlineStream.
+///
+/// @param recognizer A pointer returned by CreateKeywordSpotter().
+/// @param stream A pointer returned by CreateKeywordStream().
+/// @return A pointer containing the result. The user has to invoke
+///         DestroyKeywordResult() to free the returned pointer to
+///         avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxKeywordResult *GetKeywordResult(
+    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream *stream);
+
+/// Destroy the pointer returned by GetKeywordResult().
+///
+/// @param r A pointer returned by GetKeywordResult()
+SHERPA_ONNX_API void DestroyKeywordResult(
+    const SherpaOnnxKeywordResult *r);
+
+// ============================================================
 // For VAD
 // ============================================================
 
