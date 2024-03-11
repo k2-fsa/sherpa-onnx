@@ -83,6 +83,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-en_GB-alan-low"),
         TtsModel(model_dir="vits-piper-en_GB-alan-medium"),
         TtsModel(model_dir="vits-piper-en_GB-alba-medium"),
+        TtsModel(model_dir="vits-piper-en_GB-aru-medium"),
         TtsModel(model_dir="vits-piper-en_GB-jenny_dioco-medium"),
         TtsModel(model_dir="vits-piper-en_GB-northern_english_male-medium"),
         TtsModel(model_dir="vits-piper-en_GB-semaine-medium"),
