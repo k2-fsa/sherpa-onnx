@@ -616,6 +616,22 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.whisper.decoder = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(whisper_config_cls, "language", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(whisper_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.whisper.language = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(whisper_config_cls, "task", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(whisper_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.whisper.task = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(whisper_config_cls, "tailPaddings", "I");
+  ans.model_config.whisper.tail_paddings = env->GetIntField(whisper_config,
+                                                            fid);
+
   return ans;
 }
 

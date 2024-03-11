@@ -1,15 +1,21 @@
-// c-api-examples/decode-file-c-api.c
-//
-// Copyright (c)  2023  Xiaomi Corporation
+// c-api-examples/asr-microphone-example/c-api-alsa.cc
+// Copyright (c)  2022-2024  Xiaomi Corporation
 
-// This file shows how to use sherpa-onnx C API
-// to decode a file.
-
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "cargs.h"
+#include <algorithm>
+#include <cctype>  // std::tolower
+#include <cstdint>
+#include <string>
+
+#include "c-api-examples/asr-microphone-example/alsa.h"
+
+// NOTE: You don't need to use cargs.h in your own project.
+// We use it in this file to parse commandline arguments
+#include "cargs.h"  // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 
 static struct cag_option options[] = {
@@ -69,31 +75,48 @@ static struct cag_option options[] = {
 };
 
 const char *kUsage =
-    "\n"
-    "Usage:\n "
-    "  ./bin/decode-file-c-api \\\n"
-    "    --tokens=/path/to/tokens.txt \\\n"
-    "    --encoder=/path/to/encoder.onnx \\\n"
-    "    --decoder=/path/to/decoder.onnx \\\n"
-    "    --joiner=/path/to/joiner.onnx \\\n"
-    "    --provider=cpu \\\n"
-    "    /path/to/foo.wav\n"
-    "\n\n"
-    "Default num_threads is 1.\n"
-    "Valid decoding_method: greedy_search (default), modified_beam_search\n\n"
-    "Valid provider: cpu (default), cuda, coreml\n\n"
-    "Please refer to \n"
-    "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/"
-    "index.html\n"
-    "for a list of pre-trained models to download.\n"
-    "\n"
-    "Note that this file supports only streaming transducer models.\n";
+    R"(
+Usage:
+  ./bin/c-api-alsa \
+    --tokens=/path/to/tokens.txt \
+    --encoder=/path/to/encoder.onnx \
+    --decoder=/path/to/decoder.onnx \
+    --joiner=/path/to/decoder.onnx \
+    device_name
+
+The device name specifies which microphone to use in case there are several
+on your system. You can use
+
+  arecord -l
+
+to find all available microphones on your computer. For instance, if it outputs
+
+**** List of CAPTURE Hardware Devices ****
+card 3: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+and if you want to select card 3 and the device 0 on that card, please use:
+
+  plughw:3,0
+
+as the device_name.
+)";
+
+bool stop = false;
+
+static void Handler(int sig) {
+  stop = true;
+  fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
+}
 
 int32_t main(int32_t argc, char *argv[]) {
   if (argc < 6) {
     fprintf(stderr, "%s\n", kUsage);
     exit(0);
   }
+
+  signal(SIGINT, Handler);
 
   SherpaOnnxOnlineRecognizerConfig config;
   memset(&config, 0, sizeof(config));
@@ -168,71 +191,60 @@ int32_t main(int32_t argc, char *argv[]) {
   SherpaOnnxDisplay *display = CreateDisplay(50);
   int32_t segment_id = 0;
 
-  const char *wav_filename = argv[context.index];
-  FILE *fp = fopen(wav_filename, "rb");
-  if (!fp) {
-    fprintf(stderr, "Failed to open %s\n", wav_filename);
-    return -1;
+  const char *device_name = argv[context.index];
+  sherpa_onnx::Alsa alsa(device_name);
+  fprintf(stderr, "Use recording device: %s\n", device_name);
+  fprintf(stderr,
+          "Please \033[32m\033[1mspeak\033[0m! Press \033[31m\033[1mCtrl + "
+          "C\033[0m to exit\n");
+
+  int32_t expected_sample_rate = 16000;
+
+  if (alsa.GetExpectedSampleRate() != expected_sample_rate) {
+    fprintf(stderr, "sample rate: %d != %d\n", alsa.GetExpectedSampleRate(),
+            expected_sample_rate);
+    exit(-1);
   }
 
-  // Assume the wave header occupies 44 bytes.
-  fseek(fp, 44, SEEK_SET);
+  int32_t chunk = 0.1 * alsa.GetActualSampleRate();
 
-  // simulate streaming
+  std::string last_text;
 
-#define N 3200  // 0.2 s. Sample rate is fixed to 16 kHz
+  int32_t segment_index = 0;
 
-  int16_t buffer[N];
-  float samples[N];
+  while (!stop) {
+    const std::vector<float> &samples = alsa.Read(chunk);
+    AcceptWaveform(stream, expected_sample_rate, samples.data(),
+                   samples.size());
+    while (IsOnlineStreamReady(recognizer, stream)) {
+      DecodeOnlineStream(recognizer, stream);
+    }
 
-  while (!feof(fp)) {
-    size_t n = fread((void *)buffer, sizeof(int16_t), N, fp);
-    if (n > 0) {
-      for (size_t i = 0; i != n; ++i) {
-        samples[i] = buffer[i] / 32768.;
+    const SherpaOnnxOnlineRecognizerResult *r =
+        GetOnlineStreamResult(recognizer, stream);
+
+    std::string text = r->text;
+    DestroyOnlineRecognizerResult(r);
+
+    if (!text.empty() && last_text != text) {
+      last_text = text;
+
+      std::transform(text.begin(), text.end(), text.begin(),
+                     [](auto c) { return std::tolower(c); });
+
+      SherpaOnnxPrint(display, segment_index, text.c_str());
+      fflush(stderr);
+    }
+
+    if (IsEndpoint(recognizer, stream)) {
+      if (!text.empty()) {
+        ++segment_index;
       }
-      AcceptWaveform(stream, 16000, samples, n);
-      while (IsOnlineStreamReady(recognizer, stream)) {
-        DecodeOnlineStream(recognizer, stream);
-      }
-
-      const SherpaOnnxOnlineRecognizerResult *r =
-          GetOnlineStreamResult(recognizer, stream);
-
-      if (strlen(r->text)) {
-        SherpaOnnxPrint(display, segment_id, r->text);
-      }
-
-      if (IsEndpoint(recognizer, stream)) {
-        if (strlen(r->text)) {
-          ++segment_id;
-        }
-        Reset(recognizer, stream);
-      }
-
-      DestroyOnlineRecognizerResult(r);
+      Reset(recognizer, stream);
     }
   }
-  fclose(fp);
 
-  // add some tail padding
-  float tail_paddings[4800] = {0};  // 0.3 seconds at 16 kHz sample rate
-  AcceptWaveform(stream, 16000, tail_paddings, 4800);
-
-  InputFinished(stream);
-  while (IsOnlineStreamReady(recognizer, stream)) {
-    DecodeOnlineStream(recognizer, stream);
-  }
-
-  const SherpaOnnxOnlineRecognizerResult *r =
-      GetOnlineStreamResult(recognizer, stream);
-
-  if (strlen(r->text)) {
-    SherpaOnnxPrint(display, segment_id, r->text);
-  }
-
-  DestroyOnlineRecognizerResult(r);
-
+  // free allocated resources
   DestroyDisplay(display);
   DestroyOnlineStream(stream);
   DestroyOnlineRecognizer(recognizer);
