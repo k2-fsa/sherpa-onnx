@@ -1,3 +1,6 @@
+// wasm/sherpa-onnx-wasm-main-kws.cc
+//
+// Copyright (c)  2024  lovemefan
 #include <stdio.h>
 
 #include <algorithm>
