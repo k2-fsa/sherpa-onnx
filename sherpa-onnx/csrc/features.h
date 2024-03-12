@@ -21,6 +21,19 @@ struct FeatureExtractorConfig {
   // Feature dimension
   int32_t feature_dim = 80;
 
+  // minimal frequency for Mel-filterbank, in Hz
+  float low_freq = 20.0f;
+
+  // maximal frequency of Mel-filterbank
+  // in Hz; negative value is subtracted from Nyquist freq.:
+  // i.e. for sampling_rate 16000 / 2 - 400 = 7600Hz
+  //
+  // Please see
+  // https://github.com/lhotse-speech/lhotse/blob/master/lhotse/features/fbank.py#L27
+  // and
+  // https://github.com/k2-fsa/sherpa-onnx/issues/514
+  float high_freq = -400.0f;
+
   // Set internally by some models, e.g., paraformer sets it to false.
   // This parameter is not exposed to users from the commandline
   // If true, the feature extractor expects inputs to be normalized to
@@ -31,7 +44,6 @@ struct FeatureExtractorConfig {
   bool snip_edges = false;
   float frame_shift_ms = 10.0f;   // in milliseconds.
   float frame_length_ms = 25.0f;  // in milliseconds.
-  int32_t low_freq = 20;
   bool is_librosa = false;
   bool remove_dc_offset = true;       // Subtract mean of wave before FFT.
   std::string window_type = "povey";  // e.g. Hamming window

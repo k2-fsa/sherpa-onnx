@@ -25,6 +25,12 @@ void FeatureExtractorConfig::Register(ParseOptions *po) {
 
   po->Register("feat-dim", &feature_dim,
                "Feature dimension. Must match the one expected by the model.");
+
+  po->Regiseter("low-freq", &low_freq,
+                "Low cutoff frequency for mel bins");
+
+  po->Regiseter("high-freq", &high_freq,
+                "High cutoff frequency for mel bins (if <= 0, offset from Nyquist)");
 }
 
 std::string FeatureExtractorConfig::ToString() const {
@@ -32,7 +38,9 @@ std::string FeatureExtractorConfig::ToString() const {
 
   os << "FeatureExtractorConfig(";
   os << "sampling_rate=" << sampling_rate << ", ";
-  os << "feature_dim=" << feature_dim << ")";
+  os << "feature_dim=" << feature_dim << ", ";
+  os << "low_freq=" << low_freq << ", ";
+  os << "high_freq=" << high_freq << ")";
 
   return os.str();
 }
@@ -50,13 +58,9 @@ class FeatureExtractor::Impl {
 
     opts_.mel_opts.num_bins = config.feature_dim;
 
-    // Please see
-    // https://github.com/lhotse-speech/lhotse/blob/master/lhotse/features/fbank.py#L27
-    // and
-    // https://github.com/k2-fsa/sherpa-onnx/issues/514
-    opts_.mel_opts.high_freq = -400;
+    opts_.mel_opts.high_freq = config.high_freq;
+    opts_.mel_opts.low_freq  = config.low_freq;
 
-    opts_.mel_opts.low_freq = config.low_freq;
     opts_.mel_opts.is_librosa = config.is_librosa;
 
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);

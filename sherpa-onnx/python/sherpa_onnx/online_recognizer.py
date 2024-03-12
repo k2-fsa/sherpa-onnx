@@ -41,6 +41,8 @@ class OnlineRecognizer(object):
         num_threads: int = 2,
         sample_rate: float = 16000,
         feature_dim: int = 80,
+        low_freq: float = 20.0,
+        high_freq: float = -400.0,
         enable_endpoint_detection: bool = False,
         rule1_min_trailing_silence: float = 2.4,
         rule2_min_trailing_silence: float = 1.2,
@@ -80,6 +82,11 @@ class OnlineRecognizer(object):
             Sample rate of the training data used to train the model.
           feature_dim:
             Dimension of the feature used to train the model.
+          low_freq:
+            Low cutoff frequency for mel bins in feature extraction.
+          high_freq:
+            High cutoff frequency for mel bins in feature extraction
+            (if <= 0, offset from Nyquist)
           enable_endpoint_detection:
             True to enable endpoint detection. False to disable endpoint
             detection.
@@ -140,6 +147,8 @@ class OnlineRecognizer(object):
         feat_config = FeatureExtractorConfig(
             sampling_rate=sample_rate,
             feature_dim=feature_dim,
+            low_freq=low_freq,
+            high_freq=high_freq,
         )
 
         endpoint_config = EndpointConfig(
