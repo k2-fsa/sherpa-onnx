@@ -30,7 +30,14 @@ void FeatureExtractorConfig::Register(ParseOptions *po) {
                "Low cutoff frequency for mel bins");
 
   po->Register("high-freq", &high_freq,
-               "High cutoff frequency for mel bins (if <= 0, offset from Nyquist)");
+               "High cutoff frequency for mel bins "
+               "(if <= 0, offset from Nyquist)");
+
+  po->Register("dither", &dither,
+               "Dithering constant (0.0 means no dither). "
+               "By default the audio samples are in range [-1,+1], "
+               "so 0.00003 is a good value, "
+               "equivalent to the default 1.0 from kaldi");
 }
 
 std::string FeatureExtractorConfig::ToString() const {
@@ -40,7 +47,8 @@ std::string FeatureExtractorConfig::ToString() const {
   os << "sampling_rate=" << sampling_rate << ", ";
   os << "feature_dim=" << feature_dim << ", ";
   os << "low_freq=" << low_freq << ", ";
-  os << "high_freq=" << high_freq << ")";
+  os << "high_freq=" << high_freq << ", ";
+  os << "dither=" << dither << ")";
 
   return os.str();
 }
@@ -48,7 +56,7 @@ std::string FeatureExtractorConfig::ToString() const {
 class FeatureExtractor::Impl {
  public:
   explicit Impl(const FeatureExtractorConfig &config) : config_(config) {
-    opts_.frame_opts.dither = 0;
+    opts_.frame_opts.dither = config.dither;
     opts_.frame_opts.snip_edges = config.snip_edges;
     opts_.frame_opts.samp_freq = config.sampling_rate;
     opts_.frame_opts.frame_shift_ms = config.frame_shift_ms;

@@ -86,12 +86,11 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
         model_(OnlineTransducerModel::Create(config.model_config)),
         sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
-
-    model_->SetFeatureDim(config.feat_config.feature_dim);
-
     if (sym_.contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
+
+    model_->SetFeatureDim(config.feat_config.feature_dim);
 
     if (config.decoding_method == "modified_beam_search") {
       if (!config_.hotwords_file.empty()) {
@@ -125,6 +124,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     if (sym_.contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
+
+    model_->SetFeatureDim(config.feat_config.feature_dim);
 
     if (config.decoding_method == "modified_beam_search") {
 #if 0

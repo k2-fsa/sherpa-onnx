@@ -43,6 +43,7 @@ class OnlineRecognizer(object):
         feature_dim: int = 80,
         low_freq: float = 20.0,
         high_freq: float = -400.0,
+        dither: float = 0.0,
         enable_endpoint_detection: bool = False,
         rule1_min_trailing_silence: float = 2.4,
         rule2_min_trailing_silence: float = 1.2,
@@ -87,6 +88,11 @@ class OnlineRecognizer(object):
           high_freq:
             High cutoff frequency for mel bins in feature extraction
             (if <= 0, offset from Nyquist)
+          dither:
+            Dithering constant (0.0 means no dither).
+            By default the audio samples are in range [-1,+1],
+            so dithering constant 0.00003 is a good value,
+            equivalent to the default 1.0 from kaldi
           enable_endpoint_detection:
             True to enable endpoint detection. False to disable endpoint
             detection.
@@ -149,6 +155,7 @@ class OnlineRecognizer(object):
             feature_dim=feature_dim,
             low_freq=low_freq,
             high_freq=high_freq,
+            dither=dither,
         )
 
         endpoint_config = EndpointConfig(

@@ -37,7 +37,9 @@ class OnlineZipformer2TransducerModel : public OnlineTransducerModel {
 
   std::vector<Ort::Value> GetEncoderInitStates() override;
 
-  void SetFeatureDim(int32_t feature_dim) override { feature_dim_ = feature_dim; }
+  void SetFeatureDim(int32_t feature_dim) override {
+    feature_dim_ = feature_dim;
+  }
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
       Ort::Value features, std::vector<Ort::Value> states,

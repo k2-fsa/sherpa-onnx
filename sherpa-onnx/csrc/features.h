@@ -34,6 +34,14 @@ struct FeatureExtractorConfig {
   // https://github.com/k2-fsa/sherpa-onnx/issues/514
   float high_freq = -400.0f;
 
+  // dithering constant, useful for signals with hard-zeroes in non-speech parts
+  // this prevents large negative values in log-mel filterbanks
+  //
+  // In k2, audio samples are in range [-1..+1], in kaldi the range was [-32k..+32k],
+  // so the value 0.00003 is equivalent to kaldi default 1.0
+  //
+  float dither = 0.0f;  // dithering disabled by default
+
   // Set internally by some models, e.g., paraformer sets it to false.
   // This parameter is not exposed to users from the commandline
   // If true, the feature extractor expects inputs to be normalized to
