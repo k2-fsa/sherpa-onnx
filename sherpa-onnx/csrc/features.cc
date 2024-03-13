@@ -26,11 +26,11 @@ void FeatureExtractorConfig::Register(ParseOptions *po) {
   po->Register("feat-dim", &feature_dim,
                "Feature dimension. Must match the one expected by the model.");
 
-  po->Regiseter("low-freq", &low_freq,
-                "Low cutoff frequency for mel bins");
+  po->Register("low-freq", &low_freq,
+               "Low cutoff frequency for mel bins");
 
-  po->Regiseter("high-freq", &high_freq,
-                "High cutoff frequency for mel bins (if <= 0, offset from Nyquist)");
+  po->Register("high-freq", &high_freq,
+               "High cutoff frequency for mel bins (if <= 0, offset from Nyquist)");
 }
 
 std::string FeatureExtractorConfig::ToString() const {

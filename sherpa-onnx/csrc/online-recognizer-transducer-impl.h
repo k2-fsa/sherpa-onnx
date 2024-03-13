@@ -86,6 +86,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
         model_(OnlineTransducerModel::Create(config.model_config)),
         sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
+
+    model_->SetFeatureDim(config.feat_config.feature_dim);
+
     if (sym_.contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
