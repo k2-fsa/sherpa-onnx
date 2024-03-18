@@ -4,6 +4,23 @@ function freeConfig(config, Module) {
   if ('buffer' in config) {
     Module._free(config.buffer);
   }
+
+  if ('transducer' in config) {
+    freeConfig(config.transducer);
+  }
+
+  if ('featConfig' in config) {
+    freeConfig(config.featConfig);
+  }
+
+  if ('modelConfig' in config) {
+    freeConfig(config.modelConfig);
+  }
+
+  if ('keywordsBuffer' in config) {
+    Module._free(config.keywordsBuffer);
+  }
+
   Module._free(config.ptr);
 }
 
@@ -89,7 +106,7 @@ function initModelConfig(config, Module) {
   offset += 4;
 
   return {
-    buffer: buffer, ptr: ptr, len: len,
+    buffer: buffer, ptr: ptr, len: len, transducer: transducer
   }
 }
 
@@ -103,12 +120,10 @@ function initFeatureExtractorConfig(config, Module) {
 }
 
 function initKwsConfig(config, Module) {
-  let featConfig =
-      initFeatureExtractorConfig(config.featConfig, Module);
+  let featConfig = initFeatureExtractorConfig(config.featConfig, Module);
 
   let modelConfig = initModelConfig(config.modelConfig, Module);
-  let numBytes =
-      featConfig.len + modelConfig.len + 4 * 5;
+  let numBytes = featConfig.len + modelConfig.len + 4 * 5;
 
   let ptr = Module._malloc(numBytes);
   let offset = 0;
@@ -117,7 +132,6 @@ function initKwsConfig(config, Module) {
 
   Module._CopyHeap(modelConfig.ptr, modelConfig.len, ptr + offset)
   offset += modelConfig.len;
-
 
   Module.setValue(ptr + offset, config.maxActivePaths, 'i32');
   offset += 4;
@@ -138,7 +152,8 @@ function initKwsConfig(config, Module) {
   offset += 4;
 
   return {
-    ptr: ptr, len: numBytes, featConfig: featConfig, modelConfig: modelConfig
+    ptr: ptr, len: numBytes, featConfig: featConfig, modelConfig: modelConfig,
+        keywordsBuffer: keywordsBuffer
   }
 }
 
@@ -178,7 +193,7 @@ class Stream {
   }
 
   inputFinished() {
-    _InputFinished(this.handle);
+    this.Module._InputFinished(this.handle);
   }
 };
 
@@ -188,9 +203,6 @@ class Kws {
     let config = initKwsConfig(configObj, Module)
     let handle = Module._CreateKeywordSpotter(config.ptr);
 
-
-    freeConfig(config.featConfig, Module);
-    freeConfig(config.modelConfig, Module);
     freeConfig(config, Module);
 
     this.handle = handle;
@@ -211,7 +223,6 @@ class Kws {
     return this.Module._IsKeywordStreamReady(this.handle, stream.handle) === 1;
   }
 
-
   decode(stream) {
     return this.Module._DecodeKeywordStream(this.handle, stream.handle);
   }
@@ -230,12 +241,12 @@ function createKws(Module, myConfig) {
     encoder: './encoder-epoch-12-avg-2-chunk-16-left-64.onnx',
     decoder: './decoder-epoch-12-avg-2-chunk-16-left-64.onnx',
     joiner: './joiner-epoch-12-avg-2-chunk-16-left-64.onnx',
-  }
+  };
   let modelConfig = {
     transducer: transducerConfig,
     tokens: './tokens.txt',
     provider: 'cpu',
-    modelType: "",
+    modelType: '',
     numThreads: 1,
     debug: 1
   };
@@ -252,8 +263,8 @@ function createKws(Module, myConfig) {
     numTrailingBlanks: 1,
     keywordsScore: 1.0,
     keywordsThreshold: 0.25,
-    keywords: "x iǎo ài t óng x ué @小爱同学\n" +
-        "j ūn g ē n iú b ī @军哥牛逼"
+    keywords: 'x iǎo ài t óng x ué @小爱同学\n' +
+        'j ūn g ē n iú b ī @军哥牛逼'
   };
 
   if (myConfig) {
