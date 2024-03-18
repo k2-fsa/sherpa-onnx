@@ -124,6 +124,7 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            max_active_paths=max_active_paths,
             hotwords_file=hotwords_file,
             hotwords_score=hotwords_score,
             blank_penalty=blank_penalty,
