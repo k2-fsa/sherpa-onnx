@@ -129,6 +129,8 @@ namespace SherpaOnnx
       Rule1MinTrailingSilence = 1.2F;
       Rule2MinTrailingSilence = 2.4F;
       Rule3MinUtteranceLength = 20.0F;
+      HotwordsFile = "";
+      HotwordsScore = 2F;
     }
     public FeatureConfig FeatConfig;
     public OnlineModelConfig ModelConfig;
@@ -158,6 +160,13 @@ namespace SherpaOnnx
     /// this value.
     /// Used only when enable_endpoint is not 0.
     public float Rule3MinUtteranceLength;
+
+    /// Path to the hotwords.
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string HotwordsFile;
+
+    /// Bonus score for each token in hotwords.
+    public float HotwordsScore;
   }
 
   public class OnlineRecognizerResult
