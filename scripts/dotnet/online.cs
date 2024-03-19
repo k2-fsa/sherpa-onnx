@@ -161,7 +161,7 @@ namespace SherpaOnnx
     /// Used only when enable_endpoint is not 0.
     public float Rule3MinUtteranceLength;
 
-        /// Path to the hotwords.
+    /// Path to the hotwords.
     [MarshalAs(UnmanagedType.LPStr)]
     public string HotwordsFile;
 
