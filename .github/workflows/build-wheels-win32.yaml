@@ -43,8 +43,6 @@ jobs:
         run: |
           ls -lh ./wheelhouse/
 
-          ls -lh ./wheelhouse/*.whl
-
       - uses: actions/upload-artifact@v4
         with:
           name: wheel-${{ matrix.python-version }}

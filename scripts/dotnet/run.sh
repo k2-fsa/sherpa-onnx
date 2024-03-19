@@ -18,7 +18,7 @@ mkdir -p linux macos windows
 # You can pre-download the required wheels to /tmp
 src_dir=/tmp
 
-linux_wheel=$src_dir/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_28_x86_64.whl
+linux_wheel=$src_dir/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 macos_wheel=$src_dir/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_x86_64.whl
 windows_wheel=$src_dir/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
 
@@ -30,9 +30,9 @@ if [ ! -f /tmp/linux/libsherpa-onnx-core.so ]; then
   if [ -f $linux_wheel ]; then
     cp -v $linux_wheel .
   else
-    curl -OL https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_28_x86_64.whl
+    curl -OL https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
   fi
-  unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_28_x86_64.whl
+  unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
   cp -v sherpa_onnx/lib/*.so* ../
   cd ..
   rm -v libpiper_phonemize.so libpiper_phonemize.so.1.2.0

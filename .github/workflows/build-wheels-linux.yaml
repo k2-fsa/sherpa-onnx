@@ -24,7 +24,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
-        manylinux: [manylinux2014, manylinux_2_28]
+        manylinux: [manylinux2014] #, manylinux_2_28]
 
 
     steps:
