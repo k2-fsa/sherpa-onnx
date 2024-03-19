@@ -10,6 +10,9 @@ echo "SHERPA_ONNX_DIR: $SHERPA_ONNX_DIR"
 
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" $SHERPA_ONNX_DIR/CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
+# HF_MIRROR=hf-mirror.com
+HF_MIRROR=hf.co
+
 mkdir -p /tmp/
 pushd /tmp
 
@@ -18,7 +21,7 @@ mkdir -p linux macos windows
 # You can pre-download the required wheels to /tmp
 src_dir=/tmp
 
-linux_wheel=$src_dir/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_28_x86_64.whl
+linux_wheel=$src_dir/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 macos_wheel=$src_dir/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_x86_64.whl
 windows_wheel=$src_dir/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
 
@@ -30,9 +33,9 @@ if [ ! -f /tmp/linux/libsherpa-onnx-core.so ]; then
   if [ -f $linux_wheel ]; then
     cp -v $linux_wheel .
   else
-    curl -OL https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_28_x86_64.whl
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
   fi
-  unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_28_x86_64.whl
+  unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
   cp -v sherpa_onnx/lib/*.so* ../
   cd ..
   rm -v libpiper_phonemize.so libpiper_phonemize.so.1.2.0
@@ -52,7 +55,7 @@ if [ ! -f /tmp/macos/libsherpa-onnx-core.dylib ]; then
   if [ -f $macos_wheel  ]; then
     cp -v $macos_wheel .
   else
-    curl -OL https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_x86_64.whl
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_x86_64.whl
   fi
   unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_x86_64.whl
   cp -v sherpa_onnx/lib/*.dylib ../
@@ -69,7 +72,7 @@ if [ ! -f /tmp/macos/libsherpa-onnx-core.dylib ]; then
 fi
 
 
-if [ ! -f /tmp/windows/libsherpa-onnx-core.dll ]; then
+if [ ! -f /tmp/windows/sherpa-onnx-core.dll ]; then
   echo "---windows x64---"
   cd windows
   mkdir -p wheel
@@ -77,7 +80,7 @@ if [ ! -f /tmp/windows/libsherpa-onnx-core.dll ]; then
   if [ -f $windows_wheel ]; then
     cp -v $windows_wheel .
   else
-    curl -OL https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
   fi
   unzip sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
   cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../
