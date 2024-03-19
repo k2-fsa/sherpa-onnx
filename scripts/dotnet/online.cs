@@ -126,6 +126,8 @@ namespace SherpaOnnx
       DecodingMethod = "greedy_search";
       MaxActivePaths = 4;
       EnableEndpoint = 0;
+      HotwordsFile = "";
+      HotwordsScore = 2F;
       Rule1MinTrailingSilence = 1.2F;
       Rule2MinTrailingSilence = 2.4F;
       Rule3MinUtteranceLength = 20.0F;
@@ -143,6 +145,13 @@ namespace SherpaOnnx
     /// 0 to disable endpoint detection.
     /// A non-zero value to enable endpoint detection.
     public int EnableEndpoint;
+
+    /// Path to the hotwords.
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string HotwordsFile;
+
+    /// Bonus score for each token in hotwords.
+    public float HotwordsScore;
 
     /// An endpoint is detected if trailing silence in seconds is larger than
     /// this value even if nothing has been decoded.
