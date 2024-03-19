@@ -11,4 +11,9 @@ dotnet new console -n offline-tts-play
 dotnet sln ./sherpa-onnx.sln add ./offline-tts-play
 ```
 
+```bash
+dotnet nuget locals all --list
+dotnet nuget locals all --clear
+```
+
 [sherpa-onnx]: https://github.com/k2-fsa/sherpa-onnx

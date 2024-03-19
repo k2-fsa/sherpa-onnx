@@ -159,6 +159,9 @@ namespace SherpaOnnx
     private static extern int SherpaOnnxWriteWave(IntPtr samples, int n, int sample_rate, [MarshalAs(UnmanagedType.LPStr)] string filename);
   }
 
+  // IntPtr is actuallly a `const float*` from C++
+  public delegate void OfflineTtsCallback(IntPtr samples, int n);
+
   public class OfflineTts : IDisposable
   {
     public OfflineTts(OfflineTtsConfig config)
@@ -170,6 +173,12 @@ namespace SherpaOnnx
     public OfflineTtsGeneratedAudio Generate(String text, float speed, int speakerId)
     {
       IntPtr p = SherpaOnnxOfflineTtsGenerate(_handle.Handle, text, speakerId, speed);
+      return new OfflineTtsGeneratedAudio(p);
+    }
+
+    public OfflineTtsGeneratedAudio GenerateWithCallback(String text, float speed, int speakerId, OfflineTtsCallback callback)
+    {
+      IntPtr p = SherpaOnnxOfflineTtsGenerateWithCallback(_handle.Handle, text, speakerId, speed, callback);
       return new OfflineTtsGeneratedAudio(p);
     }
 
@@ -215,6 +224,9 @@ namespace SherpaOnnx
 
     [DllImport(Dll.Filename)]
     private static extern IntPtr SherpaOnnxOfflineTtsGenerate(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string text, int sid, float speed);
+
+    [DllImport(Dll.Filename, CallingConvention = CallingConvention.Cdecl)]
+    private static extern IntPtr SherpaOnnxOfflineTtsGenerateWithCallback(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string text, int sid, float speed, OfflineTtsCallback callback);
   }
 
 
