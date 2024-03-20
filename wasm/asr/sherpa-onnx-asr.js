@@ -393,11 +393,13 @@ function initSherpaOnnxOfflineNemoEncDecCtcModelConfig(config, Module) {
 function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   const encoderLen = Module.lengthBytesUTF8(config.encoder) + 1;
   const decoderLen = Module.lengthBytesUTF8(config.decoder) + 1;
+  const languageLen = Module.lengthBytesUTF8(config.language) + 1;
+  const taskLen = Module.lengthBytesUTF8(config.task) + 1;
 
-  const n = encoderLen + decoderLen;
+  const n = encoderLen + decoderLen + languageLen + taskLen;
   const buffer = Module._malloc(n);
 
-  const len = 2 * 4;  // 2 pointers
+  const len = 4 * 4;  // 4 pointers
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -405,12 +407,25 @@ function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   offset += encoderLen;
 
   Module.stringToUTF8(config.decoder, buffer + offset, decoderLen);
+  offset += decoderLen;
+
+  Module.stringToUTF8(config.language, buffer + offset, languageLen);
+  offset += languageLen;
+
+  Module.stringToUTF8(config.task, buffer + offset, taskLen);
 
   offset = 0;
   Module.setValue(ptr, buffer + offset, 'i8*');
   offset += encoderLen;
 
   Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += decoderLen;
+
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
+  offset += languageLen;
+
+  Module.setValue(ptr + 12, buffer + offset, 'i8*');
+  offset += taskLen;
 
   return {
     buffer: buffer, ptr: ptr, len: len,

@@ -14,7 +14,7 @@ static_assert(sizeof(SherpaOnnxOfflineTransducerModelConfig) == 3 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineParaformerModelConfig) == 4, "");
 
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
-static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 2 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 4 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTdnnModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineLMConfig) == 2 * 4, "");
 
@@ -77,6 +77,8 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "----------offline whisper model config----------\n");
   fprintf(stdout, "encoder: %s\n", whisper->encoder);
   fprintf(stdout, "decoder: %s\n", whisper->decoder);
+  fprintf(stdout, "language: %s\n", whisper->language);
+  fprintf(stdout, "task: %s\n", whisper->task);
 
   fprintf(stdout, "----------offline tdnn model config----------\n");
   fprintf(stdout, "model: %s\n", tdnn->model);

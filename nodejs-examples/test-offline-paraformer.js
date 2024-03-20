@@ -27,6 +27,8 @@ function createOfflineRecognizer() {
     whisper: {
       encoder: '',
       decoder: '',
+      language: '',
+      task: '',
     },
     tdnn: {
       model: '',
