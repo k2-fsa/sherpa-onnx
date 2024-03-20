@@ -301,12 +301,14 @@ func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
 func sherpaOnnxOfflineWhisperModelConfig(
   encoder: String = "",
   decoder: String = "",
-  language: String = ""
+  language: String = "",
+  task: String = "transcribe"
 ) -> SherpaOnnxOfflineWhisperModelConfig {
   return SherpaOnnxOfflineWhisperModelConfig(
     encoder: toCPointer(encoder),
     decoder: toCPointer(decoder),
-    language: toCPointer(language)
+    language: toCPointer(language),
+    task: toCPointer(task)
   )
 }
 
