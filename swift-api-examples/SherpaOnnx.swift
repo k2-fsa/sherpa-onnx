@@ -242,17 +242,17 @@ class SherpaOnnxRecognizer {
   /// the given hotWords appended to the default hotwords.
   func reset(hotwords: String? = nil) {
     guard let words = hotwords, !words.isEmpty else {
-        Reset(recognizer, stream)
-        return
+      Reset(recognizer, stream)
+      return
     }
-    
+
     words.withCString { cString in
-        let newStream = CreateOnlineStreamWithHotwords(recognizer, cString)
-        // lock while release and replace stream
-        objc_sync_enter(self)
-        DestroyOnlineStream(stream)
-        stream = newStream
-        objc_sync_exit(self)
+      let newStream = CreateOnlineStreamWithHotwords(recognizer, cString)
+      // lock while release and replace stream
+      objc_sync_enter(self)
+      DestroyOnlineStream(stream)
+      stream = newStream
+      objc_sync_exit(self)
     }
   }
 
@@ -300,11 +300,15 @@ func sherpaOnnxOfflineNemoEncDecCtcModelConfig(
 
 func sherpaOnnxOfflineWhisperModelConfig(
   encoder: String = "",
-  decoder: String = ""
+  decoder: String = "",
+  language: String = "",
+  task: String = "transcribe"
 ) -> SherpaOnnxOfflineWhisperModelConfig {
   return SherpaOnnxOfflineWhisperModelConfig(
     encoder: toCPointer(encoder),
-    decoder: toCPointer(decoder)
+    decoder: toCPointer(decoder),
+    language: toCPointer(language),
+    task: toCPointer(task)
   )
 }
 

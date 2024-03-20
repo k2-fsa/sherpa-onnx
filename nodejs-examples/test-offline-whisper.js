@@ -27,6 +27,8 @@ function createOfflineRecognizer() {
     whisper: {
       encoder: './sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx',
       decoder: './sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx',
+      language: '',
+      task: 'transcribe',
     },
     tdnn: {
       model: '',

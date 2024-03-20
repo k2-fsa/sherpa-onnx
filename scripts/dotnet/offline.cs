@@ -279,12 +279,20 @@ namespace SherpaOnnx
     {
       Encoder = "";
       Decoder = "";
+      Language = "";
+      Task = "transcribe";
     }
     [MarshalAs(UnmanagedType.LPStr)]
     public string Encoder;
 
     [MarshalAs(UnmanagedType.LPStr)]
     public string Decoder;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Language;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Task;
   }
 
   [StructLayout(LayoutKind.Sequential)]

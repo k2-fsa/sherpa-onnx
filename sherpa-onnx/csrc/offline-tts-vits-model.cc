@@ -223,7 +223,8 @@ class OfflineTtsVitsModel::Impl {
     inputs.push_back(std::move(length_scale_tensor));
     inputs.push_back(std::move(noise_scale_w_tensor));
 
-    if (input_names_.size() == 6 && input_names_.back() == "sid") {
+    if (input_names_.size() == 6 &&
+        (input_names_.back() == "sid" || input_names_.back() == "speaker")) {
       inputs.push_back(std::move(sid_tensor));
     }
 

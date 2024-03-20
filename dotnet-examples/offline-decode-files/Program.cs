@@ -40,6 +40,12 @@ class OfflineDecodeFiles
     [Option("whisper-decoder", Required = false, Default = "", HelpText = "Path to whisper decoder.onnx. Used only for whisper models")]
     public string WhisperDecoder { get; set; }
 
+    [Option("whisper-language", Required = false, Default = "", HelpText = "Language of the input file. Can be empty")]
+    public string WhisperLanguage{ get; set; }
+
+    [Option("whisper-task", Required = false, Default = "transcribe", HelpText = "transcribe or translate")]
+    public string WhisperTask{ get; set; }
+
     [Option("tdnn-model", Required = false, Default = "", HelpText = "Path to tdnn yesno model")]
     public string TdnnModel { get; set; }
 
@@ -193,6 +199,8 @@ to download pre-trained Tdnn models.
     {
       config.ModelConfig.Whisper.Encoder = options.WhisperEncoder;
       config.ModelConfig.Whisper.Decoder = options.WhisperDecoder;
+      config.ModelConfig.Whisper.Language = options.WhisperLanguage;
+      config.ModelConfig.Whisper.Task = options.WhisperTask;
     }
     else if (!String.IsNullOrEmpty(options.TdnnModel))
     {
