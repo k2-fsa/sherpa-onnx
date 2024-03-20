@@ -332,6 +332,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineNemoEncDecCtcModelConfig {
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineWhisperModelConfig {
   const char *encoder;
   const char *decoder;
+  const char *language;
 } SherpaOnnxOfflineWhisperModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTdnnModelConfig {

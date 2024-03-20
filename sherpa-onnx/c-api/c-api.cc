@@ -298,6 +298,9 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
   recognizer_config.model_config.whisper.decoder =
       SHERPA_ONNX_OR(config->model_config.whisper.decoder, "");
 
+  recognizer_config.model_config.whisper.language =
+      SHERPA_ONNX_OR(config->model_config.whisper.language, "");
+
   recognizer_config.model_config.tdnn.model =
       SHERPA_ONNX_OR(config->model_config.tdnn.model, "");
 
