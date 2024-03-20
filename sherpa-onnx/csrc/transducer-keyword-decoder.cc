@@ -2,14 +2,16 @@
 //
 // Copyright (c)  2023-2024  Xiaomi Corporation
 
+#include "sherpa-onnx/csrc/transducer-keyword-decoder.h"
+
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 #include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
-#include "sherpa-onnx/csrc/transducer-keyword-decoder.h"
 
 namespace sherpa_onnx {
 
