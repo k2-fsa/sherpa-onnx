@@ -2,8 +2,6 @@ name: apk-tts-engine
 
 on:
   push:
-    branches:
-      - apk-tts
     tags:
       - '*'
 

@@ -10,6 +10,7 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
       - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
     tags:
       - '*'
@@ -21,6 +22,7 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
       - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
 
   workflow_dispatch:

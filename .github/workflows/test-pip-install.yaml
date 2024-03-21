@@ -29,7 +29,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
         exclude:
           - os: macos-latest
             python-version: "3.7"
@@ -68,6 +68,7 @@ jobs:
           export PATH=/c/hostedtoolcache/windows/Python/3.9.13/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.11.8/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.12.2/x64/bin:$PATH
 
           sherpa-onnx --help
           sherpa-onnx-keyword-spotter --help

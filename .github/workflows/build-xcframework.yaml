@@ -4,11 +4,25 @@ on:
   push:
     branches:
       - master
-      - xcframework
     paths:
       - './build-ios.sh'
+      - '.github/workflows/build-xcframework.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
     tags:
       - '*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - './build-ios.sh'
+      - '.github/workflows/build-xcframework.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
 
   workflow_dispatch:
 

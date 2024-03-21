@@ -9,6 +9,7 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
       - 'toolchains/riscv64-linux-gnu.toolchain.cmake'
       - 'build-riscv64-linux-gnu.sh'
     tags:
@@ -22,6 +23,7 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'toolchains/riscv64-linux-gnu.toolchain.cmake'
+      - 'sherpa-onnx/c-api/*'
       - 'build-riscv64-linux-gnu.sh'
 
   workflow_dispatch:

@@ -2,8 +2,6 @@ name: build-wheels-macos-arm64
 
 on:
   push:
-    branches:
-      - wheel
     tags:
       - '*'
   workflow_dispatch:
@@ -16,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_wheels:
+  build_wheels_macos_arm64:
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -34,6 +32,7 @@ jobs:
         if: matrix.python-version == 'cp37'
         uses: pypa/cibuildwheel@v2.11.4
         env:
+          CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64'"
           CIBW_ARCHS: "arm64"
           CIBW_BUILD_VERBOSITY: 3
@@ -57,8 +56,6 @@ jobs:
         shell: bash
         run: |
           ls -lh ./wheelhouse/
-
-          ls -lh ./wheelhouse/*.whl
 
       - uses: actions/upload-artifact@v4
         with:

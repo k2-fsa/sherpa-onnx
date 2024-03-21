@@ -2,8 +2,6 @@ name: build-wheels-win32
 
 on:
   push:
-    branches:
-      - wheel
     tags:
       - '*'
   workflow_dispatch:

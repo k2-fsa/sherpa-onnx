@@ -25,15 +25,6 @@ on:
       - 'build-android*.sh'
 
   workflow_dispatch:
-    inputs:
-      release:
-        description: "Whether to release"
-        type: boolean
-
-env:
-  RELEASE:
-    |- # Release if there is a release tag name or a release flag in workflow_dispatch
-    ${{ github.event.release.tag_name != '' || github.event.inputs.release == 'true' }}
 
 concurrency:
   group: android-${{ github.ref }}

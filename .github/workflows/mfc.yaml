@@ -12,6 +12,7 @@ on:
       - 'cmake/**'
       - 'mfc-examples/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
   pull_request:
     branches:
       - master
@@ -21,6 +22,7 @@ on:
       - 'cmake/**'
       - 'mfc-examples/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
 
   workflow_dispatch:
 

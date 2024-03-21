@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_wheels:
+  build_wheels_macos_x64:
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -41,6 +41,7 @@ jobs:
 
           #  Don't repair macOS wheels
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
+
       - name: Build wheels
         if: matrix.python-version != 'cp37'
         uses: pypa/cibuildwheel@v2.15.0
