@@ -50,10 +50,29 @@ jobs:
           cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release ..
           cmake --build . --target install --config Release
 
+      - name: Build sherpa-onnx for windows x86
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build-win32
+          cd build-win32
+          cmake -A Win32 -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release ..
+          cmake --build . --target install --config Release
+
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.os }}
           path: ./build/install/lib/
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'windows-latest'
+        with:
+          name: ${{ matrix.os }}-win32
+          path: ./build-win32/install/lib/
 
   test-dot-net:
     runs-on: ${{ matrix.os }}
@@ -95,7 +114,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: windows-latest
-          path: /tmp/windows
+          path: /tmp/windows-x64
+
+      - name: Retrieve artifact from windows-latest
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-latest-win32
+          path: /tmp/windows-x86
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
@@ -119,8 +144,11 @@ jobs:
           echo "----------/tmp/macos----------"
           ls -lh /tmp/macos
 
-          echo "----------/tmp/windows----------"
-          ls -lh /tmp/windows
+          echo "----------/tmp/windows-x64----------"
+          ls -lh /tmp/windows-x64
+
+          echo "----------/tmp/windows-x86----------"
+          ls -lh /tmp/windows-x86
 
       - name: Build
         shell: bash
