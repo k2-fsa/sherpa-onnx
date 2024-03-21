@@ -14,12 +14,16 @@ struct OnlineTransducerModelConfig {
   std::string encoder;
   std::string decoder;
   std::string joiner;
+  std::string ctc;
+  std::string frame_reducer;
 
   OnlineTransducerModelConfig() = default;
   OnlineTransducerModelConfig(const std::string &encoder,
                               const std::string &decoder,
-                              const std::string &joiner)
-      : encoder(encoder), decoder(decoder), joiner(joiner) {}
+                              const std::string &joiner,
+                              const std::string &ctc="",
+                              const std::string &frame_reducer="")
+      : encoder(encoder), decoder(decoder), joiner(joiner), ctc(ctc), frame_reducer(frame_reducer) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

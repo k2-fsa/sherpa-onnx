@@ -90,9 +90,24 @@ void OnlineZipformerTransducerModel::InitEncoder(void *model_data,
   Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
   if (config_.debug) {
     std::ostringstream os;
-    os << "---encoder---\n";
+    os << "\n---encoder---\n";
     PrintModelMetadata(os, meta_data);
     SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    fprintf(stderr, "\033[1;33m");
+    fprintf(stderr, "encoder input names:\n");
+    for (const auto& n : encoder_input_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "\033[1;34m");
+    fprintf(stderr, "encoder output names:\n");
+    for (const auto& n : encoder_output_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");  
+    fprintf(stderr, "--------------------------------------\n");
   }
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -139,9 +154,24 @@ void OnlineZipformerTransducerModel::InitDecoder(void *model_data,
   Ort::ModelMetadata meta_data = decoder_sess_->GetModelMetadata();
   if (config_.debug) {
     std::ostringstream os;
-    os << "---decoder---\n";
+    os << "\n---decoder---\n";
     PrintModelMetadata(os, meta_data);
     SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    fprintf(stderr, "\033[1;33m");
+    fprintf(stderr, "decoder input names:\n");
+    for (const auto& n : decoder_input_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "\033[1;34m");
+    fprintf(stderr, "decoder output names:\n");
+    for (const auto& n : decoder_output_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "--------------------------------------\n");
   }
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -164,9 +194,24 @@ void OnlineZipformerTransducerModel::InitJoiner(void *model_data,
   Ort::ModelMetadata meta_data = joiner_sess_->GetModelMetadata();
   if (config_.debug) {
     std::ostringstream os;
-    os << "---joiner---\n";
+    os << "\n---joiner---\n";
     PrintModelMetadata(os, meta_data);
     SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    fprintf(stderr, "\033[1;33m");
+    fprintf(stderr, "joiner input names:\n");
+    for (const auto& n : joiner_input_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "\033[1;34m");
+    fprintf(stderr, "joiner output names:\n");
+    for (const auto& n : joiner_output_names_)
+    {
+      fprintf(stderr, "-- %s\n", n.c_str());
+    }
+    fprintf(stderr, "\033[0m");
+    fprintf(stderr, "--------------------------------------\n");
   }
 }
 

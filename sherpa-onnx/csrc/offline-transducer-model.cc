@@ -36,6 +36,32 @@ class OfflineTransducerModel::Impl {
       auto buf = ReadFile(config.transducer.joiner_filename);
       InitJoiner(buf.data(), buf.size());
     }
+
+    if (!config.transducer.ctc.empty())
+    {
+      {
+        auto buf = ReadFile(config.transducer.ctc);
+        InitCTC(buf.data(), buf.size());
+      }
+
+      {
+        auto buf = ReadFile(config.transducer.frame_reducer);
+        InitFrameReducer(buf.data(), buf.size());
+      }
+    }
+
+    if (!config.transducer.encoder_proj.empty())
+    {
+      {
+        auto buf = ReadFile(config.transducer.encoder_proj);
+        InitEncoderProj(buf.data(), buf.size());
+      }
+
+      {
+        auto buf = ReadFile(config.transducer.decoder_proj);
+        InitDecoderProj(buf.data(), buf.size());
+      }
+    }
   }
 
 #if __ANDROID_API__ >= 9
@@ -91,6 +117,39 @@ class OfflineTransducerModel::Impl {
 
     return std::move(logit[0]);
   }
+
+  Ort::Value RunCTC(Ort::Value encoder_out) {
+    auto ctc_out = ctc_sess_->Run(
+        {}, ctc_input_names_ptr_.data(), &encoder_out, 1,
+        ctc_output_names_ptr_.data(), ctc_output_names_ptr_.size());
+    return std::move(ctc_out[0]);
+  } 
+
+  std::pair<Ort::Value, Ort::Value> RunFrameReducer(Ort::Value encoder_out, 
+                                                    Ort::Value encoder_out_lens, 
+                                                    Ort::Value ctc_out) {
+    std::array<Ort::Value, 3> frame_reducer_inputs = {std::move(encoder_out),
+                                                      std::move(encoder_out_lens),
+                                                      std::move(ctc_out)};
+    auto frame_reducer_out = frame_reducer_sess_->Run(
+        {}, frame_reducer_input_names_ptr_.data(), frame_reducer_inputs.data(), frame_reducer_inputs.size(),
+        frame_reducer_output_names_ptr_.data(), frame_reducer_output_names_ptr_.size());
+    return {std::move(frame_reducer_out[0]), std::move(frame_reducer_out[1])};
+  } 
+
+  Ort::Value RunEncoderProj(Ort::Value encoder_proj_input) {
+    auto encoder_proj_out = encoder_proj_sess_->Run(
+        {}, encoder_proj_input_names_ptr_.data(), &encoder_proj_input, 1,
+        encoder_proj_output_names_ptr_.data(), encoder_proj_output_names_ptr_.size());
+    return std::move(encoder_proj_out[0]);
+  }
+
+  Ort::Value RunDecoderProj(Ort::Value decoder_proj_input) {
+    auto decoder_proj_out = decoder_proj_sess_->Run(
+        {}, decoder_proj_input_names_ptr_.data(), &decoder_proj_input, 1,
+        decoder_proj_output_names_ptr_.data(), decoder_proj_output_names_ptr_.size());
+    return std::move(decoder_proj_out[0]);
+  }  
 
   int32_t VocabSize() const { return vocab_size_; }
   int32_t ContextSize() const { return context_size_; }
@@ -209,6 +268,150 @@ class OfflineTransducerModel::Impl {
     }
   }
 
+  void InitCTC(void *model_data, size_t model_data_length)
+  {
+    ctc_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                  model_data_length, sess_opts_);
+
+    GetInputNames(ctc_sess_.get(), &ctc_input_names_,
+                  &ctc_input_names_ptr_);
+
+    GetOutputNames(ctc_sess_.get(), &ctc_output_names_,
+                   &ctc_output_names_ptr_);
+
+    // get meta data
+    Ort::ModelMetadata meta_data = ctc_sess_->GetModelMetadata();
+    if (config_.debug) {
+      std::ostringstream os;
+      os << "\n---ctc---\n";
+      PrintModelMetadata(os, meta_data);
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+      fprintf(stderr, "\033[1;33m");
+      fprintf(stderr, "ctc input names:\n");
+      for (const auto& n : ctc_input_names_)
+      {
+        fprintf(stderr, "-- %s\n", n.c_str());
+      }
+      fprintf(stderr, "\033[0m");
+      fprintf(stderr, "\033[1;34m");
+      fprintf(stderr, "ctc output names:\n");
+      for (const auto& n : ctc_output_names_)
+      {
+        fprintf(stderr, "-- %s\n", n.c_str());
+      }
+      fprintf(stderr, "\033[0m");
+      fprintf(stderr, "--------------------------------------\n");
+    }
+  }
+
+  void InitFrameReducer(void *model_data, size_t model_data_length)
+  {
+    frame_reducer_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                  model_data_length, sess_opts_);
+
+    GetInputNames(frame_reducer_sess_.get(), &frame_reducer_input_names_,
+                  &frame_reducer_input_names_ptr_);
+
+    GetOutputNames(frame_reducer_sess_.get(), &frame_reducer_output_names_,
+                   &frame_reducer_output_names_ptr_);
+
+    // get meta data
+    Ort::ModelMetadata meta_data = frame_reducer_sess_->GetModelMetadata();
+    if (config_.debug) {
+      std::ostringstream os;
+      os << "\n---frame_reducer---\n";
+      PrintModelMetadata(os, meta_data);
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+      fprintf(stderr, "\033[1;33m");
+      fprintf(stderr, "frame reducer input names:\n");
+      for (const auto& n : frame_reducer_input_names_)
+      {
+        fprintf(stderr, "-- %s\n", n.c_str());
+      }
+      fprintf(stderr, "\033[0m");
+      fprintf(stderr, "\033[1;34m");
+      fprintf(stderr, "frame reducer output names:\n");
+      for (const auto& n : frame_reducer_output_names_)
+      {
+        fprintf(stderr, "-- %s\n", n.c_str());
+      }
+      fprintf(stderr, "\033[0m");
+      fprintf(stderr, "--------------------------------------\n");
+    }
+  }
+
+  void InitEncoderProj(void *model_data, size_t model_data_length)
+  {
+    encoder_proj_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                  model_data_length, sess_opts_);
+
+    GetInputNames(encoder_proj_sess_.get(), &encoder_proj_input_names_,
+                  &encoder_proj_input_names_ptr_);
+
+    GetOutputNames(encoder_proj_sess_.get(), &encoder_proj_output_names_,
+                   &encoder_proj_output_names_ptr_);
+
+    // get meta data
+    Ort::ModelMetadata meta_data = encoder_proj_sess_->GetModelMetadata();
+    if (config_.debug) {
+      std::ostringstream os;
+      os << "\n---encoder_proj---\n";
+      PrintModelMetadata(os, meta_data);
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+      fprintf(stderr, "\033[1;33m");
+      fprintf(stderr, "encoder_proj input names:\n");
+      for (const auto& n : encoder_proj_input_names_)
+      {
+        fprintf(stderr, "-- %s\n", n.c_str());
+      }
+      fprintf(stderr, "\033[0m");
+      fprintf(stderr, "\033[1;34m");
+      fprintf(stderr, "encoder_proj output names:\n");
+      for (const auto& n : encoder_proj_output_names_)
+      {
+        fprintf(stderr, "-- %s\n", n.c_str());
+      }
+      fprintf(stderr, "\033[0m");
+      fprintf(stderr, "--------------------------------------\n");
+    }
+  }
+
+  void InitDecoderProj(void *model_data, size_t model_data_length)
+  {
+    decoder_proj_sess_ = std::make_unique<Ort::Session>(env_, model_data,
+                                                  model_data_length, sess_opts_);
+
+    GetInputNames(decoder_proj_sess_.get(), &decoder_proj_input_names_,
+                  &decoder_proj_input_names_ptr_);
+
+    GetOutputNames(decoder_proj_sess_.get(), &decoder_proj_output_names_,
+                   &decoder_proj_output_names_ptr_);
+
+    // get meta data
+    Ort::ModelMetadata meta_data = decoder_proj_sess_->GetModelMetadata();
+    if (config_.debug) {
+      std::ostringstream os;
+      os << "\n---decoder_proj---\n";
+      PrintModelMetadata(os, meta_data);
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+      fprintf(stderr, "\033[1;33m");
+      fprintf(stderr, "decoder_proj input names:\n");
+      for (const auto& n : decoder_proj_input_names_)
+      {
+        fprintf(stderr, "-- %s\n", n.c_str());
+      }
+      fprintf(stderr, "\033[0m");
+      fprintf(stderr, "\033[1;34m");
+      fprintf(stderr, "decoder_proj output names:\n");
+      for (const auto& n : decoder_proj_output_names_)
+      {
+        fprintf(stderr, "-- %s\n", n.c_str());
+      }
+      fprintf(stderr, "\033[0m");
+      fprintf(stderr, "--------------------------------------\n");
+    }
+  }
+
  private:
   OfflineModelConfig config_;
   Ort::Env env_;
@@ -218,6 +421,10 @@ class OfflineTransducerModel::Impl {
   std::unique_ptr<Ort::Session> encoder_sess_;
   std::unique_ptr<Ort::Session> decoder_sess_;
   std::unique_ptr<Ort::Session> joiner_sess_;
+  std::unique_ptr<Ort::Session> ctc_sess_;
+  std::unique_ptr<Ort::Session> frame_reducer_sess_;
+  std::unique_ptr<Ort::Session> encoder_proj_sess_;
+  std::unique_ptr<Ort::Session> decoder_proj_sess_;
 
   std::vector<std::string> encoder_input_names_;
   std::vector<const char *> encoder_input_names_ptr_;
@@ -236,6 +443,30 @@ class OfflineTransducerModel::Impl {
 
   std::vector<std::string> joiner_output_names_;
   std::vector<const char *> joiner_output_names_ptr_;
+
+  std::vector<std::string> ctc_input_names_;
+  std::vector<const char *> ctc_input_names_ptr_;
+
+  std::vector<std::string> ctc_output_names_;
+  std::vector<const char *> ctc_output_names_ptr_;
+
+  std::vector<std::string> frame_reducer_input_names_;
+  std::vector<const char *> frame_reducer_input_names_ptr_;
+
+  std::vector<std::string> frame_reducer_output_names_;
+  std::vector<const char *> frame_reducer_output_names_ptr_;
+
+  std::vector<std::string> encoder_proj_input_names_;
+  std::vector<const char *> encoder_proj_input_names_ptr_;
+
+  std::vector<std::string> encoder_proj_output_names_;
+  std::vector<const char *> encoder_proj_output_names_ptr_;
+
+  std::vector<std::string> decoder_proj_input_names_;
+  std::vector<const char *> decoder_proj_input_names_ptr_;
+
+  std::vector<std::string> decoder_proj_output_names_;
+  std::vector<const char *> decoder_proj_output_names_ptr_;
 
   int32_t vocab_size_ = 0;    // initialized in InitDecoder
   int32_t context_size_ = 0;  // initialized in InitDecoder
@@ -264,6 +495,23 @@ Ort::Value OfflineTransducerModel::RunDecoder(Ort::Value decoder_input) {
 Ort::Value OfflineTransducerModel::RunJoiner(Ort::Value encoder_out,
                                              Ort::Value decoder_out) {
   return impl_->RunJoiner(std::move(encoder_out), std::move(decoder_out));
+}
+
+Ort::Value OfflineTransducerModel::RunCTC(Ort::Value encoder_out) {
+  return impl_->RunCTC(std::move(encoder_out));
+}
+
+std::pair<Ort::Value, Ort::Value> OfflineTransducerModel::RunFrameReducer(
+    Ort::Value encoder_out, Ort::Value encoder_out_lens, Ort::Value ctc_out) {
+  return impl_->RunFrameReducer(std::move(encoder_out), std::move(encoder_out_lens), std::move(ctc_out));
+}
+
+Ort::Value OfflineTransducerModel::RunEncoderProj(Ort::Value encoder_proj_input) {
+  return impl_->RunEncoderProj(std::move(encoder_proj_input));
+}
+
+Ort::Value OfflineTransducerModel::RunDecoderProj(Ort::Value decoder_proj_input) {
+  return impl_->RunDecoderProj(std::move(decoder_proj_input));
 }
 
 int32_t OfflineTransducerModel::VocabSize() const { return impl_->VocabSize(); }
