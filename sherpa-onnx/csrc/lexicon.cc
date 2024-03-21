@@ -145,7 +145,9 @@ std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIds(
 }
 
 std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsChinese(
-    const std::string &text) const {
+    const std::string &_text) const {
+  std::string text(_text);
+  ToLowerCase(&text);
   std::vector<std::string> words;
   if (pattern_) {
     // Handle polyphones
@@ -206,6 +208,11 @@ std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsChinese(
     eos = token2id_.at("eos");
   }
 
+  int32_t pad = -1;
+  if (token2id_.count("#0")) {
+    pad = token2id_.at("#0");
+  }
+
   if (sil != -1) {
     this_sentence.push_back(sil);
   }
@@ -219,6 +226,8 @@ std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsChinese(
       if (punctuations_.count(w)) {
         if (token2id_.count(w)) {
           this_sentence.push_back(token2id_.at(w));
+        } else if (pad != -1) {
+          this_sentence.push_back(pad);
         } else if (sil != -1) {
           this_sentence.push_back(sil);
         }

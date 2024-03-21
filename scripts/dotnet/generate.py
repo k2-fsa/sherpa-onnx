@@ -87,7 +87,7 @@ def process_macos(s):
         f.write(s)
 
 
-def process_windows(s):
+def process_windows(s, rid):
     libs = [
         "espeak-ng.dll",
         "kaldi-decoder-core.dll",
@@ -103,18 +103,18 @@ def process_windows(s):
 
     version = get_version()
 
-    prefix = "/tmp/windows/"
+    prefix = f"/tmp/windows-{rid}/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
     d = get_dict()
-    d["dotnet_rid"] = "win-x64"
+    d["dotnet_rid"] = f"win-{rid}"
     d["libs"] = libs
 
     environment = jinja2.Environment()
     template = environment.from_string(s)
     s = template.render(**d)
-    with open("./windows/sherpa-onnx.runtime.csproj", "w") as f:
+    with open(f"./windows-{rid}/sherpa-onnx.runtime.csproj", "w") as f:
         f.write(s)
 
 
@@ -122,7 +122,8 @@ def main():
     s = read_proj_file("./sherpa-onnx.csproj.runtime.in")
     process_macos(s)
     process_linux(s)
-    process_windows(s)
+    process_windows(s, "x64")
+    process_windows(s, "x86")
 
     s = read_proj_file("./sherpa-onnx.csproj.in")
     d = get_dict()
