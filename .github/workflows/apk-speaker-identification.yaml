@@ -2,8 +2,6 @@ name: apk-speaker-identification
 
 on:
   push:
-    branches:
-      - apk
     tags:
       - '*'
 
@@ -17,7 +15,7 @@ permissions:
   contents: write
 
 jobs:
-  apk_tts:
+  apk_speaker_identification:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
     name: apk for tts ${{ matrix.index }}/${{ matrix.total }}
@@ -84,18 +82,7 @@ jobs:
           ls -lh ./apks/
           du -h -d1 .
 
-      # - name: Release
-      #   uses: svenstaro/upload-release-action@v2
-      #   with:
-      #     file_glob: true
-      #     file: ./apks/*.apk
-      #     overwrite: true
-      #     repo_name: k2-fsa/sherpa-onnx
-      #     repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-      #     tag: speaker-recongition-models
-
       - name: Publish to huggingface
-        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3

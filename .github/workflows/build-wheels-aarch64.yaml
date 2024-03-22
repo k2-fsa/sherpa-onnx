@@ -2,8 +2,6 @@ name: build-wheels-aarch64
 
 on:
   push:
-    branches:
-      - wheel
     tags:
       - '*'
   workflow_dispatch:
@@ -61,10 +59,8 @@ jobs:
         run: |
           ls -lh ./wheelhouse/
 
-          ls -lh ./wheelhouse/*.whl
-
       - name: Publish to huggingface
-        if: matrix.python-version == 'cp38' && matrix.manylinux == 'manylinux_2_28'
+        if: matrix.python-version == 'cp38' && matrix.manylinux == 'manylinux2014'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3

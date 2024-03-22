@@ -79,6 +79,13 @@ only when --enable-endpoint is true.")]
 larger than this value. Used only when --enable-endpoint is true.")]
     public float Rule3MinUtteranceLength { get; set; }
 
+    [Option("hotwords-file", Required = false, Default = "", HelpText = "Path to hotwords.txt")]
+    public string HotwordsFile { get; set; }
+
+    [Option("hotwords-score", Required = false, Default = 1.5F, HelpText = "hotwords score")]
+    public float HotwordsScore { get; set; }
+
+
     [Option("files", Required = true, HelpText = "Audio files for decoding")]
     public IEnumerable<string> Files { get; set; }
 
@@ -180,6 +187,8 @@ to download pre-trained streaming models.
     config.Rule1MinTrailingSilence = options.Rule1MinTrailingSilence;
     config.Rule2MinTrailingSilence = options.Rule2MinTrailingSilence;
     config.Rule3MinUtteranceLength = options.Rule3MinUtteranceLength;
+    config.HotwordsFile = options.HotwordsFile;
+    config.HotwordsScore = options.HotwordsScore;
 
     OnlineRecognizer recognizer = new OnlineRecognizer(config);
 

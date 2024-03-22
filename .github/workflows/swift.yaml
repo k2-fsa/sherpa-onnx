@@ -4,10 +4,28 @@ on:
   push:
     branches:
       - master
+    paths:
+      - './build-swift-macos.sh'
+      - '.github/workflows/swift.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'swift-api-examples/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/**'
+      - '.github/scripts/test-swift.sh'
 
   pull_request:
     branches:
       - master
+    paths:
+      - './build-swift-macos.sh'
+      - '.github/workflows/swift.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'swift-api-examples/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/**'
+      - '.github/scripts/test-swift.sh'
 
   workflow_dispatch:
 

@@ -30,19 +30,25 @@ concurrency:
 permissions:
   contents: read
 
+env:
+  SCCACHE_GHA_ENABLED: "true"
+
 jobs:
   run-python-test:
+    name: ${{ matrix.os }} ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest] # windows-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10"]
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.7", "3.8", "3.9", "3.10","3.11", "3.12"]
         exclude:
           - os: macos-latest
             python-version: "3.9"
           - os: macos-latest
             python-version: "3.10"
+          # - os: windows-latest
+          #   python-version: "3.12"
 
     steps:
       - uses: actions/checkout@v4
@@ -50,9 +56,16 @@ jobs:
           fetch-depth: 0
 
       - name: ccache
+        if: matrix.os != 'windows-latest'
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.os }}-python-${{ matrix.python-version }}
+
+      - name: Run sccache-cache
+        if: matrix.os == 'windows-latest'
+        uses: mozilla-actions/sccache-action@v0.0.3
+        with:
+          version: "v0.7.4"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -62,9 +75,10 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece==0.1.96 soundfile
+          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile
 
       - name: Install sherpa-onnx
+        if: matrix.os != 'windows-latest'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -73,11 +87,22 @@ jobs:
 
           python3 -m pip install --verbose .
 
+      - name: Install sherpa-onnx
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          cmake --version
+          export SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache"
+          echo "SHERPA_ONNX_CMAKE_ARGS: ${SHERPA_ONNX_CMAKE_ARGS}"
+
+          python3 -m pip install --verbose .
+
       - name: Test sherpa-onnx
         shell: bash
         run: |
-          .github/scripts/test-speaker-recognition-python.sh
+          export OS=${{ matrix.os }}
           .github/scripts/test-python.sh
+          .github/scripts/test-speaker-recognition-python.sh
 
       - uses: actions/upload-artifact@v4
         with:

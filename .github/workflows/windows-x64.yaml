@@ -40,7 +40,7 @@ concurrency:
 
 jobs:
   windows_x64:
-    name: Windows x64
+    name: ${{ matrix.shared_lib }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -59,7 +59,6 @@ jobs:
           mkdir build
           cd build
           cmake -A x64 -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
-
       - name: Build sherpa-onnx for windows
         shell: bash
         run: |
@@ -134,12 +133,17 @@ jobs:
           .github/scripts/test-online-transducer.sh
 
       - name: Copy files
-        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64
+          shared_lib=${{ matrix.shared_lib }}
+          if [[ $shared_lib == "ON" ]]; then
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-shared
+          else
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x64-static
+          fi
+
           mkdir $dst
 
           cp -a build/install/bin $dst/
@@ -148,10 +152,42 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            git lfs pull
+            mkdir -p win64
+
+            cp -v ../sherpa-onnx-*.tar.bz2 ./win64
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}"
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
       - name: Release pre-compiled binaries and libs for Windows x64
         if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*-win-x64.tar.bz2
+          file: sherpa-onnx-*-win-x64*.tar.bz2

@@ -2,4 +2,6 @@ all
 macos
 linux
 windows
+windows-x64
+windows-x86
 packages

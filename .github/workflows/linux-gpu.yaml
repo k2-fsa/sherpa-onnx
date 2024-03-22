@@ -50,7 +50,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        build_type: [Release, Debug]
+        # build_type: [Release, Debug]
+        build_type: [Release]
 
     steps:
       - uses: actions/checkout@v4

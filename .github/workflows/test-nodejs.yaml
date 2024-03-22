@@ -4,10 +4,26 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '.github/workflows/test-nodejs.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'scripts/nodejs/**'
+      - 'nodejs-examples/**'
 
   pull_request:
     branches:
       - master
+    paths:
+      - '.github/workflows/test-nodejs.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'scripts/nodejs/**'
+      - 'nodejs-examples/**'
 
   workflow_dispatch:
 
