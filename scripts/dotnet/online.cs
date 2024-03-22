@@ -195,12 +195,15 @@ namespace SherpaOnnx
 
       _tokens = new String[impl.Count];
 
-      unsafe {
+      unsafe
+      {
         byte* buf = (byte*)impl.Tokens;
-        for (int i = 0; i < impl.Count; i++) {
+        for (int i = 0; i < impl.Count; i++)
+        {
           length = 0;
           byte* start = buf;
-          while(*buf != 0) {
+          while (*buf != 0)
+          {
             ++buf;
             length += 1;
           }
@@ -220,9 +223,10 @@ namespace SherpaOnnx
       }
 
       _timestamps = new float[impl.Count];
-      unsafe {
+      unsafe
+      {
         float* t = (float*)impl.Timestamps;
-        fixed(float* pTarget = _timestamps)
+        fixed (float* pTarget = _timestamps)
         {
           for (int i = 0; i < impl.Count; i++)
           {
