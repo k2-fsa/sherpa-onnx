@@ -1,10 +1,6 @@
 name: nightly-wheel-arm
 
 on:
-  push:
-    branches:
-      - master
-      - nightly
   schedule:
     # minute (0-59)
     # hour (0-23)

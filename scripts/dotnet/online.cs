@@ -130,7 +130,7 @@ namespace SherpaOnnx
       Rule2MinTrailingSilence = 2.4F;
       Rule3MinUtteranceLength = 20.0F;
       HotwordsFile = "";
-      HotwordsScore = 2F;
+      HotwordsScore = 1.5F;
     }
     public FeatureConfig FeatConfig;
     public OnlineModelConfig ModelConfig;

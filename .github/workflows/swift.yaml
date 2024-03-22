@@ -11,7 +11,7 @@ on:
       - 'cmake/**'
       - 'swift-api-examples/**'
       - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/c-api/**'
       - '.github/scripts/test-swift.sh'
 
   pull_request:
@@ -24,7 +24,7 @@ on:
       - 'cmake/**'
       - 'swift-api-examples/**'
       - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/c-api/**'
       - '.github/scripts/test-swift.sh'
 
   workflow_dispatch:

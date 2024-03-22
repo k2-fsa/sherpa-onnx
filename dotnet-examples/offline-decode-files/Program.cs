@@ -68,6 +68,12 @@ class OfflineDecodeFiles
 It specifies number of active paths to keep during the search")]
     public int MaxActivePaths { get; set; }
 
+    [Option("hotwords-file", Required = false, Default = "", HelpText = "Path to hotwords.txt")]
+    public string HotwordsFile { get; set; }
+
+    [Option("hotwords-score", Required = false, Default = 1.5F, HelpText = "hotwords score")]
+    public float HotwordsScore { get; set; }
+
     [Option("files", Required = true, HelpText = "Audio files for decoding")]
     public IEnumerable<string> Files { get; set; }
   }
@@ -214,6 +220,9 @@ to download pre-trained Tdnn models.
 
     config.DecodingMethod = options.DecodingMethod;
     config.MaxActivePaths = options.MaxActivePaths;
+    config.HotwordsFile = options.HotwordsFile;
+    config.HotwordsScore = options.HotwordsScore;
+
     config.ModelConfig.Debug = 0;
 
     OfflineRecognizer recognizer = new OfflineRecognizer(config);

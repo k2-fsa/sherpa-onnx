@@ -18,6 +18,7 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
   pull_request:
     branches:
       - master
@@ -33,6 +34,7 @@ on:
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
 
   workflow_dispatch:
 

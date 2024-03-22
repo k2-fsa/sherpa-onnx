@@ -4,9 +4,23 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '.github/workflows/test-go.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'go-api-examples/**'
+      - 'scripts/go/**'
   pull_request:
     branches:
       - master
+    paths:
+      - '.github/workflows/test-go.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'go-api-examples/**'
+      - 'scripts/go/**'
 
   workflow_dispatch:
 

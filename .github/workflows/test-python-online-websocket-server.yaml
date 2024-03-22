@@ -4,9 +4,21 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '.github/workflows/test-python-online-websocket-server.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/python/**'
   pull_request:
     branches:
       - master
+    paths:
+      - '.github/workflows/test-python-online-websocket-server.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/python/**'
   workflow_dispatch:
 
 concurrency:

@@ -3,13 +3,25 @@ on:
   push:
     branches:
       - master
+    paths:
+      - '.github/workflows/test-piper-phonemize.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-piper-phonemize.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
 
   workflow_dispatch:
 
 concurrency:
   group: test-piper-phonemize-${{ github.ref }}
   cancel-in-progress: true
-
 
 jobs:
   test_piper_phonemize:

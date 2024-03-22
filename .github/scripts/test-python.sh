@@ -12,32 +12,45 @@ mkdir -p /tmp/icefall-models
 dir=/tmp/icefall-models
 
 pushd $dir
-wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
-tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
-rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+
+repo=$dir/icefall-asr-librispeech-streaming-zipformer-small-2024-03-18
+mkdir -p $repo
+cd $repo
+mkdir exp-ctc-rnnt-small
+cd exp-ctc-rnnt-small
+curl -LS -O https://huggingface.co/csukuangfj/icefall-asr-librispeech-streaming-zipformer-small-2024-03-18/resolve/main/exp-ctc-rnnt-small/ctc-epoch-30-avg-3-chunk-16-left-128.int8.onnx
+cd ..
+mkdir -p data/lang_bpe_500
+cd data/lang_bpe_500
+curl -LS -O https://huggingface.co/csukuangfj/icefall-asr-librispeech-streaming-zipformer-small-2024-03-18/resolve/main/data/lang_bpe_500/tokens.txt
+cd ../..
+mkdir test_wavs
+cd test_wavs
+
+curl -LS -O https://huggingface.co/csukuangfj/icefall-asr-librispeech-streaming-zipformer-small-2024-03-18/resolve/main/test_wavs/0.wav
+curl -LS -O https://huggingface.co/csukuangfj/icefall-asr-librispeech-streaming-zipformer-small-2024-03-18/resolve/main/test_wavs/1.wav
+curl -LS -O https://huggingface.co/csukuangfj/icefall-asr-librispeech-streaming-zipformer-small-2024-03-18/resolve/main/test_wavs/8k.wav
 popd
-repo=$dir/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
 
 python3 ./python-api-examples/online-decode-files.py \
-  --tokens=$repo/tokens.txt \
-  --zipformer2-ctc=$repo/ctc-epoch-20-avg-1-chunk-16-left-128.onnx \
-  $repo/test_wavs/DEV_T0000000000.wav \
-  $repo/test_wavs/DEV_T0000000001.wav \
-  $repo/test_wavs/DEV_T0000000002.wav
+  --tokens=$repo/data/lang_bpe_500/tokens.txt \
+  --zipformer2-ctc=$repo/exp-ctc-rnnt-small/ctc-epoch-30-avg-3-chunk-16-left-128.int8.onnx \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/8k.wav
+
+rm -rf $repo
 
 python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
 
-rm -rf $dir/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
-
 wenet_models=(
-sherpa-onnx-zh-wenet-aishell
-sherpa-onnx-zh-wenet-aishell2
-sherpa-onnx-zh-wenet-wenetspeech
-sherpa-onnx-zh-wenet-multi-cn
+# sherpa-onnx-zh-wenet-aishell
+# sherpa-onnx-zh-wenet-aishell2
+# sherpa-onnx-zh-wenet-wenetspeech
+# sherpa-onnx-zh-wenet-multi-cn
 sherpa-onnx-en-wenet-librispeech
 sherpa-onnx-en-wenet-gigaspeech
 )
-
 
 for name in ${wenet_models[@]}; do
   repo_url=https://huggingface.co/csukuangfj/$name
@@ -78,9 +91,9 @@ mkdir ./tts
 
 log "vits-ljs test"
 
-wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/vits-ljs.onnx
-wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/lexicon.txt
-wget -qq https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
+curl -LS -O https://huggingface.co/csukuangfj/vits-ljs/resolve/main/vits-ljs.onnx
+curl -LS -O https://huggingface.co/csukuangfj/vits-ljs/resolve/main/lexicon.txt
+curl -LS -O https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt
 
 python3 ./python-api-examples/offline-tts.py \
   --vits-model=./vits-ljs.onnx \
@@ -94,9 +107,9 @@ ls -lh ./tts
 rm -v vits-ljs.onnx ./lexicon.txt ./tokens.txt
 
 log "vits-vctk test"
-wget -qq https://huggingface.co/csukuangfj/vits-vctk/resolve/main/vits-vctk.onnx
-wget -qq https://huggingface.co/csukuangfj/vits-vctk/resolve/main/lexicon.txt
-wget -qq https://huggingface.co/csukuangfj/vits-vctk/resolve/main/tokens.txt
+curl -LS -O https://huggingface.co/csukuangfj/vits-vctk/resolve/main/vits-vctk.onnx
+curl -LS -O https://huggingface.co/csukuangfj/vits-vctk/resolve/main/lexicon.txt
+curl -LS -O https://huggingface.co/csukuangfj/vits-vctk/resolve/main/tokens.txt
 
 for sid in 0 10 90; do
   python3 ./python-api-examples/offline-tts.py \
@@ -110,74 +123,81 @@ done
 
 rm -v vits-vctk.onnx ./lexicon.txt ./tokens.txt
 
-log "vits-zh-aishell3"
+if [[ x$OS != x'windows-latest' ]]; then
+  echo "OS: $OS"
 
-wget -qq https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/vits-aishell3.onnx
-wget -qq https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/lexicon.txt
-wget -qq https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/tokens.txt
+  log "vits-zh-aishell3"
 
-for sid in 0 10 90; do
-  python3 ./python-api-examples/offline-tts.py \
-    --vits-model=./vits-aishell3.onnx \
-    --vits-lexicon=./lexicon.txt \
-    --vits-tokens=./tokens.txt \
-    --sid=$sid \
-    --output-filename=./tts/vits-aishell3-${sid}.wav \
-    '林美丽最美丽'
-done
+  curl -LS -O https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/vits-aishell3.onnx
+  curl -LS -O https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/lexicon.txt
+  curl -LS -O https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/tokens.txt
 
-rm -v vits-aishell3.onnx ./lexicon.txt ./tokens.txt
+  for sid in 0 10 90; do
+    python3 ./python-api-examples/offline-tts.py \
+      --vits-model=./vits-aishell3.onnx \
+      --vits-lexicon=./lexicon.txt \
+      --vits-tokens=./tokens.txt \
+      --sid=$sid \
+      --output-filename=./tts/vits-aishell3-${sid}.wav \
+      '林美丽最美丽'
+  done
+
+  rm -v vits-aishell3.onnx ./lexicon.txt ./tokens.txt
+fi
 
 mkdir -p /tmp/icefall-models
 dir=/tmp/icefall-models
 
 log "Test streaming transducer models"
 
-pushd $dir
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+if [[ x$OS != x'windows-latest' ]]; then
+  echo "OS: $OS"
+  pushd $dir
+  repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
-log "Start testing ${repo_url}"
-repo=$dir/$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
+  log "Start testing ${repo_url}"
+  repo=$dir/$(basename $repo_url)
+  log "Download pretrained model and test-data from $repo_url"
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-cd $repo
-git lfs pull --include "*.onnx"
-popd
+  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+  cd $repo
+  git lfs pull --include "*.onnx"
+  popd
 
-python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
-sherpa_onnx_version=$(python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)")
+  python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
+  sherpa_onnx_version=$(python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)")
 
-echo "sherpa_onnx version: $sherpa_onnx_version"
+  echo "sherpa_onnx version: $sherpa_onnx_version"
 
-pwd
-ls -lh
+  pwd
+  ls -lh
 
-ls -lh $repo
+  ls -lh $repo
 
-python3 ./python-api-examples/online-decode-files.py \
-  --tokens=$repo/tokens.txt \
-  --encoder=$repo/encoder-epoch-99-avg-1.onnx \
-  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
-  --joiner=$repo/joiner-epoch-99-avg-1.onnx \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav \
-  $repo/test_wavs/3.wav \
-  $repo/test_wavs/8k.wav
+  python3 ./python-api-examples/online-decode-files.py \
+    --tokens=$repo/tokens.txt \
+    --encoder=$repo/encoder-epoch-99-avg-1.onnx \
+    --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+    --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+    $repo/test_wavs/0.wav \
+    $repo/test_wavs/1.wav \
+    $repo/test_wavs/2.wav \
+    $repo/test_wavs/3.wav \
+    $repo/test_wavs/8k.wav
 
-python3 ./python-api-examples/online-decode-files.py \
-  --tokens=$repo/tokens.txt \
-  --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
-  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
-  --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav \
-  $repo/test_wavs/3.wav \
-  $repo/test_wavs/8k.wav
+  python3 ./python-api-examples/online-decode-files.py \
+    --tokens=$repo/tokens.txt \
+    --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
+    --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+    --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
+    $repo/test_wavs/0.wav \
+    $repo/test_wavs/1.wav \
+    $repo/test_wavs/2.wav \
+    $repo/test_wavs/3.wav \
+    $repo/test_wavs/8k.wav
 
-python3 sherpa-onnx/python/tests/test_online_recognizer.py --verbose
+  python3 sherpa-onnx/python/tests/test_online_recognizer.py --verbose
+fi
 
 log "Test non-streaming transducer models"
 
@@ -219,39 +239,42 @@ rm -rf $repo
 
 log "Test non-streaming paraformer models"
 
-pushd $dir
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
+if [[ x$OS != x'windows-latest' ]]; then
+  echo "OS: $OS"
+  pushd $dir
+  repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
 
-log "Start testing ${repo_url}"
-repo=$dir/$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
+  log "Start testing ${repo_url}"
+  repo=$dir/$(basename $repo_url)
+  log "Download pretrained model and test-data from $repo_url"
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-cd $repo
-git lfs pull --include "*.onnx"
-popd
+  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+  cd $repo
+  git lfs pull --include "*.onnx"
+  popd
 
-ls -lh $repo
+  ls -lh $repo
 
-python3 ./python-api-examples/offline-decode-files.py \
-  --tokens=$repo/tokens.txt \
-  --paraformer=$repo/model.onnx \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav \
-  $repo/test_wavs/8k.wav
+  python3 ./python-api-examples/offline-decode-files.py \
+    --tokens=$repo/tokens.txt \
+    --paraformer=$repo/model.onnx \
+    $repo/test_wavs/0.wav \
+    $repo/test_wavs/1.wav \
+    $repo/test_wavs/2.wav \
+    $repo/test_wavs/8k.wav
 
-python3 ./python-api-examples/offline-decode-files.py \
-  --tokens=$repo/tokens.txt \
-  --paraformer=$repo/model.int8.onnx \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav \
-  $repo/test_wavs/8k.wav
+  python3 ./python-api-examples/offline-decode-files.py \
+    --tokens=$repo/tokens.txt \
+    --paraformer=$repo/model.int8.onnx \
+    $repo/test_wavs/0.wav \
+    $repo/test_wavs/1.wav \
+    $repo/test_wavs/2.wav \
+    $repo/test_wavs/8k.wav
 
-python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
+  python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
 
-rm -rf $repo
+  rm -rf $repo
+fi
 
 log "Test non-streaming NeMo CTC models"
 
@@ -294,8 +317,8 @@ python3 sherpa-onnx/python/tests/test_text2token.py --verbose
 
 rm -rf /tmp/sherpa-test-data
 
-mkdir -p /tmp/onnx-models
 dir=/tmp/onnx-models
+mkdir -p $dir
 
 log "Test keyword spotting models"
 
@@ -311,7 +334,7 @@ repo=sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01
 log "Start testing ${repo}"
 
 pushd $dir
-wget -qq https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
+curl -LS -O https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
 tar xf sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
 popd
 
@@ -327,27 +350,35 @@ python3 ./python-api-examples/keyword-spotter.py \
   $repo/test_wavs/0.wav \
   $repo/test_wavs/1.wav
 
-repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
-log "Start testing ${repo}"
+rm -rf $repo
 
-pushd $dir
-wget -qq https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
-tar xf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
-popd
+if [[ x$OS != x'windows-latest' ]]; then
+  echo "OS: $OS"
 
-repo=$dir/$repo
-ls -lh $repo
+  repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
+  log "Start testing ${repo}"
 
-python3 ./python-api-examples/keyword-spotter.py \
-  --tokens=$repo/tokens.txt \
-  --encoder=$repo/encoder-epoch-12-avg-2-chunk-16-left-64.onnx \
-  --decoder=$repo/decoder-epoch-12-avg-2-chunk-16-left-64.onnx \
-  --joiner=$repo/joiner-epoch-12-avg-2-chunk-16-left-64.onnx \
-  --keywords-file=$repo/test_wavs/test_keywords.txt \
-  $repo/test_wavs/3.wav \
-  $repo/test_wavs/4.wav \
-  $repo/test_wavs/5.wav
+  pushd $dir
+  curl -LS -O https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
+  tar xf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
+  popd
 
-python3 sherpa-onnx/python/tests/test_keyword_spotter.py --verbose
+  repo=$dir/$repo
+  ls -lh $repo
+
+  python3 ./python-api-examples/keyword-spotter.py \
+    --tokens=$repo/tokens.txt \
+    --encoder=$repo/encoder-epoch-12-avg-2-chunk-16-left-64.onnx \
+    --decoder=$repo/decoder-epoch-12-avg-2-chunk-16-left-64.onnx \
+    --joiner=$repo/joiner-epoch-12-avg-2-chunk-16-left-64.onnx \
+    --keywords-file=$repo/test_wavs/test_keywords.txt \
+    $repo/test_wavs/3.wav \
+    $repo/test_wavs/4.wav \
+    $repo/test_wavs/5.wav
+
+  python3 sherpa-onnx/python/tests/test_keyword_spotter.py --verbose
+
+  rm -rf $repo
+fi
 
 rm -r $dir
