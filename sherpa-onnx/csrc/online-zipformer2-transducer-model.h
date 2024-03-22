@@ -105,7 +105,7 @@ class OnlineZipformer2TransducerModel : public OnlineTransducerModel {
 
   int32_t context_size_ = 0;
   int32_t vocab_size_ = 0;
-  int32_t feature_dim_ = 0;
+  int32_t feature_dim_ = 80;
 };
 
 }  // namespace sherpa_onnx
