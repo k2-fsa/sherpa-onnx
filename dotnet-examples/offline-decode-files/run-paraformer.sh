@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -ex
+
 if [ ! -d ./sherpa-onnx-paraformer-zh-2023-03-28 ]; then
   GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
   cd sherpa-onnx-paraformer-zh-2023-03-28
