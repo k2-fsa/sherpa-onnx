@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
-#
+
+set -ex
+
 if [ ! -d ./sherpa-onnx-zipformer-en-2023-04-01 ]; then
-  GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-04-01
-  cd sherpa-onnx-zipformer-en-2023-04-01
-  git lfs pull --include "*.onnx"
-  cd ..
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
+  tar xvf sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
+  rm sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
 fi
 
 dotnet run \

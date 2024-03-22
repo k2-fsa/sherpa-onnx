@@ -4,6 +4,7 @@
 # https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-streaming-paraformer-bilingual-zh-en-chinese-english
 # to download the model files
 
+set -ex
 if [ ! -d ./sherpa-onnx-streaming-paraformer-bilingual-zh-en ]; then
   GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
   cd sherpa-onnx-streaming-paraformer-bilingual-zh-en
