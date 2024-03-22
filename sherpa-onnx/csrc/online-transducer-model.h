@@ -61,6 +61,16 @@ class OnlineTransducerModel {
    */
   virtual std::vector<Ort::Value> GetEncoderInitStates() = 0;
 
+  /** Set feature dim.
+   *
+   * This is used in `OnlineZipformer2TransducerModel`,
+   * to pass `feature_dim` for `GetEncoderInitStates()`.
+   *
+   * This has to be called before GetEncoderInitStates(), so the `encoder_embed`
+   * init state has the correct `embed_dim` of its output.
+   */
+  virtual void SetFeatureDim(int32_t feature_dim) { }
+
   /** Run the encoder.
    *
    * @param features  A tensor of shape (N, T, C). It is changed in-place.

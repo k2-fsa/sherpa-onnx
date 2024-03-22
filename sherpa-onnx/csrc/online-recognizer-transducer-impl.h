@@ -90,6 +90,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       unk_id_ = sym_["<unk>"];
     }
 
+    model_->SetFeatureDim(config.feat_config.feature_dim);
+
     if (config.decoding_method == "modified_beam_search") {
       if (!config_.hotwords_file.empty()) {
         InitHotwords();
@@ -122,6 +124,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     if (sym_.contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
+
+    model_->SetFeatureDim(config.feat_config.feature_dim);
 
     if (config.decoding_method == "modified_beam_search") {
 #if 0

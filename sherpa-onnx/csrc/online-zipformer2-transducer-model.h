@@ -37,6 +37,10 @@ class OnlineZipformer2TransducerModel : public OnlineTransducerModel {
 
   std::vector<Ort::Value> GetEncoderInitStates() override;
 
+  void SetFeatureDim(int32_t feature_dim) override {
+    feature_dim_ = feature_dim;
+  }
+
   std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
       Ort::Value features, std::vector<Ort::Value> states,
       Ort::Value processed_frames) override;
@@ -101,6 +105,7 @@ class OnlineZipformer2TransducerModel : public OnlineTransducerModel {
 
   int32_t context_size_ = 0;
   int32_t vocab_size_ = 0;
+  int32_t feature_dim_ = 0;
 };
 
 }  // namespace sherpa_onnx

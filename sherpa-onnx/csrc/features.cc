@@ -25,6 +25,19 @@ void FeatureExtractorConfig::Register(ParseOptions *po) {
 
   po->Register("feat-dim", &feature_dim,
                "Feature dimension. Must match the one expected by the model.");
+
+  po->Register("low-freq", &low_freq,
+               "Low cutoff frequency for mel bins");
+
+  po->Register("high-freq", &high_freq,
+               "High cutoff frequency for mel bins "
+               "(if <= 0, offset from Nyquist)");
+
+  po->Register("dither", &dither,
+               "Dithering constant (0.0 means no dither). "
+               "By default the audio samples are in range [-1,+1], "
+               "so 0.00003 is a good value, "
+               "equivalent to the default 1.0 from kaldi");
 }
 
 std::string FeatureExtractorConfig::ToString() const {
@@ -32,7 +45,10 @@ std::string FeatureExtractorConfig::ToString() const {
 
   os << "FeatureExtractorConfig(";
   os << "sampling_rate=" << sampling_rate << ", ";
-  os << "feature_dim=" << feature_dim << ")";
+  os << "feature_dim=" << feature_dim << ", ";
+  os << "low_freq=" << low_freq << ", ";
+  os << "high_freq=" << high_freq << ", ";
+  os << "dither=" << dither << ")";
 
   return os.str();
 }
@@ -40,7 +56,7 @@ std::string FeatureExtractorConfig::ToString() const {
 class FeatureExtractor::Impl {
  public:
   explicit Impl(const FeatureExtractorConfig &config) : config_(config) {
-    opts_.frame_opts.dither = 0;
+    opts_.frame_opts.dither = config.dither;
     opts_.frame_opts.snip_edges = config.snip_edges;
     opts_.frame_opts.samp_freq = config.sampling_rate;
     opts_.frame_opts.frame_shift_ms = config.frame_shift_ms;
@@ -50,13 +66,9 @@ class FeatureExtractor::Impl {
 
     opts_.mel_opts.num_bins = config.feature_dim;
 
-    // Please see
-    // https://github.com/lhotse-speech/lhotse/blob/master/lhotse/features/fbank.py#L27
-    // and
-    // https://github.com/k2-fsa/sherpa-onnx/issues/514
-    opts_.mel_opts.high_freq = -400;
+    opts_.mel_opts.high_freq = config.high_freq;
+    opts_.mel_opts.low_freq  = config.low_freq;
 
-    opts_.mel_opts.low_freq = config.low_freq;
     opts_.mel_opts.is_librosa = config.is_librosa;
 
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);

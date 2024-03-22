@@ -72,6 +72,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       unk_id_ = sym_["<unk>"];
     }
 
+    model_->SetFeatureDim(config.feat_config.feature_dim);
+
     InitKeywords();
 
     decoder_ = std::make_unique<TransducerKeywordDecoder>(
@@ -88,6 +90,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     if (sym_.contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
+
+    model_->SetFeatureDim(config.feat_config.feature_dim);
 
     InitKeywords(mgr);
 
