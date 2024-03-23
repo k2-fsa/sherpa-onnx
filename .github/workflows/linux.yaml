@@ -45,77 +45,66 @@ concurrency:
 
 jobs:
   linux:
-    name: ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.shared_lib }} ${{ matrix.gcc_version }}
+    name: ${{ matrix.build_type }} ${{ matrix.shared_lib }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-latest]
         build_type: [Release, Debug]
         shared_lib: [ON, OFF]
-        # see https://github.com/egor-tensin/setup-gcc
-        # 7-11 for ubuntu 20.04
-        # 9-12 for ubuntu 22.04
-        gcc_version: ["7", "8", "9", "10", "11", "12", "13"]
-        exclude:
-          - os: ubuntu-20.04
-            gcc_version: "12"
-          - os: ubuntu-22.04
-            gcc_version: "7"
-          - os: ubuntu-22.04
-            gcc_version: "8"
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up GCC ${{ matrix.gcc_version }}
-        uses: egor-tensin/setup-gcc@v1
+      - name: Display PWD
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+
+      - name: Build sherpa-onnx
+        uses: addnab/docker-run-action@v3
         with:
-          version: ${{ matrix.gcc_version }}
-          platform: x64
+            image: quay.io/pypa/manylinux2014_x86_64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
 
-      - name: Display gcc version ${{ matrix.gcc_version }}
-        shell: bash
-        run: |
-          which gcc
-          gcc --version
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
 
-          which g++
-          g++ --version
+              git clone --depth 1 https://github.com/alsa-project/alsa-lib
+              pushd alsa-lib
+              ./gitcompile
+              popd
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-${{ matrix.build_type }}-shared-${{ matrix.shared_lib }}-gcc-${{ matrix.gcc_version }}
+              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
 
-      - name: Configure CMake
-        shell: bash
-        run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
+              mkdir build
+              cd build
 
-          mkdir build
-          cd build
-          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+              cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
 
-      - name: Build sherpa-onnx for ubuntu
-        shell: bash
-        run: |
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+              make -j2
+              make install
 
-          cd build
-          make -j2
-          make install
-
-          ls -lh lib
-          ls -lh bin
+              ls -lh lib
+              ls -lh bin
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
         run: |
+          sudo chown -R $USER ./build
           ls -lh build/bin
           ls -lh build/_deps/onnxruntime-src/lib/
 
@@ -130,9 +119,8 @@ jobs:
           readelf -d build/bin/sherpa-onnx
 
       - uses: actions/upload-artifact@v4
-        if: matrix.shared_lib == 'OFF' && matrix.build_type == 'Release'
         with:
-          name: release-static-${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.shared_lib }}-${{ matrix.gcc_version }}
+          name: release-${{ matrix.build_type }}-${{ matrix.shared_lib }}
           path: build/bin/*
 
       - name: Test transducer kws
@@ -211,10 +199,17 @@ jobs:
 
       - name: Copy files
         shell: bash
+        if: matrix.build_type == 'Release'
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64
+          if [[ ${{ matrix.shared_lib }} == 'ON' ]]; then
+            suffix=shared
+          else
+            suffix=static
+          fi
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-$suffix
           mkdir $dst
 
           cp -a build/install/bin $dst/
@@ -225,16 +220,46 @@ jobs:
 
           tar cjvf ${dst}.tar.bz2 $dst
 
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && matrix.build_type == 'Release'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            git lfs pull
+            mkdir -p linux-x64
+
+            cp -v ../sherpa-onnx-*.tar.bz2 ./linux-x64
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}"
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
       - name: Release pre-compiled binaries and libs for linux x64
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.os == 'ubuntu-20.04' && matrix.gcc_version == '7'
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*linux-x64.tar.bz2
+          file: sherpa-onnx-*.tar.bz2
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tts-generated-test-files-${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.shared_lib }}-${{ matrix.gcc_version }}
+          name: tts-generated-test-files-${{ matrix.build_type }}-${{ matrix.shared_lib }}
           path: tts
 
