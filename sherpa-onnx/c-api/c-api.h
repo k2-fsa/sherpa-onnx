@@ -145,6 +145,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerResult {
   const char *const *tokens_arr;
 
   // Pointer to continuous memory which holds timestamps
+  //
+  // Caution: If timestamp information is not available, this pointer is NULL.
+  // Please check whether it is NULL before you access it; otherwise, you would
+  // get segmentation fault.
   float *timestamps;
 
   // The number of tokens/timestamps in above pointer

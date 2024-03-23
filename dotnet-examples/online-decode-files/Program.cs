@@ -226,10 +226,16 @@ to download pre-trained streaming models.
     // display results
     for (int i = 0; i != files.Length; ++i)
     {
-      var text = recognizer.GetResult(streams[i]).Text;
+      OnlineRecognizerResult r = recognizer.GetResult(streams[i]);
+      var text = r.Text;
+      var tokens = r.Tokens;
       Console.WriteLine("--------------------");
       Console.WriteLine(files[i]);
-      Console.WriteLine(text);
+      Console.WriteLine("text: {0}", text);
+      Console.WriteLine("tokens: [{0}]", string.Join(", ", tokens));
+      Console.Write("timestamps: [");
+      r.Timestamps.ToList().ForEach(i => Console.Write(String.Format("{0:0.00}", i) + ", "));
+      Console.WriteLine("]");
     }
     Console.WriteLine("--------------------");
   }

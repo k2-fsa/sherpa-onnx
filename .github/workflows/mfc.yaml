@@ -124,7 +124,7 @@ jobs:
           path: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-non-streaming-asr-*.exe
 
       - name: Release pre-compiled binaries and libs for Windows ${{ matrix.arch }}
-        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -132,7 +132,7 @@ jobs:
           file: ./mfc-examples/${{ matrix.arch }}/Release/sherpa-onnx-streaming-*.exe
 
       - name: Release pre-compiled binaries and libs for Windows ${{ matrix.arch }}
-        if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
