@@ -235,7 +235,7 @@ to download pre-trained streaming models.
       Console.WriteLine("tokens: [{0}]", string.Join(", ", tokens));
       Console.Write("timestamps: [");
       r.Timestamps.ToList().ForEach(i => Console.Write(String.Format("{0:0.00}", i) + ", "));
-      Console.WriteLine("\b\b]");
+      Console.WriteLine("]");
     }
     Console.WriteLine("--------------------");
   }

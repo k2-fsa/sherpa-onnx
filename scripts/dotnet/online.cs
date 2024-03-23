@@ -222,15 +222,18 @@ namespace SherpaOnnx
         }
       }
 
-      _timestamps = new float[impl.Count];
-      unsafe
+      if (impl.Timestamps != IntPtr.Zero)
       {
-        float* t = (float*)impl.Timestamps;
-        fixed (float* pTarget = _timestamps)
+        _timestamps = new float[impl.Count];
+        unsafe
         {
-          for (int i = 0; i < impl.Count; i++)
+          float* t = (float*)impl.Timestamps;
+          fixed (float* pTarget = _timestamps)
           {
-            pTarget[i] = t[i];
+            for (int i = 0; i < impl.Count; i++)
+            {
+              pTarget[i] = t[i];
+            }
           }
         }
       }
