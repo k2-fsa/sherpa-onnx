@@ -236,6 +236,10 @@ namespace SherpaOnnx
             }
           }
         }
+        else
+        {
+          _timestamps = Array.Empty<float>();
+        }
       }
     }
 
