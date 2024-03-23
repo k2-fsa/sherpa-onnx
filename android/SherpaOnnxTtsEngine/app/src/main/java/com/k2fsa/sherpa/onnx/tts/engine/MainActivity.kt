@@ -72,111 +72,112 @@ class MainActivity : ComponentActivity() {
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
-                                var testText by remember { mutableStateOf("") }
 
+                                var testTextContent = ""
                                 
                                 when(TtsEngine.lang) {
                                     "ara" -> {
-                                        testText = "هذا هو محرك تحويل النص إلى كلام باستخدام الجيل القادم من كالدي"
+                                        testTextContent = "هذا هو محرك تحويل النص إلى كلام باستخدام الجيل القادم من كالدي"
                                     }
                                     "cat" -> {
-                                        testText = "Aquest és un motor de testText a veu que utilitza Kaldi de nova generació"
+                                        testTextContent = "Aquest és un motor de testText a veu que utilitza Kaldi de nova generació"
                                     }
                                     "ces" -> {
-                                        testText = "Toto je převodník testTextu na řeč využívající novou generaci kaldi"
+                                        testTextContent = "Toto je převodník testTextu na řeč využívající novou generaci kaldi"
                                     }
                                     "dan" -> {
-                                        testText = "Dette er en tekst til tale-motor, der bruger næste generation af kaldi"
+                                        testTextContent = "Dette er en tekst til tale-motor, der bruger næste generation af kaldi"
                                     }
                                     "deu" -> {
-                                        testText = "Dies ist eine testText-to-Speech-Engine, die Kaldi der nächsten Generation verwendet"
+                                        testTextContent = "Dies ist eine testText-to-Speech-Engine, die Kaldi der nächsten Generation verwendet"
                                     }
                                     "ell" -> {
-                                        testText = "Αυτή είναι μια μηχανή κειμένου σε ομιλία που χρησιμοποιεί kaldi επόμενης γενιάς"
+                                        testTextContent = "Αυτή είναι μια μηχανή κειμένου σε ομιλία που χρησιμοποιεί kaldi επόμενης γενιάς"
                                     }
                                     "eng" -> {
-                                        testText = "This is a testText-to-speech engine using next generation Kaldi"
+                                        testTextContent = "This is a testText-to-speech engine using next generation Kaldi"
                                     }
                                     "fas" -> {
-                                        testText = "این یک موتور تبدیل متن به گفتار است برپایه نسخه پیشگام کالدی"
+                                        testTextContent = "این یک موتور تبدیل متن به گفتار است برپایه نسخه پیشگام کالدی"
                                     }
                                     "fin" -> {
-                                        testText = "Tämä on tekstistä puheeksi -moottori, joka käyttää seuraavan sukupolven kaldia"
+                                        testTextContent = "Tämä on tekstistä puheeksi -moottori, joka käyttää seuraavan sukupolven kaldia"
                                     }
                                     "fra" -> {
-                                        testText = "Il s'agit d'un moteur de synthèse vocale utilisant Kaldi de nouvelle génération."
+                                        testTextContent = "Il s'agit d'un moteur de synthèse vocale utilisant Kaldi de nouvelle génération."
                                     }
                                     "hun" -> {
-                                        testText = "Ez egy szövegfelolvasó motor a következő generációs kaldi használatával"
+                                        testTextContent = "Ez egy szövegfelolvasó motor a következő generációs kaldi használatával"
                                     }
                                     "isl" -> {
-                                        testText = "Þetta er testTexta í tal vél sem notar næstu kynslóð kaldi"
+                                        testTextContent = "Þetta er testTexta í tal vél sem notar næstu kynslóð kaldi"
                                     }
                                     "ita" -> {
-                                        testText = "Questo è un motore di sintesi vocale che utilizza kaldi di nuova generazione"
+                                        testTextContent = "Questo è un motore di sintesi vocale che utilizza kaldi di nuova generazione"
                                     }
                                     "kat" -> {
-                                        testText = "ეს არის ტექსტიდან მეტყველების ძრავა შემდეგი თაობის კალდის გამოყენებით"
+                                        testTextContent = "ეს არის ტექსტიდან მეტყველების ძრავა შემდეგი თაობის კალდის გამოყენებით"
                                     }
                                     "kaz" -> {
-                                        testText = "Бұл келесі буын kaldi көмегімен мәтіннен сөйлеуге арналған қозғалтқыш"
+                                        testTextContent = "Бұл келесі буын kaldi көмегімен мәтіннен сөйлеуге арналған қозғалтқыш"
                                     }
                                     "ltz" -> {
-                                        testText = "Dëst ass en testText-zu-Speech-Motor mat der nächster Generatioun Kaldi"
+                                        testTextContent = "Dëst ass en testText-zu-Speech-Motor mat der nächster Generatioun Kaldi"
                                     }
                                     "nep" -> {
-                                        testText = "यो अर्को पुस्ता काल्डी प्रयोग गरेर स्पीच इन्जिनको पाठ हो"
+                                        testTextContent = "यो अर्को पुस्ता काल्डी प्रयोग गरेर स्पीच इन्जिनको पाठ हो"
                                     }
                                     "nld" -> {
-                                        testText = "Dit is een tekst-naar-spraak-engine die gebruik maakt van Kaldi van de volgende generatie"
+                                        testTextContent = "Dit is een tekst-naar-spraak-engine die gebruik maakt van Kaldi van de volgende generatie"
                                     }
                                     "nor" -> {
-                                        testText = "Dette er en tekst til tale-motor som bruker neste generasjons kaldi"
+                                        testTextContent = "Dette er en tekst til tale-motor som bruker neste generasjons kaldi"
                                     }
                                     "pol" -> {
-                                        testText = "Jest to silnik syntezatora mowy wykorzystujący Kaldi nowej generacji"
+                                        testTextContent = "Jest to silnik syntezatora mowy wykorzystujący Kaldi nowej generacji"
                                     }
                                     "por" -> {
-                                        testText = "Este é um mecanismo de conversão de testTexto em fala usando Kaldi de próxima geração"
+                                        testTextContent = "Este é um mecanismo de conversão de testTexto em fala usando Kaldi de próxima geração"
                                     }
                                     "ron" -> {
-                                        testText = "Acesta este un motor testText to speech care folosește generația următoare de kadi"
+                                        testTextContent = "Acesta este un motor testText to speech care folosește generația următoare de kadi"
                                     }
                                     "rus" -> {
-                                        testText = "Это движок преобразования текста в речь, использующий Kaldi следующего поколения."
+                                        testTextContent = "Это движок преобразования текста в речь, использующий Kaldi следующего поколения."
                                     }
                                     "slk" -> {
-                                        testText = "Toto je nástroj na prevod testTextu na reč využívajúci kaldi novej generácie"
+                                        testTextContent = "Toto je nástroj na prevod testTextu na reč využívajúci kaldi novej generácie"
                                     }
                                     "spa" -> {
-                                        testText = "Este es un motor de testTexto a voz que utiliza kaldi de próxima generación."
+                                        testTextContent = "Este es un motor de testTexto a voz que utiliza kaldi de próxima generación."
                                     }
                                     "srp" -> {
-                                        testText = "Ово је механизам за претварање текста у говор који користи калди следеће генерације"
+                                        testTextContent = "Ово је механизам за претварање текста у говор који користи калди следеће генерације"
                                     }
                                     "swa" -> {
-                                        testText = "Haya ni maandishi kwa injini ya hotuba kwa kutumia kizazi kijacho kaldi"
+                                        testTextContent = "Haya ni maandishi kwa injini ya hotuba kwa kutumia kizazi kijacho kaldi"
                                     }
                                     "swe" -> {
-                                        testText = "Detta är en testText till tal-motor som använder nästa generations kaldi"
+                                        testTextContent = "Detta är en testText till tal-motor som använder nästa generations kaldi"
                                     }
                                     "tur" -> {
-                                        testText = "Bu, yeni nesil kaldi'yi kullanan bir metinden konuşmaya motorudur"
+                                        testTextContent = "Bu, yeni nesil kaldi'yi kullanan bir metinden konuşmaya motorudur"
                                     }
                                     "ukr" -> {
-                                        testText = "Це механізм перетворення тексту на мовлення, який використовує kaldi нового покоління"
+                                        testTextContent = "Це механізм перетворення тексту на мовлення, який використовує kaldi нового покоління"
                                     }
                                     "vie" -> {
-                                        testText = "Đây là công cụ chuyển văn bản thành giọng nói sử dụng kaldi thế hệ tiếp theo"
+                                        testTextContent = "Đây là công cụ chuyển văn bản thành giọng nói sử dụng kaldi thế hệ tiếp theo"
                                     }
                                     "zho", "cmn" -> {
-                                        testText = "使用新一代卡尔迪的语音合成引擎"
+                                        testTextContent = "使用新一代卡尔迪的语音合成引擎"
                                     }
                                     else -> {
-                                        testText = ""
+                                        testTextContent = ""
                                     }
                                 }
-
+                                
+                                var testText by remember { mutableStateOf(testTextContent) }
                                 
                                 val numSpeakers = TtsEngine.tts!!.numSpeakers()
                                 if (numSpeakers > 1) {
