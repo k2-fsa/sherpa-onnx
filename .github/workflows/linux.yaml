@@ -45,77 +45,66 @@ concurrency:
 
 jobs:
   linux:
-    name: ${{ matrix.os }} ${{ matrix.build_type }} ${{ matrix.shared_lib }} ${{ matrix.gcc_version }}
+    name: ${{ matrix.build_type }} ${{ matrix.shared_lib }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, ubuntu-22.04]
+        os: [ubuntu-latest]
         build_type: [Release, Debug]
         shared_lib: [ON, OFF]
-        # see https://github.com/egor-tensin/setup-gcc
-        # 7-11 for ubuntu 20.04
-        # 9-12 for ubuntu 22.04
-        gcc_version: ["7", "8", "9", "10", "11", "12", "13"]
-        exclude:
-          - os: ubuntu-20.04
-            gcc_version: "12"
-          - os: ubuntu-22.04
-            gcc_version: "7"
-          - os: ubuntu-22.04
-            gcc_version: "8"
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Set up GCC ${{ matrix.gcc_version }}
-        uses: egor-tensin/setup-gcc@v1
+      - name: Display PWD
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+
+      - name: Build sherpa-onnx
+        uses: addnab/docker-run-action@v3
         with:
-          version: ${{ matrix.gcc_version }}
-          platform: x64
+            image: quay.io/pypa/manylinux2014_x86_64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
 
-      - name: Display gcc version ${{ matrix.gcc_version }}
-        shell: bash
-        run: |
-          which gcc
-          gcc --version
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
 
-          which g++
-          g++ --version
+              git clone --depth 1 https://github.com/alsa-project/alsa-lib
+              pushd alsa-lib
+              ./gitcompile
+              popd
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-${{ matrix.build_type }}-shared-${{ matrix.shared_lib }}-gcc-${{ matrix.gcc_version }}
+              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
 
-      - name: Configure CMake
-        shell: bash
-        run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
+              mkdir build
+              cd build
 
-          mkdir build
-          cd build
-          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+              cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
 
-      - name: Build sherpa-onnx for ubuntu
-        shell: bash
-        run: |
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+              make -j2
+              make install
 
-          cd build
-          make -j2
-          make install
-
-          ls -lh lib
-          ls -lh bin
+              ls -lh lib
+              ls -lh bin
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
         run: |
+          sudo chown -R $USER ./build
           ls -lh build/bin
           ls -lh build/_deps/onnxruntime-src/lib/
 
