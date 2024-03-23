@@ -1,10 +1,6 @@
 name: release-go
 
 on:
-  push:
-    tags:
-      - '*'
-
   workflow_dispatch:
 
 concurrency:
