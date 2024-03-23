@@ -226,7 +226,7 @@ to download pre-trained streaming models.
     // display results
     for (int i = 0; i != files.Length; ++i)
     {
-      var r = recognizer.GetResult(streams[i]);
+      OnlineRecognizerResult r = recognizer.GetResult(streams[i]);
       var text = r.Text;
       var tokens = r.Tokens;
       Console.WriteLine("--------------------");
