@@ -5,6 +5,12 @@
 #ifndef SHERPA_ONNX_CSRC_SPOKEN_LANGUAGE_IDENTIFICATION_WHISPER_IMPL_H_
 #define SHERPA_ONNX_CSRC_SPOKEN_LANGUAGE_IDENTIFICATION_WHISPER_IMPL_H_
 
+#include <algorithm>
+#include <memory>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 #include "sherpa-onnx/csrc/spoken-language-identification-impl.h"
 #include "sherpa-onnx/csrc/transpose.h"

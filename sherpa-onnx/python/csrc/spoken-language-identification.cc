@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/spoken-language-identification.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
 
 namespace sherpa_onnx {

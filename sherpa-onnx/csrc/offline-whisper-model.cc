@@ -104,7 +104,7 @@ class OfflineWhisperModel::Impl {
         std::move(decoder_input[4]), std::move(decoder_input[5])};
   }
 
-  int32_t DetectLanguage(Ort::Value &cross_k,
+  int32_t DetectLanguage(Ort::Value &cross_k,    // NOLINT
                          Ort::Value &cross_v) {  // NOLINT
     int64_t token_val = SOT();
     std::array<int64_t, 2> token_shape{1, 1};
