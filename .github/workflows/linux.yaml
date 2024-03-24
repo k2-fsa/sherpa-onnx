@@ -124,6 +124,7 @@ jobs:
           path: build/bin/*
 
       - name: Test spoken language identification
+        if: matrix.build_type != 'Debug'
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -148,6 +149,7 @@ jobs:
           .github/scripts/test-online-ctc.sh
 
       - name: Test offline Whisper
+        if: matrix.build_type != 'Debug'
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
