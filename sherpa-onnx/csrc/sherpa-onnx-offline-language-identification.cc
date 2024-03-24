@@ -34,6 +34,8 @@ We only use the int8.onnx models below.
 
 foo.wav should be of single channel, 16-bit PCM encoded wave file; its
 sampling rate can be arbitrary and does not need to be 16kHz.
+You can find test waves for different languages at
+https://hf-mirror.com/spaces/k2-fsa/spoken-language-identification/tree/main/test_wavs
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/index.html

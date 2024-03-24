@@ -33,6 +33,7 @@ set(srcs
   silero-vad-model-config.cc
   speaker-embedding-extractor.cc
   speaker-embedding-manager.cc
+  spoken-language-identification.cc
   vad-model-config.cc
   vad-model.cc
   voice-activity-detector.cc
