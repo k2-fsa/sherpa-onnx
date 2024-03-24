@@ -69,6 +69,14 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
+      # - name: Test spoken language identification
+      #   shell: bash
+      #   run: |
+      #     export PATH=$PWD/build/bin/Release:$PATH
+      #     export EXE=sherpa-onnx-offline-language-identification.exe
+      #
+      #     .github/scripts/test-spoken-language-identification.sh
+
       - name: Test online CTC
         shell: bash
         run: |

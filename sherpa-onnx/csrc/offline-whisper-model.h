@@ -18,12 +18,16 @@
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-model-config.h"
+#include "sherpa-onnx/csrc/spoken-language-identification.h"
 
 namespace sherpa_onnx {
 
 class OfflineWhisperModel {
  public:
   explicit OfflineWhisperModel(const OfflineModelConfig &config);
+
+  explicit OfflineWhisperModel(
+      const SpokenLanguageIdentificationConfig &config);
 
 #if __ANDROID_API__ >= 9
   OfflineWhisperModel(AAssetManager *mgr, const OfflineModelConfig &config);
@@ -72,7 +76,8 @@ class OfflineWhisperModel {
                  Ort::Value n_layer_self_v_cache, Ort::Value n_layer_cross_k,
                  Ort::Value n_layer_cross_v, Ort::Value offset) const;
 
-  int32_t DetectLanguage() const;
+  int32_t DetectLanguage(Ort::Value &cross_k,   // NOLINT
+                         Ort::Value &cross_v);  // NOLINT
 
   /** Return the initial self kv cache in a pair
    *  - n_layer_self_k_cache A 4-D tensor of shape
@@ -97,6 +102,9 @@ class OfflineWhisperModel {
   int32_t VocabSize() const;
   int32_t Translate() const;
   bool IsMultiLingual() const;
+
+  static void NormalizeFeatures(float *features, int32_t num_frames,
+                                int32_t feat_dim);
 
  private:
   class Impl;

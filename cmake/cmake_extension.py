@@ -43,6 +43,50 @@ def enable_alsa():
     return build_alsa and is_linux() and (is_arm64() or is_x86())
 
 
+def get_binaries():
+    binaries = [
+        "sherpa-onnx",
+        "sherpa-onnx-keyword-spotter",
+        "sherpa-onnx-microphone",
+        "sherpa-onnx-microphone-offline",
+        "sherpa-onnx-microphone-offline-speaker-identification",
+        "sherpa-onnx-offline",
+        "sherpa-onnx-offline-language-identification",
+        "sherpa-onnx-offline-tts",
+        "sherpa-onnx-offline-tts-play",
+        "sherpa-onnx-offline-websocket-server",
+        "sherpa-onnx-online-websocket-client",
+        "sherpa-onnx-online-websocket-server",
+        "sherpa-onnx-vad-microphone",
+        "sherpa-onnx-vad-microphone-offline-asr",
+    ]
+
+    if enable_alsa():
+        binaries += [
+            "sherpa-onnx-alsa",
+            "sherpa-onnx-alsa-offline",
+            "sherpa-onnx-alsa-offline-speaker-identification",
+            "sherpa-onnx-offline-tts-play-alsa",
+        ]
+
+    if is_windows():
+        binaries += [
+            "espeak-ng.dll",
+            "kaldi-decoder-core.dll",
+            "kaldi-native-fbank-core.dll",
+            "onnxruntime.dll",
+            "piper_phonemize.dll",
+            "sherpa-onnx-c-api.dll",
+            "sherpa-onnx-core.dll",
+            "sherpa-onnx-fst.lib",
+            "sherpa-onnx-kaldifst-core.lib",
+            "sherpa-onnx-portaudio.dll",
+            "ucd.dll",
+        ]
+
+    return binaries
+
+
 try:
     from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 
@@ -150,38 +194,7 @@ class BuildExtension(build_ext):
         suffix = ".exe" if is_windows() else ""
         # Remember to also change setup.py
 
-        binaries = ["sherpa-onnx"]
-        binaries += ["sherpa-onnx-keyword-spotter"]
-        binaries += ["sherpa-onnx-offline"]
-        binaries += ["sherpa-onnx-microphone"]
-        binaries += ["sherpa-onnx-microphone-offline"]
-        binaries += ["sherpa-onnx-microphone-offline-speaker-identification"]
-        binaries += ["sherpa-onnx-online-websocket-server"]
-        binaries += ["sherpa-onnx-offline-websocket-server"]
-        binaries += ["sherpa-onnx-online-websocket-client"]
-        binaries += ["sherpa-onnx-vad-microphone"]
-        binaries += ["sherpa-onnx-vad-microphone-offline-asr"]
-        binaries += ["sherpa-onnx-offline-tts"]
-        binaries += ["sherpa-onnx-offline-tts-play"]
-
-        if enable_alsa():
-            binaries += ["sherpa-onnx-alsa"]
-            binaries += ["sherpa-onnx-alsa-offline"]
-            binaries += ["sherpa-onnx-offline-tts-play-alsa"]
-            binaries += ["sherpa-onnx-alsa-offline-speaker-identification"]
-
-        if is_windows():
-            binaries += ["kaldi-native-fbank-core.dll"]
-            binaries += ["sherpa-onnx-c-api.dll"]
-            binaries += ["sherpa-onnx-core.dll"]
-            binaries += ["sherpa-onnx-portaudio.dll"]
-            binaries += ["onnxruntime.dll"]
-            binaries += ["piper_phonemize.dll"]
-            binaries += ["espeak-ng.dll"]
-            binaries += ["ucd.dll"]
-            binaries += ["kaldi-decoder-core.dll"]
-            binaries += ["sherpa-onnx-fst.lib"]
-            binaries += ["sherpa-onnx-kaldifst-core.lib"]
+        binaries = get_binaries()
 
         for f in binaries:
             suffix = "" if (".dll" in f or ".lib" in f) else suffix

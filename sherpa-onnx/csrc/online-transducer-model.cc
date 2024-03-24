@@ -28,7 +28,7 @@ enum class ModelType {
   kLstm,
   kZipformer,
   kZipformer2,
-  kUnkown,
+  kUnknown,
 };
 
 }  // namespace
@@ -58,7 +58,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
         "No model_type in the metadata!\n"
         "Please make sure you are using the latest export-onnx.py from icefall "
         "to export your transducer models");
-    return ModelType::kUnkown;
+    return ModelType::kUnknown;
   }
 
   if (model_type.get() == std::string("conformer")) {
@@ -71,7 +71,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kZipformer2;
   } else {
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
-    return ModelType::kUnkown;
+    return ModelType::kUnknown;
   }
 }
 
@@ -93,7 +93,7 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
           model_type.c_str());
     }
   }
-  ModelType model_type = ModelType::kUnkown;
+  ModelType model_type = ModelType::kUnknown;
 
   {
     auto buffer = ReadFile(config.transducer.encoder);
@@ -110,7 +110,7 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
       return std::make_unique<OnlineZipformerTransducerModel>(config);
     case ModelType::kZipformer2:
       return std::make_unique<OnlineZipformer2TransducerModel>(config);
-    case ModelType::kUnkown:
+    case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in online transducer!");
       return nullptr;
   }
@@ -185,7 +185,7 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
       return std::make_unique<OnlineZipformerTransducerModel>(mgr, config);
     case ModelType::kZipformer2:
       return std::make_unique<OnlineZipformer2TransducerModel>(mgr, config);
-    case ModelType::kUnkown:
+    case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in online transducer!");
       return nullptr;
   }

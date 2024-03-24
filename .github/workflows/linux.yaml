@@ -123,6 +123,15 @@ jobs:
           name: release-${{ matrix.build_type }}-${{ matrix.shared_lib }}
           path: build/bin/*
 
+      - name: Test spoken language identification
+        if: matrix.build_type != 'Debug'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-language-identification
+
+          .github/scripts/test-spoken-language-identification.sh
+
       - name: Test transducer kws
         shell: bash
         run: |
@@ -140,6 +149,7 @@ jobs:
           .github/scripts/test-online-ctc.sh
 
       - name: Test offline Whisper
+        if: matrix.build_type != 'Debug'
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH

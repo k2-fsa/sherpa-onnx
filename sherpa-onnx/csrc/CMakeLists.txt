@@ -86,6 +86,8 @@ set(sources
   silero-vad-model-config.cc
   silero-vad-model.cc
   slice.cc
+  spoken-language-identification-impl.cc
+  spoken-language-identification.cc
   stack.cc
   symbol-table.cc
   text-utils.cc
@@ -184,6 +186,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
   add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
   add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
+  add_executable(sherpa-onnx-offline-language-identification sherpa-onnx-offline-language-identification.cc)
 
   set(main_exes
     sherpa-onnx
@@ -191,6 +194,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-offline
     sherpa-onnx-offline-parallel
     sherpa-onnx-offline-tts
+    sherpa-onnx-offline-language-identification
   )
 
   foreach(exe IN LISTS main_exes)

@@ -102,6 +102,15 @@ jobs:
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
 
+      - name: Test spoken language identification
+        if: matrix.build_type != 'Debug'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-language-identification
+
+          .github/scripts/test-spoken-language-identification.sh
+
       - name: Test transducer kws
         shell: bash
         run: |
@@ -135,6 +144,7 @@ jobs:
           .github/scripts/test-online-paraformer.sh
 
       - name: Test offline Whisper
+        if: matrix.build_type != 'Debug'
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
