@@ -92,6 +92,14 @@ jobs:
           file build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
 
+      - name: Test spoken language identification
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-language-identification
+
+          .github/scripts/test-spoken-language-identification.sh
+
       - name: Test online CTC
         shell: bash
         run: |
@@ -115,6 +123,7 @@ jobs:
           export EXE=sherpa-onnx
 
           .github/scripts/test-online-paraformer.sh
+
 
       - name: Test offline Whisper
         shell: bash
