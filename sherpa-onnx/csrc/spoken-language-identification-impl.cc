@@ -3,6 +3,10 @@
 // Copyright (c)  2024  Xiaomi Corporation
 #include "sherpa-onnx/csrc/spoken-language-identification-impl.h"
 
+#include <memory>
+
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/spoken-language-identification-whisper-impl.h"
 
 namespace sherpa_onnx {
@@ -59,7 +63,11 @@ SpokenLanguageIdentificationImpl::Create(
     const SpokenLanguageIdentificationConfig &config) {
   ModelType model_type = ModelType::kUnknown;
   {
-    auto buffer = ReadFile(config.model);
+    if (config.whisper.encoder.empty()) {
+      SHERPA_ONNX_LOGE("Only whisper models are supported at present");
+      exit(-1);
+    }
+    auto buffer = ReadFile(config.whisper.encoder);
 
     model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
   }

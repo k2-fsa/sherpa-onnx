@@ -12,6 +12,7 @@
 #include "sherpa-onnx/csrc/online-lm-config.h"
 #include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
+#include "sherpa-onnx/csrc/spoken-language-identification.h"
 #include "sherpa-onnx/csrc/vad-model-config.h"
 
 namespace sherpa_onnx {
@@ -30,6 +31,10 @@ Ort::SessionOptions GetSessionOptions(const OfflineTtsModelConfig &config);
 
 Ort::SessionOptions GetSessionOptions(
     const SpeakerEmbeddingExtractorConfig &config);
+
+Ort::SessionOptions GetSessionOptions(
+    const SpokenLanguageIdentificationConfig &config);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_SESSION_H_

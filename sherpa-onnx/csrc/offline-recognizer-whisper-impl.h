@@ -114,7 +114,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
       num_frames = max_num_frames - 50;
     }
 
-    NormalizeFeatures(f.data(), num_frames, feat_dim);
+    model_->NormalizeFeatures(f.data(), num_frames, feat_dim);
 
     // note that 1000 is an experience-value.
     // You can replace 1000 by other values, say, 100.
@@ -159,38 +159,6 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
           "using a larger --whisper-tail-paddings",
           ex.what(), num_frames, tail_padding_frames);
       return;
-    }
-  }
-
- private:
-  static void NormalizeFeatures(float *features, int32_t num_frames,
-                                int32_t feat_dim) {
-    // log_spec = torch.clamp(features, min=1e-10).log10()
-    // log_spec = torch.maximum(log_spec, log_spec.max() - 8.0)
-    // mel = (log_spec + 4.0) / 4.0
-
-    int32_t n = num_frames * feat_dim;
-    float max_v = -1e20;
-    for (int32_t i = 0; i != n; ++i) {
-      float f = features[i];
-
-      f = std::max<float>(f, 1e-10);
-      f = std::log10(f);
-
-      max_v = std::max(f, max_v);
-
-      features[i] = f;
-    }
-
-    max_v -= 8;
-
-    for (int32_t i = 0; i != n; ++i) {
-      float f = features[i];
-      f = std::max(f, max_v);
-
-      f = (f + 4) / 4;
-
-      features[i] = f;
     }
   }
 

@@ -12,10 +12,63 @@
 
 namespace sherpa_onnx {
 
+void SpokenLanguageIdentificationWhisperConfig::Register(ParseOptions *po) {
+  po->Register(
+      "whisper-encoder", &encoder,
+      "Path to then encoder of a whisper multilingual model. Support only "
+      "tiny, base, small, medium, large.");
+
+  po->Register(
+      "whisper-decoder", &decoder,
+      "Path to the decoder of a whisper multilingual model. Support only "
+      "tiny, base, small, medium, large.");
+
+  po->Register(
+      "whisper-tail-paddings", &tail_paddings,
+      "Suggested value: 300 for multilingual models. "
+      "Since we have removed the 30-second constraint, we need to add some "
+      "tail padding frames "
+      "so that whisper can detect the eot token. Leave it to -1 to use 1000");
+}
+
+bool SpokenLanguageIdentificationWhisperConfig::Validate() const {
+  if (encoder.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --whisper-encoder");
+    return false;
+  }
+
+  if (!FileExists(encoder)) {
+    SHERPA_ONNX_LOGE("whisper encoder file %s does not exist", encoder.c_str());
+    return false;
+  }
+
+  if (decoder.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --whisper-decoder");
+    return false;
+  }
+
+  if (!FileExists(decoder)) {
+    SHERPA_ONNX_LOGE("whisper decoder file %s does not exist", decoder.c_str());
+    return false;
+  }
+
+  return true;
+}
+
+std::string SpokenLanguageIdentificationWhisperConfig::ToString() const {
+  std::ostringstream os;
+
+  os << "SpokenLanguageIdentificationWhisperConfig(";
+  os << "encoder=\"" << encoder << "\", ";
+  os << "decoder=\"" << decoder << "\", ";
+  os << "tail_paddings=" << tail_paddings << ")";
+
+  return os.str();
+}
+
 void SpokenLanguageIdentificationConfig::Register(ParseOptions *po) {
-  po->Register("model", &model,
-               "Path to encoder of a whisper multilingual model. Support only "
-               "tiny, base, small, mediu, large.");
+  whisper.Register(po);
+
   po->Register("num-threads", &num_threads,
                "Number of threads to run the neural network");
 
@@ -27,13 +80,7 @@ void SpokenLanguageIdentificationConfig::Register(ParseOptions *po) {
 }
 
 bool SpokenLanguageIdentificationConfig::Validate() const {
-  if (model.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --model");
-    return false;
-  }
-
-  if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("--model: %s does not exist", model.c_str());
+  if (!whisper.Validate()) {
     return false;
   }
 
@@ -44,7 +91,7 @@ std::string SpokenLanguageIdentificationConfig::ToString() const {
   std::ostringstream os;
 
   os << "SpokenLanguageIdentificationConfig(";
-  os << "model=\"" << model << "\", ";
+  os << "whisper=\"" << whisper.ToString() << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
   os << "provider=\"" << provider << "\")";
@@ -58,16 +105,12 @@ SpokenLanguageIdentification::SpokenLanguageIdentification(
 
 SpokenLanguageIdentification::~SpokenLanguageIdentification() = default;
 
-std::unique_ptr<OnlineStream> SpokenLanguageIdentification::CreateStream()
+std::unique_ptr<OfflineStream> SpokenLanguageIdentification::CreateStream()
     const {
   return impl_->CreateStream();
 }
 
-bool SpokenLanguageIdentification::IsReady(OnlineStream *s) const {
-  return impl_->IsReady(s);
-}
-
-std::string SpokenLanguageIdentification::Compute(OnlineStream *s) const {
+std::string SpokenLanguageIdentification::Compute(OfflineStream *s) const {
   return impl_->Compute(s);
 }
 

@@ -82,7 +82,6 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
-        shell: bash
         with:
           max_attempts: 20
           timeout_seconds: 200

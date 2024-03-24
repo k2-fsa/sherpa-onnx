@@ -21,27 +21,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312"]
 
     steps:
       - uses: actions/checkout@v4
 
-      # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
-      # for a list of versions
       - name: Build wheels
-        if: matrix.python-version == 'cp37'
-        uses: pypa/cibuildwheel@v2.11.4
-        env:
-          CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64'"
-          CIBW_ARCHS: "arm64"
-          CIBW_BUILD_VERBOSITY: 3
-
-          #  Don't repair macOS wheels
-          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
-
-      - name: Build wheels
-        if: matrix.python-version != 'cp37'
         uses: pypa/cibuildwheel@v2.15.0
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "

@@ -35,16 +35,25 @@ void OfflineWhisperModelConfig::Register(ParseOptions *po) {
 
   po->Register(
       "whisper-tail-paddings", &tail_paddings,
-      "Suggest value: 50 for English models. 300 for multilingual models. "
+      "Suggested value: 50 for English models. 300 for multilingual models. "
       "Since we have removed the 30-second constraint, we need to add some "
       "tail padding frames "
-      "so that whisper can detect the eot token. Leave it to -1 to use 50 for "
-      "English models and 300 for multilingual models.");
+      "so that whisper can detect the eot token. Leave it to -1 to use 1000.");
 }
 
 bool OfflineWhisperModelConfig::Validate() const {
+  if (encoder.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --whisper-encoder");
+    return false;
+  }
+
   if (!FileExists(encoder)) {
     SHERPA_ONNX_LOGE("whisper encoder file %s does not exist", encoder.c_str());
+    return false;
+  }
+
+  if (decoder.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --whisper-decoder");
     return false;
   }
 

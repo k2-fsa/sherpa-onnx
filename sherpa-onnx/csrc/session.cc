@@ -149,4 +149,9 @@ Ort::SessionOptions GetSessionOptions(
   return GetSessionOptionsImpl(config.num_threads, config.provider);
 }
 
+Ort::SessionOptions GetSessionOptions(
+    const SpokenLanguageIdentificationConfig &config) {
+  return GetSessionOptionsImpl(config.num_threads, config.provider);
+}
+
 }  // namespace sherpa_onnx

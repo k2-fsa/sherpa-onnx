@@ -7,20 +7,42 @@
 #include <memory>
 #include <string>
 
-#include "sherpa-onnx/csrc/online-stream.h"
+#include "sherpa-onnx/csrc/offline-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
 
-struct SpokenLanguageIdentificationConfig {
-  // 1. For whisper models:
-  // Requires a multi-lingual whisper encoder model.
+struct SpokenLanguageIdentificationWhisperConfig {
+  // Requires a multi-lingual whisper model.
   // That is, it supports only tiny, base, small, medium, large.
   // Note: It does NOT support tiny.en, base.en, small.en, medium.en
-  // You only need to pass the encoder model of whisper.
+  std::string encoder;
+  std::string decoder;
+
+  // Number of tail padding frames.
   //
-  // 2. It does not support non-whisper models at present.
-  std::string model;
+  // Since we remove the 30-second constraint, we need to add some paddings
+  // at the end.
+  //
+  // Recommended values:
+  //   - 50 for English models
+  //   - 300 for multilingual models
+  int32_t tail_paddings = -1;
+
+  SpokenLanguageIdentificationWhisperConfig() = default;
+
+  SpokenLanguageIdentificationWhisperConfig(const std::string &encoder,
+                                            const std::string &decoder,
+                                            int32_t tail_paddings)
+      : encoder(encoder), decoder(decoder), tail_paddings(tail_paddings) {}
+
+  void Register(ParseOptions *po);
+  bool Validate() const;
+  std::string ToString() const;
+};
+
+struct SpokenLanguageIdentificationConfig {
+  SpokenLanguageIdentificationWhisperConfig whisper;
 
   int32_t num_threads = 1;
   bool debug = false;
@@ -28,10 +50,10 @@ struct SpokenLanguageIdentificationConfig {
 
   SpokenLanguageIdentificationConfig() = default;
 
-  SpokenLanguageIdentificationConfig(const std::string &model,
-                                     int32_t num_threads, bool debug,
-                                     const std::string &provider)
-      : model(model),
+  SpokenLanguageIdentificationConfig(
+      const SpokenLanguageIdentificationWhisperConfig &whisper,
+      int32_t num_threads, bool debug, const std::string &provider)
+      : whisper(whisper),
         num_threads(num_threads),
         debug(debug),
         provider(provider) {}
@@ -51,16 +73,12 @@ class SpokenLanguageIdentification {
   ~SpokenLanguageIdentification();
 
   // Create a stream to accept audio samples and compute features
-  std::unique_ptr<OnlineStream> CreateStream() const;
+  std::unique_ptr<OfflineStream> CreateStream() const;
 
-  // Return true if there are feature frames in OnlineStream that
-  // can be used to compute embeddings.
-  bool IsReady(OnlineStream *s) const;
-
-  // Return a string containg the language, e.g., English, Chinese, German, etc.
-  //
-  // You have to ensure IsReady(s) returns true before you call this method.
-  std::string Compute(OnlineStream *s) const;
+  // Return a string containing the language, e.g., en, zh, de,
+  // etc.
+  // Note: en is for English, zh is for Chinese, de is for German, etc.
+  std::string Compute(OfflineStream *s) const;
 
  private:
   std::unique_ptr<SpokenLanguageIdentificationImpl> impl_;
