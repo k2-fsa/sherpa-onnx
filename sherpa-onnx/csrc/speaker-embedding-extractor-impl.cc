@@ -16,7 +16,7 @@ enum class ModelType {
   kWeSpeaker,
   k3dSpeaker,
   kNeMo,
-  kUnkown,
+  kUnknown,
 };
 
 }  // namespace
@@ -47,7 +47,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
         "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/wespeaker/"
         "add_meta_data.py"
         "to add metadata to models from WeSpeaker\n");
-    return ModelType::kUnkown;
+    return ModelType::kUnknown;
   }
 
   if (model_type.get() == std::string("wespeaker")) {
@@ -58,14 +58,14 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kNeMo;
   } else {
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
-    return ModelType::kUnkown;
+    return ModelType::kUnknown;
   }
 }
 
 std::unique_ptr<SpeakerEmbeddingExtractorImpl>
 SpeakerEmbeddingExtractorImpl::Create(
     const SpeakerEmbeddingExtractorConfig &config) {
-  ModelType model_type = ModelType::kUnkown;
+  ModelType model_type = ModelType::kUnknown;
 
   {
     auto buffer = ReadFile(config.model);
@@ -80,9 +80,8 @@ SpeakerEmbeddingExtractorImpl::Create(
       return std::make_unique<SpeakerEmbeddingExtractorGeneralImpl>(config);
     case ModelType::kNeMo:
       return std::make_unique<SpeakerEmbeddingExtractorNeMoImpl>(config);
-    case ModelType::kUnkown:
-      SHERPA_ONNX_LOGE(
-          "Unknown model type in for speaker embedding extractor!");
+    case ModelType::kUnknown:
+      SHERPA_ONNX_LOGE("Unknown model type for speaker embedding extractor!");
       return nullptr;
   }
 
@@ -94,7 +93,7 @@ SpeakerEmbeddingExtractorImpl::Create(
 std::unique_ptr<SpeakerEmbeddingExtractorImpl>
 SpeakerEmbeddingExtractorImpl::Create(
     AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config) {
-  ModelType model_type = ModelType::kUnkown;
+  ModelType model_type = ModelType::kUnknown;
 
   {
     auto buffer = ReadFile(mgr, config.model);
@@ -110,7 +109,7 @@ SpeakerEmbeddingExtractorImpl::Create(
                                                                     config);
     case ModelType::kNeMo:
       return std::make_unique<SpeakerEmbeddingExtractorNeMoImpl>(mgr, config);
-    case ModelType::kUnkown:
+    case ModelType::kUnknown:
       SHERPA_ONNX_LOGE(
           "Unknown model type in for speaker embedding extractor!");
       return nullptr;

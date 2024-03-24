@@ -86,6 +86,8 @@ set(sources
   silero-vad-model-config.cc
   silero-vad-model.cc
   slice.cc
+  spoken-language-identification-impl.cc
+  spoken-language-identification.cc
   stack.cc
   symbol-table.cc
   text-utils.cc
