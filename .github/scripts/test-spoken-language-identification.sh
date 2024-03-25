@@ -28,32 +28,32 @@ ar-arabic.wav
 bg-bulgarian.wav
 cs-czech.wav
 da-danish.wav
-de-german.wav
-el-greek.wav
-en-english.wav
-es-spanish.wav
-fa-persian.wav
-fi-finnish.wav
-fr-french.wav
-hi-hindi.wav
-hr-croatian.wav
-id-indonesian.wav
-it-italian.wav
-ja-japanese.wav
-ko-korean.wav
-nl-dutch.wav
-no-norwegian.wav
-po-polish.wav
-pt-portuguese.wav
-ro-romanian.wav
-ru-russian.wav
-sk-slovak.wav
-sv-swedish.wav
-ta-tamil.wav
-tl-tagalog.wav
-tr-turkish.wav
-uk-ukrainian.wav
-zh-chinese.wav
+# de-german.wav
+# el-greek.wav
+# en-english.wav
+# es-spanish.wav
+# fa-persian.wav
+# fi-finnish.wav
+# fr-french.wav
+# hi-hindi.wav
+# hr-croatian.wav
+# id-indonesian.wav
+# it-italian.wav
+# ja-japanese.wav
+# ko-korean.wav
+# nl-dutch.wav
+# no-norwegian.wav
+# po-polish.wav
+# pt-portuguese.wav
+# ro-romanian.wav
+# ru-russian.wav
+# sk-slovak.wav
+# sv-swedish.wav
+# ta-tamil.wav
+# tl-tagalog.wav
+# tr-turkish.wav
+# uk-ukrainian.wav
+# zh-chinese.wav
 )
 
 for wav in ${waves[@]}; do

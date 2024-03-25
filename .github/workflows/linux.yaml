@@ -123,8 +123,15 @@ jobs:
           name: release-${{ matrix.build_type }}-${{ matrix.shared_lib }}
           path: build/bin/*
 
-      - name: Test spoken language identification
-        if: matrix.build_type != 'Debug'
+      - name: Test spoken language identification (C API)
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export SLID_EXE=spoken-language-identification-c-api
+
+          .github/scripts/test-c-api.sh
+
+      - name: Test spoken language identification (C++ API)
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -243,6 +250,7 @@ jobs:
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
+            rm -rf huggingface
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface

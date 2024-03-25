@@ -820,6 +820,76 @@ SHERPA_ONNX_API int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
                                             int32_t sample_rate,
                                             const char *filename);
 
+SHERPA_ONNX_API typedef struct SherpaOnnxWave {
+  // samples normalized to the range [-1, 1]
+  const float *samples;
+  int32_t sample_rate;
+  int32_t num_samples;
+} SherpaOnnxWave;
+
+// Return a NULL pointer on error. It supports only standard WAVE file.
+// Each sample should be 16-bit. It supports only single channel..
+//
+// If the returned pointer is not NULL, the user has to invoke
+// SherpaOnnxFreeWave() to free the returned pointer to avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxWave *SherpaOnnxReadWave(const char *filename);
+
+SHERPA_ONNX_API void SherpaOnnxFreeWave(const SherpaOnnxWave *wave);
+
+// Spoken language identification
+
+SHERPA_ONNX_API typedef struct
+    SherpaOnnxSpokenLanguageIdentificationWhisperConfig {
+  const char *encoder;
+  const char *decoder;
+  int32_t tail_paddings;
+} SherpaOnnxSpokenLanguageIdentificationWhisperConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxSpokenLanguageIdentificationConfig {
+  SherpaOnnxSpokenLanguageIdentificationWhisperConfig whisper;
+  int32_t num_threads;
+  int32_t debug;
+  const char *provider;
+} SherpaOnnxSpokenLanguageIdentificationConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxSpokenLanguageIdentification
+    SherpaOnnxSpokenLanguageIdentification;
+
+// Create an instance of SpokenLanguageIdentification.
+// The user has to invoke SherpaOnnxDestroySpokenLanguageIdentification()
+// to free the returned pointer to avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxSpokenLanguageIdentification *
+SherpaOnnxCreateSpokenLanguageIdentification(
+    const SherpaOnnxSpokenLanguageIdentificationConfig *config);
+
+SHERPA_ONNX_API void SherpaOnnxDestroySpokenLanguageIdentification(
+    const SherpaOnnxSpokenLanguageIdentification *slid);
+
+// The user has to invoke DestroyOfflineStream()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API SherpaOnnxOfflineStream *
+SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(
+    const SherpaOnnxSpokenLanguageIdentification *slid);
+
+SHERPA_ONNX_API typedef struct SherpaOnnxSpokenLanguageIdentificationResult {
+  // en for English
+  // de for German
+  // zh for Chinese
+  // es for Spanish
+  // ...
+  const char *lang;
+} SherpaOnnxSpokenLanguageIdentificationResult;
+
+// The user has to invoke SherpaOnnxDestroySpokenLanguageIdentificationResult()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxSpokenLanguageIdentificationResult *
+SherpaOnnxSpokenLanguageIdentificationCompute(
+    const SherpaOnnxSpokenLanguageIdentification *slid,
+    const SherpaOnnxOfflineStream *s);
+
+SHERPA_ONNX_API void SherpaOnnxDestroySpokenLanguageIdentificationResult(
+    const SherpaOnnxSpokenLanguageIdentificationResult *r);
+
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
