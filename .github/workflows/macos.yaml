@@ -102,8 +102,15 @@ jobs:
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
 
-      - name: Test spoken language identification
-        if: matrix.build_type != 'Debug'
+      - name: Test spoken language identification (C API)
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export SLID_EXE=spoken-language-identification-c-api
+
+          .github/scripts/test-c-api.sh
+
+      - name: Test spoken language identification (C++ API)
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH

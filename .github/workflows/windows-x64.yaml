@@ -68,7 +68,15 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
-      - name: Test spoken language identification
+      - name: Test spoken language identification (C API)
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export SLID_EXE=spoken-language-identification-c-api.exe
+
+          .github/scripts/test-c-api.sh
+
+      - name: Test spoken language identification (C++ API)
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
