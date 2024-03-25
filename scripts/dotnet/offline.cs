@@ -403,8 +403,8 @@ namespace SherpaOnnx
         while (*buffer != 0)
         {
           ++buffer;
+          length += 1;
         }
-        length = (int)(buffer - (byte*)impl.Text);
       }
 
       byte[] stringBuffer = new byte[length];
@@ -496,8 +496,6 @@ namespace SherpaOnnx
       return new OfflineStream(p);
     }
 
-    /// You have to ensure that IsReady(stream) returns true before
-    /// you call this method
     public void Decode(OfflineStream stream)
     {
       Decode(_handle.Handle, stream.Handle);
@@ -549,4 +547,137 @@ namespace SherpaOnnx
     private static extern void Decode(IntPtr handle, IntPtr[] streams, int n);
   }
 
+  [StructLayout(LayoutKind.Sequential)]
+  public struct SpokenLanguageIdentificationWhisperConfig
+  {
+    public SpokenLanguageIdentificationWhisperConfig()
+    {
+      Encoder = "";
+      Decoder = "";
+      TailPaddings = -1;
+    }
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Encoder;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Decoder;
+
+    public int TailPaddings;
+  }
+
+  public struct SpokenLanguageIdentificationConfig
+  {
+    public SpokenLanguageIdentificationConfig()
+    {
+      Whisper = new SpokenLanguageIdentificationWhisperConfig();
+      NumThreads = 1;
+      Debug = 0;
+      Provider = "cpu";
+    }
+    public SpokenLanguageIdentificationWhisperConfig Whisper;
+
+    public int NumThreads;
+    public int Debug;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Provider;
+  }
+
+  public class SpokenLanguageIdentificationResult
+  {
+    public SpokenLanguageIdentificationResult(IntPtr handle)
+    {
+      Impl impl = (Impl)Marshal.PtrToStructure(handle, typeof(Impl));
+
+      // PtrToStringUTF8() requires .net standard 2.1
+      // _text = Marshal.PtrToStringUTF8(impl.Text);
+
+      int length = 0;
+
+      unsafe
+      {
+        byte* buffer = (byte*)impl.Lang;
+        while (*buffer != 0)
+        {
+          ++buffer;
+          length += 1;
+        }
+      }
+
+      byte[] stringBuffer = new byte[length];
+      Marshal.Copy(impl.Lang, stringBuffer, 0, length);
+      _lang = Encoding.UTF8.GetString(stringBuffer);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct Impl
+    {
+      public IntPtr Lang;
+    }
+
+    private String _lang;
+    public String Lang => _lang;
+  }
+
+  public class SpokenLanguageIdentification : IDisposable
+  {
+    public SpokenLanguageIdentification(SpokenLanguageIdentificationConfig config)
+    {
+      IntPtr h = SherpaOnnxCreateSpokenLanguageIdentification(ref config);
+      _handle = new HandleRef(this, h);
+    }
+
+    public OfflineStream CreateStream()
+    {
+      IntPtr p = SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(_handle.Handle);
+      return new OfflineStream(p);
+    }
+
+    public SpokenLanguageIdentificationResult Compute(OfflineStream stream)
+    {
+      IntPtr h = SherpaOnnxSpokenLanguageIdentificationCompute(_handle.Handle, stream.Handle);
+      SpokenLanguageIdentificationResult result = new SpokenLanguageIdentificationResult(h);
+      SherpaOnnxDestroySpokenLanguageIdentificationResult(h);
+      return result;
+    }
+
+    public void Dispose()
+    {
+      Cleanup();
+      // Prevent the object from being placed on the
+      // finalization queue
+      System.GC.SuppressFinalize(this);
+    }
+
+    ~SpokenLanguageIdentification()
+    {
+      Cleanup();
+    }
+
+    private void Cleanup()
+    {
+      SherpaOnnxDestroySpokenLanguageIdentification(_handle.Handle);
+
+      // Don't permit the handle to be used again.
+      _handle = new HandleRef(this, IntPtr.Zero);
+    }
+
+    private HandleRef _handle;
+
+    [DllImport(Dll.Filename)]
+    private static extern IntPtr SherpaOnnxCreateSpokenLanguageIdentification(ref SpokenLanguageIdentificationConfig config);
+
+    [DllImport(Dll.Filename)]
+    private static extern void SherpaOnnxDestroySpokenLanguageIdentification(IntPtr handle);
+
+    [DllImport(Dll.Filename)]
+    private static extern IntPtr SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(IntPtr handle);
+
+    [DllImport(Dll.Filename)]
+    private static extern IntPtr SherpaOnnxSpokenLanguageIdentificationCompute(IntPtr handle, IntPtr stream);
+
+    [DllImport(Dll.Filename)]
+    private static extern void SherpaOnnxDestroySpokenLanguageIdentificationResult(IntPtr handle);
+  }
 }

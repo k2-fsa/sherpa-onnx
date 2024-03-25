@@ -177,39 +177,16 @@ jobs:
           cp -v scripts/dotnet/examples/offline-decode-files.csproj dotnet-examples/offline-decode-files/
           cp -v scripts/dotnet/examples/online-decode-files.csproj dotnet-examples/online-decode-files/
           cp -v scripts/dotnet/examples/speech-recognition-from-microphone.csproj dotnet-examples/speech-recognition-from-microphone/
+          cp -v scripts/dotnet/examples/spoken-language-identification.csproj dotnet-examples/spoken-language-identification/
 
           ls -lh /tmp
 
-      - name: Decode a file
+      - name: Run tests
         shell: bash
         run: |
-          cd dotnet-examples/
+          .github/scripts/test-dot-net.sh
 
-          cd online-decode-files
-          ./run-zipformer2-ctc.sh
-          ./run-transducer.sh
-          ./run-paraformer.sh
-
-          cd ../offline-decode-files
-          ./run-nemo-ctc.sh
-          ./run-paraformer.sh
-          ./run-zipformer.sh
-          ./run-hotwords.sh
-          ./run-whisper.sh
-          ./run-tdnn-yesno.sh
-
-          cd ../offline-tts
-          ./run-aishell3.sh
-          ./run-piper.sh
-          ls -lh
-
-          cd ../..
-
-          mkdir tts
-
-          cp dotnet-examples/offline-tts/*.wav ./tts
-
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: dot-net-tts-generated-test-files-${{ matrix.os }}
           path: tts
