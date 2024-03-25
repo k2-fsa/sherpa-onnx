@@ -1,6 +1,7 @@
 decode-file
 decode-file-non-streaming
 generate-subtitles
+spoken-language-identification
 tts
 vits-vctk
 sherpa-onnx-paraformer-zh-2023-09-14
