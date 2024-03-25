@@ -15,9 +15,6 @@ set(srcs
   offline-stream.cc
   offline-tdnn-model-config.cc
   offline-transducer-model-config.cc
-  offline-tts-model-config.cc
-  offline-tts-vits-model-config.cc
-  offline-tts.cc
   offline-wenet-ctc-model-config.cc
   offline-whisper-model-config.cc
   offline-zipformer-ctc-model-config.cc
@@ -42,6 +39,14 @@ if(SHERPA_ONNX_HAS_ALSA)
   list(APPEND srcs ${CMAKE_SOURCE_DIR}/sherpa-onnx/csrc/alsa.cc alsa.cc)
 else()
   list(APPEND srcs faked-alsa.cc)
+endif()
+
+if(SHERPA_ONNX_ENABLE_TTS)
+  list(APPEND srcs
+    offline-tts-model-config.cc
+    offline-tts-vits-model-config.cc
+    offline-tts.cc
+  )
 endif()
 
 pybind11_add_module(_sherpa_onnx ${srcs})

@@ -4,8 +4,10 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_executable(decode-file-c-api decode-file-c-api.c)
 target_link_libraries(decode-file-c-api sherpa-onnx-c-api cargs)
 
-add_executable(offline-tts-c-api offline-tts-c-api.c)
-target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)
+if(SHERPA_ONNX_ENABLE_TTS)
+  add_executable(offline-tts-c-api offline-tts-c-api.c)
+  target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)
+endif()
 
 add_executable(spoken-language-identification-c-api spoken-language-identification-c-api.c)
 target_link_libraries(spoken-language-identification-c-api sherpa-onnx-c-api)
