@@ -942,7 +942,7 @@ SherpaOnnxSpokenLanguageIdentificationCompute(
   std::string lang = slid->impl->Compute(s->impl.get());
   char *c_lang = new char[lang.size() + 1];
   std::copy(lang.begin(), lang.end(), c_lang);
-  c_lang[0] = '\0';
+  c_lang[lang.size()] = '\0';
   SherpaOnnxSpokenLanguageIdentificationResult *r =
       new SherpaOnnxSpokenLanguageIdentificationResult;
   r->lang = c_lang;

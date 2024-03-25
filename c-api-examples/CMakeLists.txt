@@ -7,6 +7,9 @@ target_link_libraries(decode-file-c-api sherpa-onnx-c-api cargs)
 add_executable(offline-tts-c-api offline-tts-c-api.c)
 target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)
 
+add_executable(spoken-language-identification-c-api spoken-language-identification-c-api.c)
+target_link_libraries(spoken-language-identification-c-api sherpa-onnx-c-api)
+
 if(SHERPA_ONNX_HAS_ALSA)
   add_subdirectory(./asr-microphone-example)
 elseif((UNIX AND NOT APPLE) OR LINUX)
