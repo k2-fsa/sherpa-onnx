@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-tts", "offline-tts\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-tts-play", "offline-tts-play\offline-tts-play.csproj", "{40781464-5948-462B-BA4B-98932711513F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "spoken-language-identification", "spoken-language-identification\spoken-language-identification.csproj", "{3D7CF3D6-AC45-4D50-9619-5687B1443E94}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -42,5 +44,9 @@ Global
 		{40781464-5948-462B-BA4B-98932711513F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{40781464-5948-462B-BA4B-98932711513F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{40781464-5948-462B-BA4B-98932711513F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3D7CF3D6-AC45-4D50-9619-5687B1443E94}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D7CF3D6-AC45-4D50-9619-5687B1443E94}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D7CF3D6-AC45-4D50-9619-5687B1443E94}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D7CF3D6-AC45-4D50-9619-5687B1443E94}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
