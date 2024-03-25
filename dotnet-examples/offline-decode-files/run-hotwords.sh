@@ -3,7 +3,7 @@
 set -ex
 
 if [ ! -d ./sherpa-onnx-zipformer-en-2023-04-01 ]; then
-  wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
   tar xvf sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
   rm sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
 fi
