@@ -820,6 +820,22 @@ SHERPA_ONNX_API int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
                                             int32_t sample_rate,
                                             const char *filename);
 
+SHERPA_ONNX_API typedef struct SherpaOnnxWave {
+  // samples normalized to the range [-1, 1]
+  const float *samples;
+  int32_t sample_rate;
+  int32_t num_samples;
+} SherpaOnnxWave;
+
+// Return a NULL pointer on error. It supports only standard WAVE file.
+// Each sample should be 16-bit. It supports only single channel..
+//
+// If the returned pointer is not NULL, the user has to invoke
+// SherpaOnnxFreeWave() to free the returned pointer to avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxWave *SherpaOnnxReadWave(const char *filename);
+
+SHERPA_ONNX_API void SherpaOnnxFreeWave(const SherpaOnnxWave *wave);
+
 // Spoken language identification
 
 SHERPA_ONNX_API typedef struct

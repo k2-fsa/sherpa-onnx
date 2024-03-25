@@ -169,55 +169,56 @@ int32_t main(int32_t argc, char *argv[]) {
   int32_t segment_id = 0;
 
   const char *wav_filename = argv[context.index];
-  FILE *fp = fopen(wav_filename, "rb");
-  if (!fp) {
-    fprintf(stderr, "Failed to open %s\n", wav_filename);
+  const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
+  if (wave == NULL) {
+    fprintf(stderr, "Failed to read %s\n", wav_filename);
     return -1;
   }
-
-  // Assume the wave header occupies 44 bytes.
-  fseek(fp, 44, SEEK_SET);
-
   // simulate streaming
 
 #define N 3200  // 0.2 s. Sample rate is fixed to 16 kHz
 
   int16_t buffer[N];
   float samples[N];
+  fprintf(stderr, "sample rate: %d, num samples: %d, duration: %.2f s\n",
+          wave->sample_rate, wave->num_samples,
+          (float)wave->num_samples / wave->sample_rate);
 
-  while (!feof(fp)) {
-    size_t n = fread((void *)buffer, sizeof(int16_t), N, fp);
-    if (n > 0) {
-      for (size_t i = 0; i != n; ++i) {
-        samples[i] = buffer[i] / 32768.;
-      }
-      AcceptWaveform(stream, 16000, samples, n);
-      while (IsOnlineStreamReady(recognizer, stream)) {
-        DecodeOnlineStream(recognizer, stream);
-      }
+  int32_t k = 0;
+  while (k < wave->num_samples) {
+    int32_t start = k;
+    int32_t end =
+        (start + N > wave->num_samples) ? wave->num_samples : (start + N);
+    k += N;
 
-      const SherpaOnnxOnlineRecognizerResult *r =
-          GetOnlineStreamResult(recognizer, stream);
-
-      if (strlen(r->text)) {
-        SherpaOnnxPrint(display, segment_id, r->text);
-      }
-
-      if (IsEndpoint(recognizer, stream)) {
-        if (strlen(r->text)) {
-          ++segment_id;
-        }
-        Reset(recognizer, stream);
-      }
-
-      DestroyOnlineRecognizerResult(r);
+    AcceptWaveform(stream, wave->sample_rate, wave->samples + start,
+                   end - start);
+    while (IsOnlineStreamReady(recognizer, stream)) {
+      DecodeOnlineStream(recognizer, stream);
     }
+
+    const SherpaOnnxOnlineRecognizerResult *r =
+        GetOnlineStreamResult(recognizer, stream);
+
+    if (strlen(r->text)) {
+      SherpaOnnxPrint(display, segment_id, r->text);
+    }
+
+    if (IsEndpoint(recognizer, stream)) {
+      if (strlen(r->text)) {
+        ++segment_id;
+      }
+      Reset(recognizer, stream);
+    }
+
+    DestroyOnlineRecognizerResult(r);
   }
-  fclose(fp);
 
   // add some tail padding
   float tail_paddings[4800] = {0};  // 0.3 seconds at 16 kHz sample rate
-  AcceptWaveform(stream, 16000, tail_paddings, 4800);
+  AcceptWaveform(stream, wave->sample_rate, tail_paddings, 4800);
+
+  SherpaOnnxFreeWave(wave);
 
   InputFinished(stream);
   while (IsOnlineStreamReady(recognizer, stream)) {

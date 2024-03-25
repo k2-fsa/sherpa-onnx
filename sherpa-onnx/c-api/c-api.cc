@@ -19,6 +19,7 @@
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
+#include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
 struct SherpaOnnxOnlineRecognizer {
@@ -860,6 +861,32 @@ void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
 int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
                             int32_t sample_rate, const char *filename) {
   return sherpa_onnx::WriteWave(filename, sample_rate, samples, n);
+}
+
+const SherpaOnnxWave *SherpaOnnxReadWave(const char *filename) {
+  int32_t sample_rate = -1;
+  bool is_ok = false;
+  std::vector<float> samples =
+      sherpa_onnx::ReadWave(filename, &sample_rate, &is_ok);
+  if (!is_ok) {
+    return nullptr;
+  }
+
+  float *c_samples = new float[samples.size()];
+  std::copy(samples.begin(), samples.end(), c_samples);
+
+  SherpaOnnxWave *wave = new SherpaOnnxWave;
+  wave->samples = c_samples;
+  wave->sample_rate = sample_rate;
+  wave->num_samples = samples.size();
+  return wave;
+}
+
+void SherpaOnnxFreeWave(const SherpaOnnxWave *wave) {
+  if (wave) {
+    delete[] wave->samples;
+    delete wave;
+  }
 }
 
 struct SherpaOnnxSpokenLanguageIdentification {

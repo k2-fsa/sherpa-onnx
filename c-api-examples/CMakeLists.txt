@@ -9,6 +9,6 @@ target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)
 
 if(SHERPA_ONNX_HAS_ALSA)
   add_subdirectory(./asr-microphone-example)
-else()
+elseif((UNIX AND NOT APPLE) OR LINUX)
   message(WARNING "Not include ./asr-microphone-example since alsa is not available")
 endif()
