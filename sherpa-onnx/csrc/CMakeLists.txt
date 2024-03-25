@@ -369,10 +369,8 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET AND SHERPA_ONNX_ENABLE_BINARY)
   target_link_libraries(sherpa-onnx-online-websocket-client sherpa-onnx-core)
 
   if(NOT WIN32)
-    target_link_libraries(sherpa-onnx-online-websocket-server -pthread)
     target_compile_options(sherpa-onnx-online-websocket-server PRIVATE -Wno-deprecated-declarations)
 
-    target_link_libraries(sherpa-onnx-online-websocket-client -pthread)
     target_compile_options(sherpa-onnx-online-websocket-client PRIVATE -Wno-deprecated-declarations)
   endif()
 
@@ -384,7 +382,6 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET AND SHERPA_ONNX_ENABLE_BINARY)
   target_link_libraries(sherpa-onnx-offline-websocket-server sherpa-onnx-core)
 
   if(NOT WIN32)
-    target_link_libraries(sherpa-onnx-offline-websocket-server -pthread)
     target_compile_options(sherpa-onnx-offline-websocket-server PRIVATE -Wno-deprecated-declarations)
   endif()
 
