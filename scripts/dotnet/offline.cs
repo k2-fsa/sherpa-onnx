@@ -674,7 +674,7 @@ namespace SherpaOnnx
     [DllImport(Dll.Filename)]
     private static extern IntPtr SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(IntPtr handle);
 
-    [DllImport(Dll.Filename, EntryPoint = "DecodeOfflineStream")]
+    [DllImport(Dll.Filename)]
     private static extern IntPtr SherpaOnnxSpokenLanguageIdentificationCompute(IntPtr handle, IntPtr stream);
 
     [DllImport(Dll.Filename)]
