@@ -40,7 +40,7 @@ concurrency:
 
 jobs:
   windows_x86:
-    name: Windows x86
+    name: shared-${{ matrix.shared_lib }} tts-${{ matrix.with_tts }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

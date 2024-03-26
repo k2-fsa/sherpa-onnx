@@ -32,7 +32,7 @@ concurrency:
 
 jobs:
   build_xcframework:
-    name: Build xcframework on ${{ matrix.os }}
+    name: tts-${{ matrix.with_tts }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

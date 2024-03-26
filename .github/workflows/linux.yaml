@@ -45,7 +45,7 @@ concurrency:
 
 jobs:
   linux:
-    name: ${{ matrix.build_type }} ${{ matrix.shared_lib }}
+    name: ${{ matrix.build_type }} shared-${{ matrix.shared_lib }} tts-${{ matrix.with_tts }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
