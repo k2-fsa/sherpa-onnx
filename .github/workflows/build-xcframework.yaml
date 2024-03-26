@@ -56,10 +56,18 @@ jobs:
           ./build-ios-no-tts.sh
 
       - name: Display artifacts
+        if: matrix.with_tts == 'ON'
         shell: bash
         run: |
           brew install tree
           tree -L 2 ./build-ios
+
+      - name: Display artifacts
+        if: matrix.with_tts == 'OFF'
+        shell: bash
+        run: |
+          brew install tree
+          tree -L 2 ./build-ios-no-tts
 
       - name: Package artifacts
         if: matrix.with_tts == 'ON'
