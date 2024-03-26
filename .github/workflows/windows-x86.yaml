@@ -40,13 +40,14 @@ concurrency:
 
 jobs:
   windows_x86:
-    name: Windows x86
+    name: shared-${{ matrix.shared_lib }} tts-${{ matrix.with_tts }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest]
         shared_lib: [ON, OFF]
+        with_tts: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -58,7 +59,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A Win32 -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }}  -D CMAKE_INSTALL_PREFIX=./install ..
+          cmake -A Win32 -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }}  -D CMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
@@ -94,6 +95,7 @@ jobs:
           .github/scripts/test-online-ctc.sh
 
       - name: Test offline TTS
+        if: matrix.with_tts == 'ON'
         shell: bash
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
@@ -157,10 +159,17 @@ jobs:
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86
 
           shared_lib=${{ matrix.shared_lib }}
+
           if [[ $shared_lib == "ON" ]]; then
-            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86-shared
+            suffix=shared
           else
-            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86-static
+            suffix=static
+          fi
+
+          if [[ ${{ matrix.with_tts }} ]]; then
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86-$suffix
+          else
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86-$suffix-no-tts
           fi
 
           mkdir $dst

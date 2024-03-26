@@ -45,7 +45,7 @@ concurrency:
 
 jobs:
   linux:
-    name: ${{ matrix.build_type }} ${{ matrix.shared_lib }}
+    name: ${{ matrix.build_type }} shared-${{ matrix.shared_lib }} tts-${{ matrix.with_tts }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -53,6 +53,7 @@ jobs:
         os: [ubuntu-latest]
         build_type: [Release, Debug]
         shared_lib: [ON, OFF]
+        with_tts: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -93,7 +94,7 @@ jobs:
               mkdir build
               cd build
 
-              cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+              cmake -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
 
               make -j2
               make install
@@ -120,7 +121,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: release-${{ matrix.build_type }}-${{ matrix.shared_lib }}
+          name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: build/bin/*
 
       - name: Test spoken language identification (C API)
@@ -175,6 +176,7 @@ jobs:
           .github/scripts/test-offline-ctc.sh
 
       - name: Test offline TTS
+        if: matrix.with_tts == 'ON'
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -226,7 +228,11 @@ jobs:
             suffix=static
           fi
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-$suffix
+          if [[ ${{ matrix.with_tts }} ]]; then
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-$suffix
+          else
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-$suffix-no-tts
+          fi
           mkdir $dst
 
           cp -a build/install/bin $dst/
@@ -278,6 +284,6 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tts-generated-test-files-${{ matrix.build_type }}-${{ matrix.shared_lib }}
+          name: tts-generated-test-files-${{ matrix.build_type }}-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: tts
 

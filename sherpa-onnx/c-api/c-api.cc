@@ -15,12 +15,15 @@
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
-#include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
+
+#if SHERPA_ONNX_ENABLE_TTS == 1
+#include "sherpa-onnx/csrc/offline-tts.h"
+#endif
 
 struct SherpaOnnxOnlineRecognizer {
   std::unique_ptr<sherpa_onnx::OnlineRecognizer> impl;
@@ -742,6 +745,7 @@ void SherpaOnnxVoiceActivityDetectorReset(SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Reset();
 }
 
+#if SHERPA_ONNX_ENABLE_TTS == 1
 struct SherpaOnnxOfflineTts {
   std::unique_ptr<sherpa_onnx::OfflineTts> impl;
 };
@@ -857,6 +861,7 @@ void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     delete p;
   }
 }
+#endif  // SHERPA_ONNX_ENABLE_TTS == 1
 
 int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
                             int32_t sample_rate, const char *filename) {

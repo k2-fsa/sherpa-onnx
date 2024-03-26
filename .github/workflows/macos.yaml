@@ -45,13 +45,14 @@ concurrency:
 jobs:
   macos:
     runs-on: ${{ matrix.os }}
-    name: ${{ matrix.build_type }} ${{ matrix.lib_type }}
+    name: ${{ matrix.build_type }} ${{ matrix.lib_type }} tts-${{ matrix.with_tts }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
         build_type: [Release, Debug]
         lib_type: [static, shared]
+        with_tts: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -61,7 +62,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.lib_type }}
+          key: ${{ matrix.os }}-${{ matrix.build_type }}-${{ matrix.lib_type }}-tts-${{ matrix.with_tts }}
 
       - name: Configure CMake
         shell: bash
@@ -79,7 +80,7 @@ jobs:
             BUILD_SHARED_LIBS=ON
           fi
 
-          cmake -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for macos
         shell: bash
@@ -135,6 +136,7 @@ jobs:
           .github/scripts/test-online-ctc.sh
 
       - name: Test offline TTS
+        if: matrix.with_tts == 'ON'
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
@@ -196,7 +198,11 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}
+          if [[ ${{ matrix.with_tts }} ]]; then
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}
+          else
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}-no-tts
+          fi
           mkdir $dst
 
           cp -a build/install/bin $dst/

@@ -24,7 +24,6 @@
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
-#include "sherpa-onnx/csrc/offline-tts.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
@@ -32,6 +31,10 @@
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
+
+#if SHERPA_ONNX_ENABLE_TTS == 1
+#include "sherpa-onnx/csrc/offline-tts.h"
+#endif
 
 #define SHERPA_ONNX_EXTERN_C extern "C"
 
@@ -629,8 +632,8 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(whisper_config_cls, "tailPaddings", "I");
-  ans.model_config.whisper.tail_paddings = env->GetIntField(whisper_config,
-                                                            fid);
+  ans.model_config.whisper.tail_paddings =
+      env->GetIntField(whisper_config, fid);
 
   return ans;
 }
@@ -782,6 +785,7 @@ static VadModelConfig GetVadModelConfig(JNIEnv *env, jobject config) {
   return ans;
 }
 
+#if SHERPA_ONNX_ENABLE_TTS == 1
 class SherpaOnnxOfflineTts {
  public:
 #if __ANDROID_API__ >= 9
@@ -878,6 +882,7 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
 
   return ans;
 }
+#endif
 
 }  // namespace sherpa_onnx
 
@@ -1209,6 +1214,15 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_allSpeakerNames(
   return obj_arr;
 }
 
+// see
+// https://stackoverflow.com/questions/29043872/android-jni-return-multiple-variables
+static jobject NewInteger(JNIEnv *env, int32_t value) {
+  jclass cls = env->FindClass("java/lang/Integer");
+  jmethodID constructor = env->GetMethodID(cls, "<init>", "(I)V");
+  return env->NewObject(cls, constructor, value);
+}
+
+#if SHERPA_ONNX_ENABLE_TTS == 1
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_new(
     JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
@@ -1263,14 +1277,6 @@ JNIEXPORT jint JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_getNumSpeakers(
     JNIEnv *env, jobject /*obj*/, jlong ptr) {
   return reinterpret_cast<sherpa_onnx::SherpaOnnxOfflineTts *>(ptr)
       ->NumSpeakers();
-}
-
-// see
-// https://stackoverflow.com/questions/29043872/android-jni-return-multiple-variables
-static jobject NewInteger(JNIEnv *env, int32_t value) {
-  jclass cls = env->FindClass("java/lang/Integer");
-  jmethodID constructor = env->GetMethodID(cls, "<init>", "(I)V");
-  return env->NewObject(cls, constructor, value);
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -1336,6 +1342,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
 
   return obj_arr;
 }
+#endif
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_GeneratedAudio_saveImpl(

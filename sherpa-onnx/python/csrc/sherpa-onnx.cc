@@ -15,7 +15,6 @@
 #include "sherpa-onnx/python/csrc/offline-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-recognizer.h"
 #include "sherpa-onnx/python/csrc/offline-stream.h"
-#include "sherpa-onnx/python/csrc/offline-tts.h"
 #include "sherpa-onnx/python/csrc/online-lm-config.h"
 #include "sherpa-onnx/python/csrc/online-model-config.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
@@ -26,6 +25,10 @@
 #include "sherpa-onnx/python/csrc/vad-model-config.h"
 #include "sherpa-onnx/python/csrc/vad-model.h"
 #include "sherpa-onnx/python/csrc/voice-activity-detector.h"
+
+#if SHERPA_ONNX_ENABLE_TTS == 1
+#include "sherpa-onnx/python/csrc/offline-tts.h"
+#endif
 
 namespace sherpa_onnx {
 
@@ -53,7 +56,10 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindCircularBuffer(&m);
   PybindVoiceActivityDetector(&m);
 
+#if SHERPA_ONNX_ENABLE_TTS == 1
   PybindOfflineTts(&m);
+#endif
+
   PybindSpeakerEmbeddingExtractor(&m);
   PybindSpeakerEmbeddingManager(&m);
   PybindSpokenLanguageIdentification(&m);

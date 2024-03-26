@@ -32,28 +32,45 @@ concurrency:
 
 jobs:
   build_xcframework:
-    name: Build xcframework on ${{ matrix.os }}
+    name: tts-${{ matrix.with_tts }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
+        with_tts: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Build iOS
+        if: matrix.with_tts == 'ON'
         shell: bash
         run: |
           ./build-ios.sh
 
+      - name: Build iOS (No tts)
+        if: matrix.with_tts == 'OFF'
+        shell: bash
+        run: |
+          ./build-ios-no-tts.sh
+
       - name: Display artifacts
+        if: matrix.with_tts == 'ON'
         shell: bash
         run: |
           brew install tree
           tree -L 2 ./build-ios
 
+      - name: Display artifacts
+        if: matrix.with_tts == 'OFF'
+        shell: bash
+        run: |
+          brew install tree
+          tree -L 2 ./build-ios-no-tts
+
       - name: Package artifacts
+        if: matrix.with_tts == 'ON'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -71,10 +88,36 @@ jobs:
 
           ls -lh
 
+      - name: Package artifacts
+        if: matrix.with_tts == 'OFF'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+
+          rm -rf build-ios-no-tts/build
+          rm -rf build-ios-no-tts/install
+          rm -rf build-ios-no-tts/ios-onnxruntime/.git
+
+          tree build-ios-no-tts
+
+          filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-ios-no-tts.tar.bz2
+
+          tar cjvf $filename ./build-ios-no-tts
+
+          ls -lh
+
       - uses: actions/upload-artifact@v4
+        if: matrix.with_tts == 'ON'
         with:
           name: sherpa-onnx-ios-libs
           path: ./build-ios
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.with_tts == 'OFF'
+        with:
+          name: sherpa-onnx-ios-libs-no-tts
+          path: ./build-ios-no-tts
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -96,7 +139,7 @@ jobs:
             cd huggingface
             git lfs pull
 
-            cp -v ../sherpa-onnx-*-ios.tar.bz2 ./
+            cp -v ../sherpa-onnx-*.tar.bz2 ./
 
             git status
             git lfs track "*.bz2"
@@ -113,4 +156,4 @@ jobs:
         with:
           file_glob: true
           overwrite: true
-          file: sherpa-onnx-*-ios.tar.bz2
+          file: sherpa-onnx-*.tar.bz2

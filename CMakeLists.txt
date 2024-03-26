@@ -26,6 +26,7 @@ option(SHERPA_ONNX_ENABLE_WASM_ASR "Whether to enable WASM for ASR" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_KWS "Whether to enable WASM for KWS" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_NODEJS "Whether to enable WASM for NodeJS" OFF)
 option(SHERPA_ONNX_ENABLE_BINARY "Whether to build binaries" ON)
+option(SHERPA_ONNX_ENABLE_TTS "Whether to build TTS related code" ON)
 option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically. Used only when BUILD_SHARED_LIBS is OFF on Linux" ON)
 option(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE "True to use pre-installed onnxruntime if available" ON)
 
@@ -111,10 +112,26 @@ message(STATUS "SHERPA_ONNX_ENABLE_GPU ${SHERPA_ONNX_ENABLE_GPU}")
 message(STATUS "SHERPA_ONNX_ENABLE_WASM ${SHERPA_ONNX_ENABLE_WASM}")
 message(STATUS "SHERPA_ONNX_ENABLE_WASM_TTS ${SHERPA_ONNX_ENABLE_WASM_TTS}")
 message(STATUS "SHERPA_ONNX_ENABLE_WASM_ASR ${SHERPA_ONNX_ENABLE_WASM_ASR}")
+message(STATUS "SHERPA_ONNX_ENABLE_WASM_KWS ${SHERPA_ONNX_ENABLE_WASM_KWS}")
 message(STATUS "SHERPA_ONNX_ENABLE_WASM_NODEJS ${SHERPA_ONNX_ENABLE_WASM_NODEJS}")
+message(STATUS "SHERPA_ONNX_ENABLE_BINARY ${SHERPA_ONNX_ENABLE_BINARY}")
+message(STATUS "SHERPA_ONNX_ENABLE_TTS ${SHERPA_ONNX_ENABLE_TTS}")
+message(STATUS "SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY ${SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY}")
 message(STATUS "SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE ${SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE}")
 
+if(SHERPA_ONNX_ENABLE_TTS)
+  message(STATUS "TTS is enabled")
+  add_definitions(-DSHERPA_ONNX_ENABLE_TTS=1)
+else()
+  message(WARNING "TTS is disabled")
+  add_definitions(-DSHERPA_ONNX_ENABLE_TTS=0)
+endif()
+
 if(SHERPA_ONNX_ENABLE_WASM_TTS)
+  if(NOT SHERPA_ONNX_ENABLE_TTS)
+    message(FATAL_ERROR "Please set SHERPA_ONNX_ENABLE_TTS to ON if you want to build wasm TTS")
+  endif()
+
   if(NOT SHERPA_ONNX_ENABLE_WASM)
     message(FATAL_ERROR "Please set SHERPA_ONNX_ENABLE_WASM to ON if you enable WASM for TTS")
   endif()
@@ -238,10 +255,12 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET)
   include(asio)
 endif()
 
-include(espeak-ng-for-piper)
-set(ESPEAK_NG_DIR ${espeak_ng_SOURCE_DIR})
-message(STATUS "ESPEAK_NG_DIR: ${ESPEAK_NG_DIR}")
-include(piper-phonemize)
+if(SHERPA_ONNX_ENABLE_TTS)
+  include(espeak-ng-for-piper)
+  set(ESPEAK_NG_DIR ${espeak_ng_SOURCE_DIR})
+  message(STATUS "ESPEAK_NG_DIR: ${ESPEAK_NG_DIR}")
+  include(piper-phonemize)
+endif()
 
 add_subdirectory(sherpa-onnx)
 
@@ -266,7 +285,12 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 # See https://people.freedesktop.org/~dbn/pkg-config-guide.html
-configure_file(cmake/sherpa-onnx.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+if(SHERPA_ONNX_ENABLE_TTS)
+  configure_file(cmake/sherpa-onnx.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+else()
+  configure_file(cmake/sherpa-onnx-no-tts.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+endif()
+
 install(
   FILES
     ${PROJECT_BINARY_DIR}/sherpa-onnx.pc
