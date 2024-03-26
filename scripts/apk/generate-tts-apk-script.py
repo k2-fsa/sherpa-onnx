@@ -69,7 +69,7 @@ def get_coqui_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-coqui-fi-css10", lang="fi"),
         TtsModel(model_dir="vits-coqui-fr-css10", lang="fr"),
         TtsModel(model_dir="vits-coqui-ga-cv", lang="ga"),
-        TtsModel(model_dir="vits-coqui-hr-cvv", lang="hr"),
+        TtsModel(model_dir="vits-coqui-hr-cv", lang="hr"),
         TtsModel(model_dir="vits-coqui-lt-cv", lang="lt"),
         TtsModel(model_dir="vits-coqui-lv-cv", lang="lv"),
         TtsModel(model_dir="vits-coqui-mt-cv", lang="mt"),
