@@ -57,6 +57,7 @@ object TtsEngine {
         // Please enable one and only one of the examples below
 
         // Example 1:
+        // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-vctk.tar.bz2
         // modelDir = "vits-vctk"
         // modelName = "vits-vctk.onnx"
         // lexicon = "lexicon.txt"
@@ -71,11 +72,19 @@ object TtsEngine {
         // lang = "eng"
 
         // Example 3:
+        // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
         // modelDir = "vits-zh-aishell3"
         // modelName = "vits-aishell3.onnx"
         // ruleFsts = "vits-zh-aishell3/rule.fst"
         // lexicon = "lexicon.txt"
         // lang = "zho"
+
+        // Example 4:
+        // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
+        // This model does not need lexicon or dataDir
+        // modelDir = "vits-coqui-de-css10"
+        // modelName = "model.onnx"
+        // lang = "deu"
     }
 
 

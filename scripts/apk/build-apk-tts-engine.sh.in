@@ -59,7 +59,7 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
 {% if tts_model.data_dir %}
   data_dir={{ tts_model.data_dir }}
   sed -i.bak s%"dataDir = null"%"dataDir = \"$data_dir\""% ./TtsEngine.kt
-{% else %}
+{% elif not tts_model.is_char %}
   sed -i.bak s/"lexicon = null"/"lexicon = \"lexicon.txt\""/ ./TtsEngine.kt
 {% endif %}
 
