@@ -39,6 +39,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
   Ort::Env env(ORT_LOGGING_LEVEL_WARNING);
   Ort::SessionOptions sess_opts;
+  sess_opts.SetIntraOpNumThreads(1);
+  sess_opts.SetInterOpNumThreads(1);
 
   auto sess = std::make_unique<Ort::Session>(env, model_data, model_data_length,
                                              sess_opts);

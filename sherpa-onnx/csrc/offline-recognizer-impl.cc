@@ -40,6 +40,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 
   Ort::SessionOptions sess_opts;
+  sess_opts.SetIntraOpNumThreads(1);
+  sess_opts.SetInterOpNumThreads(1);
+
   std::string model_filename;
   if (!config.model_config.transducer.encoder_filename.empty()) {
     model_filename = config.model_config.transducer.encoder_filename;
@@ -167,6 +170,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 
   Ort::SessionOptions sess_opts;
+  sess_opts.SetIntraOpNumThreads(1);
+  sess_opts.SetInterOpNumThreads(1);
+
   std::string model_filename;
   if (!config.model_config.transducer.encoder_filename.empty()) {
     model_filename = config.model_config.transducer.encoder_filename;
