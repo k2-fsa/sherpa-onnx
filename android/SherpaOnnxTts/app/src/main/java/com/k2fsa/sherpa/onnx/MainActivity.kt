@@ -186,6 +186,12 @@ class MainActivity : AppCompatActivity() {
         // ruleFsts = "vits-zh-aishell3/rule.fst"
         // lexicon = "lexicon.txt"
 
+        // Example 4:
+        // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
+        // modelDir = "vits-coqui-de-css10"
+        // modelName = "model.onnx"
+        // lang = "deu"
+
         if (dataDir != null) {
             val newDir = copyDataDir(modelDir)
             modelDir = newDir + "/" + modelDir

@@ -34,6 +34,7 @@ class TtsModel:
     lang: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
     data_dir: Optional[str] = None
+    is_char: bool = False
     lang_iso_639_3: str = ""
 
 
@@ -57,7 +58,35 @@ def get_coqui_models() -> List[TtsModel]:
         m.model_name = "model.onnx"
         m.lang = "en"
 
-    return models
+    character_models = [
+        TtsModel(model_dir="vits-coqui-bg-cv", lang="bg"),
+        TtsModel(model_dir="vits-coqui-bn-custom_female", lang="bn"),
+        TtsModel(model_dir="vits-coqui-cs-cv", lang="cs"),
+        TtsModel(model_dir="vits-coqui-da-cv", lang="da"),
+        TtsModel(model_dir="vits-coqui-de-css10", lang="de"),
+        TtsModel(model_dir="vits-coqui-es-css10", lang="es"),
+        TtsModel(model_dir="vits-coqui-et-cv", lang="et"),
+        TtsModel(model_dir="vits-coqui-fi-css10", lang="fi"),
+        TtsModel(model_dir="vits-coqui-fr-css10", lang="fr"),
+        TtsModel(model_dir="vits-coqui-ga-cv", lang="ga"),
+        TtsModel(model_dir="vits-coqui-hr-cv", lang="hr"),
+        TtsModel(model_dir="vits-coqui-lt-cv", lang="lt"),
+        TtsModel(model_dir="vits-coqui-lv-cv", lang="lv"),
+        TtsModel(model_dir="vits-coqui-mt-cv", lang="mt"),
+        TtsModel(model_dir="vits-coqui-nl-css10", lang="nl"),
+        TtsModel(model_dir="vits-coqui-pl-mai_female", lang="pl"),
+        TtsModel(model_dir="vits-coqui-pt-cv", lang="pt"),
+        TtsModel(model_dir="vits-coqui-ro-cv", lang="ro"),
+        TtsModel(model_dir="vits-coqui-sk-cv", lang="sk"),
+        TtsModel(model_dir="vits-coqui-sl-cv", lang="sl"),
+        TtsModel(model_dir="vits-coqui-sv-cv", lang="sv"),
+        TtsModel(model_dir="vits-coqui-uk-mai", lang="uk"),
+    ]
+    for m in character_models:
+        m.is_char = True
+        m.model_name = "model.onnx"
+
+    return models + character_models
 
 
 def get_piper_models() -> List[TtsModel]:
