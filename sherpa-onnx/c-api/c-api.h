@@ -836,7 +836,9 @@ SHERPA_ONNX_API const SherpaOnnxWave *SherpaOnnxReadWave(const char *filename);
 
 SHERPA_ONNX_API void SherpaOnnxFreeWave(const SherpaOnnxWave *wave);
 
-// Spoken language identification
+// ============================================================
+// For spoken language identification
+// ============================================================
 
 SHERPA_ONNX_API typedef struct
     SherpaOnnxSpokenLanguageIdentificationWhisperConfig {
@@ -889,6 +891,100 @@ SherpaOnnxSpokenLanguageIdentificationCompute(
 
 SHERPA_ONNX_API void SherpaOnnxDestroySpokenLanguageIdentificationResult(
     const SherpaOnnxSpokenLanguageIdentificationResult *r);
+
+// ============================================================
+// For speaker embedding extraction
+// ============================================================
+
+SHERPA_ONNX_API typedef struct SherpaOnnxSpeakerEmbeddingManager
+    SherpaOnnxSpeakerEmbeddingManager;
+
+// The user has to invoke SherpaOnnxDestroySpeakerEmbeddingManager()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxSpeakerEmbeddingManager *
+SherpaOnnxCreateSpeakerEmbeddingManager(int32_t dim);
+
+SHERPA_ONNX_API void SherpaOnnxDestroySpeakerEmbeddingManager(
+    const SherpaOnnxSpeakerEmbeddingManager *p);
+
+// Register the embedding of a user
+//
+// @param name  The name of the user
+// @param p Pointer to an array containing the embeddings. The length of the
+//          array must be equal to `dim` used to construct the manager `p`.
+//
+// @return Return 1 if added successfully. Return 0 on error
+SHERPA_ONNX_API int32_t
+SherpaOnnxSpeakerEmbeddingManagerAdd(const SherpaOnnxSpeakerEmbeddingManager *p,
+                                     const char *name, const float *p);
+
+// Remove a user.
+// @param naem The name of the user to remove.
+// @return Return 1 if removed successfully; return 0 on error.
+//
+// Note if the user does not exist, it also returns 0.
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerRemove(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name);
+
+// Search if an existing users' embedding matches the given one.
+//
+// @param p Pointer to an array containing the embedding. The dim
+//          of the array must equal to `dim` used to construct the manager `p`.
+// @param threshold A value between 0 and 1. If the similarity score exceeds
+//                  this threshold, we say a match is found.
+// @return Returns the name of the user if found. Return NULL if not found.
+//         If not null, the caller has to invoke
+//          SherpaOnnxSpeakerEmbeddingManagerFreeSearch() to free the returned
+//          pointer to avoid memory leak.
+SHERPA_ONNX_API const char *SherpaOnnxSpeakerEmbeddingManagerSearch(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const float *p,
+    float threshold);
+
+SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeSearch(
+    const char *name);
+
+// Check whether the input embedding matches the embedding of the input
+// speaker.
+//
+// It is for speaker verification.
+//
+// @param name The target speaker name.
+// @param p The input embedding to check.
+// @param threshold A value between 0 and 1.
+// @return Return 1 if it matches. Otherwise, it returns 0.
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerVerify(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name,
+    const float *p, float threshold);
+
+// Return 1 if the user with the name is in the manager.
+// Return 0 if the user does not exist.
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerContains(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name);
+
+// Return number of speakers in the manager.
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(
+    const SherpaOnnxSpeakerEmbeddingManager *p);
+
+// Return the name of all speakers in the manager.
+//
+// @return Return an array of pointers `ans`. If there are n speakers, then
+// - ans[0] contains the name of the 0-th speaker
+// - ans[1] contains the name of the 1-st speaker
+// - ans[n-1] contains the name of the last speaker
+// - ans[n] is NULL
+// If there are no users at all, then ans[0] is NULL. In any case,
+// `ans` is not NULL.
+//
+// Each name is NULL-terminated
+//
+// The caller has to invoke SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers()
+// to free the returned pointer to avoid memory leak.
+SHERPA_ONNX_API const char *const *
+SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(
+    const SherpaOnnxSpeakerEmbeddingManager *p);
+
+SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(
+    const char *const *names);
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
