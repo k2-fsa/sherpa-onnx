@@ -13,4 +13,4 @@ fi
 
 go mod tidy
 go build
-./vad
+./vad-asr-whisper
