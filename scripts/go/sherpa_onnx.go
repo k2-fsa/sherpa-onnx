@@ -626,13 +626,13 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	return ans
 }
 
-func (audio *GeneratedAudio) Save(filename string) int {
+func (audio *GeneratedAudio) Save(filename string) bool {
 	s := C.CString(filename)
 	defer C.free(unsafe.Pointer(s))
 
 	ok := int(C.SherpaOnnxWriteWave((*C.float)(&audio.Samples[0]), C.int(len(audio.Samples)), C.int(audio.SampleRate), s))
 
-	return ok
+	return ok == 1
 }
 
 // ============================================================
