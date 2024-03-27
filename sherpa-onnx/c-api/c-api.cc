@@ -309,6 +309,9 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
 
   recognizer_config.model_config.whisper.task =
       SHERPA_ONNX_OR(config->model_config.whisper.task, "transcribe");
+  if (recognizer_config.model_config.whisper.task.empty()) {
+    recognizer_config.model_config.whisper.task = "transcribe";
+  }
 
   recognizer_config.model_config.tdnn.model =
       SHERPA_ONNX_OR(config->model_config.tdnn.model, "");
@@ -331,6 +334,11 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
 
   recognizer_config.decoding_method =
       SHERPA_ONNX_OR(config->decoding_method, "greedy_search");
+
+  if (recognizer_config.decoding_method.empty()) {
+    recognizer_config.decoding_method = "greedy_search";
+  }
+
   recognizer_config.max_active_paths =
       SHERPA_ONNX_OR(config->max_active_paths, 4);
 
