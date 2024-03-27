@@ -145,7 +145,7 @@ jobs:
           path: ./apks/*.apk
 
       - name: Publish to huggingface
-        if: false
+        if: true
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
