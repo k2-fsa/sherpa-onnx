@@ -23,4 +23,7 @@ for details.
 - [./vad-asr-paraformer](./vad-asr-paraformer) It shows how to use silero VAD + Paraformer
   for speech recognition.
 
+- [./vad-spoken-language-identification](./vad-spoken-language-identification) It shows how to use silero VAD + Whisper
+  for spoken language identification.
+
 [sherpa-onnx]: https://github.com/k2-fsa/sherpa-onnx

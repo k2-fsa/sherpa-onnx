@@ -1,0 +1,1 @@
+/Users/fangjun/open-source/sherpa-onnx/go-api-examples/vad-spoken-language-identification/run.sh
