@@ -141,8 +141,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: false
         with:
-          name: tts-apk
-          name: tts-apk-${{ matrix-index }}
+          name: tts-apk-${{ matrix.index }}
           path: ./apks/*.apk
 
       - name: Publish to huggingface
