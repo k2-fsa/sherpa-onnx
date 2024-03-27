@@ -57,8 +57,7 @@ func main() {
 	log.Println("Done!")
 
 	ok := audio.Save(filename)
-	if ok != 1 {
+	if !ok {
 		log.Fatalf("Failed to write", filename)
 	}
-
 }

@@ -235,6 +235,12 @@ def get_vits_models() -> List[TtsModel]:
     return [
         # Chinese
         TtsModel(
+            model_dir="vits-icefall-zh-aishell3",
+            model_name="model.onnx",
+            lang="zh",
+            rule_fsts="vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/rule.fst",
+        ),
+        TtsModel(
             model_dir="vits-zh-aishell3",
             model_name="vits-aishell3.onnx",
             lang="zh",

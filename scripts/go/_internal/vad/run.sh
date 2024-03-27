@@ -1,0 +1,1 @@
+../../../../go-api-examples/vad/run.sh

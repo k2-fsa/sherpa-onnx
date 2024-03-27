@@ -1,0 +1,1 @@
+../../../../go-api-examples/vad/main.go

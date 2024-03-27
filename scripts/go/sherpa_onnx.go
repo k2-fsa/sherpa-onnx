@@ -614,6 +614,9 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	ans.SampleRate = int(audio.sample_rate)
 	n := int(audio.n)
 	ans.Samples = make([]float32, n)
+
+	// see https://stackoverflow.com/questions/48756732/what-does-1-30c-yourtype-do-exactly-in-cgo
+	// :n:n means 0:n:n, means low:high:capacity
 	samples := (*[1 << 28]C.float)(unsafe.Pointer(audio.samples))[:n:n]
 	// copy(ans.Samples, samples)
 	for i := 0; i < n; i++ {
@@ -623,11 +626,160 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	return ans
 }
 
-func (audio *GeneratedAudio) Save(filename string) int {
+func (audio *GeneratedAudio) Save(filename string) bool {
 	s := C.CString(filename)
 	defer C.free(unsafe.Pointer(s))
 
 	ok := int(C.SherpaOnnxWriteWave((*C.float)(&audio.Samples[0]), C.int(len(audio.Samples)), C.int(audio.SampleRate), s))
 
-	return ok
+	return ok == 1
+}
+
+// ============================================================
+// For VAD
+// ============================================================
+type SileroVadModelConfig struct {
+	Model              string
+	Threshold          float32
+	MinSilenceDuration float32
+	MinSpeechDuration  float32
+	WindowSize         int
+}
+
+type VadModelConfig struct {
+	SileroVad  SileroVadModelConfig
+	SampleRate int
+	NumThreads int
+	Provider   string
+	Debug      int
+}
+
+type CircularBuffer struct {
+	impl *C.struct_SherpaOnnxCircularBuffer
+}
+
+func DeleteCircularBuffer(buffer *CircularBuffer) {
+	C.SherpaOnnxDestroyCircularBuffer(buffer.impl)
+	buffer.impl = nil
+}
+
+func NewCircularBuffer(capacity int) *CircularBuffer {
+	circularBuffer := &CircularBuffer{}
+	circularBuffer.impl = C.SherpaOnnxCreateCircularBuffer(C.int(capacity))
+	return circularBuffer
+}
+
+func (buffer *CircularBuffer) Push(samples []float32) {
+	C.SherpaOnnxCircularBufferPush(buffer.impl, (*C.float)(&samples[0]), C.int(len(samples)))
+}
+
+func (buffer *CircularBuffer) Get(start int, n int) []float32 {
+	samples := C.SherpaOnnxCircularBufferGet(buffer.impl, C.int(start), C.int(n))
+	defer C.SherpaOnnxCircularBufferFree(samples)
+
+	result := make([]float32, n)
+
+	p := (*[1 << 28]C.float)(unsafe.Pointer(samples))[:n:n]
+	for i := 0; i < n; i++ {
+		result[i] = float32(p[i])
+	}
+
+	return result
+}
+
+func (buffer *CircularBuffer) Pop(n int) {
+	C.SherpaOnnxCircularBufferPop(buffer.impl, C.int(n))
+}
+
+func (buffer *CircularBuffer) Size() int {
+	return int(C.SherpaOnnxCircularBufferSize(buffer.impl))
+}
+
+func (buffer *CircularBuffer) Head() int {
+	return int(C.SherpaOnnxCircularBufferHead(buffer.impl))
+}
+
+func (buffer *CircularBuffer) Reset() {
+	C.SherpaOnnxCircularBufferReset(buffer.impl)
+}
+
+type SpeechSegment struct {
+	Start   int
+	Samples []float32
+}
+
+type VoiceActivityDetector struct {
+	impl *C.struct_SherpaOnnxVoiceActivityDetector
+}
+
+func NewVoiceActivityDetector(config *VadModelConfig, bufferSizeInSeconds float32) *VoiceActivityDetector {
+	c := C.struct_SherpaOnnxVadModelConfig{}
+
+	c.silero_vad.model = C.CString(config.SileroVad.Model)
+	defer C.free(unsafe.Pointer(c.silero_vad.model))
+
+	c.silero_vad.threshold = C.float(config.SileroVad.Threshold)
+	c.silero_vad.min_silence_duration = C.float(config.SileroVad.MinSilenceDuration)
+	c.silero_vad.min_speech_duration = C.float(config.SileroVad.MinSpeechDuration)
+	c.silero_vad.window_size = C.int(config.SileroVad.WindowSize)
+
+	c.sample_rate = C.int(config.SampleRate)
+	c.num_threads = C.int(config.NumThreads)
+	c.provider = C.CString(config.Provider)
+	defer C.free(unsafe.Pointer(c.provider))
+
+	c.debug = C.int(config.Debug)
+
+	vad := &VoiceActivityDetector{}
+	vad.impl = C.SherpaOnnxCreateVoiceActivityDetector(&c, C.float(bufferSizeInSeconds))
+
+	return vad
+}
+
+func DeleteVoiceActivityDetector(vad *VoiceActivityDetector) {
+	C.SherpaOnnxDestroyVoiceActivityDetector(vad.impl)
+	vad.impl = nil
+}
+
+func (vad *VoiceActivityDetector) AcceptWaveform(samples []float32) {
+	C.SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad.impl, (*C.float)(&samples[0]), C.int(len(samples)))
+}
+
+func (vad *VoiceActivityDetector) IsEmpty() bool {
+	return 1 == int(C.SherpaOnnxVoiceActivityDetectorEmpty(vad.impl))
+}
+
+func (vad *VoiceActivityDetector) IsSpeech() bool {
+	return 1 == int(C.SherpaOnnxVoiceActivityDetectorDetected(vad.impl))
+}
+
+func (vad *VoiceActivityDetector) Pop() {
+	C.SherpaOnnxVoiceActivityDetectorPop(vad.impl)
+}
+
+func (vad *VoiceActivityDetector) Clear() {
+	C.SherpaOnnxVoiceActivityDetectorClear(vad.impl)
+}
+
+func (vad *VoiceActivityDetector) Front() *SpeechSegment {
+	f := C.SherpaOnnxVoiceActivityDetectorFront(vad.impl)
+	defer C.SherpaOnnxDestroySpeechSegment(f)
+
+	ans := &SpeechSegment{}
+	ans.Start = int(f.start)
+
+	n := int(f.n)
+	ans.Samples = make([]float32, n)
+
+	samples := (*[1 << 28]C.float)(unsafe.Pointer(f.samples))[:n:n]
+
+	for i := 0; i < n; i++ {
+		ans.Samples[i] = float32(samples[i])
+	}
+
+	return ans
+}
+
+func (vad *VoiceActivityDetector) Reset() {
+	C.SherpaOnnxVoiceActivityDetectorReset(vad.impl)
 }
