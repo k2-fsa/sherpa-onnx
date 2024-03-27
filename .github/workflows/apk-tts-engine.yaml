@@ -68,7 +68,7 @@ jobs:
 
           BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
           echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
-          echo Last build tool version is: $BUILD_TOOL_VERSION
+          echo "Last build tool version is: $BUILD_TOOL_VERSION"
 
       - name: Generate build script
         shell: bash
@@ -120,6 +120,8 @@ jobs:
         shell: bash
         run: |
           cd apks
+          rm -fv signingKey.jks
+          rm -fv *.apk.idsig
           rm -fv *-aligned.apk
 
           all_apks=$(ls -1 *-signed.apk)
@@ -137,8 +139,9 @@ jobs:
           du -h -d1 .
 
       - uses: actions/upload-artifact@v4
+        if: false
         with:
-          name: tts-engine-apk
+          name: tts-engine-apk-${{ matrix-index }}
           path: ./apks/*.apk
 
       - name: Publish to huggingface
