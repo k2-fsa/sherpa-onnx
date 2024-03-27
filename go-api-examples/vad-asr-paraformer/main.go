@@ -37,6 +37,9 @@ func main() {
 	c := sherpa.OfflineRecognizerConfig{}
 	c.FeatConfig.SampleRate = 16000
 	c.FeatConfig.FeatureDim = 80
+
+	// Please download the model from
+	// https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-trilingual-zh-cantonese-en.tar.bz2
 	c.ModelConfig.Paraformer.Model = "./sherpa-onnx-paraformer-trilingual-zh-cantonese-en/model.int8.onnx"
 	c.ModelConfig.Tokens = "./sherpa-onnx-paraformer-trilingual-zh-cantonese-en/tokens.txt"
 	c.ModelConfig.NumThreads = 2
