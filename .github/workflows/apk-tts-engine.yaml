@@ -101,6 +101,7 @@ jobs:
         shell: bash
         run: |
           cd apks
+          rm -fv *-aligned.apk
 
           all_apks=$(ls -1 *-signed.apk)
           echo "----"
