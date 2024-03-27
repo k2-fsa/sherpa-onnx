@@ -91,7 +91,7 @@ std::string SpokenLanguageIdentificationConfig::ToString() const {
   std::ostringstream os;
 
   os << "SpokenLanguageIdentificationConfig(";
-  os << "whisper=\"" << whisper.ToString() << "\", ";
+  os << "whisper=" << whisper.ToString() << ", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
   os << "provider=\"" << provider << "\")";

@@ -783,3 +783,72 @@ func (vad *VoiceActivityDetector) Front() *SpeechSegment {
 func (vad *VoiceActivityDetector) Reset() {
 	C.SherpaOnnxVoiceActivityDetectorReset(vad.impl)
 }
+
+// Spoken language identification
+
+type SpokenLanguageIdentificationWhisperConfig struct {
+	Encoder      string
+	Decoder      string
+	TailPaddings int
+}
+
+type SpokenLanguageIdentificationConfig struct {
+	Whisper    SpokenLanguageIdentificationWhisperConfig
+	NumThreads int
+	Debug      int
+	Provider   string
+}
+
+type SpokenLanguageIdentification struct {
+	impl *C.struct_SherpaOnnxSpokenLanguageIdentification
+}
+
+type SpokenLanguageIdentificationResult struct {
+	Lang string
+}
+
+func NewSpokenLanguageIdentification(config *SpokenLanguageIdentificationConfig) *SpokenLanguageIdentification {
+	c := C.struct_SherpaOnnxSpokenLanguageIdentificationConfig{}
+
+	c.whisper.encoder = C.CString(config.Whisper.Encoder)
+	defer C.free(unsafe.Pointer(c.whisper.encoder))
+
+	c.whisper.decoder = C.CString(config.Whisper.Decoder)
+	defer C.free(unsafe.Pointer(c.whisper.decoder))
+
+	c.whisper.tail_paddings = C.int(config.Whisper.TailPaddings)
+
+	c.num_threads = C.int(config.NumThreads)
+	c.debug = C.int(config.Debug)
+
+	c.provider = C.CString(config.Provider)
+	defer C.free(unsafe.Pointer(c.provider))
+
+	slid := &SpokenLanguageIdentification{}
+	slid.impl = C.SherpaOnnxCreateSpokenLanguageIdentification(&c)
+
+	return slid
+}
+
+func DeleteSpokenLanguageIdentification(slid *SpokenLanguageIdentification) {
+	C.SherpaOnnxDestroySpokenLanguageIdentification(slid.impl)
+	slid.impl = nil
+}
+
+// The user has to invoke DeleteOfflineStream() to free the returned value
+// to avoid memory leak
+func (slid *SpokenLanguageIdentification) CreateStream() *OfflineStream {
+	stream := &OfflineStream{}
+	stream.impl = C.SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(slid.impl)
+	return stream
+}
+
+func (slid *SpokenLanguageIdentification) Compute(stream *OfflineStream) *SpokenLanguageIdentificationResult {
+	r := C.SherpaOnnxSpokenLanguageIdentificationCompute(slid.impl, stream.impl)
+	// defer C.SherpaOnnxDestroySpokenLanguageIdentificationResult(r)
+
+	ans := &SpokenLanguageIdentificationResult{}
+	ans.Lang = C.GoString(r.lang)
+
+	return ans
+}
