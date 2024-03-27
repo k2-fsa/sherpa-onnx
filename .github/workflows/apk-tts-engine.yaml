@@ -53,6 +53,23 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip jinja2 iso639-lang
 
+      - name: Setup build tool version variable
+        shell: bash
+        run: |
+          echo "---"
+          ls -lh /usr/local/lib/android/
+          echo "---"
+
+          ls -lh /usr/local/lib/android/sdk
+          echo "---"
+
+          ls -lh /usr/local/lib/android/sdk/build-tools
+          echo "---"
+
+          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+          echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+          echo Last build tool version is: $BUILD_TOOL_VERSION
+
       - name: Generate build script
         shell: bash
         run: |
@@ -90,6 +107,8 @@ jobs:
           signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
           alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
           keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
 
       - name: Display APK for TTS engine after signing
         shell: bash
