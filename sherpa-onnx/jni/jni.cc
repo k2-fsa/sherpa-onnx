@@ -1808,7 +1808,6 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWaveFromAsset(
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
     exit(-1);
   }
-  SHERPA_ONNX_LOGE("Failed to read %s", p_filename);
   std::vector<char> buffer = sherpa_onnx::ReadFile(mgr, p_filename);
 
   std::istrstream is(buffer.data(), buffer.size());
