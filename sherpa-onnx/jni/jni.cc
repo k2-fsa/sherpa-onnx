@@ -795,9 +795,10 @@ class SherpaOnnxOfflineTts {
   explicit SherpaOnnxOfflineTts(const OfflineTtsConfig &config)
       : tts_(config) {}
 
-  GeneratedAudio Generate(
-      const std::string &text, int64_t sid = 0, float speed = 1.0,
-      std::function<void(const float *, int32_t, float)> callback = nullptr) const {
+  GeneratedAudio Generate(const std::string &text, int64_t sid = 0,
+                          float speed = 1.0,
+                          std::function<void(const float *, int32_t, float)>
+                              callback = nullptr) const {
     return tts_.Generate(text, sid, speed, callback);
   }
 

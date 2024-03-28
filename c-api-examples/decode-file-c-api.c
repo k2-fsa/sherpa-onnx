@@ -162,10 +162,11 @@ int32_t main(int32_t argc, char *argv[]) {
     }
   }
 
-  SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&config);
-  SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
+  const SherpaOnnxOnlineRecognizer *recognizer =
+      CreateOnlineRecognizer(&config);
+  const SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
 
-  SherpaOnnxDisplay *display = CreateDisplay(50);
+  const SherpaOnnxDisplay *display = CreateDisplay(50);
   int32_t segment_id = 0;
 
   const char *wav_filename = argv[context.index];

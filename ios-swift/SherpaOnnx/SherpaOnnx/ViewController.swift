@@ -83,7 +83,7 @@ class ViewController: UIViewController {
         // Please select one model that is best suitable for you.
         //
         // You can also modify Model.swift to add new pre-trained models from
-        // https://k2-fsa.github.io/sherpa/ncnn/pretrained_models/index.html
+        // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 
         // let modelConfig = getBilingualStreamZhEnZipformer20230220()
         // let modelConfig = getZhZipformer20230615()

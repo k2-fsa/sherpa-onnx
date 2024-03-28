@@ -186,7 +186,7 @@ SHERPA_ONNX_API SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
 ///
 /// @param p A pointer returned by CreateOnlineRecognizer()
 SHERPA_ONNX_API void DestroyOnlineRecognizer(
-    SherpaOnnxOnlineRecognizer *recognizer);
+    const SherpaOnnxOnlineRecognizer *recognizer);
 
 /// Create an online stream for accepting wave samples.
 ///
@@ -208,7 +208,7 @@ SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineStreamWithHotwords(
 /// Destroy an online stream.
 ///
 /// @param stream A pointer returned by CreateOnlineStream()
-SHERPA_ONNX_API void DestroyOnlineStream(SherpaOnnxOnlineStream *stream);
+SHERPA_ONNX_API void DestroyOnlineStream(const SherpaOnnxOnlineStream *stream);
 
 /// Accept input audio samples and compute the features.
 /// The user has to invoke DecodeOnlineStream() to run the neural network and
@@ -221,7 +221,7 @@ SHERPA_ONNX_API void DestroyOnlineStream(SherpaOnnxOnlineStream *stream);
 /// @param samples A pointer to a 1-D array containing audio samples.
 ///                The range of samples has to be normalized to [-1, 1].
 /// @param n  Number of elements in the samples array.
-SHERPA_ONNX_API void AcceptWaveform(SherpaOnnxOnlineStream *stream,
+SHERPA_ONNX_API void AcceptWaveform(const SherpaOnnxOnlineStream *stream,
                                     int32_t sample_rate, const float *samples,
                                     int32_t n);
 
@@ -230,8 +230,9 @@ SHERPA_ONNX_API void AcceptWaveform(SherpaOnnxOnlineStream *stream,
 ///
 /// @param recognizer  A pointer returned by CreateOnlineRecognizer
 /// @param stream  A pointer returned by CreateOnlineStream
-SHERPA_ONNX_API int32_t IsOnlineStreamReady(
-    SherpaOnnxOnlineRecognizer *recognizer, SherpaOnnxOnlineStream *stream);
+SHERPA_ONNX_API int32_t
+IsOnlineStreamReady(const SherpaOnnxOnlineRecognizer *recognizer,
+                    const SherpaOnnxOnlineStream *stream);
 
 /// Call this function to run the neural network model and decoding.
 //
@@ -243,8 +244,9 @@ SHERPA_ONNX_API int32_t IsOnlineStreamReady(
 ///     DecodeOnlineStream(recognizer, stream);
 ///  }
 ///
-SHERPA_ONNX_API void DecodeOnlineStream(SherpaOnnxOnlineRecognizer *recognizer,
-                                        SherpaOnnxOnlineStream *stream);
+SHERPA_ONNX_API void DecodeOnlineStream(
+    const SherpaOnnxOnlineRecognizer *recognizer,
+    const SherpaOnnxOnlineStream *stream);
 
 /// This function is similar to DecodeOnlineStream(). It decodes multiple
 /// OnlineStream in parallel.
@@ -257,8 +259,8 @@ SHERPA_ONNX_API void DecodeOnlineStream(SherpaOnnxOnlineRecognizer *recognizer,
 ///                 CreateOnlineRecognizer()
 /// @param n  Number of elements in the given streams array.
 SHERPA_ONNX_API void DecodeMultipleOnlineStreams(
-    SherpaOnnxOnlineRecognizer *recognizer, SherpaOnnxOnlineStream **streams,
-    int32_t n);
+    const SherpaOnnxOnlineRecognizer *recognizer,
+    const SherpaOnnxOnlineStream **streams, int32_t n);
 
 /// Get the decoding results so far for an OnlineStream.
 ///
@@ -268,7 +270,8 @@ SHERPA_ONNX_API void DecodeMultipleOnlineStreams(
 ///         DestroyOnlineRecognizerResult() to free the returned pointer to
 ///         avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
-    SherpaOnnxOnlineRecognizer *recognizer, SherpaOnnxOnlineStream *stream);
+    const SherpaOnnxOnlineRecognizer *recognizer,
+    const SherpaOnnxOnlineStream *stream);
 
 /// Destroy the pointer returned by GetOnlineStreamResult().
 ///
@@ -281,35 +284,36 @@ SHERPA_ONNX_API void DestroyOnlineRecognizerResult(
 ///
 /// @param recognizer A pointer returned by CreateOnlineRecognizer().
 /// @param stream A pointer returned by CreateOnlineStream
-SHERPA_ONNX_API void Reset(SherpaOnnxOnlineRecognizer *recognizer,
-                           SherpaOnnxOnlineStream *stream);
+SHERPA_ONNX_API void Reset(const SherpaOnnxOnlineRecognizer *recognizer,
+                           const SherpaOnnxOnlineStream *stream);
 
 /// Signal that no more audio samples would be available.
 /// After this call, you cannot call AcceptWaveform() any more.
 ///
 /// @param stream A pointer returned by CreateOnlineStream()
-SHERPA_ONNX_API void InputFinished(SherpaOnnxOnlineStream *stream);
+SHERPA_ONNX_API void InputFinished(const SherpaOnnxOnlineStream *stream);
 
 /// Return 1 if an endpoint has been detected.
 ///
 /// @param recognizer A pointer returned by CreateOnlineRecognizer()
 /// @param stream A pointer returned by CreateOnlineStream()
 /// @return Return 1 if an endpoint is detected. Return 0 otherwise.
-SHERPA_ONNX_API int32_t IsEndpoint(SherpaOnnxOnlineRecognizer *recognizer,
-                                   SherpaOnnxOnlineStream *stream);
+SHERPA_ONNX_API int32_t IsEndpoint(const SherpaOnnxOnlineRecognizer *recognizer,
+                                   const SherpaOnnxOnlineStream *stream);
 
 // for displaying results on Linux/macOS.
 SHERPA_ONNX_API typedef struct SherpaOnnxDisplay SherpaOnnxDisplay;
 
 /// Create a display object. Must be freed using DestroyDisplay to avoid
 /// memory leak.
-SHERPA_ONNX_API SherpaOnnxDisplay *CreateDisplay(int32_t max_word_per_line);
+SHERPA_ONNX_API const SherpaOnnxDisplay *CreateDisplay(
+    int32_t max_word_per_line);
 
-SHERPA_ONNX_API void DestroyDisplay(SherpaOnnxDisplay *display);
+SHERPA_ONNX_API void DestroyDisplay(const SherpaOnnxDisplay *display);
 
 /// Print the result.
-SHERPA_ONNX_API void SherpaOnnxPrint(SherpaOnnxDisplay *display, int32_t idx,
-                                     const char *s);
+SHERPA_ONNX_API void SherpaOnnxPrint(const SherpaOnnxDisplay *display,
+                                     int32_t idx, const char *s);
 // ============================================================
 // For offline ASR (i.e., non-streaming ASR)
 // ============================================================
@@ -769,7 +773,7 @@ typedef void (*SherpaOnnxGeneratedAudioCallbackWithArg)(const float *samples,
                                                         int32_t n, void *arg);
 
 typedef void (*SherpaOnnxGeneratedAudioProgressCallback)(const float *samples,
-                                                 int32_t n, float p);
+                                                         int32_t n, float p);
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTts SherpaOnnxOfflineTts;
 
@@ -839,7 +843,9 @@ SHERPA_ONNX_API const SherpaOnnxWave *SherpaOnnxReadWave(const char *filename);
 
 SHERPA_ONNX_API void SherpaOnnxFreeWave(const SherpaOnnxWave *wave);
 
-// Spoken language identification
+// ============================================================
+// For spoken language identification
+// ============================================================
 
 SHERPA_ONNX_API typedef struct
     SherpaOnnxSpokenLanguageIdentificationWhisperConfig {
@@ -892,6 +898,169 @@ SherpaOnnxSpokenLanguageIdentificationCompute(
 
 SHERPA_ONNX_API void SherpaOnnxDestroySpokenLanguageIdentificationResult(
     const SherpaOnnxSpokenLanguageIdentificationResult *r);
+
+// ============================================================
+// For speaker embedding extraction
+// ============================================================
+SHERPA_ONNX_API typedef struct SherpaOnnxSpeakerEmbeddingExtractorConfig {
+  const char *model;
+  int32_t num_threads;
+  int32_t debug;
+  const char *provider;
+} SherpaOnnxSpeakerEmbeddingExtractorConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxSpeakerEmbeddingExtractor
+    SherpaOnnxSpeakerEmbeddingExtractor;
+
+// The user has to invoke SherpaOnnxDestroySpeakerEmbeddingExtractor()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxSpeakerEmbeddingExtractor *
+SherpaOnnxCreateSpeakerEmbeddingExtractor(
+    const SherpaOnnxSpeakerEmbeddingExtractorConfig *config);
+
+SHERPA_ONNX_API void SherpaOnnxDestroySpeakerEmbeddingExtractor(
+    const SherpaOnnxSpeakerEmbeddingExtractor *p);
+
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingExtractorDim(
+    const SherpaOnnxSpeakerEmbeddingExtractor *p);
+
+// The user has to invoke DestroyOnlineStream() to free the returned pointer
+// to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxOnlineStream *
+SherpaOnnxSpeakerEmbeddingExtractorCreateStream(
+    const SherpaOnnxSpeakerEmbeddingExtractor *p);
+
+// Return 1 if the stream has enough feature frames for computing embeddings.
+// Return 0 otherwise.
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingExtractorIsReady(
+    const SherpaOnnxSpeakerEmbeddingExtractor *p,
+    const SherpaOnnxOnlineStream *s);
+
+// Compute the embedding of the stream.
+//
+// @return Return a pointer pointing to an array containing the embedding.
+// The length of the array is `dim` as returned by
+// SherpaOnnxSpeakerEmbeddingExtractorDim(p)
+//
+// The user has to invoke SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding()
+// to free the returned pointer to avoid memory leak.
+SHERPA_ONNX_API const float *
+SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding(
+    const SherpaOnnxSpeakerEmbeddingExtractor *p,
+    const SherpaOnnxOnlineStream *s);
+
+SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(
+    const float *v);
+
+SHERPA_ONNX_API typedef struct SherpaOnnxSpeakerEmbeddingManager
+    SherpaOnnxSpeakerEmbeddingManager;
+
+// The user has to invoke SherpaOnnxDestroySpeakerEmbeddingManager()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxSpeakerEmbeddingManager *
+SherpaOnnxCreateSpeakerEmbeddingManager(int32_t dim);
+
+SHERPA_ONNX_API void SherpaOnnxDestroySpeakerEmbeddingManager(
+    const SherpaOnnxSpeakerEmbeddingManager *p);
+
+// Register the embedding of a user
+//
+// @param name  The name of the user
+// @param p Pointer to an array containing the embeddings. The length of the
+//          array must be equal to `dim` used to construct the manager `p`.
+//
+// @return Return 1 if added successfully. Return 0 on error
+SHERPA_ONNX_API int32_t
+SherpaOnnxSpeakerEmbeddingManagerAdd(const SherpaOnnxSpeakerEmbeddingManager *p,
+                                     const char *name, const float *v);
+
+// @param v Pointer to an array of embeddings. If there are n embeddings, then
+//          v[0] is the pointer to the 0-th array containing the embeddings
+//          v[1] is the pointer to the 1-st array containing the embeddings
+//          v[n-1] is the pointer to the last array containing the embeddings
+//          v[n] is a NULL pointer
+// @return Return 1 if added successfully. Return 0 on error
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerAddList(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name,
+    const float **v);
+
+// Similar to SherpaOnnxSpeakerEmbeddingManagerAddList() but the memory
+// is flattened.
+//
+// The length of the input array should be `n * dim`.
+//
+// @return Return 1 if added successfully. Return 0 on error
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerAddListFlattened(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name,
+    const float *v, int32_t n);
+
+// Remove a user.
+// @param naem The name of the user to remove.
+// @return Return 1 if removed successfully; return 0 on error.
+//
+// Note if the user does not exist, it also returns 0.
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerRemove(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name);
+
+// Search if an existing users' embedding matches the given one.
+//
+// @param p Pointer to an array containing the embedding. The dim
+//          of the array must equal to `dim` used to construct the manager `p`.
+// @param threshold A value between 0 and 1. If the similarity score exceeds
+//                  this threshold, we say a match is found.
+// @return Returns the name of the user if found. Return NULL if not found.
+//         If not NULL, the caller has to invoke
+//          SherpaOnnxSpeakerEmbeddingManagerFreeSearch() to free the returned
+//          pointer to avoid memory leak.
+SHERPA_ONNX_API const char *SherpaOnnxSpeakerEmbeddingManagerSearch(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const float *v,
+    float threshold);
+
+SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeSearch(
+    const char *name);
+
+// Check whether the input embedding matches the embedding of the input
+// speaker.
+//
+// It is for speaker verification.
+//
+// @param name The target speaker name.
+// @param p The input embedding to check.
+// @param threshold A value between 0 and 1.
+// @return Return 1 if it matches. Otherwise, it returns 0.
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerVerify(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name,
+    const float *v, float threshold);
+
+// Return 1 if the user with the name is in the manager.
+// Return 0 if the user does not exist.
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerContains(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name);
+
+// Return number of speakers in the manager.
+SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(
+    const SherpaOnnxSpeakerEmbeddingManager *p);
+
+// Return the name of all speakers in the manager.
+//
+// @return Return an array of pointers `ans`. If there are n speakers, then
+// - ans[0] contains the name of the 0-th speaker
+// - ans[1] contains the name of the 1-st speaker
+// - ans[n-1] contains the name of the last speaker
+// - ans[n] is NULL
+// If there are no users at all, then ans[0] is NULL. In any case,
+// `ans` is not NULL.
+//
+// Each name is NULL-terminated
+//
+// The caller has to invoke SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers()
+// to free the returned pointer to avoid memory leak.
+SHERPA_ONNX_API const char *const *
+SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(
+    const SherpaOnnxSpeakerEmbeddingManager *p);
+
+SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(
+    const char *const *names);
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop

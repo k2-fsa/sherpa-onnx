@@ -44,7 +44,8 @@ static void Handler(int32_t /*sig*/) {
   fprintf(stderr, "\nCaught Ctrl + C. Exiting\n");
 }
 
-static void AudioGeneratedCallback(const float *s, int32_t n) {
+static void AudioGeneratedCallback(const float *s, int32_t n,
+                                   float /*progress*/) {
   if (n > 0) {
     std::lock_guard<std::mutex> lock(g_buffer.mutex);
     g_buffer.samples.push({s, s + n});

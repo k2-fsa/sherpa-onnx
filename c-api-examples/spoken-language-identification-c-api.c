@@ -1,3 +1,6 @@
+// c-api-examples/spoken-language-identification-c-api.c
+//
+// Copyright (c)  2024  Xiaomi Corporation
 
 // We assume you have pre-downloaded the whisper multi-lingual models
 // from https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models

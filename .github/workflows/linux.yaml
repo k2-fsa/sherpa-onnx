@@ -124,11 +124,12 @@ jobs:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: build/bin/*
 
-      - name: Test spoken language identification (C API)
+      - name: Test C API
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
           export SLID_EXE=spoken-language-identification-c-api
+          export SID_EXE=speaker-identification-c-api
 
           .github/scripts/test-c-api.sh
 
