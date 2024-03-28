@@ -797,7 +797,7 @@ class SherpaOnnxOfflineTts {
 
   GeneratedAudio Generate(
       const std::string &text, int64_t sid = 0, float speed = 1.0,
-      std::function<void(const float *, int32_t)> callback = nullptr) const {
+      std::function<void(const float *, int32_t, float)> callback = nullptr) const {
     return tts_.Generate(text, sid, speed, callback);
   }
 
@@ -1314,8 +1314,8 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
   const char *p_text = env->GetStringUTFChars(text, nullptr);
   SHERPA_ONNX_LOGE("string is: %s", p_text);
 
-  std::function<void(const float *, int32_t)> callback_wrapper =
-      [env, callback](const float *samples, int32_t n) {
+  std::function<void(const float *, int32_t, float)> callback_wrapper =
+      [env, callback](const float *samples, int32_t n, float /*p*/) {
         jclass cls = env->GetObjectClass(callback);
         jmethodID mid = env->GetMethodID(cls, "invoke", "([F)V");
 
@@ -1808,7 +1808,6 @@ Java_com_k2fsa_sherpa_onnx_WaveReader_00024Companion_readWaveFromAsset(
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
     exit(-1);
   }
-  SHERPA_ONNX_LOGE("Failed to read %s", p_filename);
   std::vector<char> buffer = sherpa_onnx::ReadFile(mgr, p_filename);
 
   std::istrstream is(buffer.data(), buffer.size());
