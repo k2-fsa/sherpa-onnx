@@ -55,7 +55,7 @@ struct GeneratedAudio {
 class OfflineTtsImpl;
 
 using GeneratedAudioCallback =
-    std::function<void(const float * /*samples*/, int32_t /*n*/)>;
+    std::function<void(const float * /*samples*/, int32_t /*n*/, float /*progress*/)>;
 
 class OfflineTts {
  public:

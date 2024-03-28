@@ -134,7 +134,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (config_.max_num_sentences <= 0 || x_size <= config_.max_num_sentences) {
       auto ans = Process(x, sid, speed);
       if (callback) {
-        callback(ans.samples.data(), ans.samples.size());
+        callback(ans.samples.data(), ans.samples.size(), 1.0);
       }
       return ans;
     }
@@ -168,7 +168,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
       if (callback) {
-        callback(audio.samples.data(), audio.samples.size());
+        callback(audio.samples.data(), audio.samples.size(), b * 1.0 / num_batches);
         // Caution(fangjun): audio is freed when the callback returns, so users
         // should copy the data if they want to access the data after
         // the callback returns to avoid segmentation fault.
@@ -187,7 +187,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
       if (callback) {
-        callback(audio.samples.data(), audio.samples.size());
+        callback(audio.samples.data(), audio.samples.size(), 1.0);
         // Caution(fangjun): audio is freed when the callback returns, so users
         // should copy the data if they want to access the data after
         // the callback returns to avoid segmentation fault.
