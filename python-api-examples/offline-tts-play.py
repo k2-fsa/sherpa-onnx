@@ -183,7 +183,7 @@ event = threading.Event()
 first_message_time = None
 
 
-def generated_audio_callback(samples: np.ndarray):
+def generated_audio_callback(samples: np.ndarray, progress: float):
     """This function is called whenever max_num_sentences sentences
     have been processed.
 
