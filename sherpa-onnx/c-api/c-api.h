@@ -916,7 +916,7 @@ SHERPA_ONNX_API void SherpaOnnxDestroySpeakerEmbeddingManager(
 // @return Return 1 if added successfully. Return 0 on error
 SHERPA_ONNX_API int32_t
 SherpaOnnxSpeakerEmbeddingManagerAdd(const SherpaOnnxSpeakerEmbeddingManager *p,
-                                     const char *name, const float *p);
+                                     const char *name, const float *v);
 
 // Remove a user.
 // @param naem The name of the user to remove.
@@ -937,7 +937,7 @@ SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerRemove(
 //          SherpaOnnxSpeakerEmbeddingManagerFreeSearch() to free the returned
 //          pointer to avoid memory leak.
 SHERPA_ONNX_API const char *SherpaOnnxSpeakerEmbeddingManagerSearch(
-    const SherpaOnnxSpeakerEmbeddingManager *p, const float *p,
+    const SherpaOnnxSpeakerEmbeddingManager *p, const float *v,
     float threshold);
 
 SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeSearch(
@@ -954,7 +954,7 @@ SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeSearch(
 // @return Return 1 if it matches. Otherwise, it returns 0.
 SHERPA_ONNX_API int32_t SherpaOnnxSpeakerEmbeddingManagerVerify(
     const SherpaOnnxSpeakerEmbeddingManager *p, const char *name,
-    const float *p, float threshold);
+    const float *v, float threshold);
 
 // Return 1 if the user with the name is in the manager.
 // Return 0 if the user does not exist.
