@@ -87,3 +87,4 @@ vits-coqui-*
 vits-mms-*
 *.tar.bz2
 sherpa-onnx-paraformer-trilingual-zh-cantonese-en
+sr-data

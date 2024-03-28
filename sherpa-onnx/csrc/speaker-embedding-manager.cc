@@ -93,7 +93,7 @@ class SpeakerEmbeddingManager::Impl {
     int32_t num_rows = embedding_matrix_.rows();
 
     if (row_idx < num_rows - 1) {
-      embedding_matrix_.block(row_idx, 0, num_rows - -1 - row_idx, dim_) =
+      embedding_matrix_.block(row_idx, 0, num_rows - 1 - row_idx, dim_) =
           embedding_matrix_.bottomRows(num_rows - 1 - row_idx);
     }
 

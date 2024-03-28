@@ -116,7 +116,7 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
   return recognizer;
 }
 
-void DestroyOnlineRecognizer(SherpaOnnxOnlineRecognizer *recognizer) {
+void DestroyOnlineRecognizer(const SherpaOnnxOnlineRecognizer *recognizer) {
   delete recognizer;
 }
 
@@ -138,23 +138,24 @@ void DestroyOnlineStream(const SherpaOnnxOnlineStream *stream) {
   delete stream;
 }
 
-void AcceptWaveform(SherpaOnnxOnlineStream *stream, int32_t sample_rate,
+void AcceptWaveform(const SherpaOnnxOnlineStream *stream, int32_t sample_rate,
                     const float *samples, int32_t n) {
   stream->impl->AcceptWaveform(sample_rate, samples, n);
 }
 
-int32_t IsOnlineStreamReady(SherpaOnnxOnlineRecognizer *recognizer,
-                            SherpaOnnxOnlineStream *stream) {
+int32_t IsOnlineStreamReady(const SherpaOnnxOnlineRecognizer *recognizer,
+                            const SherpaOnnxOnlineStream *stream) {
   return recognizer->impl->IsReady(stream->impl.get());
 }
 
-void DecodeOnlineStream(SherpaOnnxOnlineRecognizer *recognizer,
-                        SherpaOnnxOnlineStream *stream) {
+void DecodeOnlineStream(const SherpaOnnxOnlineRecognizer *recognizer,
+                        const SherpaOnnxOnlineStream *stream) {
   recognizer->impl->DecodeStream(stream->impl.get());
 }
 
-void DecodeMultipleOnlineStreams(SherpaOnnxOnlineRecognizer *recognizer,
-                                 SherpaOnnxOnlineStream **streams, int32_t n) {
+void DecodeMultipleOnlineStreams(const SherpaOnnxOnlineRecognizer *recognizer,
+                                 const SherpaOnnxOnlineStream **streams,
+                                 int32_t n) {
   std::vector<sherpa_onnx::OnlineStream *> ss(n);
   for (int32_t i = 0; i != n; ++i) {
     ss[i] = streams[i]->impl.get();
@@ -163,7 +164,8 @@ void DecodeMultipleOnlineStreams(SherpaOnnxOnlineRecognizer *recognizer,
 }
 
 const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
-    SherpaOnnxOnlineRecognizer *recognizer, SherpaOnnxOnlineStream *stream) {
+    const SherpaOnnxOnlineRecognizer *recognizer,
+    const SherpaOnnxOnlineStream *stream) {
   sherpa_onnx::OnlineRecognizerResult result =
       recognizer->impl->GetResult(stream->impl.get());
   const auto &text = result.text;
@@ -236,29 +238,30 @@ void DestroyOnlineRecognizerResult(const SherpaOnnxOnlineRecognizerResult *r) {
   }
 }
 
-void Reset(SherpaOnnxOnlineRecognizer *recognizer,
-           SherpaOnnxOnlineStream *stream) {
+void Reset(const SherpaOnnxOnlineRecognizer *recognizer,
+           const SherpaOnnxOnlineStream *stream) {
   recognizer->impl->Reset(stream->impl.get());
 }
 
-void InputFinished(SherpaOnnxOnlineStream *stream) {
+void InputFinished(const SherpaOnnxOnlineStream *stream) {
   stream->impl->InputFinished();
 }
 
-int32_t IsEndpoint(SherpaOnnxOnlineRecognizer *recognizer,
-                   SherpaOnnxOnlineStream *stream) {
+int32_t IsEndpoint(const SherpaOnnxOnlineRecognizer *recognizer,
+                   const SherpaOnnxOnlineStream *stream) {
   return recognizer->impl->IsEndpoint(stream->impl.get());
 }
 
-SherpaOnnxDisplay *CreateDisplay(int32_t max_word_per_line) {
+const SherpaOnnxDisplay *CreateDisplay(int32_t max_word_per_line) {
   SherpaOnnxDisplay *ans = new SherpaOnnxDisplay;
   ans->impl = std::make_unique<sherpa_onnx::Display>(max_word_per_line);
   return ans;
 }
 
-void DestroyDisplay(SherpaOnnxDisplay *display) { delete display; }
+void DestroyDisplay(const SherpaOnnxDisplay *display) { delete display; }
 
-void SherpaOnnxPrint(SherpaOnnxDisplay *display, int32_t idx, const char *s) {
+void SherpaOnnxPrint(const SherpaOnnxDisplay *display, int32_t idx,
+                     const char *s) {
   display->impl->Print(idx, s);
 }
 
@@ -1060,6 +1063,45 @@ int32_t SherpaOnnxSpeakerEmbeddingManagerAdd(
     const SherpaOnnxSpeakerEmbeddingManager *p, const char *name,
     const float *v) {
   return p->impl->Add(name, v);
+}
+
+int32_t SherpaOnnxSpeakerEmbeddingManagerAddList(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name,
+    const float **v) {
+  int32_t n = 0;
+  auto q = v;
+  while (q && q[0]) {
+    ++n;
+    ++q;
+  }
+
+  if (n == 0) {
+    SHERPA_ONNX_LOGE("Empty embedding!");
+    return 0;
+  }
+
+  std::vector<std::vector<float>> vec(n);
+  int32_t dim = p->impl->Dim();
+
+  for (int32_t i = 0; i != n; ++i) {
+    vec[i] = std::vector<float>(v[i], v[i] + dim);
+  }
+
+  return p->impl->Add(name, vec);
+}
+
+int32_t SherpaOnnxSpeakerEmbeddingManagerAddListFlattened(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const char *name,
+    const float *v, int32_t n) {
+  std::vector<std::vector<float>> vec(n);
+
+  int32_t dim = p->impl->Dim();
+
+  for (int32_t i = 0; i != n; ++i, v += dim) {
+    vec[i] = std::vector<float>(v, v + dim);
+  }
+
+  return p->impl->Add(name, vec);
 }
 
 int32_t SherpaOnnxSpeakerEmbeddingManagerRemove(

@@ -4,7 +4,7 @@
 //
 //  Created by fangjun on 2023/11/23.
 //
-// Speech-to-text with Next-gen Kaldi on iOS without Internet connection
+// Text-to-speech with Next-gen Kaldi on iOS without Internet connection
 
 import SwiftUI
 import AVFoundation
