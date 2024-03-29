@@ -8,6 +8,10 @@ if [ ! -f ./sr-data/enroll/fangjun-sr-1.wav ]; then
   git clone https://github.com/csukuangfj/sr-data
 fi
 
+if [ ! -f ./silero_vad.onnx ]; then
+  curl -SL -O https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx
+fi
+
 go mod tidy
 go build
-./speaker-identification
+./vad-speaker-identification
