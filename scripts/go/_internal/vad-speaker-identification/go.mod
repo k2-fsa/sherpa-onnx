@@ -1,4 +1,4 @@
-module vad-asr-paraformer
+module vad-speaker-identification
 
 go 1.12
 

@@ -102,7 +102,7 @@ func main() {
 
 			duration := float32(len(speechSegment.Samples)) / float32(config.SampleRate)
 
-			audio := &sherpa.GeneratedAudio{}
+			audio := &sherpa.Wave{}
 			audio.Samples = speechSegment.Samples
 			audio.SampleRate = config.SampleRate
 
@@ -118,7 +118,7 @@ func main() {
 	chk(s.Stop())
 }
 
-func decode(recognizer *sherpa.OfflineRecognizer, audio *sherpa.GeneratedAudio, id int) {
+func decode(recognizer *sherpa.OfflineRecognizer, audio *sherpa.Wave, id int) {
 	stream := sherpa.NewOfflineStream(recognizer)
 	defer sherpa.DeleteOfflineStream(stream)
 	stream.AcceptWaveform(audio.SampleRate, audio.Samples)
