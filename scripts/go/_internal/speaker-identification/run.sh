@@ -1,0 +1,1 @@
+../../../../go-api-examples/speaker-identification/run.sh

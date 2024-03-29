@@ -74,6 +74,12 @@ jobs:
           go mod tidy
           go build
 
+      - name: Test speaker identification
+        shell: bash
+        run: |
+          cd scripts/go/_internal/speaker-identification/
+          ./run.sh
+
       - name: Test non-streaming TTS (macOS)
         shell: bash
         run: |

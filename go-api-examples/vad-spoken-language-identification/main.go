@@ -99,7 +99,7 @@ func main() {
 
 			duration := float32(len(speechSegment.Samples)) / float32(config.SampleRate)
 
-			audio := &sherpa.GeneratedAudio{}
+			audio := &sherpa.Wave{}
 			audio.Samples = speechSegment.Samples
 			audio.SampleRate = config.SampleRate
 
@@ -115,7 +115,7 @@ func main() {
 	chk(s.Stop())
 }
 
-func decode(slid *sherpa.SpokenLanguageIdentification, audio *sherpa.GeneratedAudio, id int) {
+func decode(slid *sherpa.SpokenLanguageIdentification, audio *sherpa.Wave, id int) {
 	stream := slid.CreateStream()
 	defer sherpa.DeleteOfflineStream(stream)
 

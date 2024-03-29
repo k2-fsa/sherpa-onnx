@@ -26,4 +26,8 @@ for details.
 - [./vad-spoken-language-identification](./vad-spoken-language-identification) It shows how to use silero VAD + Whisper
   for spoken language identification.
 
+- [./speaker-identification](./speaker-identification) It shows how to use Go API for speaker identification.
+
+- [./vad-speaker-identification](./vad-speaker-identification) It shows how to use Go API for VAD + speaker identification.
+
 [sherpa-onnx]: https://github.com/k2-fsa/sherpa-onnx
