@@ -1,7 +1,6 @@
 package main
 
 import (
-	// "fmt"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	"log"
 )
@@ -9,8 +8,11 @@ import (
 func createSpeakerEmbeddingExtractor() *sherpa.SpeakerEmbeddingExtractor {
 	config := sherpa.SpeakerEmbeddingExtractorConfig{}
 
-	// Please download silero_vad.onnx from
-	// https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx
+	// Please download the model from
+	// https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx
+	//
+	// You can find more models at
+	// https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
 
 	config.Model = "./3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx"
 	config.NumThreads = 1
