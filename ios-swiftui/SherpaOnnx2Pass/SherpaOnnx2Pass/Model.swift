@@ -109,6 +109,24 @@ func getNonStreamingWhisperTinyEn() -> SherpaOnnxOfflineModelConfig {
   )
 }
 
+func getLangIdentificationTiny() -> SherpaOnnxSpokenLanguageIdentificationConfig {
+    let encoder = getResource("tiny-encoder.int8", "onnx")
+    let decoder = getResource("tiny-decoder.int8", "onnx")
+    
+    let whisperConfig = sherpaOnnxSpokenLanguageIdentificationWhisperConfig(
+       encoder: encoder,
+       decoder: decoder
+     )
+    
+    let config = sherpaOnnxSpokenLanguageIdentificationConfig(
+      whisper: whisperConfig,
+      numThreads: 1,
+      debug: 1,
+      provider: "cpu"
+    )
+    return config
+}
+
 // icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04 (English)
 // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/zipformer-transducer-models.html#icefall-asr-multidataset-pruned-transducer-stateless7-2023-05-04-english
 
