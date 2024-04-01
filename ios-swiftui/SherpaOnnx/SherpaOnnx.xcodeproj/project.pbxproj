@@ -57,6 +57,7 @@
 		C924F35F29DDB05D00A440A5 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/onnxruntime.xcframework"; sourceTree = "<group>"; };
 		C924F36129DDB15D00A440A5 /* Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extension.swift; sourceTree = "<group>"; };
 		C924F36329DDB1D500A440A5 /* SherpaOnnxViewModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SherpaOnnxViewModel.swift; sourceTree = "<group>"; };
+		DEFC34EE2BBA8AD100E174E9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -110,6 +111,7 @@
 		C924F32C29DDAC0B00A440A5 /* SherpaOnnx */ = {
 			isa = PBXGroup;
 			children = (
+				DEFC34EE2BBA8AD100E174E9 /* Info.plist */,
 				C924F36329DDB1D500A440A5 /* SherpaOnnxViewModel.swift */,
 				C924F36129DDB15D00A440A5 /* Extension.swift */,
 				C924F35D29DDAE8200A440A5 /* Model.swift */,
@@ -451,9 +453,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnx/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../build-ios/sherpa-onnx.xcframework/Headers/";
+				INFOPLIST_FILE = SherpaOnnx/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Use microphone to record voice";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -482,9 +487,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnx/Preview Content\"";
+				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../build-ios/sherpa-onnx.xcframework/Headers/";
+				INFOPLIST_FILE = SherpaOnnx/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Use microphone to record voice";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
