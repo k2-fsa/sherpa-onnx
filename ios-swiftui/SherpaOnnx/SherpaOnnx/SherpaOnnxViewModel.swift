@@ -13,6 +13,7 @@ enum Status {
     case recording
 }
 
+@MainActor
 class SherpaOnnxViewModel: ObservableObject {
     @Published var status: Status = .stop
     @Published var subtitles: String = ""
@@ -44,9 +45,7 @@ class SherpaOnnxViewModel: ObservableObject {
     }
 
     func updateLabel() {
-        DispatchQueue.main.async {
-            self.subtitles = self.results
-        }
+        self.subtitles = self.results
     }
 
     init() {
