@@ -1,0 +1,3 @@
+[submodule "android/SherpaOnnxTtsEngine-NG"]
+	path = android/SherpaOnnxTtsEngine-NG
+	url = https://github.com/mablue/SherpaOnnxTtsEngineAndroid.git
