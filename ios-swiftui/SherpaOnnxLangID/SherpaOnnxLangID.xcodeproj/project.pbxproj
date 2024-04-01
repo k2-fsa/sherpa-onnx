@@ -14,6 +14,16 @@
 		DEBB2D872BBAAA3600864EF5 /* SherpaOnnxLangIDTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2D862BBAAA3600864EF5 /* SherpaOnnxLangIDTests.swift */; };
 		DEBB2D912BBAAA3600864EF5 /* SherpaOnnxLangIDUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2D902BBAAA3600864EF5 /* SherpaOnnxLangIDUITests.swift */; };
 		DEBB2D932BBAAA3600864EF5 /* SherpaOnnxLangIDUITestsLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2D922BBAAA3600864EF5 /* SherpaOnnxLangIDUITestsLaunchTests.swift */; };
+		DEBB2DA12BBAAAD800864EF5 /* Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2DA02BBAAAD800864EF5 /* Extension.swift */; };
+		DEBB2DA32BBAAAE700864EF5 /* Model.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2DA22BBAAAE700864EF5 /* Model.swift */; };
+		DEBB2DA52BBAAAFD00864EF5 /* ViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2DA42BBAAAFD00864EF5 /* ViewModel.swift */; };
+		DEBB2DAC2BBAAC6200864EF5 /* onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEBB2DAB2BBAAC6200864EF5 /* onnxruntime.xcframework */; };
+		DEBB2DAD2BBAAC6200864EF5 /* onnxruntime.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DEBB2DAB2BBAAC6200864EF5 /* onnxruntime.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DEBB2DAF2BBAAC6400864EF5 /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEBB2DA72BBAAC4D00864EF5 /* sherpa-onnx.xcframework */; };
+		DEBB2DB02BBAAC6400864EF5 /* sherpa-onnx.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DEBB2DA72BBAAC4D00864EF5 /* sherpa-onnx.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		DEBB2DB22BBAAD0000864EF5 /* SherpaOnnx.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2DB12BBAAD0000864EF5 /* SherpaOnnx.swift */; };
+		DEBB2DB42BBAB02E00864EF5 /* tiny-decoder.int8.onnx in Resources */ = {isa = PBXBuildFile; fileRef = DEBB2DB32BBAB02E00864EF5 /* tiny-decoder.int8.onnx */; };
+		DEBB2DB62BBAB03400864EF5 /* tiny-encoder.int8.onnx in Resources */ = {isa = PBXBuildFile; fileRef = DEBB2DB52BBAB03400864EF5 /* tiny-encoder.int8.onnx */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,6 +43,21 @@
 		};
 /* End PBXContainerItemProxy section */
 
+/* Begin PBXCopyFilesBuildPhase section */
+		DEBB2DAE2BBAAC6200864EF5 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				DEBB2DAD2BBAAC6200864EF5 /* onnxruntime.xcframework in Embed Frameworks */,
+				DEBB2DB02BBAAC6400864EF5 /* sherpa-onnx.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
 /* Begin PBXFileReference section */
 		DEBB2D722BBAAA3500864EF5 /* SherpaOnnxLangID.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnxLangID.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEBB2D752BBAAA3500864EF5 /* SherpaOnnxLangIDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxLangIDApp.swift; sourceTree = "<group>"; };
@@ -44,6 +69,15 @@
 		DEBB2D8C2BBAAA3600864EF5 /* SherpaOnnxLangIDUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SherpaOnnxLangIDUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEBB2D902BBAAA3600864EF5 /* SherpaOnnxLangIDUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxLangIDUITests.swift; sourceTree = "<group>"; };
 		DEBB2D922BBAAA3600864EF5 /* SherpaOnnxLangIDUITestsLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxLangIDUITestsLaunchTests.swift; sourceTree = "<group>"; };
+		DEBB2D9F2BBAAACD00864EF5 /* SherpaOnnx-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "SherpaOnnx-Bridging-Header.h"; path = "../../../swift-api-examples/SherpaOnnx-Bridging-Header.h"; sourceTree = "<group>"; };
+		DEBB2DA02BBAAAD800864EF5 /* Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Extension.swift; path = ../../SherpaOnnx/SherpaOnnx/Extension.swift; sourceTree = "<group>"; };
+		DEBB2DA22BBAAAE700864EF5 /* Model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Model.swift; path = ../../SherpaOnnx/SherpaOnnx/Model.swift; sourceTree = "<group>"; };
+		DEBB2DA42BBAAAFD00864EF5 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
+		DEBB2DA72BBAAC4D00864EF5 /* sherpa-onnx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "sherpa-onnx.xcframework"; path = "../../build-ios/sherpa-onnx.xcframework"; sourceTree = "<group>"; };
+		DEBB2DAB2BBAAC6200864EF5 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.17.1/onnxruntime.xcframework"; sourceTree = "<group>"; };
+		DEBB2DB12BBAAD0000864EF5 /* SherpaOnnx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SherpaOnnx.swift; path = "../../../swift-api-examples/SherpaOnnx.swift"; sourceTree = "<group>"; };
+		DEBB2DB32BBAB02E00864EF5 /* tiny-decoder.int8.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "tiny-decoder.int8.onnx"; sourceTree = "<group>"; };
+		DEBB2DB52BBAB03400864EF5 /* tiny-encoder.int8.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "tiny-encoder.int8.onnx"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -51,6 +85,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEBB2DAC2BBAAC6200864EF5 /* onnxruntime.xcframework in Frameworks */,
+				DEBB2DAF2BBAAC6400864EF5 /* sherpa-onnx.xcframework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -78,6 +114,7 @@
 				DEBB2D852BBAAA3600864EF5 /* SherpaOnnxLangIDTests */,
 				DEBB2D8F2BBAAA3600864EF5 /* SherpaOnnxLangIDUITests */,
 				DEBB2D732BBAAA3500864EF5 /* Products */,
+				DEBB2DA62BBAAC4D00864EF5 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -94,8 +131,15 @@
 		DEBB2D742BBAAA3500864EF5 /* SherpaOnnxLangID */ = {
 			isa = PBXGroup;
 			children = (
+				DEBB2DB32BBAB02E00864EF5 /* tiny-decoder.int8.onnx */,
 				DEBB2D752BBAAA3500864EF5 /* SherpaOnnxLangIDApp.swift */,
+				DEBB2DB52BBAB03400864EF5 /* tiny-encoder.int8.onnx */,
 				DEBB2D772BBAAA3500864EF5 /* ContentView.swift */,
+				DEBB2DA42BBAAAFD00864EF5 /* ViewModel.swift */,
+				DEBB2D9F2BBAAACD00864EF5 /* SherpaOnnx-Bridging-Header.h */,
+				DEBB2DB12BBAAD0000864EF5 /* SherpaOnnx.swift */,
+				DEBB2DA02BBAAAD800864EF5 /* Extension.swift */,
+				DEBB2DA22BBAAAE700864EF5 /* Model.swift */,
 				DEBB2D792BBAAA3600864EF5 /* Assets.xcassets */,
 				DEBB2D7B2BBAAA3600864EF5 /* Preview Content */,
 			);
@@ -127,6 +171,15 @@
 			path = SherpaOnnxLangIDUITests;
 			sourceTree = "<group>";
 		};
+		DEBB2DA62BBAAC4D00864EF5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DEBB2DAB2BBAAC6200864EF5 /* onnxruntime.xcframework */,
+				DEBB2DA72BBAAC4D00864EF5 /* sherpa-onnx.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -137,6 +190,7 @@
 				DEBB2D6E2BBAAA3500864EF5 /* Sources */,
 				DEBB2D6F2BBAAA3500864EF5 /* Frameworks */,
 				DEBB2D702BBAAA3500864EF5 /* Resources */,
+				DEBB2DAE2BBAAC6200864EF5 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -232,6 +286,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				DEBB2D7D2BBAAA3600864EF5 /* Preview Assets.xcassets in Resources */,
+				DEBB2DB62BBAB03400864EF5 /* tiny-encoder.int8.onnx in Resources */,
+				DEBB2DB42BBAB02E00864EF5 /* tiny-decoder.int8.onnx in Resources */,
 				DEBB2D7A2BBAAA3600864EF5 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -257,8 +313,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				DEBB2DA52BBAAAFD00864EF5 /* ViewModel.swift in Sources */,
+				DEBB2DB22BBAAD0000864EF5 /* SherpaOnnx.swift in Sources */,
+				DEBB2DA12BBAAAD800864EF5 /* Extension.swift in Sources */,
 				DEBB2D782BBAAA3500864EF5 /* ContentView.swift in Sources */,
 				DEBB2D762BBAAA3500864EF5 /* SherpaOnnxLangIDApp.swift in Sources */,
+				DEBB2DA32BBAAAE700864EF5 /* Model.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -419,12 +479,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnxLangID/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../build-ios/sherpa-onnx.xcframework/Headers/";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Use microphone to record voice";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -436,10 +499,12 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lc++";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxLangID";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "${PROJECT_DIR}/../../swift-api-examples/SherpaOnnx-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -450,12 +515,15 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_STYLE = Manual;
+				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"SherpaOnnxLangID/Preview Content\"";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				HEADER_SEARCH_PATHS = "${PROJECT_DIR}/../../build-ios/sherpa-onnx.xcframework/Headers/";
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Use microphone to record voice";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -467,10 +535,12 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
+				OTHER_LDFLAGS = "-lc++";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.k2-fsa.org.SherpaOnnxLangID";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "${PROJECT_DIR}/../../swift-api-examples/SherpaOnnx-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

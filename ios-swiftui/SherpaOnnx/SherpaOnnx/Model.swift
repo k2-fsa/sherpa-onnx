@@ -48,6 +48,28 @@ func getBilingualStreamingZhEnParaformer() -> SherpaOnnxOnlineModelConfig {
   )
 }
 
+// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html#tiny-en
+//
+func getLanguageIdentificationTiny() -> SherpaOnnxSpokenLanguageIdentificationConfig
+ {
+  let encoder = getResource("tiny-encoder.int8", "onnx")
+  let decoder = getResource("tiny-decoder.int8", "onnx")
+    
+    let whisperConfig = sherpaOnnxSpokenLanguageIdentificationWhisperConfig(
+      encoder: encoder,
+      decoder: decoder
+    )
+
+    let config = sherpaOnnxSpokenLanguageIdentificationConfig(
+      whisper: whisperConfig,
+      numThreads: 1,
+      debug: 1,
+      provider: "cpu"
+    )
+    return config
+}
+
+
 /// Please refer to
 /// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
 /// to add more models if you need
