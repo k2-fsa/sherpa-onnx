@@ -104,6 +104,18 @@ class OnlineStream::Impl {
     return paraformer_alpha_cache_;
   }
 
+  void SetFasterDecoder(std::unique_ptr<kaldi_decoder::FasterDecoder> decoder) {
+    faster_decoder_ = std::move(decoder);
+  }
+
+  kaldi_decoder::FasterDecoder *GetFasterDecoder() const {
+    return faster_decoder_.get();
+  }
+
+  int32_t &GetFasterDecoderProcessedFrames() {
+    return faster_decoder_processed_frames_;
+  }
+
  private:
   FeatureExtractor feat_extractor_;
   /// For contextual-biasing
@@ -121,6 +133,8 @@ class OnlineStream::Impl {
   std::vector<float> paraformer_encoder_out_cache_;
   std::vector<float> paraformer_alpha_cache_;
   OnlineParaformerDecoderResult paraformer_result_;
+  std::unique_ptr<kaldi_decoder::FasterDecoder> faster_decoder_;
+  int32_t faster_decoder_processed_frames_ = 0;
 };
 
 OnlineStream::OnlineStream(const FeatureExtractorConfig &config /*= {}*/,
@@ -206,6 +220,19 @@ std::vector<Ort::Value> &OnlineStream::GetStates() {
 
 const ContextGraphPtr &OnlineStream::GetContextGraph() const {
   return impl_->GetContextGraph();
+}
+
+void OnlineStream::SetFasterDecoder(
+    std::unique_ptr<kaldi_decoder::FasterDecoder> decoder) {
+  impl_->SetFasterDecoder(std::move(decoder));
+}
+
+kaldi_decoder::FasterDecoder *OnlineStream::GetFasterDecoder() const {
+  return impl_->GetFasterDecoder();
+}
+
+int32_t &OnlineStream::GetFasterDecoderProcessedFrames() {
+  return impl_->GetFasterDecoderProcessedFrames();
 }
 
 std::vector<float> &OnlineStream::GetParaformerFeatCache() {

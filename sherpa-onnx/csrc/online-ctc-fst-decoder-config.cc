@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/offline-ctc-fst-decoder-config.cc
+// sherpa-onnx/csrc/online-ctc-fst-decoder-config.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2024  Xiaomi Corporation
 
-#include "sherpa-onnx/csrc/offline-ctc-fst-decoder-config.h"
+#include "sherpa-onnx/csrc/online-ctc-fst-decoder-config.h"
 
 #include <sstream>
 #include <string>
@@ -12,17 +12,17 @@
 
 namespace sherpa_onnx {
 
-std::string OfflineCtcFstDecoderConfig::ToString() const {
+std::string OnlineCtcFstDecoderConfig::ToString() const {
   std::ostringstream os;
 
-  os << "OfflineCtcFstDecoderConfig(";
+  os << "OnlineCtcFstDecoderConfig(";
   os << "graph=\"" << graph << "\", ";
   os << "max_active=" << max_active << ")";
 
   return os.str();
 }
 
-void OfflineCtcFstDecoderConfig::Register(ParseOptions *po) {
+void OnlineCtcFstDecoderConfig::Register(ParseOptions *po) {
   std::string prefix = "ctc";
   ParseOptions p(prefix, po);
 
@@ -32,7 +32,7 @@ void OfflineCtcFstDecoderConfig::Register(ParseOptions *po) {
              "Decoder max active states.  Larger->slower; more accurate");
 }
 
-bool OfflineCtcFstDecoderConfig::Validate() const {
+bool OnlineCtcFstDecoderConfig::Validate() const {
   if (!graph.empty() && !FileExists(graph)) {
     SHERPA_ONNX_LOGE("graph: %s does not exist", graph.c_str());
     return false;

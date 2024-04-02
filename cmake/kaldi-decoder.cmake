@@ -1,9 +1,9 @@
 function(download_kaldi_decoder)
   include(FetchContent)
 
-  set(kaldi_decoder_URL  "https://github.com/k2-fsa/kaldi-decoder/archive/refs/tags/v0.2.4.tar.gz")
-  set(kaldi_decoder_URL2 "https://hub.nuaa.cf/k2-fsa/kaldi-decoder/archive/refs/tags/v0.2.4.tar.gz")
-  set(kaldi_decoder_HASH "SHA256=136d96c2f1f8ec44de095205f81a6ce98981cd867fe4ba840f9415a0b58fe601")
+  set(kaldi_decoder_URL  "https://github.com/k2-fsa/kaldi-decoder/archive/refs/tags/v0.2.5.tar.gz")
+  set(kaldi_decoder_URL2 "https://hub.nuaa.cf/k2-fsa/kaldi-decoder/archive/refs/tags/v0.2.5.tar.gz")
+  set(kaldi_decoder_HASH "SHA256=f663e58aef31b33cd8086eaa09ff1383628039845f31300b5abef817d8cc2fff")
 
   set(KALDI_DECODER_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
   set(KALDI_DECODER_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
@@ -12,11 +12,11 @@ function(download_kaldi_decoder)
   # If you don't have access to the Internet,
   # please pre-download kaldi-decoder
   set(possible_file_locations
-    $ENV{HOME}/Downloads/kaldi-decoder-0.2.4.tar.gz
-    ${CMAKE_SOURCE_DIR}/kaldi-decoder-0.2.4.tar.gz
-    ${CMAKE_BINARY_DIR}/kaldi-decoder-0.2.4.tar.gz
-    /tmp/kaldi-decoder-0.2.4.tar.gz
-    /star-fj/fangjun/download/github/kaldi-decoder-0.2.4.tar.gz
+    $ENV{HOME}/Downloads/kaldi-decoder-0.2.5.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldi-decoder-0.2.5.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldi-decoder-0.2.5.tar.gz
+    /tmp/kaldi-decoder-0.2.5.tar.gz
+    /star-fj/fangjun/download/github/kaldi-decoder-0.2.5.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
