@@ -15,7 +15,8 @@ namespace sherpa_onnx {
 
 class OnlineCtcFstDecoder : public OnlineCtcDecoder {
  public:
-  explicit OnlineCtcFstDecoder(const OnlineCtcFstDecoderConfig &config);
+  OnlineCtcFstDecoder(const OnlineCtcFstDecoderConfig &config,
+                      int32_t blank_id);
 
   void Decode(Ort::Value log_probs,
               std::vector<OnlineCtcDecoderResult> *results,
@@ -29,6 +30,7 @@ class OnlineCtcFstDecoder : public OnlineCtcDecoder {
   kaldi_decoder::FasterDecoderOptions options_;
 
   std::unique_ptr<fst::Fst<fst::StdArc>> fst_;
+  int32_t blank_id_ = 0;
 };
 
 }  // namespace sherpa_onnx

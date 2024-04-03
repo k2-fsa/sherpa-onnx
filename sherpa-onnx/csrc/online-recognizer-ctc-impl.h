@@ -223,29 +223,29 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
 
  private:
   void InitDecoder() {
+    if (!sym_.contains("<blk>") && !sym_.contains("<eps>") &&
+        !sym_.contains("<blank>")) {
+      SHERPA_ONNX_LOGE(
+          "We expect that tokens.txt contains "
+          "the symbol <blk> or <eps> or <blank> and its ID.");
+      exit(-1);
+    }
+
+    int32_t blank_id = 0;
+    if (sym_.contains("<blk>")) {
+      blank_id = sym_["<blk>"];
+    } else if (sym_.contains("<eps>")) {
+      // for tdnn models of the yesno recipe from icefall
+      blank_id = sym_["<eps>"];
+    } else if (sym_.contains("<blank>")) {
+      // for WeNet CTC models
+      blank_id = sym_["<blank>"];
+    }
+
     if (!config_.ctc_fst_decoder_config.graph.empty()) {
-      decoder_ =
-          std::make_unique<OnlineCtcFstDecoder>(config_.ctc_fst_decoder_config);
+      decoder_ = std::make_unique<OnlineCtcFstDecoder>(
+          config_.ctc_fst_decoder_config, blank_id);
     } else if (config_.decoding_method == "greedy_search") {
-      if (!sym_.contains("<blk>") && !sym_.contains("<eps>") &&
-          !sym_.contains("<blank>")) {
-        SHERPA_ONNX_LOGE(
-            "We expect that tokens.txt contains "
-            "the symbol <blk> or <eps> or <blank> and its ID.");
-        exit(-1);
-      }
-
-      int32_t blank_id = 0;
-      if (sym_.contains("<blk>")) {
-        blank_id = sym_["<blk>"];
-      } else if (sym_.contains("<eps>")) {
-        // for tdnn models of the yesno recipe from icefall
-        blank_id = sym_["<eps>"];
-      } else if (sym_.contains("<blank>")) {
-        // for WeNet CTC models
-        blank_id = sym_["<blank>"];
-      }
-
       decoder_ = std::make_unique<OnlineCtcGreedySearchDecoder>(blank_id);
     } else {
       SHERPA_ONNX_LOGE(

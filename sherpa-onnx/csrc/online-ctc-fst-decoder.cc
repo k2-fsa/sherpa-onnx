@@ -20,8 +20,8 @@ namespace sherpa_onnx {
 fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename);
 
 OnlineCtcFstDecoder::OnlineCtcFstDecoder(
-    const OnlineCtcFstDecoderConfig &config)
-    : config_(config), fst_(ReadGraph(config.graph)) {
+    const OnlineCtcFstDecoderConfig &config, int32_t blank_id)
+    : config_(config), fst_(ReadGraph(config.graph)), blank_id_(blank_id) {
   options_.max_active = config_.max_active;
 }
 
@@ -32,7 +32,7 @@ OnlineCtcFstDecoder::CreateFasterDecoder() const {
 
 static void DecodeOne(const float *log_probs, int32_t num_rows,
                       int32_t num_cols, OnlineCtcDecoderResult *result,
-                      OnlineStream *s) {
+                      OnlineStream *s, int32_t blank_id) {
   int32_t &processed_frames = s->GetFasterDecoderProcessedFrames();
   kaldi_decoder::DecodableCtc decodable(log_probs, num_rows, num_cols,
                                         processed_frames);
@@ -41,6 +41,7 @@ static void DecodeOne(const float *log_probs, int32_t num_rows,
   if (processed_frames == 0) {
     decoder->InitDecoding();
   }
+
   decoder->AdvanceDecoding(&decodable);
 
   if (decoder->ReachedFinal()) {
@@ -48,30 +49,41 @@ static void DecodeOne(const float *log_probs, int32_t num_rows,
     bool ok = decoder->GetBestPath(&fst_out);
     if (ok) {
       std::vector<int32_t> isymbols_out;
-      std::vector<int32_t> osymbols_out;
-      ok = fst::GetLinearSymbolSequence(fst_out, &isymbols_out, &osymbols_out,
-                                        nullptr);
-      SHERPA_ONNX_LOGE("num tokens: %d\n",
-                       static_cast<int32_t>(isymbols_out.size()));
+      std::vector<int32_t> osymbols_out_unused;
+      ok = fst::GetLinearSymbolSequence(fst_out, &isymbols_out,
+                                        &osymbols_out_unused, nullptr);
       std::vector<int64_t> tokens;
       tokens.reserve(isymbols_out.size());
+
+      std::vector<int32_t> timestamps;
+      timestamps.reserve(isymbols_out.size());
+
       std::ostringstream os;
       int32_t prev_id = -1;
+      int32_t num_trailing_blanks = 0;
+      int32_t f = 0;  // frame number
+
       for (auto i : isymbols_out) {
         i -= 1;
-        if (i != 0 && i != prev_id) {
+
+        if (i == blank_id) {
+          num_trailing_blanks += 1;
+        } else {
+          num_trailing_blanks = 0;
+        }
+
+        if (i != blank_id && i != prev_id) {
           tokens.push_back(i);
+          timestamps.push_back(f);
         }
         prev_id = i;
-        // TODO(fangjun): set num_trailing_blanks
+        f += 1;
       }
 
       result->tokens = std::move(tokens);
-    } else {
-      result->tokens.clear();
+      result->timestamps = std::move(timestamps);
+      // no need to set frame_offset
     }
-  } else {
-    result->tokens.clear();
   }
 
   processed_frames += num_rows;
@@ -104,7 +116,7 @@ void OnlineCtcFstDecoder::Decode(Ort::Value log_probs,
 
   for (int32_t i = 0; i != batch_size; ++i) {
     DecodeOne(p + i * num_frames * vocab_size, num_frames, vocab_size,
-              &(*results)[i], ss[i]);
+              &(*results)[i], ss[i], blank_id_);
   }
 }
 
