@@ -102,7 +102,7 @@ struct OnlineRecognizerConfig {
       const FeatureExtractorConfig &feat_config,
       const OnlineModelConfig &model_config, const OnlineLMConfig &lm_config,
       const EndpointConfig &endpoint_config,
-      const OnlineCtcFstDecoderConfig &&ctc_fst_decoder_config,
+      const OnlineCtcFstDecoderConfig &ctc_fst_decoder_config,
       bool enable_endpoint, const std::string &decoding_method,
       int32_t max_active_paths, const std::string &hotwords_file,
       float hotwords_score, float blank_penalty)

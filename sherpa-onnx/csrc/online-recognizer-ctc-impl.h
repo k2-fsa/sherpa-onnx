@@ -167,7 +167,7 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     std::vector<std::vector<Ort::Value>> next_states =
         model_->UnStackStates(std::move(out_states));
 
-    decoder_->Decode(std::move(out[0]), &results);
+    decoder_->Decode(std::move(out[0]), &results, ss, n);
 
     for (int32_t k = 0; k != n; ++k) {
       ss[k]->SetCtcResult(results[k]);

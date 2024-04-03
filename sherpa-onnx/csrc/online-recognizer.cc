@@ -136,6 +136,7 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "model_config=" << model_config.ToString() << ", ";
   os << "lm_config=" << lm_config.ToString() << ", ";
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
+  os << "ctc_fst_decoder_config=" << ctc_fst_decoder_config.ToString() << ", ";
   os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ", ";
   os << "max_active_paths=" << max_active_paths << ", ";
   os << "hotwords_score=" << hotwords_score << ", ";

@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_ONLINE_CTC_DECODER_H_
 #define SHERPA_ONNX_CSRC_ONLINE_CTC_DECODER_H_
 
+#include <memory>
 #include <vector>
 
 #include "kaldi-decoder/csrc/faster-decoder.h"

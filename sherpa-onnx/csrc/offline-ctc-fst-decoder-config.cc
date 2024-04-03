@@ -37,6 +37,7 @@ bool OfflineCtcFstDecoderConfig::Validate() const {
     SHERPA_ONNX_LOGE("graph: %s does not exist", graph.c_str());
     return false;
   }
+  return true;
 }
 
 }  // namespace sherpa_onnx

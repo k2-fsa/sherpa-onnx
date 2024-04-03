@@ -24,8 +24,7 @@ static void PybindOnlineRecognizerResult(py::module *m) {
           "tokens",
           [](PyClass &self) -> std::vector<std::string> { return self.tokens; })
       .def_property_readonly(
-          "start_time",
-          [](PyClass &self) -> float { return self.start_time; })
+          "start_time", [](PyClass &self) -> float { return self.start_time; })
       .def_property_readonly(
           "timestamps",
           [](PyClass &self) -> std::vector<float> { return self.timestamps; })
@@ -35,37 +34,38 @@ static void PybindOnlineRecognizerResult(py::module *m) {
       .def_property_readonly(
           "lm_probs",
           [](PyClass &self) -> std::vector<float> { return self.lm_probs; })
+      .def_property_readonly("context_scores",
+                             [](PyClass &self) -> std::vector<float> {
+                               return self.context_scores;
+                             })
       .def_property_readonly(
-          "context_scores",
-          [](PyClass &self) -> std::vector<float> {
-            return self.context_scores;
-      })
+          "segment", [](PyClass &self) -> int32_t { return self.segment; })
       .def_property_readonly(
-          "segment",
-          [](PyClass &self) -> int32_t { return self.segment; })
-      .def_property_readonly(
-          "is_final",
-          [](PyClass &self) -> bool { return self.is_final; })
+          "is_final", [](PyClass &self) -> bool { return self.is_final; })
       .def("as_json_string", &PyClass::AsJsonString,
-            py::call_guard<py::gil_scoped_release>());
+           py::call_guard<py::gil_scoped_release>());
 }
 
 static void PybindOnlineRecognizerConfig(py::module *m) {
   using PyClass = OnlineRecognizerConfig;
   py::class_<PyClass>(*m, "OnlineRecognizerConfig")
-      .def(py::init<const FeatureExtractorConfig &, const OnlineModelConfig &,
-                    const OnlineLMConfig &, const EndpointConfig &, bool,
-                    const std::string &, int32_t, const std::string &, float,
-                    float>(),
-           py::arg("feat_config"), py::arg("model_config"),
-           py::arg("lm_config") = OnlineLMConfig(), py::arg("endpoint_config"),
-           py::arg("enable_endpoint"), py::arg("decoding_method"),
-           py::arg("max_active_paths") = 4, py::arg("hotwords_file") = "",
-           py::arg("hotwords_score") = 0, py::arg("blank_penalty") = 0.0)
+      .def(
+          py::init<const FeatureExtractorConfig &, const OnlineModelConfig &,
+                   const OnlineLMConfig &, const EndpointConfig &,
+                   const OnlineCtcFstDecoderConfig &, bool, const std::string &,
+                   int32_t, const std::string &, float, float>(),
+          py::arg("feat_config"), py::arg("model_config"),
+          py::arg("lm_config") = OnlineLMConfig(),
+          py::arg("endpoint_config") = EndpointConfig(),
+          py::arg("ctc_fst_decoder_config") = OnlineCtcFstDecoderConfig(),
+          py::arg("enable_endpoint"), py::arg("decoding_method"),
+          py::arg("max_active_paths") = 4, py::arg("hotwords_file") = "",
+          py::arg("hotwords_score") = 0, py::arg("blank_penalty") = 0.0)
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
       .def_readwrite("lm_config", &PyClass::lm_config)
       .def_readwrite("endpoint_config", &PyClass::endpoint_config)
+      .def_readwrite("ctc_fst_decoder_config", &PyClass::ctc_fst_decoder_config)
       .def_readwrite("enable_endpoint", &PyClass::enable_endpoint)
       .def_readwrite("decoding_method", &PyClass::decoding_method)
       .def_readwrite("max_active_paths", &PyClass::max_active_paths)

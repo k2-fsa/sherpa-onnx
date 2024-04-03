@@ -18,6 +18,7 @@ set(srcs
   offline-wenet-ctc-model-config.cc
   offline-whisper-model-config.cc
   offline-zipformer-ctc-model-config.cc
+  online-ctc-fst-decoder-config.cc
   online-lm-config.cc
   online-model-config.cc
   online-paraformer-model-config.cc

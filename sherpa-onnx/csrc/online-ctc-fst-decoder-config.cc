@@ -23,13 +23,10 @@ std::string OnlineCtcFstDecoderConfig::ToString() const {
 }
 
 void OnlineCtcFstDecoderConfig::Register(ParseOptions *po) {
-  std::string prefix = "ctc";
-  ParseOptions p(prefix, po);
+  po->Register("ctc-graph", &graph, "Path to H.fst, HL.fst, or HLG.fst");
 
-  p.Register("graph", &graph, "Path to H.fst, HL.fst, or HLG.fst");
-
-  p.Register("max-active", &max_active,
-             "Decoder max active states.  Larger->slower; more accurate");
+  po->Register("ctc-max-active", &max_active,
+               "Decoder max active states.  Larger->slower; more accurate");
 }
 
 bool OnlineCtcFstDecoderConfig::Validate() const {
@@ -37,6 +34,7 @@ bool OnlineCtcFstDecoderConfig::Validate() const {
     SHERPA_ONNX_LOGE("graph: %s does not exist", graph.c_str());
     return false;
   }
+  return true;
 }
 
 }  // namespace sherpa_onnx

@@ -15,6 +15,7 @@
 #include "sherpa-onnx/python/csrc/offline-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-recognizer.h"
 #include "sherpa-onnx/python/csrc/offline-stream.h"
+#include "sherpa-onnx/python/csrc/online-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/python/csrc/online-lm-config.h"
 #include "sherpa-onnx/python/csrc/online-model-config.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
@@ -36,6 +37,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   m.doc() = "pybind11 binding of sherpa-onnx";
 
   PybindFeatures(&m);
+  PybindOnlineCtcFstDecoderConfig(&m);
   PybindOnlineModelConfig(&m);
   PybindOnlineLMConfig(&m);
   PybindOnlineStream(&m);

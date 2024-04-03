@@ -5,6 +5,8 @@
 #include "sherpa-onnx/csrc/online-ctc-fst-decoder.h"
 
 #include <algorithm>
+#include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 

@@ -2,9 +2,10 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_ONLINE_FST_DECODER_H_
-#define SHERPA_ONNX_CSRC_ONLINE_FST_DECODER_H_
+#ifndef SHERPA_ONNX_CSRC_ONLINE_CTC_FST_DECODER_H_
+#define SHERPA_ONNX_CSRC_ONLINE_CTC_FST_DECODER_H_
 
+#include <memory>
 #include <vector>
 
 #include "fst/fst.h"
@@ -35,4 +36,4 @@ class OnlineCtcFstDecoder : public OnlineCtcDecoder {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_ONLINE_FST_DECODER_H_
+#endif  // SHERPA_ONNX_CSRC_ONLINE_CTC_FST_DECODER_H_

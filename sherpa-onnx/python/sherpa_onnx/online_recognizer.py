@@ -16,6 +16,7 @@ from _sherpa_onnx import (
     OnlineTransducerModelConfig,
     OnlineWenetCtcModelConfig,
     OnlineZipformer2CtcModelConfig,
+    OnlineCtcFstDecoderConfig,
 )
 
 
@@ -314,6 +315,8 @@ class OnlineRecognizer(object):
         rule2_min_trailing_silence: float = 1.2,
         rule3_min_utterance_length: float = 20.0,
         decoding_method: str = "greedy_search",
+        ctc_graph: str = "",
+        ctc_max_active: int = 3000,
         provider: str = "cpu",
     ):
         """
@@ -355,6 +358,12 @@ class OnlineRecognizer(object):
             is detected.
           decoding_method:
             The only valid value is greedy_search.
+          ctc_graph:
+            If not empty, decoding_method is ignored. It contains the path to
+            H.fst, HL.fst, or HLG.fst
+          ctc_max_active:
+            Used only when ctc_graph is not empty. It specifies the maximum
+            active paths at a time.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
         """
@@ -384,10 +393,16 @@ class OnlineRecognizer(object):
             rule3_min_utterance_length=rule3_min_utterance_length,
         )
 
+        ctc_fst_decoder_config = OnlineCtcFstDecoderConfig(
+            graph=ctc_graph,
+            max_active=ctc_max_active,
+        )
+
         recognizer_config = OnlineRecognizerConfig(
             feat_config=feat_config,
             model_config=model_config,
             endpoint_config=endpoint_config,
+            ctc_fst_decoder_config=ctc_fst_decoder_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
         )
