@@ -13,7 +13,8 @@
 namespace sherpa_onnx {
 
 void OnlineCtcGreedySearchDecoder::Decode(
-    Ort::Value log_probs, std::vector<OnlineCtcDecoderResult> *results) {
+    Ort::Value log_probs, std::vector<OnlineCtcDecoderResult> *results,
+    OnlineStream ** /*ss=nullptr*/, int32_t /*n = 0*/) {
   std::vector<int64_t> log_probs_shape =
       log_probs.GetTensorTypeAndShapeInfo().GetShape();
 

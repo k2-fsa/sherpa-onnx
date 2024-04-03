@@ -19,13 +19,13 @@
 namespace sherpa_onnx {
 
 /// Helper for `OnlineRecognizerResult::AsJsonString()`
-template<typename T>
-std::string VecToString(const std::vector<T>& vec, int32_t precision = 6) {
+template <typename T>
+std::string VecToString(const std::vector<T> &vec, int32_t precision = 6) {
   std::ostringstream oss;
   oss << std::fixed << std::setprecision(precision);
   oss << "[ ";
   std::string sep = "";
-  for (const auto& item : vec) {
+  for (const auto &item : vec) {
     oss << sep << item;
     sep = ", ";
   }
@@ -34,13 +34,13 @@ std::string VecToString(const std::vector<T>& vec, int32_t precision = 6) {
 }
 
 /// Helper for `OnlineRecognizerResult::AsJsonString()`
-template<>  // explicit specialization for T = std::string
-std::string VecToString<std::string>(const std::vector<std::string>& vec,
+template <>  // explicit specialization for T = std::string
+std::string VecToString<std::string>(const std::vector<std::string> &vec,
                                      int32_t) {  // ignore 2nd arg
   std::ostringstream oss;
   oss << "[ ";
   std::string sep = "";
-  for (const auto& item : vec) {
+  for (const auto &item : vec) {
     oss << sep << "\"" << item << "\"";
     sep = ", ";
   }
@@ -51,15 +51,17 @@ std::string VecToString<std::string>(const std::vector<std::string>& vec,
 std::string OnlineRecognizerResult::AsJsonString() const {
   std::ostringstream os;
   os << "{ ";
-  os << "\"text\": " << "\"" << text << "\"" << ", ";
+  os << "\"text\": "
+     << "\"" << text << "\""
+     << ", ";
   os << "\"tokens\": " << VecToString(tokens) << ", ";
   os << "\"timestamps\": " << VecToString(timestamps, 2) << ", ";
   os << "\"ys_probs\": " << VecToString(ys_probs, 6) << ", ";
   os << "\"lm_probs\": " << VecToString(lm_probs, 6) << ", ";
   os << "\"context_scores\": " << VecToString(context_scores, 6) << ", ";
   os << "\"segment\": " << segment << ", ";
-  os << "\"start_time\": " << std::fixed << std::setprecision(2)
-     << start_time  << ", ";
+  os << "\"start_time\": " << std::fixed << std::setprecision(2) << start_time
+     << ", ";
   os << "\"is_final\": " << (is_final ? "true" : "false");
   os << "}";
   return os.str();
@@ -70,6 +72,7 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
   model_config.Register(po);
   endpoint_config.Register(po);
   lm_config.Register(po);
+  ctc_fst_decoder_config.Register(po);
 
   po->Register("enable-endpoint", &enable_endpoint,
                "True to enable endpoint detection. False to disable it.");
@@ -116,6 +119,12 @@ bool OnlineRecognizerConfig::Validate() const {
     return false;
   }
 
+  if (!ctc_fst_decoder_config.graph.empty() &&
+      !ctc_fst_decoder_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in ctc_fst_decoder_config");
+    return false;
+  }
+
   return model_config.Validate();
 }
 
@@ -127,6 +136,7 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "model_config=" << model_config.ToString() << ", ";
   os << "lm_config=" << lm_config.ToString() << ", ";
   os << "endpoint_config=" << endpoint_config.ToString() << ", ";
+  os << "ctc_fst_decoder_config=" << ctc_fst_decoder_config.ToString() << ", ";
   os << "enable_endpoint=" << (enable_endpoint ? "True" : "False") << ", ";
   os << "max_active_paths=" << max_active_paths << ", ";
   os << "hotwords_score=" << hotwords_score << ", ";

@@ -67,6 +67,12 @@ bool OfflineRecognizerConfig::Validate() const {
     return false;
   }
 
+  if (!ctc_fst_decoder_config.graph.empty() &&
+      !ctc_fst_decoder_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in fst_decoder");
+    return false;
+  }
+
   return model_config.Validate();
 }
 

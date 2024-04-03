@@ -124,6 +124,14 @@ jobs:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: build/bin/*
 
+      - name: Test online CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-ctc.sh
+
       - name: Test C API
         shell: bash
         run: |
@@ -149,13 +157,6 @@ jobs:
 
           .github/scripts/test-kws.sh
 
-      - name: Test online CTC
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx
-
-          .github/scripts/test-online-ctc.sh
 
       - name: Test offline Whisper
         if: matrix.build_type != 'Debug'

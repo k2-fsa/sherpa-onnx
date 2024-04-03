@@ -20,7 +20,7 @@ namespace sherpa_onnx {
 // @param filename Path to a StdVectorFst or StdConstFst graph
 // @return The caller should free the returned pointer using `delete` to
 //         avoid memory leak.
-static fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
+fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename) {
   // read decoding network FST
   std::ifstream is(filename, std::ios::binary);
   if (!is.good()) {

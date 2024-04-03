@@ -16,6 +16,7 @@
 
 #include "sherpa-onnx/csrc/endpoint.h"
 #include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/online-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/csrc/online-lm-config.h"
 #include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/online-stream.h"
@@ -80,6 +81,7 @@ struct OnlineRecognizerConfig {
   OnlineModelConfig model_config;
   OnlineLMConfig lm_config;
   EndpointConfig endpoint_config;
+  OnlineCtcFstDecoderConfig ctc_fst_decoder_config;
   bool enable_endpoint = true;
 
   std::string decoding_method = "greedy_search";
@@ -96,19 +98,19 @@ struct OnlineRecognizerConfig {
 
   OnlineRecognizerConfig() = default;
 
-  OnlineRecognizerConfig(const FeatureExtractorConfig &feat_config,
-                         const OnlineModelConfig &model_config,
-                         const OnlineLMConfig &lm_config,
-                         const EndpointConfig &endpoint_config,
-                         bool enable_endpoint,
-                         const std::string &decoding_method,
-                         int32_t max_active_paths,
-                         const std::string &hotwords_file, float hotwords_score,
-                         float blank_penalty)
+  OnlineRecognizerConfig(
+      const FeatureExtractorConfig &feat_config,
+      const OnlineModelConfig &model_config, const OnlineLMConfig &lm_config,
+      const EndpointConfig &endpoint_config,
+      const OnlineCtcFstDecoderConfig &ctc_fst_decoder_config,
+      bool enable_endpoint, const std::string &decoding_method,
+      int32_t max_active_paths, const std::string &hotwords_file,
+      float hotwords_score, float blank_penalty)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
         endpoint_config(endpoint_config),
+        ctc_fst_decoder_config(ctc_fst_decoder_config),
         enable_endpoint(enable_endpoint),
         decoding_method(decoding_method),
         max_active_paths(max_active_paths),

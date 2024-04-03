@@ -24,6 +24,7 @@ struct OfflineCtcFstDecoderConfig {
   std::string ToString() const;
 
   void Register(ParseOptions *po);
+  bool Validate() const;
 };
 
 }  // namespace sherpa_onnx

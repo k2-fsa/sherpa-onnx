@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 
+#include "kaldi-decoder/csrc/faster-decoder.h"
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/features.h"
@@ -96,6 +97,11 @@ class OnlineStream {
    * @return Return the context graph for this stream.
    */
   const ContextGraphPtr &GetContextGraph() const;
+
+  // for online ctc decoder
+  void SetFasterDecoder(std::unique_ptr<kaldi_decoder::FasterDecoder> decoder);
+  kaldi_decoder::FasterDecoder *GetFasterDecoder() const;
+  int32_t &GetFasterDecoderProcessedFrames();
 
   // for streaming paraformer
   std::vector<float> &GetParaformerFeatCache();

@@ -17,7 +17,8 @@ class OnlineCtcGreedySearchDecoder : public OnlineCtcDecoder {
       : blank_id_(blank_id) {}
 
   void Decode(Ort::Value log_probs,
-              std::vector<OnlineCtcDecoderResult> *results) override;
+              std::vector<OnlineCtcDecoderResult> *results,
+              OnlineStream **ss = nullptr, int32_t n = 0) override;
 
  private:
   int32_t blank_id_;
