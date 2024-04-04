@@ -111,6 +111,15 @@ func sherpaOnnxFeatureConfig(
     feature_dim: Int32(featureDim))
 }
 
+func sherpaOnnxOnlineCtcFstDecoderConfig(
+  graph: String = "",
+  maxActive: Int = 3000
+) -> SherpaOnnxOnlineCtcFstDecoderConfig {
+  return SherpaOnnxOnlineCtcFstDecoderConfig(
+    graph: toCPointer(graph),
+    max_active: Int32(maxActive))
+}
+
 func sherpaOnnxOnlineRecognizerConfig(
   featConfig: SherpaOnnxFeatureConfig,
   modelConfig: SherpaOnnxOnlineModelConfig,
@@ -121,7 +130,8 @@ func sherpaOnnxOnlineRecognizerConfig(
   decodingMethod: String = "greedy_search",
   maxActivePaths: Int = 4,
   hotwordsFile: String = "",
-  hotwordsScore: Float = 1.5
+  hotwordsScore: Float = 1.5,
+  ctcFstDecoderConfig: SherpaOnnxOnlineCtcFstDecoderConfig = sherpaOnnxOnlineCtcFstDecoderConfig()
 ) -> SherpaOnnxOnlineRecognizerConfig {
   return SherpaOnnxOnlineRecognizerConfig(
     feat_config: featConfig,
@@ -133,7 +143,9 @@ func sherpaOnnxOnlineRecognizerConfig(
     rule2_min_trailing_silence: rule2MinTrailingSilence,
     rule3_min_utterance_length: rule3MinUtteranceLength,
     hotwords_file: toCPointer(hotwordsFile),
-    hotwords_score: hotwordsScore)
+    hotwords_score: hotwordsScore,
+    ctc_fst_decoder_config: ctcFstDecoderConfig
+  )
 }
 
 /// Wrapper for recognition result.
