@@ -50,6 +50,10 @@ function createOnlineRecognizer() {
     rule3MinUtteranceLength: 20,
     hotwordsFile: '',
     hotwordsScore: 1.5,
+    ctcFstDecoderConfig: {
+      graph: '',
+      maxActive: 3000,
+    }
   };
 
   return sherpa_onnx.createOnlineRecognizer(recognizerConfig);

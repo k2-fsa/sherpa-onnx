@@ -14,25 +14,24 @@ function createOnlineRecognizer() {
   };
 
   let onlineParaformerModelConfig = {
-    encoder:
-        './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx',
-    decoder:
-        './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx',
+    encoder: '',
+    decoder: '',
   };
 
   let onlineZipformer2CtcModelConfig = {
-    model: '',
+    model:
+        './sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/ctc-epoch-30-avg-3-chunk-16-left-128.int8.onnx',
   };
 
   let onlineModelConfig = {
     transducer: onlineTransducerModelConfig,
     paraformer: onlineParaformerModelConfig,
     zipformer2Ctc: onlineZipformer2CtcModelConfig,
-    tokens: './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt',
+    tokens: './sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/tokens.txt',
     numThreads: 1,
     provider: 'cpu',
-    debug: 1,
-    modelType: 'paraformer',
+    debug: 0,
+    modelType: '',
   };
 
   let featureConfig = {
@@ -52,7 +51,7 @@ function createOnlineRecognizer() {
     hotwordsFile: '',
     hotwordsScore: 1.5,
     ctcFstDecoderConfig: {
-      graph: '',
+      graph: './sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/HLG.fst',
       maxActive: 3000,
     }
   };
@@ -64,13 +63,13 @@ const recognizer = createOnlineRecognizer();
 const stream = recognizer.createStream();
 
 const waveFilename =
-    './sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/0.wav';
+    './sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/test_wavs/8k.wav';
 
 const reader = new wav.Reader();
 const readable = new Readable().wrap(reader);
 
 function decode(samples) {
-  stream.acceptWaveform(recognizer.config.featConfig.sampleRate, samples);
+  stream.acceptWaveform(gSampleRate, samples);
 
   while (recognizer.isReady(stream)) {
     recognizer.decode(stream);
@@ -79,11 +78,10 @@ function decode(samples) {
   console.log(text);
 }
 
+let gSampleRate = 16000;
+
 reader.on('format', ({audioFormat, bitDepth, channels, sampleRate}) => {
-  if (sampleRate != recognizer.config.featConfig.sampleRate) {
-    throw new Error(`Only support sampleRate ${
-        recognizer.config.featConfig.sampleRate}. Given ${sampleRate}`);
-  }
+  gSampleRate = sampleRate;
 
   if (audioFormat != 1) {
     throw new Error(`Only support PCM format. Given ${audioFormat}`);

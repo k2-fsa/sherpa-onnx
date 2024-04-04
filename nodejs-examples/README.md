@@ -174,3 +174,16 @@ wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherp
 tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
 node ./test-online-zipformer2-ctc.js
 ```
+
+## ./test-online-zipformer2-ctc-hlg.js
+[./test-online-zipformer2-ctc-hlg.js](./test-online-zipformer2-ctc-hlg.js) demonstrates
+how to decode a file using a streaming zipformer2 CTC model with HLG. In the code
+we use [sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+node ./test-online-zipformer2-ctc-hlg.js
+```
