@@ -66,6 +66,13 @@ jobs:
         run: |
           gcc --version
 
+      - name: Test streaming HLG decoding (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd go-api-examples/streaming-hlg-decoding/
+          ./run.sh
+
       - name: Test speaker identification (Linux/macOS)
         if: matrix.os != 'windows-latest'
         shell: bash
