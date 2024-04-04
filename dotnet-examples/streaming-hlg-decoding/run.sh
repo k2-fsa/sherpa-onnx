@@ -8,7 +8,4 @@ if [ ! -f ./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/HLG.fst ]; then
   rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 fi
 
-go mod tidy
-go build
-ls -lh
-./streaming-hlg-decoding
+dotnet run -c Release
