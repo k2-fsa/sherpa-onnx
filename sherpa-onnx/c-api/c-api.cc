@@ -243,6 +243,20 @@ void DestroyOnlineRecognizerResult(const SherpaOnnxOnlineRecognizerResult *r) {
   }
 }
 
+const char *GetOnlineStreamResultAsJson(
+    const SherpaOnnxOnlineRecognizer *recognizer,
+    const SherpaOnnxOnlineStream *stream) {
+  sherpa_onnx::OnlineRecognizerResult result =
+      recognizer->impl->GetResult(stream->impl.get());
+  std::string json = result.AsJsonString();
+  char *pJson = new char[json.size() + 1];
+  std::copy(json.begin(), json.end(), pJson);
+  pJson[json.size()] = 0;
+  return pJson;
+}
+
+void DestroyOnlineStreamResultJson(const char *s) { delete[] s; }
+
 void Reset(const SherpaOnnxOnlineRecognizer *recognizer,
            const SherpaOnnxOnlineStream *stream) {
   recognizer->impl->Reset(stream->impl.get());
@@ -409,7 +423,7 @@ void DecodeMultipleOfflineStreams(SherpaOnnxOfflineRecognizer *recognizer,
 }
 
 const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
-    SherpaOnnxOfflineStream *stream) {
+    const SherpaOnnxOfflineStream *stream) {
   const sherpa_onnx::OfflineRecognitionResult &result =
       stream->impl->GetResult();
   const auto &text = result.text;
@@ -443,6 +457,19 @@ void DestroyOfflineRecognizerResult(
     delete r;
   }
 }
+
+const char *GetOfflineStreamResultAsJson(
+    const SherpaOnnxOfflineStream *stream) {
+  const sherpa_onnx::OfflineRecognitionResult &result =
+      stream->impl->GetResult();
+  std::string json = result.AsJsonString();
+  char *pJson = new char[json.size() + 1];
+  std::copy(json.begin(), json.end(), pJson);
+  pJson[json.size()] = 0;
+  return pJson;
+}
+
+void DestroyOfflineStreamResultJson(const char *s) { delete[] s; }
 
 // ============================================================
 // For Keyword Spot

@@ -77,7 +77,7 @@ function decode(samples) {
   while (recognizer.isReady(stream)) {
     recognizer.decode(stream);
   }
-  const text = recognizer.getResult(stream);
+  const text = recognizer.getResult(stream).text;
   console.log(text);
 }
 

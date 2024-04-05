@@ -661,13 +661,12 @@ class OfflineRecognizer {
   }
 
   getResult(stream) {
-    const r = this.Module._GetOfflineStreamResult(stream.handle);
+    const r = this.Module._GetOfflineStreamResultAsJson(stream.handle);
+    const jsonStr = this.Module.UTF8ToString(r);
+    const ans = JSON.parse(jsonStr);
+    this.Module._DestroyOfflineStreamResultJson(r);
 
-    const textPtr = this.Module.getValue(r, 'i8*');
-    const text = this.Module.UTF8ToString(textPtr);
-
-    this.Module._DestroyOfflineRecognizerResult(r);
-    return text;
+    return ans;
   }
 };
 
@@ -750,11 +749,13 @@ class OnlineRecognizer {
   }
 
   getResult(stream) {
-    const r = this.Module._GetOnlineStreamResult(this.handle, stream.handle);
-    const textPtr = this.Module.getValue(r, 'i8*');
-    const text = this.Module.UTF8ToString(textPtr);
-    this.Module._DestroyOnlineRecognizerResult(r);
-    return text;
+    const r =
+        this.Module._GetOnlineStreamResultAsJson(this.handle, stream.handle);
+    const jsonStr = this.Module.UTF8ToString(r);
+    const ans = JSON.parse(jsonStr);
+    this.Module._DestroyOnlineStreamResultJson(r);
+
+    return ans;
   }
 }
 

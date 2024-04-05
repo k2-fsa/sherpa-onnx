@@ -13,10 +13,14 @@ set(exported_functions
   CreateOnlineRecognizer
   CreateOnlineStream
   DecodeOnlineStream
+  DestroyOfflineStreamResultJson
   DestroyOnlineRecognizer
   DestroyOnlineRecognizerResult
   DestroyOnlineStream
+  DestroyOnlineStreamResultJson
+  GetOfflineStreamResultAsJson
   GetOnlineStreamResult
+  GetOnlineStreamResultAsJson
   InputFinished
   IsEndpoint
   IsOnlineStreamReady
