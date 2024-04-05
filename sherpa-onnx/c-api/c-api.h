@@ -96,6 +96,11 @@ SHERPA_ONNX_API typedef struct SherpaOnnxFeatureConfig {
   int32_t feature_dim;
 } SherpaOnnxFeatureConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlineCtcFstDecoderConfig {
+  const char *graph;
+  int32_t max_active;
+} SherpaOnnxOnlineCtcFstDecoderConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
   SherpaOnnxFeatureConfig feat_config;
   SherpaOnnxOnlineModelConfig model_config;
@@ -131,6 +136,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
 
   /// Bonus score for each token in hotwords.
   float hotwords_score;
+
+  SherpaOnnxOnlineCtcFstDecoderConfig ctc_fst_decoder_config;
 } SherpaOnnxOnlineRecognizerConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerResult {

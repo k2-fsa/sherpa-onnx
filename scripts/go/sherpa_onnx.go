@@ -99,6 +99,11 @@ type FeatureConfig struct {
 	FeatureDim int
 }
 
+type OnlineCtcFstDecoderConfig struct {
+	Graph     string
+	MaxActive int
+}
+
 // Configuration for the online/streaming recognizer.
 type OnlineRecognizerConfig struct {
 	FeatConfig  FeatureConfig
@@ -120,6 +125,7 @@ type OnlineRecognizerConfig struct {
 	Rule1MinTrailingSilence float32
 	Rule2MinTrailingSilence float32
 	Rule3MinUtteranceLength float32
+	CtcFstDecoderConfig     OnlineCtcFstDecoderConfig
 }
 
 // It contains the recognition result for a online stream.
@@ -189,6 +195,10 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 	c.rule1_min_trailing_silence = C.float(config.Rule1MinTrailingSilence)
 	c.rule2_min_trailing_silence = C.float(config.Rule2MinTrailingSilence)
 	c.rule3_min_utterance_length = C.float(config.Rule3MinUtteranceLength)
+
+	c.ctc_fst_decoder_config.graph = C.CString(config.CtcFstDecoderConfig.Graph)
+	defer C.free(unsafe.Pointer(c.ctc_fst_decoder_config.graph))
+	c.ctc_fst_decoder_config.max_active = C.int(config.CtcFstDecoderConfig.MaxActive)
 
 	recognizer := &OnlineRecognizer{}
 	recognizer.impl = C.CreateOnlineRecognizer(&c)

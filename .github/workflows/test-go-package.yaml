@@ -66,11 +66,76 @@ jobs:
         run: |
           gcc --version
 
-      - name: Test speaker identification
+      - name: Test streaming HLG decoding (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd go-api-examples/streaming-hlg-decoding/
+          ./run.sh
+
+      - name: Test speaker identification (Linux/macOS)
+        if: matrix.os != 'windows-latest'
         shell: bash
         run: |
           cd go-api-examples/speaker-identification
           ./run.sh
+
+      - name: Test speaker identification (Win64)
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        shell: bash
+        run: |
+          cd go-api-examples/speaker-identification
+          go mod tidy
+          cat go.mod
+          go build
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx
+          git clone https://github.com/csukuangfj/sr-data
+          ls -lh
+          echo $PWD
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
+          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
+          ls -lh
+          go mod tidy
+          go build
+          go run ./main.go
+
+      - name: Test speaker identification (Win32)
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        shell: bash
+        run: |
+          cd go-api-examples/speaker-identification
+          go mod tidy
+          cat go.mod
+          ls -lh
+
+          go env GOARCH
+          go env
+          echo "------------------------------"
+          go env -w GOARCH=386
+          go env -w CGO_ENABLED=1
+          go env
+
+          go clean
+          go build
+
+          echo $PWD
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_campplus_sv_zh-cn_16k-common.onnx
+          git clone https://github.com/csukuangfj/sr-data
+          ls -lh
+          echo $PWD
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
+          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
+          ls -lh
+          go mod tidy
+          go build
+          go run ./main.go
+
+          rm -rf sr-data
+          rm -rf *.onnx
 
       - name: Test non-streaming TTS (Linux/macOS)
         if: matrix.os != 'windows-latest'

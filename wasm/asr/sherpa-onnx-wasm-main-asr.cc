@@ -22,9 +22,11 @@ static_assert(sizeof(SherpaOnnxOnlineModelConfig) ==
                       sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 5 * 4,
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
+static_assert(sizeof(SherpaOnnxOnlineCtcFstDecoderConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineRecognizerConfig) ==
                   sizeof(SherpaOnnxFeatureConfig) +
-                      sizeof(SherpaOnnxOnlineModelConfig) + 8 * 4,
+                      sizeof(SherpaOnnxOnlineModelConfig) + 8 * 4 +
+                      sizeof(SherpaOnnxOnlineCtcFstDecoderConfig),
               "");
 
 void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
@@ -67,6 +69,11 @@ void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
           config->rule3_min_utterance_length);
   fprintf(stdout, "hotwords_file: %s\n", config->hotwords_file);
   fprintf(stdout, "hotwords_score: %.2f\n", config->hotwords_score);
+
+  fprintf(stdout, "----------ctc fst decoder config----------\n");
+  fprintf(stdout, "graph: %s\n", config->ctc_fst_decoder_config.graph);
+  fprintf(stdout, "max_active: %d\n",
+          config->ctc_fst_decoder_config.max_active);
 }
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {

@@ -74,6 +74,12 @@ jobs:
           go mod tidy
           go build
 
+      - name: Test streaming HLG decoding
+        shell: bash
+        run: |
+          cd scripts/go/_internal/streaming-hlg-decoding/
+          ./run.sh
+
       - name: Test speaker identification
         shell: bash
         run: |

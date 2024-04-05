@@ -7,3 +7,4 @@ vits-vctk
 sherpa-onnx-paraformer-zh-2023-09-14
 !*.sh
 *.bak
+streaming-hlg-decode-file

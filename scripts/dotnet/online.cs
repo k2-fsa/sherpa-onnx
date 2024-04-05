@@ -117,6 +117,21 @@ namespace SherpaOnnx
   }
 
   [StructLayout(LayoutKind.Sequential)]
+  public struct OnlineCtcFstDecoderConfig
+  {
+    public OnlineCtcFstDecoderConfig()
+    {
+      Graph = "";
+      MaxActive = 3000;
+    }
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string Graph;
+
+    public int MaxActive;
+  }
+
+  [StructLayout(LayoutKind.Sequential)]
   public struct OnlineRecognizerConfig
   {
     public OnlineRecognizerConfig()
@@ -131,6 +146,7 @@ namespace SherpaOnnx
       Rule3MinUtteranceLength = 20.0F;
       HotwordsFile = "";
       HotwordsScore = 1.5F;
+      CtcFstDecoderConfig = new OnlineCtcFstDecoderConfig();
     }
     public FeatureConfig FeatConfig;
     public OnlineModelConfig ModelConfig;
@@ -167,6 +183,8 @@ namespace SherpaOnnx
 
     /// Bonus score for each token in hotwords.
     public float HotwordsScore;
+
+    public OnlineCtcFstDecoderConfig CtcFstDecoderConfig;
   }
 
   public class OnlineRecognizerResult

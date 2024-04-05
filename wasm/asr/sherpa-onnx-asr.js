@@ -43,6 +43,10 @@ function freeConfig(config, Module) {
     freeConfig(config.lm, Module)
   }
 
+  if ('ctcFstDecoder' in config) {
+    freeConfig(config.ctcFstDecoder, Module)
+  }
+
   Module._free(config.ptr);
 }
 
@@ -193,11 +197,26 @@ function initSherpaOnnxFeatureConfig(config, Module) {
   return {ptr: ptr, len: len};
 }
 
+function initSherpaOnnxOnlineCtcFstDecoderConfig(config, Module) {
+  const len = 2 * 4;
+  const ptr = Module._malloc(len);
+
+  const graphLen = Module.lengthBytesUTF8(config.graph) + 1;
+  const buffer = Module._malloc(graphLen);
+  Module.stringToUTF8(config.graph, buffer, graphLen);
+
+  Module.setValue(ptr, buffer, 'i8*');
+  Module.setValue(ptr + 4, config.maxActive, 'i32');
+  return {ptr: ptr, len: len, buffer: buffer};
+}
+
 function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   const feat = initSherpaOnnxFeatureConfig(config.featConfig, Module);
   const model = initSherpaOnnxOnlineModelConfig(config.modelConfig, Module);
+  const ctcFstDecoder = initSherpaOnnxOnlineCtcFstDecoderConfig(
+      config.ctcFstDecoderConfig, Module)
 
-  const len = feat.len + model.len + 8 * 4;
+  const len = feat.len + model.len + 8 * 4 + ctcFstDecoder.len;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -243,8 +262,11 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   Module.setValue(ptr + offset, config.hotwordsScore, 'float');
   offset += 4;
 
+  Module._CopyHeap(ctcFstDecoder.ptr, ctcFstDecoder.len, ptr + offset);
+
   return {
-    buffer: buffer, ptr: ptr, len: len, feat: feat, model: model
+    buffer: buffer, ptr: ptr, len: len, feat: feat, model: model,
+        ctcFstDecoder: ctcFstDecoder
   }
 }
 
@@ -313,6 +335,10 @@ function createOnlineRecognizer(Module, myConfig) {
     rule3MinUtteranceLength: 20,
     hotwordsFile: '',
     hotwordsScore: 1.5,
+    ctcFstDecoderConfig: {
+      graph: '',
+      maxActive: 3000,
+    }
   };
   if (myConfig) {
     recognizerConfig = myConfig;
