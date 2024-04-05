@@ -57,7 +57,7 @@ cmake \
   -DSHERPA_ONNX_ENABLE_BINARY=OFF \
   -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
   ..
-make -j10
+make -j3
 make install
 
 ls -lh install/bin/wasm/nodejs

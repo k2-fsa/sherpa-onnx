@@ -21,22 +21,26 @@ set(exported_functions
   DestroyOnlineRecognizer
   DestroyOnlineRecognizerResult
   DestroyOnlineStream
+  DestroyOnlineStreamResultJson
   GetOnlineStreamResult
+  GetOnlineStreamResultAsJson
   InputFinished
   IsEndpoint
   IsOnlineStreamReady
   Reset
   # non-streaming ASR
-  PrintOfflineRecognizerConfig
-  CreateOfflineRecognizer
-  DestroyOfflineRecognizer
-  CreateOfflineStream
-  DestroyOfflineStream
   AcceptWaveformOffline
-  DecodeOfflineStream
+  CreateOfflineRecognizer
+  CreateOfflineStream
   DecodeMultipleOfflineStreams
-  GetOfflineStreamResult
+  DecodeOfflineStream
+  DestroyOfflineRecognizer
   DestroyOfflineRecognizerResult
+  DestroyOfflineStream
+  DestroyOfflineStreamResultJson
+  GetOfflineStreamResult
+  GetOfflineStreamResultAsJson
+  PrintOfflineRecognizerConfig
   # online kws
   CreateKeywordSpotter
   DestroyKeywordSpotter

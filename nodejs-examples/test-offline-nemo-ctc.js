@@ -100,7 +100,7 @@ fs.createReadStream(waveFilename, {highWaterMark: 4096})
 
       stream.acceptWaveform(recognizer.config.featConfig.sampleRate, flattened);
       recognizer.decode(stream);
-      const text = recognizer.getResult(stream);
+      const text = recognizer.getResult(stream).text;
       console.log(text);
 
       stream.free();

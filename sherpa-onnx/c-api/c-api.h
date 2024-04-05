@@ -286,6 +286,16 @@ SHERPA_ONNX_API const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
 SHERPA_ONNX_API void DestroyOnlineRecognizerResult(
     const SherpaOnnxOnlineRecognizerResult *r);
 
+/// Return the result as a json string.
+/// The user has to invoke
+/// DestroyOnlineStreamResultJson()
+/// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const char *GetOnlineStreamResultAsJson(
+    const SherpaOnnxOnlineRecognizer *recognizer,
+    const SherpaOnnxOnlineStream *stream);
+
+SHERPA_ONNX_API void DestroyOnlineStreamResultJson(const char *s);
+
 /// Reset an OnlineStream , which clears the neural network model state
 /// and the state for decoding.
 ///
@@ -482,13 +492,21 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
 ///         DestroyOnlineRecognizerResult() to free the returned pointer to
 ///         avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
-    SherpaOnnxOfflineStream *stream);
+    const SherpaOnnxOfflineStream *stream);
 
 /// Destroy the pointer returned by GetOfflineStreamResult().
 ///
 /// @param r A pointer returned by GetOfflineStreamResult()
 SHERPA_ONNX_API void DestroyOfflineRecognizerResult(
     const SherpaOnnxOfflineRecognizerResult *r);
+
+/// Return the result as a json string.
+/// The user has to use DestroyOfflineStreamResultJson()
+/// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const char *GetOfflineStreamResultAsJson(
+    const SherpaOnnxOfflineStream *stream);
+
+SHERPA_ONNX_API void DestroyOfflineStreamResultJson(const char *s);
 
 // ============================================================
 // For Keyword Spot

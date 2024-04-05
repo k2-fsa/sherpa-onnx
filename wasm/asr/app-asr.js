@@ -108,7 +108,7 @@ if (navigator.mediaDevices.getUserMedia) {
       }
 
       let isEndpoint = recognizer.isEndpoint(recognizer_stream);
-      let result = recognizer.getResult(recognizer_stream);
+      let result = recognizer.getResult(recognizer_stream).text;
 
 
       if (result.length > 0 && lastResult != result) {
