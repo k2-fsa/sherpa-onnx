@@ -878,6 +878,13 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   ans.rule_fsts = p;
   env->ReleaseStringUTFChars(s, p);
 
+  // for ruleFars
+  fid = env->GetFieldID(cls, "ruleFars", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.rule_fars = p;
+  env->ReleaseStringUTFChars(s, p);
+
   fid = env->GetFieldID(cls, "maxNumSentences", "I");
   ans.max_num_sentences = env->GetIntField(config, fid);
 

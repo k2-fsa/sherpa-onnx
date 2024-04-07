@@ -54,6 +54,11 @@ sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./MainActivity.kt
   sed -i.bak s%"ruleFsts = null"%"ruleFsts = \"$rule_fsts\""% ./MainActivity.kt
 {% endif %}
 
+{% if tts_model.rule_fars %}
+  rule_fars={{ tts_model.rule_fars }}
+  sed -i.bak s%"ruleFsts = null"%"ruleFars = \"$rule_fars\""% ./MainActivity.kt
+{% endif %}
+
 {% if tts_model.data_dir %}
   data_dir={{ tts_model.data_dir }}
   sed -i.bak s%"dataDir = null"%"dataDir = \"$data_dir\""% ./MainActivity.kt

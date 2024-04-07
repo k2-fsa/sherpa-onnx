@@ -18,7 +18,7 @@ for sid in 10 33 99; do
   --vits-model=./vits-icefall-zh-aishell3/model.onnx \
   --vits-lexicon=./vits-icefall-zh-aishell3/lexicon.txt \
   --vits-tokens=./vits-icefall-zh-aishell3/tokens.txt \
-  --tts-rule-fsts=./vits-icefall-zh-aishell3/rule.fst \
+  --tts-rule-fsts=./vits-icefall-zh-aishell3/phone.fst,./vits-icefall-zh-aishell3/date.fst,./vits-icefall-zh-aishell3/number.fst \
   --sid=$sid \
   --debug=1 \
   --output-filename=./numbers-$sid.wav \
@@ -28,7 +28,7 @@ for sid in 10 33 99; do
   --vits-model=./vits-icefall-zh-aishell3/model.onnx \
   --vits-lexicon=./vits-icefall-zh-aishell3/lexicon.txt \
   --vits-tokens=./vits-icefall-zh-aishell3/tokens.txt \
-  --tts-rule-fsts=./vits-icefall-zh-aishell3/rule.fst \
+  --tts-rule-fsts=./vits-icefall-zh-aishell3/phone.fst,./vits-icefall-zh-aishell3/date.fst,./vits-icefall-zh-aishell3/number.fst \
   --tts-rule-fars=./vits-icefall-zh-aishell3/rule.far \
   --sid=$sid \
   --debug=1 \
