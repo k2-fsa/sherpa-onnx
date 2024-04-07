@@ -7,10 +7,9 @@
 
 import Foundation
 
-
 // used to get the path to espeak-ng-data
 func resourceURL(to path: String) -> String {
-    return URL(string: path, relativeTo: Bundle.main.resourceURL)!.path
+  return URL(string: path, relativeTo: Bundle.main.resourceURL)!.path
 }
 
 func getResource(_ forResource: String, _ ofType: String) -> String {
@@ -50,8 +49,7 @@ func getTtsForAishell3() -> SherpaOnnxOfflineTtsWrapper {
   // See the following link
   // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#vits-model-aishell3
 
-  // vits-vctk.onnx
-  let model = getResource("vits-aishell3", "onnx")
+  let model = getResource("model", "onnx")
 
   // lexicon.txt
   let lexicon = getResource("lexicon", "txt")
@@ -59,9 +57,19 @@ func getTtsForAishell3() -> SherpaOnnxOfflineTtsWrapper {
   // tokens.txt
   let tokens = getResource("tokens", "txt")
 
+  // rule.fst
+  let ruleFsts = getResource("rule", "fst")
+
+  // rule.far
+  let ruleFars = getResource("rule", "far")
+
   let vits = sherpaOnnxOfflineTtsVitsModelConfig(model: model, lexicon: lexicon, tokens: tokens)
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits)
-  var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
+  var config = sherpaOnnxOfflineTtsConfig(
+    model: modelConfig,
+    ruleFsts: ruleFsts,
+    ruleFars: ruleFars
+  )
   return SherpaOnnxOfflineTtsWrapper(config: &config)
 }
 
@@ -69,7 +77,6 @@ func getTtsForAishell3() -> SherpaOnnxOfflineTtsWrapper {
 func getTtsFor_en_US_amy_low() -> SherpaOnnxOfflineTtsWrapper {
   // please see  https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 
-  // vits-vctk.onnx
   let model = getResource("en_US-amy-low", "onnx")
 
   // tokens.txt
@@ -78,7 +85,8 @@ func getTtsFor_en_US_amy_low() -> SherpaOnnxOfflineTtsWrapper {
   // in this case, we don't need lexicon.txt
   let dataDir = resourceURL(to: "espeak-ng-data")
 
-  let vits = sherpaOnnxOfflineTtsVitsModelConfig(model: model, lexicon: "", tokens: tokens, dataDir: dataDir)
+  let vits = sherpaOnnxOfflineTtsVitsModelConfig(
+    model: model, lexicon: "", tokens: tokens, dataDir: dataDir)
   let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits)
   var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
 
