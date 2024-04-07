@@ -50,13 +50,7 @@ function(download_kaldifst)
       ${kaldifst_SOURCE_DIR}/
   )
 
-  target_include_directories(fst
-    PUBLIC
-      ${openfst_SOURCE_DIR}/src/include
-  )
-
   set_target_properties(kaldifst_core PROPERTIES OUTPUT_NAME "sherpa-onnx-kaldifst-core")
-  set_target_properties(fst PROPERTIES OUTPUT_NAME "sherpa-onnx-fst")
 endfunction()
 
 download_kaldifst()

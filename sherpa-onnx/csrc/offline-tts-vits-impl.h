@@ -15,6 +15,9 @@
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
+
+#include "fst/extensions/far/far.h"
+#include "kaldifst/csrc/kaldi-fst-io.h"
 #include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -44,6 +47,32 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
           SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
         }
         tn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(f));
+      }
+    }
+
+    if (!config.rule_fars.empty()) {
+      if (config.model.debug) {
+        SHERPA_ONNX_LOGE("Loading FST archives");
+      }
+      std::vector<std::string> files;
+      SplitStringToVector(config.rule_fars, ",", false, &files);
+      for (const auto &f : files) {
+        if (config.model.debug) {
+          SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
+        }
+        std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
+            fst::FarReader<fst::StdArc>::Open(f));
+        for (; !reader->Done(); reader->Next()) {
+          std::unique_ptr<fst::StdConstFst> r(
+              fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
+
+          tn_list_.push_back(
+              std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
+        }
+      }
+
+      if (config.model.debug) {
+        SHERPA_ONNX_LOGE("FST archives loaded!");
       }
     }
   }

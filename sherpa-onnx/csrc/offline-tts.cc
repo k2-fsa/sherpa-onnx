@@ -20,7 +20,14 @@ void OfflineTtsConfig::Register(ParseOptions *po) {
                "It not empty, it contains a list of rule FST filenames."
                "Multiple filenames are separated by a comma and they are "
                "applied from left to right. An example value: "
-               "rule1.fst,rule2,fst,rule3.fst");
+               "rule1.fst,rule2.fst,rule3.fst");
+
+  po->Register("tts-rule-fars", &rule_fars,
+               "It not empty, it contains a list of rule FST archive filenames."
+               "Multiple filenames are separated by a comma and they are "
+               "applied from left to right. An example value: "
+               "rule1.far,rule2.far,rule3.far. Note that an *.far can contain "
+               "multiple *.fst files");
 
   po->Register(
       "tts-max-num-sentences", &max_num_sentences,
@@ -41,6 +48,17 @@ bool OfflineTtsConfig::Validate() const {
     }
   }
 
+  if (!rule_fars.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(rule_fars, ",", false, &files);
+    for (const auto &f : files) {
+      if (!FileExists(f)) {
+        SHERPA_ONNX_LOGE("Rule far %s does not exist. ", f.c_str());
+        return false;
+      }
+    }
+  }
+
   return model.Validate();
 }
 
@@ -50,6 +68,7 @@ std::string OfflineTtsConfig::ToString() const {
   os << "OfflineTtsConfig(";
   os << "model=" << model.ToString() << ", ";
   os << "rule_fsts=\"" << rule_fsts << "\", ";
+  os << "rule_fars=\"" << rule_fars << "\", ";
   os << "max_num_sentences=" << max_num_sentences << ")";
 
   return os.str();

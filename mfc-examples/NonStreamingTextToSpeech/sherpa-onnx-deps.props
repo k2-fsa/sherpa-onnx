@@ -11,6 +11,7 @@
         sherpa-onnx-core.lib;
         kaldi-decoder-core.lib;
         sherpa-onnx-kaldifst-core.lib;
+        sherpa-onnx-fstfar.lib;
         sherpa-onnx-fst.lib;
         kaldi-native-fbank-core.lib;
         onnxruntime.lib;

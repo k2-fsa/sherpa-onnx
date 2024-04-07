@@ -164,6 +164,7 @@ endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
   target_link_libraries(sherpa-onnx-core piper_phonemize)
+  target_link_libraries(sherpa-onnx-core fstfar fst)
 endif()
 
 if(SHERPA_ONNX_ENABLE_CHECK)

@@ -29,6 +29,9 @@ struct OfflineTtsConfig {
   // If there are multiple rules, they are applied from left to right.
   std::string rule_fsts;
 
+  // If there are multiple FST archives, they are applied from left to right.
+  std::string rule_fars;
+
   // Maximum number of sentences that we process at a time.
   // This is to avoid OOM for very long input text.
   // If you set it to -1, then we process all sentences in a single batch.
@@ -36,9 +39,11 @@ struct OfflineTtsConfig {
 
   OfflineTtsConfig() = default;
   OfflineTtsConfig(const OfflineTtsModelConfig &model,
-                   const std::string &rule_fsts, int32_t max_num_sentences)
+                   const std::string &rule_fsts, const std::string &rule_fars,
+                   int32_t max_num_sentences)
       : model(model),
         rule_fsts(rule_fsts),
+        rule_fars(rule_fars),
         max_num_sentences(max_num_sentences) {}
 
   void Register(ParseOptions *po);

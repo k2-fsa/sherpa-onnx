@@ -62,13 +62,13 @@ function(download_kaldi_decoder)
     install(TARGETS
       kaldi-decoder-core
       kaldifst_core
-      fst
+      fst fstfar
     DESTINATION ..)
   else()
     install(TARGETS
       kaldi-decoder-core
       kaldifst_core
-      fst
+      fst fstfar
     DESTINATION lib)
   endif()
 
@@ -76,7 +76,7 @@ function(download_kaldi_decoder)
     install(TARGETS
       kaldi-decoder-core
       kaldifst_core
-      fst
+      fst fstfar
     DESTINATION bin)
   endif()
 endfunction()
