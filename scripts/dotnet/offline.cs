@@ -67,6 +67,7 @@ namespace SherpaOnnx
       Model = new OfflineTtsModelConfig();
       RuleFsts = "";
       MaxNumSentences = 1;
+      RuleFars = "";
     }
     public OfflineTtsModelConfig Model;
 
@@ -74,6 +75,9 @@ namespace SherpaOnnx
     public string RuleFsts;
 
     public int MaxNumSentences;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string RuleFars;
   }
 
   public class OfflineTtsGeneratedAudio
