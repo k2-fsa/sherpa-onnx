@@ -783,6 +783,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsConfig {
   SherpaOnnxOfflineTtsModelConfig model;
   const char *rule_fsts;
   int32_t max_num_sentences;
+  const char *rule_fars;
 } SherpaOnnxOfflineTtsConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxGeneratedAudio {

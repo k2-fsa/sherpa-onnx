@@ -90,7 +90,7 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
 function initSherpaOnnxOfflineTtsConfig(config, Module) {
   const modelConfig =
       initSherpaOnnxOfflineTtsModelConfig(config.offlineTtsModelConfig, Module);
-  const len = modelConfig.len + 2 * 4;
+  const len = modelConfig.len + 3 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -98,12 +98,19 @@ function initSherpaOnnxOfflineTtsConfig(config, Module) {
   offset += modelConfig.len;
 
   const ruleFstsLen = Module.lengthBytesUTF8(config.ruleFsts) + 1;
-  const buffer = Module._malloc(ruleFstsLen);
+  const ruleFarsLen = Module.lengthBytesUTF8(config.ruleFars) + 1;
+
+  const buffer = Module._malloc(ruleFstsLen + ruleFarsLen);
   Module.stringToUTF8(config.ruleFsts, buffer, ruleFstsLen);
+  Module.stringToUTF8(config.ruleFars, buffer + ruleFstsLen, ruleFarsLen);
+
   Module.setValue(ptr + offset, buffer, 'i8*');
   offset += 4;
 
   Module.setValue(ptr + offset, config.maxNumSentences, 'i32');
+  offset += 4;
+
+  Module.setValue(ptr + offset, buffer + ruleFstsLen, 'i8*');
 
   return {
     buffer: buffer, ptr: ptr, len: len, config: modelConfig,
@@ -190,6 +197,7 @@ function createOfflineTts(Module, myConfig) {
   let offlineTtsConfig = {
     offlineTtsModelConfig: offlineTtsModelConfig,
     ruleFsts: '',
+    ruleFars: '',
     maxNumSentences: 1,
   }
 
