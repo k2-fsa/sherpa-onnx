@@ -21,7 +21,8 @@ function createOfflineTts() {
 
   let offlineTtsConfig = {
     offlineTtsModelConfig: offlineTtsModelConfig,
-    ruleFsts: './vits-icefall-zh-aishell3/rule.fst',
+    ruleFsts:
+        './vits-icefall-zh-aishell3/phone.fst,./vits-icefall-zh-aishell3/date.fst,./vits-icefall-zh-aishell3/number.fst,./vits-icefall-zh-aishell3/new_heteronym.fst',
     ruleFars: './vits-icefall-zh-aishell3/rule.far',
     maxNumSentences: 1,
   };
