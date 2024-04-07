@@ -554,6 +554,7 @@ type OfflineTtsModelConfig struct {
 type OfflineTtsConfig struct {
 	Model           OfflineTtsModelConfig
 	RuleFsts        string
+	RuleFars        string
 	MaxNumSentences int
 }
 
@@ -582,6 +583,9 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 
 	c.rule_fsts = C.CString(config.RuleFsts)
 	defer C.free(unsafe.Pointer(c.rule_fsts))
+
+	c.rule_fars = C.CString(config.RuleFars)
+	defer C.free(unsafe.Pointer(c.rule_fars))
 
 	c.max_num_sentences = C.int(config.MaxNumSentences)
 
