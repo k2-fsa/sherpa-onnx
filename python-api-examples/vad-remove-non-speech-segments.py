@@ -66,6 +66,11 @@ def main():
     devices = sd.query_devices()
     if len(devices) == 0:
         print("No microphone devices found")
+        print(
+            "If you are using Linux and you are sure there is a microphone "
+            "on your system, please use "
+            "./vad-remove-non-speech-segments-alsa.py"
+        )
         sys.exit(0)
 
     print(devices)
@@ -89,7 +94,7 @@ def main():
 
     all_samples = []
 
-    print("Started! Please speak")
+    print("Started! Please speak. Press Ctrl C to exit")
 
     try:
         with sd.InputStream(channels=1, dtype="float32", samplerate=sample_rate) as s:

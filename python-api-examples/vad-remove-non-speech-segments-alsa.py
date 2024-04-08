@@ -101,7 +101,7 @@ def main():
 
     all_samples = []
 
-    print("Started! Please speak")
+    print("Started! Please speak. Press Ctrl C to exit")
 
     try:
         while True:

@@ -35,6 +35,7 @@ set(srcs
   vad-model-config.cc
   vad-model.cc
   voice-activity-detector.cc
+  wave-writer.cc
 )
 if(SHERPA_ONNX_HAS_ALSA)
   list(APPEND srcs ${CMAKE_SOURCE_DIR}/sherpa-onnx/csrc/alsa.cc alsa.cc)
