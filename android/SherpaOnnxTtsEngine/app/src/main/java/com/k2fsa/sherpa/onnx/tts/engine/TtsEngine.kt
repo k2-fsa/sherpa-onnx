@@ -39,6 +39,7 @@ object TtsEngine {
     private var modelDir: String? = null
     private var modelName: String? = null
     private var ruleFsts: String? = null
+    private var ruleFars: String? = null
     private var lexicon: String? = null
     private var dataDir: String? = null
     private var assets: AssetManager? = null
@@ -50,6 +51,7 @@ object TtsEngine {
         modelDir = null
         modelName = null
         ruleFsts = null
+        ruleFars = null
         lexicon = null
         dataDir = null
         lang = null
@@ -73,9 +75,10 @@ object TtsEngine {
 
         // Example 3:
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
-        // modelDir = "vits-zh-aishell3"
-        // modelName = "vits-aishell3.onnx"
-        // ruleFsts = "vits-zh-aishell3/rule.fst"
+        // modelDir = "vits-icefall-zh-aishell3"
+        // modelName = "model.onnx"
+        // ruleFsts = "vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/number.fst,vits-icefall-zh-aishell3/new_heteronym.fst"
+        // ruleFars = "vits-icefall-zh-aishell3/rule.far"
         // lexicon = "lexicon.txt"
         // lang = "zho"
 
@@ -108,7 +111,8 @@ object TtsEngine {
         val config = getOfflineTtsConfig(
             modelDir = modelDir!!, modelName = modelName!!, lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
-            ruleFsts = ruleFsts ?: ""
+            ruleFsts = ruleFsts ?: "",
+            ruleFars = ruleFars ?: ""
         )!!
 
         tts = OfflineTts(assetManager = assets, config = config)

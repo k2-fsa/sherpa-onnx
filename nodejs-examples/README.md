@@ -43,8 +43,8 @@ for text-to-speech.
 You can use the following command to run it:
 
 ```bash
-wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
-tar xvf vits-zh-aishell3.tar.bz2
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+tar xvf vits-icefall-zh-aishell3.tar.bz2
 node ./test-offline-tts-zh.js
 ```
 

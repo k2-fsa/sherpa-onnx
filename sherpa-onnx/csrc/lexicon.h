@@ -7,7 +7,6 @@
 
 #include <cstdint>
 #include <memory>
-#include <regex>  // NOLINT
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -65,9 +64,6 @@ class Lexicon : public OfflineTtsFrontend {
   std::unordered_map<std::string, int32_t> token2id_;
   Language language_;
   bool debug_;
-
-  // for Chinese polyphones
-  std::unique_ptr<std::regex> pattern_;
 };
 
 }  // namespace sherpa_onnx

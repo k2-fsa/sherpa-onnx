@@ -155,6 +155,7 @@ class MainActivity : AppCompatActivity() {
         var modelDir: String?
         var modelName: String?
         var ruleFsts: String?
+        var ruleFars: String?
         var lexicon: String?
         var dataDir: String?
         var assets: AssetManager? = application.assets
@@ -165,6 +166,7 @@ class MainActivity : AppCompatActivity() {
         modelDir = null
         modelName = null
         ruleFsts = null
+        ruleFars = null
         lexicon = null
         dataDir = null
 
@@ -181,9 +183,11 @@ class MainActivity : AppCompatActivity() {
         // dataDir = "vits-piper-en_US-amy-low/espeak-ng-data"
 
         // Example 3:
-        // modelDir = "vits-zh-aishell3"
-        // modelName = "vits-aishell3.onnx"
-        // ruleFsts = "vits-zh-aishell3/rule.fst"
+        // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+        // modelDir = "vits-icefall-zh-aishell3"
+        // modelName = "model.onnx"
+        // ruleFsts = "vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/number.fst,"
+        // ruleFars = "vits-icefall-zh-aishell3/rule.far"
         // lexicon = "lexicon.txt"
 
         // Example 4:
@@ -202,7 +206,8 @@ class MainActivity : AppCompatActivity() {
         val config = getOfflineTtsConfig(
             modelDir = modelDir!!, modelName = modelName!!, lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
-            ruleFsts = ruleFsts ?: ""
+            ruleFsts = ruleFsts ?: "",
+            ruleFars = ruleFars ?: "",
         )!!
 
         tts = OfflineTts(assetManager = assets, config = config)

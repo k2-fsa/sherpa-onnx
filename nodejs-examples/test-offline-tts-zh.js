@@ -4,9 +4,9 @@ const sherpa_onnx = require('sherpa-onnx');
 
 function createOfflineTts() {
   let offlineTtsVitsModelConfig = {
-    model: './vits-zh-aishell3/vits-aishell3.onnx',
-    lexicon: './vits-zh-aishell3/lexicon.txt',
-    tokens: './vits-zh-aishell3/tokens.txt',
+    model: './vits-icefall-zh-aishell3/vits-aishell3.onnx',
+    lexicon: './vits-icefall-zh-aishell3/lexicon.txt',
+    tokens: './vits-icefall-zh-aishell3/tokens.txt',
     dataDir: '',
     noiseScale: 0.667,
     noiseScaleW: 0.8,
@@ -21,7 +21,9 @@ function createOfflineTts() {
 
   let offlineTtsConfig = {
     offlineTtsModelConfig: offlineTtsModelConfig,
-    ruleFsts: './vits-zh-aishell3/rule.fst',
+    ruleFsts:
+        './vits-icefall-zh-aishell3/phone.fst,./vits-icefall-zh-aishell3/date.fst,./vits-icefall-zh-aishell3/number.fst,./vits-icefall-zh-aishell3/new_heteronym.fst',
+    ruleFars: './vits-icefall-zh-aishell3/rule.far',
     maxNumSentences: 1,
   };
 

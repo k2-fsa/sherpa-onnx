@@ -111,9 +111,11 @@ jobs:
           rm -rf vits-vctk
 
           echo "Test vits-zh-aishell3"
-          git clone https://huggingface.co/csukuangfj/vits-zh-aishell3
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+          tar xvf vits-icefall-zh-aishell3.tar.bz2
+          rm vits-icefall-zh-aishell3.tar.bz2
           ./run-vits-zh-aishell3.sh
-          rm -rf vits-zh-aishell3
+          rm -rf vits-icefall-zh-aishell3
 
           echo "Test vits-piper-en_US-lessac-medium"
           git clone https://huggingface.co/csukuangfj/vits-piper-en_US-lessac-medium

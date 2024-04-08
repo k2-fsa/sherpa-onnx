@@ -20,6 +20,9 @@ class OfflineTtsDemo
     [Option("tts-rule-fsts", Required = false, Default = "", HelpText = "path to rule.fst")]
     public string RuleFsts { get; set; }
 
+    [Option("tts-rule-fars", Required = false, Default = "", HelpText = "path to rule.far")]
+    public string RuleFars { get; set; }
+
     [Option("vits-data-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for espeak-ng.")]
     public string DataDir { get; set; }
 
@@ -72,14 +75,15 @@ class OfflineTtsDemo
     string usage = @"
 # vits-aishell3
 
-wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
-tar xf vits-zh-aishell3.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+tar xvf vits-icefall-zh-aishell3.tar.bz2
 
 dotnet run \
-  --vits-model=./vits-zh-aishell3/vits-aishell3.onnx \
-  --vits-tokens=./vits-zh-aishell3/tokens.txt \
-  --vits-lexicon=./vits-zh-aishell3/lexicon.txt \
-  --tts-rule-fsts=./vits-zh-aishell3/rule.fst \
+  --vits-model=./vits-icefall-zh-aishell3/model.onnx \
+  --vits-tokens=./vits-icefall-zh-aishell3/tokens.txt \
+  --vits-lexicon=./vits-icefall-zh-aishell3/lexicon.txt \
+  --tts-rule-fsts=./vits-icefall-zh-aishell3/phone.fst,./vits-icefall-zh-aishell3/date.fst,./vits-icefall-zh-aishell3/number.fst \
+  --tts-rule-fars=./vits-icefall-zh-aishell3/rule.far \
   --sid=66 \
   --debug=1 \
   --output-filename=./aishell3-66.wav \
@@ -127,6 +131,7 @@ to download more models.
     config.Model.Debug = options.Debug;
     config.Model.Provider = "cpu";
     config.RuleFsts = options.RuleFsts;
+    config.RuleFars = options.RuleFars;
     config.MaxNumSentences = options.MaxNumSentences;
 
     OfflineTts tts = new OfflineTts(config);

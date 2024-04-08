@@ -64,12 +64,22 @@ function(download_kaldi_decoder)
       kaldifst_core
       fst
     DESTINATION ..)
+    if(SHERPA_ONNX_ENABLE_TTS)
+      install(TARGETS
+        fstfar
+      DESTINATION ..)
+    endif()
   else()
     install(TARGETS
       kaldi-decoder-core
       kaldifst_core
       fst
     DESTINATION lib)
+    if(SHERPA_ONNX_ENABLE_TTS)
+      install(TARGETS
+        fstfar
+      DESTINATION lib)
+    endif()
   endif()
 
   if(WIN32 AND BUILD_SHARED_LIBS)
@@ -78,6 +88,11 @@ function(download_kaldi_decoder)
       kaldifst_core
       fst
     DESTINATION bin)
+    if(SHERPA_ONNX_ENABLE_TTS)
+      install(TARGETS
+        fstfar
+      DESTINATION bin)
+    endif()
   endif()
 endfunction()
 

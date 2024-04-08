@@ -41,6 +41,7 @@ if [ ! -f /tmp/linux/libsherpa-onnx-core.so ]; then
   cd ..
   rm -v libpiper_phonemize.so libpiper_phonemize.so.1.2.0
   rm -v libsherpa-onnx-fst.so
+  rm -v libsherpa-onnx-fstfar.so
   rm -v libonnxruntime.so
   rm -v libcargs.so
   rm -rf wheel
@@ -67,6 +68,7 @@ if [ ! -f /tmp/macos/libsherpa-onnx-core.dylib ]; then
   rm -v libonnxruntime.dylib
   rm -v libpiper_phonemize.1.2.0.dylib libpiper_phonemize.dylib
   rm -v libsherpa-onnx-fst.dylib
+  rm -v libsherpa-onnx-fstfar.dylib
   rm -rf wheel
   ls -lh
   cd ..

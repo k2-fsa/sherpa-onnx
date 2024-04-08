@@ -78,6 +78,7 @@ def get_binaries():
             "piper_phonemize.dll",
             "sherpa-onnx-c-api.dll",
             "sherpa-onnx-core.dll",
+            "sherpa-onnx-fstfar.lib",
             "sherpa-onnx-fst.lib",
             "sherpa-onnx-kaldifst-core.lib",
             "sherpa-onnx-portaudio.dll",

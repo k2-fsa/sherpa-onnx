@@ -33,6 +33,7 @@ class TtsModel:
     model_name: str = ""
     lang: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
+    rule_fars: Optional[List[str]] = None
     data_dir: Optional[str] = None
     is_char: bool = False
     lang_iso_639_3: str = ""
@@ -241,98 +242,94 @@ def get_mimic3_models() -> List[TtsModel]:
 
 
 def get_vits_models() -> List[TtsModel]:
-    return [
+    chinese_models = [
         # Chinese
         TtsModel(
             model_dir="vits-icefall-zh-aishell3",
             model_name="model.onnx",
             lang="zh",
-            rule_fsts="vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/rule.fst",
+            rule_fsts="vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/number.fst,vits-icefall-zh-aishell3/new_heteronym.fst",
+            rule_fars="vits-icefall-zh-aishell3/rule.far",
         ),
         TtsModel(
             model_dir="vits-zh-aishell3",
             model_name="vits-aishell3.onnx",
             lang="zh",
-            rule_fsts="vits-zh-aishell3/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-doom",
             model_name="doom.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-doom/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-echo",
             model_name="echo.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-echo/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-zenyatta",
             model_name="zenyatta.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-zenyatta/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-abyssinvoker",
             model_name="abyssinvoker.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-abyssinvoker/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-keqing",
             model_name="keqing.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-keqing/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-eula",
             model_name="eula.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-eula/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-bronya",
             model_name="bronya.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-bronya/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-theresa",
             model_name="theresa.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-theresa/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-fanchen-wnj",
             model_name="vits-zh-hf-fanchen-wnj.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-fanchen-wnj/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-fanchen-C",
             model_name="vits-zh-hf-fanchen-C.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-fanchen-C/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-fanchen-ZhiHuiLaoZhe",
             model_name="vits-zh-hf-fanchen-ZhiHuiLaoZhe.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-fanchen-ZhiHuiLaoZhe/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-fanchen-ZhiHuiLaoZhe_new",
             model_name="vits-zh-hf-fanchen-ZhiHuiLaoZhe_new.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-fanchen-ZhiHuiLaoZhe_new/rule.fst",
         ),
         TtsModel(
             model_dir="vits-zh-hf-fanchen-unity",
             model_name="vits-zh-hf-fanchen-unity.onnx",
             lang="zh",
-            rule_fsts="vits-zh-hf-fanchen-unity/rule.fst",
         ),
+    ]
+
+    rule_fsts = ["phone.fst", "date.fst", "number.fst", "new_heteronym.fst"]
+    for m in chinese_models:
+        s = [f"{m.model_dir}/{r}" for r in rule_fsts]
+        m.rule_fsts = ",".join(s)
+        m.rule_fars = f"{m.model_dir}/rule.far"
+
+    all_models = chinese_models + [
         TtsModel(
             model_dir="vits-cantonese-hf-xiaomaiiwn",
             model_name="vits-cantonese-hf-xiaomaiiwn.onnx",
@@ -345,6 +342,8 @@ def get_vits_models() -> List[TtsModel]:
         #  TtsModel(model_dir="vits-ljs", model_name="vits-ljs.onnx", lang="en"),
         # fmt: on
     ]
+
+    return all_models
 
 
 def main():

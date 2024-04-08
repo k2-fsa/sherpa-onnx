@@ -22,6 +22,7 @@ function createOfflineTts() {
   let offlineTtsConfig = {
     offlineTtsModelConfig: offlineTtsModelConfig,
     ruleFsts: '',
+    ruleFars: '',
     maxNumSentences: 1,
   };
 

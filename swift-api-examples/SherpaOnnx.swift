@@ -652,12 +652,14 @@ func sherpaOnnxOfflineTtsModelConfig(
 func sherpaOnnxOfflineTtsConfig(
   model: SherpaOnnxOfflineTtsModelConfig,
   ruleFsts: String = "",
+  ruleFars: String = "",
   maxNumSenetences: Int = 2
 ) -> SherpaOnnxOfflineTtsConfig {
   return SherpaOnnxOfflineTtsConfig(
     model: model,
     rule_fsts: toCPointer(ruleFsts),
-    max_num_sentences: Int32(maxNumSenetences)
+    max_num_sentences: Int32(maxNumSenetences),
+    rule_fars: toCPointer(ruleFars)
   )
 }
 

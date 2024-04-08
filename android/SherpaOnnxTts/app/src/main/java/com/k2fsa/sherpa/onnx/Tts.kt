@@ -23,6 +23,7 @@ data class OfflineTtsModelConfig(
 data class OfflineTtsConfig(
     var model: OfflineTtsModelConfig,
     var ruleFsts: String = "",
+    var ruleFars: String = "",
     var maxNumSentences: Int = 1,
 )
 
@@ -151,7 +152,8 @@ fun getOfflineTtsConfig(
     modelName: String,
     lexicon: String,
     dataDir: String,
-    ruleFsts: String
+    ruleFsts: String,
+    ruleFars: String
 ): OfflineTtsConfig? {
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
@@ -166,5 +168,6 @@ fun getOfflineTtsConfig(
             provider = "cpu",
         ),
         ruleFsts = ruleFsts,
+        ruleFars = ruleFars,
     )
 }
