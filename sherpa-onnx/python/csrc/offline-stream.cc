@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/offline-stream.h"
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/offline-stream.h"
 
 namespace sherpa_onnx {
