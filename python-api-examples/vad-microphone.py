@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -40,6 +41,11 @@ def main():
             "https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx"
         )
 
+    mic_sample_rate = 16000
+    if 'SHERPA_ONNX_MIC_SAMPLE_RATE' in os.environ:
+      mic_sample_rate = int(os.environ.get('SHERPA_ONNX_MIC_SAMPLE_RATE'))
+      print(f'Change microphone sample rate to {mic_sample_rate}')
+
     sample_rate = 16000
     samples_per_read = int(0.1 * sample_rate)  # 0.1 second = 100 ms
 
@@ -48,6 +54,9 @@ def main():
     config.sample_rate = sample_rate
 
     vad = sherpa_onnx.VoiceActivityDetector(config, buffer_size_in_seconds=30)
+
+    # python3 -m sounddevice
+    # can also be used to list all devices
 
     devices = sd.query_devices()
     if len(devices) == 0:
@@ -60,18 +69,28 @@ def main():
         sys.exit(0)
 
     print(devices)
-    default_input_device_idx = sd.default.device[0]
-    print(f'Use default device: {devices[default_input_device_idx]["name"]}')
+
+    if 'SHERPA_ONNX_MIC_DEVICE' in os.environ: 
+        input_device_idx = int(os.environ.get('SHERPA_ONNX_MIC_DEVICE'))
+        sd.default.device[0] = input_device_idx
+        print(f'Use selected device: {devices[input_device_idx]["name"]}')
+    else:
+        input_device_idx = sd.default.device[0]
+        print(f'Use default device: {devices[input_device_idx]["name"]}')
 
     print("Started! Please speak. Press Ctrl C to exit")
 
     printed = False
     k = 0
     try:
-        with sd.InputStream(channels=1, dtype="float32", samplerate=sample_rate) as s:
+        with sd.InputStream(channels=1, dtype="float32", samplerate=mic_sample_rate) as s:
             while True:
                 samples, _ = s.read(samples_per_read)  # a blocking read
                 samples = samples.reshape(-1)
+
+                if mic_sample_rate != sample_rate:
+                    import librosa
+                    samples = librosa.resample(samples, orig_sr=mic_sample_rate, target_sr=sample_rate)
 
                 vad.accept_waveform(samples)
 
