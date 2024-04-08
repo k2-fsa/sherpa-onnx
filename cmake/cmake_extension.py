@@ -67,6 +67,7 @@ def get_binaries():
             "sherpa-onnx-alsa-offline",
             "sherpa-onnx-alsa-offline-speaker-identification",
             "sherpa-onnx-offline-tts-play-alsa",
+            "sherpa-onnx-vad-alsa",
         ]
 
     if is_windows():

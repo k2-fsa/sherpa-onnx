@@ -26,6 +26,7 @@
 #include "sherpa-onnx/python/csrc/vad-model-config.h"
 #include "sherpa-onnx/python/csrc/vad-model.h"
 #include "sherpa-onnx/python/csrc/voice-activity-detector.h"
+#include "sherpa-onnx/python/csrc/wave-writer.h"
 
 #if SHERPA_ONNX_ENABLE_TTS == 1
 #include "sherpa-onnx/python/csrc/offline-tts.h"
@@ -35,6 +36,8 @@ namespace sherpa_onnx {
 
 PYBIND11_MODULE(_sherpa_onnx, m) {
   m.doc() = "pybind11 binding of sherpa-onnx";
+
+  PybindWaveWriter(&m);
 
   PybindFeatures(&m);
   PybindOnlineCtcFstDecoderConfig(&m);
