@@ -7,7 +7,6 @@
 #include <stdlib.h>
 
 #include <algorithm>
-#include <mutex>  // NOLINT
 
 #include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/circular-buffer.h"
@@ -77,7 +76,7 @@ as the device_name.
   sherpa_onnx::Alsa alsa(device_name.c_str());
   fprintf(stderr, "Use recording device: %s\n", device_name.c_str());
 
-  float sample_rate = 16000;
+  int32_t sample_rate = 16000;
 
   if (alsa.GetExpectedSampleRate() != sample_rate) {
     fprintf(stderr, "sample rate: %d != %d\n", alsa.GetExpectedSampleRate(),
@@ -97,8 +96,6 @@ as the device_name.
   int32_t k = 0;
   while (!stop) {
     {
-      std::lock_guard<std::mutex> lock(mutex);
-
       const std::vector<float> &samples = alsa.Read(chunk);
 
       vad->AcceptWaveform(samples.data(), samples.size());
@@ -113,7 +110,9 @@ as the device_name.
 
       while (!vad->Empty()) {
         const auto &segment = vad->Front();
-        float duration = segment.samples.size() / sample_rate;
+        float duration =
+            segment.samples.size() / static_cast<float>(sample_rate);
+
         fprintf(stderr, "Duration: %.3f seconds\n", duration);
 
         char filename[128];

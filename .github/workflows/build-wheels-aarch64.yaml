@@ -113,7 +113,6 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Publish wheels to PyPI
-        if: false
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
