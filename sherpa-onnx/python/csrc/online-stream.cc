@@ -25,7 +25,8 @@ void PybindOnlineStream(py::module *m) {
   py::class_<PyClass>(*m, "OnlineStream")
       .def(
           "accept_waveform",
-          [](PyClass &self, float sample_rate, py::array_t<float> waveform) {
+          [](PyClass &self, float sample_rate,
+             const std::vector<float> &waveform) {
             self.AcceptWaveform(sample_rate, waveform.data(), waveform.size());
           },
           py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage,
