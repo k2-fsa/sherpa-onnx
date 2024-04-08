@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/online-stream.h"
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/online-stream.h"
 
 namespace sherpa_onnx {
