@@ -5,9 +5,12 @@ This file shows how to remove non-speech segments
 and merge all speech segments into a large segment
 and save it to a file.
 
+Different from ./vad-remove-non-speech-segments.py, this file supports only
+Linux.
+
 Usage
 
-python3 ./vad-remove-non-speech-segments.py \
+python3 ./vad-remove-non-speech-segments-alsa.py \
         --silero-vad-model silero_vad.onnx
 
 Please visit
@@ -20,23 +23,12 @@ wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
 """
 
 import argparse
-import sys
 import time
 from pathlib import Path
 
 import numpy as np
 import sherpa_onnx
 import soundfile as sf
-
-try:
-    import sounddevice as sd
-except ImportError:
-    print("Please install sounddevice first. You can use")
-    print()
-    print("  pip install sounddevice")
-    print()
-    print("to install it")
-    sys.exit(-1)
 
 
 def assert_file_exists(filename: str):
@@ -59,26 +51,41 @@ def get_args():
         help="Path to silero_vad.onnx",
     )
 
+    parser.add_argument(
+        "--device-name",
+        type=str,
+        required=True,
+        help="""
+The device name specifies which microphone to use in case there are several
+on your system. You can use
+
+  arecord -l
+
+to find all available microphones on your computer. For instance, if it outputs
+
+**** List of CAPTURE Hardware Devices ****
+card 3: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+and if you want to select card 3 and the device 0 on that card, please use:
+
+  plughw:3,0
+
+as the device_name.
+        """,
+    )
+
     return parser.parse_args()
 
 
 def main():
-    devices = sd.query_devices()
-    if len(devices) == 0:
-        print("No microphone devices found")
-        print(
-            "If you are using Linux and you are sure there is a microphone "
-            "on your system, please use "
-            "./vad-remove-non-speech-segments-alsa.py"
-        )
-        sys.exit(0)
-
-    print(devices)
-    default_input_device_idx = sd.default.device[0]
-    print(f'Use default device: {devices[default_input_device_idx]["name"]}')
-
     args = get_args()
     assert_file_exists(args.silero_vad_model)
+
+    device_name = args.device_name
+    print(f"device_name: {device_name}")
+    alsa = sherpa_onnx.Alsa(device_name)
 
     sample_rate = 16000
     samples_per_read = int(0.1 * sample_rate)  # 0.1 second = 100 ms
@@ -97,17 +104,17 @@ def main():
     print("Started! Please speak. Press Ctrl C to exit")
 
     try:
-        with sd.InputStream(channels=1, dtype="float32", samplerate=sample_rate) as s:
-            while True:
-                samples, _ = s.read(samples_per_read)  # a blocking read
-                samples = samples.reshape(-1)
-                buffer = np.concatenate([buffer, samples])
+        while True:
+            samples = alsa.read(samples_per_read)  # a blocking read
+            samples = np.array(samples)
 
-                all_samples = np.concatenate([all_samples, samples])
+            buffer = np.concatenate([buffer, samples])
 
-                while len(buffer) > window_size:
-                    vad.accept_waveform(buffer[:window_size])
-                    buffer = buffer[window_size:]
+            all_samples = np.concatenate([all_samples, samples])
+
+            while len(buffer) > window_size:
+                vad.accept_waveform(buffer[:window_size])
+                buffer = buffer[window_size:]
     except KeyboardInterrupt:
         print("\nCaught Ctrl + C. Saving & Exiting")
 

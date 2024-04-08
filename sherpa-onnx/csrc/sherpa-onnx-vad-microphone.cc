@@ -13,6 +13,7 @@
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/microphone.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
+#include "sherpa-onnx/csrc/wave-writer.h"
 
 bool stop = false;
 std::mutex mutex;
@@ -122,6 +123,7 @@ wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
   int32_t window_size = config.silero_vad.window_size;
   bool printed = false;
 
+  int32_t k = 0;
   while (!stop) {
     {
       std::lock_guard<std::mutex> lock(mutex);
@@ -140,9 +142,19 @@ wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
         }
 
         while (!vad->Empty()) {
-          float duration = vad->Front().samples.size() / sample_rate;
-          vad->Pop();
+          const auto &segment = vad->Front();
+          float duration = segment.samples.size() / sample_rate;
           fprintf(stderr, "Duration: %.3f seconds\n", duration);
+
+          char filename[128];
+          snprintf(filename, sizeof(filename), "seg-%d-%.3fs.wav", k, duration);
+          k += 1;
+          sherpa_onnx::WriteWave(filename, 16000, segment.samples.data(),
+                                 segment.samples.size());
+          fprintf(stderr, "Saved to %s\n", filename);
+          fprintf(stderr, "----------\n");
+
+          vad->Pop();
         }
       }
     }

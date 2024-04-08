@@ -75,6 +75,10 @@ function(download_openfst)
   set_target_properties(fst PROPERTIES OUTPUT_NAME "sherpa-onnx-fst")
   set_target_properties(fstfar PROPERTIES OUTPUT_NAME "sherpa-onnx-fstfar")
 
+  if(LINUX)
+    target_compile_options(fst PUBLIC -Wno-missing-template-keyword)
+  endif()
+
   target_include_directories(fst
     PUBLIC
       ${openfst_SOURCE_DIR}/src/include

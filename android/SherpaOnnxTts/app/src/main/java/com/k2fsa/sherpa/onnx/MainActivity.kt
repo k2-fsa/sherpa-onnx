@@ -186,7 +186,7 @@ class MainActivity : AppCompatActivity() {
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
         // modelDir = "vits-icefall-zh-aishell3"
         // modelName = "model.onnx"
-        // ruleFsts = "vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/number.fst,"
+        // ruleFsts = "vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/number.fst,vits-icefall-zh-aishell3/new_heteronym.fst"
         // ruleFars = "vits-icefall-zh-aishell3/rule.far"
         // lexicon = "lexicon.txt"
 

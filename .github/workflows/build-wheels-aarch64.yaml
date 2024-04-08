@@ -59,8 +59,27 @@ jobs:
         run: |
           ls -lh ./wheelhouse/
 
+      - name: Install patchelf
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y patchelf
+          patchelf --help
+
+      - name: Patch wheels
+        shell: bash
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          mkdir ./wheels
+          sudo ./scripts/wheel/patch_wheel.py --in-dir ./wheelhouse --out-dir ./wheels
+
+          ls -lh ./wheels/
+          rm -rf ./wheelhouse
+          mv ./wheels ./wheelhouse
+
       - name: Publish to huggingface
-        if: matrix.python-version == 'cp38' && matrix.manylinux == 'manylinux2014'
+        if: (matrix.python-version == 'cp38' || matrix.python-version == 'cp39' ) && matrix.manylinux == 'manylinux2014'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
