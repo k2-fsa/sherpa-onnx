@@ -19,6 +19,7 @@ from _sherpa_onnx import (
     VadModel,
     VadModelConfig,
     VoiceActivityDetector,
+    write_wave,
 )
 
 from .keyword_spotter import KeywordSpotter
