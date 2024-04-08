@@ -3,18 +3,18 @@
 function(download_openfst)
   include(FetchContent)
 
-  set(openfst_URL  "https://github.com/kkm000/openfst/archive/refs/tags/win/1.6.5.1.tar.gz")
-  set(openfst_URL2 "https://hub.nuaa.cf/kkm000/openfst/archive/refs/tags/win/1.6.5.1.tar.gz")
-  set(openfst_HASH "SHA256=02c49b559c3976a536876063369efc0e41ab374be1035918036474343877046e")
+  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/792965fda2a3bc29f282321f527af0d6ba26fd22.zip")
+  set(openfst_URL2 "https://hub.nuaa.cf/csukuangfj/openfst/archive/792965fda2a3bc29f282321f527af0d6ba26fd22.zip")
+  set(openfst_HASH "SHA256=815d8acf555e4aaece294d6280ec209d0e9d91e0120e8406b24ff7124ecdbb26")
 
   # If you don't have access to the Internet,
   # please pre-download it
   set(possible_file_locations
-    $ENV{HOME}/Downloads/openfst-win-1.6.5.1.tar.gz
-    ${CMAKE_SOURCE_DIR}/openfst-win-1.6.5.1.tar.gz
-    ${CMAKE_BINARY_DIR}/openfst-win-1.6.5.1.tar.gz
-    /tmp/openfst-win-1.6.5.1.tar.gz
-    /star-fj/fangjun/download/github/openfst-win-1.6.5.1.tar.gz
+    $ENV{HOME}/Downloads/openfst-792965fda2a3bc29f282321f527af0d6ba26fd22.zip
+    ${CMAKE_SOURCE_DIR}/openfst-792965fda2a3bc29f282321f527af0d6ba26fd22.zip
+    ${CMAKE_BINARY_DIR}/openfst-792965fda2a3bc29f282321f527af0d6ba26fd22.zip
+    /tmp/openfst-792965fda2a3bc29f282321f527af0d6ba26fd22.zip
+    /star-fj/fangjun/download/github/openfst-792965fda2a3bc29f282321f527af0d6ba26fd22.zip
   )
 
   foreach(f IN LISTS possible_file_locations)

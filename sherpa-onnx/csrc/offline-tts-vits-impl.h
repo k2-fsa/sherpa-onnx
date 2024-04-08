@@ -56,6 +56,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       }
       std::vector<std::string> files;
       SplitStringToVector(config.rule_fars, ",", false, &files);
+
+      tn_list_.reserve(files.size() + tn_list_.size());
+
       for (const auto &f : files) {
         if (config.model.debug) {
           SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
@@ -96,6 +99,34 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
         tn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(is));
       }
     }
+
+    if (!config.rule_fars.empty()) {
+      std::vector<std::string> files;
+      SplitStringToVector(config.rule_fars, ",", false, &files);
+      tn_list_.reserve(files.size() + tn_list_.size());
+
+      for (const auto &f : files) {
+        if (config.model.debug) {
+          SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
+        }
+
+        auto buf = ReadFile(mgr, f);
+
+        std::unique_ptr<std::istream> s(
+            new std::istrstream(buf.data(), buf.size()));
+
+        std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
+            fst::FarReader<fst::StdArc>::Open(std::move(s)));
+
+        for (; !reader->Done(); reader->Next()) {
+          std::unique_ptr<fst::StdConstFst> r(
+              fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
+
+          tn_list_.push_back(
+              std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
+        }  // for (; !reader->Done(); reader->Next())
+      }    // for (const auto &f : files)
+    }      // if (!config.rule_fars.empty())
   }
 #endif
 
