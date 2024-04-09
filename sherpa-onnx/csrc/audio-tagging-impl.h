@@ -18,16 +18,10 @@ class AudioTaggingImpl {
   static std::unique_ptr<AudioTaggingImpl> Create(
       const AudioTaggingConfig &config);
 
-  virtual std::unique_ptr<OfflineStream> CreateStream() const {
-    return nullptr;
-  }
+  virtual std::unique_ptr<OfflineStream> CreateStream() const = 0;
 
   virtual std::vector<AudioEvent> Compute(OfflineStream *s,
-                                          int32_t top_k = -1) const {
-    return {};
-  }
-
- private:
+                                          int32_t top_k = -1) const = 0;
 };
 
 }  // namespace sherpa_onnx

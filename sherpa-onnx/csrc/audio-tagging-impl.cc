@@ -4,11 +4,13 @@
 
 #include "sherpa-onnx/csrc/audio-tagging-impl.h"
 
+#include "sherpa-onnx/csrc/audio-tagging-zipformer-impl.h"
+
 namespace sherpa_onnx {
 
 std::unique_ptr<AudioTaggingImpl> AudioTaggingImpl::Create(
     const AudioTaggingConfig &config) {
-  return {};
+  return std::make_unique<AudioTaggingZipformerImpl>(config);
 }
 
 }  // namespace sherpa_onnx
