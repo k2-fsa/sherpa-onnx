@@ -3,18 +3,18 @@
 function(download_openfst)
   include(FetchContent)
 
-  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/792965fda2a3bc29f282321f527af0d6ba26fd22.zip")
-  set(openfst_URL2 "https://hub.nuaa.cf/csukuangfj/openfst/archive/792965fda2a3bc29f282321f527af0d6ba26fd22.zip")
-  set(openfst_HASH "SHA256=815d8acf555e4aaece294d6280ec209d0e9d91e0120e8406b24ff7124ecdbb26")
+  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/f6a37911d53d99d46f74e9cd71c3f5071876ba2d.zip")
+  set(openfst_URL2 "https://hub.nuaa.cf/csukuangfj/openfst/archive/f6a37911d53d99d46f74e9cd71c3f5071876ba2d.zip")
+  set(openfst_HASH "SHA256=b538ace0a28b21c81f997876797b7e54807cd993eec758c7c690e3e022d93e44")
 
   # If you don't have access to the Internet,
   # please pre-download it
   set(possible_file_locations
-    $ENV{HOME}/Downloads/openfst-792965fda2a3bc29f282321f527af0d6ba26fd22.zip
-    ${CMAKE_SOURCE_DIR}/openfst-792965fda2a3bc29f282321f527af0d6ba26fd22.zip
-    ${CMAKE_BINARY_DIR}/openfst-792965fda2a3bc29f282321f527af0d6ba26fd22.zip
-    /tmp/openfst-792965fda2a3bc29f282321f527af0d6ba26fd22.zip
-    /star-fj/fangjun/download/github/openfst-792965fda2a3bc29f282321f527af0d6ba26fd22.zip
+    $ENV{HOME}/Downloads/openfst-f6a37911d53d99d46f74e9cd71c3f5071876ba2d.zip
+    ${CMAKE_SOURCE_DIR}/openfst-f6a37911d53d99d46f74e9cd71c3f5071876ba2d.zip
+    ${CMAKE_BINARY_DIR}/openfst-f6a37911d53d99d46f74e9cd71c3f5071876ba2d.zip
+    /tmp/openfst-f6a37911d53d99d46f74e9cd71c3f5071876ba2d.zip
+    /star-fj/fangjun/download/github/openfst-f6a37911d53d99d46f74e9cd71c3f5071876ba2d.zip
   )
 
   foreach(f IN LISTS possible_file_locations)
