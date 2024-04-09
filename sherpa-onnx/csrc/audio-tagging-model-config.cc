@@ -22,7 +22,10 @@ std::string AudioTaggingModelConfig::ToString() const {
   std::ostringstream os;
 
   os << "AudioTaggingModelConfig(";
-  os << "zipformer=" << zipformer.ToString() << ")";
+  os << "zipformer=" << zipformer.ToString() << ", ";
+  os << "num_threads=" << num_threads << ", ";
+  os << "debug=" << (debug ? "True" : "False") << ", ";
+  os << "provider=\"" << provider << "\")";
 
   return os.str();
 }

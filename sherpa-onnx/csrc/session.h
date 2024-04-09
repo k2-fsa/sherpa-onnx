@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_SESSION_H_
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/audio-tagging-model-config.h"
 #include "sherpa-onnx/csrc/offline-lm-config.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
@@ -34,6 +35,8 @@ Ort::SessionOptions GetSessionOptions(
 
 Ort::SessionOptions GetSessionOptions(
     const SpokenLanguageIdentificationConfig &config);
+
+Ort::SessionOptions GetSessionOptions(const AudioTaggingModelConfig &config);
 
 }  // namespace sherpa_onnx
 
