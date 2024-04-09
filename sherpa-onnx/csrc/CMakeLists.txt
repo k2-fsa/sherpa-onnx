@@ -114,7 +114,9 @@ list(APPEND sources
 # audio tagging
 list(APPEND sources
   audio-tagging-impl.cc
+  audio-tagging-model-config.cc
   audio-tagging.cc
+  offline-zipformer-audio-tagging-model-config.cc
 )
 
 if(SHERPA_ONNX_ENABLE_TTS)

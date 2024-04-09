@@ -8,12 +8,26 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/audio-tagging-model-config.h"
 #include "sherpa-onnx/csrc/offline-stream.h"
+#include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
 
 struct AudioTaggingConfig {
+  AudioTaggingModelConfig model;
+
   int32_t top_k = 5;
+
+  AudioTaggingConfig() = default;
+
+  AudioTaggingConfig(const AudioTaggingModelConfig &model, int32_t top_k)
+      : model(model), top_k(top_k) {}
+
+  void Register(ParseOptions *po);
+  bool Validate() const;
+
+  std::string ToString() const;
 };
 
 struct AudioEvent {

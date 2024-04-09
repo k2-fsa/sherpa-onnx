@@ -4,6 +4,9 @@
 #ifndef SHERPA_ONNX_CSRC_AUDIO_TAGGING_IMPL_H_
 #define SHERPA_ONNX_CSRC_AUDIO_TAGGING_IMPL_H_
 
+#include <memory>
+#include <vector>
+
 #include "sherpa-onnx/csrc/audio-tagging.h"
 
 namespace sherpa_onnx {
