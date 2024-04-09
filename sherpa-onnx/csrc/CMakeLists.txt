@@ -111,6 +111,12 @@ list(APPEND sources
   speaker-embedding-manager.cc
 )
 
+# audio tagging
+list(APPEND sources
+  audio-tagging-impl.cc
+  audio-tagging.cc
+)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
     lexicon.cc
