@@ -71,10 +71,9 @@ struct WhisperTag {};
 class OfflineStream {
  public:
   explicit OfflineStream(const OfflineFeatureExtractorConfig &config = {},
-                         ContextGraphPtr context_graph = nullptr);
+                         ContextGraphPtr context_graph = {});
 
-  explicit OfflineStream(WhisperTag tag,
-                         ContextGraphPtr context_graph = nullptr);
+  explicit OfflineStream(WhisperTag tag, ContextGraphPtr context_graph = {});
   ~OfflineStream();
 
   /**

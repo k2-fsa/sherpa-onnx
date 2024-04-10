@@ -97,8 +97,8 @@ void LogSoftmax(T *in, int32_t w, int32_t h) {
 }
 
 template <typename T>
-void SubtractBlank(T *in, int32_t w, int32_t h,
-                   int32_t blank_idx, float blank_penalty) {
+void SubtractBlank(T *in, int32_t w, int32_t h, int32_t blank_idx,
+                   float blank_penalty) {
   for (int32_t i = 0; i != h; ++i) {
     in[blank_idx] -= blank_penalty;
     in += w;
@@ -116,8 +116,7 @@ std::vector<int32_t> TopkIndex(const T *vec, int32_t size, int32_t topk) {
                     });
 
   int32_t k_num = std::min<int32_t>(size, topk);
-  std::vector<int32_t> index(vec_index.begin(), vec_index.begin() + k_num);
-  return index;
+  return {vec_index.begin(), vec_index.begin() + k_num};
 }
 
 }  // namespace sherpa_onnx

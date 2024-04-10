@@ -4,9 +4,7 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_AUDIO_TAGGER_MODEL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_AUDIO_TAGGER_MODEL_H_
 #include <memory>
-#include <string>
 #include <utility>
-#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -43,22 +41,18 @@ class OfflineZipformerAudioTaggingModel {
    *                         valid frames in `features` before padding.
    *                         Its dtype is int64_t.
    *
-   * @return Return a vector containing:
-   *  - log_probs: A 3-D tensor of shape (N, T', vocab_size).
-   *  - log_probs_length A 1-D tensor of shape (N,). Its dtype is int64_t
+   * @return Return a tensor
+   *  - probs: A 2-D tensor of shape (N, num_event_classes).
    */
-  std::vector<Ort::Value> Forward(Ort::Value features,
-                                  Ort::Value features_length) override;
+  Ort::Value Forward(Ort::Value features, Ort::Value features_length) const;
 
   /** Return the vocabulary size of the model
    */
-  int32_t VocabSize() const override;
+  int32_t NumEventClasses() const;
 
   /** Return an allocator for allocating memory
    */
-  OrtAllocator *Allocator() const override;
-
-  int32_t SubsamplingFactor() const override;
+  OrtAllocator *Allocator() const;
 
  private:
   class Impl;

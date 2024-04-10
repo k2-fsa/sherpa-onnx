@@ -32,7 +32,10 @@ struct AudioTaggingConfig {
 
 struct AudioEvent {
   std::string name;  // name of the event
+  int32_t index;     // index of the event in the label file
   float prob;        // probability of the event
+
+  std::string ToString() const;
 };
 
 class AudioTaggingImpl;

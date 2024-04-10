@@ -9,6 +9,15 @@
 
 namespace sherpa_onnx {
 
+std::string AudioEvent::ToString() const {
+  std::ostringstream os;
+  os << "AudioEvent(";
+  os << "name=\"" << name << "\", ";
+  os << "index=" << index << ", ";
+  os << "prob=" << prob << ")";
+  return os.str();
+}
+
 void AudioTaggingConfig::Register(ParseOptions *po) {
   model.Register(po);
   po->Register("top-k", &top_k, "Top k events to return in the result");
