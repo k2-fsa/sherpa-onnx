@@ -66,7 +66,8 @@ class OfflineZipformerAudioTaggingModel::Impl {
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
     }
 
-    // get vocab size from the output[0].shape, which is (N, num_event_classes)
+    // get num_event_classes from the output[0].shape,
+    // which is (N, num_event_classes)
     num_event_classes_ =
         sess_->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape()[1];
   }

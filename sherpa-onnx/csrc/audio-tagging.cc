@@ -52,6 +52,7 @@ std::string AudioTaggingConfig::ToString() const {
 
   os << "AudioTaggingConfig(";
   os << "model=" << model.ToString() << ", ";
+  os << "labels=\"" << labels << "\", ";
   os << "top_k=" << top_k << ")";
 
   return os.str();

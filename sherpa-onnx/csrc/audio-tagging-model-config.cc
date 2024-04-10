@@ -8,6 +8,15 @@ namespace sherpa_onnx {
 
 void AudioTaggingModelConfig::Register(ParseOptions *po) {
   zipformer.Register(po);
+
+  po->Register("num-threads", &num_threads,
+               "Number of threads to run the neural network");
+
+  po->Register("debug", &debug,
+               "true to print model information while loading it.");
+
+  po->Register("provider", &provider,
+               "Specify a provider to use: cpu, cuda, coreml");
 }
 
 bool AudioTaggingModelConfig::Validate() const {

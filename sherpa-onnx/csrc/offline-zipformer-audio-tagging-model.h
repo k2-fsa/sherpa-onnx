@@ -20,7 +20,7 @@ namespace sherpa_onnx {
  * from icefall.
  *
  * See
- * https://github.com/k2-fsa/icefall/blob/master/egs/librispeech/ASR/zipformer/export-onnx-ctc.py
+ * https://github.com/k2-fsa/icefall/blob/master/egs/audioset/AT/zipformer/export-onnx.py
  */
 class OfflineZipformerAudioTaggingModel {
  public:
@@ -46,7 +46,7 @@ class OfflineZipformerAudioTaggingModel {
    */
   Ort::Value Forward(Ort::Value features, Ort::Value features_length) const;
 
-  /** Return the vocabulary size of the model
+  /** Return the number of event classes of the model
    */
   int32_t NumEventClasses() const;
 
