@@ -8,11 +8,17 @@ cd $dir
 onnxruntime_version=1.17.1
 onnxruntime_dir=ios-onnxruntime/$onnxruntime_version
 
+SHERPA_ONNX_GITHUB=github.com
+
+if [ "$SHERPA_ONNX_GITHUB_MIRROW" == true ]; then
+    SHERPA_ONNX_GITHUB=hub.nuaa.cf
+fi
+
 if [ ! -f $onnxruntime_dir/onnxruntime.xcframework/ios-arm64/onnxruntime.a ]; then
   mkdir -p $onnxruntime_dir
   pushd $onnxruntime_dir
-  rm -f onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
-  wget https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
+#   rm -f onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
+  wget -c https://${SHERPA_ONNX_GITHUB}/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
   tar xvf onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
   rm onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
   cd ..
