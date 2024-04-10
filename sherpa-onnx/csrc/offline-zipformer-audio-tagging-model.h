@@ -14,8 +14,7 @@
 #endif
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
-#include "sherpa-onnx/csrc/offline-ctc-model.h"
-#include "sherpa-onnx/csrc/offline-model-config.h"
+#include "sherpa-onnx/csrc/audio-tagging-model-config.h"
 
 namespace sherpa_onnx {
 
@@ -31,11 +30,11 @@ class OfflineZipformerAudioTaggingModel {
       const AudioTaggingModelConfig &config);
 
 #if __ANDROID_API__ >= 9
-  OfflineZipformerCtcModel(AAssetManager *mgr,
-                           const OfflineModelConfig &config);
+  OfflineZipformerAudioTaggingModel(AAssetManager *mgr,
+                                    const AudioTaggingModelConfig &config);
 #endif
 
-  ~OfflineZipformerCtcModel() override;
+  ~OfflineZipformerAudioTaggingModel();
 
   /** Run the forward method of the model.
    *
