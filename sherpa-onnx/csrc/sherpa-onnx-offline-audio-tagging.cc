@@ -64,7 +64,7 @@ for more models.
   const float duration = samples.size() / static_cast<float>(sampling_rate);
 
   fprintf(stderr, "Start to compute\n");
-  const auto start = std::chrono::steady_clock::now();
+  const auto begin = std::chrono::steady_clock::now();
 
   auto stream = tagger.CreateStream();
 
@@ -80,6 +80,17 @@ for more models.
     fprintf(stderr, "%d: %s\n", i, event.ToString().c_str());
     i += 1;
   }
+
+  float elapsed_seconds =
+      std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)
+          .count() /
+      1000.;
+  float rtf = elapsed_seconds / duration;
+  fprintf(stderr, "Num threads: %d\n", config.model.num_threads);
+  fprintf(stderr, "Wave duration: %.3f\n", duration);
+  fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
+  fprintf(stderr, "Real time factor (RTF): %.3f / %.3f = %.3f\n",
+          elapsed_seconds, duration, rtf);
 
   return 0;
 }

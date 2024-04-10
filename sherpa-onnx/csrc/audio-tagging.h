@@ -16,13 +16,15 @@ namespace sherpa_onnx {
 
 struct AudioTaggingConfig {
   AudioTaggingModelConfig model;
+  std::string labels;
 
   int32_t top_k = 5;
 
   AudioTaggingConfig() = default;
 
-  AudioTaggingConfig(const AudioTaggingModelConfig &model, int32_t top_k)
-      : model(model), top_k(top_k) {}
+  AudioTaggingConfig(const AudioTaggingModelConfig &model,
+                     const std::string &labels, int32_t top_k)
+      : model(model), labels(labels), top_k(top_k) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

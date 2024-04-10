@@ -1,8 +1,8 @@
 // sherpa-onnx/csrc/offline-zipformer-audio-tagging-model.h
 //
 // Copyright (c)  2024  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_AUDIO_TAGGER_MODEL_H_
-#define SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_AUDIO_TAGGER_MODEL_H_
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_AUDIO_TAGGING_MODEL_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_AUDIO_TAGGING_MODEL_H_
 #include <memory>
 #include <utility>
 
@@ -61,4 +61,4 @@ class OfflineZipformerAudioTaggingModel {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_AUDIO_TAGGER_MODEL_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_AUDIO_TAGGING_MODEL_H_

@@ -5,9 +5,13 @@
 #define SHERPA_ONNX_CSRC_AUDIO_TAGGING_ZIPFORMER_IMPL_H_
 
 #include <memory>
+#include <utility>
+#include <vector>
 
 #include "sherpa-onnx/csrc/audio-tagging-impl.h"
+#include "sherpa-onnx/csrc/audio-tagging-label-file.h"
 #include "sherpa-onnx/csrc/audio-tagging.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/offline-zipformer-audio-tagging-model.h"
 
@@ -16,7 +20,13 @@ namespace sherpa_onnx {
 class AudioTaggingZipformerImpl : public AudioTaggingImpl {
  public:
   explicit AudioTaggingZipformerImpl(const AudioTaggingConfig &config)
-      : config_(config), model_(config.model) {}
+      : config_(config), model_(config.model), labels_(config.labels) {
+    if (model_.NumEventClasses() != labels_.NumEventClasses()) {
+      SHERPA_ONNX_LOGE("number of classes: %d (model) != %d (label file)",
+                       model_.NumEventClasses(), labels_.NumEventClasses());
+      exit(-1);
+    }
+  }
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
     return std::make_unique<OfflineStream>();
@@ -65,9 +75,9 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
     int32_t i = 0;
 
     for (int32_t index : top_k_indexes) {
+      ans[i].name = labels_.GetEventName(index);
       ans[i].index = index;
       ans[i].prob = p[index];
-      ans[i].name = "";  // TODO(fangjun): fix it
       i += 1;
     }
 
@@ -77,7 +87,7 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
  private:
   AudioTaggingConfig config_;
   OfflineZipformerAudioTaggingModel model_;
-  ;
+  AudioTaggingLabels labels_;
 };
 
 }  // namespace sherpa_onnx

@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/audio-tagging.h"
 
 #include "sherpa-onnx/csrc/audio-tagging-impl.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
@@ -20,6 +21,7 @@ std::string AudioEvent::ToString() const {
 
 void AudioTaggingConfig::Register(ParseOptions *po) {
   model.Register(po);
+  po->Register("labels", &labels, "Event label file");
   po->Register("top-k", &top_k, "Top k events to return in the result");
 }
 
@@ -30,6 +32,16 @@ bool AudioTaggingConfig::Validate() const {
 
   if (top_k < 1) {
     SHERPA_ONNX_LOGE("--top-k should be >= 1. Given: %d", top_k);
+    return false;
+  }
+
+  if (labels.empty()) {
+    SHERPA_ONNX_LOGE("Please provide --labels");
+    return false;
+  }
+
+  if (!FileExists(labels)) {
+    SHERPA_ONNX_LOGE("--labels %s does not exist", labels.c_str());
     return false;
   }
 
