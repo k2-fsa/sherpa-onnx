@@ -4,7 +4,6 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_CTC_MODEL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_ZIPFORMER_CTC_MODEL_H_
 #include <memory>
-#include <string>
 #include <utility>
 #include <vector>
 

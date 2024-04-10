@@ -140,9 +140,11 @@ Ort::SessionOptions GetSessionOptions(const VadModelConfig &config) {
   return GetSessionOptionsImpl(config.num_threads, config.provider);
 }
 
+#if SHERPA_ONNX_ENABLE_TTS
 Ort::SessionOptions GetSessionOptions(const OfflineTtsModelConfig &config) {
   return GetSessionOptionsImpl(config.num_threads, config.provider);
 }
+#endif
 
 Ort::SessionOptions GetSessionOptions(
     const SpeakerEmbeddingExtractorConfig &config) {
@@ -151,6 +153,10 @@ Ort::SessionOptions GetSessionOptions(
 
 Ort::SessionOptions GetSessionOptions(
     const SpokenLanguageIdentificationConfig &config) {
+  return GetSessionOptionsImpl(config.num_threads, config.provider);
+}
+
+Ort::SessionOptions GetSessionOptions(const AudioTaggingModelConfig &config) {
   return GetSessionOptionsImpl(config.num_threads, config.provider);
 }
 

@@ -4,7 +4,7 @@ const sherpa_onnx = require('sherpa-onnx');
 
 function createOfflineTts() {
   let offlineTtsVitsModelConfig = {
-    model: './vits-icefall-zh-aishell3/vits-aishell3.onnx',
+    model: './vits-icefall-zh-aishell3/model.onnx',
     lexicon: './vits-icefall-zh-aishell3/lexicon.txt',
     tokens: './vits-icefall-zh-aishell3/tokens.txt',
     dataDir: '',

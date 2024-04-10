@@ -111,6 +111,16 @@ list(APPEND sources
   speaker-embedding-manager.cc
 )
 
+# audio tagging
+list(APPEND sources
+  audio-tagging-impl.cc
+  audio-tagging-label-file.cc
+  audio-tagging-model-config.cc
+  audio-tagging.cc
+  offline-zipformer-audio-tagging-model-config.cc
+  offline-zipformer-audio-tagging-model.cc
+)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
     lexicon.cc
@@ -193,6 +203,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
   add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
   add_executable(sherpa-onnx-offline-language-identification sherpa-onnx-offline-language-identification.cc)
+  add_executable(sherpa-onnx-offline-audio-tagging sherpa-onnx-offline-audio-tagging.cc)
 
   if(SHERPA_ONNX_ENABLE_TTS)
     add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
@@ -204,6 +215,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-offline
     sherpa-onnx-offline-parallel
     sherpa-onnx-offline-language-identification
+    sherpa-onnx-offline-audio-tagging
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND main_exes

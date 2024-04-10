@@ -1,52 +1,51 @@
-// sherpa-onnx/csrc/offline-zipformer-ctc-model.cc
+// sherpa-onnx/csrc/offline-zipformer-audio-tagging-model.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2024  Xiaomi Corporation
 
-#include "sherpa-onnx/csrc/offline-zipformer-ctc-model.h"
+#include "sherpa-onnx/csrc/offline-zipformer-audio-tagging-model.h"
 
 #include <string>
+#include <vector>
 
-#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
-#include "sherpa-onnx/csrc/transpose.h"
 
 namespace sherpa_onnx {
 
-class OfflineZipformerCtcModel::Impl {
+class OfflineZipformerAudioTaggingModel::Impl {
  public:
-  explicit Impl(const OfflineModelConfig &config)
+  explicit Impl(const AudioTaggingModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(config_.zipformer_ctc.model);
+    auto buf = ReadFile(config_.zipformer.model);
     Init(buf.data(), buf.size());
   }
 
 #if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+  Impl(AAssetManager *mgr, const AudioTaggingModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(mgr, config_.zipformer_ctc.model);
+    auto buf = ReadFile(mgr, config_.zipformer.model);
     Init(buf.data(), buf.size());
   }
 #endif
 
-  std::vector<Ort::Value> Forward(Ort::Value features,
-                                  Ort::Value features_length) {
+  Ort::Value Forward(Ort::Value features, Ort::Value features_length) {
     std::array<Ort::Value, 2> inputs = {std::move(features),
                                         std::move(features_length)};
 
-    return sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
-                      output_names_ptr_.data(), output_names_ptr_.size());
+    auto ans =
+        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                   output_names_ptr_.data(), output_names_ptr_.size());
+    return std::move(ans[0]);
   }
 
-  int32_t VocabSize() const { return vocab_size_; }
-  int32_t SubsamplingFactor() const { return 4; }
+  int32_t NumEventClasses() const { return num_event_classes_; }
 
   OrtAllocator *Allocator() const { return allocator_; }
 
@@ -67,13 +66,14 @@ class OfflineZipformerCtcModel::Impl {
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
     }
 
-    // get vocab size from the output[0].shape, which is (N, T, vocab_size)
-    vocab_size_ =
-        sess_->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape()[2];
+    // get num_event_classes from the output[0].shape,
+    // which is (N, num_event_classes)
+    num_event_classes_ =
+        sess_->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape()[1];
   }
 
  private:
-  OfflineModelConfig config_;
+  AudioTaggingModelConfig config_;
   Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
@@ -86,36 +86,33 @@ class OfflineZipformerCtcModel::Impl {
   std::vector<std::string> output_names_;
   std::vector<const char *> output_names_ptr_;
 
-  int32_t vocab_size_ = 0;
+  int32_t num_event_classes_ = 0;
 };
 
-OfflineZipformerCtcModel::OfflineZipformerCtcModel(
-    const OfflineModelConfig &config)
+OfflineZipformerAudioTaggingModel::OfflineZipformerAudioTaggingModel(
+    const AudioTaggingModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
 #if __ANDROID_API__ >= 9
-OfflineZipformerCtcModel::OfflineZipformerCtcModel(
-    AAssetManager *mgr, const OfflineModelConfig &config)
+OfflineZipformerAudioTaggingModel::OfflineZipformerAudioTaggingModel(
+    AAssetManager *mgr, const AudioTaggingModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
 #endif
 
-OfflineZipformerCtcModel::~OfflineZipformerCtcModel() = default;
+OfflineZipformerAudioTaggingModel::~OfflineZipformerAudioTaggingModel() =
+    default;
 
-std::vector<Ort::Value> OfflineZipformerCtcModel::Forward(
-    Ort::Value features, Ort::Value features_length) {
+Ort::Value OfflineZipformerAudioTaggingModel::Forward(
+    Ort::Value features, Ort::Value features_length) const {
   return impl_->Forward(std::move(features), std::move(features_length));
 }
 
-int32_t OfflineZipformerCtcModel::VocabSize() const {
-  return impl_->VocabSize();
+int32_t OfflineZipformerAudioTaggingModel::NumEventClasses() const {
+  return impl_->NumEventClasses();
 }
 
-OrtAllocator *OfflineZipformerCtcModel::Allocator() const {
+OrtAllocator *OfflineZipformerAudioTaggingModel::Allocator() const {
   return impl_->Allocator();
-}
-
-int32_t OfflineZipformerCtcModel::SubsamplingFactor() const {
-  return impl_->SubsamplingFactor();
 }
 
 }  // namespace sherpa_onnx

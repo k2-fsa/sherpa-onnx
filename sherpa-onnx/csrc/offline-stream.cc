@@ -234,7 +234,7 @@ OfflineStream::OfflineStream(
     : impl_(std::make_unique<Impl>(config, context_graph)) {}
 
 OfflineStream::OfflineStream(WhisperTag tag,
-                             ContextGraphPtr context_graph /*= nullptr*/)
+                             ContextGraphPtr context_graph /*= {}*/)
     : impl_(std::make_unique<Impl>(tag, context_graph)) {}
 
 OfflineStream::~OfflineStream() = default;
