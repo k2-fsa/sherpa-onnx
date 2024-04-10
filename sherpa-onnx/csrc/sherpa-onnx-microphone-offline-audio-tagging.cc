@@ -123,7 +123,6 @@ for more models.
   PaDeviceIndex num_devices = Pa_GetDeviceCount();
   fprintf(stderr, "Num devices: %d\n", num_devices);
 
-
   int32_t device_index = Pa_GetDefaultInputDevice();
 
   if (device_index == paNoDevice) {
@@ -132,16 +131,17 @@ for more models.
     fprintf(stderr, " ./bin/sherpa-onnx-alsa-offline-audio-tagging \n");
     exit(EXIT_FAILURE);
   }
-  const char* pDeviceIndex = std::getenv("SHERPA_ONNX_MIC_DEVICE");
+
+  const char *pDeviceIndex = std::getenv("SHERPA_ONNX_MIC_DEVICE");
   if (pDeviceIndex) {
     fprintf(stderr, "Use specified device: %s\n", pDeviceIndex);
     device_index = atoi(pDeviceIndex);
   }
 
-
   for (int32_t i = 0; i != num_devices; ++i) {
     const PaDeviceInfo *info = Pa_GetDeviceInfo(i);
-    fprintf(stderr, " %s %d %s\n", (i == device_index) ? "*" : " ", i, info->name);
+    fprintf(stderr, " %s %d %s\n", (i == device_index) ? "*" : " ", i,
+            info->name);
   }
 
   PaStreamParameters param;
@@ -159,7 +159,7 @@ for more models.
   param.suggestedLatency = info->defaultLowInputLatency;
   param.hostApiSpecificStreamInfo = nullptr;
   float mic_sample_rate = 16000;
-  const char* pSampleRateStr = std::getenv("SHERPA_ONNX_MIC_SAMPLE_RATE");
+  const char *pSampleRateStr = std::getenv("SHERPA_ONNX_MIC_SAMPLE_RATE");
   if (pSampleRateStr) {
     fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(pSampleRateStr);

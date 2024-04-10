@@ -143,11 +143,11 @@ as the device_name.
   std::string device_name = po.GetArg(1);
   fprintf(stderr, "Use recording device: %s\n", device_name.c_str());
 
-  int32_t sample_rate = 16000; // fixed to 16000Hz for all models from icefall
+  int32_t sample_rate = 16000;  // fixed to 16000Hz for all models from icefall
 
   std::thread t2(Record, device_name.c_str(), sample_rate);
   using namespace std::chrono_literals;  // NOLINT
-  std::this_thread::sleep_for(100ms);     // sleep for 100ms
+  std::this_thread::sleep_for(100ms);    // sleep for 100ms
   std::thread t(DetectKeyPress);
 
   while (!stop) {
@@ -162,7 +162,7 @@ as the device_name.
           std::lock_guard<std::mutex> lock(samples_mutex);
           buf = std::move(samples);
         }
-        SHERPA_ONNX_LOGE("Computing...: %d, %d", (int)sample_rate, (int)buf.size());
+        SHERPA_ONNX_LOGE("Computing...");
         auto s = tagger.CreateStream();
         s->AcceptWaveform(sample_rate, buf.data(), buf.size());
         auto results = tagger.Compute(s.get());
@@ -183,7 +183,7 @@ as the device_name.
       }
     }
 
-    std::this_thread::sleep_for(20ms);     // sleep for 20ms
+    std::this_thread::sleep_for(20ms);  // sleep for 20ms
   }
   t.join();
   t2.join();
