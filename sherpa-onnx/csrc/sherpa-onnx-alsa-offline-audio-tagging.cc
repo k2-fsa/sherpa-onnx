@@ -68,8 +68,8 @@ static void Record(const char *device_name, int32_t expected_sample_rate) {
 
   int32_t chunk = 0.1 * alsa.GetActualSampleRate();
   while (!stop) {
-    std::lock_guard<std::mutex> lock(samples_mutex);
     const std::vector<float> &s = alsa.Read(chunk);
+    std::lock_guard<std::mutex> lock(samples_mutex);
     samples.insert(samples.end(), s.begin(), s.end());
   }
 }
@@ -143,10 +143,12 @@ as the device_name.
   std::string device_name = po.GetArg(1);
   fprintf(stderr, "Use recording device: %s\n", device_name.c_str());
 
-  int32_t sample_rate = config.feat_config.sampling_rate;
+  int32_t sample_rate = 16000; // fixed to 16000Hz for all models from icefall
 
-  std::thread t(DetectKeyPress);
   std::thread t2(Record, device_name.c_str(), sample_rate);
+  using namespace std::chrono_literals;  // NOLINT
+  std::this_thread::sleep_for(100ms);     // sleep for 100ms
+  std::thread t(DetectKeyPress);
 
   while (!stop) {
     switch (state) {
@@ -160,7 +162,7 @@ as the device_name.
           std::lock_guard<std::mutex> lock(samples_mutex);
           buf = std::move(samples);
         }
-        SHERPA_ONNX_LOGE("Computing...");
+        SHERPA_ONNX_LOGE("Computing...: %d, %d", (int)sample_rate, (int)buf.size());
         auto s = tagger.CreateStream();
         s->AcceptWaveform(sample_rate, buf.data(), buf.size());
         auto results = tagger.Compute(s.get());
@@ -181,7 +183,6 @@ as the device_name.
       }
     }
 
-    using namespace std::chrono_literals;  // NOLINT
     std::this_thread::sleep_for(20ms);     // sleep for 20ms
   }
   t.join();
