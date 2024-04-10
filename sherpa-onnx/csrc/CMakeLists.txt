@@ -354,6 +354,11 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-microphone-offline-audio-tagging
+    sherpa-onnx-microphone-offline-audio-tagging.cc
+    microphone.cc
+  )
+
   if(BUILD_SHARED_LIBS)
     set(PA_LIB portaudio)
   else()
@@ -365,6 +370,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-keyword-spotter-microphone
     sherpa-onnx-microphone-offline
     sherpa-onnx-microphone-offline-speaker-identification
+    sherpa-onnx-microphone-offline-audio-tagging
     sherpa-onnx-vad-microphone
     sherpa-onnx-vad-microphone-offline-asr
   )
