@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	iso639 "github.com/barbashov/iso639-3"
-	"github.com/gordonklaus/portaudio"
+	portaudio "github.com/csukuangfj/portaudio-go"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	"log"
 )

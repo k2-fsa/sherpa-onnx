@@ -3,7 +3,7 @@
 This examples shows how to use the golang package of [sherpa-onnx][sherpa-onnx]
 for real-time speech recognition from microphone.
 
-It uses <https://github.com/gordonklaus/portaudio>
+It uses <https://github.com/csukuangfj/portaudio-go>
 to read the microphone and you have to install `portaudio` first.
 
 On macOS, you can use

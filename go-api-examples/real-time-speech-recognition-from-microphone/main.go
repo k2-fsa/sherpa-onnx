@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/gordonklaus/portaudio"
+	portaudio "github.com/csukuangfj/portaudio-go"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	flag "github.com/spf13/pflag"
 	"log"
