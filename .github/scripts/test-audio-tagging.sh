@@ -23,9 +23,6 @@ rm sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
 repo=sherpa-onnx-zipformer-audio-tagging-2024-04-09
 ls -lh $repo
 
-$EXE \
-  --zipformer-model=$repo/model.onnx
-
 for w in 1.wav 2.wav 3.wav 4.wav; do
   $EXE \
     --zipformer-model=$repo/model.onnx \
