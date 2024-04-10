@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/sherpa-onnx-alsa-offline.cc
+// sherpa-onnx/csrc/sherpa-onnx-alsa-offline-audio-tagging.cc
 //
 // Copyright (c)  2022-2024  Xiaomi Corporation
 
@@ -7,14 +7,12 @@
 #include <stdlib.h>
 
 #include <algorithm>
-#include <cctype>  // std::tolower
-#include <chrono>  // NOLINT
 #include <mutex>   // NOLINT
 #include <thread>  // NOLINT
 
 #include "sherpa-onnx/csrc/alsa.h"
+#include "sherpa-onnx/csrc/audio-tagging.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/offline-recognizer.h"
 
 enum class State {
   kIdle,
@@ -83,39 +81,20 @@ int32_t main(int32_t argc, char *argv[]) {
   signal(SIGINT, Handler);
 
   const char *kUsageMessage = R"usage(
-This program uses non-streaming models with microphone for speech recognition.
+Audio tagging from microphone (Linux only).
 Usage:
 
-(1) Transducer from icefall
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
+tar xvf sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
+rm sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
 
-  ./bin/sherpa-onnx-alsa-offline \
-    --tokens=/path/to/tokens.txt \
-    --encoder=/path/to/encoder.onnx \
-    --decoder=/path/to/decoder.onnx \
-    --joiner=/path/to/joiner.onnx \
-    --num-threads=2 \
-    --decoding-method=greedy_search \
-    device_name
-
-(2) Paraformer from FunASR
-
-  ./bin/sherpa-onnx-alsa-offline \
-    --tokens=/path/to/tokens.txt \
-    --paraformer=/path/to/model.onnx \
-    --num-threads=1 \
-    device_name
-
-(3) Whisper models
-
-  ./bin/sherpa-onnx-alsa-offline \
-    --whisper-encoder=./sherpa-onnx-whisper-base.en/base.en-encoder.int8.onnx \
-    --whisper-decoder=./sherpa-onnx-whisper-base.en/base.en-decoder.int8.onnx \
-    --tokens=./sherpa-onnx-whisper-base.en/base.en-tokens.txt \
-    --num-threads=1 \
+./bin/sherpa-onnx-alsa-offline-audio-tagging \
+  --zipformer-model=./sherpa-onnx-zipformer-audio-tagging-2024-04-09/model.onnx \
+  --labels=./sherpa-onnx-zipformer-audio-tagging-2024-04-09/class_labels_indices.csv \
     device_name
 
 Please refer to
-https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/audio-tagging-models
 for a list of pre-trained models to download.
 
 The device name specifies which microphone to use in case there are several
@@ -138,7 +117,7 @@ as the device_name.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
-  sherpa_onnx::OfflineRecognizerConfig config;
+  sherpa_onnx::AudioTaggingConfig config;
   config.Register(&po);
 
   po.Read(argc, argv);
@@ -155,17 +134,19 @@ as the device_name.
     return -1;
   }
 
-  SHERPA_ONNX_LOGE("Creating recognizer ...");
-  sherpa_onnx::OfflineRecognizer recognizer(config);
-  SHERPA_ONNX_LOGE("Recognizer created!");
+  SHERPA_ONNX_LOGE("Creating audio tagger ...");
+  sherpa_onnx::AudioTagging tagger(config);
+  SHERPA_ONNX_LOGE("Audio tagger created created!");
 
   std::string device_name = po.GetArg(1);
   fprintf(stderr, "Use recording device: %s\n", device_name.c_str());
 
-  int32_t sample_rate = config.feat_config.sampling_rate;
+  int32_t sample_rate = 16000;  // fixed to 16000Hz for all models from icefall
 
-  std::thread t(DetectKeyPress);
   std::thread t2(Record, device_name.c_str(), sample_rate);
+  using namespace std::chrono_literals;  // NOLINT
+  std::this_thread::sleep_for(100ms);    // sleep for 100ms
+  std::thread t(DetectKeyPress);
 
   while (!stop) {
     switch (state) {
@@ -179,12 +160,20 @@ as the device_name.
           std::lock_guard<std::mutex> lock(samples_mutex);
           buf = std::move(samples);
         }
-
-        auto s = recognizer.CreateStream();
+        SHERPA_ONNX_LOGE("Computing...");
+        auto s = tagger.CreateStream();
         s->AcceptWaveform(sample_rate, buf.data(), buf.size());
-        recognizer.DecodeStream(s.get());
-        SHERPA_ONNX_LOGE("Decoding Done! Result is:");
-        SHERPA_ONNX_LOGE("%s", s->GetResult().text.c_str());
+        auto results = tagger.Compute(s.get());
+        SHERPA_ONNX_LOGE("Result is:");
+
+        int32_t i = 0;
+        std::ostringstream os;
+        for (const auto &event : results) {
+          os << i << ": " << event.ToString() << "\n";
+          i += 1;
+        }
+
+        SHERPA_ONNX_LOGE("\n%s\n", os.str().c_str());
 
         state = State::kIdle;
         SHERPA_ONNX_LOGE("Press Enter to start");
@@ -192,8 +181,7 @@ as the device_name.
       }
     }
 
-    using namespace std::chrono_literals;  // NOLINT
-    std::this_thread::sleep_for(20ms);     // sleep for 20ms
+    std::this_thread::sleep_for(20ms);  // sleep for 20ms
   }
   t.join();
   t2.join();

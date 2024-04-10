@@ -40,7 +40,7 @@ https://k2-fsa.github.io/sherpa/onnx/kws/pretrained_models/index.html
 for a list of pre-trained models to download.
 
 The device name specifies which microphone to use in case there are several
-on you system. You can use
+on your system. You can use
 
   arecord -l
 
@@ -51,7 +51,7 @@ card 3: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
   Subdevices: 1/1
   Subdevice #0: subdevice #0
 
-and if you want to select card 3 and the device 0 on that card, please use:
+and if you want to select card 3 and device 0 on that card, please use:
 
   plughw:3,0
 

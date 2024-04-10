@@ -50,6 +50,7 @@ def get_binaries():
         "sherpa-onnx-keyword-spotter",
         "sherpa-onnx-microphone",
         "sherpa-onnx-microphone-offline",
+        "sherpa-onnx-microphone-offline-audio-tagging",
         "sherpa-onnx-microphone-offline-speaker-identification",
         "sherpa-onnx-offline",
         "sherpa-onnx-offline-language-identification",
@@ -69,6 +70,7 @@ def get_binaries():
             "sherpa-onnx-alsa-offline-speaker-identification",
             "sherpa-onnx-offline-tts-play-alsa",
             "sherpa-onnx-vad-alsa",
+            "sherpa-onnx-alsa-offline-audio-tagging",
         ]
 
     if is_windows():

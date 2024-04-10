@@ -71,8 +71,8 @@ static void Record(const char *device_name, int32_t expected_sample_rate) {
 
   int32_t chunk = 0.1 * alsa.GetActualSampleRate();
   while (!stop) {
-    std::lock_guard<std::mutex> lock(samples_mutex);
     const std::vector<float> &s = alsa.Read(chunk);
+    std::lock_guard<std::mutex> lock(samples_mutex);
     samples.insert(samples.end(), s.begin(), s.end());
   }
 }
@@ -193,7 +193,7 @@ card 3: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
   Subdevices: 1/1
   Subdevice #0: subdevice #0
 
-and if you want to select card 3 and the device 0 on that card, please use:
+and if you want to select card 3 and device 0 on that card, please use:
   plughw:3,0
 as the device_name.
 

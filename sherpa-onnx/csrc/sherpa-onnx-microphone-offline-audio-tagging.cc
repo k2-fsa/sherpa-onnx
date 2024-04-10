@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/sherpa-onnx-keyword-spotter-microphone.cc
+// sherpa-onnx/csrc/sherpa-onnx-microphone-offline-audio-tagging.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
@@ -7,14 +7,55 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <cctype>  // std::tolower
+#include <mutex>   // NOLINT
+#include <thread>  // NOLINT
 
 #include "portaudio.h"  // NOLINT
-#include "sherpa-onnx/csrc/display.h"
-#include "sherpa-onnx/csrc/keyword-spotter.h"
+#include "sherpa-onnx/csrc/audio-tagging.h"
+#include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/microphone.h"
 
+enum class State {
+  kIdle,
+  kRecording,
+  kDecoding,
+};
+
+State state = State::kIdle;
+
+// true to stop the program and exit
 bool stop = false;
-float mic_sample_rate = 16000;
+
+std::vector<float> samples;
+std::mutex samples_mutex;
+
+static void DetectKeyPress() {
+  SHERPA_ONNX_LOGE("Press Enter to start");
+  int32_t key;
+  while (!stop && (key = getchar())) {
+    if (key != 0x0a) {
+      continue;
+    }
+
+    switch (state) {
+      case State::kIdle:
+        SHERPA_ONNX_LOGE("Start recording. Press Enter to stop recording");
+        state = State::kRecording;
+        {
+          std::lock_guard<std::mutex> lock(samples_mutex);
+          samples.clear();
+        }
+        break;
+      case State::kRecording:
+        SHERPA_ONNX_LOGE("Stop recording. Decoding ...");
+        state = State::kDecoding;
+        break;
+      case State::kDecoding:
+        break;
+    }
+  }
+}
 
 static int32_t RecordCallback(const void *input_buffer,
                               void * /*output_buffer*/,
@@ -22,47 +63,46 @@ static int32_t RecordCallback(const void *input_buffer,
                               const PaStreamCallbackTimeInfo * /*time_info*/,
                               PaStreamCallbackFlags /*status_flags*/,
                               void *user_data) {
-  auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(user_data);
+  std::lock_guard<std::mutex> lock(samples_mutex);
 
-  stream->AcceptWaveform(mic_sample_rate,
-                         reinterpret_cast<const float *>(input_buffer),
-                         frames_per_buffer);
+  auto p = reinterpret_cast<const float *>(input_buffer);
+  samples.insert(samples.end(), p, p + frames_per_buffer);
 
   return stop ? paComplete : paContinue;
 }
 
 static void Handler(int32_t sig) {
   stop = true;
-  fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
+  fprintf(stderr, "\nCaught Ctrl + C. Press Enter to exit\n");
 }
 
 int32_t main(int32_t argc, char *argv[]) {
   signal(SIGINT, Handler);
 
   const char *kUsageMessage = R"usage(
-This program uses streaming models with microphone for keyword spotting.
+Audio tagging from microphone.
 Usage:
 
-  ./bin/sherpa-onnx-keyword-spotter-microphone \
-    --tokens=/path/to/tokens.txt \
-    --encoder=/path/to/encoder.onnx \
-    --decoder=/path/to/decoder.onnx \
-    --joiner=/path/to/joiner.onnx \
-    --provider=cpu \
-    --num-threads=1 \
-    --keywords-file=keywords.txt
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
+tar xvf sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
+rm sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
 
-Please refer to
-https://k2-fsa.github.io/sherpa/onnx/kws/pretrained_models/index.html
-for a list of pre-trained models to download.
+./bin/sherpa-onnx-microphone-offline-audio-tagging \
+  --zipformer-model=./sherpa-onnx-zipformer-audio-tagging-2024-04-09/model.onnx \
+  --labels=./sherpa-onnx-zipformer-audio-tagging-2024-04-09/class_labels_indices.csv
+
+Please see
+https://github.com/k2-fsa/sherpa-onnx/releases/tag/audio-tagging-models
+for more models.
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
-  sherpa_onnx::KeywordSpotterConfig config;
-
+  sherpa_onnx::AudioTaggingConfig config;
   config.Register(&po);
+
   po.Read(argc, argv);
   if (po.NumArgs() != 0) {
+    fprintf(stderr, "\nThis program does not support positional arguments\n\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
   }
@@ -74,8 +114,9 @@ for a list of pre-trained models to download.
     return -1;
   }
 
-  sherpa_onnx::KeywordSpotter spotter(config);
-  auto s = spotter.CreateStream();
+  SHERPA_ONNX_LOGE("Creating audio tagger ...");
+  sherpa_onnx::AudioTagging tagger(config);
+  SHERPA_ONNX_LOGE("Audio tagger created created!");
 
   sherpa_onnx::Microphone mic;
 
@@ -87,7 +128,7 @@ for a list of pre-trained models to download.
   if (device_index == paNoDevice) {
     fprintf(stderr, "No default input device found\n");
     fprintf(stderr, "If you are using Linux, please switch to \n");
-    fprintf(stderr, " ./bin/sherpa-onnx-keyword-spotter-alsa \n");
+    fprintf(stderr, " ./bin/sherpa-onnx-alsa-offline-audio-tagging \n");
     exit(EXIT_FAILURE);
   }
 
@@ -117,7 +158,7 @@ for a list of pre-trained models to download.
 
   param.suggestedLatency = info->defaultLowInputLatency;
   param.hostApiSpecificStreamInfo = nullptr;
-
+  float mic_sample_rate = 16000;
   const char *pSampleRateStr = std::getenv("SHERPA_ONNX_MIC_SAMPLE_RATE");
   if (pSampleRateStr) {
     fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
@@ -133,7 +174,7 @@ for a list of pre-trained models to download.
                     0,          // frames per buffer
                     paClipOff,  // we won't output out of range samples
                                 // so don't bother clipping them
-                    RecordCallback, s.get());
+                    RecordCallback, nullptr);
   if (err != paNoError) {
     fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
     exit(EXIT_FAILURE);
@@ -147,22 +188,45 @@ for a list of pre-trained models to download.
     exit(EXIT_FAILURE);
   }
 
-  int32_t keyword_index = 0;
-  sherpa_onnx::Display display;
+  std::thread t(DetectKeyPress);
   while (!stop) {
-    while (spotter.IsReady(s.get())) {
-      spotter.DecodeStream(s.get());
-    }
+    switch (state) {
+      case State::kIdle:
+        break;
+      case State::kRecording:
+        break;
+      case State::kDecoding: {
+        std::vector<float> buf;
+        {
+          std::lock_guard<std::mutex> lock(samples_mutex);
+          buf = std::move(samples);
+        }
 
-    const auto r = spotter.GetResult(s.get());
-    if (!r.keyword.empty()) {
-      display.Print(keyword_index, r.AsJsonString());
-      fflush(stderr);
-      keyword_index++;
+        SHERPA_ONNX_LOGE("Computing...");
+        auto s = tagger.CreateStream();
+        s->AcceptWaveform(mic_sample_rate, buf.data(), buf.size());
+        auto results = tagger.Compute(s.get());
+
+        SHERPA_ONNX_LOGE("Result is:");
+
+        int32_t i = 0;
+        std::ostringstream os;
+        for (const auto &event : results) {
+          os << i << ": " << event.ToString() << "\n";
+          i += 1;
+        }
+
+        SHERPA_ONNX_LOGE("\n%s\n", os.str().c_str());
+
+        state = State::kIdle;
+        SHERPA_ONNX_LOGE("Press Enter to start");
+        break;
+      }
     }
 
     Pa_Sleep(20);  // sleep for 20ms
   }
+  t.join();
 
   err = Pa_CloseStream(stream);
   if (err != paNoError) {
