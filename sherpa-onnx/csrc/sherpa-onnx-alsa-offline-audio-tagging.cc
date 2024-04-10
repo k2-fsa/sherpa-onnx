@@ -7,8 +7,6 @@
 #include <stdlib.h>
 
 #include <algorithm>
-#include <cctype>  // std::tolower
-#include <chrono>  // NOLINT
 #include <mutex>   // NOLINT
 #include <thread>  // NOLINT
 
