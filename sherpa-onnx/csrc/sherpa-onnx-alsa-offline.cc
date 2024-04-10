@@ -68,8 +68,8 @@ static void Record(const char *device_name, int32_t expected_sample_rate) {
 
   int32_t chunk = 0.1 * alsa.GetActualSampleRate();
   while (!stop) {
-    std::lock_guard<std::mutex> lock(samples_mutex);
     const std::vector<float> &s = alsa.Read(chunk);
+    std::lock_guard<std::mutex> lock(samples_mutex);
     samples.insert(samples.end(), s.begin(), s.end());
   }
 }
