@@ -228,6 +228,9 @@ Note that `zh` means Chinese, while `en` means English.
   param.device = Pa_GetDefaultInputDevice();
   if (param.device == paNoDevice) {
     fprintf(stderr, "No default input device found\n");
+    fprintf(stderr, "If you are using Linux, please switch to \n");
+    fprintf(stderr,
+            " ./bin/sherpa-onnx-alsa-offline-speaker-identification \n");
     exit(EXIT_FAILURE);
   }
   fprintf(stderr, "Use default device: %d\n", param.device);

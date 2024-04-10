@@ -144,6 +144,8 @@ for a list of pre-trained models to download.
   param.device = Pa_GetDefaultInputDevice();
   if (param.device == paNoDevice) {
     fprintf(stderr, "No default input device found\n");
+    fprintf(stderr, "If you are using Linux, please switch to \n");
+    fprintf(stderr, " ./bin/sherpa-onnx-alsa-offline \n");
     exit(EXIT_FAILURE);
   }
   fprintf(stderr, "Use default device: %d\n", param.device);

@@ -81,6 +81,8 @@ wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
   param.device = Pa_GetDefaultInputDevice();
   if (param.device == paNoDevice) {
     fprintf(stderr, "No default input device found\n");
+    fprintf(stderr, "If you are using Linux, please switch to \n");
+    fprintf(stderr, " ./bin/sherpa-onnx-vad-alsa \n");
     exit(EXIT_FAILURE);
   }
   fprintf(stderr, "Use default device: %d\n", param.device);
