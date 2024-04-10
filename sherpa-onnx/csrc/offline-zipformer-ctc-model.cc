@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"

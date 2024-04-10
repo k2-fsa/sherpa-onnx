@@ -18,7 +18,8 @@ tar xvf sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
 rm sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
 
 ./bin/sherpa-onnx-offline-audio-tagging \
-  --zipformer-model=./sherpa-onnx-zipformer-audio-tagging-2024-04-09/model.onnx
+  --zipformer-model=./sherpa-onnx-zipformer-audio-tagging-2024-04-09/model.onnx \
+  --labels=./sherpa-onnx-zipformer-audio-tagging-2024-04-09/class_labels_indices.csv \
   sherpa-onnx-zipformer-audio-tagging-2024-04-09/test_wavs/0.wav
 
 Input wave files should be of single channel, 16-bit PCM encoded wave file; its

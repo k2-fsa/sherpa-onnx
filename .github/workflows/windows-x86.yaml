@@ -14,6 +14,7 @@ on:
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-online-ctc.sh'
+      - '.github/scripts/test-audio-tagging.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -28,6 +29,7 @@ on:
       - '.github/scripts/test-offline-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-online-ctc.sh'
+      - '.github/scripts/test-audio-tagging.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -85,6 +87,13 @@ jobs:
       #     export EXE=sherpa-onnx-offline-language-identification.exe
       #
       #     .github/scripts/test-spoken-language-identification.sh
+      - name: Test Audio tagging
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx-offline-audio-tagging.exe
+
+          .github/scripts/test-audio-tagging.sh
 
       - name: Test online CTC
         shell: bash
