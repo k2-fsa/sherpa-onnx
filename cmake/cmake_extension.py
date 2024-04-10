@@ -70,6 +70,7 @@ def get_binaries():
             "sherpa-onnx-alsa-offline-speaker-identification",
             "sherpa-onnx-offline-tts-play-alsa",
             "sherpa-onnx-vad-alsa",
+            "sherpa-onnx-alsa-offline-audio-tagging",
         ]
 
     if is_windows():
