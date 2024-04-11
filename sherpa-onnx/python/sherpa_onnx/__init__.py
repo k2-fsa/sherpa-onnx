@@ -1,5 +1,9 @@
 from _sherpa_onnx import (
     Alsa,
+    AudioEvent,
+    AudioTagging,
+    AudioTaggingConfig,
+    AudioTaggingModelConfig,
     CircularBuffer,
     Display,
     OfflineStream,
@@ -7,6 +11,7 @@ from _sherpa_onnx import (
     OfflineTtsConfig,
     OfflineTtsModelConfig,
     OfflineTtsVitsModelConfig,
+    OfflineZipformerAudioTaggingModelConfig,
     OnlineStream,
     SileroVadModelConfig,
     SpeakerEmbeddingExtractor,

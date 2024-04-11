@@ -16,7 +16,7 @@ void PybindOfflineTtsVitsModelConfig(py::module *m) {
   py::class_<PyClass>(*m, "OfflineTtsVitsModelConfig")
       .def(py::init<>())
       .def(py::init<const std::string &, const std::string &,
-                    const std::string &, const std::string, float, float,
+                    const std::string &, const std::string &, float, float,
                     float>(),
            py::arg("model"), py::arg("lexicon"), py::arg("tokens"),
            py::arg("data_dir") = "", py::arg("noise_scale") = 0.667,

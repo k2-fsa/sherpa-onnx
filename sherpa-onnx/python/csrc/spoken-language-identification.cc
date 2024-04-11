@@ -33,7 +33,7 @@ static void PybindSpokenLanguageIdentificationConfig(py::module *m) {
   py::class_<PyClass>(*m, "SpokenLanguageIdentificationConfig")
       .def(py::init<>())
       .def(py::init<const SpokenLanguageIdentificationWhisperConfig &, int32_t,
-                    bool, const std::string>(),
+                    bool, const std::string &>(),
            py::arg("whisper"), py::arg("num_threads") = 1,
            py::arg("debug") = false, py::arg("provider") = "cpu")
       .def_readwrite("whisper", &PyClass::whisper)
@@ -53,7 +53,7 @@ void PybindSpokenLanguageIdentification(py::module *m) {
            py::arg("config"), py::call_guard<py::gil_scoped_release>())
       .def("create_stream", &PyClass::CreateStream,
            py::call_guard<py::gil_scoped_release>())
-      .def("compute", &PyClass::Compute,
+      .def("compute", &PyClass::Compute, py::arg("s"),
            py::call_guard<py::gil_scoped_release>());
 }
 

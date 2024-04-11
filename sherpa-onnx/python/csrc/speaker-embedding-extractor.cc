@@ -14,7 +14,7 @@ static void PybindSpeakerEmbeddingExtractorConfig(py::module *m) {
   using PyClass = SpeakerEmbeddingExtractorConfig;
   py::class_<PyClass>(*m, "SpeakerEmbeddingExtractorConfig")
       .def(py::init<>())
-      .def(py::init<const std::string &, int32_t, bool, const std::string>(),
+      .def(py::init<const std::string &, int32_t, bool, const std::string &>(),
            py::arg("model"), py::arg("num_threads") = 1,
            py::arg("debug") = false, py::arg("provider") = "cpu")
       .def_readwrite("model", &PyClass::model)
