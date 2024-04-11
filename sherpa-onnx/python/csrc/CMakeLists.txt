@@ -1,6 +1,7 @@
 include_directories(${CMAKE_SOURCE_DIR})
 
 set(srcs
+  audio-tagging.cc
   circular-buffer.cc
   display.cc
   endpoint.cc
