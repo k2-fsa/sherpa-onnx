@@ -62,6 +62,8 @@ struct OnlineWebsocketDecoderConfig {
 
   int32_t max_batch_size = 5;
 
+  float end_tail_padding = 0.8;
+
   void Register(ParseOptions *po);
   void Validate() const;
 };
