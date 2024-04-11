@@ -87,8 +87,6 @@ void OnlineWebsocketDecoder::InputFinished(std::shared_ptr<Connection> c) {
     c->samples.pop_front();
   }
 
-  // TODO(fangjun): Change the amount of paddings to be configurable
-  SHERPA_ONNX_LOGE("end tail padding verification : %f",config_.end_tail_padding);
   std::vector<float> tail_padding(static_cast<int64_t>(config_.end_tail_padding * sample_rate));
 
   c->s->AcceptWaveform(sample_rate, tail_padding.data(), tail_padding.size());
