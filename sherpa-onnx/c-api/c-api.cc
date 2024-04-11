@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/audio-tagging.h"
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/display.h"
 #include "sherpa-onnx/csrc/keyword-spotter.h"
@@ -400,15 +401,18 @@ SherpaOnnxOfflineStream *CreateOfflineStream(
   return stream;
 }
 
-void DestroyOfflineStream(SherpaOnnxOfflineStream *stream) { delete stream; }
+void DestroyOfflineStream(const SherpaOnnxOfflineStream *stream) {
+  delete stream;
+}
 
-void AcceptWaveformOffline(SherpaOnnxOfflineStream *stream, int32_t sample_rate,
-                           const float *samples, int32_t n) {
+void AcceptWaveformOffline(const SherpaOnnxOfflineStream *stream,
+                           int32_t sample_rate, const float *samples,
+                           int32_t n) {
   stream->impl->AcceptWaveform(sample_rate, samples, n);
 }
 
-void DecodeOfflineStream(SherpaOnnxOfflineRecognizer *recognizer,
-                         SherpaOnnxOfflineStream *stream) {
+void DecodeOfflineStream(const SherpaOnnxOfflineRecognizer *recognizer,
+                         const SherpaOnnxOfflineStream *stream) {
   recognizer->impl->DecodeStream(stream->impl.get());
 }
 
@@ -1208,4 +1212,90 @@ void SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(
   }
 
   delete[] names;
+}
+
+struct SherpaOnnxAudioTagging {
+  std::unique_ptr<sherpa_onnx::AudioTagging> impl;
+};
+
+const SherpaOnnxAudioTagging *SherpaOnnxCreateAudioTagging(
+    const SherpaOnnxAudioTaggingConfig *config) {
+  sherpa_onnx::AudioTaggingConfig ac;
+  ac.model.zipformer.model = SHERPA_ONNX_OR(config->model.zipformer.model, "");
+  ac.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
+  ac.model.debug = config->model.debug;
+  ac.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+  ac.labels = SHERPA_ONNX_OR(config->labels, "");
+  ac.top_k = SHERPA_ONNX_OR(config->top_k, 5);
+
+  if (ac.model.debug) {
+    SHERPA_ONNX_LOGE("%s\n", ac.ToString().c_str());
+  }
+
+  if (!ac.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config");
+    return nullptr;
+  }
+
+  SherpaOnnxAudioTagging *tagger = new SherpaOnnxAudioTagging;
+  tagger->impl = std::make_unique<sherpa_onnx::AudioTagging>(ac);
+
+  return tagger;
+}
+
+void SherpaOnnxDestroyAudioTagging(const SherpaOnnxAudioTagging *tagger) {
+  delete tagger;
+}
+
+const SherpaOnnxOfflineStream *SherpaOnnxAudioTaggingCreateOfflineStream(
+    const SherpaOnnxAudioTagging *tagger) {
+  const SherpaOnnxOfflineStream *stream =
+      new SherpaOnnxOfflineStream(tagger->impl->CreateStream());
+  return stream;
+}
+
+const SherpaOnnxAudioEvent *const *SherpaOnnxAudioTaggingCompute(
+    const SherpaOnnxAudioTagging *tagger, const SherpaOnnxOfflineStream *s,
+    int32_t top_k) {
+  std::vector<sherpa_onnx::AudioEvent> events =
+      tagger->impl->Compute(s->impl.get(), top_k);
+
+  int32_t n = static_cast<int32_t>(events.size());
+  SherpaOnnxAudioEvent **ans = new SherpaOnnxAudioEvent *[n + 1];
+  ans[n] = nullptr;
+
+  int32_t i = 0;
+  for (const auto &e : events) {
+    SherpaOnnxAudioEvent *p = new SherpaOnnxAudioEvent;
+
+    char *name = new char[e.name.size() + 1];
+    std::copy(e.name.begin(), e.name.end(), name);
+    name[e.name.size()] = 0;
+
+    p->name = name;
+
+    p->index = e.index;
+    p->prob = e.prob;
+
+    ans[i] = p;
+    i += 1;
+  }
+
+  return ans;
+}
+
+void SherpaOnnxAudioTaggingFreeResults(
+    const SherpaOnnxAudioEvent *const *events) {
+  auto p = events;
+
+  while (p && *p) {
+    auto e = *p;
+
+    delete[] e->name;
+    delete e;
+
+    ++p;
+  }
+
+  delete[] events;
 }

@@ -427,7 +427,8 @@ SHERPA_ONNX_API SherpaOnnxOfflineStream *CreateOfflineStream(
 /// Destroy an offline stream.
 ///
 /// @param stream A pointer returned by CreateOfflineStream()
-SHERPA_ONNX_API void DestroyOfflineStream(SherpaOnnxOfflineStream *stream);
+SHERPA_ONNX_API void DestroyOfflineStream(
+    const SherpaOnnxOfflineStream *stream);
 
 /// Accept input audio samples and compute the features.
 /// The user has to invoke DecodeOfflineStream() to run the neural network and
@@ -442,9 +443,9 @@ SHERPA_ONNX_API void DestroyOfflineStream(SherpaOnnxOfflineStream *stream);
 /// @param n  Number of elements in the samples array.
 ///
 /// @caution: For each offline stream, please invoke this function only once!
-SHERPA_ONNX_API void AcceptWaveformOffline(SherpaOnnxOfflineStream *stream,
-                                           int32_t sample_rate,
-                                           const float *samples, int32_t n);
+SHERPA_ONNX_API void AcceptWaveformOffline(
+    const SherpaOnnxOfflineStream *stream, int32_t sample_rate,
+    const float *samples, int32_t n);
 /// Decode an offline stream.
 ///
 /// We assume you have invoked AcceptWaveformOffline() for the given stream
@@ -453,7 +454,8 @@ SHERPA_ONNX_API void AcceptWaveformOffline(SherpaOnnxOfflineStream *stream,
 /// @param recognizer A pointer returned by CreateOfflineRecognizer().
 /// @param stream A pointer returned by CreateOfflineStream()
 SHERPA_ONNX_API void DecodeOfflineStream(
-    SherpaOnnxOfflineRecognizer *recognizer, SherpaOnnxOfflineStream *stream);
+    const SherpaOnnxOfflineRecognizer *recognizer,
+    const SherpaOnnxOfflineStream *stream);
 
 /// Decode a list offline streams in parallel.
 ///
@@ -1087,6 +1089,65 @@ SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(
 
 SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(
     const char *const *names);
+
+// ============================================================
+// For audio tagging
+// ============================================================
+SHERPA_ONNX_API typedef struct
+    SherpaOnnxOfflineZipformerAudioTaggingModelConfig {
+  const char *model;
+} SherpaOnnxOfflineZipformerAudioTaggingModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxAudioTaggingModelConfig {
+  SherpaOnnxOfflineZipformerAudioTaggingModelConfig zipformer;
+  int32_t num_threads;
+  int32_t debug;  // true to print debug information of the model
+  const char *provider;
+} SherpaOnnxAudioTaggingModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxAudioTaggingConfig {
+  SherpaOnnxAudioTaggingModelConfig model;
+  const char *labels;
+  int32_t top_k;
+} SherpaOnnxAudioTaggingConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxAudioEvent {
+  const char *name;
+  int32_t index;
+  float prob;
+} SherpaOnnxAudioEvent;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxAudioTagging SherpaOnnxAudioTagging;
+
+// The user has to invoke
+// SherpaOnnxDestroyAudioTagging()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxAudioTagging *SherpaOnnxCreateAudioTagging(
+    const SherpaOnnxAudioTaggingConfig *config);
+
+SHERPA_ONNX_API void SherpaOnnxDestroyAudioTagging(
+    const SherpaOnnxAudioTagging *tagger);
+
+// The user has to invoke DestroyOfflineStream()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxOfflineStream *
+SherpaOnnxAudioTaggingCreateOfflineStream(const SherpaOnnxAudioTagging *tagger);
+
+// Return an array of pointers. The length of the array is top_k + 1.
+// If top_k is -1, then config.top_k is used, where config is the config
+// used to create the input tagger.
+//
+// The ans[0]->prob has the largest probability among the array elements
+// The last element of the array is a null pointer
+//
+// The user has to use SherpaOnnxAudioTaggingFreeResults()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxAudioEvent *const *
+SherpaOnnxAudioTaggingCompute(const SherpaOnnxAudioTagging *tagger,
+                              const SherpaOnnxOfflineStream *s, int32_t top_k);
+
+SHERPA_ONNX_API void SherpaOnnxAudioTaggingFreeResults(
+    const SherpaOnnxAudioEvent *const *p);
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop

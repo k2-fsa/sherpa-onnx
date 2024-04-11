@@ -72,6 +72,17 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
+      - name: Test C API
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export SLID_EXE=spoken-language-identification-c-api.exe
+          export SID_EXE=speaker-identification-c-api.exe
+          export AT_EXE=audio-tagging-c-api.exe
+
+          .github/scripts/test-c-api.sh
+
+
       - name: Test Audio tagging
         shell: bash
         run: |
@@ -79,15 +90,6 @@ jobs:
           export EXE=sherpa-onnx-offline-audio-tagging.exe
 
           .github/scripts/test-audio-tagging.sh
-
-      - name: Test C API
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin/Release:$PATH
-          export SLID_EXE=spoken-language-identification-c-api.exe
-          export SID_EXE=speaker-identification-c-api.exe
-
-          .github/scripts/test-c-api.sh
 
       - name: Test spoken language identification (C++ API)
         shell: bash
