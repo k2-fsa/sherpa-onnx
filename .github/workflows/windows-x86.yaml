@@ -77,6 +77,8 @@ jobs:
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
           export SLID_EXE=spoken-language-identification-c-api.exe
+          export SID_EXE=speaker-identification-c-api.exe
+          export AT_EXE=audio-tagging-c-api.exe
 
           .github/scripts/test-c-api.sh
 

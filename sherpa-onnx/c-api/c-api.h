@@ -1133,11 +1133,12 @@ SHERPA_ONNX_API void SherpaOnnxDestroyAudioTagging(
 SHERPA_ONNX_API const SherpaOnnxOfflineStream *
 SherpaOnnxAudioTaggingCreateOfflineStream(const SherpaOnnxAudioTagging *tagger);
 
-// Return an array of pointers. The length of the array is top_k.
+// Return an array of pointers. The length of the array is top_k + 1.
 // If top_k is -1, then config.top_k is used, where config is the config
 // used to create the input tagger.
 //
 // The ans[0]->prob has the largest probability among the array elements
+// The last element of the array is a null pointer
 //
 // The user has to use SherpaOnnxAudioTaggingFreeResults()
 // to free the returned pointer to avoid memory leak

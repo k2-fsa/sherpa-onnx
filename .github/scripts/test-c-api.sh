@@ -10,7 +10,20 @@ log() {
 
 echo "SLID_EXE is $SLID_EXE"
 echo "SID_EXE is $SID_EXE"
+echo "AT_EXE is $AT_EXE"
 echo "PATH: $PATH"
+
+log "------------------------------------------------------------"
+log "Test audio tagging                                          "
+log "------------------------------------------------------------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
+tar xvf sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
+rm sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
+
+$AT_EXE
+
+rm -rf sherpa-onnx-zipformer-audio-tagging-2024-04-09
 
 
 log "------------------------------------------------------------"

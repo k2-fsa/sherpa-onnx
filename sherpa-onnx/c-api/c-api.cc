@@ -1278,6 +1278,7 @@ const SherpaOnnxAudioEvent *const *SherpaOnnxAudioTaggingCompute(
     p->prob = e.prob;
 
     ans[i] = p;
+    i += 1;
   }
 
   return ans;
@@ -1286,7 +1287,8 @@ const SherpaOnnxAudioEvent *const *SherpaOnnxAudioTaggingCompute(
 void SherpaOnnxAudioTaggingFreeResults(
     const SherpaOnnxAudioEvent *const *events) {
   auto p = events;
-  while (p) {
+
+  while (p && *p) {
     auto e = *p;
 
     delete[] e->name;
