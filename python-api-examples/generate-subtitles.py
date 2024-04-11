@@ -417,7 +417,9 @@ def main():
 
             vad.pop()
 
-        recognizer.decode_streams(streams)
+        for s in streams:
+            recognizer.decode_stream(s)
+
         for seg, stream in zip(segments, streams):
             seg.text = stream.result.text
             segment_list.append(seg)
