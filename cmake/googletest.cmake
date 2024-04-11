@@ -2,7 +2,7 @@ function(download_googltest)
   include(FetchContent)
 
   set(googletest_URL  "https://github.com/google/googletest/archive/refs/tags/v1.13.0.tar.gz")
-  set(googletest_URL2 "https://huggingface.co/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/googletest-1.13.0.tar.gz")
+  set(googletest_URL2 "https://hub.nuaa.cf/google/googletest/archive/refs/tags/v1.13.0.tar.gz")
   set(googletest_HASH "SHA256=ad7fdba11ea011c1d925b3289cf4af2c66a352e18d4c7264392fead75e919363")
 
   # If you don't have access to the Internet,
