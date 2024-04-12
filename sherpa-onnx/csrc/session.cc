@@ -160,4 +160,9 @@ Ort::SessionOptions GetSessionOptions(const AudioTaggingModelConfig &config) {
   return GetSessionOptionsImpl(config.num_threads, config.provider);
 }
 
+Ort::SessionOptions GetSessionOptions(
+    const OfflinePunctuationModelConfig &config) {
+  return GetSessionOptionsImpl(config.num_threads, config.provider);
+}
+
 }  // namespace sherpa_onnx

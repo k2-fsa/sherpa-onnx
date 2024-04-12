@@ -121,6 +121,14 @@ list(APPEND sources
   offline-zipformer-audio-tagging-model.cc
 )
 
+# punctuation
+list(APPEND sources
+  offline-ct-transformer-model.cc
+  offline-punctuation-impl.cc
+  offline-punctuation-model-config.cc
+  offline-punctuation.cc
+)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
     lexicon.cc

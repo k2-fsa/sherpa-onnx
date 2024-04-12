@@ -9,6 +9,7 @@
 #include "sherpa-onnx/csrc/audio-tagging-model-config.h"
 #include "sherpa-onnx/csrc/offline-lm-config.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
+#include "sherpa-onnx/csrc/offline-punctuation-model-config.h"
 #include "sherpa-onnx/csrc/online-lm-config.h"
 #include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
@@ -42,6 +43,9 @@ Ort::SessionOptions GetSessionOptions(
     const SpokenLanguageIdentificationConfig &config);
 
 Ort::SessionOptions GetSessionOptions(const AudioTaggingModelConfig &config);
+
+Ort::SessionOptions GetSessionOptions(
+    const OfflinePunctuationModelConfig &config);
 
 }  // namespace sherpa_onnx
 
