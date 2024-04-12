@@ -6,15 +6,15 @@ function freeConfig(config, Module) {
   }
 
   if ('transducer' in config) {
-    freeConfig(config.transducer);
+    freeConfig(config.transducer, Module);
   }
 
   if ('featConfig' in config) {
-    freeConfig(config.featConfig);
+    freeConfig(config.featConfig, Module);
   }
 
   if ('modelConfig' in config) {
-    freeConfig(config.modelConfig);
+    freeConfig(config.modelConfig, Module);
   }
 
   if ('keywordsBuffer' in config) {
