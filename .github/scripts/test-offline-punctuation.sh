@@ -34,4 +34,9 @@ $EXE \
  --ct-transformer=$repo/model.onnx \
  "我们都是木头人不会说话不会动"
 
+$EXE \
+ --debug=1 \
+ --ct-transformer=$repo/model.onnx \
+ "The African blogosphere is rapidly expanding bringing more voices online in the form of commentaries opinions analyses rants and poetry"
+
 rm -rf $repo
