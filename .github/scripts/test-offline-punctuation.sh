@@ -23,7 +23,6 @@ rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 repo=sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.
 ls -lh $repo
 
-./bin/sherpa-onnx-offline-punctuation
 $EXE \
  --debug=1 \
  --ct-transformer=$repo/model.onnx \
