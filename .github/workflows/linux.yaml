@@ -16,6 +16,7 @@ on:
       - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-audio-tagging.sh'
+      - '.github/scripts/test-offline-punctuation.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -34,6 +35,7 @@ on:
       - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-audio-tagging.sh'
+      - '.github/scripts/test-offline-punctuation.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -125,6 +127,14 @@ jobs:
         with:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: build/bin/*
+
+      - name: Test offline punctuation
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-punctuation
+
+          .github/scripts/test-offline-punctuation.sh
 
       - name: Test C API
         shell: bash
