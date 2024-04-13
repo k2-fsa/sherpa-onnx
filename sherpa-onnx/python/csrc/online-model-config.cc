@@ -28,7 +28,7 @@ void PybindOnlineModelConfig(py::module *m) {
                     const OnlineParaformerModelConfig &,
                     const OnlineWenetCtcModelConfig &,
                     const OnlineZipformer2CtcModelConfig &, const std::string &,
-                    int32_t, bool, const std::string &, const std::string &>(),
+                    int32_t,int32_t, bool, const std::string &, const std::string &>(),
            py::arg("transducer") = OnlineTransducerModelConfig(),
            py::arg("paraformer") = OnlineParaformerModelConfig(),
            py::arg("wenet_ctc") = OnlineWenetCtcModelConfig(),

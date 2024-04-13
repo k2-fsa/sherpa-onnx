@@ -184,7 +184,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
            s->NumFramesReady();
   }
 
-  void WarmpUpRecognizer(int32_t warm_up,int32_t max_batch_size) {
+  void WarmpUpRecognizer(size_t warm_up,int32_t max_batch_size) const {
+    if(warm_up == 0 || warm_up > 100)
+      return
     int32_t chunk_size = model_->ChunkSize();
     int32_t chunk_shift = model_->ChunkShift();
     int32_t feature_dim = 80;
