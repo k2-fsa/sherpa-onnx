@@ -408,8 +408,11 @@ def main():
     vad_config.silero_vad.min_silence_duration = 0.25
     vad_config.silero_vad.min_speech_duration = 0.25
     vad_config.sample_rate = g_sample_rate
+    if not vad_config.validate():
+        raise ValueError("Errors in vad config")
 
     window_size = vad_config.silero_vad.window_size
+
     vad = sherpa_onnx.VoiceActivityDetector(vad_config, buffer_size_in_seconds=100)
 
     samples_per_read = int(0.1 * g_sample_rate)  # 0.1 second = 100 ms

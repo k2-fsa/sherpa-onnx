@@ -111,8 +111,8 @@ for a list of pre-trained models to download.
   fprintf(stderr, "Creating recognizer ...\n");
   sherpa_onnx::OfflineRecognizer recognizer(config);
 
-  const auto begin = std::chrono::steady_clock::now();
   fprintf(stderr, "Started\n");
+  const auto begin = std::chrono::steady_clock::now();
 
   std::vector<std::unique_ptr<sherpa_onnx::OfflineStream>> ss;
   std::vector<sherpa_onnx::OfflineStream *> ss_pointers;

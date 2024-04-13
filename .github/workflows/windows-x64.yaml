@@ -15,6 +15,7 @@ on:
       - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-audio-tagging.sh'
+      - '.github/scripts/test-offline-punctuation.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -30,6 +31,7 @@ on:
       - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-audio-tagging.sh'
+      - '.github/scripts/test-offline-punctuation.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -72,6 +74,14 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
+      - name: Test offline punctuation
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx-offline-punctuation.exe
+
+          .github/scripts/test-offline-punctuation.sh
+
       - name: Test C API
         shell: bash
         run: |
@@ -81,7 +91,6 @@ jobs:
           export AT_EXE=audio-tagging-c-api.exe
 
           .github/scripts/test-c-api.sh
-
 
       - name: Test Audio tagging
         shell: bash
