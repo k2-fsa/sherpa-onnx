@@ -132,6 +132,11 @@ class OfflinePunctuationCtTransformerImpl : public OfflinePunctuationImpl {
       }
     }  // for (int32_t i = 0; i != num_segments; ++i)
 
+    if (punctuations.size() != token_ids.size() &&
+        punctuations.size() + 1 == token_ids.size()) {
+      punctuations.push_back(meta_data.dot_id);
+    }
+
     if (punctuations.size() != token_ids.size()) {
       SHERPA_ONNX_LOGE("%s, %d, %d. Some unexpected things happened",
                        text.c_str(), static_cast<int32_t>(punctuations.size()),
