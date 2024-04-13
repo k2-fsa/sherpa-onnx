@@ -134,6 +134,9 @@ class OfflinePunctuationCtTransformerImpl : public OfflinePunctuationImpl {
       }
     }  // for (int32_t i = 0; i != num_segments; ++i)
 
+    if (punctuations.empty()) {
+      return text + meta_data.id2punct[meta_data.dot_id];
+    }
     std::vector<std::string> words_punct;
 
     for (int32_t i = 0; i != static_cast<int32_t>(punctuations.size()); ++i) {
