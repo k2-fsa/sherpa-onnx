@@ -149,8 +149,14 @@ class OfflinePunctuationCtTransformerImpl : public OfflinePunctuationImpl {
         ans.append(meta_data.id2punct[punctuations[i]]);
       }
     }
-    if (ans.back() != meta_data.dot_id && ans.back() != meta_data.quest_id) {
-      ans.push_back(meta_data.dot_id);
+    if (ans.back() == meta_data.id2punct[meta_data.comma_id] ||
+        ans.back() == meta_data.id2punct[meta_data.punct_id]) {
+      ans.back() = meta_data.id2punct[meta_data.dot_id];
+    }
+
+    if (ans.back() != meta_data.id2punct[meta_data.dot_id] &&
+        ans.back() != meta_data.id2punct[meta_data.quest_id]) {
+      ans.append(meta_data.id2punct[meta_data.dot_id]);
     }
 
     return ans;
