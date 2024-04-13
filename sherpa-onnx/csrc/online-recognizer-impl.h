@@ -39,7 +39,7 @@ class OnlineRecognizerImpl {
 
   virtual void WarmpUpRecognizer(int32_t warm_up,int32_t max_batch_size) {
     //ToDo extending to other supported models
-    SHERPA_ONNX_LOGE("Only zipformer transducer model support Warm up.");
+    SHERPA_ONNX_LOGE("Only zipformer2 transducer model support Warm up for now.");
     exit(-1);
   }
 
