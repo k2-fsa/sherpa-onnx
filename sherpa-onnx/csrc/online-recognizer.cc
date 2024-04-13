@@ -171,6 +171,10 @@ bool OnlineRecognizer::IsReady(OnlineStream *s) const {
   return impl_->IsReady(s);
 }
 
+void OnlineRecognizer::WarmpUpRecognizer(int32_t warm_up,int32_t max_batch_size) const {
+  impl_->WarmpUpRecognizer(warm_up,max_batch_size);
+}
+
 void OnlineRecognizer::DecodeStreams(OnlineStream **ss, int32_t n) const {
   impl_->DecodeStreams(ss, n);
 }

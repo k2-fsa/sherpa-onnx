@@ -83,6 +83,8 @@ class OnlineWebsocketDecoder {
   // signal that there will be no more audio samples for a stream
   void InputFinished(std::shared_ptr<Connection> c);
 
+  void Warmup();
+
   void Run();
 
  private:
