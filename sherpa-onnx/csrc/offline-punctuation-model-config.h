@@ -1,8 +1,8 @@
 // sherpa-onnx/csrc/offline-punctuation-model-config.h
 //
 // Copyright (c)  2024  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_OFFLINE_PUNCUTATION_MODEL_CONFIG_H_
-#define SHERPA_ONNX_CSRC_OFFLINE_PUNCUTATION_MODEL_CONFIG_H_
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_PUNCTUATION_MODEL_CONFIG_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_PUNCTUATION_MODEL_CONFIG_H_
 
 #include <string>
 
@@ -35,4 +35,4 @@ struct OfflinePunctuationModelConfig {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_OFFLINE_PUNCUTATION_MODEL_CONFIG_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_PUNCTUATION_MODEL_CONFIG_H_

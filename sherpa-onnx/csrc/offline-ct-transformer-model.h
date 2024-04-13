@@ -12,6 +12,7 @@
 #endif
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/offline-ct-transformer-model-meta-data.h"
 #include "sherpa-onnx/csrc/offline-punctuation-model-config.h"
 
 namespace sherpa_onnx {
@@ -34,16 +35,19 @@ class OfflineCtTransformerModel {
 
   /** Run the forward method of the model.
    *
-   * @param text  A tensor of shape (1, T) of dtype int32.
+   * @param text  A tensor of shape (N, T) of dtype int32.
+   * @param text  A tensor of shape (N) of dtype int32.
    *
    * @return Return a tensor
-   *  - punctuation_ids: A 1-D tensor of shape (T,).
+   *  - punctuation_ids: A 2-D tensor of shape (N, T).
    */
-  Ort::Value Forward(Ort::Value text) const;
+  Ort::Value Forward(Ort::Value text, Ort::Value text_len) const;
 
   /** Return an allocator for allocating memory
    */
   OrtAllocator *Allocator() const;
+
+  const OfflineCtTransformerModelMetaData &GetModelMetadata() const;
 
  private:
   class Impl;

@@ -209,9 +209,10 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx sherpa-onnx.cc)
   add_executable(sherpa-onnx-keyword-spotter sherpa-onnx-keyword-spotter.cc)
   add_executable(sherpa-onnx-offline sherpa-onnx-offline.cc)
-  add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
-  add_executable(sherpa-onnx-offline-language-identification sherpa-onnx-offline-language-identification.cc)
   add_executable(sherpa-onnx-offline-audio-tagging sherpa-onnx-offline-audio-tagging.cc)
+  add_executable(sherpa-onnx-offline-language-identification sherpa-onnx-offline-language-identification.cc)
+  add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
+  add_executable(sherpa-onnx-offline-punctuation sherpa-onnx-offline-punctuation.cc)
 
   if(SHERPA_ONNX_ENABLE_TTS)
     add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
@@ -221,9 +222,10 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx
     sherpa-onnx-keyword-spotter
     sherpa-onnx-offline
-    sherpa-onnx-offline-parallel
-    sherpa-onnx-offline-language-identification
     sherpa-onnx-offline-audio-tagging
+    sherpa-onnx-offline-language-identification
+    sherpa-onnx-offline-parallel
+    sherpa-onnx-offline-punctuation
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND main_exes
@@ -268,11 +270,11 @@ endif()
 
 if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-alsa sherpa-onnx-alsa.cc alsa.cc)
-  add_executable(sherpa-onnx-keyword-spotter-alsa sherpa-onnx-keyword-spotter-alsa.cc alsa.cc)
   add_executable(sherpa-onnx-alsa-offline sherpa-onnx-alsa-offline.cc alsa.cc)
-  add_executable(sherpa-onnx-alsa-offline-speaker-identification sherpa-onnx-alsa-offline-speaker-identification.cc alsa.cc)
-  add_executable(sherpa-onnx-vad-alsa sherpa-onnx-vad-alsa.cc alsa.cc)
   add_executable(sherpa-onnx-alsa-offline-audio-tagging sherpa-onnx-alsa-offline-audio-tagging.cc alsa.cc)
+  add_executable(sherpa-onnx-alsa-offline-speaker-identification sherpa-onnx-alsa-offline-speaker-identification.cc alsa.cc)
+  add_executable(sherpa-onnx-keyword-spotter-alsa sherpa-onnx-keyword-spotter-alsa.cc alsa.cc)
+  add_executable(sherpa-onnx-vad-alsa sherpa-onnx-vad-alsa.cc alsa.cc)
 
 
   if(SHERPA_ONNX_ENABLE_TTS)

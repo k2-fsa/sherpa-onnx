@@ -9,6 +9,10 @@
 
 namespace sherpa_onnx {
 
+void OfflinePunctuationConfig::Register(ParseOptions *po) {
+  model.Register(po);
+}
+
 bool OfflinePunctuationConfig::Validate() const {
   if (!model.Validate()) {
     return false;

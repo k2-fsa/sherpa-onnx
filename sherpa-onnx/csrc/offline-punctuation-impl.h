@@ -1,10 +1,11 @@
 // sherpa-onnx/csrc/offline-punctuation-impl.h
 //
 // Copyright (c)  2024  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_AUDIO_TAGGING_IMPL_H_
-#define SHERPA_ONNX_CSRC_AUDIO_TAGGING_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_PUNCTUATION_IMPL_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_PUNCTUATION_IMPL_H_
 
 #include <memory>
+#include <string>
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-punctuation.h"
@@ -23,4 +24,4 @@ class OfflinePunctuationImpl {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_AUDIO_TAGGING_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_PUNCTUATION_IMPL_H_

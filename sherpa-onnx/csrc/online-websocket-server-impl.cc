@@ -29,7 +29,6 @@ void OnlineWebsocketDecoderConfig::Validate() const {
   SHERPA_ONNX_CHECK_GT(loop_interval_ms, 0);
   SHERPA_ONNX_CHECK_GT(max_batch_size, 0);
   SHERPA_ONNX_CHECK_GT(end_tail_padding, 0);
-
 }
 
 void OnlineWebsocketServerConfig::Register(sherpa_onnx::ParseOptions *po) {
@@ -87,7 +86,8 @@ void OnlineWebsocketDecoder::InputFinished(std::shared_ptr<Connection> c) {
     c->samples.pop_front();
   }
 
-  std::vector<float> tail_padding(static_cast<int64_t>(config_.end_tail_padding * sample_rate));
+  std::vector<float> tail_padding(
+      static_cast<int64_t>(config_.end_tail_padding * sample_rate));
 
   c->s->AcceptWaveform(sample_rate, tail_padding.data(), tail_padding.size());
 

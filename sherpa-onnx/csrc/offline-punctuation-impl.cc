@@ -5,7 +5,7 @@
 #include "sherpa-onnx/csrc/offline-punctuation-impl.h"
 
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/offline-punctuation-ct-transformer.h"
+#include "sherpa-onnx/csrc/offline-punctuation-ct-transformer-impl.h"
 
 namespace sherpa_onnx {
 
@@ -15,7 +15,7 @@ std::unique_ptr<OfflinePunctuationImpl> OfflinePunctuationImpl::Create(
     return std::make_unique<OfflinePunctuationCtTransformerImpl>(config);
   }
 
-  SHERPA_ONNX_LOG("Please specify a punctuation model! Return a null pointer");
+  SHERPA_ONNX_LOGE("Please specify a punctuation model! Return a null pointer");
   return nullptr;
 }
 

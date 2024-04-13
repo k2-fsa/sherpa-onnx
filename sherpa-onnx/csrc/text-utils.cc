@@ -385,4 +385,16 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
   return MergeCharactersIntoWords(ans);
 }
 
+std::string ToLowerCase(const std::string &s) {
+  std::string ans(s.size(), 0);
+  std::transform(s.begin(), s.end(), ans.begin(),
+                 [](unsigned char c) { return std::tolower(c); });
+  return ans;
+}
+
+void ToLowerCase(std::string *in_out) {
+  std::transform(in_out->begin(), in_out->end(), in_out->begin(),
+                 [](unsigned char c) { return std::tolower(c); });
+}
+
 }  // namespace sherpa_onnx
