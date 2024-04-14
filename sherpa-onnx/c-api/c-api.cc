@@ -1305,7 +1305,7 @@ struct SherpaOnnxOfflinePunctuation {
   std::unique_ptr<sherpa_onnx::OfflinePunctuation> impl;
 };
 
-const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOlffinePunctuation(
+const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuation(
     const SherpaOnnxOfflinePunctuationConfig *config) {
   sherpa_onnx::OfflinePunctuationConfig c;
   c.model.ct_transformer = SHERPA_ONNX_OR(config->model.ct_transformer, "");

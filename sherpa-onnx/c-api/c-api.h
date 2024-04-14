@@ -1170,7 +1170,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflinePunctuation
 // The user has to invoke SherpaOnnxDestroyOfflinePunctuation()
 // to free the returned pointer to avoid memory leak
 SHERPA_ONNX_API const SherpaOnnxOfflinePunctuation *
-SherpaOnnxCreateOlffinePunctuation(
+SherpaOnnxCreateOfflinePunctuation(
     const SherpaOnnxOfflinePunctuationConfig *config);
 
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflinePunctuation(

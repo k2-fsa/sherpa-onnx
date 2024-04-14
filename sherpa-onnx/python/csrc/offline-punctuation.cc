@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/python/csrc/offline-punctuation.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/offline-punctuation.h"
 
 namespace sherpa_onnx {
