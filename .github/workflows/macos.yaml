@@ -122,6 +122,7 @@ jobs:
           export SLID_EXE=spoken-language-identification-c-api
           export SID_EXE=speaker-identification-c-api
           export AT_EXE=audio-tagging-c-api
+          export PUNCT_EXE=add-punctuation-c-api
 
           .github/scripts/test-c-api.sh
 

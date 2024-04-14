@@ -126,7 +126,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
-          path: build/bin/*
+          path: install/*
 
       - name: Test offline punctuation
         shell: bash
@@ -143,6 +143,7 @@ jobs:
           export SLID_EXE=spoken-language-identification-c-api
           export SID_EXE=speaker-identification-c-api
           export AT_EXE=audio-tagging-c-api
+          export PUNCT_EXE=add-punctuation-c-api
 
           .github/scripts/test-c-api.sh
 

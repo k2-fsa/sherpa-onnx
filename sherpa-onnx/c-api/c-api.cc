@@ -15,6 +15,7 @@
 #include "sherpa-onnx/csrc/display.h"
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-punctuation.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
@@ -1299,3 +1300,48 @@ void SherpaOnnxAudioTaggingFreeResults(
 
   delete[] events;
 }
+
+struct SherpaOnnxOfflinePunctuation {
+  std::unique_ptr<sherpa_onnx::OfflinePunctuation> impl;
+};
+
+const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuation(
+    const SherpaOnnxOfflinePunctuationConfig *config) {
+  sherpa_onnx::OfflinePunctuationConfig c;
+  c.model.ct_transformer = SHERPA_ONNX_OR(config->model.ct_transformer, "");
+  c.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
+  c.model.debug = config->model.debug;
+  c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+
+  if (c.model.debug) {
+    SHERPA_ONNX_LOGE("%s\n", c.ToString().c_str());
+  }
+
+  if (!c.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config");
+    return nullptr;
+  }
+
+  SherpaOnnxOfflinePunctuation *punct = new SherpaOnnxOfflinePunctuation;
+  punct->impl = std::make_unique<sherpa_onnx::OfflinePunctuation>(c);
+
+  return punct;
+}
+
+void SherpaOnnxDestroyOfflinePunctuation(
+    const SherpaOnnxOfflinePunctuation *punct) {
+  delete punct;
+}
+
+const char *SherpaOfflinePunctuationAddPunct(
+    const SherpaOnnxOfflinePunctuation *punct, const char *text) {
+  std::string text_with_punct = punct->impl->AddPunctuation(text);
+
+  char *ans = new char[text_with_punct.size() + 1];
+  std::copy(text_with_punct.begin(), text_with_punct.end(), ans);
+  ans[text_with_punct.size()] = 0;
+
+  return ans;
+}
+
+void SherpaOfflinePunctuationFreeText(const char *text) { delete[] text; }

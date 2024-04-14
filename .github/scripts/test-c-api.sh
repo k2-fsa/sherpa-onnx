@@ -11,7 +11,20 @@ log() {
 echo "SLID_EXE is $SLID_EXE"
 echo "SID_EXE is $SID_EXE"
 echo "AT_EXE is $AT_EXE"
+echo "PUNCT_EXE is $PUNCT_EXE"
 echo "PATH: $PATH"
+
+log "------------------------------------------------------------"
+log "Test adding punctuations                                    "
+log "------------------------------------------------------------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+ls -lh
+tar xf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+ls -lh sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
+rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+$PUNCT_EXE
+rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
 
 log "------------------------------------------------------------"
 log "Test audio tagging                                          "

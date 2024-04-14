@@ -134,25 +134,40 @@ class OfflinePunctuationCtTransformerImpl : public OfflinePunctuationImpl {
       }
     }  // for (int32_t i = 0; i != num_segments; ++i)
 
-    std::string ans;
+    if (punctuations.empty()) {
+      return text + meta_data.id2punct[meta_data.dot_id];
+    }
+    std::vector<std::string> words_punct;
 
     for (int32_t i = 0; i != static_cast<int32_t>(punctuations.size()); ++i) {
-      if (i > tokens.size()) {
+      if (i >= tokens.size()) {
         break;
       }
-      const std::string &w = tokens[i];
-      if (i > 0 && !(ans.back() & 0x80) && !(w[0] & 0x80)) {
-        ans.push_back(' ');
+      std::string &w = tokens[i];
+      if (i > 0 && !(words_punct.back()[0] & 0x80) && !(w[0] & 0x80)) {
+        words_punct.push_back(" ");
       }
-      ans.append(w);
+      words_punct.push_back(std::move(w));
+
       if (punctuations[i] != meta_data.underline_id) {
-        ans.append(meta_data.id2punct[punctuations[i]]);
+        words_punct.push_back(meta_data.id2punct[punctuations[i]]);
       }
-    }
-    if (ans.back() != meta_data.dot_id && ans.back() != meta_data.quest_id) {
-      ans.push_back(meta_data.dot_id);
     }
 
+    if (words_punct.back() == meta_data.id2punct[meta_data.comma_id] ||
+        words_punct.back() == meta_data.id2punct[meta_data.pause_id]) {
+      words_punct.back() = meta_data.id2punct[meta_data.dot_id];
+    }
+
+    if (words_punct.back() != meta_data.id2punct[meta_data.dot_id] &&
+        words_punct.back() != meta_data.id2punct[meta_data.quest_id]) {
+      words_punct.push_back(meta_data.id2punct[meta_data.dot_id]);
+    }
+
+    std::string ans;
+    for (const auto &w : words_punct) {
+      ans.append(w);
+    }
     return ans;
   }
 

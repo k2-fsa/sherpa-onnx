@@ -1149,6 +1149,41 @@ SherpaOnnxAudioTaggingCompute(const SherpaOnnxAudioTagging *tagger,
 SHERPA_ONNX_API void SherpaOnnxAudioTaggingFreeResults(
     const SherpaOnnxAudioEvent *const *p);
 
+// ============================================================
+// For punctuation
+// ============================================================
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflinePunctuationModelConfig {
+  const char *ct_transformer;
+  int32_t num_threads;
+  int32_t debug;  // true to print debug information of the model
+  const char *provider;
+} SherpaOnnxOfflinePunctuationModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflinePunctuationConfig {
+  SherpaOnnxOfflinePunctuationModelConfig model;
+} SherpaOnnxOfflinePunctuationConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflinePunctuation
+    SherpaOnnxOfflinePunctuation;
+
+// The user has to invoke SherpaOnnxDestroyOfflinePunctuation()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxOfflinePunctuation *
+SherpaOnnxCreateOfflinePunctuation(
+    const SherpaOnnxOfflinePunctuationConfig *config);
+
+SHERPA_ONNX_API void SherpaOnnxDestroyOfflinePunctuation(
+    const SherpaOnnxOfflinePunctuation *punct);
+
+// Add punctuations to the input text.
+// The user has to invoke SherpaOfflinePunctuationFreeText()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const char *SherpaOfflinePunctuationAddPunct(
+    const SherpaOnnxOfflinePunctuation *punct, const char *text);
+
+SHERPA_ONNX_API void SherpaOfflinePunctuationFreeText(const char *text);
+
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif
