@@ -22,7 +22,8 @@ void OnlineModelConfig::Register(ParseOptions *po) {
                "Number of threads to run the neural network");
 
   po->Register("warm-up", &warm_up,
-               "Number of warm-up to run the onnxruntime transducer neural network");
+               "Number of warm-up to run the onnxruntime"
+               "Valid vales are: zipformer2");
 
   po->Register("debug", &debug,
                "true to print model information while loading it.");
