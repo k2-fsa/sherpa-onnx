@@ -37,7 +37,7 @@ class OnlineRecognizerImpl {
 
   virtual bool IsReady(OnlineStream *s) const = 0;
 
-  virtual void WarmpUpRecognizer(int32_t warm_up,int32_t max_batch_size) {
+  virtual void WarmpUpRecognizer(int32_t warm_up,int32_t max_batch_size) const {
     //ToDo extending to other supported models
     SHERPA_ONNX_LOGE("Only zipformer2 transducer model support Warm up for now.");
     exit(-1);

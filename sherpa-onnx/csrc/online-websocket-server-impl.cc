@@ -243,18 +243,21 @@ void OnlineWebsocketServer::Run(uint16_t port) {
   server_.set_reuse_addr(true);
   server_.listen(asio::ip::tcp::v4(), port);
   server_.start_accept();
-  auto warm_up = config_.decoder_config.recognizer_config.model_config.warm_up;
-  if(warm_up > 0) {
-    if(config_.decoder_config.recognizer_config.model_config.model_type == "zipformer2") {
+  int32_t warm_up = config_.decoder_config.recognizer_config.model_config.warm_up;
+  std::string model_type = config_.decoder_config.recognizer_config.model_config.model_type;
+  if(0 < warm_up && warm_up < 100) {
+    if(model_type == std::string("zipformer2")) {
       decoder_.Warmup();
       SHERPA_ONNX_LOGE("Warm up completd : %d times.",warm_up);
     } else {
-      SHERPA_ONNX_LOGE("Only Zipformer has warmup support for now.");
-      exit(0)
+      SHERPA_ONNX_LOGE("Only Zipformer2 has warmup support for now.");
+      exit(0);
     }
+  } else if(warm_up == 0) {
+    SHERPA_ONNX_LOGE("Starting without warmup!");
   } else {
-    SHERPA_ONNX_LOGE("Invalid Warm up Value!.");
-    exit(0)
+    SHERPA_ONNX_LOGE("Invalid Warm up Value!. Expected 0 < warm_up < 100");
+    exit(0);
   }
   decoder_.Run();
 }
