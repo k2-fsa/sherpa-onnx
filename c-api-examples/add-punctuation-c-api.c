@@ -48,6 +48,7 @@ int32_t main() {
   };
 
   int32_t n = sizeof(texts) / sizeof(const char *);
+  fprintf(stderr, "n: %d\n", n);
 
   fprintf(stderr, "--------------------\n");
   for (int32_t i = 0; i != n; ++i) {
