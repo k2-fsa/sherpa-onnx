@@ -184,8 +184,10 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
            s->NumFramesReady();
   }
 
-  void WarmpUpRecognizer(int32_t warm_up,int32_t max_batch_size) const {
-    if(warm_up <= 0 || warm_up > 100)
+  // Warmping up engine with wp: warm_up count and max-batch-size
+  void WarmpUpRecognizer(int32_t warmup, int32_t mbs) const {
+    auto max_batch_size = mbs;
+    if (warmup <= 0 || warmup > 100)
       return;
     int32_t chunk_size = model_->ChunkSize();
     int32_t chunk_shift = model_->ChunkShift();
@@ -199,20 +201,20 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
 
     std::array<int64_t, 3> x_shape{max_batch_size, chunk_size, feature_dim};
 
-    //filling with 0.0, so that it doesn't affact the states,
-    //and left_context which is maintained by the encoders
-    std::fill(features_vec.begin(),features_vec.end(),0.0f);
+    // filling with 0.0, so that it doesn't affact the states,
+    // and left_context which is maintained by the encoders
+    std::fill(features_vec.begin(), features_vec.end(), 0.0f);
     for (int32_t i = 0; i != max_batch_size; ++i) {
       states_vec[i] = model_->GetEncoderInitStates();
       results[i] = decoder_->GetEmptyResult();
     }
 
-    for (int32_t i = 0; i != warm_up; ++i) {
+    for (int32_t i = 0; i != warmup; ++i) {
       auto states = model_->StackStates(states_vec);
       Ort::Value x = Ort::Value::CreateTensor(memory_info, features_vec.data(),
                                         features_vec.size(), x_shape.data(),
                                         x_shape.size());
-      auto x_copy = Clone(model_->Allocator(),&x);
+      auto x_copy = Clone(model_->Allocator(), &x);
       auto pair = model_->RunEncoder(std::move(x), std::move(states),
                                      std::move(x_copy));
       decoder_->Decode(std::move(pair.first), &results);

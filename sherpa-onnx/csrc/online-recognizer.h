@@ -162,7 +162,7 @@ class OnlineRecognizer {
     DecodeStreams(ss, 1);
   }
 
-  void WarmpUpRecognizer(int32_t warm_up,int32_t max_batch_size) const;
+  void WarmpUpRecognizer(int32_t warmup, int32_t mbs) const;
 
   /** Decode multiple streams in parallel
    *
