@@ -126,7 +126,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
-          path: build/bin/*
+          path: install/*
 
       - name: Test offline punctuation
         shell: bash
