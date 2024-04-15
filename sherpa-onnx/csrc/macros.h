@@ -118,6 +118,24 @@
     }                                                                         \
   } while (0)
 
+// read a vector of strings separated by sep
+#define SHERPA_ONNX_READ_META_DATA_VEC_STRING_SEP(dst, src_key, sep)          \
+  do {                                                                        \
+    auto value =                                                              \
+        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator);       \
+    if (!value) {                                                             \
+      SHERPA_ONNX_LOGE("%s does not exist in the metadata", src_key);         \
+      exit(-1);                                                               \
+    }                                                                         \
+    SplitStringToVector(value.get(), sep, false, &dst);                       \
+                                                                              \
+    if (dst.empty()) {                                                        \
+      SHERPA_ONNX_LOGE("Invalid value %s for %s. Empty vector!", value.get(), \
+                       src_key);                                              \
+      exit(-1);                                                               \
+    }                                                                         \
+  } while (0)
+
 // Read a string
 #define SHERPA_ONNX_READ_META_DATA_STR(dst, src_key)                    \
   do {                                                                  \

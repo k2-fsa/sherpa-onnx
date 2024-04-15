@@ -74,11 +74,6 @@ static std::vector<std::string> ProcessHeteronyms(
   return ans;
 }
 
-static void ToLowerCase(std::string *in_out) {
-  std::transform(in_out->begin(), in_out->end(), in_out->begin(),
-                 [](unsigned char c) { return std::tolower(c); });
-}
-
 // Note: We don't use SymbolTable here since tokens may contain a blank
 // in the first column
 static std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is) {

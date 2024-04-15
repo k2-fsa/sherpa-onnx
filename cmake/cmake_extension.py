@@ -46,14 +46,15 @@ def enable_alsa():
 def get_binaries():
     binaries = [
         "sherpa-onnx",
-        "sherpa-onnx-offline-audio-tagging",
         "sherpa-onnx-keyword-spotter",
         "sherpa-onnx-microphone",
         "sherpa-onnx-microphone-offline",
         "sherpa-onnx-microphone-offline-audio-tagging",
         "sherpa-onnx-microphone-offline-speaker-identification",
         "sherpa-onnx-offline",
+        "sherpa-onnx-offline-audio-tagging",
         "sherpa-onnx-offline-language-identification",
+        "sherpa-onnx-offline-punctuation",
         "sherpa-onnx-offline-tts",
         "sherpa-onnx-offline-tts-play",
         "sherpa-onnx-offline-websocket-server",

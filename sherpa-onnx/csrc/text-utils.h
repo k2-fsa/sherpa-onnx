@@ -121,6 +121,9 @@ bool ConvertStringToReal(const std::string &str, T *out);
 
 std::vector<std::string> SplitUtf8(const std::string &text);
 
+std::string ToLowerCase(const std::string &s);
+void ToLowerCase(std::string *in_out);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_
