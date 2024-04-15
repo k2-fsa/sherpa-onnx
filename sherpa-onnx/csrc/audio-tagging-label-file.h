@@ -8,11 +8,19 @@
 #include <string>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 namespace sherpa_onnx {
 
 class AudioTaggingLabels {
  public:
   explicit AudioTaggingLabels(const std::string &filename);
+#if __ANDROID_API__ >= 9
+  AudioTaggingLabels(AAssetManager *mgr, const std::string &filename);
+#endif
 
   // Return the event name for the given index.
   // The returned reference is valid as long as this object is alive

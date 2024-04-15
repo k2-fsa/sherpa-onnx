@@ -9,6 +9,10 @@ if(NOT DEFINED ANDROID_ABI)
   include_directories($ENV{JAVA_HOME}/include/darwin)
 endif()
 
-add_library(sherpa-onnx-jni jni.cc)
+add_library(sherpa-onnx-jni
+  audio-tagging.cc
+  jni.cc
+  offline-stream.cc
+)
 target_link_libraries(sherpa-onnx-jni sherpa-onnx-core)
 install(TARGETS sherpa-onnx-jni DESTINATION lib)
