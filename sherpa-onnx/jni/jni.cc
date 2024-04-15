@@ -7,19 +7,10 @@
 // TODO(fangjun): Add documentation to functions/methods in this file
 // and also show how to use them with kotlin, possibly with java.
 
-// If you use ndk, you can find "jni.h" inside
-// android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
-#include "jni.h"  // NOLINT
-
 #include <fstream>
 #include <functional>
 #include <strstream>
 #include <utility>
-
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
 
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -31,12 +22,11 @@
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
+#include "sherpa-onnx/jni/common.h"
 
 #if SHERPA_ONNX_ENABLE_TTS == 1
 #include "sherpa-onnx/csrc/offline-tts.h"
 #endif
-
-#define SHERPA_ONNX_EXTERN_C extern "C"
 
 namespace sherpa_onnx {
 
@@ -1224,9 +1214,15 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_allSpeakerNames(
 
 // see
 // https://stackoverflow.com/questions/29043872/android-jni-return-multiple-variables
-static jobject NewInteger(JNIEnv *env, int32_t value) {
+jobject NewInteger(JNIEnv *env, int32_t value) {
   jclass cls = env->FindClass("java/lang/Integer");
   jmethodID constructor = env->GetMethodID(cls, "<init>", "(I)V");
+  return env->NewObject(cls, constructor, value);
+}
+
+jobject NewFloat(JNIEnv *env, float value) {
+  jclass cls = env->FindClass("java/lang/Float");
+  jmethodID constructor = env->GetMethodID(cls, "<init>", "(F)V");
   return env->NewObject(cls, constructor, value);
 }
 

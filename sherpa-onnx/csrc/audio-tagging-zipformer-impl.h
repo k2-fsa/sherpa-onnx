@@ -8,6 +8,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/audio-tagging-impl.h"
 #include "sherpa-onnx/csrc/audio-tagging-label-file.h"
 #include "sherpa-onnx/csrc/audio-tagging.h"
@@ -27,6 +32,20 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
       exit(-1);
     }
   }
+
+#if __ANDROID_API__ >= 9
+  explicit AudioTaggingZipformerImpl(AAssetManager *mgr,
+                                     const AudioTaggingConfig &config)
+      : config_(config),
+        model_(mgr, config.model),
+        labels_(mgr, config.labels) {
+    if (model_.NumEventClasses() != labels_.NumEventClasses()) {
+      SHERPA_ONNX_LOGE("number of classes: %d (model) != %d (label file)",
+                       model_.NumEventClasses(), labels_.NumEventClasses());
+      exit(-1);
+    }
+  }
+#endif
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
     return std::make_unique<OfflineStream>();

@@ -8,7 +8,15 @@
 #include <sstream>
 #include <string>
 
+#if __ANDROID_API__ >= 9
+#include <strstream>
+
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
@@ -17,6 +25,15 @@ AudioTaggingLabels::AudioTaggingLabels(const std::string &filename) {
   std::ifstream is(filename);
   Init(is);
 }
+
+#if __ANDROID_API__ >= 9
+AudioTaggingLabels::AudioTaggingLabels(AAssetManager *mgr,
+                                       const std::string &filename) {
+  auto buf = ReadFile(mgr, filename);
+  std::istrstream is(buf.data(), buf.size());
+  Init(is);
+}
+#endif
 
 // Format of a label file
 /*

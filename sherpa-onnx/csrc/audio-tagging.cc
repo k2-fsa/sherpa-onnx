@@ -4,6 +4,11 @@
 
 #include "sherpa-onnx/csrc/audio-tagging.h"
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/audio-tagging-impl.h"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -60,6 +65,11 @@ std::string AudioTaggingConfig::ToString() const {
 
 AudioTagging::AudioTagging(const AudioTaggingConfig &config)
     : impl_(AudioTaggingImpl::Create(config)) {}
+
+#if __ANDROID_API__ >= 9
+AudioTagging::AudioTagging(AAssetManager *mgr, const AudioTaggingConfig &config)
+    : impl_(AudioTaggingImpl::Create(mgr, config)) {}
+#endif
 
 AudioTagging::~AudioTagging() = default;
 
