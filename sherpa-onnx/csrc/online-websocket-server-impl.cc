@@ -95,7 +95,7 @@ void OnlineWebsocketDecoder::InputFinished(std::shared_ptr<Connection> c) {
   c->eof = true;
 }
 
-void OnlineWebsocketDecoder::Warmup() {
+void OnlineWebsocketDecoder::Warmup() const {
   recognizer_->WarmpUpRecognizer(config_.recognizer_config.model_config.warm_up,
                                  config_.max_batch_size);
 }
@@ -249,13 +249,13 @@ void OnlineWebsocketServer::Run(uint16_t port) {
   server_.start_accept();
   auto recognizer_config = config_.decoder_config.recognizer_config;
   int32_t warm_up = recognizer_config.model_config.warm_up;
-  std::string model_type = recognizer_config.model_config.model_type;
+  const std::string &model_type = recognizer_config.model_config.model_type;
   if (0 < warm_up && warm_up < 100) {
-    if (model_type == std::string("zipformer2")) {
+    if (model_type == "zipformer2") {
       decoder_.Warmup();
-      SHERPA_ONNX_LOGE("Warm up completd : %d times.", warm_up);
+      SHERPA_ONNX_LOGE("Warm up completed : %d times.", warm_up);
     } else {
-      SHERPA_ONNX_LOGE("Only Zipformer2 has warmup support for now.");
+      SHERPA_ONNX_LOGE("Only Zipformer2 has warmup support for now. Given: %s", model_type.c_str());
       exit(0);
     }
   } else if (warm_up == 0) {

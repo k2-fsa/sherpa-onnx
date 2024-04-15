@@ -187,8 +187,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   // Warmping up engine with wp: warm_up count and max-batch-size
   void WarmpUpRecognizer(int32_t warmup, int32_t mbs) const {
     auto max_batch_size = mbs;
-    if (warmup <= 0 || warmup > 100)
+    if (warmup <= 0 || warmup > 100) {
       return;
+    }
     int32_t chunk_size = model_->ChunkSize();
     int32_t chunk_shift = model_->ChunkShift();
     int32_t feature_dim = 80;
@@ -201,9 +202,6 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
 
     std::array<int64_t, 3> x_shape{max_batch_size, chunk_size, feature_dim};
 
-    // filling with 0.0, so that it doesn't affact the states,
-    // and left_context which is maintained by the encoders
-    std::fill(features_vec.begin(), features_vec.end(), 0.0f);
     for (int32_t i = 0; i != max_batch_size; ++i) {
       states_vec[i] = model_->GetEncoderInitStates();
       results[i] = decoder_->GetEmptyResult();
