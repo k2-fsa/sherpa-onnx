@@ -34,7 +34,7 @@ void PybindOnlineModelConfig(py::module *m) {
            py::arg("paraformer") = OnlineParaformerModelConfig(),
            py::arg("wenet_ctc") = OnlineWenetCtcModelConfig(),
            py::arg("zipformer2_ctc") = OnlineZipformer2CtcModelConfig(),
-           py::arg("tokens"), py::arg("warm_up") = 0, py::arg("num_threads"),
+           py::arg("tokens"), py::arg("num_threads"), py::arg("warm_up") = 0,
            py::arg("debug") = false, py::arg("provider") = "cpu",
            py::arg("model_type") = "")
       .def_readwrite("transducer", &PyClass::transducer)
