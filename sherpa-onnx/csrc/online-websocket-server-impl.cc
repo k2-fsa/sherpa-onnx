@@ -255,7 +255,8 @@ void OnlineWebsocketServer::Run(uint16_t port) {
       decoder_.Warmup();
       SHERPA_ONNX_LOGE("Warm up completed : %d times.", warm_up);
     } else {
-      SHERPA_ONNX_LOGE("Only Zipformer2 has warmup support for now. Given: %s", model_type.c_str());
+      SHERPA_ONNX_LOGE("Only Zipformer2 has warmup support for now.");
+      SHERPA_ONNX_LOGE("Given: %s", model_type.c_str());
       exit(0);
     }
   } else if (warm_up == 0) {
