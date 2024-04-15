@@ -14,6 +14,8 @@ void OnlineTransducerModelConfig::Register(ParseOptions *po) {
   po->Register("encoder", &encoder, "Path to encoder.onnx");
   po->Register("decoder", &decoder, "Path to decoder.onnx");
   po->Register("joiner", &joiner, "Path to joiner.onnx");
+  po->Register("ctc", &ctc, "Path to ctc.onnx");
+  po->Register("frame_reducer", &frame_reducer, "Path to frame_reducer.onnx");
 }
 
 bool OnlineTransducerModelConfig::Validate() const {
@@ -32,6 +34,19 @@ bool OnlineTransducerModelConfig::Validate() const {
     return false;
   }
 
+  if (!ctc.empty())
+  {
+    if (!FileExists(ctc)) {
+      SHERPA_ONNX_LOGE("ctc: %s does not exist", ctc.c_str());
+      return false;
+    }
+
+    if (!FileExists(frame_reducer)) {
+      SHERPA_ONNX_LOGE("frame_reducer: %s does not exist", frame_reducer.c_str());
+      return false;
+    }
+  }
+
   return true;
 }
 
@@ -41,7 +56,9 @@ std::string OnlineTransducerModelConfig::ToString() const {
   os << "OnlineTransducerModelConfig(";
   os << "encoder=\"" << encoder << "\", ";
   os << "decoder=\"" << decoder << "\", ";
-  os << "joiner=\"" << joiner << "\")";
+  os << "joiner=\"" << joiner << "\", ";
+  os << "ctc=\"" << ctc << "\", ";
+  os << "frame_reducer=\"" << frame_reducer << "\")";
 
   return os.str();
 }

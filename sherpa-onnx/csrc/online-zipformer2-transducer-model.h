@@ -62,6 +62,8 @@ class OnlineZipformer2TransducerModel : public OnlineTransducerModel {
   void InitEncoder(void *model_data, size_t model_data_length);
   void InitDecoder(void *model_data, size_t model_data_length);
   void InitJoiner(void *model_data, size_t model_data_length);
+  void InitCTC(void *model_data, size_t model_data_length);
+  void InitFrameReducer(void *model_data, size_t model_data_length);
 
  private:
   Ort::Env env_;
@@ -71,6 +73,8 @@ class OnlineZipformer2TransducerModel : public OnlineTransducerModel {
   std::unique_ptr<Ort::Session> encoder_sess_;
   std::unique_ptr<Ort::Session> decoder_sess_;
   std::unique_ptr<Ort::Session> joiner_sess_;
+  std::unique_ptr<Ort::Session> ctc_sess_;
+  std::unique_ptr<Ort::Session> frame_reducer_sess_;
 
   std::vector<std::string> encoder_input_names_;
   std::vector<const char *> encoder_input_names_ptr_;
@@ -89,6 +93,18 @@ class OnlineZipformer2TransducerModel : public OnlineTransducerModel {
 
   std::vector<std::string> joiner_output_names_;
   std::vector<const char *> joiner_output_names_ptr_;
+
+  std::vector<std::string> ctc_input_names_;
+  std::vector<const char *> ctc_input_names_ptr_;
+
+  std::vector<std::string> ctc_output_names_;
+  std::vector<const char *> ctc_output_names_ptr_;
+
+  std::vector<std::string> frame_reducer_input_names_;
+  std::vector<const char *> frame_reducer_input_names_ptr_;
+
+  std::vector<std::string> frame_reducer_output_names_;
+  std::vector<const char *> frame_reducer_output_names_ptr_;
 
   OnlineModelConfig config_;
 

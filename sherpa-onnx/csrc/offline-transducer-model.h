@@ -70,6 +70,16 @@ class OfflineTransducerModel {
    */
   Ort::Value RunJoiner(Ort::Value encoder_out, Ort::Value decoder_out);
 
+  Ort::Value RunCTC(Ort::Value encoder_out);
+
+  std::pair<Ort::Value, Ort::Value> RunFrameReducer(Ort::Value encoder_out, 
+                                                    Ort::Value encoder_out_lens, 
+                                                    Ort::Value ctc_out); 
+
+  Ort::Value RunEncoderProj(Ort::Value encoder_proj_input);
+
+  Ort::Value RunDecoderProj(Ort::Value decoder_proj_input); 
+
   /** Return the vocabulary size of the model
    */
   int32_t VocabSize() const;

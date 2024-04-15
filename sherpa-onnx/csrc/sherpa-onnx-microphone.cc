@@ -68,6 +68,7 @@ for a list of pre-trained models to download.
     exit(EXIT_FAILURE);
   }
 
+  config.model_config.debug = true;
   fprintf(stderr, "%s\n", config.ToString().c_str());
 
   if (!config.Validate()) {

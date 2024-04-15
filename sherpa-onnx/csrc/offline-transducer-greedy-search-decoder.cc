@@ -22,6 +22,8 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
   PackedSequence packed_encoder_out = PackPaddedSequence(
       model_->Allocator(), &encoder_out, &encoder_out_length);
 
+  auto projected_encoder_out = model_->RunEncoderProj(Clone(model_->Allocator(), &(packed_encoder_out.data)));
+
   int32_t batch_size =
       static_cast<int32_t>(packed_encoder_out.sorted_indexes.size());
 
@@ -38,11 +40,15 @@ OfflineTransducerGreedySearchDecoder::Decode(Ort::Value encoder_out,
   auto decoder_input = model_->BuildDecoderInput(ans, ans.size());
   Ort::Value decoder_out = model_->RunDecoder(std::move(decoder_input));
 
+  auto projected_decoder_out = model_->RunDecoderProj(std::move(decoder_out));
+
   int32_t start = 0;
   int32_t t = 0;
   for (auto n : packed_encoder_out.batch_sizes) {
-    Ort::Value cur_encoder_out = packed_encoder_out.Get(start, n);
-    Ort::Value cur_decoder_out = Slice(model_->Allocator(), &decoder_out, 0, n);
+    // Ort::Value cur_encoder_out = packed_encoder_out.Get(start, n);
+    Ort::Value cur_encoder_out = Slice(model_->Allocator(), &projected_encoder_out, start, start + n);
+    // Ort::Value cur_decoder_out = Slice(model_->Allocator(), &decoder_out, 0, n);
+    Ort::Value cur_decoder_out = Slice(model_->Allocator(), &projected_decoder_out, 0, n);
     start += n;
     Ort::Value logit = model_->RunJoiner(std::move(cur_encoder_out),
                                          std::move(cur_decoder_out));
