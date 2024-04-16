@@ -60,6 +60,14 @@ void PybindSpeakerEmbeddingManager(py::module *m) {
             return self.Verify(name, v.data(), threshold);
           },
           py::arg("name"), py::arg("v"), py::arg("threshold"),
+          py::call_guard<py::gil_scoped_release>())
+      .def(
+          "score",
+          [](const PyClass &self, const std::string &name,
+             const std::vector<float> &v) -> float {
+            return self.Score(name, v.data());
+          },
+          py::arg("name"), py::arg("v"),
           py::call_guard<py::gil_scoped_release>());
 }
 

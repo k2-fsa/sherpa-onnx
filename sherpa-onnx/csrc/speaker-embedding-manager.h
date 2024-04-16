@@ -74,6 +74,8 @@ class SpeakerEmbeddingManager {
    */
   bool Verify(const std::string &name, const float *p, float threshold) const;
 
+  float Score(const std::string &name, const float *p) const;
+
   // Return true if the given speaker already exists; return false otherwise.
   bool Contains(const std::string &name) const;
 

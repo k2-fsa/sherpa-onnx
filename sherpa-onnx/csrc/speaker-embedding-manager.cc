@@ -151,6 +151,23 @@ class SpeakerEmbeddingManager::Impl {
     return true;
   }
 
+  float Score(const std::string &name, const float *p) {
+    if (!name2row_.count(name)) {
+      // Setting a default value if the name is not found
+      return -2.0;
+    }
+
+    int32_t row_idx = name2row_.at(name);
+
+    Eigen::VectorXf v =
+        Eigen::Map<Eigen::VectorXf>(const_cast<float *>(p), dim_);
+    v.normalize();
+
+    float score = embedding_matrix_.row(row_idx) * v;
+
+    return score;
+  }
+
   bool Contains(const std::string &name) const {
     return name2row_.count(name) > 0;
   }
@@ -204,6 +221,11 @@ std::string SpeakerEmbeddingManager::Search(const float *p,
 bool SpeakerEmbeddingManager::Verify(const std::string &name, const float *p,
                                      float threshold) const {
   return impl_->Verify(name, p, threshold);
+}
+
+float SpeakerEmbeddingManager::Score(const std::string &name,
+                                    const float *p) const {
+  return impl_->Score(name, p);
 }
 
 int32_t SpeakerEmbeddingManager::NumSpeakers() const {
