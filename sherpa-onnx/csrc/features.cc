@@ -26,8 +26,7 @@ void FeatureExtractorConfig::Register(ParseOptions *po) {
   po->Register("feat-dim", &feature_dim,
                "Feature dimension. Must match the one expected by the model.");
 
-  po->Register("low-freq", &low_freq,
-               "Low cutoff frequency for mel bins");
+  po->Register("low-freq", &low_freq, "Low cutoff frequency for mel bins");
 
   po->Register("high-freq", &high_freq,
                "High cutoff frequency for mel bins "
@@ -67,7 +66,7 @@ class FeatureExtractor::Impl {
     opts_.mel_opts.num_bins = config.feature_dim;
 
     opts_.mel_opts.high_freq = config.high_freq;
-    opts_.mel_opts.low_freq  = config.low_freq;
+    opts_.mel_opts.low_freq = config.low_freq;
 
     opts_.mel_opts.is_librosa = config.is_librosa;
 

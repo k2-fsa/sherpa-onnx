@@ -12,8 +12,8 @@
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
-#include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -42,10 +42,9 @@ class OnlineRnnLM::Impl {
     // nn_lm_scores
     std::array<int64_t, 2> x_shape{1, 1};
     Ort::Value x = Ort::Value::CreateTensor<int64_t>(allocator_, x_shape.data(),
-                                                    x_shape.size());
+                                                     x_shape.size());
     *x.GetTensorMutableData<int64_t>() = hyp->ys.back();
-    auto lm_out =
-        ScoreToken(std::move(x), Convert(hyp->nn_lm_states));
+    auto lm_out = ScoreToken(std::move(x), Convert(hyp->nn_lm_states));
     hyp->nn_lm_scores.value = std::move(lm_out.first);
     hyp->nn_lm_states = Convert(std::move(lm_out.second));
   }

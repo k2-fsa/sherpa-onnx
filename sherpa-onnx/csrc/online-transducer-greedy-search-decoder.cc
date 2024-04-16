@@ -71,11 +71,9 @@ void OnlineTransducerGreedySearchDecoder::StripLeadingBlanks(
   r->tokens = std::vector<int64_t>(start, end);
 }
 
-
 void OnlineTransducerGreedySearchDecoder::Decode(
     Ort::Value encoder_out,
     std::vector<OnlineTransducerDecoderResult> *result) {
-
   std::vector<int64_t> encoder_out_shape =
       encoder_out.GetTensorTypeAndShapeInfo().GetShape();
 
@@ -106,7 +104,8 @@ void OnlineTransducerGreedySearchDecoder::Decode(
         r.decoder_out.GetTensorTypeAndShapeInfo().GetShape();
     decoder_out_shape[0] = batch_size;
     decoder_out = Ort::Value::CreateTensor<float>(model_->Allocator(),
-        decoder_out_shape.data(), decoder_out_shape.size());
+                                                  decoder_out_shape.data(),
+                                                  decoder_out_shape.size());
     UseCachedDecoderOut(*result, &decoder_out);
   } else {
     Ort::Value decoder_input = model_->BuildDecoderInput(*result);
@@ -116,8 +115,8 @@ void OnlineTransducerGreedySearchDecoder::Decode(
   for (int32_t t = 0; t != num_frames; ++t) {
     Ort::Value cur_encoder_out =
         GetEncoderOutFrame(model_->Allocator(), &encoder_out, t);
-    Ort::Value logit = model_->RunJoiner(
-        std::move(cur_encoder_out), View(&decoder_out));
+    Ort::Value logit =
+        model_->RunJoiner(std::move(cur_encoder_out), View(&decoder_out));
 
     float *p_logit = logit.GetTensorMutableData<float>();
 
@@ -145,9 +144,9 @@ void OnlineTransducerGreedySearchDecoder::Decode(
 
       // export the per-token log scores
       if (y != 0 && y != unk_id_) {
-        LogSoftmax(p_logit, vocab_size);  // renormalize probabilities,
-                                          // save time by doing it only for
-                                          // emitted symbols
+        LogSoftmax(p_logit, vocab_size);   // renormalize probabilities,
+                                           // save time by doing it only for
+                                           // emitted symbols
         const float *p_logprob = p_logit;  // rename p_logit as p_logprob,
                                            // now it contains normalized
                                            // probability

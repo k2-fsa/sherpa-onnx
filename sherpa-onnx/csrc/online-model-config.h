@@ -40,8 +40,7 @@ struct OnlineModelConfig {
                     const OnlineWenetCtcModelConfig &wenet_ctc,
                     const OnlineZipformer2CtcModelConfig &zipformer2_ctc,
                     const std::string &tokens, int32_t num_threads,
-                    int32_t warm_up, bool debug,
-                    const std::string &provider,
+                    int32_t warm_up, bool debug, const std::string &provider,
                     const std::string &model_type)
       : transducer(transducer),
         paraformer(paraformer),

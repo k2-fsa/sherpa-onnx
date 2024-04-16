@@ -15,8 +15,7 @@ namespace sherpa_onnx {
 class OnlineTransducerGreedySearchDecoder : public OnlineTransducerDecoder {
  public:
   OnlineTransducerGreedySearchDecoder(OnlineTransducerModel *model,
-                                      int32_t unk_id,
-                                      float blank_penalty)
+                                      int32_t unk_id, float blank_penalty)
       : model_(model), unk_id_(unk_id), blank_penalty_(blank_penalty) {}
 
   OnlineTransducerDecoderResult GetEmptyResult() const override;

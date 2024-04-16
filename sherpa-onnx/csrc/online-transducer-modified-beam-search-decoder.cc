@@ -188,7 +188,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
                                               // score of the transducer
         // export the per-token log scores
         if (new_token != 0 && new_token != unk_id_) {
-          const Hypothesis& prev_i = prev[hyp_index];
+          const Hypothesis &prev_i = prev[hyp_index];
           // subtract 'prev[i]' path scores, which were added before
           // getting topk tokens
           float y_prob = p_logprob[k] - prev_i.log_prob - prev_i.lm_log_prob;

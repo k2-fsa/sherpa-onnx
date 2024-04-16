@@ -80,9 +80,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
       InitHotwords();
     }
     if (config_.decoding_method == "greedy_search") {
-      decoder_ =
-          std::make_unique<OfflineTransducerGreedySearchDecoder>(
-            model_.get(), config_.blank_penalty);
+      decoder_ = std::make_unique<OfflineTransducerGreedySearchDecoder>(
+          model_.get(), config_.blank_penalty);
     } else if (config_.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
         lm_ = OfflineLM::Create(config.lm_config);
@@ -106,9 +105,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
         model_(std::make_unique<OfflineTransducerModel>(mgr,
                                                         config_.model_config)) {
     if (config_.decoding_method == "greedy_search") {
-      decoder_ =
-          std::make_unique<OfflineTransducerGreedySearchDecoder>(
-            model_.get(), config_.blank_penalty);
+      decoder_ = std::make_unique<OfflineTransducerGreedySearchDecoder>(
+          model_.get(), config_.blank_penalty);
     } else if (config_.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
         lm_ = OfflineLM::Create(mgr, config.lm_config);

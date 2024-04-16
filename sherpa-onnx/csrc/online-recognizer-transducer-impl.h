@@ -30,9 +30,9 @@
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-model.h"
 #include "sherpa-onnx/csrc/online-transducer-modified-beam-search-decoder.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/utils.h"
-#include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
 
@@ -185,7 +185,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   }
 
   // Warmping up engine with wp: warm_up count and max-batch-size
-  void WarmpUpRecognizer(int32_t warmup, int32_t mbs) const {
+  void WarmpUpRecognizer(int32_t warmup, int32_t mbs) const override {
     auto max_batch_size = mbs;
     if (warmup <= 0 || warmup > 100) {
       return;
@@ -210,8 +210,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     for (int32_t i = 0; i != warmup; ++i) {
       auto states = model_->StackStates(states_vec);
       Ort::Value x = Ort::Value::CreateTensor(memory_info, features_vec.data(),
-                                        features_vec.size(), x_shape.data(),
-                                        x_shape.size());
+                                              features_vec.size(),
+                                              x_shape.data(), x_shape.size());
       auto x_copy = Clone(model_->Allocator(), &x);
       auto pair = model_->RunEncoder(std::move(x), std::move(states),
                                      std::move(x_copy));

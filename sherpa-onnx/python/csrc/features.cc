@@ -12,10 +12,8 @@ static void PybindFeatureExtractorConfig(py::module *m) {
   using PyClass = FeatureExtractorConfig;
   py::class_<PyClass>(*m, "FeatureExtractorConfig")
       .def(py::init<int32_t, int32_t, float, float, float>(),
-           py::arg("sampling_rate") = 16000,
-           py::arg("feature_dim") = 80,
-           py::arg("low_freq") = 20.0f,
-           py::arg("high_freq") = -400.0f,
+           py::arg("sampling_rate") = 16000, py::arg("feature_dim") = 80,
+           py::arg("low_freq") = 20.0f, py::arg("high_freq") = -400.0f,
            py::arg("dither") = 0.0f)
       .def_readwrite("sampling_rate", &PyClass::sampling_rate)
       .def_readwrite("feature_dim", &PyClass::feature_dim)

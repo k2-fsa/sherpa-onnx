@@ -168,7 +168,7 @@ class OnlineRecognizer {
    *
    * @param warmup Number of warmups.
    * @param mbs : max-batch-size Max batch size for the models
-  */
+   */
   void WarmpUpRecognizer(int32_t warmup, int32_t mbs) const;
 
   /** Decode multiple streams in parallel
