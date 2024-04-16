@@ -112,13 +112,13 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
 
-      - name: Display APK for TTS engine after signing
+      - name: Display APK for audio tagging after signing
         shell: bash
         run: |
           ls -lh ./apks/
           du -h -d1 .
 
-      - name: Rename APK for TTS engine after signing
+      - name: Rename APK for audio tagging after signing
         shell: bash
         run: |
           cd apks
@@ -137,6 +137,12 @@ jobs:
 
           cd ..
 
+          ls -lh ./apks/
+          du -h -d1 .
+
+      - name: Display APK after rename
+        shell: bash
+        run: |
           ls -lh ./apks/
           du -h -d1 .
 
