@@ -56,8 +56,9 @@ class AudioTagging(
         return OfflineStream(p)
     }
 
+    @Suppress("UNCHECKED_CAST")
     fun compute(stream: OfflineStream, topK: Int = -1): ArrayList<AudioEvent> {
-        var events: Array<Any> = compute(ptr, stream.ptr, topK)
+        val events: Array<Any> = compute(ptr, stream.ptr, topK)
         val ans = ArrayList<AudioEvent>()
 
         for (e in events) {
@@ -94,4 +95,43 @@ class AudioTagging(
             System.loadLibrary("sherpa-onnx-jni")
         }
     }
+}
+
+// please refer to
+// https://github.com/k2-fsa/sherpa-onnx/releases/tag/audio-tagging-models
+// to download more models
+//
+// See also
+// https://k2-fsa.github.io/sherpa/onnx/audio-tagging/
+fun getAudioTaggingConfig(type: Int): AudioTaggingConfig? {
+    when (type) {
+        0 -> {
+            val modelDir = "sherpa-onnx-zipformer-small-audio-tagging-2024-04-15"
+            return AudioTaggingConfig(
+                model = AudioTaggingModelConfig(
+                    zipformer = OfflineZipformerAudioTaggingModelConfig(model = "$modelDir/model.int8.onnx"),
+                    numThreads = 1,
+                    debug = true,
+                ),
+                labels = "$modelDir/class_labels_indices.csv",
+                topK = 3,
+            )
+        }
+
+        1 -> {
+            val modelDir = "sherpa-onnx-zipformer-audio-tagging-2024-04-09"
+            return AudioTaggingConfig(
+                model = AudioTaggingModelConfig(
+                    zipformer = OfflineZipformerAudioTaggingModelConfig(model = "$modelDir/model.int8.onnx"),
+                    numThreads = 1,
+                    debug = true,
+                ),
+                labels = "$modelDir/class_labels_indices.csv",
+                topK = 3,
+            )
+        }
+
+    }
+
+    return null
 }
