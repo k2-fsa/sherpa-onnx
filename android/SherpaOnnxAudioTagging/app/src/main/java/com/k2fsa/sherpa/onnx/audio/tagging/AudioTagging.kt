@@ -5,24 +5,24 @@ import android.util.Log
 
 private val TAG = "sherpa-onnx"
 
-data class OfflineZipformerAudioTaggingModelConfig (
+data class OfflineZipformerAudioTaggingModelConfig(
     val model: String,
 )
 
-data class AudioTaggingModelConfig (
+data class AudioTaggingModelConfig(
     var zipformer: OfflineZipformerAudioTaggingModelConfig,
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
 )
 
-data class AudioTaggingConfig (
+data class AudioTaggingConfig(
     var model: AudioTaggingModelConfig,
     var labels: String,
     var topK: Int = 5,
 )
 
-data class AudioEvent (
+data class AudioEvent(
     val name: String,
     val index: Int,
     val prob: Float,
@@ -43,10 +43,10 @@ class AudioTagging(
     }
 
     protected fun finalize() {
-      if(ptr != 0L) {
-        delete(ptr)
-        ptr = 0
-      }
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
 
     fun release() = finalize()
@@ -56,20 +56,22 @@ class AudioTagging(
         return OfflineStream(p)
     }
 
-    fun compute(stream: OfflineStream, topK: Int=-1): ArrayList<AudioEvent> {
-      var events :Array<Any> = compute(ptr, stream.ptr, topK)
-      val ans = ArrayList<AudioEvent>()
+    fun compute(stream: OfflineStream, topK: Int = -1): ArrayList<AudioEvent> {
+        var events: Array<Any> = compute(ptr, stream.ptr, topK)
+        val ans = ArrayList<AudioEvent>()
 
-      for (e in events) {
-        val p :Array<Any> = e as Array<Any>
-        ans.add(AudioEvent(
-          name=p[0] as String,
-          index=p[1] as Int,
-          prob=p[2] as Float,
-        ))
-      }
+        for (e in events) {
+            val p: Array<Any> = e as Array<Any>
+            ans.add(
+                AudioEvent(
+                    name = p[0] as String,
+                    index = p[1] as Int,
+                    prob = p[2] as Float,
+                )
+            )
+        }
 
-      return ans
+        return ans
     }
 
     private external fun newFromAsset(

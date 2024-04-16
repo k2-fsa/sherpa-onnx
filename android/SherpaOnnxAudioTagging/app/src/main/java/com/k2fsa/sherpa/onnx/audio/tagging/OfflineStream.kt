@@ -5,10 +5,10 @@ class OfflineStream(var ptr: Long) {
         acceptWaveform(ptr, samples, sampleRate)
 
     protected fun finalize() {
-      if(ptr != 0L) {
-        delete(ptr)
-        ptr = 0
-      }
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
 
     fun release() = finalize()
