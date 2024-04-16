@@ -15,7 +15,7 @@ void OnlineLMConfig::Register(ParseOptions *po) {
   po->Register("lm", &model, "Path to LM model.");
   po->Register("lm-scale", &scale, "LM scale.");
   po->Register("lm-num-threads", &lm_num_threads,
-              "Number of threads to run the neural network of LM model");
+               "Number of threads to run the neural network of LM model");
   po->Register("lm-provider", &lm_provider,
                "Specify a provider to LM model use: cpu, cuda, coreml");
 }

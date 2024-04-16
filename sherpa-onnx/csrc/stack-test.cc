@@ -16,10 +16,10 @@ TEST(Stack, Test1DTensors) {
   std::array<int64_t, 1> b_shape{3};
 
   Ort::Value a = Ort::Value::CreateTensor<float>(allocator, a_shape.data(),
-    a_shape.size());
+                                                 a_shape.size());
 
   Ort::Value b = Ort::Value::CreateTensor<float>(allocator, b_shape.data(),
-    b_shape.size());
+                                                 b_shape.size());
   float *pa = a.GetTensorMutableData<float>();
   float *pb = b.GetTensorMutableData<float>();
   for (int32_t i = 0; i != static_cast<int32_t>(a_shape[0]); ++i) {
@@ -51,11 +51,11 @@ TEST(Stack, Test2DTensorsDim0) {
   std::array<int64_t, 2> a_shape{2, 3};
   std::array<int64_t, 2> b_shape{2, 3};
 
-  Ort::Value a = Ort::Value::CreateTensor<float>(
-    allocator, a_shape.data(), a_shape.size());
+  Ort::Value a = Ort::Value::CreateTensor<float>(allocator, a_shape.data(),
+                                                 a_shape.size());
 
-  Ort::Value b = Ort::Value::CreateTensor<float>(
-    allocator, b_shape.data(), b_shape.size());
+  Ort::Value b = Ort::Value::CreateTensor<float>(allocator, b_shape.data(),
+                                                 b_shape.size());
 
   float *pa = a.GetTensorMutableData<float>();
   float *pb = b.GetTensorMutableData<float>();
