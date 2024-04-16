@@ -1,4 +1,4 @@
-name: apk-speaker-identification
+name: apk-audio-tagging
 
 on:
   push:
@@ -8,23 +8,23 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: apk-speaker-identification-${{ github.ref }}
+  group: apk-audio-tagging-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
-  apk_speaker_identification:
+  apk_audio_tagging:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
-    name: apk for speaker identification ${{ matrix.index }}/${{ matrix.total }}
+    name: apk for audio tagging ${{ matrix.index }}/${{ matrix.total }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        total: ["10"]
-        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        total: ["1"]
+        index: ["0"]
 
     steps:
       - uses: actions/checkout@v4
@@ -53,6 +53,23 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip jinja2
 
+      - name: Setup build tool version variable
+        shell: bash
+        run: |
+          echo "---"
+          ls -lh /usr/local/lib/android/
+          echo "---"
+
+          ls -lh /usr/local/lib/android/sdk
+          echo "---"
+
+          ls -lh /usr/local/lib/android/sdk/build-tools
+          echo "---"
+
+          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+          echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+          echo "Last build tool version is: $BUILD_TOOL_VERSION"
+
       - name: Generate build script
         shell: bash
         run: |
@@ -61,10 +78,10 @@ jobs:
           total=${{ matrix.total }}
           index=${{ matrix.index }}
 
-          ./generate-speaker-identification-apk-script.py --total $total --index $index
+          ./generate-audio-tagging-apk-script.py --total $total --index $index
 
-          chmod +x build-apk-speaker-identification.sh
-          mv -v ./build-apk-speaker-identification.sh ../..
+          chmod +x build-apk-audio-tagging.sh
+          mv -v ./build-apk-audio-tagging.sh ../..
 
       - name: build APK
         shell: bash
@@ -74,9 +91,54 @@ jobs:
           cmake --version
 
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
-          ./build-apk-speaker-identification.sh
+          ./build-apk-audio-tagging.sh
 
       - name: Display APK
+        shell: bash
+        run: |
+          ls -lh ./apks/
+          du -h -d1 .
+
+      # https://github.com/marketplace/actions/sign-android-release
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        with:
+          releaseDirectory: ./apks
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
+
+      - name: Display APK for audio tagging after signing
+        shell: bash
+        run: |
+          ls -lh ./apks/
+          du -h -d1 .
+
+      - name: Rename APK for audio tagging after signing
+        shell: bash
+        run: |
+          cd apks
+          rm -fv signingKey.jks
+          rm -fv *.apk.idsig
+          rm -fv *-aligned.apk
+
+          all_apks=$(ls -1 *-signed.apk)
+          echo "----"
+          echo $all_apks
+          echo "----"
+          for apk in ${all_apks[@]}; do
+            n=$(echo $apk | sed -e s/-signed//)
+            mv -v $apk $n
+          done
+
+          cd ..
+
+          ls -lh ./apks/
+          du -h -d1 .
+
+      - name: Display APK after rename
         shell: bash
         run: |
           ls -lh ./apks/
@@ -103,8 +165,8 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
 
-            mkdir -p speaker-identification
-            cp -v ../apks/*.apk ./speaker-identification/
+            mkdir -p audio-tagging
+            cp -v ../apks/*.apk ./audio-tagging/
             git status
             git lfs track "*.apk"
             git add .

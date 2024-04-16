@@ -18,7 +18,7 @@ log() {
 
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-log "Building Speaker identification APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
+log "Building audio tagging APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
@@ -32,26 +32,30 @@ log "====================x86===================="
 mkdir -p apks
 
 {% for model in model_list %}
-pushd ./android/SherpaOnnxSpeakerIdentification/app/src/main/assets/
+pushd ./android/SherpaOnnxAudioTagging/app/src/main/assets/
 model_name={{ model.model_name }}
 short_name={{ model.short_name }}
-lang={{ model.lang }}
-framework={{ model.framework }}
+type={{ model.idx }}
 
-wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$model_name
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/${model_name}.tar.bz2
+tar xvf ${model_name}.tar.bz2
+rm -rfv $model_name/model.onnx
+rm -rfv $model_name/test_wavs
+rm -rf  *.tar.bz2
+ls -lh $model_name
 
 popd
 # Now we are at the project root directory
 
 git checkout .
-pushd android/SherpaOnnxSpeakerIdentification/app/src/main/java/com/k2fsa/sherpa/onnx/speaker/identification/
-sed -i.bak s/"private val modelName.*/private val modelName = \"$model_name\"/" ./Speaker.kt
+pushd android/SherpaOnnxAudioTagging/app/src/main/java/com/k2fsa/sherpa/onnx/audio/tagging/
+sed -i.bak s/"type = 0/type = $type/" ./Tagger.kt
 git diff
 popd
 
 for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   log "------------------------------------------------------------"
-  log "build speaker identification apk for $arch"
+  log "build audio tagging apk for $arch"
   log "------------------------------------------------------------"
   src_arch=$arch
   if [ $arch == "armeabi-v7a" ]; then
@@ -62,20 +66,20 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
 
   ls -lh ./build-android-$src_arch/install/lib/*.so
 
-  cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxSpeakerIdentification/app/src/main/jniLibs/$arch/
+  cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxAudioTagging/app/src/main/jniLibs/$arch/
 
-  pushd ./android/SherpaOnnxSpeakerIdentification
+  pushd ./android/SherpaOnnxAudioTagging
   sed -i.bak s/2048/9012/g ./gradle.properties
   git diff ./gradle.properties
-  ./gradlew build
+  ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxSpeakerIdentification/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-$lang-speaker-identification-$framework-$short_name.apk
+  mv android/SherpaOnnxAudioTagging/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-audio-tagging-$short_name.apk
   ls -lh apks
-  rm -v ./android/SherpaOnnxSpeakerIdentification/app/src/main/jniLibs/$arch/*.so
+  rm -v ./android/SherpaOnnxAudioTagging/app/src/main/jniLibs/$arch/*.so
 done
 
-rm -rf ./android/SherpaOnnxSpeakerIdentification/app/src/main/assets/$model_name
+rm -rf ./android/SherpaOnnxAudioTagging/app/src/main/assets/$model_name
 {% endfor %}
 
 git checkout .
