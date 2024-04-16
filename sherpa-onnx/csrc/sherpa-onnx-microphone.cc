@@ -148,7 +148,7 @@ for a list of pre-trained models to download.
 
   std::string last_text;
   int32_t segment_index = 0;
-  sherpa_onnx::Display display;
+  sherpa_onnx::Display display(30);
   while (!stop) {
     while (recognizer.IsReady(s.get())) {
       recognizer.DecodeStream(s.get());
@@ -163,14 +163,13 @@ for a list of pre-trained models to download.
       std::transform(text.begin(), text.end(), text.begin(),
                      [](auto c) { return std::tolower(c); });
 
-      fprintf(stderr, "\r%d: %s", segment_index, text.c_str());
+      display.Print(segment_index, text);
       fflush(stderr);
     }
 
     if (is_endpoint) {
       if (!text.empty()) {
         ++segment_index;
-        fprintf(stderr, "\n");
       }
 
       recognizer.Reset(s.get());
