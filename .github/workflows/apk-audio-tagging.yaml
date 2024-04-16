@@ -1,24 +1,26 @@
-name: apk-speaker-identification
+name: apk-audio-tagging
 
 on:
   push:
+    branches:
+      - android-audio-tagging
     tags:
       - '*'
 
   workflow_dispatch:
 
 concurrency:
-  group: apk-speaker-identification-${{ github.ref }}
+  group: apk-audio-tagging-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
-  apk_speaker_identification:
+  apk_audio_tagging:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
-    name: apk for speaker identification ${{ matrix.index }}/${{ matrix.total }}
+    name: apk for audio tagging ${{ matrix.index }}/${{ matrix.total }}
     strategy:
       fail-fast: false
       matrix:
@@ -61,12 +63,13 @@ jobs:
           total=${{ matrix.total }}
           index=${{ matrix.index }}
 
-          ./generate-speaker-identification-apk-script.py --total $total --index $index
+          ./generate-audio-tagging-apk-script.py --total $total --index $index
 
-          chmod +x build-apk-speaker-identification.sh
-          mv -v ./build-apk-speaker-identification.sh ../..
+          chmod +x build-apk-audio-tagging.sh
+          mv -v ./build-apk-audio-tagging.sh ../..
 
       - name: build APK
+        if: false
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -74,7 +77,7 @@ jobs:
           cmake --version
 
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
-          ./build-apk-speaker-identification.sh
+          ./build-apk-audio-tagging.sh
 
       - name: Display APK
         shell: bash
@@ -83,6 +86,7 @@ jobs:
           du -h -d1 .
 
       - name: Publish to huggingface
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -103,8 +107,8 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
 
-            mkdir -p speaker-identification
-            cp -v ../apks/*.apk ./speaker-identification/
+            mkdir -p audio-tagging
+            cp -v ../apks/*.apk ./audio-tagging/
             git status
             git lfs track "*.apk"
             git add .
