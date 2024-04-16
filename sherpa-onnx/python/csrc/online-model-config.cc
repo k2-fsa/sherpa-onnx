@@ -27,14 +27,16 @@ void PybindOnlineModelConfig(py::module *m) {
       .def(py::init<const OnlineTransducerModelConfig &,
                     const OnlineParaformerModelConfig &,
                     const OnlineWenetCtcModelConfig &,
-                    const OnlineZipformer2CtcModelConfig &, const std::string &,
-                    int32_t, bool, const std::string &, const std::string &>(),
+                    const OnlineZipformer2CtcModelConfig &,
+                    const std::string &, int32_t, int32_t,
+                    bool, const std::string &, const std::string &>(),
            py::arg("transducer") = OnlineTransducerModelConfig(),
            py::arg("paraformer") = OnlineParaformerModelConfig(),
            py::arg("wenet_ctc") = OnlineWenetCtcModelConfig(),
            py::arg("zipformer2_ctc") = OnlineZipformer2CtcModelConfig(),
-           py::arg("tokens"), py::arg("num_threads"), py::arg("debug") = false,
-           py::arg("provider") = "cpu", py::arg("model_type") = "")
+           py::arg("tokens"), py::arg("num_threads"), py::arg("warm_up") = 0,
+           py::arg("debug") = false, py::arg("provider") = "cpu",
+           py::arg("model_type") = "")
       .def_readwrite("transducer", &PyClass::transducer)
       .def_readwrite("paraformer", &PyClass::paraformer)
       .def_readwrite("wenet_ctc", &PyClass::wenet_ctc)

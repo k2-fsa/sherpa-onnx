@@ -32,6 +32,7 @@
 #include "sherpa-onnx/csrc/online-transducer-modified-beam-search-decoder.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/utils.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
 
@@ -181,6 +182,41 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   bool IsReady(OnlineStream *s) const override {
     return s->GetNumProcessedFrames() + model_->ChunkSize() <
            s->NumFramesReady();
+  }
+
+  // Warmping up engine with wp: warm_up count and max-batch-size
+  void WarmpUpRecognizer(int32_t warmup, int32_t mbs) const {
+    auto max_batch_size = mbs;
+    if (warmup <= 0 || warmup > 100) {
+      return;
+    }
+    int32_t chunk_size = model_->ChunkSize();
+    int32_t chunk_shift = model_->ChunkShift();
+    int32_t feature_dim = 80;
+    std::vector<OnlineTransducerDecoderResult> results(max_batch_size);
+    std::vector<float> features_vec(max_batch_size * chunk_size * feature_dim);
+    std::vector<std::vector<Ort::Value>> states_vec(max_batch_size);
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::array<int64_t, 3> x_shape{max_batch_size, chunk_size, feature_dim};
+
+    for (int32_t i = 0; i != max_batch_size; ++i) {
+      states_vec[i] = model_->GetEncoderInitStates();
+      results[i] = decoder_->GetEmptyResult();
+    }
+
+    for (int32_t i = 0; i != warmup; ++i) {
+      auto states = model_->StackStates(states_vec);
+      Ort::Value x = Ort::Value::CreateTensor(memory_info, features_vec.data(),
+                                        features_vec.size(), x_shape.data(),
+                                        x_shape.size());
+      auto x_copy = Clone(model_->Allocator(), &x);
+      auto pair = model_->RunEncoder(std::move(x), std::move(states),
+                                     std::move(x_copy));
+      decoder_->Decode(std::move(pair.first), &results);
+    }
   }
 
   void DecodeStreams(OnlineStream **ss, int32_t n) const override {
