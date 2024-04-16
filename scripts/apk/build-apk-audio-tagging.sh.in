@@ -40,6 +40,7 @@ type={{ model.idx }}
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/${model_name}.tar.bz2
 rm -rfv $model_name/model.onnx
 rm -rfv $model_name/test_wavs
+rm -rf  *.tar.bz2
 
 popd
 # Now we are at the project root directory
