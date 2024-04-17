@@ -6,7 +6,7 @@ import android.util.Log
 private val TAG = "sherpa-onnx"
 
 data class OfflineZipformerAudioTaggingModelConfig(
-    val model: String,
+    var model: String,
 )
 
 data class AudioTaggingModelConfig(

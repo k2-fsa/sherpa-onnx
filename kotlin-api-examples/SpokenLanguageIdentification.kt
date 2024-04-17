@@ -5,32 +5,22 @@ import android.util.Log
 
 private val TAG = "sherpa-onnx"
 
-data class OfflineZipformerAudioTaggingModelConfig (
-    val model: String,
+data class SpokenLanguageIdentificationWhisperConfig (
+    var encoder: String,
+    var decoder: String,
+    var tailPaddings: Int = -1,
 )
 
-data class AudioTaggingModelConfig (
-    var zipformer: OfflineZipformerAudioTaggingModelConfig,
+data class SpokenLanguageIdentificationConfig (
+    var whisper: SpokenLanguageIdentificationWhisperConfig,
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
 )
 
-data class AudioTaggingConfig (
-    var model: AudioTaggingModelConfig,
-    var labels: String,
-    var topK: Int = 5,
-)
-
-data class AudioEvent (
-    val name: String,
-    val index: Int,
-    val prob: Float,
-)
-
-class AudioTagging(
+class SpokenLanguageIdentification (
     assetManager: AssetManager? = null,
-    config: AudioTaggingConfig,
+    config: SpokenLanguageIdentificationConfig,
 ) {
     private var ptr: Long
 
@@ -43,10 +33,10 @@ class AudioTagging(
     }
 
     protected fun finalize() {
-      if(ptr != 0) {
-        delete(ptr)
-        ptr = 0
-      }
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
 
     fun release() = finalize()
@@ -56,25 +46,22 @@ class AudioTagging(
         return OfflineStream(p)
     }
 
-    // fun compute(stream: OfflineStream, topK: Int=-1): Array<AudioEvent> {
-    fun compute(stream: OfflineStream, topK: Int=-1): Array<Any> {
-      var events :Array<Any> = compute(ptr, stream.ptr, topK)
-    }
+    fun compute(stream: OfflineStream) =  compute(ptr, stream.ptr)
 
     private external fun newFromAsset(
         assetManager: AssetManager,
-        config: AudioTaggingConfig,
+        config: SpokenLanguageIdentificationConfig,
     ): Long
 
     private external fun newFromFile(
-        config: AudioTaggingConfig,
+        config: SpokenLanguageIdentificationConfig,
     ): Long
 
     private external fun delete(ptr: Long)
 
     private external fun createStream(ptr: Long): Long
 
-    private external fun compute(ptr: Long, streamPtr: Long, topK: Int): Array<Any>
+    private external fun compute(ptr: Long, streamPtr: Long): String
 
     companion object {
         init {
