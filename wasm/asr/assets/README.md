@@ -47,7 +47,7 @@ assets fangjun$ tree -L 1
 ## Paraformer
 
 ```
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 

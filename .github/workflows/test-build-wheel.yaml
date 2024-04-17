@@ -90,7 +90,7 @@ jobs:
           export PATH=/c/hostedtoolcache/windows/Python/3.9.13/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.11.9/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.12.2/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.12.3/x64/bin:$PATH
 
           which sherpa-onnx
           sherpa-onnx --help
