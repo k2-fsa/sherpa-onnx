@@ -24,14 +24,38 @@ static void Handler(int sig) {
 int32_t main(int32_t argc, char *argv[]) {
   signal(SIGINT, Handler);
 
+  if (argc != 2) {
+    fprintf(stderr, R"(Please provide the device name.
+
+The device name specifies which microphone to use in case there are several
+on your system. You can use
+
+  arecord -l
+
+to find all available microphones on your computer. For instance, if it outputs
+
+**** List of CAPTURE Hardware Devices ****
+card 3: UACDemoV10 [UACDemoV1.0], device 0: USB Audio [USB Audio]
+  Subdevices: 1/1
+  Subdevice #0: subdevice #0
+
+and if you want to select card 3 and device 0 on that card, please use:
+
+  plughw:3,0
+
+as the device_name.
+)");
+  return -1;
+  }
+
   // clang-format off
   //
   // Please download the model from
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
-  const char *model = "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/ctc-epoch-30-avg-3-chunk-16-left-128.int8.onnx";
-  const char *tokens = "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/tokens.txt";
+  const char *model = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.int8.onnx";
+  const char *tokens = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt";
   const char *graph = "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/HLG.fst";
-  const char *wav_filename = "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/test_wavs/8k.wav";
+  graph = "";
   // clang-format on
 
   SherpaOnnxOnlineRecognizerConfig config;
@@ -60,15 +84,11 @@ int32_t main(int32_t argc, char *argv[]) {
 
   const SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
 
-  const SherpaOnnxOnlineRecognizer *recognizer =
-      CreateOnlineRecognizer(&config);
-  const SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
-
   const SherpaOnnxDisplay *display = CreateDisplay(50);
   int32_t segment_id = 0;
 
   // please use arecord -l to find your device
-  const char *device_name = "plughw:2,0";
+  const char *device_name = argv[1];
   sherpa_onnx::Alsa alsa(device_name);
   fprintf(stderr, "Use recording device: %s\n", device_name);
   fprintf(stderr,
