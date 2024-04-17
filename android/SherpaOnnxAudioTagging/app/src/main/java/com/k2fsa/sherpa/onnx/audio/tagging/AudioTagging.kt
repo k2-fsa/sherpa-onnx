@@ -103,14 +103,14 @@ class AudioTagging(
 //
 // See also
 // https://k2-fsa.github.io/sherpa/onnx/audio-tagging/
-fun getAudioTaggingConfig(type: Int): AudioTaggingConfig? {
+fun getAudioTaggingConfig(type: Int, numThreads: Int=1): AudioTaggingConfig? {
     when (type) {
         0 -> {
             val modelDir = "sherpa-onnx-zipformer-small-audio-tagging-2024-04-15"
             return AudioTaggingConfig(
                 model = AudioTaggingModelConfig(
                     zipformer = OfflineZipformerAudioTaggingModelConfig(model = "$modelDir/model.int8.onnx"),
-                    numThreads = 1,
+                    numThreads = numThreads,
                     debug = true,
                 ),
                 labels = "$modelDir/class_labels_indices.csv",

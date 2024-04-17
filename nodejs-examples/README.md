@@ -183,7 +183,7 @@ we use [sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18](https://github.com
 You can use the following command to run it:
 
 ```bash
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 node ./test-online-zipformer2-ctc-hlg.js
 ```

@@ -26,3 +26,7 @@ for usage.
 
 - [SherpaOnnxWebSocket](./SherpaOnnxWebSocket) It shows how to write a websocket
   client for the Python streaming websocket server.
+
+- [SherpaOnnxAudioTagging](./SherpaOnnxAudioTagging) It shows how to use audio tagging.
+
+- [SherpaOnnxAudioTaggingWearOS](./SherpaOnnxAudioTagging) It shows how to use audio tagging on WearOS.

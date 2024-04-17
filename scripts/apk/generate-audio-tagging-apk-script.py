@@ -77,7 +77,10 @@ def main():
         d["model_list"].append(all_model_list[s])
         print(f"{s}/{num_models}")
 
-    filename_list = ["./build-apk-audio-tagging.sh"]
+    filename_list = [
+        "./build-apk-audio-tagging.sh",
+        "./build-apk-audio-tagging-wearos.sh",
+    ]
     for filename in filename_list:
         environment = jinja2.Environment()
         with open(f"{filename}.in") as f:
