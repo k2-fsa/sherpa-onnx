@@ -40,8 +40,8 @@ def process_linux(s):
         "libpiper_phonemize.so.1",
         "libsherpa-onnx-c-api.so",
         "libsherpa-onnx-core.so",
-        "libsherpa-onnx-fstfar.so.16",
-        "libsherpa-onnx-fst.so.16",
+        "libsherpa-onnx-fstfar.so.7",
+        "libsherpa-onnx-fst.so.6",
         "libsherpa-onnx-kaldifst-core.so",
         "libucd.so",
     ]
@@ -69,8 +69,8 @@ def process_macos(s):
         "libpiper_phonemize.1.dylib",
         "libsherpa-onnx-c-api.dylib",
         "libsherpa-onnx-core.dylib",
-        "libsherpa-onnx-fstfar.16.dylib",
-        "libsherpa-onnx-fst.16.dylib",
+        "libsherpa-onnx-fstfar.7.dylib",
+        "libsherpa-onnx-fst.6.dylib",
         "libsherpa-onnx-kaldifst-core.dylib",
         "libucd.dylib",
     ]
