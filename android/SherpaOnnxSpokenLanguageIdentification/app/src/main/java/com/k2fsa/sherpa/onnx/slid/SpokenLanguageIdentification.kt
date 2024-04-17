@@ -69,3 +69,34 @@ class SpokenLanguageIdentification (
         }
     }
 }
+// please refer to
+// https://k2-fsa.github.io/sherpa/onnx/spolken-language-identification/pretrained_models.html#whisper
+// to download more models
+fun getSpokenLanguageIdentificationConfig(type: Int, numThreads: Int=1): SpokenLanguageIdentificationConfig? {
+    when (type) {
+        0 -> {
+            val modelDir = "sherpa-onnx-whisper-tiny"
+            return SpokenLanguageIdentificationConfig(
+                whisper = SpokenLanguageIdentificationWhisperConfig(
+                    encoder = "$modelDir/tiny-encoder.int8.onnx",
+                    decoder = "$modelDir/tiny-decoder.int8.onnx",
+                ),
+                numThreads = numThreads,
+                debug = true,
+            )
+        }
+
+        1 -> {
+            val modelDir = "sherpa-onnx-whisper-base"
+            return SpokenLanguageIdentificationConfig(
+                whisper = SpokenLanguageIdentificationWhisperConfig(
+                    encoder = "$modelDir/tiny-encoder.int8.onnx",
+                    decoder = "$modelDir/tiny-decoder.int8.onnx",
+                ),
+                numThreads = 1,
+                debug = true,
+            )
+        }
+    }
+    return null
+}

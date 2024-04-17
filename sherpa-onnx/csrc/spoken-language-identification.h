@@ -7,6 +7,11 @@
 #include <memory>
 #include <string>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/offline-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -69,6 +74,11 @@ class SpokenLanguageIdentification {
  public:
   explicit SpokenLanguageIdentification(
       const SpokenLanguageIdentificationConfig &config);
+
+#if __ANDROID_API__ >= 9
+  SpokenLanguageIdentification(
+      AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config);
+#endif
 
   ~SpokenLanguageIdentification();
 

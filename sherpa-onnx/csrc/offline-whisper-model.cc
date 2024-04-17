@@ -70,6 +70,23 @@ class OfflineWhisperModel::Impl {
       InitDecoder(buf.data(), buf.size());
     }
   }
+
+  Impl(AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config)
+      : lid_config_(config),
+        env_(ORT_LOGGING_LEVEL_ERROR),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    debug_ = config_.debug;
+    {
+      auto buf = ReadFile(mgr, config.whisper.encoder);
+      InitEncoder(buf.data(), buf.size());
+    }
+
+    {
+      auto buf = ReadFile(mgr, config.whisper.decoder);
+      InitDecoder(buf.data(), buf.size());
+    }
+  }
 #endif
 
   std::pair<Ort::Value, Ort::Value> ForwardEncoder(Ort::Value features) {
@@ -326,6 +343,11 @@ OfflineWhisperModel::OfflineWhisperModel(
 OfflineWhisperModel::OfflineWhisperModel(AAssetManager *mgr,
                                          const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
+
+OfflineWhisperModel::OfflineWhisperModel(
+    AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+
 #endif
 
 OfflineWhisperModel::~OfflineWhisperModel() = default;
