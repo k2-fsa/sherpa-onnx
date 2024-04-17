@@ -2,6 +2,8 @@ name: apk-audio-tagging-wearos
 
 on:
   push:
+    branches:
+      - wearos-audio-tagging-2
     tags:
       - '*'
 
