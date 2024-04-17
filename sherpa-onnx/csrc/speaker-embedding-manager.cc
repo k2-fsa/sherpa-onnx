@@ -224,7 +224,7 @@ bool SpeakerEmbeddingManager::Verify(const std::string &name, const float *p,
 }
 
 float SpeakerEmbeddingManager::Score(const std::string &name,
-                                    const float *p) const {
+                                     const float *p) const {
   return impl_->Score(name, p);
 }
 
