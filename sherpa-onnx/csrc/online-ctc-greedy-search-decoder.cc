@@ -39,7 +39,6 @@ void OnlineCtcGreedySearchDecoder::Decode(
       prev_id = r.tokens.back();
     }
 
-
     for (int32_t t = 0; t != num_frames; ++t, p += vocab_size) {
       int32_t y = static_cast<int32_t>(std::distance(
           static_cast<const float *>(p),
