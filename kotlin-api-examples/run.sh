@@ -30,19 +30,19 @@ cd ../kotlin-api-examples
 
 function testSpeakerEmbeddingExtractor() {
   if [ ! -f ./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx ]; then
-    wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx
   fi
 
   if [ ! -f ./speaker1_a_cn_16k.wav ]; then
-    wget -q https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_a_cn_16k.wav
+    curl -SL -O https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_a_cn_16k.wav
   fi
 
   if [ ! -f ./speaker1_b_cn_16k.wav ]; then
-    wget -q https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_b_cn_16k.wav
+    curl -SL -O https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker1_b_cn_16k.wav
   fi
 
   if [ ! -f ./speaker2_a_cn_16k.wav ]; then
-    wget -q https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker2_a_cn_16k.wav
+    curl -SL -O https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker2_a_cn_16k.wav
   fi
 }
 
@@ -53,7 +53,7 @@ function testAsr() {
   fi
 
   if [ ! -d ./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13 ]; then
-    wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
     tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
     rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
   fi
@@ -61,7 +61,7 @@ function testAsr() {
 
 function testTts() {
   if [ ! -f ./vits-piper-en_US-amy-low/en_US-amy-low.onnx ]; then
-    wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
     tar xf vits-piper-en_US-amy-low.tar.bz2
     rm vits-piper-en_US-amy-low.tar.bz2
   fi
@@ -75,7 +75,22 @@ function testAudioTagging() {
   fi
 }
 
+function testSpokenLanguageIdentification() {
+  if [ ! -f ./sherpa-onnx-whisper-tiny/tiny-encoder.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2
+    tar xvf sherpa-onnx-whisper-tiny.tar.bz2
+    rm sherpa-onnx-whisper-tiny.tar.bz2
+  fi
+
+  if [ ! -f ./spoken-language-identification-test-wavs/ar-arabic.wav ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/spoken-language-identification-test-wavs.tar.bz2
+    tar xvf spoken-language-identification-test-wavs.tar.bz2
+    rm spoken-language-identification-test-wavs.tar.bz2
+  fi
+}
+
 function test() {
+  testSpokenLanguageIdentification
   testAudioTagging
   testSpeakerEmbeddingExtractor
   testAsr
@@ -90,6 +105,7 @@ kotlinc-jvm -include-runtime -d main.jar \
   OfflineStream.kt \
   SherpaOnnx.kt \
   Speaker.kt \
+  SpokenLanguageIdentification.kt \
   Tts.kt \
   WaveReader.kt \
   faked-asset-manager.kt \
@@ -101,13 +117,13 @@ java -Djava.library.path=../build/lib -jar main.jar
 
 function testTwoPass() {
   if [ ! -f ./sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/encoder-epoch-99-avg-1.int8.onnx ]; then
-    wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
     tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
     rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
   fi
 
   if [ ! -f ./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx ]; then
-    wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
     tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
     rm sherpa-onnx-whisper-tiny.en.tar.bz2
   fi

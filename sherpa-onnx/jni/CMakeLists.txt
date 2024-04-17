@@ -13,6 +13,7 @@ add_library(sherpa-onnx-jni
   audio-tagging.cc
   jni.cc
   offline-stream.cc
+  spoken-language-identification.cc
 )
 target_link_libraries(sherpa-onnx-jni sherpa-onnx-core)
 install(TARGETS sherpa-onnx-jni DESTINATION lib)

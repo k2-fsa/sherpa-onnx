@@ -38,7 +38,7 @@ static SpokenLanguageIdentificationConfig GetSpokenLanguageIdentificationConfig(
   ans.whisper.tail_paddings = env->GetIntField(whisper, fid);
 
   fid = env->GetFieldID(cls, "numThreads", "I");
-  ans.numThreads = env->GetIntField(config, fid);
+  ans.num_threads = env->GetIntField(config, fid);
 
   fid = env->GetFieldID(cls, "debug", "Z");
   ans.debug = env->GetBooleanField(config, fid);
@@ -71,4 +71,34 @@ Java_com_k2fsa_sherpa_onnx_SpokenLanguageIdentification_newFromFile(
   auto tagger = new sherpa_onnx::SpokenLanguageIdentification(config);
 
   return (jlong)tagger;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL
+Java_com_k2fsa_sherpa_onnx_SpokenLanguageIdentification_createStream(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  auto slid =
+      reinterpret_cast<sherpa_onnx::SpokenLanguageIdentification *>(ptr);
+  std::unique_ptr<sherpa_onnx::OfflineStream> s = slid->CreateStream();
+
+  // The user is responsible to free the returned pointer.
+  //
+  // See Java_com_k2fsa_sherpa_onnx_OfflineStream_delete() from
+  // ./offline-stream.cc
+  sherpa_onnx::OfflineStream *p = s.release();
+  return (jlong)p;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jstring JNICALL
+Java_com_k2fsa_sherpa_onnx_SpokenLanguageIdentification_compute(JNIEnv *env,
+                                                                jobject /*obj*/,
+                                                                jlong ptr,
+                                                                jlong s_ptr) {
+  sherpa_onnx::SpokenLanguageIdentification *slid =
+      reinterpret_cast<sherpa_onnx::SpokenLanguageIdentification *>(ptr);
+  sherpa_onnx::OfflineStream *s =
+      reinterpret_cast<sherpa_onnx::OfflineStream *>(s_ptr);
+  std::string lang = slid->Compute(s);
+  return env->NewStringUTF(lang.c_str());
 }

@@ -12,7 +12,7 @@ data class SpokenLanguageIdentificationWhisperConfig (
 )
 
 data class SpokenLanguageIdentificationConfig (
-    var whisper SpokenLanguageIdentificationWhisperConfig
+    var whisper: SpokenLanguageIdentificationWhisperConfig,
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
