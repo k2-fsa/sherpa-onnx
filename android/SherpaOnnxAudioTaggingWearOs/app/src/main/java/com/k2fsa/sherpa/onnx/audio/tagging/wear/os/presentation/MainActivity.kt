@@ -10,28 +10,14 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Devices
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.app.ActivityCompat
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.TimeText
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import com.k2fsa.sherpa.onnx.audio.tagging.Tagger
-import com.k2fsa.sherpa.onnx.audio.tagging.wear.os.R
-import com.k2fsa.sherpa.onnx.audio.tagging.wear.os.presentation.theme.SherpaOnnxAudioTaggingWearOsTheme
 
 const val TAG = "sherpa-onnx"
 private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
@@ -42,6 +28,10 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
 
         super.onCreate(savedInstanceState)
+
+        // Keep the screen always on
+        // https://developer.android.com/develop/background-work/background-tasks/scheduling/wakelock
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         setTheme(android.R.style.Theme_DeviceDefault)
 
@@ -80,18 +70,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-
 @Composable
 fun WearApp() {
     HomeScreen()
-}
-
-@Composable
-fun Greeting(greetingName: String) {
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center,
-        color = MaterialTheme.colors.primary,
-        text = stringResource(R.string.hello_world, greetingName)
-    )
 }
