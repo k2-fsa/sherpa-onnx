@@ -214,7 +214,7 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     s->SetCtcResult({});
 
     // clear states
-    s->SetStates(model_->GetInitStates());
+    // s->SetStates(model_->GetInitStates());
 
     // Note: We only update counters. The underlying audio samples
     // are not discarded.
