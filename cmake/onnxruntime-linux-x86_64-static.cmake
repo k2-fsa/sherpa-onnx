@@ -14,19 +14,19 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-x64-static_lib-1.17.1-gcc-8.zip")
-set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-x64-static_lib-1.17.1-gcc-8.zip")
-set(onnxruntime_HASH "SHA256=44377e9b7eef618afd10216a597a4d2a09a74727cbc5bdd7d86ca2b6e00a28cb")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.3/onnxruntime-linux-x64-static_lib-1.17.3-gcc-8.zip")
+set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.3/onnxruntime-linux-x64-static_lib-1.17.3-gcc-8.zip")
+set(onnxruntime_HASH "SHA256=4848ba65d7ded63298953f8c85541e043bed214381bc08659b725e22e2afec61")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.17.1-gcc-8.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.17.1-gcc-8.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.17.1-gcc-8.zip
-  /tmp/onnxruntime-linux-x64-static_lib-1.17.1-gcc-8.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.17.1-gcc-8.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-x64-static_lib-1.17.3-gcc-8.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-x64-static_lib-1.17.3-gcc-8.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-x64-static_lib-1.17.3-gcc-8.zip
+  /tmp/onnxruntime-linux-x64-static_lib-1.17.3-gcc-8.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-x64-static_lib-1.17.3-gcc-8.zip
 )
 
 foreach(f IN LISTS possible_file_locations)
