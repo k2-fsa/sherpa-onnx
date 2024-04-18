@@ -6,6 +6,11 @@
 
 #include <string>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/spoken-language-identification-impl.h"
@@ -102,6 +107,12 @@ std::string SpokenLanguageIdentificationConfig::ToString() const {
 SpokenLanguageIdentification::SpokenLanguageIdentification(
     const SpokenLanguageIdentificationConfig &config)
     : impl_(SpokenLanguageIdentificationImpl::Create(config)) {}
+
+#if __ANDROID_API__ >= 9
+SpokenLanguageIdentification::SpokenLanguageIdentification(
+    AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config)
+    : impl_(SpokenLanguageIdentificationImpl::Create(mgr, config)) {}
+#endif
 
 SpokenLanguageIdentification::~SpokenLanguageIdentification() = default;
 

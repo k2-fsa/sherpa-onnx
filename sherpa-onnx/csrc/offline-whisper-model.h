@@ -31,6 +31,8 @@ class OfflineWhisperModel {
 
 #if __ANDROID_API__ >= 9
   OfflineWhisperModel(AAssetManager *mgr, const OfflineModelConfig &config);
+  OfflineWhisperModel(AAssetManager *mgr,
+                      const SpokenLanguageIdentificationConfig &config);
 #endif
 
   ~OfflineWhisperModel();

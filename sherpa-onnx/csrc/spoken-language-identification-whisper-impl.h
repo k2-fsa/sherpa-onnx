@@ -11,6 +11,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 #include "sherpa-onnx/csrc/spoken-language-identification-impl.h"
 #include "sherpa-onnx/csrc/transpose.h"
@@ -25,6 +30,15 @@ class SpokenLanguageIdentificationWhisperImpl
       : config_(config), model_(std::make_unique<OfflineWhisperModel>(config)) {
     Check();
   }
+
+#if __ANDROID_API__ >= 9
+  SpokenLanguageIdentificationWhisperImpl(
+      AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config)
+      : config_(config),
+        model_(std::make_unique<OfflineWhisperModel>(mgr, config)) {
+    Check();
+  }
+#endif
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
     return std::make_unique<OfflineStream>(WhisperTag{});

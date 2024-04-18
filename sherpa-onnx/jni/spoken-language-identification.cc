@@ -56,6 +56,32 @@ static SpokenLanguageIdentificationConfig GetSpokenLanguageIdentificationConfig(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
+Java_com_k2fsa_sherpa_onnx_SpokenLanguageIdentification_newFromAsset(
+    JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
+#if __ANDROID_API__ >= 9
+  AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
+  if (!mgr) {
+    SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+  }
+#endif
+
+  auto config =
+      sherpa_onnx::GetSpokenLanguageIdentificationConfig(env, _config);
+  SHERPA_ONNX_LOGE("spoken language identification newFromAsset config:\n%s",
+                   config.ToString().c_str());
+
+  auto slid = new sherpa_onnx::SpokenLanguageIdentification(
+#if __ANDROID_API__ >= 9
+      mgr,
+#endif
+      config);
+  SHERPA_ONNX_LOGE("slid %p", slid);
+
+  return (jlong)slid;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL
 Java_com_k2fsa_sherpa_onnx_SpokenLanguageIdentification_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
   auto config =
@@ -71,6 +97,14 @@ Java_com_k2fsa_sherpa_onnx_SpokenLanguageIdentification_newFromFile(
   auto tagger = new sherpa_onnx::SpokenLanguageIdentification(config);
 
   return (jlong)tagger;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_SpokenLanguageIdentification_delete(JNIEnv *env,
+                                                               jobject /*obj*/,
+                                                               jlong ptr) {
+  delete reinterpret_cast<sherpa_onnx::SpokenLanguageIdentification *>(ptr);
 }
 
 SHERPA_ONNX_EXTERN_C

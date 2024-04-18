@@ -5,6 +5,11 @@
 
 #include <memory>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/spoken-language-identification-whisper-impl.h"
@@ -84,5 +89,35 @@ SpokenLanguageIdentificationImpl::Create(
   // unreachable code
   return nullptr;
 }
+
+#if __ANDROID_API__ >= 9
+std::unique_ptr<SpokenLanguageIdentificationImpl>
+SpokenLanguageIdentificationImpl::Create(
+    AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config) {
+  ModelType model_type = ModelType::kUnknown;
+  {
+    if (config.whisper.encoder.empty()) {
+      SHERPA_ONNX_LOGE("Only whisper models are supported at present");
+      exit(-1);
+    }
+    auto buffer = ReadFile(mgr, config.whisper.encoder);
+
+    model_type = GetModelType(buffer.data(), buffer.size(), config.debug);
+  }
+
+  switch (model_type) {
+    case ModelType::kWhisper:
+      return std::make_unique<SpokenLanguageIdentificationWhisperImpl>(mgr,
+                                                                       config);
+    case ModelType::kUnknown:
+      SHERPA_ONNX_LOGE(
+          "Unknown model type for spoken language identification!");
+      return nullptr;
+  }
+
+  // unreachable code
+  return nullptr;
+}
+#endif
 
 }  // namespace sherpa_onnx
