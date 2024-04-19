@@ -1,0 +1,47 @@
+name: export-ced-to-onnx
+
+on:
+  push:
+    branches:
+      - ced-model
+  workflow_dispatch:
+
+concurrency:
+  group: export-ced-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-ced-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export ced
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/ced
+          ./run.sh
+
+      - name: Release
+        if: false
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.onnx
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: audio-tagging-models
