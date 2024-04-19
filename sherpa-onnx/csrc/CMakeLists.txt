@@ -117,6 +117,7 @@ list(APPEND sources
   audio-tagging-label-file.cc
   audio-tagging-model-config.cc
   audio-tagging.cc
+  offline-ced-model.cc
   offline-zipformer-audio-tagging-model-config.cc
   offline-zipformer-audio-tagging-model.cc
 )
