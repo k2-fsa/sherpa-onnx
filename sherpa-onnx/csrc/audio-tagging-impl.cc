@@ -35,7 +35,7 @@ std::unique_ptr<AudioTaggingImpl> AudioTaggingImpl::Create(
     AAssetManager *mgr, const AudioTaggingConfig &config) {
   if (!config.model.zipformer.model.empty()) {
     return std::make_unique<AudioTaggingZipformerImpl>(mgr, config);
-  } else if (!config.model.ced.empty) {
+  } else if (!config.model.ced.empty()) {
     return std::make_unique<AudioTaggingCEDImpl>(mgr, config);
   }
 
