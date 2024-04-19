@@ -24,7 +24,8 @@ void FeatureExtractorConfig::Register(ParseOptions *po) {
                "inside the feature extractor");
 
   po->Register("feat-dim", &feature_dim,
-               "Feature dimension. Must match the one expected by the model.");
+               "Feature dimension. Must match the one expected by the model. "
+               "Not used by whisper and CED models");
 
   po->Register("low-freq", &low_freq, "Low cutoff frequency for mel bins");
 

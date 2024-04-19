@@ -21,7 +21,7 @@ class OfflineCEDModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(config_.zipformer.model);
+    auto buf = ReadFile(config_.ced);
     Init(buf.data(), buf.size());
   }
 
@@ -31,7 +31,7 @@ class OfflineCEDModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(mgr, config_.zipformer.model);
+    auto buf = ReadFile(mgr, config_.ced);
     Init(buf.data(), buf.size());
   }
 #endif
