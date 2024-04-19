@@ -31,6 +31,12 @@ static AudioTaggingConfig GetAudioTaggingConfig(JNIEnv *env, jobject config) {
   ans.model.zipformer.model = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(model_cls, "ced", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.ced = p;
+  env->ReleaseStringUTFChars(s, p);
+
   fid = env->GetFieldID(model_cls, "numThreads", "I");
   ans.model.num_threads = env->GetIntField(model, fid);
 

@@ -3,7 +3,6 @@ package com.k2fsa.sherpa.onnx.audio.tagging
 import android.content.res.AssetManager
 import android.util.Log
 import com.k2fsa.sherpa.onnx.AudioTagging
-import com.k2fsa.sherpa.onnx.audio.tagging.wear.os.presentation.TAG
 import com.k2fsa.sherpa.onnx.getAudioTaggingConfig
 
 object Tagger {
@@ -12,6 +11,7 @@ object Tagger {
         get() {
             return _tagger!!
         }
+
     fun initTagger(assetManager: AssetManager? = null, numThreads: Int = 1) {
         synchronized(this) {
             if (_tagger != null) {
@@ -19,7 +19,7 @@ object Tagger {
             }
 
             Log.i(TAG, "Initializing audio tagger")
-            val config = getAudioTaggingConfig(type = 0, numThreads=numThreads)!!
+            val config = getAudioTaggingConfig(type = 0, numThreads = numThreads)!!
             _tagger = AudioTagging(assetManager, config)
         }
     }
