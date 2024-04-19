@@ -13,6 +13,7 @@ namespace sherpa_onnx {
 
 struct AudioTaggingModelConfig {
   struct OfflineZipformerAudioTaggingModelConfig zipformer;
+  std::string ced;
 
   int32_t num_threads = 1;
   bool debug = false;
@@ -22,8 +23,10 @@ struct AudioTaggingModelConfig {
 
   AudioTaggingModelConfig(
       const OfflineZipformerAudioTaggingModelConfig &zipformer,
-      int32_t num_threads, bool debug, const std::string &provider)
+      const std::string &ced, int32_t num_threads, bool debug,
+      const std::string &provider)
       : zipformer(zipformer),
+        ced(ced),
         num_threads(num_threads),
         debug(debug),
         provider(provider) {}

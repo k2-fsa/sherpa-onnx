@@ -27,10 +27,11 @@ static void PybindAudioTaggingModelConfig(py::module *m) {
 
   py::class_<PyClass>(*m, "AudioTaggingModelConfig")
       .def(py::init<>())
-      .def(py::init<const OfflineZipformerAudioTaggingModelConfig &, int32_t,
-                    bool, const std::string &>(),
-           py::arg("zipformer"), py::arg("num_threads") = 1,
-           py::arg("debug") = false, py::arg("provider") = "cpu")
+      .def(py::init<const OfflineZipformerAudioTaggingModelConfig &,
+                    const std::string &, int32_t, bool, const std::string &>(),
+           py::arg("zipformer"), py::arg("ced") = "",
+           py::arg("num_threads") = 1, py::arg("debug") = false,
+           py::arg("provider") = "cpu")
       .def_readwrite("zipformer", &PyClass::zipformer)
       .def_readwrite("num_threads", &PyClass::num_threads)
       .def_readwrite("debug", &PyClass::debug)
