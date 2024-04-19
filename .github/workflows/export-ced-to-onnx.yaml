@@ -1,9 +1,6 @@
 name: export-ced-to-onnx
 
 on:
-  push:
-    branches:
-      - ced-model
   workflow_dispatch:
 
 concurrency:
