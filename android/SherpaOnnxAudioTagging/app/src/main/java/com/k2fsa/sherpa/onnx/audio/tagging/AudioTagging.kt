@@ -1,7 +1,6 @@
 package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
-import android.util.Log
 
 const val TAG = "sherpa-onnx"
 
@@ -104,7 +103,7 @@ class AudioTagging(
 //
 // See also
 // https://k2-fsa.github.io/sherpa/onnx/audio-tagging/
-fun getAudioTaggingConfig(type: Int, numThreads: Int=1): AudioTaggingConfig? {
+fun getAudioTaggingConfig(type: Int, numThreads: Int = 1): AudioTaggingConfig? {
     when (type) {
         0 -> {
             val modelDir = "sherpa-onnx-zipformer-small-audio-tagging-2024-04-15"

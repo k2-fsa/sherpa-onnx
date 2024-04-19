@@ -69,7 +69,7 @@ def get_models():
         ),
     ]
 
-    return icefall_models
+    return icefall_models + ced_models
 
 
 def main():

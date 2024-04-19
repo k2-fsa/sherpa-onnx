@@ -1,9 +1,8 @@
-package com.k2fsa.sherpa.onnx.audio.tagging
+package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
 import android.util.Log
-import com.k2fsa.sherpa.onnx.AudioTagging
-import com.k2fsa.sherpa.onnx.getAudioTaggingConfig
+
 
 object Tagger {
     private var _tagger: AudioTagging? = null
