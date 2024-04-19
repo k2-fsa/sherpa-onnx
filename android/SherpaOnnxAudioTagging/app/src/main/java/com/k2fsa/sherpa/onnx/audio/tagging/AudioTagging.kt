@@ -1,16 +1,16 @@
 package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
-import android.util.Log
 
-private val TAG = "sherpa-onnx"
+const val TAG = "sherpa-onnx"
 
 data class OfflineZipformerAudioTaggingModelConfig(
-    var model: String,
+    var model: String = "",
 )
 
 data class AudioTaggingModelConfig(
-    var zipformer: OfflineZipformerAudioTaggingModelConfig,
+    var zipformer: OfflineZipformerAudioTaggingModelConfig = OfflineZipformerAudioTaggingModelConfig(),
+    var ced: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
@@ -103,7 +103,7 @@ class AudioTagging(
 //
 // See also
 // https://k2-fsa.github.io/sherpa/onnx/audio-tagging/
-fun getAudioTaggingConfig(type: Int, numThreads: Int=1): AudioTaggingConfig? {
+fun getAudioTaggingConfig(type: Int, numThreads: Int = 1): AudioTaggingConfig? {
     when (type) {
         0 -> {
             val modelDir = "sherpa-onnx-zipformer-small-audio-tagging-2024-04-15"
@@ -123,7 +123,7 @@ fun getAudioTaggingConfig(type: Int, numThreads: Int=1): AudioTaggingConfig? {
             return AudioTaggingConfig(
                 model = AudioTaggingModelConfig(
                     zipformer = OfflineZipformerAudioTaggingModelConfig(model = "$modelDir/model.int8.onnx"),
-                    numThreads = 1,
+                    numThreads = numThreads,
                     debug = true,
                 ),
                 labels = "$modelDir/class_labels_indices.csv",
@@ -131,6 +131,57 @@ fun getAudioTaggingConfig(type: Int, numThreads: Int=1): AudioTaggingConfig? {
             )
         }
 
+        2 -> {
+            val modelDir = "sherpa-onnx-ced-tiny-audio-tagging-2024-04-19"
+            return AudioTaggingConfig(
+                model = AudioTaggingModelConfig(
+                    ced = "$modelDir/model.int8.onnx",
+                    numThreads = numThreads,
+                    debug = true,
+                ),
+                labels = "$modelDir/class_labels_indices.csv",
+                topK = 3,
+            )
+        }
+
+        3 -> {
+            val modelDir = "sherpa-onnx-ced-mini-audio-tagging-2024-04-19"
+            return AudioTaggingConfig(
+                model = AudioTaggingModelConfig(
+                    ced = "$modelDir/model.int8.onnx",
+                    numThreads = numThreads,
+                    debug = true,
+                ),
+                labels = "$modelDir/class_labels_indices.csv",
+                topK = 3,
+            )
+        }
+
+        4 -> {
+            val modelDir = "sherpa-onnx-ced-small-audio-tagging-2024-04-19"
+            return AudioTaggingConfig(
+                model = AudioTaggingModelConfig(
+                    ced = "$modelDir/model.int8.onnx",
+                    numThreads = numThreads,
+                    debug = true,
+                ),
+                labels = "$modelDir/class_labels_indices.csv",
+                topK = 3,
+            )
+        }
+
+        5 -> {
+            val modelDir = "sherpa-onnx-ced-base-audio-tagging-2024-04-19"
+            return AudioTaggingConfig(
+                model = AudioTaggingModelConfig(
+                    ced = "$modelDir/model.int8.onnx",
+                    numThreads = numThreads,
+                    debug = true,
+                ),
+                labels = "$modelDir/class_labels_indices.csv",
+                topK = 3,
+            )
+        }
     }
 
     return null

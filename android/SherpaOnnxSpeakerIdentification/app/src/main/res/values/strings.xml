@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Speaker Identification</string>
+    <string name="app_name">Speaker ID</string>
     <string name="start">Start recording</string>
     <string name="stop">Stop recording</string>
     <string name="add">Add speaker</string>

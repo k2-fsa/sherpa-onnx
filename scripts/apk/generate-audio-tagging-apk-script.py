@@ -46,7 +46,30 @@ def get_models():
         ),
     ]
 
-    return icefall_models
+    ced_models = [
+        AudioTaggingModel(
+            model_name="sherpa-onnx-ced-tiny-audio-tagging-2024-04-19",
+            idx=2,
+            short_name="ced_tiny",
+        ),
+        AudioTaggingModel(
+            model_name="sherpa-onnx-ced-mini-audio-tagging-2024-04-19",
+            idx=3,
+            short_name="ced_mini",
+        ),
+        AudioTaggingModel(
+            model_name="sherpa-onnx-ced-small-audio-tagging-2024-04-19",
+            idx=4,
+            short_name="ced_small",
+        ),
+        AudioTaggingModel(
+            model_name="sherpa-onnx-ced-base-audio-tagging-2024-04-19",
+            idx=5,
+            short_name="ced_base",
+        ),
+    ]
+
+    return icefall_models + ced_models
 
 
 def main():

@@ -1223,6 +1223,7 @@ const SherpaOnnxAudioTagging *SherpaOnnxCreateAudioTagging(
     const SherpaOnnxAudioTaggingConfig *config) {
   sherpa_onnx::AudioTaggingConfig ac;
   ac.model.zipformer.model = SHERPA_ONNX_OR(config->model.zipformer.model, "");
+  ac.model.ced = SHERPA_ONNX_OR(config->model.ced, "");
   ac.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   ac.model.debug = config->model.debug;
   ac.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");

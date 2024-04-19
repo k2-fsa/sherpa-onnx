@@ -17,7 +17,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.k2fsa.sherpa.onnx.audio.tagging.Tagger
+import com.k2fsa.sherpa.onnx.Tagger
 
 const val TAG = "sherpa-onnx"
 private const val REQUEST_RECORD_AUDIO_PERMISSION = 200

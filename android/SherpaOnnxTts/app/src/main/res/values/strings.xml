@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Next-gen Kaldi: TTS</string>
+    <string name="app_name">TTS</string>
     <string name="sid_label">Speaker ID</string>
     <string name="sid_hint">0</string>
     <string name="speed_label">Speech speed (large->fast)</string>

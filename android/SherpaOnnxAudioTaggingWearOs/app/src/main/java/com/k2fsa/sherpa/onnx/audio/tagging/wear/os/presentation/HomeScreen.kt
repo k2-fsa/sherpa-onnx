@@ -33,7 +33,7 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import com.k2fsa.sherpa.onnx.AudioEvent
-import com.k2fsa.sherpa.onnx.audio.tagging.Tagger
+import com.k2fsa.sherpa.onnx.Tagger
 import com.k2fsa.sherpa.onnx.audio.tagging.wear.os.presentation.theme.SherpaOnnxAudioTaggingWearOsTheme
 import kotlin.concurrent.thread
 

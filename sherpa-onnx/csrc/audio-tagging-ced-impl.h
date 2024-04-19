@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/audio-tagging-zipformer-impl.h
+// sherpa-onnx/csrc/audio-tagging-ced-impl.h
 //
 // Copyright (c)  2024  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_AUDIO_TAGGING_ZIPFORMER_IMPL_H_
-#define SHERPA_ONNX_CSRC_AUDIO_TAGGING_ZIPFORMER_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_AUDIO_TAGGING_CED_IMPL_H_
+#define SHERPA_ONNX_CSRC_AUDIO_TAGGING_CED_IMPL_H_
 
 #include <assert.h>
 
@@ -20,13 +20,13 @@
 #include "sherpa-onnx/csrc/audio-tagging.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
-#include "sherpa-onnx/csrc/offline-zipformer-audio-tagging-model.h"
+#include "sherpa-onnx/csrc/offline-ced-model.h"
 
 namespace sherpa_onnx {
 
-class AudioTaggingZipformerImpl : public AudioTaggingImpl {
+class AudioTaggingCEDImpl : public AudioTaggingImpl {
  public:
-  explicit AudioTaggingZipformerImpl(const AudioTaggingConfig &config)
+  explicit AudioTaggingCEDImpl(const AudioTaggingConfig &config)
       : config_(config), model_(config.model), labels_(config.labels) {
     if (model_.NumEventClasses() != labels_.NumEventClasses()) {
       SHERPA_ONNX_LOGE("number of classes: %d (model) != %d (label file)",
@@ -36,8 +36,8 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
   }
 
 #if __ANDROID_API__ >= 9
-  explicit AudioTaggingZipformerImpl(AAssetManager *mgr,
-                                     const AudioTaggingConfig &config)
+  explicit AudioTaggingCEDImpl(AAssetManager *mgr,
+                               const AudioTaggingConfig &config)
       : config_(config),
         model_(mgr, config.model),
         labels_(mgr, config.labels) {
@@ -50,7 +50,7 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
 #endif
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
-    return std::make_unique<OfflineStream>();
+    return std::make_unique<OfflineStream>(CEDTag{});
   }
 
   std::vector<AudioEvent> Compute(OfflineStream *s,
@@ -68,12 +68,11 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-    // WARNING(fangjun): It is fixed to 80 for all models from icefall
-    int32_t feat_dim = 80;
+    // WARNING(fangjun): It is fixed to 64 for CED models
+    int32_t feat_dim = 64;
     std::vector<float> f = s->GetFrames();
 
     int32_t num_frames = f.size() / feat_dim;
-
     assert(feat_dim * num_frames == f.size());
 
     std::array<int64_t, 3> shape = {1, num_frames, feat_dim};
@@ -81,13 +80,7 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
     Ort::Value x = Ort::Value::CreateTensor(memory_info, f.data(), f.size(),
                                             shape.data(), shape.size());
 
-    int64_t x_length_scalar = num_frames;
-    std::array<int64_t, 1> x_length_shape = {1};
-    Ort::Value x_length =
-        Ort::Value::CreateTensor(memory_info, &x_length_scalar, 1,
-                                 x_length_shape.data(), x_length_shape.size());
-
-    Ort::Value probs = model_.Forward(std::move(x), std::move(x_length));
+    Ort::Value probs = model_.Forward(std::move(x));
 
     const float *p = probs.GetTensorData<float>();
 
@@ -109,10 +102,10 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
 
  private:
   AudioTaggingConfig config_;
-  OfflineZipformerAudioTaggingModel model_;
+  OfflineCEDModel model_;
   AudioTaggingLabels labels_;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_AUDIO_TAGGING_ZIPFORMER_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_AUDIO_TAGGING_CED_IMPL_H_
