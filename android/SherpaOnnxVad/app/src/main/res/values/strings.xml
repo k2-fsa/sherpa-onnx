@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Next-gen Kaldi: SileroVAD</string>
+    <string name="app_name">VAD</string>
 
     <string name="hint">Click the Start button to play Silero VAD with Next-gen Kaldi.</string>
     <string name="start">Start</string>
