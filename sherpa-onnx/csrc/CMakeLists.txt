@@ -132,6 +132,7 @@ list(APPEND sources
 
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
+    jieba-lexicon.cc
     lexicon.cc
     offline-tts-character-frontend.cc
     offline-tts-impl.cc

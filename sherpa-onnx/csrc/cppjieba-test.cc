@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 #include <iostream>
+#include <regex>  // NOLINT
 #include <string>
 #include <vector>
 
@@ -94,22 +95,50 @@ TEST(CppJieBa, Case2) {
       "涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感"
       "受着生命的奇迹与温柔";
   std::vector<std::string> words;
-  bool is_hmm = false;
+  bool is_hmm = true;
   jieba.Cut(s, words, is_hmm);
-  std::ostringstream os;
-  std::string sep = "";
-  for (const auto &w : words) {
-    os << sep << w;
-    sep = "_";
-  }
+  {
+    std::ostringstream os;
+    std::string sep = "";
+    for (const auto &w : words) {
+      os << sep << w;
+      sep = "_";
+    }
 
-  std::cout << os.str() << "\n";
+    std::cout << os.str() << "\n";
+  }
   /*
 当_夜幕降临_，_星光点点_，_伴随_着_微风_拂面_，
 _我_在_静谧_中_感受_着_时光_的_流转_，
 _思念_如_涟漪_荡漾_，_梦境_如_画卷_展开_，_我_与_自然_融为一体_，
 _沉静_在_这_片_宁静_的_美丽_之中_，_感受_着_生命_的_奇迹_与_温柔
    */
+  s = "这里有：红的、绿的、蓝的；各种各样的颜色都有!你想要什么呢?测试.";
+  std::regex punct_re("：|、|；");
+  std::string s2 = std::regex_replace(s, punct_re, "，");
+
+  std::regex punct_re2("[.]");
+  s2 = std::regex_replace(s2, punct_re2, "。");
+
+  std::regex punct_re3("[?]");
+  s2 = std::regex_replace(s2, punct_re3, "？");
+
+  std::regex punct_re4("[!]");
+  s2 = std::regex_replace(s2, punct_re4, "！");
+  std::cout << s << "\n" << s2 << "\n";
+
+  words.clear();
+  jieba.Cut(s2, words, is_hmm);
+  {
+    std::ostringstream os;
+    std::string sep = "";
+    for (const auto &w : words) {
+      os << sep << w;
+      sep = "_";
+    }
+
+    std::cout << os.str() << "\n";
+  }
 }
 
 }  // namespace sherpa_onnx

@@ -18,6 +18,7 @@ bool FileExists(const std::string &filename) {
 void AssertFileExists(const std::string &filename) {
   if (!FileExists(filename)) {
     SHERPA_ONNX_LOG(FATAL) << filename << " does not exist!";
+    exit(-1);
   }
 }
 

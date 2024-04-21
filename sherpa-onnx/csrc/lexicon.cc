@@ -76,7 +76,7 @@ static std::vector<std::string> ProcessHeteronyms(
 
 // Note: We don't use SymbolTable here since tokens may contain a blank
 // in the first column
-static std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is) {
+std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is) {
   std::unordered_map<std::string, int32_t> token2id;
 
   std::string line;
@@ -113,7 +113,7 @@ static std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is) {
   return token2id;
 }
 
-static std::vector<int32_t> ConvertTokensToIds(
+std::vector<int32_t> ConvertTokensToIds(
     const std::unordered_map<std::string, int32_t> &token2id,
     const std::vector<std::string> &tokens) {
   std::vector<int32_t> ids;
