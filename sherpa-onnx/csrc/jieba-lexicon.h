@@ -25,7 +25,7 @@ class JiebaLexicon : public OfflineTtsFrontend {
   ~JiebaLexicon() override;
   JiebaLexicon(const std::string &lexicon, const std::string &tokens,
                const std::string &dict_dir,
-               const OfflineTtsVitsModelMetaData &meta_data);
+               const OfflineTtsVitsModelMetaData &meta_data, bool debug);
 
 #if __ANDROID_API__ >= 9
   JiebaLexicon(AAssetManager *mgr, const std::string &lexicon,

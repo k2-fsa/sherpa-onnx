@@ -25,8 +25,8 @@ class JiebaLexicon::Impl {
  public:
   Impl(const std::string &lexicon, const std::string &tokens,
        const std::string &dict_dir,
-       const OfflineTtsVitsModelMetaData &meta_data)
-      : meta_data_(meta_data) {
+       const OfflineTtsVitsModelMetaData &meta_data, bool debug)
+      : meta_data_(meta_data), debug_(debug) {
     std::string dict = dict_dir + "/jieba.dict.utf8";
     std::string hmm = dict_dir + "/hmm_model.utf8";
     std::string user_dict = dict_dir + "/user.dict.utf8";
@@ -72,6 +72,20 @@ class JiebaLexicon::Impl {
     std::vector<std::string> words;
     bool is_hmm = true;
     jieba_->Cut(text, words, is_hmm);
+
+    if (debug_) {
+      SHERPA_ONNX_LOGE("input text: %s", text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations: %s", s.c_str());
+
+      std::ostringstream os;
+      std::string sep = "";
+      for (const auto &w : words) {
+        os << sep << w;
+        sep = "_";
+      }
+
+      SHERPA_ONNX_LOGE("after jieba processing: %s", os.str().c_str());
+    }
 
     std::vector<std::vector<int64_t>> ans;
     std::vector<int64_t> this_sentence;
@@ -122,7 +136,18 @@ class JiebaLexicon::Impl {
     return ans;
   }
 
-  void InitTokens(std::istream &is) { token2id_ = ReadTokens(is); }
+  void InitTokens(std::istream &is) {
+    token2id_ = ReadTokens(is);
+
+    std::vector<std::pair<std::string, std::string>> puncts = {
+        {",", "，"}, {".", "。"}, {"!", "！"}, {"?", "？"}};
+
+    for (const auto &p : puncts) {
+      if (token2id_.count(p.first) && !token2id_.count(p.second)) {
+        token2id_[p.second] = token2id_[p.first];
+      }
+    }
+  }
 
   void InitLexicon(std::istream &is) {
     std::string word;
@@ -170,6 +195,7 @@ class JiebaLexicon::Impl {
   OfflineTtsVitsModelMetaData meta_data_;
 
   std::unique_ptr<cppjieba::Jieba> jieba_;
+  bool debug_ = false;
 };
 
 JiebaLexicon::~JiebaLexicon() = default;
@@ -177,8 +203,10 @@ JiebaLexicon::~JiebaLexicon() = default;
 JiebaLexicon::JiebaLexicon(const std::string &lexicon,
                            const std::string &tokens,
                            const std::string &dict_dir,
-                           const OfflineTtsVitsModelMetaData &meta_data)
-    : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, meta_data)) {}
+                           const OfflineTtsVitsModelMetaData &meta_data,
+                           bool debug)
+    : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, meta_data,
+                                   debug)) {}
 
 std::vector<std::vector<int64_t>> JiebaLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string &unused_voice /*= ""*/) const {

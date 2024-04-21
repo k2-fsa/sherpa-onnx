@@ -309,7 +309,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty()) {
       frontend_ = std::make_unique<JiebaLexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, model_->GetMetaData());
+          config_.model.vits.dict_dir, model_->GetMetaData(),
+          config_.model.debug);
     } else if ((meta_data.is_piper || meta_data.is_coqui ||
                 meta_data.is_icefall) &&
                !config_.model.vits.data_dir.empty()) {
