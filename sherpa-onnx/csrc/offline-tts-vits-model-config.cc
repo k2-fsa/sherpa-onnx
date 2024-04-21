@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-tts-vits-model-config.h"
 
+#include <vector>
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 
@@ -16,6 +18,9 @@ void OfflineTtsVitsModelConfig::Register(ParseOptions *po) {
   po->Register("vits-data-dir", &data_dir,
                "Path to the directory containing dict for espeak-ng. If it is "
                "given, --vits-lexicon is ignored.");
+  po->Register("vits-dict-dir", &dict_dir,
+               "Path to the directory containing dict for jieba. Used only for "
+               "Chinese TTS models using jieba");
   po->Register("vits-noise-scale", &noise_scale, "noise_scale for VITS models");
   po->Register("vits-noise-scale-w", &noise_scale_w,
                "noise_scale_w for VITS models");
@@ -64,12 +69,24 @@ bool OfflineTtsVitsModelConfig::Validate() const {
     }
 
     if (!FileExists(data_dir + "/intonations")) {
-      SHERPA_ONNX_LOGE("%s/intonations does not exist. Skipping test",
-                       data_dir.c_str());
+      SHERPA_ONNX_LOGE("%s/intonations does not exist.", data_dir.c_str());
       return false;
     }
   }
 
+  if (!dict_dir.empty()) {
+    std::vector<std::string> required_files = {
+        "jieba.dict.utf8", "hmm_model.utf8",  "user.dict.utf8",
+        "idf.utf8",        "stop_words.utf8",
+    };
+
+    for (const auto &f : required_files) {
+      if (!FileExists(dict_dir + "/" + f)) {
+        SHERPA_ONNX_LOGE("%s/%s does not exist.", data_dir.c_str(), f.c_str());
+        return false;
+      }
+    }
+  }
   return true;
 }
 
@@ -81,6 +98,7 @@ std::string OfflineTtsVitsModelConfig::ToString() const {
   os << "lexicon=\"" << lexicon << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
+  os << "dict_dir=\"" << dict_dir << "\", ";
   os << "noise_scale=" << noise_scale << ", ";
   os << "noise_scale_w=" << noise_scale_w << ", ";
   os << "length_scale=" << length_scale << ")";

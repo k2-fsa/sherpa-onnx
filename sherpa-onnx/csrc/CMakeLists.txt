@@ -132,6 +132,7 @@ list(APPEND sources
 
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
+    jieba-lexicon.cc
     lexicon.cc
     offline-tts-character-frontend.cc
     offline-tts-impl.cc
@@ -184,6 +185,7 @@ endif()
 if(SHERPA_ONNX_ENABLE_TTS)
   target_link_libraries(sherpa-onnx-core piper_phonemize)
   target_link_libraries(sherpa-onnx-core fstfar fst)
+  target_link_libraries(sherpa-onnx-core cppjieba)
 endif()
 
 if(SHERPA_ONNX_ENABLE_CHECK)
@@ -491,6 +493,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND sherpa_onnx_test_srcs
+      cppjieba-test.cc
       piper-phonemize-test.cc
     )
   endif()
