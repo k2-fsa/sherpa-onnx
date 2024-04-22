@@ -1,0 +1,1 @@
+../android/SherpaOnnxVadAsr/app/src/main/java/com/k2fsa/sherpa/onnx/FeatureConfig.kt
