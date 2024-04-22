@@ -9,11 +9,20 @@ if(NOT DEFINED ANDROID_ABI)
   include_directories($ENV{JAVA_HOME}/include/darwin)
 endif()
 
-add_library(sherpa-onnx-jni
+set(sources
   audio-tagging.cc
   jni.cc
   offline-stream.cc
   spoken-language-identification.cc
 )
+
+if(SHERPA_ONNX_ENABLE_TTS)
+  list(APPEND sources
+    offline-tts.cc
+  )
+endif()
+
+add_library(sherpa-onnx-jni ${sources})
+
 target_link_libraries(sherpa-onnx-jni sherpa-onnx-core)
 install(TARGETS sherpa-onnx-jni DESTINATION lib)
