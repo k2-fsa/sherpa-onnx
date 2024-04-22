@@ -24,8 +24,15 @@ fun test2Pass() {
   var text = firstPass.text
   println("First pass text: $text")
 
-  text = secondPass.decode(samples, sampleRate)
-  println("Second pass text: $text")
+  val stream = secondPass.createStream()
+  stream.acceptWaveform(samples, sampleRate=sampleRate)
+  secondPass.decode(stream)
+
+  val result = secondPass.getResult(stream)
+  println(result)
+
+  stream.release()
+  secondPass.release()
 }
 
 fun createFirstPass(): SherpaOnnx {
@@ -39,11 +46,11 @@ fun createFirstPass(): SherpaOnnx {
   return SherpaOnnx(config = config)
 }
 
-fun createSecondPass(): SherpaOnnxOffline {
+fun createSecondPass(): OfflineRecognizer {
   val config = OfflineRecognizerConfig(
       featConfig = getFeatureConfig(sampleRate = 16000, featureDim = 80),
       modelConfig = getOfflineModelConfig(type = 2)!!,
   )
 
-  return SherpaOnnxOffline(config = config)
+  return OfflineRecognizer(config = config)
 }

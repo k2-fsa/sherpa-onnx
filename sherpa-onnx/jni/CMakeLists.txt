@@ -12,6 +12,7 @@ endif()
 set(sources
   audio-tagging.cc
   jni.cc
+  offline-recognizer.cc
   offline-stream.cc
   online-stream.cc
   speaker-embedding-extractor.cc

@@ -95,26 +95,27 @@ function test() {
   testSpeakerEmbeddingExtractor
   testAsr
   testTts
+
+  kotlinc-jvm -include-runtime -d main.jar \
+    AudioTagging.kt \
+    Main.kt \
+    OfflineRecognizer.kt
+    OfflineStream.kt \
+    OnlineStream.kt \
+    SherpaOnnx.kt \
+    Speaker.kt \
+    SpokenLanguageIdentification.kt \
+    Tts.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh main.jar
+
+  java -Djava.library.path=../build/lib -jar main.jar
 }
 
 test
-
-kotlinc-jvm -include-runtime -d main.jar \
-  AudioTagging.kt \
-  Main.kt \
-  OfflineStream.kt \
-  OnlineStream.kt \
-  SherpaOnnx.kt \
-  Speaker.kt \
-  SpokenLanguageIdentification.kt \
-  Tts.kt \
-  WaveReader.kt \
-  faked-asset-manager.kt \
-  faked-log.kt
-
-ls -lh main.jar
-
-java -Djava.library.path=../build/lib -jar main.jar
 
 function testTwoPass() {
   if [ ! -f ./sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/encoder-epoch-99-avg-1.int8.onnx ]; then
@@ -129,7 +130,13 @@ function testTwoPass() {
     rm sherpa-onnx-whisper-tiny.en.tar.bz2
   fi
 
-  kotlinc-jvm -include-runtime -d 2pass.jar test-2pass.kt WaveReader.kt SherpaOnnx2Pass.kt faked-asset-manager.kt
+  kotlinc-jvm -include-runtime -d 2pass.jar \
+    test-2pass.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    SherpaOnnx2Pass.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
   ls -lh 2pass.jar
   java -Djava.library.path=../build/lib -jar 2pass.jar
 }
