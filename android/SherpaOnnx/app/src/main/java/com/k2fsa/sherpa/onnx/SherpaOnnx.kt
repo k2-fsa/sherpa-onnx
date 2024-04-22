@@ -46,10 +46,6 @@ data class OnlineLMConfig(
     var scale: Float = 0.5f,
 )
 
-data class FeatureConfig(
-    var sampleRate: Int = 16000,
-    var featureDim: Int = 80,
-)
 
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
@@ -123,9 +119,7 @@ class SherpaOnnx(
     }
 }
 
-fun getFeatureConfig(sampleRate: Int, featureDim: Int): FeatureConfig {
-    return FeatureConfig(sampleRate = sampleRate, featureDim = featureDim)
-}
+
 
 /*
 Please see

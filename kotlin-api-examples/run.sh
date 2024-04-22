@@ -98,6 +98,7 @@ function test() {
 
   kotlinc-jvm -include-runtime -d main.jar \
     AudioTagging.kt \
+    FeatureConfig.kt \
     Main.kt \
     OfflineRecognizer.kt
     OfflineStream.kt \
@@ -132,6 +133,7 @@ function testTwoPass() {
 
   kotlinc-jvm -include-runtime -d 2pass.jar \
     test-2pass.kt \
+    FeatureConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
     SherpaOnnx2Pass.kt \

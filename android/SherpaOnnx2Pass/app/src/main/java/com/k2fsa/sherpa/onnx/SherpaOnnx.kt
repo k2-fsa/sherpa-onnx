@@ -45,11 +45,6 @@ data class OnlineLMConfig(
     var scale: Float = 0.5f,
 )
 
-data class FeatureConfig(
-    var sampleRate: Int = 16000,
-    var featureDim: Int = 80,
-)
-
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineModelConfig,
