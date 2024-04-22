@@ -48,7 +48,7 @@ onnxruntime_version=1.17.1
 if [ ! -f $onnxruntime_version/jni/x86/libonnxruntime.so ]; then
   mkdir -p $onnxruntime_version
   pushd $onnxruntime_version
-  wget -q https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-android-${onnxruntime_version}.zip
+  wget -c -q https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-android-${onnxruntime_version}.zip
   unzip onnxruntime-android-${onnxruntime_version}.zip
   rm onnxruntime-android-${onnxruntime_version}.zip
   popd
