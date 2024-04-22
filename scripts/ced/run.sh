@@ -24,7 +24,7 @@ base
 )
 
 for m in ${models[@]}; do
-  python3 ./export_onnx.py -m ced_$m
+  python3 ./export_onnx.py -m ced_$m --max-frames 3000
 done
 
 ls -lh *.onnx
