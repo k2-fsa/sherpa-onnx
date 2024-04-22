@@ -1,4 +1,4 @@
-package com.k2fsa.sherpa.onnx
+package com.k2fsa.sherpa.onnx.vad
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -11,6 +11,9 @@ import android.view.View
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import com.k2fsa.sherpa.onnx.R
+import com.k2fsa.sherpa.onnx.Vad
+import com.k2fsa.sherpa.onnx.getVadModelConfig
 import kotlin.concurrent.thread
 
 

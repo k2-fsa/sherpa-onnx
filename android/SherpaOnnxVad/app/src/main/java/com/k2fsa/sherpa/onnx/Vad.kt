@@ -27,7 +27,7 @@ class Vad(
 
     init {
         if (assetManager != null) {
-            ptr = new(assetManager, config)
+            ptr = newFromAsset(assetManager, config)
         } else {
             ptr = newFromFile(config)
         }
@@ -54,7 +54,7 @@ class Vad(
 
     private external fun delete(ptr: Long)
 
-    private external fun new(
+    private external fun newFromAsset(
         assetManager: AssetManager,
         config: VadModelConfig,
     ): Long
