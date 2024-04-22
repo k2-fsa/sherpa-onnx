@@ -45,7 +45,7 @@ bool OnlineModelConfig::Validate() const {
   }
 
   if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("tokens: %s does not exist", tokens.c_str());
+    SHERPA_ONNX_LOGE("tokens: '%s' does not exist", tokens.c_str());
     return false;
   }
 

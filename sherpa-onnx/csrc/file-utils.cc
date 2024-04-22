@@ -7,7 +7,7 @@
 #include <fstream>
 #include <string>
 
-#include "sherpa-onnx/csrc/log.h"
+#include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
@@ -17,7 +17,7 @@ bool FileExists(const std::string &filename) {
 
 void AssertFileExists(const std::string &filename) {
   if (!FileExists(filename)) {
-    SHERPA_ONNX_LOG(FATAL) << filename << " does not exist!";
+    SHERPA_ONNX_LOGE("filename '%s' does not exist", filename.c_str());
     exit(-1);
   }
 }

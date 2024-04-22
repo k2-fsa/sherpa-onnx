@@ -42,7 +42,7 @@ bool OfflineTtsConfig::Validate() const {
     SplitStringToVector(rule_fsts, ",", false, &files);
     for (const auto &f : files) {
       if (!FileExists(f)) {
-        SHERPA_ONNX_LOGE("Rule fst %s does not exist. ", f.c_str());
+        SHERPA_ONNX_LOGE("Rule fst '%s' does not exist. ", f.c_str());
         return false;
       }
     }
@@ -53,7 +53,7 @@ bool OfflineTtsConfig::Validate() const {
     SplitStringToVector(rule_fars, ",", false, &files);
     for (const auto &f : files) {
       if (!FileExists(f)) {
-        SHERPA_ONNX_LOGE("Rule far %s does not exist. ", f.c_str());
+        SHERPA_ONNX_LOGE("Rule far '%s' does not exist. ", f.c_str());
         return false;
       }
     }

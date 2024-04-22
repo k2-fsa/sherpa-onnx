@@ -48,7 +48,7 @@ bool AudioTaggingConfig::Validate() const {
   }
 
   if (!FileExists(labels)) {
-    SHERPA_ONNX_LOGE("--labels %s does not exist", labels.c_str());
+    SHERPA_ONNX_LOGE("--labels '%s' does not exist", labels.c_str());
     return false;
   }
 
