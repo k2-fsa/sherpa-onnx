@@ -34,7 +34,7 @@ log "https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx"
 
 # Download the model
 pushd ./android/SherpaOnnxVad/app/src/main/assets/
-wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
+wget -c https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
 popd
 
 for arch in arm64-v8a armeabi-v7a x86_64 x86; do

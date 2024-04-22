@@ -38,7 +38,7 @@ if [ ! -d ./android/SherpaOnnxKws/app/src/main/assets/$repo ]; then
   log "Start testing ${repo_url}"
 
   log "Download pretrained model and test-data from $repo_url"
-  wget -qq $repo_url
+  wget -c -qq $repo_url
   tar jxvf ${repo}.tar.bz
 
   pushd $repo

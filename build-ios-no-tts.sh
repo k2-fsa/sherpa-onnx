@@ -11,7 +11,7 @@ onnxruntime_dir=ios-onnxruntime/$onnxruntime_version
 if [ ! -f $onnxruntime_dir/onnxruntime.xcframework/ios-arm64/onnxruntime.a ]; then
   mkdir -p $onnxruntime_dir
   pushd $onnxruntime_dir
-  wget https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
+  wget -c https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
   tar xvf onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
   rm onnxruntime.xcframework-${onnxruntime_version}.tar.bz2
   cd ..
