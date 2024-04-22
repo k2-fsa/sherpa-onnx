@@ -130,17 +130,17 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
 
     float *p_logit = logit.GetTensorMutableData<float>();
 
-    // copy raw logits, apply temperature-scaling (for confidences)
+    // copy raw logits, apply temperature-scaling  (for confidences)
+    // Note: temperature scaling is used only for the confidences,
+    //       the decoding algorithm uses the original logits
     int32_t p_logit_items = vocab_size * num_hyps;
     std::vector<float> logit_with_temperature(p_logit_items);
     {
       std::copy(p_logit,
                 p_logit + p_logit_items,
                 logit_with_temperature.begin());
-      // TODO(KarelVesely84): configure externally ?
-      float temperature_scale = 2.0;
       for (float& elem : logit_with_temperature) {
-        elem /= temperature_scale;
+        elem /= temperature_scale_;
       }
       LogSoftmax(logit_with_temperature.data(), vocab_size, num_hyps);
     }

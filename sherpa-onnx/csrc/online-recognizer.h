@@ -96,16 +96,23 @@ struct OnlineRecognizerConfig {
 
   float blank_penalty = 0.0;
 
+  float temperature_scale = 2.0;
+
   OnlineRecognizerConfig() = default;
 
   OnlineRecognizerConfig(
       const FeatureExtractorConfig &feat_config,
-      const OnlineModelConfig &model_config, const OnlineLMConfig &lm_config,
+      const OnlineModelConfig &model_config,
+      const OnlineLMConfig &lm_config,
       const EndpointConfig &endpoint_config,
       const OnlineCtcFstDecoderConfig &ctc_fst_decoder_config,
-      bool enable_endpoint, const std::string &decoding_method,
-      int32_t max_active_paths, const std::string &hotwords_file,
-      float hotwords_score, float blank_penalty)
+      bool enable_endpoint,
+      const std::string &decoding_method,
+      int32_t max_active_paths,
+      const std::string &hotwords_file,
+      float hotwords_score,
+      float blank_penalty,
+      float temperature_scale)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
@@ -114,9 +121,10 @@ struct OnlineRecognizerConfig {
         enable_endpoint(enable_endpoint),
         decoding_method(decoding_method),
         max_active_paths(max_active_paths),
-        hotwords_score(hotwords_score),
         hotwords_file(hotwords_file),
-        blank_penalty(blank_penalty) {}
+        hotwords_score(hotwords_score),
+        blank_penalty(blank_penalty),
+        temperature_scale(temperature_scale) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

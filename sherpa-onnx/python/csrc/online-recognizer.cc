@@ -50,17 +50,30 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
   using PyClass = OnlineRecognizerConfig;
   py::class_<PyClass>(*m, "OnlineRecognizerConfig")
       .def(
-          py::init<const FeatureExtractorConfig &, const OnlineModelConfig &,
-                   const OnlineLMConfig &, const EndpointConfig &,
-                   const OnlineCtcFstDecoderConfig &, bool, const std::string &,
-                   int32_t, const std::string &, float, float>(),
-          py::arg("feat_config"), py::arg("model_config"),
+          py::init<const FeatureExtractorConfig &,
+                   const OnlineModelConfig &,
+                   const OnlineLMConfig &,
+                   const EndpointConfig &,
+                   const OnlineCtcFstDecoderConfig &,
+                   bool,
+                   const std::string &,
+                   int32_t,
+                   const std::string &,
+                   float,
+                   float,
+                   float>(),
+          py::arg("feat_config"),
+          py::arg("model_config"),
           py::arg("lm_config") = OnlineLMConfig(),
           py::arg("endpoint_config") = EndpointConfig(),
           py::arg("ctc_fst_decoder_config") = OnlineCtcFstDecoderConfig(),
-          py::arg("enable_endpoint"), py::arg("decoding_method"),
-          py::arg("max_active_paths") = 4, py::arg("hotwords_file") = "",
-          py::arg("hotwords_score") = 0, py::arg("blank_penalty") = 0.0)
+          py::arg("enable_endpoint"),
+          py::arg("decoding_method"),
+          py::arg("max_active_paths") = 4,
+          py::arg("hotwords_file") = "",
+          py::arg("hotwords_score") = 0,
+          py::arg("blank_penalty") = 0.0,
+          py::arg("temperature_scale") = 2.0)
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
       .def_readwrite("lm_config", &PyClass::lm_config)
@@ -72,6 +85,7 @@ static void PybindOnlineRecognizerConfig(py::module *m) {
       .def_readwrite("hotwords_file", &PyClass::hotwords_file)
       .def_readwrite("hotwords_score", &PyClass::hotwords_score)
       .def_readwrite("blank_penalty", &PyClass::blank_penalty)
+      .def_readwrite("temperature_scale", &PyClass::temperature_scale)
       .def("__str__", &PyClass::ToString);
 }
 
