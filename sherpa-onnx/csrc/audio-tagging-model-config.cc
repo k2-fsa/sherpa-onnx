@@ -32,7 +32,7 @@ bool AudioTaggingModelConfig::Validate() const {
   }
 
   if (!ced.empty() && !FileExists(ced)) {
-    SHERPA_ONNX_LOGE("CED model file %s does not exist", ced.c_str());
+    SHERPA_ONNX_LOGE("CED model file '%s' does not exist", ced.c_str());
     return false;
   }
 

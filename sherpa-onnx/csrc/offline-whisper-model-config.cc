@@ -48,7 +48,8 @@ bool OfflineWhisperModelConfig::Validate() const {
   }
 
   if (!FileExists(encoder)) {
-    SHERPA_ONNX_LOGE("whisper encoder file %s does not exist", encoder.c_str());
+    SHERPA_ONNX_LOGE("whisper encoder file '%s' does not exist",
+                     encoder.c_str());
     return false;
   }
 
@@ -58,7 +59,8 @@ bool OfflineWhisperModelConfig::Validate() const {
   }
 
   if (!FileExists(decoder)) {
-    SHERPA_ONNX_LOGE("whisper decoder file %s does not exist", decoder.c_str());
+    SHERPA_ONNX_LOGE("whisper decoder file '%s' does not exist",
+                     decoder.c_str());
     return false;
   }
 

@@ -88,7 +88,7 @@ class OfflineTts(
     fun allocate(assetManager: AssetManager? = null) {
         if (ptr == 0L) {
             if (assetManager != null) {
-                ptr = new(assetManager, config)
+                ptr = newFromAsset(assetManager, config)
             } else {
                 ptr = newFromFile(config)
             }
@@ -106,7 +106,7 @@ class OfflineTts(
         delete(ptr)
     }
 
-    private external fun new(
+    private external fun newFromAsset(
         assetManager: AssetManager,
         config: OfflineTtsConfig,
     ): Long
@@ -153,6 +153,7 @@ fun getOfflineTtsConfig(
     modelName: String,
     lexicon: String,
     dataDir: String,
+    dictDir: String,
     ruleFsts: String,
     ruleFars: String
 ): OfflineTtsConfig? {
@@ -162,7 +163,8 @@ fun getOfflineTtsConfig(
                 model = "$modelDir/$modelName",
                 lexicon = "$modelDir/$lexicon",
                 tokens = "$modelDir/tokens.txt",
-                dataDir = "$dataDir"
+                dataDir = dataDir,
+                dictDir = dictDir,
             ),
             numThreads = 2,
             debug = true,

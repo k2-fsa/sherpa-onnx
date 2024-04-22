@@ -18,12 +18,12 @@ void OnlineParaformerModelConfig::Register(ParseOptions *po) {
 
 bool OnlineParaformerModelConfig::Validate() const {
   if (!FileExists(encoder)) {
-    SHERPA_ONNX_LOGE("Paraformer encoder %s does not exist", encoder.c_str());
+    SHERPA_ONNX_LOGE("Paraformer encoder '%s' does not exist", encoder.c_str());
     return false;
   }
 
   if (!FileExists(decoder)) {
-    SHERPA_ONNX_LOGE("Paraformer decoder %s does not exist", decoder.c_str());
+    SHERPA_ONNX_LOGE("Paraformer decoder '%s' does not exist", decoder.c_str());
     return false;
   }
 

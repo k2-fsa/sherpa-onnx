@@ -31,7 +31,7 @@ bool SpeakerEmbeddingExtractorConfig::Validate() const {
   }
 
   if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("--speaker-embedding-model: %s does not exist",
+    SHERPA_ONNX_LOGE("--speaker-embedding-model: '%s' does not exist",
                      model.c_str());
     return false;
   }

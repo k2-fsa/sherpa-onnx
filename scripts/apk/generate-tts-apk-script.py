@@ -35,6 +35,7 @@ class TtsModel:
     rule_fsts: Optional[List[str]] = None
     rule_fars: Optional[List[str]] = None
     data_dir: Optional[str] = None
+    dict_dir: Optional[str] = None
     is_char: bool = False
     lang_iso_639_3: str = ""
 
@@ -326,8 +327,14 @@ def get_vits_models() -> List[TtsModel]:
     rule_fsts = ["phone.fst", "date.fst", "number.fst", "new_heteronym.fst"]
     for m in chinese_models:
         s = [f"{m.model_dir}/{r}" for r in rule_fsts]
+        if "vits-zh-hf" in m.model_dir:
+            s = s[:-1]
+            m.dict_dir = m.model_dir + "/dict"
+
         m.rule_fsts = ",".join(s)
-        m.rule_fars = f"{m.model_dir}/rule.far"
+
+        if "vits-zh-hf" not in m.model_dir:
+            m.rule_fars = f"{m.model_dir}/rule.far"
 
     all_models = chinese_models + [
         TtsModel(

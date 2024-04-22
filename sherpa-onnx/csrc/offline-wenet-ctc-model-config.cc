@@ -18,7 +18,7 @@ void OfflineWenetCtcModelConfig::Register(ParseOptions *po) {
 
 bool OfflineWenetCtcModelConfig::Validate() const {
   if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("WeNet model: %s does not exist", model.c_str());
+    SHERPA_ONNX_LOGE("WeNet model: '%s' does not exist", model.c_str());
     return false;
   }
 

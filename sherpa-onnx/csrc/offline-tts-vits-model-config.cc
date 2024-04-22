@@ -35,7 +35,7 @@ bool OfflineTtsVitsModelConfig::Validate() const {
   }
 
   if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("--vits-model: %s does not exist", model.c_str());
+    SHERPA_ONNX_LOGE("--vits-model: '%s' does not exist", model.c_str());
     return false;
   }
 
@@ -45,31 +45,31 @@ bool OfflineTtsVitsModelConfig::Validate() const {
   }
 
   if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("--vits-tokens: %s does not exist", tokens.c_str());
+    SHERPA_ONNX_LOGE("--vits-tokens: '%s' does not exist", tokens.c_str());
     return false;
   }
 
   if (!data_dir.empty()) {
     if (!FileExists(data_dir + "/phontab")) {
-      SHERPA_ONNX_LOGE("%s/phontab does not exist. Skipping test",
+      SHERPA_ONNX_LOGE("'%s/phontab' does not exist. Skipping test",
                        data_dir.c_str());
       return false;
     }
 
     if (!FileExists(data_dir + "/phonindex")) {
-      SHERPA_ONNX_LOGE("%s/phonindex does not exist. Skipping test",
+      SHERPA_ONNX_LOGE("'%s/phonindex' does not exist. Skipping test",
                        data_dir.c_str());
       return false;
     }
 
     if (!FileExists(data_dir + "/phondata")) {
-      SHERPA_ONNX_LOGE("%s/phondata does not exist. Skipping test",
+      SHERPA_ONNX_LOGE("'%s/phondata' does not exist. Skipping test",
                        data_dir.c_str());
       return false;
     }
 
     if (!FileExists(data_dir + "/intonations")) {
-      SHERPA_ONNX_LOGE("%s/intonations does not exist.", data_dir.c_str());
+      SHERPA_ONNX_LOGE("'%s/intonations' does not exist.", data_dir.c_str());
       return false;
     }
   }
@@ -82,7 +82,8 @@ bool OfflineTtsVitsModelConfig::Validate() const {
 
     for (const auto &f : required_files) {
       if (!FileExists(dict_dir + "/" + f)) {
-        SHERPA_ONNX_LOGE("%s/%s does not exist.", data_dir.c_str(), f.c_str());
+        SHERPA_ONNX_LOGE("'%s/%s' does not exist.", data_dir.c_str(),
+                         f.c_str());
         return false;
       }
     }

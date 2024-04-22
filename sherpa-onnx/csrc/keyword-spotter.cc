@@ -101,7 +101,8 @@ bool KeywordSpotterConfig::Validate() const {
   // Solution: take keyword_file variable is directly
   // parsed as a string of keywords
   if (!std::ifstream(keywords_file.c_str()).good()) {
-    SHERPA_ONNX_LOGE("Keywords file %s does not exist.", keywords_file.c_str());
+    SHERPA_ONNX_LOGE("Keywords file '%s' does not exist.",
+                     keywords_file.c_str());
     return false;
   }
 #endif

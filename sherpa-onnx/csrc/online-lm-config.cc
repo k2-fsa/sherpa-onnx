@@ -22,7 +22,7 @@ void OnlineLMConfig::Register(ParseOptions *po) {
 
 bool OnlineLMConfig::Validate() const {
   if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("%s does not exist", model.c_str());
+    SHERPA_ONNX_LOGE("'%s' does not exist", model.c_str());
     return false;
   }
 

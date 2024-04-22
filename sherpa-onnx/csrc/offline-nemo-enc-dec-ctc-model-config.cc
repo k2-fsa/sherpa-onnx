@@ -16,7 +16,7 @@ void OfflineNemoEncDecCtcModelConfig::Register(ParseOptions *po) {
 
 bool OfflineNemoEncDecCtcModelConfig::Validate() const {
   if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("NeMo model: %s does not exist", model.c_str());
+    SHERPA_ONNX_LOGE("NeMo model: '%s' does not exist", model.c_str());
     return false;
   }
 

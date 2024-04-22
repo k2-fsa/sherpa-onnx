@@ -15,7 +15,7 @@ void OfflineZipformerCtcModelConfig::Register(ParseOptions *po) {
 
 bool OfflineZipformerCtcModelConfig::Validate() const {
   if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("zipformer CTC model file %s does not exist",
+    SHERPA_ONNX_LOGE("zipformer CTC model file '%s' does not exist",
                      model.c_str());
     return false;
   }

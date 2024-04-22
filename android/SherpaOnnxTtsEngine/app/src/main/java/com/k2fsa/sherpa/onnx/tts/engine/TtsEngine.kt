@@ -87,9 +87,9 @@ object TtsEngine {
         // Example 4:
         // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#csukuangfj-vits-zh-hf-fanchen-c-chinese-187-speakers
         // modelDir = "vits-zh-hf-fanchen-C"
-        // modelName = "vits-zh-hf-fanchen-C.onnx "
+        // modelName = "vits-zh-hf-fanchen-C.onnx"
         // lexicon = "lexicon.txt"
-        // dictDit = "vits-zh-hf-fanchen-C/dict"
+        // dictDir = "vits-zh-hf-fanchen-C/dict"
         // lang = "zho"
 
         // Example 5:
@@ -121,14 +121,15 @@ object TtsEngine {
         if (dictDir != null) {
             val newDir = copyDataDir(context, modelDir!!)
             modelDir = newDir + "/" + modelDir
-            dictDir = newDir + "/" + dataDir
-            ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst,"
+            dictDir = modelDir + "/" + "dict"
+            ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
             assets = null
         }
 
         val config = getOfflineTtsConfig(
             modelDir = modelDir!!, modelName = modelName!!, lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
+            dictDir = dictDir ?: "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: ""
         )!!
