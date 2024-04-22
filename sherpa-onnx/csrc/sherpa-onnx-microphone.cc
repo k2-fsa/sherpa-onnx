@@ -157,6 +157,19 @@ for a list of pre-trained models to download.
     auto text = recognizer.GetResult(s.get()).text;
     bool is_endpoint = recognizer.IsEndpoint(s.get());
 
+    if (is_endpoint && !config.model_config.paraformer.encoder.empty()) {
+      // For streaming paraformer models, since it has a large right chunk size
+      // we need to pad it on endpointing so that the last character
+      // can be recognized
+      std::vector<float> tail_paddings(static_cast<int>(1.0 * mic_sample_rate));
+      s->AcceptWaveform(mic_sample_rate, tail_paddings.data(),
+                        tail_paddings.size());
+      while (recognizer.IsReady(s.get())) {
+        recognizer.DecodeStream(s.get());
+      }
+      text = recognizer.GetResult(s.get()).text;
+    }
+
     if (!text.empty() && last_text != text) {
       last_text = text;
 
