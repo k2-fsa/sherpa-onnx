@@ -18,17 +18,19 @@ void OnlineTransducerModelConfig::Register(ParseOptions *po) {
 
 bool OnlineTransducerModelConfig::Validate() const {
   if (!FileExists(encoder)) {
-    SHERPA_ONNX_LOGE("transducer encoder: %s does not exist", encoder.c_str());
+    SHERPA_ONNX_LOGE("transducer encoder: '%s' does not exist",
+                     encoder.c_str());
     return false;
   }
 
   if (!FileExists(decoder)) {
-    SHERPA_ONNX_LOGE("transducer decoder: %s does not exist", decoder.c_str());
+    SHERPA_ONNX_LOGE("transducer decoder: '%s' does not exist",
+                     decoder.c_str());
     return false;
   }
 
   if (!FileExists(joiner)) {
-    SHERPA_ONNX_LOGE("joiner: %s does not exist", joiner.c_str());
+    SHERPA_ONNX_LOGE("joiner: '%s' does not exist", joiner.c_str());
     return false;
   }
 

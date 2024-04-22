@@ -21,7 +21,7 @@ bool OfflineZipformerAudioTaggingModelConfig::Validate() const {
   }
 
   if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("--zipformer-model: %s does not exist", model.c_str());
+    SHERPA_ONNX_LOGE("--zipformer-model: '%s' does not exist", model.c_str());
     return false;
   }
 

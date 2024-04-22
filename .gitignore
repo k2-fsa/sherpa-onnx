@@ -93,3 +93,5 @@ sr-data
 vits-icefall-*
 sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
 spoken-language-identification-test-wavs
+my-release-key*
+vits-zh-hf-fanchen-C

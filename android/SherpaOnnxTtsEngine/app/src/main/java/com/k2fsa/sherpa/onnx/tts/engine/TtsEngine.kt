@@ -42,6 +42,7 @@ object TtsEngine {
     private var ruleFars: String? = null
     private var lexicon: String? = null
     private var dataDir: String? = null
+    private var dictDir: String? = null
     private var assets: AssetManager? = null
 
     init {
@@ -54,6 +55,7 @@ object TtsEngine {
         ruleFars = null
         lexicon = null
         dataDir = null
+        dictDir = null
         lang = null
 
         // Please enable one and only one of the examples below
@@ -83,6 +85,14 @@ object TtsEngine {
         // lang = "zho"
 
         // Example 4:
+        // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#csukuangfj-vits-zh-hf-fanchen-c-chinese-187-speakers
+        // modelDir = "vits-zh-hf-fanchen-C"
+        // modelName = "vits-zh-hf-fanchen-C.onnx"
+        // lexicon = "lexicon.txt"
+        // dictDir = "vits-zh-hf-fanchen-C/dict"
+        // lang = "zho"
+
+        // Example 5:
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
         // This model does not need lexicon or dataDir
         // modelDir = "vits-coqui-de-css10"
@@ -108,9 +118,18 @@ object TtsEngine {
             assets = null
         }
 
+        if (dictDir != null) {
+            val newDir = copyDataDir(context, modelDir!!)
+            modelDir = newDir + "/" + modelDir
+            dictDir = modelDir + "/" + "dict"
+            ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
+            assets = null
+        }
+
         val config = getOfflineTtsConfig(
             modelDir = modelDir!!, modelName = modelName!!, lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
+            dictDir = dictDir ?: "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: ""
         )!!

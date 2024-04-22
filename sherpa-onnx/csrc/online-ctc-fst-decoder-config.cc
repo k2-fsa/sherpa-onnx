@@ -31,7 +31,7 @@ void OnlineCtcFstDecoderConfig::Register(ParseOptions *po) {
 
 bool OnlineCtcFstDecoderConfig::Validate() const {
   if (!graph.empty() && !FileExists(graph)) {
-    SHERPA_ONNX_LOGE("graph: %s does not exist", graph.c_str());
+    SHERPA_ONNX_LOGE("graph: '%s' does not exist", graph.c_str());
     return false;
   }
   return true;

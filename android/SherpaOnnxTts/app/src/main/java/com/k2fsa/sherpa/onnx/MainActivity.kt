@@ -158,6 +158,7 @@ class MainActivity : AppCompatActivity() {
         var ruleFars: String?
         var lexicon: String?
         var dataDir: String?
+        var dictDir: String?
         var assets: AssetManager? = application.assets
 
         // The purpose of such a design is to make the CI test easier
@@ -169,6 +170,7 @@ class MainActivity : AppCompatActivity() {
         ruleFars = null
         lexicon = null
         dataDir = null
+        dictDir = null
 
         // Example 1:
         // modelDir = "vits-vctk"
@@ -191,21 +193,36 @@ class MainActivity : AppCompatActivity() {
         // lexicon = "lexicon.txt"
 
         // Example 4:
+        // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#csukuangfj-vits-zh-hf-fanchen-c-chinese-187-speakers
+        // modelDir = "vits-zh-hf-fanchen-C"
+        // modelName = "vits-zh-hf-fanchen-C.onnx"
+        // lexicon = "lexicon.txt"
+        // dictDir = "vits-zh-hf-fanchen-C/dict"
+
+        // Example 5:
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
         // modelDir = "vits-coqui-de-css10"
         // modelName = "model.onnx"
-        // lang = "deu"
 
         if (dataDir != null) {
-            val newDir = copyDataDir(modelDir)
+            val newDir = copyDataDir(modelDir!!)
             modelDir = newDir + "/" + modelDir
             dataDir = newDir + "/" + dataDir
+            assets = null
+        }
+
+        if (dictDir != null) {
+            val newDir = copyDataDir( modelDir!!)
+            modelDir = newDir + "/" + modelDir
+            dictDir = modelDir + "/" + "dict"
+            ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
             assets = null
         }
 
         val config = getOfflineTtsConfig(
             modelDir = modelDir!!, modelName = modelName!!, lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
+            dictDir = dictDir ?: "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: "",
         )!!

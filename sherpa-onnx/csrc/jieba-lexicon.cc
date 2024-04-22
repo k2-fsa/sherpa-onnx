@@ -146,6 +146,14 @@ class JiebaLexicon::Impl {
       if (token2id_.count(p.first) && !token2id_.count(p.second)) {
         token2id_[p.second] = token2id_[p.first];
       }
+
+      if (!token2id_.count(p.first) && token2id_.count(p.second)) {
+        token2id_[p.first] = token2id_[p.second];
+      }
+    }
+
+    if (!token2id_.count("、") && token2id_.count("，")) {
+      token2id_["、"] = token2id_["，"];
     }
   }
 
