@@ -49,7 +49,7 @@ class OfflineTts(
 
     init {
         if (assetManager != null) {
-            ptr = new(assetManager, config)
+            ptr = newFromAsset(assetManager, config)
         } else {
             ptr = newFromFile(config)
         }
