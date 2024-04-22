@@ -3,8 +3,6 @@ package com.k2fsa.sherpa.onnx
 import android.content.res.AssetManager
 import android.util.Log
 
-private val TAG = "sherpa-onnx"
-
 data class SpokenLanguageIdentificationWhisperConfig (
     var encoder: String,
     var decoder: String,

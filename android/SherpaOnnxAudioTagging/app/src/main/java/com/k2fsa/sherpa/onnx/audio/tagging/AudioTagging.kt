@@ -2,8 +2,6 @@ package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
 
-const val TAG = "sherpa-onnx"
-
 data class OfflineZipformerAudioTaggingModelConfig(
     var model: String = "",
 )

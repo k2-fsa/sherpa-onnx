@@ -13,6 +13,9 @@ set(sources
   audio-tagging.cc
   jni.cc
   offline-stream.cc
+  online-stream.cc
+  speaker-embedding-extractor.cc
+  speaker-embedding-manager.cc
   spoken-language-identification.cc
 )
 

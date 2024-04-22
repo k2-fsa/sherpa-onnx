@@ -103,6 +103,7 @@ kotlinc-jvm -include-runtime -d main.jar \
   AudioTagging.kt \
   Main.kt \
   OfflineStream.kt \
+  OnlineStream.kt \
   SherpaOnnx.kt \
   Speaker.kt \
   SpokenLanguageIdentification.kt \

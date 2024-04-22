@@ -3,40 +3,12 @@ package com.k2fsa.sherpa.onnx
 import android.content.res.AssetManager
 import android.util.Log
 
-private val TAG = "sherpa-onnx"
 data class SpeakerEmbeddingExtractorConfig(
     val model: String,
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
 )
-
-class SpeakerEmbeddingExtractorStream(var ptr: Long) {
-    fun acceptWaveform(samples: FloatArray, sampleRate: Int) =
-        acceptWaveform(ptr, samples, sampleRate)
-
-    fun inputFinished() = inputFinished(ptr)
-
-    protected fun finalize() {
-        delete(ptr)
-        ptr = 0
-    }
-
-    private external fun myTest(ptr: Long, v: Array<FloatArray>)
-
-    fun release() = finalize()
-    private external fun acceptWaveform(ptr: Long, samples: FloatArray, sampleRate: Int)
-
-    private external fun inputFinished(ptr: Long)
-
-    private external fun delete(ptr: Long)
-
-    companion object {
-        init {
-            System.loadLibrary("sherpa-onnx-jni")
-        }
-    }
-}
 
 class SpeakerEmbeddingExtractor(
     assetManager: AssetManager? = null,
@@ -46,7 +18,7 @@ class SpeakerEmbeddingExtractor(
 
     init {
         ptr = if (assetManager != null) {
-            new(assetManager, config)
+            newFromAsset(assetManager, config)
         } else {
             newFromFile(config)
         }
@@ -59,16 +31,16 @@ class SpeakerEmbeddingExtractor(
 
     fun release() = finalize()
 
-    fun createStream(): SpeakerEmbeddingExtractorStream {
+    fun createStream(): OnlineStream {
         val p = createStream(ptr)
-        return SpeakerEmbeddingExtractorStream(p)
+        return OnlineStream(p)
     }
 
-    fun isReady(stream: SpeakerEmbeddingExtractorStream) = isReady(ptr, stream.ptr)
-    fun compute(stream: SpeakerEmbeddingExtractorStream) = compute(ptr, stream.ptr)
+    fun isReady(stream: OnlineStream) = isReady(ptr, stream.ptr)
+    fun compute(stream: OnlineStream) = compute(ptr, stream.ptr)
     fun dim() = dim(ptr)
 
-    private external fun new(
+    private external fun newFromAsset(
         assetManager: AssetManager,
         config: SpeakerEmbeddingExtractorConfig,
     ): Long
@@ -98,12 +70,14 @@ class SpeakerEmbeddingManager(val dim: Int) {
     private var ptr: Long
 
     init {
-        ptr = new(dim)
+        ptr = create(dim)
     }
 
     protected fun finalize() {
-        delete(ptr)
-        ptr = 0
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
 
     fun release() = finalize()
@@ -119,7 +93,7 @@ class SpeakerEmbeddingManager(val dim: Int) {
 
     fun allSpeakerNames() = allSpeakerNames(ptr)
 
-    private external fun new(dim: Int): Long
+    private external fun create(dim: Int): Long
     private external fun delete(ptr: Long): Unit
     private external fun add(ptr: Long, name: String, embedding: FloatArray): Boolean
     private external fun addList(ptr: Long, name: String, embedding: Array<FloatArray>): Boolean
@@ -170,7 +144,7 @@ object SpeakerRecognition {
             if (_extractor != null) {
                 return
             }
-            Log.i(TAG, "Initializing speaker embedding extractor")
+            Log.i("sherpa-onnx", "Initializing speaker embedding extractor")
 
             _extractor = SpeakerEmbeddingExtractor(
                 assetManager = assetManager,
