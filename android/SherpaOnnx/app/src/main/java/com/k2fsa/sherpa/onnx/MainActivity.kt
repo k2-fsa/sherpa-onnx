@@ -126,7 +126,19 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 val isEndpoint = recognizer.isEndpoint(stream)
-                val text = recognizer.getResult(stream).text
+                var text = recognizer.getResult(stream).text
+
+                // For streaming parformer, we need to manually add some
+                // paddings so that it has enough right context to
+                // recognize the last word of this segment
+                if (isEndpoint && recognizer.config.modelConfig.paraformer.encoder.isNotBlank()) {
+                    val tailPaddings = FloatArray((0.8 * sampleRateInHz).toInt())
+                    stream.acceptWaveform(tailPaddings, sampleRate = sampleRateInHz)
+                    while (recognizer.isReady(stream)) {
+                        recognizer.decode(stream)
+                    }
+                    text = recognizer.getResult(stream).text
+                }
 
                 var textToDisplay = lastText
 

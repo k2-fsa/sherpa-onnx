@@ -67,7 +67,7 @@ data class OnlineRecognizerResult(
 
 class OnlineRecognizer(
     assetManager: AssetManager? = null,
-    var config: OnlineRecognizerConfig,
+    val config: OnlineRecognizerConfig,
 ) {
     private val ptr: Long
 
