@@ -1,12 +1,12 @@
 <resources>
-    <string name="app_name">KWS with Next-gen Kaldi</string>
+    <string name="app_name">Keyword spotting</string>
     <string name="hint">Click the Start button to play keyword spotting with Next-gen Kaldi.
         \n
         \n\n\n
         The source code and pre-trained models are publicly available.
         Please see https://github.com/k2-fsa/sherpa-onnx for details.
     </string>
-    <string name="keyword_hint">Input your keywords here, one keyword perline.</string>
+    <string name="keyword_hint">Input your keywords here, one keyword per line.\nTwo example keywords are given below:\n\nn ǐ h ǎo @你好\nd àn g ē d àn g ē @蛋哥蛋哥</string>
     <string name="start">Start</string>
     <string name="stop">Stop</string>
 </resources>

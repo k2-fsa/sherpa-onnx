@@ -1,6 +1,6 @@
 package com.k2fsa.sherpa.onnx
 
-class OnlineStream(var ptr: Long) {
+class OnlineStream(var ptr: Long = 0) {
     fun acceptWaveform(samples: FloatArray, sampleRate: Int) =
         acceptWaveform(ptr, samples, sampleRate)
 

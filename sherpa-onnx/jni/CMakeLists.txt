@@ -12,6 +12,7 @@ endif()
 set(sources
   audio-tagging.cc
   jni.cc
+  keyword-spotter.cc
   offline-recognizer.cc
   offline-stream.cc
   online-recognizer.cc

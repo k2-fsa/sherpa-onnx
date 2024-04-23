@@ -116,7 +116,6 @@ class OnlineRecognizer(
     ): Long
 
     private external fun createStream(ptr: Long, hotwords: String): Long
-    private external fun inputFinished(ptr: Long, streamPtr: Long)
     private external fun reset(ptr: Long, streamPtr: Long)
     private external fun decode(ptr: Long, streamPtr: Long)
     private external fun isEndpoint(ptr: Long, streamPtr: Long): Boolean
