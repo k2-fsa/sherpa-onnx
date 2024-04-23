@@ -49,7 +49,7 @@ data class OnlineLMConfig(
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineModelConfig,
-    var lmConfig: OnlineLMConfig,
+    var lmConfig: OnlineLMConfig = OnlineLMConfig(),
     var endpointConfig: EndpointConfig = EndpointConfig(),
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",
@@ -282,6 +282,32 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                     encoder = "$modelDir/encoder-epoch-99-avg-1.int8.onnx",
                     decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
                     joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
+            )
+        }
+
+        9 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-99-avg-1.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
+            )
+        }
+
+        10 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-99-avg-1.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer",

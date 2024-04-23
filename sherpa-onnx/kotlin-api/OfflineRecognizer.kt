@@ -3,9 +3,9 @@ package com.k2fsa.sherpa.onnx
 import android.content.res.AssetManager
 
 data class OfflineRecognizerResult(
-  val text: String,
-  val tokens: Array<String>,
-  val timestamps: FloatArray,
+    val text: String,
+    val tokens: Array<String>,
+    val timestamps: FloatArray,
 )
 
 data class OfflineTransducerModelConfig(
@@ -54,10 +54,10 @@ class OfflineRecognizer(
     private val ptr: Long
 
     init {
-        if (assetManager != null) {
-            ptr = newFromAsset(assetManager, config)
+        ptr = if (assetManager != null) {
+            newFromAsset(assetManager, config)
         } else {
-            ptr = newFromFile(config)
+            newFromFile(config)
         }
     }
 
@@ -73,12 +73,12 @@ class OfflineRecognizer(
     }
 
     fun getResult(stream: OfflineStream): OfflineRecognizerResult {
-      val objArray = getResult(stream.ptr)
+        val objArray = getResult(stream.ptr)
 
-      val text = objArray[0] as String
-      val tokens = objArray[1] as Array<String>
-      val timestamps = objArray[2] as FloatArray
-      return OfflineRecognizerResult(text=text, tokens=tokens, timestamps=timestamps)
+        val text = objArray[0] as String
+        val tokens = objArray[1] as Array<String>
+        val timestamps = objArray[2] as FloatArray
+        return OfflineRecognizerResult(text = text, tokens = tokens, timestamps = timestamps)
     }
 
     fun decode(stream: OfflineStream) = decode(ptr, stream.ptr)
