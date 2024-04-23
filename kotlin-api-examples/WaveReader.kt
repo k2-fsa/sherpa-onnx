@@ -1,1 +1,1 @@
-../android/SherpaOnnx/app/src/main/java/com/k2fsa/sherpa/onnx/WaveReader.kt
+../sherpa-onnx/kotlin-api/WaveReader.kt

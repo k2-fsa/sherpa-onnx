@@ -1,1 +1,1 @@
-../android/SherpaOnnxSpokenLanguageIdentification/app/src/main/java/com/k2fsa/sherpa/onnx/slid/SpokenLanguageIdentification.kt
+../sherpa-onnx/kotlin-api/SpokenLanguageIdentification.kt

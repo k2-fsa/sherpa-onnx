@@ -14,6 +14,7 @@ set(sources
   jni.cc
   offline-recognizer.cc
   offline-stream.cc
+  online-recognizer.cc
   online-stream.cc
   speaker-embedding-extractor.cc
   speaker-embedding-manager.cc

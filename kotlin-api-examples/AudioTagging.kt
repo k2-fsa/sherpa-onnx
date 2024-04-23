@@ -1,1 +1,1 @@
-../android/SherpaOnnxAudioTagging/app/src/main/java/com/k2fsa/sherpa/onnx/audio/tagging/AudioTagging.kt
+../sherpa-onnx/kotlin-api/AudioTagging.kt

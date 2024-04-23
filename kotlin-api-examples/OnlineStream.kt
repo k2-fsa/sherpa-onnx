@@ -1,1 +1,1 @@
-../android/SherpaOnnxSpeakerIdentification/app/src/main/java/com/k2fsa/sherpa/onnx/speaker/identification/OnlineStream.kt
+../sherpa-onnx/kotlin-api/OnlineStream.kt

@@ -12,16 +12,19 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.k2fsa.sherpa.onnx.*
 import kotlin.concurrent.thread
 
 private const val TAG = "sherpa-onnx"
 private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
 
+// To enable microphone in android emulator, use
+//
+// adb emu avd hostmicon
+
 class MainActivity : AppCompatActivity() {
     private val permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
 
-    private lateinit var model: SherpaOnnx
+    private lateinit var recognizer: OnlineRecognizer
     private var audioRecord: AudioRecord? = null
     private lateinit var recordButton: Button
     private lateinit var textView: TextView
@@ -87,7 +90,6 @@ class MainActivity : AppCompatActivity() {
             audioRecord!!.startRecording()
             recordButton.setText(R.string.stop)
             isRecording = true
-            model.reset(true)
             textView.text = ""
             lastText = ""
             idx = 0
@@ -108,6 +110,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun processSamples() {
         Log.i(TAG, "processing samples")
+        val stream = recognizer.createStream()
 
         val interval = 0.1 // i.e., 100 ms
         val bufferSize = (interval * sampleRateInHz).toInt() // in samples
@@ -117,29 +120,29 @@ class MainActivity : AppCompatActivity() {
             val ret = audioRecord?.read(buffer, 0, buffer.size)
             if (ret != null && ret > 0) {
                 val samples = FloatArray(ret) { buffer[it] / 32768.0f }
-                model.acceptWaveform(samples, sampleRate=sampleRateInHz)
-                while (model.isReady()) {
-                    model.decode()
+                stream.acceptWaveform(samples, sampleRate = sampleRateInHz)
+                while (recognizer.isReady(stream)) {
+                    recognizer.decode(stream)
                 }
 
-                val isEndpoint = model.isEndpoint()
-                val text = model.text
+                val isEndpoint = recognizer.isEndpoint(stream)
+                val text = recognizer.getResult(stream).text
 
-                var textToDisplay = lastText;
+                var textToDisplay = lastText
 
-                if(text.isNotBlank()) {
-                    if (lastText.isBlank()) {
-                        textToDisplay = "${idx}: ${text}"
+                if (text.isNotBlank()) {
+                    textToDisplay = if (lastText.isBlank()) {
+                        "${idx}: $text"
                     } else {
-                        textToDisplay = "${lastText}\n${idx}: ${text}"
+                        "${lastText}\n${idx}: $text"
                     }
                 }
 
                 if (isEndpoint) {
-                    model.reset()
+                    recognizer.reset(stream)
                     if (text.isNotBlank()) {
-                        lastText = "${lastText}\n${idx}: ${text}"
-                        textToDisplay = lastText;
+                        lastText = "${lastText}\n${idx}: $text"
+                        textToDisplay = lastText
                         idx += 1
                     }
                 }
@@ -149,6 +152,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+        stream.release()
     }
 
     private fun initMicrophone(): Boolean {
@@ -180,7 +184,7 @@ class MainActivity : AppCompatActivity() {
         // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
         // for a list of available models
         val type = 0
-        println("Select model type ${type}")
+        println("Select model type $type")
         val config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
             modelConfig = getModelConfig(type = type)!!,
@@ -189,7 +193,7 @@ class MainActivity : AppCompatActivity() {
             enableEndpoint = true,
         )
 
-        model = SherpaOnnx(
+        recognizer = OnlineRecognizer(
             assetManager = application.assets,
             config = config,
         )

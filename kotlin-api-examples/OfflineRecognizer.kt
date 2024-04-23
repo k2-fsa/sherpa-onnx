@@ -1,1 +1,1 @@
-../android/SherpaOnnxVadAsr/app/src/main/java/com/k2fsa/sherpa/onnx/OfflineRecognizer.kt
+../sherpa-onnx/kotlin-api/OfflineRecognizer.kt
