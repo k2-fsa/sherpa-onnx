@@ -1,22 +1,21 @@
 package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
-import android.util.Log
 
-data class SpokenLanguageIdentificationWhisperConfig (
+data class SpokenLanguageIdentificationWhisperConfig(
     var encoder: String,
     var decoder: String,
     var tailPaddings: Int = -1,
 )
 
-data class SpokenLanguageIdentificationConfig (
+data class SpokenLanguageIdentificationConfig(
     var whisper: SpokenLanguageIdentificationWhisperConfig,
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
 )
 
-class SpokenLanguageIdentification (
+class SpokenLanguageIdentification(
     assetManager: AssetManager? = null,
     config: SpokenLanguageIdentificationConfig,
 ) {
@@ -44,7 +43,7 @@ class SpokenLanguageIdentification (
         return OfflineStream(p)
     }
 
-    fun compute(stream: OfflineStream) =  compute(ptr, stream.ptr)
+    fun compute(stream: OfflineStream) = compute(ptr, stream.ptr)
 
     private external fun newFromAsset(
         assetManager: AssetManager,
@@ -67,10 +66,14 @@ class SpokenLanguageIdentification (
         }
     }
 }
+
 // please refer to
 // https://k2-fsa.github.io/sherpa/onnx/spolken-language-identification/pretrained_models.html#whisper
 // to download more models
-fun getSpokenLanguageIdentificationConfig(type: Int, numThreads: Int=1): SpokenLanguageIdentificationConfig? {
+fun getSpokenLanguageIdentificationConfig(
+    type: Int,
+    numThreads: Int = 1
+): SpokenLanguageIdentificationConfig? {
     when (type) {
         0 -> {
             val modelDir = "sherpa-onnx-whisper-tiny"

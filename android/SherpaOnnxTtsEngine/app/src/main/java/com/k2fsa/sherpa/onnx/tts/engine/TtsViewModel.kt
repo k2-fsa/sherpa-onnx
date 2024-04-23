@@ -1,7 +1,6 @@
 package com.k2fsa.sherpa.onnx.tts.engine
 
 import android.app.Application
-import android.os.FileUtils.ProgressListener
 import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeech.OnInitListener
 import android.speech.tts.UtteranceProgressListener
@@ -27,7 +26,7 @@ class TtsViewModel : ViewModel() {
     private val onInitListener = object : OnInitListener {
         override fun onInit(status: Int) {
             when (status) {
-                TextToSpeech.SUCCESS -> Log.i(TAG, "Init tts succeded")
+                TextToSpeech.SUCCESS -> Log.i(TAG, "Init tts succeeded")
                 TextToSpeech.ERROR -> Log.i(TAG, "Init tts failed")
                 else -> Log.i(TAG, "Unknown status $status")
             }

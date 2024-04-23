@@ -15,10 +15,10 @@ object Slid {
         get() {
             return _slid!!
         }
-    val localeMap : Map<String, String>
-            get() {
-                return _localeMap
-            }
+    val localeMap: Map<String, String>
+        get() {
+            return _localeMap
+        }
 
     fun initSlid(assetManager: AssetManager? = null, numThreads: Int = 1) {
         synchronized(this) {
@@ -31,7 +31,7 @@ object Slid {
             }
 
             if (_localeMap.isEmpty()) {
-                val allLang =  Locale.getISOLanguages();
+                val allLang = Locale.getISOLanguages()
                 for (lang in allLang) {
                     val locale = Locale(lang)
                     _localeMap[lang] = locale.displayName

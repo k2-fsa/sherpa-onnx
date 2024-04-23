@@ -26,20 +26,16 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.k2fsa.sherpa.onnx.tts.engine.ui.theme.SherpaOnnxTtsEngineTheme
 import java.io.File
-import java.lang.NumberFormatException
 
 const val TAG = "sherpa-onnx-tts-engine"
 
@@ -76,7 +72,7 @@ class MainActivity : ComponentActivity() {
                                 val testTextContent = getSampleText(TtsEngine.lang ?: "")
 
                                 var testText by remember { mutableStateOf(testTextContent) }
-                                
+
                                 val numSpeakers = TtsEngine.tts!!.numSpeakers()
                                 if (numSpeakers > 1) {
                                     OutlinedTextField(
@@ -88,7 +84,7 @@ class MainActivity : ComponentActivity() {
                                                 try {
                                                     TtsEngine.speakerId = it.toString().toInt()
                                                 } catch (ex: NumberFormatException) {
-                                                    Log.i(TAG, "Invalid input: ${it}")
+                                                    Log.i(TAG, "Invalid input: $it")
                                                     TtsEngine.speakerId = 0
                                                 }
                                             }
@@ -119,7 +115,7 @@ class MainActivity : ComponentActivity() {
                                     Button(
                                         modifier = Modifier.padding(20.dp),
                                         onClick = {
-                                            Log.i(TAG, "Clicked, text: ${testText}")
+                                            Log.i(TAG, "Clicked, text: $testText")
                                             if (testText.isBlank() || testText.isEmpty()) {
                                                 Toast.makeText(
                                                     applicationContext,
@@ -136,7 +132,7 @@ class MainActivity : ComponentActivity() {
                                                 val filename =
                                                     application.filesDir.absolutePath + "/generated.wav"
                                                 val ok =
-                                                    audio.samples.size > 0 && audio.save(filename)
+                                                    audio.samples.isNotEmpty() && audio.save(filename)
 
                                                 if (ok) {
                                                     stopMediaPlayer()
