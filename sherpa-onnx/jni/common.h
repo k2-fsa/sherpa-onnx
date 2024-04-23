@@ -6,6 +6,8 @@
 #define SHERPA_ONNX_JNI_COMMON_H_
 
 #if __ANDROID_API__ >= 9
+#include <strstream>
+
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
