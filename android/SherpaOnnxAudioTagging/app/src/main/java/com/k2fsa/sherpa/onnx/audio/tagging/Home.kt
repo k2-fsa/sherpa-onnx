@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import com.k2fsa.sherpa.onnx.AudioEvent
-import com.k2fsa.sherpa.onnx.Tagger
 import kotlin.concurrent.thread
 
 
