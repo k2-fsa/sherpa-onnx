@@ -280,7 +280,7 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                 transducer = OnlineTransducerModelConfig(
                     encoder = "$modelDir/encoder-epoch-99-avg-1.int8.onnx",
                     decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
-                    joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer",

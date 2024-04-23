@@ -29,6 +29,8 @@ log "====================x86-64===================="
 log "====================x86===================="
 ./build-android-x86.sh
 
+export SHERPA_ONNX_ENABLE_TTS=ON
+
 mkdir -p apks
 
 {% for tts_model in tts_model_list %}
