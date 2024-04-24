@@ -1,11 +1,11 @@
-name: run-python-test
+name: run-python-test-macos
 
 on:
   push:
     branches:
       - master
     paths:
-      - '.github/workflows/run-python-test.yaml'
+      - '.github/workflows/run-python-test-macos.yaml'
       - '.github/scripts/test-python.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
@@ -15,7 +15,7 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/run-python-test.yaml'
+      - '.github/workflows/run-python-test-macos.yaml'
       - '.github/scripts/test-python.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
@@ -24,7 +24,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: run-python-test-${{ github.ref }}
+  group: run-python-test-macos-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -37,19 +37,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # See https://github.com/actions/runner-images
+        # macos-14 is for arm64
+        # macos-14-large is for x64
         include:
-          - os: ubuntu-20.04
+          - os: macos-11
             python-version: "3.7"
-          - os: ubuntu-20.04
-            python-version: "3.8"
-          - os: ubuntu-20.04
-            python-version: "3.9"
 
-          - os: ubuntu-22.04
+          - os: macos-12
+            python-version: "3.8"
+
+          - os: macos-13
+            python-version: "3.9"
+          - os: macos-13
             python-version: "3.10"
-          - os: ubuntu-22.04
+
+          - os: macos-14
             python-version: "3.11"
-          - os: ubuntu-22.04
+          - os: macos-14
             python-version: "3.12"
 
     steps:
@@ -61,7 +66,7 @@ jobs:
         shell: bash
         run: |
           uname -a
-          head -n 100 /etc/*version
+          sw_vers
 
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
