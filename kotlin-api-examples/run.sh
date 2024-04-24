@@ -6,11 +6,9 @@
 
 set -ex
 
-cd ..
-mkdir -p build
-cd build
-
 if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa-onnx-jni.so ]]; then
+  mkdir -p ../build
+  pushd ../build
   cmake \
     -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
@@ -22,11 +20,10 @@ if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa
 
   make -j4
   ls -lh lib
+  popd
 fi
 
 export LD_LIBRARY_PATH=$PWD/build/lib:$LD_LIBRARY_PATH
-
-cd ../kotlin-api-examples
 
 function testSpeakerEmbeddingExtractor() {
   if [ ! -f ./3dspeaker_speech_eres2net_large_sv_zh-cn_3dspeaker_16k.onnx ]; then

@@ -69,7 +69,7 @@ void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
     const std::vector<float> samples =
         sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
     if (!is_ok) {
-      fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
+      fprintf(stderr, "Failed to read '%s'\n", wav_filename.c_str());
       continue;
     }
     duration += samples.size() / static_cast<float>(sampling_rate);
@@ -96,7 +96,7 @@ void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
       const std::vector<float> samples =
           sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
       if (!is_ok) {
-        fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
+        fprintf(stderr, "Failed to read '%s'\n", wav_filename.c_str());
         continue;
       }
       duration += samples.size() / static_cast<float>(sampling_rate);

@@ -93,7 +93,7 @@ static std::vector<std::vector<float>> ComputeEmbeddings(
         sherpa_onnx::ReadWave(f, &sampling_rate, &is_ok);
 
     if (!is_ok) {
-      fprintf(stderr, "Failed to read %s\n", f.c_str());
+      fprintf(stderr, "Failed to read '%s'\n", f.c_str());
       exit(-1);
     }
 

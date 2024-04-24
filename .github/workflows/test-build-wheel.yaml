@@ -66,11 +66,11 @@ jobs:
           - os: macos-14
             python-version: "3.12"
 
-          - os: windows-2019
+          - os: windows-2022
             python-version: "3.7"
-          - os: windows-2019
+          - os: windows-2022
             python-version: "3.8"
-          - os: windows-2019
+          - os: windows-2022
             python-version: "3.9"
 
           - os: windows-2022
