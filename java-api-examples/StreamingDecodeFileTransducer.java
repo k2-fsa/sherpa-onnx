@@ -22,8 +22,6 @@ public class StreamingDecodeFileTransducer {
         "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/0.wav";
 
     WaveReader reader = new WaveReader(waveFilename);
-    System.out.println(reader.getSampleRate());
-    System.out.println(reader.getSamples().length);
 
     OnlineTransducerModelConfig transducer =
         OnlineTransducerModelConfig.builder()

@@ -19,6 +19,15 @@ java_files += OnlineRecognizerConfig.java
 java_files += OnlineRecognizerResult.java
 java_files += OnlineRecognizer.java
 
+java_files += OfflineTransducerModelConfig.java
+java_files += OfflineParaformerModelConfig.java
+java_files += OfflineWhisperModelConfig.java
+java_files += OfflineModelConfig.java
+java_files += OfflineRecognizerConfig.java
+java_files += OfflineRecognizerResult.java
+java_files += OfflineStream.java
+java_files += OfflineRecognizer.java
+
 class_files := $(java_files:%.java=%.class)
 
 java_files := $(addprefix src/$(package_dir)/,$(java_files))

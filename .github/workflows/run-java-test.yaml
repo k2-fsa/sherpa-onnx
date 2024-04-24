@@ -92,13 +92,9 @@ jobs:
             make -j4
             ls -lh lib
 
-      - name:  Run java test
+      - name:  Run java test (Streaming ASR)
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-          cmake --version
-
           cd ./java-api-examples
           ./run-streaming-decode-file-ctc.sh
           # Delete model files to save space
@@ -109,3 +105,16 @@ jobs:
 
           ./run-streaming-decode-file-transducer.sh
           rm -rf sherpa-onnx-streaming-*
+
+      - name:  Run java test (Non-Streaming ASR)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-decode-file-paraformer.sh
+          rm -rf sherpa-onnx-paraformer-zh-*
+
+          ./run-non-streaming-decode-file-transducer.sh
+          rm -rf sherpa-onnx-zipformer-*
+
+          ./run-non-streaming-decode-file-whisper.sh
+          rm -rf sherpa-onnx-whisper-*

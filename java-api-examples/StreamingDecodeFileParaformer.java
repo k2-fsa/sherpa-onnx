@@ -1,4 +1,3 @@
-// Copyright 2022-2023 by zhaoming
 // Copyright 2024 Xiaomi Corporation
 
 // This file shows how to use an online paraformer, i.e., streaming paraformer,
@@ -16,8 +15,6 @@ public class StreamingDecodeFileParaformer {
     String waveFilename = "./sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/2.wav";
 
     WaveReader reader = new WaveReader(waveFilename);
-    System.out.println(reader.getSampleRate());
-    System.out.println(reader.getSamples().length);
 
     OnlineParaformerModelConfig paraformer =
         OnlineParaformerModelConfig.builder().setEncoder(encoder).setDecoder(decoder).build();

@@ -15,19 +15,6 @@ public class OnlineRecognizer {
         ptr = newFromFile(config);
     }
 
-    /*
-    public static float[] readWavFile(String fileName) {
-        // read data from the filename
-        Object[] wavdata = readWave(fileName);
-        Object data = wavdata[0]; // data[0] is float data, data[1] sample rate
-
-        float[] floatData = (float[]) data;
-
-        return floatData;
-    }
-    */
-
-
     public void decode(OnlineStream s) {
         decode(ptr, s.getPtr());
     }
@@ -55,7 +42,7 @@ public class OnlineRecognizer {
         release();
     }
 
-    // recognizer release, you'd better call it manually if not use anymore
+    // You'd better call it manually if it is not used anymore
     public void release() {
         if (this.ptr == 0) {
             return;
