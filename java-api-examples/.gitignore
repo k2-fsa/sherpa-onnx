@@ -1,3 +1,4 @@
 lib
 hs_err*
 !run-streaming*.sh
+!run-non-streaming*.sh

@@ -12,6 +12,7 @@ public class OnlineRecognizerConfig {
     private final int maxActivePaths;
     private final String hotwordsFile;
     private final float hotwordsScore;
+
     private OnlineRecognizerConfig(Builder builder) {
         this.featConfig = builder.featConfig;
         this.modelConfig = builder.modelConfig;

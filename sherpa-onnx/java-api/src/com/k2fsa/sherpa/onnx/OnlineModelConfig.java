@@ -12,6 +12,7 @@ public class OnlineModelConfig {
     private final boolean debug;
     private final String provider;
     private final String modelType;
+
     private OnlineModelConfig(Builder builder) {
         this.transducer = builder.transducer;
         this.paraformer = builder.paraformer;

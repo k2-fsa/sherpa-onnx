@@ -1,4 +1,3 @@
-// Copyright 2022-2023 by zhaoming
 // Copyright 2024 Xiaomi Corporation
 
 // This file shows how to use an online CTC model, i.e., streaming CTC model,
@@ -16,8 +15,6 @@ public class StreamingDecodeFileCtc {
     String waveFilename = "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/test_wavs/8k.wav";
 
     WaveReader reader = new WaveReader(waveFilename);
-    System.out.println(reader.getSampleRate());
-    System.out.println(reader.getSamples().length);
 
     OnlineZipformer2CtcModelConfig ctc =
         OnlineZipformer2CtcModelConfig.builder().setModel(model).build();
