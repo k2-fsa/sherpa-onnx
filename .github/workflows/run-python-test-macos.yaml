@@ -1,0 +1,105 @@
+name: run-python-test-macos
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/run-python-test-macos.yaml'
+      - '.github/scripts/test-python.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'python-api-examples/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/run-python-test-macos.yaml'
+      - '.github/scripts/test-python.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'python-api-examples/**'
+  workflow_dispatch:
+
+concurrency:
+  group: run-python-test-macos-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  run-python-test:
+    name: ${{ matrix.os }} ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # See https://github.com/actions/runner-images
+        # macos-14 is for arm64
+        # macos-14-large is for x64
+        include:
+          - os: macos-11
+            python-version: "3.7"
+
+          - os: macos-12
+            python-version: "3.8"
+
+          - os: macos-13
+            python-version: "3.9"
+          - os: macos-13
+            python-version: "3.10"
+          - os: macos-13
+            python-version: "3.11"
+
+          - os: macos-14
+            python-version: "3.12"
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Display OS version
+        shell: bash
+        run: |
+          uname -a
+          sw_vers
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-python-${{ matrix.python-version }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile
+
+      - name: Install sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          python3 -m pip install --verbose .
+
+      - name: Test sherpa-onnx
+        shell: bash
+        run: |
+          export OS=${{ matrix.os }}
+          .github/scripts/test-python.sh
+          .github/scripts/test-speaker-recognition-python.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-generated-test-files-${{ matrix.os }}-${{ matrix.python-version }}
+          path: tts

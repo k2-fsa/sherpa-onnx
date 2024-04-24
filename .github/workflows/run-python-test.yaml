@@ -30,9 +30,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  SCCACHE_GHA_ENABLED: "true"
-
 jobs:
   run-python-test:
     name: ${{ matrix.os }} ${{ matrix.python-version }}
@@ -40,32 +37,36 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.7", "3.8", "3.9", "3.10","3.11", "3.12"]
-        exclude:
-          - os: macos-latest
+        include:
+          - os: ubuntu-20.04
+            python-version: "3.7"
+          - os: ubuntu-20.04
+            python-version: "3.8"
+          - os: ubuntu-20.04
             python-version: "3.9"
-          - os: macos-latest
+
+          - os: ubuntu-22.04
             python-version: "3.10"
-          # - os: windows-latest
-          #   python-version: "3.12"
+          - os: ubuntu-22.04
+            python-version: "3.11"
+          - os: ubuntu-22.04
+            python-version: "3.12"
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      - name: Display OS version
+        shell: bash
+        run: |
+          uname -a
+          find "/etc" -maxdepth 1 -type f -name "*version" -exec head -n 100 {} \;
+
       - name: ccache
-        if: matrix.os != 'windows-latest'
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.os }}-python-${{ matrix.python-version }}
-
-      - name: Run sccache-cache
-        if: matrix.os == 'windows-latest'
-        uses: mozilla-actions/sccache-action@v0.0.4
-        with:
-          version: "v0.7.4"
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -76,31 +77,108 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile
+          python3 -m pip install wheel twine setuptools
 
-      - name: Install sherpa-onnx
-        if: matrix.os != 'windows-latest'
+      - name: Install ninja
+        shell: bash
+        run: |
+          sudo apt-get install ninja-build
+
+      - name: Display ninja version
+        shell: bash
+        run: |
+          ninja --version
+          ninja --help || true
+          which ninja
+
+      - name: Display site packages dir
+        shell: bash
+        run: |
+          python3 -c 'import site; print(site.getsitepackages())'
+          p=$(python3 -c 'import site; print(site.getsitepackages())')
+          echo "p: $p"
+
+      - name: Install patchelf
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y patchelf
+          patchelf --help
+
+      - name: Build sherpa-onnx
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
+          export SHERPA_ONNX_CMAKE_ARGS="-G Ninja -DCMAKE_BUILD_TYPE=Release"
+          export SHERPA_ONNX_MAKE_ARGS="-j 6"
 
-          python3 -m pip install --verbose .
+          python3 setup.py bdist_wheel
 
-      - name: Install sherpa-onnx
-        if: matrix.os == 'windows-latest'
+      - name: Patch wheels
         shell: bash
         run: |
-          cmake --version
-          export SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_CXX_COMPILER_LAUNCHER=sccache -DCMAKE_C_COMPILER_LAUNCHER=sccache"
-          echo "SHERPA_ONNX_CMAKE_ARGS: ${SHERPA_ONNX_CMAKE_ARGS}"
+          mkdir ./dist2
+          sudo ./scripts/wheel/patch_wheel.py --in-dir ./dist --out-dir ./dist2
 
-          python3 -m pip install --verbose .
+      - name: Install sherpa-onnx
+        shell: bash
+        run: |
+          ls -lh dist2
+
+          python3 -m pip install ./dist2/*.whl
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-${{ matrix.python-version }}-whl
+          path: ./dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-${{ matrix.python-version }}-whl-patched
+          path: ./dist2
+
+      - name: Show dependencies
+        shell: bash
+        run: |
+          cd dist
+          mkdir t
+          cd t
+          unzip ../*.whl
+          readelf -d _sherpa_onnx*.so
+
+          echo "----"
+
+          readelf -d sherpa_onnx-*.data/data/bin/sherpa-onnx
+
+      - name: Show dependencies (patched)
+        shell: bash
+        run: |
+          cd dist2
+          mkdir t
+          cd t
+          unzip ../*.whl
+          readelf -d _sherpa_onnx*.so
+
+          echo "----"
+
+          readelf -d sherpa_onnx-*.data/data/bin/sherpa-onnx
 
       - name: Test sherpa-onnx
         shell: bash
         run: |
           export OS=${{ matrix.os }}
+
+          p=$(python3 -c 'import site; print(site.getsitepackages()[0])')
+          echo "p: $p"
+          p=$p/sherpa_onnx/lib
+          echo "p: $p"
+          ls -lh $p
+
+          export LD_LIBRARY_PATH=$p:$LD_LIBRARY_PATH
+          echo "LD_LIBRARY_PATH: $LD_LIBRARY_PATH"
+
           .github/scripts/test-python.sh
           .github/scripts/test-speaker-recognition-python.sh
 
