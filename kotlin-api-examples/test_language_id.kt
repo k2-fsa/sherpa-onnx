@@ -37,5 +37,7 @@ fun testSpokenLanguageIdentifcation() {
     println(waveFilename)
     println(lang)
   }
+
+  slid.release()
 }
 

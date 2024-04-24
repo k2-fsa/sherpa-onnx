@@ -1,4 +1,4 @@
-// sherpa-onnx/jni/voice-activity-detector.h"
+// sherpa-onnx/csrc/voice-activity-detector.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
 #include "sherpa-onnx/csrc/voice-activity-detector.h"

@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity() {
 
     private  fun initVadModel() {
         val type = 0
-        println("Select VAD model type ${type}")
+        Log.i(TAG, "Select VAD model type ${type}")
         val config = getVadModelConfig(type)
 
         vad = Vad(

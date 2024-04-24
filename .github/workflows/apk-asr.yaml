@@ -110,13 +110,13 @@ jobs:
         env:
           BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
 
-      - name: Display APK for audio tagging after signing
+      - name: Display APK after signing
         shell: bash
         run: |
           ls -lh ./apks/
           du -h -d1 .
 
-      - name: Rename APK for audio tagging after signing
+      - name: Rename APK after signing
         shell: bash
         run: |
           cd apks

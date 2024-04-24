@@ -141,11 +141,11 @@ object TtsEngine {
 
 
     private fun copyDataDir(context: Context, dataDir: String): String {
-        println("data dir is $dataDir")
+        Log.i(TAG, "data dir is $dataDir")
         copyAssets(context, dataDir)
 
         val newDataDir = context.getExternalFilesDir(null)!!.absolutePath
-        println("newDataDir: $newDataDir")
+        Log.i(TAG, "newDataDir: $newDataDir")
         return newDataDir
     }
 

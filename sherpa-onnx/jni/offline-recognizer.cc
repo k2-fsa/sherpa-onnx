@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/offline-recognizer.h
+// sherpa-onnx/jni/offline-recognizer.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
 

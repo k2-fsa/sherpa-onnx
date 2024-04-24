@@ -21,6 +21,7 @@ fun testTts() {
   val tts = OfflineTts(config=config)
   val audio = tts.generateWithCallback(text="“Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.”", callback=::callback)
   audio.save(filename="test-en.wav")
+  tts.release()
   println("Saved to test-en.wav")
 }
 

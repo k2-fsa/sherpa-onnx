@@ -129,7 +129,7 @@ class MainActivity : AppCompatActivity() {
 
     private  fun initVadModel() {
         val type = 0
-        println("Select VAD model type ${type}")
+        Log.i(TAG, "Select VAD model type ${type}")
         val config = getVadModelConfig(type)
 
         vad = Vad(
@@ -201,7 +201,7 @@ class MainActivity : AppCompatActivity() {
         // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
         // for a list of available models
         val secondType = 0
-        println("Select model type ${secondType} for the second pass")
+        Log.i(TAG, "Select model type ${secondType} for the second pass")
 
         val config = OfflineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
@@ -219,6 +219,7 @@ class MainActivity : AppCompatActivity() {
         stream.acceptWaveform(samples, sampleRateInHz)
         offlineRecognizer.decode(stream)
         val result = offlineRecognizer.getResult(stream)
+        stream.release()
         return result.text
     }
 }

@@ -38,6 +38,7 @@ fun testSpeakerRecognition() {
     check(name.length == 0)
 
     manager.release()
+    extractor.release()
     println("Speaker ID test done!")
 }
 

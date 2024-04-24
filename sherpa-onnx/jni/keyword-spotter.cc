@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/keyword-spotter.cc
+// sherpa-onnx/jni/keyword-spotter.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
 

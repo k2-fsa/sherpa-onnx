@@ -238,11 +238,11 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun copyDataDir(dataDir: String): String {
-        println("data dir is $dataDir")
+        Log.i(TAG, "data dir is $dataDir")
         copyAssets(dataDir)
 
         val newDataDir = application.getExternalFilesDir(null)!!.absolutePath
-        println("newDataDir: $newDataDir")
+        Log.i(TAG, "newDataDir: $newDataDir")
         return newDataDir
     }
 
