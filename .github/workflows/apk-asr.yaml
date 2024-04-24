@@ -1,0 +1,174 @@
+name: apk-asr
+
+on:
+  push:
+    tags:
+      - '*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: apk-asr-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  apk_asr:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ${{ matrix.os }}
+    name: apk for asr ${{ matrix.index }}/${{ matrix.total }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        total: ["1"]
+        index: ["0"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # https://github.com/actions/setup-java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-android
+
+      - name: Display NDK HOME
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
+          ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
+
+      - name: Setup build tool version variable
+        shell: bash
+        run: |
+          echo "---"
+          ls -lh /usr/local/lib/android/
+          echo "---"
+
+          ls -lh /usr/local/lib/android/sdk
+          echo "---"
+
+          ls -lh /usr/local/lib/android/sdk/build-tools
+          echo "---"
+
+          BUILD_TOOL_VERSION=$(ls /usr/local/lib/android/sdk/build-tools/ | tail -n 1)
+          echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
+          echo "Last build tool version is: $BUILD_TOOL_VERSION"
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/apk
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-asr-apk-script.py --total $total --index $index
+
+          chmod +x build-apk-asr.sh
+          mv -v ./build-apk-asr.sh ../..
+
+      - name: build APK
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-apk-asr.sh
+
+      - name: Display APK
+        shell: bash
+        run: |
+          ls -lh ./apks/
+          du -h -d1 .
+
+      # https://github.com/marketplace/actions/sign-android-release
+      - uses: r0adkll/sign-android-release@v1
+        name: Sign app APK
+        with:
+          releaseDirectory: ./apks
+          signingKeyBase64: ${{ secrets.ANDROID_SIGNING_KEY }}
+          alias: ${{ secrets.ANDROID_SIGNING_KEY_ALIAS }}
+          keyStorePassword: ${{ secrets.ANDROID_SIGNING_KEY_STORE_PASSWORD }}
+        env:
+          BUILD_TOOLS_VERSION: ${{ env.BUILD_TOOL_VERSION }}
+
+      - name: Display APK after signing
+        shell: bash
+        run: |
+          ls -lh ./apks/
+          du -h -d1 .
+
+      - name: Rename APK after signing
+        shell: bash
+        run: |
+          cd apks
+          rm -fv signingKey.jks
+          rm -fv *.apk.idsig
+          rm -fv *-aligned.apk
+
+          all_apks=$(ls -1 *-signed.apk)
+          echo "----"
+          echo $all_apks
+          echo "----"
+          for apk in ${all_apks[@]}; do
+            n=$(echo $apk | sed -e s/-signed//)
+            mv -v $apk $n
+          done
+
+          cd ..
+
+          ls -lh ./apks/
+          du -h -d1 .
+
+      - name: Display APK after rename
+        shell: bash
+        run: |
+          ls -lh ./apks/
+          du -h -d1 .
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-apk huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            mkdir -p asr
+            cp -v ../apks/*.apk ./asr/
+            git status
+            git lfs track "*.apk"
+            git add .
+            git commit -m "add more apks"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-apk main

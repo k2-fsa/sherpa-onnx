@@ -82,7 +82,7 @@ bool OfflineTtsVitsModelConfig::Validate() const {
 
     for (const auto &f : required_files) {
       if (!FileExists(dict_dir + "/" + f)) {
-        SHERPA_ONNX_LOGE("'%s/%s' does not exist.", data_dir.c_str(),
+        SHERPA_ONNX_LOGE("'%s/%s' does not exist.", dict_dir.c_str(),
                          f.c_str());
         return false;
       }

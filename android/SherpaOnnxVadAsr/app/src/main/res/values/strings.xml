@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">VAD-ASR</string>
+    <string name="app_name">VAD+ASR</string>
     <string name="hint">Click the Start button to play speech-to-text with Next-gen Kaldi.
         \n
         \n\n\n

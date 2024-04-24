@@ -44,9 +44,23 @@ function testSpeakerEmbeddingExtractor() {
   if [ ! -f ./speaker2_a_cn_16k.wav ]; then
     curl -SL -O https://github.com/csukuangfj/sr-data/raw/main/test/3d-speaker/speaker2_a_cn_16k.wav
   fi
+
+  out_filename=test_speaker_id.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_speaker_id.kt \
+    OnlineStream.kt \
+    Speaker.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
 }
 
-function testAsr() {
+
+function testOnlineAsr() {
   if [ ! -f ./sherpa-onnx-streaming-zipformer-en-2023-02-21/tokens.txt ]; then
     git lfs install
     git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21
@@ -57,6 +71,20 @@ function testAsr() {
     tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
     rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
   fi
+
+  out_filename=test_online_asr.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_online_asr.kt \
+    FeatureConfig.kt \
+    OnlineRecognizer.kt \
+    OnlineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
 }
 
 function testTts() {
@@ -65,7 +93,19 @@ function testTts() {
     tar xf vits-piper-en_US-amy-low.tar.bz2
     rm vits-piper-en_US-amy-low.tar.bz2
   fi
+
+  out_filename=test_tts.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_tts.kt \
+    Tts.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
 }
+
 
 function testAudioTagging() {
   if [ ! -d sherpa-onnx-zipformer-audio-tagging-2024-04-09 ]; then
@@ -73,7 +113,21 @@ function testAudioTagging() {
     tar xvf sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
     rm sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
   fi
+
+  out_filename=test_audio_tagging.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_audio_tagging.kt \
+    AudioTagging.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
 }
+
 
 function testSpokenLanguageIdentification() {
   if [ ! -f ./sherpa-onnx-whisper-tiny/tiny-encoder.int8.onnx ]; then
@@ -87,50 +141,44 @@ function testSpokenLanguageIdentification() {
     tar xvf spoken-language-identification-test-wavs.tar.bz2
     rm spoken-language-identification-test-wavs.tar.bz2
   fi
+
+  out_filename=test_language_id.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_language_id.kt \
+    SpokenLanguageIdentification.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
 }
 
-function test() {
-  testSpokenLanguageIdentification
-  testAudioTagging
-  testSpeakerEmbeddingExtractor
-  testAsr
-  testTts
-}
-
-test
-
-kotlinc-jvm -include-runtime -d main.jar \
-  AudioTagging.kt \
-  Main.kt \
-  OfflineStream.kt \
-  SherpaOnnx.kt \
-  Speaker.kt \
-  SpokenLanguageIdentification.kt \
-  Tts.kt \
-  WaveReader.kt \
-  faked-asset-manager.kt \
-  faked-log.kt
-
-ls -lh main.jar
-
-java -Djava.library.path=../build/lib -jar main.jar
-
-function testTwoPass() {
-  if [ ! -f ./sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/encoder-epoch-99-avg-1.int8.onnx ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
-    tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
-    rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
-  fi
-
+function testOfflineAsr() {
   if [ ! -f ./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
     tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
     rm sherpa-onnx-whisper-tiny.en.tar.bz2
   fi
 
-  kotlinc-jvm -include-runtime -d 2pass.jar test-2pass.kt WaveReader.kt SherpaOnnx2Pass.kt faked-asset-manager.kt
-  ls -lh 2pass.jar
-  java -Djava.library.path=../build/lib -jar 2pass.jar
+  out_filename=test_offline_asr.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_asr.kt \
+    FeatureConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
 }
 
-testTwoPass
+testSpeakerEmbeddingExtractor
+testOnlineAsr
+testTts
+testAudioTagging
+testSpokenLanguageIdentification
+testOfflineAsr

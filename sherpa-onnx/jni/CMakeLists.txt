@@ -12,8 +12,15 @@ endif()
 set(sources
   audio-tagging.cc
   jni.cc
+  keyword-spotter.cc
+  offline-recognizer.cc
   offline-stream.cc
+  online-recognizer.cc
+  online-stream.cc
+  speaker-embedding-extractor.cc
+  speaker-embedding-manager.cc
   spoken-language-identification.cc
+  voice-activity-detector.cc
 )
 
 if(SHERPA_ONNX_ENABLE_TTS)

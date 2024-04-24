@@ -1,4 +1,4 @@
-package com.k2fsa.sherpa.onnx
+package com.k2fsa.sherpa.onnx.kws
 
 import android.Manifest
 import android.content.pm.PackageManager
@@ -14,7 +14,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
-import com.k2fsa.sherpa.onnx.*
+import com.k2fsa.sherpa.onnx.KeywordSpotter
+import com.k2fsa.sherpa.onnx.KeywordSpotterConfig
+import com.k2fsa.sherpa.onnx.OnlineStream
+import com.k2fsa.sherpa.onnx.R
+import com.k2fsa.sherpa.onnx.getFeatureConfig
+import com.k2fsa.sherpa.onnx.getKeywordsFile
+import com.k2fsa.sherpa.onnx.getKwsModelConfig
 import kotlin.concurrent.thread
 
 private const val TAG = "sherpa-onnx"
@@ -23,7 +29,8 @@ private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
 class MainActivity : AppCompatActivity() {
     private val permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)
 
-    private lateinit var model: SherpaOnnxKws
+    private lateinit var kws: KeywordSpotter
+    private lateinit var stream: OnlineStream
     private var audioRecord: AudioRecord? = null
     private lateinit var recordButton: Button
     private lateinit var textView: TextView
@@ -87,15 +94,18 @@ class MainActivity : AppCompatActivity() {
 
             Log.i(TAG, keywords)
             keywords = keywords.replace("\n", "/")
+            keywords = keywords.trim()
             // If keywords is an empty string, it just resets the decoding stream
             // always returns true in this case.
             // If keywords is not empty, it will create a new decoding stream with
             // the given keywords appended to the default keywords.
-            // Return false if errors occured when adding keywords, true otherwise.
-            val status = model.reset(keywords)
-            if (!status) {
-                Log.i(TAG, "Failed to reset with keywords.")
-                Toast.makeText(this, "Failed to set keywords.", Toast.LENGTH_LONG).show();
+            // Return false if errors occurred when adding keywords, true otherwise.
+            stream.release()
+            stream = kws.createStream(keywords)
+            if (stream.ptr == 0L) {
+                Log.i(TAG, "Failed to create stream with keywords: $keywords")
+                Toast.makeText(this, "Failed to set keywords to $keywords.", Toast.LENGTH_LONG)
+                    .show()
                 return
             }
 
@@ -122,6 +132,7 @@ class MainActivity : AppCompatActivity() {
             audioRecord!!.release()
             audioRecord = null
             recordButton.setText(R.string.start)
+            stream.release()
             Log.i(TAG, "Stopped recording")
         }
     }
@@ -137,22 +148,22 @@ class MainActivity : AppCompatActivity() {
             val ret = audioRecord?.read(buffer, 0, buffer.size)
             if (ret != null && ret > 0) {
                 val samples = FloatArray(ret) { buffer[it] / 32768.0f }
-                model.acceptWaveform(samples, sampleRate=sampleRateInHz)
-                while (model.isReady()) {
-                    model.decode()
+                stream.acceptWaveform(samples, sampleRate = sampleRateInHz)
+                while (kws.isReady(stream)) {
+                    kws.decode(stream)
                 }
 
-                val text = model.keyword
+                val text = kws.getResult(stream).keyword
 
-                var textToDisplay = lastText;
+                var textToDisplay = lastText
 
-                if(text.isNotBlank()) {
+                if (text.isNotBlank()) {
                     if (lastText.isBlank()) {
-                        textToDisplay = "${idx}: ${text}"
+                        textToDisplay = "$idx: $text"
                     } else {
-                        textToDisplay = "${idx}: ${text}\n${lastText}"
+                        textToDisplay = "$idx: $text\n$lastText"
                     }
-                    lastText = "${idx}: ${text}\n${lastText}"
+                    lastText = "$idx: $text\n$lastText"
                     idx += 1
                 }
 
@@ -188,20 +199,21 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initModel() {
-        // Please change getModelConfig() to add new models
+        // Please change getKwsModelConfig() to add new models
         // See https://k2-fsa.github.io/sherpa/onnx/kws/pretrained_models/index.html
         // for a list of available models
         val type = 0
-        Log.i(TAG, "Select model type ${type}")
+        Log.i(TAG, "Select model type $type")
         val config = KeywordSpotterConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
-            modelConfig = getModelConfig(type = type)!!,
-            keywordsFile = getKeywordsFile(type = type)!!,
+            modelConfig = getKwsModelConfig(type = type)!!,
+            keywordsFile = getKeywordsFile(type = type),
         )
 
-        model = SherpaOnnxKws(
+        kws = KeywordSpotter(
             assetManager = application.assets,
             config = config,
         )
+        stream = kws.createStream()
     }
 }

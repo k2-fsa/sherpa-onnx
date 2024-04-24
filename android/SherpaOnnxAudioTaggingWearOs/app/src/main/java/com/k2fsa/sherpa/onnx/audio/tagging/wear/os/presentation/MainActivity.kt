@@ -17,10 +17,13 @@ import androidx.activity.compose.setContent
 import androidx.compose.runtime.Composable
 import androidx.core.app.ActivityCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.k2fsa.sherpa.onnx.Tagger
+import com.k2fsa.sherpa.onnx.audio.tagging.Tagger
 
 const val TAG = "sherpa-onnx"
 private const val REQUEST_RECORD_AUDIO_PERMISSION = 200
+
+// adb emu avd hostmicon
+// to enable mic inside the emulator
 
 class MainActivity : ComponentActivity() {
     private val permissions: Array<String> = arrayOf(Manifest.permission.RECORD_AUDIO)

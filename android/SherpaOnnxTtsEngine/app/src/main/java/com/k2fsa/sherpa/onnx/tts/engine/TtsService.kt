@@ -6,7 +6,6 @@ import android.speech.tts.SynthesisRequest
 import android.speech.tts.TextToSpeech
 import android.speech.tts.TextToSpeechService
 import android.util.Log
-import com.k2fsa.sherpa.onnx.*
 
 /*
 https://developer.android.com/reference/java/util/Locale#getISO3Language()

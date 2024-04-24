@@ -4,8 +4,10 @@ import android.content.Context
 import android.content.res.AssetManager
 import android.util.Log
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import com.k2fsa.sherpa.onnx.*
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import com.k2fsa.sherpa.onnx.OfflineTts
+import com.k2fsa.sherpa.onnx.getOfflineTtsConfig
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -21,8 +23,8 @@ object TtsEngine {
     var lang: String? = null
 
 
-    val speedState: MutableState<Float> = mutableStateOf(1.0F)
-    val speakerIdState: MutableState<Int> = mutableStateOf(0)
+    val speedState: MutableState<Float> = mutableFloatStateOf(1.0F)
+    val speakerIdState: MutableState<Int> = mutableIntStateOf(0)
 
     var speed: Float
         get() = speedState.value
@@ -113,15 +115,15 @@ object TtsEngine {
 
         if (dataDir != null) {
             val newDir = copyDataDir(context, modelDir!!)
-            modelDir = newDir + "/" + modelDir
-            dataDir = newDir + "/" + dataDir
+            modelDir = "$newDir/$modelDir"
+            dataDir = "$newDir/$dataDir"
             assets = null
         }
 
         if (dictDir != null) {
             val newDir = copyDataDir(context, modelDir!!)
-            modelDir = newDir + "/" + modelDir
-            dictDir = modelDir + "/" + "dict"
+            modelDir = "$newDir/$modelDir"
+            dictDir = "$modelDir/dict"
             ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
             assets = null
         }
@@ -132,18 +134,18 @@ object TtsEngine {
             dictDir = dictDir ?: "",
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: ""
-        )!!
+        )
 
         tts = OfflineTts(assetManager = assets, config = config)
     }
 
 
     private fun copyDataDir(context: Context, dataDir: String): String {
-        println("data dir is $dataDir")
+        Log.i(TAG, "data dir is $dataDir")
         copyAssets(context, dataDir)
 
         val newDataDir = context.getExternalFilesDir(null)!!.absolutePath
-        println("newDataDir: $newDataDir")
+        Log.i(TAG, "newDataDir: $newDataDir")
         return newDataDir
     }
 
@@ -158,12 +160,12 @@ object TtsEngine {
                 val dir = File(fullPath)
                 dir.mkdirs()
                 for (asset in assets.iterator()) {
-                    val p: String = if (path == "") "" else path + "/"
+                    val p: String = if (path == "") "" else "$path/"
                     copyAssets(context, p + asset)
                 }
             }
         } catch (ex: IOException) {
-            Log.e(TAG, "Failed to copy $path. ${ex.toString()}")
+            Log.e(TAG, "Failed to copy $path. $ex")
         }
     }
 
@@ -183,7 +185,7 @@ object TtsEngine {
             ostream.flush()
             ostream.close()
         } catch (ex: Exception) {
-            Log.e(TAG, "Failed to copy $filename, ${ex.toString()}")
+            Log.e(TAG, "Failed to copy $filename, $ex")
         }
     }
 }

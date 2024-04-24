@@ -49,10 +49,10 @@ class OfflineTts(
     private var ptr: Long
 
     init {
-        if (assetManager != null) {
-            ptr = newFromAsset(assetManager, config)
+        ptr = if (assetManager != null) {
+            newFromAsset(assetManager, config)
         } else {
-            ptr = newFromFile(config)
+            newFromFile(config)
         }
     }
 
@@ -65,7 +65,7 @@ class OfflineTts(
         sid: Int = 0,
         speed: Float = 1.0f
     ): GeneratedAudio {
-        var objArray = generateImpl(ptr, text = text, sid = sid, speed = speed)
+        val objArray = generateImpl(ptr, text = text, sid = sid, speed = speed)
         return GeneratedAudio(
             samples = objArray[0] as FloatArray,
             sampleRate = objArray[1] as Int
@@ -78,7 +78,13 @@ class OfflineTts(
         speed: Float = 1.0f,
         callback: (samples: FloatArray) -> Unit
     ): GeneratedAudio {
-        var objArray = generateWithCallbackImpl(ptr, text = text, sid = sid, speed = speed, callback=callback)
+        val objArray = generateWithCallbackImpl(
+            ptr,
+            text = text,
+            sid = sid,
+            speed = speed,
+            callback = callback
+        )
         return GeneratedAudio(
             samples = objArray[0] as FloatArray,
             sampleRate = objArray[1] as Int
@@ -87,10 +93,10 @@ class OfflineTts(
 
     fun allocate(assetManager: AssetManager? = null) {
         if (ptr == 0L) {
-            if (assetManager != null) {
-                ptr = newFromAsset(assetManager, config)
+            ptr = if (assetManager != null) {
+                newFromAsset(assetManager, config)
             } else {
-                ptr = newFromFile(config)
+                newFromFile(config)
             }
         }
     }
@@ -103,8 +109,13 @@ class OfflineTts(
     }
 
     protected fun finalize() {
-        delete(ptr)
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
+
+    fun release() = finalize()
 
     private external fun newFromAsset(
         assetManager: AssetManager,
@@ -123,14 +134,14 @@ class OfflineTts(
     //  - the first entry is an 1-D float array containing audio samples.
     //    Each sample is normalized to the range [-1, 1]
     //  - the second entry is the sample rate
-    external fun generateImpl(
+    private external fun generateImpl(
         ptr: Long,
         text: String,
         sid: Int = 0,
         speed: Float = 1.0f
     ): Array<Any>
 
-    external fun generateWithCallbackImpl(
+    private external fun generateWithCallbackImpl(
         ptr: Long,
         text: String,
         sid: Int = 0,
@@ -156,7 +167,7 @@ fun getOfflineTtsConfig(
     dictDir: String,
     ruleFsts: String,
     ruleFars: String
-): OfflineTtsConfig? {
+): OfflineTtsConfig {
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
             vits = OfflineTtsVitsModelConfig(

@@ -2,7 +2,7 @@ package com.k2fsa.sherpa.onnx.speaker.identification
 
 import androidx.compose.ui.graphics.vector.ImageVector
 
-data class BarItem (
+data class BarItem(
     val title: String,
 
     // see https://www.composables.com/icons

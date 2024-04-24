@@ -1,7 +1,9 @@
-package com.k2fsa.sherpa.onnx
+package com.k2fsa.sherpa.onnx.audio.tagging
 
 import android.content.res.AssetManager
 import android.util.Log
+import com.k2fsa.sherpa.onnx.AudioTagging
+import com.k2fsa.sherpa.onnx.getAudioTaggingConfig
 
 
 object Tagger {
@@ -17,7 +19,7 @@ object Tagger {
                 return
             }
 
-            Log.i(TAG, "Initializing audio tagger")
+            Log.i("sherpa-onnx", "Initializing audio tagger")
             val config = getAudioTaggingConfig(type = 0, numThreads = numThreads)!!
             _tagger = AudioTagging(assetManager, config)
         }

@@ -29,6 +29,8 @@ log "====================x86-64===================="
 log "====================x86===================="
 ./build-android-x86.sh
 
+export SHERPA_ONNX_ENABLE_TTS=OFF
+
 mkdir -p apks
 
 {% for model in model_list %}

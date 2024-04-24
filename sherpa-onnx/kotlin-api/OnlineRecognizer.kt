@@ -1,4 +1,3 @@
-// Copyright (c)  2023  Xiaomi Corporation
 package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
@@ -46,15 +45,11 @@ data class OnlineLMConfig(
     var scale: Float = 0.5f,
 )
 
-data class FeatureConfig(
-    var sampleRate: Int = 16000,
-    var featureDim: Int = 80,
-)
 
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineModelConfig,
-    var lmConfig: OnlineLMConfig,
+    var lmConfig: OnlineLMConfig = OnlineLMConfig(),
     var endpointConfig: EndpointConfig = EndpointConfig(),
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",
@@ -63,17 +58,24 @@ data class OnlineRecognizerConfig(
     var hotwordsScore: Float = 1.5f,
 )
 
-class SherpaOnnx(
+data class OnlineRecognizerResult(
+    val text: String,
+    val tokens: Array<String>,
+    val timestamps: FloatArray,
+    // TODO(fangjun): Add more fields
+)
+
+class OnlineRecognizer(
     assetManager: AssetManager? = null,
-    var config: OnlineRecognizerConfig,
+    val config: OnlineRecognizerConfig,
 ) {
     private val ptr: Long
 
     init {
-        if (assetManager != null) {
-            ptr = new(assetManager, config)
+        ptr = if (assetManager != null) {
+            newFromAsset(assetManager, config)
         } else {
-            ptr = newFromFile(config)
+            newFromFile(config)
         }
     }
 
@@ -81,24 +83,30 @@ class SherpaOnnx(
         delete(ptr)
     }
 
-    fun acceptWaveform(samples: FloatArray, sampleRate: Int) =
-        acceptWaveform(ptr, samples, sampleRate)
+    fun release() = finalize()
 
-    fun inputFinished() = inputFinished(ptr)
-    fun reset(recreate: Boolean = false, hotwords: String = "") = reset(ptr, recreate, hotwords)
-    fun decode() = decode(ptr)
-    fun isEndpoint(): Boolean = isEndpoint(ptr)
-    fun isReady(): Boolean = isReady(ptr)
+    fun createStream(hotwords: String = ""): OnlineStream {
+        val p = createStream(ptr, hotwords)
+        return OnlineStream(p)
+    }
 
-    val text: String
-        get() = getText(ptr)
+    fun reset(stream: OnlineStream) = reset(ptr, stream.ptr)
+    fun decode(stream: OnlineStream) = decode(ptr, stream.ptr)
+    fun isEndpoint(stream: OnlineStream) = isEndpoint(ptr, stream.ptr)
+    fun isReady(stream: OnlineStream) = isReady(ptr, stream.ptr)
+    fun getResult(stream: OnlineStream): OnlineRecognizerResult {
+        val objArray = getResult(ptr, stream.ptr)
 
-    val tokens: Array<String>
-        get() = getTokens(ptr)
+        val text = objArray[0] as String
+        val tokens = objArray[1] as Array<String>
+        val timestamps = objArray[2] as FloatArray
+
+        return OnlineRecognizerResult(text = text, tokens = tokens, timestamps = timestamps)
+    }
 
     private external fun delete(ptr: Long)
 
-    private external fun new(
+    private external fun newFromAsset(
         assetManager: AssetManager,
         config: OnlineRecognizerConfig,
     ): Long
@@ -107,14 +115,12 @@ class SherpaOnnx(
         config: OnlineRecognizerConfig,
     ): Long
 
-    private external fun acceptWaveform(ptr: Long, samples: FloatArray, sampleRate: Int)
-    private external fun inputFinished(ptr: Long)
-    private external fun getText(ptr: Long): String
-    private external fun reset(ptr: Long, recreate: Boolean, hotwords: String)
-    private external fun decode(ptr: Long)
-    private external fun isEndpoint(ptr: Long): Boolean
-    private external fun isReady(ptr: Long): Boolean
-    private external fun getTokens(ptr: Long): Array<String>
+    private external fun createStream(ptr: Long, hotwords: String): Long
+    private external fun reset(ptr: Long, streamPtr: Long)
+    private external fun decode(ptr: Long, streamPtr: Long)
+    private external fun isEndpoint(ptr: Long, streamPtr: Long): Boolean
+    private external fun isReady(ptr: Long, streamPtr: Long): Boolean
+    private external fun getResult(ptr: Long, streamPtr: Long): Array<Any>
 
     companion object {
         init {
@@ -123,9 +129,6 @@ class SherpaOnnx(
     }
 }
 
-fun getFeatureConfig(sampleRate: Int, featureDim: Int): FeatureConfig {
-    return FeatureConfig(sampleRate = sampleRate, featureDim = featureDim)
-}
 
 /*
 Please see
@@ -277,14 +280,40 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                 transducer = OnlineTransducerModelConfig(
                     encoder = "$modelDir/encoder-epoch-99-avg-1.int8.onnx",
                     decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
-                    joiner = "$modelDir/joiner-epoch-99-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
+            )
+        }
+
+        9 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-99-avg-1.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
+            )
+        }
+
+        10 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-99-avg-1.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer",
             )
         }
     }
-    return null;
+    return null
 }
 
 /*
@@ -310,7 +339,7 @@ fun getOnlineLMConfig(type: Int): OnlineLMConfig {
             )
         }
     }
-    return OnlineLMConfig();
+    return OnlineLMConfig()
 }
 
 fun getEndpointConfig(): EndpointConfig {
@@ -320,3 +349,4 @@ fun getEndpointConfig(): EndpointConfig {
         rule3 = EndpointRule(false, 0.0f, 20.0f)
     )
 }
+

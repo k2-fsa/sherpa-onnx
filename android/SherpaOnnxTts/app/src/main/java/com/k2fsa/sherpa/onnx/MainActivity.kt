@@ -1,7 +1,11 @@
 package com.k2fsa.sherpa.onnx
 
 import android.content.res.AssetManager
-import android.media.*
+import android.media.AudioAttributes
+import android.media.AudioFormat
+import android.media.AudioManager
+import android.media.AudioTrack
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -212,7 +216,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         if (dictDir != null) {
-            val newDir = copyDataDir( modelDir!!)
+            val newDir = copyDataDir(modelDir!!)
             modelDir = newDir + "/" + modelDir
             dictDir = modelDir + "/" + "dict"
             ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
@@ -220,7 +224,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         val config = getOfflineTtsConfig(
-            modelDir = modelDir!!, modelName = modelName!!, lexicon = lexicon ?: "",
+            modelDir = modelDir!!,
+            modelName = modelName!!,
+            lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
             dictDir = dictDir ?: "",
             ruleFsts = ruleFsts ?: "",
@@ -232,11 +238,11 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun copyDataDir(dataDir: String): String {
-        println("data dir is $dataDir")
+        Log.i(TAG, "data dir is $dataDir")
         copyAssets(dataDir)
 
         val newDataDir = application.getExternalFilesDir(null)!!.absolutePath
-        println("newDataDir: $newDataDir")
+        Log.i(TAG, "newDataDir: $newDataDir")
         return newDataDir
     }
 
@@ -256,7 +262,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         } catch (ex: IOException) {
-            Log.e(TAG, "Failed to copy $path. ${ex.toString()}")
+            Log.e(TAG, "Failed to copy $path. $ex")
         }
     }
 
@@ -276,7 +282,7 @@ class MainActivity : AppCompatActivity() {
             ostream.flush()
             ostream.close()
         } catch (ex: Exception) {
-            Log.e(TAG, "Failed to copy $filename, ${ex.toString()}")
+            Log.e(TAG, "Failed to copy $filename, $ex")
         }
     }
 }

@@ -1,1 +1,1 @@
-../../../../../../../../../../SherpaOnnxAudioTagging/app/src/main/java/com/k2fsa/sherpa/onnx/audio/tagging/OfflineStream.kt
+../../../../../../../../../../../sherpa-onnx/kotlin-api/OfflineStream.kt
