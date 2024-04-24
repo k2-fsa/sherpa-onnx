@@ -180,13 +180,20 @@ class BuildExtension(build_ext):
                 print('Setting make_args to "-j4"')
                 make_args = "-j4"
 
-            build_cmd = f"""
-                cd {self.build_temp}
+            if "-G Ninja" in cmake_args:
+                build_cmd = f"""
+                    cd {self.build_temp}
+                    cmake {cmake_args} {sherpa_onnx_dir}
+                    ninja {make_args} install
+                """
+            else:
+                build_cmd = f"""
+                    cd {self.build_temp}
 
-                cmake {cmake_args} {sherpa_onnx_dir}
+                    cmake {cmake_args} {sherpa_onnx_dir}
 
-                make {make_args} install/strip
-            """
+                    make {make_args} install/strip
+                """
             print(f"build command is:\n{build_cmd}")
 
             ret = os.system(build_cmd)
