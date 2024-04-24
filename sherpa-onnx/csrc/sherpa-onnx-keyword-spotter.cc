@@ -78,7 +78,7 @@ for a list of pre-trained models to download.
         sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
 
     if (!is_ok) {
-      fprintf(stderr, "Failed to read %s\n", wav_filename.c_str());
+      fprintf(stderr, "Failed to read '%s'\n", wav_filename.c_str());
       return -1;
     }
 

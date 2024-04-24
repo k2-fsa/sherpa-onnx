@@ -11,6 +11,7 @@ on:
       - 'java-api-examples/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
+      - 'sherpa-onnx/java-api/**'
   pull_request:
     branches:
       - master
@@ -21,6 +22,7 @@ on:
       - 'java-api-examples/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
+      - 'sherpa-onnx/java-api/**'
   workflow_dispatch:
 
 concurrency:
@@ -46,13 +48,49 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}
+          key: ${{ matrix.os }}-java
 
       - name: Display java version
         shell: bash
         run: |
           java -version
           echo "JAVA_HOME is: ${JAVA_HOME}"
+
+          cmake --version
+
+      - name:  Build sherpa-onnx (jar)
+        shell: bash
+        run: |
+          cd sherpa-onnx/java-api/
+          make
+          ls -lh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-jar-${{ matrix.os }}
+          path: sherpa-onnx/java-api/build
+
+      - name:  Build sherpa-onnx (C++)
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          mkdir build
+          cd build
+
+          cmake \
+            -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+            -DSHERPA_ONNX_ENABLE_TESTS=OFF \
+            -DSHERPA_ONNX_ENABLE_CHECK=OFF \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DSHERPA_ONNX_ENABLE_JNI=ON \
+            ..
+
+            make -j4
+            ls -lh lib
 
       - name:  Run java test
         shell: bash
@@ -62,4 +100,12 @@ jobs:
           cmake --version
 
           cd ./java-api-examples
-          ./runtest.sh
+          ./run-streaming-decode-file-ctc.sh
+          # Delete model files to save space
+          rm -rf sherpa-onnx-streaming-*
+
+          ./run-streaming-decode-file-paraformer.sh
+          rm -rf sherpa-onnx-streaming-*
+
+          ./run-streaming-decode-file-transducer.sh
+          rm -rf sherpa-onnx-streaming-*

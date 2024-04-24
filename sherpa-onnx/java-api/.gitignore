@@ -1,2 +1,6 @@
 .idea
 java-api.iml
+out
+META-INF
+build
+*.jar

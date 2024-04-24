@@ -253,7 +253,7 @@ int32_t main(int32_t argc, char *argv[]) {
       sherpa_onnx::ReadWave(wave_filename, &actual_sample_rate, &is_ok);
 
   if (!is_ok) {
-    SHERPA_ONNX_LOGE("Failed to read %s", wave_filename.c_str());
+    SHERPA_ONNX_LOGE("Failed to read '%s'", wave_filename.c_str());
     return -1;
   }
 
