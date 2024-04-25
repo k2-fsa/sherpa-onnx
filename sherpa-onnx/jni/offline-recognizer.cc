@@ -147,6 +147,19 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.whisper.tail_paddings =
       env->GetIntField(whisper_config, fid);
 
+  fid = env->GetFieldID(
+      model_config_cls, "nemo",
+      "Lcom/k2fsa/sherpa/onnx/OfflineNemoEncDecCtcModelConfig;");
+  jobject nemo_config = env->GetObjectField(model_config, fid);
+  jclass nemo_config_cls = env->GetObjectClass(nemo_config);
+
+  fid = env->GetFieldID(paraformer_config_cls, "model", "Ljava/lang/String;");
+
+  s = (jstring)env->GetObjectField(nemo_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.nemo_ctc.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
   return ans;
 }
 

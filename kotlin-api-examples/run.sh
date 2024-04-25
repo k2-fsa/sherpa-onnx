@@ -160,6 +160,24 @@ function testOfflineAsr() {
     rm sherpa-onnx-whisper-tiny.en.tar.bz2
   fi
 
+  if [ ! -f ./sherpa-onnx-nemo-ctc-en-citrinet-512/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+    tar xvf sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+    rm sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+  fi
+
+  if [ ! -f ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+    tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+    rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+  fi
+
+  if [ ! -f ./sherpa-onnx-zipformer-multi-zh-hans-2023-9-2/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
+    tar xvf sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
+    rm sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
+  fi
+
   out_filename=test_offline_asr.jar
   kotlinc-jvm -include-runtime -d $out_filename \
     test_offline_asr.kt \
