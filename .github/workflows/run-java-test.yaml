@@ -100,6 +100,9 @@ jobs:
           # Delete model files to save space
           rm -rf sherpa-onnx-streaming-*
 
+          ./run-streaming-decode-file-ctc-hlg.sh
+          rm -rf sherpa-onnx-streaming-*
+
           ./run-streaming-decode-file-paraformer.sh
           rm -rf sherpa-onnx-streaming-*
 
@@ -118,3 +121,6 @@ jobs:
 
           ./run-non-streaming-decode-file-whisper.sh
           rm -rf sherpa-onnx-whisper-*
+
+          ./run-non-streaming-decode-file-nemo.sh
+          rm -rf sherpa-onnx-nemo-*

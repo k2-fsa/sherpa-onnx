@@ -14,6 +14,7 @@ java_files += OnlineParaformerModelConfig.java
 java_files += OnlineZipformer2CtcModelConfig.java
 java_files += OnlineTransducerModelConfig.java
 java_files += OnlineModelConfig.java
+java_files += OnlineCtcFstDecoderConfig.java
 java_files += OnlineStream.java
 java_files += OnlineRecognizerConfig.java
 java_files += OnlineRecognizerResult.java

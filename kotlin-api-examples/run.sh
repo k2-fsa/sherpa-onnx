@@ -69,6 +69,12 @@ function testOnlineAsr() {
     rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
   fi
 
+  if [ ! -d ./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18 ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+    tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+    rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+  fi
+
   out_filename=test_online_asr.jar
   kotlinc-jvm -include-runtime -d $out_filename \
     test_online_asr.kt \

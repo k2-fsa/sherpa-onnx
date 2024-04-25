@@ -1,3 +1,4 @@
+// Copyright 2024 Xiaomi Corporation
 package com.k2fsa.sherpa.onnx;
 
 public class OfflineNemoEncDecCtcModelConfig {
