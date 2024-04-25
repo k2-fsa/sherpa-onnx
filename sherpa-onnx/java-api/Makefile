@@ -44,10 +44,12 @@ $(info -- class files $(class_files))
 all: $(out_jar)
 
 $(out_jar): $(class_files)
-	jar --create --verbose --file $(out_jar) -C $(out_dir) .
+	# jar --create --verbose --file $(out_jar) -C $(out_dir) ./
+	jar cvf $(out_jar) -C $(out_dir) ./
 
 clean:
 	$(RM) -rfv $(out_dir)
 
 $(class_files): $(out_dir)/$(package_dir)/%.class: src/$(package_dir)/%.java
-	javac -d $(out_dir) --class-path $(out_dir) $<
+	mkdir -p build
+	javac -d $(out_dir) -cp $(out_dir) $<

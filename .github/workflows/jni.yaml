@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, macos-14]
 
     steps:
       - uses: actions/checkout@v4
@@ -49,6 +49,11 @@ jobs:
         with:
           key: ${{ matrix.os }}
 
+      - name: OS info
+        shell: bash
+        run: |
+          uname -a
+
       - name: Display kotlin version
         shell: bash
         run: |
@@ -58,6 +63,7 @@ jobs:
         shell: bash
         run: |
           java -version
+          javac -help
           echo "JAVA_HOME is: ${JAVA_HOME}"
 
       - name:  Run JNI test
