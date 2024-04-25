@@ -30,6 +30,12 @@ java_files += OfflineRecognizerResult.java
 java_files += OfflineStream.java
 java_files += OfflineRecognizer.java
 
+java_files += OfflineTtsVitsModelConfig.java
+java_files += OfflineTtsModelConfig.java
+java_files += OfflineTtsConfig.java
+java_files += GeneratedAudio.java
+java_files += OfflineTts.java
+
 class_files := $(java_files:%.java=%.class)
 
 java_files := $(addprefix src/$(package_dir)/,$(java_files))
