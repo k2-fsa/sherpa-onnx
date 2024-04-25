@@ -623,7 +623,8 @@ func sherpaOnnxOfflineTtsVitsModelConfig(
   dataDir: String = "",
   noiseScale: Float = 0.667,
   noiseScaleW: Float = 0.8,
-  lengthScale: Float = 1.0
+  lengthScale: Float = 1.0,
+  dictDir: String = ""
 ) -> SherpaOnnxOfflineTtsVitsModelConfig {
   return SherpaOnnxOfflineTtsVitsModelConfig(
     model: toCPointer(model),
@@ -632,7 +633,8 @@ func sherpaOnnxOfflineTtsVitsModelConfig(
     data_dir: toCPointer(dataDir),
     noise_scale: noiseScale,
     noise_scale_w: noiseScaleW,
-    length_scale: lengthScale)
+    length_scale: lengthScale,
+    dict_dir: toCPointer(dictDir))
 }
 
 func sherpaOnnxOfflineTtsModelConfig(

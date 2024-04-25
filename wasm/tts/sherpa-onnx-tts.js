@@ -18,7 +18,12 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
   const tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir) + 1;
 
-  const n = modelLen + lexiconLen + tokensLen + dataDirLen;
+  if (!('dictDir' in config)) {
+    config.dictDir = ''
+  }
+  const dictDirLen = Module.lengthBytesUTF8(config.dictDir) + 1;
+
+  const n = modelLen + lexiconLen + tokensLen + dataDirLen + dictDirLen;
 
   const buffer = Module._malloc(n);
 
@@ -38,6 +43,9 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
   Module.stringToUTF8(config.dataDir, buffer + offset, dataDirLen);
   offset += dataDirLen;
 
+  Module.stringToUTF8(config.dictDir, buffer + offset, dictDirLen);
+  offset += dictDirLen;
+
   offset = 0;
   Module.setValue(ptr, buffer + offset, 'i8*');
   offset += modelLen;
@@ -54,6 +62,8 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
   Module.setValue(ptr + 16, config.noiseScale, 'float');
   Module.setValue(ptr + 20, config.noiseScaleW, 'float');
   Module.setValue(ptr + 24, config.lengthScale, 'float');
+  Module.setValue(ptr + 28, buffer + offset, 'i8*');
+  offset += dictDirLen;
 
   return {
     buffer: buffer, ptr: ptr, len: len,
@@ -184,6 +194,7 @@ function createOfflineTts(Module, myConfig) {
     lexicon: '',
     tokens: './tokens.txt',
     dataDir: './espeak-ng-data',
+    dictDir: '',
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0,

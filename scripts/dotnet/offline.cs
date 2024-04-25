@@ -23,6 +23,8 @@ namespace SherpaOnnx
       NoiseScale = 0.667F;
       NoiseScaleW = 0.8F;
       LengthScale = 1.0F;
+
+      DictDir = "";
     }
     [MarshalAs(UnmanagedType.LPStr)]
     public string Model;
@@ -39,6 +41,9 @@ namespace SherpaOnnx
     public float NoiseScale;
     public float NoiseScaleW;
     public float LengthScale;
+
+    [MarshalAs(UnmanagedType.LPStr)]
+    public string DictDir;
   }
 
   [StructLayout(LayoutKind.Sequential)]

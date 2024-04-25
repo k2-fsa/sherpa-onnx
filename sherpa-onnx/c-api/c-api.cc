@@ -818,6 +818,8 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
       SHERPA_ONNX_OR(config->model.vits.noise_scale_w, 0.8);
   tts_config.model.vits.length_scale =
       SHERPA_ONNX_OR(config->model.vits.length_scale, 1.0);
+  tts_config.model.vits.dict_dir =
+      SHERPA_ONNX_OR(config->model.vits.dict_dir, "");
 
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;

@@ -772,6 +772,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsVitsModelConfig {
   float noise_scale;
   float noise_scale_w;
   float length_scale;  // < 1, faster in speed; > 1, slower in speed
+  const char *dict_dir;
 } SherpaOnnxOfflineTtsVitsModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {

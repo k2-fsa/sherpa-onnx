@@ -8,6 +8,7 @@ function createOfflineTts() {
     lexicon: '',
     tokens: './vits-piper-en_US-amy-low/tokens.txt',
     dataDir: './vits-piper-en_US-amy-low/espeak-ng-data',
+    dictDir: '',
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0,

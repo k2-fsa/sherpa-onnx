@@ -43,6 +43,7 @@ void PrintOfflineTtsConfig(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "noise scale: %.3f\n", vits_model_config->noise_scale);
   fprintf(stdout, "noise scale w: %.3f\n", vits_model_config->noise_scale_w);
   fprintf(stdout, "length scale: %.3f\n", vits_model_config->length_scale);
+  fprintf(stdout, "dict_dir: %s\n", vits_model_config->dict_dir);
 
   fprintf(stdout, "----------tts model config----------\n");
   fprintf(stdout, "num threads: %d\n", tts_model_config->num_threads);
