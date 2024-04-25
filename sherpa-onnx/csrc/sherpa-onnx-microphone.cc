@@ -7,6 +7,7 @@
 #include <stdlib.h>
 
 #include <algorithm>
+#include <locale>
 #include <cctype>  // std::tolower
 
 #include "portaudio.h"  // NOLINT
