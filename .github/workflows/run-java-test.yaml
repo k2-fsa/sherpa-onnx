@@ -154,5 +154,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tts-wav-files
+          name: tts-wav-files-${{ matrix.os }}
           path: java-api-examples/*.wav
