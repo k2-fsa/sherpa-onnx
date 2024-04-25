@@ -69,6 +69,12 @@ function testOnlineAsr() {
     rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
   fi
 
+  if [ ! -d ./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18 ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+    tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+    rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+  fi
+
   out_filename=test_online_asr.jar
   kotlinc-jvm -include-runtime -d $out_filename \
     test_online_asr.kt \
@@ -158,6 +164,24 @@ function testOfflineAsr() {
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
     tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
     rm sherpa-onnx-whisper-tiny.en.tar.bz2
+  fi
+
+  if [ ! -f ./sherpa-onnx-nemo-ctc-en-citrinet-512/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+    tar xvf sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+    rm sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+  fi
+
+  if [ ! -f ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+    tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+    rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+  fi
+
+  if [ ! -f ./sherpa-onnx-zipformer-multi-zh-hans-2023-9-2/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
+    tar xvf sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
+    rm sherpa-onnx-zipformer-multi-zh-hans-2023-9-2.tar.bz2
   fi
 
   out_filename=test_offline_asr.jar

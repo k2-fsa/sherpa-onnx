@@ -6,6 +6,8 @@ public class OnlineRecognizerConfig {
     private final FeatureConfig featConfig;
     private final OnlineModelConfig modelConfig;
     private final OnlineLMConfig lmConfig;
+
+    private final OnlineCtcFstDecoderConfig ctcFstDecoderConfig;
     private final EndpointConfig endpointConfig;
     private final boolean enableEndpoint;
     private final String decodingMethod;
@@ -17,6 +19,7 @@ public class OnlineRecognizerConfig {
         this.featConfig = builder.featConfig;
         this.modelConfig = builder.modelConfig;
         this.lmConfig = builder.lmConfig;
+        this.ctcFstDecoderConfig = builder.ctcFstDecoderConfig;
         this.endpointConfig = builder.endpointConfig;
         this.enableEndpoint = builder.enableEndpoint;
         this.decodingMethod = builder.decodingMethod;
@@ -37,6 +40,7 @@ public class OnlineRecognizerConfig {
         private FeatureConfig featConfig = FeatureConfig.builder().build();
         private OnlineModelConfig modelConfig = OnlineModelConfig.builder().build();
         private OnlineLMConfig lmConfig = OnlineLMConfig.builder().build();
+        private OnlineCtcFstDecoderConfig ctcFstDecoderConfig = OnlineCtcFstDecoderConfig.builder().build();
         private EndpointConfig endpointConfig = EndpointConfig.builder().build();
         private boolean enableEndpoint = true;
         private String decodingMethod = "greedy_search";
@@ -60,6 +64,11 @@ public class OnlineRecognizerConfig {
 
         public Builder setOnlineLMConfig(OnlineLMConfig lmConfig) {
             this.lmConfig = lmConfig;
+            return this;
+        }
+
+        public Builder setCtcFstDecoderConfig(OnlineCtcFstDecoderConfig ctcFstDecoderConfig) {
+            this.ctcFstDecoderConfig = ctcFstDecoderConfig;
             return this;
         }
 

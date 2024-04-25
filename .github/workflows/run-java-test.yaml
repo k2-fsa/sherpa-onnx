@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest, macos-14]
 
     steps:
       - uses: actions/checkout@v4
@@ -50,10 +50,24 @@ jobs:
         with:
           key: ${{ matrix.os }}-java
 
+      - name: OS info
+        shell: bash
+        run: |
+          uname -a
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+
       - name: Display java version
         shell: bash
         run: |
           java -version
+          java -help
+          echo "----"
+          javac -version
+          javac -help
           echo "JAVA_HOME is: ${JAVA_HOME}"
 
           cmake --version
@@ -100,6 +114,9 @@ jobs:
           # Delete model files to save space
           rm -rf sherpa-onnx-streaming-*
 
+          ./run-streaming-decode-file-ctc-hlg.sh
+          rm -rf sherpa-onnx-streaming-*
+
           ./run-streaming-decode-file-paraformer.sh
           rm -rf sherpa-onnx-streaming-*
 
@@ -118,3 +135,6 @@ jobs:
 
           ./run-non-streaming-decode-file-whisper.sh
           rm -rf sherpa-onnx-whisper-*
+
+          ./run-non-streaming-decode-file-nemo.sh
+          rm -rf sherpa-onnx-nemo-*

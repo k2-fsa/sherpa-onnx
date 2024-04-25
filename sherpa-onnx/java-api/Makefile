@@ -14,6 +14,7 @@ java_files += OnlineParaformerModelConfig.java
 java_files += OnlineZipformer2CtcModelConfig.java
 java_files += OnlineTransducerModelConfig.java
 java_files += OnlineModelConfig.java
+java_files += OnlineCtcFstDecoderConfig.java
 java_files += OnlineStream.java
 java_files += OnlineRecognizerConfig.java
 java_files += OnlineRecognizerResult.java
@@ -22,6 +23,7 @@ java_files += OnlineRecognizer.java
 java_files += OfflineTransducerModelConfig.java
 java_files += OfflineParaformerModelConfig.java
 java_files += OfflineWhisperModelConfig.java
+java_files += OfflineNemoEncDecCtcModelConfig.java
 java_files += OfflineModelConfig.java
 java_files += OfflineRecognizerConfig.java
 java_files += OfflineRecognizerResult.java
@@ -42,10 +44,12 @@ $(info -- class files $(class_files))
 all: $(out_jar)
 
 $(out_jar): $(class_files)
-	jar --create --verbose --file $(out_jar) -C $(out_dir) .
+	# jar --create --verbose --file $(out_jar) -C $(out_dir) ./
+	jar cvf $(out_jar) -C $(out_dir) ./
 
 clean:
 	$(RM) -rfv $(out_dir)
 
 $(class_files): $(out_dir)/$(package_dir)/%.class: src/$(package_dir)/%.java
-	javac -d $(out_dir) --class-path $(out_dir) $<
+	mkdir -p build
+	javac -d $(out_dir) -cp $(out_dir) $<

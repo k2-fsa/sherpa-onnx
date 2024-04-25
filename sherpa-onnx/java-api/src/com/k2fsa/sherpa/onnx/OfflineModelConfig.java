@@ -5,6 +5,7 @@ public class OfflineModelConfig {
     private final OfflineTransducerModelConfig transducer;
     private final OfflineParaformerModelConfig paraformer;
     private final OfflineWhisperModelConfig whisper;
+    private final OfflineNemoEncDecCtcModelConfig nemo;
     private final String tokens;
     private final int numThreads;
     private final boolean debug;
@@ -16,6 +17,7 @@ public class OfflineModelConfig {
         this.transducer = builder.transducer;
         this.paraformer = builder.paraformer;
         this.whisper = builder.whisper;
+        this.nemo = builder.nemo;
         this.tokens = builder.tokens;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
@@ -64,6 +66,7 @@ public class OfflineModelConfig {
         private OfflineParaformerModelConfig paraformer = OfflineParaformerModelConfig.builder().build();
         private OfflineTransducerModelConfig transducer = OfflineTransducerModelConfig.builder().build();
         private OfflineWhisperModelConfig whisper = OfflineWhisperModelConfig.builder().build();
+        private OfflineNemoEncDecCtcModelConfig nemo = OfflineNemoEncDecCtcModelConfig.builder().build();
         private String tokens = "";
         private int numThreads = 1;
         private boolean debug = true;
@@ -81,6 +84,11 @@ public class OfflineModelConfig {
 
         public Builder setParaformer(OfflineParaformerModelConfig paraformer) {
             this.paraformer = paraformer;
+            return this;
+        }
+
+        public Builder setNemo(OfflineNemoEncDecCtcModelConfig nemo) {
+            this.nemo = nemo;
             return this;
         }
 
