@@ -470,6 +470,19 @@ void CNonStreamingTextToSpeechDlg::Init() {
   } else if (Exists("./lexicon.txt")) {
     config.model.vits.lexicon = "./lexicon.txt";
   }
+
+  if (Exists("./dict/jieba.dict.utf8")) {
+    config.model.vits.dict_dir = "./dict";
+  }
+
+  if (Exists("./phone.fst") && Exists("./date.fst") && Exists("./number.fst")) {
+    config.rule_fsts = "./phone.fst,./date.fst,number.fst";
+  }
+
+  if (Exists("./rule.far")) {
+    config.rule_fars = "./rule.far";
+  }
+
   config.model.vits.tokens = "./tokens.txt";
 
   tts_ = SherpaOnnxCreateOfflineTts(&config);
