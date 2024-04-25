@@ -26,4 +26,6 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 ```bash
 ./run-non-streaming-tts-piper-en.sh
+./run-non-streaming-tts-coqui-de.sh
+./run-non-streaming-tts-vits-zh.sh
 ```
