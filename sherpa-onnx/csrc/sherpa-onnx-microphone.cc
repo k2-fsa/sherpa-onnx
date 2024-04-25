@@ -8,7 +8,7 @@
 
 #include <algorithm>
 #include <clocale>
-#include <cctype>  // std::tolower
+#include <cwctype>
 
 #include "portaudio.h"  // NOLINT
 #include "sherpa-onnx/csrc/display.h"
