@@ -8,6 +8,7 @@ function createOfflineTts() {
     lexicon: './vits-icefall-zh-aishell3/lexicon.txt',
     tokens: './vits-icefall-zh-aishell3/tokens.txt',
     dataDir: '',
+    dictDir: '',
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0,
