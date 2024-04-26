@@ -21,3 +21,11 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ./run-non-streaming-decode-file-whisper.sh
 ./run-non-streaming-decode-file-nemo.sh
 ```
+
+## Non-Streaming text-to-speech
+
+```bash
+./run-non-streaming-tts-piper-en.sh
+./run-non-streaming-tts-coqui-de.sh
+./run-non-streaming-tts-vits-zh.sh
+```

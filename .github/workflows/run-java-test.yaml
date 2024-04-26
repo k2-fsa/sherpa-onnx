@@ -138,3 +138,21 @@ jobs:
 
           ./run-non-streaming-decode-file-nemo.sh
           rm -rf sherpa-onnx-nemo-*
+
+      - name:  Run java test (Non-Streaming TTS)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-tts-piper-en.sh
+          rm -rf vits-piper-*
+
+          ./run-non-streaming-tts-coqui-de.sh
+          rm -rf vits-coqui-*
+
+          ./run-non-streaming-tts-vits-zh.sh
+          rm -rf vits-zh-*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-wav-files-${{ matrix.os }}
+          path: java-api-examples/*.wav
