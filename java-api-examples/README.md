@@ -35,3 +35,11 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ```bash
 ./run-spoken-language-identification-whisper.sh
 ```
+
+## Add puncutations to text
+
+The punctuation model supports both English and Chinese.
+
+```bash
+./run-add-punctuation-zh-en.sh
+```

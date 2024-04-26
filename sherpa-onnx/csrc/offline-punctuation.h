@@ -8,6 +8,11 @@
 #include <string>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/offline-punctuation-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -32,6 +37,11 @@ class OfflinePunctuationImpl;
 class OfflinePunctuation {
  public:
   explicit OfflinePunctuation(const OfflinePunctuationConfig &config);
+
+#if __ANDROID_API__ >= 9
+  OfflinePunctuation(AAssetManager *mgr,
+                     const OfflinePunctuationConfig &config);
+#endif
 
   ~OfflinePunctuation();
 
