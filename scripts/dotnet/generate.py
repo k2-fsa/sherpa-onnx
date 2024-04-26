@@ -2,12 +2,15 @@
 # Copyright (c)  2023  Xiaomi Corporation
 
 import argparse
+import os
 import re
 from pathlib import Path
 
 import jinja2
 
 SHERPA_ONNX_DIR = Path(__file__).resolve().parent.parent.parent
+
+src_dir = os.environ.get("src_dir", "/tmp")
 
 
 def get_version():
@@ -45,7 +48,7 @@ def process_linux(s):
         "libsherpa-onnx-kaldifst-core.so",
         "libucd.so",
     ]
-    prefix = "/tmp/linux/"
+    prefix = f"{src_dir}/linux/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
@@ -74,7 +77,7 @@ def process_macos(s):
         "libsherpa-onnx-kaldifst-core.dylib",
         "libucd.dylib",
     ]
-    prefix = f"/tmp/macos/"
+    prefix = f"{src_dir}/macos/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
@@ -106,7 +109,7 @@ def process_windows(s, rid):
 
     version = get_version()
 
-    prefix = f"/tmp/windows-{rid}/"
+    prefix = f"{src_dir}/windows-{rid}/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
