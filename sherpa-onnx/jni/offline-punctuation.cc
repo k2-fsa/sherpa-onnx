@@ -16,9 +16,8 @@ static OfflinePunctuationConfig GetOfflinePunctuationConfig(JNIEnv *env,
   jclass cls = env->GetObjectClass(config);
   jfieldID fid;
 
-  fid =
-      env->GetFieldID(cls, "featConfig",
-                      "Lcom/k2fsa/sherpa/onnx/OfflinePunctuationModelConfig;");
+  fid = env->GetFieldID(
+      cls, "model", "Lcom/k2fsa/sherpa/onnx/OfflinePunctuationModelConfig;");
   jobject model_config = env->GetObjectField(config, fid);
   jclass model_config_cls = env->GetObjectClass(model_config);
 
@@ -93,10 +92,10 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflinePunctuation_delete(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jstring JNICALL
-Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_addPunctuation(JNIEnv *env,
-                                                            jobject /*obj*/,
-                                                            jlong ptr,
-                                                            jstring text) {
+Java_com_k2fsa_sherpa_onnx_OfflinePunctuation_addPunctuation(JNIEnv *env,
+                                                             jobject /*obj*/,
+                                                             jlong ptr,
+                                                             jstring text) {
   auto punct = reinterpret_cast<const sherpa_onnx::OfflinePunctuation *>(ptr);
 
   const char *ptext = env->GetStringUTFChars(text, nullptr);
