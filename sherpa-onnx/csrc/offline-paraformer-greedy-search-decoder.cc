@@ -40,7 +40,7 @@ OfflineParaformerGreedySearchDecoder::Decode(
     }
 
     if (us_cif_peak) {
-      int32_t dim = us_cif_peak.GetTensorTypeAndShapeInfo().GetShape()[1];
+      int32_t dim = us_cif_peak.GetTensorTypeAndShapeInfo().GetShape().back();
 
       const auto *peak = us_cif_peak.GetTensorData<float>() + i * dim;
       std::vector<float> timestamps;
@@ -57,7 +57,10 @@ OfflineParaformerGreedySearchDecoder::Decode(
           timestamps.push_back(k * scale);
         }
       }
-      timestamps.pop_back();
+
+      if (!timestamps.empty()) {
+        timestamps.pop_back();
+      }
 
       if (timestamps.size() == results[i].tokens.size()) {
         results[i].timestamps = std::move(timestamps);

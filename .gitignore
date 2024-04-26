@@ -96,3 +96,8 @@ spoken-language-identification-test-wavs
 my-release-key*
 vits-zh-hf-fanchen-C
 sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
+*.dll
+*.lib
+*.tar.gz
+*.tar.bz2
+*.zip
