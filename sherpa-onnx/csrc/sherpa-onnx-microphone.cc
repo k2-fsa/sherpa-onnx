@@ -38,29 +38,29 @@ static void Handler(int32_t sig) {
   fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
 }
 
-static std::string tolowerUnicode(const std::string& input_str) {
-    
-    // Use system locale
-    std::setlocale(LC_ALL, ""); 
-    
-    // From char string to wchar string
-    std::wstring input_wstr(input_str.size()+1, '\0');
-    std::mbstowcs(&input_wstr[0], input_str.c_str(), input_str.size()); 
-    std::wstring lowercase_wstr;
+static std::string tolowerUnicode(const std::string &input_str) {
+  // Use system locale
+  std::setlocale(LC_ALL, "");
 
-    for (wchar_t wc : input_wstr) {
-        if (std::iswupper(wc)) {
-            lowercase_wstr += std::towlower(wc);
-        } else {
-            lowercase_wstr += wc;
-        }
+  // From char string to wchar string
+  std::wstring input_wstr(input_str.size() + 1, '\0');
+  std::mbstowcs(&input_wstr[0], input_str.c_str(), input_str.size());
+  std::wstring lowercase_wstr;
+
+  for (wchar_t wc : input_wstr) {
+    if (std::iswupper(wc)) {
+      lowercase_wstr += std::towlower(wc);
+    } else {
+      lowercase_wstr += wc;
     }
-    
-    // Back to char string
-    std::string lowercase_str(input_str.size()+1, '\0');
-    std:wcstombs(&lowercase_str[0], lowercase_wstr.c_str(), lowercase_wstr.size());
+  }
 
-    return lowercase_str;
+  // Back to char string
+  std::string lowercase_str(input_str.size() + 1, '\0');
+  std::wcstombs(&lowercase_str[0], lowercase_wstr.c_str(),
+                lowercase_wstr.size());
+
+  return lowercase_str;
 }
 
 int32_t main(int32_t argc, char *argv[]) {
