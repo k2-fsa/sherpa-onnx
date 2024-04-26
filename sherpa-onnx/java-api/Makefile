@@ -36,6 +36,10 @@ java_files += OfflineTtsConfig.java
 java_files += GeneratedAudio.java
 java_files += OfflineTts.java
 
+java_files += SpokenLanguageIdentificationWhisperConfig.java
+java_files += SpokenLanguageIdentificationConfig.java
+java_files += SpokenLanguageIdentification.java
+
 class_files := $(java_files:%.java=%.class)
 
 java_files := $(addprefix src/$(package_dir)/,$(java_files))

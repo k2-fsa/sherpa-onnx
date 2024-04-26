@@ -2,21 +2,32 @@
 
 package com.k2fsa.sherpa.onnx;
 
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
 public class SpokenLanguageIdentification {
     static {
         System.loadLibrary("sherpa-onnx-jni");
     }
 
+    private final Map<String, String> localeMap;
     private long ptr = 0; // this is the asr engine ptrss
-
-    // private final localeMap
 
     public SpokenLanguageIdentification(SpokenLanguageIdentificationConfig config) {
         ptr = newFromFile(config);
+
+        String[] languages = Locale.getISOLanguages();
+        localeMap = new HashMap<String, String>(languages.length);
+        for (String language : languages) {
+            Locale locale = new Locale(language);
+            localeMap.put(language, locale.getDisplayName());
+        }
     }
 
     public String compute(OfflineStream stream) {
-        return compute(ptr, stream.getPtr());
+        String lang = compute(ptr, stream.getPtr());
+        return localeMap.getOrDefault(lang, lang);
     }
 
     public OfflineStream createStream() {

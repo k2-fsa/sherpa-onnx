@@ -29,3 +29,9 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ./run-non-streaming-tts-coqui-de.sh
 ./run-non-streaming-tts-vits-zh.sh
 ```
+
+## Spoken language identification
+
+```bash
+./run-spoken-language-identification-whisper.sh
+```
