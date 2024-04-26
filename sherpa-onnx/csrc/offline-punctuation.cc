@@ -4,6 +4,11 @@
 
 #include "sherpa-onnx/csrc/offline-punctuation.h"
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-punctuation-impl.h"
 
@@ -32,6 +37,12 @@ std::string OfflinePunctuationConfig::ToString() const {
 
 OfflinePunctuation::OfflinePunctuation(const OfflinePunctuationConfig &config)
     : impl_(OfflinePunctuationImpl::Create(config)) {}
+
+#if __ANDROID_API__ >= 9
+OfflinePunctuation::OfflinePunctuation(AAssetManager *mgr,
+                                       const OfflinePunctuationConfig &config)
+    : impl_(OfflinePunctuationImpl::Create(mgr, config)) {}
+#endif
 
 OfflinePunctuation::~OfflinePunctuation() = default;
 
