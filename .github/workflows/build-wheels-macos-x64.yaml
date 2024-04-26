@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
+        os: [macos-11]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
 
     steps:
@@ -58,8 +58,6 @@ jobs:
         shell: bash
         run: |
           ls -lh ./wheelhouse/
-
-          ls -lh ./wheelhouse/*.whl
 
       - uses: actions/upload-artifact@v4
         with:
