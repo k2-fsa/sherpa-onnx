@@ -47,6 +47,6 @@ jobs:
         env:
           API_KEY: ${{ secrets.NUGET_API_KEY }}
         run: |
-          # API_KEY is valid until 2024.05.02
+          # API_KEY is valid until 2025.04.26
           cd /tmp/packages
           dotnet nuget push ./org.k2fsa.sherpa.onnx.*.nupkg --skip-duplicate --api-key $API_KEY --source https://api.nuget.org/v3/index.json
