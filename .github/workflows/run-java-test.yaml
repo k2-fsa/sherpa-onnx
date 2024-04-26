@@ -106,6 +106,14 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run java test (add punctuations)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-add-punctuation-zh-en.sh
+          # Delete model files to save space
+          rm -rf sherpa-onnx-punct-*
+
       - name:  Run java test (Spoken language identification)
         shell: bash
         run: |

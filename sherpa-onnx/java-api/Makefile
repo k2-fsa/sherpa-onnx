@@ -40,6 +40,10 @@ java_files += SpokenLanguageIdentificationWhisperConfig.java
 java_files += SpokenLanguageIdentificationConfig.java
 java_files += SpokenLanguageIdentification.java
 
+java_files += OfflinePunctuationModelConfig.java
+java_files += OfflinePunctuationConfig.java
+java_files += OfflinePunctuation.java
+
 class_files := $(java_files:%.java=%.class)
 
 java_files := $(addprefix src/$(package_dir)/,$(java_files))
