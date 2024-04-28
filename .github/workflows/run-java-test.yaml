@@ -106,6 +106,17 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run java test (audio tagging)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-audio-tagging-zipformer-from-file.sh
+          # Delete model files to save space
+          rm -rf sherpa-onnx-zipformer-*
+
+          ./run-audio-tagging-ced-from-file.sh
+          rm -rf sherpa-onnx-ced-*
+
       - name:  Run java test (add punctuations)
         shell: bash
         run: |

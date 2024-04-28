@@ -1,3 +1,4 @@
+# Copyright 2024 Xiaomi Corporation
 
 # all .class and .jar files are put inside out_dir
 out_dir := build
@@ -43,6 +44,12 @@ java_files += SpokenLanguageIdentification.java
 java_files += OfflinePunctuationModelConfig.java
 java_files += OfflinePunctuationConfig.java
 java_files += OfflinePunctuation.java
+
+java_files += OfflineZipformerAudioTaggingModelConfig.java
+java_files += AudioTaggingModelConfig.java
+java_files += AudioTaggingConfig.java
+java_files += AudioEvent.java
+java_files += AudioTagging.java
 
 class_files := $(java_files:%.java=%.class)
 

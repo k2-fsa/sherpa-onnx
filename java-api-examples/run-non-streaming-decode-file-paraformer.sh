@@ -25,20 +25,6 @@ if [ ! -f ../sherpa-onnx/java-api/build/sherpa-onnx.jar ]; then
   popd
 fi
 
-if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa-onnx-jni.so ]]; then
-  cmake \
-    -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
-    -DSHERPA_ONNX_ENABLE_TESTS=OFF \
-    -DSHERPA_ONNX_ENABLE_CHECK=OFF \
-    -DBUILD_SHARED_LIBS=ON \
-    -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-    -DSHERPA_ONNX_ENABLE_JNI=ON \
-    ..
-
-  make -j4
-  ls -lh lib
-fi
-
 if [ ! -f ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
 

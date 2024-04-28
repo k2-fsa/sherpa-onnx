@@ -25,20 +25,6 @@ if [ ! -f ../sherpa-onnx/java-api/build/sherpa-onnx.jar ]; then
   popd
 fi
 
-if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa-onnx-jni.so ]]; then
-  cmake \
-    -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
-    -DSHERPA_ONNX_ENABLE_TESTS=OFF \
-    -DSHERPA_ONNX_ENABLE_CHECK=OFF \
-    -DBUILD_SHARED_LIBS=ON \
-    -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-    -DSHERPA_ONNX_ENABLE_JNI=ON \
-    ..
-
-  make -j4
-  ls -lh lib
-fi
-
 # Note that it needs a multilingual whisper model. so, for example, tiny works while tiny.en does not work
 # https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2
 if [ ! -f ./sherpa-onnx-whisper-tiny/tiny-encoder.int8.onnx ]; then

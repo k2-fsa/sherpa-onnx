@@ -2,10 +2,10 @@
 
 package com.k2fsa.sherpa.onnx;
 
-public class OfflineNemoEncDecCtcModelConfig {
+public class OfflineZipformerAudioTaggingModelConfig {
     private final String model;
 
-    private OfflineNemoEncDecCtcModelConfig(Builder builder) {
+    private OfflineZipformerAudioTaggingModelConfig(Builder builder) {
         this.model = builder.model;
     }
 
@@ -20,8 +20,8 @@ public class OfflineNemoEncDecCtcModelConfig {
     public static class Builder {
         private String model = "";
 
-        public OfflineNemoEncDecCtcModelConfig build() {
-            return new OfflineNemoEncDecCtcModelConfig(this);
+        public OfflineZipformerAudioTaggingModelConfig build() {
+            return new OfflineZipformerAudioTaggingModelConfig(this);
         }
 
         public Builder setModel(String model) {
