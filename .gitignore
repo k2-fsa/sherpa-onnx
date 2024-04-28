@@ -101,3 +101,4 @@ sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 *.tar.gz
 *.tar.bz2
 *.zip
+sherpa-onnx-ced-*
