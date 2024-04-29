@@ -51,6 +51,10 @@ java_files += AudioTaggingConfig.java
 java_files += AudioEvent.java
 java_files += AudioTagging.java
 
+java_files += SpeakerEmbeddingExtractorConfig.java
+java_files += SpeakerEmbeddingExtractor.java
+java_files += SpeakerEmbeddingManager.java
+
 class_files := $(java_files:%.java=%.class)
 
 java_files := $(addprefix src/$(package_dir)/,$(java_files))

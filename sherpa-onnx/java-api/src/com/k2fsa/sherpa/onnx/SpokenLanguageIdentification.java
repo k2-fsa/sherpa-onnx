@@ -12,7 +12,7 @@ public class SpokenLanguageIdentification {
     }
 
     private final Map<String, String> localeMap;
-    private long ptr = 0; // this is the asr engine ptrss
+    private long ptr = 0;
 
     public SpokenLanguageIdentification(SpokenLanguageIdentificationConfig config) {
         ptr = newFromFile(config);

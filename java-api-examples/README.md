@@ -50,3 +50,9 @@ The punctuation model supports both English and Chinese.
 ./run-audio-tagging-zipformer-from-file.sh
 ./run-audio-tagging-ced-from-file.sh
 ```
+
+## Speaker identification
+
+```bash
+./run-speaker-identification.sh
+```

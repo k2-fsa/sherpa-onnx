@@ -7,7 +7,7 @@ public class OfflineTts {
         System.loadLibrary("sherpa-onnx-jni");
     }
 
-    private long ptr = 0; // this is the asr engine ptrss
+    private long ptr = 0;
 
     public OfflineTts(OfflineTtsConfig config) {
         ptr = newFromFile(config);
