@@ -14,7 +14,7 @@ public class AudioTaggingConfig {
     }
 
     public static Builder builder() {
-        return new AudioTaggingConfig.Builder();
+        return new Builder();
     }
 
     public static class Builder {

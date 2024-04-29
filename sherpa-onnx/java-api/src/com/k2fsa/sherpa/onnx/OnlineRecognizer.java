@@ -8,7 +8,7 @@ public class OnlineRecognizer {
         System.loadLibrary("sherpa-onnx-jni");
     }
 
-    private long ptr = 0; // this is the asr engine ptrss
+    private long ptr = 0;
 
 
     public OnlineRecognizer(OnlineRecognizerConfig config) {
