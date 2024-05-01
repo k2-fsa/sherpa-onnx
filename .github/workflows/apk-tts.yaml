@@ -166,8 +166,8 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
 
-            mkdir -p tts
-            cp -v ../apks/*.apk ./tts/
+            mkdir -p tts-2
+            cp -v ../apks/*.apk ./tts-2/
             git status
             git lfs track "*.apk"
             git add .
