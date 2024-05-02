@@ -1,3 +1,4 @@
+// scripts/node-addon-api/src/sherpa-onnx-node-addon-api.cc
 #include "napi.h"
 
 Napi::Object InitStreamingAsr(Napi::Env env, Napi::Object exports);
