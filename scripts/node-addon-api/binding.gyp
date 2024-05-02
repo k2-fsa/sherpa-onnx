@@ -3,7 +3,7 @@
     {
       'target_name': 'sherpa-onnx-node-addon-api-native',
       'sources': [
-        'src/sherpa_onnx_node_addon_api.cc',
+        'src/sherpa-onnx-node-addon-api.cc',
         'src/streaming-asr.cc'
       ],
       'include_dirs': [
