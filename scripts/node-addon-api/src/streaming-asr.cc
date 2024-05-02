@@ -162,6 +162,7 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
 
   Napi::Object config = info[0].As<Napi::Object>();
   SherpaOnnxOnlineRecognizerConfig c;
+  memset(&c, 0, sizeof(c));
   c.feat_config = GetFeatureConfig(config);
   c.model_config = GetOnlineModelConfig(config);
   printf("encoder: %s\n", c.model_config.transducer.encoder
@@ -181,6 +182,8 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   printf("debug: %d\n", c.model_config.debug);
   printf("model_type: %s\n",
          c.model_config.model_type ? c.model_config.model_type : "no");
+
+  SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&c);
 
   if (c.model_config.transducer.encoder) {
     delete[] c.model_config.transducer.encoder;
@@ -206,7 +209,12 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     delete[] c.model_config.model_type;
   }
 
-  return Napi::External<SherpaOnnxOnlineRecognizer>::New(env, nullptr);
+  return Napi::External<SherpaOnnxOnlineRecognizer>::New(
+      env, recognizer,
+      [](Napi::Env env, SherpaOnnxOnlineRecognizer *recognizer) {
+        printf("deleted!\n");
+        DestroyOnlineRecognizer(recognizer);
+      });
 }
 
 void InitStreamingAsr(Napi::Env env, Napi::Object exports) {
