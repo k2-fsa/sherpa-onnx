@@ -16,6 +16,16 @@ TEST(UTF8, Case1) {
   for (const auto &s : ss) {
     std::cout << s << "\n";
   }
+  hello = "中国 VS 美国";
+  ss = SplitUtf8(hello);
+  for (const auto &s : ss) {
+    std::cout << s << "\n";
+  }
+  hello = "中国 V S 美国";
+  ss = SplitUtf8(hello);
+  for (const auto &s : ss) {
+    std::cout << s << "\n";
+  }
 }
 
 }  // namespace sherpa_onnx

@@ -170,6 +170,8 @@ if(SHERPA_ONNX_ENABLE_GPU)
   )
 endif()
 
+target_link_libraries(sherpa-onnx-core ssentencepiece_core)
+
 if(BUILD_SHARED_LIBS)
   target_link_libraries(sherpa-onnx-core onnxruntime)
 else()
@@ -487,6 +489,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     pad-sequence-test.cc
     slice-test.cc
     stack-test.cc
+    text2token-test.cc
     transpose-test.cc
     unbind-test.cc
     utfcpp-test.cc

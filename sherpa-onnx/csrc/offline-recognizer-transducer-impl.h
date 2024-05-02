@@ -31,6 +31,7 @@
 #include "sherpa-onnx/csrc/pad-sequence.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/utils.h"
+#include "ssentencepiece/csrc/ssentencepiece.h"
 
 namespace sherpa_onnx {
 
@@ -128,7 +129,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
     std::istringstream is(hws);
     std::vector<std::vector<int32_t>> current;
-    if (!EncodeHotwords(is, symbol_table_, &current)) {
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
+                        bpe_encoder_.get(), &current)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
                        hotwords.c_str());
     }
@@ -207,7 +209,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
       exit(-1);
     }
 
-    if (!EncodeHotwords(is, symbol_table_, &hotwords_)) {
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
+                        bpe_encoder_.get(), &hotwords_)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed.");
       exit(-1);
     }
@@ -220,6 +223,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
   SymbolTable symbol_table_;
   std::vector<std::vector<int32_t>> hotwords_;
   ContextGraphPtr hotwords_graph_;
+  std::unique_ptr<ssentencepiece::Ssentencepiece> bpe_encoder_;
   std::unique_ptr<OfflineTransducerModel> model_;
   std::unique_ptr<OfflineTransducerDecoder> decoder_;
   std::unique_ptr<OfflineLM> lm_;
