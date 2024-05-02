@@ -1,14 +1,12 @@
-const SherpaOnnxNodeAddonApi = require("../lib/binding.js");
-const assert = require("assert");
+const sherpa_onnx = require('../lib/binding.js');
+console.log(sherpa_onnx)
 
-assert(SherpaOnnxNodeAddonApi, "The expected function is undefined");
+const config = {
+  'featConfig': {
+    'sampleRate': 16000,
+    'featureDim': 80,
+  }
+};
+const onlineRecognizer = sherpa_onnx.createOnlineRecognizer(config)
 
-function testBasic()
-{
-    const result =  SherpaOnnxNodeAddonApi("hello");
-    assert.strictEqual(result, "world", "Unexpected value returned");
-}
-
-assert.doesNotThrow(testBasic, undefined, "testBasic threw an expection");
-
-console.log("Tests passed- everything looks OK!");
+console.log('Tests passed- everything looks OK!');
