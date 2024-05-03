@@ -10,7 +10,7 @@ arch=$(node -p "require('os').arch()")
 
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
-SHERPA_ONNX_VERSION=1.0.7
+SHERPA_ONNX_VERSION=1.0.8
 echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
 if [ -z $owner ]; then

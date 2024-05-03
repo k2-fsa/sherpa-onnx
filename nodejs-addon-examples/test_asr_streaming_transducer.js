@@ -1,5 +1,5 @@
 // Copyright (c)  2024  Xiaomi Corporation
-const sherpa_onnx = require('sherpa-onnx-node);
+const sherpa_onnx = require('sherpa-onnx-node');
 
 // Please download test files from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
@@ -31,22 +31,25 @@ const waveFilename =
 
 const recognizer = new sherpa_onnx.OnlineRecognizer(config);
 console.log('Started')
-let start = performance.now(); const stream = recognizer.createStream();
-    const wave = sherpa_onnx.readWave(waveFilename);
-    stream.acceptWaveform(wave.samples, wave.sampleRate);
+let start = performance.now();
+const stream = recognizer.createStream();
+const wave = sherpa_onnx.readWave(waveFilename);
+stream.acceptWaveform(wave.samples, wave.sampleRate);
 
-    const tailPadding = new Float32Array(wave.sampleRate * 0.4);
-    stream.acceptWaveform(tailPadding, wave.sampleRate);
+const tailPadding = new Float32Array(wave.sampleRate * 0.4);
+stream.acceptWaveform(tailPadding, wave.sampleRate);
 
-    while (recognizer.isReady(stream)) {
-      recognizer.decode(stream);
-    } result = recognizer.getResult(stream)
-let stop = performance.now(); console.log('Done')
+while (recognizer.isReady(stream)) {
+  recognizer.decode(stream);
+}
+result = recognizer.getResult(stream)
+let stop = performance.now();
+console.log('Done')
 
 const elapsed_seconds = (stop - start) / 1000;
-    const duration = wave.samples.length / wave.sampleRate;
-    const real_time_factor = elapsed_seconds / duration;
-    console.log('Wave duration', duration.toFixed(3), 'secodns')
+const duration = wave.samples.length / wave.sampleRate;
+const real_time_factor = elapsed_seconds / duration;
+console.log('Wave duration', duration.toFixed(3), 'secodns')
 console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
 console.log('RTF', real_time_factor.toFixed(3))
 console.log('result', result.text)

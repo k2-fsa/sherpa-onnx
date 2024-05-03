@@ -3,7 +3,7 @@ name: npm-addon-macos
 on:
   push:
     branches:
-      - publish-node-2
+      - publish-node
   workflow_dispatch:
 
 concurrency:
