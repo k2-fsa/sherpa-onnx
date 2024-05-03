@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - node-addon-api-online-asr-2
     paths:
       - '.github/workflows/test-node-addon-api.yaml'
       - 'CMakeLists.txt'
