@@ -1,46 +1,26 @@
-name: test-node-addon-api
+name: npm-addon
 
 on:
   push:
     branches:
-      - master
       - publish-node
-    paths:
-      - '.github/workflows/test-nodejs-addon-api.yaml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'scripts/node-addon-api/**'
-
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-nodejs-addon-api.yaml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'scripts/node-addon-api/**'
-
   workflow_dispatch:
 
 concurrency:
-  group: test-node-addon-api-${{ github.ref }}
+  group: npm-addon-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
-  test-node-addon-api:
-    name: ${{ matrix.os }}
+  npm-addon:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-14, ubuntu-latest]
+        os: [ubuntu-latest]
         python-version: ["3.8"]
 
     steps:
@@ -76,39 +56,47 @@ jobs:
           mkdir build
           cd build
           cmake \
-            -DCMAKE_INSTALL_PREFIX=/tmp/sherpa-onnx \
+            -DCMAKE_INSTALL_PREFIX=./install \
             -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             ..
-          make -j
-          make install
+          make -j install
 
-      - name: Build node-addon-api package
+          ls -lh install/lib/
+          echo "---"
+
+          find install/lib/ -maxdepth 1 -type l
+          find install/lib/ -maxdepth 1 -type l -delete
+          echo "---"
+          ls -lh install/lib/
+
+      - name: Build sherpa-onnx node-addon
         shell: bash
         run: |
-          cd scripts/node-addon-api
-
-          export PKG_CONFIG_PATH=/tmp/sherpa-onnx:$PKG_CONFIG_PATH
-
-          ls -lh /tmp/sherpa-onnx
+          export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
 
           pkg-config --cflags sherpa-onnx
           pkg-config --libs sherpa-onnx
+
+          cd scripts/node-addon-api/
 
           npm i
 
           ./node_modules/.bin/node-gyp configure build --verbose
 
-      - name: Test streaming transducer
+      - name: Prepare for publish
         shell: bash
         run: |
-          cd scripts/node-addon-api
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
 
-          node test/test_asr_streaming_transducer.js
+          owner=${{ github.repository_owner }}
+          export owner
 
-          rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+          .github/scripts/node-addon/run.sh
+
+      - name: Display files to be published
+        shell: bash
+        run: |
+          ls -lh /tmp/sherpa-onnx-node
