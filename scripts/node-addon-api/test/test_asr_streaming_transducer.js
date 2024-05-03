@@ -9,15 +9,15 @@ const config = {
   'modelConfig': {
     'transducer': {
       'encoder':
-          './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx',
+          './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx',
       'decoder':
           './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx',
       'joiner':
-          './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx',
+          './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx',
     },
     'tokens':
         './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt',
-    'numThreads': 1,
+    'numThreads': 2,
     'provider': 'cpu',
     'debug': 1,
     'modelType': 'zipformer',
@@ -25,18 +25,29 @@ const config = {
 };
 
 const waveFilename =
-    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/2.wav';
+    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/0.wav';
 
 const recognizer = new sherpa_onnx.OnlineRecognizer(config);
+console.log('Started')
+let start = performance.now();
 const stream = recognizer.createStream();
 const wave = sherpa_onnx.readWave(waveFilename);
-console.log(wave.samples.length, wave.sampleRate);
 stream.acceptWaveform(wave.samples, wave.sampleRate);
 
-const tailPadding = new Float32Array(wave.sampleRate * 0.5);
+const tailPadding = new Float32Array(wave.sampleRate * 0.4);
 stream.acceptWaveform(tailPadding, wave.sampleRate);
 
 while (recognizer.isReady(stream)) {
   recognizer.decode(stream);
 }
-console.log(recognizer.getResult(stream))
+result = recognizer.getResult(stream)
+let stop = performance.now();
+console.log('Done')
+
+const elapsed_seconds = (stop - start) / 1000;
+const duration = wave.samples.length / wave.sampleRate;
+const real_time_factor = elapsed_seconds / duration;
+console.log('Wave duration', duration.toFixed(3), 'secodns')
+console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
+console.log('RTF', real_time_factor.toFixed(3))
+console.log('result', result.text)

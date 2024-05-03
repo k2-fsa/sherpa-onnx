@@ -222,7 +222,6 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   return Napi::External<SherpaOnnxOnlineRecognizer>::New(
       env, recognizer,
       [](Napi::Env env, SherpaOnnxOnlineRecognizer *recognizer) {
-        printf("deleted recognizer!\n");
         DestroyOnlineRecognizer(recognizer);
       });
 }
@@ -254,7 +253,6 @@ static Napi::External<SherpaOnnxOnlineStream> CreateOnlineStreamWrapper(
 
   return Napi::External<SherpaOnnxOnlineStream>::New(
       env, stream, [](Napi::Env env, SherpaOnnxOnlineStream *stream) {
-        printf("deleted stream!\n");
         DestroyOnlineStream(stream);
       });
 }

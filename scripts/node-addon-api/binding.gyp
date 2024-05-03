@@ -9,7 +9,7 @@
       ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",
-        "<!@(a=$(pkg-config --cflags sherpa-onnx);a=${a:2};echo $a)"
+        "<!@(a=$(pkg-config --cflags sherpa-onnx);echo ${a:2})"
       ],
       'dependencies': ["<!(node -p \"require('node-addon-api').gyp\")"],
       'cflags!': [
