@@ -23,4 +23,20 @@ const config = {
     'modelType': 'zipformer',
   }
 };
-const onlineRecognizer = new sherpa_onnx.OnlineRecognizer(config)
+
+const waveFilename =
+    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/2.wav';
+
+const recognizer = new sherpa_onnx.OnlineRecognizer(config);
+const stream = recognizer.createStream();
+const wave = sherpa_onnx.readWave(waveFilename);
+console.log(wave.samples.length, wave.sampleRate);
+stream.acceptWaveform(wave.samples, wave.sampleRate);
+
+const tailPadding = new Float32Array(wave.sampleRate * 0.5);
+stream.acceptWaveform(tailPadding, wave.sampleRate);
+
+while (recognizer.isReady(stream)) {
+  recognizer.decode(stream);
+}
+console.log(recognizer.getResult(stream))

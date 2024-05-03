@@ -15,8 +15,7 @@ const config = {
     'tokens': './tokens.txt',
     'numThreads': 3,
     'provider': 'cpu',
-    'debug': 10,
-    'modelType': 'zipformer2',
+    'debug': 1,
   }
 };
 const onlineRecognizer = new sherpa_onnx.OnlineRecognizer(config)

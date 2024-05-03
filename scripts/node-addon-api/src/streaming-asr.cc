@@ -3,7 +3,7 @@
 // Copyright (c)  2024  Xiaomi Corporation
 #include <sstream>
 
-#include "napi.h"
+#include "napi.h"  // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 /*
 {
@@ -149,16 +149,16 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     std::ostringstream os;
     os << "Expect only 1 argument. Given: " << info.Length();
 
-    Napi::TypeError::New(env, os.str().c_str()).ThrowAsJavaScriptException();
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
-    return Napi::External<SherpaOnnxOnlineRecognizer>::New(env, nullptr);
+    return {};
   }
 
   if (!info[0].IsObject()) {
     Napi::TypeError::New(env, "Expect an object as the argument")
         .ThrowAsJavaScriptException();
 
-    return Napi::External<SherpaOnnxOnlineRecognizer>::New(env, nullptr);
+    return {};
   }
 
   Napi::Object config = info[0].As<Napi::Object>();
@@ -212,15 +212,252 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     delete[] c.model_config.model_type;
   }
 
+  if (!recognizer) {
+    Napi::TypeError::New(env, "Please check your config!")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
   return Napi::External<SherpaOnnxOnlineRecognizer>::New(
       env, recognizer,
       [](Napi::Env env, SherpaOnnxOnlineRecognizer *recognizer) {
-        printf("deleted!\n");
+        printf("deleted recognizer!\n");
         DestroyOnlineRecognizer(recognizer);
       });
+}
+
+static Napi::External<SherpaOnnxOnlineStream> CreateOnlineStreamWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 1) {
+    std::ostringstream os;
+    os << "Expect only 1 argument. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(
+        env, "You should pass a recognizer pointer as the only argument")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  SherpaOnnxOnlineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
+
+  SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
+
+  return Napi::External<SherpaOnnxOnlineStream>::New(
+      env, stream, [](Napi::Env env, SherpaOnnxOnlineStream *stream) {
+        printf("deleted stream!\n");
+        DestroyOnlineStream(stream);
+      });
+}
+
+static void AcceptWaveformWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be a online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  SherpaOnnxOnlineStream *stream =
+      info[0].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  if (!info[1].IsObject()) {
+    Napi::TypeError::New(env, "Argument 1 should be an object")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  Napi::Object obj = info[1].As<Napi::Object>();
+
+  if (!obj.Has("samples")) {
+    Napi::TypeError::New(env, "The argument object should have a field samples")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!obj.Get("samples").IsTypedArray()) {
+    Napi::TypeError::New(env, "The object['samples'] should be a typed array")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!obj.Has("sampleRate")) {
+    Napi::TypeError::New(env,
+                         "The argument object should have a field sampleRate")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!obj.Get("sampleRate").IsNumber()) {
+    Napi::TypeError::New(env, "The object['samples'] should be a number")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
+  int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
+
+  AcceptWaveform(stream, sample_rate, samples.Data(), samples.ElementLength());
+}
+
+static Napi::Boolean IsOnlineStreamReadyWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 0 should be a online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 1 should be a online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  SherpaOnnxOnlineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
+
+  SherpaOnnxOnlineStream *stream =
+      info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  int32_t is_ready = IsOnlineStreamReady(recognizer, stream);
+
+  return Napi::Boolean::New(env, is_ready);
+}
+
+static void DecodeOnlineStreamWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 0 should be a online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 1 should be a online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  SherpaOnnxOnlineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
+
+  SherpaOnnxOnlineStream *stream =
+      info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  DecodeOnlineStream(recognizer, stream);
+}
+
+static Napi::String GetOnlineStreamResultAsJsonWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 0 should be a online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 1 should be a online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  SherpaOnnxOnlineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
+
+  SherpaOnnxOnlineStream *stream =
+      info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  const char *json = GetOnlineStreamResultAsJson(recognizer, stream);
+  Napi::String s = Napi::String::New(env, json);
+
+  DestroyOnlineStreamResultJson(json);
+
+  return s;
 }
 
 void InitStreamingAsr(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "createOnlineRecognizer"),
               Napi::Function::New(env, CreateOnlineRecognizerWrapper));
+
+  exports.Set(Napi::String::New(env, "createOnlineStream"),
+              Napi::Function::New(env, CreateOnlineStreamWrapper));
+
+  exports.Set(Napi::String::New(env, "acceptWaveformOnline"),
+              Napi::Function::New(env, AcceptWaveformWrapper));
+
+  exports.Set(Napi::String::New(env, "isOnlineStreamReady"),
+              Napi::Function::New(env, IsOnlineStreamReadyWrapper));
+
+  exports.Set(Napi::String::New(env, "decodeOnlineStream"),
+              Napi::Function::New(env, DecodeOnlineStreamWrapper));
+
+  exports.Set(Napi::String::New(env, "getOnlineStreamResultAsJson"),
+              Napi::Function::New(env, GetOnlineStreamResultAsJsonWrapper));
 }
