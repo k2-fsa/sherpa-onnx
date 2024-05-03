@@ -3,3 +3,9 @@
 Please see
 https://github.com/k2-fsa/sherpa-onnx/blob/master/nodejs-addon-examples/README.md
 for usages.
+
+
+||Method|Support multiple threads|
+|---|---|---|
+|this package| https://github.com/nodejs/node-addon-api | Yes |
+|https://www.npmjs.com/package/sherpa-onnx| WebAssembly | No |
