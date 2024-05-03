@@ -1,4 +1,4 @@
-const sherpa_onnx = require('../lib/binding.js');
+const sherpa_onnx = require('../lib/sherpa-onnx.js');
 console.log(sherpa_onnx)
 
 const config = {
@@ -19,6 +19,6 @@ const config = {
     'modelType': 'zipformer2',
   }
 };
-const onlineRecognizer = sherpa_onnx.createOnlineRecognizer(config)
+const onlineRecognizer = new sherpa_onnx.OnlineRecognizer(config)
 
 console.log('Tests passed- everything looks OK!');

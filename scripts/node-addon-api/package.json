@@ -1,5 +1,5 @@
 {
-  "main": "lib/binding.js",
+  "main": "lib/sherpa-onnx.js",
   "version": "1.0.0",
   "description": "Speech-to-text and text-to-speech using Next-gen Kaldi without internet connection",
   "dependencies": {

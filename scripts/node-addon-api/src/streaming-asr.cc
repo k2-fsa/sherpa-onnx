@@ -6,7 +6,7 @@
 #include "napi.h"
 #include "sherpa-onnx/c-api/c-api.h"
 /*
-const config = {
+{
   'featConfig': {
     'sampleRate': 16000,
     'featureDim': 80,
@@ -15,23 +15,22 @@ const config = {
  */
 static SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj) {
   SherpaOnnxFeatureConfig config;
-  config.sample_rate = 16000;
-  config.feature_dim = 80;
+  memset(&config, 0, sizeof(config));
 
-  if (obj.Has("featConfig") && obj.Get("featConfig").IsObject()) {
-    Napi::Object featConfig = obj.Get("featConfig").As<Napi::Object>();
+  if (!obj.Has("featConfig") || !obj.Get("featConfig").IsObject()) {
+    return config;
+  }
 
-    if (featConfig.Has("sampleRate") &&
-        featConfig.Get("sampleRate").IsNumber()) {
-      config.sample_rate =
-          featConfig.Get("sampleRate").As<Napi::Number>().Int32Value();
-    }
+  Napi::Object featConfig = obj.Get("featConfig").As<Napi::Object>();
 
-    if (featConfig.Has("featureDim") &&
-        featConfig.Get("featureDim").IsNumber()) {
-      config.feature_dim =
-          featConfig.Get("featureDim").As<Napi::Number>().Int32Value();
-    }
+  if (featConfig.Has("sampleRate") && featConfig.Get("sampleRate").IsNumber()) {
+    config.sample_rate =
+        featConfig.Get("sampleRate").As<Napi::Number>().Int32Value();
+  }
+
+  if (featConfig.Has("featureDim") && featConfig.Get("featureDim").IsNumber()) {
+    config.feature_dim =
+        featConfig.Get("featureDim").As<Napi::Number>().Int32Value();
   }
 
   return config;
@@ -48,44 +47,46 @@ static SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj) {
 
 static SherpaOnnxOnlineTransducerModelConfig GetOnlineTransducerModelConfig(
     Napi::Object obj) {
-  SherpaOnnxOnlineTransducerModelConfig transducer;
-  memset(&transducer, 0, sizeof(transducer));
+  SherpaOnnxOnlineTransducerModelConfig config;
+  memset(&config, 0, sizeof(config));
 
-  if (obj.Has("transducer") && obj.Get("transducer").IsObject()) {
-    Napi::Object o = obj.Get("transducer").As<Napi::Object>();
-
-    if (o.Has("encoder") && o.Get("encoder").IsString()) {
-      Napi::String encoder = o.Get("encoder").As<Napi::String>();
-      std::string s = encoder.Utf8Value();
-      char *p = new char[s.size() + 1];
-      std::copy(s.begin(), s.end(), p);
-      p[s.size()] = 0;
-
-      transducer.encoder = p;
-    }
-
-    if (o.Has("decoder") && o.Get("decoder").IsString()) {
-      Napi::String decoder = o.Get("decoder").As<Napi::String>();
-      std::string s = decoder.Utf8Value();
-      char *p = new char[s.size() + 1];
-      std::copy(s.begin(), s.end(), p);
-      p[s.size()] = 0;
-
-      transducer.decoder = p;
-    }
-
-    if (o.Has("joiner") && o.Get("joiner").IsString()) {
-      Napi::String joiner = o.Get("joiner").As<Napi::String>();
-      std::string s = joiner.Utf8Value();
-      char *p = new char[s.size() + 1];
-      std::copy(s.begin(), s.end(), p);
-      p[s.size()] = 0;
-
-      transducer.joiner = p;
-    }
+  if (!obj.Has("transducer") || !obj.Get("transducer").IsObject()) {
+    return config;
   }
 
-  return transducer;
+  Napi::Object o = obj.Get("transducer").As<Napi::Object>();
+
+  if (o.Has("encoder") && o.Get("encoder").IsString()) {
+    Napi::String encoder = o.Get("encoder").As<Napi::String>();
+    std::string s = encoder.Utf8Value();
+    char *p = new char[s.size() + 1];
+    std::copy(s.begin(), s.end(), p);
+    p[s.size()] = 0;
+
+    config.encoder = p;
+  }
+
+  if (o.Has("decoder") && o.Get("decoder").IsString()) {
+    Napi::String decoder = o.Get("decoder").As<Napi::String>();
+    std::string s = decoder.Utf8Value();
+    char *p = new char[s.size() + 1];
+    std::copy(s.begin(), s.end(), p);
+    p[s.size()] = 0;
+
+    config.decoder = p;
+  }
+
+  if (o.Has("joiner") && o.Get("joiner").IsString()) {
+    Napi::String joiner = o.Get("joiner").As<Napi::String>();
+    std::string s = joiner.Utf8Value();
+    char *p = new char[s.size() + 1];
+    std::copy(s.begin(), s.end(), p);
+    p[s.size()] = 0;
+
+    config.joiner = p;
+  }
+
+  return config;
 }
 
 static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
@@ -165,6 +166,7 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   memset(&c, 0, sizeof(c));
   c.feat_config = GetFeatureConfig(config);
   c.model_config = GetOnlineModelConfig(config);
+#if 0
   printf("encoder: %s\n", c.model_config.transducer.encoder
                               ? c.model_config.transducer.encoder
                               : "no");
@@ -182,6 +184,7 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   printf("debug: %d\n", c.model_config.debug);
   printf("model_type: %s\n",
          c.model_config.model_type ? c.model_config.model_type : "no");
+#endif
 
   SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&c);
 
