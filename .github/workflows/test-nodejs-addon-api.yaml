@@ -1,0 +1,106 @@
+name: test-node-addon-api
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-node-addon-api.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'scripts/node-addon-api/**'
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-node-addon-api.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'scripts/node-addon-api/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-node-addon-api-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test-node-addon-api:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-14]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Display node version
+        shell: bash
+        run: |
+          node --version
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-release-shared
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -DCMAKE_INSTALL_PREFIX=/tmp/sherpa-onnx -DBUILD_SHARED_LIBS=ON ..
+          make -j
+          make install
+
+      - name: Build node-addon-api package
+        shell: bash
+        run: |
+          cd scripts/node-addon-api
+
+          export PKG_CONFIG_PATH=/tmp/sherpa-onnx:$PKG_CONFIG_PATH
+
+          ls -lh /tmp/sherpa-onnx
+
+          pkg-config --cflags sherpa-onnx
+          pkg-config --libs sherpa-onnx
+
+          a=$(pkg-config --cflags sherpa-onnx);a=${a:2};echo $a
+
+          npm i
+
+          ./node_modules/.bin/node-gyp configure build --verbose
+
+      - name: Test streaming transducer
+        shell: bash
+        run: |
+          cd scripts/node-addon-api
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+
+          node test/test_asr_streaming_transducer.js
+
+          rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
