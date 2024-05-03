@@ -2,7 +2,7 @@
   "name": "sherpa-onnx",
   "version": "SHERPA_ONNX_VERSION",
   "description": "Speech-to-text and text-to-speech using Next-gen Kaldi without internet connection",
-  "main": "index.js",
+  "main": "sherpa-onnx.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -45,8 +45,8 @@
   },
   "homepage": "https://github.com/k2-fsa/sherpa-onnx#readme",
   "optionalDependencies": {
-    "sherpa-onnx-node-darwin-arm64": "*"
-  },
-  "dependencies": {
+    "sherpa-onnx-darwin-arm64": "*",
+    "sherpa-onnx-darwin-x64": "*",
+    "sherpa-onnx-linux-x64": "*"
   }
 }

@@ -1,5 +1,5 @@
 {
-  "name": "sherpa-onnx",
+  "name": "sherpa-onnx-PLATFORM-ARCH",
   "version": "SHERPA_ONNX_VERSION",
   "description": "Speech-to-text and text-to-speech using Next-gen Kaldi without internet connection",
   "main": "index.js",
