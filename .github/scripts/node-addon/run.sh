@@ -29,7 +29,7 @@ mkdir -p $dst
 
 cp $src_dir/package-optional.json $dst/package.json
 cp $src_dir/index.js $dst/
-cp $src_dir/README.md $dst/
+cp $src_dir/README-optional.md $dst/README.md
 
 cp -fv build/install/lib/lib* $dst/ || true
 cp -fv build/install/lib/*dll $dst/ || true

@@ -2,6 +2,12 @@
 
 This directory contains nodejs examples for [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx).
 
+It uses WebAssembly to wrap `sherpa-onnx` for NodeJS and it does not support multiple threads.
+
+Note: [../nodejs-addon-examples](../nodejs-addon-examples) uses
+[node-addon-api](https://github.com/nodejs/node-addon-api) to wrap
+`sherpa-onnx` for NodeJS and it supports multiple threads.
+
 Before you continue, please first run
 
 ```bash

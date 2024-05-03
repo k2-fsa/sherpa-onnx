@@ -1,3 +1,5 @@
 # Introduction
 
-Please see [sherpa-onnx-node](https://www.npmjs.com/package/sherpa-onnx-node)
+Please see
+https://github.com/k2-fsa/sherpa-onnx/blob/master/nodejs-addon-examples/README.md
+for usages.

@@ -1,13 +1,13 @@
-name: npm-addon-macos
+name: npm-addon
 
 on:
   push:
     branches:
-      - publish-node-2
+      - publish-node
   workflow_dispatch:
 
 concurrency:
-  group: npm-addon-macos-${{ github.ref }}
+  group: npm-addon-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -15,12 +15,12 @@ permissions:
   id-token: write
 
 jobs:
-  npm-addon-macos:
+  npm-addon:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11, macos-14]
+        os: [ubuntu-latest]
         python-version: ["3.8"]
 
     steps:
@@ -47,58 +47,26 @@ jobs:
         with:
           key: ${{ matrix.os }}-release-shared
 
-      - name: Build sherpa-onnx
-        shell: bash
-        run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-
-          mkdir build
-          cd build
-          cmake \
-            -DCMAKE_INSTALL_PREFIX=./install \
-            -DBUILD_SHARED_LIBS=ON \
-            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-            ..
-          make -j install
-
-
-
-      - name: Build sherpa-onnx node-addon
-        shell: bash
-        run: |
-          export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
-
-          pkg-config --cflags sherpa-onnx
-          pkg-config --libs sherpa-onnx
-
-          cd scripts/node-addon-api/
-
-          npm i
-
-          ./node_modules/.bin/node-gyp configure build --verbose
-
       - name: Prepare for publish
         shell: bash
         run: |
-          export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
-
           owner=${{ github.repository_owner }}
           export owner
 
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+          SHERPA_ONNX_VERSION=1.0.7
+          echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
-          ls -lh build/install/lib/
-          echo "---"
+          src_dir=.github/scripts/node-addon
+          sed -i.bak s/SHERPA_ONNX_VERSION/$SHERPA_ONNX_VERSION/g $src_dir/package.json
+          sed -i.bak s/k2-fsa/$owner/g $src_dir/package.json
 
-          # find build/install/lib/ -maxdepth 1 -type l
-          # find build/install/lib/ -maxdepth 1 -type l -delete
-
-          # echo "---"
-          # ls -lh build/install/lib/
-
-          .github/scripts/node-addon/run.sh
+          dst=sherpa-onnx-node
+          mkdir $dst
+          cp $src_dir/package.json $dst/
+          cp $src_dir/README.md $dst/
+          cp scripts/node-addon-api/lib/*.js $dst/
 
       - name: Display files to be published
         shell: bash
