@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - publish-node
     paths:
       - '.github/workflows/test-nodejs-addon-api.yaml'
       - 'CMakeLists.txt'
@@ -35,13 +34,13 @@ permissions:
 
 jobs:
   test-node-addon-api:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.os }} ${{ matrix.node-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-11, macos-14, ubuntu-20.04, ubuntu-22.04]
-        node-version: ["6", "8", "18", "21"]
+        os: [macos-11, macos-14, ubuntu-20.04, ubuntu-22.04]
+        node-version: ["16", "17", "18", "19", "21", "22"]
         python-version: ["3.8"]
 
     steps:
@@ -53,11 +52,11 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-          node-version: ${{ matrix.node-version }}
 
       - uses: actions/setup-node@v4
         with:
           registry-url: 'https://registry.npmjs.org'
+          node-version: ${{ matrix.node-version }}
 
       - name: Display node version
         shell: bash

@@ -1,5 +1,4 @@
 const addon = require('./addon.js');
-console.log(addon)
 
 class OnlineStream {
   constructor(handle) {

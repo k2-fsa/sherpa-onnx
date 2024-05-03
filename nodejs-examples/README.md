@@ -1,5 +1,7 @@
 # Introduction
 
+Note: You need `Node >= 18`.
+
 This directory contains nodejs examples for [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx).
 
 It uses WebAssembly to wrap `sherpa-onnx` for NodeJS and it does not support multiple threads.
@@ -19,7 +21,6 @@ npm i
 In the following, we describe how to use [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)
 for text-to-speech and speech-to-text.
 
-Note: You need `Node >= 18`.
 
 # Text-to-speech
 

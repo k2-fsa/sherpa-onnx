@@ -5,7 +5,8 @@
   "dependencies": {
     "node-addon-api": "^1.1.0",
     "bindings": "^1.5.0",
-    "node-gyp": "^10.1.0"
+    "perf_hooks": "*",
+    "node-gyp": "^8.3.0"
   },
   "scripts": {
     "test": "node --napi-modules ./test/test_binding.js"

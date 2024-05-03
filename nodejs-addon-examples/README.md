@@ -1,5 +1,7 @@
 # Introduction
 
+Note: You need `Node >= 10`.
+
 This repo contains examples for NodeJS.
 It uses [node-addon-api](https://github.com/nodejs/node-addon-api) to wrap
 `sherpa-onnx` for NodeJS and it supports multiple threads.

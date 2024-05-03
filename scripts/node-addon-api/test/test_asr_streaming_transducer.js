@@ -1,5 +1,6 @@
 // Copyright (c)  2024  Xiaomi Corporation
 const sherpa_onnx = require('../lib/sherpa-onnx.js');
+const performance = require('perf_hooks').performance;
 
 // Please download test files from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models

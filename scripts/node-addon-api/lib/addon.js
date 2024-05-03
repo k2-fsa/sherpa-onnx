@@ -10,7 +10,6 @@ const possible_paths = [
 let found = false;
 for (const p of possible_paths) {
   try {
-    console.log(p);
     module.exports = require(p);
     found = true;
     break;
@@ -23,7 +22,7 @@ for (const p of possible_paths) {
 if (!found) {
   let msg =
       `Could not find sherpa-onnx. Tried\n\n  ${possible_paths.join('\n  ')}\n`
-  if (os.platform() == 'darwin' &&
+  if (os.platform() == 'darwin' && process.env.DYLD_LIBRARY_PATH &&
       !process.env.DYLD_LIBRARY_PATH.includes(
           `node_modules/sherpa-onnx-${platform_arch}`)) {
     msg +=
@@ -35,7 +34,7 @@ if (!found) {
     msg += ':$DYLD_LIBRARY_PATH\n';
   }
 
-  if (os.platform() == 'linux' &&
+  if (os.platform() == 'linux' && process.env.LD_LIBRARY_PATH &&
       !process.env.LD_LIBRARY_PATH.includes(
           `node_modules/sherpa-onnx-${platform_arch}`)) {
     msg +=

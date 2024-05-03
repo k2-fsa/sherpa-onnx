@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - publish-node
     paths:
       - '.github/workflows/test-nodejs-addon-npm.yaml'
       - 'CMakeLists.txt'
@@ -12,6 +11,8 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'scripts/node-addon-api/**'
+      - 'scripts/node-addon-api/*.js'
+      - 'nodejs-addon-examples/package.json'
 
   pull_request:
     branches:
@@ -22,7 +23,8 @@ on:
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
-      - 'scripts/node-addon-api/**'
+      - 'scripts/node-addon-api/*.js'
+      - 'nodejs-addon-examples/package.json'
 
   workflow_dispatch:
 
@@ -35,13 +37,13 @@ permissions:
 
 jobs:
   test-node-addon-npm:
-    name: ${{ matrix.os }}
+    name: ${{ matrix.os }} node v${{ matrix.node-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-11, macos-14, ubuntu-20.04, ubuntu-22.04]
-        node-version: ["6", "8", "18", "21"]
+        os: [macos-11, macos-14, ubuntu-20.04, ubuntu-22.04]
+        node-version: ["16", "17", "18", "19", "21", "22"]
 
     steps:
       - uses: actions/checkout@v4
@@ -61,4 +63,4 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          ../scripts/test-nodejs-addon-npm.sh
+          .github/scripts/test-nodejs-addon-npm.sh
