@@ -3,7 +3,7 @@ name: npm-addon-linux-x64
 on:
   push:
     branches:
-      - publish-node
+      - publish-node-2
   workflow_dispatch:
 
 concurrency:

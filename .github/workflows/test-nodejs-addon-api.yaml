@@ -40,7 +40,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-14, ubuntu-latest]
+        os: [macos-latest, macos-11, macos-14, ubuntu-20.04, ubuntu-22.04]
+        node-version: ["6", "8", "18", "21"]
         python-version: ["3.8"]
 
     steps:
@@ -52,6 +53,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          node-version: ${{ matrix.node-version }}
 
       - uses: actions/setup-node@v4
         with:

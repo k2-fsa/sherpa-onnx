@@ -1,0 +1,64 @@
+name: test-node-addon-npm
+
+on:
+  push:
+    branches:
+      - master
+      - publish-node
+    paths:
+      - '.github/workflows/test-nodejs-addon-npm.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'scripts/node-addon-api/**'
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-nodejs-addon-npm.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'scripts/node-addon-api/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-node-addon-npm-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test-node-addon-npm:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, macos-11, macos-14, ubuntu-20.04, ubuntu-22.04]
+        node-version: ["6", "8", "18", "21"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+          node-version: ${{ matrix.node-version }}
+
+      - name: Display node version
+        shell: bash
+        run: |
+          node --version
+
+      - name: Run tests
+        shell: bash
+        run: |
+          ../scripts/test-nodejs-addon-npm.sh
