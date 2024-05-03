@@ -1,6 +1,8 @@
 // Copyright (c)  2024  Xiaomi Corporation
 const sherpa_onnx = require('../lib/sherpa-onnx.js');
 
+// Please download test files from
+// https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
 const config = {
   'featConfig': {
     'sampleRate': 16000,

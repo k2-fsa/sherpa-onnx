@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - publish-node
     paths:
       - '.github/workflows/test-node-addon-api.yaml'
       - 'CMakeLists.txt'
@@ -39,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-14]
+        os: [macos-latest, macos-14, ubuntu-latest]
         python-version: ["3.8"]
 
     steps:
