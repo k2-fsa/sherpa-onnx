@@ -39,8 +39,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11, macos-14, ubuntu-20.04, ubuntu-22.04]
-        node-version: ["16", "17", "18", "19", "21", "22"]
+        # os: [macos-11, macos-14, ubuntu-20.04, ubuntu-22.04]
+        os: [windows-latest, ubuntu-22.04]
+        # node-version: ["16", "17", "18", "19", "21", "22"]
+        node-version: [ "22"]
         python-version: ["3.8"]
 
     steps:
@@ -53,6 +55,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install ninja
+
+      - name: Show ninja help
+        shell: bash
+        run: |
+          ninja --help || true
+
       - uses: actions/setup-node@v4
         with:
           registry-url: 'https://registry.npmjs.org'
@@ -63,12 +75,43 @@ jobs:
         run: |
           node --version
 
+      - name: Display npm help
+        shell: bash
+        run: |
+          npm help
+
+      - uses: msys2/setup-msys2@v2
+        if: matrix.os == 'windows-latest'
+        with:
+          path-type: inherit
+
+      - name: Install pkg-config
+        if: matrix.os == 'windows-latest'
+        shell: msys2 {0}
+        run: |
+          pacman -S --noconfirm pkg-config
+
+      - name: Run pkg-config
+        if: matrix.os == 'windows-latest'
+        shell: msys2 {0}
+        run: |
+          pkg-config --help
+          where pkg-config
+          # D:\a\_temp\msys64\usr\bin\pkg-config.exe
+
+      - name: Display npm help
+        if: matrix.os == 'windows-latest'
+        shell: msys2 {0}
+        run: |
+          npm help
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.os }}-release-shared
 
       - name: Build sherpa-onnx
+        if: matrix.os == 'windows-latest'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -77,23 +120,72 @@ jobs:
           mkdir build
           cd build
           cmake \
-            -DCMAKE_INSTALL_PREFIX=/tmp/sherpa-onnx \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=./install \
             -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             ..
-          make -j
-          make install
 
-      - name: Build node-addon-api package
+          cmake --build . --config Release --target install -- -m:6
+
+      - name: Build sherpa-onnx
+        if: matrix.os != 'windows-latest'
         shell: bash
         run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          mkdir build
+          cd build
+          cmake \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+          cmake --build . --config Release --target install -- -j 6
+
+      - name: Build node-addon-api package
+        if: matrix.os == 'windows-latest'
+        shell: msys2 {0}
+        run: |
+          d=$PWD
           cd scripts/node-addon-api
 
-          export PKG_CONFIG_PATH=/tmp/sherpa-onnx:$PKG_CONFIG_PATH
+          export PKG_CONFIG_PATH=$d/build/install:$PKG_CONFIG_PATH
 
-          ls -lh /tmp/sherpa-onnx
+          echo $d/build/install
+          echo $PKG_CONFIG_PATH
+
+          ls -lh $d/build/install
+
+          pkg-config --cflags sherpa-onnx
+          pkg-config --libs sherpa-onnx
+
+          npm i
+
+          ./node_modules/.bin/node-gyp configure build --verbose
+
+      - name: Build node-addon-api package
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          d=$PWD
+          cd scripts/node-addon-api
+
+          export PKG_CONFIG_PATH=$d/build/install:$PKG_CONFIG_PATH
+
+          echo $d/build/install
+          echo $PKG_CONFIG_PATH
+
+          ls -lh $d/build/install
 
           pkg-config --cflags sherpa-onnx
           pkg-config --libs sherpa-onnx
