@@ -1,4 +1,4 @@
-const addon = require('bindings')('sherpa-onnx-node-addon-api-native');
+const addon = require('./addon.js');
 
 class OnlineStream {
   constructor(handle) {

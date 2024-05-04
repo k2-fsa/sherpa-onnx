@@ -1,4 +1,4 @@
-const addon = require('bindings')('sherpa-onnx-node-addon-api-native');
+const addon = require('./addon.js')
 const streaming_asr = require('./streaming-asr.js');
 
 module.exports = {

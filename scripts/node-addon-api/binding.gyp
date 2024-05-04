@@ -1,7 +1,7 @@
 {
   'targets': [
     {
-      'target_name': 'sherpa-onnx-node-addon-api-native',
+      'target_name': 'sherpa-onnx',
       'sources': [
         'src/sherpa-onnx-node-addon-api.cc',
         'src/streaming-asr.cc',
@@ -9,7 +9,7 @@
       ],
       'include_dirs': [
         "<!@(node -p \"require('node-addon-api').include\")",
-        "<!@(a=$(pkg-config --cflags sherpa-onnx);echo ${a:2})"
+        "<!@(pkg-config --variable=includedir sherpa-onnx)"
       ],
       'dependencies': ["<!(node -p \"require('node-addon-api').gyp\")"],
       'cflags!': [
