@@ -1,5 +1,9 @@
 const os = require('os');
-const platform_arch = `${os.platform()}-${os.arch()}`;
+
+// Package name triggered spam for sherpa-onnx-win32-x64
+// so we have renamed it to sherpa-onnx-win-x64
+const platform_arch =
+    `${os.platform() == 'win32' ? 'win' : os.platform()}-${os.arch()}`;
 const possible_paths = [
   '../build/Release/sherpa-onnx.node',
   '../build/Debug/sherpa-onnx.node',
