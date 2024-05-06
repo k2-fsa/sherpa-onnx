@@ -80,31 +80,6 @@ jobs:
         run: |
           npm help
 
-      - uses: msys2/setup-msys2@v2
-        if: matrix.os == 'windows-latest'
-        with:
-          path-type: inherit
-
-      - name: Install pkg-config
-        if: matrix.os == 'windows-latest'
-        shell: msys2 {0}
-        run: |
-          pacman -S --noconfirm pkg-config
-
-      - name: Run pkg-config
-        if: matrix.os == 'windows-latest'
-        shell: msys2 {0}
-        run: |
-          pkg-config --help
-          where pkg-config
-          # D:\a\_temp\msys64\usr\bin\pkg-config.exe
-
-      - name: Display npm help
-        if: matrix.os == 'windows-latest'
-        shell: msys2 {0}
-        run: |
-          npm help
-
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
@@ -128,7 +103,19 @@ jobs:
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             ..
 
+          ls -lh  _deps/onnxruntime-src/lib/
+
           cmake --build . --config Release --target install -- -m:6
+
+          ls -lh install/lib
+
+          echo "----------"
+
+          cp -v  _deps/onnxruntime-src/lib/*.lib ./install/lib
+
+          echo "----------"
+
+          ls -lh install/lib
 
       - name: Build sherpa-onnx
         if: matrix.os != 'windows-latest'
@@ -152,46 +139,20 @@ jobs:
           cmake --build . --config Release --target install -- -j 6
 
       - name: Build node-addon-api package
-        if: matrix.os == 'windows-latest'
-        shell: msys2 {0}
-        run: |
-          d=$PWD
-          cd scripts/node-addon-api
-
-          export PKG_CONFIG_PATH=$d/build/install:$PKG_CONFIG_PATH
-
-          echo $d/build/install
-          echo $PKG_CONFIG_PATH
-
-          ls -lh $d/build/install
-
-          pkg-config --cflags sherpa-onnx
-          pkg-config --libs sherpa-onnx
-
-          npm i
-
-          ./node_modules/.bin/node-gyp configure build --verbose
-
-      - name: Build node-addon-api package
-        if: matrix.os != 'windows-latest'
         shell: bash
         run: |
           d=$PWD
+          export SHERPA_ONNX_INSTALL_DIR=$d/build/install
+
           cd scripts/node-addon-api
 
-          export PKG_CONFIG_PATH=$d/build/install:$PKG_CONFIG_PATH
-
           echo $d/build/install
-          echo $PKG_CONFIG_PATH
 
           ls -lh $d/build/install
 
-          pkg-config --cflags sherpa-onnx
-          pkg-config --libs sherpa-onnx
-
           npm i
 
-          ./node_modules/.bin/node-gyp configure build --verbose
+          ./node_modules/.bin/cmake-js compile --log-level verbose
 
       - name: Test streaming transducer
         shell: bash
