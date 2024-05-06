@@ -26,14 +26,14 @@ python3 ./python-api-examples/offline-tts.py \
 
 Example (2/2)
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
-tar xvf vits-zh-aishell3.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+tar xvf vits-icefall-zh-aishell3.tar.bz2
 
 python3 ./python-api-examples/offline-tts.py \
- --vits-model=./vits-aishell3.onnx \
+ --vits-model=./model.onnx \
  --vits-lexicon=./lexicon.txt \
  --vits-tokens=./tokens.txt \
- --tts-rule-fsts=./rule.fst \
+ --tts-rule-fsts='./phone.fst,./date.fst,./number.fst' \
  --sid=21 \
  --output-filename=./liubei-21.wav \
  "勿以恶小而为之，勿以善小而不为。惟贤惟德，能服于人。122334"

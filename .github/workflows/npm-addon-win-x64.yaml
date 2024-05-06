@@ -1,10 +1,10 @@
-name: npm-addon-macos
+name: npm-addon-win-x64
 
 on:
   workflow_dispatch:
 
 concurrency:
-  group: npm-addon-macos-${{ github.ref }}
+  group: npm-addon-win-x64-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -12,12 +12,12 @@ permissions:
   id-token: write
 
 jobs:
-  npm-addon-macos:
+  npm-addon-win-x64:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11, macos-14]
+        os: [windows-latest]
         python-version: ["3.8"]
 
     steps:
@@ -39,27 +39,33 @@ jobs:
         run: |
           node --version
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-release-shared
-
       - name: Build sherpa-onnx
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-
           mkdir build
           cd build
           cmake \
+            -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=./install \
             -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             ..
-          make -j install
+
+          ls -lh  _deps/onnxruntime-src/lib/
+
+          cmake --build . --config Release --target install -- -m:6
+
+          ls -lh install/lib
+
+          echo "----------"
+
+          cp -v  _deps/onnxruntime-src/lib/*.lib ./install/lib
+
+          echo "----------"
+
+          ls -lh install/lib
 
       - name: Build sherpa-onnx node-addon
         shell: bash
@@ -79,14 +85,11 @@ jobs:
           owner=${{ github.repository_owner }}
           export owner
 
+          echo "---"
           ls -lh build/install/lib/
           echo "---"
-
-          # find build/install/lib/ -maxdepth 1 -type l
-          # find build/install/lib/ -maxdepth 1 -type l -delete
-
-          # echo "---"
-          # ls -lh build/install/lib/
+          ls -lh build/install/lib/
+          echo "---"
 
           .github/scripts/node-addon/run.sh
 

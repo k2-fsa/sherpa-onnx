@@ -39,10 +39,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [macos-11, macos-14, ubuntu-20.04, ubuntu-22.04]
-        os: [windows-latest, ubuntu-22.04]
-        # node-version: ["16", "17", "18", "19", "21", "22"]
-        node-version: [ "22"]
+        os: [macos-11, macos-14, ubuntu-20.04, ubuntu-22.04, windows-latest]
+        node-version: ["16", "17", "18", "19", "21", "22"]
         python-version: ["3.8"]
 
     steps:
@@ -157,6 +155,9 @@ jobs:
       - name: Test streaming transducer
         shell: bash
         run: |
+          export PATH=$PWD/build/install/lib:$PATH
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+
           cd scripts/node-addon-api
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
           tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
