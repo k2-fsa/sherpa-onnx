@@ -74,7 +74,7 @@ def get_2nd_models():
             pushd $model_name
 
             rm -v README.md
-            rm -fv test_wavs
+            rm -rfv test_wavs
             rm model.onnx
 
             ls -lh
@@ -90,7 +90,7 @@ def get_2nd_models():
             cmd="""
             pushd $model_name
 
-            rm -fv test_wavs
+            rm -rfv test_wavs
             rm -v README.md
             mv -v data/lang_char/tokens.txt ./
             rm -rfv data/lang_char

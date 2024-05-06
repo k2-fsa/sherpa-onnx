@@ -37,6 +37,7 @@ mkdir -p apks
 pushd ./android/SherpaOnnx2Pass/app/src/main/assets/
 
 model_name1={{ first.model_name }}
+model_name=$model_name1
 type1={{ first.idx }}
 lang1={{ first.lang }}
 short_name1={{ first.short_name }}
@@ -50,6 +51,7 @@ rm -rf  *.tar.bz2
 ls -lh $model_name1
 
 model_name2={{ second.model_name }}
+model_name=$model_name2
 type2={{ second.idx }}
 lang2={{ second.lang }}
 short_name2={{ second.short_name }}
