@@ -57,6 +57,8 @@ def get_models():
             rm -v joiner-epoch-99-avg-1.onnx
 
             rm -v *.sh
+            rm -v bpe.model
+            rm -v README.md
             rm -v .gitattributes
             rm -v *state*
             rm -rfv test_wavs
@@ -102,7 +104,8 @@ def get_models():
             rm -rfv test_wavs
             rm -v README.md
 
-            ls -lh
+            ls -lh exp/
+            ls -lh data/lang_char
 
             popd
             """,
