@@ -37,12 +37,30 @@ with the following APIs
   - Kotlin
   - Swift
 
+# Links for pre-built Android APKs
+
+| Description                    | URL                                                                                     | 中国用户                                                                             |
+|--------------------------------|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| Speech recognition             | [Address](https://k2-fsa.github.io/sherpa/onnx/android/apk.html)                        | [点此](https://k2-fsa.github.io/sherpa/onnx/android/apk-cn.html)                        |
+| Text-to-speech | [Address](https://k2-fsa.github.io/sherpa/onnx/tts/apk-engine.html)                     | [点此](https://k2-fsa.github.io/sherpa/onnx/tts/apk-engine-cn.html)                     |
+| Audio tagging                  | [Address](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk.html)                  | [点此](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk-cn.html)                  |
+| Audio tagging (WearOS)         | [Address](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk-wearos.html)           | [点此](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk-wearos-cn.html)           |
+| Speaker identification         | [Address](https://k2-fsa.github.io/sherpa/onnx/speaker-identification/apk.html)         | [点此](https://k2-fsa.github.io/sherpa/onnx/speaker-identification/apk-cn.html)         |
+| Spoken language identification | [Address](https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk.html) | [点此](https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk-cn.html) |
+
+# Links for pre-trained models
+
+| Description                    | URL                                                                                                                            |
+|--------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| Speech recognition             | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models)                                                       |
+| Text-to-speech                 | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models)                                                       |
+| Audio tagging                  | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/audio-tagging-models)                                             |
+| Speaker identification         | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models)                                       |
+| Spoken language identification | See multi-lingual Whisper ASR models from  [Speech recognition](https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models) |
+
 # Useful links
 
 - Documentation: https://k2-fsa.github.io/sherpa/onnx/
-- APK for the text-to-speech engine: https://k2-fsa.github.io/sherpa/onnx/tts/apk-engine.html
-- APK for speaker identification: https://k2-fsa.github.io/sherpa/onnx/speaker-identification/apk.html
-- APK for speech recognition: https://github.com/k2-fsa/sherpa-onnx/releases/
 - Bilibili 演示视频: https://search.bilibili.com/all?keyword=%E6%96%B0%E4%B8%80%E4%BB%A3Kaldi
 
 # How to reach us
