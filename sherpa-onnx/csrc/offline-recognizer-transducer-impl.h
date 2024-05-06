@@ -77,15 +77,21 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
       : config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerModel>(config_.model_config)) {
-    if (!config_.hotwords_file.empty()) {
-      InitHotwords();
-    }
     if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineTransducerGreedySearchDecoder>(
           model_.get(), config_.blank_penalty);
     } else if (config_.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
         lm_ = OfflineLM::Create(config.lm_config);
+      }
+
+      if (!config_.model_config.bpe_vocab.empty()) {
+        bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(
+            config_.model_config.bpe_vocab);
+      }
+
+      if (!config_.hotwords_file.empty()) {
+        InitHotwords();
       }
 
       decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
@@ -111,6 +117,16 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     } else if (config_.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
         lm_ = OfflineLM::Create(mgr, config.lm_config);
+      }
+
+      if (!config_.model_config.bpe_vocab.empty()) {
+        auto buf = ReadFile(mgr, config_.model_config.bpe_vocab);
+        std::istringstream iss(std::string(buf.begin(), buf.end()));
+        bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(iss);
+      }
+
+      if (!config_.hotwords_file.empty()) {
+        InitHotwords(mgr);
       }
 
       decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
@@ -217,6 +233,30 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     hotwords_graph_ =
         std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
   }
+
+#if __ANDROID_API__ >= 9
+  void InitHotwords(AAssetManager *mgr) {
+    // each line in hotwords_file contains space-separated words
+
+    auto buf = ReadFile(mgr, config_.hotwords_file);
+
+    std::istringstream is(std::string(buf.begin(), buf.end()));
+
+    if (!is) {
+      SHERPA_ONNX_LOGE("Open hotwords file failed: %s",
+                       config_.hotwords_file.c_str());
+      exit(-1);
+    }
+
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
+                        bpe_encoder_.get(), &hotwords_)) {
+      SHERPA_ONNX_LOGE("Encode hotwords failed.");
+      exit(-1);
+    }
+    hotwords_graph_ =
+        std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
+  }
+#endif
 
  private:
   OfflineRecognizerConfig config_;
