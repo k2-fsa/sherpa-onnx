@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "description": "Speech-to-text and text-to-speech using Next-gen Kaldi without internet connection",
   "dependencies": {
+    "cmake-js": "^6.0.0",
     "node-addon-api": "^1.1.0",
-    "bindings": "^1.5.0",
-    "perf_hooks": "*",
-    "node-gyp": "^8.3.0"
+    "perf_hooks": "*"
   },
   "scripts": {
+    "install": "cmake-js compile --log-level verbose",
     "test": "node --napi-modules ./test/test_binding.js"
   },
   "repository": {

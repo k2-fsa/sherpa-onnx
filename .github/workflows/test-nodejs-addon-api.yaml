@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11, macos-14, ubuntu-20.04, ubuntu-22.04]
+        os: [macos-11, macos-14, ubuntu-20.04, ubuntu-22.04, windows-latest]
         node-version: ["16", "17", "18", "19", "21", "22"]
         python-version: ["3.8"]
 
@@ -53,6 +53,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install ninja
+
+      - name: Show ninja help
+        shell: bash
+        run: |
+          ninja --help || true
+
       - uses: actions/setup-node@v4
         with:
           registry-url: 'https://registry.npmjs.org'
@@ -63,12 +73,18 @@ jobs:
         run: |
           node --version
 
+      - name: Display npm help
+        shell: bash
+        run: |
+          npm help
+
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.os }}-release-shared
 
       - name: Build sherpa-onnx
+        if: matrix.os == 'windows-latest'
         shell: bash
         run: |
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -77,34 +93,71 @@ jobs:
           mkdir build
           cd build
           cmake \
-            -DCMAKE_INSTALL_PREFIX=/tmp/sherpa-onnx \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=./install \
             -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             ..
-          make -j
-          make install
+
+          ls -lh  _deps/onnxruntime-src/lib/
+
+          cmake --build . --config Release --target install -- -m:6
+
+          ls -lh install/lib
+
+          echo "----------"
+
+          cp -v  _deps/onnxruntime-src/lib/*.lib ./install/lib
+
+          echo "----------"
+
+          ls -lh install/lib
+
+      - name: Build sherpa-onnx
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          mkdir build
+          cd build
+          cmake \
+            -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+          cmake --build . --config Release --target install -- -j 6
 
       - name: Build node-addon-api package
         shell: bash
         run: |
+          d=$PWD
+          export SHERPA_ONNX_INSTALL_DIR=$d/build/install
+
           cd scripts/node-addon-api
 
-          export PKG_CONFIG_PATH=/tmp/sherpa-onnx:$PKG_CONFIG_PATH
+          echo $d/build/install
 
-          ls -lh /tmp/sherpa-onnx
-
-          pkg-config --cflags sherpa-onnx
-          pkg-config --libs sherpa-onnx
+          ls -lh $d/build/install
 
           npm i
 
-          ./node_modules/.bin/node-gyp configure build --verbose
+          ./node_modules/.bin/cmake-js compile --log-level verbose
 
       - name: Test streaming transducer
         shell: bash
         run: |
+          export PATH=$PWD/build/install/lib:$PATH
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+
           cd scripts/node-addon-api
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
           tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2

@@ -47,6 +47,7 @@
   "optionalDependencies": {
     "sherpa-onnx-darwin-arm64": "^SHERPA_ONNX_VERSION",
     "sherpa-onnx-darwin-x64": "^SHERPA_ONNX_VERSION",
-    "sherpa-onnx-linux-x64": "^SHERPA_ONNX_VERSION"
+    "sherpa-onnx-linux-x64": "^SHERPA_ONNX_VERSION",
+    "sherpa-onnx-win-x64": "^SHERPA_ONNX_VERSION"
   }
 }

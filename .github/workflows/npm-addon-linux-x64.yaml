@@ -66,29 +66,25 @@ jobs:
       - name: Build sherpa-onnx node-addon
         shell: bash
         run: |
-          export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
+          d=$PWD
+          export SHERPA_ONNX_INSTALL_DIR=$d/build/install
+
           sudo mkdir /shared
           sudo ln -s $PWD/build /shared/
 
           ls -lh /shared/build
 
-          pkg-config --cflags sherpa-onnx
-          pkg-config --libs sherpa-onnx
-
           cd scripts/node-addon-api/
 
           npm i
 
-          ./node_modules/.bin/node-gyp configure build --verbose
+          ./node_modules/.bin/cmake-js compile --log-level verbose
 
       - name: Prepare for publish
         shell: bash
         run: |
-          export PKG_CONFIG_PATH=$PWD/build/install:$PKG_CONFIG_PATH
-
           owner=${{ github.repository_owner }}
           export owner
-
 
           echo "---"
           ls -lh build/install/lib/
