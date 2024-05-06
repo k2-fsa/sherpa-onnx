@@ -176,7 +176,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
     std::istringstream is(hws);
     std::vector<std::vector<int32_t>> current;
-    if (!EncodeHotwords(is, "", sym_, nullptr, &current)) {
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,
+                        bpe_encoder_.get(), &current)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
                        hotwords.c_str());
     }
@@ -365,7 +366,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       exit(-1);
     }
 
-    if (!EncodeHotwords(is, "", sym_, nullptr, &hotwords_)) {
+    if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,
+                        bpe_encoder_.get(), &hotwords_)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed.");
       exit(-1);
     }
