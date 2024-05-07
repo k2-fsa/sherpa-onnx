@@ -1,4 +1,4 @@
-name: apk-kws
+name: apk-vad
 
 on:
   push:
@@ -8,17 +8,17 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: apk-kws-${{ github.ref }}
+  group: apk-vad-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
-  apk_kws:
+  apk_vad:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
-    name: apk for kws ${{ matrix.index }}/${{ matrix.total }}
+    name: apk for vad ${{ matrix.index }}/${{ matrix.total }}
     strategy:
       fail-fast: false
       matrix:
@@ -78,7 +78,7 @@ jobs:
           total=${{ matrix.total }}
           index=${{ matrix.index }}
 
-          mv -v ./build-apk-kws.sh ../..
+          mv -v ./build-apk-vad.sh ../..
 
       - name: build APK
         shell: bash
@@ -88,7 +88,7 @@ jobs:
           cmake --version
 
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
-          ./build-apk-kws.sh
+          ./build-apk-vad.sh
 
       - name: Display APK
         shell: bash
@@ -162,8 +162,8 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
 
-            mkdir -p kws
-            cp -v ../apks/*.apk ./kws/
+            mkdir -p vad
+            cp -v ../apks/*.apk ./vad/
             git status
             git lfs track "*.apk"
             git add .

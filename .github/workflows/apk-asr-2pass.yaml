@@ -1,4 +1,4 @@
-name: apk-kws
+name: apk-asr-2pass
 
 on:
   push:
@@ -8,23 +8,23 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: apk-kws-${{ github.ref }}
+  group: apk-asr-2pass-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: write
 
 jobs:
-  apk_kws:
+  apk_asr_2pass:
     if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
-    name: apk for kws ${{ matrix.index }}/${{ matrix.total }}
+    name: apk for asr ${{ matrix.index }}/${{ matrix.total }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        total: ["1"]
-        index: ["0"]
+        total: ["2"]
+        index: ["0", "1"]
 
     steps:
       - uses: actions/checkout@v4
@@ -78,7 +78,10 @@ jobs:
           total=${{ matrix.total }}
           index=${{ matrix.index }}
 
-          mv -v ./build-apk-kws.sh ../..
+          ./generate-asr-2pass-apk-script.py --total $total --index $index
+
+          chmod +x build-apk-asr-2pass.sh
+          mv -v ./build-apk-asr-2pass.sh ../..
 
       - name: build APK
         shell: bash
@@ -88,7 +91,7 @@ jobs:
           cmake --version
 
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
-          ./build-apk-kws.sh
+          ./build-apk-asr-2pass.sh
 
       - name: Display APK
         shell: bash
@@ -162,8 +165,8 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
 
-            mkdir -p kws
-            cp -v ../apks/*.apk ./kws/
+            mkdir -p asr-2pass
+            cp -v ../apks/*.apk ./asr-2pass/
             git status
             git lfs track "*.apk"
             git add .
