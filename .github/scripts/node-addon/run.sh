@@ -6,7 +6,9 @@ echo "sherpa_onnx_dir: $sherpa_onnx_dir"
 src_dir=$sherpa_onnx_dir/.github/scripts/node-addon
 
 platform=$(node -p "require('os').platform()")
+
 arch=$(node -p "require('os').arch()")
+
 platform2=$platform
 
 if [[ $platform == win32 ]]; then
