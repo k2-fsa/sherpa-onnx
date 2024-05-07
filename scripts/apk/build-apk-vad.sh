@@ -55,7 +55,9 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxVad/app/src/main/jniLibs/$arch/
 
   pushd ./android/SherpaOnnxVad
-  ./gradlew build
+  sed -i.bak s/2048/9012/g ./gradle.properties
+  git diff ./gradle.properties
+  ./gradlew assembleRelease
   popd
 
   mv android/SherpaOnnxVad/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-silero_vad.apk

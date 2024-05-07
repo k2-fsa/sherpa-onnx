@@ -2,6 +2,8 @@ name: apk-kws
 
 on:
   push:
+    branches:
+      - fix-asr-apk
     tags:
       - '*'
 
@@ -16,11 +18,15 @@ permissions:
 
 jobs:
   apk_kws:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
     runs-on: ${{ matrix.os }}
+    name: apk for kws ${{ matrix.index }}/${{ matrix.total }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        total: ["1"]
+        index: ["0"]
 
     steps:
       - uses: actions/checkout@v4
@@ -44,6 +50,11 @@ jobs:
           echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
           ls -lh ${ANDROID_NDK_LATEST_HOME}
 
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
+
       - name: Setup build tool version variable
         shell: bash
         run: |
@@ -61,6 +72,16 @@ jobs:
           echo "BUILD_TOOL_VERSION=$BUILD_TOOL_VERSION" >> $GITHUB_ENV
           echo "Last build tool version is: $BUILD_TOOL_VERSION"
 
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/apk
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          mv -v ./build-apk-kws.sh ../..
+
       - name: build APK
         shell: bash
         run: |
@@ -69,13 +90,13 @@ jobs:
           cmake --version
 
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
-          ./build-kws-apk.sh
+          ./build-apk-kws.sh
 
       - name: Display APK
         shell: bash
         run: |
           ls -lh ./apks/
-
+          du -h -d1 .
 
       # https://github.com/marketplace/actions/sign-android-release
       - uses: r0adkll/sign-android-release@v1
