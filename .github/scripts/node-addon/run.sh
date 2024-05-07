@@ -7,6 +7,7 @@ src_dir=$sherpa_onnx_dir/.github/scripts/node-addon
 
 platform=$(node -p "require('os').platform()")
 arch=$(node -p "require('os').arch()")
+
 platform2=$platform
 
 if [[ $platform == win32 ]]; then
@@ -14,6 +15,9 @@ if [[ $platform == win32 ]]; then
 fi
 
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+SHERPA_ONNX_VERSION=1.0.14
 echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
 if [ -z $owner ]; then

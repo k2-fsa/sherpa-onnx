@@ -38,6 +38,7 @@ jobs:
         with:
             image: quay.io/pypa/manylinux2014_aarch64
             options: |
+              --platform linux/arm64
               --volume ${{ github.workspace }}/:/shared/
             shell: bash
             run: |
@@ -63,27 +64,19 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_BINARY=OFF \
                 ..
               make -j install
+              cd ..
 
-      - name: Build sherpa-onnx node-addon
-        if: true
-        shell: bash
-        run: |
-          d=$PWD
-          export SHERPA_ONNX_INSTALL_DIR=$d/build/install
+              d=$PWD
+              export SHERPA_ONNX_INSTALL_DIR=$d/build/install
 
-          sudo mkdir /shared
-          sudo ln -s $PWD/build /shared/
+              ls -lh /shared/build
 
-          ls -lh /shared/build
+              cd scripts/node-addon-api/
+              npm i
 
-          cd scripts/node-addon-api/
-
-          npm i
-
-          ./node_modules/.bin/cmake-js compile --log-level verbose
+              ./node_modules/.bin/cmake-js compile --log-level verbose
 
       - name: Prepare for publish
-        if: false
         shell: bash
         run: |
           owner=${{ github.repository_owner }}
@@ -105,13 +98,11 @@ jobs:
           .github/scripts/node-addon/run.sh
 
       - name: Display files to be published
-        if: false
         shell: bash
         run: |
           ls -lh ./sherpa-onnx-node
 
       - name: Publish
-        if: false
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
