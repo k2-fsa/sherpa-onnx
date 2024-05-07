@@ -8,7 +8,6 @@ import android.media.MediaRecorder
 import android.os.Bundle
 import android.text.method.ScrollingMovementMethod
 import android.util.Log
-import android.view.View
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
@@ -200,12 +199,12 @@ class MainActivity : AppCompatActivity() {
         // Please change getOfflineModelConfig() to add new models
         // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
         // for a list of available models
-        val secondType = 0
-        Log.i(TAG, "Select model type ${secondType} for the second pass")
+        val asrModelType = 0
+        Log.i(TAG, "Select model type ${asrModelType} for ASR")
 
         val config = OfflineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
-            modelConfig = getOfflineModelConfig(type = secondType)!!,
+            modelConfig = getOfflineModelConfig(type = asrModelType)!!,
         )
 
         offlineRecognizer = OfflineRecognizer(

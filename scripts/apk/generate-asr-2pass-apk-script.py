@@ -43,7 +43,74 @@ class Model:
     cmd: str = ""
 
 
-def get_models():
+def get_2nd_models():
+    models = [
+        Model(
+            model_name="sherpa-onnx-whisper-tiny.en",
+            idx=2,
+            lang="en",
+            short_name="whisper_tiny",
+            cmd="""
+            pushd $model_name
+            rm -v tiny.en-encoder.onnx
+            rm -v tiny.en-decoder.onnx
+            rm -rf test_wavs
+            rm -v *.py
+            rm -v requirements.txt
+            rm -v .gitignore
+            rm -v README.md
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-paraformer-zh-2023-03-28",
+            idx=0,
+            lang="zh",
+            short_name="paraformer",
+            cmd="""
+            pushd $model_name
+
+            rm -v README.md
+            rm -rfv test_wavs
+            rm model.onnx
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="icefall-asr-zipformer-wenetspeech-20230615",
+            idx=4,
+            lang="zh",
+            short_name="zipformer",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -v README.md
+            mv -v data/lang_char/tokens.txt ./
+            rm -rfv data/lang_char
+
+            mv -v exp/encoder-epoch-12-avg-4.int8.onnx ./
+            mv -v exp/decoder-epoch-12-avg-4.onnx ./
+            mv -v exp/joiner-epoch-12-avg-4.int8.onnx ./
+            rm -rfv exp
+
+            ls -lh
+
+            popd
+            """,
+        ),
+    ]
+    return models
+
+
+def get_1st_models():
+    # See as ./generate-asr-apk-script.py
     models = [
         Model(
             model_name="sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20",
@@ -175,6 +242,44 @@ def get_models():
     return models
 
 
+def get_models():
+    first = get_1st_models()
+    second = get_2nd_models()
+
+    combinations = [
+        (
+            "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
+            "sherpa-onnx-paraformer-zh-2023-03-28",
+        ),
+        (
+            "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
+            "icefall-asr-zipformer-wenetspeech-20230615",
+        ),
+        (
+            "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+            "sherpa-onnx-whisper-tiny.en",
+        ),
+    ]
+    models = []
+    for f, s in combinations:
+        t = []
+        for m in first:
+            if m.model_name == f:
+                t.append(m)
+                break
+        assert len(t) == 1, (f, s, first, second)
+
+        for m in second:
+            if m.model_name == s:
+                t.append(m)
+                break
+        assert len(t) == 2, (f, s, first, second)
+
+        models.append(t)
+
+    return models
+
+
 def main():
     args = get_args()
     index = args.index
@@ -204,7 +309,7 @@ def main():
         print(f"{s}/{num_models}")
 
     filename_list = [
-        "./build-apk-asr.sh",
+        "./build-apk-asr-2pass.sh",
     ]
     for filename in filename_list:
         environment = jinja2.Environment()
