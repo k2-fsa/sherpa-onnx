@@ -18,6 +18,8 @@ SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " 
 
 log "Building APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 
+export SHERPA_ONNX_ENABLE_TTS=OFF
+
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
 log "====================armv7-eabi================"
@@ -56,7 +58,7 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   ./gradlew build
   popd
 
-  mv android/SherpaOnnxVad/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-silero-vad.apk
+  mv android/SherpaOnnxVad/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-silero_vad.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxVad/app/src/main/jniLibs/$arch/*.so
 done
