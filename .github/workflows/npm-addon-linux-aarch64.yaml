@@ -91,10 +91,18 @@ jobs:
 
               ls -lh ./sherpa-onnx-node
 
-              export NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
 
-              cd ./sherpa-onnx-node
-              npm install
-              npm ci
-              # see https://docs.npmjs.com/generating-provenance-statements
-              npm publish --provenance --access public
+      - name: Publish
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          git diff
+          cd ./sherpa-onnx-node
+          npm install
+          npm ci
+          # see https://docs.npmjs.com/generating-provenance-statements
+          npm publish --provenance --access public
