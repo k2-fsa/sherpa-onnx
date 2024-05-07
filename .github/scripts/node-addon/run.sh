@@ -6,7 +6,10 @@ echo "sherpa_onnx_dir: $sherpa_onnx_dir"
 src_dir=$sherpa_onnx_dir/.github/scripts/node-addon
 
 platform=$(node -p "require('os').platform()")
-arch=$(node -p "require('os').arch()")
+
+if [[ -z $arch ]]; then
+  arch=$(node -p "require('os').arch()")
+fi
 
 platform2=$platform
 
