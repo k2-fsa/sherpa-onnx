@@ -41,22 +41,29 @@ with the following APIs
 
 | Description                    | URL                                                                                     | 中国用户                                                                             |
 |--------------------------------|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| Speech recognition             | [Address](https://k2-fsa.github.io/sherpa/onnx/android/apk.html)                        | [点此](https://k2-fsa.github.io/sherpa/onnx/android/apk-cn.html)                        |
+| Streaming speech recognition             | [Address](https://k2-fsa.github.io/sherpa/onnx/android/apk.html)                        | [点此](https://k2-fsa.github.io/sherpa/onnx/android/apk-cn.html)                        |
 | Text-to-speech | [Address](https://k2-fsa.github.io/sherpa/onnx/tts/apk-engine.html)                     | [点此](https://k2-fsa.github.io/sherpa/onnx/tts/apk-engine-cn.html)                     |
+|Voice activity detection (VAD) | [Address](https://k2-fsa.github.io/sherpa/onnx/vad/apk.html) | [点此](https://k2-fsa.github.io/sherpa/onnx/vad/apk-cn.html)|
+|VAD + non-streaming speech recognition| [Address](https://k2-fsa.github.io/sherpa/onnx/vad/apk-asr.html)| [点此](https://k2-fsa.github.io/sherpa/onnx/vad/apk-asr-cn.html)|
+|Two-pass speech recognition| [Address](https://k2-fsa.github.io/sherpa/onnx/android/apk-2pass.html)| [点此](https://k2-fsa.github.io/sherpa/onnx/android/apk-2pass-cn.html)|
 | Audio tagging                  | [Address](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk.html)                  | [点此](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk-cn.html)                  |
 | Audio tagging (WearOS)         | [Address](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk-wearos.html)           | [点此](https://k2-fsa.github.io/sherpa/onnx/audio-tagging/apk-wearos-cn.html)           |
 | Speaker identification         | [Address](https://k2-fsa.github.io/sherpa/onnx/speaker-identification/apk.html)         | [点此](https://k2-fsa.github.io/sherpa/onnx/speaker-identification/apk-cn.html)         |
 | Spoken language identification | [Address](https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk.html) | [点此](https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk-cn.html) |
+|Keyword spotting| [Address](https://k2-fsa.github.io/sherpa/onnx/kws/apk.html)| [点此](https://k2-fsa.github.io/sherpa/onnx/kws/apk-cn.html)|
 
 # Links for pre-trained models
 
 | Description                    | URL                                                                                                                            |
 |--------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| Speech recognition             | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models)                                                       |
-| Text-to-speech                 | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models)                                                       |
-| Audio tagging                  | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/audio-tagging-models)                                             |
-| Speaker identification         | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models)                                       |
-| Spoken language identification | See multi-lingual Whisper ASR models from  [Speech recognition](https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models) |
+| Speech recognition (speech to text, ASR)             | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models)              |
+| Text-to-speech (TTS)                 | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models)                             |
+| VAD | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx)|
+| Keyword spotting |[Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/kws-models)|
+| Audio tagging                  | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/audio-tagging-models)|
+| Speaker identification (Speaker ID)         | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models)|
+| Spoken language identification (Language ID) | See multi-lingual Whisper ASR models from  [Speech recognition](https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models) |
+| Punctuation| [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/punctuation-models)|
 
 # Useful links
 
