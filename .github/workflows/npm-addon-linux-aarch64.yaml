@@ -45,21 +45,27 @@ jobs:
               cat /etc/*release
               gcc --version
               cmake --version
+
+              curl -sL https://rpm.nodesource.com/setup_16.x | bash -
+              yum install -y nodejs
+
+              node --version
+
               cd /shared
 
-              # mkdir build
-              # cd build
-              # cmake \
-              #   -DCMAKE_INSTALL_PREFIX=./install \
-              #   -DBUILD_SHARED_LIBS=ON \
-              #   -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-              #   -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-              #   -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-              #   ..
-              # make -j install
+              mkdir build
+              cd build
+              cmake \
+                -DCMAKE_INSTALL_PREFIX=./install \
+                -DBUILD_SHARED_LIBS=ON \
+                -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+                -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+                -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+                ..
+              make -j install
 
       - name: Build sherpa-onnx node-addon
-        if: false
+        if: true
         shell: bash
         run: |
           d=$PWD
