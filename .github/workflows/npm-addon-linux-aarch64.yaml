@@ -1,9 +1,6 @@
 name: npm-addon-linux-aarch64
 
 on:
-  push:
-    branches:
-      - node-addon-arm
   workflow_dispatch:
 
 concurrency:
@@ -33,6 +30,34 @@ jobs:
         with:
           platforms: arm64
 
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Show .npmrc
+        shell: bash
+        run: |
+          echo $PWD
+          echo $HOME
+
+          find $HOME -name .npmrc
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Show .npmrc
+        shell: bash
+        run: |
+          echo $PWD
+          echo $HOME
+
+          find $HOME -name .npmrc
+
+          cat /home/runner/work/_temp/.npmrc
+          cp -v /home/runner/work/_temp/.npmrc ./
+
       - name: Build sherpa-onnx
         uses: addnab/docker-run-action@v3
         with:
@@ -42,6 +67,11 @@ jobs:
               --volume ${{ github.workspace }}/:/shared/
             shell: bash
             run: |
+              cp /shared/.npmrc ~/
+
+              cat ~/.npmrc
+
+              echo $HOME
               uname -a
               cat /etc/*release
               gcc --version
@@ -63,7 +93,9 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
                 -DSHERPA_ONNX_ENABLE_BINARY=OFF \
                 ..
-              make -j install
+
+              make
+              make install
               cd ..
 
               d=$PWD
@@ -91,18 +123,12 @@ jobs:
 
               ls -lh ./sherpa-onnx-node
 
-      - uses: actions/setup-node@v4
-        with:
-          registry-url: 'https://registry.npmjs.org'
+              export NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
 
-      - name: Publish
-        shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          git diff
-          cd ./sherpa-onnx-node
-          npm install
-          npm ci
-          # see https://docs.npmjs.com/generating-provenance-statements
-          npm publish --provenance --access public
+              cd ./sherpa-onnx-node
+              cp -v /shared/.npmrc ./
+              npm install
+              npm ci
+              ls -lh
+              # see https://docs.npmjs.com/generating-provenance-statements
+              npm publish --provenance --access public
