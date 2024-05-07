@@ -1,0 +1,80 @@
+name: test-node-addon-npm-aarch64
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-nodejs-addon-npm-aarch64.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'scripts/node-addon-api/**'
+      - 'scripts/node-addon-api/*.js'
+      - 'nodejs-addon-examples/package.json'
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-nodejs-addon-npm-aarch64.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'scripts/node-addon-api/*.js'
+      - 'nodejs-addon-examples/package.json'
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-node-addon-npm-aarch64-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test-node-addon-npm-aarch64:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
+
+      - name: Test sherpa-onnx
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux2014_aarch64
+            options: |
+              --platform linux/arm64
+              --volume ${{ github.workspace }}/:/shared/
+            shell: bash
+            run: |
+              git config --global --add safe.directory /shared
+
+              echo $HOME
+              uname -a
+              cat /etc/*release
+              cmake --version
+
+              curl -sL https://rpm.nodesource.com/setup_16.x | bash -
+              yum install -y nodejs
+
+              node --version
+
+              cd /shared
+
+              .github/scripts/test-nodejs-addon-npm.sh

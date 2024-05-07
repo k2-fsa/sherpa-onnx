@@ -22,8 +22,10 @@ export DYLD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRAR
 
 # For Linux x64
 export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-x64:$LD_LIBRARY_PATH
-```
 
+# For Linux arm64, e.g., Raspberry Pi 4
+export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-arm64:$LD_LIBRARY_PATH
+```
 
 ## Streaming speech recognition with zipformer transducer
 ```bash
