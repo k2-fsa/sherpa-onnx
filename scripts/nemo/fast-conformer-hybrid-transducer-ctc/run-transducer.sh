@@ -19,8 +19,9 @@ for m in ${ms[@]}; do
   d=sherpa-onnx-nemo-streaming-fast-conformer-transducer-${m}ms
   if [ ! -f $d/encoder.onnx ]; then
     mkdir -p $d
-    mv -v encoder-model.onnx $d/encoder.onnx
-    mv -v decoder_joint-model.onnx $d/decoder_joint.onnx
+    mv -v encoder.onnx $d/
+    mv -v decoder.onnx $d/
+    mv -v joiner.onnx $d/
     mv -v tokens.txt $d/
     ls -lh $d
   fi
@@ -32,7 +33,8 @@ for m in ${ms[@]}; do
   d=sherpa-onnx-nemo-streaming-fast-conformer-transducer-${m}ms
   python3 ./test-onnx-transducer.py \
     --encoder $d/encoder.onnx \
-    --decoder-joint $d/decoder_joint.onnx \
+    --decoder $d/decoder.onnx \
+    --joiner $d/joiner.onnx \
     --tokens $d/tokens.txt \
     --wav ./0.wav
 done

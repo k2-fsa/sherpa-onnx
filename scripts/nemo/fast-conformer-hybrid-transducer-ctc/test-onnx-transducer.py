@@ -20,10 +20,7 @@ def get_args():
     parser.add_argument(
         "--decoder", type=str, required=True, help="Path to decoder.onnx"
     )
-
-    parser.add_argument(
-        "--joiner", type=str, required=True, help="Path to joiner.onnx"
-    )
+    parser.add_argument("--joiner", type=str, required=True, help="Path to joiner.onnx")
 
     parser.add_argument("--tokens", type=str, required=True, help="Path to tokens.txt")
 
@@ -230,7 +227,7 @@ class OnnxModel:
             },
         )[0]
         # logit: [batch_size, 1, 1, vocab_size]
-        return logit 
+        return logit
 
 
 def main():
@@ -262,6 +259,10 @@ def main():
         )
         sample_rate = 16000
 
+    tail_padding = np.zeros(sample_rate * 2)
+
+    audio = np.concatenate([audio, tail_padding])
+
     window_size = model.window_size
     chunk_shift = model.chunk_shift
 
@@ -289,7 +290,9 @@ def main():
                 ans.append(idx)
                 state0 = state0_next
                 state1 = state1_next
-                decoder_out, state0_next, state1_next = model.run_decoder(ans[-1], state0, state1)
+                decoder_out, state0_next, state1_next = model.run_decoder(
+                    ans[-1], state0, state1
+                )
 
     ans = ans[1:]  # remove the first blank
     tokens = [id2token[i] for i in ans]
