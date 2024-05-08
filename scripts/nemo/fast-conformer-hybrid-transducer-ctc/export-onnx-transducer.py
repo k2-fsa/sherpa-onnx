@@ -87,7 +87,10 @@ def main():
 
     asr_model.set_export_config({"decoder_type": "rnnt", "cache_support": True})
 
-    asr_model.export("model.onnx")
+    # asr_model.export("model.onnx")
+    asr_model.encoder.export("encoder.onnx")
+    asr_model.decoder.export("decoder.onnx")
+    asr_model.joint.export("joiner.onnx")
     # model.onnx is a suffix.
     # It will generate two files:
     # encoder-model.onnx
@@ -113,7 +116,7 @@ def main():
         "url": f"https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/{model_name}",
         "comment": "Only the transducer branch is exported",
     }
-    add_meta_data("encoder-model.onnx", meta_data)
+    add_meta_data("encoder.onnx", meta_data)
 
     print(meta_data)
 

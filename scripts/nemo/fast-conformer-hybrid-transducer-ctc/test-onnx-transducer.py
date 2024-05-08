@@ -18,7 +18,11 @@ def get_args():
         "--encoder", type=str, required=True, help="Path to encoder.onnx"
     )
     parser.add_argument(
-        "--decoder-joint", type=str, required=True, help="Path to decoder_joint.onnx"
+        "--decoder", type=str, required=True, help="Path to decoder.onnx"
+    )
+
+    parser.add_argument(
+        "--joiner", type=str, required=True, help="Path to joiner.onnx"
     )
 
     parser.add_argument("--tokens", type=str, required=True, help="Path to tokens.txt")
@@ -59,10 +63,12 @@ class OnnxModel:
     def __init__(
         self,
         encoder: str,
-        decoder_joint: str,
+        decoder: str,
+        joiner: str,
     ):
         self.init_encoder(encoder)
-        self.init_decoder_joint(decoder_joint)
+        self.init_decoder(decoder)
+        self.init_joiner(joiner)
 
     def init_encoder(self, encoder):
         session_opts = ort.SessionOptions()
@@ -94,13 +100,24 @@ class OnnxModel:
 
         self.init_cache_state()
 
-    def init_decoder_joint(self, decoder_joint):
+    def init_decoder(self, decoder):
         session_opts = ort.SessionOptions()
         session_opts.inter_op_num_threads = 1
         session_opts.intra_op_num_threads = 1
 
-        self.decoder_joint = ort.InferenceSession(
-            decoder_joint,
+        self.decoder = ort.InferenceSession(
+            decoder,
+            sess_options=session_opts,
+            providers=["CPUExecutionProvider"],
+        )
+
+    def init_joiner(self, joiner):
+        session_opts = ort.SessionOptions()
+        session_opts.inter_op_num_threads = 1
+        session_opts.intra_op_num_threads = 1
+
+        self.joiner = ort.InferenceSession(
+            joiner,
             sess_options=session_opts,
             providers=["CPUExecutionProvider"],
         )
@@ -166,51 +183,67 @@ class OnnxModel:
         # [batch_size, dim, T]
         return encoder_out
 
-    def run_decoder_joint(
+    def run_decoder(
         self,
-        encoder_out: np.ndarray,
         token: int,
         state0: np.ndarray,
         state1: np.ndarray,
     ):
-        # encoder_out: [batch_size,  dim, 1]
-
         target = torch.tensor([[token]], dtype=torch.int32).numpy()
         target_len = torch.tensor([1], dtype=torch.int32).numpy()
 
         (
-            logits,
-            logits_len,
+            decoder_out,
+            decoder_out_length,
             state0_next,
             state1_next,
-        ) = self.decoder_joint.run(
+        ) = self.decoder.run(
             [
-                self.decoder_joint.get_outputs()[0].name,
-                self.decoder_joint.get_outputs()[1].name,
-                self.decoder_joint.get_outputs()[2].name,
-                self.decoder_joint.get_outputs()[3].name,
+                self.decoder.get_outputs()[0].name,
+                self.decoder.get_outputs()[1].name,
+                self.decoder.get_outputs()[2].name,
+                self.decoder.get_outputs()[3].name,
             ],
             {
-                self.decoder_joint.get_inputs()[0].name: encoder_out,
-                self.decoder_joint.get_inputs()[1].name: target,
-                self.decoder_joint.get_inputs()[2].name: target_len,
-                self.decoder_joint.get_inputs()[3].name: state0,
-                self.decoder_joint.get_inputs()[4].name: state1,
+                self.decoder.get_inputs()[0].name: target,
+                self.decoder.get_inputs()[1].name: target_len,
+                self.decoder.get_inputs()[2].name: state0,
+                self.decoder.get_inputs()[3].name: state1,
             },
         )
-        return torch.from_numpy(logits), state0_next, state1_next
+        return decoder_out, state0_next, state1_next
+
+    def run_joiner(
+        self,
+        encoder_out: np.ndarray,
+        decoder_out: np.ndarray,
+    ):
+        # encoder_out: [batch_size,  dim, 1]
+        # decoder_out: [batch_size,  dim, 1]
+        logit = self.joiner.run(
+            [
+                self.joiner.get_outputs()[0].name,
+            ],
+            {
+                self.joiner.get_inputs()[0].name: encoder_out,
+                self.joiner.get_inputs()[1].name: decoder_out,
+            },
+        )[0]
+        # logit: [batch_size, 1, 1, vocab_size]
+        return logit 
 
 
 def main():
     args = get_args()
     assert Path(args.encoder).is_file(), args.encoder
-    assert Path(args.decoder_joint).is_file(), args.decoder_joint
+    assert Path(args.decoder).is_file(), args.decoder
+    assert Path(args.joiner).is_file(), args.joiner
     assert Path(args.tokens).is_file(), args.tokens
     assert Path(args.wav).is_file(), args.wav
 
     print(vars(args))
 
-    model = OnnxModel(args.encoder, args.decoder_joint)
+    model = OnnxModel(args.encoder, args.decoder, args.joiner)
 
     id2token = dict()
     with open(args.tokens, encoding="utf-8") as f:
@@ -235,6 +268,7 @@ def main():
     blank = len(id2token) - 1
     ans = [blank]
     state0, state1 = model.get_decoder_state()
+    decoder_out, state0_next, state1_next = model.run_decoder(ans[-1], state0, state1)
 
     features = compute_features(audio, fbank)
     num_chunks = (features.shape[0] - window_size) // chunk_shift + 1
@@ -247,15 +281,15 @@ def main():
         # encoder_out:[batch_size, dim, T)
         for t in range(encoder_out.shape[2]):
             encoder_out_t = encoder_out[:, :, t : t + 1]
-            logits, state0_next, state1_next = model.run_decoder_joint(
-                encoder_out_t, ans[-1], state0, state1
-            )
+            logits = model.run_joiner(encoder_out_t, decoder_out)
+            logits = torch.from_numpy(logits)
             logits = logits.squeeze()
             idx = torch.argmax(logits, dim=-1).item()
             if idx != blank:
                 ans.append(idx)
                 state0 = state0_next
                 state1 = state1_next
+                decoder_out, state0_next, state1_next = model.run_decoder(ans[-1], state0, state1)
 
     ans = ans[1:]  # remove the first blank
     tokens = [id2token[i] for i in ans]
