@@ -1,16 +1,16 @@
-name: export-nemo-fast-conformer-ctc-to-onnx
+name: export-nemo-fast-conformer-transducer-to-onnx
 
 on:
   workflow_dispatch:
 
 concurrency:
-  group: export-nemo-fast-conformer-hybrid-transducer-ctc-to-onnx-${{ github.ref }}
+  group: export-nemo-fast-conformer-hybrid-transducer-to-onnx-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  export-nemo-fast-conformer-hybrid-transducer-ctc-to-onnx:
+  export-nemo-fast-conformer-hybrid-transducer-to-onnx:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: export NeMo fast conformer
+    name: NeMo transducer
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           cd scripts/nemo/fast-conformer-hybrid-transducer-ctc
-          ./run-ctc.sh
+          ./run-transducer.sh
 
           mv -v sherpa-onnx-nemo* ../../..
 
@@ -54,13 +54,13 @@ jobs:
           curl -SL -O https://hf-mirror.com/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-small/resolve/main/test_wavs/trans.txt
           popd
 
-          cp -av test_wavs ./sherpa-onnx-nemo-streaming-fast-conformer-ctc-80ms
-          cp -av test_wavs ./sherpa-onnx-nemo-streaming-fast-conformer-ctc-480ms
-          cp -av test_wavs ./sherpa-onnx-nemo-streaming-fast-conformer-ctc-1040ms
+          cp -av test_wavs ./sherpa-onnx-nemo-streaming-fast-conformer-transducer-80ms
+          cp -av test_wavs ./sherpa-onnx-nemo-streaming-fast-conformer-transducer-480ms
+          cp -av test_wavs ./sherpa-onnx-nemo-streaming-fast-conformer-transducer-1040ms
 
-          tar cjvf sherpa-onnx-nemo-streaming-fast-conformer-ctc-80ms.tar.bz2 sherpa-onnx-nemo-streaming-fast-conformer-ctc-80ms
-          tar cjvf sherpa-onnx-nemo-streaming-fast-conformer-ctc-480ms.tar.bz2 sherpa-onnx-nemo-streaming-fast-conformer-ctc-480ms
-          tar cjvf sherpa-onnx-nemo-streaming-fast-conformer-ctc-1040ms.tar.bz2 sherpa-onnx-nemo-streaming-fast-conformer-ctc-1040ms
+          tar cjvf sherpa-onnx-nemo-streaming-fast-conformer-transducer-80ms.tar.bz2 sherpa-onnx-nemo-streaming-fast-conformer-transducer-80ms
+          tar cjvf sherpa-onnx-nemo-streaming-fast-conformer-transducer-480ms.tar.bz2 sherpa-onnx-nemo-streaming-fast-conformer-transducer-480ms
+          tar cjvf sherpa-onnx-nemo-streaming-fast-conformer-transducer-1040ms.tar.bz2 sherpa-onnx-nemo-streaming-fast-conformer-transducer-1040ms
 
       - name: Release
         uses: svenstaro/upload-release-action@v2

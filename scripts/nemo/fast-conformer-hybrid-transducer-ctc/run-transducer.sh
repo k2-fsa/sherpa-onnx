@@ -15,11 +15,12 @@ ms=(
 )
 
 for m in ${ms[@]}; do
-  ./export-onnx-ctc.py --model $m
-  d=sherpa-onnx-nemo-streaming-fast-conformer-ctc-${m}ms
-  if [ ! -f $d/model.onnx ]; then
+  ./export-onnx-transducer.py --model $m
+  d=sherpa-onnx-nemo-streaming-fast-conformer-transducer-${m}ms
+  if [ ! -f $d/encoder.onnx ]; then
     mkdir -p $d
-    mv -v model.onnx $d/
+    mv -v encoder-model.onnx $d/encoder.onnx
+    mv -v decoder_joint-model.onnx $d/decoder_joint.onnx
     mv -v tokens.txt $d/
     ls -lh $d
   fi
@@ -28,9 +29,10 @@ done
 # Now test the exported models
 
 for m in ${ms[@]}; do
-  d=sherpa-onnx-nemo-streaming-fast-conformer-ctc-${m}ms
-  python3 ./test-onnx-ctc.py \
-    --model $d/model.onnx \
+  d=sherpa-onnx-nemo-streaming-fast-conformer-transducer-${m}ms
+  python3 ./test-onnx-transducer.py \
+    --encoder $d/encoder.onnx \
+    --decoder-joint $d/decoder_joint.onnx \
     --tokens $d/tokens.txt \
     --wav ./0.wav
 done

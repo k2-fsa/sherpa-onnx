@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
+# Copyright      2024  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 import argparse
 from pathlib import Path
 
 import kaldi_native_fbank as knf
+import librosa
 import numpy as np
 import onnxruntime as ort
-import torch
 import soundfile as sf
-import librosa
+import torch
 
 
 def get_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--encoder", type=str, required=True, help="Path to encoder.onnx")
-    parser.add_argument("--decoder-joint", type=str, required=True, help="Path to decoder_joint.onnx")
+    parser.add_argument(
+        "--encoder", type=str, required=True, help="Path to encoder.onnx"
+    )
+    parser.add_argument(
+        "--decoder-joint", type=str, required=True, help="Path to decoder_joint.onnx"
+    )
 
     parser.add_argument("--tokens", type=str, required=True, help="Path to tokens.txt")
 
@@ -106,7 +111,6 @@ class OnnxModel:
         state1 = torch.zeros(self.pred_rnn_layers, batch_size, self.pred_hidden).numpy()
         return state0, state1
 
-
     def init_cache_state(self):
         self.cache_last_channel = torch.zeros(
             1,
@@ -162,7 +166,13 @@ class OnnxModel:
         # [batch_size, dim, T]
         return encoder_out
 
-    def run_decoder_joint(self, encoder_out: np.ndarray, token: int, state0: np.ndarray, state1: np.ndarray):
+    def run_decoder_joint(
+        self,
+        encoder_out: np.ndarray,
+        token: int,
+        state0: np.ndarray,
+        state1: np.ndarray,
+    ):
         # encoder_out: [batch_size,  dim, 1]
 
         target = torch.tensor([[token]], dtype=torch.int32).numpy()
@@ -236,16 +246,18 @@ def main():
         encoder_out = model.run_encoder(chunk)
         # encoder_out:[batch_size, dim, T)
         for t in range(encoder_out.shape[2]):
-          encoder_out_t = encoder_out[:, :, t:t+1]
-          logits, state0_next, state1_next = model.run_decoder_joint(encoder_out_t, ans[-1], state0, state1)
-          logits = logits.squeeze()
-          idx = torch.argmax(logits, dim=-1).item()
-          if idx != blank:
-            ans.append(idx)
-            state0 = state0_next
-            state1 = state1_next
+            encoder_out_t = encoder_out[:, :, t : t + 1]
+            logits, state0_next, state1_next = model.run_decoder_joint(
+                encoder_out_t, ans[-1], state0, state1
+            )
+            logits = logits.squeeze()
+            idx = torch.argmax(logits, dim=-1).item()
+            if idx != blank:
+                ans.append(idx)
+                state0 = state0_next
+                state1 = state1_next
 
-    ans = ans[1:] # remove the first blank
+    ans = ans[1:]  # remove the first blank
     tokens = [id2token[i] for i in ans]
     underline = "▁"
     #  underline = b"\xe2\x96\x81".decode()
