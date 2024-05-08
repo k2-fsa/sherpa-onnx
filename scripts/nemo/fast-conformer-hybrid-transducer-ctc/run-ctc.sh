@@ -16,7 +16,7 @@ ms=(
 
 for m in ${ms[@]}; do
   ./export-onnx-ctc.py --model $m
-  d=sherpa-onnx-nemo-streaming-fast-conformer-ctc-${m}ms
+  d=sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-${m}ms
   if [ ! -f $d/model.onnx ]; then
     mkdir -p $d
     mv -v model.onnx $d/
@@ -28,7 +28,7 @@ done
 # Now test the exported models
 
 for m in ${ms[@]}; do
-  d=sherpa-onnx-nemo-streaming-fast-conformer-ctc-${m}ms
+  d=sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-${m}ms
   python3 ./test-onnx-ctc.py \
     --model $d/model.onnx \
     --tokens $d/tokens.txt \
