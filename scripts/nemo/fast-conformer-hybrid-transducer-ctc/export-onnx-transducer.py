@@ -53,7 +53,7 @@ def main():
         f.write(f"<blk> {i+1}\n")
         print("Saved to tokens.txt")
 
-    decoder_type = "ctc"
+    decoder_type = "rnnt"
     asr_model.change_decoding_strategy(decoder_type=decoder_type)
     asr_model.eval()
 
@@ -85,11 +85,16 @@ def main():
     cache_last_time_dim2 = asr_model.encoder.d_model
     cache_last_time_dim3 = asr_model.encoder.conv_context_size[0]
 
-    asr_model.set_export_config({"decoder_type": "ctc", "cache_support": True})
+    asr_model.set_export_config({"decoder_type": "rnnt", "cache_support": True})
 
-    filename = "model.onnx"
-
-    asr_model.export(filename)
+    # asr_model.export("model.onnx")
+    asr_model.encoder.export("encoder.onnx")
+    asr_model.decoder.export("decoder.onnx")
+    asr_model.joint.export("joiner.onnx")
+    # model.onnx is a suffix.
+    # It will generate two files:
+    # encoder-model.onnx
+    # decoder_joint-model.onnx
 
     meta_data = {
         "vocab_size": asr_model.decoder.vocab_size,
@@ -102,14 +107,16 @@ def main():
         "cache_last_time_dim1": cache_last_time_dim1,
         "cache_last_time_dim2": cache_last_time_dim2,
         "cache_last_time_dim3": cache_last_time_dim3,
+        "pred_rnn_layers": asr_model.decoder.pred_rnn_layers,
+        "pred_hidden": asr_model.decoder.pred_hidden,
         "subsampling_factor": 8,
         "model_type": "EncDecHybridRNNTCTCBPEModel",
         "version": "1",
         "model_author": "NeMo",
         "url": f"https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/{model_name}",
-        "comment": "Only the CTC branch is exported",
+        "comment": "Only the transducer branch is exported",
     }
-    add_meta_data(filename, meta_data)
+    add_meta_data("encoder.onnx", meta_data)
 
     print(meta_data)
 
