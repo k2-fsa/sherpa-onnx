@@ -200,7 +200,7 @@ class MainActivity : AppCompatActivity() {
         val config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
             modelConfig = getModelConfig(type = type)!!,
-            lmConfig = getOnlineLMConfig(type = type),
+            // lmConfig = getOnlineLMConfig(type = type),
             endpointConfig = getEndpointConfig(),
             enableEndpoint = true,
         )

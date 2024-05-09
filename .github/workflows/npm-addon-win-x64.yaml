@@ -1,0 +1,110 @@
+name: npm-addon-win-x64
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: npm-addon-win-x64-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  npm-addon-win-x64:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Display node version
+        shell: bash
+        run: |
+          node --version
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+          ls -lh  _deps/onnxruntime-src/lib/
+
+          cmake --build . --config Release --target install -- -m:6
+
+          ls -lh install/lib
+
+          echo "----------"
+
+          cp -v  _deps/onnxruntime-src/lib/*.lib ./install/lib
+
+          echo "----------"
+
+          ls -lh install/lib
+
+      - name: Build sherpa-onnx node-addon
+        shell: bash
+        run: |
+          d=$PWD
+          export SHERPA_ONNX_INSTALL_DIR=$d/build/install
+
+          cd scripts/node-addon-api/
+
+          npm i
+
+          ./node_modules/.bin/cmake-js compile --log-level verbose
+
+      - name: Prepare for publish
+        shell: bash
+        run: |
+          owner=${{ github.repository_owner }}
+          export owner
+
+          echo "---"
+          ls -lh build/install/lib/
+          echo "---"
+          ls -lh build/install/lib/
+          echo "---"
+
+          .github/scripts/node-addon/run.sh
+
+      - name: Display files to be published
+        shell: bash
+        run: |
+          ls -lh ./sherpa-onnx-node
+
+      - name: Publish
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd ./sherpa-onnx-node
+          npm install
+          npm ci
+          # see https://docs.npmjs.com/generating-provenance-statements
+          npm publish --provenance --access public

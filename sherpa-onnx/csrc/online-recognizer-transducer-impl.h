@@ -107,11 +107,21 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       }
 
       decoder_ = std::make_unique<OnlineTransducerModifiedBeamSearchDecoder>(
-          model_.get(), lm_.get(), config_.max_active_paths,
-          config_.lm_config.scale, unk_id_, config_.blank_penalty);
+          model_.get(),
+          lm_.get(),
+          config_.max_active_paths,
+          config_.lm_config.scale,
+          unk_id_,
+          config_.blank_penalty,
+          config_.temperature_scale);
+
     } else if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchDecoder>(
-          model_.get(), unk_id_, config_.blank_penalty);
+          model_.get(),
+          unk_id_,
+          config_.blank_penalty,
+          config_.temperature_scale);
+
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());
@@ -151,11 +161,21 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       }
 
       decoder_ = std::make_unique<OnlineTransducerModifiedBeamSearchDecoder>(
-          model_.get(), lm_.get(), config_.max_active_paths,
-          config_.lm_config.scale, unk_id_, config_.blank_penalty);
+          model_.get(),
+          lm_.get(),
+          config_.max_active_paths,
+          config_.lm_config.scale,
+          unk_id_,
+          config_.blank_penalty,
+          config_.temperature_scale);
+
     } else if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchDecoder>(
-          model_.get(), unk_id_, config_.blank_penalty);
+          model_.get(),
+          unk_id_,
+          config_.blank_penalty,
+          config_.temperature_scale);
+
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config.decoding_method.c_str());

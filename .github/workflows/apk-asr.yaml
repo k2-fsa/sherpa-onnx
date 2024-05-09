@@ -23,8 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        total: ["1"]
-        index: ["0"]
+        total: ["3"]
+        index: ["0", "1", "2"]
 
     steps:
       - uses: actions/checkout@v4

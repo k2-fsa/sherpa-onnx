@@ -1,0 +1,67 @@
+name: export-nemo-fast-conformer-ctc-non-streaming
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: export-nemo-fast-conformer-hybrid-transducer-ctc-non-streaming-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-nemo-fast-conformer-hybrid-transducer-ctc-non-streaming:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: Hybrid ctc non-streaming
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install NeMo
+        shell: bash
+        run: |
+          BRANCH='main'
+          pip install git+https://github.com/NVIDIA/NeMo.git@$BRANCH#egg=nemo_toolkit[asr]
+          pip install onnxruntime
+          pip install kaldi-native-fbank
+          pip install soundfile librosa
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/nemo/fast-conformer-hybrid-transducer-ctc
+          ./run-ctc-non-streaming.sh
+
+          mv -v sherpa-onnx-nemo* ../../..
+
+      - name: Compress files
+        shell: bash
+        run: |
+          dirs=(
+            sherpa-onnx-nemo-fast-conformer-ctc-en-24500
+            sherpa-onnx-nemo-fast-conformer-ctc-es-1424
+            sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
+            sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
+          )
+          for d in ${dirs[@]}; do
+            tar cjvf ${d}.tar.bz2 ./$d
+          done
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models

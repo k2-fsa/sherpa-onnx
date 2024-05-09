@@ -1,0 +1,134 @@
+name: npm-addon-linux-aarch64
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: npm-addon-linux-aarch64-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  npm-addon-linux-aarch64:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: arm64
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Show .npmrc
+        shell: bash
+        run: |
+          echo $PWD
+          echo $HOME
+
+          find $HOME -name .npmrc
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Show .npmrc
+        shell: bash
+        run: |
+          echo $PWD
+          echo $HOME
+
+          find $HOME -name .npmrc
+
+          cat /home/runner/work/_temp/.npmrc
+          cp -v /home/runner/work/_temp/.npmrc ./
+
+      - name: Build sherpa-onnx
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux2014_aarch64
+            options: |
+              --platform linux/arm64
+              --volume ${{ github.workspace }}/:/shared/
+            shell: bash
+            run: |
+              cp /shared/.npmrc ~/
+
+              cat ~/.npmrc
+
+              echo $HOME
+              uname -a
+              cat /etc/*release
+              gcc --version
+              cmake --version
+
+              curl -sL https://rpm.nodesource.com/setup_16.x | bash -
+              yum install -y nodejs
+
+              node --version
+
+              cd /shared
+
+              mkdir build
+              cd build
+              cmake \
+                -DCMAKE_INSTALL_PREFIX=./install \
+                -DBUILD_SHARED_LIBS=ON \
+                -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+                -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+                -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+                ..
+
+              make -j
+              make install
+              cd ..
+
+              d=$PWD
+              export SHERPA_ONNX_INSTALL_DIR=$d/build/install
+
+              ls -lh /shared/build
+
+              pushd scripts/node-addon-api/
+              npm i
+
+              ./node_modules/.bin/cmake-js compile --log-level verbose
+              popd
+
+              owner=${{ github.repository_owner }}
+              export owner
+
+              echo "---"
+              ls -lh build/install/lib/
+              sudo chown -R runner ./build
+              echo "---"
+              ls -lh build/install/lib/
+              echo "---"
+
+              .github/scripts/node-addon/run.sh
+
+              ls -lh ./sherpa-onnx-node
+
+              export NODE_AUTH_TOKEN=${{ secrets.NPM_TOKEN }}
+
+              cd ./sherpa-onnx-node
+              cp -v /shared/.npmrc ./
+              npm install
+              npm ci
+              ls -lh
+              # see https://docs.npmjs.com/generating-provenance-statements
+              npm publish --provenance --access public

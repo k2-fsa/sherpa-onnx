@@ -42,11 +42,13 @@ def get_args():
         choices=[
             "speech_campplus_sv_en_voxceleb_16k",
             "speech_campplus_sv_zh-cn_16k-common",
+            "speech_campplus_sv_zh_en_16k-common_advanced",
             "speech_eres2net_sv_en_voxceleb_16k",
             "speech_eres2net_sv_zh-cn_16k-common",
             "speech_eres2net_base_200k_sv_zh-cn_16k-common",
             "speech_eres2net_base_sv_zh-cn_3dspeaker_16k",
             "speech_eres2net_large_sv_zh-cn_3dspeaker_16k",
+            "speech_eres2netv2_sv_zh-cn_16k-common",
         ],
     )
     return parser.parse_args()
@@ -56,7 +58,7 @@ def get_args():
 def main():
     args = get_args()
     local_model_dir = "pretrained"
-    model_id = f"damo/{args.model}"
+    model_id = f"iic/{args.model}"
     conf = supports[model_id]
     cache_dir = snapshot_download(
         model_id,
@@ -121,13 +123,15 @@ def main():
 
     if "zh-cn" in args.model:
         language = "Chinese"
+    elif "zh_en" in args.model:
+        language = "Chinese-English"
     elif "en" in args.model:
         language = "English"
     else:
         raise ValueError(f"Unsupported language for model {args.model}")
 
-    comment = f"This model is from damo/{args.model}"
-    url = f"https://www.modelscope.cn/models/damo/{args.model}/summary"
+    comment = f"This model is from iic/{args.model}"
+    url = f"https://www.modelscope.cn/models/iic/{args.model}/summary"
 
     meta_data = {
         "framework": "3d-speaker",

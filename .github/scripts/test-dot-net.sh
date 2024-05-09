@@ -24,6 +24,7 @@ cd ../offline-decode-files
 cd ../offline-tts
 ./run-aishell3.sh
 ./run-piper.sh
+./run-hf-fanchen.sh
 ls -lh
 
 cd ../..

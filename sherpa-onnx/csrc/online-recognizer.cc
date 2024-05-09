@@ -96,6 +96,8 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
   po->Register("decoding-method", &decoding_method,
                "decoding method,"
                "now support greedy_search and modified_beam_search.");
+  po->Register("temperature-scale", &temperature_scale,
+               "Temperature scale for confidence computation in decoding.");
 }
 
 bool OnlineRecognizerConfig::Validate() const {
@@ -142,7 +144,8 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "hotwords_score=" << hotwords_score << ", ";
   os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "decoding_method=\"" << decoding_method << "\", ";
-  os << "blank_penalty=" << blank_penalty << ")";
+  os << "blank_penalty=" << blank_penalty << ", ";
+  os << "temperature_scale=" << temperature_scale << ")";
 
   return os.str();
 }

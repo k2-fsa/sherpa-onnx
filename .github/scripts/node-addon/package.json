@@ -1,0 +1,54 @@
+{
+  "name": "sherpa-onnx-node",
+  "version": "SHERPA_ONNX_VERSION",
+  "description": "Speech-to-text and text-to-speech using Next-gen Kaldi without internet connection",
+  "main": "sherpa-onnx.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/k2-fsa/sherpa-onnx.git"
+  },
+  "keywords": [
+    "speech to text",
+    "text to speech",
+    "transcription",
+    "real-time speech recognition",
+    "without internet connection",
+    "embedded systems",
+    "open source",
+    "zipformer",
+    "asr",
+    "tts",
+    "stt",
+    "c++",
+    "onnxruntime",
+    "onnx",
+    "ai",
+    "next-gen kaldi",
+    "offline",
+    "privacy",
+    "open source",
+    "vad",
+    "speaker id",
+    "language id",
+    "node-addon-api",
+    "streaming speech recognition",
+    "speech",
+    "recognition"
+  ],
+  "author": "The next-gen Kaldi team",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/k2-fsa/sherpa-onnx/issues"
+  },
+  "homepage": "https://github.com/k2-fsa/sherpa-onnx#readme",
+  "optionalDependencies": {
+    "sherpa-onnx-darwin-arm64": "^SHERPA_ONNX_VERSION",
+    "sherpa-onnx-darwin-x64": "^SHERPA_ONNX_VERSION",
+    "sherpa-onnx-linux-x64": "^SHERPA_ONNX_VERSION",
+    "sherpa-onnx-linux-arm64": "^SHERPA_ONNX_VERSION",
+    "sherpa-onnx-win-x64": "^SHERPA_ONNX_VERSION"
+  }
+}

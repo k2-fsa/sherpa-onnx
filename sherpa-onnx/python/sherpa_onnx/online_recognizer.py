@@ -58,6 +58,7 @@ class OnlineRecognizer(object):
         model_type: str = "",
         lm: str = "",
         lm_scale: float = 0.1,
+        temperature_scale: float = 2.0,
     ):
         """
         Please refer to
@@ -123,6 +124,10 @@ class OnlineRecognizer(object):
           hotwords_score:
             The hotword score of each token for biasing word/phrase. Used only if
             hotwords_file is given with modified_beam_search as decoding method.
+          temperature_scale:
+            Temperature scaling for output symbol confidence estiamation.
+            It affects only confidence values, the decoding uses the original
+            logits without temperature.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
           model_type:
@@ -193,6 +198,7 @@ class OnlineRecognizer(object):
             hotwords_score=hotwords_score,
             hotwords_file=hotwords_file,
             blank_penalty=blank_penalty,
+            temperature_scale=temperature_scale,
         )
 
         self.recognizer = _Recognizer(recognizer_config)

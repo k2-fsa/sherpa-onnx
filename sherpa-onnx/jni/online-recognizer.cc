@@ -198,6 +198,22 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(lm_model_config_cls, "scale", "F");
   ans.lm_config.scale = env->GetFloatField(lm_model_config, fid);
 
+  fid = env->GetFieldID(cls, "ctcFstDecoderConfig",
+                        "Lcom/k2fsa/sherpa/onnx/OnlineCtcFstDecoderConfig;");
+
+  jobject fst_decoder_config = env->GetObjectField(config, fid);
+  jclass fst_decoder_config_cls = env->GetObjectClass(fst_decoder_config);
+
+  fid = env->GetFieldID(fst_decoder_config_cls, "graph", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(fst_decoder_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.ctc_fst_decoder_config.graph = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(fst_decoder_config_cls, "maxActive", "I");
+  ans.ctc_fst_decoder_config.max_active =
+      env->GetIntField(fst_decoder_config, fid);
+
   return ans;
 }
 }  // namespace sherpa_onnx

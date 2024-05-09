@@ -62,6 +62,11 @@ for wav in ${waves[@]}; do
   ls -lh *.wav
 done
 
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/spoken-language-identification-test-wavs.tar.bz2
+tar xvf spoken-language-identification-test-wavs.tar.bz2
+rm spoken-language-identification-test-wavs.tar.bz2
+data=spoken-language-identification-test-wavs
+
 for name in ${names[@]}; do
   log "------------------------------------------------------------"
   log "Run $name"
@@ -85,14 +90,14 @@ for name in ${names[@]}; do
     time $EXE \
       --whisper-encoder=$repo/${name}-encoder.onnx \
       --whisper-decoder=$repo/${name}-decoder.onnx \
-      $wav
+      $data/$wav
 
     log "test int8 onnx"
 
     time $EXE \
       --whisper-encoder=$repo/${name}-encoder.int8.onnx \
       --whisper-decoder=$repo/${name}-decoder.int8.onnx \
-      $wav
+      $data/$wav
   done
   rm -rf $repo
 done

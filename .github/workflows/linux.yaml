@@ -128,13 +128,13 @@ jobs:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: install/*
 
-      - name: Test offline punctuation
+      - name: Test spoken language identification (C++ API)
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline-punctuation
+          export EXE=sherpa-onnx-offline-language-identification
 
-          .github/scripts/test-offline-punctuation.sh
+          .github/scripts/test-spoken-language-identification.sh
 
       - name: Test C API
         shell: bash
@@ -147,13 +147,13 @@ jobs:
 
           .github/scripts/test-c-api.sh
 
-      - name: Test Audio tagging
+      - name: Test offline CTC
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline-audio-tagging
+          export EXE=sherpa-onnx-offline
 
-          .github/scripts/test-audio-tagging.sh
+          .github/scripts/test-offline-ctc.sh
 
       - name: Test online CTC
         shell: bash
@@ -163,14 +163,21 @@ jobs:
 
           .github/scripts/test-online-ctc.sh
 
-
-      - name: Test spoken language identification (C++ API)
+      - name: Test offline punctuation
         shell: bash
         run: |
           export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline-language-identification
+          export EXE=sherpa-onnx-offline-punctuation
 
-          .github/scripts/test-spoken-language-identification.sh
+          .github/scripts/test-offline-punctuation.sh
+
+      - name: Test Audio tagging
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-audio-tagging
+
+          .github/scripts/test-audio-tagging.sh
 
       - name: Test transducer kws
         shell: bash
@@ -179,7 +186,6 @@ jobs:
           export EXE=sherpa-onnx-keyword-spotter
 
           .github/scripts/test-kws.sh
-
 
       - name: Test offline Whisper
         if: matrix.build_type != 'Debug'
@@ -191,14 +197,6 @@ jobs:
           readelf -d build/bin/sherpa-onnx-offline
 
           .github/scripts/test-offline-whisper.sh
-
-      - name: Test offline CTC
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
-
-          .github/scripts/test-offline-ctc.sh
 
       - name: Test offline TTS
         if: matrix.with_tts == 'ON'

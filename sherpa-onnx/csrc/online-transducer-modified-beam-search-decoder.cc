@@ -129,6 +129,22 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
         model_->RunJoiner(std::move(cur_encoder_out), View(&decoder_out));
 
     float *p_logit = logit.GetTensorMutableData<float>();
+
+    // copy raw logits, apply temperature-scaling  (for confidences)
+    // Note: temperature scaling is used only for the confidences,
+    //       the decoding algorithm uses the original logits
+    int32_t p_logit_items = vocab_size * num_hyps;
+    std::vector<float> logit_with_temperature(p_logit_items);
+    {
+      std::copy(p_logit,
+                p_logit + p_logit_items,
+                logit_with_temperature.begin());
+      for (float& elem : logit_with_temperature) {
+        elem /= temperature_scale_;
+      }
+      LogSoftmax(logit_with_temperature.data(), vocab_size, num_hyps);
+    }
+
     if (blank_penalty_ > 0.0) {
       // assuming blank id is 0
       SubtractBlank(p_logit, vocab_size, num_hyps, 0, blank_penalty_);
@@ -188,10 +204,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
                                               // score of the transducer
         // export the per-token log scores
         if (new_token != 0 && new_token != unk_id_) {
-          const Hypothesis &prev_i = prev[hyp_index];
-          // subtract 'prev[i]' path scores, which were added before
-          // getting topk tokens
-          float y_prob = p_logprob[k] - prev_i.log_prob - prev_i.lm_log_prob;
+          float y_prob = logit_with_temperature[start * vocab_size + k];
           new_hyp.ys_probs.push_back(y_prob);
 
           if (lm_) {  // export only when LM is used
@@ -213,7 +226,7 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
       cur.push_back(std::move(hyps));
       p_logprob += (end - start) * vocab_size;
     }  // for (int32_t b = 0; b != batch_size; ++b)
-  }
+  }  // for (int32_t t = 0; t != num_frames; ++t)
 
   for (int32_t b = 0; b != batch_size; ++b) {
     auto &hyps = cur[b];

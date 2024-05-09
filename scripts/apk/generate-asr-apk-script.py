@@ -57,9 +57,113 @@ def get_models():
             rm -v joiner-epoch-99-avg-1.onnx
 
             rm -v *.sh
+            rm -v bpe.model
+            rm -v README.md
             rm -v .gitattributes
             rm -v *state*
             rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-en-2023-06-26",
+            idx=6,
+            lang="en",
+            short_name="zipformer2",
+            cmd="""
+            pushd $model_name
+            rm -v encoder-epoch-99-avg-1-chunk-16-left-128.onnx
+            rm -v decoder-epoch-99-avg-1-chunk-16-left-128.int8.onnx
+            rm -v joiner-epoch-99-avg-1-chunk-16-left-128.int8.onnx
+
+            rm -v README.md
+            rm -v bpe.model
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="icefall-asr-zipformer-streaming-wenetspeech-20230615",
+            idx=3,
+            lang="zh",
+            short_name="zipformer2",
+            cmd="""
+            pushd $model_name
+            rm -v exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx
+            rm -v exp/decoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx
+            rm -v exp/joiner-epoch-12-avg-4-chunk-16-left-128.int8.onnx
+
+            rm -v data/lang_char/lexicon.txt
+            rm -v data/lang_char/words.txt
+            rm -rfv test_wavs
+            rm -v README.md
+
+            ls -lh exp/
+            ls -lh data/lang_char
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-fr-2023-04-14",
+            idx=7,
+            lang="fr",
+            short_name="zipformer",
+            cmd="""
+            pushd $model_name
+            rm -v encoder-epoch-29-avg-9-with-averaged-model.onnx
+            rm -v decoder-epoch-29-avg-9-with-averaged-model.int8.onnx
+            rm -v joiner-epoch-29-avg-9-with-averaged-model.int8.onnx
+
+            rm -v *.sh
+            rm -rf test_wavs
+            rm README.md
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
+            idx=9,
+            lang="zh",
+            short_name="small_zipformer",
+            cmd="""
+            pushd $model_name
+            rm -v encoder-epoch-99-avg-1.onnx
+            rm -v decoder-epoch-99-avg-1.int8.onnx
+            rm -v joiner-epoch-99-avg-1.onnx
+
+            rm -v *.sh
+            rm -rf test_wavs
+            rm README.md
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+            idx=10,
+            lang="en",
+            short_name="small_zipformer",
+            cmd="""
+            pushd $model_name
+            rm -v encoder-epoch-99-avg-1.onnx
+            rm -v decoder-epoch-99-avg-1.int8.onnx
+            rm -v joiner-epoch-99-avg-1.onnx
+
+            rm -v *.sh
+            rm -rf test_wavs
+            rm README.md
 
             ls -lh
 

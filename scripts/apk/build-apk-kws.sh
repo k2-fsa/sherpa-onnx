@@ -18,6 +18,8 @@ SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " 
 
 log "Building keyword spotting APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 
+export SHERPA_ONNX_ENABLE_TTS=OFF
+
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
 log "====================armv7-eabi================"
@@ -34,14 +36,17 @@ repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
 if [ ! -d ./android/SherpaOnnxKws/app/src/main/assets/$repo ]; then
 
-  repo_url=https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
+  repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
   log "Start testing ${repo_url}"
 
-  log "Download pretrained model and test-data from $repo_url"
-  wget -c -qq $repo_url
-  tar jxvf ${repo}.tar.bz
+  log "Download pretrained model from $repo_url"
+  curl -SL -O $repo_url
+  tar jxvf ${repo}.tar.bz2
+  rm ${repo}.tar.bz2
 
   pushd $repo
+  rm configuration.json
+  rm keywords_raw.txt
   rm *.int8.onnx
   rm README.md
   rm -rfv test_wavs
@@ -69,10 +74,13 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/
 
   pushd ./android/SherpaOnnxKws
-  ./gradlew build
+  sed -i.bak s/2048/9012/g ./gradle.properties
+  git diff ./gradle.properties
+  ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxKws/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-kws-wenetspeech-zh-${SHERPA_ONNX_VERSION}-$arch.apk
+  mv android/SherpaOnnxKws/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-kws-zh-wenetspeech-zipformer.apk
+
   ls -lh apks
   rm -v ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/*.so
 done
@@ -85,13 +93,16 @@ rm -rf ./android/SherpaOnnxKws/app/src/main/assets/$repo
 repo=sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01
 
 if [ ! -d ./android/SherpaOnnxKws/app/src/main/assets/$repo ]; then
-  repo_url=https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
+  repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz2
   log "Start testing ${repo_url}"
-  log "Download pretrained model and test-data from $repo_url"
-  wget -qq $repo_url
-  tar jxvf ${repo}.tar.bz
+  log "Download pretrained model from $repo_url"
+  curl -SL -O $repo_url
+  tar jxvf ${repo}.tar.bz2
+  rm ${repo}.tar.bz2
 
   pushd $repo
+  rm bpe.model
+  rm keywords_raw.txt
   rm *.int8.onnx
   rm README.md
   rm -rfv test_wavs
@@ -124,10 +135,12 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   cp -v ./build-android-$src_arch/install/lib/*.so ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/
 
   pushd ./android/SherpaOnnxKws
-  ./gradlew build
+  sed -i.bak s/2048/9012/g ./gradle.properties
+  git diff ./gradle.properties
+  ./gradlew assembleRelease
   popd
 
-  mv android/SherpaOnnxKws/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-kws-gigaspeech-en-${SHERPA_ONNX_VERSION}-$arch.apk
+  mv android/SherpaOnnxKws/app/build/outputs/apk/release/app-release-unsigned.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-kws-en-gigaspeech-zipformer.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxKws/app/src/main/jniLibs/$arch/*.so
 done

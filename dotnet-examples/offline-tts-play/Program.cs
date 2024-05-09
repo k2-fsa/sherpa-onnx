@@ -28,6 +28,9 @@ class OfflineTtsPlayDemo
     [Option("tts-rule-fsts", Required = false, Default = "", HelpText = "path to rule.fst")]
     public string RuleFsts { get; set; }
 
+    [Option("vits-dict-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for jieba.")]
+    public string DictDir { get; set; }
+
     [Option("vits-data-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for espeak-ng.")]
     public string DataDir { get; set; }
 
@@ -129,6 +132,7 @@ to download more models.
     config.Model.Vits.Lexicon = options.Lexicon;
     config.Model.Vits.Tokens = options.Tokens;
     config.Model.Vits.DataDir = options.DataDir;
+    config.Model.Vits.DictDir = options.DictDir;
     config.Model.Vits.NoiseScale = options.NoiseScale;
     config.Model.Vits.NoiseScaleW = options.NoiseScaleW;
     config.Model.Vits.LengthScale = options.LengthScale;

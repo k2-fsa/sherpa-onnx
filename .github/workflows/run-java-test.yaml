@@ -38,7 +38,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest, macos-14]
 
     steps:
       - uses: actions/checkout@v4
@@ -50,10 +50,24 @@ jobs:
         with:
           key: ${{ matrix.os }}-java
 
+      - name: OS info
+        shell: bash
+        run: |
+          uname -a
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+
       - name: Display java version
         shell: bash
         run: |
           java -version
+          java -help
+          echo "----"
+          javac -version
+          javac -help
           echo "JAVA_HOME is: ${JAVA_HOME}"
 
           cmake --version
@@ -92,12 +106,51 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run java test (speaker identification)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-speaker-identification.sh
+          # Delete model files to save space
+          rm -rf *.onnx
+          rm -rf sr-data
+
+      - name:  Run java test (audio tagging)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-audio-tagging-zipformer-from-file.sh
+          # Delete model files to save space
+          rm -rf sherpa-onnx-zipformer-*
+
+          ./run-audio-tagging-ced-from-file.sh
+          rm -rf sherpa-onnx-ced-*
+
+      - name:  Run java test (add punctuations)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-add-punctuation-zh-en.sh
+          # Delete model files to save space
+          rm -rf sherpa-onnx-punct-*
+
+      - name:  Run java test (Spoken language identification)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-spoken-language-identification-whisper.sh
+          # Delete model files to save space
+          rm -rf sherpa-onnx-whisper-*
+
       - name:  Run java test (Streaming ASR)
         shell: bash
         run: |
           cd ./java-api-examples
           ./run-streaming-decode-file-ctc.sh
           # Delete model files to save space
+          rm -rf sherpa-onnx-streaming-*
+
+          ./run-streaming-decode-file-ctc-hlg.sh
           rm -rf sherpa-onnx-streaming-*
 
           ./run-streaming-decode-file-paraformer.sh
@@ -118,3 +171,24 @@ jobs:
 
           ./run-non-streaming-decode-file-whisper.sh
           rm -rf sherpa-onnx-whisper-*
+
+          ./run-non-streaming-decode-file-nemo.sh
+          rm -rf sherpa-onnx-nemo-*
+
+      - name:  Run java test (Non-Streaming TTS)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-tts-piper-en.sh
+          rm -rf vits-piper-*
+
+          ./run-non-streaming-tts-coqui-de.sh
+          rm -rf vits-coqui-*
+
+          ./run-non-streaming-tts-vits-zh.sh
+          rm -rf vits-zh-*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-wav-files-${{ matrix.os }}
+          path: java-api-examples/*.wav

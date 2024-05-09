@@ -1,0 +1,80 @@
+name: npm-addon
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: npm-addon-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  npm-addon:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Display node version
+        shell: bash
+        run: |
+          node --version
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-release-shared
+
+      - name: Prepare for publish
+        shell: bash
+        run: |
+          owner=${{ github.repository_owner }}
+          export owner
+
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+          src_dir=.github/scripts/node-addon
+          sed -i.bak s/SHERPA_ONNX_VERSION/$SHERPA_ONNX_VERSION/g $src_dir/package.json
+          sed -i.bak s/k2-fsa/$owner/g $src_dir/package.json
+
+          dst=sherpa-onnx-node
+          mkdir $dst
+          cp $src_dir/package.json $dst/
+          cp $src_dir/README.md $dst/
+          cp scripts/node-addon-api/lib/*.js $dst/
+
+      - name: Display files to be published
+        shell: bash
+        run: |
+          ls -lh ./sherpa-onnx-node
+
+      - name: Publish
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd ./sherpa-onnx-node
+          npm install
+          npm ci
+          # see https://docs.npmjs.com/generating-provenance-statements
+          npm publish --provenance --access public

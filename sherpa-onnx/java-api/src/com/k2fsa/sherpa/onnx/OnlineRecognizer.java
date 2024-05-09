@@ -1,14 +1,14 @@
 // Copyright 2022-2023 by zhaoming
 // Copyright 2024 Xiaomi Corporation
-package com.k2fsa.sherpa.onnx;
 
+package com.k2fsa.sherpa.onnx;
 
 public class OnlineRecognizer {
     static {
         System.loadLibrary("sherpa-onnx-jni");
     }
 
-    private long ptr = 0; // this is the asr engine ptrss
+    private long ptr = 0;
 
 
     public OnlineRecognizer(OnlineRecognizerConfig config) {

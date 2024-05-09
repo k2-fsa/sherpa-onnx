@@ -38,7 +38,14 @@ void SymbolTable::Init(std::istream &is) {
   std::string sym;
   int32_t id;
   while (is >> sym >> id) {
-    assert(sym2id_.count(sym) == 0);
+#if 0
+    // we disable the test here since for some multi-lingual BPE models
+    // from NeMo, the same symbol can appear multiple times with different IDs.
+    if (sym != " ") {
+      assert(sym2id_.count(sym) == 0);
+    }
+#endif
+
     assert(id2sym_.count(id) == 0);
 
     sym2id_.insert({sym, id});

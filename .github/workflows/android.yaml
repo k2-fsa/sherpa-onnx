@@ -57,6 +57,7 @@ jobs:
           ./build-android-arm64-v8a.sh
           mkdir -p jniLibs/arm64-v8a/
           cp -v ./build-android-arm64-v8a/install/lib/*.so ./jniLibs/arm64-v8a/
+          rm -rf  ./build-android-arm64-v8a/
 
       - name: build android armv7-eabi
         shell: bash
@@ -65,6 +66,7 @@ jobs:
           ./build-android-armv7-eabi.sh
           mkdir -p ./jniLibs/armeabi-v7a/
           cp -v ./build-android-armv7-eabi/install/lib/*.so ./jniLibs/armeabi-v7a/
+          rm -rf ./build-android-armv7-eabi
 
       - name: build android x86_64
         shell: bash
@@ -73,6 +75,7 @@ jobs:
           ./build-android-x86-64.sh
           mkdir -p ./jniLibs/x86_64
           cp -v ./build-android-x86-64/install/lib/*.so ./jniLibs/x86_64
+          rm -rf ./build-android-x86-64
 
       - name: build android x86
         shell: bash
@@ -81,6 +84,7 @@ jobs:
           ./build-android-x86.sh
           mkdir -p ./jniLibs/x86
           cp -v ./build-android-x86/install/lib/*.so ./jniLibs/x86
+          rm -rf ./build-android-x86
 
       - name: Copy files
         shell: bash
@@ -112,6 +116,8 @@ jobs:
           command: |
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
+            du -h -d1 .
+            ls -lh
 
             rm -rf huggingface
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
