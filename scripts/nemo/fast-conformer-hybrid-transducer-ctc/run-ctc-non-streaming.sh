@@ -83,11 +83,13 @@ mkdir -p $d/test_wavs
 cp -v $data/es-spanish.wav $d/test_wavs
 
 d=sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
+mkdir -p $d/test_wavs
 for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav; do
   python3 ./test-onnx-ctc-non-streaming.py \
     --model $d/model.onnx \
     --tokens $d/tokens.txt \
     --wav $data/$w
+  cp -v $data/$w $d/test_wavs
 done
 
 d=sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k

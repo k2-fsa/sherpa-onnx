@@ -13,7 +13,7 @@ concurrency:
 jobs:
   export-nemo-fast-conformer-hybrid-transducer-ctc-non-streaming:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: hybrid ctc non-streaming
+    name: Hybrid ctc non-streaming
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
