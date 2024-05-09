@@ -60,3 +60,42 @@ mv -v tokens.txt $d/
 ls -lh $d
 
 # Now test the exported model
+log "Download test data"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/spoken-language-identification-test-wavs.tar.bz2
+tar xvf spoken-language-identification-test-wavs.tar.bz2
+rm spoken-language-identification-test-wavs.tar.bz2
+data=spoken-language-identification-test-wavs
+
+d=sherpa-onnx-nemo-fast-conformer-ctc-en-24500
+python3 ./test-onnx-ctc-non-streaming.py \
+  --model $d/model.onnx \
+  --tokens $d/tokens.txt \
+  --wav $data/en-english.wav
+mkdir -p $d/test_wavs
+cp -v $data/en-english.wav $d/test_wavs
+
+d=sherpa-onnx-nemo-fast-conformer-ctc-es-1424
+python3 ./test-onnx-ctc-non-streaming.py \
+  --model $d/model.onnx \
+  --tokens $d/tokens.txt \
+  --wav $data/es-spanish.wav
+mkdir -p $d/test_wavs
+cp -v $data/es-spanish.wav $d/test_wavs
+
+d=sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
+for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav; do
+  python3 ./test-onnx-ctc-non-streaming.py \
+    --model $d/model.onnx \
+    --tokens $d/tokens.txt \
+    --wav $data/$w
+done
+
+d=sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
+mkdir -p $d/test_wavs
+for w in en-english.wav de-german.wav es-spanish.wav fr-french.wav hr-croatian.wav it-italian.wav po-polish.wav ru-russian.wav uk-ukrainian.wav; do
+  python3 ./test-onnx-ctc-non-streaming.py \
+    --model $d/model.onnx \
+    --tokens $d/tokens.txt \
+    --wav $data/$w
+  cp -v $data/$w $d/test_wavs
+done

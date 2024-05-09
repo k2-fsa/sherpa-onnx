@@ -1,6 +1,9 @@
 name: export-nemo-fast-conformer-transducer-to-onnx
 
 on:
+  push:
+    branches:
+      - export-nemo
   workflow_dispatch:
 
 concurrency:

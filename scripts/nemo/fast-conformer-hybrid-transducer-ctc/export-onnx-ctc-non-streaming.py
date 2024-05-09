@@ -70,8 +70,8 @@ def main():
     asr_model.export(filename)
 
     normalize_type = asr_model.cfg.preprocessor.normalize
-    if normalize_type == 'NA':
-      normalize_type = ''
+    if normalize_type == "NA":
+        normalize_type = ""
 
     meta_data = {
         "vocab_size": asr_model.decoder.vocab_size,
@@ -86,7 +86,7 @@ def main():
     }
     add_meta_data(filename, meta_data)
 
-    print('preprocessor', asr_model.cfg.preprocessor)
+    print("preprocessor", asr_model.cfg.preprocessor)
     print(meta_data)
 
 

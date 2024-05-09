@@ -66,19 +66,19 @@ class OnnxModel:
             sess_options=self.session_opts,
             providers=["CPUExecutionProvider"],
         )
-        print('==========Input==========')
+        print("==========Input==========")
         for i in self.model.get_inputs():
-          print(i)
-        print('==========Output==========')
+            print(i)
+        print("==========Output==========")
         for i in self.model.get_outputs():
-          print(i)
-        '''
+            print(i)
+        """
         ==========Input==========
         NodeArg(name='audio_signal', type='tensor(float)', shape=['audio_signal_dynamic_axes_1', 80, 'audio_signal_dynamic_axes_2'])
         NodeArg(name='length', type='tensor(int64)', shape=['length_dynamic_axes_1'])
         ==========Output==========
         NodeArg(name='logprobs', type='tensor(float)', shape=['logprobs_dynamic_axes_1', 'logprobs_dynamic_axes_2', 1025])
-        '''
+        """
 
         meta = self.model.get_modelmeta().custom_metadata_map
         self.normalize_type = meta["normalize_type"]
@@ -137,25 +137,25 @@ def main():
 
     print(audio.shape)
     features = compute_features(audio, fbank)
-    if model.normalize_type != '':
-      assert model.normalize_type == 'per_feature', model.normalize_type
-      features = torch.from_numpy(features)
-      mean = features.mean(dim=1, keepdims=True)
-      stddev = features.std(dim=1, keepdims=True)
-      features = (features - mean) / stddev
-      features = features.numpy()
+    if model.normalize_type != "":
+        assert model.normalize_type == "per_feature", model.normalize_type
+        features = torch.from_numpy(features)
+        mean = features.mean(dim=1, keepdims=True)
+        stddev = features.std(dim=1, keepdims=True)
+        features = (features - mean) / stddev
+        features = features.numpy()
 
-    print('features.shape', features.shape)
+    print("features.shape", features.shape)
     log_probs = model(features)
 
-    print('log_probs.shape', log_probs.shape)
+    print("log_probs.shape", log_probs.shape)
 
-    log_probs = log_probs[0, :, :] # remove batch dim
+    log_probs = log_probs[0, :, :]  # remove batch dim
     ids = torch.argmax(log_probs, dim=1).tolist()
     for k in ids:
-      if k != blank and k != prev:
-        ans.append(k)
-      prev = k
+        if k != blank and k != prev:
+            ans.append(k)
+        prev = k
 
     tokens = [id2token[i] for i in ans]
     underline = "▁"
