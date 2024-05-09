@@ -34,6 +34,7 @@ static bool EncodeBase(std::vector<std::string> &lines,
   bool has_scores = false;
   bool has_thresholds = false;
   bool has_phrases = false;
+  bool has_oov = false;
 
   for (const auto &line : lines) {
     float score = 0;
@@ -42,14 +43,6 @@ static bool EncodeBase(std::vector<std::string> &lines,
 
     std::istringstream iss(line);
     while (iss >> word) {
-      if (word.size() >= 3) {
-        // For BPE-based models, we replace ▁ with a space
-        // Unicode 9601, hex 0x2581, utf8 0xe29681
-        const uint8_t *p = reinterpret_cast<const uint8_t *>(word.c_str());
-        if (p[0] == 0xe2 && p[1] == 0x96 && p[2] == 0x81) {
-          word = word.replace(0, 3, " ");
-        }
-      }
       if (symbol_table.contains(word)) {
         int32_t id = symbol_table[word];
         tmp_ids.push_back(id);
@@ -72,7 +65,8 @@ static bool EncodeBase(std::vector<std::string> &lines,
                 "Cannot find ID for token %s at line: %s. (Hint: words on "
                 "the same line are separated by spaces)",
                 word.c_str(), line.c_str());
-            return false;
+            has_oov = true;
+            break;
         }
       }
     }
@@ -102,7 +96,7 @@ static bool EncodeBase(std::vector<std::string> &lines,
       thresholds->clear();
     }
   }
-  return true;
+  return !has_oov;
 }
 
 bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,

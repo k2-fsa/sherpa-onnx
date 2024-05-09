@@ -227,8 +227,9 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
                         bpe_encoder_.get(), &hotwords_)) {
-      SHERPA_ONNX_LOGE("Encode hotwords failed.");
-      exit(-1);
+      SHERPA_ONNX_LOGE(
+          "Failed to encode some hotwords, skip them already, see logs above "
+          "for details.");
     }
     hotwords_graph_ =
         std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
@@ -250,8 +251,9 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
                         bpe_encoder_.get(), &hotwords_)) {
-      SHERPA_ONNX_LOGE("Encode hotwords failed.");
-      exit(-1);
+      SHERPA_ONNX_LOGE(
+          "Failed to encode some hotwords, skip them already, see logs above "
+          "for details.");
     }
     hotwords_graph_ =
         std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);

@@ -368,8 +368,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,
                         bpe_encoder_.get(), &hotwords_)) {
-      SHERPA_ONNX_LOGE("Encode hotwords failed.");
-      exit(-1);
+      SHERPA_ONNX_LOGE(
+          "Failed to encode some hotwords, skip them already, see logs above "
+          "for details.");
     }
     hotwords_graph_ =
         std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
@@ -391,8 +392,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,
                         bpe_encoder_.get(), &hotwords_)) {
-      SHERPA_ONNX_LOGE("Encode hotwords failed.");
-      exit(-1);
+      SHERPA_ONNX_LOGE(
+          "Failed to encode some hotwords, skip them already, see logs above "
+          "for details.");
     }
     hotwords_graph_ =
         std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);

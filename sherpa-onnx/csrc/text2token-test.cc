@@ -116,4 +116,37 @@ TEST(TEXT2TOKEN, TEST_cjkchar_bpe) {
   EXPECT_EQ(ids, expected_ids);
 }
 
+TEST(TEXT2TOKEN, TEST_bbpe) {
+  std::ostringstream oss;
+  oss << dir << "/text2token/tokens_bbpe.txt";
+  std::string tokens = oss.str();
+  oss.clear();
+  oss.str("");
+  oss << dir << "/text2token/bbpe.vocab";
+  std::string bpe = oss.str();
+  if (!std::ifstream(tokens).good() || !std::ifstream(bpe).good()) {
+    SHERPA_ONNX_LOGE(
+        "No test data found, skipping TEST_bbpe()."
+        "You can download the test data by: "
+        "git clone https://github.com/pkufool/sherpa-test-data.git "
+        "/tmp/sherpa-test-data");
+    return;
+  }
+
+  auto sym_table = SymbolTable(tokens);
+  auto bpe_processor = std::make_unique<ssentencepiece::Ssentencepiece>(bpe);
+
+  std::string text = "频繁\n李鞑靼";
+
+  std::istringstream iss(text);
+
+  std::vector<std::vector<int32_t>> ids;
+
+  auto r = EncodeHotwords(iss, "bpe", sym_table, bpe_processor.get(), &ids);
+
+  std::vector<std::vector<int32_t>> expected_ids(
+      {{259, 1118, 234, 188, 132}, {259, 1585, 236, 161, 148, 236, 160, 191}});
+  EXPECT_EQ(ids, expected_ids);
+}
+
 }  // namespace sherpa_onnx

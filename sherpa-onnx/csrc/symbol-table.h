@@ -35,7 +35,7 @@ class SymbolTable {
   std::string ToString() const;
 
   /// Return the symbol corresponding to the given ID.
-  const std::string &operator[](int32_t id) const;
+  const std::string operator[](int32_t id) const;
   /// Return the ID corresponding to the given symbol.
   int32_t operator[](const std::string &sym) const;
 
