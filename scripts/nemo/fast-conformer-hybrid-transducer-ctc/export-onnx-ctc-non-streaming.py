@@ -15,6 +15,11 @@ def get_args():
         type=str,
         required=True,
     )
+    parser.add_argument(
+        "--doc",
+        type=str,
+        default="",
+    )
     return parser.parse_args()
 
 
@@ -45,6 +50,8 @@ def main():
     model_name = args.model
 
     asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=model_name)
+    print(asr_model.cfg)
+    print(asr_model)
 
     with open("./tokens.txt", "w", encoding="utf-8") as f:
         for i, s in enumerate(asr_model.joint.vocabulary):
@@ -62,18 +69,24 @@ def main():
 
     asr_model.export(filename)
 
+    normalize_type = asr_model.cfg.preprocessor.normalize
+    if normalize_type == 'NA':
+      normalize_type = ''
+
     meta_data = {
         "vocab_size": asr_model.decoder.vocab_size,
-        "normalize_type": "None",
+        "normalize_type": normalize_type,
         "subsampling_factor": 8,
         "model_type": "EncDecHybridRNNTCTCBPEModel",
         "version": "1",
         "model_author": "NeMo",
         "url": f"https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/{model_name}",
         "comment": "Only the CTC branch is exported",
+        "doc": args.doc,
     }
     add_meta_data(filename, meta_data)
 
+    print('preprocessor', asr_model.cfg.preprocessor)
     print(meta_data)
 
 
