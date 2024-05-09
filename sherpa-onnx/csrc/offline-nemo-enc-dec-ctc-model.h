@@ -81,6 +81,8 @@ class OfflineNemoEncDecCtcModel : public OfflineCtcModel {
   std::unique_ptr<Impl> impl_;
 };
 
+using OfflineNemoEncDecHybridRNNTCTCBPEModel = OfflineNemoEncDecCtcModel;
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_OFFLINE_NEMO_ENC_DEC_CTC_MODEL_H_

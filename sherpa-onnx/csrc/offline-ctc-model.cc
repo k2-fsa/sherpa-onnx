@@ -20,6 +20,7 @@ namespace {
 
 enum class ModelType {
   kEncDecCTCModelBPE,
+  kEncDecHybridRNNTCTCBPEModel,
   kTdnn,
   kZipformerCtc,
   kWenetCtc,
@@ -55,7 +56,10 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
         "No model_type in the metadata!\n"
         "If you are using models from NeMo, please refer to\n"
         "https://huggingface.co/csukuangfj/"
-        "sherpa-onnx-nemo-ctc-en-citrinet-512/blob/main/add-model-metadata.py"
+        "sherpa-onnx-nemo-ctc-en-citrinet-512/blob/main/add-model-metadata.py\n"
+        "or "
+        "https://github.com/k2-fsa/sherpa-onnx/tree/master/scripts/nemo/"
+        "fast-conformer-hybrid-transducer-ctc\n"
         "If you are using models from WeNet, please refer to\n"
         "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/wenet/"
         "run.sh\n"
@@ -66,6 +70,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
   if (model_type.get() == std::string("EncDecCTCModelBPE")) {
     return ModelType::kEncDecCTCModelBPE;
+  } else if (model_type.get() == std::string("EncDecHybridRNNTCTCBPEModel")) {
+    return ModelType::kEncDecHybridRNNTCTCBPEModel;
   } else if (model_type.get() == std::string("tdnn")) {
     return ModelType::kTdnn;
   } else if (model_type.get() == std::string("zipformer2_ctc")) {
@@ -105,6 +111,9 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   switch (model_type) {
     case ModelType::kEncDecCTCModelBPE:
       return std::make_unique<OfflineNemoEncDecCtcModel>(config);
+      break;
+    case ModelType::kEncDecHybridRNNTCTCBPEModel:
+      return std::make_unique<OfflineNemoEncDecHybridRNNTCTCBPEModel>(config);
       break;
     case ModelType::kTdnn:
       return std::make_unique<OfflineTdnnCtcModel>(config);
@@ -152,6 +161,9 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   switch (model_type) {
     case ModelType::kEncDecCTCModelBPE:
       return std::make_unique<OfflineNemoEncDecCtcModel>(mgr, config);
+      break;
+    case ModelType::kEncDecHybridRNNTCTCBPEModel:
+      return std::make_unique<OfflineNemoEncDecHybridRNNTCTCBPEModel>(config);
       break;
     case ModelType::kTdnn:
       return std::make_unique<OfflineTdnnCtcModel>(mgr, config);

@@ -122,7 +122,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerParaformerImpl>(config);
   }
 
-  if (model_type == "EncDecCTCModelBPE" || model_type == "tdnn" ||
+  if (model_type == "EncDecCTCModelBPE" ||
+      model_type == "EncDecHybridRNNTCTCBPEModel" || model_type == "tdnn" ||
       model_type == "zipformer2_ctc" || model_type == "wenet_ctc") {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
@@ -137,6 +138,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - Non-streaming transducer models from icefall\n"
       " - Non-streaming Paraformer models from FunASR\n"
       " - EncDecCTCModelBPE models from NeMo\n"
+      " - EncDecHybridRNNTCTCBPEModel models from NeMo\n"
       " - Whisper models\n"
       " - Tdnn models\n"
       " - Zipformer CTC models\n"
@@ -252,7 +254,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
   }
 
-  if (model_type == "EncDecCTCModelBPE" || model_type == "tdnn" ||
+  if (model_type == "EncDecCTCModelBPE" ||
+      model_type == "EncDecHybridRNNTCTCBPEModel" || model_type == "tdnn" ||
       model_type == "zipformer2_ctc" || model_type == "wenet_ctc") {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }
@@ -267,6 +270,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - Non-streaming transducer models from icefall\n"
       " - Non-streaming Paraformer models from FunASR\n"
       " - EncDecCTCModelBPE models from NeMo\n"
+      " - EncDecHybridRNNTCTCBPEModel models from NeMo\n"
       " - Whisper models\n"
       " - Tdnn models\n"
       " - Zipformer CTC models\n"
