@@ -67,9 +67,13 @@ void SymbolTable::Init(std::istream &is) {
     // the following check.
     //
     // Note: Only id2sym_ matters as we use it to convert ID to symbols.
+#if 0
+    // we disable the test here since for some multi-lingual BPE models
+    // from NeMo, the same symbol can appear multiple times with different IDs.
     if (sym != " ") {
       assert(sym2id_.count(sym) == 0);
     }
+#endif
 
     assert(id2sym_.count(id) == 0);
 

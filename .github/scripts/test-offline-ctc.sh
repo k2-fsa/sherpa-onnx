@@ -13,14 +13,111 @@ echo "PATH: $PATH"
 
 which $EXE
 
+log "-----------------------------------------------------------------"
+log "Run Nemo fast conformer hybrid transducer ctc models (CTC branch)"
+log "-----------------------------------------------------------------"
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
+name=$(basename $url)
+curl -SL -O $url
+tar xvf $name
+rm $name
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+log "test $repo"
+test_wavs=(
+de-german.wav
+es-spanish.wav
+hr-croatian.wav
+po-polish.wav
+uk-ukrainian.wav
+en-english.wav
+fr-french.wav
+it-italian.wav
+ru-russian.wav
+)
+for w in ${test_wavs[@]}; do
+  time $EXE \
+    --tokens=$repo/tokens.txt \
+    --nemo-ctc-model=$repo/model.onnx \
+    --debug=1 \
+    $repo/test_wavs/$w
+done
+
+rm -rf $repo
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-en-24500.tar.bz2
+name=$(basename $url)
+curl -SL -O $url
+tar xvf $name
+rm $name
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+log "Test $repo"
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --nemo-ctc-model=$repo/model.onnx \
+  --debug=1 \
+  $repo/test_wavs/en-english.wav
+
+rm -rf $repo
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-es-1424.tar.bz2
+name=$(basename $url)
+curl -SL -O $url
+tar xvf $name
+rm $name
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+log "test $repo"
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --nemo-ctc-model=$repo/model.onnx \
+  --debug=1 \
+  $repo/test_wavs/es-spanish.wav
+
+rm -rf $repo
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288.tar.bz2
+name=$(basename $url)
+curl -SL -O $url
+tar xvf $name
+rm $name
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+log "Test $repo"
+
+test_wavs=(
+en-english.wav
+de-german.wav
+fr-french.wav
+es-spanish.wav
+)
+
+for w in ${test_wavs[@]}; do
+  time $EXE \
+    --tokens=$repo/tokens.txt \
+    --nemo-ctc-model=$repo/model.onnx \
+    --debug=1 \
+    $repo/test_wavs/$w
+done
+
+rm -rf $repo
+
 log "------------------------------------------------------------"
 log "Run Wenet models"
 log "------------------------------------------------------------"
 wenet_models=(
 sherpa-onnx-zh-wenet-aishell
-sherpa-onnx-zh-wenet-aishell2
+# sherpa-onnx-zh-wenet-aishell2
 # sherpa-onnx-zh-wenet-wenetspeech
-sherpa-onnx-zh-wenet-multi-cn
+# sherpa-onnx-zh-wenet-multi-cn
 sherpa-onnx-en-wenet-librispeech
 # sherpa-onnx-en-wenet-gigaspeech
 )
