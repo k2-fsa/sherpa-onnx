@@ -47,7 +47,7 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
 @torch.no_grad()
 def main():
     args = get_args()
-    model_name = f"stt_en_fastconformer_hybrid_large_streaming_{args.model}ms"
+    model_name = args.model
 
     asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=model_name)
 
