@@ -16,7 +16,7 @@ ms=(
 
 for m in ${ms[@]}; do
   ./export-onnx-transducer.py --model $m
-  d=sherpa-onnx-nemo-streaming-fast-conformer-transducer-${m}ms
+  d=sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-${m}ms
   if [ ! -f $d/encoder.onnx ]; then
     mkdir -p $d
     mv -v encoder.onnx $d/
@@ -30,7 +30,7 @@ done
 # Now test the exported models
 
 for m in ${ms[@]}; do
-  d=sherpa-onnx-nemo-streaming-fast-conformer-transducer-${m}ms
+  d=sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-${m}ms
   python3 ./test-onnx-transducer.py \
     --encoder $d/encoder.onnx \
     --decoder $d/decoder.onnx \

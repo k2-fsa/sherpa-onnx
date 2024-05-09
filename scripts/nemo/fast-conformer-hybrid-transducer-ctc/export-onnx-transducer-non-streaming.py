@@ -14,7 +14,11 @@ def get_args():
         "--model",
         type=str,
         required=True,
-        choices=["80", "480", "1040"],
+    )
+    parser.add_argument(
+        "--doc",
+        type=str,
+        default="",
     )
     return parser.parse_args()
 
@@ -43,7 +47,7 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
 @torch.no_grad()
 def main():
     args = get_args()
-    model_name = f"stt_en_fastconformer_hybrid_large_streaming_{args.model}ms"
+    model_name = args.model
 
     asr_model = nemo_asr.models.ASRModel.from_pretrained(model_name=model_name)
 
@@ -57,35 +61,7 @@ def main():
     asr_model.change_decoding_strategy(decoder_type=decoder_type)
     asr_model.eval()
 
-    assert asr_model.encoder.streaming_cfg is not None
-    if isinstance(asr_model.encoder.streaming_cfg.chunk_size, list):
-        chunk_size = asr_model.encoder.streaming_cfg.chunk_size[1]
-    else:
-        chunk_size = asr_model.encoder.streaming_cfg.chunk_size
-
-    if isinstance(asr_model.encoder.streaming_cfg.pre_encode_cache_size, list):
-        pre_encode_cache_size = asr_model.encoder.streaming_cfg.pre_encode_cache_size[1]
-    else:
-        pre_encode_cache_size = asr_model.encoder.streaming_cfg.pre_encode_cache_size
-    window_size = chunk_size + pre_encode_cache_size
-
-    print("chunk_size", chunk_size)
-    print("pre_encode_cache_size", pre_encode_cache_size)
-    print("window_size", window_size)
-
-    chunk_shift = chunk_size
-
-    # cache_last_channel: (batch_size, dim1, dim2, dim3)
-    cache_last_channel_dim1 = len(asr_model.encoder.layers)
-    cache_last_channel_dim2 = asr_model.encoder.streaming_cfg.last_channel_cache_size
-    cache_last_channel_dim3 = asr_model.encoder.d_model
-
-    # cache_last_time: (batch_size, dim1, dim2, dim3)
-    cache_last_time_dim1 = len(asr_model.encoder.layers)
-    cache_last_time_dim2 = asr_model.encoder.d_model
-    cache_last_time_dim3 = asr_model.encoder.conv_context_size[0]
-
-    asr_model.set_export_config({"decoder_type": "rnnt", "cache_support": True})
+    asr_model.set_export_config({"decoder_type": "rnnt"})
 
     # asr_model.export("model.onnx")
     asr_model.encoder.export("encoder.onnx")
@@ -99,18 +75,9 @@ def main():
     normalize_type = asr_model.cfg.preprocessor.normalize
     if normalize_type == "NA":
         normalize_type = ""
-
     meta_data = {
         "vocab_size": asr_model.decoder.vocab_size,
-        "window_size": window_size,
-        "chunk_shift": chunk_shift,
         "normalize_type": normalize_type,
-        "cache_last_channel_dim1": cache_last_channel_dim1,
-        "cache_last_channel_dim2": cache_last_channel_dim2,
-        "cache_last_channel_dim3": cache_last_channel_dim3,
-        "cache_last_time_dim1": cache_last_time_dim1,
-        "cache_last_time_dim2": cache_last_time_dim2,
-        "cache_last_time_dim3": cache_last_time_dim3,
         "pred_rnn_layers": asr_model.decoder.pred_rnn_layers,
         "pred_hidden": asr_model.decoder.pred_hidden,
         "subsampling_factor": 8,
@@ -119,6 +86,7 @@ def main():
         "model_author": "NeMo",
         "url": f"https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/{model_name}",
         "comment": "Only the transducer branch is exported",
+        "doc": args.doc,
     }
     add_meta_data("encoder.onnx", meta_data)
 
