@@ -1,9 +1,6 @@
 name: export-nemo-fast-conformer-ctc-to-onnx
 
 on:
-  push:
-    branches:
-      - export-nemo
   workflow_dispatch:
 
 concurrency:
