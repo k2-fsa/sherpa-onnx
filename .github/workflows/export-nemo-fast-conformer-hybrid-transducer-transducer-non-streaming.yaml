@@ -1,9 +1,6 @@
 name: export-nemo-fast-conformer-transducer-non-streaming
 
 on:
-  push:
-    branches:
-      - export-nemo
   workflow_dispatch:
 
 concurrency:
