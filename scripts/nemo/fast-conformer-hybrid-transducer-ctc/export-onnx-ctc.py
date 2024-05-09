@@ -91,11 +91,15 @@ def main():
 
     asr_model.export(filename)
 
+    normalize_type = asr_model.cfg.preprocessor.normalize
+    if normalize_type == "NA":
+        normalize_type = ""
+
     meta_data = {
         "vocab_size": asr_model.decoder.vocab_size,
         "window_size": window_size,
         "chunk_shift": chunk_shift,
-        "normalize_type": "None",
+        "normalize_type": normalize_type,
         "cache_last_channel_dim1": cache_last_channel_dim1,
         "cache_last_channel_dim2": cache_last_channel_dim2,
         "cache_last_channel_dim3": cache_last_channel_dim3,
