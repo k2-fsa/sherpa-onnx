@@ -23,6 +23,7 @@ curl -SL -O $url
 tar xvf $name
 rm $name
 repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
 
 log "test $repo"
 test_wavs=(
@@ -40,6 +41,7 @@ for w in ${test_wavs[@]}; do
   time $EXE \
     --tokens=$repo/tokens.txt \
     --nemo-ctc-model=$repo/model.onnx \
+    --debug=1 \
     $repo/test_wavs/$w
 done
 
@@ -51,12 +53,14 @@ curl -SL -O $url
 tar xvf $name
 rm $name
 repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
 
 log "Test $repo"
 
 time $EXE \
   --tokens=$repo/tokens.txt \
   --nemo-ctc-model=$repo/model.onnx \
+  --debug=1 \
   $repo/test_wavs/en-english.wav
 
 rm -rf $repo
@@ -67,12 +71,14 @@ curl -SL -O $url
 tar xvf $name
 rm $name
 repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
 
 log "test $repo"
 
 time $EXE \
   --tokens=$repo/tokens.txt \
   --nemo-ctc-model=$repo/model.onnx \
+  --debug=1 \
   $repo/test_wavs/es-spanish.wav
 
 rm -rf $repo
@@ -83,6 +89,7 @@ curl -SL -O $url
 tar xvf $name
 rm $name
 repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
 
 log "Test $repo"
 
@@ -97,6 +104,7 @@ for w in ${test_wavs[@]}; do
   time $EXE \
     --tokens=$repo/tokens.txt \
     --nemo-ctc-model=$repo/model.onnx \
+    --debug=1 \
     $repo/test_wavs/$w
 done
 

@@ -128,6 +128,25 @@ jobs:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: install/*
 
+      - name: Test spoken language identification (C++ API)
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-language-identification
+
+          .github/scripts/test-spoken-language-identification.sh
+
+      - name: Test C API
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export SLID_EXE=spoken-language-identification-c-api
+          export SID_EXE=speaker-identification-c-api
+          export AT_EXE=audio-tagging-c-api
+          export PUNCT_EXE=add-punctuation-c-api
+
+          .github/scripts/test-c-api.sh
+
       - name: Test offline CTC
         shell: bash
         run: |
@@ -152,17 +171,6 @@ jobs:
 
           .github/scripts/test-offline-punctuation.sh
 
-      - name: Test C API
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export SLID_EXE=spoken-language-identification-c-api
-          export SID_EXE=speaker-identification-c-api
-          export AT_EXE=audio-tagging-c-api
-          export PUNCT_EXE=add-punctuation-c-api
-
-          .github/scripts/test-c-api.sh
-
       - name: Test Audio tagging
         shell: bash
         run: |
@@ -170,14 +178,6 @@ jobs:
           export EXE=sherpa-onnx-offline-audio-tagging
 
           .github/scripts/test-audio-tagging.sh
-
-      - name: Test spoken language identification (C++ API)
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline-language-identification
-
-          .github/scripts/test-spoken-language-identification.sh
 
       - name: Test transducer kws
         shell: bash
