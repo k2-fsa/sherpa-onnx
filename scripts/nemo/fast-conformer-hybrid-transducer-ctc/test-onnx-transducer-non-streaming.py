@@ -55,14 +55,17 @@ def compute_features(audio, fbank):
     ans = np.stack(ans)
     return ans
 
+
 def display(sess):
-  print("==========Input==========")
-  for i in sess.get_inputs():
-    print(i)
-  print("==========Output==========")
-  for i in sess.get_outputs():
-    print(i)
-'''
+    print("==========Input==========")
+    for i in sess.get_inputs():
+        print(i)
+    print("==========Output==========")
+    for i in sess.get_outputs():
+        print(i)
+
+
+"""
 encoder
 ==========Input==========
 NodeArg(name='audio_signal', type='tensor(float)', shape=['audio_signal_dynamic_axes_1', 80, 'audio_signal_dynamic_axes_2'])
@@ -89,7 +92,8 @@ NodeArg(name='encoder_outputs', type='tensor(float)', shape=['encoder_outputs_dy
 NodeArg(name='decoder_outputs', type='tensor(float)', shape=['decoder_outputs_dynamic_axes_1', 640, 'decoder_outputs_dynamic_axes_2'])
 ==========Output==========
 NodeArg(name='outputs', type='tensor(float)', shape=['outputs_dynamic_axes_1', 'outputs_dynamic_axes_2', 'outputs_dynamic_axes_3', 1025])
-'''
+"""
+
 
 class OnnxModel:
     def __init__(
@@ -158,10 +162,7 @@ class OnnxModel:
         # x: [1, C, T]
         x_lens = torch.tensor([x.shape[-1]], dtype=torch.int64)
 
-        (
-            encoder_out,
-            out_len
-        ) = self.encoder.run(
+        (encoder_out, out_len) = self.encoder.run(
             [
                 self.encoder.get_outputs()[0].name,
                 self.encoder.get_outputs()[1].name,
@@ -276,18 +277,21 @@ def main():
     encoder_out = model.run_encoder(features)
     # encoder_out:[batch_size, dim, T)
     for t in range(encoder_out.shape[2]):
-      encoder_out_t = encoder_out[:, :, t : t + 1]
-      logits = model.run_joiner(encoder_out_t, decoder_out)
-      logits = torch.from_numpy(logits)
-      logits = logits.squeeze()
-      idx = torch.argmax(logits, dim=-1).item()
-      if idx != blank:
-        ans.append(idx)
-        state0 = state0_next
-        state1 = state1_next
-        decoder_out, state0_next, state1_next = model.run_decoder(ans[-1], state0, state1)
+        encoder_out_t = encoder_out[:, :, t : t + 1]
+        logits = model.run_joiner(encoder_out_t, decoder_out)
+        logits = torch.from_numpy(logits)
+        logits = logits.squeeze()
+        idx = torch.argmax(logits, dim=-1).item()
+        if idx != blank:
+            ans.append(idx)
+            state0 = state0_next
+            state1 = state1_next
+            decoder_out, state0_next, state1_next = model.run_decoder(
+                ans[-1], state0, state1
+            )
 
     ans = ans[1:]  # remove the first blank
+    print(ans)
     tokens = [id2token[i] for i in ans]
     underline = "▁"
     #  underline = b"\xe2\x96\x81".decode()
