@@ -166,6 +166,69 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   memset(&c, 0, sizeof(c));
   c.feat_config = GetFeatureConfig(config);
   c.model_config = GetOnlineModelConfig(config);
+
+  if (config.Has("decodingMethod") && config.Get("decodingMethod").IsString()) {
+    Napi::String decoding_method =
+        config.Get("decodingMethod").As<Napi::String>();
+    std::string s = decoding_method.Utf8Value();
+    char *p = new char[s.size() + 1];
+    std::copy(s.begin(), s.end(), p);
+    p[s.size()] = 0;
+
+    c.decoding_method = p;
+  }
+
+  if (config.Has("maxActivePaths") && config.Get("maxActivePaths").IsNumber()) {
+    c.max_active_paths =
+        config.Get("maxActivePaths").As<Napi::Number>().Int32Value();
+  }
+
+  // enableEndpoint can be either a boolean or an integer
+  if (config.Has("enableEndpoint") &&
+      (config.Get("enableEndpoint").IsNumber() ||
+       config.Get("enableEndpoint").IsBoolean())) {
+    if (config.Get("enableEndpoint").IsNumber()) {
+      c.enable_endpoint =
+          config.Get("enableEndpoint").As<Napi::Number>().Int32Value();
+    } else {
+      c.enable_endpoint =
+          config.Get("enableEndpoint").As<Napi::Boolean>().Value();
+    }
+  }
+
+  if (config.Has("rule1MinTrailingSilence") &&
+      config.Get("rule1MinTrailingSilence").IsNumber()) {
+    c.rule1_min_trailing_silence =
+        config.Get("rule1MinTrailingSilence").As<Napi::Number>().FloatValue();
+  }
+
+  if (config.Has("rule2MinTrailingSilence") &&
+      config.Get("rule2MinTrailingSilence").IsNumber()) {
+    c.rule2_min_trailing_silence =
+        config.Get("rule2MinTrailingSilence").As<Napi::Number>().FloatValue();
+  }
+
+  if (config.Has("rule3MinUtteranceLength") &&
+      config.Get("rule3MinUtteranceLength").IsNumber()) {
+    c.rule3_min_utterance_length =
+        config.Get("rule3MinUtteranceLength").As<Napi::Number>().FloatValue();
+  }
+
+  if (config.Has("hotwordsFile") && config.Get("hotwordsFile").IsString()) {
+    Napi::String hotwords_file = config.Get("hotwordsFile").As<Napi::String>();
+    std::string s = hotwords_file.Utf8Value();
+    char *p = new char[s.size() + 1];
+    std::copy(s.begin(), s.end(), p);
+    p[s.size()] = 0;
+
+    c.hotwords_file = p;
+  }
+
+  if (config.Has("hotwordsScore") && config.Get("hotwordsScore").IsNumber()) {
+    c.hotwords_score =
+        config.Get("hotwordsScore").As<Napi::Number>().FloatValue();
+  }
+
 #if 0
   printf("encoder: %s\n", c.model_config.transducer.encoder
                               ? c.model_config.transducer.encoder
@@ -184,6 +247,15 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   printf("debug: %d\n", c.model_config.debug);
   printf("model_type: %s\n",
          c.model_config.model_type ? c.model_config.model_type : "no");
+
+  printf("decoding_method: %s\n", c.decoding_method ? c.decoding_method : "no");
+  printf("max_active_paths: %d\n", c.max_active_paths);
+  printf("enable_endpoint: %d\n", c.enable_endpoint);
+  printf("rule1_min_trailing_silence: %.3f\n", c.rule1_min_trailing_silence);
+  printf("rule2_min_trailing_silence: %.3f\n", c.rule2_min_trailing_silence);
+  printf("rule3_min_utterance_length: %.3f\n", c.rule3_min_utterance_length);
+  printf("hotwords_file: %s\n", c.hotwords_file ? c.hotwords_file : "no");
+  printf("hotwords_score: %.3f\n", c.hotwords_score);
 #endif
 
   SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&c);
@@ -210,6 +282,14 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
 
   if (c.model_config.model_type) {
     delete[] c.model_config.model_type;
+  }
+
+  if (c.decoding_method) {
+    delete[] c.decoding_method;
+  }
+
+  if (c.hotwords_file) {
+    delete[] c.hotwords_file;
   }
 
   if (!recognizer) {
@@ -270,7 +350,7 @@ static void AcceptWaveformWrapper(const Napi::CallbackInfo &info) {
   }
 
   if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env, "Argument 0 should be a online stream pointer.")
+    Napi::TypeError::New(env, "Argument 0 should be an online stream pointer.")
         .ThrowAsJavaScriptException();
 
     return;
@@ -337,15 +417,14 @@ static Napi::Boolean IsOnlineStreamReadyWrapper(
 
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "Argument 0 should be a online recognizer pointer.")
+                         "Argument 0 should be an online recognizer pointer.")
         .ThrowAsJavaScriptException();
 
     return {};
   }
 
   if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "Argument 1 should be a online recognizer pointer.")
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
         .ThrowAsJavaScriptException();
 
     return {};
@@ -375,15 +454,14 @@ static void DecodeOnlineStreamWrapper(const Napi::CallbackInfo &info) {
 
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "Argument 0 should be a online recognizer pointer.")
+                         "Argument 0 should be an online recognizer pointer.")
         .ThrowAsJavaScriptException();
 
     return;
   }
 
   if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "Argument 1 should be a online recognizer pointer.")
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
         .ThrowAsJavaScriptException();
 
     return;
@@ -412,15 +490,14 @@ static Napi::String GetOnlineStreamResultAsJsonWrapper(
 
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "Argument 0 should be a online recognizer pointer.")
+                         "Argument 0 should be an online recognizer pointer.")
         .ThrowAsJavaScriptException();
 
     return {};
   }
 
   if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "Argument 1 should be a online recognizer pointer.")
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
         .ThrowAsJavaScriptException();
 
     return {};
@@ -438,6 +515,175 @@ static Napi::String GetOnlineStreamResultAsJsonWrapper(
   DestroyOnlineStreamResultJson(json);
 
   return s;
+}
+
+static void InputFinishedWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 1) {
+    std::ostringstream os;
+    os << "Expect only 1 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  SherpaOnnxOnlineStream *stream =
+      info[0].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  InputFinished(stream);
+}
+
+static void ResetOnlineStreamWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 0 should be an online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  SherpaOnnxOnlineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
+
+  SherpaOnnxOnlineStream *stream =
+      info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  Reset(recognizer, stream);
+}
+
+static Napi::Boolean IsEndpointWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 0 should be an online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  SherpaOnnxOnlineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
+
+  SherpaOnnxOnlineStream *stream =
+      info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  int32_t is_endpoint = IsEndpoint(recognizer, stream);
+
+  return Napi::Boolean::New(env, is_endpoint);
+}
+
+static Napi::External<SherpaOnnxDisplay> CreateDisplayWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 1) {
+    std::ostringstream os;
+    os << "Expect only 1 argument. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsNumber()) {
+    Napi::TypeError::New(env, "Expect a number as the argument")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+  int32_t max_word_per_line = info[0].As<Napi::Number>().Int32Value();
+
+  const SherpaOnnxDisplay *display = CreateDisplay(max_word_per_line);
+
+  return Napi::External<SherpaOnnxDisplay>::New(
+      env, const_cast<SherpaOnnxDisplay *>(display),
+      [](Napi::Env env, SherpaOnnxDisplay *display) {
+        DestroyDisplay(display);
+      });
+}
+
+static void PrintWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 3) {
+    std::ostringstream os;
+    os << "Expect only 3 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "Argument 1 should be a number.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[2].IsString()) {
+    Napi::TypeError::New(env, "Argument 2 should be a string.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  SherpaOnnxDisplay *display =
+      info[0].As<Napi::External<SherpaOnnxDisplay>>().Data();
+
+  int32_t idx = info[1].As<Napi::Number>().Int32Value();
+
+  Napi::String text = info[2].As<Napi::String>();
+  std::string s = text.Utf8Value();
+  SherpaOnnxPrint(display, idx, s.c_str());
 }
 
 void InitStreamingAsr(Napi::Env env, Napi::Object exports) {
@@ -458,4 +704,19 @@ void InitStreamingAsr(Napi::Env env, Napi::Object exports) {
 
   exports.Set(Napi::String::New(env, "getOnlineStreamResultAsJson"),
               Napi::Function::New(env, GetOnlineStreamResultAsJsonWrapper));
+
+  exports.Set(Napi::String::New(env, "inputFinished"),
+              Napi::Function::New(env, InputFinishedWrapper));
+
+  exports.Set(Napi::String::New(env, "reset"),
+              Napi::Function::New(env, ResetOnlineStreamWrapper));
+
+  exports.Set(Napi::String::New(env, "isEndpoint"),
+              Napi::Function::New(env, IsEndpointWrapper));
+
+  exports.Set(Napi::String::New(env, "createDisplay"),
+              Napi::Function::New(env, CreateDisplayWrapper));
+
+  exports.Set(Napi::String::New(env, "print"),
+              Napi::Function::New(env, PrintWrapper));
 }
