@@ -23,6 +23,7 @@ set(srcs
   online-ctc-fst-decoder-config.cc
   online-lm-config.cc
   online-model-config.cc
+  online-nemo-ctc-model-config.cc
   online-paraformer-model-config.cc
   online-recognizer.cc
   online-stream.cc

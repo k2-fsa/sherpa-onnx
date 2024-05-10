@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "sherpa-onnx/csrc/online-nemo-ctc-model-config.h"
 #include "sherpa-onnx/csrc/online-paraformer-model-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/csrc/online-wenet-ctc-model-config.h"
@@ -18,6 +19,7 @@ struct OnlineModelConfig {
   OnlineParaformerModelConfig paraformer;
   OnlineWenetCtcModelConfig wenet_ctc;
   OnlineZipformer2CtcModelConfig zipformer2_ctc;
+  OnlineNeMoCtcModelConfig nemo_ctc;
   std::string tokens;
   int32_t num_threads = 1;
   int32_t warm_up = 0;
@@ -30,6 +32,7 @@ struct OnlineModelConfig {
   //  - zipformer, zipformer transducer from icefall
   //  - zipformer2, zipformer2 transducer or CTC from icefall
   //  - wenet_ctc, wenet CTC model
+  //  - nemo_ctc, NeMo CTC model
   //
   // All other values are invalid and lead to loading the model twice.
   std::string model_type;
@@ -39,6 +42,7 @@ struct OnlineModelConfig {
                     const OnlineParaformerModelConfig &paraformer,
                     const OnlineWenetCtcModelConfig &wenet_ctc,
                     const OnlineZipformer2CtcModelConfig &zipformer2_ctc,
+                    const OnlineNeMoCtcModelConfig &nemo_ctc,
                     const std::string &tokens, int32_t num_threads,
                     int32_t warm_up, bool debug, const std::string &provider,
                     const std::string &model_type)
@@ -46,6 +50,7 @@ struct OnlineModelConfig {
         paraformer(paraformer),
         wenet_ctc(wenet_ctc),
         zipformer2_ctc(zipformer2_ctc),
+        nemo_ctc(nemo_ctc),
         tokens(tokens),
         num_threads(num_threads),
         warm_up(warm_up),

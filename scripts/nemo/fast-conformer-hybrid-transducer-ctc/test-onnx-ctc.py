@@ -100,7 +100,7 @@ class OnnxModel:
             dtype=torch.float32,
         ).numpy()
 
-        self.cache_last_channel_len = torch.ones([1], dtype=torch.int64).numpy()
+        self.cache_last_channel_len = torch.zeros([1], dtype=torch.int64).numpy()
 
     def __call__(self, x: np.ndarray):
         # x: (T, C)
