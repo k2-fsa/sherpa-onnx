@@ -12,9 +12,11 @@ from _sherpa_onnx import (
 from _sherpa_onnx import OnlineRecognizer as _Recognizer
 from _sherpa_onnx import (
     OnlineRecognizerConfig,
+    OnlineRecognizerResult,
     OnlineStream,
     OnlineTransducerModelConfig,
     OnlineWenetCtcModelConfig,
+    OnlineNeMoCtcModelConfig,
     OnlineZipformer2CtcModelConfig,
     OnlineCtcFstDecoderConfig,
 )
@@ -644,6 +646,9 @@ class OnlineRecognizer(object):
 
     def is_ready(self, s: OnlineStream) -> bool:
         return self.recognizer.is_ready(s)
+
+    def get_result_all(self, s: OnlineStream) -> OnlineRecognizerResult:
+        return self.recognizer.get_result(s)
 
     def get_result(self, s: OnlineStream) -> str:
         return self.recognizer.get_result(s).text.strip()
