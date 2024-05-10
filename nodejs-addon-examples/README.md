@@ -28,9 +28,13 @@ export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-arm64:$LD_LIBRARY_PAT
 ```
 
 ## Streaming speech recognition with zipformer transducer
+
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 
+node ./test_asr_streaming_transducer.js
+
+node ./test_asr_streaming_transducer_microphone.js
 ```
