@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-recognizer-transducer-nemo-impl.h
 //
-// Copyright (c)  2022-2023  Xiaomi Corporation
+// Copyright (c)  2022-2024  Xiaomi Corporation
 
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_TRANSDUCER_NEMO_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_TRANSDUCER_NEMO_IMPL_H_
@@ -117,8 +117,7 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
         memory_info, features_length_vec.data(), n,
         features_length_shape.data(), features_length_shape.size());
 
-    Ort::Value x = PadSequence(model_->Allocator(), features_pointer,
-                               -23.025850929940457f);
+    Ort::Value x = PadSequence(model_->Allocator(), features_pointer, 0);
 
     auto t = model_->RunEncoder(std::move(x), std::move(x_length));
     // t[0] encoder_out, float tensor, (batch_size, dim, T)

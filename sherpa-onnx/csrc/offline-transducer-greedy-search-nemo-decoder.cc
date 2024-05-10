@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-transducer-greedy-search-nemo-decoder.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2024  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-transducer-greedy-search-nemo-decoder.h"
 
