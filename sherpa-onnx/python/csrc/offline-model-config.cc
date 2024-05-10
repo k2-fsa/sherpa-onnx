@@ -36,7 +36,8 @@ void PybindOfflineModelConfig(py::module *m) {
                     const OfflineTdnnModelConfig &,
                     const OfflineZipformerCtcModelConfig &,
                     const OfflineWenetCtcModelConfig &, const std::string &,
-                    int32_t, bool, const std::string &, const std::string &>(),
+                    int32_t, bool, const std::string &, const std::string &,
+                    const std::string &, const std::string &>(),
            py::arg("transducer") = OfflineTransducerModelConfig(),
            py::arg("paraformer") = OfflineParaformerModelConfig(),
            py::arg("nemo_ctc") = OfflineNemoEncDecCtcModelConfig(),
@@ -45,7 +46,8 @@ void PybindOfflineModelConfig(py::module *m) {
            py::arg("zipformer_ctc") = OfflineZipformerCtcModelConfig(),
            py::arg("wenet_ctc") = OfflineWenetCtcModelConfig(),
            py::arg("tokens"), py::arg("num_threads"), py::arg("debug") = false,
-           py::arg("provider") = "cpu", py::arg("model_type") = "")
+           py::arg("provider") = "cpu", py::arg("model_type") = "",
+           py::arg("modeling_unit") = "cjkchar", py::arg("bpe_vocab") = "")
       .def_readwrite("transducer", &PyClass::transducer)
       .def_readwrite("paraformer", &PyClass::paraformer)
       .def_readwrite("nemo_ctc", &PyClass::nemo_ctc)
@@ -58,6 +60,8 @@ void PybindOfflineModelConfig(py::module *m) {
       .def_readwrite("debug", &PyClass::debug)
       .def_readwrite("provider", &PyClass::provider)
       .def_readwrite("model_type", &PyClass::model_type)
+      .def_readwrite("modeling_unit", &PyClass::modeling_unit)
+      .def_readwrite("bpe_vocab", &PyClass::bpe_vocab)
       .def("validate", &PyClass::Validate)
       .def("__str__", &PyClass::ToString);
 }
