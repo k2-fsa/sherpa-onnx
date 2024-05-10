@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/utils.h"
 
+#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -146,7 +147,14 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
           oss << " " << bpe;
         }
       } else {
-        SHERPA_ONNX_CHECK_EQ(modeling_unit, "cjkchar+bpe");
+        if (modeling_unit != "cjkchar+bpe") {
+          SHERPA_ONNX_LOGE(
+              "modeling_unit should be one of bpe, cjkchar or cjkchar+bpe, "
+              "given "
+              "%s",
+              modeling_unit.c_str());
+          exit(-1);
+        }
         for (const auto &w : SplitUtf8(word)) {
           if (isalpha(w[0])) {
             std::vector<std::string> bpes;
