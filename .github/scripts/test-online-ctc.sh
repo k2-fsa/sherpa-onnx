@@ -14,6 +14,28 @@ echo "PATH: $PATH"
 which $EXE
 
 log "------------------------------------------------------------"
+log "Run streaming NeMo CTC                                      "
+log "------------------------------------------------------------"
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms.tar.bz2
+name=$(basename $url)
+repo=$(basename -s .tar.bz2 $name)
+
+curl -SL -O $url
+tar xvf $name
+rm $name
+ls -lh $repo
+
+$EXE \
+  --nemo-ctc-model=$repo/model.onnx \
+  --tokens=$repo/tokens.txt \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/8k.wav
+
+rm -rf $repo
+
+log "------------------------------------------------------------"
 log "Run streaming Zipformer2 CTC HLG decoding                   "
 log "------------------------------------------------------------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
