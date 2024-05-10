@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import List, Optional
 
 from _sherpa_onnx import (
+    FeatureExtractorConfig,
     OfflineCtcFstDecoderConfig,
-    OfflineFeatureExtractorConfig,
     OfflineModelConfig,
     OfflineNemoEncDecCtcModelConfig,
     OfflineParaformerModelConfig,
@@ -51,6 +51,7 @@ class OfflineRecognizer(object):
         blank_penalty: float = 0.0,
         debug: bool = False,
         provider: str = "cpu",
+        model_type: str = "transducer",
     ):
         """
         Please refer to
@@ -106,10 +107,10 @@ class OfflineRecognizer(object):
             num_threads=num_threads,
             debug=debug,
             provider=provider,
-            model_type="transducer",
+            model_type=model_type,
         )
 
-        feat_config = OfflineFeatureExtractorConfig(
+        feat_config = FeatureExtractorConfig(
             sampling_rate=sample_rate,
             feature_dim=feature_dim,
         )
@@ -182,7 +183,7 @@ class OfflineRecognizer(object):
             model_type="paraformer",
         )
 
-        feat_config = OfflineFeatureExtractorConfig(
+        feat_config = FeatureExtractorConfig(
             sampling_rate=sample_rate,
             feature_dim=feature_dim,
         )
@@ -246,7 +247,7 @@ class OfflineRecognizer(object):
             model_type="nemo_ctc",
         )
 
-        feat_config = OfflineFeatureExtractorConfig(
+        feat_config = FeatureExtractorConfig(
             sampling_rate=sample_rate,
             feature_dim=feature_dim,
         )
@@ -326,7 +327,7 @@ class OfflineRecognizer(object):
             model_type="whisper",
         )
 
-        feat_config = OfflineFeatureExtractorConfig(
+        feat_config = FeatureExtractorConfig(
             sampling_rate=16000,
             feature_dim=80,
         )
@@ -389,7 +390,7 @@ class OfflineRecognizer(object):
             model_type="tdnn",
         )
 
-        feat_config = OfflineFeatureExtractorConfig(
+        feat_config = FeatureExtractorConfig(
             sampling_rate=sample_rate,
             feature_dim=feature_dim,
         )
@@ -453,7 +454,7 @@ class OfflineRecognizer(object):
             model_type="wenet_ctc",
         )
 
-        feat_config = OfflineFeatureExtractorConfig(
+        feat_config = FeatureExtractorConfig(
             sampling_rate=sample_rate,
             feature_dim=feature_dim,
         )

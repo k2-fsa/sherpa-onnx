@@ -13,7 +13,7 @@ namespace sherpa_onnx {
  * It returns v[dim0_start:dim0_end, dim1_start:dim1_end, :]
  *
  * @param allocator
- * @param v A 2-D tensor. Its data type is T.
+ * @param v A 3-D tensor. Its data type is T.
  * @param dim0_start  Start index of the first dimension..
  * @param dim0_end    End index of the first dimension..
  * @param dim1_start Start index of the second dimension.

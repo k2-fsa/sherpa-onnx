@@ -107,6 +107,14 @@ jobs:
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
 
+      - name: Test offline transducer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-transducer.sh
+
       - name: Test online CTC
         shell: bash
         run: |
@@ -191,14 +199,6 @@ jobs:
           export EXE=sherpa-onnx-offline
 
           .github/scripts/test-offline-ctc.sh
-
-      - name: Test offline transducer
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
-
-          .github/scripts/test-offline-transducer.sh
 
       - name: Test online transducer
         shell: bash

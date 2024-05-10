@@ -14,6 +14,7 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/csrc/offline-lm-config.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
@@ -26,7 +27,7 @@ namespace sherpa_onnx {
 struct OfflineRecognitionResult;
 
 struct OfflineRecognizerConfig {
-  OfflineFeatureExtractorConfig feat_config;
+  FeatureExtractorConfig feat_config;
   OfflineModelConfig model_config;
   OfflineLMConfig lm_config;
   OfflineCtcFstDecoderConfig ctc_fst_decoder_config;
@@ -44,7 +45,7 @@ struct OfflineRecognizerConfig {
 
   OfflineRecognizerConfig() = default;
   OfflineRecognizerConfig(
-      const OfflineFeatureExtractorConfig &feat_config,
+      const FeatureExtractorConfig &feat_config,
       const OfflineModelConfig &model_config, const OfflineLMConfig &lm_config,
       const OfflineCtcFstDecoderConfig &ctc_fst_decoder_config,
       const std::string &decoding_method, int32_t max_active_paths,
