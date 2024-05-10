@@ -49,7 +49,7 @@ static bool EncodeBase(std::istream &is, const SymbolTable &symbol_table,
           word = word.replace(0, 3, " ");
         }
       }
-      if (symbol_table.contains(word)) {
+      if (symbol_table.Contains(word)) {
         int32_t id = symbol_table[word];
         tmp_ids.push_back(id);
       } else {

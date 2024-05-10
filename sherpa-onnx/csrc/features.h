@@ -56,6 +56,19 @@ struct FeatureExtractorConfig {
   bool remove_dc_offset = true;       // Subtract mean of wave before FFT.
   std::string window_type = "povey";  // e.g. Hamming window
 
+  // For models from NeMo
+  // This option is not exposed and is set internally when loading models.
+  // Possible values:
+  // - per_feature
+  // - all_features (not implemented yet)
+  // - fixed_mean (not implemented)
+  // - fixed_std (not implemented)
+  // - or just leave it to empty
+  // See
+  // https://github.com/NVIDIA/NeMo/blob/main/nemo/collections/asr/parts/preprocessing/features.py#L59
+  // for details
+  std::string nemo_normalize_type;
+
   std::string ToString() const;
 
   void Register(ParseOptions *po);

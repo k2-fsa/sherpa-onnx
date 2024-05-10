@@ -100,9 +100,9 @@ int32_t SymbolTable::operator[](const std::string &sym) const {
   return sym2id_.at(sym);
 }
 
-bool SymbolTable::contains(int32_t id) const { return id2sym_.count(id) != 0; }
+bool SymbolTable::Contains(int32_t id) const { return id2sym_.count(id) != 0; }
 
-bool SymbolTable::contains(const std::string &sym) const {
+bool SymbolTable::Contains(const std::string &sym) const {
   return sym2id_.count(sym) != 0;
 }
 
