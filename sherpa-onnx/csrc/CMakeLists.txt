@@ -62,6 +62,7 @@ set(sources
   online-lstm-transducer-model.cc
   online-model-config.cc
   online-nemo-ctc-model-config.cc
+  online-nemo-ctc-model.cc
   online-paraformer-model-config.cc
   online-paraformer-model.cc
   online-recognizer-impl.cc

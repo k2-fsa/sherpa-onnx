@@ -15,7 +15,7 @@ struct OnlineNeMoCtcModelConfig {
 
   OnlineNeMoCtcModelConfig() = default;
 
-  OnlineNeMoCtcModelConfig(const std::string &model) : model(model) {}
+  explicit OnlineNeMoCtcModelConfig(const std::string &model) : model(model) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
