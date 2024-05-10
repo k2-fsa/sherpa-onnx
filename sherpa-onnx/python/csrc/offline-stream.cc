@@ -25,6 +25,7 @@ Args:
 static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
   using PyClass = OfflineRecognitionResult;
   py::class_<PyClass>(*m, "OfflineRecognitionResult")
+      .def("__str__", &PyClass::AsJsonString)
       .def_property_readonly(
           "text",
           [](const PyClass &self) -> py::str {

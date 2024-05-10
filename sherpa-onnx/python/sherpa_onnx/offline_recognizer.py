@@ -51,6 +51,7 @@ class OfflineRecognizer(object):
         blank_penalty: float = 0.0,
         debug: bool = False,
         provider: str = "cpu",
+        model_type: str = "transducer",
     ):
         """
         Please refer to
@@ -106,7 +107,7 @@ class OfflineRecognizer(object):
             num_threads=num_threads,
             debug=debug,
             provider=provider,
-            model_type="transducer",
+            model_type=model_type,
         )
 
         feat_config = FeatureExtractorConfig(
