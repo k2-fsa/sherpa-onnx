@@ -2,7 +2,10 @@
 
 cd dotnet-examples/
 
-cd streaming-hlg-decoding/
+cd speaker-identification
+./run.sh
+
+cd ../streaming-hlg-decoding/
 ./run.sh
 
 cd ../spoken-language-identification
