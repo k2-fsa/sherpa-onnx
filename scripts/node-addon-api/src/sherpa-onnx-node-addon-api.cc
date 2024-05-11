@@ -5,10 +5,14 @@
 
 void InitStreamingAsr(Napi::Env env, Napi::Object exports);
 void InitWaveReader(Napi::Env env, Napi::Object exports);
+void InitWaveWriter(Napi::Env env, Napi::Object exports);
+void InitVad(Napi::Env env, Napi::Object exports);
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitStreamingAsr(env, exports);
   InitWaveReader(env, exports);
+  InitWaveWriter(env, exports);
+  InitVad(env, exports);
 
   return exports;
 }

@@ -125,8 +125,13 @@ static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
     config.provider = p;
   }
 
-  if (o.Has("debug") && o.Get("debug").IsNumber()) {
-    config.debug = o.Get("debug").As<Napi::Number>().Int32Value();
+  if (o.Has("debug") &&
+      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
+    if (o.Get("debug").IsBoolean()) {
+      config.debug = o.Get("debug").As<Napi::Boolean>().Value();
+    } else {
+      config.debug = o.Get("debug").As<Napi::Number>().Int32Value();
+    }
   }
 
   if (o.Has("modelType") && o.Get("modelType").IsString()) {

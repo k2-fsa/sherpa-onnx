@@ -20,7 +20,9 @@ include_directories(${CMAKE_JS_INC})
 set(srcs
   src/sherpa-onnx-node-addon-api.cc
   src/streaming-asr.cc
+  src/vad.cc
   src/wave-reader.cc
+  src/wave-writer.cc
 )
 
 if(NOT DEFINED ENV{SHERPA_ONNX_INSTALL_DIR})

@@ -38,3 +38,12 @@ node ./test_asr_streaming_transducer.js
 
 node ./test_asr_streaming_transducer_microphone.js
 ```
+
+# VAD
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+node ./test_vad_microphone.js
+```
+
