@@ -21,7 +21,8 @@ using System;
 
 class SpeakerIdentificationDemo
 {
-  public static float[] ComputeEmbedding(SpeakerEmbeddingExtractor extractor, String filename) {
+  public static float[] ComputeEmbedding(SpeakerEmbeddingExtractor extractor, String filename)
+  {
     WaveReader reader = new WaveReader(filename);
 
     OnlineStream stream = extractor.CreateStream();
@@ -50,7 +51,8 @@ class SpeakerIdentificationDemo
         };
     float[][] spk1Vec = new float[spk1Files.Length][];
 
-    for (int i = 0; i < spk1Files.Length; ++i) {
+    for (int i = 0; i < spk1Files.Length; ++i)
+    {
       spk1Vec[i] = ComputeEmbedding(extractor, spk1Files[i]);
     }
 
@@ -61,31 +63,37 @@ class SpeakerIdentificationDemo
 
     float[][] spk2Vec = new float[spk2Files.Length][];
 
-    for (int i = 0; i < spk2Files.Length; ++i) {
+    for (int i = 0; i < spk2Files.Length; ++i)
+    {
       spk2Vec[i] = ComputeEmbedding(extractor, spk2Files[i]);
     }
 
-    if (!manager.Add("fangjun", spk1Vec)) {
+    if (!manager.Add("fangjun", spk1Vec))
+    {
       Console.WriteLine("Failed to register fangjun");
       return;
     }
 
-    if (!manager.Add("leijun", spk2Vec)) {
+    if (!manager.Add("leijun", spk2Vec))
+    {
       Console.WriteLine("Failed to register leijun");
       return;
     }
 
-    if (manager.NumSpeakers != 2) {
+    if (manager.NumSpeakers != 2)
+    {
       Console.WriteLine("There should be two speakers");
       return;
     }
 
-    if (!manager.Contains("fangjun")) {
+    if (!manager.Contains("fangjun"))
+    {
       Console.WriteLine("It should contain the speaker fangjun");
       return;
     }
 
-    if (!manager.Contains("leijun")) {
+    if (!manager.Contains("leijun"))
+    {
       Console.WriteLine("It should contain the speaker leijun");
       return;
     }
@@ -93,7 +101,8 @@ class SpeakerIdentificationDemo
     Console.WriteLine("---All speakers---");
 
     string[] allSpeakers = manager.GetAllSpeakers();
-    foreach (var s in allSpeakers) {
+    foreach (var s in allSpeakers)
+    {
       Console.WriteLine(s);
     }
     Console.WriteLine("------------");
@@ -106,33 +115,39 @@ class SpeakerIdentificationDemo
         };
 
     float threshold = 0.6f;
-    foreach (var file in testFiles) {
+    foreach (var file in testFiles)
+    {
       float[] embedding = ComputeEmbedding(extractor, file);
 
       String name = manager.Search(embedding, threshold);
-      if (name == "") {
+      if (name == "")
+      {
         name = "<Unknown>";
       }
       Console.WriteLine("{0}: {1}", file, name);
     }
 
     // test verify
-    if (!manager.Verify("fangjun", ComputeEmbedding(extractor, testFiles[0]), threshold)) {
+    if (!manager.Verify("fangjun", ComputeEmbedding(extractor, testFiles[0]), threshold))
+    {
       Console.WriteLine("testFiles[0] should match fangjun!");
       return;
     }
 
-    if (!manager.Remove("fangjun")) {
+    if (!manager.Remove("fangjun"))
+    {
       Console.WriteLine("Failed to remove fangjun");
       return;
     }
 
-    if (manager.Verify("fangjun", ComputeEmbedding(extractor, testFiles[0]), threshold)) {
+    if (manager.Verify("fangjun", ComputeEmbedding(extractor, testFiles[0]), threshold))
+    {
       Console.WriteLine("{0} should match no one!", testFiles[0]);
       return;
     }
 
-    if (manager.NumSpeakers != 1) {
+    if (manager.NumSpeakers != 1)
+    {
       Console.WriteLine("There should only 1 speaker left.");
       return;
     }

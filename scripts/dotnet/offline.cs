@@ -609,10 +609,10 @@ namespace SherpaOnnx
 
     public float[] Compute(OnlineStream stream)
     {
-      IntPtr p =  SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding(_handle.Handle, stream.Handle);
+      IntPtr p = SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding(_handle.Handle, stream.Handle);
 
       int dim = Dim;
-      float[] ans =  new float[dim];
+      float[] ans = new float[dim];
       Marshal.Copy(p, ans, 0, dim);
 
       SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(p);
@@ -732,7 +732,7 @@ namespace SherpaOnnx
       foreach (var item in v_list)
       {
         item.CopyTo(v, i);
-         i += _dim;
+        i += _dim;
       }
 
       return SherpaOnnxSpeakerEmbeddingManagerAddListFlattened(_handle.Handle, name, v, n) == 1;
@@ -752,7 +752,7 @@ namespace SherpaOnnx
 
       unsafe
       {
-        byte*b = (byte*)p;
+        byte* b = (byte*)p;
         if (b != null)
         {
           while (*b != 0)
@@ -789,7 +789,7 @@ namespace SherpaOnnx
     {
       if (NumSpeakers == 0)
       {
-        return new string[]{};
+        return new string[] { };
       }
 
       IntPtr names = SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(_handle.Handle);
@@ -798,11 +798,11 @@ namespace SherpaOnnx
 
       unsafe
       {
-        byte**p = (byte**)names;
+        byte** p = (byte**)names;
         for (int i = 0; i != NumSpeakers; i++)
         {
           int length = 0;
-          byte*s = p[i];
+          byte* s = p[i];
           while (*s != 0)
           {
             ++s;
