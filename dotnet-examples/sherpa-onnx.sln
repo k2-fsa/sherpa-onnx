@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "spoken-language-identificat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "streaming-hlg-decoding", "streaming-hlg-decoding\streaming-hlg-decoding.csproj", "{C4A368A5-FCA0-419D-97C9-C8CE0B08EB99}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speaker-identification", "speaker-identification\speaker-identification.csproj", "{2B1B140E-A92F-426B-B0DF-5D916B67304F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -54,5 +56,9 @@ Global
 		{C4A368A5-FCA0-419D-97C9-C8CE0B08EB99}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C4A368A5-FCA0-419D-97C9-C8CE0B08EB99}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C4A368A5-FCA0-419D-97C9-C8CE0B08EB99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B1B140E-A92F-426B-B0DF-5D916B67304F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B1B140E-A92F-426B-B0DF-5D916B67304F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B1B140E-A92F-426B-B0DF-5D916B67304F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B1B140E-A92F-426B-B0DF-5D916B67304F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
