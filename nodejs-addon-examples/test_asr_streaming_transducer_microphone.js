@@ -60,7 +60,8 @@ const display = new sherpa_onnx.Display(50);
 ai.on('data', data => {
   const samples = new Float32Array(data.buffer);
 
-  stream.acceptWaveform(samples, recognizer.config.featConfig.sampleRate);
+  stream.acceptWaveform(
+      {sampleRate: recognizer.config.featConfig.sampleRate, samples: samples});
 
   while (recognizer.isReady(stream)) {
     recognizer.decode(stream);

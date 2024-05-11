@@ -36,10 +36,10 @@ console.log('Started')
 let start = performance.now();
 const stream = recognizer.createStream();
 const wave = sherpa_onnx.readWave(waveFilename);
-stream.acceptWaveform(wave.samples, wave.sampleRate);
+stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
 
 const tailPadding = new Float32Array(wave.sampleRate * 0.4);
-stream.acceptWaveform(tailPadding, wave.sampleRate);
+stream.acceptWaveform({samples: tailPadding, sampleRate: wave.sampleRate});
 
 while (recognizer.isReady(stream)) {
   recognizer.decode(stream);

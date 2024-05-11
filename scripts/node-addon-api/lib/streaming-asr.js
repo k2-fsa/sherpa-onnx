@@ -15,10 +15,11 @@ class OnlineStream {
     this.handle = handle;
   }
 
+  // obj is {samples: samples, sampleRate: sampleRate}
   // samples is a float32 array containing samples in the range [-1, 1]
-  acceptWaveform(samples, sampleRate) {
-    addon.acceptWaveformOnline(
-        this.handle, {samples: samples, sampleRate: sampleRate})
+  // sampleRate is a number
+  acceptWaveform(obj) {
+    addon.acceptWaveformOnline(this.handle, obj)
   }
 
   inputFinished() {

@@ -47,7 +47,7 @@ python3 ./python-api-examples/offline-tts-play.py \
  --vits-model=./sherpa-onnx-vits-zh-ll/model.onnx \
  --vits-lexicon=./sherpa-onnx-vits-zh-ll/lexicon.txt \
  --vits-tokens=./sherpa-onnx-vits-zh-ll/tokens.txt \
- --tts-rule-fsts='./sherpa-onnx-vits-zh-ll/phone.fst,./sherpa-onnx-vits-zh-ll/date.fst,./sherpa-onnx-vits-zh-ll/number.fst' \
+ --tts-rule-fsts=./sherpa-onnx-vits-zh-ll/phone.fst,./sherpa-onnx-vits-zh-ll/date.fst,./sherpa-onnx-vits-zh-ll/number.fst \
  --vits-dict-dir=./sherpa-onnx-vits-zh-ll/dict \
  --sid=2 \
  --output-filename=./test-2.wav \
