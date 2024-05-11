@@ -11,7 +11,7 @@ while the model is still generating.
 
 Usage:
 
-Example (1/2)
+Example (1/3)
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 tar xf vits-piper-en_US-amy-low.tar.bz2
@@ -23,19 +23,36 @@ python3 ./python-api-examples/offline-tts-play.py \
  --output-filename=./generated.wav \
  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
 
-Example (2/2)
+Example (2/3)
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
 tar xvf vits-zh-aishell3.tar.bz2
 
 python3 ./python-api-examples/offline-tts-play.py \
- --vits-model=./vits-aishell3.onnx \
- --vits-lexicon=./lexicon.txt \
- --vits-tokens=./tokens.txt \
- --tts-rule-fsts=./rule.fst \
+ --vits-model=./vits-icefall-zh-aishell3/model.onnx \
+ --vits-lexicon=./vits-icefall-zh-aishell3/lexicon.txt \
+ --vits-tokens=./vits-icefall-zh-aishell3/tokens.txt \
+ --tts-rule-fsts='./vits-icefall-zh-aishell3/phone.fst,./vits-icefall-zh-aishell3/date.fst,./vits-icefall-zh-aishell3/number.fst' \
  --sid=21 \
  --output-filename=./liubei-21.wav \
  "勿以恶小而为之，勿以善小而不为。惟贤惟德，能服于人。122334"
+
+Example (3/3)
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2
+tar xvf sherpa-onnx-vits-zh-ll.tar.bz2
+rm sherpa-onnx-vits-zh-ll.tar.bz2
+
+python3 ./python-api-examples/offline-tts-play.py \
+ --vits-model=./sherpa-onnx-vits-zh-ll/model.onnx \
+ --vits-lexicon=./sherpa-onnx-vits-zh-ll/lexicon.txt \
+ --vits-tokens=./sherpa-onnx-vits-zh-ll/tokens.txt \
+ --tts-rule-fsts='./sherpa-onnx-vits-zh-ll/phone.fst,./sherpa-onnx-vits-zh-ll/date.fst,./sherpa-onnx-vits-zh-ll/number.fst' \
+ --vits-dict-dir=./sherpa-onnx-vits-zh-ll/dict \
+ --sid=2 \
+ --output-filename=./test-2.wav \
+ "当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔。2024年5月11号，拨打110或者18920240511。123456块钱。"
+
 
 You can find more models at
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
@@ -96,8 +113,15 @@ def get_args():
         "--vits-data-dir",
         type=str,
         default="",
-        help="""Path to the dict director of espeak-ng. If it is specified,
+        help="""Path to the dict directory of espeak-ng. If it is specified,
         --vits-lexicon and --vits-tokens are ignored""",
+    )
+
+    parser.add_argument(
+        "--vits-dict-dir",
+        type=str,
+        default="",
+        help="Path to the dict directory for models using jieba",
     )
 
     parser.add_argument(
@@ -279,6 +303,7 @@ def main():
                 model=args.vits_model,
                 lexicon=args.vits_lexicon,
                 data_dir=args.vits_data_dir,
+                dict_dir=args.vits_dict_dir,
                 tokens=args.vits_tokens,
             ),
             provider=args.provider,
