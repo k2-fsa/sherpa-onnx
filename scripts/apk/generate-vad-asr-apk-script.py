@@ -106,6 +106,66 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k",
+            idx=7,
+            lang="be_de_en_es_fr_hr_it_pl_ru_uk",
+            short_name="fast_conformer_ctc_20k",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-fast-conformer-ctc-en-24500",
+            idx=8,
+            lang="en",
+            short_name="fast_conformer_ctc_24500",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288",
+            idx=9,
+            lang="en_des_es_fr",
+            short_name="fast_conformer_ctc_14288",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-nemo-fast-conformer-ctc-es-1424",
+            idx=10,
+            lang="es",
+            short_name="fast_conformer_ctc_1424",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
