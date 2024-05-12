@@ -29,10 +29,15 @@ data class OnlineZipformer2CtcModelConfig(
     var model: String = "",
 )
 
+data class OnlineNeMoCtcModelConfig(
+    var model: String = "",
+)
+
 data class OnlineModelConfig(
     var transducer: OnlineTransducerModelConfig = OnlineTransducerModelConfig(),
     var paraformer: OnlineParaformerModelConfig = OnlineParaformerModelConfig(),
     var zipformer2Ctc: OnlineZipformer2CtcModelConfig = OnlineZipformer2CtcModelConfig(),
+    var neMoCtc: OnlineNeMoCtcModelConfig = OnlineNeMoCtcModelConfig(),
     var tokens: String,
     var numThreads: Int = 1,
     var debug: Boolean = false,
@@ -316,6 +321,36 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer",
+            )
+        }
+
+        11 -> {
+            val modelDir = "sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms"
+            return OnlineModelConfig(
+                neMoCtc = OnlineNeMoCtcModelConfig(
+                    model = "$modelDir/model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        12 -> {
+            val modelDir = "sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-480ms"
+            return OnlineModelConfig(
+                neMoCtc = OnlineNeMoCtcModelConfig(
+                    model = "$modelDir/model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        13 -> {
+            val modelDir = "sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-1040ms"
+            return OnlineModelConfig(
+                neMoCtc = OnlineNeMoCtcModelConfig(
+                    model = "$modelDir/model.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
             )
         }
     }

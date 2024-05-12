@@ -4,6 +4,7 @@ fun main() {
   testOnlineAsr("transducer")
   testOnlineAsr("zipformer2-ctc")
   testOnlineAsr("ctc-hlg")
+  testOnlineAsr("nemo-ctc")
 }
 
 fun testOnlineAsr(type: String) {
@@ -38,6 +39,17 @@ fun testOnlineAsr(type: String) {
                 model = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.onnx",
             ),
             tokens = "./sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt",
+            numThreads = 1,
+            debug = false,
+        )
+      }
+      "nemo-ctc" -> {
+        waveFilename = "./sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms/test_wavs/0.wav"
+        OnlineModelConfig(
+            neMoCtc = OnlineNeMoCtcModelConfig(
+                model = "./sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms/model.onnx",
+            ),
+            tokens = "./sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms/tokens.txt",
             numThreads = 1,
             debug = false,
         )
