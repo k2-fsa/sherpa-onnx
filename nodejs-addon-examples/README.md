@@ -36,6 +36,9 @@ rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 
 node ./test_asr_streaming_transducer.js
 
+# To run the test with microphone, you need to install the package naudiodon2
+npm install naudiodon2
+
 node ./test_asr_streaming_transducer_microphone.js
 ```
 
@@ -43,6 +46,10 @@ node ./test_asr_streaming_transducer_microphone.js
 
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+
+# To run the test with microphone, you need to install the package naudiodon2
+npm install naudiodon2
 
 node ./test_vad_microphone.js
 ```
