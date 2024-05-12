@@ -107,7 +107,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-de_DE-eva_k-x_low"),
         TtsModel(model_dir="vits-piper-de_DE-karlsson-low"),
         TtsModel(model_dir="vits-piper-de_DE-kerstin-low"),
-        TtsModel(model_dir="vits-piper-de_DE-mls-medium"),
+        #  TtsModel(model_dir="vits-piper-de_DE-mls-medium"),
         TtsModel(model_dir="vits-piper-de_DE-pavoque-low"),
         TtsModel(model_dir="vits-piper-de_DE-ramona-low"),
         TtsModel(model_dir="vits-piper-de_DE-thorsten-high"),

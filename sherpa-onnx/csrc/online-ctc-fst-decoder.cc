@@ -62,7 +62,7 @@ static void DecodeOne(const float *log_probs, int32_t num_rows,
 
       std::ostringstream os;
       int32_t prev_id = -1;
-      int32_t num_trailing_blanks = 0;
+      int32_t &num_trailing_blanks = result->num_trailing_blanks;
       int32_t f = 0;  // frame number
 
       for (auto i : isymbols_out) {
