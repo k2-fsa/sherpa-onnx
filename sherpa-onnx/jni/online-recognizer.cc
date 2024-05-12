@@ -159,6 +159,18 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   ans.model_config.zipformer2_ctc.model = p;
   env->ReleaseStringUTFChars(s, p);
 
+  // streaming NeMo CTC
+  fid = env->GetFieldID(model_config_cls, "neMoCtc",
+                        "Lcom/k2fsa/sherpa/onnx/OnlineNeMoCtcModelConfig;");
+  jobject nemo_ctc_config = env->GetObjectField(model_config, fid);
+  jclass nemo_ctc_config_cls = env->GetObjectClass(nemo_ctc_config);
+
+  fid = env->GetFieldID(nemo_ctc_config_cls, "model", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(nemo_ctc_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.nemo_ctc.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
   fid = env->GetFieldID(model_config_cls, "tokens", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(model_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
