@@ -11,24 +11,23 @@ const config = {
     'featureDim': 80,
   },
   'modelConfig': {
-    'transducer': {
-      'encoder':
-          './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.onnx',
-      'decoder':
-          './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx',
-      'joiner':
-          './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.onnx',
+    'zipformer2Ctc': {
+      'model':
+          './sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/ctc-epoch-30-avg-3-chunk-16-left-128.int8.onnx',
     },
     'tokens':
-        './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt',
+        './sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/tokens.txt',
     'numThreads': 2,
     'provider': 'cpu',
     'debug': 1,
-  }
+  },
+  'ctcFstDecoderConfig': {
+    'graph': './sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/HLG.fst',
+  },
 };
 
 const waveFilename =
-    './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/0.wav';
+    './sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/test_wavs/1.wav';
 
 const recognizer = new sherpa_onnx.OnlineRecognizer(config);
 console.log('Started')

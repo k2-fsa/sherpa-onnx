@@ -158,7 +158,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-fa_IR-gyro-medium"),
         TtsModel(model_dir="vits-piper-fi_FI-harri-low"),
         TtsModel(model_dir="vits-piper-fi_FI-harri-medium"),
-        TtsModel(model_dir="vits-piper-fr_FR-mls-medium"),
+        #  TtsModel(model_dir="vits-piper-fr_FR-mls-medium"),
         TtsModel(model_dir="vits-piper-fr_FR-siwis-low"),
         TtsModel(model_dir="vits-piper-fr_FR-siwis-medium"),
         TtsModel(model_dir="vits-piper-fr_FR-upmc-medium"),
