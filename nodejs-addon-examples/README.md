@@ -39,7 +39,7 @@ npm install naudiodon2
 node ./test_vad_microphone.js
 ```
 
-## Streaming speech recognition with zipformer transducer
+## Streaming speech recognition with Zipformer transducer
 
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
@@ -54,7 +54,7 @@ npm install naudiodon2
 node ./test_asr_streaming_transducer_microphone.js
 ```
 
-## Streaming speech recognition with zipformer CTC
+## Streaming speech recognition with Zipformer CTC
 
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
@@ -100,4 +100,18 @@ node ./test_asr_non_streaming_transducer.js
 # To run VAD + non-streaming ASR with transudcer using a microphone
 npm install naudiodon2
 node ./test_vad_asr_non_streaming_transducer_microphone.js
+```
+
+## Non-streaming speech recognition with Paraformer
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+
+node ./test_asr_non_streaming_paraformer.js
+
+# To run VAD + non-streaming ASR with Paraformer using a microphone
+npm install naudiodon2
+node ./test_vad_asr_non_streaming_paraformer_microphone.js
 ```
