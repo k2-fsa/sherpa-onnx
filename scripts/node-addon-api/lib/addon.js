@@ -9,6 +9,7 @@ const possible_paths = [
   '../build/Debug/sherpa-onnx.node',
   `./node_modules/sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
   `../sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
+  './sherpa-onnx.node',
 ];
 
 let found = false;

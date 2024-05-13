@@ -216,6 +216,8 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     // clear states
     s->SetStates(model_->GetInitStates());
 
+    s->GetFasterDecoderProcessedFrames() = 0;
+
     // Note: We only update counters. The underlying audio samples
     // are not discarded.
     s->Reset();
