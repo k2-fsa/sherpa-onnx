@@ -88,6 +88,20 @@ npm install naudiodon2
 node ./test_asr_streaming_paraformer_microphone.js
 ```
 
+## Non-streaming speech recognition with Zipformer transducer
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
+tar xvf sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
+rm sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
+
+node ./test_asr_non_streaming_transducer.js
+
+# To run VAD + non-streaming ASR with transudcer using a microphone
+npm install naudiodon2
+node ./test_vad_asr_non_streaming_transducer_microphone.js
+```
+
 ## Non-streaming speech recognition with Whisper
 
 ```bash
@@ -102,18 +116,18 @@ npm install naudiodon2
 node ./test_vad_asr_non_streaming_whisper_microphone.js
 ```
 
-## Non-streaming speech recognition with Zipformer transducer
+## Non-streaming speech recognition with NeMo CTC models
 
 ```bash
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
-tar xvf sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
-rm sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
+tar xvf sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
+rm sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
 
-node ./test_asr_non_streaming_transducer.js
+node ./test_asr_non_streaming_nemo_ctc.js
 
-# To run VAD + non-streaming ASR with transudcer using a microphone
+# To run VAD + non-streaming ASR with Paraformer using a microphone
 npm install naudiodon2
-node ./test_vad_asr_non_streaming_transducer_microphone.js
+node ./test_vad_asr_non_streaming_nemo_ctc_microphone.js
 ```
 
 ## Non-streaming speech recognition with Paraformer
