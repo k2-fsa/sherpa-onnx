@@ -6,6 +6,20 @@ d=nodejs-addon-examples
 echo "dir: $d"
 cd $d
 
+echo "----------spoken language identification----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2
+tar xvf sherpa-onnx-whisper-tiny.tar.bz2
+rm sherpa-onnx-whisper-tiny.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/spoken-language-identification-test-wavs.tar.bz2
+tar xvf spoken-language-identification-test-wavs.tar.bz2
+rm spoken-language-identification-test-wavs.tar.bz2
+
+node ./test_spoken_language_identification.js
+rm -rf sherpa-onnx-whisper-tiny
+rm -rf spoken-language-identification-test-wavs
+
 echo "----------streaming asr----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2

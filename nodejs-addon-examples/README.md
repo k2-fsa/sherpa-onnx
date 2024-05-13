@@ -183,3 +183,21 @@ rm vits-icefall-zh-aishell3.tar.bz2
 
 node ./test_tts_non_streaming_vits_zh_aishell3.js
 ```
+
+## Spoken language identification with Whisper multi-lingual models
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2
+tar xvf sherpa-onnx-whisper-tiny.tar.bz2
+rm sherpa-onnx-whisper-tiny.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/spoken-language-identification-test-wavs.tar.bz2
+tar xvf spoken-language-identification-test-wavs.tar.bz2
+rm spoken-language-identification-test-wavs.tar.bz2
+
+node ./test_spoken_language_identification.js
+
+# To run VAD + spoken language identification using a microphone
+npm install naudiodon2
+node ./test_vad_spoken_language_identification_microphone.js
+```
