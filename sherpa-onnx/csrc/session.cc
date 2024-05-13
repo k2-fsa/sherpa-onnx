@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+// #include <cuda.h>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/provider.h"
@@ -114,6 +115,55 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
       SHERPA_ONNX_LOGE("NNAPI is for Android only. Fallback to cpu");
 #endif
       break;
+    }
+    case Provider::kTRT: {
+      SHERPA_ONNX_LOGE("Came for TRT");
+      std::vector<const char*> option_keys = {
+          "device_id",
+          "trt_max_workspace_size",
+          "trt_max_partition_iterations",
+          "trt_min_subgraph_size",
+          "trt_fp16_enable",
+          "trt_int8_enable",
+          "trt_int8_use_native_calibration_table",
+          "trt_dump_subgraphs",
+          "trt_detailed_build_log",
+          // below options are strongly recommended !
+          "trt_engine_cache_enable",
+          "trt_engine_cache_path",
+          "trt_timing_cache_enable",
+          "trt_timing_cache_path",
+      };
+      std::vector<const char*> option_values = {
+          "0",
+          "2147483648",
+          "10",
+          "5",
+          "0",
+          "0",
+          "0",
+          "1",
+          "1",
+          "1",
+          ".",
+          "1",
+          ".", // can be same as the engine cache folder
+      };
+      std::vector<std::string> available_providers =
+          Ort::GetAvailableProviders();
+      if (std::find(available_providers.begin(), available_providers.end(),
+                    "TensorrtExecutionProvider") != available_providers.end()) {
+        const auto& api = Ort::GetApi();
+
+        OrtTensorRTProviderOptionsV2* tensorrt_options;
+        Ort::ThrowOnError(api.CreateTensorRTProviderOptions(&tensorrt_options));
+
+        Ort::ThrowOnError(api.UpdateTensorRTProviderOptions(tensorrt_options,
+                         option_keys.data(), option_values.data(), option_keys.size()));
+
+        sess_opts.AppendExecutionProvider_TensorRT_V2(*tensorrt_options);
+
+      }
     }
   }
 
