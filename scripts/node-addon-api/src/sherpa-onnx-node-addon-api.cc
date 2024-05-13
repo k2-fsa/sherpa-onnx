@@ -7,6 +7,8 @@ void InitStreamingAsr(Napi::Env env, Napi::Object exports);
 
 void InitNonStreamingAsr(Napi::Env env, Napi::Object exports);
 
+void InitNonStreamingTts(Napi::Env env, Napi::Object exports);
+
 void InitVad(Napi::Env env, Napi::Object exports);
 
 void InitWaveReader(Napi::Env env, Napi::Object exports);
@@ -16,6 +18,7 @@ void InitWaveWriter(Napi::Env env, Napi::Object exports);
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitStreamingAsr(env, exports);
   InitNonStreamingAsr(env, exports);
+  InitNonStreamingTts(env, exports);
   InitVad(env, exports);
   InitWaveReader(env, exports);
   InitWaveWriter(env, exports);

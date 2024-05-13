@@ -71,7 +71,7 @@ ai.on('data', data => {
               .split(' ')[0]}.wav`;
       sherpa_onnx.writeWave(
           filename,
-          {samples: segment.samples, sampleRate: vad.config.sampleRate})
+          {samples: segment.samples, sampleRate: vad.config.sampleRate});
       const duration = segment.samples.length / vad.config.sampleRate;
       console.log(`${index} End of speech. Duration: ${duration} seconds`);
       console.log(`Saved to ${filename}`);

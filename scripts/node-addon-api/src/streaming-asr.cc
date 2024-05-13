@@ -605,7 +605,7 @@ static void InputFinishedWrapper(const Napi::CallbackInfo &info) {
 
   if (info.Length() != 1) {
     std::ostringstream os;
-    os << "Expect only 1 arguments. Given: " << info.Length();
+    os << "Expect only 1 argument. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 

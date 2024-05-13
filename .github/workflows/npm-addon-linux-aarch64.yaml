@@ -94,7 +94,7 @@ jobs:
                 -DSHERPA_ONNX_ENABLE_BINARY=OFF \
                 ..
 
-              make -j
+              make -j2
               make install
               cd ..
 

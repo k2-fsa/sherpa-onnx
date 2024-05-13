@@ -102,7 +102,7 @@ ai.on('data', data => {
               .split(' ')[0]}.wav`;
       sherpa_onnx.writeWave(
           filename,
-          {samples: segment.samples, sampleRate: vad.config.sampleRate})
+          {samples: segment.samples, sampleRate: vad.config.sampleRate});
 
       index += 1;
     }
