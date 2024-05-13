@@ -13,7 +13,7 @@ class OfflineStream {
   }
 }
 
-class OnlineRecognizer {
+class OfflineRecognizer {
   constructor(config) {
     this.handle = addon.createOfflineRecognizer(config);
     this.config = config
@@ -22,6 +22,10 @@ class OnlineRecognizer {
   createStream() {
     const handle = addon.createOfflineStream(this.handle);
     return new OfflineStream(handle);
+  }
+
+  decode(stream) {
+    addon.decodeOfflineStream(this.handle, stream.handle);
   }
 
   getResult(stream) {

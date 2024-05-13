@@ -5,7 +5,7 @@ const vad = require('./vad.js');
 
 module.exports = {
   OnlineRecognizer: streaming_asr.OnlineRecognizer,
-  OfflineRecognizer: streaming_asr.OfflineRecognizer,
+  OfflineRecognizer: non_streaming_asr.OfflineRecognizer,
   readWave: addon.readWave,
   writeWave: addon.writeWave,
   Display: streaming_asr.Display,
