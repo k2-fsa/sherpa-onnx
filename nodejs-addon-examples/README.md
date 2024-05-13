@@ -72,3 +72,18 @@ npm install naudiodon2
 node ./test_asr_streaming_ctc_microphone.js
 node ./test_asr_streaming_ctc_hlg_microphone.js
 ```
+
+## Streaming speech recognition with Paraformer
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+
+node ./test_asr_streaming_paraformer.js
+
+# To run the test with a microphone, you need to install the package naudiodon2
+npm install naudiodon2
+
+node ./test_asr_streaming_paraformer_microphone.js
+```

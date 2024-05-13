@@ -113,6 +113,39 @@ GetOnlineZipformer2CtcModelConfig(Napi::Object obj) {
   return config;
 }
 
+static SherpaOnnxOnlineParaformerModelConfig GetOnlineParaformerModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOnlineParaformerModelConfig config;
+  memset(&config, 0, sizeof(config));
+
+  if (!obj.Has("paraformer") || !obj.Get("paraformer").IsObject()) {
+    return config;
+  }
+
+  Napi::Object o = obj.Get("paraformer").As<Napi::Object>();
+
+  if (o.Has("encoder") && o.Get("encoder").IsString()) {
+    Napi::String encoder = o.Get("encoder").As<Napi::String>();
+    std::string s = encoder.Utf8Value();
+    char *p = new char[s.size() + 1];
+    std::copy(s.begin(), s.end(), p);
+    p[s.size()] = 0;
+
+    config.encoder = p;
+  }
+
+  if (o.Has("decoder") && o.Get("decoder").IsString()) {
+    Napi::String decoder = o.Get("decoder").As<Napi::String>();
+    std::string s = decoder.Utf8Value();
+    char *p = new char[s.size() + 1];
+    std::copy(s.begin(), s.end(), p);
+    p[s.size()] = 0;
+
+    config.decoder = p;
+  }
+  return config;
+}
+
 static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
   SherpaOnnxOnlineModelConfig config;
   memset(&config, 0, sizeof(config));
@@ -124,6 +157,7 @@ static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
   Napi::Object o = obj.Get("modelConfig").As<Napi::Object>();
 
   config.transducer = GetOnlineTransducerModelConfig(o);
+  config.paraformer = GetOnlineParaformerModelConfig(o);
   config.zipformer2_ctc = GetOnlineZipformer2CtcModelConfig(o);
 
   if (o.Has("tokens") && o.Get("tokens").IsString()) {
@@ -331,6 +365,14 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
 
   if (c.model_config.transducer.joiner) {
     delete[] c.model_config.transducer.joiner;
+  }
+
+  if (c.model_config.paraformer.encoder) {
+    delete[] c.model_config.paraformer.encoder;
+  }
+
+  if (c.model_config.paraformer.decoder) {
+    delete[] c.model_config.paraformer.decoder;
   }
 
   if (c.model_config.zipformer2_ctc.model) {

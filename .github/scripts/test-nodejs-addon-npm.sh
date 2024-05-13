@@ -24,3 +24,11 @@ node ./test_asr_streaming_ctc.js
 node ./test_asr_streaming_ctc_hlg.js
 
 rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+
+node ./test_asr_streaming_paraformer.js
+
+rm sherpa-onnx-streaming-paraformer-bilingual-zh-en
