@@ -13,7 +13,7 @@
   }
 };
  */
-static SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj) {
+SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj) {
   SherpaOnnxFeatureConfig config;
   memset(&config, 0, sizeof(config));
 
@@ -324,35 +324,6 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
 
   c.ctc_fst_decoder_config = GetCtcFstDecoderConfig(config);
 
-#if 0
-  printf("encoder: %s\n", c.model_config.transducer.encoder
-                              ? c.model_config.transducer.encoder
-                              : "no");
-  printf("decoder: %s\n", c.model_config.transducer.decoder
-                              ? c.model_config.transducer.decoder
-                              : "no");
-  printf("joiner: %s\n", c.model_config.transducer.joiner
-                             ? c.model_config.transducer.joiner
-                             : "no");
-
-  printf("tokens: %s\n", c.model_config.tokens ? c.model_config.tokens : "no");
-  printf("num_threads: %d\n", c.model_config.num_threads);
-  printf("provider: %s\n",
-         c.model_config.provider ? c.model_config.provider : "no");
-  printf("debug: %d\n", c.model_config.debug);
-  printf("model_type: %s\n",
-         c.model_config.model_type ? c.model_config.model_type : "no");
-
-  printf("decoding_method: %s\n", c.decoding_method ? c.decoding_method : "no");
-  printf("max_active_paths: %d\n", c.max_active_paths);
-  printf("enable_endpoint: %d\n", c.enable_endpoint);
-  printf("rule1_min_trailing_silence: %.3f\n", c.rule1_min_trailing_silence);
-  printf("rule2_min_trailing_silence: %.3f\n", c.rule2_min_trailing_silence);
-  printf("rule3_min_utterance_length: %.3f\n", c.rule3_min_utterance_length);
-  printf("hotwords_file: %s\n", c.hotwords_file ? c.hotwords_file : "no");
-  printf("hotwords_score: %.3f\n", c.hotwords_score);
-#endif
-
   SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&c);
 
   if (c.model_config.transducer.encoder) {
@@ -431,7 +402,8 @@ static Napi::External<SherpaOnnxOnlineStream> CreateOnlineStreamWrapper(
 
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(
-        env, "You should pass a recognizer pointer as the only argument")
+        env,
+        "You should pass an online recognizer pointer as the only argument")
         .ThrowAsJavaScriptException();
 
     return {};
