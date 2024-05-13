@@ -18,6 +18,7 @@ add_definitions(-DNAPI_VERSION=3)
 include_directories(${CMAKE_JS_INC})
 
 set(srcs
+  src/non-streaming-asr.cc
   src/sherpa-onnx-node-addon-api.cc
   src/streaming-asr.cc
   src/vad.cc
