@@ -37,4 +37,5 @@ class OfflineRecognizer {
 
 module.exports = {
   OfflineRecognizer,
+  OfflineStream,
 }

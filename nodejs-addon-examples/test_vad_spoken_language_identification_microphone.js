@@ -26,7 +26,25 @@ function createVad() {
   return new sherpa_onnx.Vad(config, bufferSizeInSeconds);
 }
 
+// Please download test files from
+// https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
+function createSpokenLanguageID() {
+  const config = {
+    whisper: {
+      encoder: './sherpa-onnx-whisper-tiny/tiny-encoder.int8.onnx',
+      decoder: './sherpa-onnx-whisper-tiny/tiny-decoder.int8.onnx',
+    },
+    debug: true,
+    numThreads: 1,
+    provider: 'cpu',
+  };
+  return new sherpa_onnx.SpokenLanguageIdentification(config);
+}
+
+const slid = createSpokenLanguageID();
 const vad = createVad();
+
+const display = new Intl.DisplayNames(['en'], {type: 'language'})
 
 const bufferSizeInSeconds = 30;
 const buffer =
@@ -65,7 +83,14 @@ ai.on('data', data => {
     while (!vad.isEmpty()) {
       const segment = vad.front();
       vad.pop();
-      const filename = `${index}-${
+
+      const stream = slid.createStream();
+      stream.acceptWaveform(
+          {samples: segment.samples, sampleRate: vad.config.sampleRate});
+      const lang = slid.compute(stream);
+      const fullLang = display.of(lang);
+
+      const filename = `${index}-${fullLang}-${
           new Date()
               .toLocaleTimeString('en-US', {hour12: false})
               .split(' ')[0]}.wav`;
@@ -73,7 +98,8 @@ ai.on('data', data => {
           filename,
           {samples: segment.samples, sampleRate: vad.config.sampleRate});
       const duration = segment.samples.length / vad.config.sampleRate;
-      console.log(`${index} End of speech. Duration: ${duration} seconds`);
+      console.log(`${index} End of speech. Duration: ${
+          duration} seconds.\n Detected language: ${fullLang}`);
       console.log(`Saved to ${filename}`);
       index += 1;
     }
