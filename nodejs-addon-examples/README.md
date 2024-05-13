@@ -143,3 +143,43 @@ node ./test_asr_non_streaming_paraformer.js
 npm install naudiodon2
 node ./test_vad_asr_non_streaming_paraformer_microphone.js
 ```
+
+## Text-to-speech with piper VITS models (TTS)
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-cori-medium.tar.bz2
+tar xvf vits-piper-en_GB-cori-medium.tar.bz2
+rm vits-piper-en_GB-cori-medium.tar.bz2
+
+node ./test_tts_non_streaming_vits_piper_en.js
+```
+
+## Text-to-speech with piper Coqui-ai/TTS models (TTS)
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
+tar xvf vits-coqui-de-css10.tar.bz2
+rm vits-coqui-de-css10.tar.bz2
+
+node ./test_tts_non_streaming_vits_coqui_de.js
+```
+
+## Text-to-speech with vits Chinese models (1/2)
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2
+tar xvf sherpa-onnx-vits-zh-ll.tar.bz2
+rm sherpa-onnx-vits-zh-ll.tar.bz2
+
+node ./test_tts_non_streaming_vits_zh_ll.js
+```
+
+## Text-to-speech with vits Chinese models (2/2)
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+tar xvf vits-icefall-zh-aishell3.tar.bz2
+rm vits-icefall-zh-aishell3.tar.bz2
+
+node ./test_tts_non_streaming_vits_zh_aishell3.js
+```

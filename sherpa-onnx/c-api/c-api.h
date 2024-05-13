@@ -823,7 +823,7 @@ SHERPA_ONNX_API int32_t
 SherpaOnnxOfflineTtsNumSpeakers(const SherpaOnnxOfflineTts *tts);
 
 // Generate audio from the given text and speaker id (sid).
-// The user has to use DestroyOfflineTtsGeneratedAudio() to free the
+// The user has to use SherpaOnnxDestroyOfflineTtsGeneratedAudio() to free the
 // returned pointer to avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid,
