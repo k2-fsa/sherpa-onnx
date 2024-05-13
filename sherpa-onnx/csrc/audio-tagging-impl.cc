@@ -25,7 +25,7 @@ std::unique_ptr<AudioTaggingImpl> AudioTaggingImpl::Create(
     return std::make_unique<AudioTaggingCEDImpl>(config);
   }
 
-  SHERPA_ONNX_LOG(
+  SHERPA_ONNX_LOGE(
       "Please specify an audio tagging model! Return a null pointer");
   return nullptr;
 }
@@ -39,7 +39,7 @@ std::unique_ptr<AudioTaggingImpl> AudioTaggingImpl::Create(
     return std::make_unique<AudioTaggingCEDImpl>(mgr, config);
   }
 
-  SHERPA_ONNX_LOG(
+  SHERPA_ONNX_LOGE(
       "Please specify an audio tagging model! Return a null pointer");
   return nullptr;
 }
