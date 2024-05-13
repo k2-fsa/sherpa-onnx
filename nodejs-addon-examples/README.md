@@ -27,6 +27,18 @@ export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-x64:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-arm64:$LD_LIBRARY_PATH
 ```
 
+# Voice Activity detection (VAD)
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+
+# To run the test with a microphone, you need to install the package naudiodon2
+npm install naudiodon2
+
+node ./test_vad_microphone.js
+```
+
 ## Streaming speech recognition with zipformer transducer
 
 ```bash
@@ -36,21 +48,27 @@ rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 
 node ./test_asr_streaming_transducer.js
 
-# To run the test with microphone, you need to install the package naudiodon2
+# To run the test with a microphone, you need to install the package naudiodon2
 npm install naudiodon2
 
 node ./test_asr_streaming_transducer_microphone.js
 ```
 
-# VAD
+## Streaming speech recognition with zipformer CTC
 
 ```bash
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
+rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 
+node ./test_asr_streaming_ctc.js
 
-# To run the test with microphone, you need to install the package naudiodon2
+# To decode with HLG.fst
+node ./test_asr_streaming_ctc_hlg.js
+
+# To run the test with a microphone, you need to install the package naudiodon2
 npm install naudiodon2
 
-node ./test_vad_microphone.js
+node ./test_asr_streaming_ctc_microphone.js
+node ./test_asr_streaming_ctc_hlg_microphone.js
 ```
-
