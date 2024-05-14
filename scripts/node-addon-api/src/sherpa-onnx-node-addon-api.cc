@@ -21,6 +21,8 @@ void InitSpeakerID(Napi::Env env, Napi::Object exports);
 
 void InitAudioTagging(Napi::Env env, Napi::Object exports);
 
+void InitPunctuation(Napi::Env env, Napi::Object exports);
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitStreamingAsr(env, exports);
   InitNonStreamingAsr(env, exports);
@@ -31,6 +33,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitSpokenLanguageID(env, exports);
   InitSpeakerID(env, exports);
   InitAudioTagging(env, exports);
+  InitPunctuation(env, exports);
 
   return exports;
 }

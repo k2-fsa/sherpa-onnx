@@ -6,6 +6,15 @@ d=nodejs-addon-examples
 echo "dir: $d"
 cd $d
 
+echo "----------add punctuations----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+
+node ./test_punctuation.js
+rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
+
 echo "----------audio tagging----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-small-audio-tagging-2024-04-15.tar.bz2

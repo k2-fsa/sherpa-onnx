@@ -6,6 +6,7 @@ const vad = require('./vad.js');
 const slid = require('./spoken-language-identification.js');
 const sid = require('./speaker-identification.js');
 const at = require('./audio-tagg.js');
+const punct = require('./punctuation.js');
 
 module.exports = {
   OnlineRecognizer: streaming_asr.OnlineRecognizer,
@@ -20,4 +21,5 @@ module.exports = {
   SpeakerEmbeddingExtractor: sid.SpeakerEmbeddingExtractor,
   SpeakerEmbeddingManager: sid.SpeakerEmbeddingManager,
   AudioTagging: at.AudioTagging,
+  Punctuation: punct.Punctuation,
 }
