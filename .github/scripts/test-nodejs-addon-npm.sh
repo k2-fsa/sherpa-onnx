@@ -6,6 +6,15 @@ d=nodejs-addon-examples
 echo "dir: $d"
 cd $d
 
+echo "----------keyword spotting----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+
+node ./test_keyword_spotter_transducer.js
+rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
+
 echo "----------add punctuations----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2

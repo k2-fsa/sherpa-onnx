@@ -62,6 +62,13 @@ The following tables list the examples in this folder.
 |[./test_audio_tagging_zipformer.js](./test_audio_tagging_zipformer.js)| Audio tagging with a Zipformer model|
 |[./test_audio_tagging_ced.js](./test_audio_tagging_ced.js)| Audio tagging with a [CED](https://github.com/RicherMans/CED) model|
 
+## Keyword spotting
+
+|File| Description|
+|---|---|
+|[./test_keyword_spotter_transducer.js](./test_keyword_spotter_transducer.js)| Keyword spotting from a file using a Zipformer model|
+|[./test_keyword_spotter_transducer_microphone.js](./test_keyword_spotter_transducer_microphone.js)| Keyword spotting from a microphone using a Zipformer model|
+
 ## Streaming speech-to-text from files
 
 |File| Description|
@@ -324,4 +331,18 @@ tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 
 node ./test_punctuation.js
+```
+
+## Keyword spotting
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+
+node ./test_keyword_spotter_transducer.js
+
+# To run keyword spotting using a microphone
+npm install naudiodon2
+node ./test_keyword_spotter_transducer_microphone.js
 ```

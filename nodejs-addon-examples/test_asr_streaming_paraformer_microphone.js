@@ -94,11 +94,5 @@ ai.on('data', data => {
   }
 });
 
-ai.on('close', () => {
-  console.log('Free resources');
-  stream.free();
-  recognizer.free();
-});
-
 ai.start();
 console.log('Started! Please speak')

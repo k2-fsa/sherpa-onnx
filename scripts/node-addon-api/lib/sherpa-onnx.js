@@ -7,6 +7,7 @@ const slid = require('./spoken-language-identification.js');
 const sid = require('./speaker-identification.js');
 const at = require('./audio-tagg.js');
 const punct = require('./punctuation.js');
+const kws = require('./keyword-spotter.js');
 
 module.exports = {
   OnlineRecognizer: streaming_asr.OnlineRecognizer,
@@ -22,4 +23,5 @@ module.exports = {
   SpeakerEmbeddingManager: sid.SpeakerEmbeddingManager,
   AudioTagging: at.AudioTagging,
   Punctuation: punct.Punctuation,
+  KeywordSpotter: kws.KeywordSpotter,
 }

@@ -653,6 +653,20 @@ void DestroyKeywordResult(const SherpaOnnxKeywordResult *r) {
   }
 }
 
+const char *GetKeywordResultAsJson(SherpaOnnxKeywordSpotter *spotter,
+                                   SherpaOnnxOnlineStream *stream) {
+  const sherpa_onnx::KeywordResult &result =
+      spotter->impl->GetResult(stream->impl.get());
+
+  std::string json = result.AsJsonString();
+  char *pJson = new char[json.size() + 1];
+  std::copy(json.begin(), json.end(), pJson);
+  pJson[json.size()] = 0;
+  return pJson;
+}
+
+void FreeKeywordResultJson(const char *s) { delete[] s; }
+
 // ============================================================
 // For VAD
 // ============================================================

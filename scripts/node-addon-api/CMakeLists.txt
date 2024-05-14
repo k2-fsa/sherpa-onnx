@@ -19,6 +19,7 @@ include_directories(${CMAKE_JS_INC})
 
 set(srcs
   src/audio-tagging.cc
+  src/keyword-spotting.cc
   src/non-streaming-asr.cc
   src/non-streaming-tts.cc
   src/punctuation.cc
