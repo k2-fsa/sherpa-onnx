@@ -18,7 +18,7 @@ fi
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
-# SHERPA_ONNX_VERSION=1.0.21
+# SHERPA_ONNX_VERSION=1.0.22
 
 if [ -z $owner ]; then
   owner=k2-fsa
