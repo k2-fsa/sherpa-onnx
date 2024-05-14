@@ -4,7 +4,8 @@
 
 #include <sstream>
 
-#include "napi.h"  // NOLINT
+#include "macros.h"  // NOLINT
+#include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 
 static SherpaOnnxOfflineTtsVitsModelConfig GetOfflineTtsVitsModelConfig(
@@ -17,68 +18,14 @@ static SherpaOnnxOfflineTtsVitsModelConfig GetOfflineTtsVitsModelConfig(
   }
 
   Napi::Object o = obj.Get("vits").As<Napi::Object>();
-
-  if (o.Has("model") && o.Get("model").IsString()) {
-    Napi::String model = o.Get("model").As<Napi::String>();
-    std::string s = model.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.model = p;
-  }
-
-  if (o.Has("lexicon") && o.Get("lexicon").IsString()) {
-    Napi::String lexicon = o.Get("lexicon").As<Napi::String>();
-    std::string s = lexicon.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.lexicon = p;
-  }
-
-  if (o.Has("tokens") && o.Get("tokens").IsString()) {
-    Napi::String tokens = o.Get("tokens").As<Napi::String>();
-    std::string s = tokens.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.tokens = p;
-  }
-
-  if (o.Has("dataDir") && o.Get("dataDir").IsString()) {
-    Napi::String data_dir = o.Get("dataDir").As<Napi::String>();
-    std::string s = data_dir.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.data_dir = p;
-  }
-
-  if (o.Has("noiseScale") && o.Get("noiseScale").IsNumber()) {
-    c.noise_scale = o.Get("noiseScale").As<Napi::Number>().FloatValue();
-  }
-
-  if (o.Has("noiseScaleW") && o.Get("noiseScaleW").IsNumber()) {
-    c.noise_scale_w = o.Get("noiseScaleW").As<Napi::Number>().FloatValue();
-  }
-
-  if (o.Has("lengthScale") && o.Get("lengthScale").IsNumber()) {
-    c.length_scale = o.Get("lengthScale").As<Napi::Number>().FloatValue();
-  }
-
-  if (o.Has("dictDir") && o.Get("dictDir").IsString()) {
-    Napi::String dict_dir = o.Get("dictDir").As<Napi::String>();
-    std::string s = dict_dir.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.dict_dir = p;
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(noise_scale, noiseScale);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(noise_scale_w, noiseScaleW);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(dict_dir, dictDir);
 
   return c;
 }
@@ -96,9 +43,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
 
   c.vits = GetOfflineTtsVitsModelConfig(o);
 
-  if (o.Has("numThreads") && o.Get("numThreads").IsNumber()) {
-    c.num_threads = o.Get("numThreads").As<Napi::Number>().Int32Value();
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, num_threads);
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
@@ -109,15 +54,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
     }
   }
 
-  if (o.Has("provider") && o.Get("provider").IsString()) {
-    Napi::String provider = o.Get("provider").As<Napi::String>();
-    std::string s = provider.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.provider = p;
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
   return c;
 }
@@ -148,30 +85,9 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
 
   c.model = GetOfflineTtsModelConfig(o);
 
-  if (o.Has("ruleFsts") && o.Get("ruleFsts").IsString()) {
-    Napi::String rule_fsts = o.Get("ruleFsts").As<Napi::String>();
-    std::string s = rule_fsts.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.rule_fsts = p;
-  }
-
-  if (o.Has("maxNumSentences") && o.Get("maxNumSentences").IsNumber()) {
-    c.max_num_sentences =
-        o.Get("maxNumSentences").As<Napi::Number>().Int32Value();
-  }
-
-  if (o.Has("ruleFars") && o.Get("ruleFars").IsString()) {
-    Napi::String rule_fars = o.Get("ruleFars").As<Napi::String>();
-    std::string s = rule_fars.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.rule_fars = p;
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_num_sentences, maxNumSentences);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
 
   SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&c);
 

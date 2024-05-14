@@ -4,7 +4,8 @@
 
 #include <sstream>
 
-#include "napi.h"  // NOLINT
+#include "macros.h"  // NOLINT
+#include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 
 static Napi::External<SherpaOnnxCircularBuffer> CreateCircularBufferWrapper(
@@ -247,34 +248,11 @@ static SherpaOnnxSileroVadModelConfig GetSileroVadConfig(
   }
 
   Napi::Object o = obj.Get("sileroVad").As<Napi::Object>();
-
-  if (o.Has("model") && o.Get("model").IsString()) {
-    Napi::String model = o.Get("model").As<Napi::String>();
-    std::string s = model.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.model = p;
-  }
-
-  if (o.Has("threshold") && o.Get("threshold").IsNumber()) {
-    c.threshold = o.Get("threshold").As<Napi::Number>().FloatValue();
-  }
-
-  if (o.Has("minSilenceDuration") && o.Get("minSilenceDuration").IsNumber()) {
-    c.min_silence_duration =
-        o.Get("minSilenceDuration").As<Napi::Number>().FloatValue();
-  }
-
-  if (o.Has("minSpeechDuration") && o.Get("minSpeechDuration").IsNumber()) {
-    c.min_speech_duration =
-        o.Get("minSpeechDuration").As<Napi::Number>().FloatValue();
-  }
-
-  if (o.Has("windowSize") && o.Get("windowSize").IsNumber()) {
-    c.window_size = o.Get("windowSize").As<Napi::Number>().Int32Value();
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(threshold, threshold);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_silence_duration, minSilenceDuration);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_speech_duration, minSpeechDuration);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(window_size, windowSize);
 
   return c;
 }
@@ -313,23 +291,9 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
   memset(&c, 0, sizeof(c));
   c.silero_vad = GetSileroVadConfig(o);
 
-  if (o.Has("sampleRate") && o.Get("sampleRate").IsNumber()) {
-    c.sample_rate = o.Get("sampleRate").As<Napi::Number>().Int32Value();
-  }
-
-  if (o.Has("numThreads") && o.Get("numThreads").IsNumber()) {
-    c.num_threads = o.Get("numThreads").As<Napi::Number>().Int32Value();
-  }
-
-  if (o.Has("provider") && o.Get("provider").IsString()) {
-    Napi::String provider = o.Get("provider").As<Napi::String>();
-    std::string s = provider.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.provider = p;
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(sample_rate, sampleRate);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {

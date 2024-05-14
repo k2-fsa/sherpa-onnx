@@ -4,7 +4,8 @@
 
 #include <sstream>
 
-#include "napi.h"  // NOLINT
+#include "macros.h"  // NOLINT
+#include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 
 static SherpaOnnxSpokenLanguageIdentificationWhisperConfig
@@ -18,29 +19,9 @@ GetSpokenLanguageIdentificationWhisperConfig(Napi::Object obj) {
 
   Napi::Object o = obj.Get("whisper").As<Napi::Object>();
 
-  if (o.Has("encoder") && o.Get("encoder").IsString()) {
-    Napi::String encoder = o.Get("encoder").As<Napi::String>();
-    std::string s = encoder.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.encoder = p;
-  }
-
-  if (o.Has("decoder") && o.Get("decoder").IsString()) {
-    Napi::String decoder = o.Get("decoder").As<Napi::String>();
-    std::string s = decoder.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.decoder = p;
-  }
-
-  if (o.Has("tailPaddings") && o.Get("tailPaddings").IsNumber()) {
-    c.tail_paddings = o.Get("tailPaddings").As<Napi::Number>().Int32Value();
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(tail_paddings, tailPaddings);
 
   return c;
 }
@@ -70,9 +51,7 @@ CreateSpokenLanguageIdentificationWrapper(const Napi::CallbackInfo &info) {
   memset(&c, 0, sizeof(c));
   c.whisper = GetSpokenLanguageIdentificationWhisperConfig(o);
 
-  if (o.Has("numThreads") && o.Get("numThreads").IsNumber()) {
-    c.num_threads = o.Get("numThreads").As<Napi::Number>().Int32Value();
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
@@ -82,16 +61,7 @@ CreateSpokenLanguageIdentificationWrapper(const Napi::CallbackInfo &info) {
       c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
     }
   }
-
-  if (o.Has("provider") && o.Get("provider").IsString()) {
-    Napi::String provider = o.Get("provider").As<Napi::String>();
-    std::string s = provider.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.provider = p;
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
   const SherpaOnnxSpokenLanguageIdentification *slid =
       SherpaOnnxCreateSpokenLanguageIdentification(&c);

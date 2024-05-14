@@ -77,4 +77,19 @@ jobs:
 
               cd /shared
 
+              d=nodejs-addon-examples
+              echo "dir: $d"
+              cd $d
+              npm install --verbose
+              git status
+              ls -lh
+              ls -lh node_modules
+
+              export DYLD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-x64:$DYLD_LIBRARY_PATH
+              export DYLD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRARY_PATH
+              export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-x64:$LD_LIBRARY_PATH
+              export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-arm64:$LD_LIBRARY_PATH
+
+              cd ../
+
               .github/scripts/test-nodejs-addon-npm.sh
