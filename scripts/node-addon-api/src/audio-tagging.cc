@@ -166,7 +166,7 @@ static Napi::Object AudioTaggingComputeWrapper(const Napi::CallbackInfo &info) {
 
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(
-        env, "You should pass a offline stream pointer as the second argument")
+        env, "You should pass an offline stream pointer as the second argument")
         .ThrowAsJavaScriptException();
 
     return {};

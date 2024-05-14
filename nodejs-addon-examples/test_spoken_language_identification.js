@@ -2,6 +2,8 @@
 
 const sherpa_onnx = require('sherpa-onnx-node');
 
+// Please download whisper multi-lingual models from
+// https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
 function createSpokenLanguageID() {
   const config = {
     whisper: {

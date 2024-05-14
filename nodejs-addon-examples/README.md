@@ -31,6 +31,12 @@ export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-arm64:$LD_LIBRARY_PAT
 
 The following tables list the examples in this folder.
 
+## Add punctuations to text
+
+|File| Description|
+|---|---|
+|[./test_punctuation.js](./test_punctuation.js)| Add punctuations to input text using [CT transformer](https://modelscope.cn/models/iic/punc_ct-transformer_zh-cn-common-vocab272727-pytorch/summary). It supports both Chinese and English.|
+
 ## Voice activity detection (VAD)
 
 |File| Description|
@@ -308,4 +314,14 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition
 git clone https://github.com/csukuangfj/sr-data
 
 node ./test_speaker_identification.js
+```
+
+### Add punctuations
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+
+node ./test_punctuation.js
 ```
