@@ -1,8 +1,11 @@
 // scripts/node-addon-api/src/macros.h
 //
-// Copyright (c)  2023  Xiaomi Corporation
-#ifndef SCRIPTS_NODE_ADDONE_API_SRC_MACROS_H_
-#define SCRIPTS_NODE_ADDONE_API_SRC_MACROS_H_
+// Copyright (c)  2024  Xiaomi Corporation
+#ifndef SCRIPTS_NODE_ADDON_API_SRC_MACROS_H_
+#define SCRIPTS_NODE_ADDON_API_SRC_MACROS_H_
+
+#include <algorithm>
+#include <string>
 
 #define ASSIGN_ATTR_STR(c_name, js_name)                      \
   do {                                                        \
@@ -31,4 +34,4 @@
     }                                                             \
   } while (0)
 
-#endif  // SCRIPTS_NODE_ADDONE_API_SRC_MACROS_H_
+#endif  // SCRIPTS_NODE_ADDON_API_SRC_MACROS_H_
