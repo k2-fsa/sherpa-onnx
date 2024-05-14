@@ -201,3 +201,16 @@ node ./test_spoken_language_identification.js
 npm install naudiodon2
 node ./test_vad_spoken_language_identification_microphone.js
 ```
+
+## Speaker identification
+
+You can find more models at
+<https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models>
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+
+git clone https://github.com/csukuangfj/sr-data
+
+node ./test_speaker_identification.js
+```

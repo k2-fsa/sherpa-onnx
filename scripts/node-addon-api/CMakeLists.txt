@@ -21,6 +21,7 @@ set(srcs
   src/non-streaming-asr.cc
   src/non-streaming-tts.cc
   src/sherpa-onnx-node-addon-api.cc
+  src/speaker-identification.cc
   src/spoken-language-identification.cc
   src/streaming-asr.cc
   src/vad.cc

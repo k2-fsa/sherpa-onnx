@@ -1,6 +1,9 @@
 name: npm-addon-macos
 
 on:
+  push:
+    branches:
+      - node-addon
   workflow_dispatch:
 
 concurrency:
