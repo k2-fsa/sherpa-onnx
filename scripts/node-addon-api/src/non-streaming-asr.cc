@@ -11,11 +11,11 @@ SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj);
 
 static SherpaOnnxOfflineTransducerModelConfig GetOfflineTransducerModelConfig(
     Napi::Object obj) {
-  SherpaOnnxOfflineTransducerModelConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOfflineTransducerModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("transducer") || !obj.Get("transducer").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("transducer").As<Napi::Object>();
@@ -27,7 +27,7 @@ static SherpaOnnxOfflineTransducerModelConfig GetOfflineTransducerModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.encoder = p;
+    c.encoder = p;
   }
 
   if (o.Has("decoder") && o.Get("decoder").IsString()) {
@@ -37,7 +37,7 @@ static SherpaOnnxOfflineTransducerModelConfig GetOfflineTransducerModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.decoder = p;
+    c.decoder = p;
   }
 
   if (o.Has("joiner") && o.Get("joiner").IsString()) {
@@ -47,19 +47,19 @@ static SherpaOnnxOfflineTransducerModelConfig GetOfflineTransducerModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.joiner = p;
+    c.joiner = p;
   }
 
-  return config;
+  return c;
 }
 
 static SherpaOnnxOfflineParaformerModelConfig GetOfflineParaformerModelConfig(
     Napi::Object obj) {
-  SherpaOnnxOfflineParaformerModelConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOfflineParaformerModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("paraformer") || !obj.Get("paraformer").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("paraformer").As<Napi::Object>();
@@ -71,19 +71,19 @@ static SherpaOnnxOfflineParaformerModelConfig GetOfflineParaformerModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.model = p;
+    c.model = p;
   }
 
-  return config;
+  return c;
 }
 
 static SherpaOnnxOfflineNemoEncDecCtcModelConfig GetOfflineNeMoCtcModelConfig(
     Napi::Object obj) {
-  SherpaOnnxOfflineNemoEncDecCtcModelConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOfflineNemoEncDecCtcModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("nemoCtc") || !obj.Get("nemoCtc").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("nemoCtc").As<Napi::Object>();
@@ -95,19 +95,19 @@ static SherpaOnnxOfflineNemoEncDecCtcModelConfig GetOfflineNeMoCtcModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.model = p;
+    c.model = p;
   }
 
-  return config;
+  return c;
 }
 
 static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
     Napi::Object obj) {
-  SherpaOnnxOfflineWhisperModelConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOfflineWhisperModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("whisper") || !obj.Get("whisper").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("whisper").As<Napi::Object>();
@@ -119,7 +119,7 @@ static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.encoder = p;
+    c.encoder = p;
   }
 
   if (o.Has("decoder") && o.Get("decoder").IsString()) {
@@ -129,7 +129,7 @@ static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.decoder = p;
+    c.decoder = p;
   }
 
   if (o.Has("language") && o.Get("language").IsString()) {
@@ -139,7 +139,7 @@ static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.language = p;
+    c.language = p;
   }
 
   if (o.Has("task") && o.Get("task").IsString()) {
@@ -149,19 +149,19 @@ static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.task = p;
+    c.task = p;
   }
 
-  return config;
+  return c;
 }
 
 static SherpaOnnxOfflineTdnnModelConfig GetOfflineTdnnModelConfig(
     Napi::Object obj) {
-  SherpaOnnxOfflineTdnnModelConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOfflineTdnnModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("tdnn") || !obj.Get("tdnn").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("tdnn").As<Napi::Object>();
@@ -173,10 +173,10 @@ static SherpaOnnxOfflineTdnnModelConfig GetOfflineTdnnModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.model = p;
+    c.model = p;
   }
 
-  return config;
+  return c;
 }
 
 static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {

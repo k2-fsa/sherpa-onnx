@@ -14,26 +14,24 @@
 };
  */
 SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj) {
-  SherpaOnnxFeatureConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxFeatureConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("featConfig") || !obj.Get("featConfig").IsObject()) {
-    return config;
+    return c;
   }
 
-  Napi::Object featConfig = obj.Get("featConfig").As<Napi::Object>();
+  Napi::Object o = obj.Get("featConfig").As<Napi::Object>();
 
-  if (featConfig.Has("sampleRate") && featConfig.Get("sampleRate").IsNumber()) {
-    config.sample_rate =
-        featConfig.Get("sampleRate").As<Napi::Number>().Int32Value();
+  if (o.Has("sampleRate") && o.Get("sampleRate").IsNumber()) {
+    c.sample_rate = o.Get("sampleRate").As<Napi::Number>().Int32Value();
   }
 
-  if (featConfig.Has("featureDim") && featConfig.Get("featureDim").IsNumber()) {
-    config.feature_dim =
-        featConfig.Get("featureDim").As<Napi::Number>().Int32Value();
+  if (o.Has("featureDim") && o.Get("featureDim").IsNumber()) {
+    c.feature_dim = o.Get("featureDim").As<Napi::Number>().Int32Value();
   }
 
-  return config;
+  return c;
 }
 /*
 {
@@ -47,11 +45,11 @@ SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj) {
 
 static SherpaOnnxOnlineTransducerModelConfig GetOnlineTransducerModelConfig(
     Napi::Object obj) {
-  SherpaOnnxOnlineTransducerModelConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOnlineTransducerModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("transducer") || !obj.Get("transducer").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("transducer").As<Napi::Object>();
@@ -63,7 +61,7 @@ static SherpaOnnxOnlineTransducerModelConfig GetOnlineTransducerModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.encoder = p;
+    c.encoder = p;
   }
 
   if (o.Has("decoder") && o.Get("decoder").IsString()) {
@@ -73,7 +71,7 @@ static SherpaOnnxOnlineTransducerModelConfig GetOnlineTransducerModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.decoder = p;
+    c.decoder = p;
   }
 
   if (o.Has("joiner") && o.Get("joiner").IsString()) {
@@ -83,19 +81,19 @@ static SherpaOnnxOnlineTransducerModelConfig GetOnlineTransducerModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.joiner = p;
+    c.joiner = p;
   }
 
-  return config;
+  return c;
 }
 
 static SherpaOnnxOnlineZipformer2CtcModelConfig
 GetOnlineZipformer2CtcModelConfig(Napi::Object obj) {
-  SherpaOnnxOnlineZipformer2CtcModelConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOnlineZipformer2CtcModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("zipformer2Ctc") || !obj.Get("zipformer2Ctc").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("zipformer2Ctc").As<Napi::Object>();
@@ -107,19 +105,19 @@ GetOnlineZipformer2CtcModelConfig(Napi::Object obj) {
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.model = p;
+    c.model = p;
   }
 
-  return config;
+  return c;
 }
 
 static SherpaOnnxOnlineParaformerModelConfig GetOnlineParaformerModelConfig(
     Napi::Object obj) {
-  SherpaOnnxOnlineParaformerModelConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOnlineParaformerModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("paraformer") || !obj.Get("paraformer").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("paraformer").As<Napi::Object>();
@@ -131,7 +129,7 @@ static SherpaOnnxOnlineParaformerModelConfig GetOnlineParaformerModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.encoder = p;
+    c.encoder = p;
   }
 
   if (o.Has("decoder") && o.Get("decoder").IsString()) {
@@ -141,24 +139,24 @@ static SherpaOnnxOnlineParaformerModelConfig GetOnlineParaformerModelConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.decoder = p;
+    c.decoder = p;
   }
-  return config;
+  return c;
 }
 
 static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
-  SherpaOnnxOnlineModelConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOnlineModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("modelConfig") || !obj.Get("modelConfig").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("modelConfig").As<Napi::Object>();
 
-  config.transducer = GetOnlineTransducerModelConfig(o);
-  config.paraformer = GetOnlineParaformerModelConfig(o);
-  config.zipformer2_ctc = GetOnlineZipformer2CtcModelConfig(o);
+  c.transducer = GetOnlineTransducerModelConfig(o);
+  c.paraformer = GetOnlineParaformerModelConfig(o);
+  c.zipformer2_ctc = GetOnlineZipformer2CtcModelConfig(o);
 
   if (o.Has("tokens") && o.Get("tokens").IsString()) {
     Napi::String tokens = o.Get("tokens").As<Napi::String>();
@@ -167,11 +165,11 @@ static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.tokens = p;
+    c.tokens = p;
   }
 
   if (o.Has("numThreads") && o.Get("numThreads").IsNumber()) {
-    config.num_threads = o.Get("numThreads").As<Napi::Number>().Int32Value();
+    c.num_threads = o.Get("numThreads").As<Napi::Number>().Int32Value();
   }
 
   if (o.Has("provider") && o.Get("provider").IsString()) {
@@ -181,15 +179,15 @@ static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.provider = p;
+    c.provider = p;
   }
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
     if (o.Get("debug").IsBoolean()) {
-      config.debug = o.Get("debug").As<Napi::Boolean>().Value();
+      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
     } else {
-      config.debug = o.Get("debug").As<Napi::Number>().Int32Value();
+      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
     }
   }
 
@@ -200,20 +198,20 @@ static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.model_type = p;
+    c.model_type = p;
   }
 
-  return config;
+  return c;
 }
 
 static SherpaOnnxOnlineCtcFstDecoderConfig GetCtcFstDecoderConfig(
     Napi::Object obj) {
-  SherpaOnnxOnlineCtcFstDecoderConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOnlineCtcFstDecoderConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("ctcFstDecoderConfig") ||
       !obj.Get("ctcFstDecoderConfig").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("ctcFstDecoderConfig").As<Napi::Object>();
@@ -225,14 +223,14 @@ static SherpaOnnxOnlineCtcFstDecoderConfig GetCtcFstDecoderConfig(
     std::copy(s.begin(), s.end(), p);
     p[s.size()] = 0;
 
-    config.graph = p;
+    c.graph = p;
   }
 
   if (o.Has("maxActive") && o.Get("maxActive").IsNumber()) {
-    config.max_active = o.Get("maxActive").As<Napi::Number>().Int32Value();
+    c.max_active = o.Get("maxActive").As<Napi::Number>().Int32Value();
   }
 
-  return config;
+  return c;
 }
 
 static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
@@ -254,15 +252,14 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     return {};
   }
 
-  Napi::Object config = info[0].As<Napi::Object>();
+  Napi::Object o = info[0].As<Napi::Object>();
   SherpaOnnxOnlineRecognizerConfig c;
   memset(&c, 0, sizeof(c));
-  c.feat_config = GetFeatureConfig(config);
-  c.model_config = GetOnlineModelConfig(config);
+  c.feat_config = GetFeatureConfig(o);
+  c.model_config = GetOnlineModelConfig(o);
 
-  if (config.Has("decodingMethod") && config.Get("decodingMethod").IsString()) {
-    Napi::String decoding_method =
-        config.Get("decodingMethod").As<Napi::String>();
+  if (o.Has("decodingMethod") && o.Get("decodingMethod").IsString()) {
+    Napi::String decoding_method = o.Get("decodingMethod").As<Napi::String>();
     std::string s = decoding_method.Utf8Value();
     char *p = new char[s.size() + 1];
     std::copy(s.begin(), s.end(), p);
@@ -271,44 +268,42 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     c.decoding_method = p;
   }
 
-  if (config.Has("maxActivePaths") && config.Get("maxActivePaths").IsNumber()) {
+  if (o.Has("maxActivePaths") && o.Get("maxActivePaths").IsNumber()) {
     c.max_active_paths =
-        config.Get("maxActivePaths").As<Napi::Number>().Int32Value();
+        o.Get("maxActivePaths").As<Napi::Number>().Int32Value();
   }
 
   // enableEndpoint can be either a boolean or an integer
-  if (config.Has("enableEndpoint") &&
-      (config.Get("enableEndpoint").IsNumber() ||
-       config.Get("enableEndpoint").IsBoolean())) {
-    if (config.Get("enableEndpoint").IsNumber()) {
+  if (o.Has("enableEndpoint") && (o.Get("enableEndpoint").IsNumber() ||
+                                  o.Get("enableEndpoint").IsBoolean())) {
+    if (o.Get("enableEndpoint").IsNumber()) {
       c.enable_endpoint =
-          config.Get("enableEndpoint").As<Napi::Number>().Int32Value();
+          o.Get("enableEndpoint").As<Napi::Number>().Int32Value();
     } else {
-      c.enable_endpoint =
-          config.Get("enableEndpoint").As<Napi::Boolean>().Value();
+      c.enable_endpoint = o.Get("enableEndpoint").As<Napi::Boolean>().Value();
     }
   }
 
-  if (config.Has("rule1MinTrailingSilence") &&
-      config.Get("rule1MinTrailingSilence").IsNumber()) {
+  if (o.Has("rule1MinTrailingSilence") &&
+      o.Get("rule1MinTrailingSilence").IsNumber()) {
     c.rule1_min_trailing_silence =
-        config.Get("rule1MinTrailingSilence").As<Napi::Number>().FloatValue();
+        o.Get("rule1MinTrailingSilence").As<Napi::Number>().FloatValue();
   }
 
-  if (config.Has("rule2MinTrailingSilence") &&
-      config.Get("rule2MinTrailingSilence").IsNumber()) {
+  if (o.Has("rule2MinTrailingSilence") &&
+      o.Get("rule2MinTrailingSilence").IsNumber()) {
     c.rule2_min_trailing_silence =
-        config.Get("rule2MinTrailingSilence").As<Napi::Number>().FloatValue();
+        o.Get("rule2MinTrailingSilence").As<Napi::Number>().FloatValue();
   }
 
-  if (config.Has("rule3MinUtteranceLength") &&
-      config.Get("rule3MinUtteranceLength").IsNumber()) {
+  if (o.Has("rule3MinUtteranceLength") &&
+      o.Get("rule3MinUtteranceLength").IsNumber()) {
     c.rule3_min_utterance_length =
-        config.Get("rule3MinUtteranceLength").As<Napi::Number>().FloatValue();
+        o.Get("rule3MinUtteranceLength").As<Napi::Number>().FloatValue();
   }
 
-  if (config.Has("hotwordsFile") && config.Get("hotwordsFile").IsString()) {
-    Napi::String hotwords_file = config.Get("hotwordsFile").As<Napi::String>();
+  if (o.Has("hotwordsFile") && o.Get("hotwordsFile").IsString()) {
+    Napi::String hotwords_file = o.Get("hotwordsFile").As<Napi::String>();
     std::string s = hotwords_file.Utf8Value();
     char *p = new char[s.size() + 1];
     std::copy(s.begin(), s.end(), p);
@@ -317,12 +312,11 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     c.hotwords_file = p;
   }
 
-  if (config.Has("hotwordsScore") && config.Get("hotwordsScore").IsNumber()) {
-    c.hotwords_score =
-        config.Get("hotwordsScore").As<Napi::Number>().FloatValue();
+  if (o.Has("hotwordsScore") && o.Get("hotwordsScore").IsNumber()) {
+    c.hotwords_score = o.Get("hotwordsScore").As<Napi::Number>().FloatValue();
   }
 
-  c.ctc_fst_decoder_config = GetCtcFstDecoderConfig(config);
+  c.ctc_fst_decoder_config = GetCtcFstDecoderConfig(o);
 
   SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&c);
 
