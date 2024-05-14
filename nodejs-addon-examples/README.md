@@ -29,7 +29,7 @@ export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-arm64:$LD_LIBRARY_PAT
 
 # Examples
 
-The following table lists the examples in this folder.
+The following tables list the examples in this folder.
 
 ## Voice activity detection (VAD)
 
