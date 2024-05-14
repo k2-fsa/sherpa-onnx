@@ -33,6 +33,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Update pip
+        shell: bash
+        run: |
+          pip install -U pip
+
       - uses: actions/setup-node@v4
         with:
           registry-url: 'https://registry.npmjs.org'
