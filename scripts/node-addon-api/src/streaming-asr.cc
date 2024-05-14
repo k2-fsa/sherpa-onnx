@@ -90,7 +90,7 @@ static SherpaOnnxOnlineParaformerModelConfig GetOnlineParaformerModelConfig(
   return c;
 }
 
-static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
+SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
   SherpaOnnxOnlineModelConfig c;
   memset(&c, 0, sizeof(c));
 
