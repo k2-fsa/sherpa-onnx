@@ -3,7 +3,8 @@
 // Copyright (c)  2024  Xiaomi Corporation
 #include <sstream>
 
-#include "napi.h"  // NOLINT
+#include "macros.h"  // NOLINT
+#include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 
 // defined in ./streaming-asr.cc
@@ -20,35 +21,9 @@ static SherpaOnnxOfflineTransducerModelConfig GetOfflineTransducerModelConfig(
 
   Napi::Object o = obj.Get("transducer").As<Napi::Object>();
 
-  if (o.Has("encoder") && o.Get("encoder").IsString()) {
-    Napi::String encoder = o.Get("encoder").As<Napi::String>();
-    std::string s = encoder.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.encoder = p;
-  }
-
-  if (o.Has("decoder") && o.Get("decoder").IsString()) {
-    Napi::String decoder = o.Get("decoder").As<Napi::String>();
-    std::string s = decoder.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.decoder = p;
-  }
-
-  if (o.Has("joiner") && o.Get("joiner").IsString()) {
-    Napi::String joiner = o.Get("joiner").As<Napi::String>();
-    std::string s = joiner.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.joiner = p;
-  }
+  ASSIGN_ATTR_STR(encoder, encoder);
+  ASSIGN_ATTR_STR(decoder, decoder);
+  ASSIGN_ATTR_STR(joiner, joiner);
 
   return c;
 }
@@ -64,15 +39,7 @@ static SherpaOnnxOfflineParaformerModelConfig GetOfflineParaformerModelConfig(
 
   Napi::Object o = obj.Get("paraformer").As<Napi::Object>();
 
-  if (o.Has("model") && o.Get("model").IsString()) {
-    Napi::String model = o.Get("model").As<Napi::String>();
-    std::string s = model.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.model = p;
-  }
+  ASSIGN_ATTR_STR(model, model);
 
   return c;
 }
@@ -88,15 +55,7 @@ static SherpaOnnxOfflineNemoEncDecCtcModelConfig GetOfflineNeMoCtcModelConfig(
 
   Napi::Object o = obj.Get("nemoCtc").As<Napi::Object>();
 
-  if (o.Has("model") && o.Get("model").IsString()) {
-    Napi::String model = o.Get("model").As<Napi::String>();
-    std::string s = model.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.model = p;
-  }
+  ASSIGN_ATTR_STR(model, model);
 
   return c;
 }
@@ -112,45 +71,10 @@ static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
 
   Napi::Object o = obj.Get("whisper").As<Napi::Object>();
 
-  if (o.Has("encoder") && o.Get("encoder").IsString()) {
-    Napi::String encoder = o.Get("encoder").As<Napi::String>();
-    std::string s = encoder.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.encoder = p;
-  }
-
-  if (o.Has("decoder") && o.Get("decoder").IsString()) {
-    Napi::String decoder = o.Get("decoder").As<Napi::String>();
-    std::string s = decoder.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.decoder = p;
-  }
-
-  if (o.Has("language") && o.Get("language").IsString()) {
-    Napi::String language = o.Get("language").As<Napi::String>();
-    std::string s = language.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.language = p;
-  }
-
-  if (o.Has("task") && o.Get("task").IsString()) {
-    Napi::String task = o.Get("task").As<Napi::String>();
-    std::string s = task.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.task = p;
-  }
+  ASSIGN_ATTR_STR(encoder, encoder);
+  ASSIGN_ATTR_STR(decoder, decoder);
+  ASSIGN_ATTR_STR(language, language);
+  ASSIGN_ATTR_STR(task, languagek);
 
   return c;
 }
@@ -166,15 +90,7 @@ static SherpaOnnxOfflineTdnnModelConfig GetOfflineTdnnModelConfig(
 
   Napi::Object o = obj.Get("tdnn").As<Napi::Object>();
 
-  if (o.Has("model") && o.Get("model").IsString()) {
-    Napi::String model = o.Get("model").As<Napi::String>();
-    std::string s = model.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.model = p;
-  }
+  ASSIGN_ATTR_STR(model, model);
 
   return c;
 }
@@ -195,19 +111,8 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.whisper = GetOfflineWhisperModelConfig(o);
   c.tdnn = GetOfflineTdnnModelConfig(o);
 
-  if (o.Has("tokens") && o.Get("tokens").IsString()) {
-    Napi::String tokens = o.Get("tokens").As<Napi::String>();
-    std::string s = tokens.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.tokens = p;
-  }
-
-  if (o.Has("numThreads") && o.Get("numThreads").IsNumber()) {
-    c.num_threads = o.Get("numThreads").As<Napi::Number>().Int32Value();
-  }
+  ASSIGN_ATTR_STR(tokens, tokens);
+  ASSIGN_ATTR_INT32(num_threads, numThreads);
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
@@ -218,25 +123,8 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
     }
   }
 
-  if (o.Has("provider") && o.Get("provider").IsString()) {
-    Napi::String provider = o.Get("provider").As<Napi::String>();
-    std::string s = provider.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.provider = p;
-  }
-
-  if (o.Has("modelType") && o.Get("modelType").IsString()) {
-    Napi::String model_type = o.Get("modelType").As<Napi::String>();
-    std::string s = model_type.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.model_type = p;
-  }
+  ASSIGN_ATTR_STR(provider, provider);
+  ASSIGN_ATTR_STR(model_type, modelType);
 
   return c;
 }
@@ -251,19 +139,8 @@ static SherpaOnnxOfflineLMConfig GetOfflineLMConfig(Napi::Object obj) {
 
   Napi::Object o = obj.Get("lmConfig").As<Napi::Object>();
 
-  if (o.Has("model") && o.Get("model").IsString()) {
-    Napi::String model = o.Get("model").As<Napi::String>();
-    std::string s = model.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.model = p;
-  }
-
-  if (o.Has("scale") && o.Get("scale").IsNumber()) {
-    c.scale = o.Get("scale").As<Napi::Number>().FloatValue();
-  }
+  ASSIGN_ATTR_STR(model, model);
+  ASSIGN_ATTR_FLOAT(scale, scale);
 
   return c;
 }
@@ -295,34 +172,10 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   c.model_config = GetOfflineModelConfig(o);
   c.lm_config = GetOfflineLMConfig(o);
 
-  if (o.Has("decodingMethod") && o.Get("decodingMethod").IsString()) {
-    Napi::String decoding_method = o.Get("decodingMethod").As<Napi::String>();
-    std::string s = decoding_method.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.decoding_method = p;
-  }
-
-  if (o.Has("maxActivePaths") && o.Get("maxActivePaths").IsNumber()) {
-    c.max_active_paths =
-        o.Get("maxActivePaths").As<Napi::Number>().Int32Value();
-  }
-
-  if (o.Has("hotwordsFile") && o.Get("hotwordsFile").IsString()) {
-    Napi::String hotwords_file = o.Get("hotwordsFile").As<Napi::String>();
-    std::string s = hotwords_file.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    c.hotwords_file = p;
-  }
-
-  if (o.Has("hotwordsScore") && o.Get("hotwordsScore").IsNumber()) {
-    c.hotwords_score = o.Get("hotwordsScore").As<Napi::Number>().FloatValue();
-  }
+  ASSIGN_ATTR_STR(decoding_method, decodingMethod);
+  ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
+  ASSIGN_ATTR_STR(hotwords_file, hotwordsFile);
+  ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
 
   SherpaOnnxOfflineRecognizer *recognizer = CreateOfflineRecognizer(&c);
 
