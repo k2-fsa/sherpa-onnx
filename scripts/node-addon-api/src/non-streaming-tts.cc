@@ -18,14 +18,14 @@ static SherpaOnnxOfflineTtsVitsModelConfig GetOfflineTtsVitsModelConfig(
   }
 
   Napi::Object o = obj.Get("vits").As<Napi::Object>();
-  ASSIGN_ATTR_STR(model, model);
-  ASSIGN_ATTR_STR(lexicon, lexicon);
-  ASSIGN_ATTR_STR(tokens, tokens);
-  ASSIGN_ATTR_STR(data_dir, dataDir);
-  ASSIGN_ATTR_FLOAT(noise_scale, noiseScale);
-  ASSIGN_ATTR_FLOAT(noise_scale_w, noiseScaleW);
-  ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
-  ASSIGN_ATTR_STR(dict_dir, dictDir);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(noise_scale, noiseScale);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(noise_scale_w, noiseScaleW);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(dict_dir, dictDir);
 
   return c;
 }
@@ -43,7 +43,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
 
   c.vits = GetOfflineTtsVitsModelConfig(o);
 
-  ASSIGN_ATTR_INT32(num_threads, num_threads);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, num_threads);
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
@@ -54,7 +54,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
     }
   }
 
-  ASSIGN_ATTR_STR(provider, provider);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
   return c;
 }
@@ -85,9 +85,9 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
 
   c.model = GetOfflineTtsModelConfig(o);
 
-  ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
-  ASSIGN_ATTR_INT32(max_num_sentences, maxNumSentences);
-  ASSIGN_ATTR_STR(rule_fars, ruleFars);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_num_sentences, maxNumSentences);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
 
   SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&c);
 

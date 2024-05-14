@@ -7,7 +7,7 @@
 #include <algorithm>
 #include <string>
 
-#define ASSIGN_ATTR_STR(c_name, js_name)                      \
+#define SHERPA_ONNX_ASSIGN_ATTR_STR(c_name, js_name)          \
   do {                                                        \
     if (o.Has(#js_name) && o.Get(#js_name).IsString()) {      \
       Napi::String _str = o.Get(#js_name).As<Napi::String>(); \
@@ -20,14 +20,14 @@
     }                                                         \
   } while (0)
 
-#define ASSIGN_ATTR_INT32(c_name, js_name)                        \
+#define SHERPA_ONNX_ASSIGN_ATTR_INT32(c_name, js_name)            \
   do {                                                            \
     if (o.Has(#js_name) && o.Get(#js_name).IsNumber()) {          \
       c.c_name = o.Get(#js_name).As<Napi::Number>().Int32Value(); \
     }                                                             \
   } while (0)
 
-#define ASSIGN_ATTR_FLOAT(c_name, js_name)                        \
+#define SHERPA_ONNX_ASSIGN_ATTR_FLOAT(c_name, js_name)            \
   do {                                                            \
     if (o.Has(#js_name) && o.Get(#js_name).IsNumber()) {          \
       c.c_name = o.Get(#js_name).As<Napi::Number>().FloatValue(); \

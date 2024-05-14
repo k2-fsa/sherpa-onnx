@@ -21,9 +21,9 @@ static SherpaOnnxOfflineTransducerModelConfig GetOfflineTransducerModelConfig(
 
   Napi::Object o = obj.Get("transducer").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(encoder, encoder);
-  ASSIGN_ATTR_STR(decoder, decoder);
-  ASSIGN_ATTR_STR(joiner, joiner);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(joiner, joiner);
 
   return c;
 }
@@ -39,7 +39,7 @@ static SherpaOnnxOfflineParaformerModelConfig GetOfflineParaformerModelConfig(
 
   Napi::Object o = obj.Get("paraformer").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
 
   return c;
 }
@@ -55,7 +55,7 @@ static SherpaOnnxOfflineNemoEncDecCtcModelConfig GetOfflineNeMoCtcModelConfig(
 
   Napi::Object o = obj.Get("nemoCtc").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
 
   return c;
 }
@@ -71,10 +71,10 @@ static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
 
   Napi::Object o = obj.Get("whisper").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(encoder, encoder);
-  ASSIGN_ATTR_STR(decoder, decoder);
-  ASSIGN_ATTR_STR(language, language);
-  ASSIGN_ATTR_STR(task, languagek);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(language, language);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(task, languagek);
 
   return c;
 }
@@ -90,7 +90,7 @@ static SherpaOnnxOfflineTdnnModelConfig GetOfflineTdnnModelConfig(
 
   Napi::Object o = obj.Get("tdnn").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
 
   return c;
 }
@@ -111,8 +111,8 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.whisper = GetOfflineWhisperModelConfig(o);
   c.tdnn = GetOfflineTdnnModelConfig(o);
 
-  ASSIGN_ATTR_STR(tokens, tokens);
-  ASSIGN_ATTR_INT32(num_threads, numThreads);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
@@ -123,8 +123,8 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
     }
   }
 
-  ASSIGN_ATTR_STR(provider, provider);
-  ASSIGN_ATTR_STR(model_type, modelType);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
 
   return c;
 }
@@ -139,8 +139,8 @@ static SherpaOnnxOfflineLMConfig GetOfflineLMConfig(Napi::Object obj) {
 
   Napi::Object o = obj.Get("lmConfig").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(model, model);
-  ASSIGN_ATTR_FLOAT(scale, scale);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(scale, scale);
 
   return c;
 }
@@ -172,10 +172,10 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   c.model_config = GetOfflineModelConfig(o);
   c.lm_config = GetOfflineLMConfig(o);
 
-  ASSIGN_ATTR_STR(decoding_method, decodingMethod);
-  ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
-  ASSIGN_ATTR_STR(hotwords_file, hotwordsFile);
-  ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoding_method, decodingMethod);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords_file, hotwordsFile);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
 
   SherpaOnnxOfflineRecognizer *recognizer = CreateOfflineRecognizer(&c);
 

@@ -248,11 +248,11 @@ static SherpaOnnxSileroVadModelConfig GetSileroVadConfig(
   }
 
   Napi::Object o = obj.Get("sileroVad").As<Napi::Object>();
-  ASSIGN_ATTR_STR(model, model);
-  ASSIGN_ATTR_FLOAT(threshold, threshold);
-  ASSIGN_ATTR_FLOAT(min_silence_duration, minSilenceDuration);
-  ASSIGN_ATTR_FLOAT(min_speech_duration, minSpeechDuration);
-  ASSIGN_ATTR_INT32(window_size, windowSize);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(threshold, threshold);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_silence_duration, minSilenceDuration);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_speech_duration, minSpeechDuration);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(window_size, windowSize);
 
   return c;
 }
@@ -291,9 +291,9 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
   memset(&c, 0, sizeof(c));
   c.silero_vad = GetSileroVadConfig(o);
 
-  ASSIGN_ATTR_INT32(sample_rate, sampleRate);
-  ASSIGN_ATTR_INT32(num_threads, numThreads);
-  ASSIGN_ATTR_STR(provider, provider);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(sample_rate, sampleRate);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {

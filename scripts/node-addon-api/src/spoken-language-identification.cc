@@ -19,9 +19,9 @@ GetSpokenLanguageIdentificationWhisperConfig(Napi::Object obj) {
 
   Napi::Object o = obj.Get("whisper").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(encoder, encoder);
-  ASSIGN_ATTR_STR(decoder, decoder);
-  ASSIGN_ATTR_INT32(tail_paddings, tailPaddings);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(tail_paddings, tailPaddings);
 
   return c;
 }
@@ -51,7 +51,7 @@ CreateSpokenLanguageIdentificationWrapper(const Napi::CallbackInfo &info) {
   memset(&c, 0, sizeof(c));
   c.whisper = GetSpokenLanguageIdentificationWhisperConfig(o);
 
-  ASSIGN_ATTR_INT32(num_threads, numThreads);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
@@ -61,7 +61,7 @@ CreateSpokenLanguageIdentificationWrapper(const Napi::CallbackInfo &info) {
       c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
     }
   }
-  ASSIGN_ATTR_STR(provider, provider);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
   const SherpaOnnxSpokenLanguageIdentification *slid =
       SherpaOnnxCreateSpokenLanguageIdentification(&c);

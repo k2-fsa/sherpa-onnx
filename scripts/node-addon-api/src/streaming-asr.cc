@@ -24,8 +24,8 @@ SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj) {
 
   Napi::Object o = obj.Get("featConfig").As<Napi::Object>();
 
-  ASSIGN_ATTR_INT32(sample_rate, sampleRate);
-  ASSIGN_ATTR_INT32(feature_dim, featureDim);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(sample_rate, sampleRate);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(feature_dim, featureDim);
 
   return c;
 }
@@ -50,9 +50,9 @@ static SherpaOnnxOnlineTransducerModelConfig GetOnlineTransducerModelConfig(
 
   Napi::Object o = obj.Get("transducer").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(encoder, encoder);
-  ASSIGN_ATTR_STR(decoder, decoder);
-  ASSIGN_ATTR_STR(joiner, joiner);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(joiner, joiner);
 
   return c;
 }
@@ -68,7 +68,7 @@ GetOnlineZipformer2CtcModelConfig(Napi::Object obj) {
 
   Napi::Object o = obj.Get("zipformer2Ctc").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
 
   return c;
 }
@@ -84,8 +84,8 @@ static SherpaOnnxOnlineParaformerModelConfig GetOnlineParaformerModelConfig(
 
   Napi::Object o = obj.Get("paraformer").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(encoder, encoder);
-  ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
 
   return c;
 }
@@ -104,9 +104,9 @@ static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
   c.paraformer = GetOnlineParaformerModelConfig(o);
   c.zipformer2_ctc = GetOnlineZipformer2CtcModelConfig(o);
 
-  ASSIGN_ATTR_STR(tokens, tokens);
-  ASSIGN_ATTR_INT32(num_threads, numThreads);
-  ASSIGN_ATTR_STR(provider, provider);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
@@ -117,7 +117,7 @@ static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
     }
   }
 
-  ASSIGN_ATTR_STR(model_type, modelType);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
 
   return c;
 }
@@ -134,8 +134,8 @@ static SherpaOnnxOnlineCtcFstDecoderConfig GetCtcFstDecoderConfig(
 
   Napi::Object o = obj.Get("ctcFstDecoderConfig").As<Napi::Object>();
 
-  ASSIGN_ATTR_STR(graph, graph);
-  ASSIGN_ATTR_INT32(max_active, maxActive);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(graph, graph);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active, maxActive);
 
   return c;
 }
@@ -165,8 +165,8 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   c.feat_config = GetFeatureConfig(o);
   c.model_config = GetOnlineModelConfig(o);
 
-  ASSIGN_ATTR_STR(decoding_method, decodingMethod);
-  ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoding_method, decodingMethod);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
 
   // enableEndpoint can be either a boolean or an integer
   if (o.Has("enableEndpoint") && (o.Get("enableEndpoint").IsNumber() ||
@@ -179,11 +179,14 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     }
   }
 
-  ASSIGN_ATTR_FLOAT(rule1_min_trailing_silence, rule1MinTrailingSilence);
-  ASSIGN_ATTR_FLOAT(rule2_min_trailing_silence, rule2MinTrailingSilence);
-  ASSIGN_ATTR_FLOAT(rule3_min_utterance_length, rule3MinUtteranceLength);
-  ASSIGN_ATTR_STR(hotwords_file, hotwordsFile);
-  ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(rule1_min_trailing_silence,
+                                rule1MinTrailingSilence);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(rule2_min_trailing_silence,
+                                rule2MinTrailingSilence);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(rule3_min_utterance_length,
+                                rule3MinUtteranceLength);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords_file, hotwordsFile);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
 
   c.ctc_fst_decoder_config = GetCtcFstDecoderConfig(o);
 
