@@ -1,6 +1,9 @@
 name: npm-addon-win-x64
 
 on:
+  push:
+    branches:
+      - node-addon
   workflow_dispatch:
 
 concurrency:

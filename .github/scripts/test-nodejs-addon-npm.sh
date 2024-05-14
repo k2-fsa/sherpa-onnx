@@ -6,6 +6,16 @@ d=nodejs-addon-examples
 echo "dir: $d"
 cd $d
 
+echo "----------speaker identification----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+
+git clone https://github.com/csukuangfj/sr-data
+
+node ./test_speaker_identification.js
+
+rm *.onnx
+rm -rf sr-data
+
 echo "----------spoken language identification----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2

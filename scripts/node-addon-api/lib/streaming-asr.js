@@ -64,5 +64,6 @@ class OnlineRecognizer {
 
 module.exports = {
   OnlineRecognizer,
+  OnlineStream,
   Display
 }

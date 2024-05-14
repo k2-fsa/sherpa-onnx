@@ -17,6 +17,8 @@ void InitWaveWriter(Napi::Env env, Napi::Object exports);
 
 void InitSpokenLanguageID(Napi::Env env, Napi::Object exports);
 
+void InitSpeakerID(Napi::Env env, Napi::Object exports);
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitStreamingAsr(env, exports);
   InitNonStreamingAsr(env, exports);
@@ -25,6 +27,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitWaveReader(env, exports);
   InitWaveWriter(env, exports);
   InitSpokenLanguageID(env, exports);
+  InitSpeakerID(env, exports);
 
   return exports;
 }
