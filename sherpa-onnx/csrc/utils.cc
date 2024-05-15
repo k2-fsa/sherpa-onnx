@@ -49,6 +49,26 @@ static bool EncodeBase(std::istream &is, const SymbolTable &symbol_table,
           word = word.replace(0, 3, " ");
         }
       }
+
+      if (word.size() == 6 && word[0] == '<' && word[1] == '0' &&
+          word[2] == 'x' && word[5] == '>') {
+        // handles byte BPE models
+        //
+        // <0xE7> -> E7
+        std::string tmp = std::string(word.data() + 3, word.data() + 5);
+
+        std::size_t pos{};
+        uint8_t i = std::stoi(tmp, &pos, 16);
+        if (pos != 2) {
+          SHERPA_ONNX_LOGE(
+              "Unexpected token for byte BPE model: %s. pos: %d, i: %d",
+              word.c_str(), static_cast<int32_t>(pos), static_cast<int32_t>(i));
+          exit(-1);
+        }
+
+        word = std::string(&i, &i + 1);
+      }
+
       if (symbol_table.Contains(word)) {
         int32_t id = symbol_table[word];
         tmp_ids.push_back(id);
