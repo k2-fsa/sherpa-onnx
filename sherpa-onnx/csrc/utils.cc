@@ -44,7 +44,7 @@ static bool EncodeBase(std::vector<std::string> &lines,
 
     std::istringstream iss(line);
     while (iss >> word) {
-      if (symbol_table.contains(word)) {
+      if (symbol_table.Contains(word)) {
         int32_t id = symbol_table[word];
         tmp_ids.push_back(id);
       } else {

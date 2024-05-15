@@ -59,7 +59,7 @@ class OnlineRecognizer(object):
         provider: str = "cpu",
         model_type: str = "",
         modeling_unit: str = "cjkchar",
-        bpe_model: str = "",
+        bpe_vocab: str = "",
         lm: str = "",
         lm_scale: float = 0.1,
         temperature_scale: float = 2.0,

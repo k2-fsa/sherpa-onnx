@@ -50,7 +50,7 @@ class OfflineRecognizer(object):
         hotwords_score: float = 1.5,
         blank_penalty: float = 0.0,
         modeling_unit: str = "cjkchar",
-        bpe_model: str = "",
+        bpe_vocab: str = "",
         debug: bool = False,
         provider: str = "cpu",
         model_type: str = "transducer",
