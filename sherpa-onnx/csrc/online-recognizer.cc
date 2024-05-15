@@ -51,9 +51,7 @@ std::string VecToString<std::string>(const std::vector<std::string> &vec,
 std::string OnlineRecognizerResult::AsJsonString() const {
   std::ostringstream os;
   os << "{ ";
-  os << "\"text\": "
-     << "\"" << text << "\""
-     << ", ";
+  os << "\"text\": " << "\"" << text << "\"" << ", ";
   os << "\"tokens\": " << VecToString(tokens) << ", ";
   os << "\"timestamps\": " << VecToString(timestamps, 2) << ", ";
   os << "\"ys_probs\": " << VecToString(ys_probs, 6) << ", ";
@@ -89,10 +87,9 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
                "Used only when decoding_method is modified_beam_search");
   po->Register(
       "hotwords-file", &hotwords_file,
-      "The file containing hotwords, one words/phrases per line, and for each"
-      "phrase the bpe/cjkchar are separated by a space. For example: "
-      "▁HE LL O ▁WORLD"
-      "你 好 世 界");
+      "The file containing hotwords, one words/phrases per line, For example: "
+      "HELLO WORLD"
+      "你好世界");
   po->Register("decoding-method", &decoding_method,
                "decoding method,"
                "now support greedy_search and modified_beam_search.");

@@ -110,11 +110,9 @@ def get_args():
         type=str,
         default="",
         help="""
-        The file containing hotwords, one words/phrases per line, and for each
-        phrase the bpe/cjkchar are separated by a space. For example:
-
-        ▁HE LL O ▁WORLD
-        你 好 世 界
+        The file containing hotwords, one words/phrases per line, like
+        HELLO WORLD
+        你好世界
         """,
     )
 
