@@ -152,17 +152,23 @@ jobs:
 
           ./node_modules/.bin/cmake-js compile --log-level verbose
 
-      - name: Test streaming transducer
+      - name: Run tests
         shell: bash
         run: |
           export PATH=$PWD/build/install/lib:$PATH
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          d=nodejs-addon-examples
+          cd $d
+          files=$(ls *.js)
+          echo $files
+          for f in ${files[@]}; do
+            echo $f
+            sed -i.bak s%sherpa-onnx-node%./sherpa-onnx% ./$f
+          done
+          cd ..
 
-          cd scripts/node-addon-api
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          cp -v scripts/node-addon-api/build/Release/sherpa-onnx.node $d/
+          cp -v scripts/node-addon-api/lib/*.js $d/
+          cp -v ./build/install/lib/lib*  $d/
 
-          node test/test_asr_streaming_transducer.js
-
-          rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+          .github/scripts/test-nodejs-addon-npm.sh

@@ -4,6 +4,8 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_PUNCTUATION_CT_TRANSFORMER_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_PUNCTUATION_CT_TRANSFORMER_IMPL_H_
 
+#include <math.h>
+
 #include <memory>
 #include <string>
 #include <utility>
@@ -60,7 +62,9 @@ class OfflinePunctuationCtTransformerImpl : public OfflinePunctuationImpl {
 
     int32_t segment_size = 20;
     int32_t max_len = 200;
-    int32_t num_segments = (token_ids.size() + segment_size - 1) / segment_size;
+    int32_t num_segments =
+        ceil((static_cast<float>(token_ids.size()) + segment_size - 1) /
+             segment_size);
 
     std::vector<int32_t> punctuations;
     int32_t last = -1;

@@ -9,6 +9,7 @@ const possible_paths = [
   '../build/Debug/sherpa-onnx.node',
   `./node_modules/sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
   `../sherpa-onnx-${platform_arch}/sherpa-onnx.node`,
+  './sherpa-onnx.node',
 ];
 
 let found = false;
@@ -24,8 +25,8 @@ for (const p of possible_paths) {
 }
 
 if (!found) {
-  let msg =
-      `Could not find sherpa-onnx. Tried\n\n  ${possible_paths.join('\n  ')}\n`
+  let msg = `Could not find sherpa-onnx-node. Tried\n\n  ${
+      possible_paths.join('\n  ')}\n`
   if (os.platform() == 'darwin' && process.env.DYLD_LIBRARY_PATH &&
       !process.env.DYLD_LIBRARY_PATH.includes(
           `node_modules/sherpa-onnx-${platform_arch}`)) {

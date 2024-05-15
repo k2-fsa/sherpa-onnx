@@ -68,7 +68,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       : config_(config),
         model_(OnlineTransducerModel::Create(config.model_config)),
         sym_(config.model_config.tokens) {
-    if (sym_.contains("<unk>")) {
+    if (sym_.Contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
 
@@ -87,7 +87,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       : config_(config),
         model_(OnlineTransducerModel::Create(mgr, config.model_config)),
         sym_(mgr, config.model_config.tokens) {
-    if (sym_.contains("<unk>")) {
+    if (sym_.Contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
 
@@ -307,7 +307,7 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
 
   void InitOnlineStream(OnlineStream *stream) const {
     auto r = decoder_->GetEmptyResult();
-    SHERPA_ONNX_CHECK_EQ(r.hyps.size(), 1);
+    SHERPA_ONNX_CHECK_EQ(r.hyps.Size(), 1);
 
     SHERPA_ONNX_CHECK(stream->GetContextGraph() != nullptr);
     r.hyps.begin()->second.context_state = stream->GetContextGraph()->Root();

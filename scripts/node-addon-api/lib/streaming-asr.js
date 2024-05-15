@@ -1,20 +1,36 @@
 const addon = require('./addon.js');
 
+class Display {
+  constructor(maxWordPerline) {
+    this.handle = addon.createDisplay(maxWordPerline);
+  }
+
+  print(idx, text) {
+    addon.print(this.handle, idx, text)
+  }
+}
+
 class OnlineStream {
   constructor(handle) {
     this.handle = handle;
   }
 
+  // obj is {samples: samples, sampleRate: sampleRate}
   // samples is a float32 array containing samples in the range [-1, 1]
-  acceptWaveform(samples, sampleRate) {
-    addon.acceptWaveformOnline(
-        this.handle, {samples: samples, sampleRate: sampleRate})
+  // sampleRate is a number
+  acceptWaveform(obj) {
+    addon.acceptWaveformOnline(this.handle, obj)
+  }
+
+  inputFinished() {
+    addon.inputFinished(this.handle)
   }
 }
 
 class OnlineRecognizer {
   constructor(config) {
     this.handle = addon.createOnlineRecognizer(config);
+    this.config = config
   }
 
   createStream() {
@@ -30,6 +46,14 @@ class OnlineRecognizer {
     addon.decodeOnlineStream(this.handle, stream.handle);
   }
 
+  isEndpoint(stream) {
+    return addon.isEndpoint(this.handle, stream.handle);
+  }
+
+  reset(stream) {
+    addon.reset(this.handle, stream.handle);
+  }
+
   getResult(stream) {
     const jsonStr =
         addon.getOnlineStreamResultAsJson(this.handle, stream.handle);
@@ -38,4 +62,8 @@ class OnlineRecognizer {
   }
 }
 
-module.exports = {OnlineRecognizer}
+module.exports = {
+  OnlineRecognizer,
+  OnlineStream,
+  Display
+}

@@ -1,6 +1,9 @@
 name: npm-addon-linux-x64
 
 on:
+  push:
+    branches:
+      - node-addon
   workflow_dispatch:
 
 concurrency:

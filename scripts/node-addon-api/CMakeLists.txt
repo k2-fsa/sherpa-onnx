@@ -18,9 +18,18 @@ add_definitions(-DNAPI_VERSION=3)
 include_directories(${CMAKE_JS_INC})
 
 set(srcs
+  src/audio-tagging.cc
+  src/keyword-spotting.cc
+  src/non-streaming-asr.cc
+  src/non-streaming-tts.cc
+  src/punctuation.cc
   src/sherpa-onnx-node-addon-api.cc
+  src/speaker-identification.cc
+  src/spoken-language-identification.cc
   src/streaming-asr.cc
+  src/vad.cc
   src/wave-reader.cc
+  src/wave-writer.cc
 )
 
 if(NOT DEFINED ENV{SHERPA_ONNX_INSTALL_DIR})

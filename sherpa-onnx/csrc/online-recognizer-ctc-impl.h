@@ -216,6 +216,8 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     // clear states
     s->SetStates(model_->GetInitStates());
 
+    s->GetFasterDecoderProcessedFrames() = 0;
+
     // Note: We only update counters. The underlying audio samples
     // are not discarded.
     s->Reset();
@@ -223,8 +225,8 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
 
  private:
   void InitDecoder() {
-    if (!sym_.contains("<blk>") && !sym_.contains("<eps>") &&
-        !sym_.contains("<blank>")) {
+    if (!sym_.Contains("<blk>") && !sym_.Contains("<eps>") &&
+        !sym_.Contains("<blank>")) {
       SHERPA_ONNX_LOGE(
           "We expect that tokens.txt contains "
           "the symbol <blk> or <eps> or <blank> and its ID.");
@@ -232,12 +234,12 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     }
 
     int32_t blank_id = 0;
-    if (sym_.contains("<blk>")) {
+    if (sym_.Contains("<blk>")) {
       blank_id = sym_["<blk>"];
-    } else if (sym_.contains("<eps>")) {
+    } else if (sym_.Contains("<eps>")) {
       // for tdnn models of the yesno recipe from icefall
       blank_id = sym_["<eps>"];
-    } else if (sym_.contains("<blank>")) {
+    } else if (sym_.Contains("<blank>")) {
       // for WeNet CTC models
       blank_id = sym_["<blank>"];
     }

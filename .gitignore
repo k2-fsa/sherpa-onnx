@@ -104,3 +104,5 @@ sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 sherpa-onnx-ced-*
 node_modules
 package-lock.json
+sherpa-onnx-nemo-*
+sherpa-onnx-vits-*

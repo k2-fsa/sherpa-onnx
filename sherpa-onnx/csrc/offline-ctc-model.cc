@@ -163,7 +163,8 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
       return std::make_unique<OfflineNemoEncDecCtcModel>(mgr, config);
       break;
     case ModelType::kEncDecHybridRNNTCTCBPEModel:
-      return std::make_unique<OfflineNemoEncDecHybridRNNTCTCBPEModel>(config);
+      return std::make_unique<OfflineNemoEncDecHybridRNNTCTCBPEModel>(mgr,
+                                                                      config);
       break;
     case ModelType::kTdnn:
       return std::make_unique<OfflineTdnnCtcModel>(mgr, config);

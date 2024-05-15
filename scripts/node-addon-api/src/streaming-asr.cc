@@ -3,7 +3,8 @@
 // Copyright (c)  2024  Xiaomi Corporation
 #include <sstream>
 
-#include "napi.h"  // NOLINT
+#include "macros.h"  // NOLINT
+#include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 /*
 {
@@ -13,27 +14,20 @@
   }
 };
  */
-static SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj) {
-  SherpaOnnxFeatureConfig config;
-  memset(&config, 0, sizeof(config));
+SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj) {
+  SherpaOnnxFeatureConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("featConfig") || !obj.Get("featConfig").IsObject()) {
-    return config;
+    return c;
   }
 
-  Napi::Object featConfig = obj.Get("featConfig").As<Napi::Object>();
+  Napi::Object o = obj.Get("featConfig").As<Napi::Object>();
 
-  if (featConfig.Has("sampleRate") && featConfig.Get("sampleRate").IsNumber()) {
-    config.sample_rate =
-        featConfig.Get("sampleRate").As<Napi::Number>().Int32Value();
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(sample_rate, sampleRate);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(feature_dim, featureDim);
 
-  if (featConfig.Has("featureDim") && featConfig.Get("featureDim").IsNumber()) {
-    config.feature_dim =
-        featConfig.Get("featureDim").As<Napi::Number>().Int32Value();
-  }
-
-  return config;
+  return c;
 }
 /*
 {
@@ -47,99 +41,103 @@ static SherpaOnnxFeatureConfig GetFeatureConfig(Napi::Object obj) {
 
 static SherpaOnnxOnlineTransducerModelConfig GetOnlineTransducerModelConfig(
     Napi::Object obj) {
-  SherpaOnnxOnlineTransducerModelConfig config;
-  memset(&config, 0, sizeof(config));
+  SherpaOnnxOnlineTransducerModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("transducer") || !obj.Get("transducer").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("transducer").As<Napi::Object>();
 
-  if (o.Has("encoder") && o.Get("encoder").IsString()) {
-    Napi::String encoder = o.Get("encoder").As<Napi::String>();
-    std::string s = encoder.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(joiner, joiner);
 
-    config.encoder = p;
-  }
-
-  if (o.Has("decoder") && o.Get("decoder").IsString()) {
-    Napi::String decoder = o.Get("decoder").As<Napi::String>();
-    std::string s = decoder.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    config.decoder = p;
-  }
-
-  if (o.Has("joiner") && o.Get("joiner").IsString()) {
-    Napi::String joiner = o.Get("joiner").As<Napi::String>();
-    std::string s = joiner.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    config.joiner = p;
-  }
-
-  return config;
+  return c;
 }
 
-static SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
-  SherpaOnnxOnlineModelConfig config;
-  memset(&config, 0, sizeof(config));
+static SherpaOnnxOnlineZipformer2CtcModelConfig
+GetOnlineZipformer2CtcModelConfig(Napi::Object obj) {
+  SherpaOnnxOnlineZipformer2CtcModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("zipformer2Ctc") || !obj.Get("zipformer2Ctc").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("zipformer2Ctc").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+
+  return c;
+}
+
+static SherpaOnnxOnlineParaformerModelConfig GetOnlineParaformerModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOnlineParaformerModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("paraformer") || !obj.Get("paraformer").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("paraformer").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+
+  return c;
+}
+
+SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
+  SherpaOnnxOnlineModelConfig c;
+  memset(&c, 0, sizeof(c));
 
   if (!obj.Has("modelConfig") || !obj.Get("modelConfig").IsObject()) {
-    return config;
+    return c;
   }
 
   Napi::Object o = obj.Get("modelConfig").As<Napi::Object>();
 
-  config.transducer = GetOnlineTransducerModelConfig(o);
+  c.transducer = GetOnlineTransducerModelConfig(o);
+  c.paraformer = GetOnlineParaformerModelConfig(o);
+  c.zipformer2_ctc = GetOnlineZipformer2CtcModelConfig(o);
 
-  if (o.Has("tokens") && o.Get("tokens").IsString()) {
-    Napi::String tokens = o.Get("tokens").As<Napi::String>();
-    std::string s = tokens.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
-    config.tokens = p;
+  if (o.Has("debug") &&
+      (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {
+    if (o.Get("debug").IsBoolean()) {
+      c.debug = o.Get("debug").As<Napi::Boolean>().Value();
+    } else {
+      c.debug = o.Get("debug").As<Napi::Number>().Int32Value();
+    }
   }
 
-  if (o.Has("numThreads") && o.Get("numThreads").IsNumber()) {
-    config.num_threads = o.Get("numThreads").As<Napi::Number>().Int32Value();
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
+
+  return c;
+}
+
+static SherpaOnnxOnlineCtcFstDecoderConfig GetCtcFstDecoderConfig(
+    Napi::Object obj) {
+  SherpaOnnxOnlineCtcFstDecoderConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("ctcFstDecoderConfig") ||
+      !obj.Get("ctcFstDecoderConfig").IsObject()) {
+    return c;
   }
 
-  if (o.Has("provider") && o.Get("provider").IsString()) {
-    Napi::String provider = o.Get("provider").As<Napi::String>();
-    std::string s = provider.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
+  Napi::Object o = obj.Get("ctcFstDecoderConfig").As<Napi::Object>();
 
-    config.provider = p;
-  }
+  SHERPA_ONNX_ASSIGN_ATTR_STR(graph, graph);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active, maxActive);
 
-  if (o.Has("debug") && o.Get("debug").IsNumber()) {
-    config.debug = o.Get("debug").As<Napi::Number>().Int32Value();
-  }
-
-  if (o.Has("modelType") && o.Get("modelType").IsString()) {
-    Napi::String model_type = o.Get("modelType").As<Napi::String>();
-    std::string s = model_type.Utf8Value();
-    char *p = new char[s.size() + 1];
-    std::copy(s.begin(), s.end(), p);
-    p[s.size()] = 0;
-
-    config.model_type = p;
-  }
-
-  return config;
+  return c;
 }
 
 static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
@@ -161,30 +159,36 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     return {};
   }
 
-  Napi::Object config = info[0].As<Napi::Object>();
+  Napi::Object o = info[0].As<Napi::Object>();
   SherpaOnnxOnlineRecognizerConfig c;
   memset(&c, 0, sizeof(c));
-  c.feat_config = GetFeatureConfig(config);
-  c.model_config = GetOnlineModelConfig(config);
-#if 0
-  printf("encoder: %s\n", c.model_config.transducer.encoder
-                              ? c.model_config.transducer.encoder
-                              : "no");
-  printf("decoder: %s\n", c.model_config.transducer.decoder
-                              ? c.model_config.transducer.decoder
-                              : "no");
-  printf("joiner: %s\n", c.model_config.transducer.joiner
-                             ? c.model_config.transducer.joiner
-                             : "no");
+  c.feat_config = GetFeatureConfig(o);
+  c.model_config = GetOnlineModelConfig(o);
 
-  printf("tokens: %s\n", c.model_config.tokens ? c.model_config.tokens : "no");
-  printf("num_threads: %d\n", c.model_config.num_threads);
-  printf("provider: %s\n",
-         c.model_config.provider ? c.model_config.provider : "no");
-  printf("debug: %d\n", c.model_config.debug);
-  printf("model_type: %s\n",
-         c.model_config.model_type ? c.model_config.model_type : "no");
-#endif
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoding_method, decodingMethod);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
+
+  // enableEndpoint can be either a boolean or an integer
+  if (o.Has("enableEndpoint") && (o.Get("enableEndpoint").IsNumber() ||
+                                  o.Get("enableEndpoint").IsBoolean())) {
+    if (o.Get("enableEndpoint").IsNumber()) {
+      c.enable_endpoint =
+          o.Get("enableEndpoint").As<Napi::Number>().Int32Value();
+    } else {
+      c.enable_endpoint = o.Get("enableEndpoint").As<Napi::Boolean>().Value();
+    }
+  }
+
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(rule1_min_trailing_silence,
+                                rule1MinTrailingSilence);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(rule2_min_trailing_silence,
+                                rule2MinTrailingSilence);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(rule3_min_utterance_length,
+                                rule3MinUtteranceLength);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords_file, hotwordsFile);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
+
+  c.ctc_fst_decoder_config = GetCtcFstDecoderConfig(o);
 
   SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&c);
 
@@ -200,6 +204,18 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     delete[] c.model_config.transducer.joiner;
   }
 
+  if (c.model_config.paraformer.encoder) {
+    delete[] c.model_config.paraformer.encoder;
+  }
+
+  if (c.model_config.paraformer.decoder) {
+    delete[] c.model_config.paraformer.decoder;
+  }
+
+  if (c.model_config.zipformer2_ctc.model) {
+    delete[] c.model_config.zipformer2_ctc.model;
+  }
+
   if (c.model_config.tokens) {
     delete[] c.model_config.tokens;
   }
@@ -210,6 +226,18 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
 
   if (c.model_config.model_type) {
     delete[] c.model_config.model_type;
+  }
+
+  if (c.decoding_method) {
+    delete[] c.decoding_method;
+  }
+
+  if (c.hotwords_file) {
+    delete[] c.hotwords_file;
+  }
+
+  if (c.ctc_fst_decoder_config.graph) {
+    delete[] c.ctc_fst_decoder_config.graph;
   }
 
   if (!recognizer) {
@@ -240,7 +268,8 @@ static Napi::External<SherpaOnnxOnlineStream> CreateOnlineStreamWrapper(
 
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(
-        env, "You should pass a recognizer pointer as the only argument")
+        env,
+        "You should pass an online recognizer pointer as the only argument")
         .ThrowAsJavaScriptException();
 
     return {};
@@ -270,7 +299,7 @@ static void AcceptWaveformWrapper(const Napi::CallbackInfo &info) {
   }
 
   if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env, "Argument 0 should be a online stream pointer.")
+    Napi::TypeError::New(env, "Argument 0 should be an online stream pointer.")
         .ThrowAsJavaScriptException();
 
     return;
@@ -337,15 +366,14 @@ static Napi::Boolean IsOnlineStreamReadyWrapper(
 
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "Argument 0 should be a online recognizer pointer.")
+                         "Argument 0 should be an online recognizer pointer.")
         .ThrowAsJavaScriptException();
 
     return {};
   }
 
   if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "Argument 1 should be a online recognizer pointer.")
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
         .ThrowAsJavaScriptException();
 
     return {};
@@ -375,15 +403,14 @@ static void DecodeOnlineStreamWrapper(const Napi::CallbackInfo &info) {
 
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "Argument 0 should be a online recognizer pointer.")
+                         "Argument 0 should be an online recognizer pointer.")
         .ThrowAsJavaScriptException();
 
     return;
   }
 
   if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "Argument 1 should be a online recognizer pointer.")
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
         .ThrowAsJavaScriptException();
 
     return;
@@ -412,15 +439,14 @@ static Napi::String GetOnlineStreamResultAsJsonWrapper(
 
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "Argument 0 should be a online recognizer pointer.")
+                         "Argument 0 should be an online recognizer pointer.")
         .ThrowAsJavaScriptException();
 
     return {};
   }
 
   if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "Argument 1 should be a online recognizer pointer.")
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
         .ThrowAsJavaScriptException();
 
     return {};
@@ -438,6 +464,175 @@ static Napi::String GetOnlineStreamResultAsJsonWrapper(
   DestroyOnlineStreamResultJson(json);
 
   return s;
+}
+
+static void InputFinishedWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 1) {
+    std::ostringstream os;
+    os << "Expect only 1 argument. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  SherpaOnnxOnlineStream *stream =
+      info[0].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  InputFinished(stream);
+}
+
+static void ResetOnlineStreamWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 0 should be an online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  SherpaOnnxOnlineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
+
+  SherpaOnnxOnlineStream *stream =
+      info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  Reset(recognizer, stream);
+}
+
+static Napi::Boolean IsEndpointWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "Argument 0 should be an online recognizer pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  SherpaOnnxOnlineRecognizer *recognizer =
+      info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
+
+  SherpaOnnxOnlineStream *stream =
+      info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  int32_t is_endpoint = IsEndpoint(recognizer, stream);
+
+  return Napi::Boolean::New(env, is_endpoint);
+}
+
+static Napi::External<SherpaOnnxDisplay> CreateDisplayWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 1) {
+    std::ostringstream os;
+    os << "Expect only 1 argument. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+
+  if (!info[0].IsNumber()) {
+    Napi::TypeError::New(env, "Expect a number as the argument")
+        .ThrowAsJavaScriptException();
+
+    return {};
+  }
+  int32_t max_word_per_line = info[0].As<Napi::Number>().Int32Value();
+
+  const SherpaOnnxDisplay *display = CreateDisplay(max_word_per_line);
+
+  return Napi::External<SherpaOnnxDisplay>::New(
+      env, const_cast<SherpaOnnxDisplay *>(display),
+      [](Napi::Env env, SherpaOnnxDisplay *display) {
+        DestroyDisplay(display);
+      });
+}
+
+static void PrintWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 3) {
+    std::ostringstream os;
+    os << "Expect only 3 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "Argument 1 should be a number.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[2].IsString()) {
+    Napi::TypeError::New(env, "Argument 2 should be a string.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  SherpaOnnxDisplay *display =
+      info[0].As<Napi::External<SherpaOnnxDisplay>>().Data();
+
+  int32_t idx = info[1].As<Napi::Number>().Int32Value();
+
+  Napi::String text = info[2].As<Napi::String>();
+  std::string s = text.Utf8Value();
+  SherpaOnnxPrint(display, idx, s.c_str());
 }
 
 void InitStreamingAsr(Napi::Env env, Napi::Object exports) {
@@ -458,4 +653,19 @@ void InitStreamingAsr(Napi::Env env, Napi::Object exports) {
 
   exports.Set(Napi::String::New(env, "getOnlineStreamResultAsJson"),
               Napi::Function::New(env, GetOnlineStreamResultAsJsonWrapper));
+
+  exports.Set(Napi::String::New(env, "inputFinished"),
+              Napi::Function::New(env, InputFinishedWrapper));
+
+  exports.Set(Napi::String::New(env, "reset"),
+              Napi::Function::New(env, ResetOnlineStreamWrapper));
+
+  exports.Set(Napi::String::New(env, "isEndpoint"),
+              Napi::Function::New(env, IsEndpointWrapper));
+
+  exports.Set(Napi::String::New(env, "createDisplay"),
+              Napi::Function::New(env, CreateDisplayWrapper));
+
+  exports.Set(Napi::String::New(env, "print"),
+              Napi::Function::New(env, PrintWrapper));
 }

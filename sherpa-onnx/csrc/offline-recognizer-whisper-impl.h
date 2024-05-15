@@ -35,7 +35,7 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 
   std::string text;
   for (auto i : src.tokens) {
-    if (!sym_table.contains(i)) {
+    if (!sym_table.Contains(i)) {
       continue;
     }
 

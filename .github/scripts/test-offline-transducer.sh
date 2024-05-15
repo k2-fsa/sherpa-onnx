@@ -13,6 +13,105 @@ echo "PATH: $PATH"
 
 which $EXE
 
+log "------------------------------------------------------------------------"
+log "Run Nemo fast conformer hybrid transducer ctc models (transducer branch)"
+log "------------------------------------------------------------------------"
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-transducer-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
+name=$(basename $url)
+curl -SL -O $url
+tar xvf $name
+rm $name
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+log "test $repo"
+test_wavs=(
+de-german.wav
+es-spanish.wav
+hr-croatian.wav
+po-polish.wav
+uk-ukrainian.wav
+en-english.wav
+fr-french.wav
+it-italian.wav
+ru-russian.wav
+)
+for w in ${test_wavs[@]}; do
+  time $EXE \
+    --tokens=$repo/tokens.txt \
+    --encoder=$repo/encoder.onnx \
+    --decoder=$repo/decoder.onnx \
+    --joiner=$repo/joiner.onnx \
+    --debug=1 \
+    $repo/test_wavs/$w
+done
+
+rm -rf $repo
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-transducer-en-24500.tar.bz2
+name=$(basename $url)
+curl -SL -O $url
+tar xvf $name
+rm $name
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+log "Test $repo"
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  --debug=1 \
+  $repo/test_wavs/en-english.wav
+
+rm -rf $repo
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-transducer-es-1424.tar.bz2
+name=$(basename $url)
+curl -SL -O $url
+tar xvf $name
+rm $name
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+log "test $repo"
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  --debug=1 \
+  $repo/test_wavs/es-spanish.wav
+
+rm -rf $repo
+
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-transducer-en-de-es-fr-14288.tar.bz2
+name=$(basename $url)
+curl -SL -O $url
+tar xvf $name
+rm $name
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+log "Test $repo"
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  --debug=1 \
+  $repo/test_wavs/en-english.wav \
+  $repo/test_wavs/de-german.wav \
+  $repo/test_wavs/fr-french.wav \
+  $repo/test_wavs/es-spanish.wav
+
+rm -rf $repo
+
 log "------------------------------------------------------------"
 log "Run Conformer transducer (English)"
 log "------------------------------------------------------------"

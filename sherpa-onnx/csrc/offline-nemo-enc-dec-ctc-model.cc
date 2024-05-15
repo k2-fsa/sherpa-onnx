@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023-2024  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 

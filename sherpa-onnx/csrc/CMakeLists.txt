@@ -40,9 +40,11 @@ set(sources
   offline-tdnn-ctc-model.cc
   offline-tdnn-model-config.cc
   offline-transducer-greedy-search-decoder.cc
+  offline-transducer-greedy-search-nemo-decoder.cc
   offline-transducer-model-config.cc
   offline-transducer-model.cc
   offline-transducer-modified-beam-search-decoder.cc
+  offline-transducer-nemo-model.cc
   offline-wenet-ctc-model-config.cc
   offline-wenet-ctc-model.cc
   offline-whisper-greedy-search-decoder.cc
@@ -59,6 +61,8 @@ set(sources
   online-lm.cc
   online-lstm-transducer-model.cc
   online-model-config.cc
+  online-nemo-ctc-model-config.cc
+  online-nemo-ctc-model.cc
   online-paraformer-model-config.cc
   online-paraformer-model.cc
   online-recognizer-impl.cc

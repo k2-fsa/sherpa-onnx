@@ -7,5 +7,5 @@ for usages.
 
 ||Method|Support multiple threads|Minimum required node version|
 |---|---|---|---|
-|this package| https://github.com/nodejs/node-addon-api | Yes | v10|
+|this package| https://github.com/nodejs/node-addon-api | Yes | v16|
 |https://www.npmjs.com/package/sherpa-onnx| WebAssembly | No | v18|

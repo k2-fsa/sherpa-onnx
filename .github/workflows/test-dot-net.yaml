@@ -179,6 +179,7 @@ jobs:
           cp -v scripts/dotnet/examples/speech-recognition-from-microphone.csproj dotnet-examples/speech-recognition-from-microphone/
           cp -v scripts/dotnet/examples/spoken-language-identification.csproj dotnet-examples/spoken-language-identification/
           cp -v scripts/dotnet/examples/streaming-hlg-decoding.csproj dotnet-examples/streaming-hlg-decoding
+          cp -v scripts/dotnet/examples/speaker-identification.csproj dotnet-examples/speaker-identification
 
           ls -lh /tmp
 

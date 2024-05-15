@@ -625,6 +625,13 @@ SHERPA_ONNX_API const SherpaOnnxKeywordResult *GetKeywordResult(
 /// @param r A pointer returned by GetKeywordResult()
 SHERPA_ONNX_API void DestroyKeywordResult(const SherpaOnnxKeywordResult *r);
 
+// the user has to call FreeKeywordResultJson() to free the returned pointer
+// to avoid memory leak
+SHERPA_ONNX_API const char *GetKeywordResultAsJson(
+    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream *stream);
+
+SHERPA_ONNX_API void FreeKeywordResultJson(const char *s);
+
 // ============================================================
 // For VAD
 // ============================================================
@@ -823,7 +830,7 @@ SHERPA_ONNX_API int32_t
 SherpaOnnxOfflineTtsNumSpeakers(const SherpaOnnxOfflineTts *tts);
 
 // Generate audio from the given text and speaker id (sid).
-// The user has to use DestroyOfflineTtsGeneratedAudio() to free the
+// The user has to use SherpaOnnxDestroyOfflineTtsGeneratedAudio() to free the
 // returned pointer to avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid,
