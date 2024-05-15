@@ -1,6 +1,6 @@
 # Introduction
 
-Note: You need `Node >= 10`.
+Note: You need `Node >= 16`.
 
 This repo contains examples for NodeJS.
 It uses [node-addon-api](https://github.com/nodejs/node-addon-api) to wrap
