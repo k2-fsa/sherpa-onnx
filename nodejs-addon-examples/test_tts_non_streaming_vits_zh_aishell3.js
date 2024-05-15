@@ -1,6 +1,5 @@
 // Copyright (c)  2024  Xiaomi Corporation
 const sherpa_onnx = require('sherpa-onnx-node');
-const performance = require('perf_hooks').performance;
 
 // please download model files from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
@@ -29,9 +28,9 @@ const tts = createOfflineTts();
 const text =
     '他在长沙出生，长白山长大，去过长江，现在他是一个银行的行长，主管行政工作。有困难，请拨110，或者13020240513。今天是2024年5月13号, 他上个月的工资是12345块钱。'
 
-let start = performance.now();
+let start = Date.now();
 const audio = tts.generate({text: text, sid: 88, speed: 1.0});
-let stop = performance.now();
+let stop = Date.now();
 const elapsed_seconds = (stop - start) / 1000;
 const duration = audio.samples.length / audio.sampleRate;
 const real_time_factor = elapsed_seconds / duration;
