@@ -7,6 +7,7 @@ if(NOT DEFINED ANDROID_ABI)
   include_directories($ENV{JAVA_HOME}/include)
   include_directories($ENV{JAVA_HOME}/include/linux)
   include_directories($ENV{JAVA_HOME}/include/darwin)
+  include_directories($ENV{JAVA_HOME}/include/win32)
 endif()
 
 set(sources
