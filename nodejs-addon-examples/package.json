@@ -1,6 +1,5 @@
 {
   "dependencies": {
-    "perf_hooks": "*",
-    "sherpa-onnx-node": "*"
+    "sherpa-onnx-node": "^1.0.24"
   }
 }

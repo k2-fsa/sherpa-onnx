@@ -1,7 +1,5 @@
 // Copyright (c)  2024  Xiaomi Corporation
 const sherpa_onnx = require('sherpa-onnx-node');
-const performance = require('perf_hooks').performance;
-
 
 // Please download test files from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
@@ -29,7 +27,7 @@ const waveFilename =
 
 const recognizer = new sherpa_onnx.OnlineRecognizer(config);
 console.log('Started')
-let start = performance.now();
+let start = Date.now();
 const stream = recognizer.createStream();
 const wave = sherpa_onnx.readWave(waveFilename);
 stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
@@ -41,7 +39,7 @@ while (recognizer.isReady(stream)) {
   recognizer.decode(stream);
 }
 result = recognizer.getResult(stream)
-let stop = performance.now();
+let stop = Date.now();
 console.log('Done')
 
 const elapsed_seconds = (stop - start) / 1000;

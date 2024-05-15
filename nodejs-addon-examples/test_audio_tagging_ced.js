@@ -38,12 +38,12 @@ const testWaves = [
 console.log('------');
 
 for (let filename of testWaves) {
-  const start = performance.now();
+  const start = Date.now();
   const stream = at.createStream();
   const wave = sherpa_onnx.readWave(filename);
   stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
   const events = at.compute(stream);
-  const stop = performance.now();
+  const stop = Date.now();
 
   const elapsed_seconds = (stop - start) / 1000;
   const duration = wave.samples.length / wave.sampleRate;

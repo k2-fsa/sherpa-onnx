@@ -1,6 +1,5 @@
 // Copyright (c)  2024  Xiaomi Corporation
 const sherpa_onnx = require('sherpa-onnx-node');
-const performance = require('perf_hooks').performance;
 
 // please download model files from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
@@ -29,9 +28,9 @@ const tts = createOfflineTts();
 const text =
     '当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔。2024年5月13号，拨打110或者18920240513。123456块钱。'
 
-let start = performance.now();
+let start = Date.now();
 const audio = tts.generate({text: text, sid: 2, speed: 1.0});
-let stop = performance.now();
+let stop = Date.now();
 const elapsed_seconds = (stop - start) / 1000;
 const duration = audio.samples.length / audio.sampleRate;
 const real_time_factor = elapsed_seconds / duration;

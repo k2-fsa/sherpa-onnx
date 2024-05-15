@@ -1,6 +1,5 @@
 // Copyright (c)  2024  Xiaomi Corporation
 const sherpa_onnx = require('sherpa-onnx-node');
-const performance = require('perf_hooks').performance;
 
 // please download model files from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
@@ -24,9 +23,9 @@ const tts = createOfflineTts();
 
 const text = 'Alles hat ein Ende, nur die Wurst hat zwei.'
 
-let start = performance.now();
+let start = Date.now();
 const audio = tts.generate({text: text, sid: 0, speed: 1.0});
-let stop = performance.now();
+let stop = Date.now();
 const elapsed_seconds = (stop - start) / 1000;
 const duration = audio.samples.length / audio.sampleRate;
 const real_time_factor = elapsed_seconds / duration;

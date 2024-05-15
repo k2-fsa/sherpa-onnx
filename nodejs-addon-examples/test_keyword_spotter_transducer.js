@@ -1,7 +1,5 @@
 // Copyright (c)  2024  Xiaomi Corporation
 const sherpa_onnx = require('sherpa-onnx-node');
-const performance = require('perf_hooks').performance;
-
 
 // Please download test files from
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/kws-models
@@ -34,7 +32,7 @@ const waveFilename =
 
 const kws = new sherpa_onnx.KeywordSpotter(config);
 console.log('Started')
-let start = performance.now();
+let start = Date.now();
 const stream = kws.createStream();
 const wave = sherpa_onnx.readWave(waveFilename);
 stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
@@ -50,7 +48,7 @@ while (kws.isReady(stream)) {
   }
   kws.decode(stream);
 }
-let stop = performance.now();
+let stop = Date.now();
 
 console.log('Done')
 
