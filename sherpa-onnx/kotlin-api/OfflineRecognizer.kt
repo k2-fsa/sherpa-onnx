@@ -40,8 +40,8 @@ data class OfflineModelConfig(
     var provider: String = "cpu",
     var modelType: String = "",
     var tokens: String,
-    var modelingUnit: String,
-    var bpeVocab: String,
+    var modelingUnit: String = "",
+    var bpeVocab: String = "",
 )
 
 data class OfflineRecognizerConfig(
