@@ -165,6 +165,7 @@ endif()
 target_link_libraries(sherpa-onnx-core
   kaldi-native-fbank-core
   kaldi-decoder-core
+  ssentencepiece_core
 )
 
 if(SHERPA_ONNX_ENABLE_GPU)
@@ -173,8 +174,6 @@ if(SHERPA_ONNX_ENABLE_GPU)
     onnxruntime_providers_shared
   )
 endif()
-
-target_link_libraries(sherpa-onnx-core ssentencepiece_core)
 
 if(BUILD_SHARED_LIBS)
   target_link_libraries(sherpa-onnx-core onnxruntime)

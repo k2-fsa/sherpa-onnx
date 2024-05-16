@@ -48,7 +48,16 @@ function(download_simple_sentencepiece)
     PUBLIC
       ${simple-sentencepiece_SOURCE_DIR}/
   )
-  set_target_properties(ssentencepiece_core PROPERTIES OUTPUT_NAME "sherpa-onnx-ssentencepiece-core")
+
+  if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
+    install(TARGETS ssentencepiece_core DESTINATION ..)
+  else()
+    install(TARGETS ssentencepiece_core DESTINATION lib)
+  endif()
+
+  if(WIN32 AND BUILD_SHARED_LIBS)
+    install(TARGETS ssentencepiece_core DESTINATION bin)
+  endif()
 endfunction()
 
 download_simple_sentencepiece()
