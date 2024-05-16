@@ -13,6 +13,7 @@ java_files += FeatureConfig.java
 java_files += OnlineLMConfig.java
 java_files += OnlineParaformerModelConfig.java
 java_files += OnlineZipformer2CtcModelConfig.java
+java_files += OnlineNeMoCtcModelConfig.java
 java_files += OnlineTransducerModelConfig.java
 java_files += OnlineModelConfig.java
 java_files += OnlineCtcFstDecoderConfig.java
