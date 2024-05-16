@@ -314,13 +314,15 @@ func sherpaOnnxOfflineWhisperModelConfig(
   encoder: String = "",
   decoder: String = "",
   language: String = "",
-  task: String = "transcribe"
+  task: String = "transcribe",
+  tailPaddings: Int = -1
 ) -> SherpaOnnxOfflineWhisperModelConfig {
   return SherpaOnnxOfflineWhisperModelConfig(
     encoder: toCPointer(encoder),
     decoder: toCPointer(decoder),
     language: toCPointer(language),
-    task: toCPointer(task)
+    task: toCPointer(task),
+    tail_paddings: Int32(tailPaddings)
   )
 }
 

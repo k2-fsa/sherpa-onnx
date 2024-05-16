@@ -32,6 +32,7 @@ function createOfflineRecognizer() {
       decoder: '',
       language: '',
       task: '',
+      tailPaddings: -1,
     },
     tdnn: {
       model: '',

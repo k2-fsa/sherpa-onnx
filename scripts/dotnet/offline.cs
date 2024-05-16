@@ -301,6 +301,7 @@ namespace SherpaOnnx
       Decoder = "";
       Language = "";
       Task = "transcribe";
+      TailPaddings = -1;
     }
     [MarshalAs(UnmanagedType.LPStr)]
     public string Encoder;
@@ -313,6 +314,8 @@ namespace SherpaOnnx
 
     [MarshalAs(UnmanagedType.LPStr)]
     public string Task;
+
+    public int TailPaddings;
   }
 
   [StructLayout(LayoutKind.Sequential)]
