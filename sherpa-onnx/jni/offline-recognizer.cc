@@ -153,7 +153,7 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   jobject nemo_config = env->GetObjectField(model_config, fid);
   jclass nemo_config_cls = env->GetObjectClass(nemo_config);
 
-  fid = env->GetFieldID(paraformer_config_cls, "model", "Ljava/lang/String;");
+  fid = env->GetFieldID(nemo_config_cls, "model", "Ljava/lang/String;");
 
   s = (jstring)env->GetObjectField(nemo_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
