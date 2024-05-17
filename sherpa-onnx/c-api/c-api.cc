@@ -341,6 +341,9 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
     recognizer_config.model_config.whisper.task = "transcribe";
   }
 
+  recognizer_config.model_config.whisper.tail_paddings =
+      SHERPA_ONNX_OR(config->model_config.whisper.tail_paddings, -1);
+
   recognizer_config.model_config.tdnn.model =
       SHERPA_ONNX_OR(config->model_config.tdnn.model, "");
 

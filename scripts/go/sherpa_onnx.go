@@ -336,10 +336,11 @@ type OfflineNemoEncDecCtcModelConfig struct {
 }
 
 type OfflineWhisperModelConfig struct {
-	Encoder  string
-	Decoder  string
-	Language string
-	Task     string
+	Encoder      string
+	Decoder      string
+	Language     string
+	Task         string
+	TailPaddings int
 }
 
 type OfflineTdnnModelConfig struct {
@@ -440,6 +441,8 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 
 	c.model_config.whisper.task = C.CString(config.ModelConfig.Whisper.Task)
 	defer C.free(unsafe.Pointer(c.model_config.whisper.task))
+
+	c.model_config.whisper.tail_paddings = C.int(config.ModelConfig.Whisper.TailPaddings)
 
 	c.model_config.tdnn.model = C.CString(config.ModelConfig.Tdnn.Model)
 	defer C.free(unsafe.Pointer(c.model_config.tdnn.model))

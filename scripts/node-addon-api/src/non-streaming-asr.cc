@@ -74,7 +74,8 @@ static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
   SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
   SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
   SHERPA_ONNX_ASSIGN_ATTR_STR(language, language);
-  SHERPA_ONNX_ASSIGN_ATTR_STR(task, languagek);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(task, task);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(tail_paddings, tailPaddings);
 
   return c;
 }
