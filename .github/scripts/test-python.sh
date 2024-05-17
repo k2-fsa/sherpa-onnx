@@ -109,7 +109,7 @@ for name in ${wenet_models[@]}; do
   repo=$dir/$(basename $repo_url)
   log "Download pretrained model and test-data from $repo_url"
   pushd $dir
-  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+  GIT_CLONE_PROTECTION_ACTIVE=false GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
   cd $repo
   git lfs pull --include "*.onnx"
   ls -lh *.onnx

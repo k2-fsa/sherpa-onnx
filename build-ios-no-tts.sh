@@ -126,7 +126,7 @@ echo "Generate xcframework"
 
 mkdir -p "build/simulator/lib"
 for f in libkaldi-native-fbank-core.a libsherpa-onnx-c-api.a libsherpa-onnx-core.a \
-         libsherpa-onnx-fst.a libsherpa-onnx-kaldifst-core.a libkaldi-decoder-core.a; do
+         libsherpa-onnx-fst.a libsherpa-onnx-kaldifst-core.a libkaldi-decoder-core.a libssentencepiece_core.a; do
   lipo -create build/simulator_arm64/lib/${f} \
                build/simulator_x86_64/lib/${f} \
        -output build/simulator/lib/${f}
@@ -140,7 +140,8 @@ libtool -static -o build/simulator/sherpa-onnx.a \
   build/simulator/lib/libsherpa-onnx-core.a  \
   build/simulator/lib/libsherpa-onnx-fst.a   \
   build/simulator/lib/libsherpa-onnx-kaldifst-core.a \
-  build/simulator/lib/libkaldi-decoder-core.a
+  build/simulator/lib/libkaldi-decoder-core.a \
+  build/simulator/lib/libssentencepiece_core.a
 
 libtool -static -o build/os64/sherpa-onnx.a \
   build/os64/lib/libkaldi-native-fbank-core.a \
@@ -148,7 +149,8 @@ libtool -static -o build/os64/sherpa-onnx.a \
   build/os64/lib/libsherpa-onnx-core.a \
   build/os64/lib/libsherpa-onnx-fst.a   \
   build/os64/lib/libsherpa-onnx-kaldifst-core.a \
-  build/os64/lib/libkaldi-decoder-core.a
+  build/os64/lib/libkaldi-decoder-core.a \
+  build/os64/lib/libssentencepiece_core.a
 
 rm -rf sherpa-onnx.xcframework
 
