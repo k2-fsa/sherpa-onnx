@@ -34,4 +34,4 @@ libtool -static -o ./install/lib/libsherpa-onnx.a \
   ./install/lib/libucd.a \
   ./install/lib/libpiper_phonemize.a \
   ./install/lib/libespeak-ng.a \
-  ./install/lib/ssentencepiece_core.a
+  ./install/lib/libssentencepiece_core.a
