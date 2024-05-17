@@ -8,6 +8,8 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+export GIT_CLONE_PROTECTION_ACTIVE=false
+
 log "test online NeMo CTC"
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms.tar.bz2
@@ -109,7 +111,7 @@ for name in ${wenet_models[@]}; do
   repo=$dir/$(basename $repo_url)
   log "Download pretrained model and test-data from $repo_url"
   pushd $dir
-  GIT_CLONE_PROTECTION_ACTIVE=false GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
+  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
   cd $repo
   git lfs pull --include "*.onnx"
   ls -lh *.onnx
