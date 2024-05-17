@@ -16,7 +16,7 @@ namespace sherpa_onnx {
 // Please refer to
 // https://github.com/pkufool/sherpa-test-data
 // to download test data for testing
-static const std::string dir = "/tmp/sherpa-test-data";
+static const char dir[] = "/tmp/sherpa-test-data";
 
 TEST(TEXT2TOKEN, TEST_cjkchar) {
   std::ostringstream oss;
