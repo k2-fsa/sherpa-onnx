@@ -20,10 +20,12 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#include "sherpa-onnx/csrc/cat.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 #include "sherpa-onnx/csrc/transpose.h"
 #include "sherpa-onnx/csrc/unbind.h"
 
@@ -76,163 +78,74 @@ class OnlineTransducerNeMoModel::Impl {
 #endif
 
   std::vector<Ort::Value> StackStates(
-      const std::vector<std::vector<Ort::Value>> &states) const {
+      std::vector<std::vector<Ort::Value>> states) const {
     int32_t batch_size = static_cast<int32_t>(states.size());
-    int32_t num_encoders = static_cast<int32_t>(num_encoder_layers_.size());
-
-    std::vector<const Ort::Value *> buf(batch_size);
+    if (batch_size == 1) {
+      return std::move(states[0]);
+    }
 
     std::vector<Ort::Value> ans;
-    int32_t num_states = static_cast<int32_t>(states[0].size());
-    ans.reserve(num_states);
 
-    for (int32_t i = 0; i != (num_states - 2) / 6; ++i) {
-      {
-        for (int32_t n = 0; n != batch_size; ++n) {
-          buf[n] = &states[n][6 * i];
-        }
-        auto v = Cat(allocator_, buf, 1);
-        ans.push_back(std::move(v));
+    // stack cache_last_channel
+    std::vector<const Ort::Value *> buf(batch_size);
+
+    // there are 3 states to be stacked
+    for (int32_t i = 0; i != 3; ++i) {
+      buf.clear();
+      buf.reserve(batch_size);
+
+      for (int32_t b = 0; b != batch_size; ++b) {
+        assert(states[b].size() == 3);
+        buf.push_back(&states[b][i]);
       }
-      {
-        for (int32_t n = 0; n != batch_size; ++n) {
-          buf[n] = &states[n][6 * i + 1];
-        }
-        auto v = Cat(allocator_, buf, 1);
-        ans.push_back(std::move(v));
+
+      Ort::Value c{nullptr};
+      if (i == 2) {
+        c = Cat<int64_t>(allocator_, buf, 0);
+      } else {
+        c = Cat(allocator_, buf, 0);
       }
-      {
-        for (int32_t n = 0; n != batch_size; ++n) {
-          buf[n] = &states[n][6 * i + 2];
-        }
-        auto v = Cat(allocator_, buf, 1);
-        ans.push_back(std::move(v));
-      }
-      {
-        for (int32_t n = 0; n != batch_size; ++n) {
-          buf[n] = &states[n][6 * i + 3];
-        }
-        auto v = Cat(allocator_, buf, 1);
-        ans.push_back(std::move(v));
-      }
-      {
-        for (int32_t n = 0; n != batch_size; ++n) {
-          buf[n] = &states[n][6 * i + 4];
-        }
-        auto v = Cat(allocator_, buf, 0);
-        ans.push_back(std::move(v));
-      }
-      {
-        for (int32_t n = 0; n != batch_size; ++n) {
-          buf[n] = &states[n][6 * i + 5];
-        }
-        auto v = Cat(allocator_, buf, 0);
-        ans.push_back(std::move(v));
-      }
+
+      ans.push_back(std::move(c));
     }
 
-    {
-      for (int32_t n = 0; n != batch_size; ++n) {
-        buf[n] = &states[n][num_states - 2];
-      }
-      auto v = Cat(allocator_, buf, 0);
-      ans.push_back(std::move(v));
-    }
-
-    {
-      for (int32_t n = 0; n != batch_size; ++n) {
-        buf[n] = &states[n][num_states - 1];
-      }
-      auto v = Cat<int64_t>(allocator_, buf, 0);
-      ans.push_back(std::move(v));
-    }
     return ans;
   }
 
-  std::vector<std::vector<Ort::Value>>UnStackStates(
-      const std::vector<Ort::Value> &states) const {
-    int32_t m = std::accumulate(num_encoder_layers_.begin(),
-                                num_encoder_layers_.end(), 0);
-    assert(states.size() == m * 6 + 2);
-
-    int32_t batch_size = states[0].GetTensorTypeAndShapeInfo().GetShape()[1];
-    int32_t num_encoders = num_encoder_layers_.size();
+  std::vector<std::vector<Ort::Value>> UnStackStates(
+      std::vector<Ort::Value> states) const {
+    assert(states.size() == 3);
 
     std::vector<std::vector<Ort::Value>> ans;
+
+    auto shape = states[0].GetTensorTypeAndShapeInfo().GetShape();
+    int32_t batch_size = shape[0];
     ans.resize(batch_size);
 
-    for (int32_t i = 0; i != m; ++i) {
-      {
-        auto v = Unbind(allocator_, &states[i * 6], 1);
-        assert(v.size() == batch_size);
-
-        for (int32_t n = 0; n != batch_size; ++n) {
-          ans[n].push_back(std::move(v[n]));
-        }
-      }
-      {
-        auto v = Unbind(allocator_, &states[i * 6 + 1], 1);
-        assert(v.size() == batch_size);
-
-        for (int32_t n = 0; n != batch_size; ++n) {
-          ans[n].push_back(std::move(v[n]));
-        }
-      }
-      {
-        auto v = Unbind(allocator_, &states[i * 6 + 2], 1);
-        assert(v.size() == batch_size);
-
-        for (int32_t n = 0; n != batch_size; ++n) {
-          ans[n].push_back(std::move(v[n]));
-        }
-      }
-      {
-        auto v = Unbind(allocator_, &states[i * 6 + 3], 1);
-        assert(v.size() == batch_size);
-
-        for (int32_t n = 0; n != batch_size; ++n) {
-          ans[n].push_back(std::move(v[n]));
-        }
-      }
-      {
-        auto v = Unbind(allocator_, &states[i * 6 + 4], 0);
-        assert(v.size() == batch_size);
-
-        for (int32_t n = 0; n != batch_size; ++n) {
-          ans[n].push_back(std::move(v[n]));
-        }
-      }
-      {
-        auto v = Unbind(allocator_, &states[i * 6 + 5], 0);
-        assert(v.size() == batch_size);
-
-        for (int32_t n = 0; n != batch_size; ++n) {
-          ans[n].push_back(std::move(v[n]));
-        }
-      }
+    if (batch_size == 1) {
+      ans[0] = std::move(states);
+      return ans;
     }
 
-    {
-      auto v = Unbind(allocator_, &states[m * 6], 0);
-      assert(v.size() == batch_size);
-
-      for (int32_t n = 0; n != batch_size; ++n) {
-        ans[n].push_back(std::move(v[n]));
+    for (int32_t i = 0; i != 3; ++i) {
+      std::vector<Ort::Value> v;
+      if (i == 2) {
+        v = Unbind<int64_t>(allocator_, &states[i], 0);
+      } else {
+        v = Unbind(allocator_, &states[i], 0);
       }
-    }
-    {
-      auto v = Unbind<int64_t>(allocator_, &states[m * 6 + 1], 0);
+
       assert(v.size() == batch_size);
 
-      for (int32_t n = 0; n != batch_size; ++n) {
-        ans[n].push_back(std::move(v[n]));
+      for (int32_t b = 0; b != batch_size; ++b) {
+        ans[b].push_back(std::move(v[b]));
       }
     }
 
     return ans;
   }
 
-  std::pair<Ort::Value, std::vector<Ort::Value>>RunEncoder(Ort::Value features,
+  std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(Ort::Value features,
                                               std::vector<Ort::Value> states,
                                               Ort::Value /* processed_frames */) {
     std::vector<Ort::Value> encoder_inputs;
@@ -257,11 +170,37 @@ class OnlineTransducerNeMoModel::Impl {
     return {std::move(encoder_out[0]), std::move(next_states)};
   }
 
-  Ort::Value RunDecoder(Ort::Value decoder_input) {
+  std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
+      Ort::Value targets, Ort::Value targets_length,
+      std::vector<Ort::Value> states) {
+    std::vector<Ort::Value> decoder_inputs;
+    decoder_inputs.reserve(2 + states.size());
+
+    decoder_inputs.push_back(std::move(targets));
+    decoder_inputs.push_back(std::move(targets_length));
+
+    for (auto &s : states) {
+      decoder_inputs.push_back(std::move(s));
+    }
+
     auto decoder_out = decoder_sess_->Run(
-        {}, decoder_input_names_ptr_.data(), &decoder_input, 1,
-        decoder_output_names_ptr_.data(), decoder_output_names_ptr_.size());
-    return std::move(decoder_out[0]);
+        {}, decoder_input_names_ptr_.data(), decoder_inputs.data(),
+        decoder_inputs.size(), decoder_output_names_ptr_.data(),
+        decoder_output_names_ptr_.size());
+
+    std::vector<Ort::Value> states_next;
+    states_next.reserve(states.size());
+
+    // decoder_out[0]: decoder_output
+    // decoder_out[1]: decoder_output_length
+    // decoder_out[2:] states_next
+
+    for (int32_t i = 0; i != states.size(); ++i) {
+      states_next.push_back(std::move(decoder_out[i + 2]));
+    }
+
+    // we discard decoder_out[1]
+    return {std::move(decoder_out[0]), std::move(states_next)};
   }
 
   Ort::Value RunJoiner(Ort::Value encoder_out, Ort::Value decoder_out) {
@@ -298,7 +237,13 @@ class OnlineTransducerNeMoModel::Impl {
     return states;
   }
 
+
+  int32_t ChunkSize() const { return window_size_; }
+
+  int32_t ChunkShift() const { return chunk_shift_; }
+
   int32_t SubsamplingFactor() const { return subsampling_factor_; }
+  
   int32_t VocabSize() const { return vocab_size_; }
 
   OrtAllocator *Allocator() const { return allocator_; }
@@ -332,14 +277,54 @@ private:
     // vocab_size in NeMo.
     vocab_size_ += 1;
 
+    SHERPA_ONNX_READ_META_DATA(window_size_, "window_size");
+    SHERPA_ONNX_READ_META_DATA(chunk_shift_, "chunk_shift");
     SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
     SHERPA_ONNX_READ_META_DATA_STR(normalize_type_, "normalize_type");
     SHERPA_ONNX_READ_META_DATA(pred_rnn_layers_, "pred_rnn_layers");
     SHERPA_ONNX_READ_META_DATA(pred_hidden_, "pred_hidden");
 
+    SHERPA_ONNX_READ_META_DATA(cache_last_channel_dim1_,
+                               "cache_last_channel_dim1");
+    SHERPA_ONNX_READ_META_DATA(cache_last_channel_dim2_,
+                               "cache_last_channel_dim2");
+    SHERPA_ONNX_READ_META_DATA(cache_last_channel_dim3_,
+                               "cache_last_channel_dim3");
+    SHERPA_ONNX_READ_META_DATA(cache_last_time_dim1_, "cache_last_time_dim1");
+    SHERPA_ONNX_READ_META_DATA(cache_last_time_dim2_, "cache_last_time_dim2");
+    SHERPA_ONNX_READ_META_DATA(cache_last_time_dim3_, "cache_last_time_dim3");
+
     if (normalize_type_ == "NA") {
       normalize_type_ = "";
     }
+
+    InitStates();
+  }
+  
+  void InitStates() {
+    std::array<int64_t, 4> cache_last_channel_shape{1, cache_last_channel_dim1_,
+                                                    cache_last_channel_dim2_,
+                                                    cache_last_channel_dim3_};
+
+    cache_last_channel_ = Ort::Value::CreateTensor<float>(
+        allocator_, cache_last_channel_shape.data(),
+        cache_last_channel_shape.size());
+
+    Fill<float>(&cache_last_channel_, 0);
+
+    std::array<int64_t, 4> cache_last_time_shape{
+        1, cache_last_time_dim1_, cache_last_time_dim2_, cache_last_time_dim3_};
+
+    cache_last_time_ = Ort::Value::CreateTensor<float>(
+        allocator_, cache_last_time_shape.data(), cache_last_time_shape.size());
+
+    Fill<float>(&cache_last_time_, 0);
+
+    int64_t shape = 1;
+    cache_last_channel_len_ =
+        Ort::Value::CreateTensor<int64_t>(allocator_, &shape, 1);
+
+    cache_last_channel_len_.GetTensorMutableData<int64_t>()[0] = 0;
   }
 
   void InitDecoder(void *model_data, size_t model_data_length) {
@@ -392,11 +377,24 @@ private:
   std::vector<std::string> joiner_output_names_;
   std::vector<const char *> joiner_output_names_ptr_;
 
+  int32_t window_size_;
+  int32_t chunk_shift_;
   int32_t vocab_size_ = 0;
   int32_t subsampling_factor_ = 8;
   std::string normalize_type_;
   int32_t pred_rnn_layers_ = -1;
   int32_t pred_hidden_ = -1;
+
+  int32_t cache_last_channel_dim1_;
+  int32_t cache_last_channel_dim2_;
+  int32_t cache_last_channel_dim3_;
+  int32_t cache_last_time_dim1_;
+  int32_t cache_last_time_dim2_;
+  int32_t cache_last_time_dim3_;
+
+  Ort::Value cache_last_channel_{nullptr};
+  Ort::Value cache_last_time_{nullptr};
+  Ort::Value cache_last_channel_len_{nullptr};
 };
 
 OnlineTransducerNeMoModel::OnlineTransducerNeMoModel(
@@ -411,9 +409,39 @@ OnlineTransducerNeMoModel::OnlineTransducerNeMoModel(
 
 OnlineTransducerNeMoModel::~OnlineTransducerNeMoModel() = default;
 
-int32_t ChunkLength() const { return window_size_; }
+std::pair<Ort::Value, std::vector<Ort::Value>>
+OnlineTransducerNeMoModel::RunEncoder(Ort::Value features, 
+                                      std::vector<Ort::Value> states,
+                                      Ort::Value processed_frames) const {
+return impl_->RunEncoder(std::move(features), std::move(states), std::move(processed_frames));
+}
 
-int32_t ChunkShift() const { return chunk_shift_; }
+std::pair<Ort::Value, std::vector<Ort::Value>>
+OnlineTransducerNeMoModel::RunDecoder(Ort::Value targets,
+                                      Ort::Value targets_length,
+                                      std::vector<Ort::Value> states) const {
+  return impl_->RunDecoder(std::move(targets), std::move(targets_length),
+                          std::move(states));
+}
+
+std::vector<Ort::Value> OnlineTransducerNeMoModel::GetDecoderInitStates(
+    int32_t batch_size) const {
+  return impl_->GetDecoderInitStates(batch_size);
+}
+
+Ort::Value OnlineTransducerNeMoModel::RunJoiner(Ort::Value encoder_out,
+                                                Ort::Value decoder_out) const {
+  return impl_->RunJoiner(std::move(encoder_out), std::move(decoder_out));
+}
+
+
+int32_t OnlineTransducerNeMoModel::ChunkSize() const { 
+  return  impl_->ChunkSize();
+  }
+
+int32_t OnlineTransducerNeMoModel::ChunkShift() const { 
+  return impl_->ChunkShift(); 
+  }
 
 int32_t OnlineTransducerNeMoModel::SubsamplingFactor() const {
   return impl_->SubsamplingFactor();

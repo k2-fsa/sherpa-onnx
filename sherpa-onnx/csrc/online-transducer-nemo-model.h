@@ -32,7 +32,12 @@ class OnlineTransducerNeMoModel {
 #endif
   
   ~OnlineTransducerNeMoModel();
-  
+    // A list of 3 tensors:
+  //  - cache_last_channel
+  //  - cache_last_time
+  //  - cache_last_channel_len
+  std::vector<Ort::Value> GetInitStates() const;
+
   /** Stack a list of individual states into a batch.
    *
    * It is the inverse operation of `UnStackStates`.
