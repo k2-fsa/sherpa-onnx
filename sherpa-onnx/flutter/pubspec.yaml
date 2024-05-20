@@ -19,12 +19,12 @@ environment:
   flutter: '>=3.3.0'
 
 dependencies:
+  ffi: ^2.1.0
   flutter:
     sdk: flutter
   plugin_platform_interface: ^2.0.2
 
 dev_dependencies:
-  ffi: ^2.1.0
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
