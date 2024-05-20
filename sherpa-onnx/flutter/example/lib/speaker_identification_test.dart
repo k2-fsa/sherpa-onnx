@@ -10,6 +10,10 @@ Future<void> testSpeakerID() async {
   final config = sherpa_onnx.SpeakerEmbeddingExtractorConfig(model: modelPath);
   final extractor = sherpa_onnx.SpeakerEmbeddingExtractor(config: config);
   print('dim: ${extractor.dim}');
+  final stream = extractor.createStream();
+  print('stream.ptr: ${stream.ptr}');
+  stream.free();
+  print('stream.ptr: ${stream.ptr}');
 
   const _spk1Files = [
     'assets/sr-data/enroll/fangjun-sr-1.wav',

@@ -3,6 +3,7 @@ import 'dart:ffi';
 
 import 'src/sherpa_onnx_bindings.dart';
 export 'src/speaker_identification.dart';
+export 'src/online_stream.dart';
 
 final DynamicLibrary _dylib = () {
   if (Platform.isIOS) {

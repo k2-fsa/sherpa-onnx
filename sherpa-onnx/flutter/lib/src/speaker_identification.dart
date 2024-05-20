@@ -1,6 +1,7 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 import "./sherpa_onnx_bindings.dart";
+import "./online_stream.dart";
 
 class SpeakerEmbeddingExtractorConfig {
   const SpeakerEmbeddingExtractorConfig(
@@ -23,6 +24,8 @@ class SpeakerEmbeddingExtractorConfig {
 class SpeakerEmbeddingExtractor {
   SpeakerEmbeddingExtractor._({required this.ptr});
 
+  /// The user is responsible to call the free() method
+  /// of the returned instance to avoid memory leak.
   factory SpeakerEmbeddingExtractor(
       {required SpeakerEmbeddingExtractorConfig config}) {
     var c = calloc<SherpaOnnxSpeakerEmbeddingExtractorConfig>();
@@ -48,6 +51,16 @@ class SpeakerEmbeddingExtractor {
   void free() {
     SherpaOnnxBindings.destroySpeakerEmbeddingExtractor?.call(ptr);
     ptr = nullptr;
+  }
+
+  /// The user has to invoke stream.free() on the returned instance
+  /// to avoid memory leak
+  OnlineStream createStream() {
+    final p =
+        SherpaOnnxBindings.speakerEmbeddingExtractorCreateStream?.call(ptr) ??
+            nullptr;
+
+    return OnlineStream(ptr: p);
   }
 
   int get dim =>

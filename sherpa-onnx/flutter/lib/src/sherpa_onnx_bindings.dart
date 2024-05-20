@@ -13,6 +13,8 @@ final class SherpaOnnxSpeakerEmbeddingExtractorConfig extends Struct {
   external Pointer<Utf8> provider;
 }
 
+final class SherpaOnnxOnlineStream extends Opaque {}
+
 final class SherpaOnnxSpeakerEmbeddingExtractor extends Opaque {}
 
 typedef SherpaOnnxCreateSpeakerEmbeddingExtractorNative
@@ -34,6 +36,18 @@ typedef SherpaOnnxSpeakerEmbeddingExtractorDimNative = Int32 Function(
 typedef SherpaOnnxSpeakerEmbeddingExtractorDim = int Function(
     Pointer<SherpaOnnxSpeakerEmbeddingExtractor>);
 
+typedef SherpaOnnxSpeakerEmbeddingExtractorCreateStreamNative
+    = Pointer<SherpaOnnxOnlineStream> Function(
+        Pointer<SherpaOnnxSpeakerEmbeddingExtractor>);
+
+typedef SherpaOnnxSpeakerEmbeddingExtractorCreateStream
+    = SherpaOnnxSpeakerEmbeddingExtractorCreateStreamNative;
+
+typedef DestroyOnlineStreamNative = Void Function(
+    Pointer<SherpaOnnxOnlineStream>);
+
+typedef DestroyOnlineStream = void Function(Pointer<SherpaOnnxOnlineStream>);
+
 class SherpaOnnxBindings {
   static SherpaOnnxCreateSpeakerEmbeddingExtractor?
       createSpeakerEmbeddingExtractor;
@@ -42,6 +56,11 @@ class SherpaOnnxBindings {
       destroySpeakerEmbeddingExtractor;
 
   static SherpaOnnxSpeakerEmbeddingExtractorDim? speakerEmbeddingExtractorDim;
+
+  static SherpaOnnxSpeakerEmbeddingExtractorCreateStream?
+      speakerEmbeddingExtractorCreateStream;
+
+  static DestroyOnlineStream? destroyOnlineStream;
 
   static void init(DynamicLibrary dynamicLibrary) {
     createSpeakerEmbeddingExtractor ??= dynamicLibrary
@@ -59,6 +78,18 @@ class SherpaOnnxBindings {
     speakerEmbeddingExtractorDim ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingExtractorDimNative>>(
             'SherpaOnnxSpeakerEmbeddingExtractorDim')
+        .asFunction();
+
+    speakerEmbeddingExtractorCreateStream ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpeakerEmbeddingExtractorCreateStreamNative>>(
+            'SherpaOnnxSpeakerEmbeddingExtractorCreateStream')
+        .asFunction();
+
+    destroyOnlineStream ??= dynamicLibrary
+        .lookup<NativeFunction<DestroyOnlineStreamNative>>(
+            'DestroyOnlineStream')
         .asFunction();
   }
 }
