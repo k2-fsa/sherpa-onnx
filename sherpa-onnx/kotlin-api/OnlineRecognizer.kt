@@ -43,6 +43,8 @@ data class OnlineModelConfig(
     var debug: Boolean = false,
     var provider: String = "cpu",
     var modelType: String = "",
+    var modelingUnit: String = "",
+    var bpeVocab: String = "",
 )
 
 data class OnlineLMConfig(

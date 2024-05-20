@@ -8,6 +8,8 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+export GIT_CLONE_PROTECTION_ACTIVE=false
+
 echo "EXE is $EXE"
 echo "PATH: $PATH"
 

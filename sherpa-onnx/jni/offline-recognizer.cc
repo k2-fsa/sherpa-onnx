@@ -76,6 +76,18 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.model_type = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(model_config_cls, "modelingUnit", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.modeling_unit = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(model_config_cls, "bpeVocab", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.bpe_vocab = p;
+  env->ReleaseStringUTFChars(s, p);
+
   // transducer
   fid = env->GetFieldID(model_config_cls, "transducer",
                         "Lcom/k2fsa/sherpa/onnx/OfflineTransducerModelConfig;");

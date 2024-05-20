@@ -234,6 +234,7 @@ endif()
 include(kaldi-native-fbank)
 include(kaldi-decoder)
 include(onnxruntime)
+include(simple-sentencepiece)
 set(ONNXRUNTIME_DIR ${onnxruntime_SOURCE_DIR})
 message(STATUS "ONNXRUNTIME_DIR: ${ONNXRUNTIME_DIR}")
 
