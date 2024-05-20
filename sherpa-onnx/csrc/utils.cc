@@ -17,7 +17,7 @@
 
 namespace sherpa_onnx {
 
-static bool EncodeBase(std::vector<std::string> &lines,
+static bool EncodeBase(const std::vector<std::string> &lines,
                        const SymbolTable &symbol_table,
                        std::vector<std::vector<int32_t>> *ids,
                        std::vector<std::string> *phrases,
