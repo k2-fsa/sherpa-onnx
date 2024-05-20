@@ -25,5 +25,8 @@ Future<void> testSpeakerID() async {
     spk1Files.add(await copyAssetFile(src: f, dst: basename(f)));
   }
 
+  final waveData = sherpa_onnx.readWave(spk1Files[0]);
+  print('num samples of ${spk1Files[0]}: ${waveData.samples.length}');
+
   extractor.free();
 }

@@ -1,6 +1,16 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
+final class SherpaOnnxWave extends Struct {
+  external Pointer<Float> samples;
+
+  @Int32()
+  external int sampleRate;
+
+  @Int32()
+  external int numSamples;
+}
+
 final class SherpaOnnxSpeakerEmbeddingExtractorConfig extends Struct {
   external Pointer<Utf8> model;
 
@@ -48,6 +58,22 @@ typedef DestroyOnlineStreamNative = Void Function(
 
 typedef DestroyOnlineStream = void Function(Pointer<SherpaOnnxOnlineStream>);
 
+typedef SherpaOnnxSpeakerEmbeddingExtractorIsReadyNative = Int32 Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+    Pointer<SherpaOnnxOnlineStream>);
+
+typedef SherpaOnnxSpeakerEmbeddingExtractorIsReady = int Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+    Pointer<SherpaOnnxOnlineStream>);
+
+typedef SherpaOnnxReadWaveNative = Pointer<SherpaOnnxWave> Function(
+    Pointer<Utf8>);
+
+typedef SherpaOnnxReadWave = SherpaOnnxReadWaveNative;
+
+typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
+typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
+
 class SherpaOnnxBindings {
   static SherpaOnnxCreateSpeakerEmbeddingExtractor?
       createSpeakerEmbeddingExtractor;
@@ -61,6 +87,12 @@ class SherpaOnnxBindings {
       speakerEmbeddingExtractorCreateStream;
 
   static DestroyOnlineStream? destroyOnlineStream;
+
+  static SherpaOnnxSpeakerEmbeddingExtractorIsReady?
+      speakerEmbeddingExtractorIsReady;
+
+  static SherpaOnnxReadWave? readWave;
+  static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
     createSpeakerEmbeddingExtractor ??= dynamicLibrary
@@ -90,6 +122,21 @@ class SherpaOnnxBindings {
     destroyOnlineStream ??= dynamicLibrary
         .lookup<NativeFunction<DestroyOnlineStreamNative>>(
             'DestroyOnlineStream')
+        .asFunction();
+
+    speakerEmbeddingExtractorIsReady ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpeakerEmbeddingExtractorIsReadyNative>>(
+            'SherpaOnnxSpeakerEmbeddingExtractorIsReady')
+        .asFunction();
+
+    readWave ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxReadWaveNative>>('SherpaOnnxReadWave')
+        .asFunction();
+
+    freeWave ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxFreeWaveNative>>('SherpaOnnxFreeWave')
         .asFunction();
   }
 }
