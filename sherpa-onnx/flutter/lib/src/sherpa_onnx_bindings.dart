@@ -28,12 +28,20 @@ typedef SherpaOnnxDestroySpeakerEmbeddingExtractorNative = Void Function(
 typedef SherpaOnnxDestroySpeakerEmbeddingExtractor = void Function(
     Pointer<SherpaOnnxSpeakerEmbeddingExtractor>);
 
+typedef SherpaOnnxSpeakerEmbeddingExtractorDimNative = Int32 Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingExtractor>);
+
+typedef SherpaOnnxSpeakerEmbeddingExtractorDim = int Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingExtractor>);
+
 class SherpaOnnxBindings {
   static SherpaOnnxCreateSpeakerEmbeddingExtractor?
       createSpeakerEmbeddingExtractor;
 
   static SherpaOnnxDestroySpeakerEmbeddingExtractor?
       destroySpeakerEmbeddingExtractor;
+
+  static SherpaOnnxSpeakerEmbeddingExtractorDim? speakerEmbeddingExtractorDim;
 
   static void init(DynamicLibrary dynamicLibrary) {
     createSpeakerEmbeddingExtractor ??= dynamicLibrary
@@ -46,6 +54,11 @@ class SherpaOnnxBindings {
                 NativeFunction<
                     SherpaOnnxDestroySpeakerEmbeddingExtractorNative>>(
             'SherpaOnnxDestroySpeakerEmbeddingExtractor')
+        .asFunction();
+
+    speakerEmbeddingExtractorDim ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingExtractorDimNative>>(
+            'SherpaOnnxSpeakerEmbeddingExtractorDim')
         .asFunction();
   }
 }

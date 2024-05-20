@@ -50,6 +50,9 @@ class SpeakerEmbeddingExtractor {
     ptr = nullptr;
   }
 
+  int get dim =>
+      SherpaOnnxBindings.speakerEmbeddingExtractorDim?.call(ptr) ?? 0;
+
   Pointer<SherpaOnnxSpeakerEmbeddingExtractor> ptr;
 }
 

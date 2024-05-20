@@ -9,6 +9,7 @@ Future<void> testSpeakerID() async {
 
   final config = sherpa_onnx.SpeakerEmbeddingExtractorConfig(model: modelPath);
   final extractor = sherpa_onnx.SpeakerEmbeddingExtractor(config: config);
+  print('dim: ${extractor.dim}');
 
   const _spk1Files = [
     'assets/sr-data/enroll/fangjun-sr-1.wav',

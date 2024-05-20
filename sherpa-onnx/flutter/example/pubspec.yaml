@@ -1,5 +1,5 @@
-name: hello_example
-description: "Demonstrates how to use the hello plugin."
+name: hello_sherpa_onnx
+description: "Demonstrates how to use the sherpa_onnx ffi plugin."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
