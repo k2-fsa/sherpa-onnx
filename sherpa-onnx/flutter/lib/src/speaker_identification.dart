@@ -1,4 +1,5 @@
 import 'dart:ffi';
+import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
 import "./sherpa_onnx_bindings.dart";
 import "./online_stream.dart";
@@ -22,7 +23,7 @@ class SpeakerEmbeddingExtractorConfig {
 }
 
 class SpeakerEmbeddingExtractor {
-  SpeakerEmbeddingExtractor._({required this.ptr});
+  SpeakerEmbeddingExtractor._({required this.ptr, required this.dim});
 
   /// The user is responsible to call the SpeakerEmbeddingExtractor.free()
   /// method of the returned instance to avoid memory leak.
@@ -45,7 +46,9 @@ class SpeakerEmbeddingExtractor {
     calloc.free(modelPtr);
     calloc.free(providerPtr);
 
-    return SpeakerEmbeddingExtractor._(ptr: ptr);
+    int dim = SherpaOnnxBindings.speakerEmbeddingExtractorDim?.call(ptr) ?? 0;
+
+    return SpeakerEmbeddingExtractor._(ptr: ptr, dim: dim);
   }
 
   void free() {
@@ -70,8 +73,26 @@ class SpeakerEmbeddingExtractor {
     return ready == 1;
   }
 
-  int get dim =>
-      SherpaOnnxBindings.speakerEmbeddingExtractorDim?.call(ptr) ?? 0;
+  Float32List compute(OnlineStream stream) {
+    final Pointer<Float> embedding = SherpaOnnxBindings
+            .speakerEmbeddingExtractorComputeEmbedding
+            ?.call(this.ptr, stream.ptr) ??
+        nullptr;
+
+    if (embedding == nullptr) {
+      return Float32List(0);
+    }
+
+    final embeddingList = embedding.asTypedList(this.dim);
+    final ans = Float32List(this.dim);
+    ans.setAll(0, embeddingList);
+
+    SherpaOnnxBindings.speakerEmbeddingExtractorDestroyEmbedding
+        ?.call(embedding);
+
+    return ans;
+  }
 
   Pointer<SherpaOnnxSpeakerEmbeddingExtractor> ptr;
+  int dim;
 }

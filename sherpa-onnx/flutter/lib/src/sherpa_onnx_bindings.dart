@@ -75,12 +75,26 @@ typedef SherpaOnnxSpeakerEmbeddingExtractorIsReady = int Function(
     Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
     Pointer<SherpaOnnxOnlineStream>);
 
+typedef SherpaOnnxSpeakerEmbeddingExtractorComputeEmbeddingNative
+    = Pointer<Float> Function(Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
+        Pointer<SherpaOnnxOnlineStream>);
+
+typedef SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding
+    = SherpaOnnxSpeakerEmbeddingExtractorComputeEmbeddingNative;
+
+typedef SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbeddingNative = Void
+    Function(Pointer<Float>);
+
+typedef SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding = void Function(
+    Pointer<Float>);
+
 typedef SherpaOnnxReadWaveNative = Pointer<SherpaOnnxWave> Function(
     Pointer<Utf8>);
 
 typedef SherpaOnnxReadWave = SherpaOnnxReadWaveNative;
 
 typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
+
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
@@ -95,6 +109,12 @@ class SherpaOnnxBindings {
   static SherpaOnnxSpeakerEmbeddingExtractorCreateStream?
       speakerEmbeddingExtractorCreateStream;
 
+  static SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding?
+      speakerEmbeddingExtractorComputeEmbedding;
+
+  static SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding?
+      speakerEmbeddingExtractorDestroyEmbedding;
+
   static DestroyOnlineStream? destroyOnlineStream;
 
   static OnlineStreamAcceptWaveform? onlineStreamAcceptWaveform;
@@ -103,6 +123,7 @@ class SherpaOnnxBindings {
       speakerEmbeddingExtractorIsReady;
 
   static SherpaOnnxReadWave? readWave;
+
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
@@ -128,6 +149,20 @@ class SherpaOnnxBindings {
                 NativeFunction<
                     SherpaOnnxSpeakerEmbeddingExtractorCreateStreamNative>>(
             'SherpaOnnxSpeakerEmbeddingExtractorCreateStream')
+        .asFunction();
+
+    speakerEmbeddingExtractorComputeEmbedding ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpeakerEmbeddingExtractorComputeEmbeddingNative>>(
+            'SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding')
+        .asFunction();
+
+    speakerEmbeddingExtractorDestroyEmbedding ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbeddingNative>>(
+            'SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding')
         .asFunction();
 
     destroyOnlineStream ??= dynamicLibrary

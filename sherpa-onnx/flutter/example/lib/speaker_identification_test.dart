@@ -1,4 +1,5 @@
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
+import 'dart:typed_data';
 import 'package:path/path.dart';
 import './utils.dart';
 
@@ -32,6 +33,9 @@ Future<void> testSpeakerID() async {
       samples: waveData.samples, sampleRate: waveData.sampleRate);
   isReady = extractor.isReady(stream);
   print('is ready3: $isReady');
+
+  final Float32List embedding = extractor.compute(stream);
+  print('embedding dim: ${embedding.length}');
 
   stream.free();
   print('stream.ptr: ${stream.ptr}');
