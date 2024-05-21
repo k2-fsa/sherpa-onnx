@@ -92,6 +92,7 @@ jobs:
         shell: bash
         run: |
           git lfs install
+          export GIT_CLONE_PROTECTION_ACTIVE=false
           git clone https://huggingface.co/csukuangfj/arm-linux-gcc
           ls -lh arm-linux-gcc
 

@@ -55,7 +55,7 @@ $EXE \
   $repo/test_wavs/1.wav \
   $repo/test_wavs/8k.wav
 
-rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18
+rm -rf $repo
 
 log "------------------------------------------------------------"
 log "Run streaming Zipformer2 CTC                                "
@@ -87,28 +87,26 @@ time $EXE \
   $repo/test_wavs/DEV_T0000000001.wav \
   $repo/test_wavs/DEV_T0000000002.wav
 
+rm -rf $repo
 
 log "------------------------------------------------------------"
 log "Run streaming Conformer CTC from WeNet"
 log "------------------------------------------------------------"
 wenet_models=(
 sherpa-onnx-zh-wenet-aishell
-sherpa-onnx-zh-wenet-aishell2
-sherpa-onnx-zh-wenet-wenetspeech
-sherpa-onnx-zh-wenet-multi-cn
+# sherpa-onnx-zh-wenet-aishell2
+# sherpa-onnx-zh-wenet-wenetspeech
+# sherpa-onnx-zh-wenet-multi-cn
 sherpa-onnx-en-wenet-librispeech
-sherpa-onnx-en-wenet-gigaspeech
+# sherpa-onnx-en-wenet-gigaspeech
 )
 for name in ${wenet_models[@]}; do
-  repo_url=https://huggingface.co/csukuangfj/$name
+  repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$name.tar.bz2
+  curl -SL -O $repo_url
+  tar xvf $name.tar.bz2
+  rm $name.tar.bz2
+  repo=$name
   log "Start testing ${repo_url}"
-  repo=$(basename $repo_url)
-  log "Download pretrained model and test-data from $repo_url"
-  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-  pushd $repo
-  git lfs pull --include "*.onnx"
-  ls -lh *.onnx
-  popd
 
   log "test float32 models"
   time $EXE \

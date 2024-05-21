@@ -69,6 +69,7 @@ jobs:
         run: |
           echo "pwd: $PWD"
           ls -lh
+          du -h -d1 .
 
       - name: Build sherpa-onnx
         uses: addnab/docker-run-action@v3
@@ -109,6 +110,7 @@ jobs:
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
         run: |
+          du -h -d1 .
           sudo chown -R $USER ./build
           ls -lh build/bin
           ls -lh build/_deps/onnxruntime-src/lib/
@@ -128,33 +130,70 @@ jobs:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: install/*
 
-      - name: Test online CTC
+      - name: Test online transducer
         shell: bash
         run: |
+          du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx
 
-          .github/scripts/test-online-ctc.sh
+          .github/scripts/test-online-transducer.sh
+          du -h -d1 .
 
-      - name: Test offline transducer
+      - name: Test online transducer (C API)
         shell: bash
         run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=decode-file-c-api
+
+          .github/scripts/test-online-transducer.sh
+          du -h -d1 .
+
+      - name: Test offline CTC
+        shell: bash
+        run: |
+          du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx-offline
 
-          .github/scripts/test-offline-transducer.sh
+          .github/scripts/test-offline-ctc.sh
+          du -h -d1 .
 
       - name: Test spoken language identification (C++ API)
         shell: bash
         run: |
+          du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx-offline-language-identification
 
           .github/scripts/test-spoken-language-identification.sh
+          du -h -d1 .
+
+      - name: Test online CTC
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-ctc.sh
+          du -h -d1 .
+
+      - name: Test offline transducer
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-transducer.sh
+          du -h -d1 .
 
       - name: Test C API
         shell: bash
         run: |
+          du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export SLID_EXE=spoken-language-identification-c-api
           export SID_EXE=speaker-identification-c-api
@@ -162,87 +201,77 @@ jobs:
           export PUNCT_EXE=add-punctuation-c-api
 
           .github/scripts/test-c-api.sh
-
-      - name: Test offline CTC
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
-
-          .github/scripts/test-offline-ctc.sh
+          du -h -d1 .
 
       - name: Test offline punctuation
         shell: bash
         run: |
+          du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx-offline-punctuation
 
           .github/scripts/test-offline-punctuation.sh
+          du -h -d1 .
 
       - name: Test Audio tagging
         shell: bash
         run: |
+          du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx-offline-audio-tagging
 
           .github/scripts/test-audio-tagging.sh
+          du -h -d1 .
 
       - name: Test transducer kws
         shell: bash
         run: |
+          du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx-keyword-spotter
 
           .github/scripts/test-kws.sh
+          du -h -d1 .
 
       - name: Test offline Whisper
         if: matrix.build_type != 'Debug'
         shell: bash
         run: |
+          du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx-offline
 
           readelf -d build/bin/sherpa-onnx-offline
 
           .github/scripts/test-offline-whisper.sh
+          du -h -d1 .
 
       - name: Test offline TTS
         if: matrix.with_tts == 'ON'
         shell: bash
         run: |
+          du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx-offline-tts
 
           .github/scripts/test-offline-tts.sh
+          du -h -d1 .
 
       - name: Test online paraformer
         shell: bash
         run: |
+          du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export EXE=sherpa-onnx
 
           .github/scripts/test-online-paraformer.sh
-
-      - name: Test online transducer
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx
-
-          .github/scripts/test-online-transducer.sh
-
-      - name: Test online transducer (C API)
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=decode-file-c-api
-
-          .github/scripts/test-online-transducer.sh
+          du -h -d1 .
 
       - name: Copy files
         shell: bash
         if: matrix.build_type == 'Release'
         run: |
+          du -h -d1 .
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           if [[ ${{ matrix.shared_lib }} == 'ON' ]]; then
@@ -265,6 +294,7 @@ jobs:
           tree $dst
 
           tar cjvf ${dst}.tar.bz2 $dst
+          du -h -d1 .
 
       - name: Publish to huggingface
         if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && matrix.build_type == 'Release'
@@ -276,11 +306,14 @@ jobs:
           timeout_seconds: 200
           shell: bash
           command: |
+            du -h -d1 .
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
             rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            du -h -d1 .
 
             cd huggingface
             git lfs pull
@@ -296,6 +329,7 @@ jobs:
             git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}"
 
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+            du -h -d1 .
 
       - name: Release pre-compiled binaries and libs for linux x64
         if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'

@@ -19,16 +19,13 @@ log "------------------------------------------------------------"
 log "Run LSTM transducer (English)"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-lstm-en-2023-02-17
-log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-lstm-en-2023-02-17.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-lstm-en-2023-02-17.tar.bz2
+rm sherpa-onnx-lstm-en-2023-02-17.tar.bz2
+repo=sherpa-onnx-lstm-en-2023-02-17
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+log "Start testing ${repo_url}"
 
 waves=(
 $repo/test_wavs/0.wav
@@ -62,16 +59,13 @@ log "------------------------------------------------------------"
 log "Run LSTM transducer (Chinese)"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-lstm-zh-2023-02-20
-log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-lstm-zh-2023-02-20.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-lstm-zh-2023-02-20.tar.bz2
+rm sherpa-onnx-lstm-zh-2023-02-20.tar.bz2
+repo=sherpa-onnx-lstm-zh-2023-02-20
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+log "Start testing ${repo_url}"
 
 waves=(
 $repo/test_wavs/0.wav
@@ -105,16 +99,13 @@ log "------------------------------------------------------------"
 log "Run streaming Zipformer transducer (English)"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-02-21
-log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-02-21.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-streaming-zipformer-en-2023-02-21.tar.bz2
+rm sherpa-onnx-streaming-zipformer-en-2023-02-21.tar.bz2
+repo=sherpa-onnx-streaming-zipformer-en-2023-02-21
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+log "Start testing ${repo_url}"
 
 waves=(
 $repo/test_wavs/0.wav
@@ -150,16 +141,13 @@ log "------------------------------------------------------------"
 log "Run streaming Zipformer transducer (Bilingual, Chinese + English)"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
-log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+repo=sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+log "Start testing ${repo_url}"
 
 waves=(
 $repo/test_wavs/0.wav
@@ -216,16 +204,13 @@ log "------------------------------------------------------------"
 log "Run streaming Conformer transducer (English)"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-conformer-en-2023-05-09
-log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-conformer-en-2023-05-09.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-streaming-conformer-en-2023-05-09.tar.bz2
+rm sherpa-onnx-streaming-conformer-en-2023-05-09.tar.bz2
+repo=sherpa-onnx-streaming-conformer-en-2023-05-09
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+log "Start testing ${repo_url}"
 
 waves=(
 $repo/test_wavs/0.wav

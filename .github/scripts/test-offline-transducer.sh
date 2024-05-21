@@ -118,16 +118,13 @@ log "------------------------------------------------------------"
 log "Run Conformer transducer (English)"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-conformer-en-2023-03-18
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-conformer-en-2023-03-18.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-conformer-en-2023-03-18.tar.bz2
+rm sherpa-onnx-conformer-en-2023-03-18.tar.bz2
 log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
+repo=sherpa-onnx-conformer-en-2023-03-18
 log "Download pretrained model and test-data from $repo_url"
-
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
 
 time $EXE \
   --tokens=$repo/tokens.txt \
@@ -155,16 +152,12 @@ log "------------------------------------------------------------"
 log "Run Zipformer transducer (English)"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-03-30
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-03-30.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-zipformer-en-2023-03-30.tar.bz2
+rm sherpa-onnx-zipformer-en-2023-03-30.tar.bz2
+repo=sherpa-onnx-zipformer-en-2023-03-30
 log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
-
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
 
 time $EXE \
   --tokens=$repo/tokens.txt \
@@ -192,16 +185,12 @@ log "------------------------------------------------------------"
 log "Run Paraformer (Chinese)"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+repo=sherpa-onnx-paraformer-zh-2023-03-28
 log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
-
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
 
 time $EXE \
   --tokens=$repo/tokens.txt \
@@ -229,16 +218,13 @@ log "------------------------------------------------------------"
 log "Run Paraformer (Chinese) with timestamps"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-09-14
-log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+repo=sherpa-onnx-paraformer-zh-2023-09-14
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+log "Start testing ${repo_url}"
 
 time $EXE \
   --tokens=$repo/tokens.txt \

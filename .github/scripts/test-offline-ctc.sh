@@ -124,15 +124,13 @@ sherpa-onnx-en-wenet-librispeech
 # sherpa-onnx-en-wenet-gigaspeech
 )
 for name in ${wenet_models[@]}; do
-  repo_url=https://huggingface.co/csukuangfj/$name
+  repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$name.tar.bz2
   log "Start testing ${repo_url}"
-  repo=$(basename $repo_url)
+  repo=$name
   log "Download pretrained model and test-data from $repo_url"
-  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-  pushd $repo
-  git lfs pull --include "*.onnx"
-  ls -lh *.onnx
-  popd
+  curl -SL -O $repo_url
+  tar xvf $name.tar.bz2
+  rm $name.tar.bz2
 
   log "test float32 models"
   time $EXE \
@@ -156,16 +154,13 @@ done
 log "------------------------------------------------------------"
 log "Run tdnn yesno (Hebrew)"
 log "------------------------------------------------------------"
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-tdnn-yesno
-log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
-
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-tdnn-yesno.tar.bz2
+curl -SL -O $url
+tar xvf sherpa-onnx-tdnn-yesno.tar.bz2
+rm sherpa-onnx-tdnn-yesno.tar.bz2
+log "Start testing ${url}"
+repo=sherpa-onnx-tdnn-yesno
+log "Download pretrained model and test-data from $url"
 
 log "test float32 models"
 time $EXE \
@@ -201,16 +196,13 @@ log "------------------------------------------------------------"
 log "Run Citrinet (stt_en_citrinet_512, English)"
 log "------------------------------------------------------------"
 
-repo_url=http://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-citrinet-512
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+rm sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
 log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
+repo=sherpa-onnx-nemo-ctc-en-citrinet-512
 log "Download pretrained model and test-data from $repo_url"
-
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
 
 time $EXE \
   --tokens=$repo/tokens.txt \
@@ -233,17 +225,13 @@ rm -rf $repo
 log "------------------------------------------------------------"
 log "Run Librispeech zipformer CTC H/HL/HLG decoding (English)   "
 log "------------------------------------------------------------"
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-ctc-en-2023-10-02
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+curl -SL -O $repo_url
 log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
+tar xvf sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+rm sherpa-onnx-zipformer-ctc-en-2023-10-02.tar.bz2
+repo=sherpa-onnx-zipformer-ctc-en-2023-10-02
 log "Download pretrained model and test-data from $repo_url"
-
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-git lfs pull --include "*.fst"
-ls -lh
-popd
 
 graphs=(
 $repo/H.fst
