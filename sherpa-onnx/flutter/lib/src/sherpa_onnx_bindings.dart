@@ -58,6 +58,15 @@ typedef DestroyOnlineStreamNative = Void Function(
 
 typedef DestroyOnlineStream = void Function(Pointer<SherpaOnnxOnlineStream>);
 
+typedef OnlineStreamAcceptWaveformNative = Void Function(
+    Pointer<SherpaOnnxOnlineStream>,
+    Int32 sample_rate,
+    Pointer<Float>,
+    Int32 n);
+
+typedef OnlineStreamAcceptWaveform = void Function(
+    Pointer<SherpaOnnxOnlineStream>, int sample_rate, Pointer<Float>, int n);
+
 typedef SherpaOnnxSpeakerEmbeddingExtractorIsReadyNative = Int32 Function(
     Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
     Pointer<SherpaOnnxOnlineStream>);
@@ -87,6 +96,8 @@ class SherpaOnnxBindings {
       speakerEmbeddingExtractorCreateStream;
 
   static DestroyOnlineStream? destroyOnlineStream;
+
+  static OnlineStreamAcceptWaveform? onlineStreamAcceptWaveform;
 
   static SherpaOnnxSpeakerEmbeddingExtractorIsReady?
       speakerEmbeddingExtractorIsReady;
@@ -122,6 +133,11 @@ class SherpaOnnxBindings {
     destroyOnlineStream ??= dynamicLibrary
         .lookup<NativeFunction<DestroyOnlineStreamNative>>(
             'DestroyOnlineStream')
+        .asFunction();
+
+    onlineStreamAcceptWaveform ??= dynamicLibrary
+        .lookup<NativeFunction<OnlineStreamAcceptWaveformNative>>(
+            'AcceptWaveform')
         .asFunction();
 
     speakerEmbeddingExtractorIsReady ??= dynamicLibrary

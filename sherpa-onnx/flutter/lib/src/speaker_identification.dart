@@ -24,8 +24,8 @@ class SpeakerEmbeddingExtractorConfig {
 class SpeakerEmbeddingExtractor {
   SpeakerEmbeddingExtractor._({required this.ptr});
 
-  /// The user is responsible to call the free() method
-  /// of the returned instance to avoid memory leak.
+  /// The user is responsible to call the SpeakerEmbeddingExtractor.free()
+  /// method of the returned instance to avoid memory leak.
   factory SpeakerEmbeddingExtractor(
       {required SpeakerEmbeddingExtractorConfig config}) {
     var c = calloc<SherpaOnnxSpeakerEmbeddingExtractorConfig>();
@@ -63,12 +63,15 @@ class SpeakerEmbeddingExtractor {
     return OnlineStream(ptr: p);
   }
 
+  bool isReady(OnlineStream stream) {
+    int ready = SherpaOnnxBindings.speakerEmbeddingExtractorIsReady
+            ?.call(this.ptr, stream.ptr) ??
+        0;
+    return ready == 1;
+  }
+
   int get dim =>
       SherpaOnnxBindings.speakerEmbeddingExtractorDim?.call(ptr) ?? 0;
 
   Pointer<SherpaOnnxSpeakerEmbeddingExtractor> ptr;
-}
-
-void testSpeakerID() {
-  print(SherpaOnnxBindings.createSpeakerEmbeddingExtractor);
 }

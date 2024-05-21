@@ -12,8 +12,6 @@ Future<void> testSpeakerID() async {
   print('dim: ${extractor.dim}');
   final stream = extractor.createStream();
   print('stream.ptr: ${stream.ptr}');
-  stream.free();
-  print('stream.ptr: ${stream.ptr}');
 
   const _spk1Files = [
     'assets/sr-data/enroll/fangjun-sr-1.wav',
@@ -27,6 +25,16 @@ Future<void> testSpeakerID() async {
 
   final waveData = sherpa_onnx.readWave(spk1Files[0]);
   print('num samples of ${spk1Files[0]}: ${waveData.samples.length}');
+
+  bool isReady = extractor.isReady(stream);
+  print('is ready: $isReady');
+  stream.acceptWaveform(
+      samples: waveData.samples, sampleRate: waveData.sampleRate);
+  isReady = extractor.isReady(stream);
+  print('is ready3: $isReady');
+
+  stream.free();
+  print('stream.ptr: ${stream.ptr}');
 
   extractor.free();
 }
