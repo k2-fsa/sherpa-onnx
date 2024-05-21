@@ -40,15 +40,13 @@ log "------------------------------------------------------------"
 log "vits-ljs test"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/vits-ljs
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-ljs.tar.bz2
+curl -SL -O $repo_url
+tar xvf vits-ljs.tar.bz2
+rm vits-ljs.tar.bz2
+repo=vits-ljs
+
 log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model from $repo_url"
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
 
 $EXE \
   --vits-model=$repo/vits-ljs.onnx \
@@ -65,15 +63,13 @@ log "------------------------------------------------------------"
 log "vits-vctk test"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/vits-vctk
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-vctk.tar.bz2
+curl -SL -O $repo_url
+tar xvf vits-vctk.tar.bz2
+rm vits-vctk.tar.bz2
+repo=vits-vctk
+
 log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model from $repo_url"
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
 
 for sid in 0 10 90; do
   $EXE \
@@ -93,15 +89,13 @@ log "------------------------------------------------------------"
 log "vits-zh-aishell3"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/vits-zh-aishell3
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
+curl -SL -O $repo_url
+tar xvf vits-zh-aishell3.tar.bz2
+rm vits-zh-aishell3.tar.bz2
+repo=vits-zh-aishell3
+
 log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model from $repo_url"
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
 
 for sid in 0 10 90; do
   $EXE \

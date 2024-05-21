@@ -102,20 +102,16 @@ wenet_models=(
 # sherpa-onnx-zh-wenet-wenetspeech
 # sherpa-onnx-zh-wenet-multi-cn
 sherpa-onnx-en-wenet-librispeech
-sherpa-onnx-en-wenet-gigaspeech
+# sherpa-onnx-en-wenet-gigaspeech
 )
 
 for name in ${wenet_models[@]}; do
-  repo_url=https://huggingface.co/csukuangfj/$name
+  repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$name.tar.bz2
+  curl -SL -O $repo_url
+  tar xvf $name.tar.bz2
+  rm $name.tar.bz2
+  repo=$name
   log "Start testing ${repo_url}"
-  repo=$dir/$(basename $repo_url)
-  log "Download pretrained model and test-data from $repo_url"
-  pushd $dir
-  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-  cd $repo
-  git lfs pull --include "*.onnx"
-  ls -lh *.onnx
-  popd
 
   python3 ./python-api-examples/offline-decode-files.py \
     --tokens=$repo/tokens.txt \
@@ -206,16 +202,14 @@ log "Test streaming transducer models"
 if [[ x$OS != x'windows-latest' ]]; then
   echo "OS: $OS"
   pushd $dir
-  repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+  repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+  curl -SL -O $repo_url
+  tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+  rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+  repo=sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
   log "Start testing ${repo_url}"
-  repo=$dir/$(basename $repo_url)
-  log "Download pretrained model and test-data from $repo_url"
-
-  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-  cd $repo
-  git lfs pull --include "*.onnx"
-  popd
+  repo=$dir/$repo
 
   python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
   sherpa_onnx_version=$(python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)")
@@ -255,15 +249,14 @@ fi
 log "Test non-streaming transducer models"
 
 pushd $dir
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-04-01
-
-log "Start testing ${repo_url}"
-repo=$dir/$(basename $repo_url)
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
 log "Download pretrained model and test-data from $repo_url"
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-cd $repo
-git lfs pull --include "*.onnx"
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
+rm sherpa-onnx-zipformer-en-2023-04-01.tar.bz2
+repo=$dir/sherpa-onnx-zipformer-en-2023-04-01
+
 popd
 
 ls -lh $repo
@@ -295,16 +288,13 @@ log "Test non-streaming paraformer models"
 if [[ x$OS != x'windows-latest' ]]; then
   echo "OS: $OS"
   pushd $dir
-  repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
+  repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+  curl -SL -O $repo_url
+  tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+  rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
 
   log "Start testing ${repo_url}"
-  repo=$dir/$(basename $repo_url)
-  log "Download pretrained model and test-data from $repo_url"
-
-  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-  cd $repo
-  git lfs pull --include "*.onnx"
-  popd
+  repo=$dir/sherpa-onnx-paraformer-zh-2023-03-28
 
   ls -lh $repo
 
@@ -332,16 +322,13 @@ fi
 log "Test non-streaming NeMo CTC models"
 
 pushd $dir
-repo_url=http://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-citrinet-512
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
+rm sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
 
 log "Start testing ${repo_url}"
-repo=$dir/$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
-
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-cd $repo
-git lfs pull --include "*.onnx"
-popd
+repo=$dir/sherpa-onnx-nemo-ctc-en-citrinet-512
 
 ls -lh $repo
 

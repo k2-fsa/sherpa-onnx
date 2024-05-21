@@ -73,10 +73,9 @@ jobs:
         if: matrix.model_type == 'transducer'
         shell: bash
         run: |
-          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26
-          cd sherpa-onnx-zipformer-en-2023-06-26
-          git lfs pull --include "*.onnx"
-          cd ..
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
+          tar xvf sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
+          rm sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
 
           python3 ./python-api-examples/non_streaming_server.py \
             --encoder ./sherpa-onnx-zipformer-en-2023-06-26/encoder-epoch-99-avg-1.onnx \
@@ -105,14 +104,13 @@ jobs:
         if: matrix.model_type == 'paraformer' && matrix.os != 'windows-latest'
         shell: bash
         run: |
-          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-bilingual-zh-en
-          cd sherpa-onnx-paraformer-bilingual-zh-en
-          git lfs pull --include "*.onnx"
-          cd ..
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+          tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+          rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
 
           python3 ./python-api-examples/non_streaming_server.py \
-            --paraformer ./sherpa-onnx-paraformer-bilingual-zh-en/model.int8.onnx \
-            --tokens ./sherpa-onnx-paraformer-bilingual-zh-en/tokens.txt &
+            --paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx \
+            --tokens ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt &
 
           echo "sleep 10 seconds to wait the server start"
           sleep 10
@@ -122,25 +120,24 @@ jobs:
         shell: bash
         run: |
           python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
-            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/0.wav \
-            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/1.wav \
-            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/2.wav \
-            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/8k.wav
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav
 
           python3 ./python-api-examples/offline-websocket-client-decode-files-sequential.py \
-            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/0.wav \
-            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/1.wav \
-            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/2.wav \
-            ./sherpa-onnx-paraformer-bilingual-zh-en/test_wavs/8k.wav
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav \
+            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav
 
       - name: Start server for nemo_ctc models
         if: matrix.model_type == 'nemo_ctc'
         shell: bash
         run: |
-          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
-          cd sherpa-onnx-nemo-ctc-en-conformer-medium
-          git lfs pull --include "*.onnx"
-          cd ..
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2
+          tar xvf sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2
+          rm sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2
 
           python3 ./python-api-examples/non_streaming_server.py \
             --nemo-ctc ./sherpa-onnx-nemo-ctc-en-conformer-medium/model.onnx \
@@ -167,10 +164,9 @@ jobs:
         if: matrix.model_type == 'whisper'
         shell: bash
         run: |
-          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
-          cd sherpa-onnx-whisper-tiny.en
-          git lfs pull --include "*.onnx"
-          cd ..
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+          tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+          rm sherpa-onnx-whisper-tiny.en.tar.bz2
 
           python3 ./python-api-examples/non_streaming_server.py \
             --whisper-encoder=./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.onnx \
@@ -198,10 +194,9 @@ jobs:
         if: matrix.model_type == 'tdnn'
         shell: bash
         run: |
-          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-tdnn-yesno
-          cd sherpa-onnx-tdnn-yesno
-          git lfs pull --include "*.onnx"
-          cd ..
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-tdnn-yesno.tar.bz2
+          tar xvf sherpa-onnx-tdnn-yesno.tar.bz2
+          rm sherpa-onnx-tdnn-yesno.tar.bz2
 
           python3 ./python-api-examples/non_streaming_server.py \
             --tdnn-model=./sherpa-onnx-tdnn-yesno/model-epoch-14-avg-2.onnx \
