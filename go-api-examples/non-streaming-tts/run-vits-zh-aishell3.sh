@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
+set -ex
 
-# please refer to
-# https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#aishell3-chinese-multi-speaker-174-speakers
-# to download the model before you run this script
+if [ ! -d vits-icefall-zh-aishell3 ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+  tar xvf vits-icefall-zh-aishell3.tar.bz2
+  rm vits-icefall-zh-aishell3.tar.bz2
+fi
+
+go mod tidy
+go build
 
 for sid in 10 33 99; do
 ./non-streaming-tts \

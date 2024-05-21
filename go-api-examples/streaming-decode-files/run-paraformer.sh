@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 
-# Please refer to
-# https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-streaming-paraformer-bilingual-zh-en-chinese-english
-# to download the model files
+set -ex
 
 if [ ! -d ./sherpa-onnx-streaming-paraformer-bilingual-zh-en ]; then
-  GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
-  cd sherpa-onnx-streaming-paraformer-bilingual-zh-en
-  git lfs pull --include "*.onnx"
-  cd ..
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+  tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+  rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 fi
+
+go mod tidy
+go build
 
 ./streaming-decode-files \
   --paraformer-encoder ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx \

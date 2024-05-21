@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 
-# please refer to
-# https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#en-us-lessac-medium-english-single-speaker
-# to download the model before you run this script
+set -ex
+
+if [ ! -d vits-piper-en_US-lessac-medium ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium.tar.bz2
+  tar xvf vits-piper-en_US-lessac-medium.tar.bz2
+  rm vits-piper-en_US-lessac-medium.tar.bz2
+fi
+
+go mod tidy
+go build
 
 ./non-streaming-tts \
   --vits-model=./vits-piper-en_US-lessac-medium/en_US-lessac-medium.onnx \
