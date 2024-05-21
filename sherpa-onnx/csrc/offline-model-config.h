@@ -41,6 +41,9 @@ struct OfflineModelConfig {
   // All other values are invalid and lead to loading the model twice.
   std::string model_type;
 
+  std::string modeling_unit = "cjkchar";
+  std::string bpe_vocab;
+
   OfflineModelConfig() = default;
   OfflineModelConfig(const OfflineTransducerModelConfig &transducer,
                      const OfflineParaformerModelConfig &paraformer,
@@ -50,7 +53,9 @@ struct OfflineModelConfig {
                      const OfflineZipformerCtcModelConfig &zipformer_ctc,
                      const OfflineWenetCtcModelConfig &wenet_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
-                     const std::string &provider, const std::string &model_type)
+                     const std::string &provider, const std::string &model_type,
+                     const std::string &modeling_unit,
+                     const std::string &bpe_vocab)
       : transducer(transducer),
         paraformer(paraformer),
         nemo_ctc(nemo_ctc),
@@ -62,7 +67,9 @@ struct OfflineModelConfig {
         num_threads(num_threads),
         debug(debug),
         provider(provider),
-        model_type(model_type) {}
+        model_type(model_type),
+        modeling_unit(modeling_unit),
+        bpe_vocab(bpe_vocab) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

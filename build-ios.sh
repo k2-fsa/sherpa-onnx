@@ -129,7 +129,7 @@ echo "Generate xcframework"
 
 mkdir -p "build/simulator/lib"
 for f in libkaldi-native-fbank-core.a libsherpa-onnx-c-api.a libsherpa-onnx-core.a \
-         libsherpa-onnx-fstfar.a \
+         libsherpa-onnx-fstfar.a libssentencepiece_core.a \
          libsherpa-onnx-fst.a libsherpa-onnx-kaldifst-core.a libkaldi-decoder-core.a \
          libucd.a libpiper_phonemize.a libespeak-ng.a; do
   lipo -create build/simulator_arm64/lib/${f} \
@@ -150,6 +150,7 @@ libtool -static -o build/simulator/sherpa-onnx.a \
   build/simulator/lib/libucd.a \
   build/simulator/lib/libpiper_phonemize.a \
   build/simulator/lib/libespeak-ng.a \
+  build/simulator/lib/libssentencepiece_core.a
 
 libtool -static -o build/os64/sherpa-onnx.a \
   build/os64/lib/libkaldi-native-fbank-core.a \
@@ -162,6 +163,7 @@ libtool -static -o build/os64/sherpa-onnx.a \
   build/os64/lib/libucd.a \
   build/os64/lib/libpiper_phonemize.a \
   build/os64/lib/libespeak-ng.a \
+  build/os64/lib/libssentencepiece_core.a
 
 
 rm -rf sherpa-onnx.xcframework
