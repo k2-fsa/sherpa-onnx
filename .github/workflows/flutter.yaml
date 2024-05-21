@@ -1,0 +1,157 @@
+name: flutter
+
+on:
+  push:
+    branches:
+      - flutter
+      - flutter-sid-2
+    tags:
+      - '*'
+    paths:
+      - '.github/workflows/flutter.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/flutter/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/flutter.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/flutter/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: flutter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    name: flutter
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-flutter
+
+      - name: Display PWD
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+
+      - name: Display machine info
+        shell: bash
+        run: |
+          uname -a
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -D BUILD_SHARED_LIBS=ON \
+            -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=ON \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+
+      - name: Build sherpa-onnx for macos
+        shell: bash
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cd build
+          make -j2
+          make install
+
+          rm -v ./install/lib/libcargs*
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -v build/install/lib/lib* ./sherpa-onnx/flutter/macos/
+
+          echo "--------------------"
+
+          ls -lh ./sherpa-onnx/flutter/macos/
+
+      - name: Download model files
+        shell: bash
+        run: |
+          cd sherpa-onnx/flutter
+          pushd example/assets
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+          git clone https://github.com/csukuangfj/sr-data
+
+          rm -rf sr-data/.git
+          popd
+
+
+      - name: Build flutter
+        shell: bash
+        run: |
+          d=$PWD
+
+          pushd sherpa-onnx/flutter
+          dart pub get
+
+          cd example
+          flutter build macos
+
+          pushd build/macos/Build/Products/Release/
+          tar cjfv sherpa_onnx.app.tar.bz2 ./sherpa_onnx.app
+          ls -lh
+          mv sherpa_onnx.app.tar.bz2 $d
+          popd
+
+          popd
+
+          ls -lh sherpa_onnx.app.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'macos-latest'
+        with:
+          name: flutter-sherpa-onnx-app-macos
+          path: ./sherpa_onnx.app.tar.bz2

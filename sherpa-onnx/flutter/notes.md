@@ -37,4 +37,6 @@ flutter run --release -d macos
 
 # add platform to an existing project
 flutter create --platforms=windows,macos,linux .
+
+dart analyze
 ```
