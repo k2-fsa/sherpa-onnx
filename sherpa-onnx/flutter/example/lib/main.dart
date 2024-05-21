@@ -1,3 +1,4 @@
+// Copyright (c)  2024  Xiaomi Corporation
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import 'package:flutter/material.dart';
 import "./speaker_identification_test.dart";

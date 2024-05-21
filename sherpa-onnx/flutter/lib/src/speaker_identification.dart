@@ -1,3 +1,4 @@
+// Copyright (c)  2024  Xiaomi Corporation
 import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
@@ -29,7 +30,7 @@ class SpeakerEmbeddingExtractor {
   /// method of the returned instance to avoid memory leak.
   factory SpeakerEmbeddingExtractor(
       {required SpeakerEmbeddingExtractorConfig config}) {
-    var c = calloc<SherpaOnnxSpeakerEmbeddingExtractorConfig>();
+    final c = calloc<SherpaOnnxSpeakerEmbeddingExtractorConfig>();
 
     final modelPtr = config.model.toNativeUtf8();
     c.ref.model = modelPtr;
@@ -43,10 +44,11 @@ class SpeakerEmbeddingExtractor {
     final ptr =
         SherpaOnnxBindings.createSpeakerEmbeddingExtractor?.call(c) ?? nullptr;
 
-    calloc.free(modelPtr);
     calloc.free(providerPtr);
+    calloc.free(modelPtr);
+    calloc.free(c);
 
-    int dim = SherpaOnnxBindings.speakerEmbeddingExtractorDim?.call(ptr) ?? 0;
+    final dim = SherpaOnnxBindings.speakerEmbeddingExtractorDim?.call(ptr) ?? 0;
 
     return SpeakerEmbeddingExtractor._(ptr: ptr, dim: dim);
   }
@@ -67,7 +69,7 @@ class SpeakerEmbeddingExtractor {
   }
 
   bool isReady(OnlineStream stream) {
-    int ready = SherpaOnnxBindings.speakerEmbeddingExtractorIsReady
+    final int ready = SherpaOnnxBindings.speakerEmbeddingExtractorIsReady
             ?.call(this.ptr, stream.ptr) ??
         0;
     return ready == 1;
@@ -100,6 +102,7 @@ class SpeakerEmbeddingExtractor {
 class SpeakerEmbeddingManager {
   SpeakerEmbeddingManager._({required this.ptr, required this.dim});
 
+  // The user has to use SpeakerEmbeddingManager.free() to avoid memory leak
   factory SpeakerEmbeddingManager(int dim) {
     final p =
         SherpaOnnxBindings.createSpeakerEmbeddingManager?.call(dim) ?? nullptr;
@@ -161,7 +164,7 @@ class SpeakerEmbeddingManager {
   bool contains(String name) {
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
 
-    int found = SherpaOnnxBindings.speakerEmbeddingManagerContains
+    final int found = SherpaOnnxBindings.speakerEmbeddingManagerContains
             ?.call(this.ptr, namePtr) ??
         0;
 
@@ -173,7 +176,7 @@ class SpeakerEmbeddingManager {
   bool remove(String name) {
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
 
-    int ok = SherpaOnnxBindings.speakerEmbeddingManagerRemove
+    final int ok = SherpaOnnxBindings.speakerEmbeddingManagerRemove
             ?.call(this.ptr, namePtr) ??
         0;
 
@@ -200,7 +203,7 @@ class SpeakerEmbeddingManager {
       return '';
     }
 
-    String ans = name.toDartString();
+    final String ans = name.toDartString();
 
     SherpaOnnxBindings.speakerEmbeddingManagerFreeSearch?.call(name);
 
@@ -219,7 +222,7 @@ class SpeakerEmbeddingManager {
     final pList = p.asTypedList(this.dim);
     pList.setAll(0, embedding);
 
-    int ok = SherpaOnnxBindings.speakerEmbeddingManagerVerify
+    final int ok = SherpaOnnxBindings.speakerEmbeddingManagerVerify
             ?.call(this.ptr, namePtr, p, threshold) ??
         0;
 

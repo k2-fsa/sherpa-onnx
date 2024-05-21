@@ -1,3 +1,4 @@
+// Copyright (c)  2024  Xiaomi Corporation
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter/services.dart' show rootBundle;
