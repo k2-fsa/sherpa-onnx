@@ -59,6 +59,12 @@ jobs:
           go version
           go env GOPATH
           go env GOARCH
+          go env CGO_ENABLED
+
+      - name: Display go env
+        shell: bash
+        run: |
+          go env
 
       - name: Build sherpa-onnx
         shell: bash
@@ -74,16 +80,16 @@ jobs:
           go mod tidy
           go build
 
-      - name: Test streaming HLG decoding
-        shell: bash
-        run: |
-          cd scripts/go/_internal/streaming-hlg-decoding/
-          ./run.sh
-
       - name: Test speaker identification
         shell: bash
         run: |
           cd scripts/go/_internal/speaker-identification/
+          ./run.sh
+
+      - name: Test streaming HLG decoding
+        shell: bash
+        run: |
+          cd scripts/go/_internal/streaming-hlg-decoding/
           ./run.sh
 
       - name: Test non-streaming TTS (macOS)
