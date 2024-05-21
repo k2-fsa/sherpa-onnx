@@ -3,6 +3,24 @@ import 'dart:typed_data';
 import 'package:path/path.dart';
 import './utils.dart';
 
+Float32List computeEmbedding(
+    {required sherpa_onnx.SpeakerEmbeddingExtractor extractor,
+    required String filename}) {
+  final stream = extractor.createStream();
+  final waveData = sherpa_onnx.readWave(filename);
+
+  stream.acceptWaveform(
+      samples: waveData.samples, sampleRate: waveData.sampleRate);
+
+  stream.inputFinished();
+
+  final embedding = extractor.compute(stream);
+
+  stream.free();
+
+  return embedding;
+}
+
 Future<void> testSpeakerID() async {
   final src =
       'assets/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx';
@@ -10,9 +28,6 @@ Future<void> testSpeakerID() async {
 
   final config = sherpa_onnx.SpeakerEmbeddingExtractorConfig(model: modelPath);
   final extractor = sherpa_onnx.SpeakerEmbeddingExtractor(config: config);
-  print('dim: ${extractor.dim}');
-  final stream = extractor.createStream();
-  print('stream.ptr: ${stream.ptr}');
 
   const _spk1Files = [
     'assets/sr-data/enroll/fangjun-sr-1.wav',
@@ -24,35 +39,21 @@ Future<void> testSpeakerID() async {
     spk1Files.add(await copyAssetFile(src: f, dst: basename(f)));
   }
 
-  final waveData = sherpa_onnx.readWave(spk1Files[0]);
-  print('num samples of ${spk1Files[0]}: ${waveData.samples.length}');
-
-  bool isReady = extractor.isReady(stream);
-  print('is ready: $isReady');
-  stream.acceptWaveform(
-      samples: waveData.samples, sampleRate: waveData.sampleRate);
-  isReady = extractor.isReady(stream);
-  print('is ready3: $isReady');
-
-  final Float32List embedding = extractor.compute(stream);
-  print('embedding dim: ${embedding.length}');
+  final spk1Vec = <Float32List>[];
+  for (final f in spk1Files) {
+    spk1Vec.add(computeEmbedding(extractor: extractor, filename: f));
+  }
 
   print('create speaker embedding manager');
 
   final manager = sherpa_onnx.SpeakerEmbeddingManager(extractor.dim);
   print('manager.ptr: ${manager.ptr}');
 
-  bool ok = manager.add(name: 'fangjun', embedding: embedding);
-  print('ok: $ok');
-
-  ok = manager.add(name: 'fangjun', embedding: embedding);
+  bool ok = manager.addMulti(name: 'fangjun', embeddingList: spk1Vec);
   print('ok: $ok');
 
   manager.free();
   print('manager.ptr: ${manager.ptr}');
-
-  stream.free();
-  print('stream.ptr: ${stream.ptr}');
 
   extractor.free();
 }

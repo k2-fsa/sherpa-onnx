@@ -32,5 +32,9 @@ class OnlineStream {
     calloc.free(p);
   }
 
+  void inputFinished() {
+    SherpaOnnxBindings.onlineStreamInputFinished?.call(this.ptr);
+  }
+
   Pointer<SherpaOnnxOnlineStream> ptr;
 }

@@ -47,6 +47,16 @@ typedef SherpaOnnxSpeakerEmbeddingManagerAddNative = Int32 Function(
 typedef SherpaOnnxSpeakerEmbeddingManagerAdd = int Function(
     Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>, Pointer<Float>);
 
+typedef SherpaOnnxSpeakerEmbeddingManagerAddListFlattenedNative
+    = Int32 Function(Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>,
+        Pointer<Float>, Int32);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerAddListFlattened = int Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+    Pointer<Utf8>,
+    Pointer<Float>,
+    int);
+
 typedef SherpaOnnxCreateSpeakerEmbeddingExtractorNative
     = Pointer<SherpaOnnxSpeakerEmbeddingExtractor> Function(
         Pointer<SherpaOnnxSpeakerEmbeddingExtractorConfig>);
@@ -86,6 +96,12 @@ typedef OnlineStreamAcceptWaveformNative = Void Function(
 
 typedef OnlineStreamAcceptWaveform = void Function(
     Pointer<SherpaOnnxOnlineStream>, int sample_rate, Pointer<Float>, int n);
+
+typedef OnlineStreamInputFinishedNative = Void Function(
+    Pointer<SherpaOnnxOnlineStream>);
+
+typedef OnlineStreamInputFinished = void Function(
+    Pointer<SherpaOnnxOnlineStream>);
 
 typedef SherpaOnnxSpeakerEmbeddingExtractorIsReadyNative = Int32 Function(
     Pointer<SherpaOnnxSpeakerEmbeddingExtractor>,
@@ -139,6 +155,8 @@ class SherpaOnnxBindings {
 
   static OnlineStreamAcceptWaveform? onlineStreamAcceptWaveform;
 
+  static OnlineStreamInputFinished? onlineStreamInputFinished;
+
   static SherpaOnnxSpeakerEmbeddingExtractorIsReady?
       speakerEmbeddingExtractorIsReady;
 
@@ -148,6 +166,9 @@ class SherpaOnnxBindings {
       destroySpeakerEmbeddingManager;
 
   static SherpaOnnxSpeakerEmbeddingManagerAdd? speakerEmbeddingManagerAdd;
+
+  static SherpaOnnxSpeakerEmbeddingManagerAddListFlattened?
+      speakerEmbeddingManagerAddListFlattened;
 
   static SherpaOnnxReadWave? readWave;
 
@@ -202,6 +223,11 @@ class SherpaOnnxBindings {
             'AcceptWaveform')
         .asFunction();
 
+    onlineStreamInputFinished ??= dynamicLibrary
+        .lookup<NativeFunction<OnlineStreamInputFinishedNative>>(
+            'InputFinished')
+        .asFunction();
+
     speakerEmbeddingExtractorIsReady ??= dynamicLibrary
         .lookup<
                 NativeFunction<
@@ -222,6 +248,13 @@ class SherpaOnnxBindings {
     speakerEmbeddingManagerAdd ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingManagerAddNative>>(
             'SherpaOnnxSpeakerEmbeddingManagerAdd')
+        .asFunction();
+
+    speakerEmbeddingManagerAddListFlattened ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpeakerEmbeddingManagerAddListFlattenedNative>>(
+            'SherpaOnnxSpeakerEmbeddingManagerAddListFlattened')
         .asFunction();
 
     readWave ??= dynamicLibrary

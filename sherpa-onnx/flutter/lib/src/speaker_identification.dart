@@ -130,6 +130,32 @@ class SpeakerEmbeddingManager {
     return ok == 1;
   }
 
+  bool addMulti(
+      {required String name, required List<Float32List> embeddingList}) {
+    final Pointer<Utf8> namePtr = name.toNativeUtf8();
+    final int n = embeddingList.length;
+
+    final Pointer<Float> p = calloc<Float>(n * this.dim);
+    final pList = p.asTypedList(n * this.dim);
+
+    int offset = 0;
+    for (final e in embeddingList) {
+      assert(e.length == this.dim, "${e.length} vs ${this.dim}");
+
+      pList.setAll(offset, e);
+      offset += this.dim;
+    }
+
+    final int ok = SherpaOnnxBindings.speakerEmbeddingManagerAddListFlattened
+            ?.call(this.ptr, namePtr, p, n) ??
+        0;
+
+    calloc.free(p);
+    calloc.free(namePtr);
+
+    return ok == 1;
+  }
+
   Pointer<SherpaOnnxSpeakerEmbeddingManager> ptr;
   final int dim;
 }
