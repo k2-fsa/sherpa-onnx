@@ -111,22 +111,16 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
         symbol_table_(mgr, config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerModel>(mgr,
                                                         config_.model_config)) {
+    if (!config_.hotwords_file.empty()) {
+      InitHotwords();
+    }
+
     if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineTransducerGreedySearchDecoder>(
           model_.get(), config_.blank_penalty);
     } else if (config_.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
         lm_ = OfflineLM::Create(mgr, config.lm_config);
-      }
-
-      if (!config_.model_config.bpe_vocab.empty()) {
-        auto buf = ReadFile(mgr, config_.model_config.bpe_vocab);
-        std::istringstream iss(std::string(buf.begin(), buf.end()));
-        bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(iss);
-      }
-
-      if (!config_.hotwords_file.empty()) {
-        InitHotwords(mgr);
       }
 
       decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
