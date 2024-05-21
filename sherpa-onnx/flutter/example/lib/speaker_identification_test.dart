@@ -37,6 +37,13 @@ Future<void> testSpeakerID() async {
   final Float32List embedding = extractor.compute(stream);
   print('embedding dim: ${embedding.length}');
 
+  print('create speaker embedding manager');
+
+  final manager = sherpa_onnx.SpeakerEmbeddingManager(extractor.dim);
+  print('manager.ptr: ${manager.ptr}');
+  manager.free();
+  print('manager.ptr: ${manager.ptr}');
+
   stream.free();
   print('stream.ptr: ${stream.ptr}');
 

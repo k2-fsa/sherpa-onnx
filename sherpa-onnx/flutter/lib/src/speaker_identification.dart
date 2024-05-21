@@ -96,3 +96,21 @@ class SpeakerEmbeddingExtractor {
   Pointer<SherpaOnnxSpeakerEmbeddingExtractor> ptr;
   int dim;
 }
+
+class SpeakerEmbeddingManager {
+  SpeakerEmbeddingManager._({required this.ptr, required this.dim});
+
+  factory SpeakerEmbeddingManager(int dim) {
+    final p =
+        SherpaOnnxBindings.createSpeakerEmbeddingManager?.call(dim) ?? nullptr;
+    return SpeakerEmbeddingManager._(ptr: p, dim: dim);
+  }
+
+  void free() {
+    SherpaOnnxBindings.destroySpeakerEmbeddingManager?.call(this.ptr);
+    this.ptr = nullptr;
+  }
+
+  Pointer<SherpaOnnxSpeakerEmbeddingManager> ptr;
+  int dim;
+}
