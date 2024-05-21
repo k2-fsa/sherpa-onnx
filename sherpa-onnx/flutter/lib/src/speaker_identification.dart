@@ -94,7 +94,7 @@ class SpeakerEmbeddingExtractor {
   }
 
   Pointer<SherpaOnnxSpeakerEmbeddingExtractor> ptr;
-  int dim;
+  final int dim;
 }
 
 class SpeakerEmbeddingManager {
@@ -111,6 +111,25 @@ class SpeakerEmbeddingManager {
     this.ptr = nullptr;
   }
 
+  /// Return true if added successfully; return false otherwise
+  bool add({required String name, required Float32List embedding}) {
+    final Pointer<Utf8> namePtr = name.toNativeUtf8();
+    final int n = embedding.length;
+
+    final Pointer<Float> p = calloc<Float>(n);
+    final pList = p.asTypedList(n);
+    pList.setAll(0, embedding);
+
+    final int ok = SherpaOnnxBindings.speakerEmbeddingManagerAdd
+            ?.call(this.ptr, namePtr, p) ??
+        0;
+
+    calloc.free(p);
+    calloc.free(namePtr);
+
+    return ok == 1;
+  }
+
   Pointer<SherpaOnnxSpeakerEmbeddingManager> ptr;
-  int dim;
+  final int dim;
 }

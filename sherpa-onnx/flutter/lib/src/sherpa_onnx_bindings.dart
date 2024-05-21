@@ -41,6 +41,12 @@ typedef SherpaOnnxDestroySpeakerEmbeddingManagerNative = Void Function(
 typedef SherpaOnnxDestroySpeakerEmbeddingManager = void Function(
     Pointer<SherpaOnnxSpeakerEmbeddingManager>);
 
+typedef SherpaOnnxSpeakerEmbeddingManagerAddNative = Int32 Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>, Pointer<Float>);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerAdd = int Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>, Pointer<Float>);
+
 typedef SherpaOnnxCreateSpeakerEmbeddingExtractorNative
     = Pointer<SherpaOnnxSpeakerEmbeddingExtractor> Function(
         Pointer<SherpaOnnxSpeakerEmbeddingExtractorConfig>);
@@ -141,6 +147,8 @@ class SherpaOnnxBindings {
   static SherpaOnnxDestroySpeakerEmbeddingManager?
       destroySpeakerEmbeddingManager;
 
+  static SherpaOnnxSpeakerEmbeddingManagerAdd? speakerEmbeddingManagerAdd;
+
   static SherpaOnnxReadWave? readWave;
 
   static SherpaOnnxFreeWave? freeWave;
@@ -209,6 +217,11 @@ class SherpaOnnxBindings {
     destroySpeakerEmbeddingManager ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroySpeakerEmbeddingManagerNative>>(
             'SherpaOnnxDestroySpeakerEmbeddingManager')
+        .asFunction();
+
+    speakerEmbeddingManagerAdd ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingManagerAddNative>>(
+            'SherpaOnnxSpeakerEmbeddingManagerAdd')
         .asFunction();
 
     readWave ??= dynamicLibrary

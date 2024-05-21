@@ -41,6 +41,13 @@ Future<void> testSpeakerID() async {
 
   final manager = sherpa_onnx.SpeakerEmbeddingManager(extractor.dim);
   print('manager.ptr: ${manager.ptr}');
+
+  bool ok = manager.add(name: 'fangjun', embedding: embedding);
+  print('ok: $ok');
+
+  ok = manager.add(name: 'fangjun', embedding: embedding);
+  print('ok: $ok');
+
   manager.free();
   print('manager.ptr: ${manager.ptr}');
 
