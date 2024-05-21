@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+
+set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version. Used only for macOS")
+
 project(sherpa-onnx)
 
 set(SHERPA_ONNX_VERSION "1.9.25")
