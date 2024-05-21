@@ -77,6 +77,11 @@ jobs:
           cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
 
           cd ../scripts/go/_internal/
+          ls -lh lib
+          echo "-----"
+          ls -lh lib/*/
+          echo "-----"
+
           go mod tidy
           go build
 
