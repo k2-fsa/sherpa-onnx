@@ -3,9 +3,9 @@
 set -ex
 
 if [ ! -d sherpa-onnx-streaming-zipformer-en-2023-06-26 ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
-  tar xvf sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
-  rm sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
+  tar xvf sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
+  rm sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
 fi
 
 go mod tidy
