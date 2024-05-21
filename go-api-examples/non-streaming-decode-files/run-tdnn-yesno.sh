@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 
-# Please refer to
-# https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/yesno/index.html
-# to download the model
-# before you run this script.
-#
+set -ex
+
+if [ ! -d sherpa-onnx-tdnn-yesno ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-tdnn-yesno.tar.bz2
+  tar xvf sherpa-onnx-tdnn-yesno.tar.bz2
+  rm sherpa-onnx-tdnn-yesno.tar.bz2
+fi
+
+go mod tidy
+go build
 
 ./non-streaming-decode-files \
   --sample-rate=8000 \
