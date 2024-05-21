@@ -52,6 +52,15 @@ Future<void> testSpeakerID() async {
   bool ok = manager.addMulti(name: 'fangjun', embeddingList: spk1Vec);
   print('ok: $ok');
 
+  ok = manager.contains('fangjun');
+  print('contains: $ok');
+
+  ok = manager.remove('fangjun');
+  print('removed: $ok');
+
+  ok = manager.contains('fangjun');
+  print('contains: $ok');
+
   manager.free();
   print('manager.ptr: ${manager.ptr}');
 

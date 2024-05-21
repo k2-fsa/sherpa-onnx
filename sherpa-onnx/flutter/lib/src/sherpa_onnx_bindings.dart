@@ -57,6 +57,18 @@ typedef SherpaOnnxSpeakerEmbeddingManagerAddListFlattened = int Function(
     Pointer<Float>,
     int);
 
+typedef SherpaOnnxSpeakerEmbeddingManagerRemoveNative = Int32 Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerRemove = int Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerContainsNative = Int32 Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerContains = int Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>);
+
 typedef SherpaOnnxCreateSpeakerEmbeddingExtractorNative
     = Pointer<SherpaOnnxSpeakerEmbeddingExtractor> Function(
         Pointer<SherpaOnnxSpeakerEmbeddingExtractorConfig>);
@@ -170,6 +182,11 @@ class SherpaOnnxBindings {
   static SherpaOnnxSpeakerEmbeddingManagerAddListFlattened?
       speakerEmbeddingManagerAddListFlattened;
 
+  static SherpaOnnxSpeakerEmbeddingManagerRemove? speakerEmbeddingManagerRemove;
+
+  static SherpaOnnxSpeakerEmbeddingManagerContains?
+      speakerEmbeddingManagerContains;
+
   static SherpaOnnxReadWave? readWave;
 
   static SherpaOnnxFreeWave? freeWave;
@@ -255,6 +272,18 @@ class SherpaOnnxBindings {
                 NativeFunction<
                     SherpaOnnxSpeakerEmbeddingManagerAddListFlattenedNative>>(
             'SherpaOnnxSpeakerEmbeddingManagerAddListFlattened')
+        .asFunction();
+
+    speakerEmbeddingManagerRemove ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingManagerRemoveNative>>(
+            'SherpaOnnxSpeakerEmbeddingManagerRemove')
+        .asFunction();
+
+    speakerEmbeddingManagerContains ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpeakerEmbeddingManagerContainsNative>>(
+            'SherpaOnnxSpeakerEmbeddingManagerContains')
         .asFunction();
 
     readWave ??= dynamicLibrary

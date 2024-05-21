@@ -156,6 +156,30 @@ class SpeakerEmbeddingManager {
     return ok == 1;
   }
 
+  bool contains(String name) {
+    final Pointer<Utf8> namePtr = name.toNativeUtf8();
+
+    int found = SherpaOnnxBindings.speakerEmbeddingManagerContains
+            ?.call(this.ptr, namePtr) ??
+        0;
+
+    calloc.free(namePtr);
+
+    return found == 1;
+  }
+
+  bool remove(String name) {
+    final Pointer<Utf8> namePtr = name.toNativeUtf8();
+
+    int ok = SherpaOnnxBindings.speakerEmbeddingManagerRemove
+            ?.call(this.ptr, namePtr) ??
+        0;
+
+    calloc.free(namePtr);
+
+    return ok == 1;
+  }
+
   Pointer<SherpaOnnxSpeakerEmbeddingManager> ptr;
   final int dim;
 }
