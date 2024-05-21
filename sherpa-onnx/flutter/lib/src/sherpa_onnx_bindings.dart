@@ -69,6 +69,49 @@ typedef SherpaOnnxSpeakerEmbeddingManagerContainsNative = Int32 Function(
 typedef SherpaOnnxSpeakerEmbeddingManagerContains = int Function(
     Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Utf8>);
 
+typedef SherpaOnnxSpeakerEmbeddingManagerSearchNative = Pointer<Utf8> Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Float>, Float);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerSearch = Pointer<Utf8> Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>, Pointer<Float>, double);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerFreeSearchNative = Void Function(
+    Pointer<Utf8>);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerFreeSearch = void Function(
+    Pointer<Utf8>);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerNumSpeakersNative = Int32 Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerNumSpeakers = int Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerVerifyNative = Int32 Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+    Pointer<Utf8>,
+    Pointer<Float>,
+    Float);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerVerify = int Function(
+    Pointer<SherpaOnnxSpeakerEmbeddingManager>,
+    Pointer<Utf8>,
+    Pointer<Float>,
+    double);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakersNative
+    = Pointer<Pointer<Utf8>> Function(
+        Pointer<SherpaOnnxSpeakerEmbeddingManager>);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers
+    = SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakersNative;
+
+typedef SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakersNative = Void Function(
+    Pointer<Pointer<Utf8>>);
+
+typedef SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers = void Function(
+    Pointer<Pointer<Utf8>>);
+
 typedef SherpaOnnxCreateSpeakerEmbeddingExtractorNative
     = Pointer<SherpaOnnxSpeakerEmbeddingExtractor> Function(
         Pointer<SherpaOnnxSpeakerEmbeddingExtractorConfig>);
@@ -187,6 +230,22 @@ class SherpaOnnxBindings {
   static SherpaOnnxSpeakerEmbeddingManagerContains?
       speakerEmbeddingManagerContains;
 
+  static SherpaOnnxSpeakerEmbeddingManagerSearch? speakerEmbeddingManagerSearch;
+
+  static SherpaOnnxSpeakerEmbeddingManagerFreeSearch?
+      speakerEmbeddingManagerFreeSearch;
+
+  static SherpaOnnxSpeakerEmbeddingManagerNumSpeakers?
+      speakerEmbeddingManagerNumSpeakers;
+
+  static SherpaOnnxSpeakerEmbeddingManagerVerify? speakerEmbeddingManagerVerify;
+
+  static SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers?
+      speakerEmbeddingManagerGetAllSpeakers;
+
+  static SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers?
+      speakerEmbeddingManagerFreeAllSpeakers;
+
   static SherpaOnnxReadWave? readWave;
 
   static SherpaOnnxFreeWave? freeWave;
@@ -284,6 +343,44 @@ class SherpaOnnxBindings {
                 NativeFunction<
                     SherpaOnnxSpeakerEmbeddingManagerContainsNative>>(
             'SherpaOnnxSpeakerEmbeddingManagerContains')
+        .asFunction();
+
+    speakerEmbeddingManagerSearch ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingManagerSearchNative>>(
+            'SherpaOnnxSpeakerEmbeddingManagerSearch')
+        .asFunction();
+
+    speakerEmbeddingManagerFreeSearch ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpeakerEmbeddingManagerFreeSearchNative>>(
+            'SherpaOnnxSpeakerEmbeddingManagerFreeSearch')
+        .asFunction();
+
+    speakerEmbeddingManagerNumSpeakers ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpeakerEmbeddingManagerNumSpeakersNative>>(
+            'SherpaOnnxSpeakerEmbeddingManagerNumSpeakers')
+        .asFunction();
+
+    speakerEmbeddingManagerVerify ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxSpeakerEmbeddingManagerVerifyNative>>(
+            'SherpaOnnxSpeakerEmbeddingManagerVerify')
+        .asFunction();
+
+    speakerEmbeddingManagerGetAllSpeakers ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakersNative>>(
+            'SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers')
+        .asFunction();
+
+    speakerEmbeddingManagerFreeAllSpeakers ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakersNative>>(
+            'SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers')
         .asFunction();
 
     readWave ??= dynamicLibrary

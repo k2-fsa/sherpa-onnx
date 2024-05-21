@@ -113,6 +113,8 @@ class SpeakerEmbeddingManager {
 
   /// Return true if added successfully; return false otherwise
   bool add({required String name, required Float32List embedding}) {
+    assert(embedding.length == this.dim, "${embedding.length} vs ${this.dim}");
+
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
     final int n = embedding.length;
 
@@ -178,6 +180,85 @@ class SpeakerEmbeddingManager {
     calloc.free(namePtr);
 
     return ok == 1;
+  }
+
+  /// Return an empty string if no speaker is found
+  String search({required Float32List embedding, required double threshold}) {
+    assert(embedding.length == this.dim);
+
+    final Pointer<Float> p = calloc<Float>(this.dim);
+    final pList = p.asTypedList(this.dim);
+    pList.setAll(0, embedding);
+
+    final Pointer<Utf8> name = SherpaOnnxBindings.speakerEmbeddingManagerSearch
+            ?.call(this.ptr, p, threshold) ??
+        nullptr;
+
+    calloc.free(p);
+
+    if (name == nullptr) {
+      return '';
+    }
+
+    String ans = name.toDartString();
+
+    SherpaOnnxBindings.speakerEmbeddingManagerFreeSearch?.call(name);
+
+    return ans;
+  }
+
+  bool verify(
+      {required String name,
+      required Float32List embedding,
+      required double threshold}) {
+    assert(embedding.length == this.dim);
+
+    final Pointer<Utf8> namePtr = name.toNativeUtf8();
+
+    final Pointer<Float> p = calloc<Float>(this.dim);
+    final pList = p.asTypedList(this.dim);
+    pList.setAll(0, embedding);
+
+    int ok = SherpaOnnxBindings.speakerEmbeddingManagerVerify
+            ?.call(this.ptr, namePtr, p, threshold) ??
+        0;
+
+    calloc.free(p);
+    calloc.free(namePtr);
+
+    return ok == 1;
+  }
+
+  int get numSpeakers =>
+      SherpaOnnxBindings.speakerEmbeddingManagerNumSpeakers?.call(this.ptr) ??
+      0;
+
+  List<String> get allSpeakerNames {
+    int n = this.numSpeakers;
+    if (n == 0) {
+      return <String>[];
+    }
+
+    final Pointer<Pointer<Utf8>> names = SherpaOnnxBindings
+            .speakerEmbeddingManagerGetAllSpeakers
+            ?.call(this.ptr) ??
+        nullptr;
+
+    if (names == nullptr) {
+      return <String>[];
+    }
+
+    final ans = <String>[];
+
+    // see https://api.flutter.dev/flutter/dart-ffi/PointerPointer.html
+    for (int i = 0; i != n; ++i) {
+      String name = names[i].toDartString();
+      ans.add(name);
+    }
+
+    SherpaOnnxBindings.speakerEmbeddingManagerFreeAllSpeakers?.call(names);
+
+    return ans;
   }
 
   Pointer<SherpaOnnxSpeakerEmbeddingManager> ptr;

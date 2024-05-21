@@ -27,5 +27,5 @@ WaveData readWave(String filename) {
   int sampleRate = wave.ref.sampleRate;
   SherpaOnnxBindings.freeWave?.call(wave);
 
-  return WaveData(samples: samples, sampleRate: sampleRate);
+  return WaveData(samples: newSamples, sampleRate: sampleRate);
 }

@@ -34,7 +34,7 @@ Future<void> testSpeakerID() async {
     'assets/sr-data/enroll/fangjun-sr-2.wav',
     'assets/sr-data/enroll/fangjun-sr-3.wav',
   ];
-  final spk1Files = [];
+  final spk1Files = <String>[];
   for (final f in _spk1Files) {
     spk1Files.add(await copyAssetFile(src: f, dst: basename(f)));
   }
@@ -44,25 +44,85 @@ Future<void> testSpeakerID() async {
     spk1Vec.add(computeEmbedding(extractor: extractor, filename: f));
   }
 
-  print('create speaker embedding manager');
+  const _spk2Files = [
+    'assets/sr-data/enroll/leijun-sr-1.wav',
+    'assets/sr-data/enroll/leijun-sr-2.wav',
+  ];
+  final spk2Files = <String>[];
+  for (final f in _spk2Files) {
+    spk2Files.add(await copyAssetFile(src: f, dst: basename(f)));
+  }
+
+  final spk2Vec = <Float32List>[];
+  for (final f in spk2Files) {
+    spk2Vec.add(computeEmbedding(extractor: extractor, filename: f));
+  }
 
   final manager = sherpa_onnx.SpeakerEmbeddingManager(extractor.dim);
-  print('manager.ptr: ${manager.ptr}');
+  assert(manager.numSpeakers == 0, '${manager.numSpeakers}');
 
   bool ok = manager.addMulti(name: 'fangjun', embeddingList: spk1Vec);
-  print('ok: $ok');
+  assert(ok, "Failed to add fangjun");
+  assert(manager.numSpeakers == 1, '${manager.numSpeakers}');
 
-  ok = manager.contains('fangjun');
-  print('contains: $ok');
+  ok = manager.addMulti(name: 'leijun', embeddingList: spk2Vec);
+  assert(ok, "Failed to add leijun");
+  assert(manager.numSpeakers == 2, '${manager.numSpeakers}');
+
+  bool found = manager.contains('fangjun');
+  assert(found, 'Failed to find fangjun');
+
+  found = manager.contains('leijun');
+  assert(found, 'Failed to find leijun');
+
+  print('---All speakers---');
+
+  print(manager.allSpeakerNames);
+
+  print('------------');
+
+  const _testFiles = [
+    'assets/sr-data/test/fangjun-test-sr-1.wav',
+    'assets/sr-data/test/leijun-test-sr-1.wav',
+    'assets/sr-data/test/liudehua-test-sr-1.wav',
+  ];
+
+  final testFiles = <String>[];
+  for (final f in _testFiles) {
+    testFiles.add(await copyAssetFile(src: f, dst: basename(f)));
+  }
+
+  const threshold = 0.6;
+
+  for (final f in testFiles) {
+    final embedding = computeEmbedding(extractor: extractor, filename: f);
+
+    var name = manager.search(embedding: embedding, threshold: threshold);
+    if (name == '') {
+      name = '<Unknown>';
+    }
+    print('${f}: ${name}');
+  }
+
+  ok = manager.verify(
+      name: 'fangjun',
+      embedding: computeEmbedding(extractor: extractor, filename: testFiles[0]),
+      threshold: threshold);
+  assert(ok, 'Failed to verify fangjun using ${testFiles[0]}');
 
   ok = manager.remove('fangjun');
-  print('removed: $ok');
+  assert(ok, 'Failed to remove fangjun');
+  assert(manager.numSpeakers == 1, '${manager.numSpeakers}');
 
-  ok = manager.contains('fangjun');
-  print('contains: $ok');
+  found = manager.contains('fangjun');
+  assert(!found, 'Still found fangjun!');
+
+  ok = manager.verify(
+      name: 'fangjun',
+      embedding: computeEmbedding(extractor: extractor, filename: testFiles[0]),
+      threshold: threshold);
+  assert(!ok, '${testFiles[0]}');
 
   manager.free();
-  print('manager.ptr: ${manager.ptr}');
-
   extractor.free();
 }
