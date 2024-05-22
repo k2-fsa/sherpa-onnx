@@ -1,8 +1,25 @@
-import 'package:flutter/foundation.dart';
-
+// Copyright (c)  2024  Xiaomi Corporation
+import 'dart:typed_data';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
+import './utils.dart';
 
 Future<void> testVad() async {
+  final src = 'assets/silero_vad.onnx';
+  final modelPath = await copyAssetFile(src: src, dst: 'silero_vad.onnx');
+
+  final sileroVadConfig = sherpa_onnx.SileroVadModelConfig(model: modelPath);
+  final config = sherpa_onnx.VadModelConfig(
+    sileroVad: sileroVadConfig,
+    numThreads: 1,
+    debug: true,
+  );
+
+  final vad = sherpa_onnx.VoiceActivityDetector(
+      config: config, bufferSizeInSeconds: 10);
+  print('before vad.free(): ${vad.ptr}');
+  vad.free();
+  print('after vad.free(): ${vad.ptr}');
+
   final buffer = sherpa_onnx.CircularBuffer(capacity: 16000 * 2);
 
   final d = Float32List.fromList([0, 10, 20, 30]);

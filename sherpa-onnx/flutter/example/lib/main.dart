@@ -52,8 +52,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _incrementCounter() async {
     if (_counter <= 10) {
       sherpa_onnx.initBindings();
-      // await testSpeakerID();
-      await testVad();
+      await testSpeakerID();
+      // await testVad();
     }
 
     setState(() {

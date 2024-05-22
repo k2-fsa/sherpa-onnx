@@ -45,6 +45,12 @@ class VadModelConfig {
   final bool debug;
 }
 
+class SpeechSegment {
+  SpeechSegment({required this.samples, required this.start});
+  final Float32List samples;
+  final int start;
+}
+
 class CircularBuffer {
   CircularBuffer._({required this.ptr});
 
@@ -104,4 +110,104 @@ class CircularBuffer {
   int get head => SherpaOnnxBindings.circularBufferHead?.call(this.ptr) ?? 0;
 
   Pointer<SherpaOnnxCircularBuffer> ptr;
+}
+
+class VoiceActivityDetector {
+  VoiceActivityDetector._({required this.ptr});
+
+  // The user has to invoke VoiceActivityDetector.free() to avoid memory leak.
+  factory VoiceActivityDetector(
+      {required VadModelConfig config, required double bufferSizeInSeconds}) {
+    final c = calloc<SherpaOnnxVadModelConfig>();
+
+    final modelPtr = config.sileroVad.model.toNativeUtf8();
+    c.ref.sileroVad.model = modelPtr;
+
+    c.ref.sileroVad.threshold = config.sileroVad.threshold;
+    c.ref.sileroVad.minSilenceDuration = config.sileroVad.minSilenceDuration;
+    c.ref.sileroVad.minSpeechDuration = config.sileroVad.minSpeechDuration;
+    c.ref.sileroVad.windowSize = config.sileroVad.windowSize;
+
+    c.ref.sampleRate = config.sampleRate;
+    c.ref.numThreads = config.numThreads;
+
+    final providerPtr = config.provider.toNativeUtf8();
+    c.ref.provider = providerPtr;
+
+    c.ref.debug = config.debug ? 1 : 0;
+
+    final ptr = SherpaOnnxBindings.createVoiceActivityDetector
+            ?.call(c, bufferSizeInSeconds) ??
+        nullptr;
+
+    calloc.free(providerPtr);
+    calloc.free(modelPtr);
+    calloc.free(c);
+
+    return VoiceActivityDetector._(ptr: ptr);
+  }
+
+  void free() {
+    SherpaOnnxBindings.destroyVoiceActivityDetector?.call(ptr);
+    ptr = nullptr;
+  }
+
+  void acceptWaveform(Float32List samples) {
+    final n = samples.length;
+    final Pointer<Float> p = calloc<Float>(n);
+
+    final pList = p.asTypedList(n);
+    pList.setAll(0, samples);
+
+    SherpaOnnxBindings.voiceActivityDetectorAcceptWaveform
+        ?.call(this.ptr, p, n);
+
+    calloc.free(p);
+  }
+
+  bool isEmpty() {
+    final int empty =
+        SherpaOnnxBindings.voiceActivityDetectorEmpty?.call(this.ptr) ?? 0;
+
+    return empty == 1;
+  }
+
+  bool isDetected() {
+    final int detected =
+        SherpaOnnxBindings.voiceActivityDetectorDetected?.call(this.ptr) ?? 0;
+
+    return detected == 1;
+  }
+
+  void pop() {
+    SherpaOnnxBindings.voiceActivityDetectorPop?.call(this.ptr);
+  }
+
+  void clear() {
+    SherpaOnnxBindings.voiceActivityDetectorClear?.call(this.ptr);
+  }
+
+  SpeechSegment front() {
+    final Pointer<SherpaOnnxSpeechSegment> segment =
+        SherpaOnnxBindings.voiceActivityDetectorFront?.call(this.ptr) ??
+            nullptr;
+    if (segment == nullptr) {
+      return SpeechSegment(samples: Float32List(0), start: 0);
+    }
+
+    final sampleList = segment.ref.samples.asTypedList(segment.ref.n);
+    final start = segment.ref.start;
+
+    final samples = Float32List.fromList(sampleList);
+
+    SherpaOnnxBindings.destroySpeechSegment?.call(segment);
+
+    return SpeechSegment(samples: samples, start: start);
+  }
+
+  void reset() {
+    SherpaOnnxBindings.voiceActivityDetectorReset?.call(this.ptr);
+  }
+
+  Pointer<SherpaOnnxVoiceActivityDetector> ptr;
 }

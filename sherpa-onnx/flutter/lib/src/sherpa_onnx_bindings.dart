@@ -33,6 +33,16 @@ final class SherpaOnnxVadModelConfig extends Struct {
   external int debug;
 }
 
+final class SherpaOnnxSpeechSegment extends Struct {
+  @Int32()
+  external int start;
+
+  external Pointer<Float> samples;
+
+  @Int32()
+  external int n;
+}
+
 final class SherpaOnnxWave extends Struct {
   external Pointer<Float> samples;
 
@@ -57,11 +67,76 @@ final class SherpaOnnxSpeakerEmbeddingExtractorConfig extends Struct {
 
 final class SherpaOnnxCircularBuffer extends Opaque {}
 
+final class SherpaOnnxVoiceActivityDetector extends Opaque {}
+
 final class SherpaOnnxOnlineStream extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingExtractor extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingManager extends Opaque {}
+
+typedef SherpaOnnxCreateVoiceActivityDetectorNative
+    = Pointer<SherpaOnnxVoiceActivityDetector> Function(
+        Pointer<SherpaOnnxVadModelConfig>, Float);
+
+typedef SherpaOnnxCreateVoiceActivityDetector
+    = Pointer<SherpaOnnxVoiceActivityDetector> Function(
+        Pointer<SherpaOnnxVadModelConfig>, double);
+
+typedef SherpaOnnxDestroyVoiceActivityDetectorNative = Void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxDestroyVoiceActivityDetector = void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorAcceptWaveformNative = Void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>, Pointer<Float>, Int32);
+
+typedef SherpaOnnxVoiceActivityDetectorAcceptWaveform = void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>, Pointer<Float>, int);
+
+typedef SherpaOnnxVoiceActivityDetectorEmptyNative = Int32 Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorEmpty = int Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorDetectedNative = Int32 Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorDetected = int Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorPopNative = Void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorPop = void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorClearNative = Void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorClear = void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorResetNative = Void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorReset = void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorFrontNative
+    = Pointer<SherpaOnnxSpeechSegment> Function(
+        Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorFront
+    = SherpaOnnxVoiceActivityDetectorFrontNative;
+
+typedef SherpaOnnxDestroySpeechSegmentNative = Void Function(
+    Pointer<SherpaOnnxSpeechSegment>);
+
+typedef SherpaOnnxDestroySpeechSegment = void Function(
+    Pointer<SherpaOnnxSpeechSegment>);
 
 typedef SherpaOnnxCreateCircularBufferNative = Pointer<SherpaOnnxCircularBuffer>
     Function(Int32);
@@ -275,6 +350,27 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
+  static SherpaOnnxCreateVoiceActivityDetector? createVoiceActivityDetector;
+
+  static SherpaOnnxDestroyVoiceActivityDetector? destroyVoiceActivityDetector;
+
+  static SherpaOnnxVoiceActivityDetectorAcceptWaveform?
+      voiceActivityDetectorAcceptWaveform;
+
+  static SherpaOnnxVoiceActivityDetectorEmpty? voiceActivityDetectorEmpty;
+
+  static SherpaOnnxVoiceActivityDetectorDetected? voiceActivityDetectorDetected;
+
+  static SherpaOnnxVoiceActivityDetectorPop? voiceActivityDetectorPop;
+
+  static SherpaOnnxVoiceActivityDetectorClear? voiceActivityDetectorClear;
+
+  static SherpaOnnxVoiceActivityDetectorFront? voiceActivityDetectorFront;
+
+  static SherpaOnnxDestroySpeechSegment? destroySpeechSegment;
+
+  static SherpaOnnxVoiceActivityDetectorReset? voiceActivityDetectorReset;
+
   static SherpaOnnxCreateCircularBuffer? createCircularBuffer;
 
   static SherpaOnnxDestroyCircularBuffer? destroyCircularBuffer;
@@ -355,6 +451,58 @@ class SherpaOnnxBindings {
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
+    createVoiceActivityDetector ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCreateVoiceActivityDetectorNative>>(
+            'SherpaOnnxCreateVoiceActivityDetector')
+        .asFunction();
+
+    destroyVoiceActivityDetector ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyVoiceActivityDetectorNative>>(
+            'SherpaOnnxDestroyVoiceActivityDetector')
+        .asFunction();
+
+    voiceActivityDetectorAcceptWaveform ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxVoiceActivityDetectorAcceptWaveformNative>>(
+            'SherpaOnnxVoiceActivityDetectorAcceptWaveform')
+        .asFunction();
+
+    voiceActivityDetectorEmpty ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorEmptyNative>>(
+            'SherpaOnnxVoiceActivityDetectorEmpty')
+        .asFunction();
+
+    voiceActivityDetectorDetected ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorDetectedNative>>(
+            'SherpaOnnxVoiceActivityDetectorDetected')
+        .asFunction();
+
+    voiceActivityDetectorPop ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorPopNative>>(
+            'SherpaOnnxVoiceActivityDetectorPop')
+        .asFunction();
+
+    voiceActivityDetectorClear ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorClearNative>>(
+            'SherpaOnnxVoiceActivityDetectorClear')
+        .asFunction();
+
+    voiceActivityDetectorFront ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorFrontNative>>(
+            'SherpaOnnxVoiceActivityDetectorFront')
+        .asFunction();
+
+    destroySpeechSegment ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroySpeechSegmentNative>>(
+            'SherpaOnnxDestroySpeechSegment')
+        .asFunction();
+
+    voiceActivityDetectorReset ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorResetNative>>(
+            'SherpaOnnxVoiceActivityDetectorReset')
+        .asFunction();
+
     createCircularBuffer ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateCircularBufferNative>>(
             'SherpaOnnxCreateCircularBuffer')
