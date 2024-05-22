@@ -75,6 +75,46 @@ typedef SherpaOnnxDestroyCircularBufferNative = Void Function(
 typedef SherpaOnnxDestroyCircularBuffer = void Function(
     Pointer<SherpaOnnxCircularBuffer>);
 
+typedef SherpaOnnxCircularBufferPushNative = Void Function(
+    Pointer<SherpaOnnxCircularBuffer>, Pointer<Float>, Int32);
+
+typedef SherpaOnnxCircularBufferPush = void Function(
+    Pointer<SherpaOnnxCircularBuffer>, Pointer<Float>, int);
+
+typedef SherpaOnnxCircularBufferGetNative = Pointer<Float> Function(
+    Pointer<SherpaOnnxCircularBuffer>, Int32, Int32);
+
+typedef SherpaOnnxCircularBufferGet = Pointer<Float> Function(
+    Pointer<SherpaOnnxCircularBuffer>, int, int);
+
+typedef SherpaOnnxCircularBufferFreeNative = Void Function(Pointer<Float>);
+
+typedef SherpaOnnxCircularBufferFree = void Function(Pointer<Float>);
+
+typedef SherpaOnnxCircularBufferPopNative = Void Function(
+    Pointer<SherpaOnnxCircularBuffer>, Int32);
+
+typedef SherpaOnnxCircularBufferPop = void Function(
+    Pointer<SherpaOnnxCircularBuffer>, int);
+
+typedef SherpaOnnxCircularBufferSizeNative = Int32 Function(
+    Pointer<SherpaOnnxCircularBuffer>);
+
+typedef SherpaOnnxCircularBufferSize = int Function(
+    Pointer<SherpaOnnxCircularBuffer>);
+
+typedef SherpaOnnxCircularBufferHeadNative = Int32 Function(
+    Pointer<SherpaOnnxCircularBuffer>);
+
+typedef SherpaOnnxCircularBufferHead = int Function(
+    Pointer<SherpaOnnxCircularBuffer>);
+
+typedef SherpaOnnxCircularBufferResetNative = Void Function(
+    Pointer<SherpaOnnxCircularBuffer>);
+
+typedef SherpaOnnxCircularBufferReset = void Function(
+    Pointer<SherpaOnnxCircularBuffer>);
+
 typedef SherpaOnnxCreateSpeakerEmbeddingManagerNative
     = Pointer<SherpaOnnxSpeakerEmbeddingManager> Function(Int32);
 
@@ -239,6 +279,20 @@ class SherpaOnnxBindings {
 
   static SherpaOnnxDestroyCircularBuffer? destroyCircularBuffer;
 
+  static SherpaOnnxCircularBufferPush? circularBufferPush;
+
+  static SherpaOnnxCircularBufferGet? circularBufferGet;
+
+  static SherpaOnnxCircularBufferFree? circularBufferFree;
+
+  static SherpaOnnxCircularBufferPop? circularBufferPop;
+
+  static SherpaOnnxCircularBufferSize? circularBufferSize;
+
+  static SherpaOnnxCircularBufferHead? circularBufferHead;
+
+  static SherpaOnnxCircularBufferReset? circularBufferReset;
+
   static SherpaOnnxCreateSpeakerEmbeddingExtractor?
       createSpeakerEmbeddingExtractor;
 
@@ -309,6 +363,41 @@ class SherpaOnnxBindings {
     destroyCircularBuffer ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxDestroyCircularBufferNative>>(
             'SherpaOnnxDestroyCircularBuffer')
+        .asFunction();
+
+    circularBufferPush ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCircularBufferPushNative>>(
+            'SherpaOnnxCircularBufferPush')
+        .asFunction();
+
+    circularBufferGet ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCircularBufferGetNative>>(
+            'SherpaOnnxCircularBufferGet')
+        .asFunction();
+
+    circularBufferFree ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCircularBufferFreeNative>>(
+            'SherpaOnnxCircularBufferFree')
+        .asFunction();
+
+    circularBufferPop ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCircularBufferPopNative>>(
+            'SherpaOnnxCircularBufferPop')
+        .asFunction();
+
+    circularBufferSize ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCircularBufferSizeNative>>(
+            'SherpaOnnxCircularBufferSize')
+        .asFunction();
+
+    circularBufferHead ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCircularBufferHeadNative>>(
+            'SherpaOnnxCircularBufferHead')
+        .asFunction();
+
+    circularBufferReset ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCircularBufferResetNative>>(
+            'SherpaOnnxCircularBufferReset')
         .asFunction();
 
     createSpeakerEmbeddingExtractor ??= dynamicLibrary

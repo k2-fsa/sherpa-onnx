@@ -2,6 +2,7 @@
 import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
+
 import './sherpa_onnx_bindings.dart';
 
 class SileroVadModelConfig {
@@ -61,6 +62,46 @@ class CircularBuffer {
     SherpaOnnxBindings.destroyCircularBuffer?.call(ptr);
     ptr = nullptr;
   }
+
+  void push(Float32List data) {
+    final n = data.length;
+    final Pointer<Float> p = calloc<Float>(n);
+
+    final pList = p.asTypedList(n);
+    pList.setAll(0, data);
+
+    SherpaOnnxBindings.circularBufferPush?.call(this.ptr, p, n);
+
+    calloc.free(p);
+  }
+
+  Float32List get({required int startIndex, required int n}) {
+    final Pointer<Float> p =
+        SherpaOnnxBindings.circularBufferGet?.call(this.ptr, startIndex, n) ??
+            nullptr;
+
+    if (p == nullptr) {
+      return Float32List(0);
+    }
+
+    final pList = p.asTypedList(n);
+    final Float32List ans = Float32List.fromList(pList);
+
+    SherpaOnnxBindings.circularBufferFree?.call(p);
+
+    return ans;
+  }
+
+  void pop(int n) {
+    SherpaOnnxBindings.circularBufferPop?.call(this.ptr, n);
+  }
+
+  void reset() {
+    SherpaOnnxBindings.circularBufferReset?.call(this.ptr);
+  }
+
+  int get size => SherpaOnnxBindings.circularBufferSize?.call(this.ptr) ?? 0;
+  int get head => SherpaOnnxBindings.circularBufferHead?.call(this.ptr) ?? 0;
 
   Pointer<SherpaOnnxCircularBuffer> ptr;
 }

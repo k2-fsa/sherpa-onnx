@@ -143,3 +143,5 @@ xcuserdata/
 ## Xcode 8 and earlier
 *.xcscmblueprint
 *.xccheckout
+
+flutter_jank_metrics*.json
