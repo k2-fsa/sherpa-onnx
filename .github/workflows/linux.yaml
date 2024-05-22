@@ -296,41 +296,6 @@ jobs:
           tar cjvf ${dst}.tar.bz2 $dst
           du -h -d1 .
 
-      - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && matrix.build_type == 'Release'
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        uses: nick-fields/retry@v3
-        with:
-          max_attempts: 20
-          timeout_seconds: 200
-          shell: bash
-          command: |
-            du -h -d1 .
-            git config --global user.email "csukuangfj@gmail.com"
-            git config --global user.name "Fangjun Kuang"
-
-            rm -rf huggingface
-            export GIT_CLONE_PROTECTION_ACTIVE=false
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
-            du -h -d1 .
-
-            cd huggingface
-            git lfs pull
-            mkdir -p linux-x64
-
-            cp -v ../sherpa-onnx-*.tar.bz2 ./linux-x64
-
-            git status
-            git lfs track "*.bz2"
-
-            git add .
-
-            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}"
-
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
-            du -h -d1 .
-
       - name: Release pre-compiled binaries and libs for linux x64
         if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
         uses: svenstaro/upload-release-action@v2

@@ -210,8 +210,6 @@ jobs:
             cp -a build-riscv64-linux-gnu/install/lib $dst/
             rm -fv $dst/lib/libasound.so
             rm -fv $dst/lib/libonnxruntime.so
-            rm -fv $dst/lib/libsherpa-onnx-fst.so
-            rm -fv $dst/lib/libsherpa-onnx-fstfar.so
           fi
 
           tree $dst

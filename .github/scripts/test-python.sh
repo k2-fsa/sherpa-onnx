@@ -220,6 +220,7 @@ if [[ x$OS != x'windows-latest' ]]; then
   ls -lh
 
   ls -lh $repo
+  popd
 
   python3 ./python-api-examples/online-decode-files.py \
     --tokens=$repo/tokens.txt \
@@ -297,6 +298,7 @@ if [[ x$OS != x'windows-latest' ]]; then
   repo=$dir/sherpa-onnx-paraformer-zh-2023-03-28
 
   ls -lh $repo
+  popd
 
   python3 ./python-api-examples/offline-decode-files.py \
     --tokens=$repo/tokens.txt \
@@ -331,6 +333,7 @@ log "Start testing ${repo_url}"
 repo=$dir/sherpa-onnx-nemo-ctc-en-citrinet-512
 
 ls -lh $repo
+popd
 
 python3 ./python-api-examples/offline-decode-files.py \
   --tokens=$repo/tokens.txt \
@@ -376,6 +379,7 @@ log "Start testing ${repo}"
 pushd $dir
 curl -LS -O https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
 tar xf sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
+rm sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
 popd
 
 repo=$dir/$repo
@@ -401,6 +405,7 @@ if [[ x$OS != x'windows-latest' ]]; then
   pushd $dir
   curl -LS -O https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
   tar xf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
+  rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
   popd
 
   repo=$dir/$repo
