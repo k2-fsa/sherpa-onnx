@@ -1,4 +1,4 @@
-#citrinet-512!/usr/bin/env bash
+#!/usr/bin/env bash
 
 set -ex
 
