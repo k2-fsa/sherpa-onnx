@@ -32,7 +32,8 @@ dependencies:
     sdk: flutter
 
   path_provider: ^2.1.3
-  path:
+  path: ^1.9.0
+  record: ^5.1.0
 
   sherpa_onnx:
     # When depending on this package from a real application you should use:
