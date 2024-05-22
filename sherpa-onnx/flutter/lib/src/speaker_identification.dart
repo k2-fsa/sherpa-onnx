@@ -2,19 +2,20 @@
 import 'dart:ffi';
 import 'dart:typed_data';
 import 'package:ffi/ffi.dart';
-import "./sherpa_onnx_bindings.dart";
-import "./online_stream.dart";
+
+import './online_stream.dart';
+import './sherpa_onnx_bindings.dart';
 
 class SpeakerEmbeddingExtractorConfig {
   const SpeakerEmbeddingExtractorConfig(
       {required this.model,
       this.numThreads = 1,
       this.debug = true,
-      this.provider = "cpu"});
+      this.provider = 'cpu'});
 
   @override
   String toString() {
-    return "SpeakerEmbeddingExtractorConfig(model: $model, numThreads: $numThreads, debug: $debug, provider: $provider)";
+    return 'SpeakerEmbeddingExtractorConfig(model: $model, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
 
   final String model;
@@ -116,7 +117,7 @@ class SpeakerEmbeddingManager {
 
   /// Return true if added successfully; return false otherwise
   bool add({required String name, required Float32List embedding}) {
-    assert(embedding.length == this.dim, "${embedding.length} vs ${this.dim}");
+    assert(embedding.length == this.dim, '${embedding.length} vs ${this.dim}');
 
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
     final int n = embedding.length;
@@ -145,7 +146,7 @@ class SpeakerEmbeddingManager {
 
     int offset = 0;
     for (final e in embeddingList) {
-      assert(e.length == this.dim, "${e.length} vs ${this.dim}");
+      assert(e.length == this.dim, '${e.length} vs ${this.dim}');
 
       pList.setAll(offset, e);
       offset += this.dim;
