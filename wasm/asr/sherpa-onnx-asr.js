@@ -425,7 +425,7 @@ function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   const n = encoderLen + decoderLen + languageLen + taskLen;
   const buffer = Module._malloc(n);
 
-  const len = 4 * 4;  // 4 pointers
+  const len = 5 * 4;  // 4 pointers
   const ptr = Module._malloc(len);
 
   let offset = 0;

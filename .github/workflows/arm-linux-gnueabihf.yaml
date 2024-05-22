@@ -173,8 +173,6 @@ jobs:
             cp -a build-arm-linux-gnueabihf/install/lib $dst/
             rm -v $dst/lib/libasound.so
             rm -v $dst/lib/libonnxruntime.so
-            rm -v $dst/lib/libsherpa-onnx-fst.so
-            rm -v $dst/lib/libsherpa-onnx-fstfar.so
           fi
 
           tree $dst
