@@ -145,7 +145,7 @@ class OnlineTransducerNeMoModel::Impl {
     return ans;
   }
 
-  std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(Ort::Value features,
+  std::pair<std::vector<Ort::Value>, std::vector<Ort::Value>> RunEncoder(Ort::Value features,
                                               std::vector<Ort::Value> states,
                                               Ort::Value /* processed_frames */) {
     std::vector<Ort::Value> encoder_inputs;
@@ -167,7 +167,7 @@ class OnlineTransducerNeMoModel::Impl {
     for (int32_t i = 1; i != static_cast<int32_t>(encoder_out.size()); ++i) {
       next_states.push_back(std::move(encoder_out[i]));
     }
-    return {std::move(encoder_out[0]), std::move(next_states)};
+    return {std::move(encoder_out), std::move(next_states)};
   }
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
@@ -409,11 +409,11 @@ OnlineTransducerNeMoModel::OnlineTransducerNeMoModel(
 
 OnlineTransducerNeMoModel::~OnlineTransducerNeMoModel() = default;
 
-std::pair<Ort::Value, std::vector<Ort::Value>>
+std::pair<std::vector<Ort::Value>, std::vector<Ort::Value>>
 OnlineTransducerNeMoModel::RunEncoder(Ort::Value features, 
                                       std::vector<Ort::Value> states,
                                       Ort::Value processed_frames) const {
-return impl_->RunEncoder(std::move(features), std::move(states), std::move(processed_frames));
+    return impl_->RunEncoder(std::move(features), std::move(states), std::move(processed_frames));
 }
 
 std::pair<Ort::Value, std::vector<Ort::Value>>

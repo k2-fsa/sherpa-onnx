@@ -75,7 +75,7 @@ class OnlineTransducerNeMoModel {
    *           - encoder_out, a tensor of shape (N, T', encoder_out_dim)
    *           - next_states  Encoder state for the next chunk.
    */
-  std::pair<Ort::Value, std::vector<Ort::Value>> RunEncoder(
+  std::pair<std::vector<Ort::Value>, std::vector<Ort::Value>> RunEncoder(
       Ort::Value features, std::vector<Ort::Value> states,
       Ort::Value processed_frames) const;  // NOLINT
 
