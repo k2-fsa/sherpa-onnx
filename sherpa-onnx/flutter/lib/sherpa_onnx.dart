@@ -2,10 +2,11 @@
 import 'dart:io';
 import 'dart:ffi';
 
-import 'src/sherpa_onnx_bindings.dart';
-export 'src/speaker_identification.dart';
 export 'src/online_stream.dart';
+export 'src/speaker_identification.dart';
+export 'src/vad.dart';
 export 'src/wave_reader.dart';
+import 'src/sherpa_onnx_bindings.dart';
 
 final DynamicLibrary _dylib = () {
   if (Platform.isIOS) {

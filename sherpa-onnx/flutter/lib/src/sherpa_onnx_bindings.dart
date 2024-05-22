@@ -2,6 +2,37 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
+final class SherpaOnnxSileroVadModelConfig extends Struct {
+  external Pointer<Utf8> model;
+
+  @Float()
+  external double threshold;
+
+  @Float()
+  external double minSilenceDuration;
+
+  @Float()
+  external double minSpeechDuration;
+
+  @Int32()
+  external int windowSize;
+}
+
+final class SherpaOnnxVadModelConfig extends Struct {
+  external SherpaOnnxSileroVadModelConfig sileroVad;
+
+  @Int32()
+  external int sampleRate;
+
+  @Int32()
+  external int numThreads;
+
+  external Pointer<Utf8> provider;
+
+  @Int32()
+  external int debug;
+}
+
 final class SherpaOnnxWave extends Struct {
   external Pointer<Float> samples;
 
@@ -24,17 +55,31 @@ final class SherpaOnnxSpeakerEmbeddingExtractorConfig extends Struct {
   external Pointer<Utf8> provider;
 }
 
+final class SherpaOnnxCircularBuffer extends Opaque {}
+
 final class SherpaOnnxOnlineStream extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingExtractor extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingManager extends Opaque {}
 
+typedef SherpaOnnxCreateCircularBufferNative = Pointer<SherpaOnnxCircularBuffer>
+    Function(Int32);
+
+typedef SherpaOnnxCreateCircularBuffer = Pointer<SherpaOnnxCircularBuffer>
+    Function(int);
+
+typedef SherpaOnnxDestroyCircularBufferNative = Void Function(
+    Pointer<SherpaOnnxCircularBuffer>);
+
+typedef SherpaOnnxDestroyCircularBuffer = void Function(
+    Pointer<SherpaOnnxCircularBuffer>);
+
 typedef SherpaOnnxCreateSpeakerEmbeddingManagerNative
-    = Pointer<SherpaOnnxSpeakerEmbeddingManager> Function(Int32 dim);
+    = Pointer<SherpaOnnxSpeakerEmbeddingManager> Function(Int32);
 
 typedef SherpaOnnxCreateSpeakerEmbeddingManager
-    = Pointer<SherpaOnnxSpeakerEmbeddingManager> Function(int dim);
+    = Pointer<SherpaOnnxSpeakerEmbeddingManager> Function(int);
 
 typedef SherpaOnnxDestroySpeakerEmbeddingManagerNative = Void Function(
     Pointer<SherpaOnnxSpeakerEmbeddingManager>);
@@ -190,6 +235,10 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
+  static SherpaOnnxCreateCircularBuffer? createCircularBuffer;
+
+  static SherpaOnnxDestroyCircularBuffer? destroyCircularBuffer;
+
   static SherpaOnnxCreateSpeakerEmbeddingExtractor?
       createSpeakerEmbeddingExtractor;
 
@@ -252,8 +301,20 @@ class SherpaOnnxBindings {
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
+    createCircularBuffer ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCreateCircularBufferNative>>(
+            'SherpaOnnxCreateCircularBuffer')
+        .asFunction();
+
+    destroyCircularBuffer ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyCircularBufferNative>>(
+            'SherpaOnnxDestroyCircularBuffer')
+        .asFunction();
+
     createSpeakerEmbeddingExtractor ??= dynamicLibrary
-        .lookup<NativeFunction<SherpaOnnxCreateSpeakerEmbeddingExtractor>>(
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxCreateSpeakerEmbeddingExtractorNative>>(
             'SherpaOnnxCreateSpeakerEmbeddingExtractor')
         .asFunction();
 

@@ -1,7 +1,9 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import 'package:flutter/material.dart';
+
 import "./speaker_identification_test.dart";
+import "./vad_test.dart";
 
 void main() {
   runApp(const MyApp());
@@ -50,7 +52,8 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> _incrementCounter() async {
     if (_counter <= 10) {
       sherpa_onnx.initBindings();
-      await testSpeakerID();
+      // await testSpeakerID();
+      await testVad();
     }
 
     setState(() {

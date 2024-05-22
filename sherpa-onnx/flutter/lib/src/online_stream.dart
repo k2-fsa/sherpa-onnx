@@ -2,7 +2,7 @@
 import 'dart:typed_data';
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
-import "./sherpa_onnx_bindings.dart";
+import './sherpa_onnx_bindings.dart';
 
 class OnlineStream {
   /// The user has to call OnlineStream.free() to avoid memory leak.
