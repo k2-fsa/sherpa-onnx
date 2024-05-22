@@ -36,7 +36,8 @@ struct WaveHeader {
       return false;
     }
 
-    if (subchunk1_size != 16) {  // 16 for PCM
+    // NAudio uses 18
+    if (subchunk1_size != 16 && subchunk1_size != 18) {  // 16 for PCM
       SHERPA_ONNX_LOGE("Expected subchunk1_size 16. Given: %d\n",
                        subchunk1_size);
       return false;
