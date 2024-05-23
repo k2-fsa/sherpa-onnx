@@ -1,6 +1,8 @@
 // sherpa-onnx/csrc/online-transducer-nemo-model.h
 //
 // Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2024  Sangeet Sagar
+
 #ifndef SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_NEMO_MODEL_H_
 #define SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_NEMO_MODEL_H_
 
@@ -58,26 +60,22 @@ class OnlineTransducerNeMoModel {
   std::vector<std::vector<Ort::Value>> UnStackStates(
       const std::vector<Ort::Value> &states) const;
 
-  // /** Get the initial encoder states.
-  //  *
-  //  * @return Return the initial encoder state.
-  //  */
-  // std::vector<Ort::Value> GetEncoderInitStates() = 0;
+  // A list of 3 tensors:
+  //  - cache_last_channel
+  //  - cache_last_time
+  //  - cache_last_channel_len
+  std::vector<Ort::Value> GetInitStates() const;
 
   /** Run the encoder.
    *
    * @param features  A tensor of shape (N, T, C). It is changed in-place.
-   * @param states  Encoder state of the previous chunk. It is changed in-place.
-   * @param processed_frames  Processed frames before subsampling. It is a 1-D
-   * tensor with data type int64_t.
-   *
+   * @param states  It is from GetInitStates() or returned from this method.
+   * 
    * @return Return a tuple containing:
    *           - encoder_out, a tensor of shape (N, T', encoder_out_dim)
-   *           - next_states  Encoder state for the next chunk.
    */
-  std::pair<std::vector<Ort::Value>, std::vector<Ort::Value>> RunEncoder(
-      Ort::Value features, std::vector<Ort::Value> states,
-      Ort::Value processed_frames) const;  // NOLINT
+  std::vector<Ort::Value> RunEncoder(
+      Ort::Value features, std::vector<Ort::Value> states) const;  // NOLINT
 
   /** Run the decoder network.
    *

@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-transducer-nemo-model.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2024  Sangeet Sagar
 
 #include "sherpa-onnx/csrc/online-transducer-nemo-model.h"
 
@@ -145,29 +146,51 @@ class OnlineTransducerNeMoModel::Impl {
     return ans;
   }
 
-  std::pair<std::vector<Ort::Value>, std::vector<Ort::Value>> RunEncoder(Ort::Value features,
-                                              std::vector<Ort::Value> states,
-                                              Ort::Value /* processed_frames */) {
-    std::vector<Ort::Value> encoder_inputs;
-    encoder_inputs.reserve(1 + states.size());
+  std::vector<Ort::Value> RunEncoder(Ort::Value features,
+                                    std::vector<Ort::Value> states) {
+     Ort::Value &cache_last_channel = states[0];
+    Ort::Value &cache_last_time = states[1];
+    Ort::Value &cache_last_channel_len = states[2];
 
-    encoder_inputs.push_back(std::move(features));
-    for (auto &v : states) {
-      encoder_inputs.push_back(std::move(v));
+    int32_t batch_size = features.GetTensorTypeAndShapeInfo().GetShape()[0];
+
+    std::array<int64_t, 1> length_shape{batch_size};
+
+    Ort::Value length = Ort::Value::CreateTensor<int64_t>(
+        allocator_, length_shape.data(), length_shape.size());
+
+    int64_t *p_length = length.GetTensorMutableData<int64_t>();
+
+    std::fill(p_length, p_length + batch_size, ChunkSize());
+
+    // (B, T, C) -> (B, C, T)
+    features = Transpose12(allocator_, &features);
+
+    std::array<Ort::Value, 5> inputs = {
+        std::move(features), View(&length), std::move(cache_last_channel),
+        std::move(cache_last_time), std::move(cache_last_channel_len)};
+
+    auto out =
+        encoder_sess_->Run({}, encoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
+                   encoder_output_names_ptr_.data(), encoder_output_names_ptr_.size());
+    // out[0]: logit
+    // out[1] logit_length
+    // out[2:] states_next
+    //
+    // we need to remove out[1]
+
+    std::vector<Ort::Value> ans;
+    ans.reserve(out.size() - 1);
+
+    for (int32_t i = 0; i != out.size(); ++i) {
+      if (i == 1) {
+        continue;
+      }
+
+      ans.push_back(std::move(out[i]));
     }
 
-    auto encoder_out = encoder_sess_->Run(
-        {}, encoder_input_names_ptr_.data(), encoder_inputs.data(),
-        encoder_inputs.size(), encoder_output_names_ptr_.data(),
-        encoder_output_names_ptr_.size());
-
-    std::vector<Ort::Value> next_states;
-    next_states.reserve(states.size());
-
-    for (int32_t i = 1; i != static_cast<int32_t>(encoder_out.size()); ++i) {
-      next_states.push_back(std::move(encoder_out[i]));
-    }
-    return {std::move(encoder_out), std::move(next_states)};
+    return ans;
   }
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
@@ -249,6 +272,20 @@ class OnlineTransducerNeMoModel::Impl {
   OrtAllocator *Allocator() const { return allocator_; }
 
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
+
+  // Return a vector containing 3 tensors
+  // - cache_last_channel
+  // - cache_last_time_
+  // - cache_last_channel_len
+  std::vector<Ort::Value> GetInitStates() {
+    std::vector<Ort::Value> ans;
+    ans.reserve(3);
+    ans.push_back(View(&cache_last_channel_));
+    ans.push_back(View(&cache_last_time_));
+    ans.push_back(View(&cache_last_channel_len_));
+
+    return ans;
+  }
 
 private:
   void InitEncoder(void *model_data, size_t model_data_length) {
@@ -409,11 +446,10 @@ OnlineTransducerNeMoModel::OnlineTransducerNeMoModel(
 
 OnlineTransducerNeMoModel::~OnlineTransducerNeMoModel() = default;
 
-std::pair<std::vector<Ort::Value>, std::vector<Ort::Value>>
+std::vector<Ort::Value> 
 OnlineTransducerNeMoModel::RunEncoder(Ort::Value features, 
-                                      std::vector<Ort::Value> states,
-                                      Ort::Value processed_frames) const {
-    return impl_->RunEncoder(std::move(features), std::move(states), std::move(processed_frames));
+                                      std::vector<Ort::Value> states) const {
+    return impl_->RunEncoder(std::move(features), std::move(states));
 }
 
 std::pair<Ort::Value, std::vector<Ort::Value>>
@@ -457,6 +493,10 @@ OrtAllocator *OnlineTransducerNeMoModel::Allocator() const {
 
 std::string OnlineTransducerNeMoModel::FeatureNormalizationMethod() const {
   return impl_->FeatureNormalizationMethod();
+}
+
+std::vector<Ort::Value> OnlineTransducerNeMoModel::GetInitStates() const {
+  return impl_->GetInitStates();
 }
 
 }  // namespace sherpa_onnx

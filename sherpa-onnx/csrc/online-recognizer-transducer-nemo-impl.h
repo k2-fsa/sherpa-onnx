@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-recognizer-transducer-nemo-impl.h
 //
 // Copyright (c)  2022-2024  Xiaomi Corporation
+// Copyright (c)  2024  Sangeet Sagar
 
 #ifndef SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_IMPL_H_
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_IMPL_H_
@@ -24,7 +25,6 @@
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-nemo-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-nemo-model.h"
-#include "sherpa-onnx/csrc/pad-sequence.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/transpose.h"
 #include "sherpa-onnx/csrc/utils.h"
@@ -80,6 +80,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);
+    stream->SetStates(model_->GetInitStates());
     InitOnlineStream(stream.get());
     return stream;
   }
@@ -120,27 +121,27 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
                                             features_vec.size(), x_shape.data(),
                                             x_shape.size());
 
-    std::array<int64_t, 1> processed_frames_shape{
-        static_cast<int64_t>(all_processed_frames.size())};
-
-    Ort::Value processed_frames = Ort::Value::CreateTensor(
-        memory_info, all_processed_frames.data(), all_processed_frames.size(),
-        processed_frames_shape.data(), processed_frames_shape.size());
-
     auto states = model_->StackStates(states_vec);
-
-    auto [t, ns] = model_->RunEncoder(std::move(x), std::move(states),
-                                   std::move(processed_frames));
+    int32_t num_states = states.size();
+    auto t = model_->RunEncoder(std::move(x), std::move(states));
     // t[0] encoder_out, float tensor, (batch_size, dim, T)
     // t[1] encoder_out_length, int64 tensor, (batch_size,)
     
+    std::vector<Ort::Value> out_states;
+    out_states.reserve(num_states);
+    
+    for (int32_t k = 1; k != num_states + 1; ++k) {
+      out_states.push_back(std::move(t[k]));
+    }
+
     Ort::Value encoder_out = Transpose12(model_->Allocator(), &t[0]);
     
     // defined in online-transducer-greedy-search-nemo-decoder.h
-    std::vector<OnlineTransducerDecoderResult> results = decoder_-> Decode(std::move(encoder_out), std::move(t[1]));
+    decoder_-> Decode(std::move(encoder_out), std::move(t[1]),
+                      std::move(out_states), &results, ss, n);
 
     std::vector<std::vector<Ort::Value>> next_states =
-        model_->UnStackStates(ns);
+        model_->UnStackStates(out_states);
 
     for (int32_t i = 0; i != n; ++i) {
       ss[i]->SetResult(results[i]);
@@ -187,6 +188,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
                        symbol_table_.NumSymbols(), vocab_size);
       exit(-1);
     }
+
   }
 
  private:
