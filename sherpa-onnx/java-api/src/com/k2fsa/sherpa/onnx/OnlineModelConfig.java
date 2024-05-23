@@ -13,6 +13,8 @@ public class OnlineModelConfig {
     private final boolean debug;
     private final String provider;
     private final String modelType;
+    private final String modelingUnit;
+    private final String bpeVocab;
 
     private OnlineModelConfig(Builder builder) {
         this.transducer = builder.transducer;
@@ -24,6 +26,8 @@ public class OnlineModelConfig {
         this.debug = builder.debug;
         this.provider = builder.provider;
         this.modelType = builder.modelType;
+        this.modelingUnit = builder.modelingUnit;
+        this.bpeVocab = builder.bpeVocab;
     }
 
     public static Builder builder() {
@@ -66,6 +70,14 @@ public class OnlineModelConfig {
         return modelType;
     }
 
+    public String getModelingUnit() {
+        return modelingUnit;
+    }
+
+    public String getBpeVocab() {
+        return bpeVocab;
+    }
+
     public static class Builder {
         private OnlineParaformerModelConfig paraformer = OnlineParaformerModelConfig.builder().build();
         private OnlineTransducerModelConfig transducer = OnlineTransducerModelConfig.builder().build();
@@ -76,6 +88,8 @@ public class OnlineModelConfig {
         private boolean debug = true;
         private String provider = "cpu";
         private String modelType = "";
+        private String modelingUnit = "cjkchar";
+        private String bpeVocab = "";
 
         public OnlineModelConfig build() {
             return new OnlineModelConfig(this);
@@ -124,6 +138,14 @@ public class OnlineModelConfig {
         public Builder setModelType(String modelType) {
             this.modelType = modelType;
             return this;
+        }
+
+        public void setModelingUnit(String modelingUnit) {
+            this.modelingUnit = modelingUnit;
+        }
+
+        public void setBpeVocab(String bpeVocab) {
+            this.bpeVocab = bpeVocab;
         }
     }
 }

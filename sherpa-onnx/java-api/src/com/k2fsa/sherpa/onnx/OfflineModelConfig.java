@@ -13,6 +13,8 @@ public class OfflineModelConfig {
     private final String provider;
 
     private final String modelType;
+    private final String modelingUnit;
+    private final String bpeVocab;
 
     private OfflineModelConfig(Builder builder) {
         this.transducer = builder.transducer;
@@ -24,6 +26,8 @@ public class OfflineModelConfig {
         this.debug = builder.debug;
         this.provider = builder.provider;
         this.modelType = builder.modelType;
+        this.modelingUnit = builder.modelingUnit;
+        this.bpeVocab = builder.bpeVocab;
     }
 
     public static Builder builder() {
@@ -62,6 +66,13 @@ public class OfflineModelConfig {
         return modelType;
     }
 
+    public String getModelingUnit() {
+        return modelingUnit;
+    }
+
+    public String getBpeVocab() {
+        return bpeVocab;
+    }
 
     public static class Builder {
         private OfflineParaformerModelConfig paraformer = OfflineParaformerModelConfig.builder().build();
@@ -73,6 +84,8 @@ public class OfflineModelConfig {
         private boolean debug = true;
         private String provider = "cpu";
         private String modelType = "";
+        private String modelingUnit = "cjkchar";
+        private String bpeVocab = "";
 
         public OfflineModelConfig build() {
             return new OfflineModelConfig(this);
@@ -121,6 +134,14 @@ public class OfflineModelConfig {
         public Builder setModelType(String modelType) {
             this.modelType = modelType;
             return this;
+        }
+
+        public void setModelingUnit(String modelingUnit) {
+            this.modelingUnit = modelingUnit;
+        }
+
+        public void setBpeVocab(String bpeVocab) {
+            this.bpeVocab = bpeVocab;
         }
     }
 }
