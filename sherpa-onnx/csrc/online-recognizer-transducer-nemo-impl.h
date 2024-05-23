@@ -131,11 +131,13 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
     auto [t, ns] = model_->RunEncoder(std::move(x), std::move(states),
                                    std::move(processed_frames));
-
+    // t[0] encoder_out, float tensor, (batch_size, dim, T)
+    // t[1] encoder_out_length, int64 tensor, (batch_size,)
+    
     Ort::Value encoder_out = Transpose12(model_->Allocator(), &t[0]);
     
     // defined in online-transducer-greedy-search-nemo-decoder.h
-     auto results = decoder_-> Decode(std::move(encoder_out), std::move(t[1]));
+    std::vector<OnlineTransducerDecoderResult> results = decoder_-> Decode(std::move(encoder_out), std::move(t[1]));
 
     std::vector<std::vector<Ort::Value>> next_states =
         model_->UnStackStates(ns);
@@ -193,7 +195,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   std::unique_ptr<OnlineTransducerNeMoModel> model_;
   std::unique_ptr<OnlineTransducerDecoder> decoder_;
 
-   int32_t batch_size_ = 1;
+  int32_t batch_size_ = 1;
 };
 
 }  // namespace sherpa_onnx
