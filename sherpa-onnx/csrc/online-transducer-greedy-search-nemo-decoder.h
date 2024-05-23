@@ -17,7 +17,10 @@ class OnlineTransducerGreedySearchNeMoDecoder : public OnlineTransducerDecoder {
                                           float blank_penalty);
 
   std::vector<OnlineTransducerDecoderResult> Decode(
-    Ort::Value encoder_out, Ort::Value encoder_out_length,
+    Ort::Value encoder_out, 
+    Ort::Value encoder_out_length, 
+    std::vector<Ort::Value> decoder_states, 
+    std::vector<OnlineTransducerDecoderResult> *results,
     OnlineStream **ss = nullptr, int32_t n = 0);
 
  private:
@@ -27,7 +30,7 @@ class OnlineTransducerGreedySearchNeMoDecoder : public OnlineTransducerDecoder {
 
   OnlineTransducerNeMoModel *model_;  // Not owned
   float blank_penalty_;
-  std::vector<Ort::Value> decoder_states_;  // Decoder states to be maintained across chunks
+  // std::vector<Ort::Value> decoder_states_;  // Decoder states to be maintained across chunks
 };
 
 }  // namespace sherpa_onnx

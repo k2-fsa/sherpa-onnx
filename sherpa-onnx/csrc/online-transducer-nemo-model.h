@@ -60,12 +60,6 @@ class OnlineTransducerNeMoModel {
   std::vector<std::vector<Ort::Value>> UnStackStates(
       const std::vector<Ort::Value> &states) const;
 
-  // A list of 3 tensors:
-  //  - cache_last_channel
-  //  - cache_last_time
-  //  - cache_last_channel_len
-  std::vector<Ort::Value> GetInitStates() const;
-
   /** Run the encoder.
    *
    * @param features  A tensor of shape (N, T, C). It is changed in-place.

@@ -35,15 +35,15 @@ static std::pair<Ort::Value, Ort::Value> BuildDecoderInput(
   return {std::move(decoder_input), std::move(decoder_input_length)};
 }
 
-OnlineTransducerGreedySearchNeMoDecoder::OnlineTransducerGreedySearchNeMoDecoder(
-    OnlineTransducerNeMoModel *model, float blank_penalty)
-    : model_(model), blank_penalty_(blank_penalty) {
-  // Initialize decoder state
-  auto init_states = model_->GetDecoderInitStates(1);
-  decoder_states_ = std::move(init_states);
-}
+// OnlineTransducerGreedySearchNeMoDecoder::OnlineTransducerGreedySearchNeMoDecoder(
+//     OnlineTransducerNeMoModel *model, float blank_penalty)
+//     : model_(model), blank_penalty_(blank_penalty) {
+//   // Initialize decoder state
+//   auto init_states = model_->GetDecoderInitStates(1);
+//   decoder_states_ = std::move(init_states);
+// }
 
-static OnlineTransducerDecoderResult DecodeOne(
+std::pair<OnlineTransducerDecoderResult, std::vector<Ort::Value>> DecodeOne(
     const float *encoder_out, int32_t num_rows, int32_t num_cols,
     OnlineTransducerNeMoModel *model, float blank_penalty,
     std::vector<Ort::Value>& decoder_states) {
@@ -97,12 +97,15 @@ static OnlineTransducerDecoderResult DecodeOne(
   // Update the decoder states for the next chunk
   decoder_states = std::move(decoder_output_pair.second);
 
-  return result;
+  return {result, decoder_states};
 }
 
 std::vector<OnlineTransducerDecoderResult>
 OnlineTransducerGreedySearchNeMoDecoder::Decode(
-    Ort::Value encoder_out, Ort::Value encoder_out_length,
+    Ort::Value encoder_out, 
+    Ort::Value encoder_out_length,
+    std::vector<Ort::Value> decoder_states,
+    std::vector<OnlineTransducerDecoderResult> *results,
     OnlineStream ** /*ss = nullptr*/, int32_t /*n= 0*/) {
 
   auto shape = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
@@ -119,7 +122,9 @@ OnlineTransducerGreedySearchNeMoDecoder::Decode(
     const float *this_p = p + dim1 * dim2 * i;
     int32_t this_len = p_length[i];
 
-    ans[i] = DecodeOne(this_p, this_len, dim2, model_, blank_penalty_, decoder_states_);
+    auto decode_result_pair = DecodeOne(this_p, this_len, dim2, model_, blank_penalty_, decoder_states);
+    ans[i] = decode_result_pair.first;
+    decoder_states = std::move(decode_result_pair.second); // Update decoder states for next chunk
   }
 
   return ans;

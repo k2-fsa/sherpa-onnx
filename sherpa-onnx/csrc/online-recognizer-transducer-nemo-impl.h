@@ -195,7 +195,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   OnlineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OnlineTransducerNeMoModel> model_;
-  std::unique_ptr<OnlineTransducerDecoder> decoder_;
+  std::unique_ptr<OnlineTransducerGreedySearchNeMoDecoder> decoder_;
 
   int32_t batch_size_ = 1;
 };
