@@ -1,11 +1,13 @@
-// This file is copied from https://github.com/llfbandit/record/blob/master/record/example/lib/audio_recorder.dart
+// This file is modified from https://github.com/llfbandit/record/blob/master/record/example/lib/audio_recorder.dart
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:record/record.dart';
 
-import 'platform/audio_recorder_platform.dart';
+import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
+
+import './utils.dart';
 
 class Recorder extends StatefulWidget {
   final void Function(String path) onStop;
@@ -16,14 +18,15 @@ class Recorder extends StatefulWidget {
   State<Recorder> createState() => _RecorderState();
 }
 
-class _RecorderState extends State<Recorder> with AudioRecorderMixin {
-  int _recordDuration = 0;
-  Timer? _timer;
+class _RecorderState extends State<Recorder> {
   late final AudioRecorder _audioRecorder;
+
+  bool _printed = false;
+  bool _isInitialized = false;
+  late final sherpa_onnx.VoiceActivityDetector _vad;
+  late final sherpa_onnx.CircularBuffer _buffer;
   StreamSubscription<RecordState>? _recordSub;
   RecordState _recordState = RecordState.stop;
-  StreamSubscription<Amplitude>? _amplitudeSub;
-  Amplitude? _amplitude;
 
   @override
   void initState() {
@@ -33,19 +36,35 @@ class _RecorderState extends State<Recorder> with AudioRecorderMixin {
       _updateRecordState(recordState);
     });
 
-    _amplitudeSub = _audioRecorder
-        .onAmplitudeChanged(const Duration(milliseconds: 300))
-        .listen((amp) {
-      setState(() => _amplitude = amp);
-    });
-
     super.initState();
   }
 
   Future<void> _start() async {
+    if (!_isInitialized) {
+      sherpa_onnx.initBindings();
+      final src = 'assets/silero_vad.onnx';
+      final modelPath = await copyAssetFile(src: src, dst: 'silero_vad.onnx');
+
+      final sileroVadConfig =
+          sherpa_onnx.SileroVadModelConfig(model: modelPath);
+      final config = sherpa_onnx.VadModelConfig(
+        sileroVad: sileroVadConfig,
+        numThreads: 1,
+        debug: true,
+      );
+
+      _vad = sherpa_onnx.VoiceActivityDetector(
+          config: config, bufferSizeInSeconds: 30);
+
+      _buffer = sherpa_onnx.CircularBuffer(capacity: 16000 * 30);
+      print(_buffer.ptr);
+
+      _isInitialized = true;
+    }
+
     try {
       if (await _audioRecorder.hasPermission()) {
-        const encoder = AudioEncoder.aacLc;
+        const encoder = AudioEncoder.pcm16bits;
 
         if (!await _isEncoderSupported(encoder)) {
           return;
@@ -54,33 +73,59 @@ class _RecorderState extends State<Recorder> with AudioRecorderMixin {
         final devs = await _audioRecorder.listInputDevices();
         debugPrint(devs.toString());
 
-        const config = RecordConfig(encoder: encoder, numChannels: 1);
+        const config = RecordConfig(
+          encoder: encoder,
+          sampleRate: 16000,
+          numChannels: 1,
+        );
 
-        // Record to file
-        await recordFile(_audioRecorder, config);
+        final stream = await _audioRecorder.startStream(config);
 
-        // Record to stream
-        // await recordStream(_audioRecorder, config);
+        stream.listen(
+          (data) {
+            // ignore: avoid_print
+            final samplesFloat32 =
+                convertBytesToFloat32(Uint8List.fromList(data));
 
-        _recordDuration = 0;
+            _buffer.push(samplesFloat32);
 
-        _startTimer();
+            final windowSize = _vad.config.sileroVad.windowSize;
+            while (_buffer.size > windowSize) {
+              final samples =
+                  _buffer.get(startIndex: _buffer.head, n: windowSize);
+              _buffer.pop(windowSize);
+              _vad.acceptWaveform(samples);
+              if (_vad.isDetected() && !_printed) {
+                print('detected');
+                _printed = true;
+              }
+
+              if (!_vad.isDetected()) {
+                _printed = false;
+              }
+
+              while (!_vad.isEmpty()) {
+                _vad.pop();
+              }
+            }
+          },
+          // ignore: avoid_print
+          onDone: () {
+            // ignore: avoid_print
+            print('stream stopped.');
+          },
+        );
       }
     } catch (e) {
-      if (kDebugMode) {
-        print(e);
-      }
+      print(e);
     }
   }
 
   Future<void> _stop() async {
-    final path = await _audioRecorder.stop();
+    _buffer.reset();
+    _vad.clear();
 
-    if (path != null) {
-      widget.onStop(path);
-
-      downloadWebData(path);
-    }
+    await _audioRecorder.stop();
   }
 
   Future<void> _pause() => _audioRecorder.pause();
@@ -89,19 +134,6 @@ class _RecorderState extends State<Recorder> with AudioRecorderMixin {
 
   void _updateRecordState(RecordState recordState) {
     setState(() => _recordState = recordState);
-
-    switch (recordState) {
-      case RecordState.pause:
-        _timer?.cancel();
-        break;
-      case RecordState.record:
-        _startTimer();
-        break;
-      case RecordState.stop:
-        _timer?.cancel();
-        _recordDuration = 0;
-        break;
-    }
   }
 
   Future<bool> _isEncoderSupported(AudioEncoder encoder) async {
@@ -135,16 +167,9 @@ class _RecorderState extends State<Recorder> with AudioRecorderMixin {
               children: <Widget>[
                 _buildRecordStopControl(),
                 const SizedBox(width: 20),
-                _buildPauseResumeControl(),
-                const SizedBox(width: 20),
                 _buildText(),
               ],
             ),
-            if (_amplitude != null) ...[
-              const SizedBox(height: 40),
-              Text('Current: ${_amplitude?.current ?? 0.0}'),
-              Text('Max: ${_amplitude?.max ?? 0.0}'),
-            ],
           ],
         ),
       ),
@@ -153,10 +178,10 @@ class _RecorderState extends State<Recorder> with AudioRecorderMixin {
 
   @override
   void dispose() {
-    _timer?.cancel();
     _recordSub?.cancel();
-    _amplitudeSub?.cancel();
     _audioRecorder.dispose();
+    _vad.free();
+    _buffer.free();
     super.dispose();
   }
 
@@ -186,68 +211,11 @@ class _RecorderState extends State<Recorder> with AudioRecorderMixin {
     );
   }
 
-  Widget _buildPauseResumeControl() {
-    if (_recordState == RecordState.stop) {
-      return const SizedBox.shrink();
-    }
-
-    late Icon icon;
-    late Color color;
-
-    if (_recordState == RecordState.record) {
-      icon = const Icon(Icons.pause, color: Colors.red, size: 30);
-      color = Colors.red.withOpacity(0.1);
-    } else {
-      final theme = Theme.of(context);
-      icon = const Icon(Icons.play_arrow, color: Colors.red, size: 30);
-      color = theme.primaryColor.withOpacity(0.1);
-    }
-
-    return ClipOval(
-      child: Material(
-        color: color,
-        child: InkWell(
-          child: SizedBox(width: 56, height: 56, child: icon),
-          onTap: () {
-            (_recordState == RecordState.pause) ? _resume() : _pause();
-          },
-        ),
-      ),
-    );
-  }
-
   Widget _buildText() {
-    if (_recordState != RecordState.stop) {
-      return _buildTimer();
+    if (_recordState == RecordState.stop) {
+      return const Text("Start");
+    } else {
+      return const Text("Stop");
     }
-
-    return const Text("Waiting to record");
-  }
-
-  Widget _buildTimer() {
-    final String minutes = _formatNumber(_recordDuration ~/ 60);
-    final String seconds = _formatNumber(_recordDuration % 60);
-
-    return Text(
-      '$minutes : $seconds',
-      style: const TextStyle(color: Colors.red),
-    );
-  }
-
-  String _formatNumber(int number) {
-    String numberStr = number.toString();
-    if (number < 10) {
-      numberStr = '0$numberStr';
-    }
-
-    return numberStr;
-  }
-
-  void _startTimer() {
-    _timer?.cancel();
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (Timer t) {
-      setState(() => _recordDuration++);
-    });
   }
 }
