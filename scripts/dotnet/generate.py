@@ -39,7 +39,7 @@ def process_linux(s):
         "libespeak-ng.so",
         "libkaldi-decoder-core.so",
         "libkaldi-native-fbank-core.so",
-        "libonnxruntime.so.1.18.0",
+        "libonnxruntime.so",
         "libpiper_phonemize.so.1",
         "libsherpa-onnx-c-api.so",
         "libsherpa-onnx-core.so",
