@@ -31,6 +31,10 @@ function install_dependencies() {
     cp -a ./wenet/wenet/ctl_model $wenet_dir
   fi
 
+  if [ ! -d $wenet_dir/finetune ]; then
+    cp -av ./wenet/wenet/finetune $wenet_dir/
+  fi
+
   rm -rf wenet
 }
 
