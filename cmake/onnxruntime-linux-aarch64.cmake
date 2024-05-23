@@ -16,7 +16,8 @@ endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-aarch64-glibc2_17-Release-1.18.0.zip")
 set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-aarch64-glibc2_17-Release-1.18.0.zip")
-set(onnxruntime_HASH "SHA256=9b288e867f09521d3a9f17b9c0979ac92bc1817dc083dc82d54aa027c0dac781")
+# set(onnxruntime_HASH "SHA256=9b288e867f09521d3a9f17b9c0979ac92bc1817dc083dc82d54aa027c0dac781")
+set(onnxruntime_HASH) # TODO(fangjun): Update it
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.

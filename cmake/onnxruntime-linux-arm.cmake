@@ -16,7 +16,8 @@ endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-arm-1.18.0.zip")
 set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-arm-1.18.0.zip")
-set(onnxruntime_HASH "SHA256=f713a5e09bff5ff1438c26d26cf283d305e37af1fbd59e9190b17cd7f8d2b1c6")
+# set(onnxruntime_HASH "SHA256=f713a5e09bff5ff1438c26d26cf283d305e37af1fbd59e9190b17cd7f8d2b1c6")
+set(onnxruntime_HASH) # TODO(fangjun): Update it
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
