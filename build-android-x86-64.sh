@@ -43,7 +43,7 @@ fi
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 
-onnxruntime_version=1.17.1
+onnxruntime_version=1.18.0
 
 if [ ! -f $onnxruntime_version/jni/x86_64/libonnxruntime.so ]; then
   mkdir -p $onnxruntime_version

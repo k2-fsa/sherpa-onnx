@@ -6,7 +6,7 @@ set -ex
 
 function install_dependencies() {
   pip install -qq torch==2.1.0+cpu torchaudio==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-  pip install -qq onnx onnxruntime==1.17.1
+  pip install -qq onnx onnxruntime==1.18.0
 
   pip install -r ./requirements.txt
 }

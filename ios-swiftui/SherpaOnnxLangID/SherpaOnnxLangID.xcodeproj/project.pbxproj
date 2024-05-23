@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C98126522BFEEDB7000AD7AA /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C98126512BFEEDB7000AD7AA /* Info.plist */; };
 		DEBB2D762BBAAA3500864EF5 /* SherpaOnnxLangIDApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2D752BBAAA3500864EF5 /* SherpaOnnxLangIDApp.swift */; };
 		DEBB2D782BBAAA3500864EF5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2D772BBAAA3500864EF5 /* ContentView.swift */; };
 		DEBB2D7A2BBAAA3600864EF5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DEBB2D792BBAAA3600864EF5 /* Assets.xcassets */; };
@@ -22,8 +23,6 @@
 		DEBB2DAF2BBAAC6400864EF5 /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DEBB2DA72BBAAC4D00864EF5 /* sherpa-onnx.xcframework */; };
 		DEBB2DB02BBAAC6400864EF5 /* sherpa-onnx.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DEBB2DA72BBAAC4D00864EF5 /* sherpa-onnx.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		DEBB2DB22BBAAD0000864EF5 /* SherpaOnnx.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEBB2DB12BBAAD0000864EF5 /* SherpaOnnx.swift */; };
-		DEBB2DB42BBAB02E00864EF5 /* tiny-decoder.int8.onnx in Resources */ = {isa = PBXBuildFile; fileRef = DEBB2DB32BBAB02E00864EF5 /* tiny-decoder.int8.onnx */; };
-		DEBB2DB62BBAB03400864EF5 /* tiny-encoder.int8.onnx in Resources */ = {isa = PBXBuildFile; fileRef = DEBB2DB52BBAB03400864EF5 /* tiny-encoder.int8.onnx */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +58,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		C98126512BFEEDB7000AD7AA /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DEBB2D722BBAAA3500864EF5 /* SherpaOnnxLangID.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnxLangID.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEBB2D752BBAAA3500864EF5 /* SherpaOnnxLangIDApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxLangIDApp.swift; sourceTree = "<group>"; };
 		DEBB2D772BBAAA3500864EF5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -74,10 +74,8 @@
 		DEBB2DA22BBAAAE700864EF5 /* Model.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Model.swift; path = ../../SherpaOnnx/SherpaOnnx/Model.swift; sourceTree = "<group>"; };
 		DEBB2DA42BBAAAFD00864EF5 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
 		DEBB2DA72BBAAC4D00864EF5 /* sherpa-onnx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "sherpa-onnx.xcframework"; path = "../../build-ios/sherpa-onnx.xcframework"; sourceTree = "<group>"; };
-		DEBB2DAB2BBAAC6200864EF5 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.17.1/onnxruntime.xcframework"; sourceTree = "<group>"; };
+		DEBB2DAB2BBAAC6200864EF5 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.18.0/onnxruntime.xcframework"; sourceTree = "<group>"; };
 		DEBB2DB12BBAAD0000864EF5 /* SherpaOnnx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SherpaOnnx.swift; path = "../../../swift-api-examples/SherpaOnnx.swift"; sourceTree = "<group>"; };
-		DEBB2DB32BBAB02E00864EF5 /* tiny-decoder.int8.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "tiny-decoder.int8.onnx"; sourceTree = "<group>"; };
-		DEBB2DB52BBAB03400864EF5 /* tiny-encoder.int8.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "tiny-encoder.int8.onnx"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -131,9 +129,8 @@
 		DEBB2D742BBAAA3500864EF5 /* SherpaOnnxLangID */ = {
 			isa = PBXGroup;
 			children = (
-				DEBB2DB32BBAB02E00864EF5 /* tiny-decoder.int8.onnx */,
+				C98126512BFEEDB7000AD7AA /* Info.plist */,
 				DEBB2D752BBAAA3500864EF5 /* SherpaOnnxLangIDApp.swift */,
-				DEBB2DB52BBAB03400864EF5 /* tiny-encoder.int8.onnx */,
 				DEBB2D772BBAAA3500864EF5 /* ContentView.swift */,
 				DEBB2DA42BBAAAFD00864EF5 /* ViewModel.swift */,
 				DEBB2D9F2BBAAACD00864EF5 /* SherpaOnnx-Bridging-Header.h */,
@@ -286,9 +283,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				DEBB2D7D2BBAAA3600864EF5 /* Preview Assets.xcassets in Resources */,
-				DEBB2DB62BBAB03400864EF5 /* tiny-encoder.int8.onnx in Resources */,
-				DEBB2DB42BBAB02E00864EF5 /* tiny-decoder.int8.onnx in Resources */,
 				DEBB2D7A2BBAAA3600864EF5 /* Assets.xcassets in Resources */,
+				C98126522BFEEDB7000AD7AA /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
