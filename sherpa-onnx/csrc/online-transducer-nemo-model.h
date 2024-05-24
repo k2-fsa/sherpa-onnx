@@ -30,7 +30,7 @@ class OnlineTransducerNeMoModel {
 
 #if __ANDROID_API__ >= 9
   OnlineTransducerNeMoModel(AAssetManager *mgr,
-                            const OfflineModelConfig &config);
+                            const OnlineModelConfig &config);
 #endif
   
   ~OnlineTransducerNeMoModel();
@@ -50,7 +50,7 @@ class OnlineTransducerNeMoModel {
   std::vector<Ort::Value> StackStates(
       const std::vector<std::vector<Ort::Value>> &states) const;
 
-  /** Unstack a batch state into a list of individual states.
+  /** Unstack a batched state into a list of individual states.
    *
    * It is the inverse operation of `StackStates`.
    *
@@ -66,7 +66,8 @@ class OnlineTransducerNeMoModel {
    * @param states  It is from GetInitStates() or returned from this method.
    * 
    * @return Return a tuple containing:
-   *           - encoder_out, a tensor of shape (N, T', encoder_out_dim)
+   *           - ans[0]: encoder_out, a tensor of shape (N, T', encoder_out_dim)
+   *           - ans[1:]: contains next states 
    */
   std::vector<Ort::Value> RunEncoder(
       Ort::Value features, std::vector<Ort::Value> states) const;  // NOLINT
@@ -74,16 +75,13 @@ class OnlineTransducerNeMoModel {
   /** Run the decoder network.
    *
    * @param targets A int32 tensor of shape (batch_size, 1)
-   * @param targets_length A int32 tensor of shape (batch_size,)
    * @param states The states for the decoder model.
    * @return Return a vector:
    *           - ans[0] is the decoder_out (a float tensor)
-   *           - ans[1] is the decoder_out_length (a int32 tensor)
-   *           - ans[2:] is the states_next
+   *           - ans[1:] is the next states
    */
   std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
-      Ort::Value targets, Ort::Value targets_length,
-      std::vector<Ort::Value> states) const;
+      Ort::Value targets, std::vector<Ort::Value> states) const;
 
   std::vector<Ort::Value> GetDecoderInitStates(int32_t batch_size) const;
 
@@ -96,8 +94,6 @@ class OnlineTransducerNeMoModel {
   virtual Ort::Value RunJoiner( Ort::Value encoder_out, 
                                 Ort::Value decoder_out) const;
 
-  // cache_last_time_dim3 in the model meta_data
-  int32_t ContextSize() const;
 
   /** We send this number of feature frames to the encoder at a time. */
   int32_t ChunkSize() const;

@@ -56,9 +56,10 @@ std::pair<OnlineTransducerDecoderResult, std::vector<Ort::Value>> DecodeOne(
   int32_t blank_id = vocab_size - 1;
 
   auto decoder_input_pair = BuildDecoderInput(blank_id, model->Allocator());
+  // decoder_input_pair[0]: decoder_input
+  // decoder_input_pair[1]: decoder_input_length (discarded)
   std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair =
       model->RunDecoder(std::move(decoder_input_pair.first),
-                         std::move(decoder_input_pair.second),
                          std::move(decoder_states));
 
   std::array<int64_t, 3> encoder_shape{1, num_cols, 1};
@@ -89,7 +90,6 @@ std::pair<OnlineTransducerDecoderResult, std::vector<Ort::Value>> DecodeOne(
 
       decoder_output_pair =
           model->RunDecoder(std::move(decoder_input_pair.first),
-                             std::move(decoder_input_pair.second),
                              std::move(decoder_output_pair.second));
     } // if (y != blank_id)
   } // for (int32_t t = 0; t != num_rows; ++t)
@@ -103,15 +103,25 @@ std::pair<OnlineTransducerDecoderResult, std::vector<Ort::Value>> DecodeOne(
 std::vector<OnlineTransducerDecoderResult>
 OnlineTransducerGreedySearchNeMoDecoder::Decode(
     Ort::Value encoder_out, 
-    Ort::Value encoder_out_length,
     std::vector<Ort::Value> decoder_states,
     std::vector<OnlineTransducerDecoderResult> *results,
     OnlineStream ** /*ss = nullptr*/, int32_t /*n= 0*/) {
 
   auto shape = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
-  int32_t batch_size = static_cast<int32_t>(shape[0]);
-  int32_t dim1 = static_cast<int32_t>(shape[1]);
-  int32_t dim2 = static_cast<int32_t>(shape[2]);
+  int32_t batch_size = static_cast<int32_t>(shape[0]);  // bs = 1
+  int32_t dim1 = static_cast<int32_t>(shape[1]);  // feature dimension
+  int32_t dim2 = static_cast<int32_t>(shape[2]);  // frames
+
+  // Define and initialize encoder_out_length
+  Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
+  
+  int64_t length_value = 1;
+  std::vector<int64_t> length_shape = {1};
+  
+  Ort::Value encoder_out_length = Ort::Value::CreateTensor<int64_t>(
+      memory_info, &length_value, 1, length_shape.data(), length_shape.size()
+  );
+
 
   const int64_t *p_length = encoder_out_length.GetTensorData<int64_t>();
   const float *p = encoder_out.GetTensorData<float>();

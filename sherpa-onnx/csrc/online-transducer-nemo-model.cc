@@ -194,8 +194,18 @@ class OnlineTransducerNeMoModel::Impl {
   }
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
-      Ort::Value targets, Ort::Value targets_length,
-      std::vector<Ort::Value> states) {
+      Ort::Value targets, std::vector<Ort::Value> states) {
+    
+    Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
+
+    // Create the tensor with a single int32_t value of 1
+    int32_t length_value = 1;
+    std::vector<int64_t> length_shape = {1}; 
+
+    Ort::Value targets_length = Ort::Value::CreateTensor<int32_t>(
+        memory_info, &length_value, 1, length_shape.data(), length_shape.size()
+    );
+    
     std::vector<Ort::Value> decoder_inputs;
     decoder_inputs.reserve(2 + states.size());
 
@@ -215,7 +225,7 @@ class OnlineTransducerNeMoModel::Impl {
     states_next.reserve(states.size());
 
     // decoder_out[0]: decoder_output
-    // decoder_out[1]: decoder_output_length
+    // decoder_out[1]: decoder_output_length (discarded)
     // decoder_out[2:] states_next
 
     for (int32_t i = 0; i != states.size(); ++i) {
@@ -454,10 +464,8 @@ OnlineTransducerNeMoModel::RunEncoder(Ort::Value features,
 
 std::pair<Ort::Value, std::vector<Ort::Value>>
 OnlineTransducerNeMoModel::RunDecoder(Ort::Value targets,
-                                      Ort::Value targets_length,
                                       std::vector<Ort::Value> states) const {
-  return impl_->RunDecoder(std::move(targets), std::move(targets_length),
-                          std::move(states));
+  return impl_->RunDecoder(std::move(targets), std::move(states));
 }
 
 std::vector<Ort::Value> OnlineTransducerNeMoModel::GetDecoderInitStates(

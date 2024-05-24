@@ -18,7 +18,6 @@ class OnlineTransducerGreedySearchNeMoDecoder : public OnlineTransducerDecoder {
 
   std::vector<OnlineTransducerDecoderResult> Decode(
     Ort::Value encoder_out, 
-    Ort::Value encoder_out_length, 
     std::vector<Ort::Value> decoder_states, 
     std::vector<OnlineTransducerDecoderResult> *results,
     OnlineStream **ss = nullptr, int32_t n = 0);

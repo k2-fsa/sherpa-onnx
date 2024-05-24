@@ -94,8 +94,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     std::vector<OnlineTransducerDecoderResult> results(n);
     std::vector<float> features_vec(n * chunk_size * feature_dim);
     std::vector<std::vector<Ort::Value>> states_vec(n);
-    std::vector<int64_t> all_processed_frames(n);
-
+    
     for (int32_t i = 0; i != n; ++i) {
       const auto num_processed_frames = ss[i]->GetNumProcessedFrames();
       std::vector<float> features =
@@ -109,7 +108,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
       results[i] = std::move(ss[i]->GetResult());
       states_vec[i] = std::move(ss[i]->GetStates());
-      all_processed_frames[i] = num_processed_frames;
+      
     }
 
     auto memory_info =
@@ -125,7 +124,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     int32_t num_states = states.size();
     auto t = model_->RunEncoder(std::move(x), std::move(states));
     // t[0] encoder_out, float tensor, (batch_size, dim, T)
-    // t[1] encoder_out_length, int64 tensor, (batch_size,)
+    // t[1] next states
     
     std::vector<Ort::Value> out_states;
     out_states.reserve(num_states);
@@ -137,8 +136,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     Ort::Value encoder_out = Transpose12(model_->Allocator(), &t[0]);
     
     // defined in online-transducer-greedy-search-nemo-decoder.h
-    decoder_-> Decode(std::move(encoder_out), std::move(t[1]),
-                      std::move(out_states), &results, ss, n);
+    decoder_-> Decode(std::move(encoder_out), std::move(out_states), &results, ss, n);
 
     std::vector<std::vector<Ort::Value>> next_states =
         model_->UnStackStates(out_states);
@@ -153,7 +151,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     auto r = decoder_->GetEmptyResult();
 
     stream->SetResult(r);
-    stream->SetNeMoDecoderStates(model_->GetDecoderInitStates(batch_size_));
+    stream->SetNeMoDecoderStates(model_->GetDecoderInitStates(1));
   }
 
  private:
@@ -197,7 +195,6 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   std::unique_ptr<OnlineTransducerNeMoModel> model_;
   std::unique_ptr<OnlineTransducerGreedySearchNeMoDecoder> decoder_;
 
-  int32_t batch_size_ = 1;
 };
 
 }  // namespace sherpa_onnx
