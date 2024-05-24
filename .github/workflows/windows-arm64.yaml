@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - win-arm64-2
     tags:
       - '*'
     paths:
