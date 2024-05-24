@@ -1,4 +1,4 @@
-# Copyright (c)  2022-2023  Xiaomi Corporation
+# Copyright (c)  2022-2024  Xiaomi Corporation
 message(STATUS "CMAKE_SYSTEM_NAME: ${CMAKE_SYSTEM_NAME}")
 message(STATUS "CMAKE_SYSTEM_PROCESSOR: ${CMAKE_SYSTEM_PROCESSOR}")
 message(STATUS "CMAKE_VS_PLATFORM_NAME: ${CMAKE_VS_PLATFORM_NAME}")
@@ -8,7 +8,7 @@ if(NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
 endif()
 
 if(NOT (CMAKE_VS_PLATFORM_NAME STREQUAL ARM64 OR CMAKE_VS_PLATFORM_NAME STREQUAL arm64))
-  message(FATAL_ERROR "This file is for Windows x64 only. Given: ${CMAKE_VS_PLATFORM_NAME}")
+  message(FATAL_ERROR "This file is for Windows arm64 only. Given: ${CMAKE_VS_PLATFORM_NAME}")
 endif()
 
 if(NOT BUILD_SHARED_LIBS)
