@@ -39,4 +39,7 @@ flutter run --release -d macos
 flutter create --platforms=windows,macos,linux .
 
 dart analyze
+
+FLUTTER_XCODE_ARCHS=arm64
+FLUTTER_XCODE_ARCHS=x86_64
 ```

@@ -1,0 +1,146 @@
+name: flutter-windows-x64
+
+on:
+  push:
+    branches:
+      - flutter
+    tags:
+      - '*'
+    paths:
+      - '.github/workflows/flutter-windows-x64.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/flutter/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/flutter-windows-x64.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/flutter/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: flutter-windows-x64${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter_windows_x64:
+    name: flutter windows x64
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display PWD
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+
+      - name: Display machine info
+        shell: bash
+        run: |
+          uname -a
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -A x64 \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+
+      - name: Build sherpa-onnx for windows x64
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --config Release -- -m:2
+          cmake --build . --config Release --target install -- -m:2
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -v build/install/lib/*dll ./sherpa-onnx/flutter/windows/
+          cp -v build/install/lib/*fst* ./sherpa-onnx/flutter/windows/
+
+          echo "--------------------"
+
+          ls -lh ./sherpa-onnx/flutter/windows/
+
+      - name: Download model files
+        shell: bash
+        run: |
+          cd sherpa-onnx/flutter
+
+          cd example/assets
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+      - name: Build flutter
+        shell: bash
+        run: |
+          d=$PWD
+
+          pushd sherpa-onnx/flutter
+          dart pub get
+
+          cd example
+          flutter build windows
+
+          cd build/windows/x64/runner/
+
+          dst=flutter_sherpa_onnx_windows_x64
+          mv Release $dst
+
+          tar cjfv $dst.tar.bz2 ./$dst
+          ls -lh
+          mv $dst.tar.bz2 $d/
+
+          popd
+
+          ls -lh $dst.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flutter-sherpa-onnx-windows-x64
+          path: ./*.tar.bz2

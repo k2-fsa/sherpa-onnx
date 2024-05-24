@@ -1,14 +1,13 @@
-name: flutter
+name: flutter-macos
 
 on:
   push:
     branches:
       - flutter
-      - flutter-sid-2
     tags:
       - '*'
     paths:
-      - '.github/workflows/flutter.yaml'
+      - '.github/workflows/flutter-macos.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -18,7 +17,7 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/flutter.yaml'
+      - '.github/workflows/flutter-macos.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -28,17 +27,18 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: flutter-${{ github.ref }}
+  group: flutter-macos-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  flutter:
-    name: flutter
+  flutter_macos:
+    name: macos ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [macos-latest]
+        arch: [x86_64, arm64]
 
     steps:
       - uses: actions/checkout@v4
@@ -54,7 +54,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-flutter
+          key: ${{ matrix.os }}-flutter-${{ matrix.arch }}
 
       - name: Display PWD
         shell: bash
@@ -66,6 +66,11 @@ jobs:
         shell: bash
         run: |
           uname -a
+
+      - name: Install tree
+        shell: bash
+        run: |
+          brew install tree
 
       - name: Display flutter info
         shell: bash
@@ -83,20 +88,22 @@ jobs:
           export CMAKE_CXX_COMPILER_LAUNCHER=ccache
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
+          arch=${{ matrix.arch }}
 
           mkdir build
           cd build
 
           cmake \
             -D BUILD_SHARED_LIBS=ON \
-            -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+            -DCMAKE_OSX_ARCHITECTURES=$arch \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-            -DSHERPA_ONNX_ENABLE_BINARY=ON \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
 
-      - name: Build sherpa-onnx for macos
+      - name: Build sherpa-onnx for macos ${{ matrix.arch }}
         shell: bash
         run: |
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
@@ -105,7 +112,7 @@ jobs:
           make -j2
           make install
 
-          rm -v ./install/lib/libcargs*
+          rm -v ./install/lib/libonnxruntime.dylib
 
       - name: Copy libs
         shell: bash
@@ -122,13 +129,12 @@ jobs:
           cd sherpa-onnx/flutter
           pushd example/assets
 
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+          # curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
-          git clone https://github.com/csukuangfj/sr-data
+          # git clone https://github.com/csukuangfj/sr-data
 
           rm -rf sr-data/.git
           popd
-
 
       - name: Build flutter
         shell: bash
@@ -139,20 +145,25 @@ jobs:
           dart pub get
 
           cd example
+          export FLUTTER_XCODE_ARCHS=${{ matrix.arch }}
+          echo "FLUTTER_XCODE_ARCHS: $FLUTTER_XCODE_ARCHS"
           flutter build macos
 
-          pushd build/macos/Build/Products/Release/
-          tar cjfv sherpa_onnx.app.tar.bz2 ./sherpa_onnx.app
+          cd build/macos/Build/Products/Release/
+
+          tree ./sherpa_onnx.app
+
+          app=flutter_sherpa_onnx_macos_${{ matrix.arch }}.app
+          mv sherpa_onnx.app $app
+          tar cjfv $app.tar.bz2 $app
           ls -lh
-          mv sherpa_onnx.app.tar.bz2 $d
-          popd
+          mv $app.tar.bz2 $d
 
           popd
 
-          ls -lh sherpa_onnx.app.tar.bz2
+          ls -lh $app.tar.bz2
 
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'macos-latest'
         with:
-          name: flutter-sherpa-onnx-app-macos
-          path: ./sherpa_onnx.app.tar.bz2
+          name: flutter-sherpa-onnx-app-macos-${{ matrix.arch }}
+          path: ./*.tar.bz2

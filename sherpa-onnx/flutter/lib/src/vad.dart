@@ -113,7 +113,7 @@ class CircularBuffer {
 }
 
 class VoiceActivityDetector {
-  VoiceActivityDetector._({required this.ptr});
+  VoiceActivityDetector._({required this.ptr, required this.config});
 
   // The user has to invoke VoiceActivityDetector.free() to avoid memory leak.
   factory VoiceActivityDetector(
@@ -144,7 +144,7 @@ class VoiceActivityDetector {
     calloc.free(modelPtr);
     calloc.free(c);
 
-    return VoiceActivityDetector._(ptr: ptr);
+    return VoiceActivityDetector._(ptr: ptr, config: config);
   }
 
   void free() {
@@ -210,4 +210,5 @@ class VoiceActivityDetector {
   }
 
   Pointer<SherpaOnnxVoiceActivityDetector> ptr;
+  final VadModelConfig config;
 }

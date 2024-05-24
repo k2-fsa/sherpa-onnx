@@ -11,4 +11,4 @@ PRODUCT_NAME = sherpa_onnx
 PRODUCT_BUNDLE_IDENTIFIER = com.k2fsa.sherpa.onnx
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2024 com.k2fsa.sherpa.onnx. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2024 Next-gen Kaldi. All rights reserved.

@@ -345,6 +345,12 @@ typedef SherpaOnnxReadWaveNative = Pointer<SherpaOnnxWave> Function(
 
 typedef SherpaOnnxReadWave = SherpaOnnxReadWaveNative;
 
+typedef SherpaOnnxWriteWaveNative = Int32 Function(
+    Pointer<Float>, Int32, Int32, Pointer<Utf8>);
+
+typedef SherpaOnnxWriteWave = int Function(
+    Pointer<Float>, int, int, Pointer<Utf8>);
+
 typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
@@ -447,6 +453,8 @@ class SherpaOnnxBindings {
       speakerEmbeddingManagerFreeAllSpeakers;
 
   static SherpaOnnxReadWave? readWave;
+
+  static SherpaOnnxWriteWave? writeWave;
 
   static SherpaOnnxFreeWave? freeWave;
 
@@ -684,6 +692,11 @@ class SherpaOnnxBindings {
 
     readWave ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxReadWaveNative>>('SherpaOnnxReadWave')
+        .asFunction();
+
+    writeWave ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxWriteWaveNative>>(
+            'SherpaOnnxWriteWave')
         .asFunction();
 
     freeWave ??= dynamicLibrary

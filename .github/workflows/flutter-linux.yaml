@@ -1,0 +1,206 @@
+name: flutter-linux
+
+on:
+  push:
+    branches:
+      - flutter
+    tags:
+      - '*'
+    paths:
+      - '.github/workflows/flutter-linux.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/flutter/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/flutter-linux.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/flutter/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: flutter-linux-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter_linux:
+    name: linux
+    runs-on: ${{ matrix.os }}
+    container: ubuntu:18.04
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Install deps
+        shell: bash
+        run: |
+          apt-get update -y
+          apt-get install -y build-essential jq git cmake 
+          apt-get install -y curl
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - name: Install ninja
+        shell: bash
+        run: |
+          apt-get install -y ninja-build
+
+      - name: Display ninja version
+        shell: bash
+        run: |
+          ninja --version
+          ninja --help || true
+          which ninja
+
+      - name: Display PWD
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+
+      - name: Display machine info
+        shell: bash
+        run: |
+          uname -a
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+
+          flutter --version
+
+          mkdir -p /__t/flutter-Linux-3.22.1-X64/flutter
+
+          git config --global --add safe.directory /__t/flutter-Linux-3.22.1-X64/flutter
+
+          flutter --version
+
+          dart --version
+          flutter doctor
+
+
+          flutter doctor
+
+      - name: Install libgtk-3-dev
+        shell: bash
+        run: |
+          apt install -y libgtk-3-dev tree clang pkg-config
+
+      - name: Display flutter info (2)
+        shell: bash
+        run: |
+          which flutter
+          which dart
+
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build sherpa-onnx
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux2014_x86_64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
+
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+
+              mkdir build
+              cd build
+
+              cmake \
+                -D BUILD_SHARED_LIBS=ON \
+                -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+                -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+                -DBUILD_ESPEAK_NG_EXE=OFF \
+                -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+                -DCMAKE_INSTALL_PREFIX=./install \
+                ..
+
+              make -j2
+              make install
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -v build/install/lib/lib* ./sherpa-onnx/flutter/linux/
+
+          echo "--------------------"
+
+          ls -lh ./sherpa-onnx/flutter/linux/
+
+      - name: Download model files
+        shell: bash
+        run: |
+          cd sherpa-onnx/flutter
+          cd example/assets
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+      - name: Build flutter
+        shell: bash
+        run: |
+
+          d=$PWD
+
+          pushd sherpa-onnx/flutter
+          dart pub get
+
+          cd example
+          flutter build linux
+
+          ls -lh build/linux/x64/release/bundle/sherpa_onnx
+          file build/linux/x64/release/bundle/sherpa_onnx
+
+          tree build/linux/x64/release/bundle/
+          cd build/linux/x64/release/
+
+          dst=flutter_sherpa_onnx_linux_x64
+          mv bundle $dst
+
+          pushd $dst/lib
+
+          ls -lh
+          mv -v libonnxruntime.so libonnxruntime.so.1.17.1
+          mv -v libpiper_phonemize.so libpiper_phonemize.so.1
+          popd
+
+          tar cjfv $dst.tar.bz2 $dst
+          ls -lh
+          mv $dst.tar.bz2 $d
+          popd
+
+          ls -lh $dst.tar.bz2
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: flutter-sherpa-onnx-linux-x64
+          path: ./*.tar.bz2
