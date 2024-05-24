@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - flutter
-      - vad-gui-flutter-22
     tags:
       - '*'
     paths:
@@ -68,6 +67,11 @@ jobs:
         run: |
           uname -a
 
+      - name: Install tree
+        shell: bash
+        run: |
+          brew install tree
+
       - name: Display flutter info
         shell: bash
         run: |
@@ -95,7 +99,7 @@ jobs:
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DBUILD_ESPEAK_NG_EXE=OFF \
-            -DSHERPA_ONNX_ENABLE_BINARY=ON \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
 
@@ -108,7 +112,6 @@ jobs:
           make -j2
           make install
 
-          rm -v ./install/lib/libcargs*
           rm -v ./install/lib/libonnxruntime.dylib
 
       - name: Copy libs
@@ -146,19 +149,21 @@ jobs:
           echo "FLUTTER_XCODE_ARCHS: $FLUTTER_XCODE_ARCHS"
           flutter build macos
 
-          pushd build/macos/Build/Products/Release/
-          app=sherpa_onnx_$${{ matrix.arch }}.app
-          tar cjfv $app.tar.bz2 ./sherpa_onnx.app
+          cd build/macos/Build/Products/Release/
+
+          tree ./sherpa_onnx.app
+
+          app=flutter_sherpa_onnx_macos_${{ matrix.arch }}.app
+          mv sherpa_onnx.app $app
+          tar cjfv $app.tar.bz2 $app
           ls -lh
           mv $app.tar.bz2 $d
-          popd
 
           popd
 
           ls -lh $app.tar.bz2
 
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'macos-latest'
         with:
           name: flutter-sherpa-onnx-app-macos-${{ matrix.arch }}
-          path: ./*.app.tar.bz2
+          path: ./*.tar.bz2
