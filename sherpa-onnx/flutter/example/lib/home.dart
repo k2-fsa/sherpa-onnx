@@ -1,4 +1,4 @@
-// This file is modified from https://github.com/llfbandit/record/blob/master/record/example/lib/audio_recorder.dart
+// Copyright (c)  2024  Xiaomi Corporation
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -11,22 +11,22 @@ import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 import './utils.dart';
 
-class Recorder extends StatefulWidget {
-  const Recorder({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  State<Recorder> createState() => _RecorderState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _RecorderState extends State<Recorder> {
+class _HomeScreenState extends State<HomeScreen> {
   late final AudioRecorder _audioRecorder;
 
   bool _printed = false;
   var _color = Colors.black;
   bool _isInitialized = false;
 
-  late final sherpa_onnx.VoiceActivityDetector _vad;
-  late final sherpa_onnx.CircularBuffer _buffer;
+  sherpa_onnx.VoiceActivityDetector? _vad;
+  sherpa_onnx.CircularBuffer? _buffer;
 
   StreamSubscription<RecordState>? _recordSub;
   RecordState _recordState = RecordState.stop;
@@ -64,7 +64,7 @@ class _RecorderState extends State<Recorder> {
           config: config, bufferSizeInSeconds: 30);
 
       _buffer = sherpa_onnx.CircularBuffer(capacity: 16000 * 30);
-      print(_buffer.ptr);
+      print(_buffer!.ptr);
 
       _isInitialized = true;
     }
@@ -76,11 +76,9 @@ class _RecorderState extends State<Recorder> {
         if (!await _isEncoderSupported(encoder)) {
           return;
         }
-        print('supported');
 
         final devs = await _audioRecorder.listInputDevices();
         debugPrint(devs.toString());
-        print('devices list: $devs');
 
         const config = RecordConfig(
           encoder: encoder,
@@ -94,32 +92,31 @@ class _RecorderState extends State<Recorder> {
 
         stream.listen(
           (data) {
-            // ignore: avoid_print
             final samplesFloat32 =
                 convertBytesToFloat32(Uint8List.fromList(data));
 
-            _buffer.push(samplesFloat32);
+            _buffer!.push(samplesFloat32);
 
-            final windowSize = _vad.config.sileroVad.windowSize;
-            while (_buffer.size > windowSize) {
+            final windowSize = _vad!.config.sileroVad.windowSize;
+            while (_buffer!.size > windowSize) {
               final samples =
-                  _buffer.get(startIndex: _buffer.head, n: windowSize);
-              _buffer.pop(windowSize);
-              _vad.acceptWaveform(samples);
-              if (_vad.isDetected() && !_printed) {
+                  _buffer!.get(startIndex: _buffer!.head, n: windowSize);
+              _buffer!.pop(windowSize);
+              _vad!.acceptWaveform(samples);
+              if (_vad!.isDetected() && !_printed) {
                 print('detected');
                 _printed = true;
 
                 setState(() => _color = Colors.red);
               }
 
-              if (!_vad.isDetected()) {
+              if (!_vad!.isDetected()) {
                 _printed = false;
                 setState(() => _color = Colors.black);
               }
 
-              while (!_vad.isEmpty()) {
-                final segment = _vad.front();
+              while (!_vad!.isEmpty()) {
+                final segment = _vad!.front();
                 final duration = segment.samples.length / 16000;
                 final d = DateTime.now();
                 final filename = p.join(dir.path,
@@ -135,13 +132,11 @@ class _RecorderState extends State<Recorder> {
                   print('Saved to write $filename');
                 }
 
-                _vad.pop();
+                _vad!.pop();
               }
             }
           },
-          // ignore: avoid_print
           onDone: () {
-            // ignore: avoid_print
             print('stream stopped.');
           },
         );
@@ -152,8 +147,8 @@ class _RecorderState extends State<Recorder> {
   }
 
   Future<void> _stop() async {
-    _buffer.reset();
-    _vad.clear();
+    _buffer!.reset();
+    _vad!.clear();
 
     await _audioRecorder.stop();
   }
@@ -219,8 +214,8 @@ class _RecorderState extends State<Recorder> {
   void dispose() {
     _recordSub?.cancel();
     _audioRecorder.dispose();
-    _vad.free();
-    _buffer.free();
+    _vad?.free();
+    _buffer?.free();
     super.dispose();
   }
 
