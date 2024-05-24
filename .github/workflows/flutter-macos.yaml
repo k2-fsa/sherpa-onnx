@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - flutter
-      - vad-gui-flutter-2
+      - vad-gui-flutter-22
     tags:
       - '*'
     paths:
