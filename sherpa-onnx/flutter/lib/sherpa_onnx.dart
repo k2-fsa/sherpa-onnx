@@ -6,6 +6,7 @@ export 'src/online_stream.dart';
 export 'src/speaker_identification.dart';
 export 'src/vad.dart';
 export 'src/wave_reader.dart';
+export 'src/wave_writer.dart';
 import 'src/sherpa_onnx_bindings.dart';
 
 final DynamicLibrary _dylib = () {

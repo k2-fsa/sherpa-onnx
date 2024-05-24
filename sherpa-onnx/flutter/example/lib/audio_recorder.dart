@@ -3,6 +3,8 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
@@ -10,9 +12,7 @@ import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import './utils.dart';
 
 class Recorder extends StatefulWidget {
-  final void Function(String path) onStop;
-
-  const Recorder({super.key, required this.onStop});
+  const Recorder({super.key});
 
   @override
   State<Recorder> createState() => _RecorderState();
@@ -22,9 +22,12 @@ class _RecorderState extends State<Recorder> {
   late final AudioRecorder _audioRecorder;
 
   bool _printed = false;
+  var _color = Colors.black;
   bool _isInitialized = false;
+
   late final sherpa_onnx.VoiceActivityDetector _vad;
   late final sherpa_onnx.CircularBuffer _buffer;
+
   StreamSubscription<RecordState>? _recordSub;
   RecordState _recordState = RecordState.stop;
 
@@ -45,8 +48,12 @@ class _RecorderState extends State<Recorder> {
       final src = 'assets/silero_vad.onnx';
       final modelPath = await copyAssetFile(src: src, dst: 'silero_vad.onnx');
 
-      final sileroVadConfig =
-          sherpa_onnx.SileroVadModelConfig(model: modelPath);
+      final sileroVadConfig = sherpa_onnx.SileroVadModelConfig(
+        model: modelPath,
+        minSpeechDuration: 0.25,
+        minSilenceDuration: 0.5,
+      );
+
       final config = sherpa_onnx.VadModelConfig(
         sileroVad: sileroVadConfig,
         numThreads: 1,
@@ -69,9 +76,11 @@ class _RecorderState extends State<Recorder> {
         if (!await _isEncoderSupported(encoder)) {
           return;
         }
+        print('supported');
 
         final devs = await _audioRecorder.listInputDevices();
         debugPrint(devs.toString());
+        print('devices list: $devs');
 
         const config = RecordConfig(
           encoder: encoder,
@@ -80,6 +89,8 @@ class _RecorderState extends State<Recorder> {
         );
 
         final stream = await _audioRecorder.startStream(config);
+
+        final dir = await getApplicationDocumentsDirectory();
 
         stream.listen(
           (data) {
@@ -98,13 +109,32 @@ class _RecorderState extends State<Recorder> {
               if (_vad.isDetected() && !_printed) {
                 print('detected');
                 _printed = true;
+
+                setState(() => _color = Colors.red);
               }
 
               if (!_vad.isDetected()) {
                 _printed = false;
+                setState(() => _color = Colors.black);
               }
 
               while (!_vad.isEmpty()) {
+                final segment = _vad.front();
+                final duration = segment.samples.length / 16000;
+                final d = DateTime.now();
+                final filename = p.join(dir.path,
+                    '${d.year}-${d.month}-${d.day}-${d.hour}-${d.minute}-${d.second}-duration-${duration.toStringAsPrecision(3)}s.wav');
+
+                bool ok = sherpa_onnx.writeWave(
+                    filename: filename,
+                    samples: segment.samples,
+                    sampleRate: 16000);
+                if (!ok) {
+                  print('Failed to write $filename');
+                } else {
+                  print('Saved to write $filename');
+                }
+
                 _vad.pop();
               }
             }
@@ -162,6 +192,15 @@ class _RecorderState extends State<Recorder> {
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Container(
+              width: 100.0,
+              height: 100.0,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: _color,
+              ),
+            ),
+            const SizedBox(height: 50),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget>[
