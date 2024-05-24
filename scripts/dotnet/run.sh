@@ -53,7 +53,6 @@ if [ ! -f $src_dir/linux/libsherpa-onnx-core.so ]; then
   cp -v sherpa_onnx/lib/*.so* ../
   cd ..
   rm -v libpiper_phonemize.so libpiper_phonemize.so.1.2.0
-  rm -v libonnxruntime.so
   rm -v libcargs.so
   rm -rf wheel
   ls -lh

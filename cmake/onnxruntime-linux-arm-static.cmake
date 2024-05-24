@@ -14,19 +14,19 @@ if(BUILD_SHARED_LIBS)
   message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-arm-static_lib-1.17.1.zip")
-set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-arm-static_lib-1.17.1.zip")
-set(onnxruntime_HASH "SHA256=3f2ba38156d2facfb732c0fe53bc1eaaf2791d9a91dd240380e3d53716798b09")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-arm-static_lib-1.18.0.zip")
+set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-arm-static_lib-1.18.0.zip")
+set(onnxruntime_HASH "SHA256=ba4590a386bc4aae3e03b00ccc1be42edd582fd7ecf5583614e1e0c2e7424652")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-arm-static_lib-1.17.1.zip
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-arm-static_lib-1.17.1.zip
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-arm-static_lib-1.17.1.zip
-  /tmp/onnxruntime-linux-arm-static_lib-1.17.1.zip
-  /star-fj/fangjun/download/github/onnxruntime-linux-arm-static_lib-1.17.1.zip
+  $ENV{HOME}/Downloads/onnxruntime-linux-arm-static_lib-1.18.0.zip
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-arm-static_lib-1.18.0.zip
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-arm-static_lib-1.18.0.zip
+  /tmp/onnxruntime-linux-arm-static_lib-1.18.0.zip
+  /star-fj/fangjun/download/github/onnxruntime-linux-arm-static_lib-1.18.0.zip
 )
 
 foreach(f IN LISTS possible_file_locations)

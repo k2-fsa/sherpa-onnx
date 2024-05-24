@@ -99,7 +99,7 @@ function do_check() {
       ;;
     2)
       echo "Check all files"
-      files=$(find $sherpa_onnx_dir/sherpa-onnx -name "*.h" -o -name "*.cc")
+      files=$(find $sherpa_onnx_dir/sherpa-onnx/{csrc,python} -name "*.h" -o -name "*.cc")
       ;;
     *)
       echo "Check last commit"

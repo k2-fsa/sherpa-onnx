@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		C98126502BFEED7D000AD7AA /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = C981264F2BFEED7C000AD7AA /* Info.plist */; };
 		C9A2587D2AAEFFF100E555CA /* SherpaOnnx2PassApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A2587C2AAEFFF100E555CA /* SherpaOnnx2PassApp.swift */; };
 		C9A2587F2AAEFFF100E555CA /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9A2587E2AAEFFF100E555CA /* ContentView.swift */; };
 		C9A258812AAEFFF200E555CA /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = C9A258802AAEFFF200E555CA /* Assets.xcassets */; };
@@ -20,6 +21,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		C981264F2BFEED7C000AD7AA /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		C9A258792AAEFFF100E555CA /* SherpaOnnx2Pass.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnx2Pass.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C9A2587C2AAEFFF100E555CA /* SherpaOnnx2PassApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnx2PassApp.swift; sourceTree = "<group>"; };
 		C9A2587E2AAEFFF100E555CA /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -30,7 +32,7 @@
 		C9A2588D2AAF039D00E555CA /* Extension.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Extension.swift; sourceTree = "<group>"; };
 		C9A258922AAF057E00E555CA /* SherpaOnnx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SherpaOnnx.swift; path = "../../../swift-api-examples/SherpaOnnx.swift"; sourceTree = "<group>"; };
 		C9A258952AAF05D100E555CA /* sherpa-onnx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "sherpa-onnx.xcframework"; path = "../../build-ios/sherpa-onnx.xcframework"; sourceTree = "<group>"; };
-		C9A258972AAF05E400E555CA /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.17.1/onnxruntime.xcframework"; sourceTree = "<group>"; };
+		C9A258972AAF05E400E555CA /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.18.0/onnxruntime.xcframework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +68,7 @@
 		C9A2587B2AAEFFF100E555CA /* SherpaOnnx2Pass */ = {
 			isa = PBXGroup;
 			children = (
+				C981264F2BFEED7C000AD7AA /* Info.plist */,
 				C9A258922AAF057E00E555CA /* SherpaOnnx.swift */,
 				C9A2588D2AAF039D00E555CA /* Extension.swift */,
 				C9A2588A2AAF039D00E555CA /* Model.swift */,
@@ -155,6 +158,7 @@
 			files = (
 				C9A258842AAEFFF200E555CA /* Preview Assets.xcassets in Resources */,
 				C9A258812AAEFFF200E555CA /* Assets.xcassets in Resources */,
+				C98126502BFEED7D000AD7AA /* Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

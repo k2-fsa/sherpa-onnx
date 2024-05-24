@@ -172,7 +172,6 @@ jobs:
           if [[ $lib_type == "shared" ]]; then
             cp -a build-arm-linux-gnueabihf/install/lib $dst/
             rm -v $dst/lib/libasound.so
-            rm -v $dst/lib/libonnxruntime.so
           fi
 
           tree $dst

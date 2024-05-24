@@ -16,10 +16,6 @@
 		DE8C85A62ABF23E100F667E3 /* onnxruntime.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE8C85A52ABF23E100F667E3 /* onnxruntime.xcframework */; };
 		DE8C85AA2ABF23FA00F667E3 /* sherpa-onnx.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = DE8C85A92ABF23FA00F667E3 /* sherpa-onnx.xcframework */; };
 		DE8C85B22ABF257200F667E3 /* SpeechSegment.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE8C85B12ABF257200F667E3 /* SpeechSegment.swift */; };
-		DEA22DF12AC1796C00549373 /* tiny.en-encoder.int8.onnx in Resources */ = {isa = PBXBuildFile; fileRef = DEA22DEE2AC1796C00549373 /* tiny.en-encoder.int8.onnx */; };
-		DEA22DF22AC1796C00549373 /* tiny.en-decoder.int8.onnx in Resources */ = {isa = PBXBuildFile; fileRef = DEA22DEF2AC1796C00549373 /* tiny.en-decoder.int8.onnx */; };
-		DEA22DF32AC1796C00549373 /* tiny.en-tokens.txt in Resources */ = {isa = PBXBuildFile; fileRef = DEA22DF02AC1796C00549373 /* tiny.en-tokens.txt */; };
-		DEA22DF52AC179E500549373 /* silero_vad.onnx in Resources */ = {isa = PBXBuildFile; fileRef = DEA22DF42AC179CA00549373 /* silero_vad.onnx */; };
 		DEA657152ABF19730066A81D /* SherpaOnnxSubtitleApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA657142ABF19730066A81D /* SherpaOnnxSubtitleApp.swift */; };
 		DEA657172ABF19730066A81D /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA657162ABF19730066A81D /* ContentView.swift */; };
 		DEA657192ABF19740066A81D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DEA657182ABF19740066A81D /* Assets.xcassets */; };
@@ -36,13 +32,9 @@
 		DE081AAE2ABFF35400E8CD63 /* UTType.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = UTType.swift; sourceTree = "<group>"; };
 		DE081AB02ABFFEEE00E8CD63 /* Document.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Document.swift; sourceTree = "<group>"; };
 		DE081AB22ABFFF2600E8CD63 /* Errors.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Errors.swift; sourceTree = "<group>"; };
-		DE8C85A52ABF23E100F667E3 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.17.1/onnxruntime.xcframework"; sourceTree = "<group>"; };
+		DE8C85A52ABF23E100F667E3 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.18.0/onnxruntime.xcframework"; sourceTree = "<group>"; };
 		DE8C85A92ABF23FA00F667E3 /* sherpa-onnx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "sherpa-onnx.xcframework"; path = "../../build-ios/sherpa-onnx.xcframework"; sourceTree = "<group>"; };
 		DE8C85B12ABF257200F667E3 /* SpeechSegment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechSegment.swift; sourceTree = "<group>"; };
-		DEA22DEE2AC1796C00549373 /* tiny.en-encoder.int8.onnx */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "tiny.en-encoder.int8.onnx"; sourceTree = "<group>"; };
-		DEA22DEF2AC1796C00549373 /* tiny.en-decoder.int8.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = "tiny.en-decoder.int8.onnx"; sourceTree = "<group>"; };
-		DEA22DF02AC1796C00549373 /* tiny.en-tokens.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "tiny.en-tokens.txt"; sourceTree = "<group>"; };
-		DEA22DF42AC179CA00549373 /* silero_vad.onnx */ = {isa = PBXFileReference; lastKnownFileType = file; path = silero_vad.onnx; sourceTree = "<group>"; };
 		DEA657112ABF19730066A81D /* SherpaOnnxSubtitle.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SherpaOnnxSubtitle.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEA657142ABF19730066A81D /* SherpaOnnxSubtitleApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SherpaOnnxSubtitleApp.swift; sourceTree = "<group>"; };
 		DEA657162ABF19730066A81D /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -114,10 +106,6 @@
 		DEA657132ABF19730066A81D /* SherpaOnnxSubtitle */ = {
 			isa = PBXGroup;
 			children = (
-				DEA22DEF2AC1796C00549373 /* tiny.en-decoder.int8.onnx */,
-				DEA22DEE2AC1796C00549373 /* tiny.en-encoder.int8.onnx */,
-				DEA22DF02AC1796C00549373 /* tiny.en-tokens.txt */,
-				DEA22DF42AC179CA00549373 /* silero_vad.onnx */,
 				DE081AAC2ABFF30A00E8CD63 /* Info.plist */,
 				DE081A8E2ABF287C00E8CD63 /* SherpaOnnx.swift */,
 				DEA657142ABF19730066A81D /* SherpaOnnxSubtitleApp.swift */,
@@ -198,12 +186,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DEA22DF52AC179E500549373 /* silero_vad.onnx in Resources */,
 				DEA6571C2ABF19740066A81D /* Preview Assets.xcassets in Resources */,
-				DEA22DF12AC1796C00549373 /* tiny.en-encoder.int8.onnx in Resources */,
 				DEA657192ABF19740066A81D /* Assets.xcassets in Resources */,
-				DEA22DF22AC1796C00549373 /* tiny.en-decoder.int8.onnx in Resources */,
-				DEA22DF32AC1796C00549373 /* tiny.en-tokens.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
