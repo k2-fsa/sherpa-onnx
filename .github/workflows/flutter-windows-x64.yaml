@@ -82,11 +82,12 @@ jobs:
 
           cmake \
             -A x64 \
-            -D BUILD_SHARED_LIBS=ON \
-            -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+            -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-            -DSHERPA_ONNX_ENABLE_BINARY=ON \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
 
@@ -131,7 +132,6 @@ jobs:
 
           cd build/windows/x64/runner/Release/
 
-          pushd build/macos/Build/Products/Release/
           dst=flutter_sherpa_onnx_windows_x64
           mv Release $dst
 
@@ -144,7 +144,6 @@ jobs:
           ls -lh $dst.tar.bz2
 
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'macos-latest'
         with:
           name: flutter-sherpa-onnx-windows-x64
           path: ./*.tar.bz2
