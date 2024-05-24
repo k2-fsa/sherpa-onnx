@@ -89,13 +89,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "com.k2fsa.sherpa.onnx" "\0"
-            VALUE "FileDescription", "hello_example" "\0"
+            VALUE "CompanyName", "Next-gen Kaldi" "\0"
+            VALUE "FileDescription", "sherpa_onnx" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "hello_example" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2024 com.k2fsa.sherpa.onnx. All rights reserved." "\0"
-            VALUE "OriginalFilename", "hello_example.exe" "\0"
-            VALUE "ProductName", "hello_example" "\0"
+            VALUE "InternalName", "sherpa_onnx" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2024 Next-gen Kaldi. All rights reserved." "\0"
+            VALUE "OriginalFilename", "sherpa_onnx.exe" "\0"
+            VALUE "ProductName", "sherpa_onnx" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

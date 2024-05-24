@@ -1,14 +1,14 @@
-name: flutter
+name: flutter-windows-x64
 
 on:
   push:
     branches:
       - flutter
-      - flutter-sid-2
+      - vad-gui-flutter-2
     tags:
       - '*'
     paths:
-      - '.github/workflows/flutter.yaml'
+      - '.github/workflows/flutter-windows-x64.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -18,7 +18,7 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/flutter.yaml'
+      - '.github/workflows/flutter-windows-x64.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -28,17 +28,17 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: flutter-${{ github.ref }}
+  group: flutter-windows-x64${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  flutter:
-    name: flutter
+  flutter_windows_x64:
+    name: flutter windows x64
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest]
+        os: [windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -50,11 +50,6 @@ jobs:
         with:
           channel: stable
           version: latest
-
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-flutter
 
       - name: Display PWD
         shell: bash
@@ -80,14 +75,13 @@ jobs:
       - name: Configure CMake
         shell: bash
         run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
           mkdir build
           cd build
 
           cmake \
+            -A x64 \
             -D BUILD_SHARED_LIBS=ON \
             -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
@@ -96,39 +90,33 @@ jobs:
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
 
-      - name: Build sherpa-onnx for macos
+      - name: Build sherpa-onnx for windows x64
         shell: bash
         run: |
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
-
           cd build
-          make -j2
-          make install
+          cmake --build . --config Release -- -m:2
+          cmake --build . --config Release --target install -- -m:2
 
-          rm -v ./install/lib/libcargs*
+          rm -v ./install/lib/cargs*
 
       - name: Copy libs
         shell: bash
         run: |
-          cp -v build/install/lib/lib* ./sherpa-onnx/flutter/macos/
+          cp -v build/install/lib/*dll ./sherpa-onnx/flutter/windows/
+          cp -v build/install/lib/*fst* ./sherpa-onnx/flutter/windows/
 
           echo "--------------------"
 
-          ls -lh ./sherpa-onnx/flutter/macos/
+          ls -lh ./sherpa-onnx/flutter/windows/
 
       - name: Download model files
         shell: bash
         run: |
           cd sherpa-onnx/flutter
-          pushd example/assets
 
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+          cd example/assets
+
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
-          git clone https://github.com/csukuangfj/sr-data
-
-          rm -rf sr-data/.git
-          popd
-
 
       - name: Build flutter
         shell: bash
@@ -139,20 +127,24 @@ jobs:
           dart pub get
 
           cd example
-          flutter build macos
+          flutter build windows
+
+          cd build/windows/x64/runner/Release/
 
           pushd build/macos/Build/Products/Release/
-          tar cjfv sherpa_onnx.app.tar.bz2 ./sherpa_onnx.app
+          dst=flutter_sherpa_onnx_windows_x64
+          mv Release $dst
+
+          tar cjfv $dst.tar.bz2 ./$dst
           ls -lh
-          mv sherpa_onnx.app.tar.bz2 $d
-          popd
+          mv $dst.tar.bz2 $d
 
           popd
 
-          ls -lh sherpa_onnx.app.tar.bz2
+          ls -lh $dst.tar.bz2
 
       - uses: actions/upload-artifact@v4
         if: matrix.os == 'macos-latest'
         with:
-          name: flutter-sherpa-onnx-app-macos
-          path: ./sherpa_onnx.app.tar.bz2
+          name: flutter-sherpa-onnx-windows-x64
+          path: ./*.tar.bz2
