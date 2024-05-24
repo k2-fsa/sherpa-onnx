@@ -44,15 +44,15 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   explicit OnlineRecognizerTransducerNeMoImpl(
       const OnlineRecognizerConfig &config)
       : config_(config),
-        symbol_table_(config_.model_config.tokens),
+        symbol_table_(config.model_config.tokens),
         model_(std::make_unique<OnlineTransducerNeMoModel>(
-            config_.model_config)) {
-    if (config_.decoding_method == "greedy_search") {
+            config.model_config)) {
+    if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
-                       config_.decoding_method.c_str());
+                       config.decoding_method.c_str());
       exit(-1);
     }
     PostInit();
@@ -62,15 +62,15 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   explicit OnlineRecognizerTransducerNeMoImpl(
       AAssetManager *mgr, const OnlineRecognizerConfig &config)
       : config_(config),
-        symbol_table_(mgr, config_.model_config.tokens),
+        symbol_table_(mgr, config.model_config.tokens),
         model_(std::make_unique<OnlineTransducerNeMoModel>(
-            mgr, config_.model_config)) {
-    if (config_.decoding_method == "greedy_search") {
+            mgr, config.model_config)) {
+    if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
-                      config_.decoding_method.c_str());
+                      config.decoding_method.c_str());
       exit(-1);
     }
 
@@ -136,10 +136,13 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     Ort::Value encoder_out = Transpose12(model_->Allocator(), &t[0]);
     
     // defined in online-transducer-greedy-search-nemo-decoder.h
-    decoder_-> Decode(std::move(encoder_out), std::move(out_states), &results, ss, n);
+    std::vector<Ort::Value> decoder_states = model_->GetDecoderInitStates(1);
+    decoder_states = decoder_->Decode(std::move(encoder_out), 
+                                      std::move(decoder_states), 
+                                      &results, ss, n);
 
     std::vector<std::vector<Ort::Value>> next_states =
-        model_->UnStackStates(out_states);
+        model_->UnStackStates(decoder_states);
 
     for (int32_t i = 0; i != n; ++i) {
       ss[i]->SetResult(results[i]);
@@ -193,7 +196,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   OnlineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OnlineTransducerNeMoModel> model_;
-  std::unique_ptr<OnlineTransducerGreedySearchNeMoDecoder> decoder_;
+  std::unique_ptr<OnlineTransducerDecoder> decoder_;
 
 };
 

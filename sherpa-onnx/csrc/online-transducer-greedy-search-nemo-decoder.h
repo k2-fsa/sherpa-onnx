@@ -14,22 +14,20 @@ namespace sherpa_onnx {
 class OnlineTransducerGreedySearchNeMoDecoder : public OnlineTransducerDecoder {
  public:
   OnlineTransducerGreedySearchNeMoDecoder(OnlineTransducerNeMoModel *model,
-                                          float blank_penalty);
+                                          float blank_penalty)
+      : model_(model),
+      blank_penalty_(blank_penalty){}
 
-  std::vector<OnlineTransducerDecoderResult> Decode(
-    Ort::Value encoder_out, 
-    std::vector<Ort::Value> decoder_states, 
-    std::vector<OnlineTransducerDecoderResult> *results,
-    OnlineStream **ss = nullptr, int32_t n = 0);
+
+  std::vector<Ort::Value> Decode(
+      Ort::Value encoder_out, 
+      std::vector<Ort::Value> decoder_states, 
+      std::vector<OnlineTransducerDecoderResult> *results,
+      OnlineStream **ss = nullptr, int32_t n = 0) override;
 
  private:
-  OnlineTransducerDecoderResult DecodeChunkByChunk(const float *encoder_out,
-                                                   int32_t num_rows,
-                                                   int32_t num_cols);
-
   OnlineTransducerNeMoModel *model_;  // Not owned
   float blank_penalty_;
-  // std::vector<Ort::Value> decoder_states_;  // Decoder states to be maintained across chunks
 };
 
 }  // namespace sherpa_onnx

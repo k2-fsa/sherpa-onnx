@@ -82,6 +82,11 @@ class OnlineTransducerDecoder {
   virtual void Decode(Ort::Value encoder_out,
                       std::vector<OnlineTransducerDecoderResult> *result) = 0;
 
+  virtual std::vector<Ort::Value> Decode(Ort::Value encoder_out,
+                                        std::vector<Ort::Value> decoder_states,
+                                        std::vector<OnlineTransducerDecoderResult> *results,
+                                        OnlineStream **ss = nullptr, int32_t n = 0) = 0;
+
   /** Run transducer beam search given the output from the encoder model.
    *
    * Note: Currently this interface is for contextual-biasing feature which
