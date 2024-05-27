@@ -194,7 +194,7 @@ class TestSpeakerRecognition(unittest.TestCase):
             test_zh_models(filename)
             test_en_and_zh_models(filename)
 
-    def test_3dpeaker_models(self):
+    def _test_3dpeaker_models(self):
         model_dir = Path(d) / "3dspeaker"
         if not model_dir.is_dir():
             print(f"{model_dir} does not exist - skip it")

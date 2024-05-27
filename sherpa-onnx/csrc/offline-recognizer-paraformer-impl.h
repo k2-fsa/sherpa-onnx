@@ -59,9 +59,9 @@ static OfflineRecognitionResult Convert(
         mergeable = false;
 
         if (i > 0) {
-          const uint8_t *p = reinterpret_cast<const uint8_t *>(
-              sym_table[src.tokens[i - 1]].c_str());
-          if (p[0] < 0x80) {
+          const uint8_t p = reinterpret_cast<const uint8_t *>(
+              sym_table[src.tokens[i - 1]].c_str())[0];
+          if (p < 0x80) {
             // put a space between ascii and non-ascii
             text.append(" ");
           }

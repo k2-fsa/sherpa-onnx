@@ -23,10 +23,9 @@ Usage examples:
 (1) Use a non-streaming transducer model
 
 cd /path/to/sherpa-onnx
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26
-cd sherpa-onnx-zipformer-en-2023-06-26
-git lfs pull --include "*.onnx"
-cd ..
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
+rm sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
 
 python3 ./python-api-examples/non_streaming_server.py \
   --encoder ./sherpa-onnx-zipformer-en-2023-06-26/encoder-epoch-99-avg-1.onnx \
@@ -37,22 +36,20 @@ python3 ./python-api-examples/non_streaming_server.py \
 (2) Use a non-streaming paraformer
 
 cd /path/to/sherpa-onnx
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-bilingual-zh-en
-cd sherpa-onnx-paraformer-bilingual-zh-en/
-git lfs pull --include "*.onnx"
-cd ..
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
 
 python3 ./python-api-examples/non_streaming_server.py \
-  --paraformer ./sherpa-onnx-paraformer-bilingual-zh-en/model.int8.onnx \
-  --tokens ./sherpa-onnx-paraformer-bilingual-zh-en/tokens.txt
+  --paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx \
+  --tokens ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt
 
 (3) Use a non-streaming CTC model from NeMo
 
 cd /path/to/sherpa-onnx
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
-cd sherpa-onnx-nemo-ctc-en-conformer-medium
-git lfs pull --include "*.onnx"
-cd ..
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2
+tar xvf sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2
+rm sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2
 
 python3 ./python-api-examples/non_streaming_server.py \
   --nemo-ctc ./sherpa-onnx-nemo-ctc-en-conformer-medium/model.onnx \
@@ -61,10 +58,9 @@ python3 ./python-api-examples/non_streaming_server.py \
 (4) Use a non-streaming CTC model from WeNet
 
 cd /path/to/sherpa-onnx
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-wenetspeech
-cd sherpa-onnx-zh-wenet-wenetspeech
-git lfs pull --include "*.onnx"
-cd ..
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zh-wenet-wenetspeech.tar.bz2
+tar xvf sherpa-onnx-zh-wenet-wenetspeech.tar.bz2
+rm sherpa-onnx-zh-wenet-wenetspeech.tar.bz2
 
 python3 ./python-api-examples/non_streaming_server.py \
   --wenet-ctc ./sherpa-onnx-zh-wenet-wenetspeech/model.onnx \
@@ -73,10 +69,9 @@ python3 ./python-api-examples/non_streaming_server.py \
 (5) Use a Whisper model
 
 cd /path/to/sherpa-onnx
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
-cd sherpa-onnx-whisper-tiny.en
-git lfs pull --include "*.onnx"
-cd ..
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+rm sherpa-onnx-whisper-tiny.en.tar.bz2
 
 python3 ./python-api-examples/non_streaming_server.py \
   --whisper-encoder=./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.onnx \
@@ -87,9 +82,9 @@ python3 ./python-api-examples/non_streaming_server.py \
 
 cd /path/to/sherpa-onnx
 
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-tdnn-yesno
-cd sherpa-onnx-tdnn-yesno
-git lfs pull --include "*.onnx"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-tdnn-yesno.tar.bz2
+tar xvf sherpa-onnx-tdnn-yesno.tar.bz2
+rm sherpa-onnx-tdnn-yesno.tar.bz2
 
 python3 ./python-api-examples/non_streaming_server.py \
   --sample-rate=8000 \
@@ -382,6 +377,7 @@ def add_hotwords_args(parser: argparse.ArgumentParser):
         --hotwords-file is given.
         """,
     )
+
 
 def add_blank_penalty_args(parser: argparse.ArgumentParser):
     parser.add_argument(

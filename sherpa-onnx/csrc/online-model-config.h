@@ -37,6 +37,13 @@ struct OnlineModelConfig {
   // All other values are invalid and lead to loading the model twice.
   std::string model_type;
 
+  // Valid values:
+  //  - cjkchar
+  //  - bpe
+  //  - cjkchar+bpe
+  std::string modeling_unit = "cjkchar";
+  std::string bpe_vocab;
+
   OnlineModelConfig() = default;
   OnlineModelConfig(const OnlineTransducerModelConfig &transducer,
                     const OnlineParaformerModelConfig &paraformer,
@@ -45,7 +52,9 @@ struct OnlineModelConfig {
                     const OnlineNeMoCtcModelConfig &nemo_ctc,
                     const std::string &tokens, int32_t num_threads,
                     int32_t warm_up, bool debug, const std::string &provider,
-                    const std::string &model_type)
+                    const std::string &model_type,
+                    const std::string &modeling_unit,
+                    const std::string &bpe_vocab)
       : transducer(transducer),
         paraformer(paraformer),
         wenet_ctc(wenet_ctc),
@@ -56,7 +65,9 @@ struct OnlineModelConfig {
         warm_up(warm_up),
         debug(debug),
         provider(provider),
-        model_type(model_type) {}
+        model_type(model_type),
+        modeling_unit(modeling_unit),
+        bpe_vocab(bpe_vocab) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

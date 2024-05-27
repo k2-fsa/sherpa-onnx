@@ -167,6 +167,7 @@ endif()
 target_link_libraries(sherpa-onnx-core
   kaldi-native-fbank-core
   kaldi-decoder-core
+  ssentencepiece_core
 )
 
 if(SHERPA_ONNX_ENABLE_GPU)
@@ -493,6 +494,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     pad-sequence-test.cc
     slice-test.cc
     stack-test.cc
+    text2token-test.cc
     transpose-test.cc
     unbind-test.cc
     utfcpp-test.cc

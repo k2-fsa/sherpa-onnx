@@ -36,7 +36,9 @@ struct WaveHeader {
       return false;
     }
 
-    if (subchunk1_size != 16) {  // 16 for PCM
+    // NAudio uses 18
+    // See https://github.com/naudio/NAudio/issues/1132
+    if (subchunk1_size != 16 && subchunk1_size != 18) {  // 16 for PCM
       SHERPA_ONNX_LOGE("Expected subchunk1_size 16. Given: %d\n",
                        subchunk1_size);
       return false;
@@ -114,6 +116,30 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
   if (!header.Validate()) {
     *is_ok = false;
     return {};
+  }
+
+  if (header.subchunk1_size == 18) {
+    // this is for NAudio. It puts extra bytes after bits_per_sample
+    // See
+    // https://github.com/naudio/NAudio/blob/master/NAudio.Core/Wave/WaveFormats/WaveFormat.cs#L223
+
+    is.seekg(36, std::istream::beg);
+
+    int16_t extra_size = -1;
+    is.read(reinterpret_cast<char *>(&extra_size), sizeof(int16_t));
+    if (extra_size != 0) {
+      SHERPA_ONNX_LOGE(
+          "Extra size should be 0 for wave from NAudio. Current extra size "
+          "%d\n",
+          extra_size);
+      *is_ok = false;
+      return {};
+    }
+
+    is.read(reinterpret_cast<char *>(&header.subchunk2_id),
+            sizeof(header.subchunk2_id));
+    is.read(reinterpret_cast<char *>(&header.subchunk2_size),
+            sizeof(header.subchunk2_size));
   }
 
   header.SeekToDataChunk(is);

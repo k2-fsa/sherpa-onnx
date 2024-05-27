@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
-# Please refer to
-# https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html
-# to download the model
-# before you run this script.
-#
-# You can switch to a different offline model if you need
+set -ex
+
+if [ ! -d sherpa-onnx-whisper-tiny.en ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+  tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+  rm sherpa-onnx-whisper-tiny.en.tar.bz2
+fi
+
+go mod tidy
+go build
 
 ./non-streaming-decode-files \
   --whisper-encoder=./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.onnx \

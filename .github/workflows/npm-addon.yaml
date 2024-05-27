@@ -55,7 +55,7 @@ jobs:
 
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
           echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
-          # SHERPA_ONNX_VERSION=1.0.24
+          # SHERPA_ONNX_VERSION=1.0.25
 
           src_dir=.github/scripts/node-addon
           sed -i.bak s/SHERPA_ONNX_VERSION/$SHERPA_ONNX_VERSION/g $src_dir/package.json

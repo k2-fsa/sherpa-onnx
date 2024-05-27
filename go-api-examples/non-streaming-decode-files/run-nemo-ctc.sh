@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
-# Please refer to
-# https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/nemo/english.html#stt-en-conformer-ctc-medium
-# to download the model
-# before you run this script.
-#
-# You can switch to a different offline model if you need
+set -ex
+
+if [ ! -d sherpa-onnx-nemo-ctc-en-conformer-medium ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2
+  tar xvf sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2
+  rm sherpa-onnx-nemo-ctc-en-conformer-medium.tar.bz2
+fi
+
+go mod tidy
+go build
 
 ./non-streaming-decode-files \
   --nemo-ctc ./sherpa-onnx-nemo-ctc-en-conformer-medium/model.onnx \

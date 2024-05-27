@@ -32,6 +32,7 @@ void PybindOnlineModelConfig(py::module *m) {
                     const OnlineZipformer2CtcModelConfig &,
                     const OnlineNeMoCtcModelConfig &, const std::string &,
                     int32_t, int32_t, bool, const std::string &,
+                    const std::string &, const std::string &,
                     const std::string &>(),
            py::arg("transducer") = OnlineTransducerModelConfig(),
            py::arg("paraformer") = OnlineParaformerModelConfig(),
@@ -40,7 +41,8 @@ void PybindOnlineModelConfig(py::module *m) {
            py::arg("nemo_ctc") = OnlineNeMoCtcModelConfig(), py::arg("tokens"),
            py::arg("num_threads"), py::arg("warm_up") = 0,
            py::arg("debug") = false, py::arg("provider") = "cpu",
-           py::arg("model_type") = "")
+           py::arg("model_type") = "", py::arg("modeling_unit") = "",
+           py::arg("bpe_vocab") = "")
       .def_readwrite("transducer", &PyClass::transducer)
       .def_readwrite("paraformer", &PyClass::paraformer)
       .def_readwrite("wenet_ctc", &PyClass::wenet_ctc)
@@ -51,6 +53,8 @@ void PybindOnlineModelConfig(py::module *m) {
       .def_readwrite("debug", &PyClass::debug)
       .def_readwrite("provider", &PyClass::provider)
       .def_readwrite("model_type", &PyClass::model_type)
+      .def_readwrite("modeling_unit", &PyClass::modeling_unit)
+      .def_readwrite("bpe_vocab", &PyClass::bpe_vocab)
       .def("validate", &PyClass::Validate)
       .def("__str__", &PyClass::ToString);
 }

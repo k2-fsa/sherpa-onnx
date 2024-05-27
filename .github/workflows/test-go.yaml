@@ -59,6 +59,12 @@ jobs:
           go version
           go env GOPATH
           go env GOARCH
+          go env CGO_ENABLED
+
+      - name: Display go env
+        shell: bash
+        run: |
+          go env
 
       - name: Build sherpa-onnx
         shell: bash
@@ -71,19 +77,24 @@ jobs:
           cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
 
           cd ../scripts/go/_internal/
+          ls -lh lib
+          echo "-----"
+          ls -lh lib/*/
+          echo "-----"
+
           go mod tidy
           go build
-
-      - name: Test streaming HLG decoding
-        shell: bash
-        run: |
-          cd scripts/go/_internal/streaming-hlg-decoding/
-          ./run.sh
 
       - name: Test speaker identification
         shell: bash
         run: |
           cd scripts/go/_internal/speaker-identification/
+          ./run.sh
+
+      - name: Test streaming HLG decoding
+        shell: bash
+        run: |
+          cd scripts/go/_internal/streaming-hlg-decoding/
           ./run.sh
 
       - name: Test non-streaming TTS (macOS)
@@ -101,24 +112,18 @@ jobs:
           git lfs install
 
           echo "Test vits-ljs"
-          git clone https://huggingface.co/csukuangfj/vits-ljs
           ./run-vits-ljs.sh
           rm -rf vits-ljs
 
           echo "Test vits-vctk"
-          git clone https://huggingface.co/csukuangfj/vits-vctk
           ./run-vits-vctk.sh
           rm -rf vits-vctk
 
           echo "Test vits-zh-aishell3"
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
-          tar xvf vits-icefall-zh-aishell3.tar.bz2
-          rm vits-icefall-zh-aishell3.tar.bz2
           ./run-vits-zh-aishell3.sh
           rm -rf vits-icefall-zh-aishell3
 
           echo "Test vits-piper-en_US-lessac-medium"
-          git clone https://huggingface.co/csukuangfj/vits-piper-en_US-lessac-medium
           ./run-vits-piper-en_US-lessac-medium.sh
           rm -rf vits-piper-en_US-lessac-medium
 
@@ -142,30 +147,22 @@ jobs:
           git lfs install
 
           echo "Test transducer"
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-zipformer-en-2023-06-26
           ./run-transducer.sh
           rm -rf sherpa-onnx-zipformer-en-2023-06-26
 
           echo "Test paraformer"
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28
           ./run-paraformer.sh
           rm -rf sherpa-onnx-paraformer-zh-2023-03-28
 
           echo "Test NeMo CTC"
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-nemo-ctc-en-conformer-medium
           ./run-nemo-ctc.sh
           rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
 
           echo "Test Whisper tiny.en"
-          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-tiny.en
-          cd sherpa-onnx-whisper-tiny.en
-          git lfs pull --include "*.onnx"
-          cd ..
           ./run-whisper.sh
           rm -rf sherpa-onnx-whisper-tiny.en
 
           echo "Test Tdnn yesno"
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-tdnn-yesno
           ./run-tdnn-yesno.sh
           rm -rf sherpa-onnx-tdnn-yesno
 
@@ -179,22 +176,14 @@ jobs:
           go build
           ls -lh
 
-          git lfs install
-
           echo "Test zipformer2 CTC"
-          wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
-          tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
-          rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
-
           ./run-zipformer2-ctc.sh
           rm -rf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
 
           echo "Test transducer"
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
           ./run-transducer.sh
           rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
 
           echo "Test paraformer"
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
           ./run-paraformer.sh
           rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en

@@ -13,4 +13,4 @@ Cflags: -I"${includedir}"
 # Note: -lcargs is required only for the following file
 # https://github.com/k2-fsa/sherpa-onnx/blob/master/c-api-examples/decode-file-c-api.c
 # We add it here so that users don't need to specify -lcargs when compiling decode-file-c-api.c
-Libs: -L"${libdir}" -lsherpa-onnx-c-api -lsherpa-onnx-core -lkaldi-decoder-core -lsherpa-onnx-kaldifst-core -lsherpa-onnx-fst -lkaldi-native-fbank-core -lonnxruntime -Wl,-rpath,${libdir} @SHERPA_ONNX_PKG_WITH_CARGS@ @SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS@
+Libs: -L"${libdir}" -lsherpa-onnx-c-api -lsherpa-onnx-core -lkaldi-decoder-core -lsherpa-onnx-kaldifst-core -lsherpa-onnx-fst -lkaldi-native-fbank-core -lonnxruntime -lssentencepiece_core -Wl,-rpath,${libdir} @SHERPA_ONNX_PKG_WITH_CARGS@ @SHERPA_ONNX_PKG_CONFIG_EXTRA_LIBS@
