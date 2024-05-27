@@ -147,7 +147,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
           "1",
           ".",
           "1",
-          ".", // can be same as the engine cache folder
+          ".",  // can be same as the engine cache folder
       };
       std::vector<std::string> available_providers =
           Ort::GetAvailableProviders();
@@ -159,10 +159,9 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
         Ort::ThrowOnError(api.CreateTensorRTProviderOptions(&tensorrt_options));
 
         Ort::ThrowOnError(api.UpdateTensorRTProviderOptions(tensorrt_options,
-                         option_keys.data(), option_values.data(), option_keys.size()));
+                option_keys.data(), option_values.data(), option_keys.size()));
 
         sess_opts.AppendExecutionProvider_TensorRT_V2(*tensorrt_options);
-
       }
     }
   }
