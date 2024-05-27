@@ -344,6 +344,9 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       }
     }
 
+    // reset encoder states
+    s->SetStates(model_->GetEncoderInitStates());
+
     // we keep the decoder_out
     decoder_->UpdateDecoderOut(&s->GetResult());
     Ort::Value decoder_out = std::move(s->GetResult().decoder_out);
