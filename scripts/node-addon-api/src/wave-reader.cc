@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
+#include <algorithm>
 #include <sstream>
 
 #include "napi.h"  // NOLINT
@@ -35,6 +36,7 @@ static Napi::Object ReadWaveWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
+#if 0
   Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
       env, const_cast<float *>(wave->samples),
       sizeof(float) * wave->num_samples,
@@ -49,6 +51,26 @@ static Napi::Object ReadWaveWrapper(const Napi::CallbackInfo &info) {
   obj.Set(Napi::String::New(env, "samples"), float32Array);
   obj.Set(Napi::String::New(env, "sampleRate"), wave->sample_rate);
   return obj;
+#else
+  // don't use external buffer
+  Napi::ArrayBuffer arrayBuffer =
+      Napi::ArrayBuffer::New(env, sizeof(float) * wave->num_samples);
+
+  Napi::Float32Array float32Array =
+      Napi::Float32Array::New(env, wave->num_samples, arrayBuffer, 0);
+
+  std::copy(wave->samples, wave->samples + wave->num_samples,
+            float32Array.Data());
+
+  Napi::Object obj = Napi::Object::New(env);
+  obj.Set(Napi::String::New(env, "samples"), float32Array);
+  obj.Set(Napi::String::New(env, "sampleRate"), wave->sample_rate);
+
+  SherpaOnnxFreeWave(wave);
+
+  return obj;
+
+#endif
 }
 
 void InitWaveReader(Napi::Env env, Napi::Object exports) {
