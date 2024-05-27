@@ -34,7 +34,7 @@ const kws = new sherpa_onnx.KeywordSpotter(config);
 console.log('Started')
 let start = Date.now();
 const stream = kws.createStream();
-const wave = sherpa_onnx.readWave(waveFilename);
+const wave = sherpa_onnx.readWave(waveFilename, enableExternalBuffer = true);
 stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
 
 const tailPadding = new Float32Array(wave.sampleRate * 0.4);

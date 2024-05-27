@@ -15,7 +15,7 @@ function createSpeakerEmbeddingExtractor() {
 
 function computeEmbedding(extractor, filename) {
   const stream = extractor.createStream();
-  const wave = sherpa_onnx.readWave(filename);
+  const wave = sherpa_onnx.readWave(filename, enableExternalBuffer = true);
   stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
   return extractor.compute(stream);
 }
