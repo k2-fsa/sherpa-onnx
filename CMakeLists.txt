@@ -231,6 +231,7 @@ if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
   endif()
 endif()
 
+include(cppinyin)
 include(kaldi-native-fbank)
 include(kaldi-decoder)
 include(onnxruntime)

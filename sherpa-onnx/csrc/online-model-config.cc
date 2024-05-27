@@ -45,6 +45,10 @@ void OnlineModelConfig::Register(ParseOptions *po) {
                "your bpe model is generated. Only used when hotwords provided "
                "and the modeling unit is bpe or cjkchar+bpe");
 
+  po->Register("lexicon", &lexicon,
+               "The lexicon used to encode words into tokens."
+               "Only used for keyword spotting now");
+
   po->Register("model-type", &model_type,
                "Specify it to reduce model initialization time. "
                "Valid values are: conformer, lstm, zipformer, zipformer2, "
@@ -67,6 +71,14 @@ bool OnlineModelConfig::Validate() const {
       (modeling_unit == "bpe" || modeling_unit == "cjkchar+bpe")) {
     if (!FileExists(bpe_vocab)) {
       SHERPA_ONNX_LOGE("bpe_vocab: %s does not exist", bpe_vocab.c_str());
+      return false;
+    }
+  }
+
+  if (!modeling_unit.empty() &&
+      (modeling_unit == "fpinyin" || modeling_unit == "ppinyin")) {
+    if (!FileExists(lexicon)) {
+      SHERPA_ONNX_LOGE("lexicon: %s does not exist", lexicon.c_str());
       return false;
     }
   }
@@ -106,6 +118,7 @@ std::string OnlineModelConfig::ToString() const {
   os << "provider=\"" << provider << "\", ";
   os << "model_type=\"" << model_type << "\", ";
   os << "modeling_unit=\"" << modeling_unit << "\", ";
+  os << "lexicon=\"" << lexicon << "\", ";
   os << "bpe_vocab=\"" << bpe_vocab << "\")";
 
   return os.str();

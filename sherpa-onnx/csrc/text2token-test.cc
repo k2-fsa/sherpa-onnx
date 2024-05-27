@@ -149,4 +149,83 @@ TEST(TEXT2TOKEN, TEST_bbpe) {
   EXPECT_EQ(ids, expected_ids);
 }
 
+TEST(TEXT2TOKEN, TEST_keyword_bpe) {
+  std::ostringstream oss;
+  oss << dir << "/text2token/tokens_en.txt";
+  std::string tokens = oss.str();
+  oss.clear();
+  oss.str("");
+  oss << dir << "/text2token/bpe_en.vocab";
+  std::string bpe = oss.str();
+  if (!std::ifstream(tokens).good() || !std::ifstream(bpe).good()) {
+    SHERPA_ONNX_LOGE(
+        "No test data found, skipping TEST_bpe()."
+        "You can download the test data by: "
+        "git clone https://github.com/pkufool/sherpa-test-data.git "
+        "/tmp/sherpa-test-data");
+    return;
+  }
+
+  auto sym_table = SymbolTable(tokens);
+  auto bpe_processor = std::make_unique<ssentencepiece::Ssentencepiece>(bpe);
+
+  std::string text = "HELLO WORLD :2.0 @FUCK_WORLD\nI LOVE YOU #0.25";
+
+  std::istringstream iss(text);
+
+  std::vector<std::vector<int32_t>> ids;
+  std::vector<std::string> keywords;
+  std::vector<float> scores;
+  std::vector<float> thresholds;
+
+  auto r = EncodeKeywords(iss, "bpe", sym_table, bpe_processor.get(), nullptr,
+                          &ids, &keywords, &scores, &thresholds);
+
+  std::vector<std::vector<int32_t>> expected_ids(
+      {{22, 58, 24, 425}, {19, 370, 47}});
+  EXPECT_EQ(ids, expected_ids);
+
+  std::vector<std::string> expected_keywords({"FUCK WORLD", "I LOVE YOU"});
+  EXPECT_EQ(keywords, expected_keywords);
+
+  std::vector<float> expected_scores({2.0, 0});
+  EXPECT_EQ(scores, expected_scores);
+
+  std::vector<float> expected_thresholds({0, 0.25});
+  EXPECT_EQ(thresholds, expected_thresholds);
+}
+
+TEST(TEXT2TOKEN, TEST_keyword_ppinyin) {
+  std::ostringstream oss;
+  oss << dir << "/text2token/tokens_en.txt";
+  std::string tokens = oss.str();
+  oss.clear();
+  oss.str("");
+  oss << dir << "/text2token/bpe_en.vocab";
+  std::string bpe = oss.str();
+  if (!std::ifstream(tokens).good() || !std::ifstream(bpe).good()) {
+    SHERPA_ONNX_LOGE(
+        "No test data found, skipping TEST_bpe()."
+        "You can download the test data by: "
+        "git clone https://github.com/pkufool/sherpa-test-data.git "
+        "/tmp/sherpa-test-data");
+    return;
+  }
+
+  auto sym_table = SymbolTable(tokens);
+  auto bpe_processor = std::make_unique<ssentencepiece::Ssentencepiece>(bpe);
+
+  std::string text = "HELLO WORLD\nI LOVE YOU";
+
+  std::istringstream iss(text);
+
+  std::vector<std::vector<int32_t>> ids;
+
+  auto r = EncodeHotwords(iss, "bpe", sym_table, bpe_processor.get(), &ids);
+
+  std::vector<std::vector<int32_t>> expected_ids(
+      {{22, 58, 24, 425}, {19, 370, 47}});
+  EXPECT_EQ(ids, expected_ids);
+}
+
 }  // namespace sherpa_onnx
