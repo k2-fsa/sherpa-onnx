@@ -34,7 +34,7 @@ const display = new Intl.DisplayNames(['en'], {type: 'language'})
 for (let f of testWaves) {
   const stream = slid.createStream();
 
-  const wave = sherpa_onnx.readWave(f, enableExternalBuffer = true);
+  const wave = sherpa_onnx.readWave(f);
   stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
 
   const lang = slid.compute(stream);

@@ -40,7 +40,7 @@ console.log('------');
 for (let filename of testWaves) {
   const start = Date.now();
   const stream = at.createStream();
-  const wave = sherpa_onnx.readWave(filename, enableExternalBuffer = true);
+  const wave = sherpa_onnx.readWave(filename);
   stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
   const events = at.compute(stream);
   const stop = Date.now();

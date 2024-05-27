@@ -28,7 +28,7 @@ const recognizer = new sherpa_onnx.OfflineRecognizer(config);
 console.log('Started')
 let start = Date.now();
 const stream = recognizer.createStream();
-const wave = sherpa_onnx.readWave(waveFilename, enableExternalBuffer = true);
+const wave = sherpa_onnx.readWave(waveFilename);
 stream.acceptWaveform({sampleRate: wave.sampleRate, samples: wave.samples});
 
 recognizer.decode(stream);
