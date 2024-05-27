@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-transducer-greedy-search-nemo-decoder.h
 //
 // Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2024  Sangeet Sagar
 
 #ifndef SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_GREEDY_SEARCH_NEMO_DECODER_H_
 #define SHERPA_ONNX_CSRC_ONLINE_TRANSDUCER_GREEDY_SEARCH_NEMO_DECODER_H_
@@ -18,12 +19,13 @@ class OnlineTransducerGreedySearchNeMoDecoder : public OnlineTransducerDecoder {
       : model_(model),
       blank_penalty_(blank_penalty){}
 
-
-  std::vector<Ort::Value> Decode(
-      Ort::Value encoder_out, 
-      std::vector<Ort::Value> decoder_states, 
-      std::vector<OnlineTransducerDecoderResult> *results,
-      OnlineStream **ss = nullptr, int32_t n = 0) override;
+  OnlineTransducerDecoderResult GetEmptyResult() const override;
+  
+  std::vector<Ort::Value> Decode_me(
+    Ort::Value encoder_out, 
+    std::vector<Ort::Value> decoder_states, 
+    std::vector<OnlineTransducerDecoderResult> *result,
+    OnlineStream **ss = nullptr, int32_t n = 0) override;
 
  private:
   OnlineTransducerNeMoModel *model_;  // Not owned

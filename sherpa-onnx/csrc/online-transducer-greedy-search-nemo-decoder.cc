@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/online-transducer-greedy-search-nemo-decoder.cc
 //
-// Copyright (c) 2024 Xiaomi Corporation
+// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2024  Sangeet Sagar
 
 #include "sherpa-onnx/csrc/online-transducer-greedy-search-nemo-decoder.h"
 
@@ -35,11 +36,24 @@ static std::pair<Ort::Value, Ort::Value> BuildDecoderInput(
   return {std::move(decoder_input), std::move(decoder_input_length)};
 }
 
+OnlineTransducerDecoderResult
+OnlineTransducerGreedySearchNeMoDecoder::GetEmptyResult() const {
+  int32_t context_size = 8;
+  int32_t blank_id = 0;  // always 0
+  OnlineTransducerDecoderResult r;
+  r.tokens.resize(context_size, -1);
+  r.tokens.back() = blank_id;
+
+  return r;
+}
+
+
 std::pair<OnlineTransducerDecoderResult, std::vector<Ort::Value>> DecodeOne(
     const float *encoder_out, int32_t num_rows, int32_t num_cols,
     OnlineTransducerNeMoModel *model, float blank_penalty,
     std::vector<Ort::Value>& decoder_states) {
 
+  // num_rows = frames
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -89,13 +103,13 @@ std::pair<OnlineTransducerDecoderResult, std::vector<Ort::Value>> DecodeOne(
   // Update the decoder states for the next chunk
   decoder_states = std::move(decoder_output_pair.second);
 
-  return {result, decoder_states};
+  return {result, std::move(decoder_states)};
 }
 
-std::vector<Ort::Value> OnlineTransducerGreedySearchNeMoDecoder::Decode(
+std::vector<Ort::Value> OnlineTransducerGreedySearchNeMoDecoder::Decode_me(
     Ort::Value encoder_out, 
     std::vector<Ort::Value> decoder_states,
-    std::vector<OnlineTransducerDecoderResult> *results,
+    std::vector<OnlineTransducerDecoderResult> *result,
     OnlineStream ** /*ss = nullptr*/, int32_t /*n= 0*/) {
 
   auto shape = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
@@ -126,8 +140,8 @@ std::vector<Ort::Value> OnlineTransducerGreedySearchNeMoDecoder::Decode(
     ans[i] = decode_result_pair.first;
     decoder_states = std::move(decode_result_pair.second); // Update decoder states for next chunk
 
-    if (results != nullptr && i < results->size()) {
-      (*results)[i] = ans[i];
+    if (result != nullptr && i < result->size()) {
+      (*result)[i] = ans[i];
     }
   }
   

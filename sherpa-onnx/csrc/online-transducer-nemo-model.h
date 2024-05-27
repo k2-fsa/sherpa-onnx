@@ -91,8 +91,8 @@ class OnlineTransducerNeMoModel {
    * @param decoder_out Output of the decoder network.
    * @return Return a tensor of shape (N, 1, 1, vocab_size) containing logits.
    */
-  virtual Ort::Value RunJoiner( Ort::Value encoder_out, 
-                                Ort::Value decoder_out) const;
+  Ort::Value RunJoiner(Ort::Value encoder_out,
+                      Ort::Value decoder_out) const;
 
 
   /** We send this number of feature frames to the encoder at a time. */
