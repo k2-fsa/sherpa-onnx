@@ -561,6 +561,13 @@ SherpaOnnxOnlineStream *CreateKeywordStream(
   return stream;
 }
 
+SherpaOnnxOnlineStream *CreateKeywordStreamWithKeywords(
+    const SherpaOnnxKeywordSpotter *spotter, const char *keywords) {
+  SherpaOnnxOnlineStream *stream =
+      new SherpaOnnxOnlineStream(spotter->impl->CreateStream(keywords));
+  return stream;
+}
+
 int32_t IsKeywordStreamReady(SherpaOnnxKeywordSpotter *spotter,
                              SherpaOnnxOnlineStream *stream) {
   return spotter->impl->IsReady(stream->impl.get());

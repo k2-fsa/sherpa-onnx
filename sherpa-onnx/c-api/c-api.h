@@ -583,6 +583,16 @@ SHERPA_ONNX_API void DestroyKeywordSpotter(SherpaOnnxKeywordSpotter *spotter);
 SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateKeywordStream(
     const SherpaOnnxKeywordSpotter *spotter);
 
+/// Create an online stream for accepting wave samples with the specified hot
+/// words.
+///
+/// @param spotter A pointer returned by CreateKeywordSpotter()
+/// @param keywords A pointer points to the keywords that you set
+/// @return Return a pointer to an OnlineStream. The user has to invoke
+///         DestroyOnlineStream() to free it to avoid memory leak.
+SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateKeywordStreamWithKeywords(
+    const SherpaOnnxKeywordSpotter *spotter, const char *keywords);
+
 /// Return 1 if there are enough number of feature frames for decoding.
 /// Return 0 otherwise.
 ///
