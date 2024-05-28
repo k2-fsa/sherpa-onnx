@@ -40,26 +40,6 @@ class OnlineTransducerNeMoModel {
   //  - cache_last_channel_len
   std::vector<Ort::Value> GetInitStates() const;
 
-  /** Stack a list of individual states into a batch.
-   *
-   * It is the inverse operation of `UnStackStates`.
-   *
-   * @param states states[i] contains the state for the i-th utterance.
-   * @return Return a single value representing the batched state.
-   */
-  std::vector<Ort::Value> StackStates(
-      const std::vector<std::vector<Ort::Value>> &states) const;
-
-  /** Unstack a batched state into a list of individual states.
-   *
-   * It is the inverse operation of `StackStates`.
-   *
-   * @param states A batched state.
-   * @return ans[i] contains the state for the i-th utterance.
-   */
-  std::vector<std::vector<Ort::Value>> UnStackStates(
-      const std::vector<Ort::Value> &states) const;
-
   /** Run the encoder.
    *
    * @param features  A tensor of shape (N, T, C). It is changed in-place.
@@ -91,7 +71,7 @@ class OnlineTransducerNeMoModel {
    * @param decoder_out Output of the decoder network.
    * @return Return a tensor of shape (N, 1, 1, vocab_size) containing logits.
    */
-  Ort::Value RunJoiner(Ort::Value encoder_out,
+  Ort::Value RunJoiner(Ort::Value encoder_out, 
                       Ort::Value decoder_out) const;
 
 

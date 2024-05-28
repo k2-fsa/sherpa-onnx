@@ -26,6 +26,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     if (node_count == 1) {
       return std::make_unique<OnlineRecognizerTransducerImpl>(config);
     } else {
+      SHERPA_ONNX_LOGE("Running streaming Nemo transducer model");
       return std::make_unique<OnlineRecognizerTransducerNeMoImpl>(config);
     }
   }
