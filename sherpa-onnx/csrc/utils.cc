@@ -132,7 +132,12 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
           break;
       }
     }
-    phrase = oss.str().substr(1);
+    phrase = oss.str();
+    if (phrase.empty()) {
+      continue;
+    } else {
+      phrase = phrase.substr(1);
+    }
     std::istringstream piss(phrase);
     oss.clear();
     oss.str("");

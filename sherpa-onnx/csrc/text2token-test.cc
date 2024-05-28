@@ -35,7 +35,8 @@ TEST(TEXT2TOKEN, TEST_cjkchar) {
 
   auto sym_table = SymbolTable(tokens);
 
-  std::string text = "世界人民大团结\n中国 V S 美国";
+  std::string text =
+      "世界人民大团结\n中国 V S 美国\n\n";  // Test blank lines also
 
   std::istringstream iss(text);
 
