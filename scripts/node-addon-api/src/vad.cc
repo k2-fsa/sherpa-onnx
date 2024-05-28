@@ -137,8 +137,8 @@ static Napi::Float32Array CircularBufferGetWrapper(
     return float32Array;
   } else {
     // don't use external buffer
-    Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
-        env, const_cast<float *>(data), sizeof(float) * n);
+    Napi::ArrayBuffer arrayBuffer =
+        Napi::ArrayBuffer::New(env, sizeof(float) * n);
 
     Napi::Float32Array float32Array =
         Napi::Float32Array::New(env, n, arrayBuffer, 0);
