@@ -91,6 +91,7 @@ public class VadNonStreamingParaformer {
           stream.acceptWaveform(segment.getSamples(), 16000);
           recognizer.decode(stream);
           String text = recognizer.getResult(stream).getText();
+          stream.release();
 
           if (!text.isEmpty()) {
             System.out.printf("%.3f--%.3f: %s\n", startTime, startTime + duration, text);
@@ -100,5 +101,8 @@ public class VadNonStreamingParaformer {
         }
       }
     }
+
+    vad.release();
+    recognizer.release();
   }
 }

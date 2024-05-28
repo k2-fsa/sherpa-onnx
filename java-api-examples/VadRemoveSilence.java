@@ -75,5 +75,7 @@ public class VadRemoveSilence {
     String outFilename = "lei-jun-test-no-silence.wav";
     WaveWriter.write(outFilename, allSamples, 16000);
     System.out.printf("Saved to %s\n", outFilename);
+
+    vad.release();
   }
 }

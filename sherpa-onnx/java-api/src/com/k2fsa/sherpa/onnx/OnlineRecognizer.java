@@ -10,7 +10,6 @@ public class OnlineRecognizer {
 
     private long ptr = 0;
 
-
     public OnlineRecognizer(OnlineRecognizerConfig config) {
         ptr = newFromFile(config);
     }
@@ -18,7 +17,6 @@ public class OnlineRecognizer {
     public void decode(OnlineStream s) {
         decode(ptr, s.getPtr());
     }
-
 
     public boolean isReady(OnlineStream s) {
         return isReady(ptr, s.getPtr());
