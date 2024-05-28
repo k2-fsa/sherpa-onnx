@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
+#include <algorithm>
 #include <sstream>
 
 #include "macros.h"  // NOLINT
@@ -75,9 +76,9 @@ static Napi::Float32Array CircularBufferGetWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
-  if (info.Length() != 3) {
+  if (info.Length() != 3 && info.Length() != 4) {
     std::ostringstream os;
-    os << "Expect only 3 arguments. Given: " << info.Length();
+    os << "Expect only 3 or 4 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -108,21 +109,46 @@ static Napi::Float32Array CircularBufferGetWrapper(
     return {};
   }
 
+  bool enable_external_buffer = true;
+  if (info.Length() == 4) {
+    if (info[3].IsBoolean()) {
+      enable_external_buffer = info[3].As<Napi::Boolean>().Value();
+    } else {
+      Napi::TypeError::New(env, "Argument 3 should be a boolean.")
+          .ThrowAsJavaScriptException();
+    }
+  }
+
   int32_t start_index = info[1].As<Napi::Number>().Int32Value();
   int32_t n = info[2].As<Napi::Number>().Int32Value();
 
   const float *data = SherpaOnnxCircularBufferGet(buf, start_index, n);
 
-  Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
-      env, const_cast<float *>(data), sizeof(float) * n,
-      [](Napi::Env /*env*/, void *p) {
-        SherpaOnnxCircularBufferFree(reinterpret_cast<const float *>(p));
-      });
+  if (enable_external_buffer) {
+    Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
+        env, const_cast<float *>(data), sizeof(float) * n,
+        [](Napi::Env /*env*/, void *p) {
+          SherpaOnnxCircularBufferFree(reinterpret_cast<const float *>(p));
+        });
 
-  Napi::Float32Array float32Array =
-      Napi::Float32Array::New(env, n, arrayBuffer, 0);
+    Napi::Float32Array float32Array =
+        Napi::Float32Array::New(env, n, arrayBuffer, 0);
 
-  return float32Array;
+    return float32Array;
+  } else {
+    // don't use external buffer
+    Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
+        env, const_cast<float *>(data), sizeof(float) * n);
+
+    Napi::Float32Array float32Array =
+        Napi::Float32Array::New(env, n, arrayBuffer, 0);
+
+    std::copy(data, data + n, float32Array.Data());
+
+    SherpaOnnxCircularBufferFree(data);
+
+    return float32Array;
+  }
 }
 
 static void CircularBufferPopWrapper(const Napi::CallbackInfo &info) {
@@ -470,9 +496,9 @@ static Napi::Object VoiceActivityDetectorFrontWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
 
-  if (info.Length() != 1) {
+  if (info.Length() != 1 && info.Length() != 2) {
     std::ostringstream os;
-    os << "Expect only 1 argument. Given: " << info.Length();
+    os << "Expect only 1 or 2 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -486,28 +512,57 @@ static Napi::Object VoiceActivityDetectorFrontWrapper(
     return {};
   }
 
+  bool enable_external_buffer = true;
+  if (info.Length() == 2) {
+    if (info[1].IsBoolean()) {
+      enable_external_buffer = info[1].As<Napi::Boolean>().Value();
+    } else {
+      Napi::TypeError::New(env, "Argument 1 should be a boolean.")
+          .ThrowAsJavaScriptException();
+    }
+  }
+
   SherpaOnnxVoiceActivityDetector *vad =
       info[0].As<Napi::External<SherpaOnnxVoiceActivityDetector>>().Data();
 
   const SherpaOnnxSpeechSegment *segment =
       SherpaOnnxVoiceActivityDetectorFront(vad);
 
-  Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
-      env, const_cast<float *>(segment->samples), sizeof(float) * segment->n,
-      [](Napi::Env /*env*/, void * /*data*/,
-         const SherpaOnnxSpeechSegment *hint) {
-        SherpaOnnxDestroySpeechSegment(hint);
-      },
-      segment);
+  if (enable_external_buffer) {
+    Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
+        env, const_cast<float *>(segment->samples), sizeof(float) * segment->n,
+        [](Napi::Env /*env*/, void * /*data*/,
+           const SherpaOnnxSpeechSegment *hint) {
+          SherpaOnnxDestroySpeechSegment(hint);
+        },
+        segment);
 
-  Napi::Float32Array float32Array =
-      Napi::Float32Array::New(env, segment->n, arrayBuffer, 0);
+    Napi::Float32Array float32Array =
+        Napi::Float32Array::New(env, segment->n, arrayBuffer, 0);
 
-  Napi::Object obj = Napi::Object::New(env);
-  obj.Set(Napi::String::New(env, "start"), segment->start);
-  obj.Set(Napi::String::New(env, "samples"), float32Array);
+    Napi::Object obj = Napi::Object::New(env);
+    obj.Set(Napi::String::New(env, "start"), segment->start);
+    obj.Set(Napi::String::New(env, "samples"), float32Array);
 
-  return obj;
+    return obj;
+  } else {
+    Napi::ArrayBuffer arrayBuffer =
+        Napi::ArrayBuffer::New(env, sizeof(float) * segment->n);
+
+    Napi::Float32Array float32Array =
+        Napi::Float32Array::New(env, segment->n, arrayBuffer, 0);
+
+    std::copy(segment->samples, segment->samples + segment->n,
+              float32Array.Data());
+
+    Napi::Object obj = Napi::Object::New(env);
+    obj.Set(Napi::String::New(env, "start"), segment->start);
+    obj.Set(Napi::String::New(env, "samples"), float32Array);
+
+    SherpaOnnxDestroySpeechSegment(segment);
+
+    return obj;
+  }
 }
 
 static void VoiceActivityDetectorResetWrapper(const Napi::CallbackInfo &info) {

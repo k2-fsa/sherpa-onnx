@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
+#include <algorithm>
 #include <sstream>
 
 #include "macros.h"  // NOLINT
@@ -265,6 +266,13 @@ static Napi::Object OfflineTtsGenerateWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
+  bool enable_external_buffer = true;
+  if (obj.Has("enableExternalBuffer") &&
+      obj.Get("enableExternalBuffer").IsBoolean()) {
+    enable_external_buffer =
+        obj.Get("enableExternalBuffer").As<Napi::Boolean>().Value();
+  }
+
   Napi::String _text = obj.Get("text").As<Napi::String>();
   std::string text = _text.Utf8Value();
   int32_t sid = obj.Get("sid").As<Napi::Number>().Int32Value();
@@ -273,20 +281,37 @@ static Napi::Object OfflineTtsGenerateWrapper(const Napi::CallbackInfo &info) {
   const SherpaOnnxGeneratedAudio *audio =
       SherpaOnnxOfflineTtsGenerate(tts, text.c_str(), sid, speed);
 
-  Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
-      env, const_cast<float *>(audio->samples), sizeof(float) * audio->n,
-      [](Napi::Env /*env*/, void * /*data*/,
-         const SherpaOnnxGeneratedAudio *hint) {
-        SherpaOnnxDestroyOfflineTtsGeneratedAudio(hint);
-      },
-      audio);
-  Napi::Float32Array float32Array =
-      Napi::Float32Array::New(env, audio->n, arrayBuffer, 0);
+  if (enable_external_buffer) {
+    Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
+        env, const_cast<float *>(audio->samples), sizeof(float) * audio->n,
+        [](Napi::Env /*env*/, void * /*data*/,
+           const SherpaOnnxGeneratedAudio *hint) {
+          SherpaOnnxDestroyOfflineTtsGeneratedAudio(hint);
+        },
+        audio);
+    Napi::Float32Array float32Array =
+        Napi::Float32Array::New(env, audio->n, arrayBuffer, 0);
 
-  Napi::Object ans = Napi::Object::New(env);
-  ans.Set(Napi::String::New(env, "samples"), float32Array);
-  ans.Set(Napi::String::New(env, "sampleRate"), audio->sample_rate);
-  return ans;
+    Napi::Object ans = Napi::Object::New(env);
+    ans.Set(Napi::String::New(env, "samples"), float32Array);
+    ans.Set(Napi::String::New(env, "sampleRate"), audio->sample_rate);
+    return ans;
+  } else {
+    // don't use external buffer
+    Napi::ArrayBuffer arrayBuffer =
+        Napi::ArrayBuffer::New(env, sizeof(float) * audio->n);
+
+    Napi::Float32Array float32Array =
+        Napi::Float32Array::New(env, audio->n, arrayBuffer, 0);
+
+    std::copy(audio->samples, audio->samples + audio->n, float32Array.Data());
+
+    Napi::Object ans = Napi::Object::New(env);
+    ans.Set(Napi::String::New(env, "samples"), float32Array);
+    ans.Set(Napi::String::New(env, "sampleRate"), audio->sample_rate);
+    SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+    return ans;
+  }
 }
 
 void InitNonStreamingTts(Napi::Env env, Napi::Object exports) {
