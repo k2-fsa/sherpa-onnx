@@ -13,7 +13,7 @@ function createOfflineTts() {
         dictDir: './sherpa-onnx-vits-zh-ll/dict',
       },
       debug: true,
-      numThreads: 1,
+      num_threads: 1,
       provider: 'cpu',
     },
     maxNumStences: 1,
