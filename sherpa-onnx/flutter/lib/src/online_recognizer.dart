@@ -19,8 +19,11 @@ class FeatureConfig {
 }
 
 class OnlineTransducerModelConfig {
-  const OnlineTransducerModelConfig(
-      {this.encoder = '', this.decoder = '', this.joiner = ''});
+  const OnlineTransducerModelConfig({
+    this.encoder = '',
+    this.decoder = '',
+    this.joiner = '',
+  });
 
   @override
   String toString() {
@@ -87,7 +90,7 @@ class OnlineModelConfig {
   final String modelType;
 }
 
-class OnlineCtcFstDecoderConfig extends Struct {
+class OnlineCtcFstDecoderConfig {
   const OnlineCtcFstDecoderConfig({this.graph = '', this.maxActive = 3000});
 
   @override
@@ -102,16 +105,16 @@ class OnlineCtcFstDecoderConfig extends Struct {
 class OnlineRecognizerConfig {
   const OnlineRecognizerConfig({
     this.feat = const FeatureConfig(),
-    this.model = const OnlineModelConfig(),
+    required this.model,
     this.decodingMethod = 'greedy_search',
     this.maxActivePaths = 4,
     this.enableEndpoint = true,
     this.rule1MinTrailingSilence = 2.4,
     this.rule2MinTrailingSilence = 1.2,
     this.rule3MinUtteranceLength = 20,
-    this.rule3MinUtteranceLength = 20,
     this.hotwordsFile = '',
     this.hotwordsScore = 1.5,
+    this.ctcFstDecoderConfig = const OnlineCtcFstDecoderConfig(),
   });
 
   @override
@@ -142,10 +145,74 @@ class OnlineRecognizerConfig {
 
 class OnlineRecognizer {
   OnlineRecognizer._({required this.ptr, required this.config});
+
+  /// The user is responsible to call the OnlineRecognizer.free()
+  /// method of the returned instance to avoid memory leak.
   factory OnlineRecognizer(OnlineRecognizerConfig config) {
     final c = calloc<SherpaOnnxOnlineRecognizerConfig>();
     c.ref.feat.sampleRate = config.feat.sampleRate;
     c.ref.feat.featureDim = config.feat.featureDim;
+
+    // transducer
+    c.ref.model.transducer.encoder =
+        config.model.transducer.encoder.toNativeUtf8();
+    c.ref.model.transducer.decoder =
+        config.model.transducer.decoder.toNativeUtf8();
+    c.ref.model.transducer.joiner =
+        config.model.transducer.joiner.toNativeUtf8();
+
+    // paraformer
+    c.ref.model.paraformer.encoder =
+        config.model.paraformer.encoder.toNativeUtf8();
+    c.ref.model.paraformer.decoder =
+        config.model.paraformer.decoder.toNativeUtf8();
+
+    // zipformer2Ctc
+    c.ref.model.zipformer2Ctc.model =
+        config.model.zipformer2Ctc.model.toNativeUtf8();
+
+    c.ref.model.tokens = config.model.tokens.toNativeUtf8();
+    c.ref.model.numThreads = config.model.numThreads;
+    c.ref.model.provider = config.model.provider.toNativeUtf8();
+    c.ref.model.debug = config.model.debug ? 1 : 0;
+    c.ref.model.modelType = config.model.modelType.toNativeUtf8();
+
+    c.ref.decodingMethod = config.decodingMethod.toNativeUtf8();
+    c.ref.maxActivePaths = config.maxActivePaths;
+    c.ref.enableEndpoint = config.enableEndpoint ? 1 : 0;
+    c.ref.rule1MinTrailingSilence = config.rule1MinTrailingSilence;
+    c.ref.rule2MinTrailingSilence = config.rule2MinTrailingSilence;
+    c.ref.rule3MinUtteranceLength = config.rule3MinUtteranceLength;
+    c.ref.hotwordsFile = config.hotwordsFile.toNativeUtf8();
+    c.ref.hotwordsScore = config.hotwordsScore;
+
+    c.ref.ctcFstDecoderConfig.graph =
+        config.ctcFstDecoderConfig.graph.toNativeUtf8();
+    c.ref.ctcFstDecoderConfig.maxActive = config.ctcFstDecoderConfig.maxActive;
+
+    final ptr = SherpaOnnxBindings.createOnlineRecognizer?.call(c) ?? nullptr;
+
+    calloc.free(c.ref.ctcFstDecoderConfig.graph);
+    calloc.free(c.ref.hotwordsFile);
+    calloc.free(c.ref.decodingMethod);
+    calloc.free(c.ref.model.modelType);
+    calloc.free(c.ref.model.provider);
+    calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.zipformer2Ctc.model);
+    calloc.free(c.ref.model.paraformer.encoder);
+    calloc.free(c.ref.model.paraformer.decoder);
+
+    calloc.free(c.ref.model.transducer.encoder);
+    calloc.free(c.ref.model.transducer.decoder);
+    calloc.free(c.ref.model.transducer.joiner);
+    calloc.free(c);
+
+    return OnlineRecognizer._(ptr: ptr, config: config);
+  }
+
+  void free() {
+    SherpaOnnxBindings.destroyOnlineRecognizer?.call(ptr);
+    ptr = nullptr;
   }
 
   Pointer<SherpaOnnxOnlineRecognizer> ptr;

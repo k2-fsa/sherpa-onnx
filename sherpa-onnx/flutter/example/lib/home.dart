@@ -11,6 +11,8 @@ import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 import './utils.dart';
 
+import './streaming_transducer_asr_test.dart'; // TODO(fangjun): remove it
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -43,6 +45,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _start() async {
+    await testStreamingTransducerAsr();
+
     if (!_isInitialized) {
       sherpa_onnx.initBindings();
       final src = 'assets/silero_vad.onnx';

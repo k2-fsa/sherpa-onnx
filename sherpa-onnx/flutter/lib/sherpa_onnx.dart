@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'dart:ffi';
 
+export 'src/online_recognizer.dart';
 export 'src/online_stream.dart';
 export 'src/speaker_identification.dart';
 export 'src/vad.dart';
