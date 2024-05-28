@@ -7,6 +7,7 @@ out_jar := $(out_dir)/sherpa-onnx.jar
 package_dir := com/k2fsa/sherpa/onnx
 
 java_files := WaveReader.java
+java_files += WaveWriter.java
 java_files += EndpointRule.java
 java_files += EndpointConfig.java
 java_files += FeatureConfig.java
@@ -55,6 +56,11 @@ java_files += AudioTagging.java
 java_files += SpeakerEmbeddingExtractorConfig.java
 java_files += SpeakerEmbeddingExtractor.java
 java_files += SpeakerEmbeddingManager.java
+
+java_files += SileroVadModelConfig.java
+java_files += VadModelConfig.java
+java_files += SpeechSegment.java
+java_files += Vad.java
 
 class_files := $(java_files:%.java=%.class)
 

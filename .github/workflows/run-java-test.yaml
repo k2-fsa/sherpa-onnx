@@ -100,11 +100,31 @@ jobs:
             -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
             -DSHERPA_ONNX_ENABLE_JNI=ON \
             ..
 
             make -j4
             ls -lh lib
+
+      - name:  Run java test (VAD + Non-streaming Paraformer)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-vad-non-streaming-paraformer.sh
+          rm *.onnx
+          ls -lh *.wav
+          rm *.wav
+          rm -rf sherpa-onnx-*
+
+      - name:  Run java test (VAD remove silence)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-vad-remove-slience.sh
+          rm *.onnx
+          ls -lh *.wav
+          rm *.wav
 
       - name:  Run java test (speaker identification)
         shell: bash
