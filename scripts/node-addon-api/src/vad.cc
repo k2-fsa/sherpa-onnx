@@ -2,6 +2,7 @@
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
+#include <algorithm>
 #include <sstream>
 
 #include "macros.h"  // NOLINT
@@ -545,7 +546,6 @@ static Napi::Object VoiceActivityDetectorFrontWrapper(
 
     return obj;
   } else {
-    fprintf(stderr, "here!\n");
     Napi::ArrayBuffer arrayBuffer =
         Napi::ArrayBuffer::New(env, sizeof(float) * segment->n);
 

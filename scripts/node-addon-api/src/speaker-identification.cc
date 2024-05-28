@@ -1,6 +1,7 @@
 // scripts/node-addon-api/src/speaker-identification.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
+#include <algorithm>
 #include <sstream>
 
 #include "macros.h"  // NOLINT
