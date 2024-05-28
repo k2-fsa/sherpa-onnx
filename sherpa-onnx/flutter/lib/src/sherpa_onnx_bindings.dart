@@ -2,6 +2,82 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
+final class SherpaOnnxFeatureConfig extends Struct {
+  @Int32()
+  external int sampleRate;
+
+  @Int32()
+  external int featureDim;
+}
+
+final class SherpaOnnxOnlineTransducerModelConfig extends Struct {
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> decoder;
+  external Pointer<Utf8> joiner;
+}
+
+final class SherpaOnnxOnlineParaformerModelConfig extends Struct {
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> decoder;
+}
+
+final class SherpaOnnxOnlineZipformer2CtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
+final class SherpaOnnxOnlineModelConfig extends Struct {
+  external SherpaOnnxOnlineTransducerModelConfig transducer;
+  external SherpaOnnxOnlineParaformerModelConfig paraformer;
+  external SherpaOnnxOnlineZipformer2CtcModelConfig zipformer2Ctc;
+
+  external Pointer<Utf8> tokens;
+
+  @Int32()
+  external int numThreads;
+
+  external Pointer<Utf8> provider;
+
+  @Int32()
+  external int debug;
+
+  external Pointer<Utf8> modelType;
+}
+
+final class SherpaOnnxOnlineCtcFstDecoderConfig extends Struct {
+  external Pointer<Utf8> graph;
+
+  @Int32()
+  external int maxActive;
+}
+
+final class SherpaOnnxOnlineRecognizerConfig extends Struct {
+  external SherpaOnnxFeatureConfig feat;
+  external SherpaOnnxOnlineModelConfig model;
+  external Pointer<Utf8> decodingMethod;
+
+  @Int32()
+  external int maxActivePaths;
+
+  @Int32()
+  external int enableEndpoint;
+
+  @Float()
+  external double rule1MinTrailingSilence;
+
+  @Float()
+  external double rule2MinTrailingSilence;
+
+  @Float()
+  external double rule3MinUtteranceLength;
+
+  external Pointer<Utf8> hotwordsFile;
+
+  @Float()
+  external double hotwordsScore;
+
+  external SherpaOnnxOnlineCtcFstDecoderConfig ctcFstDecoderConfig;
+}
+
 final class SherpaOnnxSileroVadModelConfig extends Struct {
   external Pointer<Utf8> model;
 
@@ -71,9 +147,22 @@ final class SherpaOnnxVoiceActivityDetector extends Opaque {}
 
 final class SherpaOnnxOnlineStream extends Opaque {}
 
+final class SherpaOnnxOnlineRecognizer extends Opaque {}
+
 final class SherpaOnnxSpeakerEmbeddingExtractor extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingManager extends Opaque {}
+
+typedef CreateOnlineRecognizerNative = Pointer<SherpaOnnxOnlineRecognizer>
+    Function(Pointer<SherpaOnnxOnlineRecognizerConfig>);
+
+typedef CreateOnlineRecognizer = CreateOnlineRecognizerNative;
+
+typedef DestroyOnlineRecognizerNative = Void Function(
+    Pointer<SherpaOnnxOnlineRecognizer>);
+
+typedef DestroyOnlineRecognizer = void Function(
+    Pointer<SherpaOnnxOnlineRecognizer>);
 
 typedef SherpaOnnxCreateVoiceActivityDetectorNative
     = Pointer<SherpaOnnxVoiceActivityDetector> Function(
@@ -356,6 +445,10 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
+  static CreateOnlineRecognizer? createOnlineRecognizer;
+
+  static DestroyOnlineRecognizer? destroyOnlineRecognizer;
+
   static SherpaOnnxCreateVoiceActivityDetector? createVoiceActivityDetector;
 
   static SherpaOnnxDestroyVoiceActivityDetector? destroyVoiceActivityDetector;
@@ -459,6 +552,16 @@ class SherpaOnnxBindings {
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
+    createOnlineRecognizer ??= dynamicLibrary
+        .lookup<NativeFunction<CreateOnlineRecognizerNative>>(
+            'CreateOnlineRecognizer')
+        .asFunction();
+
+    destroyOnlineRecognizer ??= dynamicLibrary
+        .lookup<NativeFunction<DestroyOnlineRecognizerNative>>(
+            'DestroyOnlineRecognizer')
+        .asFunction();
+
     createVoiceActivityDetector ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateVoiceActivityDetectorNative>>(
             'SherpaOnnxCreateVoiceActivityDetector')
