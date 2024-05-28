@@ -62,6 +62,10 @@ java_files += VadModelConfig.java
 java_files += SpeechSegment.java
 java_files += Vad.java
 
+java_files += KeywordSpotterConfig.java
+java_files += KeywordSpotterResult.java
+java_files += KeywordSpotter.java
+
 class_files := $(java_files:%.java=%.class)
 
 java_files := $(addprefix src/$(package_dir)/,$(java_files))

@@ -107,6 +107,13 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run java test (kws)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-kws-from-file.sh
+          rm -rf sherpa-onnx-*
+
       - name:  Run java test (VAD + Non-streaming Paraformer)
         shell: bash
         run: |

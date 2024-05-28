@@ -68,3 +68,9 @@ The punctuation model supports both English and Chinese.
 ```bash
 ./run-vad-non-streaming-paraformer.sh
 ```
+
+## Keyword spotter
+
+```bash
+./run-kws-from-file.sh
+```
