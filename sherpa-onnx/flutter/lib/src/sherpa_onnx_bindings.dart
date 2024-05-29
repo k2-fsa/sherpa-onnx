@@ -164,6 +164,49 @@ typedef DestroyOnlineRecognizerNative = Void Function(
 typedef DestroyOnlineRecognizer = void Function(
     Pointer<SherpaOnnxOnlineRecognizer>);
 
+typedef CreateOnlineStreamNative = Pointer<SherpaOnnxOnlineStream> Function(
+    Pointer<SherpaOnnxOnlineRecognizer>);
+
+typedef CreateOnlineStream = CreateOnlineStreamNative;
+
+typedef CreateOnlineStreamWithHotwordsNative = Pointer<SherpaOnnxOnlineStream>
+    Function(Pointer<SherpaOnnxOnlineRecognizer>, Pointer<Utf8>);
+
+typedef CreateOnlineStreamWithHotwords = CreateOnlineStreamWithHotwordsNative;
+
+typedef IsOnlineStreamReadyNative = Int32 Function(
+    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef IsOnlineStreamReady = int Function(
+    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef DecodeOnlineStreamNative = Void Function(
+    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef DecodeOnlineStream = void Function(
+    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef GetOnlineStreamResultAsJsonNative = Pointer<Utf8> Function(
+    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef GetOnlineStreamResultAsJson = GetOnlineStreamResultAsJsonNative;
+
+typedef ResetNative = Void Function(
+    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef Reset = void Function(
+    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef IsEndpointNative = Int32 Function(
+    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef IsEndpoint = int Function(
+    Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef DestroyOnlineStreamResultJsonNative = Void Function(Pointer<Utf8>);
+
+typedef DestroyOnlineStreamResultJson = void Function(Pointer<Utf8>);
+
 typedef SherpaOnnxCreateVoiceActivityDetectorNative
     = Pointer<SherpaOnnxVoiceActivityDetector> Function(
         Pointer<SherpaOnnxVadModelConfig>, Float);
@@ -449,6 +492,22 @@ class SherpaOnnxBindings {
 
   static DestroyOnlineRecognizer? destroyOnlineRecognizer;
 
+  static CreateOnlineStream? createOnlineStream;
+
+  static CreateOnlineStreamWithHotwords? createOnlineStreamWithHotwords;
+
+  static IsOnlineStreamReady? isOnlineStreamReady;
+
+  static DecodeOnlineStream? decodeOnlineStream;
+
+  static GetOnlineStreamResultAsJson? getOnlineStreamResultAsJson;
+
+  static Reset? reset;
+
+  static IsEndpoint? isEndpoint;
+
+  static DestroyOnlineStreamResultJson? destroyOnlineStreamResultJson;
+
   static SherpaOnnxCreateVoiceActivityDetector? createVoiceActivityDetector;
 
   static SherpaOnnxDestroyVoiceActivityDetector? destroyVoiceActivityDetector;
@@ -560,6 +619,42 @@ class SherpaOnnxBindings {
     destroyOnlineRecognizer ??= dynamicLibrary
         .lookup<NativeFunction<DestroyOnlineRecognizerNative>>(
             'DestroyOnlineRecognizer')
+        .asFunction();
+
+    createOnlineStream ??= dynamicLibrary
+        .lookup<NativeFunction<CreateOnlineStreamNative>>('CreateOnlineStream')
+        .asFunction();
+
+    createOnlineStreamWithHotwords ??= dynamicLibrary
+        .lookup<NativeFunction<CreateOnlineStreamWithHotwordsNative>>(
+            'CreateOnlineStreamWithHotwords')
+        .asFunction();
+
+    isOnlineStreamReady ??= dynamicLibrary
+        .lookup<NativeFunction<IsOnlineStreamReadyNative>>(
+            'IsOnlineStreamReady')
+        .asFunction();
+
+    decodeOnlineStream ??= dynamicLibrary
+        .lookup<NativeFunction<DecodeOnlineStreamNative>>('DecodeOnlineStream')
+        .asFunction();
+
+    getOnlineStreamResultAsJson ??= dynamicLibrary
+        .lookup<NativeFunction<GetOnlineStreamResultAsJsonNative>>(
+            'GetOnlineStreamResultAsJson')
+        .asFunction();
+
+    reset ??= dynamicLibrary
+        .lookup<NativeFunction<ResetNative>>('Reset')
+        .asFunction();
+
+    isEndpoint ??= dynamicLibrary
+        .lookup<NativeFunction<IsEndpointNative>>('IsEndpoint')
+        .asFunction();
+
+    destroyOnlineStreamResultJson ??= dynamicLibrary
+        .lookup<NativeFunction<DestroyOnlineStreamResultJsonNative>>(
+            'DestroyOnlineStreamResultJson')
         .asFunction();
 
     createVoiceActivityDetector ??= dynamicLibrary

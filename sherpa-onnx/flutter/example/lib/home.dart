@@ -45,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _start() async {
+    sherpa_onnx.initBindings();
     await testStreamingTransducerAsr();
 
     if (!_isInitialized) {

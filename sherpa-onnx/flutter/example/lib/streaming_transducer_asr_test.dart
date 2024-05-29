@@ -18,10 +18,14 @@ Future<void> testStreamingTransducerAsr() async {
   var tokens =
       'assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt';
 
+  var testWave =
+      'assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/0.wav';
+
   encoder = await copyAssetFile(src: encoder, dst: 'encoder.onnx');
   decoder = await copyAssetFile(src: decoder, dst: 'decoder.onnx');
   joiner = await copyAssetFile(src: joiner, dst: 'joiner.onnx');
   tokens = await copyAssetFile(src: tokens, dst: 'tokens.txt');
+  testWave = await copyAssetFile(src: testWave, dst: 'test.wav');
 
   final transducer = sherpa_onnx.OnlineTransducerModelConfig(
     encoder: encoder,
@@ -38,6 +42,20 @@ Future<void> testStreamingTransducerAsr() async {
   final config = sherpa_onnx.OnlineRecognizerConfig(model: modelConfig);
   print(config);
   final recognizer = sherpa_onnx.OnlineRecognizer(config);
+
+  final waveData = sherpa_onnx.readWave(testWave);
+  final stream = recognizer.createStream();
+
+  stream.acceptWaveform(
+      samples: waveData.samples, sampleRate: waveData.sampleRate);
+  while (recognizer.isReady(stream)) {
+    recognizer.decode(stream);
+  }
+
+  final result = recognizer.getResult(stream);
+  print('result is: ${result}');
+
   print('recognizer: ${recognizer.ptr}');
+  stream.free();
   recognizer.free();
 }

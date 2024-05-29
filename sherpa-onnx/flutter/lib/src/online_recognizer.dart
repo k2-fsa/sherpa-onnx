@@ -1,6 +1,8 @@
 // Copyright (c)  2024  Xiaomi Corporation
+import 'dart:convert';
 import 'dart:ffi';
 import 'dart:typed_data';
+
 import 'package:ffi/ffi.dart';
 
 import './online_stream.dart';
@@ -143,6 +145,20 @@ class OnlineRecognizerConfig {
   final OnlineCtcFstDecoderConfig ctcFstDecoderConfig;
 }
 
+class OnlineRecognizerResult {
+  OnlineRecognizerResult(
+      {required this.text, required this.tokens, required this.timestamps});
+
+  @override
+  String toString() {
+    return 'OnlineRecognizerResult(text: $text, tokens: $tokens, timestamps: $timestamps)';
+  }
+
+  final String text;
+  final List<String> tokens;
+  final List<double> timestamps;
+}
+
 class OnlineRecognizer {
   OnlineRecognizer._({required this.ptr, required this.config});
 
@@ -213,6 +229,61 @@ class OnlineRecognizer {
   void free() {
     SherpaOnnxBindings.destroyOnlineRecognizer?.call(ptr);
     ptr = nullptr;
+  }
+
+  /// The user has to invoke stream.free() on the returned instance
+  /// to avoid memory leak
+  OnlineStream createStream({String hotwords = ''}) {
+    if (hotwords == '') {
+      final p = SherpaOnnxBindings.createOnlineStream?.call(ptr) ?? nullptr;
+      return OnlineStream(ptr: p);
+    }
+
+    final utf8 = hotwords.toNativeUtf8();
+    final p =
+        SherpaOnnxBindings.createOnlineStreamWithHotwords?.call(ptr, utf8) ??
+            nullptr;
+    calloc.free(utf8);
+    return OnlineStream(ptr: p);
+  }
+
+  bool isReady(OnlineStream stream) {
+    int ready =
+        SherpaOnnxBindings.isOnlineStreamReady?.call(ptr, stream.ptr) ?? 0;
+
+    return ready == 1;
+  }
+
+  OnlineRecognizerResult getResult(OnlineStream stream) {
+    final json =
+        SherpaOnnxBindings.getOnlineStreamResultAsJson?.call(ptr, stream.ptr) ??
+            nullptr;
+    if (json == null) {
+      return OnlineRecognizerResult(text: '', tokens: [], timestamps: []);
+    }
+
+    final parsedJson = jsonDecode(json.toDartString());
+
+    SherpaOnnxBindings.destroyOnlineStreamResultJson?.call(json);
+
+    return OnlineRecognizerResult(
+        text: parsedJson['text'],
+        tokens: List<String>.from(parsedJson['tokens']),
+        timestamps: List<double>.from(parsedJson['timestamps']));
+  }
+
+  void reset(OnlineStream stream) {
+    SherpaOnnxBindings.reset?.call(ptr, stream.ptr);
+  }
+
+  void decode(OnlineStream stream) {
+    SherpaOnnxBindings.decodeOnlineStream?.call(ptr, stream.ptr);
+  }
+
+  bool isEndpoint(OnlineStream stream) {
+    int yes = SherpaOnnxBindings.isEndpoint?.call(ptr, stream.ptr) ?? 0;
+
+    return yes == 1;
   }
 
   Pointer<SherpaOnnxOnlineRecognizer> ptr;
