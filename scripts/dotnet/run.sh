@@ -128,8 +128,7 @@ popd
 
 mkdir -p macos linux windows-x64 windows-x86 all
 
-cp ./online.cs all
-cp ./offline.cs all
+cp ./*.cs all
 
 ./generate.py
 
