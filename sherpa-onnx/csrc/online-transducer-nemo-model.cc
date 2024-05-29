@@ -80,7 +80,7 @@ class OnlineTransducerNeMoModel::Impl {
 
   std::vector<Ort::Value> RunEncoder(Ort::Value features,
                                     std::vector<Ort::Value> states) {
-     Ort::Value &cache_last_channel = states[0];
+    Ort::Value &cache_last_channel = states[0];
     Ort::Value &cache_last_time = states[1];
     Ort::Value &cache_last_channel_len = states[2];
 

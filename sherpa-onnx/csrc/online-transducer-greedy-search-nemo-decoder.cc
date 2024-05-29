@@ -93,13 +93,13 @@ std::vector<Ort::Value> DecodeOne(
   // decoder_output_pair.second returns the next decoder state
   std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair =
       model->RunDecoder(std::move(decoder_input_pair.first),
-                         std::move(decoder_states));
+                         std::move(decoder_states)); // here decoder_states = {len=0, cap=0}. But decoder_output_pair= {first, second: {len=2, cap=2}} // ATTN
 
   std::array<int64_t, 3> encoder_shape{1, num_cols, 1};
 
   decoder_states = std::move(decoder_output_pair.second);
 
-  // start with each chunks in the input sequence. Is this loop really meant for that?
+  // TODO: Inside this loop, I need to framewise decoding.
   for (int32_t t = 0; t != num_rows; ++t) {
     Ort::Value cur_encoder_out = Ort::Value::CreateTensor(
         memory_info, const_cast<float *>(encoder_out) + t * num_cols, num_cols,
@@ -117,7 +117,7 @@ std::vector<Ort::Value> DecodeOne(
         static_cast<const float *>(p_logit),
         std::max_element(static_cast<const float *>(p_logit),
                          static_cast<const float *>(p_logit) + vocab_size)));
-
+    SHERPA_ONNX_LOGE("y=%d", y);
     if (y != blank_id) {
       r.tokens.push_back(y);
       r.timestamps.push_back(t + r.frame_offset);
@@ -128,14 +128,14 @@ std::vector<Ort::Value> DecodeOne(
       decoder_output_pair =
           model->RunDecoder(std::move(decoder_input_pair.first),
                              std::move(decoder_states));
+
+      // Update the decoder states for the next chunk
+      decoder_states = std::move(decoder_output_pair.second);
     }
-    
-    // Update the decoder states for the next chunk
-    decoder_states = std::move(decoder_output_pair.second);
   }
 
   decoder_out = std::move(decoder_output_pair.first);
-  // UpdateCachedDecoderOut(model->Allocator(), &decoder_out, result);
+//  UpdateCachedDecoderOut(model->Allocator(), &decoder_out, result);
 
   // Update frame_offset
   for (auto &r : *result) {
@@ -163,8 +163,8 @@ std::vector<Ort::Value> OnlineTransducerGreedySearchNeMoDecoder::Decode(
   }
 
   int32_t batch_size = static_cast<int32_t>(shape[0]);  // bs = 1
-  int32_t dim1 = static_cast<int32_t>(shape[1]);
-  int32_t dim2 = static_cast<int32_t>(shape[2]);
+  int32_t dim1 = static_cast<int32_t>(shape[1]); // 2
+  int32_t dim2 = static_cast<int32_t>(shape[2]); // 512
 
   // Define and initialize encoder_out_length
   Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);

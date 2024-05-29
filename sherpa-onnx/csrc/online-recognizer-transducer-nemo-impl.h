@@ -153,7 +153,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
     std::vector<OnlineTransducerDecoderResult> result(n);
     std::vector<float> features_vec(n * chunk_size * feature_dim);
-    std::vector<std::vector<Ort::Value>> states_vec(n);
+    std::vector<std::vector<Ort::Value>> encoder_states(n);
     
     for (int32_t i = 0; i != n; ++i) {
       const auto num_processed_frames = ss[i]->GetNumProcessedFrames();
@@ -167,7 +167,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
                 features_vec.data() + i * chunk_size * feature_dim);
 
       result[i] = std::move(ss[i]->GetResult());
-      states_vec[i] = std::move(ss[i]->GetStates());
+      encoder_states[i] = std::move(ss[i]->GetStates());
       
     }
 
@@ -181,8 +181,8 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
                                             x_shape.size());
 
     // Batch size is 1
-    auto states = std::move(states_vec[0]);
-    int32_t num_states = states.size();
+    auto states = std::move(encoder_states[0]);
+    int32_t num_states = states.size(); // num_states = 3
     auto t = model_->RunEncoder(std::move(x), std::move(states));
     // t[0] encoder_out, float tensor, (batch_size, dim, T)
     // t[1] next states
@@ -203,14 +203,12 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     // Subsequent decoder states (for each chunks) are updated inside the Decode method.
     // This returns the decoder state from the LAST chunk. We probably dont need it. So we can discard it.
     decoder_states = decoder_->Decode(std::move(encoder_out), 
-                                      std::move(decoder_states), 
+                                      std::move(decoder_states),
                                       &result, ss, n);
-
 
     ss[0]->SetResult(result[0]);
 
-    // We probably dont need it. Will discard it.
-    ss[0]->SetStates(std::move(decoder_states));
+    ss[0]->SetStates(std::move(out_states));
   }
 
   void InitOnlineStream(OnlineStream *stream) const {
