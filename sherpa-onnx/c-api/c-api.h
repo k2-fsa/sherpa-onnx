@@ -623,7 +623,7 @@ SHERPA_ONNX_API void DecodeMultipleKeywordStreams(
 
 /// Get the decoding results so far for an OnlineStream.
 ///
-/// @param recognizer A pointer returned by CreateKeywordSpotter().
+/// @param spotter A pointer returned by CreateKeywordSpotter().
 /// @param stream A pointer returned by CreateKeywordStream().
 /// @return A pointer containing the result. The user has to invoke
 ///         DestroyKeywordResult() to free the returned pointer to
