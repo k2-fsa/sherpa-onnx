@@ -13,14 +13,14 @@ import './utils.dart';
 
 import './streaming_transducer_asr_test.dart'; // TODO(fangjun): remove it
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class VadScreen extends StatefulWidget {
+  const VadScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<VadScreen> createState() => _VadScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _VadScreenState extends State<VadScreen> {
   late final AudioRecorder _audioRecorder;
 
   bool _printed = false;

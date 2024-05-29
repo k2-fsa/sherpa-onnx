@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import "./speaker_identification_test.dart";
 import "./vad_test.dart";
-import './home.dart';
+import './vad.dart';
 import './info.dart';
 
 void main() {
@@ -35,7 +35,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
   final List<Widget> _tabs = [
-    HomeScreen(),
+    AsrScreen(),
+    VadScreen(),
     InfoScreen(),
   ];
   @override
@@ -52,10 +53,15 @@ class _MyHomePageState extends State<MyHomePage> {
             _currentIndex = index;
           });
         },
+        // https://www.xiconeditor.com/
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: new Image.asset("assets/streaming-asr.ico"),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: new Image.asset("assets/vad.ico"),
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.info),
