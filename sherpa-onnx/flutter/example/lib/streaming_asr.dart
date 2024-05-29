@@ -23,14 +23,10 @@ Future<sherpa_onnx.OnlineRecognizer> createOnlineRecognizer() async {
   var tokens =
       'assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt';
 
-  var testWave =
-      'assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/0.wav';
-
   encoder = await copyAssetFile(src: encoder, dst: 'encoder.onnx');
   decoder = await copyAssetFile(src: decoder, dst: 'decoder.onnx');
   joiner = await copyAssetFile(src: joiner, dst: 'joiner.onnx');
   tokens = await copyAssetFile(src: tokens, dst: 'tokens.txt');
-  testWave = await copyAssetFile(src: testWave, dst: 'test.wav');
 
   final transducer = sherpa_onnx.OnlineTransducerModelConfig(
     encoder: encoder,
