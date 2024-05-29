@@ -2,9 +2,8 @@
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import 'package:flutter/material.dart';
 
-import "./speaker_identification_test.dart";
-import "./vad_test.dart";
 import './vad.dart';
+import './streaming_asr.dart';
 import './info.dart';
 
 void main() {
@@ -35,7 +34,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
   final List<Widget> _tabs = [
-    AsrScreen(),
+    StreamingAsrScreen(),
     VadScreen(),
     InfoScreen(),
   ];
