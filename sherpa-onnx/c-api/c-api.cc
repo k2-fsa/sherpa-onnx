@@ -444,14 +444,49 @@ const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
   pText[text.size()] = 0;
   r->text = pText;
 
-  if (!result.timestamps.empty()) {
-    r->timestamps = new float[result.timestamps.size()];
-    std::copy(result.timestamps.begin(), result.timestamps.end(),
-              r->timestamps);
-    r->count = result.timestamps.size();
+  // copy json
+  const auto &json = result.AsJsonString();
+  char *pJson = new char[json.size() + 1];
+  std::copy(json.begin(), json.end(), pJson);
+  pJson[json.size()] = 0;
+  r->json = pJson;
+
+  // copy tokens
+  auto count = result.tokens.size();
+  if (count > 0) {
+    size_t total_length = 0;
+    for (const auto &token : result.tokens) {
+      // +1 for the null character at the end of each token
+      total_length += token.size() + 1;
+    }
+
+    r->count = count;
+    // Each word ends with nullptr
+    char *tokens = new char[total_length]{};
+    char **tokens_temp = new char *[r->count];
+    int32_t pos = 0;
+    for (int32_t i = 0; i < r->count; ++i) {
+      tokens_temp[i] = tokens + pos;
+      memcpy(tokens + pos, result.tokens[i].c_str(), result.tokens[i].size());
+      // +1 to move past the null character
+      pos += result.tokens[i].size() + 1;
+    }
+    r->tokens_arr = tokens_temp;
+
+    if (!result.timestamps.empty()) {
+      r->timestamps = new float[r->count];
+      std::copy(result.timestamps.begin(), result.timestamps.end(),
+                r->timestamps);
+    } else {
+      r->timestamps = nullptr;
+    }
+
+    r->tokens = tokens;
   } else {
-    r->timestamps = nullptr;
     r->count = 0;
+    r->timestamps = nullptr;
+    r->tokens = nullptr;
+    r->tokens_arr = nullptr;
   }
 
   return r;
@@ -462,6 +497,9 @@ void DestroyOfflineRecognizerResult(
   if (r) {
     delete[] r->text;
     delete[] r->timestamps;
+    delete[] r->tokens;
+    delete[] r->tokens_arr;
+    delete[] r->json;
     delete r;
   }
 }
