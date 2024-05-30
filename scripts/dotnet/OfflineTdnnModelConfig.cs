@@ -18,5 +18,4 @@ namespace SherpaOnnx
         [MarshalAs(UnmanagedType.LPStr)]
         public string Model;
     }
-
 }

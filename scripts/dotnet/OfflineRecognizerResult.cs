@@ -8,7 +8,6 @@ using System;
 
 namespace SherpaOnnx
 {
-
     public class OfflineRecognizerResult
     {
         public OfflineRecognizerResult(IntPtr handle)
@@ -44,6 +43,4 @@ namespace SherpaOnnx
         private String _text;
         public String Text => _text;
     }
-
-
 }

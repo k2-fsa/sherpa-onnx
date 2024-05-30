@@ -8,7 +8,6 @@ using System;
 
 namespace SherpaOnnx
 {
-
     [StructLayout(LayoutKind.Sequential)]
     public struct OfflineLMConfig
     {
@@ -22,5 +21,4 @@ namespace SherpaOnnx
 
         public float Scale;
     }
-
 }

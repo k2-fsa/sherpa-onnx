@@ -8,7 +8,6 @@ using System;
 
 namespace SherpaOnnx
 {
-
     [StructLayout(LayoutKind.Sequential)]
     public struct OfflineRecognizerConfig
     {
@@ -38,6 +37,4 @@ namespace SherpaOnnx
 
         public float HotwordsScore;
     }
-
-
 }

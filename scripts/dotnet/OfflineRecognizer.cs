@@ -72,5 +72,4 @@ namespace SherpaOnnx
         [DllImport(Dll.Filename, EntryPoint = "DecodeMultipleOfflineStreams")]
         private static extern void Decode(IntPtr handle, IntPtr[] streams, int n);
     }
-
 }

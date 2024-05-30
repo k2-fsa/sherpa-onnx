@@ -8,7 +8,6 @@ using System;
 
 namespace SherpaOnnx
 {
-
     [StructLayout(LayoutKind.Sequential)]
     public struct OfflineModelConfig
     {
@@ -44,6 +43,4 @@ namespace SherpaOnnx
         [MarshalAs(UnmanagedType.LPStr)]
         public string ModelType;
     }
-
-
 }

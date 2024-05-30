@@ -33,5 +33,4 @@ namespace SherpaOnnx
 
         public int TailPaddings;
     }
-
 }
