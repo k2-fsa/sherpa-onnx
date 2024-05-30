@@ -193,26 +193,24 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     Ort::Value encoder_out = Transpose12(model_->Allocator(), &t[0]);
 
     // defined in online-transducer-greedy-search-nemo-decoder.h
-    // get intial states of decoder.
+    // get initial states of decoder.
     std::vector<Ort::Value> &decoder_states = ss[0]->GetNeMoDecoderStates();
 
     // Subsequent decoder states (for each chunks) are updated inside the Decode
     // method. This returns the decoder state from the LAST chunk. We probably
-    // dont need it. So we can discard it.
+    // don't need it. So we can discard it.
     decoder_states = decoder_->Decode(
         std::move(encoder_out), std::move(decoder_states), &result, ss, n);
-
-    ss[0]->SetResult(result[0]);
 
     ss[0]->SetStates(std::move(out_states));
   }
 
   void InitOnlineStream(OnlineStream *stream) const {
     // set encoder states
-    stream->SetStates(model_->GetInitStates());
+    stream->SetStates(model_->GetEncoderInitStates());
 
     // set decoder states
-    stream->SetNeMoDecoderStates(model_->GetDecoderInitStates(1));
+    stream->SetNeMoDecoderStates(model_->GetDecoderInitStates());
   }
 
  private:

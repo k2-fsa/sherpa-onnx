@@ -38,7 +38,15 @@ class OnlineTransducerNeMoModel {
   //  - cache_last_channel
   //  - cache_last_time
   //  - cache_last_channel_len
-  std::vector<Ort::Value> GetInitStates() const;
+  std::vector<Ort::Value> GetEncoderInitStates() const;
+
+  // stack encoder states
+  std::vector<Ort::Value> StackStates(
+      std::vector<std::vector<Ort::Value>> states) const;
+
+  // unstack encoder states
+  std::vector<std::vector<Ort::Value>> UnStackStates(
+      std::vector<Ort::Value> states) const;
 
   /** Run the encoder.
    *
@@ -46,7 +54,7 @@ class OnlineTransducerNeMoModel {
    * @param states  It is from GetInitStates() or returned from this method.
    *
    * @return Return a tuple containing:
-   *           - ans[0]: encoder_out, a tensor of shape (N, T', encoder_out_dim)
+   *           - ans[0]: encoder_out, a tensor of shape (N, encoder_out_dim, T')
    *           - ans[1:]: contains next states
    */
   std::vector<Ort::Value> RunEncoder(
@@ -63,7 +71,7 @@ class OnlineTransducerNeMoModel {
   std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
       Ort::Value targets, std::vector<Ort::Value> states) const;
 
-  std::vector<Ort::Value> GetDecoderInitStates(int32_t batch_size) const;
+  std::vector<Ort::Value> GetDecoderInitStates() const;
 
   /** Run the joint network.
    *

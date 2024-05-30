@@ -179,27 +179,13 @@ class OnlineTransducerNeMoModel::Impl {
     return std::move(logit[0]);
   }
 
-  std::vector<Ort::Value> GetDecoderInitStates(int32_t batch_size) const {
-    std::array<int64_t, 3> s0_shape{pred_rnn_layers_, batch_size, pred_hidden_};
-    Ort::Value s0 = Ort::Value::CreateTensor<float>(allocator_, s0_shape.data(),
-                                                    s0_shape.size());
+  std::vector<Ort::Value> GetDecoderInitStates() {
+    std::vector<Ort::Value> ans;
+    ans.reserve(2);
+    ans.push_back(View(&lstm0_));
+    ans.push_back(View(&lstm1_));
 
-    Fill<float>(&s0, 0);
-
-    std::array<int64_t, 3> s1_shape{pred_rnn_layers_, batch_size, pred_hidden_};
-
-    Ort::Value s1 = Ort::Value::CreateTensor<float>(allocator_, s1_shape.data(),
-                                                    s1_shape.size());
-
-    Fill<float>(&s1, 0);
-
-    std::vector<Ort::Value> states;
-
-    states.reserve(2);
-    states.push_back(std::move(s0));
-    states.push_back(std::move(s1));
-
-    return states;
+    return ans;
   }
 
   int32_t ChunkSize() const { return window_size_; }
@@ -218,12 +204,80 @@ class OnlineTransducerNeMoModel::Impl {
   // - cache_last_channel
   // - cache_last_time_
   // - cache_last_channel_len
-  std::vector<Ort::Value> GetInitStates() {
+  std::vector<Ort::Value> GetEncoderInitStates() {
     std::vector<Ort::Value> ans;
     ans.reserve(3);
     ans.push_back(View(&cache_last_channel_));
     ans.push_back(View(&cache_last_time_));
     ans.push_back(View(&cache_last_channel_len_));
+
+    return ans;
+  }
+
+  std::vector<Ort::Value> StackStates(
+      std::vector<std::vector<Ort::Value>> states) const {
+    int32_t batch_size = static_cast<int32_t>(states.size());
+    if (batch_size == 1) {
+      return std::move(states[0]);
+    }
+
+    std::vector<Ort::Value> ans;
+
+    // stack cache_last_channel
+    std::vector<const Ort::Value *> buf(batch_size);
+
+    // there are 3 states to be stacked
+    for (int32_t i = 0; i != 3; ++i) {
+      buf.clear();
+      buf.reserve(batch_size);
+
+      for (int32_t b = 0; b != batch_size; ++b) {
+        assert(states[b].size() == 3);
+        buf.push_back(&states[b][i]);
+      }
+
+      Ort::Value c{nullptr};
+      if (i == 2) {
+        c = Cat<int64_t>(allocator_, buf, 0);
+      } else {
+        c = Cat(allocator_, buf, 0);
+      }
+
+      ans.push_back(std::move(c));
+    }
+
+    return ans;
+  }
+
+  std::vector<std::vector<Ort::Value>> UnStackStates(
+      std::vector<Ort::Value> states) const {
+    assert(states.size() == 3);
+
+    std::vector<std::vector<Ort::Value>> ans;
+
+    auto shape = states[0].GetTensorTypeAndShapeInfo().GetShape();
+    int32_t batch_size = shape[0];
+    ans.resize(batch_size);
+
+    if (batch_size == 1) {
+      ans[0] = std::move(states);
+      return ans;
+    }
+
+    for (int32_t i = 0; i != 3; ++i) {
+      std::vector<Ort::Value> v;
+      if (i == 2) {
+        v = Unbind<int64_t>(allocator_, &states[i], 0);
+      } else {
+        v = Unbind(allocator_, &states[i], 0);
+      }
+
+      assert(v.size() == batch_size);
+
+      for (int32_t b = 0; b != batch_size; ++b) {
+        ans[b].push_back(std::move(v[b]));
+      }
+    }
 
     return ans;
   }
@@ -276,10 +330,10 @@ class OnlineTransducerNeMoModel::Impl {
       normalize_type_ = "";
     }
 
-    InitStates();
+    InitEncoderStates();
   }
 
-  void InitStates() {
+  void InitEncoderStates() {
     std::array<int64_t, 4> cache_last_channel_shape{1, cache_last_channel_dim1_,
                                                     cache_last_channel_dim2_,
                                                     cache_last_channel_dim3_};
@@ -314,6 +368,24 @@ class OnlineTransducerNeMoModel::Impl {
 
     GetOutputNames(decoder_sess_.get(), &decoder_output_names_,
                    &decoder_output_names_ptr_);
+
+    InitDecoderStates();
+  }
+
+  void InitDecoderStates() {
+    int32_t batch_size = 1;
+    std::array<int64_t, 3> s0_shape{pred_rnn_layers_, batch_size, pred_hidden_};
+    lstm0_ = Ort::Value::CreateTensor<float>(allocator_, s0_shape.data(),
+                                             s0_shape.size());
+
+    Fill<float>(&lstm0_, 0);
+
+    std::array<int64_t, 3> s1_shape{pred_rnn_layers_, batch_size, pred_hidden_};
+
+    lstm1_ = Ort::Value::CreateTensor<float>(allocator_, s1_shape.data(),
+                                             s1_shape.size());
+
+    Fill<float>(&lstm1_, 0);
   }
 
   void InitJoiner(void *model_data, size_t model_data_length) {
@@ -363,6 +435,7 @@ class OnlineTransducerNeMoModel::Impl {
   int32_t pred_rnn_layers_ = -1;
   int32_t pred_hidden_ = -1;
 
+  // encoder states
   int32_t cache_last_channel_dim1_;
   int32_t cache_last_channel_dim2_;
   int32_t cache_last_channel_dim3_;
@@ -370,9 +443,14 @@ class OnlineTransducerNeMoModel::Impl {
   int32_t cache_last_time_dim2_;
   int32_t cache_last_time_dim3_;
 
+  // init encoder states
   Ort::Value cache_last_channel_{nullptr};
   Ort::Value cache_last_time_{nullptr};
   Ort::Value cache_last_channel_len_{nullptr};
+
+  // init decoder states
+  Ort::Value lstm0_{nullptr};
+  Ort::Value lstm1_{nullptr};
 };
 
 OnlineTransducerNeMoModel::OnlineTransducerNeMoModel(
@@ -398,9 +476,9 @@ OnlineTransducerNeMoModel::RunDecoder(Ort::Value targets,
   return impl_->RunDecoder(std::move(targets), std::move(states));
 }
 
-std::vector<Ort::Value> OnlineTransducerNeMoModel::GetDecoderInitStates(
-    int32_t batch_size) const {
-  return impl_->GetDecoderInitStates(batch_size);
+std::vector<Ort::Value> OnlineTransducerNeMoModel::GetDecoderInitStates()
+    const {
+  return impl_->GetDecoderInitStates();
 }
 
 Ort::Value OnlineTransducerNeMoModel::RunJoiner(Ort::Value encoder_out,
@@ -432,8 +510,19 @@ std::string OnlineTransducerNeMoModel::FeatureNormalizationMethod() const {
   return impl_->FeatureNormalizationMethod();
 }
 
-std::vector<Ort::Value> OnlineTransducerNeMoModel::GetInitStates() const {
-  return impl_->GetInitStates();
+std::vector<Ort::Value> OnlineTransducerNeMoModel::GetEncoderInitStates()
+    const {
+  return impl_->GetEncoderInitStates();
+}
+
+std::vector<Ort::Value> OnlineTransducerNeMoModel::StackStates(
+    std::vector<std::vector<Ort::Value>> states) const {
+  return impl_->StackStates(std::move(states));
+}
+
+std::vector<std::vector<Ort::Value>> OnlineTransducerNeMoModel::UnStackStates(
+    std::vector<Ort::Value> states) const {
+  return impl_->UnStackStates(std::move(states));
 }
 
 }  // namespace sherpa_onnx
