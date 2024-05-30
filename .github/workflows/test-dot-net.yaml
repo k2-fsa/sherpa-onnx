@@ -26,7 +26,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: test-dot-net
+  group: test-dot-net-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -61,7 +61,15 @@ jobs:
 
           mkdir build
           cd build
-          cmake -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release ..
+          cmake \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
           cmake --build . --target install --config Release
 
       - name: Build sherpa-onnx for windows x86
@@ -74,7 +82,15 @@ jobs:
 
           mkdir build-win32
           cd build-win32
-          cmake -A Win32 -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DCMAKE_BUILD_TYPE=Release ..
+          cmake \
+            -A Win32 \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
           cmake --build . --target install --config Release
 
       - uses: actions/upload-artifact@v4

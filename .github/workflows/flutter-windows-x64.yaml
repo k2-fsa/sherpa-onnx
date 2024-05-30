@@ -27,7 +27,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: flutter-windows-x64${{ github.ref }}
+  group: flutter-windows-x64-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
