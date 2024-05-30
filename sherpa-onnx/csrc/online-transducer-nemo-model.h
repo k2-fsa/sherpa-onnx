@@ -32,22 +32,31 @@ class OnlineTransducerNeMoModel {
   OnlineTransducerNeMoModel(AAssetManager *mgr,
                             const OnlineModelConfig &config);
 #endif
-  
+
   ~OnlineTransducerNeMoModel();
-    // A list of 3 tensors:
+  // A list of 3 tensors:
   //  - cache_last_channel
   //  - cache_last_time
   //  - cache_last_channel_len
-  std::vector<Ort::Value> GetInitStates() const;
+  std::vector<Ort::Value> GetEncoderInitStates() const;
+
+  // stack encoder states
+  std::vector<Ort::Value> StackStates(
+      std::vector<std::vector<Ort::Value>> states) const;
+
+  // unstack encoder states
+  std::vector<std::vector<Ort::Value>> UnStackStates(
+      std::vector<Ort::Value> states) const;
 
   /** Run the encoder.
    *
    * @param features  A tensor of shape (N, T, C). It is changed in-place.
-   * @param states  It is from GetInitStates() or returned from this method.
-   * 
+   * @param states  It is from GetEncoderInitStates() or returned from this
+   *                method.
+   *
    * @return Return a tuple containing:
-   *           - ans[0]: encoder_out, a tensor of shape (N, T', encoder_out_dim)
-   *           - ans[1:]: contains next states 
+   *           - ans[0]: encoder_out, a tensor of shape (N, encoder_out_dim, T')
+   *           - ans[1:]: contains next states
    */
   std::vector<Ort::Value> RunEncoder(
       Ort::Value features, std::vector<Ort::Value> states) const;  // NOLINT
@@ -63,7 +72,7 @@ class OnlineTransducerNeMoModel {
   std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
       Ort::Value targets, std::vector<Ort::Value> states) const;
 
-  std::vector<Ort::Value> GetDecoderInitStates(int32_t batch_size) const;
+  std::vector<Ort::Value> GetDecoderInitStates() const;
 
   /** Run the joint network.
    *
@@ -71,9 +80,7 @@ class OnlineTransducerNeMoModel {
    * @param decoder_out Output of the decoder network.
    * @return Return a tensor of shape (N, 1, 1, vocab_size) containing logits.
    */
-  Ort::Value RunJoiner(Ort::Value encoder_out, 
-                      Ort::Value decoder_out) const;
-
+  Ort::Value RunJoiner(Ort::Value encoder_out, Ort::Value decoder_out) const;
 
   /** We send this number of feature frames to the encoder at a time. */
   int32_t ChunkSize() const;
@@ -114,10 +121,10 @@ class OnlineTransducerNeMoModel {
   // for details
   std::string FeatureNormalizationMethod() const;
 
-  private:
-    class Impl;
-    std::unique_ptr<Impl> impl_;
-  };
+ private:
+  class Impl;
+  std::unique_ptr<Impl> impl_;
+};
 
 }  // namespace sherpa_onnx
 
