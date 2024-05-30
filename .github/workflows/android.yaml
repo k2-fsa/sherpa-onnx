@@ -124,7 +124,6 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
-            git lfs pull
 
             cp -v ../sherpa-onnx-*-android.tar.bz2 ./
 
