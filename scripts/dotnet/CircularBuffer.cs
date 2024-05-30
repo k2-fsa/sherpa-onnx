@@ -10,9 +10,9 @@ namespace SherpaOnnx
 {
     public class CircularBuffer : IDisposable
     {
-        public CircularBuffer(OfflinePunctuationConfig config)
+        public CircularBuffer(int capacity)
         {
-            IntPtr h = SherpaOnnxCreateCircularBuffer(ref config);
+            IntPtr h = SherpaOnnxCreateCircularBuffer(capacity);
             _handle = new HandleRef(this, h);
         }
 
@@ -56,7 +56,7 @@ namespace SherpaOnnx
 
         public void Reset()
         {
-            return SherpaOnnxCircularBufferReset(_handle.Handle);
+            SherpaOnnxCircularBufferReset(_handle.Handle);
         }
 
         public void Dispose()
@@ -95,7 +95,7 @@ namespace SherpaOnnx
         private static extern IntPtr SherpaOnnxCircularBufferGet(IntPtr handle, int startIndex, int n);
 
         [DllImport(Dll.Filename)]
-        private static extern void SherpaOnnxCircularBufferFree(IntPtr handle, IntPtr p);
+        private static extern void SherpaOnnxCircularBufferFree(IntPtr p);
 
         [DllImport(Dll.Filename)]
         private static extern void SherpaOnnxCircularBufferPop(IntPtr handle, int n);

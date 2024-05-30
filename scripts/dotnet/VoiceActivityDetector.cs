@@ -40,7 +40,7 @@ namespace SherpaOnnx
         {
             IntPtr p = SherpaOnnxVoiceActivityDetectorFront(_handle.Handle);
 
-            SpeechSegment segment = new SpeechSegment(h);
+            SpeechSegment segment = new SpeechSegment(p);
 
             SherpaOnnxDestroySpeechSegment(p);
 
