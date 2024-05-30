@@ -35,18 +35,15 @@
 
 namespace sherpa_onnx {
 
-static OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
-                                      const SymbolTable &sym_table,
-                                      float frame_shift_ms,
-                                      int32_t subsampling_factor,
-                                      int32_t segment,
-                                      int32_t frames_since_start) {
+OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
+                               const SymbolTable &sym_table,
+                               float frame_shift_ms, int32_t subsampling_factor,
+                               int32_t segment, int32_t frames_since_start) {
   OnlineRecognizerResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
 
   for (auto i : src.tokens) {
-    if (i == -1) continue;
     auto sym = sym_table[i];
 
     r.text.append(sym);

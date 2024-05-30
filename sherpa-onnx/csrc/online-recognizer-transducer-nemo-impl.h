@@ -32,13 +32,10 @@
 namespace sherpa_onnx {
 
 // defined in ./online-recognizer-transducer-impl.h
-// static may or may not be here? TODDOs
-static OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
-                                      const SymbolTable &sym_table,
-                                      float frame_shift_ms,
-                                      int32_t subsampling_factor,
-                                      int32_t segment,
-                                      int32_t frames_since_start);
+OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
+                               const SymbolTable &sym_table,
+                               float frame_shift_ms, int32_t subsampling_factor,
+                               int32_t segment, int32_t frames_since_start);
 
 class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
  public:
@@ -83,7 +80,6 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);
-    stream->SetStates(model_->GetInitStates());
     InitOnlineStream(stream.get());
     return stream;
   }
@@ -99,7 +95,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
-    int32_t subsampling_factor = 8;
+    int32_t subsampling_factor = model_->SubsamplingFactor();
     return Convert(decoder_result, symbol_table_, frame_shift_ms,
                    subsampling_factor, s->GetCurrentSegment(),
                    s->GetNumFramesSinceStart());
@@ -115,8 +111,8 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     // frame shift is 10 milliseconds
     float frame_shift_in_seconds = 0.01;
 
-    // subsampling factor is 8
-    int32_t trailing_silence_frames = s->GetResult().num_trailing_blanks * 8;
+    int32_t trailing_silence_frames =
+        s->GetResult().num_trailing_blanks * model_->SubsamplingFactor();
 
     return endpoint_.IsEndpoint(num_processed_frames, trailing_silence_frames,
                                 frame_shift_in_seconds);
@@ -212,9 +208,10 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   }
 
   void InitOnlineStream(OnlineStream *stream) const {
-    auto r = decoder_->GetEmptyResult();
+    // set encoder states
+    stream->SetStates(model_->GetInitStates());
 
-    stream->SetResult(r);
+    // set decoder states
     stream->SetNeMoDecoderStates(model_->GetDecoderInitStates(1));
   }
 
