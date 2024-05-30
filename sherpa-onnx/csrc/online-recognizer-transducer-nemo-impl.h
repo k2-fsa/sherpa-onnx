@@ -6,6 +6,7 @@
 #ifndef SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_IMPL_H_
 #define SHERPA_ONNX_CSRC_ONLINE_RECOGNIZER_TRANSDUCER_NEMO_IMPL_H_
 
+#include <algorithm>
 #include <fstream>
 #include <ios>
 #include <memory>

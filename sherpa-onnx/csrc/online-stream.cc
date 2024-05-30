@@ -225,7 +225,8 @@ std::vector<Ort::Value> &OnlineStream::GetStates() {
   return impl_->GetStates();
 }
 
-void OnlineStream::SetNeMoDecoderStates(std::vector<Ort::Value> decoder_states) {
+void OnlineStream::SetNeMoDecoderStates(
+    std::vector<Ort::Value> decoder_states) {
   return impl_->SetNeMoDecoderStates(std::move(decoder_states));
 }
 
