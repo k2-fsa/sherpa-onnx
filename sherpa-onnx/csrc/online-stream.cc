@@ -90,6 +90,12 @@ class OnlineStream::Impl {
 
   std::vector<Ort::Value> &GetStates() { return states_; }
 
+  void SetNeMoDecoderStates(std::vector<Ort::Value> decoder_states) {
+    decoder_states_ = std::move(decoder_states);
+  }
+
+  std::vector<Ort::Value> &GetNeMoDecoderStates() { return decoder_states_; }
+
   const ContextGraphPtr &GetContextGraph() const { return context_graph_; }
 
   std::vector<float> &GetParaformerFeatCache() {
@@ -129,6 +135,7 @@ class OnlineStream::Impl {
   TransducerKeywordResult empty_keyword_result_;
   OnlineCtcDecoderResult ctc_result_;
   std::vector<Ort::Value> states_;  // states for transducer or ctc models
+  std::vector<Ort::Value> decoder_states_;  // states for nemo transducer models
   std::vector<float> paraformer_feat_cache_;
   std::vector<float> paraformer_encoder_out_cache_;
   std::vector<float> paraformer_alpha_cache_;
@@ -216,6 +223,14 @@ void OnlineStream::SetStates(std::vector<Ort::Value> states) {
 
 std::vector<Ort::Value> &OnlineStream::GetStates() {
   return impl_->GetStates();
+}
+
+void OnlineStream::SetNeMoDecoderStates(std::vector<Ort::Value> decoder_states) {
+  return impl_->SetNeMoDecoderStates(std::move(decoder_states));
+}
+
+std::vector<Ort::Value> &OnlineStream::GetNeMoDecoderStates() {
+  return impl_->GetNeMoDecoderStates();
 }
 
 const ContextGraphPtr &OnlineStream::GetContextGraph() const {

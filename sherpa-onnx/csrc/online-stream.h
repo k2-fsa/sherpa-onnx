@@ -91,6 +91,9 @@ class OnlineStream {
   void SetStates(std::vector<Ort::Value> states);
   std::vector<Ort::Value> &GetStates();
 
+  void SetNeMoDecoderStates(std::vector<Ort::Value> decoder_states); 
+  std::vector<Ort::Value> &GetNeMoDecoderStates(); 
+
   /**
    * Get the context graph corresponding to this stream.
    *

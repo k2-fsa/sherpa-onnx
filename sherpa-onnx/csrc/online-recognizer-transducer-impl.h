@@ -46,6 +46,7 @@ static OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
   r.timestamps.reserve(src.tokens.size());
 
   for (auto i : src.tokens) {
+    if (i == -1) continue;
     auto sym = sym_table[i];
 
     r.text.append(sym);
