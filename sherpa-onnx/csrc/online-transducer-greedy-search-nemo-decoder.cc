@@ -83,12 +83,15 @@ static void DecodeOne(const float *encoder_out, int32_t num_rows,
       emitted = true;
       r.tokens.push_back(y);
       r.timestamps.push_back(t + r.frame_offset);
+      r.num_trailing_blanks = 0;
 
       decoder_input = BuildDecoderInput(y, model->Allocator());
 
       // last decoder state becomes the current state for the first chunk
       decoder_output_pair = model->RunDecoder(
           std::move(decoder_input), std::move(decoder_output_pair.second));
+    } else {
+      ++r.num_trailing_blanks;
     }
   }
 
