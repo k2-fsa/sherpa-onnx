@@ -36,7 +36,6 @@ static std::pair<Ort::Value, Ort::Value> BuildDecoderInput(
   return {std::move(decoder_input), std::move(decoder_input_length)};
 }
 
-
 OnlineTransducerDecoderResult
 OnlineTransducerGreedySearchNeMoDecoder::GetEmptyResult() const {
   int32_t context_size = 8;
@@ -73,16 +72,15 @@ static void UpdateCachedDecoderOut(
 std::vector<Ort::Value> DecodeOne(
     const float *encoder_out, int32_t num_rows, int32_t num_cols,
     OnlineTransducerNeMoModel *model, float blank_penalty,
-    std::vector<Ort::Value>& decoder_states,
+    std::vector<Ort::Value> &decoder_states,
     std::vector<OnlineTransducerDecoderResult> *result) {
-
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
   // OnlineTransducerDecoderResult result;
   int32_t vocab_size = model->VocabSize();
   int32_t blank_id = vocab_size - 1;
-  
+
   auto &r = (*result)[0];
   Ort::Value decoder_out{nullptr};
 
@@ -92,8 +90,11 @@ std::vector<Ort::Value> DecodeOne(
 
   // decoder_output_pair.second returns the next decoder state
   std::pair<Ort::Value, std::vector<Ort::Value>> decoder_output_pair =
-      model->RunDecoder(std::move(decoder_input_pair.first),
-                         std::move(decoder_states)); // here decoder_states = {len=0, cap=0}. But decoder_output_pair= {first, second: {len=2, cap=2}} // ATTN
+      model->RunDecoder(
+          std::move(decoder_input_pair.first),
+          std::move(decoder_states));  // here decoder_states = {len=0, cap=0}.
+                                       // But decoder_output_pair= {first,
+                                       // second: {len=2, cap=2}} // ATTN
 
   std::array<int64_t, 3> encoder_shape{1, num_cols, 1};
 
@@ -106,7 +107,7 @@ std::vector<Ort::Value> DecodeOne(
         encoder_shape.data(), encoder_shape.size());
 
     Ort::Value logit = model->RunJoiner(std::move(cur_encoder_out),
-                                         View(&decoder_output_pair.first));
+                                        View(&decoder_output_pair.first));
 
     float *p_logit = logit.GetTensorMutableData<float>();
     if (blank_penalty > 0) {
@@ -125,9 +126,8 @@ std::vector<Ort::Value> DecodeOne(
       decoder_input_pair = BuildDecoderInput(y, model->Allocator());
 
       // last decoder state becomes the current state for the first chunk
-      decoder_output_pair =
-          model->RunDecoder(std::move(decoder_input_pair.first),
-                             std::move(decoder_states));
+      decoder_output_pair = model->RunDecoder(
+          std::move(decoder_input_pair.first), std::move(decoder_states));
 
       // Update the decoder states for the next chunk
       decoder_states = std::move(decoder_output_pair.second);
@@ -135,7 +135,7 @@ std::vector<Ort::Value> DecodeOne(
   }
 
   decoder_out = std::move(decoder_output_pair.first);
-//  UpdateCachedDecoderOut(model->Allocator(), &decoder_out, result);
+  //  UpdateCachedDecoderOut(model->Allocator(), &decoder_out, result);
 
   // Update frame_offset
   for (auto &r : *result) {
@@ -145,36 +145,32 @@ std::vector<Ort::Value> DecodeOne(
   return std::move(decoder_states);
 }
 
-
 std::vector<Ort::Value> OnlineTransducerGreedySearchNeMoDecoder::Decode(
-    Ort::Value encoder_out, 
-    std::vector<Ort::Value> decoder_states,
+    Ort::Value encoder_out, std::vector<Ort::Value> decoder_states,
     std::vector<OnlineTransducerDecoderResult> *result,
     OnlineStream ** /*ss = nullptr*/, int32_t /*n= 0*/) {
-
   auto shape = encoder_out.GetTensorTypeAndShapeInfo().GetShape();
 
   if (shape[0] != result->size()) {
     SHERPA_ONNX_LOGE(
         "Size mismatch! encoder_out.size(0) %d, result.size(0): %d",
-        static_cast<int32_t>(shape[0]),
-        static_cast<int32_t>(result->size()));
+        static_cast<int32_t>(shape[0]), static_cast<int32_t>(result->size()));
     exit(-1);
   }
 
   int32_t batch_size = static_cast<int32_t>(shape[0]);  // bs = 1
-  int32_t dim1 = static_cast<int32_t>(shape[1]); // 2
-  int32_t dim2 = static_cast<int32_t>(shape[2]); // 512
+  int32_t dim1 = static_cast<int32_t>(shape[1]);        // 2
+  int32_t dim2 = static_cast<int32_t>(shape[2]);        // 512
 
   // Define and initialize encoder_out_length
-  Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
-  
+  Ort::MemoryInfo memory_info =
+      Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
+
   int64_t length_value = 1;
   std::vector<int64_t> length_shape = {1};
-  
+
   Ort::Value encoder_out_length = Ort::Value::CreateTensor<int64_t>(
-      memory_info, &length_value, 1, length_shape.data(), length_shape.size()
-  );
+      memory_info, &length_value, 1, length_shape.data(), length_shape.size());
 
   const int64_t *p_length = encoder_out_length.GetTensorData<int64_t>();
   const float *p = encoder_out.GetTensorData<float>();
@@ -186,13 +182,13 @@ std::vector<Ort::Value> OnlineTransducerGreedySearchNeMoDecoder::Decode(
     int32_t this_len = p_length[i];
 
     // outputs the decoder state from last chunk.
-    auto last_decoder_states = DecodeOne(this_p, this_len, dim2, model_, blank_penalty_, decoder_states, result);
+    auto last_decoder_states = DecodeOne(
+        this_p, this_len, dim2, model_, blank_penalty_, decoder_states, result);
     // ans[i] = decode_result_pair.first;
     decoder_states = std::move(last_decoder_states);
   }
-  
-  return decoder_states;
 
+  return decoder_states;
 }
 
-} // namespace sherpa_onnx
+}  // namespace sherpa_onnx

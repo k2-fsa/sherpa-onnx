@@ -34,21 +34,21 @@ namespace sherpa_onnx {
 // defined in ./online-recognizer-transducer-impl.h
 // static may or may not be here? TODDOs
 static OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
-                              const SymbolTable &sym_table,
-                              float frame_shift_ms,
-                              int32_t subsampling_factor,
-                              int32_t segment,
-                              int32_t frames_since_start);
+                                      const SymbolTable &sym_table,
+                                      float frame_shift_ms,
+                                      int32_t subsampling_factor,
+                                      int32_t segment,
+                                      int32_t frames_since_start);
 
 class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
-  public:
+ public:
   explicit OnlineRecognizerTransducerNeMoImpl(
       const OnlineRecognizerConfig &config)
       : config_(config),
         symbol_table_(config.model_config.tokens),
         endpoint_(config_.endpoint_config),
-        model_(std::make_unique<OnlineTransducerNeMoModel>(
-            config.model_config)) {
+        model_(
+            std::make_unique<OnlineTransducerNeMoModel>(config.model_config)) {
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(
           model_.get(), config_.blank_penalty);
@@ -73,7 +73,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
           model_.get(), config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
-                      config.decoding_method.c_str());
+                       config.decoding_method.c_str());
       exit(-1);
     }
 
@@ -100,8 +100,9 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = 8;
-    return Convert(decoder_result, symbol_table_, frame_shift_ms, subsampling_factor,
-                   s->GetCurrentSegment(), s->GetNumFramesSinceStart());
+    return Convert(decoder_result, symbol_table_, frame_shift_ms,
+                   subsampling_factor, s->GetCurrentSegment(),
+                   s->GetNumFramesSinceStart());
   }
 
   bool IsEndpoint(OnlineStream *s) const override {
@@ -136,7 +137,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     Ort::Value decoder_out = std::move(s->GetResult().decoder_out);
 
     auto r = decoder_->GetEmptyResult();
-    
+
     s->SetResult(r);
     s->GetResult().decoder_out = std::move(decoder_out);
 
@@ -154,7 +155,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     std::vector<OnlineTransducerDecoderResult> result(n);
     std::vector<float> features_vec(n * chunk_size * feature_dim);
     std::vector<std::vector<Ort::Value>> encoder_states(n);
-    
+
     for (int32_t i = 0; i != n; ++i) {
       const auto num_processed_frames = ss[i]->GetNumProcessedFrames();
       std::vector<float> features =
@@ -168,7 +169,6 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
       result[i] = std::move(ss[i]->GetResult());
       encoder_states[i] = std::move(ss[i]->GetStates());
-      
     }
 
     auto memory_info =
@@ -182,29 +182,29 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
     // Batch size is 1
     auto states = std::move(encoder_states[0]);
-    int32_t num_states = states.size(); // num_states = 3
+    int32_t num_states = states.size();  // num_states = 3
     auto t = model_->RunEncoder(std::move(x), std::move(states));
     // t[0] encoder_out, float tensor, (batch_size, dim, T)
     // t[1] next states
-    
+
     std::vector<Ort::Value> out_states;
     out_states.reserve(num_states);
-    
+
     for (int32_t k = 1; k != num_states + 1; ++k) {
       out_states.push_back(std::move(t[k]));
     }
 
     Ort::Value encoder_out = Transpose12(model_->Allocator(), &t[0]);
-    
+
     // defined in online-transducer-greedy-search-nemo-decoder.h
     // get intial states of decoder.
     std::vector<Ort::Value> &decoder_states = ss[0]->GetNeMoDecoderStates();
-    
-    // Subsequent decoder states (for each chunks) are updated inside the Decode method.
-    // This returns the decoder state from the LAST chunk. We probably dont need it. So we can discard it.
-    decoder_states = decoder_->Decode(std::move(encoder_out), 
-                                      std::move(decoder_states),
-                                      &result, ss, n);
+
+    // Subsequent decoder states (for each chunks) are updated inside the Decode
+    // method. This returns the decoder state from the LAST chunk. We probably
+    // dont need it. So we can discard it.
+    decoder_states = decoder_->Decode(
+        std::move(encoder_out), std::move(decoder_states), &result, ss, n);
 
     ss[0]->SetResult(result[0]);
 
@@ -250,7 +250,6 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
                        symbol_table_.NumSymbols(), vocab_size);
       exit(-1);
     }
-
   }
 
  private:
@@ -259,7 +258,6 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   std::unique_ptr<OnlineTransducerNeMoModel> model_;
   std::unique_ptr<OnlineTransducerGreedySearchNeMoDecoder> decoder_;
   Endpoint endpoint_;
-
 };
 
 }  // namespace sherpa_onnx

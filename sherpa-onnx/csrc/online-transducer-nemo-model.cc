@@ -54,7 +54,7 @@ class OnlineTransducerNeMoModel::Impl {
       InitJoiner(buf.data(), buf.size());
     }
   }
-  
+
 #if __ANDROID_API__ >= 9
   Impl(AAssetManager *mgr, const OnlineModelConfig &config)
       : config_(config),
@@ -79,7 +79,7 @@ class OnlineTransducerNeMoModel::Impl {
 #endif
 
   std::vector<Ort::Value> RunEncoder(Ort::Value features,
-                                    std::vector<Ort::Value> states) {
+                                     std::vector<Ort::Value> states) {
     Ort::Value &cache_last_channel = states[0];
     Ort::Value &cache_last_time = states[1];
     Ort::Value &cache_last_channel_len = states[2];
@@ -102,9 +102,9 @@ class OnlineTransducerNeMoModel::Impl {
         std::move(features), View(&length), std::move(cache_last_channel),
         std::move(cache_last_time), std::move(cache_last_channel_len)};
 
-    auto out =
-        encoder_sess_->Run({}, encoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
-                   encoder_output_names_ptr_.data(), encoder_output_names_ptr_.size());
+    auto out = encoder_sess_->Run(
+        {}, encoder_input_names_ptr_.data(), inputs.data(), inputs.size(),
+        encoder_output_names_ptr_.data(), encoder_output_names_ptr_.size());
     // out[0]: logit
     // out[1] logit_length
     // out[2:] states_next
@@ -127,17 +127,17 @@ class OnlineTransducerNeMoModel::Impl {
 
   std::pair<Ort::Value, std::vector<Ort::Value>> RunDecoder(
       Ort::Value targets, std::vector<Ort::Value> states) {
-    
-    Ort::MemoryInfo memory_info = Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
+    Ort::MemoryInfo memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
 
     // Create the tensor with a single int32_t value of 1
     int32_t length_value = 1;
-    std::vector<int64_t> length_shape = {1}; 
+    std::vector<int64_t> length_shape = {1};
 
     Ort::Value targets_length = Ort::Value::CreateTensor<int32_t>(
-        memory_info, &length_value, 1, length_shape.data(), length_shape.size()
-    );
-    
+        memory_info, &length_value, 1, length_shape.data(),
+        length_shape.size());
+
     std::vector<Ort::Value> decoder_inputs;
     decoder_inputs.reserve(2 + states.size());
 
@@ -171,13 +171,13 @@ class OnlineTransducerNeMoModel::Impl {
   Ort::Value RunJoiner(Ort::Value encoder_out, Ort::Value decoder_out) {
     std::array<Ort::Value, 2> joiner_input = {std::move(encoder_out),
                                               std::move(decoder_out)};
-    auto logit =
-        joiner_sess_->Run({}, joiner_input_names_ptr_.data(), joiner_input.data(),
-                          joiner_input.size(), joiner_output_names_ptr_.data(),
-                          joiner_output_names_ptr_.size());
+    auto logit = joiner_sess_->Run({}, joiner_input_names_ptr_.data(),
+                                   joiner_input.data(), joiner_input.size(),
+                                   joiner_output_names_ptr_.data(),
+                                   joiner_output_names_ptr_.size());
 
     return std::move(logit[0]);
-}
+  }
 
   std::vector<Ort::Value> GetDecoderInitStates(int32_t batch_size) const {
     std::array<int64_t, 3> s0_shape{pred_rnn_layers_, batch_size, pred_hidden_};
@@ -207,7 +207,7 @@ class OnlineTransducerNeMoModel::Impl {
   int32_t ChunkShift() const { return chunk_shift_; }
 
   int32_t SubsamplingFactor() const { return subsampling_factor_; }
-  
+
   int32_t VocabSize() const { return vocab_size_; }
 
   OrtAllocator *Allocator() const { return allocator_; }
@@ -228,7 +228,7 @@ class OnlineTransducerNeMoModel::Impl {
     return ans;
   }
 
-private:
+ private:
   void InitEncoder(void *model_data, size_t model_data_length) {
     encoder_sess_ = std::make_unique<Ort::Session>(
         env_, model_data, model_data_length, sess_opts_);
@@ -278,7 +278,7 @@ private:
 
     InitStates();
   }
-  
+
   void InitStates() {
     std::array<int64_t, 4> cache_last_channel_shape{1, cache_last_channel_dim1_,
                                                     cache_last_channel_dim2_,
@@ -313,7 +313,7 @@ private:
                   &decoder_input_names_ptr_);
 
     GetOutputNames(decoder_sess_.get(), &decoder_output_names_,
-                  &decoder_output_names_ptr_);
+                   &decoder_output_names_ptr_);
   }
 
   void InitJoiner(void *model_data, size_t model_data_length) {
@@ -324,7 +324,7 @@ private:
                   &joiner_input_names_ptr_);
 
     GetOutputNames(joiner_sess_.get(), &joiner_output_names_,
-                  &joiner_output_names_ptr_);
+                   &joiner_output_names_ptr_);
   }
 
  private:
@@ -387,10 +387,9 @@ OnlineTransducerNeMoModel::OnlineTransducerNeMoModel(
 
 OnlineTransducerNeMoModel::~OnlineTransducerNeMoModel() = default;
 
-std::vector<Ort::Value> 
-OnlineTransducerNeMoModel::RunEncoder(Ort::Value features, 
-                                      std::vector<Ort::Value> states) const {
-    return impl_->RunEncoder(std::move(features), std::move(states));
+std::vector<Ort::Value> OnlineTransducerNeMoModel::RunEncoder(
+    Ort::Value features, std::vector<Ort::Value> states) const {
+  return impl_->RunEncoder(std::move(features), std::move(states));
 }
 
 std::pair<Ort::Value, std::vector<Ort::Value>>
@@ -409,14 +408,13 @@ Ort::Value OnlineTransducerNeMoModel::RunJoiner(Ort::Value encoder_out,
   return impl_->RunJoiner(std::move(encoder_out), std::move(decoder_out));
 }
 
+int32_t OnlineTransducerNeMoModel::ChunkSize() const {
+  return impl_->ChunkSize();
+}
 
-int32_t OnlineTransducerNeMoModel::ChunkSize() const { 
-  return  impl_->ChunkSize();
-  }
-
-int32_t OnlineTransducerNeMoModel::ChunkShift() const { 
-  return impl_->ChunkShift(); 
-  }
+int32_t OnlineTransducerNeMoModel::ChunkShift() const {
+  return impl_->ChunkShift();
+}
 
 int32_t OnlineTransducerNeMoModel::SubsamplingFactor() const {
   return impl_->SubsamplingFactor();
