@@ -51,7 +51,8 @@ class OnlineTransducerNeMoModel {
   /** Run the encoder.
    *
    * @param features  A tensor of shape (N, T, C). It is changed in-place.
-   * @param states  It is from GetInitStates() or returned from this method.
+   * @param states  It is from GetEncoderInitStates() or returned from this
+   *                method.
    *
    * @return Return a tuple containing:
    *           - ans[0]: encoder_out, a tensor of shape (N, encoder_out_dim, T')

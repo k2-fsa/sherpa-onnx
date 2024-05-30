@@ -130,12 +130,14 @@ class OnlineTransducerNeMoModel::Impl {
     Ort::MemoryInfo memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeCPU);
 
-    // Create the tensor with a single int32_t value of 1
-    int32_t length_value = 1;
-    std::vector<int64_t> length_shape = {1};
+    auto shape = targets.GetTensorTypeAndShapeInfo().GetShape();
+    int32_t batch_size = static_cast<int32_t>(shape[0]);
+
+    std::vector<int64_t> length_shape = {batch_size};
+    std::vector<int32_t> length_value(batch_size, 1);
 
     Ort::Value targets_length = Ort::Value::CreateTensor<int32_t>(
-        memory_info, &length_value, 1, length_shape.data(),
+        memory_info, length_value.data(), batch_size, length_shape.data(),
         length_shape.size());
 
     std::vector<Ort::Value> decoder_inputs;

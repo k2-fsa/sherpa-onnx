@@ -14,19 +14,18 @@ namespace sherpa_onnx {
 
 std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     const OnlineRecognizerConfig &config) {
-  
   if (!config.model_config.transducer.encoder.empty()) {
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING);
-    
+
     auto decoder_model = ReadFile(config.model_config.transducer.decoder);
-    auto sess = std::make_unique<Ort::Session>(env, decoder_model.data(), decoder_model.size(), Ort::SessionOptions{});
-    
+    auto sess = std::make_unique<Ort::Session>(
+        env, decoder_model.data(), decoder_model.size(), Ort::SessionOptions{});
+
     size_t node_count = sess->GetOutputCount();
-    
+
     if (node_count == 1) {
       return std::make_unique<OnlineRecognizerTransducerImpl>(config);
     } else {
-      SHERPA_ONNX_LOGE("Running streaming Nemo transducer model");
       return std::make_unique<OnlineRecognizerTransducerNeMoImpl>(config);
     }
   }
@@ -50,12 +49,13 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     AAssetManager *mgr, const OnlineRecognizerConfig &config) {
   if (!config.model_config.transducer.encoder.empty()) {
     Ort::Env env(ORT_LOGGING_LEVEL_WARNING);
-    
+
     auto decoder_model = ReadFile(mgr, config.model_config.transducer.decoder);
-    auto sess = std::make_unique<Ort::Session>(env, decoder_model.data(), decoder_model.size(), Ort::SessionOptions{});
-    
+    auto sess = std::make_unique<Ort::Session>(
+        env, decoder_model.data(), decoder_model.size(), Ort::SessionOptions{});
+
     size_t node_count = sess->GetOutputCount();
-    
+
     if (node_count == 1) {
       return std::make_unique<OnlineRecognizerTransducerImpl>(mgr, config);
     } else {

@@ -90,13 +90,10 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
   }
 
   OnlineRecognizerResult GetResult(OnlineStream *s) const override {
-    OnlineTransducerDecoderResult decoder_result = s->GetResult();
-    decoder_->StripLeadingBlanks(&decoder_result);
-
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = model_->SubsamplingFactor();
-    return Convert(decoder_result, symbol_table_, frame_shift_ms,
+    return Convert(s->GetResult(), symbol_table_, frame_shift_ms,
                    subsampling_factor, s->GetCurrentSegment(),
                    s->GetNumFramesSinceStart());
   }
@@ -123,19 +120,16 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
       // segment is incremented only when the last
       // result is not empty
       const auto &r = s->GetResult();
-      if (!r.tokens.empty() && r.tokens.back() != 0) {
+      if (!r.tokens.empty()) {
         s->GetCurrentSegment() += 1;
       }
     }
 
-    // we keep the decoder_out
-    decoder_->UpdateDecoderOut(&s->GetResult());
-    Ort::Value decoder_out = std::move(s->GetResult().decoder_out);
+    s->SetResult({});
 
-    auto r = decoder_->GetEmptyResult();
+    s->SetStates(model_->GetEncoderInitStates());
 
-    s->SetResult(r);
-    s->GetResult().decoder_out = std::move(decoder_out);
+    s->SetNeMoDecoderStates(model_->GetDecoderInitStates());
 
     // Note: We only update counters. The underlying audio samples
     // are not discarded.
@@ -148,7 +142,6 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
     int32_t feature_dim = ss[0]->FeatureDim();
 
-    std::vector<OnlineTransducerDecoderResult> result(n);
     std::vector<float> features_vec(n * chunk_size * feature_dim);
     std::vector<std::vector<Ort::Value>> encoder_states(n);
 
@@ -163,7 +156,6 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
       std::copy(features.begin(), features.end(),
                 features_vec.data() + i * chunk_size * feature_dim);
 
-      result[i] = std::move(ss[i]->GetResult());
       encoder_states[i] = std::move(ss[i]->GetStates());
     }
 
@@ -176,8 +168,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
                                             features_vec.size(), x_shape.data(),
                                             x_shape.size());
 
-    // Batch size is 1
-    auto states = std::move(encoder_states[0]);
+    auto states = model_->StackStates(std::move(encoder_states));
     int32_t num_states = states.size();  // num_states = 3
     auto t = model_->RunEncoder(std::move(x), std::move(states));
     // t[0] encoder_out, float tensor, (batch_size, dim, T)
@@ -190,19 +181,14 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
       out_states.push_back(std::move(t[k]));
     }
 
+    auto unstacked_states = model_->UnStackStates(std::move(out_states));
+    for (int32_t i = 0; i != n; ++i) {
+      ss[i]->SetStates(std::move(unstacked_states[i]));
+    }
+
     Ort::Value encoder_out = Transpose12(model_->Allocator(), &t[0]);
 
-    // defined in online-transducer-greedy-search-nemo-decoder.h
-    // get initial states of decoder.
-    std::vector<Ort::Value> &decoder_states = ss[0]->GetNeMoDecoderStates();
-
-    // Subsequent decoder states (for each chunks) are updated inside the Decode
-    // method. This returns the decoder state from the LAST chunk. We probably
-    // don't need it. So we can discard it.
-    decoder_states = decoder_->Decode(
-        std::move(encoder_out), std::move(decoder_states), &result, ss, n);
-
-    ss[0]->SetStates(std::move(out_states));
+    decoder_->Decode(std::move(encoder_out), ss, n);
   }
 
   void InitOnlineStream(OnlineStream *stream) const {

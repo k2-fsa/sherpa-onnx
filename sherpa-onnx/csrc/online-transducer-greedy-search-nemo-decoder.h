@@ -13,20 +13,16 @@
 
 namespace sherpa_onnx {
 
+class OnlineStream;
+
 class OnlineTransducerGreedySearchNeMoDecoder {
  public:
   OnlineTransducerGreedySearchNeMoDecoder(OnlineTransducerNeMoModel *model,
                                           float blank_penalty)
       : model_(model), blank_penalty_(blank_penalty) {}
 
-  OnlineTransducerDecoderResult GetEmptyResult() const;
-  void UpdateDecoderOut(OnlineTransducerDecoderResult *result) {}
-  void StripLeadingBlanks(OnlineTransducerDecoderResult * /*r*/) const {}
-
-  std::vector<Ort::Value> Decode(
-      Ort::Value encoder_out, std::vector<Ort::Value> decoder_states,
-      std::vector<OnlineTransducerDecoderResult> *result,
-      OnlineStream **ss = nullptr, int32_t n = 0);
+  // @param n number of elements in ss
+  void Decode(Ort::Value encoder_out, OnlineStream **ss, int32_t n) const;
 
  private:
   OnlineTransducerNeMoModel *model_;  // Not owned
