@@ -10,7 +10,6 @@ using System;
 
 namespace SherpaOnnx
 {
-
     public class OnlineRecognizerResult
     {
         public OnlineRecognizerResult(IntPtr handle)

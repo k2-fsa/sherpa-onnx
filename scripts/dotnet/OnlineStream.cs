@@ -10,7 +10,6 @@ using System;
 
 namespace SherpaOnnx
 {
-
     public class OnlineStream : IDisposable
     {
         public OnlineStream(IntPtr p)
@@ -61,5 +60,4 @@ namespace SherpaOnnx
         [DllImport(Dll.Filename)]
         private static extern void InputFinished(IntPtr handle);
     }
-
 }

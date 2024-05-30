@@ -1,4 +1,4 @@
-/// Copyright (c)  2024.5 by 东风破
+/// Copyright (c)  2024  Xiaomi Corporation (authors: Fangjun Kuang)
 
 using System.Linq;
 using System.Collections.Generic;
@@ -9,19 +9,23 @@ using System;
 namespace SherpaOnnx
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct OfflineTtsModelConfig
+    public struct OfflinePunctuationModelConfig
     {
-        public OfflineTtsModelConfig()
+        public OfflinePunctuationModelConfig()
         {
-            Vits = new OfflineTtsVitsModelConfig();
+            CtTransformer = "";
             NumThreads = 1;
             Debug = 0;
             Provider = "cpu";
         }
 
-        public OfflineTtsVitsModelConfig Vits;
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string CtTransformer;
+
         public int NumThreads;
+
         public int Debug;
+
         [MarshalAs(UnmanagedType.LPStr)]
         public string Provider;
     }

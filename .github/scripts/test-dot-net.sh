@@ -2,7 +2,10 @@
 
 cd dotnet-examples/
 
-cd speaker-identification
+cd offline-punctuation
+./run.sh
+
+cd ../speaker-identification
 ./run.sh
 
 cd ../streaming-hlg-decoding/

@@ -10,7 +10,6 @@ using System;
 
 namespace SherpaOnnx
 {
-
     [StructLayout(LayoutKind.Sequential)]
     public struct OnlineTransducerModelConfig
     {
@@ -30,5 +29,4 @@ namespace SherpaOnnx
         [MarshalAs(UnmanagedType.LPStr)]
         public string Joiner;
     }
-
 }

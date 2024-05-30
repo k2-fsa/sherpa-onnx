@@ -10,7 +10,6 @@ using System;
 
 namespace SherpaOnnx
 {
-
     [StructLayout(LayoutKind.Sequential)]
     public struct OnlineParaformerModelConfig
     {
@@ -26,5 +25,4 @@ namespace SherpaOnnx
         [MarshalAs(UnmanagedType.LPStr)]
         public string Decoder;
     }
-
 }

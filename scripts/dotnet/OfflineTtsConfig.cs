@@ -28,5 +28,4 @@ namespace SherpaOnnx
         [MarshalAs(UnmanagedType.LPStr)]
         public string RuleFars;
     }
-
 }

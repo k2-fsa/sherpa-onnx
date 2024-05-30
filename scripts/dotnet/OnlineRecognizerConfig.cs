@@ -10,7 +10,6 @@ using System;
 
 namespace SherpaOnnx
 {
-
     [StructLayout(LayoutKind.Sequential)]
     public struct OnlineRecognizerConfig
     {
@@ -66,5 +65,4 @@ namespace SherpaOnnx
 
         public OnlineCtcFstDecoderConfig CtcFstDecoderConfig;
     }
-
 }

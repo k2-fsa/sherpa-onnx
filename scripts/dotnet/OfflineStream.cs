@@ -8,7 +8,6 @@ using System;
 
 namespace SherpaOnnx
 {
-
     public class OfflineStream : IDisposable
     {
         public OfflineStream(IntPtr p)
@@ -68,5 +67,4 @@ namespace SherpaOnnx
         [DllImport(Dll.Filename, EntryPoint = "DestroyOfflineRecognizerResult")]
         private static extern void DestroyResult(IntPtr handle);
     }
-
 }

@@ -24,5 +24,4 @@ namespace SherpaOnnx
 
         public int MaxActive;
     }
-
 }
