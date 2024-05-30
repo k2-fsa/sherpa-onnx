@@ -11,22 +11,58 @@ import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 import './utils.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+import './streaming_transducer_asr_test.dart'; // TODO(fangjun): remove it
 
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
+Future<sherpa_onnx.OnlineRecognizer> createOnlineRecognizer() async {
+  var encoder =
+      'assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx';
+  var decoder =
+      'assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx';
+  var joiner =
+      'assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx';
+  var tokens =
+      'assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt';
+
+  encoder = await copyAssetFile(src: encoder, dst: 'encoder.onnx');
+  decoder = await copyAssetFile(src: decoder, dst: 'decoder.onnx');
+  joiner = await copyAssetFile(src: joiner, dst: 'joiner.onnx');
+  tokens = await copyAssetFile(src: tokens, dst: 'tokens.txt');
+
+  final transducer = sherpa_onnx.OnlineTransducerModelConfig(
+    encoder: encoder,
+    decoder: decoder,
+    joiner: joiner,
+  );
+
+  final modelConfig = sherpa_onnx.OnlineModelConfig(
+    transducer: transducer,
+    tokens: tokens,
+    modelType: 'zipformer',
+  );
+
+  final config = sherpa_onnx.OnlineRecognizerConfig(model: modelConfig);
+  return sherpa_onnx.OnlineRecognizer(config);
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class StreamingAsrScreen extends StatefulWidget {
+  const StreamingAsrScreen({super.key});
+
+  @override
+  State<StreamingAsrScreen> createState() => _StreamingAsrScreenState();
+}
+
+class _StreamingAsrScreenState extends State<StreamingAsrScreen> {
+  late final TextEditingController _controller;
   late final AudioRecorder _audioRecorder;
 
-  bool _printed = false;
-  var _color = Colors.black;
+  String _title = 'Real-time speech recognition';
+  String _last = '';
+  int _index = 0;
   bool _isInitialized = false;
 
-  sherpa_onnx.VoiceActivityDetector? _vad;
-  sherpa_onnx.CircularBuffer? _buffer;
+  sherpa_onnx.OnlineRecognizer? _recognizer;
+  sherpa_onnx.OnlineStream? _stream;
+  int _sampleRate = 16000;
 
   StreamSubscription<RecordState>? _recordSub;
   RecordState _recordState = RecordState.stop;
@@ -34,6 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     _audioRecorder = AudioRecorder();
+    _controller = TextEditingController();
 
     _recordSub = _audioRecorder.onStateChanged().listen((recordState) {
       _updateRecordState(recordState);
@@ -45,26 +82,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _start() async {
     if (!_isInitialized) {
       sherpa_onnx.initBindings();
-      final src = 'assets/silero_vad.onnx';
-      final modelPath = await copyAssetFile(src: src, dst: 'silero_vad.onnx');
-
-      final sileroVadConfig = sherpa_onnx.SileroVadModelConfig(
-        model: modelPath,
-        minSpeechDuration: 0.25,
-        minSilenceDuration: 0.5,
-      );
-
-      final config = sherpa_onnx.VadModelConfig(
-        sileroVad: sileroVadConfig,
-        numThreads: 1,
-        debug: true,
-      );
-
-      _vad = sherpa_onnx.VoiceActivityDetector(
-          config: config, bufferSizeInSeconds: 30);
-
-      _buffer = sherpa_onnx.CircularBuffer(capacity: 16000 * 30);
-      print(_buffer!.ptr);
+      _recognizer = await createOnlineRecognizer();
+      _stream = _recognizer?.createStream();
 
       _isInitialized = true;
     }
@@ -88,53 +107,39 @@ class _HomeScreenState extends State<HomeScreen> {
 
         final stream = await _audioRecorder.startStream(config);
 
-        final dir = await getApplicationDocumentsDirectory();
-
         stream.listen(
           (data) {
             final samplesFloat32 =
                 convertBytesToFloat32(Uint8List.fromList(data));
 
-            _buffer!.push(samplesFloat32);
-
-            final windowSize = _vad!.config.sileroVad.windowSize;
-            while (_buffer!.size > windowSize) {
-              final samples =
-                  _buffer!.get(startIndex: _buffer!.head, n: windowSize);
-              _buffer!.pop(windowSize);
-              _vad!.acceptWaveform(samples);
-              if (_vad!.isDetected() && !_printed) {
-                print('detected');
-                _printed = true;
-
-                setState(() => _color = Colors.red);
-              }
-
-              if (!_vad!.isDetected()) {
-                _printed = false;
-                setState(() => _color = Colors.black);
-              }
-
-              while (!_vad!.isEmpty()) {
-                final segment = _vad!.front();
-                final duration = segment.samples.length / 16000;
-                final d = DateTime.now();
-                final filename = p.join(dir.path,
-                    '${d.year}-${d.month}-${d.day}-${d.hour}-${d.minute}-${d.second}-duration-${duration.toStringAsPrecision(3)}s.wav');
-
-                bool ok = sherpa_onnx.writeWave(
-                    filename: filename,
-                    samples: segment.samples,
-                    sampleRate: 16000);
-                if (!ok) {
-                  print('Failed to write $filename');
-                } else {
-                  print('Saved to write $filename');
-                }
-
-                _vad!.pop();
+            _stream!.acceptWaveform(
+                samples: samplesFloat32, sampleRate: _sampleRate);
+            while (_recognizer!.isReady(_stream!)) {
+              _recognizer!.decode(_stream!);
+            }
+            final text = _recognizer!.getResult(_stream!).text;
+            String textToDisplay = _last;
+            if (text != '') {
+              if (_last == '') {
+                textToDisplay = '$_index: $text';
+              } else {
+                textToDisplay = '$_index: $text\n$_last';
               }
             }
+
+            if (_recognizer!.isEndpoint(_stream!)) {
+              _recognizer!.reset(_stream!);
+              if (text != '') {
+                _last = textToDisplay;
+                _index += 1;
+              }
+            }
+            print('text: $textToDisplay');
+
+            _controller.value = TextEditingValue(
+              text: textToDisplay,
+              selection: TextSelection.collapsed(offset: textToDisplay.length),
+            );
           },
           onDone: () {
             print('stream stopped.');
@@ -147,8 +152,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _stop() async {
-    _buffer!.reset();
-    _vad!.clear();
+    _stream!.free();
+    _stream = _recognizer!.createStream();
 
     await _audioRecorder.stop();
   }
@@ -187,13 +192,12 @@ class _HomeScreenState extends State<HomeScreen> {
         body: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 100.0,
-              height: 100.0,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: _color,
-              ),
+            Text(_title),
+            const SizedBox(height: 50),
+            TextField(
+              maxLines: 5,
+              controller: _controller,
+              readOnly: true,
             ),
             const SizedBox(height: 50),
             Row(
@@ -214,8 +218,8 @@ class _HomeScreenState extends State<HomeScreen> {
   void dispose() {
     _recordSub?.cancel();
     _audioRecorder.dispose();
-    _vad?.free();
-    _buffer?.free();
+    _stream?.free();
+    _recognizer?.free();
     super.dispose();
   }
 

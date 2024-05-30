@@ -73,6 +73,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/
+    - assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/
   #   - assets/sr-data/enroll/
   #   - assets/sr-data/test/
   #   - images/a_dot_ham.jpeg

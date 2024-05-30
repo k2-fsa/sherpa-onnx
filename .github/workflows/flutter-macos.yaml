@@ -132,6 +132,19 @@ jobs:
           # curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
           # git clone https://github.com/csukuangfj/sr-data
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          cd sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+          rm encoder-epoch-99-avg-1.onnx
+          rm decoder-epoch-99-avg-1.int8.onnx
+          rm joiner-epoch-99-avg-1.onnx
+          rm README.md
+          rm bpe.model
+          rm bpe.vocab
+          rm -rf test_wavs
+          ls -lh
+          cd ..
 
           rm -rf sr-data/.git
           popd
