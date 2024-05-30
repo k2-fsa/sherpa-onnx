@@ -122,3 +122,4 @@ namespace SherpaOnnx
         [DllImport(Dll.Filename)]
         private static extern int IsEndpoint(IntPtr handle, IntPtr stream);
     }
+}
