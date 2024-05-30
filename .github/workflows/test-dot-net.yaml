@@ -67,7 +67,7 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DBUILD_ESPEAK_NG_EXE=OFF \
-            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=ON \
             ..
 
           cmake --build . --target install --config Release
@@ -197,6 +197,7 @@ jobs:
           cp -v scripts/dotnet/examples/streaming-hlg-decoding.csproj dotnet-examples/streaming-hlg-decoding
           cp -v scripts/dotnet/examples/speaker-identification.csproj dotnet-examples/speaker-identification
           cp -v scripts/dotnet/examples/offline-punctuation.csproj dotnet-examples/offline-punctuation
+          cp -v scripts/dotnet/examples/vad-non-streaming-asr-paraformer.csproj dotnet-examples/vad-non-streaming-asr-paraformer
 
           ls -lh /tmp
 

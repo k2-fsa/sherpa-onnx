@@ -21,6 +21,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speaker-identification", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-punctuation", "offline-punctuation\offline-punctuation.csproj", "{42D85582-BB63-4259-A4EA-837D66AC078B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "vad-non-streaming-asr-paraformer", "vad-non-streaming-asr-paraformer\vad-non-streaming-asr-paraformer.csproj", "{8CD6B7E5-F59F-47B3-BB87-2B2E3678924D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -66,5 +68,9 @@ Global
 		{42D85582-BB63-4259-A4EA-837D66AC078B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{42D85582-BB63-4259-A4EA-837D66AC078B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{42D85582-BB63-4259-A4EA-837D66AC078B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CD6B7E5-F59F-47B3-BB87-2B2E3678924D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CD6B7E5-F59F-47B3-BB87-2B2E3678924D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CD6B7E5-F59F-47B3-BB87-2B2E3678924D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CD6B7E5-F59F-47B3-BB87-2B2E3678924D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

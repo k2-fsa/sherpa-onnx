@@ -2,7 +2,10 @@
 
 cd dotnet-examples/
 
-cd offline-punctuation
+cd vad-non-streaming-asr-paraformer
+./run.sh
+
+cd ../offline-punctuation
 ./run.sh
 
 cd ../speaker-identification

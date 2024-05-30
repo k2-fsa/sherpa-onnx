@@ -17,7 +17,6 @@ using System;
 
 class OfflinePunctuationDemo
 {
-
   static void Main(string[] args)
   {
     var config = new OfflinePunctuationConfig();
@@ -42,4 +41,3 @@ class OfflinePunctuationDemo
     }
   }
 }
-
