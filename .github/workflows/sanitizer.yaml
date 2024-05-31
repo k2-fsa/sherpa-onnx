@@ -1,33 +1,16 @@
 name: sanitizer
 
 on:
-  push:
-    branches:
-      - master
-      - sanitizer
-    tags:
-      - '*'
-    paths:
-      - '.github/workflows/sanitizer.yaml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/jni/*'
-      - 'sherpa-onnx/python/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/sanitizer.yaml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/jni/*'
-      - 'sherpa-onnx/python/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-
   workflow_dispatch:
+
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 22:50 UTC time every day
+    - cron: "50 22 * * *"
 
 concurrency:
   group: sanitizer-${{ github.ref }}
