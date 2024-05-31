@@ -285,8 +285,13 @@ if(SHERPA_ONNX_ENABLE_SANITIZER)
   string(APPEND flags " -fsanitize=bounds ")
   string(APPEND flags " -fsanitize=address ")
 
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flags} -Wall -Wextra")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flags} -Wall -Wextra")
+  if(OFF)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flags} -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flags} -Wall -Wextra")
+  else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flags}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flags}")
+  endif()
 
   set(CMAKE_EXECUTBLE_LINKER_FLAGS "${CMAKE_EXECUTBLE_LINKER_FLAGS} ${flags}")
 

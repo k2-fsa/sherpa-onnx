@@ -180,3 +180,11 @@ jobs:
         with:
           name: flutter-sherpa-onnx-app-macos-${{ matrix.arch }}
           path: ./*.tar.bz2
+
+      - name: Release android libs
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: flutter*.tar.bz2
