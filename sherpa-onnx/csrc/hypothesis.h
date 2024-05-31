@@ -129,8 +129,8 @@ class Hypotheses {
     return os.str();
   }
 
-  const auto begin() const { return hyps_dict_.begin(); }
-  const auto end() const { return hyps_dict_.end(); }
+  auto begin() const { return hyps_dict_.begin(); }
+  auto end() const { return hyps_dict_.end(); }
 
   auto begin() { return hyps_dict_.begin(); }
   auto end() { return hyps_dict_.end(); }

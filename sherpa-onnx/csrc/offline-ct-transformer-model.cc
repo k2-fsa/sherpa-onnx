@@ -69,7 +69,7 @@ class OfflineCtTransformerModel::Impl {
 
     int32_t vocab_size;
     SHERPA_ONNX_READ_META_DATA(vocab_size, "vocab_size");
-    if (tokens.size() != vocab_size) {
+    if (static_cast<int32_t>(tokens.size()) != vocab_size) {
       SHERPA_ONNX_LOGE("tokens.size() %d != vocab_size %d",
                        static_cast<int32_t>(tokens.size()), vocab_size);
       exit(-1);

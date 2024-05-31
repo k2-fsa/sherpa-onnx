@@ -65,8 +65,6 @@ int32_t main() {
 // simulate streaming. You can choose an arbitrary N
 #define N 3200
 
-  int16_t buffer[N];
-  float samples[N];
   fprintf(stderr, "sample rate: %d, num samples: %d, duration: %.2f s\n",
           wave->sample_rate, wave->num_samples,
           (float)wave->num_samples / wave->sample_rate);

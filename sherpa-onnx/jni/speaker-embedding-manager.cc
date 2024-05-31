@@ -17,7 +17,7 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_create(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL
-Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_delete(JNIEnv *env,
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_delete(JNIEnv * /*env*/,
                                                           jobject /*obj*/,
                                                           jlong ptr) {
   auto manager = reinterpret_cast<sherpa_onnx::SpeakerEmbeddingManager *>(ptr);
@@ -178,7 +178,7 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_contains(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jint JNICALL
-Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_numSpeakers(JNIEnv *env,
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingManager_numSpeakers(JNIEnv * /*env*/,
                                                                jobject /*obj*/,
                                                                jlong ptr) {
   auto manager = reinterpret_cast<sherpa_onnx::SpeakerEmbeddingManager *>(ptr);

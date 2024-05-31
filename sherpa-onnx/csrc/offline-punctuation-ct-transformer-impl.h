@@ -71,7 +71,7 @@ class OfflinePunctuationCtTransformerImpl : public OfflinePunctuationImpl {
     for (int32_t i = 0; i != num_segments; ++i) {
       int32_t this_start = i * segment_size;         // inclusive
       int32_t this_end = this_start + segment_size;  // exclusive
-      if (this_end > token_ids.size()) {
+      if (this_end > static_cast<int32_t>(token_ids.size())) {
         this_end = token_ids.size();
       }
 
@@ -155,7 +155,7 @@ class OfflinePunctuationCtTransformerImpl : public OfflinePunctuationImpl {
     std::vector<std::string> words_punct;
 
     for (int32_t i = 0; i != static_cast<int32_t>(punctuations.size()); ++i) {
-      if (i >= tokens.size()) {
+      if (i >= static_cast<int32_t>(tokens.size())) {
         break;
       }
       std::string &w = tokens[i];

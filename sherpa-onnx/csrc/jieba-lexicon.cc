@@ -217,7 +217,7 @@ JiebaLexicon::JiebaLexicon(const std::string &lexicon,
                                    debug)) {}
 
 std::vector<std::vector<int64_t>> JiebaLexicon::ConvertTextToTokenIds(
-    const std::string &text, const std::string &unused_voice /*= ""*/) const {
+    const std::string &text, const std::string & /*unused_voice = ""*/) const {
   return impl_->ConvertTextToTokenIds(text);
 }
 

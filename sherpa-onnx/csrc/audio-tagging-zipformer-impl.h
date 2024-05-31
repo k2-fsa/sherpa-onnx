@@ -74,7 +74,7 @@ class AudioTaggingZipformerImpl : public AudioTaggingImpl {
 
     int32_t num_frames = f.size() / feat_dim;
 
-    assert(feat_dim * num_frames == f.size());
+    assert(feat_dim * num_frames == static_cast<int32_t>(f.size()));
 
     std::array<int64_t, 3> shape = {1, num_frames, feat_dim};
 
