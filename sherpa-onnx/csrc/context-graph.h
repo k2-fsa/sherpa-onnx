@@ -61,10 +61,9 @@ class ContextGraph {
   }
 
   ContextGraph(const std::vector<std::vector<int32_t>> &token_ids,
-               float context_score, const std::vector<float> &scores = {},
-               const std::vector<std::string> &phrases = {})
-      : ContextGraph(token_ids, context_score, 0.0f, scores, phrases,
-                     std::vector<float>()) {}
+               float context_score, const std::vector<float> &scores = {})
+      : ContextGraph(token_ids, context_score, 0.0f, scores,
+                     std::vector<std::string>(), std::vector<float>()) {}
 
   std::tuple<float, const ContextState *, const ContextState *> ForwardOneStep(
       const ContextState *state, int32_t token_id,
