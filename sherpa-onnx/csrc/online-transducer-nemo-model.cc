@@ -62,17 +62,17 @@ class OnlineTransducerNeMoModel::Impl {
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     {
-      auto buf = ReadFile(mgr, config.transducer.encoder_filename);
+      auto buf = ReadFile(mgr, config.transducer.encoder);
       InitEncoder(buf.data(), buf.size());
     }
 
     {
-      auto buf = ReadFile(mgr, config.transducer.decoder_filename);
+      auto buf = ReadFile(mgr, config.transducer.decoder);
       InitDecoder(buf.data(), buf.size());
     }
 
     {
-      auto buf = ReadFile(mgr, config.transducer.joiner_filename);
+      auto buf = ReadFile(mgr, config.transducer.joiner);
       InitJoiner(buf.data(), buf.size());
     }
   }
