@@ -97,7 +97,7 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_Vad_newFromFile(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_delete(JNIEnv *env,
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_delete(JNIEnv * /*env*/,
                                                              jobject /*obj*/,
                                                              jlong ptr) {
   delete reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
@@ -117,7 +117,7 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_acceptWaveform(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_Vad_empty(JNIEnv *env,
+JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_Vad_empty(JNIEnv * /*env*/,
                                                             jobject /*obj*/,
                                                             jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
@@ -125,7 +125,7 @@ JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_Vad_empty(JNIEnv *env,
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_pop(JNIEnv *env,
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_pop(JNIEnv * /*env*/,
                                                           jobject /*obj*/,
                                                           jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
@@ -133,7 +133,7 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_pop(JNIEnv *env,
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_clear(JNIEnv *env,
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_clear(JNIEnv * /*env*/,
                                                             jobject /*obj*/,
                                                             jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
@@ -161,13 +161,13 @@ Java_com_k2fsa_sherpa_onnx_Vad_front(JNIEnv *env, jobject /*obj*/, jlong ptr) {
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_Vad_isSpeechDetected(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
   return model->IsSpeechDetected();
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(JNIEnv *env,
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(JNIEnv * /*env*/,
                                                             jobject /*obj*/,
                                                             jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);

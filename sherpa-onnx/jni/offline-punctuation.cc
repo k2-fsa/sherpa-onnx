@@ -86,7 +86,7 @@ Java_com_k2fsa_sherpa_onnx_OfflinePunctuation_newFromFile(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflinePunctuation_delete(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   delete reinterpret_cast<sherpa_onnx::OfflinePunctuation *>(ptr);
 }
 

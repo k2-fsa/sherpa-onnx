@@ -179,8 +179,6 @@ int32_t main(int32_t argc, char *argv[]) {
 
 #define N 3200  // 0.2 s. Sample rate is fixed to 16 kHz
 
-  int16_t buffer[N];
-  float samples[N];
   fprintf(stderr, "sample rate: %d, num samples: %d, duration: %.2f s\n",
           wave->sample_rate, wave->num_samples,
           (float)wave->num_samples / wave->sample_rate);

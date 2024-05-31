@@ -85,7 +85,7 @@ void AsrInference(const std::vector<std::vector<std::string>> &chunk_wav_paths,
 
   while (true) {
     int chunk = wav_index.fetch_add(1);
-    if (chunk >= chunk_wav_paths.size()) {
+    if (chunk >= static_cast<int32_t>(chunk_wav_paths.size())) {
       break;
     }
     const auto &wav_paths = chunk_wav_paths[chunk];

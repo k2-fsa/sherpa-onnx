@@ -8,7 +8,7 @@
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineStream_delete(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   delete reinterpret_cast<sherpa_onnx::OfflineStream *>(ptr);
 }
 

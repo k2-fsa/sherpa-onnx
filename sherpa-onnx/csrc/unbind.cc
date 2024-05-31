@@ -58,7 +58,7 @@ std::vector<Ort::Value> Unbind(OrtAllocator *allocator, const Ort::Value *value,
     }
   }
 
-  return std::move(ans);
+  return ans;
 }
 
 template std::vector<Ort::Value> Unbind<float>(OrtAllocator *allocator,

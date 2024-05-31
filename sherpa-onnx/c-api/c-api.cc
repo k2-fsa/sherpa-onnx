@@ -187,7 +187,7 @@ const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
   r->text = pText;
 
   // copy json
-  const auto &json = result.AsJsonString();
+  std::string json = result.AsJsonString();
   char *pJson = new char[json.size() + 1];
   std::copy(json.begin(), json.end(), pJson);
   pJson[json.size()] = 0;
@@ -445,7 +445,7 @@ const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
   r->text = pText;
 
   // copy json
-  const auto &json = result.AsJsonString();
+  std::string json = result.AsJsonString();
   char *pJson = new char[json.size() + 1];
   std::copy(json.begin(), json.end(), pJson);
   pJson[json.size()] = 0;
@@ -643,7 +643,7 @@ const SherpaOnnxKeywordResult *GetKeywordResult(
   r->keyword = pKeyword;
 
   // copy json
-  const auto &json = result.AsJsonString();
+  std::string json = result.AsJsonString();
   char *pJson = new char[json.size() + 1];
   std::copy(json.begin(), json.end(), pJson);
   pJson[json.size()] = 0;

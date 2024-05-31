@@ -161,7 +161,7 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
   }
 
   std::vector<float> ans(samples.size());
-  for (int32_t i = 0; i != ans.size(); ++i) {
+  for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
     ans[i] = samples[i] / 32768.;
   }
 

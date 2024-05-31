@@ -25,14 +25,14 @@ static int32_t RecordCallback(const void *input_buffer,
                               unsigned long frames_per_buffer,  // NOLINT
                               const PaStreamCallbackTimeInfo * /*time_info*/,
                               PaStreamCallbackFlags /*status_flags*/,
-                              void *user_data) {
+                              void * /*user_data*/) {
   std::lock_guard<std::mutex> lock(mutex);
   buffer.Push(reinterpret_cast<const float *>(input_buffer), frames_per_buffer);
 
   return stop ? paComplete : paContinue;
 }
 
-static void Handler(int32_t sig) {
+static void Handler(int32_t /*sig*/) {
   stop = true;
   fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
 }

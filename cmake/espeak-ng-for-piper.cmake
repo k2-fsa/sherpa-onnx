@@ -14,10 +14,7 @@ function(download_espeak_ng_for_piper)
   set(USE_SPEECHPLAYER OFF CACHE BOOL "" FORCE)
   set(EXTRA_cmn ON CACHE BOOL "" FORCE)
   set(EXTRA_ru ON CACHE BOOL "" FORCE)
-
-  if(SHERPA_ONNX_ENABLE_WASM)
-    set(BUILD_ESPEAK_NG_EXE OFF CACHE BOOL "" FORCE)
-  endif()
+  set(BUILD_ESPEAK_NG_EXE OFF CACHE BOOL "" FORCE)
 
   # If you don't have access to the Internet,
   # please pre-download kaldi-decoder

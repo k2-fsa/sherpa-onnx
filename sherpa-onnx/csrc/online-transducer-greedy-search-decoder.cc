@@ -77,7 +77,7 @@ void OnlineTransducerGreedySearchDecoder::Decode(
   std::vector<int64_t> encoder_out_shape =
       encoder_out.GetTensorTypeAndShapeInfo().GetShape();
 
-  if (encoder_out_shape[0] != result->size()) {
+  if (encoder_out_shape[0] != static_cast<int32_t>(result->size())) {
     SHERPA_ONNX_LOGE(
         "Size mismatch! encoder_out.size(0) %d, result.size(0): %d",
         static_cast<int32_t>(encoder_out_shape[0]),
