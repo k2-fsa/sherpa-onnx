@@ -63,7 +63,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
       AAssetManager *mgr, const OnlineRecognizerConfig &config)
       : config_(config),
         symbol_table_(mgr, config.model_config.tokens),
-        endpoint_(mgrconfig_.endpoint_config),
+        endpoint_(config_.endpoint_config),
         model_(std::make_unique<OnlineTransducerNeMoModel>(
             mgr, config.model_config)) {
     if (config.decoding_method == "greedy_search") {
