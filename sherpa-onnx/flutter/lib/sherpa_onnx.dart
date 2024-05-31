@@ -8,6 +8,9 @@ export 'src/speaker_identification.dart';
 export 'src/vad.dart';
 export 'src/wave_reader.dart';
 export 'src/wave_writer.dart';
+import 'src/feature_config.dart';
+import 'src/offline_recognizer.dart';
+import 'src/offline_stream.dart';
 import 'src/sherpa_onnx_bindings.dart';
 
 final DynamicLibrary _dylib = () {
