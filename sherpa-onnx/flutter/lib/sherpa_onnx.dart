@@ -2,12 +2,16 @@
 import 'dart:io';
 import 'dart:ffi';
 
+export 'src/feature_config.dart';
+export 'src/offline_recognizer.dart';
+export 'src/offline_stream.dart';
 export 'src/online_recognizer.dart';
 export 'src/online_stream.dart';
 export 'src/speaker_identification.dart';
 export 'src/vad.dart';
 export 'src/wave_reader.dart';
 export 'src/wave_writer.dart';
+
 import 'src/sherpa_onnx_bindings.dart';
 
 final DynamicLibrary _dylib = () {

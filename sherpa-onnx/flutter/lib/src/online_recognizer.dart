@@ -5,20 +5,9 @@ import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
+import './feature_config.dart';
 import './online_stream.dart';
 import './sherpa_onnx_bindings.dart';
-
-class FeatureConfig {
-  const FeatureConfig({this.sampleRate = 16000, this.featureDim = 80});
-
-  @override
-  String toString() {
-    return 'FeatureConfig(sampleRate: $sampleRate, featureDim: $featureDim)';
-  }
-
-  final int sampleRate;
-  final int featureDim;
-}
 
 class OnlineTransducerModelConfig {
   const OnlineTransducerModelConfig({
