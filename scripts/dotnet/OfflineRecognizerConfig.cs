@@ -1,6 +1,5 @@
 /// Copyright (c)  2024.5 by 东风破
 
-<<<<<<< HEAD
 using System.Runtime.InteropServices;
 
 namespace SherpaOnnx
