@@ -8,7 +8,7 @@
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineStream_delete(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   delete reinterpret_cast<sherpa_onnx::OnlineStream *>(ptr);
 }
 
@@ -26,7 +26,7 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineStream_acceptWaveform(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OnlineStream_inputFinished(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(ptr);
   stream->InputFinished();
 }

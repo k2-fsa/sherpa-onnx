@@ -39,10 +39,6 @@ public class VadNonStreamingParaformer {
     String model = "./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx";
     String tokens = "./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt";
 
-    String waveFilename = "./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/3-sichuan.wav";
-
-    WaveReader reader = new WaveReader(waveFilename);
-
     OfflineParaformerModelConfig paraformer =
         OfflineParaformerModelConfig.builder().setModel(model).build();
 

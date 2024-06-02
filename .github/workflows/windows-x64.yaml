@@ -219,7 +219,6 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
-            git lfs pull
             mkdir -p win64
 
             cp -v ../sherpa-onnx-*.tar.bz2 ./win64

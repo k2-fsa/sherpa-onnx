@@ -92,7 +92,7 @@ Ort::Value Cat(OrtAllocator *allocator,
     }
   }
 
-  return std::move(ans);
+  return ans;
 }
 
 template Ort::Value Cat<float>(OrtAllocator *allocator,

@@ -63,7 +63,11 @@ if(APPLE)
     OUTPUT_VARIABLE PYTHON_SITE_PACKAGE_DIR
   )
   message(STATUS "PYTHON_SITE_PACKAGE_DIR: ${PYTHON_SITE_PACKAGE_DIR}")
-  target_link_libraries(_sherpa_onnx PRIVATE "-Wl,-rpath,${PYTHON_SITE_PACKAGE_DIR}")
+  if(PYTHON_SITE_PACKAGE_DIR STREQUAL "")
+    message(WARNING "PYTHON_SITE_PACKAGE_DIR is empty!")
+  else()
+    target_link_libraries(_sherpa_onnx PRIVATE "-Wl,-rpath,${PYTHON_SITE_PACKAGE_DIR}")
+  endif()
 endif()
 
 if(NOT WIN32)

@@ -238,7 +238,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     }
 
     batch.clear();
-    while (k < x.size()) {
+    while (k < static_cast<int32_t>(x.size())) {
       batch.push_back(std::move(x[k]));
       ++k;
     }

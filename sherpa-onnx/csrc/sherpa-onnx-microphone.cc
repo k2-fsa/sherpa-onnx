@@ -33,7 +33,7 @@ static int32_t RecordCallback(const void *input_buffer,
   return stop ? paComplete : paContinue;
 }
 
-static void Handler(int32_t sig) {
+static void Handler(int32_t /*sig*/) {
   stop = true;
   fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
 }

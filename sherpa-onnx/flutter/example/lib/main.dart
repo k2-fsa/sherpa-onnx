@@ -2,9 +2,8 @@
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import 'package:flutter/material.dart';
 
-import "./speaker_identification_test.dart";
-import "./vad_test.dart";
-import './home.dart';
+import './vad.dart';
+import './streaming_asr.dart';
 import './info.dart';
 
 void main() {
@@ -20,7 +19,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Next-gen Kaldi: VAD demo'),
+      home: const MyHomePage(title: 'Next-gen Kaldi Demo'),
     );
   }
 }
@@ -35,7 +34,8 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   int _currentIndex = 0;
   final List<Widget> _tabs = [
-    HomeScreen(),
+    StreamingAsrScreen(),
+    VadScreen(),
     InfoScreen(),
   ];
   @override
@@ -52,10 +52,15 @@ class _MyHomePageState extends State<MyHomePage> {
             _currentIndex = index;
           });
         },
+        // https://www.xiconeditor.com/
         items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
+            icon: new Image.asset("assets/streaming-asr.ico"),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: new Image.asset("assets/vad.ico"),
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.info),

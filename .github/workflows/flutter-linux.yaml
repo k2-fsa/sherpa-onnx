@@ -164,6 +164,19 @@ jobs:
           cd example/assets
 
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          cd sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+          rm encoder-epoch-99-avg-1.onnx
+          rm decoder-epoch-99-avg-1.int8.onnx
+          rm joiner-epoch-99-avg-1.onnx
+          rm README.md
+          rm bpe.model
+          rm bpe.vocab
+          rm -rf test_wavs
+          ls -lh
+          cd ..
 
       - name: Build flutter
         shell: bash
@@ -204,3 +217,11 @@ jobs:
         with:
           name: flutter-sherpa-onnx-linux-x64
           path: ./*.tar.bz2
+
+      # - name: Release android libs
+      #   if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      #   uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     file_glob: true
+      #     overwrite: true
+      #     file: flutter*.tar.bz2

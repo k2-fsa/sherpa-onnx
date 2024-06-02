@@ -91,8 +91,8 @@ struct OnlineRecognizerConfig {
   int32_t max_active_paths = 4;
 
   /// used only for modified_beam_search
-  float hotwords_score = 1.5;
   std::string hotwords_file;
+  float hotwords_score = 1.5;
 
   float blank_penalty = 0.0;
 
@@ -102,17 +102,12 @@ struct OnlineRecognizerConfig {
 
   OnlineRecognizerConfig(
       const FeatureExtractorConfig &feat_config,
-      const OnlineModelConfig &model_config,
-      const OnlineLMConfig &lm_config,
+      const OnlineModelConfig &model_config, const OnlineLMConfig &lm_config,
       const EndpointConfig &endpoint_config,
       const OnlineCtcFstDecoderConfig &ctc_fst_decoder_config,
-      bool enable_endpoint,
-      const std::string &decoding_method,
-      int32_t max_active_paths,
-      const std::string &hotwords_file,
-      float hotwords_score,
-      float blank_penalty,
-      float temperature_scale)
+      bool enable_endpoint, const std::string &decoding_method,
+      int32_t max_active_paths, const std::string &hotwords_file,
+      float hotwords_score, float blank_penalty, float temperature_scale)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),

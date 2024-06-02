@@ -77,7 +77,7 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_newFromFile(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL
-Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_delete(JNIEnv *env,
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_delete(JNIEnv * /*env*/,
                                                             jobject /*obj*/,
                                                             jlong ptr) {
   delete reinterpret_cast<sherpa_onnx::SpeakerEmbeddingExtractor *>(ptr);
@@ -86,7 +86,7 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_delete(JNIEnv *env,
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
 Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_createStream(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   std::unique_ptr<sherpa_onnx::OnlineStream> s =
       reinterpret_cast<sherpa_onnx::SpeakerEmbeddingExtractor *>(ptr)
           ->CreateStream();
@@ -101,7 +101,7 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_createStream(
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jboolean JNICALL
-Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_isReady(JNIEnv *env,
+Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_isReady(JNIEnv * /*env*/,
                                                              jobject /*obj*/,
                                                              jlong ptr,
                                                              jlong stream_ptr) {
@@ -130,7 +130,7 @@ Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_compute(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jint JNICALL Java_com_k2fsa_sherpa_onnx_SpeakerEmbeddingExtractor_dim(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   auto extractor =
       reinterpret_cast<sherpa_onnx::SpeakerEmbeddingExtractor *>(ptr);
   return extractor->Dim();

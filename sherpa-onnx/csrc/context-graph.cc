@@ -27,7 +27,7 @@ void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids,
   if (!ac_thresholds.empty()) {
     SHERPA_ONNX_CHECK_EQ(token_ids.size(), ac_thresholds.size());
   }
-  for (int32_t i = 0; i < token_ids.size(); ++i) {
+  for (int32_t i = 0; i < static_cast<int32_t>(token_ids.size()); ++i) {
     auto node = root_.get();
     float score = scores.empty() ? 0.0f : scores[i];
     score = score == 0.0f ? context_score_ : score;
@@ -35,10 +35,10 @@ void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids,
     ac_threshold = ac_threshold == 0.0f ? ac_threshold_ : ac_threshold;
     std::string phrase = phrases.empty() ? std::string() : phrases[i];
 
-    for (int32_t j = 0; j < token_ids[i].size(); ++j) {
+    for (int32_t j = 0; j < static_cast<int32_t>(token_ids[i].size()); ++j) {
       int32_t token = token_ids[i][j];
       if (0 == node->next.count(token)) {
-        bool is_end = j == token_ids[i].size() - 1;
+        bool is_end = j == (static_cast<int32_t>(token_ids[i].size()) - 1);
         node->next[token] = std::make_unique<ContextState>(
             token, score, node->node_score + score,
             is_end ? node->node_score + score : 0, j + 1,
@@ -49,11 +49,11 @@ void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids,
         node->next[token]->token_score = token_score;
         float node_score = node->node_score + token_score;
         node->next[token]->node_score = node_score;
-        bool is_end =
-            (j == token_ids[i].size() - 1) || node->next[token]->is_end;
+        bool is_end = (j == static_cast<int32_t>(token_ids[i].size()) - 1) ||
+                      node->next[token]->is_end;
         node->next[token]->output_score = is_end ? node_score : 0.0f;
         node->next[token]->is_end = is_end;
-        if (j == token_ids[i].size() - 1) {
+        if (j == static_cast<int32_t>(token_ids[i].size()) - 1) {
           node->next[token]->phrase = phrase;
           node->next[token]->ac_threshold = ac_threshold;
         }

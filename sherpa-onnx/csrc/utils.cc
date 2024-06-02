@@ -103,7 +103,8 @@ static bool EncodeBase(const std::vector<std::string> &lines,
 bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
                     const SymbolTable &symbol_table,
                     const ssentencepiece::Ssentencepiece *bpe_encoder,
-                    std::vector<std::vector<int32_t>> *hotwords) {
+                    std::vector<std::vector<int32_t>> *hotwords,
+                    std::vector<float> *boost_scores) {
   std::vector<std::string> lines;
   std::string line;
   std::string word;
@@ -131,7 +132,12 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
           break;
       }
     }
-    phrase = oss.str().substr(1);
+    phrase = oss.str();
+    if (phrase.empty()) {
+      continue;
+    } else {
+      phrase = phrase.substr(1);
+    }
     std::istringstream piss(phrase);
     oss.clear();
     oss.str("");
@@ -177,7 +183,8 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
     }
     lines.push_back(oss.str());
   }
-  return EncodeBase(lines, symbol_table, hotwords, nullptr, nullptr, nullptr);
+  return EncodeBase(lines, symbol_table, hotwords, nullptr, boost_scores,
+                    nullptr);
 }
 
 bool EncodeKeywords(std::istream &is, const SymbolTable &symbol_table,

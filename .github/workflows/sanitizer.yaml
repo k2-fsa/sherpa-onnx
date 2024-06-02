@@ -1,0 +1,186 @@
+name: sanitizer
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 22:50 UTC time every day
+    - cron: "50 22 * * *"
+
+concurrency:
+  group: sanitizer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sanitizer:
+    runs-on: ${{ matrix.os }}
+    name: sanitizer
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-sanitizer
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -DSHERPA_ONNX_ENABLE_PYTHON=ON \
+            -DSHERPA_ONNX_ENABLE_TESTS=ON \
+            -DSHERPA_ONNX_ENABLE_JNI=ON \
+            -DSHERPA_ONNX_ENABLE_SANITIZER=ON \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cd build
+          make -j2
+          make install
+
+          ls -lh lib
+          ls -lh bin
+
+          file ./bin/sherpa-onnx
+
+      - name: Display dependencies of sherpa-onnx for macos
+        shell: bash
+        run: |
+          file bin/sherpa-onnx
+          otool -L build/bin/sherpa-onnx
+          otool -l build/bin/sherpa-onnx
+
+      - name: Test offline transducer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-transducer.sh
+
+      - name: Test online CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-ctc.sh
+
+      - name: Test offline punctuation
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-punctuation
+
+          .github/scripts/test-offline-punctuation.sh
+
+      - name: Test C API
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export SLID_EXE=spoken-language-identification-c-api
+          export SID_EXE=speaker-identification-c-api
+          export AT_EXE=audio-tagging-c-api
+          export PUNCT_EXE=add-punctuation-c-api
+
+          .github/scripts/test-c-api.sh
+
+      - name: Test Audio tagging
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-audio-tagging
+
+          .github/scripts/test-audio-tagging.sh
+
+      - name: Test spoken language identification (C++ API)
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-language-identification
+
+          .github/scripts/test-spoken-language-identification.sh
+
+      - name: Test transducer kws
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-keyword-spotter
+
+          .github/scripts/test-kws.sh
+
+      - name: Test offline TTS
+        if: matrix.with_tts == 'ON'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-tts
+
+          .github/scripts/test-offline-tts.sh
+
+      - name: Test online paraformer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-paraformer.sh
+
+      - name: Test offline Whisper
+        if: matrix.build_type != 'Debug'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-whisper.sh
+
+      - name: Test offline CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-ctc.sh
+
+      - name: Test online transducer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-transducer.sh
+
+      - name: Test online transducer (C API)
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=decode-file-c-api
+
+          .github/scripts/test-online-transducer.sh

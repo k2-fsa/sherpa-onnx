@@ -246,7 +246,7 @@ static bool MustBeQuoted(const std::string &str, ShellType st) {
 // Our aim is to print out the command line in such a way that if it's
 // pasted into a shell of ShellType "st" (only bash for now), it
 // will get passed to the program in the same way.
-static std::string QuoteAndEscape(const std::string &str, ShellType st) {
+static std::string QuoteAndEscape(const std::string &str, ShellType /*st*/) {
   // Only Bash is supported (for the moment).
   SHERPA_ONNX_CHECK_EQ(st, kBash) << "Invalid shell type.";
 
