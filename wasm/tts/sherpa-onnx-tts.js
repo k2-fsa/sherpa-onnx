@@ -27,7 +27,7 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
 
   const buffer = Module._malloc(n);
 
-  const len = 7 * 4;
+  const len = 8 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;

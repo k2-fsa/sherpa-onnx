@@ -33,17 +33,12 @@ for name in ${names[@]}; do
   log "Run $name"
   log "------------------------------------------------------------"
 
-  repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-whisper-$name
+  repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-$name.tar.bz2
+  curl -SL -O $repo_url
+  tar xvf sherpa-onnx-whisper-$name.tar.bz2
+  rm sherpa-onnx-whisper-$name.tar.bz2
+  repo=sherpa-onnx-whisper-$name
   log "Start testing ${repo_url}"
-  repo=$(basename $repo_url)
-  log "Download pretrained model and test-data from $repo_url"
-
-  GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-  pushd $repo
-  git lfs pull --include "*.onnx"
-  # git lfs pull --include "*.ort"
-  ls -lh *.onnx
-  popd
 
   log "test fp32 onnx"
 

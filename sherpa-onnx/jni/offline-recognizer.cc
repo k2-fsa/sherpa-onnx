@@ -220,13 +220,13 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromFile(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_delete(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   delete reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
 }
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
-Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream(JNIEnv *env,
+Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream(JNIEnv * /*env*/,
                                                           jobject /*obj*/,
                                                           jlong ptr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
@@ -242,7 +242,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decode(
-    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong streamPtr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong streamPtr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OfflineStream *>(streamPtr);
 

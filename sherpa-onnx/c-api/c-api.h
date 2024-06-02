@@ -481,7 +481,27 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
 
   // number of entries in timestamps
   int32_t count;
-  // TODO(fangjun): Add more fields
+
+  // Pointer to continuous memory which holds string based tokens
+  // which are separated by \0
+  const char *tokens;
+
+  // a pointer array containing the address of the first item in tokens
+  const char *const *tokens_arr;
+
+  /** Return a json string.
+   *
+   * The returned string contains:
+   *   {
+   *     "text": "The recognition result",
+   *     "tokens": [x, x, x],
+   *     "timestamps": [x, x, x],
+   *     "segment": x,
+   *     "start_time": x,
+   *     "is_final": true|false
+   *   }
+   */
+  const char *json;
 } SherpaOnnxOfflineRecognizerResult;
 
 /// Get the result of the offline stream.
@@ -583,6 +603,16 @@ SHERPA_ONNX_API void DestroyKeywordSpotter(SherpaOnnxKeywordSpotter *spotter);
 SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateKeywordStream(
     const SherpaOnnxKeywordSpotter *spotter);
 
+/// Create an online stream for accepting wave samples with the specified hot
+/// words.
+///
+/// @param spotter A pointer returned by CreateKeywordSpotter()
+/// @param keywords A pointer points to the keywords that you set
+/// @return Return a pointer to an OnlineStream. The user has to invoke
+///         DestroyOnlineStream() to free it to avoid memory leak.
+SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateKeywordStreamWithKeywords(
+    const SherpaOnnxKeywordSpotter *spotter, const char *keywords);
+
 /// Return 1 if there are enough number of feature frames for decoding.
 /// Return 0 otherwise.
 ///
@@ -613,7 +643,7 @@ SHERPA_ONNX_API void DecodeMultipleKeywordStreams(
 
 /// Get the decoding results so far for an OnlineStream.
 ///
-/// @param recognizer A pointer returned by CreateKeywordSpotter().
+/// @param spotter A pointer returned by CreateKeywordSpotter().
 /// @param stream A pointer returned by CreateKeywordStream().
 /// @return A pointer containing the result. The user has to invoke
 ///         DestroyKeywordResult() to free the returned pointer to

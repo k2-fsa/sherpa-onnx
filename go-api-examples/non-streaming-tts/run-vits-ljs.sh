@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 
-# please refer to
-# https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#ljspeech-english-single-speaker
-# to download the model before you run this script
+set -ex
+
+if [ ! -d vits-ljs ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-ljs.tar.bz2
+  tar xvf vits-ljs.tar.bz2
+  rm vits-ljs.tar.bz2
+fi
+
+go mod tidy
+go build
 
 ./non-streaming-tts \
   --vits-model=./vits-ljs/vits-ljs.onnx \

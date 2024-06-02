@@ -24,6 +24,7 @@ set(sources
   spoken-language-identification.cc
   voice-activity-detector.cc
   wave-reader.cc
+  wave-writer.cc
 )
 
 if(SHERPA_ONNX_ENABLE_TTS)

@@ -1,6 +1,7 @@
 // scripts/node-addon-api/src/speaker-identification.cc
 //
 // Copyright (c)  2024  Xiaomi Corporation
+#include <algorithm>
 #include <sstream>
 
 #include "macros.h"  // NOLINT
@@ -175,9 +176,9 @@ static Napi::Boolean SpeakerEmbeddingExtractorIsReadyWrapper(
 static Napi::Float32Array SpeakerEmbeddingExtractorComputeEmbeddingWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  if (info.Length() != 2) {
+  if (info.Length() != 2 && info.Length() != 3) {
     std::ostringstream os;
-    os << "Expect only 2 arguments. Given: " << info.Length();
+    os << "Expect only 2 or 3 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -199,6 +200,16 @@ static Napi::Float32Array SpeakerEmbeddingExtractorComputeEmbeddingWrapper(
     return {};
   }
 
+  bool enable_external_buffer = true;
+  if (info.Length() == 3) {
+    if (info[2].IsBoolean()) {
+      enable_external_buffer = info[2].As<Napi::Boolean>().Value();
+    } else {
+      Napi::TypeError::New(env, "Argument 2 should be a boolean.")
+          .ThrowAsJavaScriptException();
+    }
+  }
+
   SherpaOnnxSpeakerEmbeddingExtractor *extractor =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingExtractor>>().Data();
 
@@ -210,14 +221,29 @@ static Napi::Float32Array SpeakerEmbeddingExtractorComputeEmbeddingWrapper(
 
   int32_t dim = SherpaOnnxSpeakerEmbeddingExtractorDim(extractor);
 
-  Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
-      env, const_cast<float *>(v), sizeof(float) * dim,
-      [](Napi::Env /*env*/, void *data) {
-        SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(
-            reinterpret_cast<float *>(data));
-      });
+  if (enable_external_buffer) {
+    Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
+        env, const_cast<float *>(v), sizeof(float) * dim,
+        [](Napi::Env /*env*/, void *data) {
+          SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(
+              reinterpret_cast<float *>(data));
+        });
 
-  return Napi::Float32Array::New(env, dim, arrayBuffer, 0);
+    return Napi::Float32Array::New(env, dim, arrayBuffer, 0);
+  } else {
+    // don't use external buffer
+    Napi::ArrayBuffer arrayBuffer =
+        Napi::ArrayBuffer::New(env, sizeof(float) * dim);
+
+    Napi::Float32Array float32Array =
+        Napi::Float32Array::New(env, dim, arrayBuffer, 0);
+
+    std::copy(v, v + dim, float32Array.Data());
+
+    SherpaOnnxSpeakerEmbeddingExtractorDestroyEmbedding(v);
+
+    return float32Array;
+  }
 }
 
 static Napi::External<SherpaOnnxSpeakerEmbeddingManager>

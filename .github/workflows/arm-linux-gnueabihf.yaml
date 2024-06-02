@@ -92,6 +92,7 @@ jobs:
         shell: bash
         run: |
           git lfs install
+          export GIT_CLONE_PROTECTION_ACTIVE=false
           git clone https://huggingface.co/csukuangfj/arm-linux-gcc
           ls -lh arm-linux-gcc
 
@@ -172,8 +173,6 @@ jobs:
             cp -a build-arm-linux-gnueabihf/install/lib $dst/
             rm -v $dst/lib/libasound.so
             rm -v $dst/lib/libonnxruntime.so
-            rm -v $dst/lib/libsherpa-onnx-fst.so
-            rm -v $dst/lib/libsherpa-onnx-fstfar.so
           fi
 
           tree $dst
@@ -210,7 +209,6 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
-            git lfs pull
             mkdir -p arm32
 
             cp -v ../sherpa-onnx-*.tar.bz2 ./arm32

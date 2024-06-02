@@ -4,6 +4,7 @@ set -ex
 
 echo "Downloading models"
 export GIT_LFS_SKIP_SMUDGE=1
+export GIT_CLONE_PROTECTION_ACTIVE=false
 git clone https://huggingface.co/openspeech/wespeaker-models
 cd wespeaker-models
 git lfs pull --include "*.onnx"

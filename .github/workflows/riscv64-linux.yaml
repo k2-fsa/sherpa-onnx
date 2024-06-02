@@ -210,8 +210,6 @@ jobs:
             cp -a build-riscv64-linux-gnu/install/lib $dst/
             rm -fv $dst/lib/libasound.so
             rm -fv $dst/lib/libonnxruntime.so
-            rm -fv $dst/lib/libsherpa-onnx-fst.so
-            rm -fv $dst/lib/libsherpa-onnx-fstfar.so
           fi
 
           tree $dst
@@ -239,11 +237,11 @@ jobs:
             git config --global user.name "Fangjun Kuang"
 
             rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
 
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
-            git lfs pull
             mkdir -p riscv64
 
             cp -v ../sherpa-onnx-*-shared.tar.bz2 ./riscv64

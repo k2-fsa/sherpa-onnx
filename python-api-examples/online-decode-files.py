@@ -8,9 +8,9 @@ Usage:
 
 (1) Streaming transducer
 
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-zipformer-en-2023-06-26
-cd sherpa-onnx-streaming-zipformer-en-2023-06-26
-git lfs pull --include "*.onnx"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
+tar xvf sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
+rm sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
 
 ./python-api-examples/online-decode-files.py \
   --tokens=./sherpa-onnx-streaming-zipformer-en-2023-06-26/tokens.txt \
@@ -23,9 +23,9 @@ git lfs pull --include "*.onnx"
 
 (2) Streaming paraformer
 
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
-cd sherpa-onnx-streaming-paraformer-bilingual-zh-en
-git lfs pull --include "*.onnx"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 
 ./python-api-examples/online-decode-files.py \
   --tokens=./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt \
@@ -52,9 +52,9 @@ ls -lh sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
 
 (4) Streaming Conformer CTC from WeNet
 
-GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-wenetspeech
-cd sherpa-onnx-zh-wenet-wenetspeech
-git lfs pull --include "*.onnx"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zh-wenet-wenetspeech.tar.bz2
+tar xvf sherpa-onnx-zh-wenet-wenetspeech.tar.bz2
+rm sherpa-onnx-zh-wenet-wenetspeech.tar.bz2
 
 ./python-api-examples/online-decode-files.py \
   --tokens=./sherpa-onnx-zh-wenet-wenetspeech/tokens.txt \

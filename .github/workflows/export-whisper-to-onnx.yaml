@@ -142,6 +142,8 @@ jobs:
           git config --global user.email "csukuangfj@gmail.com"
           git config --global user.name "Fangjun Kuang"
 
+          export GIT_CLONE_PROTECTION_ACTIVE=false
+
           GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} huggingface
 
           if [[ $model != medium-aishell ]]; then

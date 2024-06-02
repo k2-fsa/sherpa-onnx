@@ -1,8 +1,15 @@
 #!/usr/bin/env bash
 
-# please refer to
-# https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#vctk-english-multi-speaker-109-speakers
-# to download the model before you run this script
+set -ex
+
+if [ ! -d vits-vctk ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-vctk.tar.bz2
+  tar xvf vits-vctk.tar.bz2
+  rm vits-vctk.tar.bz2
+fi
+
+go mod tidy
+go build
 
 for sid in 0 10 108; do
 ./non-streaming-tts \

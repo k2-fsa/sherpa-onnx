@@ -19,16 +19,13 @@ log "------------------------------------------------------------"
 log "Run streaming Paraformer"
 log "------------------------------------------------------------"
 
-repo_url=https://huggingface.co/csukuangfj/sherpa-onnx-streaming-paraformer-bilingual-zh-en
-log "Start testing ${repo_url}"
-repo=$(basename $repo_url)
-log "Download pretrained model and test-data from $repo_url"
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+repo=sherpa-onnx-streaming-paraformer-bilingual-zh-en
 
-GIT_LFS_SKIP_SMUDGE=1 git clone $repo_url
-pushd $repo
-git lfs pull --include "*.onnx"
-ls -lh *.onnx
-popd
+log "Start testing ${repo_url}"
 
 time $EXE \
   --tokens=$repo/tokens.txt \

@@ -1,11 +1,15 @@
 #!/usr/bin/env bash
 
-# Please refer to
-# https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/zipformer-transducer-models.html#pkufool-icefall-asr-zipformer-streaming-wenetspeech-20230615-chinese
-# to download the model
-# before you run this script.
-#
-# You can switch to different online models if you need
+set -ex
+
+if [ ! -d icefall-asr-zipformer-streaming-wenetspeech-20230615 ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/icefall-asr-zipformer-streaming-wenetspeech-20230615.tar.bz2
+  tar xvf icefall-asr-zipformer-streaming-wenetspeech-20230615.tar.bz2
+  rm icefall-asr-zipformer-streaming-wenetspeech-20230615.tar.bz2
+fi
+
+go mod tidy
+go build
 
 ./real-time-speech-recognition-from-microphone \
   --encoder ./icefall-asr-zipformer-streaming-wenetspeech-20230615/exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx \

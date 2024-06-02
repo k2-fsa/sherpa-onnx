@@ -2,7 +2,13 @@
 
 cd dotnet-examples/
 
-cd speaker-identification
+cd vad-non-streaming-asr-paraformer
+./run.sh
+
+cd ../offline-punctuation
+./run.sh
+
+cd ../speaker-identification
 ./run.sh
 
 cd ../streaming-hlg-decoding/

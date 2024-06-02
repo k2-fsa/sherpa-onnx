@@ -51,7 +51,7 @@ class Client {
     c_.init_asio(&io_);
     c_.set_open_handler([this](connection_hdl hdl) { OnOpen(hdl); });
     c_.set_close_handler(
-        [this](connection_hdl /*hdl*/) { SHERPA_ONNX_LOGE("Disconnected"); });
+        [](connection_hdl /*hdl*/) { SHERPA_ONNX_LOGE("Disconnected"); });
     c_.set_message_handler(
         [this](connection_hdl hdl, message_ptr msg) { OnMessage(hdl, msg); });
 

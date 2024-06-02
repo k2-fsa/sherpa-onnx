@@ -88,6 +88,7 @@ jobs:
 
             rm -rf ms
             export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
 
             git clone https://www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en.git ms
             cd ms
@@ -124,6 +125,7 @@ jobs:
 
             rm -rf huggingface
             export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
 
             git clone https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en huggingface
             cd huggingface

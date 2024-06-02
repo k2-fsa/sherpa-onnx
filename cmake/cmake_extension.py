@@ -80,6 +80,7 @@ def get_binaries():
             "kaldi-decoder-core.dll",
             "kaldi-native-fbank-core.dll",
             "onnxruntime.dll",
+            "ssentencepiece_core.dll",
             "piper_phonemize.dll",
             "sherpa-onnx-c-api.dll",
             "sherpa-onnx-core.dll",

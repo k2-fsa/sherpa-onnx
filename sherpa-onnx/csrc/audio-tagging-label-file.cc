@@ -65,7 +65,7 @@ void AudioTaggingLabels::Init(std::istream &is) {
       exit(-1);
     }
 
-    if (i != names_.size()) {
+    if (i != static_cast<int32_t>(names_.size())) {
       SHERPA_ONNX_LOGE(
           "Index should be sorted and contiguous. Expected index: %d, given: "
           "%d.",
