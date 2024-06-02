@@ -28,11 +28,10 @@ class OfflineStream {
     final pList = p.asTypedList(n);
     pList.setAll(0, samples);
 
-    SherpaOnnxBindings.acceptWaveformOffline
-        ?.call(this.ptr, sampleRate, p, n);
+    SherpaOnnxBindings.acceptWaveformOffline?.call(this.ptr, sampleRate, p, n);
 
     calloc.free(p);
   }
 
-  Pointer<SherpaOnnxOnlineStream> ptr;
+  Pointer<SherpaOnnxOfflineStream> ptr;
 }

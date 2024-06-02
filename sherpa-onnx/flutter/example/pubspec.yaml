@@ -74,6 +74,8 @@ flutter:
   assets:
     - assets/
     - assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/
+    # - assets/sherpa-onnx-paraformer-zh-2023-03-28/
+    # - assets/sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/
   #   - assets/sr-data/enroll/
   #   - assets/sr-data/test/
   #   - images/a_dot_ham.jpeg

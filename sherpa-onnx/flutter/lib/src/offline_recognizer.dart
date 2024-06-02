@@ -10,7 +10,7 @@ import './offline_stream.dart';
 import './sherpa_onnx_bindings.dart';
 
 class OfflineTransducerModelConfig {
-  const OfflineTransducerModelConfig ({
+  const OfflineTransducerModelConfig({
     this.encoder = '',
     this.decoder = '',
     this.joiner = '',
@@ -49,7 +49,12 @@ class OfflineNemoEncDecCtcModelConfig {
 }
 
 class OfflineWhisperModelConfig {
-  const OfflineWhisperModelConfig({this.encoder = '', this.decoder='', this.language='', this.task='', this.tailPaddings=-1});
+  const OfflineWhisperModelConfig(
+      {this.encoder = '',
+      this.decoder = '',
+      this.language = '',
+      this.task = '',
+      this.tailPaddings = -1});
 
   @override
   String toString() {
@@ -75,7 +80,7 @@ class OfflineTdnnModelConfig {
 }
 
 class OfflineLMConfig {
-  const OfflineLMConfig({this.model = '', this.scale=1.0});
+  const OfflineLMConfig({this.model = '', this.scale = 1.0});
 
   @override
   String toString() {
@@ -112,10 +117,10 @@ class OfflineModelConfig {
   final OfflineTdnnModelConfig tdnn;
 
   final String tokens;
-  int numThreads;
-  int debug;
-  String provider;
-  String modelType;
+  final int numThreads;
+  final bool debug;
+  final String provider;
+  final String modelType;
 }
 
 class OfflineRecognizerConfig {
@@ -168,7 +173,7 @@ class OfflineRecognizer {
     ptr = nullptr;
   }
 
-  /// The user is responsible to call the OnlineRecognizer.free()
+  /// The user is responsible to call the OfflineRecognizer.free()
   /// method of the returned instance to avoid memory leak.
   factory OfflineRecognizer(OfflineRecognizerConfig config) {
     final c = calloc<SherpaOnnxOfflineRecognizerConfig>();
@@ -185,19 +190,15 @@ class OfflineRecognizer {
         config.model.transducer.joiner.toNativeUtf8();
 
     // paraformer
-    c.ref.model.paraformer.model =
-        config.model.paraformer.model.toNativeUtf8();
+    c.ref.model.paraformer.model = config.model.paraformer.model.toNativeUtf8();
 
     // nemoCtc
-    c.ref.model.nemoCtc.model =
-        config.model.nemoCtc.model.toNativeUtf8();
+    c.ref.model.nemoCtc.model = config.model.nemoCtc.model.toNativeUtf8();
 
     // whisper
-    c.ref.model.whisper.encoder =
-        config.model.whisper.encoder.toNativeUtf8();
+    c.ref.model.whisper.encoder = config.model.whisper.encoder.toNativeUtf8();
 
-    c.ref.model.whisper.decoder =
-        config.model.whisper.decoder.toNativeUtf8();
+    c.ref.model.whisper.decoder = config.model.whisper.decoder.toNativeUtf8();
 
     c.ref.model.whisper.language = config.model.whisper.language.toNativeUtf8();
 
