@@ -189,7 +189,8 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
                     nullptr);
 }
 
-bool EncodeKeywords(std::istream &is, const SymbolTable &symbol_table,
+bool EncodeKeywords(std::istream &is, const std::string &modeling_unit,
+                    const SymbolTable &symbol_table,
                     const ssentencepiece::Ssentencepiece *bpe_encoder,
                     const cppinyin::PinyinEncoder *pinyin_encoder,
                     std::vector<std::vector<int32_t>> *keywords_id,
@@ -231,7 +232,14 @@ bool EncodeKeywords(std::istream &is, const SymbolTable &symbol_table,
           break;
       }
     }
-    phrase = oss.str().substr(1);
+
+    phrase = oss.str();
+    if (phrase.empty()) {
+      continue;
+    } else {
+      phrase = phrase.substr(1);
+    }
+
     std::istringstream piss(phrase);
     oss.clear();
     oss.str("");
@@ -254,7 +262,8 @@ bool EncodeKeywords(std::istream &is, const SymbolTable &symbol_table,
           exit(-1);
         }
         std::vector<std::string> pinyins;
-        pinyin_encoder->Encode(word, &pinyins);
+        pinyin_encoder->Encode(word, &pinyins, true /* tone */,
+                               true /* partial */);
         for (const auto &pinyin : pinyins) {
           oss << " " << pinyin;
         }

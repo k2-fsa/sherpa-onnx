@@ -19,6 +19,7 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#include "cppinyin/csrc/cppinyin.h"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/keyword-spotter-impl.h"
 #include "sherpa-onnx/csrc/keyword-spotter.h"
@@ -27,6 +28,7 @@
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/transducer-keyword-decoder.h"
 #include "sherpa-onnx/csrc/utils.h"
+#include "ssentencepiece/csrc/ssentencepiece.h"
 
 namespace sherpa_onnx {
 
@@ -118,8 +120,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     std::vector<float> current_scores;
     std::vector<float> current_thresholds;
 
-    if (!EncodeKeywords(is, sym_, &current_ids, &current_kws, &current_scores,
-                        &current_thresholds)) {
+    if (!EncodeKeywords(is, "", sym_, nullptr, nullptr, &current_ids,
+                        &current_kws, &current_scores, &current_thresholds)) {
       SHERPA_ONNX_LOGE("Encode keywords %s failed.", keywords.c_str());
       return nullptr;
     }
@@ -259,8 +261,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
 
  private:
   void InitKeywords(std::istream &is) {
-    if (!EncodeKeywords(is, sym_, &keywords_id_, &keywords_, &boost_scores_,
-                        &thresholds_)) {
+    if (!EncodeKeywords(is, "", sym_, nullptr, nullptr, &keywords_id_,
+                        &keywords_, &boost_scores_, &thresholds_)) {
       SHERPA_ONNX_LOGE("Encode keywords failed.");
       exit(-1);
     }

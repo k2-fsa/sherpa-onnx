@@ -52,7 +52,8 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
  * @return  If all the symbols from ``is`` are in the symbol_table, returns true
  *          otherwise returns false.
  */
-bool EncodeKeywords(std::istream &is, const SymbolTable &symbol_table,
+bool EncodeKeywords(std::istream &is, const std::string &modeling_unit,
+                    const SymbolTable &symbol_table,
                     const ssentencepiece::Ssentencepiece *bpe_encoder,
                     const cppinyin::PinyinEncoder *pinyin_encoder,
                     std::vector<std::vector<int32_t>> *keywords_id,
