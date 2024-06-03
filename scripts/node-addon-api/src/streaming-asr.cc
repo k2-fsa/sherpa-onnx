@@ -118,6 +118,8 @@ SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
   }
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(modeling_unit, modelingUnit);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(bpe_vocab, bpeVocab);
 
   return c;
 }
@@ -226,6 +228,14 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
 
   if (c.model_config.model_type) {
     delete[] c.model_config.model_type;
+  }
+
+  if (c.model_config.modeling_unit) {
+    delete[] c.model_config.modeling_unit;
+  }
+
+  if (c.model_config.bpe_vocab) {
+    delete[] c.model_config.bpe_vocab;
   }
 
   if (c.decoding_method) {
