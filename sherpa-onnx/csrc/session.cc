@@ -106,17 +106,11 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
                 tensorrt_options, option_keys.data(), option_values.data(),
                 option_keys.size());
 
-        if (statusC) {
-          OrtStatusFailure(statusC, &os);
-        } else if (statusU) {
-          OrtStatusFailure(statusU, &os);
-        } else {
-          auto *statusTrt = OrtSessionOptionsAppendExecutionProvider_Tensorrt(
+        auto *statusTrt = OrtSessionOptionsAppendExecutionProvider_Tensorrt(
                               sess_opts, 0);
-          if (statusTrt) {
-            OrtStatusFailure(statusTrt, &os);
-          }
-        }
+        if (statusC) { OrtStatusFailure(statusC, &os); }
+        if (statusU) { OrtStatusFailure(statusU, &os); }
+        if (statusTrt) { OrtStatusFailure(statusTrt, &os);}
 
         api.ReleaseTensorRTProviderOptions(tensorrt_options);
       }
