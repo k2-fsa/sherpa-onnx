@@ -22,6 +22,16 @@
 
 namespace sherpa_onnx {
 
+
+static void OrtStatusFailure(OrtStatus *status,std::ostringstream *os) {
+    const auto &api = Ort::GetApi();
+    const char *msg = api.GetErrorMessage(status);
+    SHERPA_ONNX_LOGE(
+      "Failed to enable TensorRT : %s."
+      "Available providers: %s. Fallback to cuda", msg, os->str().c_str());
+    api.ReleaseStatus(status);
+}
+
 static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
                                                  std::string provider_str) {
   Provider p = StringToProvider(std::move(provider_str));
@@ -108,7 +118,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
 
         api.ReleaseTensorRTProviderOptions(tensorrt_options);
       }
-      // Break is ommited here intentially so that
+      // break; is ommited here intentially so that
       // if TRT not available, CUDA will be used
     }
     case Provider::kCUDA: {
@@ -220,15 +230,6 @@ Ort::SessionOptions GetSessionOptions(const AudioTaggingModelConfig &config) {
 Ort::SessionOptions GetSessionOptions(
     const OfflinePunctuationModelConfig &config) {
   return GetSessionOptionsImpl(config.num_threads, config.provider);
-}
-
-void OrtStatusFailure(OrtStatus *status,std::ostringstream *os) {
-    const auto &api = Ort::GetApi();
-    const char *msg = api.GetErrorMessage(status);
-    SHERPA_ONNX_LOGE(
-      "Failed to enable TensorRT : %s."
-      "Available providers: %s. Fallback to cuda", msg, os->str().c_str());
-    api.ReleaseStatus(status);
 }
 
 }  // namespace sherpa_onnx
