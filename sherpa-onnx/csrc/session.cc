@@ -23,7 +23,7 @@
 namespace sherpa_onnx {
 
 
-static void OrtStatusFailure(OrtStatus *status,std::ostringstream *os) {
+static void OrtStatusFailure(OrtStatus *status, std::ostringstream *os) {
     const auto &api = Ort::GetApi();
     const char *msg = api.GetErrorMessage(status);
     SHERPA_ONNX_LOGE(
@@ -65,31 +65,29 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
       break;
     }
     case Provider::kTRT: {
-
       struct TrtPairs {
         const char* op_keys;
         const char* op_values;
       };
 
       std::vector<TrtPairs> trt_options = {
-        {"device_id","0"},
-        {"trt_max_workspace_size","2147483648"},
-        {"trt_max_partition_iterations","10"},
-        {"trt_min_subgraph_size","5"},
-        {"trt_fp16_enable","0"},
-        {"trt_detailed_build_log","0"},
-        {"trt_engine_cache_enable","1"},
-        {"trt_engine_cache_path","."},
-        {"trt_timing_cache_enable","1"},
-        {"trt_timing_cache_path","."}
+        {"device_id", "0"},
+        {"trt_max_workspace_size", "2147483648"},
+        {"trt_max_partition_iterations", "10"},
+        {"trt_min_subgraph_size", "5"},
+        {"trt_fp16_enable", "0"},
+        {"trt_detailed_build_log", "0"},
+        {"trt_engine_cache_enable", "1"},
+        {"trt_engine_cache_path", "."},
+        {"trt_timing_cache_enable", "1"},
+        {"trt_timing_cache_path", "."}
       };
-      
       // ToDo : Trt configs
-      // "trt_int8_enable",
-      // "trt_int8_use_native_calibration_table",
-      // "trt_dump_subgraphs",
+      // "trt_int8_enable"
+      // "trt_int8_use_native_calibration_table"
+      // "trt_dump_subgraphs"
 
-      std::vector<const char*> option_keys,option_values;
+      std::vector<const char*> option_keys, option_values;
       for (const TrtPairs& pair : trt_options) {
         option_keys.emplace_back(pair.op_keys);
         option_values.emplace_back(pair.op_values);
@@ -108,12 +106,16 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
                 tensorrt_options, option_keys.data(), option_values.data(),
                 option_keys.size());
 
-        if (statusC) { OrtStatusFailure(statusC,&os);}
-        else if(statusU) { OrtStatusFailure(statusU,&os);}
-        else {
+        if (statusC) {
+          OrtStatusFailure(statusC, &os);
+        } else if (statusU) {
+          OrtStatusFailure(statusU, &os);
+        } else {
           auto *statusTrt = OrtSessionOptionsAppendExecutionProvider_Tensorrt(
                               sess_opts, 0);
-          if(statusTrt) { OrtStatusFailure(statusTrt,&os);}
+          if (statusTrt) {
+            OrtStatusFailure(statusTrt, &os);
+          }
         }
 
         api.ReleaseTensorRTProviderOptions(tensorrt_options);
