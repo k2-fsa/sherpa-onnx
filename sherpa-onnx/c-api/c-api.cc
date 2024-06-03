@@ -79,6 +79,10 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
       SHERPA_ONNX_OR(config->model_config.model_type, "");
   recognizer_config.model_config.debug =
       SHERPA_ONNX_OR(config->model_config.debug, 0);
+  recognizer_config.model_config.modeling_unit =
+      SHERPA_ONNX_OR(config->model_config.modeling_unit, "cjkchar");
+  recognizer_config.model_config.bpe_vocab =
+      SHERPA_ONNX_OR(config->model_config.bpe_vocab, "");
 
   recognizer_config.decoding_method =
       SHERPA_ONNX_OR(config->decoding_method, "greedy_search");
@@ -357,6 +361,10 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
   recognizer_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
+  recognizer_config.model_config.modeling_unit =
+      SHERPA_ONNX_OR(config->model_config.modeling_unit, "cjkchar");
+  recognizer_config.model_config.bpe_vocab =
+      SHERPA_ONNX_OR(config->model_config.bpe_vocab, "");
 
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");

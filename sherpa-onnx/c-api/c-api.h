@@ -82,6 +82,12 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineModelConfig {
   const char *provider;
   int32_t debug;  // true to print debug information of the model
   const char *model_type;
+  // Valid values:
+  //  - cjkchar
+  //  - bpe
+  //  - cjkchar+bpe
+  const char *modeling_unit;
+  const char *bpe_vocab;
 } SherpaOnnxOnlineModelConfig;
 
 /// It expects 16 kHz 16-bit single channel wave format.
@@ -383,6 +389,12 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   int32_t debug;
   const char *provider;
   const char *model_type;
+  // Valid values:
+  //  - cjkchar
+  //  - bpe
+  //  - cjkchar+bpe
+  const char *modeling_unit;
+  const char *bpe_vocab;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {
