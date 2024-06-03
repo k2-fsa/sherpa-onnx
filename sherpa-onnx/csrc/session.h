@@ -47,6 +47,8 @@ Ort::SessionOptions GetSessionOptions(const AudioTaggingModelConfig &config);
 Ort::SessionOptions GetSessionOptions(
     const OfflinePunctuationModelConfig &config);
 
+void OrtStatusFailure(OrtStatus *status,std::ostringstream *os);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_SESSION_H_
