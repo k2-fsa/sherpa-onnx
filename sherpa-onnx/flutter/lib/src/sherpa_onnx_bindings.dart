@@ -10,6 +10,76 @@ final class SherpaOnnxFeatureConfig extends Struct {
   external int featureDim;
 }
 
+final class SherpaOnnxOfflineTransducerModelConfig extends Struct {
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> decoder;
+  external Pointer<Utf8> joiner;
+}
+
+final class SherpaOnnxOfflineParaformerModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
+final class SherpaOnnxOfflineNemoEncDecCtcModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
+final class SherpaOnnxOfflineWhisperModelConfig extends Struct {
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> decoder;
+  external Pointer<Utf8> language;
+  external Pointer<Utf8> task;
+
+  @Int32()
+  external int tailPaddings;
+}
+
+final class SherpaOnnxOfflineTdnnModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
+final class SherpaOnnxOfflineLMConfig extends Struct {
+  external Pointer<Utf8> model;
+
+  @Float()
+  external double scale;
+}
+
+final class SherpaOnnxOfflineModelConfig extends Struct {
+  external SherpaOnnxOfflineTransducerModelConfig transducer;
+  external SherpaOnnxOfflineParaformerModelConfig paraformer;
+  external SherpaOnnxOfflineNemoEncDecCtcModelConfig nemoCtc;
+  external SherpaOnnxOfflineWhisperModelConfig whisper;
+  external SherpaOnnxOfflineTdnnModelConfig tdnn;
+
+  external Pointer<Utf8> tokens;
+
+  @Int32()
+  external int numThreads;
+
+  @Int32()
+  external int debug;
+
+  external Pointer<Utf8> provider;
+
+  external Pointer<Utf8> modelType;
+}
+
+final class SherpaOnnxOfflineRecognizerConfig extends Struct {
+  external SherpaOnnxFeatureConfig feat;
+  external SherpaOnnxOfflineModelConfig model;
+  external SherpaOnnxOfflineLMConfig lm;
+  external Pointer<Utf8> decodingMethod;
+
+  @Int32()
+  external int maxActivePaths;
+
+  external Pointer<Utf8> hotwordsFile;
+
+  @Float()
+  external double hotwordsScore;
+}
+
 final class SherpaOnnxOnlineTransducerModelConfig extends Struct {
   external Pointer<Utf8> encoder;
   external Pointer<Utf8> decoder;
@@ -149,9 +219,55 @@ final class SherpaOnnxOnlineStream extends Opaque {}
 
 final class SherpaOnnxOnlineRecognizer extends Opaque {}
 
+final class SherpaOnnxOfflineRecognizer extends Opaque {}
+
+final class SherpaOnnxOfflineStream extends Opaque {}
+
 final class SherpaOnnxSpeakerEmbeddingExtractor extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingManager extends Opaque {}
+
+typedef CreateOfflineRecognizerNative = Pointer<SherpaOnnxOfflineRecognizer>
+    Function(Pointer<SherpaOnnxOfflineRecognizerConfig>);
+
+typedef CreateOfflineRecognizer = CreateOfflineRecognizerNative;
+
+typedef DestroyOfflineRecognizerNative = Void Function(
+    Pointer<SherpaOnnxOfflineRecognizer>);
+
+typedef DestroyOfflineRecognizer = void Function(
+    Pointer<SherpaOnnxOfflineRecognizer>);
+
+typedef CreateOfflineStreamNative = Pointer<SherpaOnnxOfflineStream> Function(
+    Pointer<SherpaOnnxOfflineRecognizer>);
+
+typedef CreateOfflineStream = CreateOfflineStreamNative;
+
+typedef DestroyOfflineStreamNative = Void Function(
+    Pointer<SherpaOnnxOfflineStream>);
+
+typedef DestroyOfflineStream = void Function(Pointer<SherpaOnnxOfflineStream>);
+
+typedef AcceptWaveformOfflineNative = Void Function(
+    Pointer<SherpaOnnxOfflineStream>, Int32, Pointer<Float>, Int32);
+
+typedef AcceptWaveformOffline = void Function(
+    Pointer<SherpaOnnxOfflineStream>, int, Pointer<Float>, int);
+
+typedef DecodeOfflineStreamNative = Void Function(
+    Pointer<SherpaOnnxOfflineRecognizer>, Pointer<SherpaOnnxOfflineStream>);
+
+typedef DecodeOfflineStream = void Function(
+    Pointer<SherpaOnnxOfflineRecognizer>, Pointer<SherpaOnnxOfflineStream>);
+
+typedef GetOfflineStreamResultAsJsonNative = Pointer<Utf8> Function(
+    Pointer<SherpaOnnxOfflineStream>);
+
+typedef GetOfflineStreamResultAsJson = GetOfflineStreamResultAsJsonNative;
+
+typedef DestroyOfflineStreamResultJsonNative = Void Function(Pointer<Utf8>);
+
+typedef DestroyOfflineStreamResultJson = void Function(Pointer<Utf8>);
 
 typedef CreateOnlineRecognizerNative = Pointer<SherpaOnnxOnlineRecognizer>
     Function(Pointer<SherpaOnnxOnlineRecognizerConfig>);
@@ -488,6 +604,15 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
+  static CreateOfflineRecognizer? createOfflineRecognizer;
+  static DestroyOfflineRecognizer? destroyOfflineRecognizer;
+  static CreateOfflineStream? createOfflineStream;
+  static DestroyOfflineStream? destroyOfflineStream;
+  static AcceptWaveformOffline? acceptWaveformOffline;
+  static DecodeOfflineStream? decodeOfflineStream;
+  static GetOfflineStreamResultAsJson? getOfflineStreamResultAsJson;
+  static DestroyOfflineStreamResultJson? destroyOfflineStreamResultJson;
+
   static CreateOnlineRecognizer? createOnlineRecognizer;
 
   static DestroyOnlineRecognizer? destroyOnlineRecognizer;
@@ -611,6 +736,46 @@ class SherpaOnnxBindings {
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
+    createOfflineRecognizer ??= dynamicLibrary
+        .lookup<NativeFunction<CreateOfflineRecognizerNative>>(
+            'CreateOfflineRecognizer')
+        .asFunction();
+
+    destroyOfflineRecognizer ??= dynamicLibrary
+        .lookup<NativeFunction<DestroyOfflineRecognizerNative>>(
+            'DestroyOfflineRecognizer')
+        .asFunction();
+
+    createOfflineStream ??= dynamicLibrary
+        .lookup<NativeFunction<CreateOfflineStreamNative>>(
+            'CreateOfflineStream')
+        .asFunction();
+
+    destroyOfflineStream ??= dynamicLibrary
+        .lookup<NativeFunction<DestroyOfflineStreamNative>>(
+            'DestroyOfflineStream')
+        .asFunction();
+
+    acceptWaveformOffline ??= dynamicLibrary
+        .lookup<NativeFunction<AcceptWaveformOfflineNative>>(
+            'AcceptWaveformOffline')
+        .asFunction();
+
+    decodeOfflineStream ??= dynamicLibrary
+        .lookup<NativeFunction<DecodeOfflineStreamNative>>(
+            'DecodeOfflineStream')
+        .asFunction();
+
+    getOfflineStreamResultAsJson ??= dynamicLibrary
+        .lookup<NativeFunction<GetOfflineStreamResultAsJsonNative>>(
+            'GetOfflineStreamResultAsJson')
+        .asFunction();
+
+    destroyOfflineStreamResultJson ??= dynamicLibrary
+        .lookup<NativeFunction<DestroyOfflineStreamResultJsonNative>>(
+            'DestroyOfflineStreamResultJson')
+        .asFunction();
+
     createOnlineRecognizer ??= dynamicLibrary
         .lookup<NativeFunction<CreateOnlineRecognizerNative>>(
             'CreateOnlineRecognizer')
