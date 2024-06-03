@@ -86,8 +86,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineModelConfig {
   //  - cjkchar
   //  - bpe
   //  - cjkchar+bpe
-  std::string modeling_unit = "cjkchar";
-  std::string bpe_vocab;
+  const char * modeling_unit = "cjkchar";
+  const char * bpe_vocab;
 } SherpaOnnxOnlineModelConfig;
 
 /// It expects 16 kHz 16-bit single channel wave format.
@@ -393,8 +393,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   //  - cjkchar
   //  - bpe
   //  - cjkchar+bpe
-  std::string modeling_unit = "cjkchar";
-  std::string bpe_vocab;
+  const char * modeling_unit = "cjkchar";
+  const char * bpe_vocab;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {
