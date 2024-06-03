@@ -108,6 +108,8 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
 
         api.ReleaseTensorRTProviderOptions(tensorrt_options);
       }
+      // Break is ommited here intentially so that
+      // if TRT not available, CUDA will be used
     }
     case Provider::kCUDA: {
       if (std::find(available_providers.begin(), available_providers.end(),
