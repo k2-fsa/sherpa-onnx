@@ -105,12 +105,10 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
         OrtStatus *statusU = api.UpdateTensorRTProviderOptions(
                 tensorrt_options, option_keys.data(), option_values.data(),
                 option_keys.size());
+        sess_opts.AppendExecutionProvider_TensorRT_V2(*tensorrt_options);
 
-        auto *statusTrt = OrtSessionOptionsAppendExecutionProvider_Tensorrt(
-                              sess_opts, 0);
         if (statusC) { OrtStatusFailure(statusC, &os); }
         if (statusU) { OrtStatusFailure(statusU, &os); }
-        if (statusTrt) { OrtStatusFailure(statusTrt, &os);}
 
         api.ReleaseTensorRTProviderOptions(tensorrt_options);
       }
