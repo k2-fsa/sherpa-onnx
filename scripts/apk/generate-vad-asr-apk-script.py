@@ -166,6 +166,22 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04",
+            idx=11,
+            lang="zh",
+            short_name="telespeech",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm test.py
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
