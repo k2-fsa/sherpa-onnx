@@ -19,7 +19,7 @@ static_assert(sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) == 1 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineModelConfig) ==
                   sizeof(SherpaOnnxOnlineTransducerModelConfig) +
                       sizeof(SherpaOnnxOnlineParaformerModelConfig) +
-                      sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 5 * 4,
+                      sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 7 * 4,
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineCtcFstDecoderConfig) == 2 * 4, "");
@@ -52,6 +52,8 @@ void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
   fprintf(stdout, "provider: %s\n", model_config->provider);
   fprintf(stdout, "debug: %d\n", model_config->debug);
   fprintf(stdout, "model type: %s\n", model_config->model_type);
+  fprintf(stdout, "modeling unit: %s\n", model_config->modeling_unit);
+  fprintf(stdout, "bpe vocab: %s\n", model_config->bpe_vocab);
 
   fprintf(stdout, "----------feat config----------\n");
   fprintf(stdout, "sample rate: %d\n", feat->sample_rate);

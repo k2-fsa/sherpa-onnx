@@ -87,6 +87,8 @@ type OnlineModelConfig struct {
 	Provider      string // Optional. Valid values are: cpu, cuda, coreml
 	Debug         int    // 1 to show model meta information while loading it.
 	ModelType     string // Optional. You can specify it for faster model initialization
+	ModelingUnit  string // Optional. cjkchar, bpe, cjkchar+bpe
+	BpeVocab      string // Optional.
 }
 
 // Configuration for the feature extractor
@@ -186,6 +188,12 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 
 	c.model_config.model_type = C.CString(config.ModelConfig.ModelType)
 	defer C.free(unsafe.Pointer(c.model_config.model_type))
+
+	c.model_config.modeling_unit = C.CString(config.ModelConfig.ModelingUnit)
+	defer C.free(unsafe.Pointer(c.model_config.modeling_unit))
+
+	c.model_config.bpe_vocab = C.CString(config.ModelConfig.BpeVocab)
+	defer C.free(unsafe.Pointer(c.model_config.bpe_vocab))
 
 	c.decoding_method = C.CString(config.DecodingMethod)
 	defer C.free(unsafe.Pointer(c.decoding_method))
@@ -372,6 +380,9 @@ type OfflineModelConfig struct {
 
 	// Optional. Specify it for faster model initialization.
 	ModelType string
+
+	ModelingUnit string // Optional. cjkchar, bpe, cjkchar+bpe
+	BpeVocab     string // Optional.
 }
 
 // Configuration for the offline/non-streaming recognizer.
@@ -459,6 +470,12 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 
 	c.model_config.model_type = C.CString(config.ModelConfig.ModelType)
 	defer C.free(unsafe.Pointer(c.model_config.model_type))
+
+	c.model_config.modeling_unit = C.CString(config.ModelConfig.ModelingUnit)
+	defer C.free(unsafe.Pointer(c.model_config.modeling_unit))
+
+	c.model_config.bpe_vocab = C.CString(config.ModelConfig.BpeVocab)
+	defer C.free(unsafe.Pointer(c.model_config.bpe_vocab))
 
 	c.lm_config.model = C.CString(config.LmConfig.Model)
 	defer C.free(unsafe.Pointer(c.lm_config.model))

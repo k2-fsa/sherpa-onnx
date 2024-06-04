@@ -23,7 +23,7 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineParaformerModelConfig) +
                       sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) +
                       sizeof(SherpaOnnxOfflineWhisperModelConfig) +
-                      sizeof(SherpaOnnxOfflineTdnnModelConfig) + 5 * 4,
+                      sizeof(SherpaOnnxOfflineTdnnModelConfig) + 7 * 4,
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineRecognizerConfig) ==
@@ -90,6 +90,8 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "provider: %s\n", model_config->provider);
   fprintf(stdout, "debug: %d\n", model_config->debug);
   fprintf(stdout, "model type: %s\n", model_config->model_type);
+  fprintf(stdout, "modeling unit: %s\n", model_config->modeling_unit);
+  fprintf(stdout, "bpe vocab: %s\n", model_config->bpe_vocab);
 
   fprintf(stdout, "----------feat config----------\n");
   fprintf(stdout, "sample rate: %d\n", feat->sample_rate);
