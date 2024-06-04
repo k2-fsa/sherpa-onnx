@@ -23,6 +23,8 @@ namespace SherpaOnnx
             Debug = 0;
             Provider = "cpu";
             ModelType = "";
+            ModelingUnit = "cjkchar";
+            BpeVocab = "";
         }
         public OfflineTransducerModelConfig Transducer;
         public OfflineParaformerModelConfig Paraformer;
@@ -42,5 +44,11 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string ModelType;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string ModelingUnit;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string BpeVocab;
     }
 }

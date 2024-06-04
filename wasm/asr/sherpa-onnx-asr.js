@@ -137,7 +137,7 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
   const ctc = initSherpaOnnxOnlineZipformer2CtcModelConfig(
       config.zipformer2Ctc, Module);
 
-  const len = transducer.len + paraformer.len + ctc.len + 5 * 4;
+  const len = transducer.len + paraformer.len + ctc.len + 7 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -153,7 +153,11 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
   const tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
   const providerLen = Module.lengthBytesUTF8(config.provider) + 1;
   const modelTypeLen = Module.lengthBytesUTF8(config.modelType) + 1;
-  const bufferLen = tokensLen + providerLen + modelTypeLen;
+  const modelingUnitLen = Module.lengthBytesUTF8(config.modelingUnit || '') + 1;
+  const bpeVocabLen = Module.lengthBytesUTF8(config.bpeVocab || '') + 1;
+
+  const bufferLen =
+      tokensLen + providerLen + modelTypeLen + modelingUnitLen + bpeVocabLen;
   const buffer = Module._malloc(bufferLen);
 
   offset = 0;
@@ -164,6 +168,14 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
   offset += providerLen;
 
   Module.stringToUTF8(config.modelType, buffer + offset, modelTypeLen);
+  offset += modelTypeLen;
+
+  Module.stringToUTF8(
+      config.modelingUnit || '', buffer + offset, modelingUnitLen);
+  offset += modelingUnitLen;
+
+  Module.stringToUTF8(config.bpeVocab || '', buffer + offset, bpeVocabLen);
+  offset += bpeVocabLen;
 
   offset = transducer.len + paraformer.len + ctc.len;
   Module.setValue(ptr + offset, buffer, 'i8*');  // tokens
@@ -180,6 +192,17 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
 
   Module.setValue(
       ptr + offset, buffer + tokensLen + providerLen, 'i8*');  // modelType
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset, buffer + tokensLen + providerLen + modelTypeLen,
+      'i8*');  // modelingUnit
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset,
+      buffer + tokensLen + providerLen + modelTypeLen + modelingUnitLen,
+      'i8*');  // bpeVocab
   offset += 4;
 
   return {
@@ -317,6 +340,8 @@ function createOnlineRecognizer(Module, myConfig) {
     provider: 'cpu',
     debug: 1,
     modelType: '',
+    modelingUnit: 'cjkchar',
+    bpeVocab: '',
   };
 
   const featureConfig = {
@@ -504,7 +529,7 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const tdnn = initSherpaOnnxOfflineTdnnModelConfig(config.tdnn, Module);
 
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
-      tdnn.len + 5 * 4;
+      tdnn.len + 7 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -526,7 +551,11 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
   const providerLen = Module.lengthBytesUTF8(config.provider) + 1;
   const modelTypeLen = Module.lengthBytesUTF8(config.modelType) + 1;
-  const bufferLen = tokensLen + providerLen + modelTypeLen;
+  const modelingUnitLen = Module.lengthBytesUTF8(config.modelingUnit || '') + 1;
+  const bpeVocabLen = Module.lengthBytesUTF8(config.bpeVocab || '') + 1;
+
+  const bufferLen =
+      tokensLen + providerLen + modelTypeLen + modelingUnitLen + bpeVocabLen;
   const buffer = Module._malloc(bufferLen);
 
   offset = 0;
@@ -537,6 +566,14 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   offset += providerLen;
 
   Module.stringToUTF8(config.modelType, buffer + offset, modelTypeLen);
+  offset += modelTypeLen;
+
+  Module.stringToUTF8(
+      config.modelingUnit || '', buffer + offset, modelingUnitLen);
+  offset += modelingUnitLen;
+
+  Module.stringToUTF8(config.bpeVocab || '', buffer + offset, bpeVocabLen);
+  offset += bpeVocabLen;
 
   offset =
       transducer.len + paraformer.len + nemoCtc.len + whisper.len + tdnn.len;
@@ -554,6 +591,17 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
 
   Module.setValue(
       ptr + offset, buffer + tokensLen + providerLen, 'i8*');  // modelType
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset, buffer + tokensLen + providerLen + modelTypeLen,
+      'i8*');  // modelingUnit
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset,
+      buffer + tokensLen + providerLen + modelTypeLen + modelingUnitLen,
+      'i8*');  // bpeVocab
   offset += 4;
 
   return {
