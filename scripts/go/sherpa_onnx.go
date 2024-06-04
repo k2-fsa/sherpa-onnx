@@ -89,6 +89,7 @@ type OnlineModelConfig struct {
 	ModelType     string // Optional. You can specify it for faster model initialization
 	ModelingUnit  string // Optional. cjkchar, bpe, cjkchar+bpe
 	BpeVocab      string // Optional.
+	TeleSpeechCtc string // Optional.
 }
 
 // Configuration for the feature extractor
@@ -194,6 +195,9 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 
 	c.model_config.bpe_vocab = C.CString(config.ModelConfig.BpeVocab)
 	defer C.free(unsafe.Pointer(c.model_config.bpe_vocab))
+
+	c.model_config.telespeech_ctc = C.CString(config.ModelConfig.TeleSpeechCtc)
+	defer C.free(unsafe.Pointer(c.model_config.telespeech_ctc))
 
 	c.decoding_method = C.CString(config.DecodingMethod)
 	defer C.free(unsafe.Pointer(c.decoding_method))

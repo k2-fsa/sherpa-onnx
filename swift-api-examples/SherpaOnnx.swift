@@ -102,7 +102,7 @@ func sherpaOnnxOnlineModelConfig(
     debug: Int32(debug),
     model_type: toCPointer(modelType),
     modeling_unit: toCPointer(modelingUnit),
-    bpeVocab: toCPointer(bpeVocab)
+    bpe_vocab: toCPointer(bpeVocab)
   )
 }
 
@@ -374,7 +374,7 @@ func sherpaOnnxOfflineModelConfig(
     provider: toCPointer(provider),
     model_type: toCPointer(modelType),
     modeling_unit: toCPointer(modelingUnit),
-    bpeVocab: toCPointer(bpeVocab)
+    bpe_vocab: toCPointer(bpeVocab)
   )
 }
 
