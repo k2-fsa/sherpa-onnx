@@ -15,7 +15,7 @@ ls -lh
 
 ./add-metadata.py
 
-dst=sherpa-onnx-telespeech-ctc-2024-06-04
+dst=sherpa-onnx-telespeech-ctc-zh-2024-06-04
 mkdir $dst
 mkdir $dst/test_wavs
 cp -v model.onnx $dst/
@@ -29,7 +29,7 @@ ls -lh $dst
 
 tar cvjfv ${dst}.tar.bz2 $dst
 
-dst=sherpa-onnx-telespeech-ctc-int8-2024-06-04
+dst=sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04
 mkdir $dst
 mkdir $dst/test_wavs
 cp -v model.int8.onnx $dst/
