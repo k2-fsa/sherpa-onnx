@@ -69,6 +69,12 @@ struct FeatureExtractorConfig {
   // for details
   std::string nemo_normalize_type;
 
+  // for MFCC
+  int32_t num_ceps = 13;
+  bool use_energy = true;
+
+  bool is_mfcc = false;
+
   std::string ToString() const;
 
   void Register(ParseOptions *po);

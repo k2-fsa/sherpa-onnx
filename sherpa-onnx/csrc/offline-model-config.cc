@@ -57,12 +57,6 @@ bool OfflineModelConfig::Validate() const {
     return false;
   }
 
-  if (!telespeech_ctc.empty() && !FileExists(telespeech_ctc)) {
-    SHERPA_ONNX_LOGE("telespeech_ctc: '%s' does not exist",
-                     telespeech_ctc.c_str());
-    return false;
-  }
-
   if (!FileExists(tokens)) {
     SHERPA_ONNX_LOGE("tokens: '%s' does not exist", tokens.c_str());
     return false;
@@ -98,6 +92,14 @@ bool OfflineModelConfig::Validate() const {
 
   if (!wenet_ctc.model.empty()) {
     return wenet_ctc.Validate();
+  }
+
+  if (!telespeech_ctc.empty() && !FileExists(telespeech_ctc)) {
+    SHERPA_ONNX_LOGE("telespeech_ctc: '%s' does not exist",
+                     telespeech_ctc.c_str());
+    return false;
+  } else {
+    return true;
   }
 
   return transducer.Validate();
