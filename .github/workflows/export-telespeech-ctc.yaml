@@ -69,7 +69,7 @@ jobs:
           git lfs track "*.pdf"
           git lfs track "*.onnx"
           git add .
-          git commit -m 'add model files'
+          git commit -m 'add model files' || true
           git status
           ls -lh
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-zh-2024-06-04 main || true
@@ -86,13 +86,14 @@ jobs:
 
           export GIT_CLONE_PROTECTION_ACTIVE=false
 
+          rm -rf hf
           GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04 hf
           cp -a $src/* hf/
           cd hf
           git lfs track "*.pdf"
           git lfs track "*.onnx"
           git add .
-          git commit -m 'add model files'
+          git commit -m 'add model files' || true
           git status
           ls -lh
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04 main || true
