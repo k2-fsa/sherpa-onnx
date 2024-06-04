@@ -83,10 +83,9 @@ void KeywordSpotterConfig::Register(ParseOptions *po) {
                "The acoustic threshold (probability) to trigger the keywords.");
   po->Register(
       "keywords-file", &keywords_file,
-      "The file containing keywords, one word/phrase per line, and for each"
-      "phrase the bpe/cjkchar are separated by a space. For example: "
-      "▁HE LL O ▁WORLD"
-      "你 好 世 界");
+      "The file containing keywords, one word/phrase per line. For example: "
+      "HELLO WORLD"
+      "你好世界");
 }
 
 bool KeywordSpotterConfig::Validate() const {

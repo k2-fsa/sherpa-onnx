@@ -74,6 +74,17 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
       unk_id_ = sym_["<unk>"];
     }
 
+    if (!config_.model_config.bpe_vocab.empty()) {
+      bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(
+          config_.model_config.bpe_vocab);
+    }
+
+    if (config_.model_config.modeling_unit == "ppinyin" &&
+        !config_.model_config.lexicon.empty()) {
+      pinyin_encoder_ = std::make_unique<cppinyin::PinyinEncoder>(
+          config_.model_config.lexicon);
+    }
+
     model_->SetFeatureDim(config.feat_config.feature_dim);
 
     InitKeywords();
@@ -94,6 +105,19 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     }
 
     model_->SetFeatureDim(config.feat_config.feature_dim);
+
+    if (!config_.model_config.bpe_vocab.empty()) {
+      auto buf = ReadFile(mgr, config_.model_config.bpe_vocab);
+      std::istringstream iss(std::string(buf.begin(), buf.end()));
+      bpe_encoder_ = std::make_unique<ssentencepiece::Ssentencepiece>(iss);
+    }
+
+    if (config_.model_config.modeling_unit == "ppinyin" &&
+        !config_.model_config.lexicon.empty()) {
+      auto buf = ReadFile(mgr, config_.model_config.lexicon);
+      std::istringstream iss(std::string(buf.begin(), buf.end()));
+      pinyin_encoder_ = std::make_unique<cppinyin::PinyinEncoder>(iss);
+    }
 
     InitKeywords(mgr);
 
@@ -120,7 +144,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     std::vector<float> current_scores;
     std::vector<float> current_thresholds;
 
-    if (!EncodeKeywords(is, "", sym_, nullptr, nullptr, &current_ids,
+    if (!EncodeKeywords(is, config_.model_config.modeling_unit, sym_,
+                        bpe_encoder_.get(), pinyin_encoder_.get(), &current_ids,
                         &current_kws, &current_scores, &current_thresholds)) {
       SHERPA_ONNX_LOGE("Encode keywords %s failed.", keywords.c_str());
       return nullptr;
@@ -261,8 +286,10 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
 
  private:
   void InitKeywords(std::istream &is) {
-    if (!EncodeKeywords(is, "", sym_, nullptr, nullptr, &keywords_id_,
-                        &keywords_, &boost_scores_, &thresholds_)) {
+    if (!EncodeKeywords(is, config_.model_config.modeling_unit, sym_,
+                        bpe_encoder_.get(), pinyin_encoder_.get(),
+                        &keywords_id_, &keywords_, &boost_scores_,
+                        &thresholds_)) {
       SHERPA_ONNX_LOGE("Encode keywords failed.");
       exit(-1);
     }
@@ -325,6 +352,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
   std::vector<float> thresholds_;
   std::vector<std::string> keywords_;
   ContextGraphPtr keywords_graph_;
+  std::unique_ptr<ssentencepiece::Ssentencepiece> bpe_encoder_;
+  std::unique_ptr<cppinyin::PinyinEncoder> pinyin_encoder_;
   std::unique_ptr<OnlineTransducerModel> model_;
   std::unique_ptr<TransducerKeywordDecoder> decoder_;
   SymbolTable sym_;

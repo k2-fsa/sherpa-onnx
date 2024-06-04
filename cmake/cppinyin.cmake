@@ -2,7 +2,7 @@ function(download_cppinyin)
   include(FetchContent)
 
   set(cppinyin_URL "https://github.com/pkufool/cppinyin/archive/refs/tags/v0.1.tar.gz")
-  set(cppinyin_URL2 "https://hub.nauu.cf/pkufool/cppinyin/archive/refs/tags/v0.1.tar.gz")
+  set(cppinyin_URL2 "https://hub.nuaa.cf/pkufool/cppinyin/archive/refs/tags/v0.1.tar.gz")
   set(cppinyin_HASH "SHA256=3659bc0c28d17d41ce932807c1cdc1da8c861e6acee969b5844d0d0a3c5ef78b")
 
   # If you don't have access to the Internet,
