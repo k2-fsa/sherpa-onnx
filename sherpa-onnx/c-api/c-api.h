@@ -395,6 +395,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineModelConfig {
   //  - cjkchar+bpe
   const char *modeling_unit;
   const char *bpe_vocab;
+  const char *telespeech_ctc;
 } SherpaOnnxOfflineModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerConfig {

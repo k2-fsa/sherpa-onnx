@@ -102,7 +102,7 @@ func sherpaOnnxOnlineModelConfig(
     debug: Int32(debug),
     model_type: toCPointer(modelType),
     modeling_unit: toCPointer(modelingUnit),
-    bpeVocab: toCPointer(bpeVocab)
+    bpe_vocab: toCPointer(bpeVocab)
   )
 }
 
@@ -360,7 +360,8 @@ func sherpaOnnxOfflineModelConfig(
   debug: Int = 0,
   modelType: String = "",
   modelingUnit: String = "cjkchar",
-  bpeVocab: String = ""
+  bpeVocab: String = "",
+  teleSpeechCtc: String = ""
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -374,7 +375,8 @@ func sherpaOnnxOfflineModelConfig(
     provider: toCPointer(provider),
     model_type: toCPointer(modelType),
     modeling_unit: toCPointer(modelingUnit),
-    bpeVocab: toCPointer(bpeVocab)
+    bpe_vocab: toCPointer(bpeVocab),
+    telespeech_ctc: toCPointer(teleSpeechCtc)
   )
 }
 

@@ -25,6 +25,7 @@ namespace SherpaOnnx
             ModelType = "";
             ModelingUnit = "cjkchar";
             BpeVocab = "";
+            TeleSpeechCtc = "";
         }
         public OfflineTransducerModelConfig Transducer;
         public OfflineParaformerModelConfig Paraformer;
@@ -50,5 +51,8 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string BpeVocab;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string TeleSpeechCtc;
     }
 }

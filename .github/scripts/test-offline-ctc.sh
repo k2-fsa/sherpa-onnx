@@ -15,6 +15,39 @@ echo "PATH: $PATH"
 
 which $EXE
 
+log "test offline TeleSpeech CTC"
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
+name=$(basename $url)
+repo=$(basename -s .tar.bz2 $name)
+
+curl -SL -O $url
+tar xvf $name
+rm $name
+ls -lh $repo
+
+test_wavs=(
+3-sichuan.wav
+4-tianjin.wav
+5-henan.wav
+)
+for w in ${test_wavs[@]}; do
+  time $EXE \
+    --tokens=$repo/tokens.txt \
+    --telespeech-ctc=$repo/model.int8.onnx \
+    --debug=1 \
+    $repo/test_wavs/$w
+done
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --telespeech-ctc=$repo/model.int8.onnx \
+  --debug=1 \
+  $repo/test_wavs/3-sichuan.wav \
+  $repo/test_wavs/4-tianjin.wav \
+  $repo/test_wavs/5-henan.wav
+
+rm -rf $repo
+
 log "-----------------------------------------------------------------"
 log "Run Nemo fast conformer hybrid transducer ctc models (CTC branch)"
 log "-----------------------------------------------------------------"

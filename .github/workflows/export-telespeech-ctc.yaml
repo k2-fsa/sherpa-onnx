@@ -48,3 +48,49 @@ jobs:
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: asr-models
+
+      - name: Publish float32 model to huggingface
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          src=scripts/tele-speech/sherpa-onnx-telespeech-ctc-zh-2024-06-04
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          export GIT_CLONE_PROTECTION_ACTIVE=false
+
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-zh-2024-06-04 hf
+          cp -a $src/* hf/
+          cd hf
+          git lfs track "*.pdf"
+          git lfs track "*.onnx"
+          git add .
+          git commit -m 'add model files' || true
+          git status
+          ls -lh
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-zh-2024-06-04 main || true
+          rm -rf hf
+
+      - name: Publish int8 model to huggingface
+        shell: bash
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          src=scripts/tele-speech/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04
+          git config --global user.email "csukuangfj@gmail.com"
+          git config --global user.name "Fangjun Kuang"
+
+          export GIT_CLONE_PROTECTION_ACTIVE=false
+
+          rm -rf hf
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04 hf
+          cp -a $src/* hf/
+          cd hf
+          git lfs track "*.pdf"
+          git lfs track "*.onnx"
+          git add .
+          git commit -m 'add model files' || true
+          git status
+          ls -lh
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04 main || true

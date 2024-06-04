@@ -2,7 +2,16 @@
 
 cd dotnet-examples/
 
-cd vad-non-streaming-asr-paraformer
+cd ./offline-decode-files
+./run-telespeech-ctc.sh
+./run-nemo-ctc.sh
+./run-paraformer.sh
+./run-zipformer.sh
+./run-hotwords.sh
+./run-whisper.sh
+./run-tdnn-yesno.sh
+
+cd ../vad-non-streaming-asr-paraformer
 ./run.sh
 
 cd ../offline-punctuation
@@ -21,14 +30,6 @@ cd ../online-decode-files
 ./run-zipformer2-ctc.sh
 ./run-transducer.sh
 ./run-paraformer.sh
-
-cd ../offline-decode-files
-./run-nemo-ctc.sh
-./run-paraformer.sh
-./run-zipformer.sh
-./run-hotwords.sh
-./run-whisper.sh
-./run-tdnn-yesno.sh
 
 cd ../offline-tts
 ./run-aishell3.sh

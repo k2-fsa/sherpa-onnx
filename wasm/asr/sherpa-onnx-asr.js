@@ -529,7 +529,7 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const tdnn = initSherpaOnnxOfflineTdnnModelConfig(config.tdnn, Module);
 
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
-      tdnn.len + 7 * 4;
+      tdnn.len + 8 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -553,9 +553,11 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const modelTypeLen = Module.lengthBytesUTF8(config.modelType) + 1;
   const modelingUnitLen = Module.lengthBytesUTF8(config.modelingUnit || '') + 1;
   const bpeVocabLen = Module.lengthBytesUTF8(config.bpeVocab || '') + 1;
+  const teleSpeechCtcLen =
+      Module.lengthBytesUTF8(config.teleSpeechCtc || '') + 1;
 
-  const bufferLen =
-      tokensLen + providerLen + modelTypeLen + modelingUnitLen + bpeVocabLen;
+  const bufferLen = tokensLen + providerLen + modelTypeLen + modelingUnitLen +
+      bpeVocabLen + teleSpeechCtcLen;
   const buffer = Module._malloc(bufferLen);
 
   offset = 0;
@@ -574,6 +576,10 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
 
   Module.stringToUTF8(config.bpeVocab || '', buffer + offset, bpeVocabLen);
   offset += bpeVocabLen;
+
+  Module.stringToUTF8(
+      config.teleSpeechCtc || '', buffer + offset, teleSpeechCtcLen);
+  offset += teleSpeechCtcLen;
 
   offset =
       transducer.len + paraformer.len + nemoCtc.len + whisper.len + tdnn.len;
@@ -602,6 +608,13 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
       ptr + offset,
       buffer + tokensLen + providerLen + modelTypeLen + modelingUnitLen,
       'i8*');  // bpeVocab
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset,
+      buffer + tokensLen + providerLen + modelTypeLen + modelingUnitLen +
+          bpeVocabLen,
+      'i8*');  // teleSpeechCtc
   offset += 4;
 
   return {

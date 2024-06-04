@@ -19,6 +19,9 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   zipformer_ctc.Register(po);
   wenet_ctc.Register(po);
 
+  po->Register("telespeech-ctc", &telespeech_ctc,
+               "Path to model.onnx for telespeech ctc");
+
   po->Register("tokens", &tokens, "Path to tokens.txt");
 
   po->Register("num-threads", &num_threads,
@@ -33,7 +36,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   po->Register("model-type", &model_type,
                "Specify it to reduce model initialization time. "
                "Valid values are: transducer, paraformer, nemo_ctc, whisper, "
-               "tdnn, zipformer2_ctc"
+               "tdnn, zipformer2_ctc, telespeech_ctc."
                "All other values lead to loading the model twice.");
   po->Register("modeling-unit", &modeling_unit,
                "The modeling unit of the model, commonly used units are bpe, "
@@ -55,14 +58,14 @@ bool OfflineModelConfig::Validate() const {
   }
 
   if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("tokens: %s does not exist", tokens.c_str());
+    SHERPA_ONNX_LOGE("tokens: '%s' does not exist", tokens.c_str());
     return false;
   }
 
   if (!modeling_unit.empty() &&
       (modeling_unit == "bpe" || modeling_unit == "cjkchar+bpe")) {
     if (!FileExists(bpe_vocab)) {
-      SHERPA_ONNX_LOGE("bpe_vocab: %s does not exist", bpe_vocab.c_str());
+      SHERPA_ONNX_LOGE("bpe_vocab: '%s' does not exist", bpe_vocab.c_str());
       return false;
     }
   }
@@ -91,6 +94,14 @@ bool OfflineModelConfig::Validate() const {
     return wenet_ctc.Validate();
   }
 
+  if (!telespeech_ctc.empty() && !FileExists(telespeech_ctc)) {
+    SHERPA_ONNX_LOGE("telespeech_ctc: '%s' does not exist",
+                     telespeech_ctc.c_str());
+    return false;
+  } else {
+    return true;
+  }
+
   return transducer.Validate();
 }
 
@@ -105,6 +116,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "tdnn=" << tdnn.ToString() << ", ";
   os << "zipformer_ctc=" << zipformer_ctc.ToString() << ", ";
   os << "wenet_ctc=" << wenet_ctc.ToString() << ", ";
+  os << "telespeech_ctc=\"" << telespeech_ctc << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";

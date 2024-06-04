@@ -35,6 +35,7 @@ data class OfflineModelConfig(
     var paraformer: OfflineParaformerModelConfig = OfflineParaformerModelConfig(),
     var whisper: OfflineWhisperModelConfig = OfflineWhisperModelConfig(),
     var nemo: OfflineNemoEncDecCtcModelConfig = OfflineNemoEncDecCtcModelConfig(),
+    var teleSpeech: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
@@ -270,6 +271,15 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     model = "$modelDir/model.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        11 -> {
+            val modelDir = "sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04"
+            return OfflineModelConfig(
+                teleSpeech = "$modelDir/model.int8.onnx",
+                tokens = "$modelDir/tokens.txt",
+                modelType = "tele_speech",
             )
         }
     }
