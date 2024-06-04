@@ -3,7 +3,7 @@ name: build-wheels-macos-universal2
 on:
   push:
     branches:
-      - telespeech-ctc-2
+      - wheel
     tags:
       - '*'
   workflow_dispatch:
