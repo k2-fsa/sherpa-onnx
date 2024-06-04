@@ -366,6 +366,9 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
   recognizer_config.model_config.bpe_vocab =
       SHERPA_ONNX_OR(config->model_config.bpe_vocab, "");
 
+  recognizer_config.model_config.telespeech_ctc =
+      SHERPA_ONNX_OR(config->model_config.telespeech_ctc, "");
+
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");
   recognizer_config.lm_config.scale =
