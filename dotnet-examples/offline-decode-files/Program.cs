@@ -34,6 +34,9 @@ class OfflineDecodeFiles
     [Option(Required = false,  Default = "",HelpText = "Path to transducer joiner.onnx. Used only for transducer models")]
     public string Joiner { get; set; }
 
+    [Option("model-type", Required = false, Default = "", HelpText = "model type")]
+    public string ModelType { get; set; }
+
     [Option("whisper-encoder", Required = false, Default = "", HelpText = "Path to whisper encoder.onnx. Used only for whisper models")]
     public string WhisperEncoder { get; set; }
 
@@ -55,6 +58,9 @@ class OfflineDecodeFiles
 
     [Option("nemo-ctc", Required = false, HelpText = "Path to model.onnx. Used only for NeMo CTC models")]
     public string NeMoCtc { get; set; }
+
+    [Option("telespeech-ctc", Required = false, HelpText = "Path to model.onnx. Used only for TeleSpeech CTC models")]
+    public string TeleSpeechCtc { get; set; }
 
     [Option("num-threads", Required = false, Default = 1, HelpText = "Number of threads for computation")]
     public int NumThreads { get; set; }
@@ -201,6 +207,10 @@ to download pre-trained Tdnn models.
     {
       config.ModelConfig.NeMoCtc.Model = options.NeMoCtc;
     }
+    else if (!String.IsNullOrEmpty(options.TeleSpeechCtc))
+    {
+      config.ModelConfig.TeleSpeechCtc = options.TeleSpeechCtc;
+    }
     else if (!String.IsNullOrEmpty(options.WhisperEncoder))
     {
       config.ModelConfig.Whisper.Encoder = options.WhisperEncoder;
@@ -218,6 +228,7 @@ to download pre-trained Tdnn models.
       return;
     }
 
+    config.ModelConfig.ModelType = options.ModelType;
     config.DecodingMethod = options.DecodingMethod;
     config.MaxActivePaths = options.MaxActivePaths;
     config.HotwordsFile = options.HotwordsFile;
