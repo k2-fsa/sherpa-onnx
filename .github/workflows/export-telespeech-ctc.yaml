@@ -72,7 +72,7 @@ jobs:
           git commit -m 'add model files'
           git status
           ls -lh
-          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-zh-2024-06-04 main
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-zh-2024-06-04 main || true
           rm -rf hf
 
       - name: Publish int8 model to huggingface
@@ -95,4 +95,4 @@ jobs:
           git commit -m 'add model files'
           git status
           ls -lh
-          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04 main
+          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04 main || true
