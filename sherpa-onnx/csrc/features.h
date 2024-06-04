@@ -18,7 +18,10 @@ struct FeatureExtractorConfig {
   // the sampling rate of the input waveform, we will do resampling inside.
   int32_t sampling_rate = 16000;
 
-  // Feature dimension
+  // num_mel_bins
+  //
+  // Note: for mfcc, this value is also for num_mel_bins.
+  // The actual feature dimension is actuall num_ceps
   int32_t feature_dim = 80;
 
   // minimal frequency for Mel-filterbank, in Hz

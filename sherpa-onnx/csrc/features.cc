@@ -91,38 +91,37 @@ class FeatureExtractor::Impl {
       std::vector<float> samples;
       resampler_->Resample(waveform, n, false, &samples);
       if (fbank_) {
-        fbank_->AcceptWaveform(opts_.frame_opts.samp_freq, samples.data(),
+        fbank_->AcceptWaveform(config_.sampling_rate, samples.data(),
                                samples.size());
       } else {
-        mfcc_->AcceptWaveform(mfcc_opts_.frame_opts.samp_freq, samples.data(),
+        mfcc_->AcceptWaveform(config_.sampling_rate, samples.data(),
                               samples.size());
       }
       return;
     }
 
-    if (sampling_rate != opts_.frame_opts.samp_freq) {
+    if (sampling_rate != config_.sampling_rate) {
       SHERPA_ONNX_LOGE(
           "Creating a resampler:\n"
           "   in_sample_rate: %d\n"
           "   output_sample_rate: %d\n",
-          sampling_rate, static_cast<int32_t>(opts_.frame_opts.samp_freq));
+          sampling_rate, static_cast<int32_t>(config_.sampling_rate));
 
-      float min_freq =
-          std::min<int32_t>(sampling_rate, opts_.frame_opts.samp_freq);
+      float min_freq = std::min<int32_t>(sampling_rate, config_.sampling_rate);
       float lowpass_cutoff = 0.99 * 0.5 * min_freq;
 
       int32_t lowpass_filter_width = 6;
       resampler_ = std::make_unique<LinearResample>(
-          sampling_rate, opts_.frame_opts.samp_freq, lowpass_cutoff,
+          sampling_rate, config_.sampling_rate, lowpass_cutoff,
           lowpass_filter_width);
 
       std::vector<float> samples;
       resampler_->Resample(waveform, n, false, &samples);
       if (fbank_) {
-        fbank_->AcceptWaveform(opts_.frame_opts.samp_freq, samples.data(),
+        fbank_->AcceptWaveform(config_.sampling_rate, samples.data(),
                                samples.size());
       } else {
-        mfcc_->AcceptWaveform(mfcc_opts_.frame_opts.samp_freq, samples.data(),
+        mfcc_->AcceptWaveform(config_.sampling_rate, samples.data(),
                               samples.size());
       }
       return;
@@ -183,7 +182,7 @@ class FeatureExtractor::Impl {
   }
 
   int32_t FeatureDim() const {
-    return mfcc_ ? mfcc_opts_.mel_opts.num_bins : opts_.mel_opts.num_bins;
+    return mfcc_ ? mfcc_opts_.num_ceps : opts_.mel_opts.num_bins;
   }
 
  private:

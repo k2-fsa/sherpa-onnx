@@ -1,9 +1,6 @@
 name: export-telespeech-ctc-to-onnx
 
 on:
-  push:
-    branches:
-      - telespeech-ctc
   workflow_dispatch:
 
 concurrency:
