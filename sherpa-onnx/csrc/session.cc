@@ -23,7 +23,7 @@
 namespace sherpa_onnx {
 
 
-static void OrtStatusFailure(OrtStatus *status, std::ostringstream *os) {
+static void OrtStatusFailure(OrtStatus *status, const char *s) {
     const auto &api = Ort::GetApi();
     const char *msg = api.GetErrorMessage(status);
     SHERPA_ONNX_LOGE(
