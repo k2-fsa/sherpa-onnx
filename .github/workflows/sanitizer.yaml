@@ -76,6 +76,14 @@ jobs:
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
 
+      - name: Test offline punctuation
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-punctuation
+
+          .github/scripts/test-offline-punctuation.sh
+
       - name: Test offline transducer
         shell: bash
         run: |
@@ -92,13 +100,7 @@ jobs:
 
           .github/scripts/test-online-ctc.sh
 
-      - name: Test offline punctuation
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline-punctuation
 
-          .github/scripts/test-offline-punctuation.sh
 
       - name: Test C API
         shell: bash
