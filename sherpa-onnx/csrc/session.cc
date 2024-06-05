@@ -27,7 +27,7 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
     const char *msg = api.GetErrorMessage(status);
     SHERPA_ONNX_LOGE(
       "Failed to enable TensorRT : %s."
-      "Available providers: %s. Fallback to cuda", msg, os->str().c_str());
+      "Available providers: %s. Fallback to cuda", msg, s);
     api.ReleaseStatus(status);
 }
 
@@ -106,8 +106,8 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
                 option_keys.size());
         sess_opts.AppendExecutionProvider_TensorRT_V2(*tensorrt_options);
 
-        if (statusC) { OrtStatusFailure(statusC, &os); }
-        if (statusU) { OrtStatusFailure(statusU, &os); }
+        if (statusC) { OrtStatusFailure(statusC, os.str().c_str()); }
+        if (statusU) { OrtStatusFailure(statusU, os.str().c_str()); }
 
         api.ReleaseTensorRTProviderOptions(tensorrt_options);
       }
