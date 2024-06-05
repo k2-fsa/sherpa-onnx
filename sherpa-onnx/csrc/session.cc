@@ -8,7 +8,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-// #include <cuda.h>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/provider.h"
