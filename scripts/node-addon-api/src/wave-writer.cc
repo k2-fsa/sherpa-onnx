@@ -13,7 +13,7 @@ static Napi::Boolean WriteWaveWrapper(const Napi::CallbackInfo &info) {
 
   if (info.Length() != 2) {
     std::ostringstream os;
-    os << "Expect only 2 argument2. Given: " << info.Length();
+    os << "Expect only 2 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 

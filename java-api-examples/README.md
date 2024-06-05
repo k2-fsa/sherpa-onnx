@@ -56,3 +56,21 @@ The punctuation model supports both English and Chinese.
 ```bash
 ./run-speaker-identification.sh
 ```
+
+## VAD (Remove silence)
+
+```bash
+./run-vad-remove-slience.sh
+```
+
+## VAD + Non-streaming Paraformer for speech recognition
+
+```bash
+./run-vad-non-streaming-paraformer.sh
+```
+
+## Keyword spotter
+
+```bash
+./run-kws-from-file.sh
+```

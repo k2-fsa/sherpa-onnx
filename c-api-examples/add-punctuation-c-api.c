@@ -43,8 +43,8 @@ int32_t main() {
   const char *texts[] = {
       "这是一个测试你好吗How are you我很好thank you are you ok谢谢你",
       "我们都是木头人不会说话不会动",
-      "The African blogosphere is rapidly expanding bringing more voices "
-      "online in the form of commentaries opinions analyses rants and poetry",
+      ("The African blogosphere is rapidly expanding bringing more voices "
+       "online in the form of commentaries opinions analyses rants and poetry"),
   };
 
   int32_t n = sizeof(texts) / sizeof(const char *);

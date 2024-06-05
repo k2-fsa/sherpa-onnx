@@ -14,8 +14,7 @@ function(download_espeak_ng_for_piper)
   set(USE_SPEECHPLAYER OFF CACHE BOOL "" FORCE)
   set(EXTRA_cmn ON CACHE BOOL "" FORCE)
   set(EXTRA_ru ON CACHE BOOL "" FORCE)
-
-  if(SHERPA_ONNX_ENABLE_WASM)
+  if (NOT SHERPA_ONNX_ENABLE_EPSEAK_NG_EXE)
     set(BUILD_ESPEAK_NG_EXE OFF CACHE BOOL "" FORCE)
   endif()
 

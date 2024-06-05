@@ -39,6 +39,7 @@ set(sources
   offline-stream.cc
   offline-tdnn-ctc-model.cc
   offline-tdnn-model-config.cc
+  offline-telespeech-ctc-model.cc
   offline-transducer-greedy-search-decoder.cc
   offline-transducer-greedy-search-nemo-decoder.cc
   offline-transducer-model-config.cc
@@ -74,6 +75,8 @@ set(sources
   online-transducer-model-config.cc
   online-transducer-model.cc
   online-transducer-modified-beam-search-decoder.cc
+  online-transducer-nemo-model.cc
+  online-transducer-greedy-search-nemo-decoder.cc
   online-wenet-ctc-model-config.cc
   online-wenet-ctc-model.cc
   online-zipformer-transducer-model.cc

@@ -66,7 +66,7 @@ bool OnlineModelConfig::Validate() const {
   if (!modeling_unit.empty() &&
       (modeling_unit == "bpe" || modeling_unit == "cjkchar+bpe")) {
     if (!FileExists(bpe_vocab)) {
-      SHERPA_ONNX_LOGE("bpe_vocab: %s does not exist", bpe_vocab.c_str());
+      SHERPA_ONNX_LOGE("bpe_vocab: '%s' does not exist", bpe_vocab.c_str());
       return false;
     }
   }

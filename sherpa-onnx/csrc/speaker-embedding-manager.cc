@@ -50,7 +50,7 @@ class SpeakerEmbeddingManager::Impl {
     }
 
     for (const auto &x : embedding_list) {
-      if (x.size() != dim_) {
+      if (static_cast<int32_t>(x.size()) != dim_) {
         SHERPA_ONNX_LOGE("Given dim: %d, expected dim: %d",
                          static_cast<int32_t>(x.size()), dim_);
         return false;
@@ -224,7 +224,7 @@ bool SpeakerEmbeddingManager::Verify(const std::string &name, const float *p,
 }
 
 float SpeakerEmbeddingManager::Score(const std::string &name,
-                                    const float *p) const {
+                                     const float *p) const {
   return impl_->Score(name, p);
 }
 

@@ -10,6 +10,18 @@ log() {
 
 export GIT_CLONE_PROTECTION_ACTIVE=false
 
+log "test offline TeleSpeech CTC"
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
+name=$(basename $url)
+repo=$(basename -s .tar.bz2 $name)
+
+curl -SL -O $url
+tar xvf $name
+rm $name
+ls -lh $repo
+python3 ./python-api-examples/offline-telespeech-ctc-decode-files.py
+rm -rf $repo
+
 log "test online NeMo CTC"
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms.tar.bz2

@@ -172,6 +172,12 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.nemo_ctc.model = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(model_config_cls, "teleSpeech", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.telespeech_ctc = p;
+  env->ReleaseStringUTFChars(s, p);
+
   return ans;
 }
 
@@ -220,13 +226,13 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromFile(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_delete(
-    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   delete reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
 }
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
-Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream(JNIEnv *env,
+Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream(JNIEnv * /*env*/,
                                                           jobject /*obj*/,
                                                           jlong ptr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
@@ -242,7 +248,7 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream(JNIEnv *env,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decode(
-    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong streamPtr) {
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong streamPtr) {
   auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
   auto stream = reinterpret_cast<sherpa_onnx::OfflineStream *>(streamPtr);
 

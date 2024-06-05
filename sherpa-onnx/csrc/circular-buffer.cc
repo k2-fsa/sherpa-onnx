@@ -62,7 +62,6 @@ void CircularBuffer::Resize(int32_t new_capacity) {
                 new_buffer.begin() + dest);
     } else {
       int32_t first_part = new_capacity - dest;
-      int32_t second_part = part1_size - first_part;
       std::copy(buffer_.begin() + start, buffer_.begin() + start + first_part,
                 new_buffer.begin() + dest);
 

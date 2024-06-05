@@ -57,22 +57,44 @@ class OfflineStream::Impl {
   explicit Impl(const FeatureExtractorConfig &config,
                 ContextGraphPtr context_graph)
       : config_(config), context_graph_(context_graph) {
-    opts_.frame_opts.dither = config.dither;
-    opts_.frame_opts.snip_edges = config.snip_edges;
-    opts_.frame_opts.samp_freq = config.sampling_rate;
-    opts_.frame_opts.frame_shift_ms = config.frame_shift_ms;
-    opts_.frame_opts.frame_length_ms = config.frame_length_ms;
-    opts_.frame_opts.remove_dc_offset = config.remove_dc_offset;
-    opts_.frame_opts.window_type = config.window_type;
+    if (config.is_mfcc) {
+      mfcc_opts_.frame_opts.dither = config_.dither;
+      mfcc_opts_.frame_opts.snip_edges = config_.snip_edges;
+      mfcc_opts_.frame_opts.samp_freq = config_.sampling_rate;
+      mfcc_opts_.frame_opts.frame_shift_ms = config_.frame_shift_ms;
+      mfcc_opts_.frame_opts.frame_length_ms = config_.frame_length_ms;
+      mfcc_opts_.frame_opts.remove_dc_offset = config_.remove_dc_offset;
+      mfcc_opts_.frame_opts.window_type = config_.window_type;
 
-    opts_.mel_opts.num_bins = config.feature_dim;
+      mfcc_opts_.mel_opts.num_bins = config_.feature_dim;
 
-    opts_.mel_opts.high_freq = config.high_freq;
-    opts_.mel_opts.low_freq = config.low_freq;
+      mfcc_opts_.mel_opts.high_freq = config_.high_freq;
+      mfcc_opts_.mel_opts.low_freq = config_.low_freq;
 
-    opts_.mel_opts.is_librosa = config.is_librosa;
+      mfcc_opts_.mel_opts.is_librosa = config_.is_librosa;
 
-    fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
+      mfcc_opts_.num_ceps = config_.num_ceps;
+      mfcc_opts_.use_energy = config_.use_energy;
+
+      mfcc_ = std::make_unique<knf::OnlineMfcc>(mfcc_opts_);
+    } else {
+      opts_.frame_opts.dither = config.dither;
+      opts_.frame_opts.snip_edges = config.snip_edges;
+      opts_.frame_opts.samp_freq = config.sampling_rate;
+      opts_.frame_opts.frame_shift_ms = config.frame_shift_ms;
+      opts_.frame_opts.frame_length_ms = config.frame_length_ms;
+      opts_.frame_opts.remove_dc_offset = config.remove_dc_offset;
+      opts_.frame_opts.window_type = config.window_type;
+
+      opts_.mel_opts.num_bins = config.feature_dim;
+
+      opts_.mel_opts.high_freq = config.high_freq;
+      opts_.mel_opts.low_freq = config.low_freq;
+
+      opts_.mel_opts.is_librosa = config.is_librosa;
+
+      fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
+    }
   }
 
   explicit Impl(WhisperTag /*tag*/) {
@@ -81,6 +103,7 @@ class OfflineStream::Impl {
     opts_.mel_opts.num_bins = 80;  // not used
     whisper_fbank_ =
         std::make_unique<knf::OnlineWhisperFbank>(opts_.frame_opts);
+    config_.sampling_rate = opts_.frame_opts.samp_freq;
   }
 
   explicit Impl(CEDTag /*tag*/) {
@@ -97,6 +120,8 @@ class OfflineStream::Impl {
     opts_.frame_opts.samp_freq = 16000;  // fixed to 16000
     opts_.mel_opts.num_bins = 64;
     opts_.mel_opts.high_freq = 8000;
+
+    config_.sampling_rate = opts_.frame_opts.samp_freq;
 
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
   }
@@ -115,52 +140,60 @@ class OfflineStream::Impl {
 
   void AcceptWaveformImpl(int32_t sampling_rate, const float *waveform,
                           int32_t n) {
-    if (sampling_rate != opts_.frame_opts.samp_freq) {
+    if (sampling_rate != config_.sampling_rate) {
       SHERPA_ONNX_LOGE(
           "Creating a resampler:\n"
           "   in_sample_rate: %d\n"
           "   output_sample_rate: %d\n",
-          sampling_rate, static_cast<int32_t>(opts_.frame_opts.samp_freq));
+          sampling_rate, static_cast<int32_t>(config_.sampling_rate));
 
-      float min_freq =
-          std::min<int32_t>(sampling_rate, opts_.frame_opts.samp_freq);
+      float min_freq = std::min<int32_t>(sampling_rate, config_.sampling_rate);
       float lowpass_cutoff = 0.99 * 0.5 * min_freq;
 
       int32_t lowpass_filter_width = 6;
       auto resampler = std::make_unique<LinearResample>(
-          sampling_rate, opts_.frame_opts.samp_freq, lowpass_cutoff,
+          sampling_rate, config_.sampling_rate, lowpass_cutoff,
           lowpass_filter_width);
       std::vector<float> samples;
       resampler->Resample(waveform, n, true, &samples);
 
       if (fbank_) {
-        fbank_->AcceptWaveform(opts_.frame_opts.samp_freq, samples.data(),
+        fbank_->AcceptWaveform(config_.sampling_rate, samples.data(),
                                samples.size());
         fbank_->InputFinished();
+      } else if (mfcc_) {
+        mfcc_->AcceptWaveform(config_.sampling_rate, samples.data(),
+                              samples.size());
+        mfcc_->InputFinished();
       } else {
-        whisper_fbank_->AcceptWaveform(opts_.frame_opts.samp_freq,
-                                       samples.data(), samples.size());
+        whisper_fbank_->AcceptWaveform(config_.sampling_rate, samples.data(),
+                                       samples.size());
         whisper_fbank_->InputFinished();
       }
 
       return;
-    }  // if (sampling_rate != opts_.frame_opts.samp_freq)
+    }  // if (sampling_rate != config_.sampling_rate)
 
     if (fbank_) {
       fbank_->AcceptWaveform(sampling_rate, waveform, n);
       fbank_->InputFinished();
+    } else if (mfcc_) {
+      mfcc_->AcceptWaveform(sampling_rate, waveform, n);
+      mfcc_->InputFinished();
     } else {
       whisper_fbank_->AcceptWaveform(sampling_rate, waveform, n);
       whisper_fbank_->InputFinished();
     }
   }
 
-  int32_t FeatureDim() const { return opts_.mel_opts.num_bins; }
+  int32_t FeatureDim() const {
+    return mfcc_ ? mfcc_opts_.num_ceps : opts_.mel_opts.num_bins;
+  }
 
   std::vector<float> GetFrames() const {
-    int32_t n =
-        fbank_ ? fbank_->NumFramesReady() : whisper_fbank_->NumFramesReady();
-
+    int32_t n = fbank_  ? fbank_->NumFramesReady()
+                : mfcc_ ? mfcc_->NumFramesReady()
+                        : whisper_fbank_->NumFramesReady();
     assert(n > 0 && "Please first call AcceptWaveform()");
 
     int32_t feature_dim = FeatureDim();
@@ -170,8 +203,9 @@ class OfflineStream::Impl {
     float *p = features.data();
 
     for (int32_t i = 0; i != n; ++i) {
-      const float *f =
-          fbank_ ? fbank_->GetFrame(i) : whisper_fbank_->GetFrame(i);
+      const float *f = fbank_  ? fbank_->GetFrame(i)
+                       : mfcc_ ? mfcc_->GetFrame(i)
+                               : whisper_fbank_->GetFrame(i);
       std::copy(f, f + feature_dim, p);
       p += feature_dim;
     }
@@ -222,8 +256,10 @@ class OfflineStream::Impl {
  private:
   FeatureExtractorConfig config_;
   std::unique_ptr<knf::OnlineFbank> fbank_;
+  std::unique_ptr<knf::OnlineMfcc> mfcc_;
   std::unique_ptr<knf::OnlineWhisperFbank> whisper_fbank_;
   knf::FbankOptions opts_;
+  knf::MfccOptions mfcc_opts_;
   OfflineRecognitionResult r_;
   ContextGraphPtr context_graph_;
 };
