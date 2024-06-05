@@ -88,6 +88,17 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
 #endif
 
   void Init() {
+    if (!config_.model_config.telespeech_ctc.empty()) {
+      config_.feat_config.snip_edges = true;
+      config_.feat_config.num_ceps = 40;
+      config_.feat_config.feature_dim = 40;
+      config_.feat_config.low_freq = 40;
+      config_.feat_config.high_freq = -200;
+      config_.feat_config.use_energy = false;
+      config_.feat_config.normalize_samples = false;
+      config_.feat_config.is_mfcc = true;
+    }
+
     if (!config_.model_config.wenet_ctc.model.empty()) {
       // WeNet CTC models assume input samples are in the range
       // [-32768, 32767], so we set normalize_samples to false

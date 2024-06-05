@@ -40,6 +40,9 @@ func main() {
 	flag.IntVar(&config.ModelConfig.Debug, "debug", 0, "Whether to show debug message")
 	flag.StringVar(&config.ModelConfig.ModelType, "model-type", "", "Optional. Used for loading the model in a faster way")
 	flag.StringVar(&config.ModelConfig.Provider, "provider", "cpu", "Provider to use")
+	flag.StringVar(&config.ModelConfig.ModelingUnit, "modeling-unit", "cjkchar", "cjkchar, bpe, cjkchar+bpe, or leave it to empty")
+	flag.StringVar(&config.ModelConfig.BpeVocab, "bpe-vocab", "", "")
+	flag.StringVar(&config.ModelConfig.TeleSpeechCtc, "telespeech-ctc", "", "Used for TeleSpeechCtc model")
 	flag.StringVar(&config.LmConfig.Model, "lm-model", "", "Optional. Path to the LM model")
 	flag.Float32Var(&config.LmConfig.Scale, "lm-scale", 1.0, "Optional. Scale for the LM model")
 

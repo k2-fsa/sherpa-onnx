@@ -30,14 +30,12 @@ concurrency:
 
 jobs:
   test-go:
-    name: ${{ matrix.os }} ${{matrix.arch }}
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: macos-latest
-            arch: amd64
+        os: [macos-latest, macos-14]
 
     steps:
       - uses: actions/checkout@v4
@@ -47,7 +45,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-${{ matrix.arch }}
+          key: ${{ matrix.os }}-go
 
       - uses: actions/setup-go@v5
         with:
@@ -109,8 +107,6 @@ jobs:
           go build
           ls -lh
 
-          git lfs install
-
           echo "Test vits-ljs"
           ./run-vits-ljs.sh
           rm -rf vits-ljs
@@ -144,7 +140,13 @@ jobs:
           go build
           ls -lh
 
-          git lfs install
+          echo "Test telespeech ctc"
+          ./run-telespeech-ctc.sh
+          rm -rf sherpa-onnx-telespeech-ctc-*
+
+          echo "Test transducer"
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-zipformer-en-2023-06-26
 
           echo "Test transducer"
           ./run-transducer.sh

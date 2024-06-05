@@ -88,7 +88,9 @@ func sherpaOnnxOnlineModelConfig(
   numThreads: Int = 1,
   provider: String = "cpu",
   debug: Int = 0,
-  modelType: String = ""
+  modelType: String = "",
+  modelingUnit: String = "cjkchar",
+  bpeVocab: String = ""
 ) -> SherpaOnnxOnlineModelConfig {
   return SherpaOnnxOnlineModelConfig(
     transducer: transducer,
@@ -98,7 +100,9 @@ func sherpaOnnxOnlineModelConfig(
     num_threads: Int32(numThreads),
     provider: toCPointer(provider),
     debug: Int32(debug),
-    model_type: toCPointer(modelType)
+    model_type: toCPointer(modelType),
+    modeling_unit: toCPointer(modelingUnit),
+    bpe_vocab: toCPointer(bpeVocab)
   )
 }
 
@@ -354,7 +358,10 @@ func sherpaOnnxOfflineModelConfig(
   numThreads: Int = 1,
   provider: String = "cpu",
   debug: Int = 0,
-  modelType: String = ""
+  modelType: String = "",
+  modelingUnit: String = "cjkchar",
+  bpeVocab: String = "",
+  teleSpeechCtc: String = ""
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -366,7 +373,10 @@ func sherpaOnnxOfflineModelConfig(
     num_threads: Int32(numThreads),
     debug: Int32(debug),
     provider: toCPointer(provider),
-    model_type: toCPointer(modelType)
+    model_type: toCPointer(modelType),
+    modeling_unit: toCPointer(modelingUnit),
+    bpe_vocab: toCPointer(bpeVocab),
+    telespeech_ctc: toCPointer(teleSpeechCtc)
   )
 }
 

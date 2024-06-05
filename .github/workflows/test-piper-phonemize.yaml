@@ -57,7 +57,7 @@ jobs:
 
           mkdir build
           cd build
-          cmake -DCMAKE_VERBOSE_MAKEFILE=ON -D SHERPA_ONNX_ENABLE_TESTS=ON -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake -DSHERPA_ONNX_ENABLE_EPSEAK_NG_EXE=ON -DBUILD_ESPEAK_NG_EXE=ON -DCMAKE_VERBOSE_MAKEFILE=ON -D SHERPA_ONNX_ENABLE_TESTS=ON -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build
         shell: bash

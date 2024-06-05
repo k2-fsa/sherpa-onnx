@@ -172,6 +172,12 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.nemo_ctc.model = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(model_config_cls, "teleSpeech", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(model_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.telespeech_ctc = p;
+  env->ReleaseStringUTFChars(s, p);
+
   return ans;
 }
 

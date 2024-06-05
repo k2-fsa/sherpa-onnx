@@ -1,7 +1,9 @@
-name: build-wheels-macos-arm64
+name: build-wheels-macos-universal2
 
 on:
   push:
+    branches:
+      - wheel
     tags:
       - '*'
   workflow_dispatch:
@@ -10,17 +12,17 @@ env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
 
 concurrency:
-  group: build-wheels-macos-arm64-${{ github.ref }}
+  group: build-wheels-macos-universal2-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build_wheels_macos_arm64:
+  build_wheels_macos_universal2:
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11]
+        os: [macos-latest]
         python-version: ["cp38", "cp39", "cp310", "cp311", "cp312"]
 
     steps:
@@ -30,8 +32,8 @@ jobs:
         uses: pypa/cibuildwheel@v2.15.0
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64'"
-          CIBW_ARCHS: "arm64"
+          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64;x86_64'"
+          CIBW_ARCHS: "universal2"
           CIBW_BUILD_VERBOSITY: 3
 
           #  Don't repair macOS wheels

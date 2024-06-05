@@ -20,6 +20,8 @@ namespace SherpaOnnx
             Provider = "cpu";
             Debug = 0;
             ModelType = "";
+            ModelingUnit = "cjkchar";
+            BpeVocab = "";
         }
 
         public OnlineTransducerModelConfig Transducer;
@@ -40,6 +42,12 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string ModelType;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string ModelingUnit;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string BpeVocab;
     }
 
 }
