@@ -41,6 +41,9 @@ static void PybindOnlineRecognizerResult(py::module *m) {
       .def_property_readonly(
           "segment", [](PyClass &self) -> int32_t { return self.segment; })
       .def_property_readonly(
+          "words",
+          [](PyClass &self) -> std::vector<int32_t> { return self.words; })
+      .def_property_readonly(
           "is_final", [](PyClass &self) -> bool { return self.is_final; })
       .def("__str__", &PyClass::AsJsonString,
            py::call_guard<py::gil_scoped_release>())
