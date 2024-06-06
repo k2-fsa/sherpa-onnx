@@ -18,6 +18,7 @@ enum class Provider {
   kCoreML = 2,   // CoreMLExecutionProvider
   kXnnpack = 3,  // XnnpackExecutionProvider
   kNNAPI = 4,    // NnapiExecutionProvider
+  kTRT = 5,     // TensorRTExecutionProvider
 };
 
 /**
