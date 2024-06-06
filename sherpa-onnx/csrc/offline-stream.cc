@@ -339,6 +339,20 @@ std::string OfflineRecognitionResult::AsJsonString() const {
     }
     sep = ", ";
   }
+  os << "], ";
+
+  sep = "";
+
+  os << "\""
+     << "words"
+     << "\""
+     << ": ";
+  os << "[";
+  for (int32_t w : words) {
+    os << sep << w;
+    sep = ", ";
+  }
+
   os << "]";
   os << "}";
 

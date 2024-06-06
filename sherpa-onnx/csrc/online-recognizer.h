@@ -47,6 +47,8 @@ struct OnlineRecognizerResult {
   /// log-domain scores from "hot-phrase" contextual boosting
   std::vector<float> context_scores;
 
+  std::vector<int32_t> words;
+
   /// ID of this segment
   /// When an endpoint is detected, it is incremented
   int32_t segment = 0;
