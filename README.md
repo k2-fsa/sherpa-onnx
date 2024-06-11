@@ -31,6 +31,7 @@ with the following APIs
   - C++, C, Python, Go, ``C#``
   - Java, Kotlin, JavaScript
   - Swift
+  - Dart
 
 ## Links for pre-built Android APKs
 
