@@ -8,6 +8,7 @@
 #include <assert.h>
 
 #include <algorithm>
+#include <iomanip>
 #include <memory>
 #include <sstream>
 #include <utility>
