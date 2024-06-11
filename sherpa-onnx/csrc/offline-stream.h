@@ -28,9 +28,28 @@ struct OfflineRecognitionResult {
 
   /// timestamps.size() == tokens.size()
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
+  ///
+  /// Note: It is the start time stamp of a token.
+  ///
+  /// It is empty if the model does not support time stamp information.
   std::vector<float> timestamps;
 
+  /// It is not empty for CTC models.
+  /// It is empty for non-CTC models.
+  /// If it is not empty, then stop_timestamps.size() == timestamps.size()
+  std::vector<float> stop_timestamps;
+
+  /// It is not empty for CTC models with a HL or HLG decoding graph
+  /// It is empty for non-CTC models.
+  ///
+  /// If not empty, it contains word IDs. You have to use words.txt
+  /// to map word IDs to word symbols.
   std::vector<int32_t> words;
+
+  /// If not empty, word_start_timestamps[i] is the start time of words[i].
+  ///
+  /// words.size() == word_start_timestamps.size()
+  std::vector<float> word_start_timestamps;
 
   std::string AsJsonString() const;
 };

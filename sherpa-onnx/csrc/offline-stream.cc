@@ -307,6 +307,7 @@ std::string OfflineRecognitionResult::AsJsonString() const {
      << ", ";
 
   os << "\"timestamps\": " << VecToString(timestamps, 2) << ", ";
+  os << "\"stop_timestamps\": " << VecToString(stop_timestamps, 2) << ", ";
 
   os << "\""
      << "tokens"
@@ -331,7 +332,9 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   }
   os << "], ";
 
-  os << "\"words\": " << VecToString(words, 0);
+  os << "\"words\": " << VecToString(words, 0) << ", ";
+
+  os << "\"word_start_timestamps\": " << VecToString(word_start_timestamps, 2);
 
   os << "}";
 
