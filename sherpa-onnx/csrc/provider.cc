@@ -24,6 +24,8 @@ Provider StringToProvider(std::string s) {
     return Provider::kXnnpack;
   } else if (s == "nnapi") {
     return Provider::kNNAPI;
+  } else if (s == "trt") {
+    return Provider::kTRT;
   } else {
     SHERPA_ONNX_LOGE("Unsupported string: %s. Fallback to cpu", s.c_str());
     return Provider::kCPU;

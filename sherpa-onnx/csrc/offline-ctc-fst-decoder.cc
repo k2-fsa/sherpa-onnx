@@ -108,6 +108,9 @@ static OfflineCtcDecoderResult DecodeOne(kaldi_decoder::FasterDecoder *decoder,
     // -1 here since the input labels are incremented during graph
     // construction
     r.tokens.push_back(arc.ilabel - 1);
+    if (arc.olabel != 0) {
+      r.words.push_back(arc.olabel);
+    }
 
     r.timestamps.push_back(t);
     prev = arc.ilabel;

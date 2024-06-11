@@ -59,6 +59,7 @@ static OnlineRecognizerResult Convert(const OnlineCtcDecoderResult &src,
   }
 
   r.segment = segment;
+  r.words = std::move(src.words);
   r.start_time = frames_since_start * frame_shift_ms / 1000.;
 
   return r;

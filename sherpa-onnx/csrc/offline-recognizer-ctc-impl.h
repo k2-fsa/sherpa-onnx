@@ -65,6 +65,8 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
     r.timestamps.push_back(time);
   }
 
+  r.words = std::move(src.words);
+
   return r;
 }
 

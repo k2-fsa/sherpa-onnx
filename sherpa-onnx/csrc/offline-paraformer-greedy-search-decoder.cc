@@ -64,10 +64,6 @@ OfflineParaformerGreedySearchDecoder::Decode(
 
       if (timestamps.size() == results[i].tokens.size()) {
         results[i].timestamps = std::move(timestamps);
-      } else {
-        SHERPA_ONNX_LOGE("time stamp for batch: %d, %d vs %d", i,
-                         static_cast<int32_t>(results[i].tokens.size()),
-                         static_cast<int32_t>(timestamps.size()));
       }
     }
   }
