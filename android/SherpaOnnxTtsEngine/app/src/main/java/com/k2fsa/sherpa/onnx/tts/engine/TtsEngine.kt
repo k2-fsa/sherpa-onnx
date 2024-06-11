@@ -11,6 +11,7 @@ import com.k2fsa.sherpa.onnx.getOfflineTtsConfig
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import PreferenceHelper
 
 object TtsEngine {
     var tts: OfflineTts? = null
@@ -135,6 +136,8 @@ object TtsEngine {
             ruleFsts = ruleFsts ?: "",
             ruleFars = ruleFars ?: ""
         )
+
+        speed = PreferenceHelper(context).getSpeed()
 
         tts = OfflineTts(assetManager = assets, config = config)
     }
