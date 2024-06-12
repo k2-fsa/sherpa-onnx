@@ -52,13 +52,13 @@ def get_2nd_models():
             short_name="whisper_tiny",
             cmd="""
             pushd $model_name
-            rm -v tiny.en-encoder.onnx
-            rm -v tiny.en-decoder.onnx
+            rm -fv tiny.en-encoder.onnx
+            rm -fv tiny.en-decoder.onnx
             rm -rf test_wavs
-            rm -v *.py
-            rm -v requirements.txt
-            rm -v .gitignore
-            rm -v README.md
+            rm -fv *.py
+            rm -fv requirements.txt
+            rm -fv .gitignore
+            rm -fv README.md
 
             ls -lh
 
@@ -73,7 +73,7 @@ def get_2nd_models():
             cmd="""
             pushd $model_name
 
-            rm -v README.md
+            rm -fv README.md
             rm -rfv test_wavs
             rm model.onnx
 
@@ -91,7 +91,7 @@ def get_2nd_models():
             pushd $model_name
 
             rm -rfv test_wavs
-            rm -v README.md
+            rm -fv README.md
             mv -v data/lang_char/tokens.txt ./
             rm -rfv data/lang_char
 
@@ -119,15 +119,15 @@ def get_1st_models():
             short_name="zipformer",
             cmd="""
             pushd $model_name
-            rm -v decoder-epoch-99-avg-1.int8.onnx
-            rm -v encoder-epoch-99-avg-1.onnx
-            rm -v joiner-epoch-99-avg-1.onnx
+            rm -fv decoder-epoch-99-avg-1.int8.onnx
+            rm -fv encoder-epoch-99-avg-1.onnx
+            rm -fv joiner-epoch-99-avg-1.onnx
 
-            rm -v *.sh
-            rm -v bpe.model
-            rm -v README.md
-            rm -v .gitattributes
-            rm -v *state*
+            rm -fv *.sh
+            rm -fv bpe.model
+            rm -fv README.md
+            rm -fv .gitattributes
+            rm -fv *state*
             rm -rfv test_wavs
 
             ls -lh
@@ -142,12 +142,12 @@ def get_1st_models():
             short_name="zipformer2",
             cmd="""
             pushd $model_name
-            rm -v encoder-epoch-99-avg-1-chunk-16-left-128.onnx
-            rm -v decoder-epoch-99-avg-1-chunk-16-left-128.int8.onnx
-            rm -v joiner-epoch-99-avg-1-chunk-16-left-128.int8.onnx
+            rm -fv encoder-epoch-99-avg-1-chunk-16-left-128.onnx
+            rm -fv decoder-epoch-99-avg-1-chunk-16-left-128.int8.onnx
+            rm -fv joiner-epoch-99-avg-1-chunk-16-left-128.int8.onnx
 
-            rm -v README.md
-            rm -v bpe.model
+            rm -fv README.md
+            rm -fv bpe.model
             rm -rfv test_wavs
 
             ls -lh
@@ -162,14 +162,14 @@ def get_1st_models():
             short_name="zipformer2",
             cmd="""
             pushd $model_name
-            rm -v exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx
-            rm -v exp/decoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx
-            rm -v exp/joiner-epoch-12-avg-4-chunk-16-left-128.int8.onnx
+            rm -fv exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx
+            rm -fv exp/decoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx
+            rm -fv exp/joiner-epoch-12-avg-4-chunk-16-left-128.int8.onnx
 
-            rm -v data/lang_char/lexicon.txt
-            rm -v data/lang_char/words.txt
+            rm -fv data/lang_char/lexicon.txt
+            rm -fv data/lang_char/words.txt
             rm -rfv test_wavs
-            rm -v README.md
+            rm -fv README.md
 
             ls -lh exp/
             ls -lh data/lang_char
@@ -184,11 +184,11 @@ def get_1st_models():
             short_name="zipformer",
             cmd="""
             pushd $model_name
-            rm -v encoder-epoch-29-avg-9-with-averaged-model.onnx
-            rm -v decoder-epoch-29-avg-9-with-averaged-model.int8.onnx
-            rm -v joiner-epoch-29-avg-9-with-averaged-model.int8.onnx
+            rm -fv encoder-epoch-29-avg-9-with-averaged-model.onnx
+            rm -fv decoder-epoch-29-avg-9-with-averaged-model.int8.onnx
+            rm -fv joiner-epoch-29-avg-9-with-averaged-model.int8.onnx
 
-            rm -v *.sh
+            rm -fv *.sh
             rm -rf test_wavs
             rm README.md
 
@@ -204,11 +204,11 @@ def get_1st_models():
             short_name="small_zipformer",
             cmd="""
             pushd $model_name
-            rm -v encoder-epoch-99-avg-1.onnx
-            rm -v decoder-epoch-99-avg-1.int8.onnx
-            rm -v joiner-epoch-99-avg-1.onnx
+            rm -fv encoder-epoch-99-avg-1.onnx
+            rm -fv decoder-epoch-99-avg-1.int8.onnx
+            rm -fv joiner-epoch-99-avg-1.onnx
 
-            rm -v *.sh
+            rm -fv *.sh
             rm -rf test_wavs
             rm README.md
 
@@ -224,11 +224,11 @@ def get_1st_models():
             short_name="small_zipformer",
             cmd="""
             pushd $model_name
-            rm -v encoder-epoch-99-avg-1.onnx
-            rm -v decoder-epoch-99-avg-1.int8.onnx
-            rm -v joiner-epoch-99-avg-1.onnx
+            rm -fv encoder-epoch-99-avg-1.onnx
+            rm -fv decoder-epoch-99-avg-1.int8.onnx
+            rm -fv joiner-epoch-99-avg-1.onnx
 
-            rm -v *.sh
+            rm -fv *.sh
             rm -rf test_wavs
             rm README.md
 
