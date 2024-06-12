@@ -190,6 +190,14 @@ class SileroVadModel::Impl {
 
   int32_t MinSpeechDurationSamples() const { return min_speech_samples_; }
 
+  void SetMinSilenceDuration(float s) {
+    min_silence_samples_ = sample_rate_ * s;
+  }
+
+  void SetThreshold(float threshold) {
+    config_.silero_vad.threshold = threshold;
+  }
+
  private:
   void Init(void *model_data, size_t model_data_length) {
     sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
@@ -304,6 +312,14 @@ int32_t SileroVadModel::MinSilenceDurationSamples() const {
 
 int32_t SileroVadModel::MinSpeechDurationSamples() const {
   return impl_->MinSpeechDurationSamples();
+}
+
+void SileroVadModel::SetMinSilenceDuration(float s) {
+  impl_->SetMinSilenceDuration(s);
+}
+
+void SileroVadModel::SetThreshold(float threshold) {
+  impl_->SetThreshold(threshold);
 }
 
 }  // namespace sherpa_onnx
