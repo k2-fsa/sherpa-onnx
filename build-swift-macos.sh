@@ -7,7 +7,6 @@ mkdir -p $dir
 cd $dir
 
 cmake \
-  -DCMAKE_OSX_ARCHITECTURES="x86_64" \
   -DCMAKE_INSTALL_PREFIX=./install \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_SHARED_LIBS=OFF \

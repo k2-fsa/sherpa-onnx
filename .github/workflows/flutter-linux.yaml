@@ -89,16 +89,11 @@ jobs:
 
           flutter --version
 
-          mkdir -p /__t/flutter-Linux-3.22.1-X64/flutter
-
-          git config --global --add safe.directory /__t/flutter-Linux-3.22.1-X64/flutter
+          git config --global --add safe.directory /__t/flutter-Linux-*/flutter || true
 
           flutter --version
 
           dart --version
-          flutter doctor
-
-
           flutter doctor
 
       - name: Install libgtk-3-dev

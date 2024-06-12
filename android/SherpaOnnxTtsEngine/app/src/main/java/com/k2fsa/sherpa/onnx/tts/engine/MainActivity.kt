@@ -93,6 +93,7 @@ class MainActivity : ComponentActivity() {
                                                     TtsEngine.speakerId = 0
                                                 }
                                             }
+                                            preferenceHelper.setSid(TtsEngine.speakerId)
                                         },
                                         label = {
                                             Text("Speaker ID: (0-${numSpeakers - 1})")
