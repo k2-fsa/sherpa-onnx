@@ -2,6 +2,7 @@
 
 package com.k2fsa.sherpa.onnx.tts.engine
 
+import PreferenceHelper
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         TtsEngine.createTts(this)
+        val preferenceHelper = PreferenceHelper(this)
         setContent {
             SherpaOnnxTtsEngineTheme {
                 // A surface container using the 'background' color from the theme
@@ -63,7 +65,10 @@ class MainActivity : ComponentActivity() {
                                     Text("Speed " + String.format("%.1f", TtsEngine.speed))
                                     Slider(
                                         value = TtsEngine.speedState.value,
-                                        onValueChange = { TtsEngine.speed = it },
+                                        onValueChange = { 
+                                            TtsEngine.speed = it 
+                                            preferenceHelper.setSpeed(it)
+                                        },
                                         valueRange = 0.2F..3.0F,
                                         modifier = Modifier.fillMaxWidth()
                                     )
