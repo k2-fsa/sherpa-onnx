@@ -29,6 +29,14 @@ class VoiceActivityDetector::Impl {
 #endif
 
   void AcceptWaveform(const float *samples, int32_t n) {
+    if (buffer_.Size() > max_utterance_length_) {
+      model_->SetMinSilenceDuration(new_min_silence_duration_s_);
+      model_->SetThreshold(new_threshold_);
+    } else {
+      model_->SetMinSilenceDuration(config_.silero_vad.min_silence_duration);
+      model_->SetThreshold(config_.silero_vad.threshold);
+    }
+
     int32_t window_size = model_->WindowSize();
 
     // note n is usually window_size and there is no need to use
@@ -113,6 +121,10 @@ class VoiceActivityDetector::Impl {
   VadModelConfig config_;
   CircularBuffer buffer_;
   std::vector<float> last_;
+
+  int max_utterance_length_ = 16000 * 20;  // in samples
+  float new_min_silence_duration_s_ = 0.1;
+  float new_threshold_ = 1.10;
 
   int32_t start_ = -1;
 };
