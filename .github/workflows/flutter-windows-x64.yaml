@@ -180,7 +180,7 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
             mkdir -p flutter
-            cp -v *.tar.bz2 ./flutter
+            cp -v ../*.tar.bz2 ./flutter
 
             git status
             git lfs track "*.bz2"
