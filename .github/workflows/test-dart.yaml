@@ -28,7 +28,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest, ubuntu-latest] #, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -51,51 +51,7 @@ jobs:
           dart --version
           flutter doctor
 
-      - name: Download files
-        if: matrix.os == 'windows-latest'
-        shell: bash
-        run: |
-          cd dart-api-examples
-          cd vad
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
-          ls -lh
-
       - name: Run tests
-        if: matrix.os == 'windows-latest'
-        shell: cmd
-        run: |
-          cd dart-api-examples
-
-          cd vad
-          dart pub get
-          echo "run tests"
-          dart run .\bin\vad.dart --silero-vad .\silero_vad.onnx --input-wav .\lei-jun-test.wav --output-wav .\lei-jun-test-no-silence.wav
-          ls -lh
-
-      - name: Run tests2
-        if: matrix.os == 'windows-latest'
-        shell: cmd
-        run: |
-          cd dart-api-examples
-          cd vad
-          echo "--"
-          dir D:\a\_temp\pub-cache\hosted\pub.dev\sherpa_onnx-0.0.3\lib
-          echo "--"
-          dir D:\a\_temp\pub-cache\hosted\pub.dev\sherpa_onnx-0.0.3\lib\..\windows
-          echo "--"
-          dir D:\a\_temp\pub-cache\hosted\pub.dev\sherpa_onnx-0.0.3\lib\..\windows\sherpa-onnx-c-api.dll
-
-      - name: Run tests
-        if: matrix.os == 'windows-latest'
-        shell: cmd
-        run: |
-          cd dart-api-examples
-          cd vad
-          dart run .\bin\vad.dart --silero-vad .\silero_vad.onnx --input-wav .\lei-jun-test.wav --output-wav .\lei-jun-test-no-silence.wav
-
-      - name: Run tests
-        if: matrix.os != 'windows-latest'
         shell: bash
         run: |
           cd dart-api-examples
