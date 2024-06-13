@@ -28,8 +28,7 @@ class OnlineStream {
     final pList = p.asTypedList(n);
     pList.setAll(0, samples);
 
-    SherpaOnnxBindings.onlineStreamAcceptWaveform
-        ?.call(this.ptr, sampleRate, p, n);
+    SherpaOnnxBindings.onlineStreamAcceptWaveform?.call(ptr, sampleRate, p, n);
 
     calloc.free(p);
   }

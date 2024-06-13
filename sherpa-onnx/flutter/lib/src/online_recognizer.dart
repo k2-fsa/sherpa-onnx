@@ -1,7 +1,6 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
@@ -247,7 +246,7 @@ class OnlineRecognizer {
     final json =
         SherpaOnnxBindings.getOnlineStreamResultAsJson?.call(ptr, stream.ptr) ??
             nullptr;
-    if (json == null) {
+    if (json == nullptr) {
       return OnlineRecognizerResult(text: '', tokens: [], timestamps: []);
     }
 
