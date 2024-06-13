@@ -40,7 +40,7 @@ final DynamicLibrary _dylib = () {
     if (_path == null) {
       return DynamicLibrary.open('sherpa-onnx-c-api.dll');
     } else {
-      return DynamicLibrary.open('${_path}/sherpa-onnx-c-api.dll');
+      return DynamicLibrary.open('${_path}\\sherpa-onnx-c-api.dll');
     }
   }
 
