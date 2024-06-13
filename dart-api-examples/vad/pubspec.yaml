@@ -1,15 +1,17 @@
 name: vad
-description: A sample command-line application.
+
+description: >
+  This example demonstrates how to use the Dart API for VAD (voice activity detection).
+
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
 
 environment:
   sdk: ^3.4.0
 
-# Add regular dependencies here.
 dependencies:
-  # path: ^1.8.0
+  sherpa_onnx: ^0.0.2
+  path: ^1.9.0
+  args: ^2.5.0
 
 dev_dependencies:
   lints: ^3.0.0
-  test: ^1.24.0

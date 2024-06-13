@@ -10,14 +10,14 @@ issue_tracker: https://github.com/k2-fsa/sherpa-onnx/issues
 documentation: https://k2-fsa.github.io/sherpa/onnx/
 
 topics:
-  - Speech recognition (ASR, speech-to-text)
-  - Speech synthesis (TTS, text-to-speech)
+  - speech-recognition
+  - speech-synthesis
   - speaker-identification
   - audio-tagging
   - voice-activity-detection
 
 # remember to change the version in macos/sherpa_onnx.podspec
-version: 0.0.1
+version: 0.0.2
 
 homepage: https://github.com/k2-fsa/sherpa-onnx
 
