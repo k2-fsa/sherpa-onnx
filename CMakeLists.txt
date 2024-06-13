@@ -4,7 +4,7 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment ve
 
 project(sherpa-onnx)
 
-set(SHERPA_ONNX_VERSION "1.9.28")
+set(SHERPA_ONNX_VERSION "1.9.29")
 
 # Disable warning about
 #
