@@ -80,7 +80,7 @@ def get_features(test_wav_filename):
         samples = librosa.resample(samples, orig_sr=sample_rate, target_sr=16000)
         sample_rate = 16000
 
-    samples *= 372768
+    samples *= 32768
 
     opts = knf.MfccOptions()
     # See https://github.com/Tele-AI/TeleSpeech-ASR/blob/master/mfcc_hires.conf
