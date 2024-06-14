@@ -54,8 +54,4 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          cd dart-api-examples
-
-          pushd vad
-          ./run.sh
-          popd
+          .github/scripts/test-dart.sh

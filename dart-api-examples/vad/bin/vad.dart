@@ -1,9 +1,7 @@
 import 'dart:io';
-import 'dart:isolate';
 import 'dart:typed_data';
 
 import 'package:args/args.dart';
-import 'package:path/path.dart' as p;
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 import './init.dart';
 
@@ -65,6 +63,8 @@ void main(List<String> arguments) async {
       }
     }
   }
+
+  vad.free();
 
   final s = Float32List.fromList(allSamples.expand((x) => x).toList());
   sherpa_onnx.writeWave(

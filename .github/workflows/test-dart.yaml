@@ -88,8 +88,6 @@ jobs:
         shell: bash
         run: |
           cp scripts/dart/vad-pubspec.yaml dart-api-examples/vad/pubspec.yaml
-          cd dart-api-examples
+          cp scripts/dart/non-streaming-asr-pubspec.yaml dart-api-examples/non-streaming-asr/pubspec.yaml
 
-          pushd vad
-          ./run.sh
-          popd
+          .github/scripts/test-dart.sh
