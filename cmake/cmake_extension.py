@@ -84,9 +84,9 @@ def get_binaries():
             "piper_phonemize.dll",
             "sherpa-onnx-c-api.dll",
             "sherpa-onnx-core.dll",
-            "sherpa-onnx-fstfar.lib",
-            "sherpa-onnx-fst.lib",
-            "sherpa-onnx-kaldifst-core.lib",
+            "sherpa-onnx-fstfar.dll",
+            "sherpa-onnx-fst.dll",
+            "sherpa-onnx-kaldifst-core.dll",
             "sherpa-onnx-portaudio.dll",
             "ucd.dll",
         ]
@@ -211,7 +211,7 @@ class BuildExtension(build_ext):
         binaries = get_binaries()
 
         for f in binaries:
-            suffix = "" if (".dll" in f or ".lib" in f) else suffix
+            suffix = "" if ".dll" in f else suffix
             src_file = install_dir / "bin" / (f + suffix)
             if not src_file.is_file():
                 src_file = install_dir / "lib" / (f + suffix)

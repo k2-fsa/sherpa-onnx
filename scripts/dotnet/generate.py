@@ -104,9 +104,9 @@ def process_windows(s, rid):
         "piper_phonemize.dll",
         "sherpa-onnx-c-api.dll",
         "sherpa-onnx-core.dll",
-        "sherpa-onnx-fstfar.lib",
-        "sherpa-onnx-fst.lib",
-        "sherpa-onnx-kaldifst-core.lib",
+        "sherpa-onnx-fstfar.dll",
+        "sherpa-onnx-fst.dll",
+        "sherpa-onnx-kaldifst-core.dll",
         "ucd.dll",
     ]
 

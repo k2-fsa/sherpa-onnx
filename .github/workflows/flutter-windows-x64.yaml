@@ -142,7 +142,7 @@ jobs:
 
           cd build/windows/x64/runner/
 
-          dst=flutter_sherpa_onnx_windows_x64
+          dst=sherpa-onnx-win-x64-$SHERPA_ONNX_VERSION
           mv Release $dst
 
           tar cjfv $dst.tar.bz2 ./$dst
@@ -155,13 +155,43 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: flutter-sherpa-onnx-windows-x64
+          name: sherpa-onnx-win-x64
           path: ./*.tar.bz2
 
-      - name: Release android libs
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        uses: svenstaro/upload-release-action@v2
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
         with:
-          file_glob: true
-          overwrite: true
-          file: flutter*.tar.bz2
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-flutter huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+            mkdir -p flutter
+            cp -v ../*.tar.bz2 ./flutter
+
+            git status
+            git lfs track "*.bz2"
+            git add .
+            git commit -m "add more files"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter main
+
+      # - name: Release android libs
+      #   if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      #   uses: svenstaro/upload-release-action@v2
+      #   with:
+      #     file_glob: true
+      #     overwrite: true
+      #     file: sherpa*.tar.bz2

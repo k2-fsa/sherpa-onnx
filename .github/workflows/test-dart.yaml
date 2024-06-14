@@ -1,0 +1,60 @@
+name: test-dart
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-dart.yaml'
+      - 'dart-api-examples/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-dart.yaml'
+      - 'dart-api-examples/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-dart-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dart:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest] #, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Run tests
+        shell: bash
+        run: |
+          cd dart-api-examples
+
+          pushd vad
+          ./run.sh
+          popd

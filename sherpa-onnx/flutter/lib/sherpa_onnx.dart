@@ -14,24 +14,40 @@ export 'src/wave_writer.dart';
 
 import 'src/sherpa_onnx_bindings.dart';
 
+String? _path;
+
 final DynamicLibrary _dylib = () {
   if (Platform.isIOS) {
     throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
   }
   if (Platform.isMacOS) {
-    return DynamicLibrary.open('libsherpa-onnx-c-api.dylib');
+    if (_path == null) {
+      return DynamicLibrary.open('libsherpa-onnx-c-api.dylib');
+    } else {
+      return DynamicLibrary.open('${_path}/libsherpa-onnx-c-api.dylib');
+    }
   }
+
   if (Platform.isAndroid || Platform.isLinux) {
-    return DynamicLibrary.open('libsherpa-onnx-c-api.so');
+    if (_path == null) {
+      return DynamicLibrary.open('libsherpa-onnx-c-api.so');
+    } else {
+      return DynamicLibrary.open('${_path}/libsherpa-onnx-c-api.so');
+    }
   }
 
   if (Platform.isWindows) {
-    return DynamicLibrary.open('sherpa-onnx-c-api.dll');
+    if (_path == null) {
+      return DynamicLibrary.open('sherpa-onnx-c-api.dll');
+    } else {
+      return DynamicLibrary.open('${_path}\\sherpa-onnx-c-api.dll');
+    }
   }
 
   throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
 }();
 
-void initBindings() {
+void initBindings([String? p]) {
+  _path ??= p;
   SherpaOnnxBindings.init(_dylib);
 }

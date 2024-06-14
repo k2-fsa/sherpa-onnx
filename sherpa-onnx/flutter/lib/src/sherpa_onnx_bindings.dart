@@ -553,13 +553,10 @@ typedef DestroyOnlineStreamNative = Void Function(
 typedef DestroyOnlineStream = void Function(Pointer<SherpaOnnxOnlineStream>);
 
 typedef OnlineStreamAcceptWaveformNative = Void Function(
-    Pointer<SherpaOnnxOnlineStream>,
-    Int32 sample_rate,
-    Pointer<Float>,
-    Int32 n);
+    Pointer<SherpaOnnxOnlineStream>, Int32, Pointer<Float>, Int32);
 
 typedef OnlineStreamAcceptWaveform = void Function(
-    Pointer<SherpaOnnxOnlineStream>, int sample_rate, Pointer<Float>, int n);
+    Pointer<SherpaOnnxOnlineStream>, int, Pointer<Float>, int);
 
 typedef OnlineStreamInputFinishedNative = Void Function(
     Pointer<SherpaOnnxOnlineStream>);
