@@ -1,0 +1,51 @@
+name: release-dart
+
+on:
+  push:
+    branches:
+      - ci-pub-dart
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*' # tag-pattern on pub.dev: 'v{{version}}'
+
+  workflow_dispatch:
+
+concurrency:
+  group: release-dart-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release_dart:
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    name: Release dart
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Copy pre-build libs
+        shell: bash
+        run: |
+          cd scripts/dart
+          ./release.sh
+          cd ../..
+
+          mv -v sherpa-onnx/flutter /tmp/to-be-published
+
+          cp -v README.md /tmp/to-be-published
+
+      - name: Release
+        shell: bash
+        run: |
+          cd /tmp/to-be-published
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force

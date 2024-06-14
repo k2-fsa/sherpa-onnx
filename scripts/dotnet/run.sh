@@ -30,7 +30,7 @@ mkdir -p linux macos windows-x64 windows-x86
 linux_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 linux_wheel=$src_dir/$linux_wheel_filename
 
-macos_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_universal2.whl
+macos_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_10_14_universal2.whl
 macos_wheel=$src_dir/$macos_wheel_filename
 
 windows_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
@@ -96,7 +96,6 @@ if [ ! -f $src_dir/windows-x64/sherpa-onnx-core.dll ]; then
   fi
   unzip $windows_x64_wheel_filename
   cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.lib ../
   cd ..
 
   rm -rf wheel
@@ -116,7 +115,6 @@ if [ ! -f $src_dir/windows-x86/sherpa-onnx-core.dll ]; then
   fi
   unzip $windows_x86_wheel_filename
   cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.lib ../
   cd ..
 
   rm -rf wheel
