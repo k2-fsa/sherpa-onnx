@@ -1,6 +1,7 @@
 # Introduction
 
-This folder shows how to use the Dart API from sherpa-onnx for voice activity detection (VAD).
+This example shows how to use the Dart API from sherpa-onnx for voice activity detection (VAD).
+Specifically, we use VAD to remove silences from a wave file.
 
 # Usage
 

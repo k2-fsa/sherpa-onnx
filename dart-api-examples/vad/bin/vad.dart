@@ -2,9 +2,9 @@ import 'dart:io';
 import 'dart:isolate';
 import 'dart:typed_data';
 
+import 'package:args/args.dart';
 import 'package:path/path.dart' as p;
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
-import 'package:args/args.dart';
 
 Future<void> initSherpaOnnx() async {
   var uri = await Isolate.resolvePackageUri(

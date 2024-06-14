@@ -1,10 +1,9 @@
 # Introduction
 
-This page contains examples for Dart API.
+This directory contains examples for Dart API.
 
 You can find the package at
 https://pub.dev/packages/sherpa_onnx
-
 
 ## How to create an example in this folder
 
