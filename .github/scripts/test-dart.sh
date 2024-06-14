@@ -6,6 +6,10 @@ cd dart-api-examples
 
 pushd non-streaming-asr
 
+echo '----------NeMo transducer----------'
+./run-nemo-transducer.sh
+rm -rf sherpa-onnx-*
+
 echo '----------NeMo CTC----------'
 ./run-nemo-ctc.sh
 rm -rf sherpa-onnx-*
