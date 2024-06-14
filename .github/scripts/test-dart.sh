@@ -6,6 +6,10 @@ cd dart-api-examples
 
 pushd non-streaming-asr
 
+echo '----------NeMo CTC----------'
+./run-nemo-ctc.sh
+rm -rf sherpa-onnx-*
+
 echo '----------TeleSpeech CTC----------'
 ./run-telespeech-ctc.sh
 rm -rf sherpa-onnx-*
