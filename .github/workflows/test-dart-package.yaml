@@ -1,19 +1,14 @@
 name: test-dart-package
 
 on:
-  push:
-    branches:
-      - master
-      - dart-example-non-streaming-asr
-    paths:
-      - '.github/workflows/test-dart-package.yaml'
-      - 'dart-api-examples/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/test-dart-package.yaml'
-      - 'dart-api-examples/**'
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 15:50 UTC time every day
+    - cron: "50 15 * * *"
 
   workflow_dispatch:
 
