@@ -64,7 +64,7 @@ def process_linux(s):
         f.write(s)
 
 
-def process_macos(s):
+def process_macos(s, rid):
     libs = [
         "libespeak-ng.dylib",
         "libkaldi-decoder-core.dylib",
@@ -79,18 +79,18 @@ def process_macos(s):
         "libsherpa-onnx-kaldifst-core.dylib",
         "libucd.dylib",
     ]
-    prefix = f"{src_dir}/macos/"
+    prefix = f"{src_dir}/macos-{rid}/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
     d = get_dict()
-    d["dotnet_rid"] = "osx-x64"
+    d["dotnet_rid"] = f"osx-{rid}"
     d["libs"] = libs
 
     environment = jinja2.Environment()
     template = environment.from_string(s)
     s = template.render(**d)
-    with open("./macos/sherpa-onnx.runtime.csproj", "w") as f:
+    with open(f"./macos-{rid}/sherpa-onnx.runtime.csproj", "w") as f:
         f.write(s)
 
 
@@ -129,7 +129,8 @@ def process_windows(s, rid):
 
 def main():
     s = read_proj_file("./sherpa-onnx.csproj.runtime.in")
-    process_macos(s)
+    process_macos(s, "x64")
+    process_macos(s, "arm64")
     process_linux(s)
     process_windows(s, "x64")
     process_windows(s, "x86")
