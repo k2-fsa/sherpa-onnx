@@ -21,18 +21,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  dart:
+  test_dart:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, ubuntu-latest] #, windows-latest]
+        os: [ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-dart
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
@@ -50,11 +55,39 @@ jobs:
           dart --version
           flutter doctor
 
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+          mkdir build
+
+          cd build
+
+          cmake \
+            -D BUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+          make -j install
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -v build/install/lib/lib* ./sherpa-onnx/flutter/linux/
+
+          echo "--------------------"
+
+          ls -lh ./sherpa-onnx/flutter/linux/
+
       - name: Run tests
         shell: bash
         run: |
-          cd dart-api-examples
+          cp scripts/dart/vad-pubspec.yaml dart-api-examples/vad/pubspec.yaml
+          cp scripts/dart/non-streaming-asr-pubspec.yaml dart-api-examples/non-streaming-asr/pubspec.yaml
 
-          pushd vad
-          ./run.sh
-          popd
+          .github/scripts/test-dart.sh

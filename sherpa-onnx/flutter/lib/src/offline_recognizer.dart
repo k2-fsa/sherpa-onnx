@@ -102,11 +102,14 @@ class OfflineModelConfig {
     this.debug = true,
     this.provider = 'cpu',
     this.modelType = '',
+    this.modelingUnit = '',
+    this.bpeVocab = '',
+    this.telespeechCtc = '',
   });
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   final OfflineTransducerModelConfig transducer;
@@ -120,6 +123,9 @@ class OfflineModelConfig {
   final bool debug;
   final String provider;
   final String modelType;
+  final String modelingUnit;
+  final String bpeVocab;
+  final String telespeechCtc;
 }
 
 class OfflineRecognizerConfig {
@@ -213,6 +219,9 @@ class OfflineRecognizer {
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
     c.ref.model.modelType = config.model.modelType.toNativeUtf8();
+    c.ref.model.modelingUnit = config.model.modelingUnit.toNativeUtf8();
+    c.ref.model.bpeVocab = config.model.bpeVocab.toNativeUtf8();
+    c.ref.model.telespeechCtc = config.model.telespeechCtc.toNativeUtf8();
 
     c.ref.lm.model = config.lm.model.toNativeUtf8();
     c.ref.lm.scale = config.lm.scale;
@@ -228,6 +237,9 @@ class OfflineRecognizer {
     calloc.free(c.ref.hotwordsFile);
     calloc.free(c.ref.decodingMethod);
     calloc.free(c.ref.lm.model);
+    calloc.free(c.ref.model.telespeechCtc);
+    calloc.free(c.ref.model.bpeVocab);
+    calloc.free(c.ref.model.modelingUnit);
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);

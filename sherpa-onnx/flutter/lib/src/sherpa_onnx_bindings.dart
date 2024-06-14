@@ -63,6 +63,9 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external Pointer<Utf8> provider;
 
   external Pointer<Utf8> modelType;
+  external Pointer<Utf8> modelingUnit;
+  external Pointer<Utf8> bpeVocab;
+  external Pointer<Utf8> telespeechCtc;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
@@ -111,6 +114,10 @@ final class SherpaOnnxOnlineModelConfig extends Struct {
   external int debug;
 
   external Pointer<Utf8> modelType;
+
+  external Pointer<Utf8> modelingUnit;
+
+  external Pointer<Utf8> bpeVocab;
 }
 
 final class SherpaOnnxOnlineCtcFstDecoderConfig extends Struct {

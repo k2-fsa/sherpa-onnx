@@ -1,0 +1,18 @@
+name: non_streaming_asr
+description: >
+  This example demonstrates how to use the Dart API for Non-streaming speech recognition. Specifically, we use the following models as examples, whisper, zipformer, and paraformer.
+
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.4.0
+
+# Add regular dependencies here.
+dependencies:
+  sherpa_onnx: ^1.9.29
+  path: ^1.9.0
+  args: ^2.5.0
+
+dev_dependencies:
+  lints: ^3.0.0

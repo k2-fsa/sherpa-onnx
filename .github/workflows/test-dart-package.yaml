@@ -1,0 +1,52 @@
+name: test-dart-package
+
+on:
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 15:50 UTC time every day
+    - cron: "50 15 * * *"
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-dart-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_dart_package:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest] #, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Run tests
+        shell: bash
+        run: |
+          .github/scripts/test-dart.sh
