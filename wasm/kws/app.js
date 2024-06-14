@@ -106,9 +106,9 @@ if (navigator.mediaDevices.getUserMedia) {
 
 
       let result = recognizer.getResult(recognizer_stream);
-      console.log(result)
 
       if (result.keyword.length > 0) {
+        console.log(result)
         lastResult = result;
         resultList.push(JSON.stringify(result));
       }
