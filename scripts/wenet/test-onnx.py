@@ -52,7 +52,7 @@ def get_features(test_wav_filename):
         audio = torchaudio.functional.resample(
             audio, orig_freq=sample_rate, new_freq=16000
         )
-    audio *= 372768
+    audio *= 32768
 
     opts = knf.FbankOptions()
     opts.frame_opts.dither = 0
