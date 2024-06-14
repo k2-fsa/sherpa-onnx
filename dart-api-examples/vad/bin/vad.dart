@@ -26,6 +26,7 @@ Future<void> initSherpaOnnx() async {
   }
 
   final libPath = p.join(p.dirname(p.fromUri(uri)), '..', platform);
+  print('libPath: ${libPath}');
   sherpa_onnx.initBindings(libPath);
 }
 
