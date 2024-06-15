@@ -13,14 +13,12 @@ void main(List<String> arguments) async {
   final parser = ArgParser()
     ..addOption('encoder', help: 'Path to the encoder model')
     ..addOption('decoder', help: 'Path to decoder model')
-    ..addOption('joiner', help: 'Path to joiner model')
     ..addOption('tokens', help: 'Path to tokens.txt')
     ..addOption('input-wav', help: 'Path to input.wav to transcribe');
 
   final res = parser.parse(arguments);
   if (res['encoder'] == null ||
       res['decoder'] == null ||
-      res['joiner'] == null ||
       res['tokens'] == null ||
       res['input-wav'] == null) {
     print(parser.usage);
@@ -29,18 +27,16 @@ void main(List<String> arguments) async {
 
   final encoder = res['encoder'] as String;
   final decoder = res['decoder'] as String;
-  final joiner = res['joiner'] as String;
   final tokens = res['tokens'] as String;
   final inputWav = res['input-wav'] as String;
 
-  final transducer = sherpa_onnx.OnlineTransducerModelConfig(
+  final paraformer = sherpa_onnx.OnlineParaformerModelConfig(
     encoder: encoder,
     decoder: decoder,
-    joiner: joiner,
   );
 
   final modelConfig = sherpa_onnx.OnlineModelConfig(
-    transducer: transducer,
+    paraformer: paraformer,
     tokens: tokens,
     debug: true,
     numThreads: 1,

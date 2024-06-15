@@ -1,0 +1,21 @@
+name: streaming_asr
+
+description: >
+  This example demonstrates how to use the Dart API for streaming speech recognition.
+
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ^3.4.0
+
+# Add regular dependencies here.
+dependencies:
+  sherpa_onnx:
+    path: ../../sherpa-onnx/flutter
+  path: ^1.9.0
+  args: ^2.5.0
+
+dev_dependencies:
+  lints: ^3.0.0
+  test: ^1.24.0

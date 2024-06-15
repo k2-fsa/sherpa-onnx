@@ -11,36 +11,28 @@ void main(List<String> arguments) async {
   await initSherpaOnnx();
 
   final parser = ArgParser()
-    ..addOption('encoder', help: 'Path to the encoder model')
-    ..addOption('decoder', help: 'Path to decoder model')
-    ..addOption('joiner', help: 'Path to joiner model')
+    ..addOption('model', help: 'Path to the model')
     ..addOption('tokens', help: 'Path to tokens.txt')
     ..addOption('input-wav', help: 'Path to input.wav to transcribe');
 
   final res = parser.parse(arguments);
-  if (res['encoder'] == null ||
-      res['decoder'] == null ||
-      res['joiner'] == null ||
+  if (res['model'] == null ||
       res['tokens'] == null ||
       res['input-wav'] == null) {
     print(parser.usage);
     exit(1);
   }
 
-  final encoder = res['encoder'] as String;
-  final decoder = res['decoder'] as String;
-  final joiner = res['joiner'] as String;
+  final model = res['model'] as String;
   final tokens = res['tokens'] as String;
   final inputWav = res['input-wav'] as String;
 
-  final transducer = sherpa_onnx.OnlineTransducerModelConfig(
-    encoder: encoder,
-    decoder: decoder,
-    joiner: joiner,
+  final ctc = sherpa_onnx.OnlineZipformer2CtcModelConfig(
+    model: model,
   );
 
   final modelConfig = sherpa_onnx.OnlineModelConfig(
-    transducer: transducer,
+    zipformer2Ctc: ctc,
     tokens: tokens,
     debug: true,
     numThreads: 1,

@@ -4,11 +4,27 @@ set -ex
 
 cd dart-api-examples
 
+pushd streaming-asr
+
+echo '----------streaming zipformer ctc HLG----------'
+./run-zipformer-ctc-hlg.sh
+rm -rf sherpa-onnx-*
+
+echo '----------streaming zipformer ctc----------'
+./run-zipformer-ctc.sh
+rm -rf sherpa-onnx-*
+
 echo '----------streaming zipformer transducer----------'
 ./run-zipformer-transducer.sh
 rm -rf sherpa-onnx-*
 
-pushd streaming-asr
+echo '----------streaming NeMo transducer----------'
+./run-nemo-transducer.sh
+rm -rf sherpa-onnx-*
+
+echo '----------streaming paraformer----------'
+./run-paraformer.sh
+rm -rf sherpa-onnx-*
 
 popd # streaming-asr
 
