@@ -2,6 +2,55 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
+final class SherpaOnnxOfflineTtsVitsModelConfig extends Struct {
+  external Pointer<Utf8> model;
+  external Pointer<Utf8> lexicon;
+  external Pointer<Utf8> tokens;
+  external Pointer<Utf8> dataDir;
+
+  @Float()
+  external double noiseScale;
+
+  @Float()
+  external double noiseScaleW;
+
+  @Float()
+  external double lengthScale;
+
+  external Pointer<Utf8> dictDir;
+}
+
+final class SherpaOnnxOfflineTtsModelConfig extends Struct {
+  external SherpaOnnxOfflineTtsVitsModelConfig vits;
+  @Int32()
+  external int numThreads;
+
+  @Int32()
+  external int debug;
+
+  external Pointer<Utf8> provider;
+}
+
+final class SherpaOnnxOfflineTtsConfig extends Struct {
+  external SherpaOnnxOfflineTtsModelConfig model;
+  external Pointer<Utf8> ruleFsts;
+
+  @Int32()
+  external int maxNumSenetences;
+
+  external Pointer<Utf8> ruleFars;
+}
+
+final class SherpaOnnxGeneratedAudio extends Struct {
+  external Pointer<Float> samples;
+
+  @Int32()
+  external int n;
+
+  @Int32()
+  external int sampleRate;
+}
+
 final class SherpaOnnxFeatureConfig extends Struct {
   @Int32()
   external int sampleRate;
@@ -218,6 +267,8 @@ final class SherpaOnnxSpeakerEmbeddingExtractorConfig extends Struct {
   external Pointer<Utf8> provider;
 }
 
+final class SherpaOnnxOfflineTts extends Opaque {}
+
 final class SherpaOnnxCircularBuffer extends Opaque {}
 
 final class SherpaOnnxVoiceActivityDetector extends Opaque {}
@@ -233,6 +284,60 @@ final class SherpaOnnxOfflineStream extends Opaque {}
 final class SherpaOnnxSpeakerEmbeddingExtractor extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingManager extends Opaque {}
+
+typedef SherpaOnnxCreateOfflineTtsNative = Pointer<SherpaOnnxOfflineTts>
+    Function(Pointer<SherpaOnnxOfflineTtsConfig>);
+
+typedef SherpaOnnxCreateOfflineTts = SherpaOnnxCreateOfflineTtsNative;
+
+typedef SherpaOnnxDestroyOfflineTtsNative = Void Function(
+    Pointer<SherpaOnnxOfflineTts>);
+
+typedef SherpaOnnxDestroyOfflineTts = void Function(
+    Pointer<SherpaOnnxOfflineTts>);
+
+typedef SherpaOnnxOfflineTtsSampleRateNative = Int32 Function(
+    Pointer<SherpaOnnxOfflineTts>);
+
+typedef SherpaOnnxOfflineTtsSampleRate = int Function(
+    Pointer<SherpaOnnxOfflineTts>);
+
+typedef SherpaOnnxOfflineTtsNumSpeakersNative = Int32 Function(
+    Pointer<SherpaOnnxOfflineTts>);
+
+typedef SherpaOnnxOfflineTtsNumSpeakers = int Function(
+    Pointer<SherpaOnnxOfflineTts>);
+
+typedef SherpaOnnxOfflineTtsGenerateNative = Pointer<SherpaOnnxGeneratedAudio>
+    Function(Pointer<SherpaOnnxOfflineTts>, Pointer<Utf8>, Int32, Float);
+
+typedef SherpaOnnxOfflineTtsGenerate = Pointer<SherpaOnnxGeneratedAudio>
+    Function(Pointer<SherpaOnnxOfflineTts>, Pointer<Utf8>, int, double);
+
+typedef SherpaOnnxDestroyOfflineTtsGeneratedAudioNative = Void Function(
+    Pointer<SherpaOnnxGeneratedAudio>);
+
+typedef SherpaOnnxDestroyOfflineTtsGeneratedAudio = void Function(
+    Pointer<SherpaOnnxGeneratedAudio>);
+
+typedef SherpaOnnxGeneratedAudioCallbackNative = Void Function(
+    Pointer<Float>, Int32);
+
+typedef SherpaOnnxOfflineTtsGenerateWithCallbackNative
+    = Pointer<SherpaOnnxGeneratedAudio> Function(
+        Pointer<SherpaOnnxOfflineTts>,
+        Pointer<Utf8>,
+        Int32,
+        Float,
+        Pointer<NativeFunction<SherpaOnnxGeneratedAudioCallbackNative>>);
+
+typedef SherpaOnnxOfflineTtsGenerateWithCallback
+    = Pointer<SherpaOnnxGeneratedAudio> Function(
+        Pointer<SherpaOnnxOfflineTts>,
+        Pointer<Utf8>,
+        int,
+        double,
+        Pointer<NativeFunction<SherpaOnnxGeneratedAudioCallbackNative>>);
 
 typedef CreateOfflineRecognizerNative = Pointer<SherpaOnnxOfflineRecognizer>
     Function(Pointer<SherpaOnnxOfflineRecognizerConfig>);
@@ -608,6 +713,16 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
+  static SherpaOnnxCreateOfflineTts? createOfflineTts;
+  static SherpaOnnxDestroyOfflineTts? destroyOfflineTts;
+  static SherpaOnnxOfflineTtsSampleRate? offlineTtsSampleRate;
+  static SherpaOnnxOfflineTtsNumSpeakers? offlineTtsNumSpeakers;
+  static SherpaOnnxOfflineTtsGenerate? offlineTtsGenerate;
+  static SherpaOnnxDestroyOfflineTtsGeneratedAudio?
+      destroyOfflineTtsGeneratedAudio;
+  static SherpaOnnxOfflineTtsGenerateWithCallback?
+      offlineTtsGenerateWithCallback;
+
   static CreateOfflineRecognizer? createOfflineRecognizer;
   static DestroyOfflineRecognizer? destroyOfflineRecognizer;
   static CreateOfflineStream? createOfflineStream;
@@ -740,6 +855,43 @@ class SherpaOnnxBindings {
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
+    createOfflineTts ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCreateOfflineTtsNative>>(
+            'SherpaOnnxCreateOfflineTts')
+        .asFunction();
+
+    destroyOfflineTts ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyOfflineTtsNative>>(
+            'SherpaOnnxDestroyOfflineTts')
+        .asFunction();
+
+    offlineTtsSampleRate ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOfflineTtsSampleRateNative>>(
+            'SherpaOnnxOfflineTtsSampleRate')
+        .asFunction();
+
+    offlineTtsNumSpeakers ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOfflineTtsNumSpeakersNative>>(
+            'SherpaOnnxOfflineTtsNumSpeakers')
+        .asFunction();
+
+    offlineTtsGenerate ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOfflineTtsGenerateNative>>(
+            'SherpaOnnxOfflineTtsGenerate')
+        .asFunction();
+
+    destroyOfflineTtsGeneratedAudio ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxDestroyOfflineTtsGeneratedAudioNative>>(
+            'SherpaOnnxDestroyOfflineTtsGeneratedAudio')
+        .asFunction();
+
+    offlineTtsGenerateWithCallback ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOfflineTtsGenerateWithCallbackNative>>(
+            'SherpaOnnxOfflineTtsGenerateWithCallback')
+        .asFunction();
+
     createOfflineRecognizer ??= dynamicLibrary
         .lookup<NativeFunction<CreateOfflineRecognizerNative>>(
             'CreateOfflineRecognizer')

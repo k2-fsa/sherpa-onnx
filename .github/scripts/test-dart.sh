@@ -4,6 +4,22 @@ set -ex
 
 cd dart-api-examples
 
+pushd tts
+
+echo '----------piper tts----------'
+./run-piper.sh
+rm -rf vits-piper-*
+
+echo '----------coqui tts----------'
+./run-coqui.sh
+rm -rf vits-coqui-*
+
+echo '----------zh tts----------'
+./run-zh.sh
+rm -rf sherpa-onnx-*
+
+popd # tts
+
 pushd streaming-asr
 
 echo '----------streaming zipformer ctc HLG----------'
