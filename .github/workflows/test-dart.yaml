@@ -4,14 +4,17 @@ on:
   push:
     branches:
       - master
+      - dart-api-streaming-asr-example
     paths:
       - '.github/workflows/test-dart.yaml'
+      - '.github/scripts/test-dart.sh'
       - 'dart-api-examples/**'
   pull_request:
     branches:
       - master
     paths:
       - '.github/workflows/test-dart.yaml'
+      - '.github/scripts/test-dart.sh'
       - 'dart-api-examples/**'
 
   workflow_dispatch:
