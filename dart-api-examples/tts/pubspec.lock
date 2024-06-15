@@ -73,9 +73,10 @@ packages:
   sherpa_onnx:
     dependency: "direct main"
     description:
-      path: "../../sherpa-onnx/flutter"
-      relative: true
-    source: path
+      name: sherpa_onnx
+      sha256: e45894f81e7c854ca96d678bcab5303036e884a7c90e9a6c4ec04c7b1ee215a8
+      url: "https://pub.dev"
+    source: hosted
     version: "1.9.29"
   sky_engine:
     dependency: transitive

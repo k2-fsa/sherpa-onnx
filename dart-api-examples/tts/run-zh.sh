@@ -16,7 +16,7 @@ if [[ ! -f ./sherpa-onnx-vits-zh-ll/tokens.txt ]]; then
 fi
 
 dart run \
-  ./bin/zh-jieba.dart \
+  ./bin/zh.dart \
   --model ./sherpa-onnx-vits-zh-ll/model.onnx \
   --lexicon ./sherpa-onnx-vits-zh-ll/lexicon.txt \
   --tokens ./sherpa-onnx-vits-zh-ll/tokens.txt \
@@ -27,7 +27,7 @@ dart run \
   --output-wav zh-jieba-2.wav
 
 dart run \
-  ./bin/zh-jieba.dart \
+  ./bin/zh.dart \
   --model ./sherpa-onnx-vits-zh-ll/model.onnx \
   --lexicon ./sherpa-onnx-vits-zh-ll/lexicon.txt \
   --tokens ./sherpa-onnx-vits-zh-ll/tokens.txt \

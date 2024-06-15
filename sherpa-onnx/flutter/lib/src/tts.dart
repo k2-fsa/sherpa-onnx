@@ -1,6 +1,7 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
@@ -77,8 +78,8 @@ class GeneratedAudio {
     required this.sampleRate,
   });
 
-  final Float32List samles;
-  int sampleRate;
+  final Float32List samples;
+  final int sampleRate;
 }
 
 class OfflineTts {

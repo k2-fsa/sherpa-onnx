@@ -23,6 +23,6 @@ dart run \
   --sid 351 \
   --speed 1.0 \
   --text 'How are you doing? This is a speech to text example, using next generation kaldi with piper.' \
-  --output-wav 351.wav
+  --output-wav piper-351.wav
 
 ls -lh *.wav

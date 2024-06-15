@@ -1,6 +1,7 @@
 # Introduction
 
 This folder contains examples for streaming ASR with Dart API.
+
 | File | Description|
 |------|------------|
 |[./bin/nemo-transducer.dart](./bin/nemo-transducer.dart)| Use a NeMo transducer model for speech recognition. See [./run-nemo-transducer.sh](./run-nemo-transducer.sh)|
