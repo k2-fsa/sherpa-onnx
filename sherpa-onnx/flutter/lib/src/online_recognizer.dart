@@ -1,7 +1,6 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
@@ -59,11 +58,13 @@ class OnlineModelConfig {
     this.provider = 'cpu',
     this.debug = true,
     this.modelType = '',
+    this.modelingUnit = '',
+    this.bpeVocab = '',
   });
 
   @override
   String toString() {
-    return 'OnlineModelConfig(transducer: $transducer, paraformer: $paraformer, zipformer2Ctc: $zipformer2Ctc, tokens: $tokens, numThreads: $numThreads, provider: $provider, debug: $debug, modelType: $modelType)';
+    return 'OnlineModelConfig(transducer: $transducer, paraformer: $paraformer, zipformer2Ctc: $zipformer2Ctc, tokens: $tokens, numThreads: $numThreads, provider: $provider, debug: $debug, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab)';
   }
 
   final OnlineTransducerModelConfig transducer;
@@ -79,6 +80,10 @@ class OnlineModelConfig {
   final bool debug;
 
   final String modelType;
+
+  final String modelingUnit;
+
+  final String bpeVocab;
 }
 
 class OnlineCtcFstDecoderConfig {
@@ -181,6 +186,8 @@ class OnlineRecognizer {
     c.ref.model.provider = config.model.provider.toNativeUtf8();
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.modelType = config.model.modelType.toNativeUtf8();
+    c.ref.model.modelingUnit = config.model.modelingUnit.toNativeUtf8();
+    c.ref.model.bpeVocab = config.model.bpeVocab.toNativeUtf8();
 
     c.ref.decodingMethod = config.decodingMethod.toNativeUtf8();
     c.ref.maxActivePaths = config.maxActivePaths;
@@ -200,6 +207,8 @@ class OnlineRecognizer {
     calloc.free(c.ref.ctcFstDecoderConfig.graph);
     calloc.free(c.ref.hotwordsFile);
     calloc.free(c.ref.decodingMethod);
+    calloc.free(c.ref.model.bpeVocab);
+    calloc.free(c.ref.model.modelingUnit);
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
@@ -247,7 +256,7 @@ class OnlineRecognizer {
     final json =
         SherpaOnnxBindings.getOnlineStreamResultAsJson?.call(ptr, stream.ptr) ??
             nullptr;
-    if (json == null) {
+    if (json == nullptr) {
       return OnlineRecognizerResult(text: '', tokens: [], timestamps: []);
     }
 

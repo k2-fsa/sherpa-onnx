@@ -106,8 +106,8 @@ class CircularBuffer {
     SherpaOnnxBindings.circularBufferReset?.call(this.ptr);
   }
 
-  int get size => SherpaOnnxBindings.circularBufferSize?.call(this.ptr) ?? 0;
-  int get head => SherpaOnnxBindings.circularBufferHead?.call(this.ptr) ?? 0;
+  int get size => SherpaOnnxBindings.circularBufferSize?.call(ptr) ?? 0;
+  int get head => SherpaOnnxBindings.circularBufferHead?.call(ptr) ?? 0;
 
   Pointer<SherpaOnnxCircularBuffer> ptr;
 }
@@ -159,38 +159,36 @@ class VoiceActivityDetector {
     final pList = p.asTypedList(n);
     pList.setAll(0, samples);
 
-    SherpaOnnxBindings.voiceActivityDetectorAcceptWaveform
-        ?.call(this.ptr, p, n);
+    SherpaOnnxBindings.voiceActivityDetectorAcceptWaveform?.call(ptr, p, n);
 
     calloc.free(p);
   }
 
   bool isEmpty() {
     final int empty =
-        SherpaOnnxBindings.voiceActivityDetectorEmpty?.call(this.ptr) ?? 0;
+        SherpaOnnxBindings.voiceActivityDetectorEmpty?.call(ptr) ?? 0;
 
     return empty == 1;
   }
 
   bool isDetected() {
     final int detected =
-        SherpaOnnxBindings.voiceActivityDetectorDetected?.call(this.ptr) ?? 0;
+        SherpaOnnxBindings.voiceActivityDetectorDetected?.call(ptr) ?? 0;
 
     return detected == 1;
   }
 
   void pop() {
-    SherpaOnnxBindings.voiceActivityDetectorPop?.call(this.ptr);
+    SherpaOnnxBindings.voiceActivityDetectorPop?.call(ptr);
   }
 
   void clear() {
-    SherpaOnnxBindings.voiceActivityDetectorClear?.call(this.ptr);
+    SherpaOnnxBindings.voiceActivityDetectorClear?.call(ptr);
   }
 
   SpeechSegment front() {
     final Pointer<SherpaOnnxSpeechSegment> segment =
-        SherpaOnnxBindings.voiceActivityDetectorFront?.call(this.ptr) ??
-            nullptr;
+        SherpaOnnxBindings.voiceActivityDetectorFront?.call(ptr) ?? nullptr;
     if (segment == nullptr) {
       return SpeechSegment(samples: Float32List(0), start: 0);
     }
@@ -206,7 +204,7 @@ class VoiceActivityDetector {
   }
 
   void reset() {
-    SherpaOnnxBindings.voiceActivityDetectorReset?.call(this.ptr);
+    SherpaOnnxBindings.voiceActivityDetectorReset?.call(ptr);
   }
 
   Pointer<SherpaOnnxVoiceActivityDetector> ptr;

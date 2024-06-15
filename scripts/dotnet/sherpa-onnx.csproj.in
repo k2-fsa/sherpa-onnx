@@ -5,7 +5,7 @@
     <OutputType>Library</OutputType>
     <LangVersion>10.0</LangVersion>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <RuntimeIdentifiers>linux-x64;osx-x64;win-x64</RuntimeIdentifiers>
+    <RuntimeIdentifiers>linux-x64;osx-x64;osx-arm64;win-x64;win-x86</RuntimeIdentifiers>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>sherpa-onnx</AssemblyName>
     <Version>{{ version }}</Version>
@@ -50,6 +50,7 @@
   <ItemGroup>
     <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.linux-x64" Version="{{ version }}" />
     <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-x64"   Version="{{ version }}" />
+    <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.osx-arm64" Version="{{ version }}" />
     <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x64"   Version="{{ version }}" />
     <PackageReference Include="org.k2fsa.sherpa.onnx.runtime.win-x86"   Version="{{ version }}" />
   </ItemGroup>

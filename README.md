@@ -1,4 +1,33 @@
-# Introduction
+### Supported functions
+
+|Speech recognition| Speech synthesis | Speaker verification | Speaker identification |
+|------------------|------------------|----------------------|------------------------|
+|   ✔️              |         ✔️        |          ✔️           |                ✔️       |
+
+| Spoken Language identification | Audio tagging | Voice activity detection | Keyword spotting |
+|--------------------------------|---------------|--------------------------|------------------|
+|                 ✔️              |          ✔️    |                ✔️         |         ✔️        |
+
+### Supported platforms
+
+|Architecture| Android          | iOS           | Windows    | macOS | linux |
+|------------|------------------|---------------|------------|-------|-------|
+|   x64      |  ✔️               |               |   ✔️        | ✔️     |  ✔️    |
+|   x86      |  ✔️               |               |   ✔️        |       |       |
+|   arm64    |  ✔️               | ✔️             |   ✔️        | ✔️     |  ✔️    |
+|   arm32    |  ✔️               |               |            |       |  ✔️    |
+|   riscv64  |                  |               |            |       |  ✔️    |
+
+
+### Supported programming languages
+
+| C++ | C  | Python | C# | Java | JavaScript | Kotlin | Swift | Go | Dart |
+|-----|----|--------|----|------|------------|--------|-------|----|------|
+| ✔️   | ✔️  | ✔️      | ✔️  |  ✔️   | ✔️          | ✔️      |  ✔️    | ✔️  |  ✔️   |
+
+It also supports WebAssembly.
+
+## Introduction
 
 This repository supports running the following functions **locally**
 
@@ -33,7 +62,7 @@ with the following APIs
   - Swift
   - Dart
 
-## Links for pre-built Android APKs
+### Links for pre-built Android APKs
 
 | Description                    | URL                                                                                     | 中国用户                                                                             |
 |--------------------------------|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
@@ -48,7 +77,7 @@ with the following APIs
 | Spoken language identification | [Address](https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk.html) | [点此](https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk-cn.html) |
 |Keyword spotting| [Address](https://k2-fsa.github.io/sherpa/onnx/kws/apk.html)| [点此](https://k2-fsa.github.io/sherpa/onnx/kws/apk-cn.html)|
 
-## Links for pre-trained models
+### Links for pre-trained models
 
 | Description                    | URL                                                                                                                            |
 |--------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
@@ -61,12 +90,12 @@ with the following APIs
 | Spoken language identification (Language ID) | See multi-lingual Whisper ASR models from  [Speech recognition](https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models) |
 | Punctuation| [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/punctuation-models)|
 
-## Useful links
+### Useful links
 
 - Documentation: https://k2-fsa.github.io/sherpa/onnx/
 - Bilibili 演示视频: https://search.bilibili.com/all?keyword=%E6%96%B0%E4%B8%80%E4%BB%A3Kaldi
 
-## How to reach us
+### How to reach us
 
 Please see
 https://k2-fsa.github.io/sherpa/social-groups.html

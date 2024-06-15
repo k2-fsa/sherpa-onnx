@@ -1,18 +1,18 @@
 function(download_kaldifst)
   include(FetchContent)
 
-  set(kaldifst_URL  "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.7.10.tar.gz")
-  set(kaldifst_URL2 "https://hub.nuaa.cf/k2-fsa/kaldifst/archive/refs/tags/v1.7.10.tar.gz")
-  set(kaldifst_HASH "SHA256=7f7b3173a6584a6b1987f65ae7af2ac453d66b845f875a9d31074b8d2cd0de54")
+  set(kaldifst_URL  "https://github.com/k2-fsa/kaldifst/archive/refs/tags/v1.7.11.tar.gz")
+  set(kaldifst_URL2 "https://hub.nuaa.cf/k2-fsa/kaldifst/archive/refs/tags/v1.7.11.tar.gz")
+  set(kaldifst_HASH "SHA256=b43b3332faa2961edc730e47995a58cd4e22ead21905d55b0c4a41375b4a525f")
 
   # If you don't have access to the Internet,
   # please pre-download kaldifst
   set(possible_file_locations
-    $ENV{HOME}/Downloads/kaldifst-1.7.10.tar.gz
-    ${CMAKE_SOURCE_DIR}/kaldifst-1.7.10.tar.gz
-    ${CMAKE_BINARY_DIR}/kaldifst-1.7.10.tar.gz
-    /tmp/kaldifst-1.7.10.tar.gz
-    /star-fj/fangjun/download/github/kaldifst-1.7.10.tar.gz
+    $ENV{HOME}/Downloads/kaldifst-1.7.11.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldifst-1.7.11.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldifst-1.7.11.tar.gz
+    /tmp/kaldifst-1.7.11.tar.gz
+    /star-fj/fangjun/download/github/kaldifst-1.7.11.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
@@ -51,6 +51,7 @@ function(download_kaldifst)
   )
 
   set_target_properties(kaldifst_core PROPERTIES OUTPUT_NAME "sherpa-onnx-kaldifst-core")
+  # installed in ./kaldi-decoder.cmake
 endfunction()
 
 download_kaldifst()

@@ -43,3 +43,20 @@ dart analyze
 FLUTTER_XCODE_ARCHS=arm64
 FLUTTER_XCODE_ARCHS=x86_64
 ```
+
+## Examples
+
+  - https://dart.dev/tools/pub/automated-publishing
+
+     Use GitHub actions to publish
+
+  - https://dart.dev/tools/pub/pubspec
+
+     It describes the format of ./pubspec.yaml
+
+  - https://github.com/folksable/blurhash_ffi/
+
+      It supports ios, android, linux, macos, and windows.
+
+ - https://github.com/alexmercerind/dart_vlc
+ - https://github.com/dart-lang/native/tree/main/pkgs/jni

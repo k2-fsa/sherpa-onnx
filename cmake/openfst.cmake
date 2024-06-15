@@ -3,18 +3,18 @@
 function(download_openfst)
   include(FetchContent)
 
-  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/refs/tags/sherpa-onnx-2024-05-22-2.tar.gz")
-  set(openfst_URL2 "https://hub.nuaa.cf/csukuangfj/openfst/archive/refs/tags/sherpa-onnx-2024-05-22-2.tar.gz")
-  set(openfst_HASH "SHA256=ec52d32ab46ac884d77c87918155ca9d0cae424095ce3bd7e3cc7eaab8235a39")
+  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/refs/tags/sherpa-onnx-2024-06-13.tar.gz")
+  set(openfst_URL2 "https://hub.nuaa.cf/csukuangfj/openfst/archive/refs/tags/sherpa-onnx-2024-06-13.tar.gz")
+  set(openfst_HASH "SHA256=f10a71c6b64d89eabdc316d372b956c30c825c7c298e2f20c780320e8181ffb6")
 
   # If you don't have access to the Internet,
   # please pre-download it
   set(possible_file_locations
-    $ENV{HOME}/Downloads/openfst-sherpa-onnx-2024-05-22-2.tar.gz
-    ${CMAKE_SOURCE_DIR}/openfst-sherpa-onnx-2024-05-22-2.tar.gz
-    ${CMAKE_BINARY_DIR}/openfst-sherpa-onnx-2024-05-22-2.tar.gz
-    /tmp/openfst-sherpa-onnx-2024-05-22-2.tar.gz
-    /star-fj/fangjun/download/github/openfst-sherpa-onnx-2024-05-22-2.tar.gz
+    $ENV{HOME}/Downloads/openfst-sherpa-onnx-2024-06-13.tar.gz
+    ${CMAKE_SOURCE_DIR}/openfst-sherpa-onnx-2024-06-13.tar.gz
+    ${CMAKE_BINARY_DIR}/openfst-sherpa-onnx-2024-06-13.tar.gz
+    /tmp/openfst-sherpa-onnx-2024-06-13.tar.gz
+    /star-fj/fangjun/download/github/openfst-sherpa-onnx-2024-06-13.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
@@ -27,7 +27,7 @@ function(download_openfst)
   endforeach()
 
   set(HAVE_BIN OFF CACHE BOOL "" FORCE)
-  set(HAVE_SCRIPT ON CACHE BOOL "" FORCE)
+  set(HAVE_SCRIPT OFF CACHE BOOL "" FORCE)
   set(HAVE_COMPACT OFF CACHE BOOL "" FORCE)
   set(HAVE_COMPRESS OFF CACHE BOOL "" FORCE)
   set(HAVE_CONST OFF CACHE BOOL "" FORCE)
@@ -70,8 +70,6 @@ function(download_openfst)
   add_subdirectory(${openfst_SOURCE_DIR} ${openfst_BINARY_DIR} EXCLUDE_FROM_ALL)
   set(openfst_SOURCE_DIR ${openfst_SOURCE_DIR} PARENT_SCOPE)
 
-  # Rename libfst.so.6 to libsherpa-onnx-fst.so.6 to avoid potential conflicts
-  # when sherpa-onnx is installed.
   set_target_properties(fst PROPERTIES OUTPUT_NAME "sherpa-onnx-fst")
   set_target_properties(fstfar PROPERTIES OUTPUT_NAME "sherpa-onnx-fstfar")
 
