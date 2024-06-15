@@ -1,3 +1,7 @@
+## 1.9.30
+
+* Add TTS
+
 ## 1.9.29
 
 * Publish with CI
