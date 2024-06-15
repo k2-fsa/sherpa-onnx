@@ -320,6 +320,25 @@ typedef SherpaOnnxDestroyOfflineTtsGeneratedAudioNative = Void Function(
 typedef SherpaOnnxDestroyOfflineTtsGeneratedAudio = void Function(
     Pointer<SherpaOnnxGeneratedAudio>);
 
+typedef SherpaOnnxGeneratedAudioCallbackNative = Void Function(
+    Pointer<Float>, Int32);
+
+typedef SherpaOnnxOfflineTtsGenerateWithCallbackNative
+    = Pointer<SherpaOnnxGeneratedAudio> Function(
+        Pointer<SherpaOnnxOfflineTts>,
+        Pointer<Utf8>,
+        Int32,
+        Float,
+        Pointer<NativeFunction<SherpaOnnxGeneratedAudioCallbackNative>>);
+
+typedef SherpaOnnxOfflineTtsGenerateWithCallback
+    = Pointer<SherpaOnnxGeneratedAudio> Function(
+        Pointer<SherpaOnnxOfflineTts>,
+        Pointer<Utf8>,
+        int,
+        double,
+        Pointer<NativeFunction<SherpaOnnxGeneratedAudioCallbackNative>>);
+
 typedef CreateOfflineRecognizerNative = Pointer<SherpaOnnxOfflineRecognizer>
     Function(Pointer<SherpaOnnxOfflineRecognizerConfig>);
 
@@ -701,6 +720,8 @@ class SherpaOnnxBindings {
   static SherpaOnnxOfflineTtsGenerate? offlineTtsGenerate;
   static SherpaOnnxDestroyOfflineTtsGeneratedAudio?
       destroyOfflineTtsGeneratedAudio;
+  static SherpaOnnxOfflineTtsGenerateWithCallback?
+      offlineTtsGenerateWithCallback;
 
   static CreateOfflineRecognizer? createOfflineRecognizer;
   static DestroyOfflineRecognizer? destroyOfflineRecognizer;
@@ -864,6 +885,11 @@ class SherpaOnnxBindings {
                 NativeFunction<
                     SherpaOnnxDestroyOfflineTtsGeneratedAudioNative>>(
             'SherpaOnnxDestroyOfflineTtsGeneratedAudio')
+        .asFunction();
+
+    offlineTtsGenerateWithCallback ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOfflineTtsGenerateWithCallbackNative>>(
+            'SherpaOnnxOfflineTtsGenerateWithCallback')
         .asFunction();
 
     createOfflineRecognizer ??= dynamicLibrary

@@ -61,7 +61,14 @@ void main(List<String> arguments) async {
   );
 
   final tts = sherpa_onnx.OfflineTts(config);
-  final audio = tts.generate(text: text, sid: sid, speed: speed);
+  final audio = tts.generateWithCallback(
+      text: text,
+      sid: sid,
+      speed: speed,
+      callback: (Float32List samples) {
+        print('${samples.length} samples received');
+        // You can play samples in a separate thread/isolate
+      });
   tts.free();
 
   sherpa_onnx.writeWave(

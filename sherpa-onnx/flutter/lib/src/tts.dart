@@ -146,6 +146,44 @@ class OfflineTts {
     return GeneratedAudio(samples: newSamples, sampleRate: sampleRate);
   }
 
+  GeneratedAudio generateWithCallback(
+      {required String text,
+      int sid = 0,
+      double speed = 1.0,
+      required void Function(Float32List samples) callback}) {
+    // see
+    // https://github.com/dart-lang/sdk/issues/54276#issuecomment-1846109285
+    // https://stackoverflow.com/questions/69537440/callbacks-in-dart-dartffi-only-supports-calling-static-dart-functions-from-nat
+    // https://github.com/dart-lang/sdk/blob/main/tests/ffi/isolate_local_function_callbacks_test.dart#L46
+    final wrapper =
+        NativeCallable<SherpaOnnxGeneratedAudioCallbackNative>.isolateLocal(
+            (Pointer<Float> samples, int n) {
+      final s = samples.asTypedList(n);
+      final newSamples = Float32List.fromList(s);
+      callback(newSamples);
+    });
+
+    final Pointer<Utf8> textPtr = text.toNativeUtf8();
+    final p = SherpaOnnxBindings.offlineTtsGenerateWithCallback
+            ?.call(ptr, textPtr, sid, speed, wrapper.nativeFunction) ??
+        nullptr;
+
+    calloc.free(textPtr);
+    wrapper.close();
+
+    if (p == nullptr) {
+      return GeneratedAudio(samples: Float32List(0), sampleRate: 0);
+    }
+
+    final samples = p.ref.samples.asTypedList(p.ref.n);
+    final sampleRate = p.ref.sampleRate;
+    final newSamples = Float32List.fromList(samples);
+
+    SherpaOnnxBindings.destroyOfflineTtsGeneratedAudio?.call(p);
+
+    return GeneratedAudio(samples: newSamples, sampleRate: sampleRate);
+  }
+
   int get sampleRate =>
       SherpaOnnxBindings.offlineTtsSampleRate?.call(this.ptr) ?? 0;
 
