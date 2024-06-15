@@ -1,3 +1,4 @@
+// Copyright (c)  2024  Xiaomi Corporation
 import 'dart:io';
 import 'dart:isolate';
 import 'package:path/path.dart' as p;

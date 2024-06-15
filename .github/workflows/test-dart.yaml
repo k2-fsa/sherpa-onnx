@@ -6,12 +6,14 @@ on:
       - master
     paths:
       - '.github/workflows/test-dart.yaml'
+      - '.github/scripts/test-dart.sh'
       - 'dart-api-examples/**'
   pull_request:
     branches:
       - master
     paths:
       - '.github/workflows/test-dart.yaml'
+      - '.github/scripts/test-dart.sh'
       - 'dart-api-examples/**'
 
   workflow_dispatch:
@@ -89,5 +91,6 @@ jobs:
         run: |
           cp scripts/dart/vad-pubspec.yaml dart-api-examples/vad/pubspec.yaml
           cp scripts/dart/non-streaming-asr-pubspec.yaml dart-api-examples/non-streaming-asr/pubspec.yaml
+          cp scripts/dart/streaming-asr-pubspec.yaml dart-api-examples/streaming-asr/pubspec.yaml
 
           .github/scripts/test-dart.sh

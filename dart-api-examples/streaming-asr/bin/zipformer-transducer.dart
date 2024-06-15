@@ -33,30 +33,63 @@ void main(List<String> arguments) async {
   final tokens = res['tokens'] as String;
   final inputWav = res['input-wav'] as String;
 
-  final transducer = sherpa_onnx.OfflineTransducerModelConfig(
+  final transducer = sherpa_onnx.OnlineTransducerModelConfig(
     encoder: encoder,
     decoder: decoder,
     joiner: joiner,
   );
 
-  final modelConfig = sherpa_onnx.OfflineModelConfig(
+  final modelConfig = sherpa_onnx.OnlineModelConfig(
     transducer: transducer,
     tokens: tokens,
     debug: true,
     numThreads: 1,
   );
-  final config = sherpa_onnx.OfflineRecognizerConfig(model: modelConfig);
-  final recognizer = sherpa_onnx.OfflineRecognizer(config);
+  final config = sherpa_onnx.OnlineRecognizerConfig(model: modelConfig);
+  final recognizer = sherpa_onnx.OnlineRecognizer(config);
 
   final waveData = sherpa_onnx.readWave(inputWav);
   final stream = recognizer.createStream();
 
+  // simulate streaming. You can choose an arbitrary chunk size.
+  // chunkSize of a single sample is also ok, i.e, chunkSize = 1
+  final chunkSize = 1600; // 0.1 second for 16kHz
+  final numChunks = waveData.samples.length ~/ chunkSize;
+
+  var last = '';
+  for (int i = 0; i != numChunks; ++i) {
+    int start = i * chunkSize;
+    stream.acceptWaveform(
+      samples:
+          Float32List.sublistView(waveData.samples, start, start + chunkSize),
+      sampleRate: waveData.sampleRate,
+    );
+    while (recognizer.isReady(stream)) {
+      recognizer.decode(stream);
+    }
+    final result = recognizer.getResult(stream);
+    if (result.text != last && result.text != '') {
+      last = result.text;
+      print(last);
+    }
+  }
+
+  // 0.5 seconds, assume sampleRate is 16kHz
+  final tailPaddings = Float32List(8000);
   stream.acceptWaveform(
-      samples: waveData.samples, sampleRate: waveData.sampleRate);
-  recognizer.decode(stream);
+    samples: tailPaddings,
+    sampleRate: waveData.sampleRate,
+  );
+
+  while (recognizer.isReady(stream)) {
+    recognizer.decode(stream);
+  }
 
   final result = recognizer.getResult(stream);
-  print(result.text);
+
+  if (result.text != '') {
+    print(result.text);
+  }
 
   stream.free();
   recognizer.free();
