@@ -212,6 +212,27 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-streaming-zipformer-korean-2024-06-16",
+            idx=14,
+            lang="ko",
+            short_name="zipformer",
+            cmd="""
+            pushd $model_name
+            rm -fv decoder-epoch-99-avg-1.int8.onnx
+            rm -fv encoder-epoch-99-avg-1.onnx
+            rm -fv joiner-epoch-99-avg-1.onnx
+
+            rm -fv bpe.model
+            rm -fv README.md
+            rm -fv .gitattributes
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
 
     return models
