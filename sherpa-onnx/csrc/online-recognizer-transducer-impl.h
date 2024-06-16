@@ -364,7 +364,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     }
 
     // reset encoder states
-    s->SetStates(model_->GetEncoderInitStates());
+    // s->SetStates(model_->GetEncoderInitStates());
 
     // we keep the decoder_out
     decoder_->UpdateDecoderOut(&s->GetResult());
