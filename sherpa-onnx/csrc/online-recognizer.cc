@@ -14,7 +14,9 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -100,6 +102,15 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
                "now support greedy_search and modified_beam_search.");
   po->Register("temperature-scale", &temperature_scale,
                "Temperature scale for confidence computation in decoding.");
+  po->Register(
+      "rule-fsts", &rule_fsts,
+      "If not empty, it specifies fsts for inverse text normalization. "
+      "If there are multiple fsts, they are separated by a comma.");
+
+  po->Register(
+      "rule-fars", &rule_fars,
+      "If not empty, it specifies fst archives for inverse text normalization. "
+      "If there are multiple archives, they are separated by a comma.");
 }
 
 bool OnlineRecognizerConfig::Validate() const {
@@ -129,6 +140,34 @@ bool OnlineRecognizerConfig::Validate() const {
     return false;
   }
 
+  if (!hotwords_file.empty() && !FileExists(hotwords_file)) {
+    SHERPA_ONNX_LOGE("--hotwords-file: '%s' does not exist",
+                     hotwords_file.c_str());
+    return false;
+  }
+
+  if (!rule_fsts.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(rule_fsts, ",", false, &files);
+    for (const auto &f : files) {
+      if (!FileExists(f)) {
+        SHERPA_ONNX_LOGE("Rule fst '%s' does not exist. ", f.c_str());
+        return false;
+      }
+    }
+  }
+
+  if (!rule_fars.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(rule_fars, ",", false, &files);
+    for (const auto &f : files) {
+      if (!FileExists(f)) {
+        SHERPA_ONNX_LOGE("Rule far '%s' does not exist. ", f.c_str());
+        return false;
+      }
+    }
+  }
+
   return model_config.Validate();
 }
 
@@ -147,7 +186,9 @@ std::string OnlineRecognizerConfig::ToString() const {
   os << "hotwords_file=\"" << hotwords_file << "\", ";
   os << "decoding_method=\"" << decoding_method << "\", ";
   os << "blank_penalty=" << blank_penalty << ", ";
-  os << "temperature_scale=" << temperature_scale << ")";
+  os << "temperature_scale=" << temperature_scale << ", ";
+  os << "rule_fsts=\"" << rule_fsts << "\", ";
+  os << "rule_fars=\"" << rule_fars << "\")";
 
   return os.str();
 }

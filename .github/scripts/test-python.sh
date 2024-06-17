@@ -256,7 +256,18 @@ if [[ x$OS != x'windows-latest' ]]; then
     $repo/test_wavs/3.wav \
     $repo/test_wavs/8k.wav
 
+  ln -s $repo $PWD/
+
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+
+  python3 ./python-api-examples/inverse-text-normalization-online-asr.py
+
   python3 sherpa-onnx/python/tests/test_online_recognizer.py --verbose
+
+  rm -rfv sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+
+  rm -rf $repo
 fi
 
 log "Test non-streaming transducer models"
