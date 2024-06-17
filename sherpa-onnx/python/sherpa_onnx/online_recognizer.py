@@ -64,6 +64,8 @@ class OnlineRecognizer(object):
         lm_scale: float = 0.1,
         temperature_scale: float = 2.0,
         debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
     ):
         """
         Please refer to
@@ -148,6 +150,12 @@ class OnlineRecognizer(object):
             the log probability, you can get it from the directory where
             your bpe model is generated. Only used when hotwords provided
             and the modeling unit is bpe or cjkchar+bpe.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -217,6 +225,8 @@ class OnlineRecognizer(object):
             hotwords_file=hotwords_file,
             blank_penalty=blank_penalty,
             temperature_scale=temperature_scale,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -239,6 +249,8 @@ class OnlineRecognizer(object):
         decoding_method: str = "greedy_search",
         provider: str = "cpu",
         debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
     ):
         """
         Please refer to
@@ -283,6 +295,12 @@ class OnlineRecognizer(object):
             The only valid value is greedy_search.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -322,6 +340,8 @@ class OnlineRecognizer(object):
             endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -345,6 +365,8 @@ class OnlineRecognizer(object):
         ctc_max_active: int = 3000,
         provider: str = "cpu",
         debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
     ):
         """
         Please refer to
@@ -393,6 +415,12 @@ class OnlineRecognizer(object):
             active paths at a time.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -433,6 +461,8 @@ class OnlineRecognizer(object):
             ctc_fst_decoder_config=ctc_fst_decoder_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -454,6 +484,8 @@ class OnlineRecognizer(object):
         decoding_method: str = "greedy_search",
         provider: str = "cpu",
         debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
     ):
         """
         Please refer to
@@ -497,6 +529,12 @@ class OnlineRecognizer(object):
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
           debug:
             True to show meta data in the model.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -533,6 +571,8 @@ class OnlineRecognizer(object):
             endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -556,6 +596,8 @@ class OnlineRecognizer(object):
         decoding_method: str = "greedy_search",
         provider: str = "cpu",
         debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
     ):
         """
         Please refer to
@@ -602,6 +644,12 @@ class OnlineRecognizer(object):
             The only valid value is greedy_search.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -640,6 +688,8 @@ class OnlineRecognizer(object):
             endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
