@@ -74,7 +74,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerTransducerImpl(
       const OfflineRecognizerConfig &config)
-      : config_(config),
+      : OfflineRecognizerImpl(config),
+        config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerModel>(config_.model_config)) {
     if (config_.decoding_method == "greedy_search") {
@@ -107,7 +108,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 #if __ANDROID_API__ >= 9
   explicit OfflineRecognizerTransducerImpl(
       AAssetManager *mgr, const OfflineRecognizerConfig &config)
-      : config_(config),
+      : OfflineRecognizerImpl(mgr, config),
+        config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerModel>(mgr,
                                                         config_.model_config)) {
@@ -230,6 +232,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     for (int32_t i = 0; i != n; ++i) {
       auto r = Convert(results[i], symbol_table_, frame_shift_ms,
                        model_->SubsamplingFactor());
+      r.text = ApplyInverseTextNormalization(std::move(r.text));
 
       ss[i]->SetResult(r);
     }
