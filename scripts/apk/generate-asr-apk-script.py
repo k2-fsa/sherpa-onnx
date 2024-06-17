@@ -54,7 +54,9 @@ def get_models():
             short_name="zipformer",
             rule_fsts="itn_zh_number.fst",
             cmd="""
-            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
             rm -fv decoder-epoch-99-avg-1.int8.onnx
             rm -fv encoder-epoch-99-avg-1.onnx
@@ -99,7 +101,9 @@ def get_models():
             short_name="zipformer2",
             rule_fsts="itn_zh_number.fst",
             cmd="""
-            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
             rm -fv exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx
             rm -fv exp/decoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx
@@ -143,7 +147,9 @@ def get_models():
             short_name="small_zipformer",
             rule_fsts="itn_zh_number.fst",
             cmd="""
-            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
             rm -fv encoder-epoch-99-avg-1.onnx
             rm -fv decoder-epoch-99-avg-1.int8.onnx

@@ -42,6 +42,8 @@ class Model:
     # cmd is used to remove extra file from the model directory
     cmd: str = ""
 
+    rule_fsts: str = ""
+
 
 # See get_2nd_models() in ./generate-asr-2pass-apk-script.py
 def get_models():
@@ -71,7 +73,11 @@ def get_models():
             idx=0,
             lang="zh",
             short_name="paraformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
 
             rm -v README.md
@@ -88,7 +94,11 @@ def get_models():
             idx=4,
             lang="zh",
             short_name="zipformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
 
             rm -rfv test_wavs
@@ -171,7 +181,11 @@ def get_models():
             idx=11,
             lang="zh",
             short_name="telespeech",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
 
             rm -rfv test_wavs
