@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 
 #include <string>
+#include <utility>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
