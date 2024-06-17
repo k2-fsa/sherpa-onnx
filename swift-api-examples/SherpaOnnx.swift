@@ -387,7 +387,9 @@ func sherpaOnnxOfflineRecognizerConfig(
   decodingMethod: String = "greedy_search",
   maxActivePaths: Int = 4,
   hotwordsFile: String = "",
-  hotwordsScore: Float = 1.5
+  hotwordsScore: Float = 1.5,
+  ruleFsts: String = "",
+  ruleFars: String = ""
 ) -> SherpaOnnxOfflineRecognizerConfig {
   return SherpaOnnxOfflineRecognizerConfig(
     feat_config: featConfig,
@@ -396,7 +398,9 @@ func sherpaOnnxOfflineRecognizerConfig(
     decoding_method: toCPointer(decodingMethod),
     max_active_paths: Int32(maxActivePaths),
     hotwords_file: toCPointer(hotwordsFile),
-    hotwords_score: hotwordsScore
+    hotwords_score: hotwordsScore,
+    rule_fsts: toCPointer(ruleFsts),
+    rule_fars: toCPointer(ruleFars)
   )
 }
 
