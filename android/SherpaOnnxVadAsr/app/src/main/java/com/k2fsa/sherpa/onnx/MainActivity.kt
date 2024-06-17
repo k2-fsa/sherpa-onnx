@@ -200,7 +200,8 @@ class MainActivity : AppCompatActivity() {
         // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
         // for a list of available models
         val asrModelType = 0
-        val asrRuleFsts: String? = null
+        val asrRuleFsts: String?
+        asrRuleFsts = null
         Log.i(TAG, "Select model type ${asrModelType} for ASR")
 
         val config = OfflineRecognizerConfig(
