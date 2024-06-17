@@ -7,7 +7,7 @@ project(sherpa-onnx)
 # Remember to update
 # ./nodejs-addon-examples
 # ./dart-api-examples/
-set(SHERPA_ONNX_VERSION "1.9.29")
+set(SHERPA_ONNX_VERSION "1.9.30")
 
 # Disable warning about
 #
