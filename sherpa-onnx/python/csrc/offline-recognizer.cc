@@ -17,13 +17,14 @@ static void PybindOfflineRecognizerConfig(py::module *m) {
       .def(py::init<const FeatureExtractorConfig &, const OfflineModelConfig &,
                     const OfflineLMConfig &, const OfflineCtcFstDecoderConfig &,
                     const std::string &, int32_t, const std::string &, float,
-                    float>(),
+                    float, const std::string &, const std::string &>(),
            py::arg("feat_config"), py::arg("model_config"),
            py::arg("lm_config") = OfflineLMConfig(),
            py::arg("ctc_fst_decoder_config") = OfflineCtcFstDecoderConfig(),
            py::arg("decoding_method") = "greedy_search",
            py::arg("max_active_paths") = 4, py::arg("hotwords_file") = "",
-           py::arg("hotwords_score") = 1.5, py::arg("blank_penalty") = 0.0)
+           py::arg("hotwords_score") = 1.5, py::arg("blank_penalty") = 0.0,
+           py::arg("rule_fsts") = "", py::arg("rule_fars") = "")
       .def_readwrite("feat_config", &PyClass::feat_config)
       .def_readwrite("model_config", &PyClass::model_config)
       .def_readwrite("lm_config", &PyClass::lm_config)
@@ -33,6 +34,8 @@ static void PybindOfflineRecognizerConfig(py::module *m) {
       .def_readwrite("hotwords_file", &PyClass::hotwords_file)
       .def_readwrite("hotwords_score", &PyClass::hotwords_score)
       .def_readwrite("blank_penalty", &PyClass::blank_penalty)
+      .def_readwrite("rule_fsts", &PyClass::rule_fsts)
+      .def_readwrite("rule_fars", &PyClass::rule_fars)
       .def("__str__", &PyClass::ToString);
 }
 
