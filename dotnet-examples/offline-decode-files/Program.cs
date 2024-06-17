@@ -69,6 +69,10 @@ class OfflineDecodeFiles
             HelpText = "Valid decoding methods are: greedy_search, modified_beam_search")]
     public string DecodingMethod { get; set; }
 
+    [Option("rule-fsts", Required = false, Default = "",
+            HelpText = "If not empty, path to rule fst for inverse text normalization")]
+    public string RuleFsts { get; set; }
+
     [Option("max-active-paths", Required = false, Default = 4,
         HelpText = @"Used only when --decoding--method is modified_beam_search.
 It specifies number of active paths to keep during the search")]
@@ -233,6 +237,7 @@ to download pre-trained Tdnn models.
     config.MaxActivePaths = options.MaxActivePaths;
     config.HotwordsFile = options.HotwordsFile;
     config.HotwordsScore = options.HotwordsScore;
+    config.RuleFsts = options.RuleFsts;
 
     config.ModelConfig.Debug = 0;
 
