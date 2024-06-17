@@ -190,6 +190,8 @@ jobs:
         shell: bash
         run: |
           cd ./java-api-examples
+          ./run-inverse-text-normalization-paraformer.sh
+
           ./run-non-streaming-decode-file-paraformer.sh
           rm -rf sherpa-onnx-paraformer-zh-*
 
