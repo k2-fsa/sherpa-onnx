@@ -26,6 +26,8 @@ namespace SherpaOnnx
             HotwordsFile = "";
             HotwordsScore = 1.5F;
             CtcFstDecoderConfig = new OnlineCtcFstDecoderConfig();
+            RuleFsts = "";
+            RuleFars = "";
         }
         public FeatureConfig FeatConfig;
         public OnlineModelConfig ModelConfig;
@@ -64,5 +66,11 @@ namespace SherpaOnnx
         public float HotwordsScore;
 
         public OnlineCtcFstDecoderConfig CtcFstDecoderConfig;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string RuleFsts;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string RuleFars;
     }
 }

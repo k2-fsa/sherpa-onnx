@@ -85,6 +85,10 @@ larger than this value. Used only when --enable-endpoint is true.")]
     [Option("hotwords-score", Required = false, Default = 1.5F, HelpText = "hotwords score")]
     public float HotwordsScore { get; set; }
 
+    [Option("rule-fsts", Required = false, Default = "",
+            HelpText = "If not empty, path to rule fst for inverse text normalization")]
+    public string RuleFsts { get; set; }
+
 
     [Option("files", Required = true, HelpText = "Audio files for decoding")]
     public IEnumerable<string> Files { get; set; }
@@ -189,6 +193,7 @@ to download pre-trained streaming models.
     config.Rule3MinUtteranceLength = options.Rule3MinUtteranceLength;
     config.HotwordsFile = options.HotwordsFile;
     config.HotwordsScore = options.HotwordsScore;
+    config.RuleFsts = options.RuleFsts;
 
     OnlineRecognizer recognizer = new OnlineRecognizer(config);
 
