@@ -330,6 +330,11 @@ if [[ x$OS != x'windows-latest' ]]; then
 
   python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
 
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+
+  python3 ./python-api-examples/inverse-text-normalization-offline-asr.py
+
   rm -rf $repo
 fi
 
