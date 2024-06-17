@@ -194,6 +194,7 @@ class MainActivity : AppCompatActivity() {
         // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
         // for a list of available models
         val firstType = 9
+        val firstRuleFsts: String? = null
         Log.i(TAG, "Select model type $firstType for the first pass")
         val config = OnlineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
@@ -201,6 +202,9 @@ class MainActivity : AppCompatActivity() {
             endpointConfig = getEndpointConfig(),
             enableEndpoint = true,
         )
+        if (firstRuleFsts != null) {
+            config.ruleFsts = firstRuleFsts;
+        }
 
         onlineRecognizer = OnlineRecognizer(
             assetManager = application.assets,
@@ -213,12 +217,17 @@ class MainActivity : AppCompatActivity() {
         // See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
         // for a list of available models
         val secondType = 0
+        var secondRuleFsts: String? = null
         Log.i(TAG, "Select model type $secondType for the second pass")
 
         val config = OfflineRecognizerConfig(
             featConfig = getFeatureConfig(sampleRate = sampleRateInHz, featureDim = 80),
             modelConfig = getOfflineModelConfig(type = secondType)!!,
         )
+
+        if (secondRuleFsts != null) {
+            config.ruleFsts = secondRuleFsts
+        }
 
         offlineRecognizer = OfflineRecognizer(
             assetManager = application.assets,

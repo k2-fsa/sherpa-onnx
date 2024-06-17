@@ -54,6 +54,12 @@ popd
 git checkout .
 pushd android/SherpaOnnx/app/src/main/java/com/k2fsa/sherpa/onnx
 sed -i.bak s/"type = 0/type = $type/" ./MainActivity.kt
+
+{% if model.rule_fsts %}
+  rule_fsts={{ model.rule_fsts }}
+  sed -i.bak s%"ruleFsts = null"%"ruleFsts = \"$rule_fsts\""% ./MainActivity.kt
+{% endif %}
+
 git diff
 popd
 
@@ -84,6 +90,7 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
 done
 
 rm -rf ./android/SherpaOnnx/app/src/main/assets/$model_name
+rm -rf ./android/SherpaOnnx/app/src/main/assets/*.fst
 {% endfor %}
 
 git checkout .
