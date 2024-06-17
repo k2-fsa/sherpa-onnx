@@ -44,7 +44,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
 
   c.vits = GetOfflineTtsVitsModelConfig(o);
 
-  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, num_threads);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
   if (o.Has("debug") &&
       (o.Get("debug").IsNumber() || o.Get("debug").IsBoolean())) {

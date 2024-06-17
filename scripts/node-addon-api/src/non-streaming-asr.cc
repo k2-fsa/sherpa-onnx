@@ -180,6 +180,8 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
   SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords_file, hotwordsFile);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
 
   SherpaOnnxOfflineRecognizer *recognizer = CreateOfflineRecognizer(&c);
 
@@ -257,6 +259,14 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
 
   if (c.hotwords_file) {
     delete[] c.hotwords_file;
+  }
+
+  if (c.rule_fsts) {
+    delete[] c.rule_fsts;
+  }
+
+  if (c.rule_fars) {
+    delete[] c.rule_fars;
   }
 
   if (!recognizer) {

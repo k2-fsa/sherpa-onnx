@@ -628,7 +628,7 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
   const model = initSherpaOnnxOfflineModelConfig(config.modelConfig, Module);
   const lm = initSherpaOnnxOfflineLMConfig(config.lmConfig, Module);
 
-  const len = feat.len + model.len + lm.len + 4 * 4;
+  const len = feat.len + model.len + lm.len + 6 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -643,7 +643,10 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
 
   const decodingMethodLen = Module.lengthBytesUTF8(config.decodingMethod) + 1;
   const hotwordsFileLen = Module.lengthBytesUTF8(config.hotwordsFile) + 1;
-  const bufferLen = decodingMethodLen + hotwordsFileLen;
+  const ruleFstsLen = Module.lengthBytesUTF8(config.ruleFsts || '') + 1;
+  const ruleFarsLen = Module.lengthBytesUTF8(config.ruleFars || '') + 1;
+  const bufferLen =
+      decodingMethodLen + hotwordsFileLen + ruleFstsLen + ruleFarsLen;
   const buffer = Module._malloc(bufferLen);
 
   offset = 0;
@@ -651,6 +654,13 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
   offset += decodingMethodLen;
 
   Module.stringToUTF8(config.hotwordsFile, buffer + offset, hotwordsFileLen);
+  offset += hotwordsFileLen;
+
+  Module.stringToUTF8(config.ruleFsts || '', buffer + offset, ruleFstsLen);
+  offset += ruleFstsLen;
+
+  Module.stringToUTF8(config.ruleFars || '', buffer + offset, ruleFarsLen);
+  offset += ruleFarsLen;
 
   offset = feat.len + model.len + lm.len;
 
@@ -664,6 +674,15 @@ function initSherpaOnnxOfflineRecognizerConfig(config, Module) {
   offset += 4;
 
   Module.setValue(ptr + offset, config.hotwordsScore, 'float');
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset, buffer + decodingMethodLen + hotwordsFileLen, 'i8*');
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset, buffer + decodingMethodLen + hotwordsFileLen + ruleFstsLen,
+      'i8*');
   offset += 4;
 
   return {
