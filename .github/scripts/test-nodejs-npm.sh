@@ -11,6 +11,15 @@ ls -lh node_modules
 
 # offline asr
 
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+ls -lh
+tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+node ./test-offline-paraformer-itn.js
+rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+
 curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-conformer-small.tar.bz2
 ls -lh
 tar xvf sherpa-onnx-nemo-ctc-en-conformer-small.tar.bz2

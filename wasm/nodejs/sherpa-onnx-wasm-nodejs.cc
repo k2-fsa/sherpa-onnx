@@ -29,7 +29,7 @@ static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineRecognizerConfig) ==
                   sizeof(SherpaOnnxFeatureConfig) +
                       sizeof(SherpaOnnxOfflineLMConfig) +
-                      sizeof(SherpaOnnxOfflineModelConfig) + 4 * 4,
+                      sizeof(SherpaOnnxOfflineModelConfig) + 6 * 4,
               "");
 
 void PrintOfflineTtsConfig(SherpaOnnxOfflineTtsConfig *tts_config) {
@@ -103,6 +103,8 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "max active paths: %d\n", config->max_active_paths);
   fprintf(stdout, "hotwords_file: %s\n", config->hotwords_file);
   fprintf(stdout, "hotwords_score: %.2f\n", config->hotwords_score);
+  fprintf(stdout, "rule_fsts: %s\n", config->rule_fsts);
+  fprintf(stdout, "rule_fars: %s\n", config->rule_fars);
 }
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {

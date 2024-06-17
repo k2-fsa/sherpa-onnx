@@ -388,6 +388,9 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
   recognizer_config.hotwords_score =
       SHERPA_ONNX_OR(config->hotwords_score, 1.5);
 
+  recognizer_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
+  recognizer_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
+
   if (config->model_config.debug) {
     SHERPA_ONNX_LOGE("%s", recognizer_config.ToString().c_str());
   }

@@ -39,8 +39,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11, macos-14, ubuntu-20.04, ubuntu-22.04] #, windows-latest]
-        node-version: ["16", "17", "18", "19", "21", "22"]
+        os: [macos-latest, ubuntu-latest, ubuntu-latest]
+        node-version: ["16", "22"]
         python-version: ["3.8"]
 
     steps:

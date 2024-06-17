@@ -203,6 +203,34 @@ function testOfflineAsr() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testInverseTextNormalizationAsr() {
+  if [ ! -f ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+    tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+    rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+  fi
+
+  if [ ! -f ./itn-zh-number.wav ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+  fi
+
+  if [ ! -f ./itn_zh_number.fst ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+  fi
+
+  out_filename=test_offline_asr.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_itn_asr.kt \
+    FeatureConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
 function testPunctuation() {
   if [ ! -f ./sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/model.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
@@ -229,3 +257,4 @@ testAudioTagging
 testSpokenLanguageIdentification
 testOfflineAsr
 testPunctuation
+testInverseTextNormalizationAsr

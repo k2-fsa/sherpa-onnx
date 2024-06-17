@@ -34,6 +34,18 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(cls, "hotwordsScore", "F");
   ans.hotwords_score = env->GetFloatField(config, fid);
 
+  fid = env->GetFieldID(cls, "ruleFsts", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.rule_fsts = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(cls, "ruleFars", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.rule_fars = p;
+  env->ReleaseStringUTFChars(s, p);
+
   //---------- feat config ----------
   fid = env->GetFieldID(cls, "featConfig",
                         "Lcom/k2fsa/sherpa/onnx/FeatureConfig;");

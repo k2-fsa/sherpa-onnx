@@ -397,6 +397,10 @@ type OfflineRecognizerConfig struct {
 
 	// Used only when DecodingMethod is modified_beam_search.
 	MaxActivePaths int
+	HotwordsFile   string
+	HotwordsScore  float32
+	RuleFsts       string
+	RuleFars       string
 }
 
 // It wraps a pointer from C
@@ -490,6 +494,17 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 	defer C.free(unsafe.Pointer(c.decoding_method))
 
 	c.max_active_paths = C.int(config.MaxActivePaths)
+
+	c.hotwords_file = C.CString(config.HotwordsFile)
+	defer C.free(unsafe.Pointer(c.hotwords_file))
+
+	c.hotwords_score = C.float(config.HotwordsScore)
+
+	c.rule_fsts = C.CString(config.RuleFsts)
+	defer C.free(unsafe.Pointer(c.rule_fsts))
+
+	c.rule_fars = C.CString(config.RuleFars)
+	defer C.free(unsafe.Pointer(c.rule_fars))
 
 	recognizer := &OfflineRecognizer{}
 	recognizer.impl = C.CreateOfflineRecognizer(&c)

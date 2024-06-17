@@ -107,3 +107,4 @@ package-lock.json
 sherpa-onnx-nemo-*
 sherpa-onnx-vits-*
 sherpa-onnx-telespeech-ctc-*
+*.fst

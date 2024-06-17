@@ -130,6 +130,9 @@ final class SherpaOnnxOfflineRecognizerConfig extends Struct {
 
   @Float()
   external double hotwordsScore;
+
+  external Pointer<Utf8> ruleFsts;
+  external Pointer<Utf8> ruleFars;
 }
 
 final class SherpaOnnxOnlineTransducerModelConfig extends Struct {

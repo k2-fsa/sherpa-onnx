@@ -3,6 +3,7 @@
 cd dotnet-examples/
 
 cd ./offline-decode-files
+./run-paraformer-itn.sh
 ./run-telespeech-ctc.sh
 ./run-nemo-ctc.sh
 ./run-paraformer.sh
