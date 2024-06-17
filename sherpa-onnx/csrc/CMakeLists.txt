@@ -190,9 +190,10 @@ if(NOT BUILD_SHARED_LIBS AND APPLE)
   target_link_libraries(sherpa-onnx-core "-framework Foundation")
 endif()
 
+target_link_libraries(sherpa-onnx-core fstfar fst)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   target_link_libraries(sherpa-onnx-core piper_phonemize)
-  target_link_libraries(sherpa-onnx-core fstfar fst)
   target_link_libraries(sherpa-onnx-core cppjieba)
 endif()
 
