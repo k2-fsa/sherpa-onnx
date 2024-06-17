@@ -1,5 +1,4 @@
 // Copyright (c)  2024  Xiaomi Corporation
-import 'dart:convert';
 import 'dart:ffi';
 import 'dart:typed_data';
 
@@ -184,11 +183,10 @@ class OfflineTts {
     return GeneratedAudio(samples: newSamples, sampleRate: sampleRate);
   }
 
-  int get sampleRate =>
-      SherpaOnnxBindings.offlineTtsSampleRate?.call(this.ptr) ?? 0;
+  int get sampleRate => SherpaOnnxBindings.offlineTtsSampleRate?.call(ptr) ?? 0;
 
   int get numSpeakers =>
-      SherpaOnnxBindings.offlineTtsNumSpeakers?.call(this.ptr) ?? 0;
+      SherpaOnnxBindings.offlineTtsNumSpeakers?.call(ptr) ?? 0;
 
   Pointer<SherpaOnnxOfflineTts> ptr;
   OfflineTtsConfig config;

@@ -71,7 +71,7 @@ class SpeakerEmbeddingExtractor {
 
   bool isReady(OnlineStream stream) {
     final int ready = SherpaOnnxBindings.speakerEmbeddingExtractorIsReady
-            ?.call(this.ptr, stream.ptr) ??
+            ?.call(ptr, stream.ptr) ??
         0;
     return ready == 1;
   }
@@ -79,15 +79,15 @@ class SpeakerEmbeddingExtractor {
   Float32List compute(OnlineStream stream) {
     final Pointer<Float> embedding = SherpaOnnxBindings
             .speakerEmbeddingExtractorComputeEmbedding
-            ?.call(this.ptr, stream.ptr) ??
+            ?.call(ptr, stream.ptr) ??
         nullptr;
 
     if (embedding == nullptr) {
       return Float32List(0);
     }
 
-    final embeddingList = embedding.asTypedList(this.dim);
-    final ans = Float32List(this.dim);
+    final embeddingList = embedding.asTypedList(dim);
+    final ans = Float32List(dim);
     ans.setAll(0, embeddingList);
 
     SherpaOnnxBindings.speakerEmbeddingExtractorDestroyEmbedding
@@ -111,13 +111,13 @@ class SpeakerEmbeddingManager {
   }
 
   void free() {
-    SherpaOnnxBindings.destroySpeakerEmbeddingManager?.call(this.ptr);
-    this.ptr = nullptr;
+    SherpaOnnxBindings.destroySpeakerEmbeddingManager?.call(ptr);
+    ptr = nullptr;
   }
 
   /// Return true if added successfully; return false otherwise
   bool add({required String name, required Float32List embedding}) {
-    assert(embedding.length == this.dim, '${embedding.length} vs ${this.dim}');
+    assert(embedding.length == dim, '${embedding.length} vs $dim');
 
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
     final int n = embedding.length;
@@ -126,9 +126,9 @@ class SpeakerEmbeddingManager {
     final pList = p.asTypedList(n);
     pList.setAll(0, embedding);
 
-    final int ok = SherpaOnnxBindings.speakerEmbeddingManagerAdd
-            ?.call(this.ptr, namePtr, p) ??
-        0;
+    final int ok =
+        SherpaOnnxBindings.speakerEmbeddingManagerAdd?.call(ptr, namePtr, p) ??
+            0;
 
     calloc.free(p);
     calloc.free(namePtr);
@@ -141,19 +141,19 @@ class SpeakerEmbeddingManager {
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
     final int n = embeddingList.length;
 
-    final Pointer<Float> p = calloc<Float>(n * this.dim);
-    final pList = p.asTypedList(n * this.dim);
+    final Pointer<Float> p = calloc<Float>(n * dim);
+    final pList = p.asTypedList(n * dim);
 
     int offset = 0;
     for (final e in embeddingList) {
-      assert(e.length == this.dim, '${e.length} vs ${this.dim}');
+      assert(e.length == dim, '${e.length} vs $dim');
 
       pList.setAll(offset, e);
-      offset += this.dim;
+      offset += dim;
     }
 
     final int ok = SherpaOnnxBindings.speakerEmbeddingManagerAddListFlattened
-            ?.call(this.ptr, namePtr, p, n) ??
+            ?.call(ptr, namePtr, p, n) ??
         0;
 
     calloc.free(p);
@@ -166,7 +166,7 @@ class SpeakerEmbeddingManager {
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
 
     final int found = SherpaOnnxBindings.speakerEmbeddingManagerContains
-            ?.call(this.ptr, namePtr) ??
+            ?.call(ptr, namePtr) ??
         0;
 
     calloc.free(namePtr);
@@ -177,9 +177,9 @@ class SpeakerEmbeddingManager {
   bool remove(String name) {
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
 
-    final int ok = SherpaOnnxBindings.speakerEmbeddingManagerRemove
-            ?.call(this.ptr, namePtr) ??
-        0;
+    final int ok =
+        SherpaOnnxBindings.speakerEmbeddingManagerRemove?.call(ptr, namePtr) ??
+            0;
 
     calloc.free(namePtr);
 
@@ -188,14 +188,14 @@ class SpeakerEmbeddingManager {
 
   /// Return an empty string if no speaker is found
   String search({required Float32List embedding, required double threshold}) {
-    assert(embedding.length == this.dim);
+    assert(embedding.length == dim);
 
-    final Pointer<Float> p = calloc<Float>(this.dim);
-    final pList = p.asTypedList(this.dim);
+    final Pointer<Float> p = calloc<Float>(dim);
+    final pList = p.asTypedList(dim);
     pList.setAll(0, embedding);
 
     final Pointer<Utf8> name = SherpaOnnxBindings.speakerEmbeddingManagerSearch
-            ?.call(this.ptr, p, threshold) ??
+            ?.call(ptr, p, threshold) ??
         nullptr;
 
     calloc.free(p);
@@ -215,16 +215,16 @@ class SpeakerEmbeddingManager {
       {required String name,
       required Float32List embedding,
       required double threshold}) {
-    assert(embedding.length == this.dim);
+    assert(embedding.length == dim);
 
     final Pointer<Utf8> namePtr = name.toNativeUtf8();
 
-    final Pointer<Float> p = calloc<Float>(this.dim);
-    final pList = p.asTypedList(this.dim);
+    final Pointer<Float> p = calloc<Float>(dim);
+    final pList = p.asTypedList(dim);
     pList.setAll(0, embedding);
 
     final int ok = SherpaOnnxBindings.speakerEmbeddingManagerVerify
-            ?.call(this.ptr, namePtr, p, threshold) ??
+            ?.call(ptr, namePtr, p, threshold) ??
         0;
 
     calloc.free(p);
@@ -234,19 +234,17 @@ class SpeakerEmbeddingManager {
   }
 
   int get numSpeakers =>
-      SherpaOnnxBindings.speakerEmbeddingManagerNumSpeakers?.call(this.ptr) ??
-      0;
+      SherpaOnnxBindings.speakerEmbeddingManagerNumSpeakers?.call(ptr) ?? 0;
 
   List<String> get allSpeakerNames {
-    int n = this.numSpeakers;
+    int n = numSpeakers;
     if (n == 0) {
       return <String>[];
     }
 
-    final Pointer<Pointer<Utf8>> names = SherpaOnnxBindings
-            .speakerEmbeddingManagerGetAllSpeakers
-            ?.call(this.ptr) ??
-        nullptr;
+    final Pointer<Pointer<Utf8>> names =
+        SherpaOnnxBindings.speakerEmbeddingManagerGetAllSpeakers?.call(ptr) ??
+            nullptr;
 
     if (names == nullptr) {
       return <String>[];
