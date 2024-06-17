@@ -127,7 +127,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tts-waves
+          name: tts-waves-${{ matrix.os }}
           path: tts-waves
 
       - name: Test non-streaming decoding files (macOS)
@@ -154,6 +154,7 @@ jobs:
 
           echo "Test paraformer"
           ./run-paraformer.sh
+          ./run-paraformer-itn.sh
           rm -rf sherpa-onnx-paraformer-zh-2023-03-28
 
           echo "Test NeMo CTC"

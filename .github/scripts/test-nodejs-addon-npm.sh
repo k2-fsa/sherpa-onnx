@@ -123,7 +123,7 @@ node ./test_asr_non_streaming_paraformer.js
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
 
-node ./test_asr_non_streaming_paraformer_asr.js
+node ./test_asr_non_streaming_paraformer_itn.js
 
 rm -rf sherpa-onnx-paraformer-zh-2023-03-28
 
