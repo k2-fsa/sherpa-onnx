@@ -62,6 +62,10 @@ echo '----------TeleSpeech CTC----------'
 ./run-telespeech-ctc.sh
 rm -rf sherpa-onnx-*
 
+echo '----------paraformer itn----------'
+./run-paraformer-itn.sh
+rm -rf sherpa-onnx-*
+
 echo '----------paraformer----------'
 ./run-paraformer.sh
 rm -rf sherpa-onnx-*
