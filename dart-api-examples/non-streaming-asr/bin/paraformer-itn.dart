@@ -28,7 +28,7 @@ void main(List<String> arguments) async {
 
   final model = res['model'] as String;
   final tokens = res['tokens'] as String;
-  final ruleFsts = res['rule-fst'] as String;
+  final ruleFsts = res['rule-fsts'] as String;
   final inputWav = res['input-wav'] as String;
 
   final paraformer = sherpa_onnx.OfflineParaformerModelConfig(

@@ -237,8 +237,13 @@ class OfflineRecognizer {
     c.ref.hotwordsFile = config.hotwordsFile.toNativeUtf8();
     c.ref.hotwordsScore = config.hotwordsScore;
 
+    c.ref.ruleFsts = config.ruleFsts.toNativeUtf8();
+    c.ref.ruleFars = config.ruleFars.toNativeUtf8();
+
     final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;
 
+    calloc.free(c.ref.ruleFars);
+    calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.hotwordsFile);
     calloc.free(c.ref.decodingMethod);
     calloc.free(c.ref.lm.model);
