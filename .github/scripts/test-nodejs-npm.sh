@@ -15,6 +15,8 @@ curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/s
 ls -lh
 tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
 rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+
+rm -f itn*
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
 node ./test-offline-paraformer-itn.js
@@ -57,7 +59,15 @@ rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
 curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+
+rm -f itn*
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+
+node ./test-online-transducer-itn.js
+
 node ./test-online-transducer.js
+
 rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
 curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
