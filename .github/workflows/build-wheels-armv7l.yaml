@@ -3,7 +3,7 @@ name: build-wheels-armv7l
 on:
   push:
     tags:
-      - '*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
 
 env:
