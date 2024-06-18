@@ -2,6 +2,8 @@ name: build-wheels-linux
 
 on:
   push:
+    branches:
+      - wheel
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:

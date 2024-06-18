@@ -79,8 +79,8 @@ function osx() {
 
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_x86_64.whl
-  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_x86_64.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_x86_64.whl
+  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_x86_64.whl
 
   cp -v sherpa_onnx/lib/*.dylib $dst/
 
@@ -93,8 +93,8 @@ function osx() {
 
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_arm64.whl
-  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_arm64.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_arm64.whl
+  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_arm64.whl
 
   cp -v sherpa_onnx/lib/*.dylib $dst/
 
@@ -126,7 +126,6 @@ function windows() {
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
 
   cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll $dst
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.lib $dst
 
   cd ..
   rm -rf t
@@ -139,7 +138,6 @@ function windows() {
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win32.whl
 
   cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll $dst
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.lib $dst
 
   cd ..
   rm -rf t

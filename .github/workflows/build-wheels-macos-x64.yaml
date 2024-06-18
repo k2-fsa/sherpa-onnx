@@ -101,7 +101,7 @@ jobs:
         run: |
           opts='--break-system-packages'
           v=${{ matrix.python-version }}
-          if [[ $v == cp38 || $v == cp39 ]]; then
+          if [[ $v == cp37 || $v == cp38 || $v == cp39 ]]; then
             opts=''
           fi
 
