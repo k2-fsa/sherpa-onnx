@@ -82,9 +82,9 @@ Ort::Value Cat(OrtAllocator *allocator,
   T *dst = ans.GetTensorMutableData<T>();
 
   for (int32_t i = 0; i != leading_size; ++i) {
-    for (int32_t n = 0; n != static_cast<int32_t>(values.size()); ++n) {
-      auto this_dim = values[n]->GetTensorTypeAndShapeInfo().GetShape()[dim];
-      const T *src = values[n]->GetTensorData<T>();
+    for (auto value : values) {
+      auto this_dim = value->GetTensorTypeAndShapeInfo().GetShape()[dim];
+      const T *src = value->GetTensorData<T>();
       src += i * this_dim * trailing_size;
 
       std::copy(src, src + this_dim * trailing_size, dst);

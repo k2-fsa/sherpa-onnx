@@ -60,7 +60,7 @@ void AudioTaggingLabels::Init(std::istream &is) {
 
     std::size_t pos{};
     int32_t i = std::stoi(index, &pos);
-    if (index.size() == 0 || pos != index.size()) {
+    if (index.empty() || pos != index.size()) {
       SHERPA_ONNX_LOGE("Invalid line: %s", line.c_str());
       exit(-1);
     }
