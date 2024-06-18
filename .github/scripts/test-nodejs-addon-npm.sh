@@ -70,6 +70,13 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/s
 tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 
+rm -f itn*
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+
+node test_asr_streaming_transducer_itn.js
+
 node test_asr_streaming_transducer.js
 
 rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
@@ -119,6 +126,8 @@ tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
 rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
 
 node ./test_asr_non_streaming_paraformer.js
+
+rm -f itn*
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav

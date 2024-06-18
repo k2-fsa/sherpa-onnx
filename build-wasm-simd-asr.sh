@@ -36,14 +36,7 @@ pushd build-wasm-simd-asr
 
 export SHERPA_ONNX_IS_USING_BUILD_WASM_SH=ON
 
-if [ x$SHERPA_ONNX_WASM_MINIFY_JS != x ]; then
-  SHERPA_ONNX_WASM_MINIFY_JS=OFF
-else
-  SHERPA_ONNX_WASM_MINIFY_JS=ON
-fi
-
 cmake \
-  -DSHERPA_ONNX_WASM_MINIFY_JS=$SHERPA_ONNX_WASM_MINIFY_JS \
   -DCMAKE_INSTALL_PREFIX=./install \
   -DCMAKE_BUILD_TYPE=Release \
   -DCMAKE_TOOLCHAIN_FILE=$EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake \
