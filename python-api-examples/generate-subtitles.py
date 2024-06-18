@@ -238,30 +238,6 @@ def assert_file_exists(filename: str):
         "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html to download it"
     )
 
-def generate_silence(duration, sample_rate, channels)->str:
-    # 生成静音文件
-    command = [
-        'ffmpeg',
-        '-f', 'lavfi',
-        '-i', f'anullsrc=r={sample_rate}:cl={channels}',
-        '-t', str(duration),
-        "silence.wav"
-    ]
-    subprocess.run(command, check=True)
-    return "silence.wav"
-    
-def append_silence_to_audio(input_file, silence_file)->str:
-    # 合并音频文件和静音文件
-    command = [
-        'ffmpeg',
-        '-i', input_file,
-        '-i', silence_file,
-        '-filter_complex', '[0:0][1:0]concat=n=2:v=0:a=1[out]',
-        '-map', '[out]',
-        "output.wav"
-    ]
-    subprocess.run(command, check=True)
-    return "output.wav"
 
 def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     if args.encoder:
@@ -376,7 +352,7 @@ def main():
     ffmpeg_cmd = [
         "ffmpeg",
         "-i",
-        append_silence_to_audio(args.sound_file,generate_silence(1,args.sample_rate,1)),
+        args.sound_file,
         "-f",
         "s16le",
         "-acodec",
@@ -410,12 +386,17 @@ def main():
 
     print("Started!")
 
+    is_silence=False
     # TODO(fangjun): Support multithreads
     while True:
         # *2 because int16_t has two bytes
         data = process.stdout.read(frames_per_read * 2)
         if not data:
-            break
+            if is_silence:
+                break
+            is_silence=True
+            # The converted audio file does not have a mute data of 1 second or more at the end, which will result in the loss of the last segment data
+            data = np.zeros(1*args.sample_rate,dtype=np.int16)
 
         samples = np.frombuffer(data, dtype=np.int16)
         samples = samples.astype(np.float32) / 32768
