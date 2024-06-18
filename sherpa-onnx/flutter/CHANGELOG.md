@@ -1,3 +1,7 @@
+## 1.10.0
+
+* Add inverse text normalization
+
 ## 1.9.30
 
 * Add TTS
