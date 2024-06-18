@@ -135,7 +135,9 @@ func sherpaOnnxOnlineRecognizerConfig(
   maxActivePaths: Int = 4,
   hotwordsFile: String = "",
   hotwordsScore: Float = 1.5,
-  ctcFstDecoderConfig: SherpaOnnxOnlineCtcFstDecoderConfig = sherpaOnnxOnlineCtcFstDecoderConfig()
+  ctcFstDecoderConfig: SherpaOnnxOnlineCtcFstDecoderConfig = sherpaOnnxOnlineCtcFstDecoderConfig(),
+  ruleFsts: String = "",
+  ruleFars: String = ""
 ) -> SherpaOnnxOnlineRecognizerConfig {
   return SherpaOnnxOnlineRecognizerConfig(
     feat_config: featConfig,
@@ -148,7 +150,9 @@ func sherpaOnnxOnlineRecognizerConfig(
     rule3_min_utterance_length: rule3MinUtteranceLength,
     hotwords_file: toCPointer(hotwordsFile),
     hotwords_score: hotwordsScore,
-    ctc_fst_decoder_config: ctcFstDecoderConfig
+    ctc_fst_decoder_config: ctcFstDecoderConfig,
+    rule_fsts: toCPointer(ruleFsts),
+    rule_fars: toCPointer(ruleFars)
   )
 }
 

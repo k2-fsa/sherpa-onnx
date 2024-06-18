@@ -1,5 +1,5 @@
 {
   "dependencies": {
-    "sherpa-onnx-node": "^1.9.30"
+    "sherpa-onnx-node": "^1.10.0"
   }
 }

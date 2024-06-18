@@ -2,7 +2,13 @@
 
 cd dotnet-examples/
 
-cd ./offline-decode-files
+cd ./online-decode-files
+./run-transducer-itn.sh
+./run-zipformer2-ctc.sh
+./run-transducer.sh
+./run-paraformer.sh
+
+cd ../offline-decode-files
 ./run-paraformer-itn.sh
 ./run-telespeech-ctc.sh
 ./run-nemo-ctc.sh
@@ -26,11 +32,6 @@ cd ../streaming-hlg-decoding/
 
 cd ../spoken-language-identification
 ./run.sh
-
-cd ../online-decode-files
-./run-zipformer2-ctc.sh
-./run-transducer.sh
-./run-paraformer.sh
 
 cd ../offline-tts
 ./run-aishell3.sh

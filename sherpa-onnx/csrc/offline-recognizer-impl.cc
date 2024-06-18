@@ -425,9 +425,6 @@ std::string OfflineRecognizerImpl::ApplyInverseTextNormalization(
   if (!itn_list_.empty()) {
     for (const auto &tn : itn_list_) {
       text = tn->Normalize(text);
-      if (config_.model_config.debug) {
-        SHERPA_ONNX_LOGE("After inverse text normalization: %s", text.c_str());
-      }
     }
   }
 

@@ -2,6 +2,8 @@ name: build-wheels-macos-arm64
 
 on:
   push:
+    branches:
+      - wheel
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
@@ -84,7 +86,7 @@ jobs:
         run: |
           opts='--break-system-packages'
           v=${{ matrix.python-version }}
-          if [[ $v == cp38 || $v == cp39 ]]; then
+          if [[ $v == cp37 || $v == cp38 || $v == cp39 ]]; then
             opts=''
           fi
 

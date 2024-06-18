@@ -239,7 +239,7 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   const ctcFstDecoder = initSherpaOnnxOnlineCtcFstDecoderConfig(
       config.ctcFstDecoderConfig, Module)
 
-  const len = feat.len + model.len + 8 * 4 + ctcFstDecoder.len;
+  const len = feat.len + model.len + 8 * 4 + ctcFstDecoder.len + 2 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -251,7 +251,10 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
 
   const decodingMethodLen = Module.lengthBytesUTF8(config.decodingMethod) + 1;
   const hotwordsFileLen = Module.lengthBytesUTF8(config.hotwordsFile) + 1;
-  const bufferLen = decodingMethodLen + hotwordsFileLen;
+  const ruleFstsFileLen = Module.lengthBytesUTF8(config.ruleFsts || '') + 1;
+  const ruleFarsFileLen = Module.lengthBytesUTF8(config.ruleFars || '') + 1;
+  const bufferLen =
+      decodingMethodLen + hotwordsFileLen + ruleFstsFileLen + ruleFarsFileLen;
   const buffer = Module._malloc(bufferLen);
 
   offset = 0;
@@ -259,6 +262,13 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   offset += decodingMethodLen;
 
   Module.stringToUTF8(config.hotwordsFile, buffer + offset, hotwordsFileLen);
+  offset += hotwordsFileLen;
+
+  Module.stringToUTF8(config.ruleFsts || '', buffer + offset, ruleFstsFileLen);
+  offset += ruleFstsFileLen;
+
+  Module.stringToUTF8(config.ruleFars || '', buffer + offset, ruleFarsFileLen);
+  offset += ruleFarsFileLen;
 
   offset = feat.len + model.len;
   Module.setValue(ptr + offset, buffer, 'i8*');  // decoding method
@@ -286,6 +296,16 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   offset += 4;
 
   Module._CopyHeap(ctcFstDecoder.ptr, ctcFstDecoder.len, ptr + offset);
+  offset += ctcFstDecoder.len;
+
+  Module.setValue(
+      ptr + offset, buffer + decodingMethodLen + hotwordsFileLen, 'i8*');
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset,
+      buffer + decodingMethodLen + hotwordsFileLen + ruleFstsFileLen, 'i8*');
+  offset += 4;
 
   return {
     buffer: buffer, ptr: ptr, len: len, feat: feat, model: model,
@@ -363,7 +383,9 @@ function createOnlineRecognizer(Module, myConfig) {
     ctcFstDecoderConfig: {
       graph: '',
       maxActive: 3000,
-    }
+    },
+    ruleFsts: '',
+    ruleFars: '',
   };
   if (myConfig) {
     recognizerConfig = myConfig;

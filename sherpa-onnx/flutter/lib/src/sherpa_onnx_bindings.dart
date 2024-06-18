@@ -205,6 +205,9 @@ final class SherpaOnnxOnlineRecognizerConfig extends Struct {
   external double hotwordsScore;
 
   external SherpaOnnxOnlineCtcFstDecoderConfig ctcFstDecoderConfig;
+
+  external Pointer<Utf8> ruleFsts;
+  external Pointer<Utf8> ruleFars;
 }
 
 final class SherpaOnnxSileroVadModelConfig extends Struct {

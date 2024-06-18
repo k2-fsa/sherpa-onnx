@@ -203,7 +203,7 @@ function testOfflineAsr() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
-function testInverseTextNormalizationAsr() {
+function testInverseTextNormalizationOfflineAsr() {
   if [ ! -f ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
     tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
@@ -218,12 +218,40 @@ function testInverseTextNormalizationAsr() {
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
   fi
 
-  out_filename=test_offline_asr.jar
+  out_filename=test_itn_offline_asr.jar
   kotlinc-jvm -include-runtime -d $out_filename \
-    test_itn_asr.kt \
+    test_itn_offline_asr.kt \
     FeatureConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+function testInverseTextNormalizationOnlineAsr() {
+  if [ ! -f ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+    tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+    rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+  fi
+
+  if [ ! -f ./itn-zh-number.wav ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+  fi
+
+  if [ ! -f ./itn_zh_number.fst ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+  fi
+
+  out_filename=test_itn_online_asr.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_itn_online_asr.kt \
+    FeatureConfig.kt \
+    OnlineRecognizer.kt \
+    OnlineStream.kt \
     WaveReader.kt \
     faked-asset-manager.kt
 
@@ -257,4 +285,5 @@ testAudioTagging
 testSpokenLanguageIdentification
 testOfflineAsr
 testPunctuation
-testInverseTextNormalizationAsr
+testInverseTextNormalizationOfflineAsr
+testInverseTextNormalizationOnlineAsr

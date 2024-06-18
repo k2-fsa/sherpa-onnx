@@ -41,6 +41,7 @@ class Model:
 
     # cmd is used to remove extra file from the model directory
     cmd: str = ""
+    rule_fsts: str = ""
 
 
 def get_2nd_models():
@@ -70,7 +71,11 @@ def get_2nd_models():
             idx=0,
             lang="zh",
             short_name="paraformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
 
             rm -fv README.md
@@ -87,7 +92,11 @@ def get_2nd_models():
             idx=4,
             lang="zh",
             short_name="zipformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
 
             rm -rfv test_wavs
@@ -117,7 +126,11 @@ def get_1st_models():
             idx=8,
             lang="bilingual_zh_en",
             short_name="zipformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
             rm -fv decoder-epoch-99-avg-1.int8.onnx
             rm -fv encoder-epoch-99-avg-1.onnx
@@ -160,7 +173,11 @@ def get_1st_models():
             idx=3,
             lang="zh",
             short_name="zipformer2",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
             rm -fv exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx
             rm -fv exp/decoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx
@@ -202,7 +219,11 @@ def get_1st_models():
             idx=9,
             lang="zh",
             short_name="small_zipformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
             rm -fv encoder-epoch-99-avg-1.onnx
             rm -fv decoder-epoch-99-avg-1.int8.onnx

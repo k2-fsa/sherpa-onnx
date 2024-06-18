@@ -187,6 +187,9 @@ jobs:
           ./run-transducer.sh
           rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
 
+          ./run-transducer-itn.sh
+          rm -rf sherpa-onnx-streaming-*
+
           echo "Test paraformer"
           ./run-paraformer.sh
           rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
