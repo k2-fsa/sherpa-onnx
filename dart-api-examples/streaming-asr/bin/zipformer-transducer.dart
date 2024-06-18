@@ -15,6 +15,7 @@ void main(List<String> arguments) async {
     ..addOption('decoder', help: 'Path to decoder model')
     ..addOption('joiner', help: 'Path to joiner model')
     ..addOption('tokens', help: 'Path to tokens.txt')
+    ..addOption('rule-fsts', help: 'Path to rule fsts', defaultsTo: '')
     ..addOption('input-wav', help: 'Path to input.wav to transcribe');
 
   final res = parser.parse(arguments);
@@ -31,6 +32,7 @@ void main(List<String> arguments) async {
   final decoder = res['decoder'] as String;
   final joiner = res['joiner'] as String;
   final tokens = res['tokens'] as String;
+  final ruleFsts = res['rule-fsts'] as String;
   final inputWav = res['input-wav'] as String;
 
   final transducer = sherpa_onnx.OnlineTransducerModelConfig(
@@ -45,7 +47,10 @@ void main(List<String> arguments) async {
     debug: true,
     numThreads: 1,
   );
-  final config = sherpa_onnx.OnlineRecognizerConfig(model: modelConfig);
+  final config = sherpa_onnx.OnlineRecognizerConfig(
+    model: modelConfig,
+    ruleFsts: ruleFsts,
+  );
   final recognizer = sherpa_onnx.OnlineRecognizer(config);
 
   final waveData = sherpa_onnx.readWave(inputWav);

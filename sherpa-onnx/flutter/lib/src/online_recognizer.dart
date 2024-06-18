@@ -111,11 +111,13 @@ class OnlineRecognizerConfig {
     this.hotwordsFile = '',
     this.hotwordsScore = 1.5,
     this.ctcFstDecoderConfig = const OnlineCtcFstDecoderConfig(),
+    this.ruleFsts = '',
+    this.ruleFars = '',
   });
 
   @override
   String toString() {
-    return 'OnlineRecognizerConfig(feat: $feat, model: $model, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, enableEndpoint: $enableEndpoint, rule1MinTrailingSilence: $rule1MinTrailingSilence, rule2MinTrailingSilence: $rule2MinTrailingSilence, rule3MinUtteranceLength: $rule3MinUtteranceLength, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ctcFstDecoderConfig: $ctcFstDecoderConfig)';
+    return 'OnlineRecognizerConfig(feat: $feat, model: $model, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, enableEndpoint: $enableEndpoint, rule1MinTrailingSilence: $rule1MinTrailingSilence, rule2MinTrailingSilence: $rule2MinTrailingSilence, rule3MinUtteranceLength: $rule3MinUtteranceLength, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ctcFstDecoderConfig: $ctcFstDecoderConfig, ruleFsts: $ruleFsts, ruleFars: $ruleFars)';
   }
 
   final FeatureConfig feat;
@@ -137,6 +139,8 @@ class OnlineRecognizerConfig {
   final double hotwordsScore;
 
   final OnlineCtcFstDecoderConfig ctcFstDecoderConfig;
+  final String ruleFsts;
+  final String ruleFars;
 }
 
 class OnlineRecognizerResult {
@@ -201,9 +205,13 @@ class OnlineRecognizer {
     c.ref.ctcFstDecoderConfig.graph =
         config.ctcFstDecoderConfig.graph.toNativeUtf8();
     c.ref.ctcFstDecoderConfig.maxActive = config.ctcFstDecoderConfig.maxActive;
+    c.ref.ruleFsts = config.ruleFsts.toNativeUtf8();
+    c.ref.ruleFars = config.ruleFars.toNativeUtf8();
 
     final ptr = SherpaOnnxBindings.createOnlineRecognizer?.call(c) ?? nullptr;
 
+    calloc.free(c.ref.ruleFars);
+    calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.ctcFstDecoderConfig.graph);
     calloc.free(c.ref.hotwordsFile);
     calloc.free(c.ref.decodingMethod);

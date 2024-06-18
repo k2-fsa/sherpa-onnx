@@ -66,7 +66,9 @@ echo '----------streaming zipformer ctc----------'
 rm -rf sherpa-onnx-*
 
 echo '----------streaming zipformer transducer----------'
+./run-zipformer-transducer-itn.sh
 ./run-zipformer-transducer.sh
+rm -f itn*
 rm -rf sherpa-onnx-*
 
 echo '----------streaming NeMo transducer----------'
