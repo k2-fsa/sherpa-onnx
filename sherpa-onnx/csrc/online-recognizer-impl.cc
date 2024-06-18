@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 
+#include <utility>
+
 #if __ANDROID_API__ >= 9
 #include <strstream>
 
