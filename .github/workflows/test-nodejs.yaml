@@ -77,6 +77,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+          export SHERPA_ONNX_WASM_MINIFY_JS=OFF
           ./build-wasm-simd-nodejs.sh
           cp -v build-wasm-simd-nodejs/install/bin/wasm/nodejs/*.js ./scripts/nodejs/
           cp -v build-wasm-simd-nodejs/install/bin/wasm/nodejs/*.wasm ./scripts/nodejs/
