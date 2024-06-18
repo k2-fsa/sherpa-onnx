@@ -251,8 +251,8 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
 
   const decodingMethodLen = Module.lengthBytesUTF8(config.decodingMethod) + 1;
   const hotwordsFileLen = Module.lengthBytesUTF8(config.hotwordsFile) + 1;
-  const ruleFstsFileLen = Module.lengthBytesUTF8(config.ruleFsts) + 1;
-  const ruleFarsFileLen = Module.lengthBytesUTF8(config.ruleFars) + 1;
+  const ruleFstsFileLen = Module.lengthBytesUTF8(config.ruleFsts || '') + 1;
+  const ruleFarsFileLen = Module.lengthBytesUTF8(config.ruleFars || '') + 1;
   const bufferLen =
       decodingMethodLen + hotwordsFileLen + ruleFstsFileLen + ruleFarsFileLen;
   const buffer = Module._malloc(bufferLen);
