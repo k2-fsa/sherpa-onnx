@@ -1,0 +1,161 @@
+name: linux-jni
+
+on:
+  push:
+    branches:
+      - linux-jni
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+
+concurrency:
+  group: linux-jni-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-jni:
+    name: linux jni
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Display PWD
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+          du -h -d1 .
+
+      - name: Build sherpa-onnx
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux2014_x86_64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
+
+              yum install -y java-11-openjdk-devel
+              java -version
+              which java
+              ls -lh $(which java)
+              ls -lrt /etc/alternatives/java
+
+              export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-11.0.23.0.9-2.el7_9.x86_64
+              echo "JAVA_HOME: $JAVA_HOME"
+              find $JAVA_HOME -name jni.h
+
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+
+              git clone --depth 1 https://github.com/alsa-project/alsa-lib
+              pushd alsa-lib
+              ./gitcompile
+              popd
+
+              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+
+              mkdir build
+              cd build
+
+              cmake -DSHERPA_ONNX_ENABLE_TTS=ON -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DSHERPA_ONNX_ENABLE_JNI=ON ..
+
+              make -j2
+              make install
+
+              ls -lh lib
+              ls -lh bin
+
+      - name: Display dependencies of sherpa-onnx for linux
+        shell: bash
+        run: |
+          du -h -d1 .
+          sudo chown -R $USER ./build
+          ls -lh build/bin
+          ls -lh build/_deps/onnxruntime-src/lib/
+
+          echo "strip"
+          strip build/bin/*
+          echo "after strip"
+          ls -lh build/bin
+
+          file build/bin/sherpa-onnx
+          file build/bin/sherpa-onnx
+          ls -lh build/bin/sherpa-onnx
+          readelf -d build/bin/sherpa-onnx
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-jni
+          path: install/*
+
+
+      - name: Copy files
+        shell: bash
+        run: |
+          du -h -d1 .
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-jni
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+          cp -a build/install/lib $dst/
+          cp -a build/install/include $dst/
+
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+          du -h -d1 .
+
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            mkdir -p jni
+
+            cp -v ../sherpa-onnx-*.tar.bz2 ./jni
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+
+            git commit -m "add more files"
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
+      - name: Release pre-compiled binaries and libs for linux x64
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*.tar.bz2
