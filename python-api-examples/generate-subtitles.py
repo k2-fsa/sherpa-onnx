@@ -238,6 +238,30 @@ def assert_file_exists(filename: str):
         "https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html to download it"
     )
 
+def generate_silence(duration, sample_rate, channels)->str:
+    # 生成静音文件
+    command = [
+        'ffmpeg',
+        '-f', 'lavfi',
+        '-i', f'anullsrc=r={sample_rate}:cl={channels}',
+        '-t', str(duration),
+        "silence.wav"
+    ]
+    subprocess.run(command, check=True)
+    return "silence.wav"
+    
+def append_silence_to_audio(input_file, silence_file)->str:
+    # 合并音频文件和静音文件
+    command = [
+        'ffmpeg',
+        '-i', input_file,
+        '-i', silence_file,
+        '-filter_complex', '[0:0][1:0]concat=n=2:v=0:a=1[out]',
+        '-map', '[out]',
+        "output.wav"
+    ]
+    subprocess.run(command, check=True)
+    return "output.wav"
 
 def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     if args.encoder:
@@ -352,7 +376,7 @@ def main():
     ffmpeg_cmd = [
         "ffmpeg",
         "-i",
-        args.sound_file,
+        append_silence_to_audio(args.sound_file,generate_silence(1,args.sample_rate,1)),
         "-f",
         "s16le",
         "-acodec",
