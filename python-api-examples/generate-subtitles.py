@@ -386,12 +386,17 @@ def main():
 
     print("Started!")
 
+    is_silence=False
     # TODO(fangjun): Support multithreads
     while True:
         # *2 because int16_t has two bytes
         data = process.stdout.read(frames_per_read * 2)
         if not data:
-            break
+            if is_silence:
+                break
+            is_silence=True
+            # The converted audio file does not have a mute data of 1 second or more at the end, which will result in the loss of the last segment data
+            data = np.zeros(1*args.sample_rate,dtype=np.int16)
 
         samples = np.frombuffer(data, dtype=np.int16)
         samples = samples.astype(np.float32) / 32768
