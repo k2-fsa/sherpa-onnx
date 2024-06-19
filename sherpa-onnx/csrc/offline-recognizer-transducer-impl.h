@@ -78,9 +78,13 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
         config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerModel>(config_.model_config)) {
+    if (symbol_table_.Contains("<unk>")) {
+      unk_id_ = symbol_table_["<unk>"];
+    }
+
     if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineTransducerGreedySearchDecoder>(
-          model_.get(), config_.blank_penalty);
+          model_.get(), unk_id_, config_.blank_penalty);
     } else if (config_.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
         lm_ = OfflineLM::Create(config.lm_config);
@@ -97,7 +101,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
       decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
           model_.get(), lm_.get(), config_.max_active_paths,
-          config_.lm_config.scale, config_.blank_penalty);
+          config_.lm_config.scale, unk_id_, config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -113,9 +117,13 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
         symbol_table_(mgr, config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerModel>(mgr,
                                                         config_.model_config)) {
+    if (symbol_table_.Contains("<unk>")) {
+      unk_id_ = symbol_table_["<unk>"];
+    }
+
     if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineTransducerGreedySearchDecoder>(
-          model_.get(), config_.blank_penalty);
+          model_.get(), unk_id_, config_.blank_penalty);
     } else if (config_.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
         lm_ = OfflineLM::Create(mgr, config.lm_config);
@@ -133,7 +141,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
       decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
           model_.get(), lm_.get(), config_.max_active_paths,
-          config_.lm_config.scale, config_.blank_penalty);
+          config_.lm_config.scale, unk_id_, config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -293,6 +301,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
   std::unique_ptr<OfflineTransducerModel> model_;
   std::unique_ptr<OfflineTransducerDecoder> decoder_;
   std::unique_ptr<OfflineLM> lm_;
+  int32_t unk_id_ = -1;
 };
 
 }  // namespace sherpa_onnx
