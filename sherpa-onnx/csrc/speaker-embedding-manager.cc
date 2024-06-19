@@ -183,7 +183,7 @@ class SpeakerEmbeddingManager::Impl {
       all_speakers.push_back(p.first);
     }
 
-    std::stable_sort(all_speakers.begin(), all_speakers.end());
+    std::sort(all_speakers.begin(), all_speakers.end());
     return all_speakers;
   }
 
