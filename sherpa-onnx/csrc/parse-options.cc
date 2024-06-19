@@ -178,10 +178,10 @@ void ParseOptions::DisableOption(const std::string &name) {
   string_map_.erase(name);
 }
 
-int ParseOptions::NumArgs() const { return positional_args_.size(); }
+int32_t ParseOptions::NumArgs() const { return positional_args_.size(); }
 
-std::string ParseOptions::GetArg(int i) const {
-  if (i < 1 || i > static_cast<int>(positional_args_.size())) {
+std::string ParseOptions::GetArg(int32_t i) const {
+  if (i < 1 || i > static_cast<int32_t>(positional_args_.size())) {
     SHERPA_ONNX_LOGE("ParseOptions::GetArg, invalid index %d", i);
     exit(-1);
   }
@@ -190,7 +190,7 @@ std::string ParseOptions::GetArg(int i) const {
 }
 
 // We currently do not support any other options.
-enum ShellType { kBash = 0 };
+enum ShellType : std::uint8_t { kBash = 0 };
 
 // This can be changed in the code if it ever does need to be changed (as it's
 // unlikely that one compilation of this tool-set would use both shells).
@@ -212,7 +212,7 @@ static bool MustBeQuoted(const std::string &str, ShellType st) {
   if (*c == '\0') {
     return true;  // Must quote empty string
   } else {
-    std::array<const char *, 2> ok_chars;
+    std::array<const char *, 2> ok_chars{};
 
     // These seem not to be interpreted as long as there are no other "bad"
     // characters involved (e.g. "," would be interpreted as part of something
@@ -268,7 +268,7 @@ static std::string QuoteAndEscape(const std::string &str, ShellType /*st*/) {
     escape_str = "\\\"";  // should never be accessed.
   }
 
-  std::array<char, 2> buf;
+  std::array<char, 2> buf{};
   buf[1] = '\0';
 
   buf[0] = quote_char;
@@ -292,11 +292,11 @@ std::string ParseOptions::Escape(const std::string &str) {
   return MustBeQuoted(str, kShellType) ? QuoteAndEscape(str, kShellType) : str;
 }
 
-int ParseOptions::Read(int argc, const char *const argv[]) {
+int32_t ParseOptions::Read(int32_t argc, const char *const *argv) {
   argc_ = argc;
   argv_ = argv;
   std::string key, value;
-  int i = 0;
+  int32_t i = 0;
 
   // first pass: look for config parameter, look for priority
   for (i = 1; i < argc; ++i) {
@@ -329,7 +329,7 @@ int ParseOptions::Read(int argc, const char *const argv[]) {
         double_dash_seen = true;
         break;
       }
-      bool has_equal_sign;
+      bool has_equal_sign = false;
       SplitLongArg(argv[i], &key, &value, &has_equal_sign);
       NormalizeArgName(&key);
       Trim(&value);
@@ -355,7 +355,7 @@ int ParseOptions::Read(int argc, const char *const argv[]) {
   // if the user did not suppress this with --print-args = false....
   if (print_args_) {
     std::ostringstream strm;
-    for (int j = 0; j < argc; ++j) strm << Escape(argv[j]) << " ";
+    for (int32_t j = 0; j < argc; ++j) strm << Escape(argv[j]) << " ";
     strm << '\n';
     SHERPA_ONNX_LOGE("%s", strm.str().c_str());
   }
@@ -393,7 +393,7 @@ void ParseOptions::PrintUsage(bool print_command_line /*=false*/) const {
   if (print_command_line) {
     std::ostringstream strm;
     strm << "Command line was: ";
-    for (int j = 0; j < argc_; ++j) strm << Escape(argv_[j]) << " ";
+    for (int32_t j = 0; j < argc_; ++j) strm << Escape(argv_[j]) << " ";
     strm << '\n';
     os << strm.str();
   }
@@ -441,13 +441,13 @@ void ParseOptions::ReadConfigFile(const std::string &filename) {
   while (std::getline(is, line)) {
     ++line_number;
     // trim out the comments
-    size_t pos = 0;
-    if ((pos = line.find_first_of('#')) != std::string::npos) {
+    size_t pos = line.find_first_of('#');
+    if (pos != std::string::npos) {
       line.erase(pos);
     }
     // skip empty lines
     Trim(&line);
-    if (line.length() == 0) continue;
+    if (line.empty()) continue;
 
     if (line.substr(0, 2) != "--") {
       SHERPA_ONNX_LOGE(
@@ -556,8 +556,7 @@ bool ParseOptions::ToBool(std::string str) const {
   std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
   // allow "" as a valid option for "true", so that --x is the same as --x=true
-  if (str == "true" || str == "t" || str == "1") ||
-      (str.compare("") == 0)) {
+  if (str == "true" || str == "t" || str == "1" || str.empty()) {
     return true;
   }
   if (str == "false" || str == "f" || str == "0") {
@@ -600,7 +599,7 @@ float ParseOptions::ToFloat(const std::string &str) const {
 }
 
 double ParseOptions::ToDouble(const std::string &str) const {
-  double ret;
+  double ret = 0;
   if (!ConvertStringToReal(str, &ret)) {
     SHERPA_ONNX_LOGE("Invalid floating-point option \"%s\"", str.c_str());
     exit(-1);

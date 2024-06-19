@@ -138,6 +138,7 @@ OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
         }
 
         ans.push_back(std::move(this_sentence));
+        this_sentence = {};
 
         // re-initialize this_sentence
         if (use_eos_bos) {
@@ -172,6 +173,7 @@ OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
         }
 
         ans.push_back(std::move(this_sentence));
+        this_sentence = {};
 
         // re-initialize this_sentence
         if (use_eos_bos) {

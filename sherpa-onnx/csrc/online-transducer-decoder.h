@@ -44,10 +44,10 @@ struct OnlineTransducerDecoderResult {
   OnlineTransducerDecoderResult &operator=(
       const OnlineTransducerDecoderResult &other);
 
-  OnlineTransducerDecoderResult(OnlineTransducerDecoderResult &&other);
+  OnlineTransducerDecoderResult(OnlineTransducerDecoderResult &&other) noexcept;
 
   OnlineTransducerDecoderResult &operator=(
-      OnlineTransducerDecoderResult &&other);
+      OnlineTransducerDecoderResult &&other) noexcept;
 };
 
 class OnlineStream;

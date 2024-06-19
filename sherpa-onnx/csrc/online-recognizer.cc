@@ -5,9 +5,8 @@
 
 #include "sherpa-onnx/csrc/online-recognizer.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <iomanip>
 #include <memory>
 #include <sstream>

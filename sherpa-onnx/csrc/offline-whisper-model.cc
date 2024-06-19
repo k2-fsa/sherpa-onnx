@@ -316,18 +316,18 @@ class OfflineWhisperModel::Impl {
   std::unordered_map<int32_t, std::string> id2lang_;
 
   // model meta data
-  int32_t n_text_layer_;
-  int32_t n_text_ctx_;
-  int32_t n_text_state_;
-  int32_t n_vocab_;
-  int32_t sot_;
-  int32_t eot_;
-  int32_t blank_;
-  int32_t translate_;
-  int32_t transcribe_;
-  int32_t no_timestamps_;
-  int32_t no_speech_;
-  int32_t is_multilingual_;
+  int32_t n_text_layer_ = 0;
+  int32_t n_text_ctx_ = 0;
+  int32_t n_text_state_ = 0;
+  int32_t n_vocab_ = 0;
+  int32_t sot_ = 0;
+  int32_t eot_ = 0;
+  int32_t blank_ = 0;
+  int32_t translate_ = 0;
+  int32_t transcribe_ = 0;
+  int32_t no_timestamps_ = 0;
+  int32_t no_speech_ = 0;
+  int32_t is_multilingual_ = 0;
   std::vector<int64_t> sot_sequence_;
 };
 

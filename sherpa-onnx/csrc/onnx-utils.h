@@ -110,9 +110,9 @@ struct CopyableOrtValue {
 
   CopyableOrtValue &operator=(const CopyableOrtValue &other);
 
-  CopyableOrtValue(CopyableOrtValue &&other);
+  CopyableOrtValue(CopyableOrtValue &&other) noexcept;
 
-  CopyableOrtValue &operator=(CopyableOrtValue &&other);
+  CopyableOrtValue &operator=(CopyableOrtValue &&other) noexcept;
 };
 
 std::vector<CopyableOrtValue> Convert(std::vector<Ort::Value> values);

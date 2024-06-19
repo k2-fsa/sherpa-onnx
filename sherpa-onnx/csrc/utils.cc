@@ -71,6 +71,7 @@ static bool EncodeBase(const std::vector<std::string> &lines,
       }
     }
     ids->push_back(std::move(tmp_ids));
+    tmp_ids = {};
     tmp_scores.push_back(score);
     tmp_phrases.push_back(phrase);
     tmp_thresholds.push_back(threshold);
