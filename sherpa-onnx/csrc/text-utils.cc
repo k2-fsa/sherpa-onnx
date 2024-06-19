@@ -5,9 +5,8 @@
 
 #include "sherpa-onnx/csrc/text-utils.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <cctype>
 #include <cstdint>
 #include <limits>

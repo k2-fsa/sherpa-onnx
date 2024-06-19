@@ -3,18 +3,18 @@
 function(download_openfst)
   include(FetchContent)
 
-  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/refs/tags/sherpa-onnx-2024-06-13.tar.gz")
-  set(openfst_URL2 "https://hub.nuaa.cf/csukuangfj/openfst/archive/refs/tags/sherpa-onnx-2024-06-13.tar.gz")
-  set(openfst_HASH "SHA256=f10a71c6b64d89eabdc316d372b956c30c825c7c298e2f20c780320e8181ffb6")
+  set(openfst_URL  "https://github.com/csukuangfj/openfst/archive/refs/tags/sherpa-onnx-2024-06-18.tar.gz")
+  set(openfst_URL2 "https://hub.nuaa.cf/csukuangfj/openfst/archive/refs/tags/sherpa-onnx-2024-06-18.tar.gz")
+  set(openfst_HASH "SHA256=3783e593ee846b8e1598c2403bda0e783e517967203fcc4ce0ff35a5145d4e06")
 
   # If you don't have access to the Internet,
   # please pre-download it
   set(possible_file_locations
-    $ENV{HOME}/Downloads/openfst-sherpa-onnx-2024-06-13.tar.gz
-    ${CMAKE_SOURCE_DIR}/openfst-sherpa-onnx-2024-06-13.tar.gz
-    ${CMAKE_BINARY_DIR}/openfst-sherpa-onnx-2024-06-13.tar.gz
-    /tmp/openfst-sherpa-onnx-2024-06-13.tar.gz
-    /star-fj/fangjun/download/github/openfst-sherpa-onnx-2024-06-13.tar.gz
+    $ENV{HOME}/Downloads/openfst-sherpa-onnx-2024-06-18.tar.gz
+    ${CMAKE_SOURCE_DIR}/openfst-sherpa-onnx-2024-06-18.tar.gz
+    ${CMAKE_BINARY_DIR}/openfst-sherpa-onnx-2024-06-18.tar.gz
+    /tmp/openfst-sherpa-onnx-2024-06-18.tar.gz
+    /star-fj/fangjun/download/github/openfst-sherpa-onnx-2024-06-18.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)

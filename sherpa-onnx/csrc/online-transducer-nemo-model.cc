@@ -5,10 +5,9 @@
 
 #include "sherpa-onnx/csrc/online-transducer-nemo-model.h"
 
-#include <assert.h>
-#include <math.h>
-
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <memory>
 #include <numeric>
 #include <sstream>

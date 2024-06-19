@@ -24,10 +24,9 @@
 
 #include "sherpa-onnx/csrc/resample.h"
 
-#include <assert.h>
-#include <math.h>
-#include <stdio.h>
-
+#include <cassert>
+#include <cmath>
+#include <cstdio>
 #include <cstdlib>
 #include <type_traits>
 
@@ -54,8 +53,8 @@ I Gcd(I m, I n) {
   }
   // could use compile-time assertion
   // but involves messing with complex template stuff.
-  static_assert(std::is_integral<I>::value, "");
-  while (1) {
+  static_assert(std::is_integral_v<I>);
+  while (true) {
     m %= n;
     if (m == 0) return (n > 0 ? n : -n);
     n %= m;
@@ -139,9 +138,9 @@ void LinearResample::SetIndexesAndWeights() {
     in the header as h(t) = f(t)g(t), evaluated at t.
 */
 float LinearResample::FilterFunc(float t) const {
-  float window,  // raised-cosine (Hanning) window of width
-                 // num_zeros_/2*filter_cutoff_
-      filter;    // sinc filter function
+  float window = 0,  // raised-cosine (Hanning) window of width
+                     // num_zeros_/2*filter_cutoff_
+      filter = 0;    // sinc filter function
   if (fabs(t) < num_zeros_ / (2.0 * filter_cutoff_))
     window = 0.5 * (1 + cos(M_2PI * filter_cutoff_ / num_zeros_ * t));
   else
@@ -172,15 +171,15 @@ void LinearResample::Resample(const float *input, int32_t input_dim, bool flush,
   // of it we are producing here.
   for (int64_t samp_out = output_sample_offset_; samp_out < tot_output_samp;
        samp_out++) {
-    int64_t first_samp_in;
-    int32_t samp_out_wrapped;
+    int64_t first_samp_in = 0;
+    int32_t samp_out_wrapped = 0;
     GetIndexes(samp_out, &first_samp_in, &samp_out_wrapped);
     const std::vector<float> &weights = weights_[samp_out_wrapped];
     // first_input_index is the first index into "input" that we have a weight
     // for.
     int32_t first_input_index =
         static_cast<int32_t>(first_samp_in - input_sample_offset_);
-    float this_output;
+    float this_output = 0;
     if (first_input_index >= 0 &&
         first_input_index + static_cast<int32_t>(weights.size()) <= input_dim) {
       this_output =

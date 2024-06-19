@@ -62,8 +62,8 @@ class Lexicon : public OfflineTtsFrontend {
   std::unordered_map<std::string, std::vector<int32_t>> word2ids_;
   std::unordered_set<std::string> punctuations_;
   std::unordered_map<std::string, int32_t> token2id_;
-  Language language_;
-  bool debug_;
+  Language language_ = Language::kUnknown;
+  bool debug_ = false;
 };
 
 }  // namespace sherpa_onnx

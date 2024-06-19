@@ -42,7 +42,7 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
   std::vector<ContextGraphPtr> context_graphs(batch_size, nullptr);
 
   for (int32_t i = 0; i < batch_size; ++i) {
-    const ContextState *context_state;
+    const ContextState *context_state = nullptr;
     if (ss != nullptr) {
       context_graphs[i] =
           ss[packed_encoder_out.sorted_indexes[i]]->GetContextGraph();

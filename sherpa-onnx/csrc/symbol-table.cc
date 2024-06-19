@@ -36,7 +36,7 @@ SymbolTable::SymbolTable(AAssetManager *mgr, const std::string &filename) {
 
 void SymbolTable::Init(std::istream &is) {
   std::string sym;
-  int32_t id;
+  int32_t id = 0;
   while (is >> sym >> id) {
 #if 0
     // we disable the test here since for some multi-lingual BPE models

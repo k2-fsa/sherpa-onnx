@@ -82,7 +82,7 @@ std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is) {
   std::string line;
 
   std::string sym;
-  int32_t id;
+  int32_t id = -1;
   while (std::getline(is, line)) {
     std::istringstream iss(line);
     iss >> sym;

@@ -148,7 +148,6 @@ class OfflineWhisperModel::Impl {
     cross_v = std::move(std::get<4>(decoder_out));
 
     const float *p_logits = std::get<0>(decoder_out).GetTensorData<float>();
-    int32_t vocab_size = VocabSize();
     const auto &all_language_ids = GetAllLanguageIDs();
 
     int32_t lang_id = all_language_ids[0];

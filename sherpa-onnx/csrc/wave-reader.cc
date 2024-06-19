@@ -100,13 +100,13 @@ struct WaveHeader {
   int32_t subchunk2_id;    // a tag of this chunk
   int32_t subchunk2_size;  // size of subchunk2
 };
-static_assert(sizeof(WaveHeader) == 44, "");
+static_assert(sizeof(WaveHeader) == 44);
 
 // Read a wave file of mono-channel.
 // Return its samples normalized to the range [-1, 1).
 std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
                                 bool *is_ok) {
-  WaveHeader header;
+  WaveHeader header{};
   is.read(reinterpret_cast<char *>(&header), sizeof(header));
   if (!is) {
     *is_ok = false;

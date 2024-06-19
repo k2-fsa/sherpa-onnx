@@ -20,11 +20,11 @@ class SileroVadModel::Impl {
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
-        allocator_{} {
+        allocator_{},
+        sample_rate_(config.sample_rate) {
     auto buf = ReadFile(config.silero_vad.model);
     Init(buf.data(), buf.size());
 
-    sample_rate_ = config.sample_rate;
     if (sample_rate_ != 16000) {
       SHERPA_ONNX_LOGE("Expected sample rate 16000. Given: %d",
                        config.sample_rate);

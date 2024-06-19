@@ -87,7 +87,7 @@ OfflineTts::~OfflineTts() = default;
 GeneratedAudio OfflineTts::Generate(
     const std::string &text, int64_t sid /*=0*/, float speed /*= 1.0*/,
     GeneratedAudioCallback callback /*= nullptr*/) const {
-  return impl_->Generate(text, sid, speed, callback);
+  return impl_->Generate(text, sid, speed, std::move(callback));
 }
 
 int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }
