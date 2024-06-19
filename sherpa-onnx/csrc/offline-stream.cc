@@ -8,6 +8,7 @@
 #include <cassert>
 #include <cmath>
 #include <iomanip>
+#include <utility>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
 #include "sherpa-onnx/csrc/macros.h"
