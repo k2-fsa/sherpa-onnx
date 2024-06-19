@@ -103,6 +103,7 @@ class JiebaLexicon::Impl {
 
       if (w == "。" || w == "！" || w == "？" || w == "，") {
         ans.push_back(std::move(this_sentence));
+        this_sentence = {};
       }
     }  // for (const auto &w : words)
 

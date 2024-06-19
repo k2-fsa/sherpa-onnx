@@ -73,10 +73,15 @@ std::string EndpointConfig::ToString() const {
   return os.str();
 }
 
-bool Endpoint::IsEndpoint(int num_frames_decoded, int trailing_silence_frames,
+bool Endpoint::IsEndpoint(int32_t num_frames_decoded,
+                          int32_t trailing_silence_frames,
                           float frame_shift_in_seconds) const {
-  float utterance_length = num_frames_decoded * frame_shift_in_seconds;
-  float trailing_silence = trailing_silence_frames * frame_shift_in_seconds;
+  float utterance_length =
+      static_cast<float>(num_frames_decoded) * frame_shift_in_seconds;
+
+  float trailing_silence =
+      static_cast<float>(trailing_silence_frames) * frame_shift_in_seconds;
+
   if (RuleActivated(config_.rule1, "rule1", trailing_silence,
                     utterance_length) ||
       RuleActivated(config_.rule2, "rule2", trailing_silence,

@@ -133,6 +133,7 @@ jobs:
         shell: bash
         run: |
           d=$PWD
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           pushd sherpa-onnx/flutter
           dart pub get
@@ -159,6 +160,7 @@ jobs:
           path: ./*.tar.bz2
 
       - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3

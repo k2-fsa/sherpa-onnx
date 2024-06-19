@@ -265,16 +265,16 @@ class OnlineNeMoCtcModel::Impl {
   std::vector<std::string> output_names_;
   std::vector<const char *> output_names_ptr_;
 
-  int32_t window_size_;
-  int32_t chunk_shift_;
-  int32_t subsampling_factor_;
-  int32_t vocab_size_;
-  int32_t cache_last_channel_dim1_;
-  int32_t cache_last_channel_dim2_;
-  int32_t cache_last_channel_dim3_;
-  int32_t cache_last_time_dim1_;
-  int32_t cache_last_time_dim2_;
-  int32_t cache_last_time_dim3_;
+  int32_t window_size_ = 0;
+  int32_t chunk_shift_ = 0;
+  int32_t subsampling_factor_ = 0;
+  int32_t vocab_size_ = 0;
+  int32_t cache_last_channel_dim1_ = 0;
+  int32_t cache_last_channel_dim2_ = 0;
+  int32_t cache_last_channel_dim3_ = 0;
+  int32_t cache_last_time_dim1_ = 0;
+  int32_t cache_last_time_dim2_ = 0;
+  int32_t cache_last_time_dim3_ = 0;
 
   Ort::Value cache_last_channel_{nullptr};
   Ort::Value cache_last_time_{nullptr};

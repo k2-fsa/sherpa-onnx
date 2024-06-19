@@ -281,11 +281,12 @@ CopyableOrtValue &CopyableOrtValue::operator=(const CopyableOrtValue &other) {
   return *this;
 }
 
-CopyableOrtValue::CopyableOrtValue(CopyableOrtValue &&other) {
+CopyableOrtValue::CopyableOrtValue(CopyableOrtValue &&other) noexcept {
   *this = std::move(other);
 }
 
-CopyableOrtValue &CopyableOrtValue::operator=(CopyableOrtValue &&other) {
+CopyableOrtValue &CopyableOrtValue::operator=(
+    CopyableOrtValue &&other) noexcept {
   if (this == &other) {
     return *this;
   }

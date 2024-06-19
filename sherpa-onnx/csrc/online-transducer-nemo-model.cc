@@ -5,10 +5,9 @@
 
 #include "sherpa-onnx/csrc/online-transducer-nemo-model.h"
 
-#include <assert.h>
-#include <math.h>
-
 #include <algorithm>
+#include <cassert>
+#include <cmath>
 #include <memory>
 #include <numeric>
 #include <sstream>
@@ -429,8 +428,8 @@ class OnlineTransducerNeMoModel::Impl {
   std::vector<std::string> joiner_output_names_;
   std::vector<const char *> joiner_output_names_ptr_;
 
-  int32_t window_size_;
-  int32_t chunk_shift_;
+  int32_t window_size_ = 0;
+  int32_t chunk_shift_ = 0;
   int32_t vocab_size_ = 0;
   int32_t subsampling_factor_ = 8;
   std::string normalize_type_;
@@ -438,12 +437,12 @@ class OnlineTransducerNeMoModel::Impl {
   int32_t pred_hidden_ = -1;
 
   // encoder states
-  int32_t cache_last_channel_dim1_;
-  int32_t cache_last_channel_dim2_;
-  int32_t cache_last_channel_dim3_;
-  int32_t cache_last_time_dim1_;
-  int32_t cache_last_time_dim2_;
-  int32_t cache_last_time_dim3_;
+  int32_t cache_last_channel_dim1_ = 0;
+  int32_t cache_last_channel_dim2_ = 0;
+  int32_t cache_last_channel_dim3_ = 0;
+  int32_t cache_last_time_dim1_ = 0;
+  int32_t cache_last_time_dim2_ = 0;
+  int32_t cache_last_time_dim3_ = 0;
 
   // init encoder states
   Ort::Value cache_last_channel_{nullptr};

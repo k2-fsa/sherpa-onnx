@@ -4,11 +4,11 @@
 
 #include "sherpa-onnx/csrc/offline-stream.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <iomanip>
+#include <utility>
 
 #include "kaldi-native-fbank/csrc/online-feature.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -56,7 +56,7 @@ class OfflineStream::Impl {
  public:
   explicit Impl(const FeatureExtractorConfig &config,
                 ContextGraphPtr context_graph)
-      : config_(config), context_graph_(context_graph) {
+      : config_(config), context_graph_(std::move(context_graph)) {
     if (config.is_mfcc) {
       mfcc_opts_.frame_opts.dither = config_.dither;
       mfcc_opts_.frame_opts.snip_edges = config_.snip_edges;
@@ -266,7 +266,7 @@ class OfflineStream::Impl {
 
 OfflineStream::OfflineStream(const FeatureExtractorConfig &config /*= {}*/,
                              ContextGraphPtr context_graph /*= nullptr*/)
-    : impl_(std::make_unique<Impl>(config, context_graph)) {}
+    : impl_(std::make_unique<Impl>(config, std::move(context_graph))) {}
 
 OfflineStream::OfflineStream(WhisperTag tag)
     : impl_(std::make_unique<Impl>(tag)) {}

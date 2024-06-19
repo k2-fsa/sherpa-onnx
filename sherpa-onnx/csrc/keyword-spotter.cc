@@ -4,9 +4,8 @@
 
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <iomanip>
 #include <memory>

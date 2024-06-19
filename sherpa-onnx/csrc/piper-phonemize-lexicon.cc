@@ -37,7 +37,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
 
   std::string sym;
   std::u32string s;
-  int32_t id;
+  int32_t id = 0;
   while (std::getline(is, line)) {
     std::istringstream iss(line);
     iss >> sym;
