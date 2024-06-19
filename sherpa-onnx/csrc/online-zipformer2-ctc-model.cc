@@ -4,8 +4,6 @@
 
 #include "sherpa-onnx/csrc/online-zipformer2-ctc-model.h"
 
-#include <math.h>
-
 #include <algorithm>
 #include <cassert>
 #include <cmath>

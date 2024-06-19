@@ -22,9 +22,9 @@ class OfflineWhisperModel::Impl {
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
+        debug_(config.debug),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    debug_ = config_.debug;
     {
       auto buf = ReadFile(config.whisper.encoder);
       InitEncoder(buf.data(), buf.size());
@@ -39,9 +39,9 @@ class OfflineWhisperModel::Impl {
   explicit Impl(const SpokenLanguageIdentificationConfig &config)
       : lid_config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
+        debug_(config_.debug),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    debug_ = config_.debug;
     {
       auto buf = ReadFile(config.whisper.encoder);
       InitEncoder(buf.data(), buf.size());
