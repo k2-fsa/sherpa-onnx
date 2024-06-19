@@ -460,7 +460,7 @@ void ParseOptions::ReadConfigFile(const std::string &filename) {
     }
 
     // parse option
-    bool has_equal_sign;
+    bool has_equal_sign = false;
     SplitLongArg(line, &key, &value, &has_equal_sign);
     NormalizeArgName(&key);
     Trim(&value);
@@ -526,7 +526,7 @@ void ParseOptions::Trim(std::string *str) const {
 bool ParseOptions::SetOption(const std::string &key, const std::string &value,
                              bool has_equal_sign) {
   if (bool_map_.end() != bool_map_.find(key)) {
-    if (has_equal_sign && value == "") {
+    if (has_equal_sign && value.empty()) {
       SHERPA_ONNX_LOGE("Invalid option --%s=", key.c_str());
       exit(-1);
     }
@@ -556,12 +556,11 @@ bool ParseOptions::ToBool(std::string str) const {
   std::transform(str.begin(), str.end(), str.begin(), ::tolower);
 
   // allow "" as a valid option for "true", so that --x is the same as --x=true
-  if ((str.compare("true") == 0) || (str.compare("t") == 0) ||
-      (str.compare("1") == 0) || (str.compare("") == 0)) {
+  if (str == "true" || str == "t" || str == "1") ||
+      (str.compare("") == 0)) {
     return true;
   }
-  if ((str.compare("false") == 0) || (str.compare("f") == 0) ||
-      (str.compare("0") == 0)) {
+  if (str == "false" || str == "f" || str == "0") {
     return false;
   }
   // if it is neither true nor false:
@@ -592,7 +591,7 @@ uint32_t ParseOptions::ToUint(const std::string &str) const {
 }
 
 float ParseOptions::ToFloat(const std::string &str) const {
-  float ret;
+  float ret = 0;
   if (!ConvertStringToReal(str, &ret)) {
     SHERPA_ONNX_LOGE("Invalid floating-point option \"%s\"", str.c_str());
     exit(-1);

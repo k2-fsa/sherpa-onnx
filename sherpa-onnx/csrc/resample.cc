@@ -141,7 +141,7 @@ float LinearResample::FilterFunc(float t) const {
   float window = 0,  // raised-cosine (Hanning) window of width
                      // num_zeros_/2*filter_cutoff_
       filter = 0;    // sinc filter function
-  if (fabs(t) < num_zeros_ / (2.0 * filter_cutoff_))
+  if (std::fabs(t) < num_zeros_ / (2.0 * filter_cutoff_))
     window = 0.5 * (1 + cos(M_2PI * filter_cutoff_ / num_zeros_ * t));
   else
     window = 0.0;  // outside support of window function
@@ -238,7 +238,7 @@ int64_t LinearResample::GetNumOutputSamples(int64_t input_num_samp,
     // largest integer in the interval [ 0, 2 - 0.9 ) are the same (both one).
     // So when we're subtracting the window-width we can ignore the fractional
     // part.
-    int32_t window_width_ticks = floor(window_width * tick_freq);
+    int32_t window_width_ticks = std::floor(window_width * tick_freq);
     // The time-period of the output that we can sample gets reduced
     // by the window-width (which is actually the distance from the
     // center to the edge of the windowing function) if we're not
@@ -286,7 +286,7 @@ void LinearResample::SetRemainder(const float *input, int32_t input_dim) {
   // that are "in the past" relative to the beginning of the latest
   // input... anyway, storing more remainder than needed is not harmful.
   int32_t max_remainder_needed =
-      ceil(samp_rate_in_ * num_zeros_ / filter_cutoff_);
+      std::ceil(samp_rate_in_ * num_zeros_ / filter_cutoff_);
   input_remainder_.resize(max_remainder_needed);
   for (int32_t index = -static_cast<int32_t>(input_remainder_.size());
        index < 0; index++) {
