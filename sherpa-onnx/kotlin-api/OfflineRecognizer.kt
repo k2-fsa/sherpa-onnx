@@ -284,6 +284,19 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 modelType = "tele_speech",
             )
         }
+
+        12 -> {
+            val modelDir = "sherpa-onnx-zipformer-thai-2024-06-20"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-12-avg-5.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-12-avg-5.onnx",
+                    joiner = "$modelDir/joiner-epoch-12-avg-5.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer2",
+            )
+        }
     }
     return null
 }
