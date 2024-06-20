@@ -24,5 +24,6 @@ dotnet run -c Release \
   --encoder ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx \
   --decoder ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.int8.onnx \
   --joiner ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx \
+  --rule-fsts ./itn_zh_number.fst \
   --decoding-method greedy_search \
   --files ./itn-zh-number.wav
