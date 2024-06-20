@@ -87,11 +87,12 @@ class OnnxModel:
         )
 
         meta = self.encoder.get_modelmeta().custom_metadata_map
-        version = int(meta("version"))
+        version = int(meta["version"])
         if version < 2:
             raise RuntimeError(
                 "If you have exported your model before 2024-06-21, please re-export it using the latest "
-                "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/whisper/export-onnx.py"
+                "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/whisper/export-onnx.py\n"
+                "See https://github.com/k2-fsa/sherpa-onnx/pull/1037 for details"
             )
         self.n_text_layer = int(meta["n_text_layer"])
         self.n_text_ctx = int(meta["n_text_ctx"])
