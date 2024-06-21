@@ -43,12 +43,23 @@ TEST(TEXT2TOKEN, TEST_cjkchar) {
   std::vector<std::vector<int32_t>> ids;
   std::vector<float> scores;
 
-  auto r = EncodeHotwords(iss, "cjkchar", sym_table, nullptr, &ids, &scores);
+  auto r =
+      EncodeHotwords(iss, "cjkchar", sym_table, true, nullptr, &ids, &scores);
 
   std::vector<std::vector<int32_t>> expected_ids(
       {{379, 380, 72, 874, 93, 1251, 489}, {262, 147, 3423, 2476, 21, 147}});
   EXPECT_EQ(ids, expected_ids);
+  EXPECT_EQ(scores.size(), 0);
 
+  // tokenize_hotwords = false
+  text = "世 界 人 民 大 团 结\n中 国 V S 美 国\n\n";  // Test blank lines also
+
+  iss.clear();
+  iss.str(text);
+
+  r = EncodeHotwords(iss, "cjkchar", sym_table, false, nullptr, &ids, &scores);
+
+  EXPECT_EQ(ids, expected_ids);
   EXPECT_EQ(scores.size(), 0);
 }
 
@@ -79,8 +90,8 @@ TEST(TEXT2TOKEN, TEST_bpe) {
   std::vector<std::vector<int32_t>> ids;
   std::vector<float> scores;
 
-  auto r =
-      EncodeHotwords(iss, "bpe", sym_table, bpe_processor.get(), &ids, &scores);
+  auto r = EncodeHotwords(iss, "bpe", sym_table, true, bpe_processor.get(),
+                          &ids, &scores);
 
   std::vector<std::vector<int32_t>> expected_ids(
       {{22, 58, 24, 425}, {19, 370, 47}});
@@ -117,8 +128,8 @@ TEST(TEXT2TOKEN, TEST_cjkchar_bpe) {
   std::vector<std::vector<int32_t>> ids;
   std::vector<float> scores;
 
-  auto r = EncodeHotwords(iss, "cjkchar+bpe", sym_table, bpe_processor.get(),
-                          &ids, &scores);
+  auto r = EncodeHotwords(iss, "cjkchar+bpe", sym_table, true,
+                          bpe_processor.get(), &ids, &scores);
 
   std::vector<std::vector<int32_t>> expected_ids(
       {{1368, 1392, 557, 680, 275, 178, 475},
@@ -156,8 +167,8 @@ TEST(TEXT2TOKEN, TEST_bbpe) {
   std::vector<std::vector<int32_t>> ids;
   std::vector<float> scores;
 
-  auto r =
-      EncodeHotwords(iss, "bpe", sym_table, bpe_processor.get(), &ids, &scores);
+  auto r = EncodeHotwords(iss, "bpe", sym_table, true, bpe_processor.get(),
+                          &ids, &scores);
 
   std::vector<std::vector<int32_t>> expected_ids(
       {{259, 1118, 234, 188, 132}, {259, 1585, 236, 161, 148, 236, 160, 191}});
