@@ -49,6 +49,7 @@ class OfflineRecognizer(object):
         max_active_paths: int = 4,
         hotwords_file: str = "",
         hotwords_score: float = 1.5,
+        tokenize_hotwords: bool = True,
         blank_penalty: float = 0.0,
         modeling_unit: str = "cjkchar",
         bpe_vocab: str = "",
@@ -96,6 +97,9 @@ class OfflineRecognizer(object):
           hotwords_score:
             The hotword score of each token for biasing word/phrase. Used only if
             hotwords_file is given with modified_beam_search as decoding method.
+          tokenize_hotwords:
+            Whether to tokenize hotwords, true will tokenize hotwords in the engine
+            if false, you have to tokenize hotwords by yourself.
           blank_penalty:
             The penalty applied on blank symbol during decoding.
           modeling_unit:
@@ -165,6 +169,7 @@ class OfflineRecognizer(object):
             max_active_paths=max_active_paths,
             hotwords_file=hotwords_file,
             hotwords_score=hotwords_score,
+            tokenize_hotwords=tokenize_hotwords,
             blank_penalty=blank_penalty,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,

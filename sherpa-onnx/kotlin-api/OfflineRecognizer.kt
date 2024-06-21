@@ -53,6 +53,7 @@ data class OfflineRecognizerConfig(
     var maxActivePaths: Int = 4,
     var hotwordsFile: String = "",
     var hotwordsScore: Float = 1.5f,
+    var tokenizeHotwords: Boolean = true,
     var ruleFsts: String = "",
     var ruleFars: String = "",
 )
