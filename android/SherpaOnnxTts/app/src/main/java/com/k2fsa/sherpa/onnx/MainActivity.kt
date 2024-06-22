@@ -147,13 +147,13 @@ class MainActivity : AppCompatActivity() {
                 speed = speedFloat,
                 callback = this::callback
             )
-            generate.isEnabled = true
 
             val filename = application.filesDir.absolutePath + "/generated.wav"
             val ok = audio.samples.size > 0 && audio.save(filename)
             if (ok) {
                 runOnUiThread {
                     play.isEnabled = true
+                    generate.isEnabled = true
                     track.stop()
                 }
             }
