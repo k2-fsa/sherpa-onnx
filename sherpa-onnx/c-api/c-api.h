@@ -850,14 +850,17 @@ SHERPA_ONNX_API typedef struct SherpaOnnxGeneratedAudio {
   int32_t sample_rate;
 } SherpaOnnxGeneratedAudio;
 
-typedef void (*SherpaOnnxGeneratedAudioCallback)(const float *samples,
-                                                 int32_t n);
+// If the callback returns 0, then it stops generating
+// If the callback returns 1, then it keeps generating
+typedef int32_t (*SherpaOnnxGeneratedAudioCallback)(const float *samples,
+                                                    int32_t n);
 
-typedef void (*SherpaOnnxGeneratedAudioCallbackWithArg)(const float *samples,
-                                                        int32_t n, void *arg);
+typedef int32_t (*SherpaOnnxGeneratedAudioCallbackWithArg)(const float *samples,
+                                                           int32_t n,
+                                                           void *arg);
 
-typedef void (*SherpaOnnxGeneratedAudioProgressCallback)(const float *samples,
-                                                         int32_t n, float p);
+typedef int32_t (*SherpaOnnxGeneratedAudioProgressCallback)(
+    const float *samples, int32_t n, float p);
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTts SherpaOnnxOfflineTts;
 

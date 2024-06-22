@@ -68,6 +68,10 @@ void main(List<String> arguments) async {
       callback: (Float32List samples) {
         print('${samples.length} samples received');
         // You can play samples in a separate thread/isolate
+
+        // 1 means to continue
+        // 0 means to stop
+        return 1;
       });
   tts.free();
 

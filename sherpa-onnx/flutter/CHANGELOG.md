@@ -1,3 +1,7 @@
+## 1.10.1
+
+* Enable to stop TTS generation
+
 ## 1.10.0
 
 * Add inverse text normalization

@@ -8,8 +8,8 @@ using System;
 
 namespace SherpaOnnx
 {
-    // IntPtr is actuallly a `const float*` from C++
-    public delegate void OfflineTtsCallback(IntPtr samples, int n);
+    // IntPtr is actually a `const float*` from C++
+    public delegate int OfflineTtsCallback(IntPtr samples, int n);
 
     public class OfflineTts : IDisposable
     {

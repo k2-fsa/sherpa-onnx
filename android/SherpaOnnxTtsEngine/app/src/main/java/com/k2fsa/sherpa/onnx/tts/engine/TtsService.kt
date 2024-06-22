@@ -126,7 +126,7 @@ class TtsService : TextToSpeechService() {
             return
         }
 
-        val ttsCallback = { floatSamples: FloatArray ->
+        val ttsCallback: (FloatArray) -> Int = fun(floatSamples): Int {
             // convert FloatArray to ByteArray
             val samples = floatArrayToByteArray(floatSamples)
             val maxBufferSize: Int = callback.maxBufferSize
@@ -137,6 +137,9 @@ class TtsService : TextToSpeechService() {
                 offset += bytesToWrite
             }
 
+            // 1 means to continue
+            // 0 means to stop
+            return 1
         }
 
         Log.i(TAG, "text: $text")

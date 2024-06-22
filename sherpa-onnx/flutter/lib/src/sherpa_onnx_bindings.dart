@@ -326,7 +326,7 @@ typedef SherpaOnnxDestroyOfflineTtsGeneratedAudioNative = Void Function(
 typedef SherpaOnnxDestroyOfflineTtsGeneratedAudio = void Function(
     Pointer<SherpaOnnxGeneratedAudio>);
 
-typedef SherpaOnnxGeneratedAudioCallbackNative = Void Function(
+typedef SherpaOnnxGeneratedAudioCallbackNative = Int Function(
     Pointer<Float>, Int32);
 
 typedef SherpaOnnxOfflineTtsGenerateWithCallbackNative
