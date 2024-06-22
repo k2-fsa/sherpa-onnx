@@ -522,7 +522,7 @@ void CNonStreamingTextToSpeechDlg::OnBnClickedOk() {
   }
 
   speed_.GetWindowText(s);
-  float speed = static_cast<float>(_ttof(s)); 
+  float speed = static_cast<float>(_ttof(s));
   if (speed < 0) {
     AfxMessageBox(Utf8ToUtf16("Please input a valid speed").c_str(), MB_OK);
     return;
