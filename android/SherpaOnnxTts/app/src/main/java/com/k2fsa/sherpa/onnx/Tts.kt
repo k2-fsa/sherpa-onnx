@@ -76,7 +76,7 @@ class OfflineTts(
         text: String,
         sid: Int = 0,
         speed: Float = 1.0f,
-        callback: (samples: FloatArray) -> Unit
+        callback: (samples: FloatArray) -> Int
     ): GeneratedAudio {
         val objArray = generateWithCallbackImpl(
             ptr,
@@ -146,7 +146,7 @@ class OfflineTts(
         text: String,
         sid: Int = 0,
         speed: Float = 1.0f,
-        callback: (samples: FloatArray) -> Unit
+        callback: (samples: FloatArray) -> Int
     ): Array<Any>
 
     companion object {

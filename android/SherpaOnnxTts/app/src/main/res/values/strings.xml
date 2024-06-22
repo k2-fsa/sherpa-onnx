@@ -7,4 +7,5 @@
     <string name="text_hint">Please input your text here</string>
     <string name="generate">Generate</string>
     <string name="play">Play</string>
+    <string name="stop">Stop</string>
 </resources>
