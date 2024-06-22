@@ -9,8 +9,9 @@
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
-void audioCallback(const float * /*samples*/, int32_t n, float progress) {
+int32_t audioCallback(const float * /*samples*/, int32_t n, float progress) {
   printf("sample=%d, progress=%f\n", n, progress);
+  return 1;
 }
 
 int main(int32_t argc, char *argv[]) {

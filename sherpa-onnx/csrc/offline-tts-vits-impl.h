@@ -216,9 +216,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
     GeneratedAudio ans;
 
+    int32_t should_continue = 1;
+
     int32_t k = 0;
 
-    for (int32_t b = 0; b != num_batches; ++b) {
+    for (int32_t b = 0; b != num_batches && should_continue; ++b) {
       batch.clear();
       for (int32_t i = 0; i != batch_size; ++i, ++k) {
         batch.push_back(std::move(x[k]));
@@ -229,8 +231,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
       if (callback) {
-        callback(audio.samples.data(), audio.samples.size(),
-                 b * 1.0 / num_batches);
+        should_continue = callback(audio.samples.data(), audio.samples.size(),
+                                   b * 1.0 / num_batches);
         // Caution(fangjun): audio is freed when the callback returns, so users
         // should copy the data if they want to access the data after
         // the callback returns to avoid segmentation fault.
@@ -238,7 +240,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     }
 
     batch.clear();
-    while (k < static_cast<int32_t>(x.size())) {
+    while (k < static_cast<int32_t>(x.size()) && should_continue) {
       batch.push_back(std::move(x[k]));
       ++k;
     }

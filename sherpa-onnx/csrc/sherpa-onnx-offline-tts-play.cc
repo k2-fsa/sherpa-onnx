@@ -47,8 +47,8 @@ static void Handler(int32_t /*sig*/) {
   fprintf(stderr, "\nCaught Ctrl + C. Exiting\n");
 }
 
-static void AudioGeneratedCallback(const float *s, int32_t n,
-                                   float /*progress*/) {
+static int32_t AudioGeneratedCallback(const float *s, int32_t n,
+                                      float /*progress*/) {
   if (n > 0) {
     Samples samples;
     samples.data = std::vector<float>{s, s + n};
@@ -57,6 +57,12 @@ static void AudioGeneratedCallback(const float *s, int32_t n,
     g_buffer.samples.push(std::move(samples));
     g_started = true;
   }
+  if (g_killed) {
+    return 0;  // stop generating
+  }
+
+  // continue generating
+  return 1;
 }
 
 static int PlayCallback(const void * /*in*/, void *out,
