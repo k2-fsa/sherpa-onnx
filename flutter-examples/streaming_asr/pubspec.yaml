@@ -42,3 +42,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/
+    - assets/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/
