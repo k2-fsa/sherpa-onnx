@@ -16,7 +16,10 @@ Future<sherpa_onnx.OnlineRecognizer> createOnlineRecognizer() async {
   final type = 1;
 
   final modelConfig = await getOnlineModelConfig(type: type);
-  final config = sherpa_onnx.OnlineRecognizerConfig(model: modelConfig);
+  final config = sherpa_onnx.OnlineRecognizerConfig(
+    model: modelConfig,
+    ruleFsts: '',
+  );
 
   return sherpa_onnx.OnlineRecognizer(config);
 }
