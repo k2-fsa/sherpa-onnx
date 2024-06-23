@@ -13,7 +13,7 @@ import './utils.dart';
 import './online_model.dart';
 
 Future<sherpa_onnx.OnlineRecognizer> createOnlineRecognizer() async {
-  final type = 1;
+  final type = 0;
 
   final modelConfig = await getOnlineModelConfig(type: type);
   final config = sherpa_onnx.OnlineRecognizerConfig(
