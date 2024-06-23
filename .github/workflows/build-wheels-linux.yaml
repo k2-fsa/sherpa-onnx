@@ -36,7 +36,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BEFORE_ALL: |
-            git clone --depth 1 https://github.com/alsa-project/alsa-lib
+            git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
             cd alsa-lib
             ./gitcompile
             cd ..
