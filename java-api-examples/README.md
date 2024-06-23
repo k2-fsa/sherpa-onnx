@@ -63,6 +63,18 @@ The punctuation model supports both English and Chinese.
 ./run-vad-from-mic.sh
 ```
 
+## VAD with a microphone + Non-streaming Paraformer for speech recognition
+
+```bash
+./run-vad-from-mic-non-streaming-paraformer.sh
+```
+
+## VAD with a microphone + Non-streaming Whisper tiny.en for speech recognition
+
+```bash
+./run-vad-from-mic-non-streaming-whisper.sh
+```
+
 ## VAD (Remove silence)
 
 ```bash
