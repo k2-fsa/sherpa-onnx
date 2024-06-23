@@ -1,3 +1,5 @@
 bin
 obj
+v17
 !*.sh
+*.vsidx
