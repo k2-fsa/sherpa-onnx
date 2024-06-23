@@ -57,6 +57,12 @@ The punctuation model supports both English and Chinese.
 ./run-speaker-identification.sh
 ```
 
+## VAD with a microphone
+
+```bash
+./run-vad-from-mic.sh
+```
+
 ## VAD (Remove silence)
 
 ```bash
