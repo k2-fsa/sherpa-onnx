@@ -52,8 +52,9 @@ static void DecodeOne(const float *log_probs, int32_t num_rows,
     if (ok) {
       std::vector<int32_t> isymbols_out;
       std::vector<int32_t> osymbols_out;
-      ok = fst::GetLinearSymbolSequence(fst_out, &isymbols_out, &osymbols_out,
-                                        nullptr);
+      /*ok =*/fst::GetLinearSymbolSequence(fst_out, &isymbols_out,
+                                           &osymbols_out, nullptr);
+      // TODO(fangjun): handle ok is false
       std::vector<int64_t> tokens;
       tokens.reserve(isymbols_out.size());
 

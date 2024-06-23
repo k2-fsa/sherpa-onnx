@@ -34,7 +34,7 @@ std::string Base64Decode(const std::string &s) {
     exit(-1);
   }
 
-  int32_t n = s.size() / 4 * 3;
+  int32_t n = static_cast<int32_t>(s.size()) / 4 * 3;
 
   std::string ans;
   ans.reserve(n);
@@ -46,16 +46,16 @@ std::string Base64Decode(const std::string &s) {
     }
 
     int32_t first = (Ord(s[i]) << 2) + ((Ord(s[i + 1]) & 0x30) >> 4);
-    ans.push_back(first);
+    ans.push_back(static_cast<char>(first));
 
     if (i + 2 < static_cast<int32_t>(s.size()) && s[i + 2] != '=') {
       int32_t second =
           ((Ord(s[i + 1]) & 0x0f) << 4) + ((Ord(s[i + 2]) & 0x3c) >> 2);
-      ans.push_back(second);
+      ans.push_back(static_cast<char>(second));
 
       if (i + 3 < static_cast<int32_t>(s.size()) && s[i + 3] != '=') {
         int32_t third = ((Ord(s[i + 2]) & 0x03) << 6) + Ord(s[i + 3]);
-        ans.push_back(third);
+        ans.push_back(static_cast<char>(third));
       }
     }
     i += 4;

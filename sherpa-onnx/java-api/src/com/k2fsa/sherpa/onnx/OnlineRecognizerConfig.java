@@ -15,6 +15,8 @@ public class OnlineRecognizerConfig {
     private final int maxActivePaths;
     private final String hotwordsFile;
     private final float hotwordsScore;
+    private final String ruleFsts;
+    private final String ruleFars;
 
     private OnlineRecognizerConfig(Builder builder) {
         this.featConfig = builder.featConfig;
@@ -27,6 +29,8 @@ public class OnlineRecognizerConfig {
         this.maxActivePaths = builder.maxActivePaths;
         this.hotwordsFile = builder.hotwordsFile;
         this.hotwordsScore = builder.hotwordsScore;
+        this.ruleFsts = builder.ruleFsts;
+        this.ruleFars = builder.ruleFars;
     }
 
     public static Builder builder() {
@@ -48,6 +52,8 @@ public class OnlineRecognizerConfig {
         private int maxActivePaths = 4;
         private String hotwordsFile = "";
         private float hotwordsScore = 1.5f;
+        private String ruleFsts = "";
+        private String ruleFars = "";
 
         public OnlineRecognizerConfig build() {
             return new OnlineRecognizerConfig(this);
@@ -100,6 +106,16 @@ public class OnlineRecognizerConfig {
 
         public Builder setHotwordsScore(float hotwordsScore) {
             this.hotwordsScore = hotwordsScore;
+            return this;
+        }
+
+        public Builder setRuleFsts(String ruleFsts) {
+            this.ruleFsts = ruleFsts;
+            return this;
+        }
+
+        public Builder setRuleFars(String ruleFars) {
+            this.ruleFars = ruleFars;
             return this;
         }
     }

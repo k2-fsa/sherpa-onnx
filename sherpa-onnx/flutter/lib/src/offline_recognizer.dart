@@ -137,11 +137,13 @@ class OfflineRecognizerConfig {
     this.maxActivePaths = 4,
     this.hotwordsFile = '',
     this.hotwordsScore = 1.5,
+    this.ruleFsts = '',
+    this.ruleFars = '',
   });
 
   @override
   String toString() {
-    return 'OfflineRecognizerConfig(feat: $feat, model: $model, lm: $lm, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore)';
+    return 'OfflineRecognizerConfig(feat: $feat, model: $model, lm: $lm, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ruleFsts: $ruleFsts, ruleFars: $ruleFars)';
   }
 
   final FeatureConfig feat;
@@ -154,6 +156,9 @@ class OfflineRecognizerConfig {
   final String hotwordsFile;
 
   final double hotwordsScore;
+
+  final String ruleFsts;
+  final String ruleFars;
 }
 
 class OfflineRecognizerResult {
@@ -232,8 +237,13 @@ class OfflineRecognizer {
     c.ref.hotwordsFile = config.hotwordsFile.toNativeUtf8();
     c.ref.hotwordsScore = config.hotwordsScore;
 
+    c.ref.ruleFsts = config.ruleFsts.toNativeUtf8();
+    c.ref.ruleFars = config.ruleFars.toNativeUtf8();
+
     final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;
 
+    calloc.free(c.ref.ruleFars);
+    calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.hotwordsFile);
     calloc.free(c.ref.decodingMethod);
     calloc.free(c.ref.lm.model);

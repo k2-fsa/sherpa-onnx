@@ -122,7 +122,7 @@ class SpeakerEmbeddingManager::Impl {
 
     Eigen::VectorXf scores = embedding_matrix_ * v;
 
-    Eigen::VectorXf::Index max_index;
+    Eigen::VectorXf::Index max_index = 0;
     float max_score = scores.maxCoeff(&max_index);
     if (max_score < threshold) {
       return {};
@@ -178,11 +178,12 @@ class SpeakerEmbeddingManager::Impl {
 
   std::vector<std::string> GetAllSpeakers() const {
     std::vector<std::string> all_speakers;
+    all_speakers.reserve(name2row_.size());
     for (const auto &p : name2row_) {
       all_speakers.push_back(p.first);
     }
 
-    std::stable_sort(all_speakers.begin(), all_speakers.end());
+    std::sort(all_speakers.begin(), all_speakers.end());
     return all_speakers;
   }
 

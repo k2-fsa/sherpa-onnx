@@ -44,13 +44,20 @@ static void Handler(int32_t /*sig*/) {
   fprintf(stderr, "\nCaught Ctrl + C. Exiting\n");
 }
 
-static void AudioGeneratedCallback(const float *s, int32_t n,
-                                   float /*progress*/) {
+static int32_t AudioGeneratedCallback(const float *s, int32_t n,
+                                      float /*progress*/) {
   if (n > 0) {
     std::lock_guard<std::mutex> lock(g_buffer.mutex);
     g_buffer.samples.push({s, s + n});
     g_cv.notify_all();
   }
+
+  if (g_killed) {
+    return 0;  // stop generating
+  }
+
+  // continue generating
+  return 1;
 }
 
 static void StartPlayback(const std::string &device_name, int32_t sample_rate) {

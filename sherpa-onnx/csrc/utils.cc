@@ -30,7 +30,6 @@ static bool EncodeBase(const std::vector<std::string> &lines,
   std::vector<float> tmp_thresholds;
   std::vector<std::string> tmp_phrases;
 
-  std::string line;
   std::string word;
   bool has_scores = false;
   bool has_thresholds = false;
@@ -72,6 +71,7 @@ static bool EncodeBase(const std::vector<std::string> &lines,
       }
     }
     ids->push_back(std::move(tmp_ids));
+    tmp_ids = {};
     tmp_scores.push_back(score);
     tmp_phrases.push_back(phrase);
     tmp_thresholds.push_back(threshold);

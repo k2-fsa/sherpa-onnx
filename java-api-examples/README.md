@@ -7,6 +7,7 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ## Streaming Speech recognition
 
 ```
+./run-streaming-asr-from-mic-transducer.sh
 ./run-streaming-decode-file-ctc.sh
 ./run-streaming-decode-file-ctc-hlg.sh
 ./run-streaming-decode-file-paraformer.sh
@@ -55,6 +56,24 @@ The punctuation model supports both English and Chinese.
 
 ```bash
 ./run-speaker-identification.sh
+```
+
+## VAD with a microphone
+
+```bash
+./run-vad-from-mic.sh
+```
+
+## VAD with a microphone + Non-streaming Paraformer for speech recognition
+
+```bash
+./run-vad-from-mic-non-streaming-paraformer.sh
+```
+
+## VAD with a microphone + Non-streaming Whisper tiny.en for speech recognition
+
+```bash
+./run-vad-from-mic-non-streaming-whisper.sh
 ```
 
 ## VAD (Remove silence)

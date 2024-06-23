@@ -15,7 +15,6 @@
 #include "sherpa-onnx/csrc/online-ctc-decoder.h"
 #include "sherpa-onnx/csrc/online-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
-#include "sherpa-onnx/csrc/transducer-keyword-decoder.h"
 
 namespace sherpa_onnx {
 

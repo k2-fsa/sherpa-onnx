@@ -57,13 +57,13 @@ void PybindOfflineTts(py::module *m) {
           "generate",
           [](const PyClass &self, const std::string &text, int64_t sid,
              float speed,
-             std::function<void(py::array_t<float>, float)> callback)
+             std::function<int32_t(py::array_t<float>, float)> callback)
               -> GeneratedAudio {
             if (!callback) {
               return self.Generate(text, sid, speed);
             }
 
-            std::function<void(const float *, int32_t, float)>
+            std::function<int32_t(const float *, int32_t, float)>
                 callback_wrapper = [callback](const float *samples, int32_t n,
                                               float progress) {
                   // CAUTION(fangjun): we have to copy samples since it is
@@ -75,7 +75,7 @@ void PybindOfflineTts(py::module *m) {
                   py::buffer_info buf = array.request();
                   auto p = static_cast<float *>(buf.ptr);
                   std::copy(samples, samples + n, p);
-                  callback(array, progress);
+                  return callback(array, progress);
                 };
 
             return self.Generate(text, sid, speed, callback_wrapper);

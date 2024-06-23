@@ -67,7 +67,7 @@ class OfflineCtTransformerModel::Impl {
     std::vector<std::string> tokens;
     SHERPA_ONNX_READ_META_DATA_VEC_STRING_SEP(tokens, "tokens", "|");
 
-    int32_t vocab_size;
+    int32_t vocab_size = 0;
     SHERPA_ONNX_READ_META_DATA(vocab_size, "vocab_size");
     if (static_cast<int32_t>(tokens.size()) != vocab_size) {
       SHERPA_ONNX_LOGE("tokens.size() %d != vocab_size %d",

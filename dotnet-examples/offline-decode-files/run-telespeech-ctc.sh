@@ -11,5 +11,5 @@ fi
 dotnet run \
   --telespeech-ctc=./sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/model.int8.onnx \
   --tokens=./sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/tokens.txt \
-  --model-type=telespeech-ctc \
+  --model-type=telespeech_ctc \
   --files ./sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/test_wavs/3-sichuan.wav

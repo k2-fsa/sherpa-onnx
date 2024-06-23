@@ -15,8 +15,8 @@ cmake -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON ..
 make -j install
 export PKG_CONFIG_PATH=$PWD/install:$PKG_CONFIG_PATH
 cd ../scripts/node-addon-api/
-
-./node_modules/.bin/node-gyp build --verbose
+npm i
+./node_modules/.bin/cmake-js compile --log-level verbose
 
 # see test/test_asr_streaming_transducer.js
 # for usages

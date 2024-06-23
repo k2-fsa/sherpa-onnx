@@ -34,7 +34,7 @@ class OnlineStream {
   }
 
   void inputFinished() {
-    SherpaOnnxBindings.onlineStreamInputFinished?.call(this.ptr);
+    SherpaOnnxBindings.onlineStreamInputFinished?.call(ptr);
   }
 
   Pointer<SherpaOnnxOnlineStream> ptr;

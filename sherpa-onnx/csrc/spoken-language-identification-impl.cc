@@ -18,7 +18,7 @@ namespace sherpa_onnx {
 
 namespace {
 
-enum class ModelType {
+enum class ModelType : std::uint8_t {
   kWhisper,
   kUnknown,
 };

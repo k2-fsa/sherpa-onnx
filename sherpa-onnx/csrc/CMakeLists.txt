@@ -190,9 +190,10 @@ if(NOT BUILD_SHARED_LIBS AND APPLE)
   target_link_libraries(sherpa-onnx-core "-framework Foundation")
 endif()
 
+target_link_libraries(sherpa-onnx-core fstfar fst)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   target_link_libraries(sherpa-onnx-core piper_phonemize)
-  target_link_libraries(sherpa-onnx-core fstfar fst)
   target_link_libraries(sherpa-onnx-core cppjieba)
 endif()
 
@@ -533,3 +534,17 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     sherpa_onnx_add_test(${source})
   endforeach()
 endif()
+
+set(srcs_to_check)
+foreach(s IN LISTS sources)
+  list(APPEND srcs_to_check ${CMAKE_CURRENT_LIST_DIR}/${s})
+endforeach()
+
+# For clang-tidy
+add_custom_target(
+  clang-tidy-check
+  clang-tidy -p ${CMAKE_BINARY_DIR}/compile_commands.json --config-file ${CMAKE_SOURCE_DIR}/.clang-tidy ${srcs_to_check}
+  DEPENDS ${sources})
+
+add_custom_target(check DEPENDS clang-tidy-check)
+

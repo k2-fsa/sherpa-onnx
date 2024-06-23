@@ -7,7 +7,8 @@ project(sherpa-onnx)
 # Remember to update
 # ./nodejs-addon-examples
 # ./dart-api-examples/
-set(SHERPA_ONNX_VERSION "1.9.29")
+# ./sherpa-onnx/flutter/CHANGELOG.md
+set(SHERPA_ONNX_VERSION "1.10.1")
 
 # Disable warning about
 #
@@ -166,7 +167,7 @@ if(SHERPA_ONNX_ENABLE_WASM_KWS)
 endif()
 
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
+  set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ version to be used.")
 endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "C++ Standard version: ${CMAKE_CXX_STANDARD}")

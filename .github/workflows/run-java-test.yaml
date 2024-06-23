@@ -173,6 +173,9 @@ jobs:
         shell: bash
         run: |
           cd ./java-api-examples
+          ./run-inverse-text-normalization-transducer.sh
+          rm -rf sherpa-onnx-streaming-*
+
           ./run-streaming-decode-file-ctc.sh
           # Delete model files to save space
           rm -rf sherpa-onnx-streaming-*
@@ -190,6 +193,8 @@ jobs:
         shell: bash
         run: |
           cd ./java-api-examples
+          ./run-inverse-text-normalization-paraformer.sh
+
           ./run-non-streaming-decode-file-paraformer.sh
           rm -rf sherpa-onnx-paraformer-zh-*
 

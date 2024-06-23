@@ -1,3 +1,15 @@
+## 1.10.1
+
+* Enable to stop TTS generation
+
+## 1.10.0
+
+* Add inverse text normalization
+
+## 1.9.30
+
+* Add TTS
+
 ## 1.9.29
 
 * Publish with CI

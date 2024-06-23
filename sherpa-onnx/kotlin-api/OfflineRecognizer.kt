@@ -53,6 +53,8 @@ data class OfflineRecognizerConfig(
     var maxActivePaths: Int = 4,
     var hotwordsFile: String = "",
     var hotwordsScore: Float = 1.5f,
+    var ruleFsts: String = "",
+    var ruleFars: String = "",
 )
 
 class OfflineRecognizer(
@@ -280,6 +282,19 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 teleSpeech = "$modelDir/model.int8.onnx",
                 tokens = "$modelDir/tokens.txt",
                 modelType = "tele_speech",
+            )
+        }
+
+        12 -> {
+            val modelDir = "sherpa-onnx-zipformer-thai-2024-06-20"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-12-avg-5.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-12-avg-5.onnx",
+                    joiner = "$modelDir/joiner-epoch-12-avg-5.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer2",
             )
         }
     }

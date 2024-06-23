@@ -130,6 +130,9 @@ final class SherpaOnnxOfflineRecognizerConfig extends Struct {
 
   @Float()
   external double hotwordsScore;
+
+  external Pointer<Utf8> ruleFsts;
+  external Pointer<Utf8> ruleFars;
 }
 
 final class SherpaOnnxOnlineTransducerModelConfig extends Struct {
@@ -202,6 +205,9 @@ final class SherpaOnnxOnlineRecognizerConfig extends Struct {
   external double hotwordsScore;
 
   external SherpaOnnxOnlineCtcFstDecoderConfig ctcFstDecoderConfig;
+
+  external Pointer<Utf8> ruleFsts;
+  external Pointer<Utf8> ruleFars;
 }
 
 final class SherpaOnnxSileroVadModelConfig extends Struct {
@@ -320,7 +326,7 @@ typedef SherpaOnnxDestroyOfflineTtsGeneratedAudioNative = Void Function(
 typedef SherpaOnnxDestroyOfflineTtsGeneratedAudio = void Function(
     Pointer<SherpaOnnxGeneratedAudio>);
 
-typedef SherpaOnnxGeneratedAudioCallbackNative = Void Function(
+typedef SherpaOnnxGeneratedAudioCallbackNative = Int Function(
     Pointer<Float>, Int32);
 
 typedef SherpaOnnxOfflineTtsGenerateWithCallbackNative

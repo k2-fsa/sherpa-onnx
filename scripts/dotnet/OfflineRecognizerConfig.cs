@@ -18,7 +18,8 @@ namespace SherpaOnnx
             MaxActivePaths = 4;
             HotwordsFile = "";
             HotwordsScore = 1.5F;
-
+            RuleFsts = "";
+            RuleFars = "";
         }
         public FeatureConfig FeatConfig;
         public OfflineModelConfig ModelConfig;
@@ -33,6 +34,12 @@ namespace SherpaOnnx
         public string HotwordsFile;
 
         public float HotwordsScore;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string RuleFsts;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string RuleFars;
     }
 
 

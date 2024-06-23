@@ -1,0 +1,57 @@
+name: clang-tidy
+
+on:
+  push:
+    branches:
+      - master
+      - clang-tidy
+    paths:
+      - 'sherpa-onnx/csrc/**'
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'sherpa-onnx/csrc/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: clang-tidy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  clang-tidy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8]
+      fail-fast: false
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install clang-tidy
+        shell: bash
+        run: |
+          pip install clang-tidy
+
+      - name: Configure
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake -DSHERPA_ONNX_ENABLE_PYTHON=ON -DCMAKE_EXPORT_COMPILE_COMMANDS=ON ..
+
+      - name: Check with clang-tidy
+        shell: bash
+        run: |
+          cd build
+          make check

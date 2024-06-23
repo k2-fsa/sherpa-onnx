@@ -71,6 +71,17 @@ git checkout .
 pushd android/SherpaOnnx2Pass/app/src/main/java/com/k2fsa/sherpa/onnx
 sed -i.bak s/"firstType = 9/firstType = $type1/" ./MainActivity.kt
 sed -i.bak s/"secondType = 0/secondType = $type2/" ./MainActivity.kt
+
+{% if first.rule_fsts %}
+  rule_fsts={{ first.rule_fsts }}
+  sed -i.bak s%"firstRuleFsts = null"%"firstRuleFsts = \"$rule_fsts\""% ./MainActivity.kt
+{% endif %}
+
+{% if second.rule_fsts %}
+  rule_fsts={{ second.rule_fsts }}
+  sed -i.bak s%"secondRuleFsts = null"%"secondRuleFsts = \"$rule_fsts\""% ./MainActivity.kt
+{% endif %}
+
 git diff
 popd
 

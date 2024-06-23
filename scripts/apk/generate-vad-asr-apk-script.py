@@ -42,6 +42,8 @@ class Model:
     # cmd is used to remove extra file from the model directory
     cmd: str = ""
 
+    rule_fsts: str = ""
+
 
 # See get_2nd_models() in ./generate-asr-2pass-apk-script.py
 def get_models():
@@ -53,13 +55,13 @@ def get_models():
             short_name="whisper_tiny",
             cmd="""
             pushd $model_name
-            rm -v tiny.en-encoder.onnx
-            rm -v tiny.en-decoder.onnx
+            rm -fv tiny.en-encoder.onnx
+            rm -fv tiny.en-decoder.onnx
             rm -rf test_wavs
-            rm -v *.py
-            rm -v requirements.txt
-            rm -v .gitignore
-            rm -v README.md
+            rm -fv *.py
+            rm -fv requirements.txt
+            rm -fv .gitignore
+            rm -fv README.md
 
             ls -lh
 
@@ -71,10 +73,14 @@ def get_models():
             idx=0,
             lang="zh",
             short_name="paraformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
 
-            rm -v README.md
+            rm -fv README.md
             rm -rfv test_wavs
             rm model.onnx
 
@@ -88,11 +94,15 @@ def get_models():
             idx=4,
             lang="zh",
             short_name="zipformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
 
             rm -rfv test_wavs
-            rm -v README.md
+            rm -fv README.md
             mv -v data/lang_char/tokens.txt ./
             rm -rfv data/lang_char
 
@@ -171,11 +181,36 @@ def get_models():
             idx=11,
             lang="zh",
             short_name="telespeech",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
 
             rm -rfv test_wavs
             rm test.py
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-zipformer-thai-2024-06-20",
+            idx=12,
+            lang="th",
+            short_name="zipformer",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -fv README.md
+            rm -fv bpe.model
+
+            rm encoder-epoch-12-avg-5.onnx
+            rm decoder-epoch-12-avg-5.int8.onnx
+            rm joiner-epoch-12-avg-5.onnx
 
             ls -lh
 

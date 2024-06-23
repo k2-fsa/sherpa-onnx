@@ -1,5 +1,4 @@
 // Copyright (c)  2024  Xiaomi Corporation
-import 'dart:convert';
 import 'dart:ffi';
 import 'dart:typed_data';
 
@@ -150,7 +149,7 @@ class OfflineTts {
       {required String text,
       int sid = 0,
       double speed = 1.0,
-      required void Function(Float32List samples) callback}) {
+      required int Function(Float32List samples) callback}) {
     // see
     // https://github.com/dart-lang/sdk/issues/54276#issuecomment-1846109285
     // https://stackoverflow.com/questions/69537440/callbacks-in-dart-dartffi-only-supports-calling-static-dart-functions-from-nat
@@ -160,8 +159,8 @@ class OfflineTts {
             (Pointer<Float> samples, int n) {
       final s = samples.asTypedList(n);
       final newSamples = Float32List.fromList(s);
-      callback(newSamples);
-    });
+      return callback(newSamples);
+    }, exceptionalReturn: 0);
 
     final Pointer<Utf8> textPtr = text.toNativeUtf8();
     final p = SherpaOnnxBindings.offlineTtsGenerateWithCallback
@@ -184,11 +183,10 @@ class OfflineTts {
     return GeneratedAudio(samples: newSamples, sampleRate: sampleRate);
   }
 
-  int get sampleRate =>
-      SherpaOnnxBindings.offlineTtsSampleRate?.call(this.ptr) ?? 0;
+  int get sampleRate => SherpaOnnxBindings.offlineTtsSampleRate?.call(ptr) ?? 0;
 
   int get numSpeakers =>
-      SherpaOnnxBindings.offlineTtsNumSpeakers?.call(this.ptr) ?? 0;
+      SherpaOnnxBindings.offlineTtsNumSpeakers?.call(ptr) ?? 0;
 
   Pointer<SherpaOnnxOfflineTts> ptr;
   OfflineTtsConfig config;

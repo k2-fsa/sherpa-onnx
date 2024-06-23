@@ -73,7 +73,8 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
 class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerCtcImpl(const OfflineRecognizerConfig &config)
-      : config_(config),
+      : OfflineRecognizerImpl(config),
+        config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(OfflineCtcModel::Create(config_.model_config)) {
     Init();
@@ -82,7 +83,8 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
 #if __ANDROID_API__ >= 9
   OfflineRecognizerCtcImpl(AAssetManager *mgr,
                            const OfflineRecognizerConfig &config)
-      : config_(config),
+      : OfflineRecognizerImpl(mgr, config),
+        config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
         model_(OfflineCtcModel::Create(mgr, config_.model_config)) {
     Init();
@@ -205,6 +207,7 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     for (int32_t i = 0; i != n; ++i) {
       auto r = Convert(results[i], symbol_table_, frame_shift_ms,
                        model_->SubsamplingFactor());
+      r.text = ApplyInverseTextNormalization(std::move(r.text));
       ss[i]->SetResult(r);
     }
   }
@@ -238,6 +241,7 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
 
     auto r = Convert(results[0], symbol_table_, frame_shift_ms,
                      model_->SubsamplingFactor());
+    r.text = ApplyInverseTextNormalization(std::move(r.text));
     s->SetResult(r);
   }
 

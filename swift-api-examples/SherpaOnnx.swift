@@ -135,7 +135,9 @@ func sherpaOnnxOnlineRecognizerConfig(
   maxActivePaths: Int = 4,
   hotwordsFile: String = "",
   hotwordsScore: Float = 1.5,
-  ctcFstDecoderConfig: SherpaOnnxOnlineCtcFstDecoderConfig = sherpaOnnxOnlineCtcFstDecoderConfig()
+  ctcFstDecoderConfig: SherpaOnnxOnlineCtcFstDecoderConfig = sherpaOnnxOnlineCtcFstDecoderConfig(),
+  ruleFsts: String = "",
+  ruleFars: String = ""
 ) -> SherpaOnnxOnlineRecognizerConfig {
   return SherpaOnnxOnlineRecognizerConfig(
     feat_config: featConfig,
@@ -148,7 +150,9 @@ func sherpaOnnxOnlineRecognizerConfig(
     rule3_min_utterance_length: rule3MinUtteranceLength,
     hotwords_file: toCPointer(hotwordsFile),
     hotwords_score: hotwordsScore,
-    ctc_fst_decoder_config: ctcFstDecoderConfig
+    ctc_fst_decoder_config: ctcFstDecoderConfig,
+    rule_fsts: toCPointer(ruleFsts),
+    rule_fars: toCPointer(ruleFars)
   )
 }
 
@@ -387,7 +391,9 @@ func sherpaOnnxOfflineRecognizerConfig(
   decodingMethod: String = "greedy_search",
   maxActivePaths: Int = 4,
   hotwordsFile: String = "",
-  hotwordsScore: Float = 1.5
+  hotwordsScore: Float = 1.5,
+  ruleFsts: String = "",
+  ruleFars: String = ""
 ) -> SherpaOnnxOfflineRecognizerConfig {
   return SherpaOnnxOfflineRecognizerConfig(
     feat_config: featConfig,
@@ -396,7 +402,9 @@ func sherpaOnnxOfflineRecognizerConfig(
     decoding_method: toCPointer(decodingMethod),
     max_active_paths: Int32(maxActivePaths),
     hotwords_file: toCPointer(hotwordsFile),
-    hotwords_score: hotwordsScore
+    hotwords_score: hotwordsScore,
+    rule_fsts: toCPointer(ruleFsts),
+    rule_fars: toCPointer(ruleFars)
   )
 }
 
@@ -822,5 +830,113 @@ class SherpaOnnxSpokenLanguageIdentificationWrapper {
 
     DestroyOfflineStream(stream)
     return SherpaOnnxSpokenLanguageIdentificationResultWrapper(result: result)
+  }
+}
+
+// keyword spotting
+
+class SherpaOnnxKeywordResultWrapper {
+  /// A pointer to the underlying counterpart in C
+  let result: UnsafePointer<SherpaOnnxKeywordResult>!
+
+  var keyword: String {
+    return String(cString: result.pointee.keyword)
+  }
+
+  var count: Int32 {
+    return result.pointee.count
+  }
+
+  var tokens: [String] {
+    if let tokensPointer = result.pointee.tokens_arr {
+      var tokens: [String] = []
+      for index in 0..<count {
+        if let tokenPointer = tokensPointer[Int(index)] {
+          let token = String(cString: tokenPointer)
+          tokens.append(token)
+        }
+      }
+      return tokens
+    } else {
+      let tokens: [String] = []
+      return tokens
+    }
+  }
+
+  init(result: UnsafePointer<SherpaOnnxKeywordResult>!) {
+    self.result = result
+  }
+
+  deinit {
+    if let result {
+      DestroyKeywordResult(result)
+    }
+  }
+}
+
+func sherpaOnnxKeywordSpotterConfig(
+  featConfig: SherpaOnnxFeatureConfig,
+  modelConfig: SherpaOnnxOnlineModelConfig,
+  keywordsFile: String,
+  maxActivePaths: Int = 4,
+  numTrailingBlanks: Int = 1,
+  keywordsScore: Float = 1.0,
+  keywordsThreshold: Float = 0.25
+) -> SherpaOnnxKeywordSpotterConfig {
+  return SherpaOnnxKeywordSpotterConfig(
+    feat_config: featConfig,
+    model_config: modelConfig,
+    max_active_paths: Int32(maxActivePaths),
+    num_trailing_blanks: Int32(numTrailingBlanks),
+    keywords_score: keywordsScore,
+    keywords_threshold: keywordsThreshold,
+    keywords_file: toCPointer(keywordsFile)
+  )
+}
+
+class SherpaOnnxKeywordSpotterWrapper {
+  /// A pointer to the underlying counterpart in C
+  let spotter: OpaquePointer!
+  var stream: OpaquePointer!
+
+  init(
+    config: UnsafePointer<SherpaOnnxKeywordSpotterConfig>!
+  ) {
+    spotter = CreateKeywordSpotter(config)
+    stream = CreateKeywordStream(spotter)
+  }
+
+  deinit {
+    if let stream {
+      DestroyOnlineStream(stream)
+    }
+
+    if let spotter {
+      DestroyKeywordSpotter(spotter)
+    }
+  }
+
+  func acceptWaveform(samples: [Float], sampleRate: Int = 16000) {
+    AcceptWaveform(stream, Int32(sampleRate), samples, Int32(samples.count))
+  }
+
+  func isReady() -> Bool {
+    return IsKeywordStreamReady(spotter, stream) == 1 ? true : false
+  }
+
+  func decode() {
+    DecodeKeywordStream(spotter, stream)
+  }
+
+  func getResult() -> SherpaOnnxKeywordResultWrapper {
+    let result: UnsafePointer<SherpaOnnxKeywordResult>? = GetKeywordResult(
+      spotter, stream)
+    return SherpaOnnxKeywordResultWrapper(result: result)
+  }
+
+  /// Signal that no more audio samples would be available.
+  /// After this call, you cannot call acceptWaveform() any more.
+  func inputFinished() {
+    InputFinished(stream)
   }
 }

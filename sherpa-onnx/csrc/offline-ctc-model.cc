@@ -19,7 +19,7 @@
 
 namespace {
 
-enum class ModelType {
+enum class ModelType : std::uint8_t {
   kEncDecCTCModelBPE,
   kEncDecHybridRNNTCTCBPEModel,
   kTdnn,

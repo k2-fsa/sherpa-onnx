@@ -30,7 +30,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
 
   std::string sym;
   std::u32string s;
-  int32_t id;
+  int32_t id = 0;
   while (std::getline(is, line)) {
     std::istringstream iss(line);
     iss >> sym;
@@ -138,6 +138,7 @@ OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
         }
 
         ans.push_back(std::move(this_sentence));
+        this_sentence = {};
 
         // re-initialize this_sentence
         if (use_eos_bos) {
@@ -172,6 +173,7 @@ OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
         }
 
         ans.push_back(std::move(this_sentence));
+        this_sentence = {};
 
         // re-initialize this_sentence
         if (use_eos_bos) {

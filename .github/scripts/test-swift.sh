@@ -7,6 +7,10 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-keyword-spotting-from-file.sh
+rm ./keyword-spotting-from-file
+rm -rf sherpa-onnx-kws-*
+
 ./run-streaming-hlg-decode-file.sh
 rm ./streaming-hlg-decode-file
 rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18

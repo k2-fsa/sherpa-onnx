@@ -77,6 +77,12 @@ with the following APIs
 | Spoken language identification | [Address](https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk.html) | [点此](https://k2-fsa.github.io/sherpa/onnx/spoken-language-identification/apk-cn.html) |
 |Keyword spotting| [Address](https://k2-fsa.github.io/sherpa/onnx/kws/apk.html)| [点此](https://k2-fsa.github.io/sherpa/onnx/kws/apk-cn.html)|
 
+### Links for pre-built Flutter APPs
+
+| Description                    | URL                                                                                     | 中国用户                                                                             |
+|--------------------------------|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
+| Streaming speech recognition             | [Address](https://k2-fsa.github.io/sherpa/onnx/flutter/asr/app.html)                        | [点此](https://k2-fsa.github.io/sherpa/onnx/flutter/asr/app-cn.html)                        |
+
 ### Links for pre-trained models
 
 | Description                    | URL                                                                                                                            |

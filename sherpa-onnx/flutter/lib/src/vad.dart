@@ -76,14 +76,14 @@ class CircularBuffer {
     final pList = p.asTypedList(n);
     pList.setAll(0, data);
 
-    SherpaOnnxBindings.circularBufferPush?.call(this.ptr, p, n);
+    SherpaOnnxBindings.circularBufferPush?.call(ptr, p, n);
 
     calloc.free(p);
   }
 
   Float32List get({required int startIndex, required int n}) {
     final Pointer<Float> p =
-        SherpaOnnxBindings.circularBufferGet?.call(this.ptr, startIndex, n) ??
+        SherpaOnnxBindings.circularBufferGet?.call(ptr, startIndex, n) ??
             nullptr;
 
     if (p == nullptr) {
@@ -99,11 +99,11 @@ class CircularBuffer {
   }
 
   void pop(int n) {
-    SherpaOnnxBindings.circularBufferPop?.call(this.ptr, n);
+    SherpaOnnxBindings.circularBufferPop?.call(ptr, n);
   }
 
   void reset() {
-    SherpaOnnxBindings.circularBufferReset?.call(this.ptr);
+    SherpaOnnxBindings.circularBufferReset?.call(ptr);
   }
 
   int get size => SherpaOnnxBindings.circularBufferSize?.call(ptr) ?? 0;
