@@ -78,36 +78,6 @@ jobs:
           cd ../../
           ls -lh *.tar.bz2
 
-      - name: Build flutter
-        if: false
-        shell: bash
-        run: |
-          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
-
-          d=$PWD
-
-          pushd sherpa-onnx/flutter
-          dart pub get
-
-          cd example
-          export FLUTTER_XCODE_ARCHS=${{ matrix.arch }}
-          echo "FLUTTER_XCODE_ARCHS: $FLUTTER_XCODE_ARCHS"
-          flutter build macos
-
-          cd build/macos/Build/Products/Release/
-
-          tree ./sherpa_onnx.app
-
-          app=sherpa-onnx-osx-${{ matrix.arch }}-$SHERPA_ONNX_VERSION.app
-          mv sherpa_onnx.app $app
-          tar cjfv $app.tar.bz2 $app
-          ls -lh
-          mv $app.tar.bz2 $d
-
-          popd
-
-          ls -lh $app.tar.bz2
-
       - uses: actions/upload-artifact@v4
         with:
           name: sherpa-onnx-osx-${{ matrix.arch }}-${{ matrix.index }}
