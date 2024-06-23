@@ -6,23 +6,6 @@ on:
       - flutter
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
-    paths:
-      - '.github/workflows/flutter-windows-x64.yaml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'sherpa-onnx/flutter/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/flutter-windows-x64.yaml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'sherpa-onnx/flutter/**'
 
   workflow_dispatch:
 
@@ -32,17 +15,24 @@ concurrency:
 
 jobs:
   flutter_windows_x64:
-    name: flutter windows x64
+    name: windows x64 ${{ matrix.index }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest]
+        total: ["3"]
+        index: ["0", "1", "2"]
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
@@ -71,96 +61,28 @@ jobs:
           dart --version
           flutter doctor
 
-      - name: Configure CMake
-        shell: bash
-        run: |
-          cmake --version
-
-          mkdir build
-          cd build
-
-          cmake \
-            -A x64 \
-            -DBUILD_SHARED_LIBS=ON \
-            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-            -DBUILD_ESPEAK_NG_EXE=OFF \
-            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-            -DBUILD_ESPEAK_NG_EXE=OFF \
-            -DCMAKE_INSTALL_PREFIX=./install \
-            ..
-
-      - name: Build sherpa-onnx for windows x64
-        shell: bash
-        run: |
-          cd build
-          cmake --build . --config Release -- -m:2
-          cmake --build . --config Release --target install -- -m:2
-
-      - name: Copy libs
-        shell: bash
-        run: |
-          cp -v build/install/lib/*dll ./sherpa-onnx/flutter/windows/
-          cp -v build/install/lib/*fst* ./sherpa-onnx/flutter/windows/
-
-          echo "--------------------"
-
-          ls -lh ./sherpa-onnx/flutter/windows/
-
-      - name: Download model files
-        shell: bash
-        run: |
-          cd sherpa-onnx/flutter
-
-          cd example/assets
-
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          cd sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
-          rm encoder-epoch-99-avg-1.onnx
-          rm decoder-epoch-99-avg-1.int8.onnx
-          rm joiner-epoch-99-avg-1.onnx
-          rm README.md
-          rm bpe.model
-          rm bpe.vocab
-          rm -rf test_wavs
-          ls -lh
-          cd ..
-
       - name: Build flutter
         shell: bash
         run: |
-          d=$PWD
-          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          cd scripts/flutter
 
-          pushd sherpa-onnx/flutter
-          dart pub get
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
 
-          cd example
-          flutter build windows
+          ./generate-streaming-asr.py --total $total --index $index
 
-          cd build/windows/x64/runner/
-
-          dst=sherpa-onnx-win-x64-$SHERPA_ONNX_VERSION
-          mv Release $dst
-
-          tar cjfv $dst.tar.bz2 ./$dst
-          ls -lh
-          mv $dst.tar.bz2 $d/
-
-          popd
-
-          ls -lh $dst.tar.bz2
+          chmod +x *.sh
+          ./build-windows-streaming-asr.sh
+          cd ../../
+          ls -lh *.tar.bz2
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-win-x64
+          name: sherpa-onnx-win-x64-${{ matrix.index }}
           path: ./*.tar.bz2
 
       - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -181,19 +103,11 @@ jobs:
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
-            mkdir -p flutter
-            cp -v ../*.tar.bz2 ./flutter
+            mkdir -p flutter/asr
+            cp -v ../*.tar.bz2 ./flutter/asr
 
             git status
             git lfs track "*.bz2"
             git add .
             git commit -m "add more files"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter main
-
-      # - name: Release android libs
-      #   if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-      #   uses: svenstaro/upload-release-action@v2
-      #   with:
-      #     file_glob: true
-      #     overwrite: true
-      #     file: sherpa*.tar.bz2
