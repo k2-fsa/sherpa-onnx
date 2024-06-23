@@ -134,6 +134,7 @@ jobs:
       - name: Copy files
         shell: bash
         run: |
+          cp -v scripts/dotnet/examples/Common.csproj dotnet-examples/Common/
           cp -v scripts/dotnet/examples/offline-tts.csproj dotnet-examples/offline-tts/
           cp -v scripts/dotnet/examples/offline-decode-files.csproj dotnet-examples/offline-decode-files/
           cp -v scripts/dotnet/examples/online-decode-files.csproj dotnet-examples/online-decode-files/
