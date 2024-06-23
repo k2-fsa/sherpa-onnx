@@ -60,7 +60,7 @@ jobs:
 
               cd /home/runner/work/sherpa-onnx/sherpa-onnx
 
-              git clone --depth 1 https://github.com/alsa-project/alsa-lib
+              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
               pushd alsa-lib
               ./gitcompile
               popd

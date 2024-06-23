@@ -23,7 +23,7 @@ cd $dir
 if [ ! -f alsa-lib/src/.libs/libasound.so ]; then
   echo "Start to cross-compile alsa-lib"
   if [ ! -d alsa-lib ]; then
-    git clone --depth 1 https://github.com/alsa-project/alsa-lib
+    git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
   fi
   pushd alsa-lib
   CC=arm-linux-gnueabihf-gcc ./gitcompile --host=arm-linux-gnueabihf
