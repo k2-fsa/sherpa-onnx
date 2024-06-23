@@ -7,6 +7,7 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 ## Streaming Speech recognition
 
 ```
+./run-streaming-asr-from-mic-transducer.sh
 ./run-streaming-decode-file-ctc.sh
 ./run-streaming-decode-file-ctc-hlg.sh
 ./run-streaming-decode-file-paraformer.sh
