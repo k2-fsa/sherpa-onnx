@@ -24,7 +24,7 @@ void PybindOnlineModelConfig(py::module *m) {
   PybindOnlineWenetCtcModelConfig(m);
   PybindOnlineZipformer2CtcModelConfig(m);
   PybindOnlineNeMoCtcModelConfig(m);
-  PybindProviderconfig(m);
+  PybindExecutionProviderConfig(m);
 
   using PyClass = OnlineModelConfig;
   py::class_<PyClass>(*m, "OnlineModelConfig")
