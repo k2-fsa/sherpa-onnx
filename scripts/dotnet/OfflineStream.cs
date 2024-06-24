@@ -1,5 +1,6 @@
-/// Copyright (c)  2024.5 by 东风破
+﻿/// Copyright (c)  2024.5 by 东风破
 
+using System;
 using System.Runtime.InteropServices;
 
 namespace SherpaOnnx
