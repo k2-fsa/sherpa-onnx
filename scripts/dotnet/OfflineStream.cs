@@ -1,13 +1,11 @@
-/// Copyright (c)  2024.5 by 东风破
+﻿/// Copyright (c)  2024.5 by 东风破
 
-using System.Linq;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
 using System;
+using System.Runtime.InteropServices;
 
 namespace SherpaOnnx
 {
+
     public class OfflineStream : IDisposable
     {
         public OfflineStream(IntPtr p)
@@ -67,4 +65,5 @@ namespace SherpaOnnx
         [DllImport(Dll.Filename, EntryPoint = "DestroyOfflineRecognizerResult")]
         private static extern void DestroyResult(IntPtr handle);
     }
+
 }

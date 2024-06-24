@@ -1,10 +1,6 @@
-/// Copyright (c)  2024  Xiaomi Corporation (authors: Fangjun Kuang)
-
-using System.Linq;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
+﻿/// Copyright (c)  2024  Xiaomi Corporation (authors: Fangjun Kuang)
 using System;
+using System.Runtime.InteropServices;
 
 namespace SherpaOnnx
 {
@@ -112,4 +108,3 @@ namespace SherpaOnnx
 
     }
 }
-

@@ -1,10 +1,9 @@
-/// Copyright (c)  2024.5 by 东风破
+﻿/// Copyright (c)  2024.5 by 东风破
 
-using System.Linq;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Runtime.InteropServices;
 
 namespace SherpaOnnx
 {
@@ -72,4 +71,5 @@ namespace SherpaOnnx
         [DllImport(Dll.Filename, EntryPoint = "DecodeMultipleOfflineStreams")]
         private static extern void Decode(IntPtr handle, IntPtr[] streams, int n);
     }
+
 }

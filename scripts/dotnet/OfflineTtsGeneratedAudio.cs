@@ -1,10 +1,6 @@
-/// Copyright (c)  2024.5 by 东风破
-
-using System.Linq;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
+﻿/// Copyright (c)  2024.5 by 东风破
 using System;
+using System.Runtime.InteropServices;
 
 namespace SherpaOnnx
 {
