@@ -143,7 +143,7 @@ def main():
         (model.chunk_size - 1) * model.subsampling_factor + model.right_context + 1
     )
     chunk_length = int(chunk_length)
-    chunk_shift = int(model.required_cache_size)
+    chunk_shift = int(model.chunk_size * model.subsampling_factor)
     print(chunk_length, chunk_shift)
 
     num_frames = x.shape[0]
