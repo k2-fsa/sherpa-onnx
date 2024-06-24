@@ -1,7 +1,7 @@
 // sherpa-onnx/csrc/online-transducer-model-config.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
-#include "sherpa-onnx/csrc/onnxrt-execution-provider-config.h"
+#include "sherpa-onnx/csrc/provider-config.h"
 
 #include <sstream>
 
@@ -10,20 +10,12 @@
 
 namespace sherpa_onnx {
 
-void OnnxrtCudaConfig::Register(ParseOptions *po) {
-  po->Register("cuda-device", &device,
-          "Onnxruntime CUDA device index."
-          "Set based on available CUDA device");
+void CudaConfig::Register(ParseOptions *po) {
   po->Register("cuda-cudnn-conv-algo-search", &cudnn_conv_algo_search,
           "CuDNN convolution algrorithm search");
 }
 
-bool OnnxrtCudaConfig::Validate() const {
-
-  if(device > 0) {
-    SHERPA_ONNX_LOGE("device: '%d' is not valid.", device);
-    return false;
-  }
+bool CudaConfig::Validate() const {
 
   if(cudnn_conv_algo_search > 0 && cudnn_conv_algo_search < 4) {
     SHERPA_ONNX_LOGE("cudnn_conv_algo_search: '%d' is not valid option."
@@ -35,20 +27,16 @@ bool OnnxrtCudaConfig::Validate() const {
   return true;
 }
 
-std::string OnnxrtCudaConfig::ToString() const {
+std::string CudaConfig::ToString() const {
   std::ostringstream os;
 
-  os << "OnnxrtCudaConfig(";
-  os << "device=\"" << device << "\", ";
+  os << "CudaConfig(";
   os << "cudnn_conv_algo_search=\"" << cudnn_conv_algo_search << ")";
 
   return os.str();
 }
 
-void OnnxrtTensorrtConfig::Register(ParseOptions *po) {
-  po->Register("device", &device,
-          "Onnxruntime CUDA device index."
-          "Set based on available CUDA device");
+void TensorrtConfig::Register(ParseOptions *po) {
   po->Register("trt-max-workspace-size",&trt_max_workspace_size,
               "");
   po->Register("trt-max-partition-iterations",&trt_max_partition_iterations,
@@ -56,20 +44,22 @@ void OnnxrtTensorrtConfig::Register(ParseOptions *po) {
   po->Register("trt-min-subgraph-size ",&trt_min_subgraph_size,
               "");
   po->Register("trt-fp16-enable",&trt_fp16_enable,
-              "");
+              "true to enable fp16");
   po->Register("trt-detailed-build-log",&trt_detailed_build_log,
-              "");
+              "true to print TensorRT build logs");
   po->Register("trt-engine-cache-enable",&trt_engine_cache_enable,
-              "");
+              "true to enable engine caching");
   po->Register("trt-engine-cache-path",&trt_engine_cache_path,
               "");
   po->Register("trt-timing-cache-enable",&trt_timing_cache_enable,
-              "");
+              "true to enable timing cache");
   po->Register("trt-timing-cache-path",&trt_timing_cache_path,
               "");
+  po->Register("trt-dump-subgraphs",&trt_dump_subgraphs,
+              "true to dump subgraphs");
 }
 
-bool OnnxrtTensorrtConfig::Validate() const {
+bool TensorrtConfig::Validate() const {
 
   if (trt_max_workspace_size > 0) {
     SHERPA_ONNX_LOGE("trt_max_workspace_size: '%d' is not valid.",
@@ -86,83 +76,89 @@ bool OnnxrtTensorrtConfig::Validate() const {
         trt_min_subgraph_size);
     return false;
   }
-  if (trt_fp16_enable < 0 || trt_fp16_enable > 1) {
+  if (trt_fp16_enable != true || trt_fp16_enable != false) {
     SHERPA_ONNX_LOGE("trt_fp16_enable: '%d' is not valid.",trt_fp16_enable);
     return false;
   }
-  if (trt_detailed_build_log < 0 || trt_detailed_build_log > 1) {
+  if (trt_detailed_build_log != true || trt_detailed_build_log != false) {
     SHERPA_ONNX_LOGE("trt_detailed_build_log: '%d' is not valid.",
         trt_detailed_build_log);
     return false;
   }
-  if (trt_engine_cache_enable < 0 || trt_engine_cache_enable > 1) {
+  if (trt_engine_cache_enable != true || trt_engine_cache_enable != false) {
     SHERPA_ONNX_LOGE("trt_engine_cache_enable: '%d' is not valid.",
         trt_engine_cache_enable);
     return false;
   }
-  if (trt_timing_cache_enable < 0 || trt_timing_cache_enable > 1) {
+  if (trt_timing_cache_enable != true || trt_timing_cache_enable != false) {
     SHERPA_ONNX_LOGE("trt_timing_cache_enable: '%d' is not valid.",
         trt_timing_cache_enable);
     return false;
   }
 
-  if(trt_max_workspace_size > 0) {
-    SHERPA_ONNX_LOGE("trt_max_workspace_size: '%d' is not valid.",device);
+  if (trt_dump_subgraphs != true || trt_dump_subgraphs != false) {
+    SHERPA_ONNX_LOGE("trt_dump_subgraphs: '%d' is not valid.",
+        trt_dump_subgraphs);
     return false;
   }
+
+  // if(trt_max_workspace_size > 0) {
+  //   SHERPA_ONNX_LOGE("trt_max_workspace_size: '%d' is not valid.",);
+  //   return false;
+  // }
 
   return true;
 }
 
-std::string OnnxrtTensorrtConfig::ToString() const {
+std::string TensorrtConfig::ToString() const {
   std::ostringstream os;
 
-  os << "OnnxrtTensorrtConfig(";
-  os << "device=\"" << device << "\", ";
+  os << "TensorrtConfig(";
   os << "trt_max_workspace_size=\"" << trt_max_workspace_size << "\", ";
-  os << "trt_max_partition_iterations=\"" << trt_max_partition_iterations << "\", ";
+  os << "trt_max_partition_iterations=\"" 
+      << trt_max_partition_iterations << "\", ";
   os << "trt_min_subgraph_size=\"" << trt_min_subgraph_size << "\", ";
-  os << "trt_fp16_enable=\"" << trt_fp16_enable << "\", ";
-  os << "trt_detailed_build_log=\"" << trt_detailed_build_log << "\", ";
-  os << "trt_engine_cache_enable=\"" << trt_engine_cache_enable << "\", ";
-  os << "trt_engine_cache_path=\"" << trt_engine_cache_path.c_str() << "\", ";
-  os << "trt_timing_cache_enable=\"" << trt_timing_cache_enable << "\", ";
-  os << "trt_timing_cache_path=\"" << trt_timing_cache_path.c_str() << ")";
-
+  os << "trt_fp16_enable=\"" 
+      << (trt_fp16_enable? "True" : "False") << "\", ";
+  os << "trt_detailed_build_log=\"" 
+      << (trt_detailed_build_log? "True" : "False") << "\", ";
+  os << "trt_engine_cache_enable=\"" 
+      << (trt_engine_cache_enable? "True" : "False") << "\", ";
+  os << "trt_engine_cache_path=\"" 
+      << trt_engine_cache_path.c_str() << "\", ";
+  os << "trt_timing_cache_enable=\"" 
+      << (trt_timing_cache_enable? "True" : "False") << "\", ";
+  os << "trt_timing_cache_path=\"" 
+      << trt_timing_cache_path.c_str() << "\",";
+  os << "trt_dump_subgraphs=\"" 
+      << (trt_dump_subgraphs? "True" : "False") << "\" )"; 
   return os.str();
 }
 
-void OnnxrtExecutionProviderConfig::Register(ParseOptions *po) {
-  po->Register("device", &device,
-          "Onnxruntime CUDA device index."
-          "Set based on available CUDA device");
-  po->Register("cudnn_conv_algo_search", &cudnn_conv_algo_search, "CuDNN convolution algrorithm search");
+void ExecutionProviderConfig::Register(ParseOptions *po) {
+  po->Register("device_id", &device_id, "GPU device_id for CUDA and Trt EP");
+  po->Register("provider", &provider,
+               "Specify a provider to use: cpu, cuda, coreml");
 }
 
-bool OnnxrtExecutionProviderConfig::Validate() const {
+bool ExecutionProviderConfig::Validate() const {
 
-  if(device > 0) {
-    SHERPA_ONNX_LOGE("device: '%d' is not valid.", device);
-    return false;
-  }
-
-  if(cudnn_conv_algo_search > 0 && cudnn_conv_algo_search < 4) {
-    SHERPA_ONNX_LOGE("cudnn_conv_algo_search: '%d' is not valid option."
-                     "Options : [1,3]. Check OnnxRT docs",
-                    cudnn_conv_algo_search);
+  if(device_id < 0) {
+    SHERPA_ONNX_LOGE("device_id: '%d' is invalid.",device_id);
     return false;
   }
 
   return true;
 }
 
-std::string OnnxrtExecutionProviderConfig::ToString() const {
+std::string ExecutionProviderConfig::ToString() const {
   std::ostringstream os;
 
-  os << "OnnxrtCudaConfig(";
-  os << "device=\"" << device << "\", ";
-  os << "cudnn_conv_algo_search=\"" << cudnn_conv_algo_search << ")";
-
+  os << "ExecutionProviderConfig(";
+  os << "device_id=\"" << device_id << "\", ";
+  os << "provider=\"" << provider << "\", "; 
+  os << "cuda_config=\"" << cuda_config.ToString() << "\", ";
+  os << "trt_config=\"" << trt_config.ToString() << ")";
   return os.str();
 }
 

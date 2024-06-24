@@ -113,6 +113,7 @@ void OnlineRecognizerConfig::Register(ParseOptions *po) {
 }
 
 bool OnlineRecognizerConfig::Validate() const {
+  SHERPA_ONNX_LOGE("Args recognizer : %s",ToString().c_str());
   if (decoding_method == "modified_beam_search" && !lm_config.model.empty()) {
     if (max_active_paths <= 0) {
       SHERPA_ONNX_LOGE("max_active_paths is less than 0! Given: %d",

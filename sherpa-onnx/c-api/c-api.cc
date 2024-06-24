@@ -73,7 +73,7 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
       SHERPA_ONNX_OR(config->model_config.tokens, "");
   recognizer_config.model_config.num_threads =
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
-  recognizer_config.model_config.provider =
+  recognizer_config.model_config.provider_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
   recognizer_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
@@ -570,7 +570,7 @@ SherpaOnnxKeywordSpotter *CreateKeywordSpotter(
       SHERPA_ONNX_OR(config->model_config.tokens, "");
   spotter_config.model_config.num_threads =
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
-  spotter_config.model_config.provider =
+  spotter_config.model_config.provider_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
   spotter_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
