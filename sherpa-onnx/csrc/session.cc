@@ -33,7 +33,7 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
 
 static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
     std::string provider_str,
-    const ExecutionProviderConfig *provider_config=nullptr) {
+    const ProviderConfig *provider_config=nullptr) {
   Provider p = StringToProvider(std::move(provider_str));
 
   Ort::SessionOptions sess_opts;
@@ -79,7 +79,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
 
       std::vector<TrtPairs> trt_options = {
         {"device_id",
-          std::to_string(provider_config->device_id).c_str()},
+          std::to_string(provider_config->device).c_str()},
         {"trt_max_workspace_size",
           std::to_string(trt_config.trt_max_workspace_size).c_str()},
         {"trt_max_partition_iterations",
@@ -144,7 +144,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
         OrtCUDAProviderOptions options;
 
         if(provider_config != nullptr) {
-          options.device_id = provider_config->device_id;
+          options.device_id = provider_config->device;
           options.cudnn_conv_algo_search = 
               OrtCudnnConvAlgoSearch(provider_config->cuda_config
                 .cudnn_conv_algo_search);

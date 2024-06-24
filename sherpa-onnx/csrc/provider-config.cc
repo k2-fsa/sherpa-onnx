@@ -135,27 +135,27 @@ std::string TensorrtConfig::ToString() const {
   return os.str();
 }
 
-void ExecutionProviderConfig::Register(ParseOptions *po) {
-  po->Register("device_id", &device_id, "GPU device_id for CUDA and Trt EP");
+void ProviderConfig::Register(ParseOptions *po) {
+  po->Register("device", &device, "GPU device index for CUDA and Trt EP");
   po->Register("provider", &provider,
                "Specify a provider to use: cpu, cuda, coreml");
 }
 
-bool ExecutionProviderConfig::Validate() const {
+bool ProviderConfig::Validate() const {
 
-  if(device_id < 0) {
-    SHERPA_ONNX_LOGE("device_id: '%d' is invalid.",device_id);
+  if(device < 0) {
+    SHERPA_ONNX_LOGE("device: '%d' is invalid.",device);
     return false;
   }
 
   return true;
 }
 
-std::string ExecutionProviderConfig::ToString() const {
+std::string ProviderConfig::ToString() const {
   std::ostringstream os;
 
-  os << "ExecutionProviderConfig(";
-  os << "device_id=\"" << device_id << "\", ";
+  os << "ProviderConfig(";
+  os << "device=\"" << device << "\", ";
   os << "provider=\"" << provider << "\", "; 
   os << "cuda_config=\"" << cuda_config.ToString() << "\", ";
   os << "trt_config=\"" << trt_config.ToString() << ")";

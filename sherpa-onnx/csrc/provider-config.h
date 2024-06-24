@@ -13,7 +13,7 @@
 namespace sherpa_onnx {
 
 struct CudaConfig {
-  int32_t cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
+  uint32_t cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
 
   CudaConfig() = default;
   CudaConfig(const uint32_t &cudnn_conv_algo_search)
@@ -63,19 +63,19 @@ struct TensorrtConfig {
   std::string ToString() const;
 };
 
-struct ExecutionProviderConfig {
-  uint32_t device_id = 0;
-  // device_id only used for cuda and trt
+struct ProviderConfig {
+  uint32_t device = 0;
+  // device only used for cuda and trt
   std::string provider = "cpu";
   CudaConfig cuda_config;
   TensorrtConfig trt_config;
 
-  ExecutionProviderConfig() = default;
-  ExecutionProviderConfig(const uint32_t &device_id,
+  ProviderConfig() = default;
+  ProviderConfig(const uint32_t &device,
                               const std::string &provider,
                               CudaConfig &cuda_config,
                               TensorrtConfig &trt_config)
-      : device_id(device_id), provider(provider), cuda_config(cuda_config),
+      : device(device), provider(provider), cuda_config(cuda_config),
         trt_config(trt_config) {}
 
   void Register(ParseOptions *po);

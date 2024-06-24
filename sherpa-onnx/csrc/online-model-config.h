@@ -21,7 +21,7 @@ struct OnlineModelConfig {
   OnlineWenetCtcModelConfig wenet_ctc;
   OnlineZipformer2CtcModelConfig zipformer2_ctc;
   OnlineNeMoCtcModelConfig nemo_ctc;
-  ExecutionProviderConfig provider_config;
+  ProviderConfig provider_config;
   std::string tokens;
   int32_t num_threads = 1;
   int32_t warm_up = 0;
@@ -51,7 +51,7 @@ struct OnlineModelConfig {
                     const OnlineWenetCtcModelConfig &wenet_ctc,
                     const OnlineZipformer2CtcModelConfig &zipformer2_ctc,
                     const OnlineNeMoCtcModelConfig &nemo_ctc,
-                    const ExecutionProviderConfig &provider_config,
+                    const ProviderConfig &provider_config,
                     const std::string &tokens, int32_t num_threads,
                     int32_t warm_up, bool debug, const std::string &provider,
                     const std::string &model_type,

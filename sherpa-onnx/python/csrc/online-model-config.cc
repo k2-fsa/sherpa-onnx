@@ -24,7 +24,7 @@ void PybindOnlineModelConfig(py::module *m) {
   PybindOnlineWenetCtcModelConfig(m);
   PybindOnlineZipformer2CtcModelConfig(m);
   PybindOnlineNeMoCtcModelConfig(m);
-  PybindExecutionProviderConfig(m);
+  PybindProviderConfig(m);
 
   using PyClass = OnlineModelConfig;
   py::class_<PyClass>(*m, "OnlineModelConfig")
@@ -33,7 +33,7 @@ void PybindOnlineModelConfig(py::module *m) {
                     const OnlineWenetCtcModelConfig &,
                     const OnlineZipformer2CtcModelConfig &,
                     const OnlineNeMoCtcModelConfig &,
-                    const ExecutionProviderConfig &,
+                    const ProviderConfig &,
                     const std::string &, int32_t, int32_t,
                     bool, const std::string &, const std::string &,
                     const std::string &, const std::string &>(),
@@ -42,7 +42,7 @@ void PybindOnlineModelConfig(py::module *m) {
            py::arg("wenet_ctc") = OnlineWenetCtcModelConfig(),
            py::arg("zipformer2_ctc") = OnlineZipformer2CtcModelConfig(),
            py::arg("nemo_ctc") = OnlineNeMoCtcModelConfig(),
-           py::arg("provider_config") = ExecutionProviderConfig(),
+           py::arg("provider_config") = ProviderConfig(),
            py::arg("tokens"), py::arg("num_threads"), py::arg("warm_up") = 0,
            py::arg("debug") = false, py::arg("provider") = "cpu",
            py::arg("model_type") = "", py::arg("modeling_unit") = "",
