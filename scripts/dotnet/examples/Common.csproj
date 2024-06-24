@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>.net6</TargetFramework>
+    <RestoreSources>/tmp/packages;$(RestoreSources);https://api.nuget.org/v3/index.json</RestoreSources>
   </PropertyGroup>
 
   <ItemGroup>

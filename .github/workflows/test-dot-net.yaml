@@ -135,15 +135,6 @@ jobs:
         shell: bash
         run: |
           cp -v scripts/dotnet/examples/Common.csproj dotnet-examples/Common/
-          cp -v scripts/dotnet/examples/offline-tts.csproj dotnet-examples/offline-tts/
-          cp -v scripts/dotnet/examples/offline-decode-files.csproj dotnet-examples/offline-decode-files/
-          cp -v scripts/dotnet/examples/online-decode-files.csproj dotnet-examples/online-decode-files/
-          cp -v scripts/dotnet/examples/speech-recognition-from-microphone.csproj dotnet-examples/speech-recognition-from-microphone/
-          cp -v scripts/dotnet/examples/spoken-language-identification.csproj dotnet-examples/spoken-language-identification/
-          cp -v scripts/dotnet/examples/streaming-hlg-decoding.csproj dotnet-examples/streaming-hlg-decoding
-          cp -v scripts/dotnet/examples/speaker-identification.csproj dotnet-examples/speaker-identification
-          cp -v scripts/dotnet/examples/offline-punctuation.csproj dotnet-examples/offline-punctuation
-          cp -v scripts/dotnet/examples/vad-non-streaming-asr-paraformer.csproj dotnet-examples/vad-non-streaming-asr-paraformer
 
           ls -lh /tmp
 
