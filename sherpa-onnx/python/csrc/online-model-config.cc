@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-model-config.h"
+#include "sherpa-onnx/csrc/provider-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/python/csrc/online-nemo-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/online-paraformer-model-config.h"
@@ -23,6 +24,7 @@ void PybindOnlineModelConfig(py::module *m) {
   PybindOnlineWenetCtcModelConfig(m);
   PybindOnlineZipformer2CtcModelConfig(m);
   PybindOnlineNeMoCtcModelConfig(m);
+  PybindProviderconfig(m);
 
   using PyClass = OnlineModelConfig;
   py::class_<PyClass>(*m, "OnlineModelConfig")
@@ -30,16 +32,18 @@ void PybindOnlineModelConfig(py::module *m) {
                     const OnlineParaformerModelConfig &,
                     const OnlineWenetCtcModelConfig &,
                     const OnlineZipformer2CtcModelConfig &,
-                    const OnlineNeMoCtcModelConfig &, const std::string &,
-                    int32_t, int32_t, bool, const std::string &,
-                    const std::string &, const std::string &,
-                    const std::string &>(),
+                    const OnlineNeMoCtcModelConfig &,
+                    const ExecutionProviderConfig &,
+                    const std::string &, int32_t, int32_t,
+                    bool, const std::string &, const std::string &,
+                    const std::string &, const std::string &>(),
            py::arg("transducer") = OnlineTransducerModelConfig(),
            py::arg("paraformer") = OnlineParaformerModelConfig(),
            py::arg("wenet_ctc") = OnlineWenetCtcModelConfig(),
            py::arg("zipformer2_ctc") = OnlineZipformer2CtcModelConfig(),
-           py::arg("nemo_ctc") = OnlineNeMoCtcModelConfig(), py::arg("tokens"),
-           py::arg("num_threads"), py::arg("warm_up") = 0,
+           py::arg("nemo_ctc") = OnlineNeMoCtcModelConfig(),
+           py::arg("provider_config") = ExecutionProviderConfig(),
+           py::arg("tokens"), py::arg("num_threads"), py::arg("warm_up") = 0,
            py::arg("debug") = false, py::arg("provider") = "cpu",
            py::arg("model_type") = "", py::arg("modeling_unit") = "",
            py::arg("bpe_vocab") = "")
@@ -51,7 +55,6 @@ void PybindOnlineModelConfig(py::module *m) {
       .def_readwrite("tokens", &PyClass::tokens)
       .def_readwrite("num_threads", &PyClass::num_threads)
       .def_readwrite("debug", &PyClass::debug)
-      .def_readwrite("provider", &PyClass::provider)
       .def_readwrite("model_type", &PyClass::model_type)
       .def_readwrite("modeling_unit", &PyClass::modeling_unit)
       .def_readwrite("bpe_vocab", &PyClass::bpe_vocab)
