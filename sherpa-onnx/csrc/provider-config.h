@@ -1,6 +1,7 @@
-// sherpa-onnx/csrc/online-transducer-model-config.h
+// sherpa-onnx/csrc/provider-config.h
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2024  Uniphore (Author: Manickavela)
+
 #ifndef SHERPA_ONNX_CSRC_ONNXRT_EXECUTION_PROVIDER_CONFIG_H_
 #define SHERPA_ONNX_CSRC_ONNXRT_EXECUTION_PROVIDER_CONFIG_H_
 
@@ -55,7 +56,8 @@ struct TensorrtConfig {
       trt_engine_cache_enable(trt_engine_cache_enable),
       trt_timing_cache_enable(trt_timing_cache_enable),
       trt_engine_cache_path(trt_engine_cache_path),
-      trt_timing_cache_path(trt_timing_cache_path) {}
+      trt_timing_cache_path(trt_timing_cache_path,
+      trt_dump_subgraphs(trt_dump_subgraphs)) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

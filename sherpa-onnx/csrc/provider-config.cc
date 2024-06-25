@@ -1,6 +1,7 @@
-// sherpa-onnx/csrc/online-transducer-model-config.cc
+// sherpa-onnx/csrc/provider-config.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2024  Uniphore (Author: Manickavela)
+
 #include "sherpa-onnx/csrc/provider-config.h"
 
 #include <sstream>
@@ -110,23 +111,23 @@ std::string TensorrtConfig::ToString() const {
 
   os << "TensorrtConfig(";
   os << "trt_max_workspace_size=\"" << trt_max_workspace_size << "\", ";
-  os << "trt_max_partition_iterations=\"" 
+  os << "trt_max_partition_iterations=\""
       << trt_max_partition_iterations << "\", ";
   os << "trt_min_subgraph_size=\"" << trt_min_subgraph_size << "\", ";
-  os << "trt_fp16_enable=\"" 
+  os << "trt_fp16_enable=\""
       << (trt_fp16_enable? "True" : "False") << "\", ";
-  os << "trt_detailed_build_log=\"" 
+  os << "trt_detailed_build_log=\""
       << (trt_detailed_build_log? "True" : "False") << "\", ";
-  os << "trt_engine_cache_enable=\"" 
+  os << "trt_engine_cache_enable=\""
       << (trt_engine_cache_enable? "True" : "False") << "\", ";
-  os << "trt_engine_cache_path=\"" 
+  os << "trt_engine_cache_path=\""
       << trt_engine_cache_path.c_str() << "\", ";
-  os << "trt_timing_cache_enable=\"" 
+  os << "trt_timing_cache_enable=\""
       << (trt_timing_cache_enable? "True" : "False") << "\", ";
   os << "trt_timing_cache_path=\"" 
       << trt_timing_cache_path.c_str() << "\",";
-  os << "trt_dump_subgraphs=\"" 
-      << (trt_dump_subgraphs? "True" : "False") << "\" )"; 
+  os << "trt_dump_subgraphs=\""
+      << (trt_dump_subgraphs? "True" : "False") << "\" )";
   return os.str();
 }
 

@@ -69,6 +69,7 @@ int32_t main(int32_t argc, char *argv[]) {
   }
 
   config.Validate();
+
   asio::io_context io_conn;  // for network connections
   asio::io_context io_work;  // for neural network and decoding
 
