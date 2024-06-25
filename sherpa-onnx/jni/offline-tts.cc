@@ -187,8 +187,9 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
   SHERPA_ONNX_LOGE("string is: %s", p_text);
 
   std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
-      [env, callback](const float *samples, int32_t n, float /*progress*/) {
-        jclass cls = env->GetObjectClass(callback);
+      [env, callback](const float *samples, int32_t n,
+                      float /*progress*/) -> int {
+    jclass cls = env->GetObjectClass(callback);
 
 #if 0
         // this block is for debugging only
@@ -207,22 +208,20 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
         env->ReleaseStringUTFChars(classString, className);
 #endif
 
-        jmethodID mid =
-            env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
-        if (mid == nullptr) {
-          SHERPA_ONNX_LOGE("Failed to get the callback. Ignore it.");
-          return 1;
-        }
+    jmethodID mid = env->GetMethodID(cls, "invoke", "([F)Ljava/lang/Integer;");
+    if (mid == nullptr) {
+      SHERPA_ONNX_LOGE("Failed to get the callback. Ignore it.");
+      return 1;
+    }
 
-        jfloatArray samples_arr = env->NewFloatArray(n);
-        env->SetFloatArrayRegion(samples_arr, 0, n, samples);
+    jfloatArray samples_arr = env->NewFloatArray(n);
+    env->SetFloatArrayRegion(samples_arr, 0, n, samples);
 
-        jobject should_continue =
-            env->CallObjectMethod(callback, mid, samples_arr);
-        jclass jklass = env->GetObjectClass(should_continue);
-        jmethodID int_value_mid = env->GetMethodID(jklass, "intValue", "()I");
-        return env->CallIntMethod(should_continue, int_value_mid);
-      };
+    jobject should_continue = env->CallObjectMethod(callback, mid, samples_arr);
+    jclass jklass = env->GetObjectClass(should_continue);
+    jmethodID int_value_mid = env->GetMethodID(jklass, "intValue", "()I");
+    return env->CallIntMethod(should_continue, int_value_mid);
+  };
 
   auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
       p_text, sid, speed, callback_wrapper);

@@ -3,7 +3,7 @@ name: linux-jni
 on:
   push:
     branches:
-      - linux-jni
+      - jni
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
@@ -32,6 +32,30 @@ jobs:
           echo "pwd: $PWD"
           ls -lh
           du -h -d1 .
+
+      - name: Build jar
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          cd sherpa-onnx/java-api
+          make
+          ls -lh build/
+          cp build/sherpa-onnx.jar ../../sherpa-onnx-$SHERPA_ONNX_VERSION.jar
+          cd ../..
+          ls -lh *.jar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-jni-linux-jar
+          path: ./*.jar
+
+      - name: Release jar
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./*.jar
 
       - name: Build sherpa-onnx
         uses: addnab/docker-run-action@v3
@@ -78,6 +102,8 @@ jobs:
 
               ls -lh lib
               ls -lh bin
+              rm -rf ./install/pkgconfig
+              rm -rf ./install/share
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
@@ -99,9 +125,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: release-jni
-          path: install/*
-
+          name: release-jni-linux
+          path: build/install/*
 
       - name: Copy files
         shell: bash
@@ -142,6 +167,7 @@ jobs:
             mkdir -p jni
 
             cp -v ../sherpa-onnx-*.tar.bz2 ./jni
+            cp -v ../*.jar ./jni
 
             git status
             git lfs track "*.bz2"
@@ -159,3 +185,4 @@ jobs:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*.tar.bz2
+
