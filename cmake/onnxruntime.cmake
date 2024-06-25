@@ -136,8 +136,8 @@ if(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE)
   else()
     find_path(location_onnxruntime_header_dir onnxruntime_cxx_api.h
       PATHS
-        /usr/include
-        /usr/local/include
+        /usr/include/onnxruntime
+        /usr/local/include/onnxruntime
     )
   endif()
 
