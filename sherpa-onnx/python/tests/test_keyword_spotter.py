@@ -60,6 +60,9 @@ class TestKeywordSpotter(unittest.TestCase):
             tokens = (
                 f"{d}/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01/tokens.txt"
             )
+            bpe_vocab = (
+                f"{d}/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01/bpe.vocab"
+            )
             keywords_file = f"{d}/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01/test_wavs/test_keywords.txt"
             wave0 = f"{d}/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01/test_wavs/0.wav"
             wave1 = f"{d}/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01/test_wavs/1.wav"
@@ -74,6 +77,8 @@ class TestKeywordSpotter(unittest.TestCase):
                 tokens=tokens,
                 num_threads=1,
                 keywords_file=keywords_file,
+                modeling_unit="bpe",
+                bpe_vocab=bpe_vocab,
                 provider="cpu",
             )
             streams = []
@@ -119,6 +124,9 @@ class TestKeywordSpotter(unittest.TestCase):
             tokens = (
                 f"{d}/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/tokens.txt"
             )
+            lexicon = (
+                f"{d}/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/pinyin.dict"
+            )
             keywords_file = f"{d}/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/test_wavs/test_keywords.txt"
             wave0 = f"{d}/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/test_wavs/3.wav"
             wave1 = f"{d}/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/test_wavs/4.wav"
@@ -134,6 +142,8 @@ class TestKeywordSpotter(unittest.TestCase):
                 tokens=tokens,
                 num_threads=1,
                 keywords_file=keywords_file,
+                modeling_unit="ppinyin",
+                lexicon=lexicon,
                 provider="cpu",
             )
             streams = []

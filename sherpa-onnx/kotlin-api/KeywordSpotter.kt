@@ -109,6 +109,8 @@ fun getKwsModelConfig(type: Int): OnlineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer2",
+                modelingUnit = "ppinyin",
+                lexicon = "$modelDir/pinyin.dict",
             )
         }
 
@@ -122,6 +124,8 @@ fun getKwsModelConfig(type: Int): OnlineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "zipformer2",
+                modelingUnit = "bpe",
+                bpeVocab = "$modelDir/bpe.vocab",
             )
         }
 
