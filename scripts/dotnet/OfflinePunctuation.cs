@@ -16,7 +16,9 @@ namespace SherpaOnnx
 
         public String AddPunct(String text)
         {
-            IntPtr p = SherpaOfflinePunctuationAddPunct(_handle.Handle, text);
+            byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
+
+            IntPtr p = SherpaOfflinePunctuationAddPunct(_handle.Handle, utf8Bytes);
 
             string s = "";
             int length = 0;
@@ -77,7 +79,7 @@ namespace SherpaOnnx
         private static extern void SherpaOnnxDestroyOfflinePunctuation(IntPtr handle);
 
         [DllImport(Dll.Filename)]
-        private static extern IntPtr SherpaOfflinePunctuationAddPunct(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string text);
+        private static extern IntPtr SherpaOfflinePunctuationAddPunct(IntPtr handle, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Text);
 
         [DllImport(Dll.Filename)]
         private static extern void SherpaOfflinePunctuationFreeText(IntPtr p);

@@ -1,6 +1,7 @@
 ﻿/// Copyright (c)  2024.5 by 东风破
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace SherpaOnnx
 {
@@ -14,7 +15,8 @@ namespace SherpaOnnx
         public bool SaveToWaveFile(String filename)
         {
             Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
-            int status = SherpaOnnxWriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, filename);
+            byte[] utf8Filename = Encoding.UTF8.GetBytes(filename);
+            int status = SherpaOnnxWriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, utf8Filename);
             return status == 1;
         }
 
@@ -84,6 +86,6 @@ namespace SherpaOnnx
         private static extern void SherpaOnnxDestroyOfflineTtsGeneratedAudio(IntPtr handle);
 
         [DllImport(Dll.Filename)]
-        private static extern int SherpaOnnxWriteWave(IntPtr samples, int n, int sample_rate, [MarshalAs(UnmanagedType.LPStr)] string filename);
+        private static extern int SherpaOnnxWriteWave(IntPtr samples, int n, int sample_rate, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Filename);
     }
 }
