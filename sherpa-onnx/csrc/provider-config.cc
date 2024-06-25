@@ -102,11 +102,6 @@ bool TensorrtConfig::Validate() const {
     return false;
   }
 
-  // if(trt_max_workspace_size > 0) {
-  //   SHERPA_ONNX_LOGE("trt_max_workspace_size: '%d' is not valid.",);
-  //   return false;
-  // }
-
   return true;
 }
 

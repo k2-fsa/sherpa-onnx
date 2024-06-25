@@ -32,8 +32,8 @@ struct TensorrtConfig {
   bool trt_fp16_enable = 1;
   bool trt_detailed_build_log = 0;
   bool trt_engine_cache_enable = 1;
-  std::string trt_engine_cache_path = ".";
   bool trt_timing_cache_enable = 1;
+  std::string trt_engine_cache_path = ".";
   std::string trt_timing_cache_path = ".";
   bool trt_dump_subgraphs = 0;
 
@@ -44,8 +44,8 @@ struct TensorrtConfig {
                 const bool &trt_fp16_enable,
                 const bool &trt_detailed_build_log,
                 const bool &trt_engine_cache_enable,
-                const std::string &trt_engine_cache_path,
                 const bool &trt_timing_cache_enable,
+                const std::string &trt_engine_cache_path,
                 const std::string &trt_timing_cache_path)
       : trt_max_workspace_size(trt_max_workspace_size),
       trt_max_partition_iterations(trt_max_partition_iterations),
@@ -53,8 +53,8 @@ struct TensorrtConfig {
       trt_fp16_enable(trt_fp16_enable),
       trt_detailed_build_log(trt_detailed_build_log),
       trt_engine_cache_enable(trt_engine_cache_enable),
-      trt_engine_cache_path(trt_engine_cache_path),
       trt_timing_cache_enable(trt_timing_cache_enable),
+      trt_engine_cache_path(trt_engine_cache_path),
       trt_timing_cache_path(trt_timing_cache_path) {}
 
   void Register(ParseOptions *po);
@@ -72,10 +72,11 @@ struct ProviderConfig {
 
   ProviderConfig() = default;
   ProviderConfig(const uint32_t &device,
-                              const std::string &provider,
-                              CudaConfig &cuda_config,
-                              TensorrtConfig &trt_config)
-      : device(device), provider(provider), cuda_config(cuda_config),
+                const std::string &provider,
+                CudaConfig &cuda_config,
+                TensorrtConfig &trt_config)
+      : device(device), provider(provider),
+        cuda_config(cuda_config),
         trt_config(trt_config) {}
 
   void Register(ParseOptions *po);
