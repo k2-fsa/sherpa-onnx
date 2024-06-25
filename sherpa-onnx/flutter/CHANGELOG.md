@@ -1,3 +1,7 @@
+## 1.10.2
+
+* Fix passing C# string to C++
+
 ## 1.10.1
 
 * Enable to stop TTS generation
