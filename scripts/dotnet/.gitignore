@@ -1,5 +1,6 @@
 all
-macos
+macos-arm64
+macos-x64
 linux
 windows
 windows-x64
