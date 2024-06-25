@@ -71,7 +71,7 @@ jobs:
               mkdir build
               cd build
 
-              cmake -DSHERPA_ONNX_ENABLE_TTS=ON -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DSHERPA_ONNX_ENABLE_JNI=ON ..
+              cmake -DSHERPA_ONNX_ENABLE_TTS=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DSHERPA_ONNX_ENABLE_JNI=ON ..
 
               make -j2
               make install
@@ -153,7 +153,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
 
       - name: Release pre-compiled binaries and libs for linux x64
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
