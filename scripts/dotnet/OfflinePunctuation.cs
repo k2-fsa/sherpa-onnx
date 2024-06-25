@@ -16,7 +16,6 @@ namespace SherpaOnnx
 
         public String AddPunct(String text)
         {
-            Console.WriteLine("hello");
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
 
             IntPtr p = SherpaOfflinePunctuationAddPunct(_handle.Handle, utf8Bytes);

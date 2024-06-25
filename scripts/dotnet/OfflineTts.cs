@@ -1,6 +1,7 @@
 ﻿/// Copyright (c)  2024.5 by 东风破
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace SherpaOnnx
 {
@@ -17,13 +18,15 @@ namespace SherpaOnnx
 
         public OfflineTtsGeneratedAudio Generate(String text, float speed, int speakerId)
         {
-            IntPtr p = SherpaOnnxOfflineTtsGenerate(_handle.Handle, text, speakerId, speed);
+            byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
+            IntPtr p = SherpaOnnxOfflineTtsGenerate(_handle.Handle, utf8Bytes, speakerId, speed);
             return new OfflineTtsGeneratedAudio(p);
         }
 
         public OfflineTtsGeneratedAudio GenerateWithCallback(String text, float speed, int speakerId, OfflineTtsCallback callback)
         {
-            IntPtr p = SherpaOnnxOfflineTtsGenerateWithCallback(_handle.Handle, text, speakerId, speed, callback);
+            byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
+            IntPtr p = SherpaOnnxOfflineTtsGenerateWithCallback(_handle.Handle, utf8Bytes, speakerId, speed, callback);
             return new OfflineTtsGeneratedAudio(p);
         }
 
@@ -79,9 +82,9 @@ namespace SherpaOnnx
         private static extern int SherpaOnnxOfflineTtsNumSpeakers(IntPtr handle);
 
         [DllImport(Dll.Filename)]
-        private static extern IntPtr SherpaOnnxOfflineTtsGenerate(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string text, int sid, float speed);
+        private static extern IntPtr SherpaOnnxOfflineTtsGenerate(IntPtr handle, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Text, int sid, float speed);
 
         [DllImport(Dll.Filename, CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr SherpaOnnxOfflineTtsGenerateWithCallback(IntPtr handle, [MarshalAs(UnmanagedType.LPStr)] string text, int sid, float speed, OfflineTtsCallback callback);
+        private static extern IntPtr SherpaOnnxOfflineTtsGenerateWithCallback(IntPtr handle, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Text, int sid, float speed, OfflineTtsCallback callback);
     }
 }
