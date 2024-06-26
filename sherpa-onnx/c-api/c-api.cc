@@ -222,7 +222,7 @@ const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     }
     r->tokens_arr = tokens_temp;
 
-    if (!result.timestamps.empty()) {
+    if (!result.timestamps.empty() && result.timestamps.size() == r->count) {
       r->timestamps = new float[r->count];
       std::copy(result.timestamps.begin(), result.timestamps.end(),
                 r->timestamps);
@@ -490,7 +490,7 @@ const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
     }
     r->tokens_arr = tokens_temp;
 
-    if (!result.timestamps.empty()) {
+    if (!result.timestamps.empty() && result.timestamps.size() == r->count) {
       r->timestamps = new float[r->count];
       std::copy(result.timestamps.begin(), result.timestamps.end(),
                 r->timestamps);
