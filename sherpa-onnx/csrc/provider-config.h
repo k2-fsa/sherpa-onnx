@@ -14,10 +14,10 @@
 namespace sherpa_onnx {
 
 struct CudaConfig {
-  uint32_t cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
+  int32_t cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
 
   CudaConfig() = default;
-  explicit CudaConfig(uint32_t cudnn_conv_algo_search)
+  explicit CudaConfig(int32_t cudnn_conv_algo_search)
       : cudnn_conv_algo_search(cudnn_conv_algo_search) {}
 
   void Register(ParseOptions *po);
@@ -27,9 +27,9 @@ struct CudaConfig {
 };
 
 struct TensorrtConfig {
-  uint32_t trt_max_workspace_size = 2147483648;
-  uint32_t trt_max_partition_iterations = 10;
-  uint32_t trt_min_subgraph_size = 5;
+  int32_t trt_max_workspace_size = 2147483648;
+  int32_t trt_max_partition_iterations = 10;
+  int32_t trt_min_subgraph_size = 5;
   bool trt_fp16_enable = 1;
   bool trt_detailed_build_log = 0;
   bool trt_engine_cache_enable = 1;
@@ -39,9 +39,9 @@ struct TensorrtConfig {
   bool trt_dump_subgraphs = 0;
 
   TensorrtConfig() = default;
-  TensorrtConfig(uint32_t trt_max_workspace_size,
-                uint32_t trt_max_partition_iterations,
-                uint32_t trt_min_subgraph_size,
+  TensorrtConfig(int32_t trt_max_workspace_size,
+                int32_t trt_max_partition_iterations,
+                int32_t trt_min_subgraph_size,
                 bool trt_fp16_enable,
                 bool trt_detailed_build_log,
                 bool trt_engine_cache_enable,
@@ -70,14 +70,14 @@ struct ProviderConfig {
   TensorrtConfig trt_config;
   CudaConfig cuda_config;
   std::string provider = "cpu";
-  uint32_t device = 0;
+  int32_t device = 0;
   // device only used for cuda and trt
 
   ProviderConfig() = default;
   ProviderConfig(const TensorrtConfig &trt_config,
                 const CudaConfig &cuda_config,
                 const std::string &provider,
-                uint32_t device)
+                int32_t device)
       : device(device), provider(provider),
         cuda_config(cuda_config),
         trt_config(trt_config) {}

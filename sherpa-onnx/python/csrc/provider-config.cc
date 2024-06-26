@@ -16,7 +16,7 @@ void PybindProviderConfig(py::module *m) {
   py::class_<PyClass>(*m, "ProviderConfig")
       .def(py::init<const TensorrtConfig &,
           const CudaConfig &, const std::string,
-          uint32_t>(),
+          int32_t>(),
            py::arg("trt_config") = TensorrtConfig(),
            py::arg("cuda_config") = CudaConfig(),
            py::arg("provider") = "cpu",
