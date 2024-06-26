@@ -34,7 +34,7 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
 static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
     const std::string &provider_str,
     const ProviderConfig *provider_config = nullptr) {
-  Provider p = StringToProvider(std::move(provider_str));
+  Provider p = StringToProvider(provider_str);
 
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(num_threads);
@@ -86,7 +86,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
           std::to_string(trt_config.trt_min_subgraph_size);
       auto trt_fp16_enable =
           std::to_string(trt_config.trt_fp16_enable);
-      auto trt_detailed_build_log = 
+      auto trt_detailed_build_log =
           std::to_string(trt_config.trt_detailed_build_log);
       auto trt_engine_cache_enable =
           std::to_string(trt_config.trt_engine_cache_enable);

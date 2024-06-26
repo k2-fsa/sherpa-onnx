@@ -135,7 +135,7 @@ void ProviderConfig::Register(ParseOptions *po) {
 
 bool ProviderConfig::Validate() const {
   if (device < 0) {
-    SHERPA_ONNX_LOGE("device: '%d' is invalid.",device);
+    SHERPA_ONNX_LOGE("device: '%d' is invalid.", device);
     return false;
   }
   return true;

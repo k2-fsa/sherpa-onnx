@@ -3,17 +3,17 @@
 // Copyright (c)  2024  Uniphore (Author: Manickavela)
 
 
-#include "sherpa-onnx/csrc/provider-config.h"
+#include "sherpa-onnx/python/csrc/provider-config.h"
 
 #include <string>
 
-#include "sherpa-onnx/python/csrc/provider-config.h"
+#include "sherpa-onnx/csrc/provider-config.h"
 
 namespace sherpa_onnx {
 
-void PybindCudaConfig(py::module *m) {
-  using PyClass = PybindCudaConfig;
-  py::class_<PyClass>(*m, "PybindCudaConfig")
+static void PybindCudaConfig(py::module *m) {
+  using PyClass = CudaConfig;
+  py::class_<PyClass>(*m, "CudaConfig")
     .def(py::init<uint32_t cudnn_conv_algo_search>(),
            py::arg("cudnn_conv_algo_search") = 1)
       .def_readwrite("cudnn_conv_algo_search",
@@ -22,9 +22,9 @@ void PybindCudaConfig(py::module *m) {
       .def("validate", &PyClass::Validate);
 }
 
-void PybindTensorrtConfig(py::module *m) {
-  using PyClass = PybindTensorrtConfig;
-  py::class_<PyClass>(*m, "PybindTensorrtConfig")
+static void PybindTensorrtConfig(py::module *m) {
+  using PyClass = TensorrtConfig;
+  py::class_<PyClass>(*m, "TensorrtConfig")
     .def(py::init<uint32_t trt_max_workspace_size,
                   uint32_t trt_max_partition_iterations,
                   uint32_t trt_min_subgraph_size,
@@ -69,8 +69,10 @@ void PybindTensorrtConfig(py::module *m) {
       .def("validate", &PyClass::Validate);
 }
 
-
 void PybindProviderConfig(py::module *m) {
+  PybindCudaConfig(m);
+  PybindTensorrtConfig(m);
+
   using PyClass = ProviderConfig;
   py::class_<PyClass>(*m, "ProviderConfig")
       .def(py::init<const TensorrtConfig &, const CudaConfig &,
