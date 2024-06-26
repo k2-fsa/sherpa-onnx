@@ -30,6 +30,7 @@ set(srcs
   online-transducer-model-config.cc
   online-wenet-ctc-model-config.cc
   online-zipformer2-ctc-model-config.cc
+  provider-config.cc
   sherpa-onnx.cc
   silero-vad-model-config.cc
   speaker-embedding-extractor.cc
