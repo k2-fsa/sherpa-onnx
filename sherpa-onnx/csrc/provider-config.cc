@@ -19,7 +19,7 @@ void CudaConfig::Register(ParseOptions *po) {
 bool CudaConfig::Validate() const {
 
   if(cudnn_conv_algo_search > 0 && cudnn_conv_algo_search < 4) {
-    SHERPA_ONNX_LOGE("cudnn_conv_algo_search: '%d' is not valid option."
+    SHERPA_ONNX_LOGE("cudnn_conv_algo_search: '%d' is not a valid option."
                      "Options : [1,3]. Check OnnxRT docs",
                     cudnn_conv_algo_search);
     return false;
