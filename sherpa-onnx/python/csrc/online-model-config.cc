@@ -8,13 +8,13 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/online-model-config.h"
-#include "sherpa-onnx/csrc/provider-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/python/csrc/online-nemo-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/online-paraformer-model-config.h"
 #include "sherpa-onnx/python/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/python/csrc/online-wenet-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/online-zipformer2-ctc-model-config.h"
+#include "sherpa-onnx/python/csrc/provider-config.h"
 
 namespace sherpa_onnx {
 
@@ -36,7 +36,7 @@ void PybindOnlineModelConfig(py::module *m) {
                     const ProviderConfig &,
                     const std::string &, int32_t, int32_t,
                     bool, const std::string &, const std::string &,
-                    const std::string &, const std::string &>(),
+                    const std::string &>(),
            py::arg("transducer") = OnlineTransducerModelConfig(),
            py::arg("paraformer") = OnlineParaformerModelConfig(),
            py::arg("wenet_ctc") = OnlineWenetCtcModelConfig(),
@@ -44,16 +44,17 @@ void PybindOnlineModelConfig(py::module *m) {
            py::arg("nemo_ctc") = OnlineNeMoCtcModelConfig(),
            py::arg("provider_config") = ProviderConfig(),
            py::arg("tokens"), py::arg("num_threads"), py::arg("warm_up") = 0,
-           py::arg("debug") = false, py::arg("provider") = "cpu",
-           py::arg("model_type") = "", py::arg("modeling_unit") = "",
-           py::arg("bpe_vocab") = "")
+           py::arg("debug") = false, py::arg("model_type") = "",
+           py::arg("modeling_unit") = "", py::arg("bpe_vocab") = "")
       .def_readwrite("transducer", &PyClass::transducer)
       .def_readwrite("paraformer", &PyClass::paraformer)
       .def_readwrite("wenet_ctc", &PyClass::wenet_ctc)
       .def_readwrite("zipformer2_ctc", &PyClass::zipformer2_ctc)
       .def_readwrite("nemo_ctc", &PyClass::nemo_ctc)
+      .def_readwrite("provider_config", &PyClass::provider_config)
       .def_readwrite("tokens", &PyClass::tokens)
       .def_readwrite("num_threads", &PyClass::num_threads)
+      .def_readwrite("warm_up", &PyClass::warm_up)
       .def_readwrite("debug", &PyClass::debug)
       .def_readwrite("model_type", &PyClass::model_type)
       .def_readwrite("modeling_unit", &PyClass::modeling_unit)

@@ -67,17 +67,17 @@ struct TensorrtConfig {
 };
 
 struct ProviderConfig {
+  TensorrtConfig trt_config;
+  CudaConfig cuda_config;
+  std::string provider = "cpu";
   uint32_t device = 0;
   // device only used for cuda and trt
-  std::string provider = "cpu";
-  CudaConfig cuda_config;
-  TensorrtConfig trt_config;
 
   ProviderConfig() = default;
-  ProviderConfig(uint32_t device,
-                const std::string &provider,
+  ProviderConfig(const TensorrtConfig &trt_config,
                 const CudaConfig &cuda_config,
-                const TensorrtConfig &trt_config)
+                const std::string &provider,
+                uint32_t device)
       : device(device), provider(provider),
         cuda_config(cuda_config),
         trt_config(trt_config) {}
