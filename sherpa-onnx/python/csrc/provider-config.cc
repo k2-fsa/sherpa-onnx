@@ -1,4 +1,4 @@
-// sherpa-onnx/python/csrc/provider-config.h
+// sherpa-onnx/python/csrc/provider-config.cc
 //
 // Copyright (c)  2024  Uniphore (Author: Manickavela)
 
