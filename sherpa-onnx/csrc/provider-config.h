@@ -2,8 +2,8 @@
 //
 // Copyright (c)  2024  Uniphore (Author: Manickavela)
 
-#ifndef SHERPA_ONNX_CSRC_ONNXRT_EXECUTION_PROVIDER_CONFIG_H_
-#define SHERPA_ONNX_CSRC_ONNXRT_EXECUTION_PROVIDER_CONFIG_H_
+#ifndef SHERPA_ONNX_CSRC_PROVIDER_CONFIG_H_
+#define SHERPA_ONNX_CSRC_PROVIDER_CONFIG_H_
 
 #include <string>
 
@@ -17,7 +17,7 @@ struct CudaConfig {
   uint32_t cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
 
   CudaConfig() = default;
-  CudaConfig(uint32_t &cudnn_conv_algo_search)
+  CudaConfig(uint32_t cudnn_conv_algo_search)
       : cudnn_conv_algo_search(cudnn_conv_algo_search) {}
 
   void Register(ParseOptions *po);
@@ -76,8 +76,8 @@ struct ProviderConfig {
   ProviderConfig() = default;
   ProviderConfig(uint32_t device,
                 const std::string &provider,
-                CudaConfig &cuda_config,
-                TensorrtConfig &trt_config)
+                const CudaConfig &cuda_config,
+                const TensorrtConfig &trt_config)
       : device(device), provider(provider),
         cuda_config(cuda_config),
         trt_config(trt_config) {}
@@ -90,4 +90,4 @@ struct ProviderConfig {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_ONNXRT_EXECUTION_PROVIDER_CONFIG_H_
+#endif  // SHERPA_ONNX_CSRC_PROVIDER_CONFIG_H_
