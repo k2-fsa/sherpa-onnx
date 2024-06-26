@@ -77,6 +77,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
         const char *op_values;
       };
 
+      auto device_id = std::to_string(provider_config->device);
       auto trt_max_workspace_size =
           std::to_string(trt_config.trt_max_workspace_size);
       auto trt_max_partition_iterations =
@@ -95,8 +96,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
           std::to_string(trt_config.trt_dump_subgraphs);
 
       std::vector<TrtPairs> trt_options = {
-        {"device_id",
-          std::to_string(provider_config->device).c_str()},
+        {"device_id", device_id.c_str()},
         {"trt_max_workspace_size", trt_max_workspace_size.c_str()},
         {"trt_max_partition_iterations", trt_max_partition_iterations.c_str()},
         {"trt_min_subgraph_size", trt_min_subgraph_size.c_str()},
