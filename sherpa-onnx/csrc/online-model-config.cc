@@ -86,7 +86,7 @@ bool OnlineModelConfig::Validate() const {
   }
 
   if (!provider_config.Validate()) {
-    return provider_config.Validate();
+    return false;
   }
 
   return transducer.Validate();

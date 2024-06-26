@@ -17,7 +17,7 @@ struct CudaConfig {
   uint32_t cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
 
   CudaConfig() = default;
-  CudaConfig(const uint32_t &cudnn_conv_algo_search)
+  CudaConfig(uint32_t &cudnn_conv_algo_search)
       : cudnn_conv_algo_search(cudnn_conv_algo_search) {}
 
   void Register(ParseOptions *po);
@@ -39,15 +39,16 @@ struct TensorrtConfig {
   bool trt_dump_subgraphs = 0;
 
   TensorrtConfig() = default;
-  TensorrtConfig(const uint32_t &trt_max_workspace_size,
-                const uint32_t &trt_max_partition_iterations,
-                const uint32_t &trt_min_subgraph_size,
-                const bool &trt_fp16_enable,
-                const bool &trt_detailed_build_log,
-                const bool &trt_engine_cache_enable,
-                const bool &trt_timing_cache_enable,
+  TensorrtConfig(uint32_t trt_max_workspace_size,
+                uint32_t trt_max_partition_iterations,
+                uint32_t trt_min_subgraph_size,
+                bool trt_fp16_enable,
+                bool trt_detailed_build_log,
+                bool trt_engine_cache_enable,
+                bool trt_timing_cache_enable,
                 const std::string &trt_engine_cache_path,
-                const std::string &trt_timing_cache_path)
+                const std::string &trt_timing_cache_path,
+                bool trt_dump_subgraphs)
       : trt_max_workspace_size(trt_max_workspace_size),
       trt_max_partition_iterations(trt_max_partition_iterations),
       trt_min_subgraph_size(trt_min_subgraph_size),
@@ -56,8 +57,8 @@ struct TensorrtConfig {
       trt_engine_cache_enable(trt_engine_cache_enable),
       trt_timing_cache_enable(trt_timing_cache_enable),
       trt_engine_cache_path(trt_engine_cache_path),
-      trt_timing_cache_path(trt_timing_cache_path,
-      trt_dump_subgraphs(trt_dump_subgraphs)) {}
+      trt_timing_cache_path(trt_timing_cache_path),
+      trt_dump_subgraphs(trt_dump_subgraphs) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
@@ -73,7 +74,7 @@ struct ProviderConfig {
   TensorrtConfig trt_config;
 
   ProviderConfig() = default;
-  ProviderConfig(const uint32_t &device,
+  ProviderConfig(uint32_t device,
                 const std::string &provider,
                 CudaConfig &cuda_config,
                 TensorrtConfig &trt_config)

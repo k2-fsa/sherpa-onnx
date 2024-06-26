@@ -1,6 +1,6 @@
 // sherpa-onnx/python/csrc/provider-config.h
 //
-// Copyright (c)  2024 Uniphore Pvt Ltd(github.com/manickavela29)
+// Copyright (c)  2024  Uniphore (Author: Manickavela)
 
 #ifndef SHERPA_ONNX_PYTHON_CSRC_PROVIDER_CONFIG_H_
 #define SHERPA_ONNX_PYTHON_CSRC_PROVIDER_CONFIG_H_

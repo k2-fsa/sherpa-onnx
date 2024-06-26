@@ -32,7 +32,7 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
 }
 
 static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
-    std::string provider_str,
+    const std::string &provider_str,
     const ProviderConfig *provider_config=nullptr) {
   Provider p = StringToProvider(std::move(provider_str));
 
@@ -77,29 +77,36 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
         const char *op_values;
       };
 
+      auto trt_max_workspace_size =
+          std::to_string(trt_config.trt_max_workspace_size);
+      auto trt_max_partition_iterations =
+          std::to_string(trt_config.trt_max_partition_iterations);
+      auto trt_min_subgraph_size =
+          std::to_string(trt_config.trt_min_subgraph_size);
+      auto trt_fp16_enable = 
+          std::to_string(trt_config.trt_fp16_enable);
+      auto trt_detailed_build_log = 
+          std::to_string(trt_config.trt_detailed_build_log);
+      auto trt_engine_cache_enable =
+          std::to_string(trt_config.trt_engine_cache_enable);          
+      auto trt_timing_cache_enable =
+          std::to_string(trt_config.trt_timing_cache_enable);
+      auto trt_dump_subgraphs =
+          std::to_string(trt_config.trt_dump_subgraphs);
+
       std::vector<TrtPairs> trt_options = {
         {"device_id",
           std::to_string(provider_config->device).c_str()},
-        {"trt_max_workspace_size",
-          std::to_string(trt_config.trt_max_workspace_size).c_str()},
-        {"trt_max_partition_iterations",
-          std::to_string(trt_config.trt_max_partition_iterations).c_str()},
-        {"trt_min_subgraph_size",
-          std::to_string(trt_config.trt_min_subgraph_size).c_str()},
-        {"trt_fp16_enable",
-          std::to_string(trt_config.trt_fp16_enable).c_str()},
-        {"trt_detailed_build_log",
-          std::to_string(trt_config.trt_detailed_build_log).c_str()},
-        {"trt_engine_cache_enable",
-          std::to_string(trt_config.trt_engine_cache_enable).c_str()},
-        {"trt_engine_cache_path",
-          trt_config.trt_engine_cache_path.c_str()},
-        {"trt_timing_cache_enable",
-          std::to_string(trt_config.trt_timing_cache_enable).c_str()},
-        {"trt_timing_cache_path", 
-          trt_config.trt_timing_cache_path.c_str()},
-        {"trt_dump_subgraphs",
-          std::to_string(trt_config.trt_dump_subgraphs).c_str()}
+        {"trt_max_workspace_size", trt_max_workspace_size.c_str()},
+        {"trt_max_partition_iterations", trt_max_partition_iterations.c_str()},
+        {"trt_min_subgraph_size", trt_min_subgraph_size.c_str()},
+        {"trt_fp16_enable", trt_fp16_enable.c_str()},
+        {"trt_detailed_build_log",trt_detailed_build_log.c_str()},
+        {"trt_engine_cache_enable",trt_engine_cache_enable.c_str()},
+        {"trt_engine_cache_path", trt_config.trt_engine_cache_path.c_str()},
+        {"trt_timing_cache_enable", trt_timing_cache_enable.c_str()},
+        {"trt_timing_cache_path", trt_config.trt_timing_cache_path.c_str()},
+        {"trt_dump_subgraphs", trt_dump_subgraphs.c_str()}
       };
       // ToDo : Trt configs
       // "trt_int8_enable"

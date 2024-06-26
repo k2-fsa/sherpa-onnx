@@ -14,7 +14,7 @@ namespace sherpa_onnx {
 void PybindCudaConfig(py::module *m) {
   using PyClass = PybindCudaConfig;
   py::class_<PyClass>(*m, "PybindCudaConfig")
-    .def(py::init<const uint32_t cudnn_conv_algo_search &>(),
+    .def(py::init<uint32_t cudnn_conv_algo_search>(),
            py::arg("cudnn_conv_algo_search") = 1)
       .def_readwrite("cudnn_conv_algo_search",
           &PyClass::cudnn_conv_algo_search)
@@ -25,16 +25,16 @@ void PybindCudaConfig(py::module *m) {
 void PybindTensorrtConfig(py::module *m) {
   using PyClass = PybindTensorrtConfig;
   py::class_<PyClass>(*m, "PybindTensorrtConfig")
-    .def(py::init<const uint32_t &trt_max_workspace_size &,
-                  const uint32_t &trt_max_partition_iterations &,
-                  const uint32_t &trt_min_subgraph_size &,
-                  const bool &trt_fp16_enable &,
-                  const bool &trt_detailed_build_log &,
-                  const bool &trt_engine_cache_enable &,
-                  const bool &trt_timing_cache_enable &,
+    .def(py::init<uint32_t trt_max_workspace_size,
+                  uint32_t trt_max_partition_iterations,
+                  uint32_t trt_min_subgraph_size,
+                  bool trt_fp16_enable,
+                  bool trt_detailed_build_log,
+                  bool trt_engine_cache_enable,
+                  bool trt_timing_cache_enable,
                   const std::string &trt_engine_cache_path &,
                   const std::string &trt_timing_cache_path &,
-                  const bool trt_dump_subgraphs &>(),
+                  bool trt_dump_subgraphs>(),
            py::arg("trt_max_workspace_size") = 2147483648,
            py::arg("trt_max_partition_iterations")  = 10,
            py::arg("trt_min_subgraph_size") = 5,
@@ -74,14 +74,15 @@ void PybindProviderConfig(py::module *m) {
   using PyClass = ProviderConfig;
   py::class_<PyClass>(*m, "ProviderConfig")
       .def(py::init<const TensorrtConfig &, const CudaConfig &,
-                    const std::string &, const uint32_t &>(),
+                    const std::string &, uint32_t>(),
            py::arg("trt_config") = TensorrtConfig(),
            py::arg("cuda_config") = CudaConfig(),
            py::arg("provider") = "cpu",
            py::arg("device") = 0)
-      .def_readwrite("trt_config", &PyClass::Ten)
-      .def_readwrite("decoder", &PyClass::decoder)
-      .def_readwrite("joiner", &PyClass::joiner)
+      .def_readwrite("cuda_config", &PyClass::cuda_config)
+      .def_readwrite("trt_config", &PyClass::trt_config)
+      .def_readwrite("provider", &PyClass::provider)
+      .def_readwrite("device", &PyClass::device)
       .def("__str__", &PyClass::ToString)
       .def("validate", &PyClass::Validate);}
 
