@@ -184,7 +184,9 @@ else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
 endif()
 
-target_link_libraries(sherpa-onnx-core -lm)
+if(NOT WIN32)
+  target_link_libraries(sherpa-onnx-core -lm)
+endif()
 
 if(NOT BUILD_SHARED_LIBS AND APPLE)
   target_link_libraries(sherpa-onnx-core "-framework Foundation")

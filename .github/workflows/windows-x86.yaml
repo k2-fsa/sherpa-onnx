@@ -49,9 +49,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
-        shared_lib: [ON, OFF]
-        with_tts: [ON, OFF]
+        os: [windows-2019]
+        # shared_lib: [ON, OFF]
+        # with_tts: [ON, OFF]
+        shared_lib: [ON]
+        with_tts: [ON]
 
     steps:
       - uses: actions/checkout@v4
@@ -63,7 +65,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A Win32 -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }}  -D CMAKE_INSTALL_PREFIX=./install ..
+          cmake -A Win32 -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }}  -D CMAKE_INSTALL_PREFIX=./install -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
@@ -73,6 +75,11 @@ jobs:
           cmake --build . --config Release --target install -- -m:2
 
           ls -lh ./bin/Release/sherpa-onnx.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows-x86-${{ matrix.shared_lib }}-${{ matrix.with_tts }}
+          path: build/install/*
 
       - name: Test offline punctuation
         shell: bash
