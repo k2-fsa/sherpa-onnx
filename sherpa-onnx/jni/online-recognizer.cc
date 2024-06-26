@@ -198,7 +198,7 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(model_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.provider = p;
+  ans.model_config.provider_config.provider = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "modelType", "Ljava/lang/String;");

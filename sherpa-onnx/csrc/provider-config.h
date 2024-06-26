@@ -27,9 +27,9 @@ struct CudaConfig {
 };
 
 struct TensorrtConfig {
-  int32_t trt_max_workspace_size = 2147483648;
-  int32_t trt_max_partition_iterations = 10;
-  int32_t trt_min_subgraph_size = 5;
+  uint32_t trt_max_workspace_size = 2147483648;
+  uint32_t trt_max_partition_iterations = 10;
+  uint32_t trt_min_subgraph_size = 5;
   bool trt_fp16_enable = 1;
   bool trt_detailed_build_log = 0;
   bool trt_engine_cache_enable = 1;
@@ -39,9 +39,9 @@ struct TensorrtConfig {
   bool trt_dump_subgraphs = 0;
 
   TensorrtConfig() = default;
-  TensorrtConfig(int32_t trt_max_workspace_size,
-                int32_t trt_max_partition_iterations,
-                int32_t trt_min_subgraph_size,
+  TensorrtConfig(uint32_t trt_max_workspace_size,
+                uint32_t trt_max_partition_iterations,
+                uint32_t trt_min_subgraph_size,
                 bool trt_fp16_enable,
                 bool trt_detailed_build_log,
                 bool trt_engine_cache_enable,
