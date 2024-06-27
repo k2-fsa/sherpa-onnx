@@ -74,6 +74,11 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows-x86-${{ matrix.shared_lib }}-${{ matrix.with_tts }}
+          path: build/install/*
+
       - name: Test offline punctuation
         shell: bash
         run: |

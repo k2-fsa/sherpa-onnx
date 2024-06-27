@@ -134,6 +134,7 @@ def main():
     process_linux(s)
     process_windows(s, "x64")
     process_windows(s, "x86")
+    process_windows(s, "arm64")
 
     s = read_proj_file("./sherpa-onnx.csproj.in")
     d = get_dict()

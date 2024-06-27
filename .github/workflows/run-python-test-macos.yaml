@@ -44,17 +44,17 @@ jobs:
           - os: macos-11
             python-version: "3.7"
 
-          - os: macos-12
+          - os: macos-13
             python-version: "3.8"
 
           - os: macos-13
             python-version: "3.9"
-          - os: macos-13
+          - os: macos-14
             python-version: "3.10"
-          - os: macos-13
+          - os: macos-14
             python-version: "3.11"
 
-          - os: macos-14
+          - os: macos-latest
             python-version: "3.12"
 
     steps:
@@ -90,7 +90,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
-          python3 -m pip install --verbose .
+          python3 setup.py install
 
       - name: Test sherpa-onnx
         shell: bash

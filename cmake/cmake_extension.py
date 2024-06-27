@@ -146,6 +146,7 @@ class BuildExtension(build_ext):
         extra_cmake_args += " -DBUILD_ESPEAK_NG_EXE=OFF "
         extra_cmake_args += " -DBUILD_ESPEAK_NG_TESTS=OFF "
 
+        extra_cmake_args += " -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_CHECK=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PYTHON=ON "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_PORTAUDIO=ON "

@@ -11,8 +11,103 @@ permissions:
   contents: read
 
 jobs:
+  build-libs:
+    name: ${{ matrix.os }} ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019]
+        arch: [x64, x86, arm64]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          arch=${{ matrix.arch }}
+          opts=""
+          if [ $arch == x86 ]; then
+            opts="-A Win32"
+          elif [ $arch == arm64 ]; then
+            opts="-A ARM64"
+          fi
+
+          mkdir build
+          cd build
+          cmake \
+            $opts \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF  \
+            -DSHERPA_ONNX_ENABLE_BINARY=ON \
+            ..
+
+          cmake --build . --target install --config Release
+          rm -rf install/pkgconfig
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ matrix.arch }}
+          path: ./build/install/lib/
+
+      - name: Create tar file
+        shell: bash
+        run: |
+          arch=${{ matrix.arch }}
+
+          cd build
+
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ../CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-$SHERPA_ONNX_VERSION-win-$arch
+          mv install/lib $dst
+          tar cjvf $dst.tar.bz2 $dst
+          ls -lh *.tar.bz2
+          mv *.tar.bz2 ../
+
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            mkdir -p windows-for-dotnet
+
+            cp -v ../sherpa-onnx-*.tar.bz2 ./windows-for-dotnet
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+
+            git commit -m "add more files"
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+            rm -rf huggingface
+
   release-nuget-package:
     runs-on: ${{ matrix.os }}
+    needs: [build-libs]
     strategy:
       fail-fast: false
       matrix:
@@ -30,8 +125,43 @@ jobs:
             6.0.x
             7.0.x
 
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip Jinja2
+
+      - name: Retrieve artifact from windows x64
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x64
+          path: /tmp/windows-x64
+
+      - name: Retrieve artifact from windows x86
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x86
+          path: /tmp/windows-x86
+
+      - name: Retrieve artifact from windows arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-arm64
+          path: /tmp/windows-arm64
+
       - name: Check dotnet
         run: dotnet --info
+
+      - name: Build
+        shell: bash
+        run: |
+          sudo apt-get install -y tree
+          ls -lh /tmp/
+
+          tree /tmp/windows*
+          echo "----"
+
+          rm -v /tmp/windows*/*.lib
+          tree /tmp/windows*
 
       - name: Build
         shell: bash

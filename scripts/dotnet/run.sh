@@ -24,7 +24,7 @@ export src_dir
 mkdir -p $src_dir
 pushd $src_dir
 
-mkdir -p linux macos-x64 macos-arm64 windows-x64 windows-x86
+mkdir -p linux macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64
 
 linux_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 linux_wheel=$src_dir/$linux_wheel_filename
@@ -41,6 +41,9 @@ windows_x64_wheel=$src_dir/$windows_x64_wheel_filename
 windows_x86_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win32.whl
 windows_x86_wheel=$src_dir/$windows_x86_wheel_filename
 
+windows_arm64_wheel_filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-arm64.tar.bz2
+windows_arm64_wheel=$src_dir/$windows_arm64_wheel_filename
+
 if [ ! -f $src_dir/linux/libsherpa-onnx-core.so ]; then
   echo "---linux x86_64---"
   cd linux
@@ -54,9 +57,9 @@ if [ ! -f $src_dir/linux/libsherpa-onnx-core.so ]; then
   unzip $linux_wheel_filename
   cp -v sherpa_onnx/lib/*.so* ../
   cd ..
-  rm -v libpiper_phonemize.so libpiper_phonemize.so.1.2.0
-  rm -v libonnxruntime.so
-  rm -v libcargs.so
+  rm -fv libpiper_phonemize.so libpiper_phonemize.so.1.2.0
+  rm -fv libonnxruntime.so
+  rm -fv libcargs.so
   rm -rf wheel
   ls -lh
   cd ..
@@ -77,9 +80,9 @@ if [ ! -f $src_dir/macos-x64/libsherpa-onnx-core.dylib ]; then
 
   cd ..
 
-  rm -v libcargs.dylib
-  rm -v libonnxruntime.dylib
-  rm -v libpiper_phonemize.1.2.0.dylib libpiper_phonemize.dylib
+  rm -fv libcargs.dylib
+  rm -fv libonnxruntime.dylib
+  rm -fv libpiper_phonemize.1.2.0.dylib libpiper_phonemize.dylib
   rm -rf wheel
   ls -lh
   cd ..
@@ -100,9 +103,9 @@ if [ ! -f $src_dir/macos-arm64/libsherpa-onnx-core.dylib ]; then
 
   cd ..
 
-  rm -v libcargs.dylib
-  rm -v libonnxruntime.dylib
-  rm -v libpiper_phonemize.1.2.0.dylib libpiper_phonemize.dylib
+  rm -fv libcargs.dylib
+  rm -fv libonnxruntime.dylib
+  rm -fv libpiper_phonemize.1.2.0.dylib libpiper_phonemize.dylib
   rm -rf wheel
   ls -lh
   cd ..
@@ -146,9 +149,28 @@ if [ ! -f $src_dir/windows-x86/sherpa-onnx-core.dll ]; then
   cd ..
 fi
 
+if [ ! -f $src_dir/windows-arm64/sherpa-onnx-core.dll ]; then
+  echo "---windows arm64---"
+  cd windows-arm64
+  mkdir -p wheel
+  cd wheel
+  if [ -f $windows_arm64_wheel ]; then
+    cp -v $windows_arm64_wheel .
+  else
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-libs/resolve/main/windows-for-dotnet/$windows_arm64_wheel_filename
+  fi
+  unzip $windows_arm64_wheel_filename
+  cp -v sherpa-onnx-${SHERPA_ONNX_VERSION}-win-arm64/*dll ../
+  cd ..
+
+  rm -rf wheel
+  ls -lh
+  cd ..
+fi
+
 popd
 
-mkdir -p macos-x64 macos-arm64 linux windows-x64 windows-x86 all
+mkdir -p macos-x64 macos-arm64 linux windows-x64 windows-x86 windows-arm64 all
 
 cp ./*.cs all
 
@@ -175,6 +197,11 @@ dotnet pack -c Release -o ../packages
 popd
 
 pushd windows-x86
+dotnet build -c Release
+dotnet pack -c Release -o ../packages
+popd
+
+pushd windows-arm64
 dotnet build -c Release
 dotnet pack -c Release -o ../packages
 popd

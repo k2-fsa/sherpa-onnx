@@ -22,20 +22,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
-        python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
+        os: [windows-2019]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
 
-      # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
-      # for a list of versions
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
-        env:
-          CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_SKIP: "cp27-* cp35-* *-win32 pp* *-musllinux*"
-          CIBW_BUILD_VERBOSITY: 3
+        shell: bash
+        run: |
+          pip install setuptools wheel
+
+          python3 setup.py bdist_wheel
+
+          ls -lh ./dist/
+
+          mv dist wheelhouse
 
       - name: Display wheels
         shell: bash
@@ -48,40 +55,9 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface
-        if: matrix.python-version == 'cp38'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
-        with:
-          max_attempts: 20
-          timeout_seconds: 200
-          shell: bash
-          command: |
-            git config --global user.email "csukuangfj@gmail.com"
-            git config --global user.name "Fangjun Kuang"
-
-            rm -rf huggingface
-            export GIT_LFS_SKIP_SMUDGE=1
-            export GIT_CLONE_PROTECTION_ACTIVE=false
-
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
-            cd huggingface
-            git fetch
-            git pull
-            git merge -m "merge remote" --ff origin main
-
-            cp -v ../wheelhouse/*.whl .
-
-            git status
-            git add .
-            git commit -m "add more wheels"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
-
-      - name: Publish to huggingface
-        if: matrix.python-version == 'cp38'
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        uses: nick-fields/retry@v2
         with:
           max_attempts: 20
           timeout_seconds: 200
