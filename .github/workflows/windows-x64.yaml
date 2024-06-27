@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2019]
+        os: [windows-latest]
         shared_lib: [ON, OFF]
         with_tts: [ON, OFF]
 
