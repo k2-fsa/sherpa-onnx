@@ -77,7 +77,7 @@ namespace SherpaOnnx
                 }
                 else
                 {
-                    _timestamps = Array.Empty<float>();
+                    _timestamps = new float[] {};
                 }
             }
         }
