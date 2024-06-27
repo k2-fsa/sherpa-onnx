@@ -50,10 +50,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-2019]
-        # shared_lib: [ON, OFF]
-        # with_tts: [ON, OFF]
-        shared_lib: [ON]
-        with_tts: [ON]
+        shared_lib: [ON, OFF]
+        with_tts: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -65,7 +63,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A Win32 -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }}  -D CMAKE_INSTALL_PREFIX=./install -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF ..
+          cmake -A Win32 -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }}  -D CMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
