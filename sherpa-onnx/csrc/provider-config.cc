@@ -17,7 +17,7 @@ void CudaConfig::Register(ParseOptions *po) {
 }
 
 bool CudaConfig::Validate() const {
-  if (cudnn_conv_algo_search < 1 && cudnn_conv_algo_search > 3) {
+  if (cudnn_conv_algo_search < 1 || cudnn_conv_algo_search > 3) {
     SHERPA_ONNX_LOGE("cudnn_conv_algo_search: '%d' is not a valid option."
                      "Options : [1,3]. Check OnnxRT docs",
                     cudnn_conv_algo_search);
@@ -30,7 +30,7 @@ std::string CudaConfig::ToString() const {
   std::ostringstream os;
 
   os << "CudaConfig(";
-  os << "cudnn_conv_algo_search=\"" << cudnn_conv_algo_search << ")";
+  os << "cudnn_conv_algo_search=" << cudnn_conv_algo_search << ")";
 
   return os.str();
 }
@@ -60,7 +60,7 @@ void TensorrtConfig::Register(ParseOptions *po) {
 
 bool TensorrtConfig::Validate() const {
   if (trt_max_workspace_size > 0) {
-    SHERPA_ONNX_LOGE("trt_max_workspace_size: '%d' is not valid.",
+    SHERPA_ONNX_LOGE("trt_max_workspace_size: '%u' is not valid.",
         trt_max_workspace_size);
     return false;
   }
