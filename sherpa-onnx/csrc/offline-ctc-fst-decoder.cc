@@ -88,12 +88,18 @@ static OfflineCtcDecoderResult DecodeOne(kaldi_decoder::FasterDecoder *decoder,
   auto cur_state = decoded.Start();
 
   int32_t blank_id = 0;
+  int32_t prev = -1;
+  int32_t t = 0;
 
-  for (int32_t t = 0, prev = -1; decoded.NumArcs(cur_state) == 1; ++t) {
+  for (; decoded.NumArcs(cur_state) == 1; ++t) {
     fst::ArcIterator<fst::Fst<fst::LatticeArc>> iter(decoded, cur_state);
     const auto &arc = iter.Value();
 
     cur_state = arc.nextstate;
+
+    if (prev != -1 && prev != 0 && prev != blank_id + 1 && arc.ilabel != prev) {
+      r.stop_timestamps.push_back(t);
+    }
 
     if (arc.ilabel == prev) {
       continue;
@@ -110,10 +116,19 @@ static OfflineCtcDecoderResult DecodeOne(kaldi_decoder::FasterDecoder *decoder,
     r.tokens.push_back(arc.ilabel - 1);
     if (arc.olabel != 0) {
       r.words.push_back(arc.olabel);
+      r.word_start_timestamps.push_back(t);
     }
 
     r.timestamps.push_back(t);
     prev = arc.ilabel;
+  }
+
+  if (r.timestamps.size() != r.stop_timestamps.size()) {
+    r.stop_timestamps.push_back(t);
+  }
+
+  if (r.timestamps.size() != r.stop_timestamps.size()) {
+    SHERPA_ONNX_LOGE("something bad happened");
   }
 
   return r;

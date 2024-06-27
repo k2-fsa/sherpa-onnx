@@ -29,9 +29,10 @@ std::vector<OfflineCtcDecoderResult> OfflineCtcGreedySearchDecoder::Decode(
         log_probs.GetTensorData<float>() + b * num_frames * vocab_size;
 
     OfflineCtcDecoderResult r;
-    int64_t prev_id = -1;
+    int32_t prev_id = -1;
+    int32_t t = 0;
 
-    for (int32_t t = 0; t != static_cast<int32_t>(p_log_probs_length[b]); ++t) {
+    for (; t != static_cast<int32_t>(p_log_probs_length[b]); ++t) {
       auto y = static_cast<int64_t>(std::distance(
           static_cast<const float *>(p_log_probs),
           std::max_element(
@@ -39,12 +40,24 @@ std::vector<OfflineCtcDecoderResult> OfflineCtcGreedySearchDecoder::Decode(
               static_cast<const float *>(p_log_probs) + vocab_size)));
       p_log_probs += vocab_size;
 
+      if (prev_id != -1 && prev_id != blank_id_ && y != prev_id) {
+        r.stop_timestamps.push_back(t);
+      }
+
       if (y != blank_id_ && y != prev_id) {
         r.tokens.push_back(y);
         r.timestamps.push_back(t);
       }
       prev_id = y;
     }  // for (int32_t t = 0; ...)
+
+    if (r.timestamps.size() != r.stop_timestamps.size()) {
+      r.stop_timestamps.push_back(t);
+    }
+
+    if (r.timestamps.size() != r.stop_timestamps.size()) {
+      SHERPA_ONNX_LOGE("something bad happened");
+    }
 
     ans.push_back(std::move(r));
   }
