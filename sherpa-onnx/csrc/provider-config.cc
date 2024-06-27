@@ -37,40 +37,40 @@ std::string CudaConfig::ToString() const {
 
 void TensorrtConfig::Register(ParseOptions *po) {
   po->Register("trt-max-workspace-size", &trt_max_workspace_size,
-              "");
+              "Set TensorRT EP GPU memory usage limit.");
   po->Register("trt-max-partition-iterations", &trt_max_partition_iterations,
-              "");
-  po->Register("trt-min-subgraph-size ", &trt_min_subgraph_size,
-              "");
+              "Limit partitioning iterations for model conversion.");
+  po->Register("trt-min-subgraph-size", &trt_min_subgraph_size,
+              "Set minimum size for subgraphs in partitioning.");
   po->Register("trt-fp16-enable", &trt_fp16_enable,
-              "true to enable fp16");
+              "Enable FP16 precision for faster performance.");
   po->Register("trt-detailed-build-log", &trt_detailed_build_log,
-              "true to print TensorRT build logs");
+              "Enable detailed logging of build steps.");
   po->Register("trt-engine-cache-enable", &trt_engine_cache_enable,
-              "true to enable engine caching");
+              "Enable caching of TensorRT engines.");
   po->Register("trt-engine-cache-path", &trt_engine_cache_path,
-              "");
+              "Set path to store cached TensorRT engines.");
   po->Register("trt-timing-cache-enable", &trt_timing_cache_enable,
-              "true to enable timing cache");
+              "Enable use of timing cache to speed up builds.");
   po->Register("trt-timing-cache-path", &trt_timing_cache_path,
-              "");
+              "Set path for storing timing cache.");
   po->Register("trt-dump-subgraphs", &trt_dump_subgraphs,
-              "true to dump subgraphs");
+              "Dump optimized subgraphs for debugging.");
 }
 
 bool TensorrtConfig::Validate() const {
-  if (trt_max_workspace_size > 0) {
+  if (trt_max_workspace_size < 0) {
     SHERPA_ONNX_LOGE("trt_max_workspace_size: '%u' is not valid.",
         trt_max_workspace_size);
     return false;
   }
-  if (trt_max_partition_iterations > 0) {
-    SHERPA_ONNX_LOGE("trt_max_partition_iterations: '%d' is not valid.",
+  if (trt_max_partition_iterations < 0) {
+    SHERPA_ONNX_LOGE("trt_max_partition_iterations: '%u' is not valid.",
         trt_max_partition_iterations);
     return false;
   }
-  if (trt_min_subgraph_size > 0) {
-    SHERPA_ONNX_LOGE("trt_min_subgraph_size: '%d' is not valid.",
+  if (trt_min_subgraph_size < 0) {
+    SHERPA_ONNX_LOGE("trt_min_subgraph_size: '%u' is not valid.",
         trt_min_subgraph_size);
     return false;
   }
@@ -128,6 +128,9 @@ std::string TensorrtConfig::ToString() const {
 }
 
 void ProviderConfig::Register(ParseOptions *po) {
+  cuda_config.Register(po);
+  trt_config.Register(po);
+
   po->Register("device", &device, "GPU device index for CUDA and Trt EP");
   po->Register("provider", &provider,
                "Specify a provider to use: cpu, cuda, coreml");
