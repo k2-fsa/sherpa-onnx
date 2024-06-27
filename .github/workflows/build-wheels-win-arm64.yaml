@@ -1,9 +1,10 @@
-name: build-wheels-win64
+name: build-wheels-win-arm64
 
 on:
   push:
     branches:
       - wheel
+      - fix-ci
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
@@ -16,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  build_wheels_win64:
+  build_wheels_win_arm64:
     name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -37,6 +38,8 @@ jobs:
         shell: bash
         run: |
           pip install setuptools wheel
+
+          export SHERPA_ONNX_CMAKE_ARGS="-A ARM64"
 
           python3 setup.py bdist_wheel
 

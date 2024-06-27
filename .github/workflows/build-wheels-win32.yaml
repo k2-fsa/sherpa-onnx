@@ -22,21 +22,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
-        python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
+        os: [windows-2019]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
 
-      # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
-      # for a list of versions
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
-        env:
-          CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-A Win32"
-          CIBW_BUILD: "${{ matrix.python-version}}-* "
-          CIBW_SKIP: "*-win_amd64"
-          CIBW_BUILD_VERBOSITY: 3
+        shell: bash
+        run: |
+          pip install setuptools wheel
+          python3 setup.py bdist_wheel
+
+          mv dist wheelhouse
+          ls -lh ./wheelhouse/
 
       - name: Display wheels
         shell: bash
@@ -49,7 +48,6 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface
-        if: matrix.python-version == 'cp38'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
