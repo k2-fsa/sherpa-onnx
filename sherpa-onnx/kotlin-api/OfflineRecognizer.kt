@@ -171,7 +171,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     joiner = "$modelDir/joiner-epoch-30-avg-4.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
-                modelType = "zipformer",
+                modelType = "transducer",
             )
         }
 
@@ -209,7 +209,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     joiner = "$modelDir/joiner-epoch-12-avg-4.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
-                modelType = "zipformer",
+                modelType = "transducer",
             )
         }
 
@@ -222,7 +222,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     joiner = "$modelDir/joiner-epoch-20-avg-1.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
-                modelType = "zipformer2",
+                modelType = "transducer",
             )
         }
 
@@ -281,7 +281,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
             return OfflineModelConfig(
                 teleSpeech = "$modelDir/model.int8.onnx",
                 tokens = "$modelDir/tokens.txt",
-                modelType = "tele_speech",
+                modelType = "telespeech_ctc",
             )
         }
 
@@ -294,7 +294,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     joiner = "$modelDir/joiner-epoch-12-avg-5.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
-                modelType = "zipformer2",
+                modelType = "transducer",
             )
         }
 
@@ -307,7 +307,7 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     joiner = "$modelDir/joiner-epoch-99-avg-1.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
-                modelType = "zipformer2",
+                modelType = "transducer",
             )
         }
     }
