@@ -18,81 +18,80 @@ class OnlineDecodeFiles
   class Options
   {
     [Option(Required = true, HelpText = "Path to tokens.txt")]
-    public string Tokens { get; set; }
+    public string Tokens { get; set; } = "";
 
     [Option(Required = false, Default = "cpu", HelpText = "Provider, e.g., cpu, coreml")]
-    public string Provider { get; set; }
+    public string Provider { get; set; } = "";
 
     [Option(Required = false, HelpText = "Path to transducer encoder.onnx")]
-    public string Encoder { get; set; }
+    public string Encoder { get; set; } = "";
 
     [Option(Required = false, HelpText = "Path to transducer decoder.onnx")]
-    public string Decoder { get; set; }
+    public string Decoder { get; set; } = "";
 
     [Option(Required = false, HelpText = "Path to transducer joiner.onnx")]
-    public string Joiner { get; set; }
+    public string Joiner { get; set; } = "";
 
     [Option("paraformer-encoder", Required = false, HelpText = "Path to paraformer encoder.onnx")]
-    public string ParaformerEncoder { get; set; }
+    public string ParaformerEncoder { get; set; } = "";
 
     [Option("paraformer-decoder", Required = false, HelpText = "Path to paraformer decoder.onnx")]
-    public string ParaformerDecoder { get; set; }
+    public string ParaformerDecoder { get; set; } = "";
 
     [Option("zipformer2-ctc", Required = false, HelpText = "Path to zipformer2 CTC onnx model")]
-    public string Zipformer2Ctc { get; set; }
+    public string Zipformer2Ctc { get; set; } = "";
 
     [Option("num-threads", Required = false, Default = 1, HelpText = "Number of threads for computation")]
-    public int NumThreads { get; set; }
+    public int NumThreads { get; set; } = 1;
 
     [Option("decoding-method", Required = false, Default = "greedy_search",
             HelpText = "Valid decoding methods are: greedy_search, modified_beam_search")]
-    public string DecodingMethod { get; set; }
+    public string DecodingMethod { get; set; } = "greedy_search";
 
     [Option(Required = false, Default = false, HelpText = "True to show model info during loading")]
-    public bool Debug { get; set; }
+    public bool Debug { get; set; } = false;
 
     [Option("sample-rate", Required = false, Default = 16000, HelpText = "Sample rate of the data used to train the model")]
-    public int SampleRate { get; set; }
+    public int SampleRate { get; set; } = 16000;
 
     [Option("max-active-paths", Required = false, Default = 4,
         HelpText = @"Used only when --decoding--method is modified_beam_search.
 It specifies number of active paths to keep during the search")]
-    public int MaxActivePaths { get; set; }
+    public int MaxActivePaths { get; set; } = 4;
 
     [Option("enable-endpoint", Required = false, Default = false,
         HelpText = "True to enable endpoint detection.")]
-    public bool EnableEndpoint { get; set; }
+    public bool EnableEndpoint { get; set; } = false;
 
     [Option("rule1-min-trailing-silence", Required = false, Default = 2.4F,
         HelpText = @"An endpoint is detected if trailing silence in seconds is
 larger than this value even if nothing has been decoded. Used only when --enable-endpoint is true.")]
-    public float Rule1MinTrailingSilence { get; set; }
+    public float Rule1MinTrailingSilence { get; set; } = 2.4F;
 
     [Option("rule2-min-trailing-silence", Required = false, Default = 1.2F,
         HelpText = @"An endpoint is detected if trailing silence in seconds is
 larger than this value after something that is not blank has been decoded. Used
 only when --enable-endpoint is true.")]
-    public float Rule2MinTrailingSilence { get; set; }
+    public float Rule2MinTrailingSilence { get; set; }  = 1.2F;
 
     [Option("rule3-min-utterance-length", Required = false, Default = 20.0F,
         HelpText = @"An endpoint is detected if the utterance in seconds is
 larger than this value. Used only when --enable-endpoint is true.")]
-    public float Rule3MinUtteranceLength { get; set; }
+    public float Rule3MinUtteranceLength { get; set; } = 20.0F;
 
     [Option("hotwords-file", Required = false, Default = "", HelpText = "Path to hotwords.txt")]
-    public string HotwordsFile { get; set; }
+    public string HotwordsFile { get; set; } = "";
 
     [Option("hotwords-score", Required = false, Default = 1.5F, HelpText = "hotwords score")]
-    public float HotwordsScore { get; set; }
+    public float HotwordsScore { get; set; } = 1.5F;
 
     [Option("rule-fsts", Required = false, Default = "",
             HelpText = "If not empty, path to rule fst for inverse text normalization")]
-    public string RuleFsts { get; set; }
+    public string RuleFsts { get; set; } = "";
 
 
     [Option("files", Required = true, HelpText = "Audio files for decoding")]
-    public IEnumerable<string> Files { get; set; }
-
+    public IEnumerable<string> Files { get; set; } = new string[] {};
   }
 
   static void Main(string[] args)

@@ -38,7 +38,7 @@ macos_arm64_wheel=$src_dir/$macos_arm64_wheel_filename
 windows_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
 windows_x64_wheel=$src_dir/$windows_x64_wheel_filename
 
-windows_x86_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win32.whl
+windows_x86_wheel_filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86.tar.bz2
 windows_x86_wheel=$src_dir/$windows_x86_wheel_filename
 
 windows_arm64_wheel_filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-arm64.tar.bz2
@@ -138,10 +138,10 @@ if [ ! -f $src_dir/windows-x86/sherpa-onnx-core.dll ]; then
   if [ -f $windows_x86_wheel ]; then
     cp -v $windows_x86_wheel .
   else
-    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$windows_x86_wheel_filename
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-libs/resolve/main/windows-for-dotnet/$windows_x86_wheel_filename
   fi
-  unzip $windows_x86_wheel_filename
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../
+  tar xvf $windows_x86_wheel_filename
+  cp -v sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86/*dll ../
   cd ..
 
   rm -rf wheel
@@ -159,7 +159,7 @@ if [ ! -f $src_dir/windows-arm64/sherpa-onnx-core.dll ]; then
   else
     curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-libs/resolve/main/windows-for-dotnet/$windows_arm64_wheel_filename
   fi
-  unzip $windows_arm64_wheel_filename
+  tar xvf $windows_arm64_wheel_filename
   cp -v sherpa-onnx-${SHERPA_ONNX_VERSION}-win-arm64/*dll ../
   cd ..
 
