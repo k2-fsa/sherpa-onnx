@@ -48,10 +48,10 @@ void TensorrtConfig::Register(ParseOptions *po) {
               "Enable detailed logging of build steps.");
   po->Register("trt-engine-cache-enable", &trt_engine_cache_enable,
               "Enable caching of TensorRT engines.");
-  po->Register("trt-engine-cache-path", &trt_engine_cache_path,
-              "Set path to store cached TensorRT engines.");
   po->Register("trt-timing-cache-enable", &trt_timing_cache_enable,
               "Enable use of timing cache to speed up builds.");
+  po->Register("trt-engine-cache-path", &trt_engine_cache_path,
+              "Set path to store cached TensorRT engines.");
   po->Register("trt-timing-cache-path", &trt_timing_cache_path,
               "Set path for storing timing cache.");
   po->Register("trt-dump-subgraphs", &trt_dump_subgraphs,
@@ -60,42 +60,18 @@ void TensorrtConfig::Register(ParseOptions *po) {
 
 bool TensorrtConfig::Validate() const {
   if (trt_max_workspace_size < 0) {
-    SHERPA_ONNX_LOGE("trt_max_workspace_size: '%u' is not valid.",
+    SHERPA_ONNX_LOGE("trt_max_workspace_size: %d is not valid.",
         trt_max_workspace_size);
     return false;
   }
   if (trt_max_partition_iterations < 0) {
-    SHERPA_ONNX_LOGE("trt_max_partition_iterations: '%u' is not valid.",
+    SHERPA_ONNX_LOGE("trt_max_partition_iterations: %d is not valid.",
         trt_max_partition_iterations);
     return false;
   }
   if (trt_min_subgraph_size < 0) {
-    SHERPA_ONNX_LOGE("trt_min_subgraph_size: '%u' is not valid.",
+    SHERPA_ONNX_LOGE("trt_min_subgraph_size: %d is not valid.",
         trt_min_subgraph_size);
-    return false;
-  }
-  if (trt_fp16_enable != true || trt_fp16_enable != false) {
-    SHERPA_ONNX_LOGE("trt_fp16_enable: '%d' is not valid.", trt_fp16_enable);
-    return false;
-  }
-  if (trt_detailed_build_log != true || trt_detailed_build_log != false) {
-    SHERPA_ONNX_LOGE("trt_detailed_build_log: '%d' is not valid.",
-        trt_detailed_build_log);
-    return false;
-  }
-  if (trt_engine_cache_enable != true || trt_engine_cache_enable != false) {
-    SHERPA_ONNX_LOGE("trt_engine_cache_enable: '%d' is not valid.",
-        trt_engine_cache_enable);
-    return false;
-  }
-  if (trt_timing_cache_enable != true || trt_timing_cache_enable != false) {
-    SHERPA_ONNX_LOGE("trt_timing_cache_enable: '%d' is not valid.",
-        trt_timing_cache_enable);
-    return false;
-  }
-  if (trt_dump_subgraphs != true || trt_dump_subgraphs != false) {
-    SHERPA_ONNX_LOGE("trt_dump_subgraphs: '%d' is not valid.",
-        trt_dump_subgraphs);
     return false;
   }
 
@@ -106,10 +82,10 @@ std::string TensorrtConfig::ToString() const {
   std::ostringstream os;
 
   os << "TensorrtConfig(";
-  os << "trt_max_workspace_size=\"" << trt_max_workspace_size << "\", ";
-  os << "trt_max_partition_iterations=\""
-      << trt_max_partition_iterations << "\", ";
-  os << "trt_min_subgraph_size=\"" << trt_min_subgraph_size << "\", ";
+  os << "trt_max_workspace_size=" << trt_max_workspace_size << ", ";
+  os << "trt_max_partition_iterations="
+      << trt_max_partition_iterations << ", ";
+  os << "trt_min_subgraph_size=" << trt_min_subgraph_size << ", ";
   os << "trt_fp16_enable=\""
       << (trt_fp16_enable? "True" : "False") << "\", ";
   os << "trt_detailed_build_log=\""
@@ -148,10 +124,10 @@ std::string ProviderConfig::ToString() const {
   std::ostringstream os;
 
   os << "ProviderConfig(";
-  os << "device=\"" << device << "\", ";
+  os << "device=" << device << ", ";
   os << "provider=\"" << provider << "\", ";
-  os << "cuda_config=\"" << cuda_config.ToString() << "\", ";
-  os << "trt_config=\"" << trt_config.ToString() << ")";
+  os << "cuda_config=" << cuda_config.ToString() << ", ";
+  os << "trt_config=" << trt_config.ToString() << ")";
   return os.str();
 }
 
