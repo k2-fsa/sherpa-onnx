@@ -62,5 +62,4 @@ void PybindOnlineModelConfig(py::module *m) {
       .def("validate", &PyClass::Validate)
       .def("__str__", &PyClass::ToString);
 }
-
 }  // namespace sherpa_onnx
