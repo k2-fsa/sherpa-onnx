@@ -230,7 +230,7 @@ class SileroVadModel::Impl {
     states_.push_back(std::move(c));
   }
 
-  void Check() {
+  void Check() const {
     if (is_v5_) {
       CheckV5();
     } else {
@@ -238,7 +238,7 @@ class SileroVadModel::Impl {
     }
   }
 
-  void CheckV4() {
+  void CheckV4() const {
     if (input_names_.size() != 4) {
       SHERPA_ONNX_LOGE("Expect 4 inputs. Given: %d",
                        static_cast<int32_t>(input_names_.size()));
@@ -290,7 +290,7 @@ class SileroVadModel::Impl {
     }
   }
 
-  void CheckV5() {
+  void CheckV5() const {
     if (input_names_.size() != 3) {
       SHERPA_ONNX_LOGE("Expect 3 inputs. Given: %d",
                        static_cast<int32_t>(input_names_.size()));
