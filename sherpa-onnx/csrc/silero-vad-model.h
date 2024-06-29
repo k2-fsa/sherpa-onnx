@@ -39,6 +39,10 @@ class SileroVadModel : public VadModel {
 
   int32_t WindowSize() const override;
 
+  // For silero vad V4, it is 0.
+  // For silero vad V5, it is 512-64 for 16kHz and 512-32 for 8kHz
+  int32_t WindowShift() const override;
+
   int32_t MinSilenceDurationSamples() const override;
   int32_t MinSpeechDurationSamples() const override;
 
