@@ -44,13 +44,17 @@ class VoiceActivityDetector::Impl {
     // an extra buffer here
     last_.insert(last_.end(), samples, samples + n);
 
+    if (last_.size() < window_size) {
+      return;
+    }
+
     // Note: For v4, window_shift == window_size
     int32_t k =
         (static_cast<int32_t>(last_.size()) - window_size) / window_shift + 1;
     const float *p = last_.data();
     bool is_speech = false;
 
-    for (int32_t i = 0; i != k; ++i, p += window_shift) {
+    for (int32_t i = 0; i < k; ++i, p += window_shift) {
       buffer_.Push(p, window_shift);
       // NOTE(fangjun): Please don't use a very large n.
       bool this_window_is_speech = model_->IsSpeech(p, window_size);
