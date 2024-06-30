@@ -74,9 +74,8 @@ class SileroVadModel::Impl {
   }
 
   bool IsSpeech(const float *samples, int32_t n) {
-    if (n != config_.silero_vad.window_size) {
-      SHERPA_ONNX_LOGE("n: %d != window_size: %d", n,
-                       config_.silero_vad.window_size);
+    if (n != WindowSize()) {
+      SHERPA_ONNX_LOGE("n: %d != window_size: %d", n, WindowSize());
       exit(-1);
     }
 
@@ -146,9 +145,11 @@ class SileroVadModel::Impl {
     return false;
   }
 
-  int32_t WindowSize() const { return config_.silero_vad.window_size; }
+  int32_t WindowShift() const { return config_.silero_vad.window_size; }
 
-  int32_t WindowShift() const { return WindowSize() - window_shift_; }
+  int32_t WindowSize() const {
+    return config_.silero_vad.window_size + window_overlap_;
+  }
 
   int32_t MinSilenceDurationSamples() const { return min_silence_samples_; }
 
@@ -177,9 +178,9 @@ class SileroVadModel::Impl {
 
       // 64 for 16kHz
       // 32 for 8kHz
-      window_shift_ = 64;
+      window_overlap_ = 64;
 
-      if (WindowSize() != 512) {
+      if (config_.silero_vad.window_size != 512) {
         SHERPA_ONNX_LOGE(
             "For silero_vad  v5, we require window_size to be 512 for 16kHz");
         exit(-1);
@@ -423,7 +424,7 @@ class SileroVadModel::Impl {
   int32_t temp_start_ = 0;
   int32_t temp_end_ = 0;
 
-  int32_t window_shift_ = 0;
+  int32_t window_overlap_ = 0;
 
   bool is_v5_ = false;
 };
