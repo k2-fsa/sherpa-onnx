@@ -63,6 +63,10 @@ def add_meta_data(filename: str, meta_data: Dict[str, Any]):
         Key-value pairs.
     """
     model = onnx.load(filename)
+
+    while len(model.metadata_props):
+        model.metadata_props.pop()
+
     for key, value in meta_data.items():
         meta = model.metadata_props.add()
         meta.key = key
@@ -422,7 +426,7 @@ def main():
 
     encoder_meta_data = {
         "model_type": f"whisper-{name}",
-        "version": "1",
+        "version": "2",
         "maintainer": "k2-fsa",
         "n_mels": model.dims.n_mels,
         "n_audio_ctx": model.dims.n_audio_ctx,
@@ -453,6 +457,7 @@ def main():
         "sot_prev": tokenizer.sot_prev,
         "sot_lm": tokenizer.sot_lm,
         "no_timestamps": tokenizer.no_timestamps,
+        "timestamp_begin": tokenizer.timestamp_begin,
     }
     print(f"encoder_meta_data: {encoder_meta_data}")
     add_meta_data(filename=encoder_filename, meta_data=encoder_meta_data)
