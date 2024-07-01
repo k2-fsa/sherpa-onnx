@@ -5,6 +5,8 @@
 #ifndef SHERPA_ONNX_PYTHON_CSRC_SHERPA_ONNX_H_
 #define SHERPA_ONNX_PYTHON_CSRC_SHERPA_ONNX_H_
 
+#define PYBIND11_DETAILED_ERROR_MESSAGES
+
 #include "pybind11/functional.h"
 #include "pybind11/numpy.h"
 #include "pybind11/pybind11.h"

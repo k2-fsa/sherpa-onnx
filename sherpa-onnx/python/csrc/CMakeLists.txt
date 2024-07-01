@@ -3,6 +3,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 set(srcs
   audio-tagging.cc
   circular-buffer.cc
+  cuda-config.cc
   display.cc
   endpoint.cc
   features.cc
@@ -30,11 +31,13 @@ set(srcs
   online-transducer-model-config.cc
   online-wenet-ctc-model-config.cc
   online-zipformer2-ctc-model-config.cc
+  provider-config.cc
   sherpa-onnx.cc
   silero-vad-model-config.cc
   speaker-embedding-extractor.cc
   speaker-embedding-manager.cc
   spoken-language-identification.cc
+  tensorrt-config.cc
   vad-model-config.cc
   vad-model.cc
   voice-activity-detector.cc

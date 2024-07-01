@@ -87,6 +87,7 @@ set(sources
   packed-sequence.cc
   pad-sequence.cc
   parse-options.cc
+  provider-config.cc
   provider.cc
   resample.cc
   session.cc
