@@ -50,9 +50,6 @@ jobs:
           - os: ubuntu-22.04
             python-version: "3.12"
 
-          - os: macos-11
-            python-version: "3.7"
-
           - os: macos-12
             python-version: "3.8"
 

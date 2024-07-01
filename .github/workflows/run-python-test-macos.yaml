@@ -41,9 +41,6 @@ jobs:
         # macos-14 is for arm64
         # macos-14-large is for x64
         include:
-          - os: macos-11
-            python-version: "3.7"
-
           - os: macos-13
             python-version: "3.8"
 
