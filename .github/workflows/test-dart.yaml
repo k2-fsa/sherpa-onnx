@@ -30,7 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -85,9 +85,13 @@ jobs:
             os=linux
           elif [[ ${{ matrix.os }} == macos-latest ]]; then
             os=macos
+          elif [[ ${{ matrix.os }} == windows-latest ]]; then
+            os=windows
           fi
 
-          cp -v build/install/lib/lib* ./flutter/sherpa_onnx_$os/$os
+          cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_$os/$os
+
+          cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_$os/$os
 
           echo "--------------------"
 
