@@ -9,6 +9,8 @@ are created.
 flutter create --template plugin sherpa_onnx
 ```
 
-Then edit:
+2. Create `sherpa_onnx_macos`
 
-  - a. pubspec.yaml, to remove/add dependencies
+```bash
+flutter create --template plugin_ffi --platforms macos sherpa_onnx_macos
+```
