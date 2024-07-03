@@ -14,3 +14,9 @@ flutter create --template plugin sherpa_onnx
 ```bash
 flutter create --template plugin_ffi --platforms macos sherpa_onnx_macos
 ```
+
+3. Create `sherpa_onnx_linux
+
+```bash
+flutter create --template plugin_ffi --platforms linux sherpa_onnx_linux
+```
