@@ -13,4 +13,4 @@ void PybindTensorrtConfig(py::module *m);
 
 }
 
-#endif  // SHERPA_ONNX_PYTHON_CSRC_PROVIDER_CONFIG_H_
+#endif  // SHERPA_ONNX_PYTHON_CSRC_TENSORRT_CONFIG_H_

@@ -17,7 +17,7 @@ struct CudaConfig {
   int32_t cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
 
   CudaConfig() = default;
-  CudaConfig(int32_t cudnn_conv_algo_search)
+  explicit CudaConfig(int32_t cudnn_conv_algo_search)
       : cudnn_conv_algo_search(cudnn_conv_algo_search) {}
 
   void Register(ParseOptions *po);

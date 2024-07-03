@@ -13,4 +13,4 @@ void PybindCudaConfig(py::module *m);
 
 }
 
-#endif  // SHERPA_ONNX_PYTHON_CSRC_SILERO_VAD_MODEL_CONFIG_H_
+#endif  // SHERPA_ONNX_PYTHON_CSRC_CUDA_CONFIG_H_
