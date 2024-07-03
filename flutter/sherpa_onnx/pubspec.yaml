@@ -33,8 +33,13 @@ dependencies:
   sherpa_onnx_macos:
     # path: ../sherpa_onnx_macos
 
+  sherpa_onnx_linux:
+    # path: ../sherpa_onnx_linux
+
 flutter:
   plugin:
     platforms:
       macos:
         default_package: sherpa_onnx_macos
+      linux:
+        default_package: sherpa_onnx_linux
