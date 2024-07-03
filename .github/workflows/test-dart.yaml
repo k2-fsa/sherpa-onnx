@@ -8,13 +8,14 @@ on:
       - '.github/workflows/test-dart.yaml'
       - '.github/scripts/test-dart.sh'
       - 'dart-api-examples/**'
+      - 'flutter/**'
   pull_request:
     branches:
       - master
     paths:
       - '.github/workflows/test-dart.yaml'
       - '.github/scripts/test-dart.sh'
-      - 'dart-api-examples/**'
+      - 'flutter/**'
 
   workflow_dispatch:
 
@@ -29,7 +30,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        # os: [ubuntu-latest, macos-latest]
+        os: [macos-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -80,11 +82,17 @@ jobs:
       - name: Copy libs
         shell: bash
         run: |
-          cp -v build/install/lib/lib* ./sherpa-onnx/flutter/linux/
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            os=linux
+          elif [[ ${{ matrix.os }} == macos-latest ]]; then
+            os=macos
+          fi
+
+          cp -v build/install/lib/lib* ./flutter/sherpa_onnx_$os/$os
 
           echo "--------------------"
 
-          ls -lh ./sherpa-onnx/flutter/linux/
+          ls -lh ./flutter/sherpa_onnx_$os/$os
 
       - name: Run tests
         shell: bash
@@ -93,5 +101,6 @@ jobs:
           cp scripts/dart/non-streaming-asr-pubspec.yaml dart-api-examples/non-streaming-asr/pubspec.yaml
           cp scripts/dart/streaming-asr-pubspec.yaml dart-api-examples/streaming-asr/pubspec.yaml
           cp scripts/dart/tts-pubspec.yaml dart-api-examples/tts/pubspec.yaml
+          cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa-onnx/pubspec.yaml
 
           .github/scripts/test-dart.sh
