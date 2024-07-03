@@ -76,7 +76,8 @@ jobs:
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
-          make -j install
+
+          cmake --build . --target install --config Release
 
       - name: Copy libs
         shell: bash
