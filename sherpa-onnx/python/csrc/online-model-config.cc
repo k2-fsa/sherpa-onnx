@@ -9,6 +9,7 @@
 
 #include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
+#include "sherpa-onnx/csrc/provider-config.h"
 #include "sherpa-onnx/python/csrc/online-nemo-ctc-model-config.h"
 #include "sherpa-onnx/python/csrc/online-paraformer-model-config.h"
 #include "sherpa-onnx/python/csrc/online-transducer-model-config.h"

@@ -6,14 +6,12 @@ from _sherpa_onnx import (
     EndpointConfig,
     FeatureExtractorConfig,
     OnlineLMConfig,
+
     OnlineModelConfig,
     OnlineParaformerModelConfig,
 )
 from _sherpa_onnx import OnlineRecognizer as _Recognizer
 from _sherpa_onnx import (
-    CudaConfig,
-    TensorrtConfig,
-    ProviderConfig,
     OnlineRecognizerConfig,
     OnlineRecognizerResult,
     OnlineStream,
@@ -59,6 +57,7 @@ class OnlineRecognizer(object):
         hotwords_score: float = 1.5,
         blank_penalty: float = 0.0,
         hotwords_file: str = "",
+        provider: str = "cpu",
         model_type: str = "",
         modeling_unit: str = "cjkchar",
         bpe_vocab: str = "",
@@ -68,19 +67,6 @@ class OnlineRecognizer(object):
         debug: bool = False,
         rule_fsts: str = "",
         rule_fars: str = "",
-        provider: str = "cpu",
-        device: int = 0,
-        cudnn_conv_algo_search: int = 1,
-        trt_max_workspace_size: int = 2147483648,
-        trt_max_partition_iterations: int = 10,
-        trt_min_subgraph_size: int = 5,
-        trt_fp16_enable: bool = True,
-        trt_detailed_build_log: bool = False,
-        trt_engine_cache_enable: bool = True,
-        trt_timing_cache_enable: bool = True,
-        trt_engine_cache_path: str ="",
-        trt_timing_cache_path: str ="",
-        trt_dump_subgraphs: bool = False,
     ):
         """
         Please refer to
@@ -150,6 +136,8 @@ class OnlineRecognizer(object):
             Temperature scaling for output symbol confidence estiamation.
             It affects only confidence values, the decoding uses the original
             logits without temperature.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
           model_type:
             Online transducer model type. Valid values are: conformer, lstm,
             zipformer, zipformer2. All other values lead to loading the model twice.
@@ -169,32 +157,6 @@ class OnlineRecognizer(object):
           rule_fars:
             If not empty, it specifies fst archives for inverse text normalization.
             If there are multiple archives, they are separated by a comma.
-          provider:
-            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
-          device:
-            onnxruntime cuda device index.
-          cudnn_conv_algo_search:
-            onxrt CuDNN convolution search algorithm selection. CUDA EP
-          trt_max_workspace_size:
-            Set TensorRT EP GPU memory usage limit. TensorRT EP
-          trt_max_partition_iterations:
-            Limit partitioning iterations for model conversion. TensorRT EP
-          trt_min_subgraph_size:
-            Set minimum size for subgraphs in partitioning. TensorRT EP
-          trt_fp16_enable: bool = True,
-            Enable FP16 precision for faster performance. TensorRT EP
-          trt_detailed_build_log: bool = False,
-            Enable detailed logging of build steps. TensorRT EP
-          trt_engine_cache_enable: bool = True,
-            Enable caching of TensorRT engines. TensorRT EP
-          trt_timing_cache_enable: bool = True,
-            "Enable use of timing cache to speed up builds." TensorRT EP
-          trt_engine_cache_path: str ="",
-            "Set path to store cached TensorRT engines." TensorRT EP
-          trt_timing_cache_path: str ="",
-            "Set path for storing timing cache." TensorRT EP
-          trt_dump_subgraphs: bool = False,
-            "Dump optimized subgraphs for debugging." TensorRT EP
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -210,35 +172,11 @@ class OnlineRecognizer(object):
             joiner=joiner,
         )
 
-        cuda_config = CudaConfig(
-          cudnn_conv_algo_search=cudnn_conv_algo_search,
-        )
-
-        trt_config = TensorrtConfig(
-          trt_max_workspace_size=trt_max_workspace_size,
-          trt_max_partition_iterations=trt_max_partition_iterations,
-          trt_min_subgraph_size=trt_min_subgraph_size,
-          trt_fp16_enable=trt_fp16_enable,
-          trt_detailed_build_log=trt_detailed_build_log,
-          trt_engine_cache_enable=trt_engine_cache_enable,
-          trt_timing_cache_enable=trt_timing_cache_enable,
-          trt_engine_cache_path=trt_engine_cache_path,
-          trt_timing_cache_path=trt_timing_cache_path,
-          trt_dump_subgraphs=trt_dump_subgraphs,
-        )
-
-        provider_config = ProviderConfig(
-          trt_config=trt_config,
-          cuda_config=cuda_config,
-          provider=provider,
-          device=device,
-        )
-
         model_config = OnlineModelConfig(
             transducer=transducer_config,
             tokens=tokens,
             num_threads=num_threads,
-            provider_config=provider_config,
+            provider=provider,
             model_type=model_type,
             modeling_unit=modeling_unit,
             bpe_vocab=bpe_vocab,
@@ -314,7 +252,6 @@ class OnlineRecognizer(object):
         debug: bool = False,
         rule_fsts: str = "",
         rule_fars: str = "",
-        device: int = 0,
     ):
         """
         Please refer to
@@ -365,8 +302,6 @@ class OnlineRecognizer(object):
           rule_fars:
             If not empty, it specifies fst archives for inverse text normalization.
             If there are multiple archives, they are separated by a comma.
-          device:
-            onnxruntime cuda device index.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -380,16 +315,11 @@ class OnlineRecognizer(object):
             decoder=decoder,
         )
 
-        provider_config = ProviderConfig(
-          provider=provider,
-          device=device,
-        )
-
         model_config = OnlineModelConfig(
             paraformer=paraformer_config,
             tokens=tokens,
             num_threads=num_threads,
-            provider_config=provider_config,
+            provider=provider,
             model_type="paraformer",
             debug=debug,
         )
@@ -438,7 +368,6 @@ class OnlineRecognizer(object):
         debug: bool = False,
         rule_fsts: str = "",
         rule_fars: str = "",
-        device: int = 0,
     ):
         """
         Please refer to
@@ -493,8 +422,6 @@ class OnlineRecognizer(object):
           rule_fars:
             If not empty, it specifies fst archives for inverse text normalization.
             If there are multiple archives, they are separated by a comma.
-          device:
-            onnxruntime cuda device index.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -504,16 +431,11 @@ class OnlineRecognizer(object):
 
         zipformer2_ctc_config = OnlineZipformer2CtcModelConfig(model=model)
 
-        provider_config = ProviderConfig(
-          provider=provider,
-          device=device,
-        )
-
         model_config = OnlineModelConfig(
             zipformer2_ctc=zipformer2_ctc_config,
             tokens=tokens,
             num_threads=num_threads,
-            provider_config=provider_config,
+            provider=provider,
             debug=debug,
         )
 
@@ -565,7 +487,6 @@ class OnlineRecognizer(object):
         debug: bool = False,
         rule_fsts: str = "",
         rule_fars: str = "",
-        device: int = 0,
     ):
         """
         Please refer to
@@ -615,8 +536,6 @@ class OnlineRecognizer(object):
           rule_fars:
             If not empty, it specifies fst archives for inverse text normalization.
             If there are multiple archives, they are separated by a comma.
-          device:
-            onnxruntime cuda device index.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -628,16 +547,11 @@ class OnlineRecognizer(object):
             model=model,
         )
 
-        provider_config = ProviderConfig(
-          provider=provider,
-          device=device,
-        )
-
         model_config = OnlineModelConfig(
             nemo_ctc=nemo_ctc_config,
             tokens=tokens,
             num_threads=num_threads,
-            provider_config=provider_config,
+            provider=provider,
             debug=debug,
         )
 
@@ -685,7 +599,6 @@ class OnlineRecognizer(object):
         debug: bool = False,
         rule_fsts: str = "",
         rule_fars: str = "",
-        device: int = 0,
     ):
         """
         Please refer to
@@ -738,8 +651,6 @@ class OnlineRecognizer(object):
           rule_fars:
             If not empty, it specifies fst archives for inverse text normalization.
             If there are multiple archives, they are separated by a comma.
-          device:
-            onnxruntime cuda device index.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -753,16 +664,11 @@ class OnlineRecognizer(object):
             num_left_chunks=num_left_chunks,
         )
 
-        provider_config = ProviderConfig(
-          provider=provider,
-          device=device,
-        )
-
         model_config = OnlineModelConfig(
             wenet_ctc=wenet_ctc_config,
             tokens=tokens,
             num_threads=num_threads,
-            provider_config=provider_config,
+            provider=provider,
             debug=debug,
         )
 

@@ -17,7 +17,7 @@ struct CudaConfig {
   int32_t cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
 
   CudaConfig() = default;
-  explicit CudaConfig(int32_t cudnn_conv_algo_search)
+  CudaConfig(int32_t cudnn_conv_algo_search)
       : cudnn_conv_algo_search(cudnn_conv_algo_search) {}
 
   void Register(ParseOptions *po);
@@ -74,6 +74,9 @@ struct ProviderConfig {
   // device only used for cuda and trt
 
   ProviderConfig() = default;
+  ProviderConfig(const std::string &provider,
+                int32_t device)
+      : provider(provider), device(device) {}
   ProviderConfig(const TensorrtConfig &trt_config,
                 const CudaConfig &cuda_config,
                 const std::string &provider,

@@ -7,7 +7,6 @@
 #include "sherpa-onnx/python/csrc/alsa.h"
 #include "sherpa-onnx/python/csrc/audio-tagging.h"
 #include "sherpa-onnx/python/csrc/circular-buffer.h"
-// #include "sherpa-onnx/python/csrc/cuda-config.h"
 #include "sherpa-onnx/python/csrc/display.h"
 #include "sherpa-onnx/python/csrc/endpoint.h"
 #include "sherpa-onnx/python/csrc/features.h"
@@ -20,14 +19,12 @@
 #include "sherpa-onnx/python/csrc/offline-stream.h"
 #include "sherpa-onnx/python/csrc/online-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/python/csrc/online-lm-config.h"
-// #include "sherpa-onnx/python/csrc/provider-config.h"
 #include "sherpa-onnx/python/csrc/online-model-config.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
 #include "sherpa-onnx/python/csrc/online-stream.h"
 #include "sherpa-onnx/python/csrc/speaker-embedding-extractor.h"
 #include "sherpa-onnx/python/csrc/speaker-embedding-manager.h"
 #include "sherpa-onnx/python/csrc/spoken-language-identification.h"
-// #include "sherpa-onnx/python/csrc/tensorrt-config.h"
 #include "sherpa-onnx/python/csrc/vad-model-config.h"
 #include "sherpa-onnx/python/csrc/vad-model.h"
 #include "sherpa-onnx/python/csrc/voice-activity-detector.h"
@@ -54,7 +51,6 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindEndpoint(&m);
   PybindOnlineRecognizer(&m);
   PybindKeywordSpotter(&m);
-  // PybindProviderConfig(&m);
   PybindDisplay(&m);
 
   PybindOfflineStream(&m);

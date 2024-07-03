@@ -16,6 +16,7 @@ from _sherpa_onnx import (
     OfflineTtsVitsModelConfig,
     OfflineZipformerAudioTaggingModelConfig,
     OnlineStream,
+    ProviderConfig,
     SileroVadModelConfig,
     SpeakerEmbeddingExtractor,
     SpeakerEmbeddingExtractorConfig,

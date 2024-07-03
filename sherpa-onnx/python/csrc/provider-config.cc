@@ -8,21 +8,25 @@
 #include <string>
 
 #include "sherpa-onnx/csrc/provider-config.h"
-// #include "sherpa-onnx/python/csrc/cuda-config.h"
-// #include "sherpa-onnx/python/csrc/tensorrt-config.h"
+#include "sherpa-onnx/python/csrc/cuda-config.h"
+#include "sherpa-onnx/python/csrc/tensorrt-config.h"
 
 namespace sherpa_onnx {
 
 void PybindProviderConfig(py::module *m) {
-  // PybindCudaConfig(m);
-  // PybindTensorrtConfig(m);
+  PybindCudaConfig(m);
+  PybindTensorrtConfig(m);
 
   using PyClass = ProviderConfig;
   py::class_<PyClass>(*m, "ProviderConfig")
       .def(py::init<>())
+      .def(py::init<const std::string &, int32_t>(),
+           py::arg("provider") = "cpu",
+           py::arg("device") = 0)
       .def(py::init<const TensorrtConfig &, const CudaConfig &,
           const std::string &, int32_t>(),
-           py::arg("trt_config"), py::arg("cuda_config"),
+           py::arg("trt_config") = TensorrtConfig{},
+           py::arg("cuda_config") = CudaConfig{},
            py::arg("provider") = "cpu",
            py::arg("device") = 0)
       .def_readwrite("trt_config", &PyClass::trt_config)
