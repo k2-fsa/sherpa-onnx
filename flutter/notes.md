@@ -21,8 +21,14 @@ flutter create --template plugin_ffi --platforms macos sherpa_onnx_macos
 flutter create --template plugin_ffi --platforms linux sherpa_onnx_linux
 ```
 
-3. Create `sherpa_onnx_windows
+4. Create `sherpa_onnx_windows
 
 ```bash
 flutter create --template plugin_ffi --platforms linux sherpa_onnx_windows
+```
+
+5. Create `sherpa_onnx_android
+
+```bash
+flutter create --template plugin_ffi --platforms android --org com.k2fsa.sherpa.onnx sherpa_onnx_android
 ```
