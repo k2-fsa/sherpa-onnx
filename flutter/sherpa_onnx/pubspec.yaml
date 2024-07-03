@@ -35,6 +35,9 @@ dependencies:
 
   sherpa_onnx_linux:
     # path: ../sherpa_onnx_linux
+    #
+  sherpa_onnx_windows:
+    # path: ../sherpa_onnx_windows
 
 flutter:
   plugin:
@@ -43,3 +46,5 @@ flutter:
         default_package: sherpa_onnx_macos
       linux:
         default_package: sherpa_onnx_linux
+      windows:
+        default_package: sherpa_onnx_windows
