@@ -20,3 +20,9 @@ flutter create --template plugin_ffi --platforms macos sherpa_onnx_macos
 ```bash
 flutter create --template plugin_ffi --platforms linux sherpa_onnx_linux
 ```
+
+3. Create `sherpa_onnx_windows
+
+```bash
+flutter create --template plugin_ffi --platforms linux sherpa_onnx_windows
+```
