@@ -3,15 +3,26 @@
 # the plugin to fail to compile for some customers of the plugin.
 cmake_minimum_required(VERSION 3.10)
 
-project(sherpa_onnx_linux_library VERSION 0.0.1 LANGUAGES C)
+project(sherpa_onnx_linux LANGUAGES CXX)
 
-add_library(sherpa_onnx_linux SHARED
-  "sherpa_onnx_linux.c"
+# Invoke the build for native code shared with the other target platforms.
+# This can be changed to accommodate different builds.
+
+# List of absolute paths to libraries that should be bundled with the plugin.
+# This list could contain prebuilt libraries, or libraries created by an
+# external build triggered from this build file.
+set(sherpa_onnx_linux_bundled_libraries
+  "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-c-api.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-core.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libkaldi-decoder-core.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-kaldifst-core.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-fstfar.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-fst.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libkaldi-native-fbank-core.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libpiper_phonemize.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libespeak-ng.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libucd.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libonnxruntime.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libssentencepiece_core.so"
+  PARENT_SCOPE
 )
-
-set_target_properties(sherpa_onnx_linux PROPERTIES
-  PUBLIC_HEADER sherpa_onnx_linux.h
-  OUTPUT_NAME "sherpa_onnx_linux"
-)
-
-target_compile_definitions(sherpa_onnx_linux PUBLIC DART_SHARED_LIB)
