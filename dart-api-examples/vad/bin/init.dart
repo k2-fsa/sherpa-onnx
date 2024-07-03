@@ -18,7 +18,7 @@ Future<void> initSherpaOnnx() async {
   }
 
   var uri = await Isolate.resolvePackageUri(
-      Uri.parse('package:sherpa_onnx_$platform/sherpa_onnx.dart'));
+      Uri.parse('package:sherpa_onnx_$platform/any_path_is_ok_here.dart'));
 
   if (uri == null) {
     print('File not found');
