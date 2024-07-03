@@ -89,9 +89,11 @@ jobs:
             os=windows
           fi
 
-          cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_$os/$os
-
-          cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_$os/$os
+          if [[ $os == windows ]]; then
+            cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_$os/$os
+          else
+            cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_$os/$os
+          fi
 
           echo "--------------------"
 
