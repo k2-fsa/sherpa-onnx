@@ -1,5 +1,7 @@
 # sherpa-onnx app example
 
+See also <https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples>
+
 ## Streaming speech recognition
 
 Please see https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/streaming-asr
