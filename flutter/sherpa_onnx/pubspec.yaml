@@ -30,6 +30,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  sherpa_onnx_android:
+    # path: ../sherpa_onnx_android
+
   sherpa_onnx_macos:
     # path: ../sherpa_onnx_macos
 
@@ -42,9 +45,14 @@ dependencies:
 flutter:
   plugin:
     platforms:
+      android:
+        default_package: sherpa_onnx_android
+
       macos:
         default_package: sherpa_onnx_macos
+
       linux:
         default_package: sherpa_onnx_linux
+
       windows:
         default_package: sherpa_onnx_windows
