@@ -16,7 +16,7 @@ flutter create --platforms --org com.k2fsa.sherpa.onnx android ./
 
 To run with android, first use
 ```
-(py38) fangjuns-MacBook-Pro:streaming_asr fangjun$ flutter run -d android-arm64
+(py38) fangjuns-MacBook-Pro:streaming_asr fangjun$ flutter run devices
 No devices found yet. Checking for wireless devices...
 
 No supported devices found with name or id matching 'android-arm64'.
