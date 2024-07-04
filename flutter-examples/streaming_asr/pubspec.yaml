@@ -31,6 +31,8 @@ dependencies:
   url_launcher: ^6.2.6
 
   sherpa_onnx: ^1.10.0
+  # sherpa_onnx:
+    # path: ../../flutter/sherpa_onnx
 
 dev_dependencies:
   flutter_test:
