@@ -71,7 +71,7 @@ class OnlineRecognizer(object):
         provider: str = "cpu",
         device: int = 0,
         cudnn_conv_algo_search: int = 1,
-        trt_max_workspace_size: int = 2147483648,
+        trt_max_workspace_size: int = 2147483647,
         trt_max_partition_iterations: int = 10,
         trt_min_subgraph_size: int = 5,
         trt_fp16_enable: bool = True,
