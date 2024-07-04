@@ -65,8 +65,8 @@ jobs:
             echo "-----"
             ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-*
 
-            sudo mkdir /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib
-            sudo touch /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib/.gitkeep
+            # sudo mkdir /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib
+            # sudo touch /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib/.gitkeep
 
             echo "-----"
             ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-*/linux
@@ -86,8 +86,8 @@ jobs:
             echo "-----"
             ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-*/macos
 
-            sudo mkdir /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib
-            touch /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib/.gitkeep
+            # sudo mkdir /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib
+            # sudo touch /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib/.gitkeep
           fi
 
 
