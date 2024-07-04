@@ -219,13 +219,9 @@ jobs:
           pushd /tmp/to_be_published/macos
 
           rm libonnxruntime.dylib
-          ln -s libonnxruntime.1.*.dylib ./libonnxruntime.dylib
 
           rm libpiper_phonemize.1.dylib
           rm libpiper_phonemize.dylib
-
-          ln -s libpiper_phonemize.1.2.0.dylib libpiper_phonemize.1.dylib
-          ln -s libpiper_phonemize.1.dylib libpiper_phonemize.dylib
 
           ls -lh
 
@@ -380,6 +376,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
+          export SHERPA_ONNX_ENABLE_C_API=ON
           export SHERPA_ONNX_ENABLE_JNI=OFF
           export SHERPA_ONNX_ENABLE_BINARY=OFF
 
@@ -392,6 +389,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
+          export SHERPA_ONNX_ENABLE_C_API=ON
           export SHERPA_ONNX_ENABLE_JNI=OFF
           export SHERPA_ONNX_ENABLE_BINARY=OFF
 
@@ -404,6 +402,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
+          export SHERPA_ONNX_ENABLE_C_API=ON
           export SHERPA_ONNX_ENABLE_JNI=OFF
           export SHERPA_ONNX_ENABLE_BINARY=OFF
 
@@ -416,6 +415,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
+          export SHERPA_ONNX_ENABLE_C_API=ON
           export SHERPA_ONNX_ENABLE_JNI=OFF
           export SHERPA_ONNX_ENABLE_BINARY=OFF
 
@@ -424,11 +424,16 @@ jobs:
       - name: Copy pre-built libs
         shell: bash
         run: |
-          cp -v build/install/lib/lib*.dylib* flutter/sherpa_onnx_macos/macos/
-
+          echo "----arm64-v8a----"
           cp -v build-android-arm64-v8a/install/lib/lib*.so flutter/sherpa_onnx_android/android/src/main/jniLibs/arm64-v8a/
+
+          echo "----armv7-eabi----"
           cp -v build-android-armv7-eabi/install/lib/lib*.so flutter/sherpa_onnx_android/android/src/main/jniLibs/armeabi-v7a
+
+          echo "----x86----"
           cp -v build-android-x86/install/lib/lib*.so flutter/sherpa_onnx_android/android/src/main/jniLibs/x86
+
+          echo "----x86_64----"
           cp -v build-android-x86-64/install/lib/lib*.so flutter/sherpa_onnx_android/android/src/main/jniLibs/x86_64
 
           mv -v flutter/sherpa_onnx_android /tmp/to_be_published
