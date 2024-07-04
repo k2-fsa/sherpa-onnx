@@ -192,7 +192,7 @@ jobs:
         shell: bash
         run: |
           cd build
-          make -j install
+          make -j2 install
 
           ls -lh install/lib/libsherpa-onnx-core.dylib
           file install/lib/libsherpa-onnx-core.dylib
@@ -219,6 +219,94 @@ jobs:
           mv -v flutter/sherpa_onnx_macos /tmp/to_be_published
 
           ls -lh /tmp/to_be_published/macos
+
+      - name: Release
+        shell: bash
+        run: |
+          cd /tmp/to_be_published
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force
+
+  sherpa_onnx_windows:
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    name: sherpa_onnx_windows
+    runs-on: windows-2019
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-flutter-release-package
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Fix version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          src_dir=$PWD/flutter/sherpa_onnx_windows
+          pushd $src_dir
+          v="version: $SHERPA_ONNX_VERSION"
+          echo "v: $v"
+          sed -i.bak s"/^version: .*/$v/" ./pubspec.yaml
+          rm *.bak
+          git status
+          git diff
+
+      - name: Copy extra files
+        shell: bash
+        run: |
+          dst=flutter/sherpa_onnx_windows
+
+          mkdir $dst/example
+
+          cp -v flutter/sherpa_onnx/example/* $dst/example
+          cp -v LICENSE $dst/
+          cp -v CHANGELOG.md $dst/
+
+          git status
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -D SHERPA_ONNX_ENABLE_TTS=ON \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D SHERPA_ONNX_ENABLE_JNI=OFF \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --target install --config Release
+
+          ls -lh install/lib/*.dll
+
+      - name: Copy pre-built libs
+        shell: bash
+        run: |
+          cp -v build/install/lib/*.dll flutter/sherpa_onnx_windows/windows/
+          mv -v flutter/sherpa_onnx_windows /tmp/to_be_published
+
+          ls -lh /tmp/to_be_published/windows
 
       - name: Release
         shell: bash
