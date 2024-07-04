@@ -46,6 +46,51 @@ jobs:
           dart --version
           flutter doctor
 
+      - name: Display sherpa-onnx package info
+        shell: bash
+        run: |
+          cd dart-api-examples/vad
+          flutter pub get
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            echo "-----"
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev
+
+            echo "-----"
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*
+
+            echo "-----"
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*/*
+
+            echo "-----"
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-*
+
+            # sudo mkdir /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib
+            # sudo touch /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib/.gitkeep
+
+            echo "-----"
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-*/linux
+          elif [[ ${{ matrix.os }} == macos-latest ]]; then
+            echo "-----"
+            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev
+
+            echo "-----"
+            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*
+
+            echo "-----"
+            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*/*
+
+            echo "-----"
+            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-*/
+
+            echo "-----"
+            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-*/macos
+
+            # sudo mkdir /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib
+            # sudo touch /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib/.gitkeep
+          fi
+
+
       - name: Run tests
         shell: bash
         run: |

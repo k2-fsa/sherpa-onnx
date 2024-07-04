@@ -1,7 +1,24 @@
 name: sherpa_onnx_macos
-description: "A new Flutter FFI plugin project."
+
+description: >
+  Speech recognition, speech synthesis, and speaker recognition using next-gen Kaldi
+  with onnxruntime without Internet connection.
+
 version: 0.0.1
-homepage:
+
+repository: https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter
+
+issue_tracker: https://github.com/k2-fsa/sherpa-onnx/issues
+documentation: https://k2-fsa.github.io/sherpa/onnx/
+
+homepage: https://github.com/k2-fsa/sherpa-onnx
+
+topics:
+  - speech-recognition
+  - speech-synthesis
+  - speaker-identification
+  - audio-tagging
+  - voice-activity-detection
 
 environment:
   sdk: '>=3.4.0 <4.0.0'

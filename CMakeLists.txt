@@ -8,7 +8,7 @@ project(sherpa-onnx)
 # ./nodejs-addon-examples
 # ./dart-api-examples/
 # ./sherpa-onnx/flutter/CHANGELOG.md
-set(SHERPA_ONNX_VERSION "1.10.6")
+set(SHERPA_ONNX_VERSION "1.10.9")
 
 # Disable warning about
 #
@@ -61,7 +61,7 @@ if(NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-if(DEFINED ANDROID_ABI AND NOT SHERPA_ONNX_ENABLE_JNI)
+if(DEFINED ANDROID_ABI AND NOT SHERPA_ONNX_ENABLE_JNI AND NOT SHERPA_ONNX_ENABLE_C_API)
   message(STATUS "Set SHERPA_ONNX_ENABLE_JNI to ON for Android")
   set(SHERPA_ONNX_ENABLE_JNI ON CACHE BOOL "" FORCE)
 endif()
