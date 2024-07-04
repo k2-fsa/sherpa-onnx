@@ -42,7 +42,7 @@ class KeywordSpotter(object):
         keywords_threshold: float = 0.25,
         num_trailing_blanks: int = 1,
         provider: str = "cpu",
-        device: int = 1,
+        device: int = 0,
     ):
         """
         Please refer to
@@ -89,7 +89,6 @@ class KeywordSpotter(object):
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
           device:
             onnxruntime cuda device index.
-
         """
         _assert_file_exists(tokens)
         _assert_file_exists(encoder)
@@ -108,6 +107,7 @@ class KeywordSpotter(object):
           provider=provider,
           device = device,
         )
+
         model_config = OnlineModelConfig(
             transducer=transducer_config,
             tokens=tokens,
