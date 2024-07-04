@@ -18,7 +18,7 @@ jobs:
     if: false
     permissions:
       id-token: write # Required for authentication using OIDC
-    name: Release dart
+    name: sherpa_onnx_linux
     runs-on: ubuntu-latest
 
     steps:
@@ -126,7 +126,7 @@ jobs:
   sherpa_onnx_macos:
     permissions:
       id-token: write # Required for authentication using OIDC
-    name: Release dart
+    name: sherpa_onnx_macos
     runs-on: macos-latest
 
     steps:
@@ -150,7 +150,7 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          src_dir=$PWD/flutter/sherpa_onnx_mcos
+          src_dir=$PWD/flutter/sherpa_onnx_macos
           pushd $src_dir
           v="version: $SHERPA_ONNX_VERSION"
           echo "v: $v"
