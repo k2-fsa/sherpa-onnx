@@ -45,6 +45,19 @@ jobs:
           git status
           git diff
 
+      - name: Copy extra files
+        shell: bash
+        run: |
+          dst=flutter/sherpa_onnx_linux
+
+          mkdir $dst/example
+
+          cp flutter/sherpa_onnx/example/* $dst/example
+          cp LICENSE $dst/
+          cp CHANGELOG.md $dst/
+
+          git status
+
       - name: Build sherpa-onnx
         uses: addnab/docker-run-action@v3
         with:
@@ -83,10 +96,10 @@ jobs:
         shell: bash
         run: |
           cp build/install/lib/lib*.so* flutter/sherpa_onnx_linux/linux/
-          cp LICENSE flutter/sherpa_onnx_linux/
-          cp CHANGE.md flutter/sherpa_onnx_linux/
 
           mv -v flutter/sherpa_onnx_linux /tmp/to-be-published
+
+          ls -lh /tmp-to-be-published/linux
 
       - name: Release
         shell: bash
