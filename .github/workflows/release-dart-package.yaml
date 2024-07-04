@@ -79,7 +79,8 @@ jobs:
               cd build
 
               cmake \
-                -DSHERPA_ONNX_ENABLE_TTS=ON \
+                -D SHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+                -D SHERPA_ONNX_ENABLE_TTS=ON \
                 -D CMAKE_BUILD_TYPE=Release \
                 -D BUILD_SHARED_LIBS=ON \
                 -D CMAKE_INSTALL_PREFIX=./install \
@@ -95,16 +96,28 @@ jobs:
       - name: Copy pre-built libs
         shell: bash
         run: |
-          cp build/install/lib/lib*.so* flutter/sherpa_onnx_linux/linux/
+          cp -v build/install/lib/lib*.so* flutter/sherpa_onnx_linux/linux/
+          pushd flutter/sherpa_onnx_linux/linux/
 
-          mv -v flutter/sherpa_onnx_linux /tmp/to-be-published
+          rm libonnxruntime.so
+          ln -s libonnxruntime.so.* ./libonnxruntime.so
 
-          ls -lh /tmp-to-be-published/linux
+          rm libpiper_phonemize.so.1
+          rm libpiper_phonemize.so
+
+          ln -s libpiper_phonemize.so.1.2.0 libpiper_phonemize.so.1
+          ln -s libpiper_phonemize.so.1 libpiper_phonemize.so
+
+          popd
+
+          mv -v flutter/sherpa_onnx_linux /tmp/to_be_published
+
+          ls -lh /tmp/to_be_published/linux
 
       - name: Release
         shell: bash
         run: |
-          cd /tmp/to-be-published
+          cd /tmp/to_be_published
           flutter pub get
           flutter pub publish --dry-run
           flutter pub publish --force
