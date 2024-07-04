@@ -4,14 +4,14 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'sherpa_onnx_ios'
-  s.version          = '0.0.1'
+  s.version          = '1.10.9'
   s.summary          = 'A new Flutter FFI plugin project.'
   s.description      = <<-DESC
 A new Flutter FFI plugin project.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://github.com/k2-fsa/sherpa-onnx'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Fangjun Kuang' => 'csukuangfj@gmail.com' }
 
   # This will ensure the source files in Classes/ are included in the native
   # builds of apps using this FFI plugin. Podspec does not support relative
