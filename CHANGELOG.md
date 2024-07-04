@@ -1,6 +1,6 @@
-## 1.10.7
+## 1.10.6
 
-* Support Android
+* Support Android for Flutter.
 
 ## 1.10.2
 

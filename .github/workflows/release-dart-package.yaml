@@ -124,7 +124,7 @@ jobs:
           flutter pub publish --force
 
   sherpa_onnx_macos:
-    if: true
+    if: false
     permissions:
       id-token: write # Required for authentication using OIDC
     name: sherpa_onnx_macos
@@ -321,6 +321,7 @@ jobs:
           flutter pub publish --force
 
   sherpa_onnx_android:
+    if: false
     permissions:
       id-token: write # Required for authentication using OIDC
     name: sherpa_onnx_android
@@ -437,6 +438,62 @@ jobs:
           cp -v build-android-x86-64/install/lib/lib*.so flutter/sherpa_onnx_android/android/src/main/jniLibs/x86_64
 
           mv -v flutter/sherpa_onnx_android /tmp/to_be_published
+
+          ls -lh /tmp/to_be_published
+
+      - name: Release
+        shell: bash
+        run: |
+          cd /tmp/to_be_published
+          du -h -d1 .
+
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force
+
+  sherpa_onnx:
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    name: sherpa_onnx
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Fix version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          src_dir=$PWD/flutter/sherpa_onnx
+          pushd $src_dir
+          v="version: $SHERPA_ONNX_VERSION"
+          echo "v: $v"
+          sed -i.bak s"/^version: .*/$v/" ./pubspec.yaml
+          rm *.bak
+          git status
+          git diff
+
+      - name: Copy extra files
+        shell: bash
+        run: |
+          dst=flutter/sherpa_onnx
+
+          cp -v LICENSE $dst/
+          cp -v CHANGELOG.md $dst/
+          cp -v README.md $dst/
+
+          git status
+
+          mv -v flutter/sherpa_onnx /tmp/to_be_published
 
           ls -lh /tmp/to_be_published
 
