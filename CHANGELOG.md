@@ -1,3 +1,7 @@
+## 1.10.8
+
+* Fix released packages. There should be a lib directory.
+
 ## 1.10.7
 
 * Support Android for Flutter.

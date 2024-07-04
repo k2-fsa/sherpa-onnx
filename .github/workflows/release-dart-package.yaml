@@ -452,7 +452,7 @@ jobs:
           flutter pub publish --force
 
   sherpa_onnx:
-    # if: false
+    if: false
     permissions:
       id-token: write # Required for authentication using OIDC
     name: sherpa_onnx
