@@ -103,12 +103,6 @@ jobs:
           rm libonnxruntime.so
           ln -s libonnxruntime.so.* ./libonnxruntime.so
 
-          rm libpiper_phonemize.so.1
-          rm libpiper_phonemize.so
-
-          ln -s libpiper_phonemize.so.1.2.0 libpiper_phonemize.so.1
-          ln -s libpiper_phonemize.so.1 libpiper_phonemize.so
-
           popd
 
           mv -v flutter/sherpa_onnx_linux /tmp/to_be_published
@@ -219,9 +213,6 @@ jobs:
           pushd /tmp/to_be_published/macos
 
           rm libonnxruntime.dylib
-
-          rm libpiper_phonemize.1.dylib
-          rm libpiper_phonemize.dylib
 
           ls -lh
 

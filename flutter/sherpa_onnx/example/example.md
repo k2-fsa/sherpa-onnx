@@ -8,8 +8,6 @@
 
 ## Pure dart-examples
 
-## Streaming speech recognition
-
 | Functions | URL | Supported Platforms|
 |---|---|---|
 |Streaming speech recognition| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/streaming-asr)| macOS, Windows, Linux|

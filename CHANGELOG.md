@@ -1,3 +1,7 @@
+## 1.10.9
+
+* Fix released packages. piper-phonemize was not included in v1.10.8.
+
 ## 1.10.8
 
 * Fix released packages. There should be a lib directory.
