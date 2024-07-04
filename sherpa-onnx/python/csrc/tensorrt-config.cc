@@ -39,7 +39,7 @@ void PybindTensorrtConfig(py::module *m) {
 
             return ans;
           }),
-           py::arg("trt_max_workspace_size") = 2147483648,
+           py::arg("trt_max_workspace_size") = 2147483647,
            py::arg("trt_max_partition_iterations") = 10,
            py::arg("trt_min_subgraph_size") = 5,
            py::arg("trt_fp16_enable") = true,

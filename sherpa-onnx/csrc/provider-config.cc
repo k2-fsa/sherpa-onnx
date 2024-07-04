@@ -113,12 +113,19 @@ void ProviderConfig::Register(ParseOptions *po) {
 }
 
 bool ProviderConfig::Validate() const {
-  if(provider == "cuda" || provider == "trt") {
-    if (device < 0) {
-      SHERPA_ONNX_LOGE("device: '%d' is invalid.", device);
-      return false;
-    }
+  if (device < 0) {
+    SHERPA_ONNX_LOGE("device: '%d' is invalid.", device);
+    return false;
   }
+
+  if(provider == "cuda" && !cuda_config.Validate()) {
+    return false;
+  }
+
+  if(provider == "trt" && !trt_config.Validate()) {
+    return false;
+  }
+
   return true;
 }
 
