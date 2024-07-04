@@ -14,7 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  release_dart:
+  sherpa_onnx_linux:
     permissions:
       id-token: write # Required for authentication using OIDC
     name: Release dart
@@ -31,16 +31,62 @@ jobs:
 
       - uses: dart-lang/setup-dart@v1
 
-      - name: Copy pre-build libs
+      - name: Fix version
         shell: bash
         run: |
-          cd scripts/dart
-          ./release.sh
-          cd ../..
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          mv -v sherpa-onnx/flutter /tmp/to-be-published
+          src_dir=$PWD/flutter/sherpa_onnx_linux
+          pushd $src_dir
+          v="version: $SHERPA_ONNX_VERSION"
+          echo "v: $v"
+          sed -i.bak s"/^version: .*/$v/" ./pubspec.yaml
+          rm *.bak
+          git status
+          git diff
 
-          cp -v README.md /tmp/to-be-published
+      - name: Build sherpa-onnx
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux2014_x86_64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
+
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+
+              mkdir build
+              cd build
+
+              cmake \
+                -DSHERPA_ONNX_ENABLE_TTS=ON \
+                -D CMAKE_BUILD_TYPE=Release \
+                -D BUILD_SHARED_LIBS=ON \
+                -D CMAKE_INSTALL_PREFIX=./install \
+                -D SHERPA_ONNX_ENABLE_JNI=OFF \
+                -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+                ..
+
+              make -j2
+              make install
+
+              ls -lh ./install/lib
+
+      - name: Copy pre-built libs
+        shell: bash
+        run: |
+          cp build/install/lib/lib*.so* flutter/sherpa_onnx_linux/linux/
+          cp LICENSE flutter/sherpa_onnx_linux/
+          cp CHANGE.md flutter/sherpa_onnx_linux/
+
+          mv -v flutter/sherpa_onnx_linux /tmp/to-be-published
 
       - name: Release
         shell: bash
