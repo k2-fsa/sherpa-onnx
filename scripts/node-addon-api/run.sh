@@ -6,7 +6,12 @@ if [[ ! -f ../../build/install/lib/libsherpa-onnx-core.dylib && ! -f ../../build
   pushd ../../
   mkdir -p build
   cd build
-  cmake -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON ..
+
+  cmake \
+    -DCMAKE_INSTALL_PREFIX=./install \
+    -DBUILD_SHARED_LIBS=ON \
+    -DSHERPA_ONNX_BUILD_SINGLE_SHARED_LIB=ON \
+    ..
   make install
   popd
 fi
