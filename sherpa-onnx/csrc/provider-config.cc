@@ -118,11 +118,11 @@ bool ProviderConfig::Validate() const {
     return false;
   }
 
-  if(provider == "cuda" && !cuda_config.Validate()) {
+  if (provider == "cuda" && !cuda_config.Validate()) {
     return false;
   }
 
-  if(provider == "trt" && !trt_config.Validate()) {
+  if (provider == "trt" && !trt_config.Validate()) {
     return false;
   }
 
