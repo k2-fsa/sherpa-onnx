@@ -118,18 +118,6 @@ rm -rf install/lib/pkgconfig
 #   cd /data/local/tmp
 #   ./sherpa-onnx
 #
-# which shows the following error log:
-#
-#  CANNOT LINK EXECUTABLE "./sherpa-onnx": library "libsherpa-onnx-core.so" not found: needed by main executable
-#
-# Please run:
-#
-#  export LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH
-#
-# and then you can run:
-#
-#  ./sherpa-onnx
-#
 # It should show the help message of sherpa-onnx.
 #
 # Please use the above approach to copy model files to your phone.

@@ -197,8 +197,8 @@ jobs:
           cd build
           make -j2 install
 
-          ls -lh install/lib/libsherpa-onnx-core.dylib
-          file install/lib/libsherpa-onnx-core.dylib
+          ls -lh install/lib/libsherpa-onnx-c-api.dylib
+          file install/lib/libsherpa-onnx-c-api.dylib
 
       - name: Copy pre-built libs
         shell: bash
