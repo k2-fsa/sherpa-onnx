@@ -101,8 +101,8 @@ jobs:
           cp -v build/install/lib/lib*.so* flutter/sherpa_onnx_linux/linux/
           pushd flutter/sherpa_onnx_linux/linux/
 
-          rm libonnxruntime.so
-          ln -s libonnxruntime.so.* ./libonnxruntime.so
+          # rm libonnxruntime.so
+          # ln -s libonnxruntime.so.* ./libonnxruntime.so
 
           popd
 
@@ -206,7 +206,6 @@ jobs:
         shell: bash
         run: |
           cp -v build/install/lib/lib*.dylib* flutter/sherpa_onnx_macos/macos/
-
 
           mv -v flutter/sherpa_onnx_macos /tmp/to_be_published
 
