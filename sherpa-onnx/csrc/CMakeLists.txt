@@ -155,6 +155,7 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
 
+set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
 if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
   # We set BUILD_SHARED_LIBS to OFF only in this file so that
   # building EXEs won't throw the following error
@@ -575,3 +576,4 @@ add_custom_target(
 
 add_custom_target(check DEPENDS clang-tidy-check)
 
+set(BUILD_SHARED_LIBS ${_build_shared_libs_bak})
