@@ -10,8 +10,8 @@ if [[ ! -f ../../build/install/lib/libsherpa-onnx-c-api.dylib && ! -f ../../buil
   cmake \
     -DCMAKE_INSTALL_PREFIX=./install \
     -DBUILD_SHARED_LIBS=ON \
-    -DSHERPA_ONNX_BUILD_SINGLE_SHARED_LIB=ON \
     ..
+
   make install
   popd
 fi

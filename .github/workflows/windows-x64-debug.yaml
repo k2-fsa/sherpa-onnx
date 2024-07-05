@@ -63,7 +63,6 @@ jobs:
             -A x64 \
             -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
             -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
-            -D SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB=${{ matrix.shared_lib }} \
             -D CMAKE_INSTALL_PREFIX=./install \
             ..
 

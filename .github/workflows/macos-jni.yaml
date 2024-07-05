@@ -54,7 +54,6 @@ jobs:
             -D CMAKE_BUILD_TYPE=Release \
             -D CMAKE_OSX_ARCHITECTURES=$arch \
             -D SHERPA_ONNX_ENABLE_JNI=ON \
-            -D SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB=ON \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
 

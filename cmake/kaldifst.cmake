@@ -43,14 +43,14 @@ function(download_kaldifst)
 
   list(APPEND CMAKE_MODULE_PATH ${kaldifst_SOURCE_DIR}/cmake)
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND BUILD_SHARED_LIBS)
+  if(BUILD_SHARED_LIBS)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
     set(BUILD_SHARED_LIBS OFF)
   endif()
 
   add_subdirectory(${kaldifst_SOURCE_DIR} ${kaldifst_BINARY_DIR} EXCLUDE_FROM_ALL)
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND _build_shared_libs_bak)
+  if(_build_shared_libs_bak)
     set_target_properties(kaldifst_core
       PROPERTIES
         POSITION_INDEPENDENT_CODE ON

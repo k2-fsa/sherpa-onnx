@@ -41,7 +41,6 @@ jobs:
             -A x64 \
             -D CMAKE_BUILD_TYPE=Release \
             -D BUILD_SHARED_LIBS=ON \
-            -D SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB=ON \
             -D SHERPA_ONNX_ENABLE_JNI=ON \
             -D CMAKE_INSTALL_PREFIX=./install \
             ..

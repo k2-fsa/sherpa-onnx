@@ -41,7 +41,6 @@ jobs:
           cmake \
             $opts \
             -DBUILD_SHARED_LIBS=ON \
-            -DSHERPA_ONNX_BUILD_SINGLE_SHARED_LIB=ON \
             -DCMAKE_INSTALL_PREFIX=./install \
             -DCMAKE_BUILD_TYPE=Release \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \

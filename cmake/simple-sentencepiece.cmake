@@ -43,14 +43,14 @@ function(download_simple_sentencepiece)
   endif()
   message(STATUS "simple-sentencepiece is downloaded to ${simple-sentencepiece_SOURCE_DIR}")
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND BUILD_SHARED_LIBS)
+  if(BUILD_SHARED_LIBS)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
     set(BUILD_SHARED_LIBS OFF)
   endif()
 
   add_subdirectory(${simple-sentencepiece_SOURCE_DIR} ${simple-sentencepiece_BINARY_DIR} EXCLUDE_FROM_ALL)
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND _build_shared_libs_bak)
+  if(_build_shared_libs_bak)
     set_target_properties(ssentencepiece_core
       PROPERTIES
         POSITION_INDEPENDENT_CODE ON
@@ -65,16 +65,8 @@ function(download_simple_sentencepiece)
       ${simple-sentencepiece_SOURCE_DIR}/
   )
 
-  if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
-    if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-      install(TARGETS ssentencepiece_core DESTINATION ..)
-    else()
-      install(TARGETS ssentencepiece_core DESTINATION lib)
-    endif()
-
-    if(WIN32 AND BUILD_SHARED_LIBS)
-      install(TARGETS ssentencepiece_core DESTINATION bin)
-    endif()
+  if(NOT BUILD_SHARED_LIBS)
+    install(TARGETS ssentencepiece_core DESTINATION lib)
   endif()
 endfunction()
 

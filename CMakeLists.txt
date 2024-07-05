@@ -56,7 +56,6 @@ option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically.
 option(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE "True to use pre-installed onnxruntime if available" ON)
 option(SHERPA_ONNX_ENABLE_SANITIZER "Whether to enable ubsan and asan" OFF)
 option(SHERPA_ONNX_BUILD_C_API_EXAMPLES "Whether to enable C API examples" ON)
-option(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB "Whether to build a single shared lib." OFF)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -114,20 +113,6 @@ if(BUILD_SHARED_LIBS AND MSVC)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
-if((NOT BUILD_SHARED_LIBS OR SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB) AND MSVC)
-  # see https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
-  # https://stackoverflow.com/questions/14172856/compile-with-mt-instead-of-md-using-cmake
-  if(MSVC)
-      add_compile_options(
-          $<$<CONFIG:>:/MT> #---------|
-          $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
-          $<$<CONFIG:Release>:/MT> #--|
-          $<$<CONFIG:RelWithDebInfo>:/MT>
-          $<$<CONFIG:MinSizeRel>:/MT>
-      )
-  endif()
-endif()
-
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 message(STATUS "CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX}")
 message(STATUS "BUILD_SHARED_LIBS ${BUILD_SHARED_LIBS}")
@@ -150,12 +135,6 @@ message(STATUS "SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY ${SHERPA_ONNX_LINK_LIBSTDC
 message(STATUS "SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE ${SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE}")
 message(STATUS "SHERPA_ONNX_ENABLE_SANITIZER: ${SHERPA_ONNX_ENABLE_SANITIZER}")
 message(STATUS "SHERPA_ONNX_BUILD_C_API_EXAMPLES: ${SHERPA_ONNX_BUILD_C_API_EXAMPLES}")
-message(STATUS "SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB: ${SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB}")
-
-if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND NOT BUILD_SHARED_LIBS)
-  message(STATUS "Set BUILD_SHARED_LIBS to ON since SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB is ON")
-  set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
-endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
   message(STATUS "TTS is enabled")
@@ -352,21 +331,21 @@ if(NOT BUILD_SHARED_LIBS)
   endif()
 endif()
 
-if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
+if(NOT BUILD_SHARED_LIBS)
 # See https://people.freedesktop.org/~dbn/pkg-config-guide.html
   if(SHERPA_ONNX_ENABLE_TTS)
-    configure_file(cmake/sherpa-onnx.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+    configure_file(cmake/sherpa-onnx-static.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
   else()
-    configure_file(cmake/sherpa-onnx-no-tts.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+    configure_file(cmake/sherpa-onnx-static-no-tts.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
   endif()
 else()
-  configure_file(cmake/sherpa-onnx-single.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  configure_file(cmake/sherpa-onnx-shared.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
 endif()
 
 install(
   FILES
     ${PROJECT_BINARY_DIR}/sherpa-onnx.pc
   DESTINATION
-    .
+    ./
 )
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")

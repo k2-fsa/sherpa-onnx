@@ -68,14 +68,14 @@ function(download_openfst)
   endif()
   message(STATUS "openfst is downloaded to ${openfst_SOURCE_DIR}")
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND _build_shared_libs_bak)
+  if(_build_shared_libs_bak)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
     set(BUILD_SHARED_LIBS OFF)
   endif()
 
   add_subdirectory(${openfst_SOURCE_DIR} ${openfst_BINARY_DIR} EXCLUDE_FROM_ALL)
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND _build_shared_libs_bak)
+  if(_build_shared_libs_bak)
     set_target_properties(fst fstfar
       PROPERTIES
         POSITION_INDEPENDENT_CODE ON

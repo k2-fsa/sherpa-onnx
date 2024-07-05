@@ -130,7 +130,6 @@ class BuildExtension(build_ext):
 
         extra_cmake_args = f" -DCMAKE_INSTALL_PREFIX={install_dir} "
         extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
-        extra_cmake_args += " -DSHERPA_ONNX_BUILD_SINGLE_SHARED_LIB=ON "
         extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_EXE=OFF "
         extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_TESTS=OFF "
         extra_cmake_args += " -DBUILD_ESPEAK_NG_EXE=OFF "

@@ -10,7 +10,6 @@ if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
     -DSHERPA_ONNX_ENABLE_CHECK=OFF \
     -DBUILD_SHARED_LIBS=ON \
-    -DSHERPA_ONNX_BUILD_SINGLE_SHARED_LIB=ON \
     -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
     -DSHERPA_ONNX_ENABLE_JNI=ON \
     ..

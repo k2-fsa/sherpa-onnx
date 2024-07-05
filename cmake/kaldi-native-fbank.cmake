@@ -44,14 +44,14 @@ function(download_kaldi_native_fbank)
   message(STATUS "kaldi-native-fbank is downloaded to ${kaldi_native_fbank_SOURCE_DIR}")
   message(STATUS "kaldi-native-fbank's binary dir is ${kaldi_native_fbank_BINARY_DIR}")
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND BUILD_SHARED_LIBS)
+  if(BUILD_SHARED_LIBS)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
     set(BUILD_SHARED_LIBS OFF)
   endif()
 
   add_subdirectory(${kaldi_native_fbank_SOURCE_DIR} ${kaldi_native_fbank_BINARY_DIR} EXCLUDE_FROM_ALL)
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND _build_shared_libs_bak)
+  if(_build_shared_libs_bak)
     set_target_properties(kaldi-native-fbank-core
       PROPERTIES
         POSITION_INDEPENDENT_CODE ON
@@ -66,16 +66,8 @@ function(download_kaldi_native_fbank)
       ${kaldi_native_fbank_SOURCE_DIR}/
   )
 
-  if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
-    if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-      install(TARGETS kaldi-native-fbank-core DESTINATION ..)
-    else()
-      install(TARGETS kaldi-native-fbank-core DESTINATION lib)
-    endif()
-
-    if(WIN32 AND BUILD_SHARED_LIBS)
-      install(TARGETS kaldi-native-fbank-core DESTINATION bin)
-    endif()
+  if(NOT BUILD_SHARED_LIBS)
+    install(TARGETS kaldi-native-fbank-core DESTINATION lib)
   endif()
 endfunction()
 

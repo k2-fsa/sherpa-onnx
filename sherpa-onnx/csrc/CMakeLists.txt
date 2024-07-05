@@ -155,26 +155,16 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
 
-set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
-if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
-  # We set BUILD_SHARED_LIBS to OFF only in this file so that
-  # building EXEs won't throw the following error
-  #   mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't
-  #   match value 'MD_Dynamic Release'
-  set(BUILD_SHARED_LIBS OFF)
-endif()
+# Always static build
+add_library(sherpa-onnx-core STATIC ${sources})
 
-add_library(sherpa-onnx-core ${sources})
-
-if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
-  set_target_properties(
-      sherpa-onnx-core
-    PROPERTIES
-      POSITION_INDEPENDENT_CODE ON
-      C_VISIBILITY_PRESET hidden
-      CXX_VISIBILITY_PRESET hidden
-  )
-endif()
+set_target_properties(
+    sherpa-onnx-core
+  PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    C_VISIBILITY_PRESET hidden
+    CXX_VISIBILITY_PRESET hidden
+)
 
 if(APPLE)
   target_compile_options(sherpa-onnx-core PRIVATE
@@ -232,10 +222,6 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   endif()
 endif()
 
-if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
-  target_link_libraries(sherpa-onnx-core -ldl)
-endif()
-
 if(NOT WIN32 AND NOT SHERPA_ONNX_ENABLE_WASM AND CMAKE_SYSTEM_NAME STREQUAL Linux)
   target_link_libraries(sherpa-onnx-core -pthread)
 endif()
@@ -284,17 +270,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   endif()
 endif()
 
-if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
-  if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-    install(TARGETS sherpa-onnx-core DESTINATION ..)
-  else()
-    install(TARGETS sherpa-onnx-core DESTINATION lib)
-  endif()
-
-  if(WIN32 AND BUILD_SHARED_LIBS)
-    install(TARGETS sherpa-onnx-core DESTINATION bin)
-  endif()
-endif()
+install(TARGETS sherpa-onnx-core DESTINATION lib)
 
 if(SHERPA_ONNX_ENABLE_BINARY)
   install(
@@ -411,12 +387,6 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
-  if(BUILD_SHARED_LIBS)
-    set(PA_LIB portaudio)
-  else()
-    set(PA_LIB portaudio_static)
-  endif()
-
   set(exes
     sherpa-onnx-microphone
     sherpa-onnx-keyword-spotter-microphone
@@ -433,7 +403,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
   endif()
 
   foreach(exe IN LISTS exes)
-    target_link_libraries(${exe} ${PA_LIB} sherpa-onnx-core)
+    target_link_libraries(${exe} portaudio_static sherpa-onnx-core)
   endforeach()
 
   if(NOT WIN32)
@@ -575,5 +545,3 @@ add_custom_target(
   DEPENDS ${sources})
 
 add_custom_target(check DEPENDS clang-tidy-check)
-
-set(BUILD_SHARED_LIBS ${_build_shared_libs_bak})

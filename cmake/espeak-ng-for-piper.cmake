@@ -53,14 +53,14 @@ function(download_espeak_ng_for_piper)
   message(STATUS "espeak-ng is downloaded to ${espeak_ng_SOURCE_DIR}")
   message(STATUS "espeak-ng binary dir is ${espeak_ng_BINARY_DIR}")
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND BUILD_SHARED_LIBS)
+  if(BUILD_SHARED_LIBS)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
     set(BUILD_SHARED_LIBS OFF)
   endif()
 
   add_subdirectory(${espeak_ng_SOURCE_DIR} ${espeak_ng_BINARY_DIR})
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND _build_shared_libs_bak)
+  if(_build_shared_libs_bak)
     set_target_properties(espeak-ng
       PROPERTIES
         POSITION_INDEPENDENT_CODE ON
@@ -123,29 +123,11 @@ function(download_espeak_ng_for_piper)
       ${espeak_ng_SOURCE_DIR}/src/ucd-tools/src/include
   )
 
-  if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
-    if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-      install(TARGETS
-        espeak-ng
-        ucd
-      DESTINATION ..)
-    else()
-      install(TARGETS
-        espeak-ng
-        ucd
-      DESTINATION lib)
-    endif()
-
-    if(NOT BUILD_SHARED_LIBS)
-      install(TARGETS ucd DESTINATION lib)
-    endif()
-
-    if(WIN32 AND BUILD_SHARED_LIBS)
-      install(TARGETS
-        espeak-ng
-        ucd
-      DESTINATION bin)
-    endif()
+  if(NOT BUILD_SHARED_LIBS)
+    install(TARGETS
+      espeak-ng
+      ucd
+    DESTINATION lib)
   endif()
 endfunction()
 

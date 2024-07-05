@@ -46,14 +46,14 @@ function(download_kaldi_decoder)
 
   include_directories(${kaldi_decoder_SOURCE_DIR})
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND BUILD_SHARED_LIBS)
+  if(BUILD_SHARED_LIBS)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
     set(BUILD_SHARED_LIBS OFF)
   endif()
 
   add_subdirectory(${kaldi_decoder_SOURCE_DIR} ${kaldi_decoder_BINARY_DIR} EXCLUDE_FROM_ALL)
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND _build_shared_libs_bak)
+  if(_build_shared_libs_bak)
     set_target_properties(
         kaldi-decoder-core
       PROPERTIES
@@ -75,31 +75,13 @@ function(download_kaldi_decoder)
     INTERFACE
       ${kaldi-decoder_SOURCE_DIR}/
   )
-  if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
-    if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-      install(TARGETS
-        kaldi-decoder-core
-        kaldifst_core
-        fst
-        fstfar
-      DESTINATION ..)
-    else()
-      install(TARGETS
-        kaldi-decoder-core
-        kaldifst_core
-        fst
-        fstfar
-      DESTINATION lib)
-    endif()
-
-    if(WIN32 AND BUILD_SHARED_LIBS)
-      install(TARGETS
-        kaldi-decoder-core
-        kaldifst_core
-        fst
-        fstfar
-      DESTINATION bin)
-    endif()
+  if(NOT BUILD_SHARED_LIBS)
+    install(TARGETS
+      kaldi-decoder-core
+      kaldifst_core
+      fst
+      fstfar
+    DESTINATION lib)
   endif()
 endfunction()
 

@@ -40,14 +40,14 @@ function(download_piper_phonemize)
   message(STATUS "piper-phonemize is downloaded to ${piper_phonemize_SOURCE_DIR}")
   message(STATUS "piper-phonemize binary dir is ${piper_phonemize_BINARY_DIR}")
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND BUILD_SHARED_LIBS)
+  if(BUILD_SHARED_LIBS)
     set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
     set(BUILD_SHARED_LIBS OFF)
   endif()
 
   add_subdirectory(${piper_phonemize_SOURCE_DIR} ${piper_phonemize_BINARY_DIR} EXCLUDE_FROM_ALL)
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND _build_shared_libs_bak)
+  if(_build_shared_libs_bak)
     set_target_properties(piper_phonemize
       PROPERTIES
         POSITION_INDEPENDENT_CODE ON
@@ -68,22 +68,10 @@ function(download_piper_phonemize)
       ${piper_phonemize_SOURCE_DIR}/src/include
   )
 
-  if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
-    if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-      install(TARGETS
-        piper_phonemize
-      DESTINATION ..)
-    else()
-      install(TARGETS
-        piper_phonemize
-      DESTINATION lib)
-    endif()
-
-    if(WIN32 AND BUILD_SHARED_LIBS)
-      install(TARGETS
-        piper_phonemize
-      DESTINATION bin)
-    endif()
+  if(NOT BUILD_SHARED_LIBS)
+    install(TARGETS
+      piper_phonemize
+    DESTINATION lib)
   endif()
 endfunction()
 
