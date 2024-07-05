@@ -2,5 +2,5 @@
 
 package sherpa_onnx
 
-// #cgo LDFLAGS: -L ${SRCDIR}/lib/aarch64-apple-darwin -lsherpa-onnx-c-api -lonnxruntime -lssentencepiece_core -Wl,-rpath,${SRCDIR}/lib/aarch64-apple-darwin
+// #cgo LDFLAGS: -L ${SRCDIR}/lib/aarch64-apple-darwin -lsherpa-onnx-c-api -lonnxruntime -Wl,-rpath,${SRCDIR}/lib/aarch64-apple-darwin
 import "C"
