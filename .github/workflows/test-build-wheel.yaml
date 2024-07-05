@@ -110,6 +110,11 @@ jobs:
           python3 setup.py bdist_wheel
           ls -lh dist
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}-${{ matrix.python-version }}
+          path: ./dist/*.whl
+
       - name: Display wheel
         shell: bash
         run: |
