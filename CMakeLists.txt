@@ -350,11 +350,15 @@ if(NOT BUILD_SHARED_LIBS)
   endif()
 endif()
 
+if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
 # See https://people.freedesktop.org/~dbn/pkg-config-guide.html
-if(SHERPA_ONNX_ENABLE_TTS)
-  configure_file(cmake/sherpa-onnx.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  if(SHERPA_ONNX_ENABLE_TTS)
+    configure_file(cmake/sherpa-onnx.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  else()
+    configure_file(cmake/sherpa-onnx-no-tts.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  endif()
 else()
-  configure_file(cmake/sherpa-onnx-no-tts.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  configure_file(cmake/sherpa-onnx-single.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
 endif()
 
 install(
