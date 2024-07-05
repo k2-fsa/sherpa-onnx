@@ -66,7 +66,7 @@ function(download_kaldi_native_fbank)
       ${kaldi_native_fbank_SOURCE_DIR}/
   )
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
+  if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
     if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
       install(TARGETS kaldi-native-fbank-core DESTINATION ..)
     else()

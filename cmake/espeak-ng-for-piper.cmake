@@ -123,7 +123,7 @@ function(download_espeak_ng_for_piper)
       ${espeak_ng_SOURCE_DIR}/src/ucd-tools/src/include
   )
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
+  if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
     if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
       install(TARGETS
         espeak-ng

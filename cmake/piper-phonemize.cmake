@@ -68,7 +68,7 @@ function(download_piper_phonemize)
       ${piper_phonemize_SOURCE_DIR}/src/include
   )
 
-  if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
+  if(NOT SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
     if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
       install(TARGETS
         piper_phonemize
