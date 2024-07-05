@@ -94,8 +94,16 @@ to install CUDA toolkit if you have not installed it.")
   endif()
 endif()
 
-if(BUILD_SHARED_LIBS AND MSVC)
-  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+# see https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
+# https://stackoverflow.com/questions/14172856/compile-with-mt-instead-of-md-using-cmake
+if(MSVC)
+  add_compile_options(
+      $<$<CONFIG:>:/MT> #---------|
+      $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
+      $<$<CONFIG:Release>:/MT> #--|
+      $<$<CONFIG:RelWithDebInfo>:/MT>
+      $<$<CONFIG:MinSizeRel>:/MT>
+  )
 endif()
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
