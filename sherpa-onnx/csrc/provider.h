@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "sherpa-onnx/csrc/provider-config.h"
 namespace sherpa_onnx {
 
 // Please refer to

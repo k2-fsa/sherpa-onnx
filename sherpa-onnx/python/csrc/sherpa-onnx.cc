@@ -51,7 +51,6 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindEndpoint(&m);
   PybindOnlineRecognizer(&m);
   PybindKeywordSpotter(&m);
-
   PybindDisplay(&m);
 
   PybindOfflineStream(&m);

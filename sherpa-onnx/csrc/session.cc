@@ -32,11 +32,13 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
 }
 
 static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
-                                                 std::string provider_str) {
-  Provider p = StringToProvider(std::move(provider_str));
+    const std::string &provider_str,
+    const ProviderConfig *provider_config = nullptr) {
+  Provider p = StringToProvider(provider_str);
 
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(num_threads);
+
   sess_opts.SetInterOpNumThreads(num_threads);
 
   std::vector<std::string> available_providers = Ort::GetAvailableProviders();
@@ -64,26 +66,51 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
       break;
     }
     case Provider::kTRT: {
+      if (provider_config == nullptr) {
+        SHERPA_ONNX_LOGE("Tensorrt support for Online models ony,"
+                         "Must be extended for offline and others");
+        exit(1);
+      }
+      auto trt_config = provider_config->trt_config;
       struct TrtPairs {
         const char *op_keys;
         const char *op_values;
       };
 
+      auto device_id = std::to_string(provider_config->device);
+      auto trt_max_workspace_size =
+          std::to_string(trt_config.trt_max_workspace_size);
+      auto trt_max_partition_iterations =
+          std::to_string(trt_config.trt_max_partition_iterations);
+      auto trt_min_subgraph_size =
+          std::to_string(trt_config.trt_min_subgraph_size);
+      auto trt_fp16_enable =
+          std::to_string(trt_config.trt_fp16_enable);
+      auto trt_detailed_build_log =
+          std::to_string(trt_config.trt_detailed_build_log);
+      auto trt_engine_cache_enable =
+          std::to_string(trt_config.trt_engine_cache_enable);
+      auto trt_timing_cache_enable =
+          std::to_string(trt_config.trt_timing_cache_enable);
+      auto trt_dump_subgraphs =
+          std::to_string(trt_config.trt_dump_subgraphs);
+
       std::vector<TrtPairs> trt_options = {
-          {"device_id", "0"},
-          {"trt_max_workspace_size", "2147483648"},
-          {"trt_max_partition_iterations", "10"},
-          {"trt_min_subgraph_size", "5"},
-          {"trt_fp16_enable", "0"},
-          {"trt_detailed_build_log", "0"},
-          {"trt_engine_cache_enable", "1"},
-          {"trt_engine_cache_path", "."},
-          {"trt_timing_cache_enable", "1"},
-          {"trt_timing_cache_path", "."}};
+        {"device_id", device_id.c_str()},
+        {"trt_max_workspace_size", trt_max_workspace_size.c_str()},
+        {"trt_max_partition_iterations", trt_max_partition_iterations.c_str()},
+        {"trt_min_subgraph_size", trt_min_subgraph_size.c_str()},
+        {"trt_fp16_enable", trt_fp16_enable.c_str()},
+        {"trt_detailed_build_log", trt_detailed_build_log.c_str()},
+        {"trt_engine_cache_enable", trt_engine_cache_enable.c_str()},
+        {"trt_engine_cache_path", trt_config.trt_engine_cache_path.c_str()},
+        {"trt_timing_cache_enable", trt_timing_cache_enable.c_str()},
+        {"trt_timing_cache_path", trt_config.trt_timing_cache_path.c_str()},
+        {"trt_dump_subgraphs", trt_dump_subgraphs.c_str()}
+      };
       // ToDo : Trt configs
       // "trt_int8_enable"
       // "trt_int8_use_native_calibration_table"
-      // "trt_dump_subgraphs"
 
       std::vector<const char *> option_keys, option_values;
       for (const TrtPairs &pair : trt_options) {
@@ -122,10 +149,18 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
                     "CUDAExecutionProvider") != available_providers.end()) {
         // The CUDA provider is available, proceed with setting the options
         OrtCUDAProviderOptions options;
-        options.device_id = 0;
-        // Default OrtCudnnConvAlgoSearchExhaustive is extremely slow
-        options.cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
-        // set more options on need
+
+        if (provider_config != nullptr) {
+          options.device_id = provider_config->device;
+          options.cudnn_conv_algo_search =
+              OrtCudnnConvAlgoSearch(provider_config->cuda_config
+                .cudnn_conv_algo_search);
+        } else {
+          options.device_id = 0;
+          // Default OrtCudnnConvAlgoSearchExhaustive is extremely slow
+          options.cudnn_conv_algo_search = OrtCudnnConvAlgoSearchHeuristic;
+          // set more options on need
+        }
         sess_opts.AppendExecutionProvider_CUDA(options);
       } else {
         SHERPA_ONNX_LOGE(
@@ -184,7 +219,8 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
 }
 
 Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
+  return GetSessionOptionsImpl(config.num_threads,
+        config.provider_config.provider, &config.provider_config);
 }
 
 Ort::SessionOptions GetSessionOptions(const OfflineModelConfig &config) {
