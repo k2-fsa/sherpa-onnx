@@ -257,17 +257,6 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   foreach(exe IN LISTS main_exes)
     target_link_libraries(${exe} sherpa-onnx-core)
   endforeach()
-
-  if(NOT WIN32)
-    foreach(exe IN LISTS main_exes)
-      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
-      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
-
-      if(SHERPA_ONNX_ENABLE_PYTHON)
-        target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
-      endif()
-    endforeach()
-  endif()
 endif()
 
 if(NOT BUILD_SHARED_LIBS)
@@ -325,19 +314,6 @@ if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
       target_link_libraries(${exe} asound)
     endif()
   endforeach()
-
-  if(NOT WIN32)
-    foreach(exe IN LISTS exes)
-      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
-      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
-    endforeach()
-
-    if(SHERPA_ONNX_ENABLE_PYTHON)
-      foreach(exe IN LISTS exes)
-        target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
-      endforeach()
-    endif()
-  endif()
 
   install(
     TARGETS ${exes}
@@ -408,19 +384,6 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     target_link_libraries(${exe} portaudio_static sherpa-onnx-core)
   endforeach()
 
-  if(NOT WIN32)
-    foreach(exe IN LISTS exes)
-      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
-      target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
-    endforeach()
-
-    if(SHERPA_ONNX_ENABLE_PYTHON)
-      foreach(exe IN LISTS exes)
-        target_link_libraries(${exe} "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
-      endforeach()
-    endif()
-  endif()
-
   install(
     TARGETS ${exes}
     DESTINATION
@@ -458,23 +421,6 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET AND SHERPA_ONNX_ENABLE_BINARY)
 
   if(NOT WIN32)
     target_compile_options(sherpa-onnx-offline-websocket-server PRIVATE -Wno-deprecated-declarations)
-  endif()
-
-  if(NOT WIN32)
-    target_link_libraries(sherpa-onnx-online-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
-    target_link_libraries(sherpa-onnx-online-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
-
-    target_link_libraries(sherpa-onnx-online-websocket-client "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
-    target_link_libraries(sherpa-onnx-online-websocket-client "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
-
-    target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
-    target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
-
-    if(SHERPA_ONNX_ENABLE_PYTHON AND NOT WIN32)
-      target_link_libraries(sherpa-onnx-online-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
-      target_link_libraries(sherpa-onnx-online-websocket-client "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
-      target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
-    endif()
   endif()
 
   install(
