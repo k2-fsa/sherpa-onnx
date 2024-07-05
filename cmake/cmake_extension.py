@@ -77,6 +77,7 @@ def get_binaries():
     if is_windows():
         binaries += [
             "onnxruntime.dll",
+            "sherpa-onnx-c-api.dll",
         ]
 
     return binaries
@@ -151,7 +152,7 @@ class BuildExtension(build_ext):
         if is_windows():
             build_cmd = f"""
          cmake {cmake_args} -B {self.build_temp} -S {sherpa_onnx_dir}
-         cmake --build {self.build_temp} --target install --config Release -- -m
+         cmake --build {self.build_temp} --target install --config Release
             """
             print(f"build command is:\n{build_cmd}")
             ret = os.system(
@@ -161,7 +162,7 @@ class BuildExtension(build_ext):
                 raise Exception("Failed to configure sherpa")
 
             ret = os.system(
-                f"cmake --build {self.build_temp} --target install --config Release -- -m"  # noqa
+                f"cmake --build {self.build_temp} --target install --config Release"  # noqa
             )
             if ret != 0:
                 raise Exception("Failed to build and install sherpa")
