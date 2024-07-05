@@ -112,7 +112,7 @@ if(BUILD_SHARED_LIBS AND MSVC)
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
 endif()
 
-if(NOT BUILD_SHARED_LIBS AND MSVC)
+if((NOT BUILD_SHARED_LIBS OR SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB) AND MSVC)
   # see https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
   # https://stackoverflow.com/questions/14172856/compile-with-mt-instead-of-md-using-cmake
   if(MSVC)

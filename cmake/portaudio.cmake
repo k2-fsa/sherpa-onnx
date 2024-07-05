@@ -26,6 +26,10 @@ function(download_portaudio)
     endif()
   endforeach()
 
+  if(MSVC AND SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
+    set(BUILD_SHARED_LIBS OFF)
+  endif()
+
   if(BUILD_SHARED_LIBS)
     set(PA_BUILD_SHARED ON CACHE BOOL "" FORCE)
     set(PA_BUILD_STATIC OFF CACHE BOOL "" FORCE)

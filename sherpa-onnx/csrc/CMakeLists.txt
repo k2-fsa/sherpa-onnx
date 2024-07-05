@@ -155,19 +155,17 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
 
-if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND BUILD_SHARED_LIBS)
-  add_library(sherpa-onnx-core STATIC ${sources})
-  # if(MSVC)
-  #   # To fix the following error for Windows when building exe
-  #   #  mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_Dynamic Release'
-  #   add_library(sherpa-onnx-core-shared ${sources})
-  #   set(sherpa-onnx-core-lib sherpa-onnx-core-shared)
-  # endif()
-else()
-  add_library(sherpa-onnx-core ${sources})
+if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
+  # We set BUILD_SHARED_LIBS to OFF only in this file so that
+  # building EXEs won't throw the following error
+  #   mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't
+  #   match value 'MD_Dynamic Release'
+  set(BUILD_SHARED_LIBS OFF)
 endif()
 
-if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND BUILD_SHARED_LIBS)
+add_library(sherpa-onnx-core ${sources})
+
+if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
   set_target_properties(
       sherpa-onnx-core
     PROPERTIES
@@ -336,17 +334,10 @@ if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
 
   #   # To fix the following error for Windows when building exe
   #   #  mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_Dynamic Release'
-  if(MSVC AND SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB)
-    add_library(sherpa-onnx-core-shared SHARED)
-    target_link_libraries(sherpa-onnx-core-shared sherpa-onnx-core)
-    foreach(exe IN LISTS exes)
-      target_link_libraries(${exe} sherpa-onnx-core-shared)
-    endforeach()
-  else()
-    foreach(exe IN LISTS exes)
-      target_link_libraries(${exe} sherpa-onnx-core)
-    endforeach()
-  endif
+
+  foreach(exe IN LISTS exes)
+    target_link_libraries(${exe} sherpa-onnx-core)
+  endforeach()
 
   foreach(exe IN LISTS exes)
     if(DEFINED ENV{SHERPA_ONNX_ALSA_LIB_DIR})
