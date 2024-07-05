@@ -114,6 +114,10 @@ jobs:
         shell: bash
         run: |
           ls -lh dist
+          cd dist
+          unzip ../*.whl
+
+          tree .
 
       - name: Install wheel
         shell: bash
