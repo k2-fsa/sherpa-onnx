@@ -19,6 +19,7 @@ String? _path;
 
 // see also
 // https://github.com/flutter/codelabs/blob/main/ffigen_codelab/step_05/lib/ffigen_app.dart
+// https://api.flutter.dev/flutter/dart-io/Platform-class.html
 final DynamicLibrary _dylib = () {
   if (Platform.isIOS) {
     throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');

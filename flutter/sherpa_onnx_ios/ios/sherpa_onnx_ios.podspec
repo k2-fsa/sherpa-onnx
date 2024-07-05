@@ -2,6 +2,9 @@
 # To learn more about a Podspec see http://guides.cocoapods.org/syntax/podspec.html.
 # Run `pod lib lint sherpa_onnx_ios.podspec` to validate before publishing.
 #
+# See also
+# https://github.com/google/webcrypto.dart/blob/2010361a106d7a872d90e3dfebfed250e2ede609/ios/webcrypto.podspec#L23-L28
+# https://groups.google.com/g/dart-ffi/c/nUATMBy7r0c
 Pod::Spec.new do |s|
   s.name             = 'sherpa_onnx_ios'
   s.version          = '1.10.9'
