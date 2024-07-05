@@ -125,8 +125,6 @@ jobs:
           cd t
           unzip ../*.whl
 
-          tree .
-
       - name: Install wheel
         shell: bash
         run: |
