@@ -115,6 +115,9 @@ jobs:
         run: |
           ls -lh dist
           cd dist
+
+          mkdir t
+          cd t
           unzip ../*.whl
 
           tree .
