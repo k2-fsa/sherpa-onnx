@@ -270,7 +270,9 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   endif()
 endif()
 
-install(TARGETS sherpa-onnx-core DESTINATION lib)
+if(NOT BUILD_SHARED_LIBS)
+  install(TARGETS sherpa-onnx-core DESTINATION lib)
+endif()
 
 if(SHERPA_ONNX_ENABLE_BINARY)
   install(
