@@ -81,6 +81,7 @@ jobs:
 
           make -j1
           cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
+          rm ./lib/*.a
 
           cd ../scripts/go/_internal/
           ls -lh lib
