@@ -76,19 +76,7 @@ def get_binaries():
 
     if is_windows():
         binaries += [
-            "espeak-ng.dll",
-            "kaldi-decoder-core.dll",
-            "kaldi-native-fbank-core.dll",
             "onnxruntime.dll",
-            "ssentencepiece_core.dll",
-            "piper_phonemize.dll",
-            "sherpa-onnx-c-api.dll",
-            "sherpa-onnx-core.dll",
-            "sherpa-onnx-fstfar.dll",
-            "sherpa-onnx-fst.dll",
-            "sherpa-onnx-kaldifst-core.dll",
-            "sherpa-onnx-portaudio.dll",
-            "ucd.dll",
         ]
 
     return binaries
@@ -141,10 +129,12 @@ class BuildExtension(build_ext):
 
         extra_cmake_args = f" -DCMAKE_INSTALL_PREFIX={install_dir} "
         extra_cmake_args += " -DBUILD_SHARED_LIBS=ON "
+        extra_cmake_args += " -DSHERPA_ONNX_BUILD_SINGLE_SHARED_LIB=ON "
         extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_EXE=OFF "
         extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_TESTS=OFF "
         extra_cmake_args += " -DBUILD_ESPEAK_NG_EXE=OFF "
         extra_cmake_args += " -DBUILD_ESPEAK_NG_TESTS=OFF "
+        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_C_API=ON "
 
         extra_cmake_args += " -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_CHECK=OFF "

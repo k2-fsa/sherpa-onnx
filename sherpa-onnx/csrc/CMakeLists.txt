@@ -154,7 +154,23 @@ endif()
 if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
-add_library(sherpa-onnx-core ${sources})
+
+if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND BUILD_SHARED_LIBS)
+  add_library(sherpa-onnx-core STATIC ${sources})
+else()
+  add_library(sherpa-onnx-core ${sources})
+endif()
+
+if(SHERPA_ONNX_BUILD_SINGLE_SHARED_LIB AND BUILD_SHARED_LIBS)
+  set_target_properties(
+      sherpa-onnx-core
+    PROPERTIES
+      POSITION_INDEPENDENT_CODE ON
+      C_VISIBILITY_PRESET hidden
+      CXX_VISIBILITY_PRESET hidden
+  )
+endif()
+
 if(APPLE)
   target_compile_options(sherpa-onnx-core PRIVATE
     -Wno-deprecated-declarations
