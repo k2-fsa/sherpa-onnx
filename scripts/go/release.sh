@@ -33,7 +33,6 @@ function linux() {
   cp -v sherpa_onnx/lib/*.so* $dst
 
   pushd $dst
-  rm -v libonnxruntime.so
   ln -s libonnxruntime.so.1.17.1 libonnxruntime.so
   popd
 
@@ -50,7 +49,6 @@ function linux() {
   cp -v sherpa_onnx/lib/*.so* $dst
 
   pushd $dst
-  rm -v libonnxruntime.so
   ln -s libonnxruntime.so.1.17.1 libonnxruntime.so
   popd
 
@@ -67,7 +65,6 @@ function linux() {
   cp -v sherpa_onnx/lib/*.so* $dst
 
   pushd $dst
-  rm libonnxruntime.so
   ln -s libonnxruntime.so.1.17.1 libonnxruntime.so
   popd
 
@@ -104,7 +101,6 @@ function osx() {
   cp -v sherpa_onnx/lib/*.dylib $dst/
 
   pushd $dst
-  rm -v libonnxruntime.dylib
   ln -s libonnxruntime.1.17.1.dylib libonnxruntime.dylib
   popd
 
@@ -123,7 +119,6 @@ function osx() {
   cp -v sherpa_onnx/lib/*.dylib $dst/
 
   pushd $dst
-  rm -v libonnxruntime.dylib
   ln -s libonnxruntime.1.17.1.dylib libonnxruntime.dylib
   popd
 
