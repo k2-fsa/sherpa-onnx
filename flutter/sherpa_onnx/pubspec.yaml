@@ -44,7 +44,7 @@ dependencies:
 
   sherpa_onnx_ios: ^1.10.11
   # sherpa_onnx_ios:
-    path: ../sherpa_onnx_ios
+    # path: ../sherpa_onnx_ios
 
 flutter:
   plugin:
