@@ -222,6 +222,11 @@ if(SHERPA_ONNX_ENABLE_CHECK)
   endif()
 endif()
 
+if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
+  # This is for linux arm32 and arm64
+  target_link_libraries(sherpa-onnx-core -ldl)
+endif()
+
 if(NOT WIN32 AND NOT SHERPA_ONNX_ENABLE_WASM AND CMAKE_SYSTEM_NAME STREQUAL Linux)
   target_link_libraries(sherpa-onnx-core -pthread)
 endif()
