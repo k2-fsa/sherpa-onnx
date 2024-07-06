@@ -67,6 +67,10 @@ jobs:
       - name: Build sherpa-onnx
         shell: bash
         run: |
+          upload_dir=$PWD/to-upload
+          mkdir -p $upload_dir
+          echo "upload_dir"
+
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           mkdir build
           cd build
@@ -86,6 +90,8 @@ jobs:
           fi
 
           if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* $upload_dir
+
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* ./lib/
             rm -v ./lib/libonnxruntime.so
 
@@ -105,7 +111,10 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-decode-files/
 
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll $upload_dir
           else
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib $upload_dir/
+
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
             rm ./lib/*.a
             rm ./lib/libonnxruntime.dylib
@@ -122,6 +131,11 @@ jobs:
 
           go mod tidy
           go build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-${{ matrix.arch }}
+          path: to-upload/
 
       - name: Test speaker identification
         shell: bash
