@@ -125,7 +125,9 @@ index 536165d3..9b1a1012 100644
 ```
 
 # ios
+
 To support ios, run
+
 ```bash
 cd streaming_asr
 flutter create --platforms ios ./
@@ -148,7 +150,8 @@ for connected devices with the "--device-timeout" flag. Visit https://flutter.de
 ```
 
 Then run
-```
+
+```bash
 flutter run -d 00008030-001064212E85802E
 ```
 
@@ -268,6 +271,7 @@ index b208c7e9..466b0afb 100644
 ```
 
 Then re-run
+
 ```bash
 flutter run -d 00008030-001064212E85802E
 ```
@@ -324,13 +328,20 @@ Please make the following changes
 
 And re-run
 
-```
+```bash
 flutter run -d 00008030-001064212E85802E
 ```
 
-The following are some screenshots of the iOS app:
+The following are some screenshots of the iOS APP:
 
 |1|2|3|
 |---|---|---|
 |![](./ios-demo-2.jpg)|![](./ios-demo-3.jpg)|![](./ios-demo-4.jpg)|
 
+
+**Hint**: If you find that you cannot start the APP on your iPhone after
+disconnecting from the computer, please use
+
+```bash
+flutter run --release -d 00008030-001064212E85802E
+```
