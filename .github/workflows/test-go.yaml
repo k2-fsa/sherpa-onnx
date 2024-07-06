@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-13, ubuntu-latest]
+        os: [macos-latest, macos-13, ubuntu-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -76,13 +76,30 @@ jobs:
             -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
             ..
 
-          make -j2
+          if [[ ${{ matrix.os }} == windows-latest ]]; then
+            cmake --build . --target install --config Release -- -m:2
+          else
+            make -j2 install
+          fi
 
           if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* ./lib/
-            rm ./lib/libonnxruntime.so
+            rm -v ./lib/libonnxruntime.so
+            rm -v ./lib/*.a
+            ls -h ./lib
+          elif [[ ${{ matrix.os }} == windows-latest ]]; then
+            cp -v ./install/sherpa-onnx-c-api.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            cp -v ./install/onnxruntime.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            ls -lh ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-hlg-decoding/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-decode-files/
+
           else
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
             rm ./lib/*.a
