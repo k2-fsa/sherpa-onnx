@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-14]
+        os: [macos-latest, macos-13, ubuntu-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -78,9 +78,16 @@ jobs:
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             ..
 
-          make -j1
-          cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
-          rm ./lib/*.a
+          make -j2
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* ./lib/
+            rm ./lib/libonnxruntime.so
+          else
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
+            rm ./lib/*.a
+            rm ./lib/libonnxruntime.dylib
+          fi
 
           cd ../scripts/go/_internal/
           ls -lh lib
@@ -103,7 +110,7 @@ jobs:
           cd scripts/go/_internal/streaming-hlg-decoding/
           ./run.sh
 
-      - name: Test non-streaming TTS (macOS)
+      - name: Test non-streaming TTS
         shell: bash
         run: |
           mkdir tts-waves
@@ -138,7 +145,7 @@ jobs:
           name: tts-waves-${{ matrix.os }}
           path: tts-waves
 
-      - name: Test non-streaming decoding files (macOS)
+      - name: Test non-streaming decoding files
         shell: bash
         run: |
           cd scripts/go/_internal/non-streaming-decode-files/
