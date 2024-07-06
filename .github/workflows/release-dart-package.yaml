@@ -24,14 +24,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Flutter SDK
-        uses: flutter-actions/setup-flutter@v3
-        with:
-          channel: stable
-          version: latest
-
-      - uses: dart-lang/setup-dart@v1
-
       - name: Fix version
         shell: bash
         run: |
@@ -104,6 +96,14 @@ jobs:
 
           ls -lh /tmp/to_be_published/linux
 
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - uses: dart-lang/setup-dart@v1
+
       - name: Release
         shell: bash
         run: |
@@ -126,14 +126,6 @@ jobs:
         uses: hendrikmuhs/ccache-action@v1.2
         with:
           key: ${{ matrix.os }}-flutter-release-package
-
-      - name: Setup Flutter SDK
-        uses: flutter-actions/setup-flutter@v3
-        with:
-          channel: stable
-          version: latest
-
-      - uses: dart-lang/setup-dart@v1
 
       - name: Fix version
         shell: bash
@@ -204,6 +196,14 @@ jobs:
           mv -v flutter/sherpa_onnx_macos /tmp/to_be_published
 
           ls -lh /tmp/to_be_published/macos
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - uses: dart-lang/setup-dart@v1
 
       - name: Release
         shell: bash
@@ -429,8 +429,89 @@ jobs:
           flutter pub publish --dry-run
           flutter pub publish --force
 
+  sherpa_onnx_ios:
+    # if: false
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    name: sherpa_onnx_ios
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-flutter-release-package-ios
+
+      - name: Fix version
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          src_dir=$PWD/flutter/sherpa_onnx_ios
+          pushd $src_dir
+          v="version: $SHERPA_ONNX_VERSION"
+          echo "v: $v"
+          sed -i.bak s"/^version: .*/$v/" ./pubspec.yaml
+          rm *.bak
+          git status
+          git diff
+
+      - name: Copy extra files
+        shell: bash
+        run: |
+          dst=flutter/sherpa_onnx_ios
+
+          mkdir $dst/example
+
+          cp -v flutter/sherpa_onnx/example/* $dst/example
+          cp -v LICENSE $dst/
+          cp -v CHANGELOG.md $dst/
+
+          git status
+
+      - name: Build ios
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+          ./build-ios-shared.sh
+
+      - name: Copy pre-built libs
+        shell: bash
+        run: |
+          echo "----ios-arm64----"
+          cp -v build-ios-shared/ios-arm64/libsherpa-onnx-c-api.dylib flutter/sherpa_onnx_ios/ios/
+          cp -v build-ios-shared/ios-onnxruntime/onnxruntime.xcframework/ios-arm64/onnxruntime.a flutter/sherpa_onnx_ios/ios/libonnxruntime.a
+
+          ls -lh flutter/sherpa_onnx_ios/ios/libonnxruntime.a
+
+          mv -v flutter/sherpa_onnx_ios /tmp/to_be_published
+
+          ls -lh /tmp/to_be_published
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - uses: dart-lang/setup-dart@v1
+
+      - name: Release
+        shell: bash
+        run: |
+          cd /tmp/to_be_published
+          du -h -d1 .
+
+          flutter pub get
+          flutter pub publish --dry-run
+          flutter pub publish --force
+
   sherpa_onnx:
-    # needs: [sherpa_onnx_linux, sherpa_onnx_macos, sherpa_onnx_windows, sherpa_onnx_android]
+    needs: [sherpa_onnx_linux, sherpa_onnx_macos, sherpa_onnx_windows, sherpa_onnx_android, sherpa_onnx_ios]
     # if: false
     permissions:
       id-token: write # Required for authentication using OIDC

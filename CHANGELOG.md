@@ -1,3 +1,7 @@
+## 1.10.11
+
+* Support the iOS platform for iOS.
+
 ## 1.10.10
 
 * Build sherpa-onnx into a single shared library.

@@ -109,3 +109,4 @@ sherpa-onnx-vits-*
 sherpa-onnx-telespeech-ctc-*
 *.fst
 .ccache
+lib*.a
