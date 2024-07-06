@@ -90,6 +90,7 @@ jobs:
           fi
 
           if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            cp -v ./lib/*.so $upload_dir
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* $upload_dir
 
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* ./lib/
@@ -114,6 +115,7 @@ jobs:
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll $upload_dir
           else
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib $upload_dir/
+            cp -v lib/*.dylib $upload_dir
 
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
             rm ./lib/*.a
@@ -134,7 +136,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.os }}-${{ matrix.arch }}
+          name: ${{ matrix.os }}-libs
           path: to-upload/
 
       - name: Test speaker identification
