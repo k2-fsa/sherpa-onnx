@@ -11,7 +11,7 @@ project(sherpa-onnx)
 # ./nodejs-addon-examples
 # ./dart-api-examples/
 # ./sherpa-onnx/flutter/CHANGELOG.md
-set(SHERPA_ONNX_VERSION "1.10.10")
+set(SHERPA_ONNX_VERSION "1.10.11")
 
 # Disable warning about
 #
