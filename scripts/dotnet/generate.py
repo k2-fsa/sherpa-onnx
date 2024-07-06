@@ -36,18 +36,8 @@ def get_dict():
 
 def process_linux(s):
     libs = [
-        "libespeak-ng.so",
-        "libkaldi-decoder-core.so",
-        "libkaldi-native-fbank-core.so",
         "libonnxruntime.so.1.17.1",
-        "libssentencepiece_core.so",
-        "libpiper_phonemize.so.1",
         "libsherpa-onnx-c-api.so",
-        "libsherpa-onnx-core.so",
-        "libsherpa-onnx-fstfar.so",
-        "libsherpa-onnx-fst.so",
-        "libsherpa-onnx-kaldifst-core.so",
-        "libucd.so",
     ]
     prefix = f"{src_dir}/linux/"
     libs = [prefix + lib for lib in libs]
@@ -66,18 +56,8 @@ def process_linux(s):
 
 def process_macos(s, rid):
     libs = [
-        "libespeak-ng.dylib",
-        "libkaldi-decoder-core.dylib",
-        "libkaldi-native-fbank-core.dylib",
         "libonnxruntime.1.17.1.dylib",
-        "libssentencepiece_core.dylib",
-        "libpiper_phonemize.1.dylib",
         "libsherpa-onnx-c-api.dylib",
-        "libsherpa-onnx-core.dylib",
-        "libsherpa-onnx-fstfar.dylib",
-        "libsherpa-onnx-fst.dylib",
-        "libsherpa-onnx-kaldifst-core.dylib",
-        "libucd.dylib",
     ]
     prefix = f"{src_dir}/macos-{rid}/"
     libs = [prefix + lib for lib in libs]
@@ -96,18 +76,8 @@ def process_macos(s, rid):
 
 def process_windows(s, rid):
     libs = [
-        "espeak-ng.dll",
-        "kaldi-decoder-core.dll",
-        "kaldi-native-fbank-core.dll",
         "onnxruntime.dll",
-        "ssentencepiece_core.dll",
-        "piper_phonemize.dll",
         "sherpa-onnx-c-api.dll",
-        "sherpa-onnx-core.dll",
-        "sherpa-onnx-fstfar.dll",
-        "sherpa-onnx-fst.dll",
-        "sherpa-onnx-kaldifst-core.dll",
-        "ucd.dll",
     ]
 
     version = get_version()

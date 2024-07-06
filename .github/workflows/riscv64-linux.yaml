@@ -123,7 +123,15 @@ jobs:
           ls -lh build-riscv64-linux-gnu/bin
           ls -lh build-riscv64-linux-gnu/lib
 
+          echo "---install/lib---"
+          ls -lh build-riscv64-linux-gnu/install/lib
+
+          echo "---install/bin---"
+          ls -lh build-riscv64-linux-gnu/install/bin
+
           file build-riscv64-linux-gnu/bin/sherpa-onnx
+
+          readelf -d build-riscv64-linux-gnu/bin/sherpa-onnx
 
       - name: Test sherpa-onnx
         shell: bash

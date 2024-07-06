@@ -45,7 +45,24 @@ function(download_kaldi_decoder)
   message(STATUS "kaldi-decoder's binary dir is ${kaldi_decoder_BINARY_DIR}")
 
   include_directories(${kaldi_decoder_SOURCE_DIR})
+
+  if(BUILD_SHARED_LIBS)
+    set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
+  endif()
+
   add_subdirectory(${kaldi_decoder_SOURCE_DIR} ${kaldi_decoder_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  if(_build_shared_libs_bak)
+    set_target_properties(
+        kaldi-decoder-core
+      PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        C_VISIBILITY_PRESET hidden
+        CXX_VISIBILITY_PRESET hidden
+    )
+    set(BUILD_SHARED_LIBS ON)
+  endif()
 
   if(WIN32 AND MSVC)
     target_compile_options(kaldi-decoder-core PUBLIC
@@ -58,29 +75,13 @@ function(download_kaldi_decoder)
     INTERFACE
       ${kaldi-decoder_SOURCE_DIR}/
   )
-  if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-    install(TARGETS
-      kaldi-decoder-core
-      kaldifst_core
-      fst
-      fstfar
-    DESTINATION ..)
-  else()
+  if(NOT BUILD_SHARED_LIBS)
     install(TARGETS
       kaldi-decoder-core
       kaldifst_core
       fst
       fstfar
     DESTINATION lib)
-  endif()
-
-  if(WIN32 AND BUILD_SHARED_LIBS)
-    install(TARGETS
-      kaldi-decoder-core
-      kaldifst_core
-      fst
-      fstfar
-    DESTINATION bin)
   endif()
 endfunction()
 

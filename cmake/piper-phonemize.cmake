@@ -40,7 +40,22 @@ function(download_piper_phonemize)
   message(STATUS "piper-phonemize is downloaded to ${piper_phonemize_SOURCE_DIR}")
   message(STATUS "piper-phonemize binary dir is ${piper_phonemize_BINARY_DIR}")
 
+  if(BUILD_SHARED_LIBS)
+    set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
+  endif()
+
   add_subdirectory(${piper_phonemize_SOURCE_DIR} ${piper_phonemize_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  if(_build_shared_libs_bak)
+    set_target_properties(piper_phonemize
+      PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        C_VISIBILITY_PRESET hidden
+        CXX_VISIBILITY_PRESET hidden
+    )
+    set(BUILD_SHARED_LIBS ON)
+  endif()
 
   if(WIN32 AND MSVC)
     target_compile_options(piper_phonemize PUBLIC
@@ -53,20 +68,10 @@ function(download_piper_phonemize)
       ${piper_phonemize_SOURCE_DIR}/src/include
   )
 
-  if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-    install(TARGETS
-      piper_phonemize
-    DESTINATION ..)
-  else()
+  if(NOT BUILD_SHARED_LIBS)
     install(TARGETS
       piper_phonemize
     DESTINATION lib)
-  endif()
-
-  if(WIN32 AND BUILD_SHARED_LIBS)
-    install(TARGETS
-      piper_phonemize
-    DESTINATION bin)
   endif()
 endfunction()
 

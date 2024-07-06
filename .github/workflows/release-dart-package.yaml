@@ -93,17 +93,12 @@ jobs:
               make install
 
               ls -lh ./install/lib
+              rm -v ./install/lib/libonnxruntime.so
 
       - name: Copy pre-built libs
         shell: bash
         run: |
           cp -v build/install/lib/lib*.so* flutter/sherpa_onnx_linux/linux/
-          pushd flutter/sherpa_onnx_linux/linux/
-
-          rm libonnxruntime.so
-          ln -s libonnxruntime.so.* ./libonnxruntime.so
-
-          popd
 
           mv -v flutter/sherpa_onnx_linux /tmp/to_be_published
 
@@ -197,26 +192,18 @@ jobs:
           cd build
           make -j2 install
 
-          ls -lh install/lib/libsherpa-onnx-core.dylib
-          file install/lib/libsherpa-onnx-core.dylib
+          ls -lh install/lib/libsherpa-onnx-c-api.dylib
+          file install/lib/libsherpa-onnx-c-api.dylib
+          rm -v install/lib/libonnxruntime.dylib
 
       - name: Copy pre-built libs
         shell: bash
         run: |
           cp -v build/install/lib/lib*.dylib* flutter/sherpa_onnx_macos/macos/
 
-
           mv -v flutter/sherpa_onnx_macos /tmp/to_be_published
 
           ls -lh /tmp/to_be_published/macos
-
-          pushd /tmp/to_be_published/macos
-
-          rm libonnxruntime.dylib
-
-          ls -lh
-
-          popd
 
       - name: Release
         shell: bash
@@ -283,7 +270,7 @@ jobs:
         shell: bash
         run: |
           cd build
-          cmake --build . --target install --config Release
+          cmake --build . --target install --config Release -- -m:2
 
           ls -lh install/lib/*.dll
 

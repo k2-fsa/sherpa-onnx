@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, macos-14]
+        os: [macos-latest, macos-13, ubuntu-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -67,12 +67,63 @@ jobs:
       - name: Build sherpa-onnx
         shell: bash
         run: |
+          upload_dir=$PWD/to-upload
+          mkdir -p $upload_dir
+          echo "upload_dir"
+
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           mkdir build
           cd build
-          cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_SHARED_LIBS=ON -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF ..
-          make -j1
-          cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
+          cmake \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+
+          if [[ ${{ matrix.os }} == windows-latest ]]; then
+            cmake --build . --target install --config Release -- -m:2
+          else
+            make -j2 install
+          fi
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            cp -v ./lib/*.so $upload_dir
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* $upload_dir
+
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* ./lib/
+            rm -v ./lib/libonnxruntime.so
+
+            cd lib
+            ln -s libonnxruntime.so.1.17.1 libonnxruntime.so
+            cd ..
+
+            rm -v ./lib/*.a
+            ls -h ./lib
+          elif [[ ${{ matrix.os }} == windows-latest ]]; then
+            cp -v ./install/lib/sherpa-onnx-c-api.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            cp -v ./install/lib/onnxruntime.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            ls -lh ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-hlg-decoding/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-decode-files/
+
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll $upload_dir
+          else
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib $upload_dir/
+            cp -v lib/*.dylib $upload_dir
+
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
+            rm ./lib/*.a
+            rm ./lib/libonnxruntime.dylib
+            cd lib
+            ln -s libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+            cd ..
+          fi
 
           cd ../scripts/go/_internal/
           ls -lh lib
@@ -82,6 +133,11 @@ jobs:
 
           go mod tidy
           go build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-libs
+          path: to-upload/
 
       - name: Test speaker identification
         shell: bash
@@ -95,7 +151,7 @@ jobs:
           cd scripts/go/_internal/streaming-hlg-decoding/
           ./run.sh
 
-      - name: Test non-streaming TTS (macOS)
+      - name: Test non-streaming TTS
         shell: bash
         run: |
           mkdir tts-waves
@@ -130,7 +186,7 @@ jobs:
           name: tts-waves-${{ matrix.os }}
           path: tts-waves
 
-      - name: Test non-streaming decoding files (macOS)
+      - name: Test non-streaming decoding files
         shell: bash
         run: |
           cd scripts/go/_internal/non-streaming-decode-files/

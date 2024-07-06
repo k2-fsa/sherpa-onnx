@@ -44,20 +44,30 @@ function(download_kaldi_native_fbank)
   message(STATUS "kaldi-native-fbank is downloaded to ${kaldi_native_fbank_SOURCE_DIR}")
   message(STATUS "kaldi-native-fbank's binary dir is ${kaldi_native_fbank_BINARY_DIR}")
 
+  if(BUILD_SHARED_LIBS)
+    set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
+  endif()
+
   add_subdirectory(${kaldi_native_fbank_SOURCE_DIR} ${kaldi_native_fbank_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  if(_build_shared_libs_bak)
+    set_target_properties(kaldi-native-fbank-core
+      PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        C_VISIBILITY_PRESET hidden
+        CXX_VISIBILITY_PRESET hidden
+    )
+    set(BUILD_SHARED_LIBS ON)
+  endif()
 
   target_include_directories(kaldi-native-fbank-core
     INTERFACE
       ${kaldi_native_fbank_SOURCE_DIR}/
   )
-  if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-    install(TARGETS kaldi-native-fbank-core DESTINATION ..)
-  else()
-    install(TARGETS kaldi-native-fbank-core DESTINATION lib)
-  endif()
 
-  if(WIN32 AND BUILD_SHARED_LIBS)
-    install(TARGETS kaldi-native-fbank-core DESTINATION bin)
+  if(NOT BUILD_SHARED_LIBS)
+    install(TARGETS kaldi-native-fbank-core DESTINATION lib)
   endif()
 endfunction()
 

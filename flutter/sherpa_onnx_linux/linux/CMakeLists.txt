@@ -12,16 +12,6 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 # external build triggered from this build file.
 set(sherpa_onnx_linux_bundled_libraries
   "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-c-api.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-core.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libkaldi-decoder-core.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-kaldifst-core.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-fstfar.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-fst.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libkaldi-native-fbank-core.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libpiper_phonemize.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libespeak-ng.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libucd.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libonnxruntime.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libssentencepiece_core.so"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libonnxruntime.so.1.17.1"
   PARENT_SCOPE
 )

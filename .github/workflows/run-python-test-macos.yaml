@@ -78,7 +78,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile
+          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile setuptools wheel
 
       - name: Install sherpa-onnx
         shell: bash
@@ -87,7 +87,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
-          python3 setup.py install
+          python3 -m pip install .
 
       - name: Test sherpa-onnx
         shell: bash

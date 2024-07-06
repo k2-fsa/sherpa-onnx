@@ -2,13 +2,16 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version. Used only for macOS")
 
+set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+
 project(sherpa-onnx)
 
 # Remember to update
 # ./nodejs-addon-examples
 # ./dart-api-examples/
 # ./sherpa-onnx/flutter/CHANGELOG.md
-set(SHERPA_ONNX_VERSION "1.10.9")
+set(SHERPA_ONNX_VERSION "1.10.10")
 
 # Disable warning about
 #
@@ -17,6 +20,21 @@ set(SHERPA_ONNX_VERSION "1.10.9")
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
 endif()
+
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo)
+
+if(ipo)
+  message(STATUS "IPO is enabled")
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+else()
+  message(STATUS "IPO is not available")
+endif()
+
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(SHERPA_ONNX_ENABLE_PYTHON "Whether to build Python" OFF)
 option(SHERPA_ONNX_ENABLE_TESTS "Whether to build tests" OFF)
@@ -53,8 +71,10 @@ else()
   set(SHERPA_ONNX_RPATH_ORIGIN "@loader_path")
 endif()
 
-set(CMAKE_INSTALL_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
-set(CMAKE_BUILD_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
+if(NOT WIN32)
+  set(CMAKE_INSTALL_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
+  set(CMAKE_BUILD_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "No CMAKE_BUILD_TYPE given, default to Release")
@@ -89,22 +109,16 @@ to install CUDA toolkit if you have not installed it.")
   endif()
 endif()
 
-if(BUILD_SHARED_LIBS AND MSVC)
-  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-endif()
-
-if(NOT BUILD_SHARED_LIBS AND MSVC)
-  # see https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
-  # https://stackoverflow.com/questions/14172856/compile-with-mt-instead-of-md-using-cmake
-  if(MSVC)
-      add_compile_options(
-          $<$<CONFIG:>:/MT> #---------|
-          $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
-          $<$<CONFIG:Release>:/MT> #--|
-          $<$<CONFIG:RelWithDebInfo>:/MT>
-          $<$<CONFIG:MinSizeRel>:/MT>
-      )
-  endif()
+# see https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
+# https://stackoverflow.com/questions/14172856/compile-with-mt-instead-of-md-using-cmake
+if(MSVC)
+  add_compile_options(
+      $<$<CONFIG:>:/MT> #---------|
+      $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
+      $<$<CONFIG:Release>:/MT> #--|
+      $<$<CONFIG:RelWithDebInfo>:/MT>
+      $<$<CONFIG:MinSizeRel>:/MT>
+  )
 endif()
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
@@ -325,17 +339,21 @@ if(NOT BUILD_SHARED_LIBS)
   endif()
 endif()
 
+if(NOT BUILD_SHARED_LIBS)
 # See https://people.freedesktop.org/~dbn/pkg-config-guide.html
-if(SHERPA_ONNX_ENABLE_TTS)
-  configure_file(cmake/sherpa-onnx.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  if(SHERPA_ONNX_ENABLE_TTS)
+    configure_file(cmake/sherpa-onnx-static.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  else()
+    configure_file(cmake/sherpa-onnx-static-no-tts.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  endif()
 else()
-  configure_file(cmake/sherpa-onnx-no-tts.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  configure_file(cmake/sherpa-onnx-shared.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
 endif()
 
 install(
   FILES
     ${PROJECT_BINARY_DIR}/sherpa-onnx.pc
   DESTINATION
-    .
+    ./
 )
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")

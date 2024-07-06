@@ -84,7 +84,13 @@ jobs:
             BUILD_SHARED_LIBS=ON
           fi
 
-          cmake -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake \
+            -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
+            -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -D CMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            ..
 
       - name: Build sherpa-onnx for macos
         shell: bash

@@ -63,7 +63,13 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A x64 -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake \
+            -A x64 \
+            -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
 
       - name: Build sherpa-onnx for windows
         shell: bash

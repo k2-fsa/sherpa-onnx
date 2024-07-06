@@ -59,7 +59,11 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A Win32 -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }}  -D CMAKE_INSTALL_PREFIX=./install ..
+          cmake \
+            -A Win32 \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
+            -D CMAKE_INSTALL_PREFIX=./install ..
 
       - name: Build sherpa-onnx for windows
         shell: bash

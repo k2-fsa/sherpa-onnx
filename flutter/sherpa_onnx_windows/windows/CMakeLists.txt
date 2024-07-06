@@ -13,16 +13,6 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 # external build triggered from this build file.
 set(sherpa_onnx_windows_bundled_libraries
   "${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-c-api.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-core.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/kaldi-decoder-core.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-kaldifst-core.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-fstfar.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/sherpa-onnx-fst.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/kaldi-native-fbank-core.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/piper_phonemize.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/espeak-ng.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ucd.dll"
   "${CMAKE_CURRENT_SOURCE_DIR}/onnxruntime.dll"
-  "${CMAKE_CURRENT_SOURCE_DIR}/ssentencepiece_core.dll"
   PARENT_SCOPE
 )

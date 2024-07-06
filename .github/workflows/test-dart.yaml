@@ -70,7 +70,7 @@ jobs:
           cd build
 
           cmake \
-            -D BUILD_SHARED_LIBS=ON \
+            -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DBUILD_ESPEAK_NG_EXE=OFF \

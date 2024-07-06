@@ -52,8 +52,8 @@ jobs:
           cmake \
             -D BUILD_SHARED_LIBS=ON \
             -D CMAKE_BUILD_TYPE=Release \
-            -DCMAKE_OSX_ARCHITECTURES=$arch \
-            -DSHERPA_ONNX_ENABLE_JNI=ON \
+            -D CMAKE_OSX_ARCHITECTURES=$arch \
+            -D SHERPA_ONNX_ENABLE_JNI=ON \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
 

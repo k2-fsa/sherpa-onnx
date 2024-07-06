@@ -76,19 +76,8 @@ def get_binaries():
 
     if is_windows():
         binaries += [
-            "espeak-ng.dll",
-            "kaldi-decoder-core.dll",
-            "kaldi-native-fbank-core.dll",
             "onnxruntime.dll",
-            "ssentencepiece_core.dll",
-            "piper_phonemize.dll",
             "sherpa-onnx-c-api.dll",
-            "sherpa-onnx-core.dll",
-            "sherpa-onnx-fstfar.dll",
-            "sherpa-onnx-fst.dll",
-            "sherpa-onnx-kaldifst-core.dll",
-            "sherpa-onnx-portaudio.dll",
-            "ucd.dll",
         ]
 
     return binaries
@@ -145,6 +134,7 @@ class BuildExtension(build_ext):
         extra_cmake_args += " -DBUILD_PIPER_PHONMIZE_TESTS=OFF "
         extra_cmake_args += " -DBUILD_ESPEAK_NG_EXE=OFF "
         extra_cmake_args += " -DBUILD_ESPEAK_NG_TESTS=OFF "
+        extra_cmake_args += " -DSHERPA_ONNX_ENABLE_C_API=ON "
 
         extra_cmake_args += " -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF "
         extra_cmake_args += " -DSHERPA_ONNX_ENABLE_CHECK=OFF "
@@ -161,7 +151,7 @@ class BuildExtension(build_ext):
         if is_windows():
             build_cmd = f"""
          cmake {cmake_args} -B {self.build_temp} -S {sherpa_onnx_dir}
-         cmake --build {self.build_temp} --target install --config Release -- -m
+         cmake --build {self.build_temp} --target install --config Release -- -m:2
             """
             print(f"build command is:\n{build_cmd}")
             ret = os.system(
@@ -171,7 +161,7 @@ class BuildExtension(build_ext):
                 raise Exception("Failed to configure sherpa")
 
             ret = os.system(
-                f"cmake --build {self.build_temp} --target install --config Release -- -m"  # noqa
+                f"cmake --build {self.build_temp} --target install --config Release -- -m:2"  # noqa
             )
             if ret != 0:
                 raise Exception("Failed to build and install sherpa")
@@ -225,6 +215,12 @@ class BuildExtension(build_ext):
         shutil.rmtree(f"{install_dir}/bin")
         shutil.rmtree(f"{install_dir}/share")
         shutil.rmtree(f"{install_dir}/lib/pkgconfig")
+
+        if is_linux():
+            os.remove(f"{install_dir}/lib/libonnxruntime.so")
+
+        if is_macos():
+            os.remove(f"{install_dir}/lib/libonnxruntime.dylib")
 
         if is_windows():
             shutil.rmtree(f"{install_dir}/lib")

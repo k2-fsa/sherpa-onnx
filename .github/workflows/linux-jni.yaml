@@ -95,7 +95,13 @@ jobs:
               mkdir build
               cd build
 
-              cmake -DSHERPA_ONNX_ENABLE_TTS=ON -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DSHERPA_ONNX_ENABLE_JNI=ON ..
+              cmake \
+                -D SHERPA_ONNX_ENABLE_TTS=ON \
+                -D CMAKE_BUILD_TYPE=Release \
+                -D BUILD_SHARED_LIBS=ON \
+                -D CMAKE_INSTALL_PREFIX=./install \
+                -D SHERPA_ONNX_ENABLE_JNI=ON \
+                ..
 
               make -j2
               make install
@@ -104,6 +110,12 @@ jobs:
               ls -lh bin
               rm -rf ./install/pkgconfig
               rm -rf ./install/share
+
+              echo "----"
+              ls -lh install/lib
+
+              echo "----"
+              ls -lh install/bin
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash

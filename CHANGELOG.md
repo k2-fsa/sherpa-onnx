@@ -1,3 +1,7 @@
+## 1.10.10
+
+* Build sherpa-onnx into a single shared library.
+
 ## 1.10.9
 
 * Fix released packages. piper-phonemize was not included in v1.10.8.

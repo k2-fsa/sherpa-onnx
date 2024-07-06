@@ -17,8 +17,11 @@ echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 function linux() {
   echo "Process linux"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-linux.git
+  rm -v ./sherpa-onnx-go-linux/*.go
+
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-linux/
   cp -v ./_internal/c-api.h ./sherpa-onnx-go-linux/
+  cp -v ./_internal/build_linux_*.go ./sherpa-onnx-go-linux/
 
   rm -rf sherpa-onnx-go-linux/lib/x86_64-unknown-linux-gnu/lib*
   dst=$(realpath sherpa-onnx-go-linux/lib/x86_64-unknown-linux-gnu)
@@ -28,6 +31,10 @@ function linux() {
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 
   cp -v sherpa_onnx/lib/*.so* $dst
+
+  pushd $dst
+  cp -v libonnxruntime.so.1.17.1 libonnxruntime.so
+  popd
 
   cd ..
   rm -rf t
@@ -41,6 +48,10 @@ function linux() {
 
   cp -v sherpa_onnx/lib/*.so* $dst
 
+  pushd $dst
+  cp -v libonnxruntime.so.1.17.1 libonnxruntime.so
+  popd
+
   cd ..
   rm -rf t
 
@@ -52,6 +63,10 @@ function linux() {
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
 
   cp -v sherpa_onnx/lib/*.so* $dst
+
+  pushd $dst
+  cp -v libonnxruntime.so.1.17.1 libonnxruntime.so
+  popd
 
   cd ..
   rm -rf t
@@ -71,8 +86,10 @@ function linux() {
 function osx() {
   echo "Process osx-x64"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-macos.git
+  rm -v ./sherpa-onnx-go-macos/*.go
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-macos/
   cp -v ./_internal/c-api.h ./sherpa-onnx-go-macos/
+  cp -v ./_internal/build_darwin_*.go ./sherpa-onnx-go-macos/
 
   rm -rf sherpa-onnx-go-macos/lib/x86_64-apple-darwin/lib*
   dst=$(realpath sherpa-onnx-go-macos/lib/x86_64-apple-darwin/)
@@ -83,6 +100,10 @@ function osx() {
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_x86_64.whl
 
   cp -v sherpa_onnx/lib/*.dylib $dst/
+
+  pushd $dst
+  cp -v libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+  popd
 
   cd ..
   rm -rf t
@@ -97,6 +118,10 @@ function osx() {
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_arm64.whl
 
   cp -v sherpa_onnx/lib/*.dylib $dst/
+
+  pushd $dst
+  cp -v libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+  popd
 
   cd ..
   rm -rf t
@@ -115,8 +140,10 @@ function osx() {
 function windows() {
   echo "Process windows"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-windows.git
+  rm -v ./sherpa-onnx-go-windows/*.go
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-windows/
   cp -v ./_internal/c-api.h ./sherpa-onnx-go-windows/
+  cp -v ./_internal/build_windows_*.go ./sherpa-onnx-go-windows/
 
   rm -fv sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu/*
   dst=$(realpath sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu)

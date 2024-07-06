@@ -57,7 +57,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece
+          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece setuptools wheel
 
       - name: Install sherpa-onnx
         shell: bash
@@ -66,7 +66,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           cmake --version
 
-          python3 setup.py install
+          python3 -m pip install .
           python3 -m pip install websockets
 
       - name: Start server for transducer models

@@ -44,10 +44,6 @@ function process_linux() {
 
   pushd linux
 
-  rm -v libpiper_phonemize.so libpiper_phonemize.so.1.2.0
-  rm -v libonnxruntime.so
-  rm -v libcargs.so
-
   popd
 }
 
@@ -69,12 +65,6 @@ function process_macos() {
   cp -v sherpa_onnx/lib/*.dylib ../macos
   cd ..
   rm -rf t
-
-  pushd macos
-  rm -v libcargs.dylib
-  rm -v libonnxruntime.dylib
-  rm -v libpiper_phonemize.1.2.0.dylib libpiper_phonemize.dylib
-  popd
 }
 
 process_linux

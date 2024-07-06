@@ -99,13 +99,24 @@ jobs:
               mkdir build
               cd build
 
-              cmake -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+              cmake \
+                -D SHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
+                -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
+                -D CMAKE_INSTALL_PREFIX=./install \
+                ..
 
               make -j2
               make install
 
               ls -lh lib
               ls -lh bin
+
+              echo "----"
+              ls -lh install/lib
+
+              echo "----"
+              ls -lh install/bin
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
