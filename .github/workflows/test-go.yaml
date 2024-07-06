@@ -88,6 +88,11 @@ jobs:
           if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* ./lib/
             rm -v ./lib/libonnxruntime.so
+
+            cd lib
+            ln -s libonnxruntime.so.1.17.1 libonnxruntime.so
+            cd ..
+
             rm -v ./lib/*.a
             ls -h ./lib
           elif [[ ${{ matrix.os }} == windows-latest ]]; then
@@ -104,6 +109,9 @@ jobs:
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
             rm ./lib/*.a
             rm ./lib/libonnxruntime.dylib
+            cd lib
+            ln -s libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+            cd ..
           fi
 
           cd ../scripts/go/_internal/
