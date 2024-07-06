@@ -86,6 +86,7 @@ function linux() {
 function osx() {
   echo "Process osx-x64"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-macos.git
+  rm -v ./sherpa-onnx-go-macos/*.go
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-macos/
   cp -v ./_internal/c-api.h ./sherpa-onnx-go-macos/
   cp -v ./_internal/build_darwin_*.go ./sherpa-onnx-go-macos/
@@ -139,6 +140,7 @@ function osx() {
 function windows() {
   echo "Process windows"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-windows.git
+  rm -v ./sherpa-onnx-go-windows/*.go
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-windows/
   cp -v ./_internal/c-api.h ./sherpa-onnx-go-windows/
   cp -v ./_internal/build_windows_*.go ./sherpa-onnx-go-windows/
