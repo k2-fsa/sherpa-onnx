@@ -205,14 +205,6 @@ jobs:
 
           ls -lh /tmp/to_be_published/macos
 
-          pushd /tmp/to_be_published/macos
-
-          rm libonnxruntime.dylib
-
-          ls -lh
-
-          popd
-
       - name: Release
         shell: bash
         run: |
