@@ -78,7 +78,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile
+          python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile setuptools wheel
 
       - name: Install sherpa-onnx
         shell: bash
