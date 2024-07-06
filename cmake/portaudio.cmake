@@ -55,6 +55,13 @@ function(download_portaudio)
   if(NOT WIN32)
     target_compile_options(portaudio_static PRIVATE "-Wno-deprecated-declarations")
   endif()
+
+  if(NOT BUILD_SHARED_LIBS AND SHERPA_ONNX_ENABLE_BINARY)
+    install(TARGETS
+      portaudio_static
+    DESTINATION lib)
+  endif()
+
 endfunction()
 
 download_portaudio()
