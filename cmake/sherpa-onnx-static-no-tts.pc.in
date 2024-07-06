@@ -1,3 +1,12 @@
+# Note: If you use Python, then the prefix might not be correct.
+#
+# You need to either manually modify this file to change the prefix to the location
+# where this sherpa-onnx.pc file actually resides
+# or
+# you can use
+#
+#   pkg-config --define-variable=prefix=/path/to/the/dir/containing/this/file --cflags sherpa-onnx
+
 prefix="@CMAKE_INSTALL_PREFIX@"
 exec_prefix="${prefix}"
 includedir="${prefix}/include"

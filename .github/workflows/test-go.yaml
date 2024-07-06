@@ -96,8 +96,8 @@ jobs:
             rm -v ./lib/*.a
             ls -h ./lib
           elif [[ ${{ matrix.os }} == windows-latest ]]; then
-            cp -v ./install/sherpa-onnx-c-api.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
-            cp -v ./install/onnxruntime.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            cp -v ./install/lib/sherpa-onnx-c-api.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            cp -v ./install/lib/onnxruntime.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
             ls -lh ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-hlg-decoding/
