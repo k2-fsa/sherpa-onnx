@@ -35,7 +35,7 @@ def main():
             if skip:
                 continue
 
-            t = os.path.join(root, f)
+            t = os.path.join(root, f).replace('\\', '/')
             ss.append("{sep}- {t}".format(sep=sep, t=t))
 
     # read pub.spec.yaml
