@@ -15,12 +15,6 @@ log "SHERPA_ONNX_DIR: $SHERPA_ONNX_DIR"
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" $SHERPA_ONNX_DIR/CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 log "SHERPA_ONNX_VERSION: $SHERPA_ONNX_VERSION"
 
-if [ -z $arch ]; then
-  arch=x86_64
-fi
-
-log "arch: $arch"
-
 {% for tts_model in tts_model_list %}
 pushd $SHERPA_ONNX_DIR/flutter-examples/tts/
 
@@ -76,36 +70,18 @@ popd #lib
 
 flutter pub get
 
-flutter build linux
+flutter build apk --split-per-abi --release
 
-pushd build/linux/x64/release/
-
+pushd build/app/outputs/flutter-apk
 ls -lh
-echo "----"
-ls -lh bundle
 
-echo "----"
-ls -lh bundle/lib
+for arch in armeabi-v7a arm64-v8a x86_64; do
+  src=app-$arch-release.apk
+  dst=$SHERPA_ONNX_DIR/sherpa-onnx-$SHERPA_ONNX_VERSION-$arch-$lang-tts-$model_dir.apk
+  mv $src $dst
+done
 
-echo "----"
-ls -lh bundle/data
-
-echo "----"
-file bundle/tts
-
-echo "----"
-readelf -d bundle/tts
-
-echo "----"
-ldd bundle/tts
-
-app=sherpa-onnx-$SHERPA_ONNX_VERSION-linux-$arch-$lang-tts-$model_dir
-
-mv bundle $app
-tar cjf $app.tar.bz2 $app
-rm -rf $app
-mv $app.tar.bz2 $SHERPA_ONNX_DIR
-ls -lh $SHERPA_ONNX_DIR/*.tar.bz2
+ls -lh $SHERPA_ONNX_DIR/*.apk
 
 popd
 
