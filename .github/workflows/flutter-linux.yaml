@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   tts:
-    name: linux
+    name: tts ${{ matrix.index }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -32,9 +32,9 @@ jobs:
       - name: Install deps
         shell: bash
         run: |
-          apt-get update -y
-          apt-get install -y build-essential jq git cmake
-          apt-get install -y curl
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential jq git cmake
+          sudo apt-get install -y curl
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
@@ -45,7 +45,7 @@ jobs:
       - name: Install ninja
         shell: bash
         run: |
-          apt-get install -y ninja-build
+          sudo apt-get install -y ninja-build
 
       - name: Display ninja version
         shell: bash
@@ -83,7 +83,7 @@ jobs:
       - name: Install libgtk-3-dev
         shell: bash
         run: |
-          apt install -y libgtk-3-dev tree clang pkg-config
+          sudo apt install -y libgtk-3-dev tree clang pkg-config
 
       - name: Display flutter info (2)
         shell: bash

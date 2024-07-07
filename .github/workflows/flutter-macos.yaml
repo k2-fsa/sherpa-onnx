@@ -16,7 +16,7 @@ concurrency:
 jobs:
   asr:
     if: false
-    name: asr ${{ matrix.arch }} ${{ matrix.index }}
+    name: asr ${{ matrix.arch }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -116,7 +116,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter main
 
   tts:
-    name: tts ${{ matrix.arch }} ${{ matrix.index }}
+    name: tts ${{ matrix.arch }} ${{ matrix.index }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
