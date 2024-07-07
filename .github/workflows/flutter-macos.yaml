@@ -106,8 +106,8 @@ jobs:
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
-            mkdir -p flutter/asr
-            cp -v ../*.tar.bz2 ./flutter/asr
+            mkdir -p flutter/asr/macos
+            cp -v ../*.tar.bz2 ./flutter/asr/macos
 
             git status
             git lfs track "*.bz2"
@@ -207,8 +207,8 @@ jobs:
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
-            mkdir -p flutter/tts
-            cp -v ../*.tar.bz2 ./flutter/tts
+            mkdir -p flutter/tts/macos
+            cp -v ../*.tar.bz2 ./flutter/tts/macos
 
             git status
             git lfs track "*.bz2"
