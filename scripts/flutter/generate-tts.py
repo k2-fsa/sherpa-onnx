@@ -397,6 +397,7 @@ def main():
     filename_list = [
         "./build-macos-tts.sh",
         "./build-linux-tts.sh",
+        "./build-windows-tts.sh",
     ]
     for filename in filename_list:
         environment = jinja2.Environment()

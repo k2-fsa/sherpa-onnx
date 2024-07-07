@@ -58,6 +58,7 @@ mv Release $dst
 tar cjfv $dst.tar.bz2 ./$dst
 rm -rf $dst
 mv $dst.tar.bz2 $SHERPA_ONNX_DIR
+ls -lh $SHERPA_ONNX_DIR/*.tar.bz2
 
 popd
 
