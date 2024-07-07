@@ -27,7 +27,7 @@ jobs:
         index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
