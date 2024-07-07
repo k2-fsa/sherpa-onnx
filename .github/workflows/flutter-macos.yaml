@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  flutter_macos:
-    name: macos ${{ matrix.arch }} ${{ matrix.index }}
+  asr:
+    name: asr ${{ matrix.arch }} ${{ matrix.index }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

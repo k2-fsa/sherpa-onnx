@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  flutter_windows_x64:
-    name: windows x64 ${{ matrix.index }}
+  asr:
+    name: asr ${{ matrix.index }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

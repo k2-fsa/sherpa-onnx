@@ -29,3 +29,10 @@ In order to run your application, type:
 
 Your application code is in tts/lib/main.dart.
 ```
+
+```
+cd tts
+flutter pub get
+flutter build macos
+flutter run -d macos
+```

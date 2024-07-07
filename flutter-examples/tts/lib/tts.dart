@@ -144,7 +144,7 @@ class _TtsScreenState extends State<TtsScreen> {
                         final audio =
                             _tts!.generate(text: text, sid: sid, speed: _speed);
                         final suffix =
-                            '-sid-$sid-speed-${_speed.toStringAsPrecision(1)}';
+                            '-sid-$sid-speed-${_speed.toStringAsPrecision(2)}';
                         final filename = await generateWaveFilename(suffix);
 
                         final ok = sherpa_onnx.writeWave(
@@ -179,7 +179,7 @@ class _TtsScreenState extends State<TtsScreen> {
                         }
                       },
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 5),
                     OutlinedButton(
                       child: Text("Clear"),
                       onPressed: () {
@@ -192,7 +192,7 @@ class _TtsScreenState extends State<TtsScreen> {
                         );
                       },
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 5),
                     OutlinedButton(
                       child: Text("Play"),
                       onPressed: () async {
@@ -209,9 +209,9 @@ class _TtsScreenState extends State<TtsScreen> {
                         );
                       },
                     ),
-                    const SizedBox(width: 10),
+                    const SizedBox(width: 5),
                     OutlinedButton(
-                      child: Text("Stop play"),
+                      child: Text("Stop"),
                       onPressed: () async {
                         await _player?.stop();
                         _controller_hint.value = TextEditingValue(
