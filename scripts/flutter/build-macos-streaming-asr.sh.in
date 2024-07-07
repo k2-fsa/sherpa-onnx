@@ -23,6 +23,9 @@ log "arch: $arch"
 
 {% for model in model_list %}
 pushd $SHERPA_ONNX_DIR/flutter-examples/streaming_asr/
+
+flutter clean
+
 model_name={{ model.model_name }}
 lang={{ model.lang }}
 type={{ model.idx }}

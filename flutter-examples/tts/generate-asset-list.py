@@ -36,7 +36,7 @@ def main():
                 continue
 
             t = os.path.join(root, f)
-            ss.append(f"{sep}- {t}")
+            ss.append("{sep}- {t}".format(sep=sep, t=t))
 
     # read pub.spec.yaml
     with open("./pubspec.yaml", encoding="utf-8") as f:
@@ -56,13 +56,13 @@ def main():
                 continue
 
             for s in ss:
-                f.write(f"{s}\n")
+                f.write("{s}\n".format(s=s))
             break
 
         if not found_assets and ss:
             f.write("  assets:\n")
             for s in ss:
-                f.write(f"{s}\n")
+                f.write("{s}\n".format(s=s))
 
 
 if __name__ == "__main__":

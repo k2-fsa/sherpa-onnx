@@ -387,12 +387,21 @@ def main():
 
     remaining = num_models - args.total * num_per_runner
 
-    print(f"{index}/{total}: {start}-{end}/{num_models}")
+    print(
+        "{index}/{total}: {start}-{end}/{num_models}".format(
+            index=index,
+            total=total,
+            start=start,
+            end=end,
+            num_models=num_models,
+        )
+    )
+
     d["tts_model_list"] = all_model_list[start:end]
     if index < remaining:
         s = args.total * num_per_runner + index
         d["tts_model_list"].append(all_model_list[s])
-        print(f"{s}/{num_models}")
+        print("{s}/{num_models}".format(s=s, num_models=num_models))
 
     filename_list = [
         "./build-macos-tts.sh",
@@ -402,7 +411,7 @@ def main():
     ]
     for filename in filename_list:
         environment = jinja2.Environment()
-        with open(f"{filename}.in") as f:
+        with open("{filename}.in".format(filename=filename)) as f:
             s = f.read()
         template = environment.from_string(s)
 

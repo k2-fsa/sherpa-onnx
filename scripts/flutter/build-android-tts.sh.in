@@ -17,6 +17,7 @@ log "SHERPA_ONNX_VERSION: $SHERPA_ONNX_VERSION"
 
 {% for tts_model in tts_model_list %}
 pushd $SHERPA_ONNX_DIR/flutter-examples/tts/
+flutter clean
 
 git checkout .
 

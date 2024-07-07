@@ -23,6 +23,7 @@ log "arch: $arch"
 
 {% for tts_model in tts_model_list %}
 pushd $SHERPA_ONNX_DIR/flutter-examples/tts/
+flutter clean
 
 git checkout .
 
@@ -74,6 +75,8 @@ sed -i.bak s/"modelName = \'\'"/"modelName = \"$model_name\""/ ./model.dart
   sed -i.bak s/"lexicon = \'\'"/"lexicon = \'lexicon.txt\'"/ ./model.dart
 {% endif %}
 
+git status
+
 git diff .
 
 popd #lib
@@ -93,6 +96,9 @@ ls -lh bundle/lib
 
 echo "----"
 ls -lh bundle/data
+echo "======"
+ls -lh bundle/data/flutter_assets
+
 
 echo "----"
 file bundle/tts
