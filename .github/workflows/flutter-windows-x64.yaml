@@ -78,7 +78,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -120,8 +120,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        total: ["10"]
-        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        total: ["20"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
 
     steps:
       - uses: actions/checkout@v4
@@ -176,7 +176,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3

@@ -14,6 +14,10 @@ concurrency:
   group: flutter-linux-${{ github.ref }}
   cancel-in-progress: true
 
+# See https://github.com/actions/checkout/issues/1590#issuecomment-2207052044 
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
 jobs:
   tts:
     name: tts ${{ matrix.index }}/${{ matrix.total }}
@@ -23,18 +27,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        total: ["10"]
-        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        total: ["20"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
 
     steps:
-      # - uses: actions/checkout@v2
-      #   with:
-      #     fetch-depth: 0
+
       - name: Install deps
         shell: bash
         run: |
           apt-get update -y
-          apt-get install -y bc curl
+          apt-get install -y bc curl git-lfs
 
       # Ubuntu 18.04 uses cmake 3.10 by default, but we need cmake >= 3.11
       - name: Install cmake
@@ -69,8 +71,6 @@ jobs:
           apt-get install -y build-essential jq git python3-pip
           apt-get install -y curl
           apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev
-
-
 
       - name: Clone repo
         shell: bash
@@ -184,35 +184,64 @@ jobs:
         run: |
           ls -lh *.tar.bz2
 
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.os }}-${{ matrix.total }}-${{ matrix.index }}
+          path: ./*.tar.bz2
+
+
+
+  tts_upload:
+    needs: [tts]
+    name: tts ${{ matrix.index }}/${{ matrix.total }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        total: ["20"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
+        # total: ["1"]
+        # index: ["0"]
+
+    steps:
+      - name: Retrieve artifact from ubuntu-latest
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.os }}-${{ matrix.total }}-${{ matrix.index }}
+          path: /tmp/files/
+
       - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        shell: bash
-        run: |
-          git config --global user.email "csukuangfj@gmail.com"
-          git config --global user.name "Fangjun Kuang"
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
 
-          rm -rf huggingface
-          export GIT_LFS_SKIP_SMUDGE=1
-          export GIT_CLONE_PROTECTION_ACTIVE=false
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
 
-          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
-          echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
-          git clone https://huggingface.co/csukuangfj/sherpa-onnx-flutter huggingface
-          cd huggingface
-          git fetch
-          git pull
-          git merge -m "merge remote" --ff origin main
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-flutter huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+            dst=flutter/tts/linux/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
+            cp -v /tmp/files/*.tar.bz2 $dst
 
-          dst=flutter/tts/linux/$SHERPA_ONNX_VERSION
-          mkdir -p $dst
-
-          cp -v ../*.tar.bz2 $dst
-
-          git status
-          git lfs track "*.bz2"
-          git add .
-          git commit -m "add more files"
-          git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter main
+            git status
+            git lfs track "*.bz2"
+            git add .
+            git commit -m "add more files"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter main

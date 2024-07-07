@@ -23,7 +23,6 @@ log "arch: $arch"
 
 {% for tts_model in tts_model_list %}
 pushd $SHERPA_ONNX_DIR/flutter-examples/tts/
-flutter clean
 
 git checkout .
 
@@ -50,29 +49,29 @@ popd # assets
 
 pushd lib
 
-sed -i.bak s%"modelDir = \'\'"%"modelDir = \"$model_dir\""% ./model.dart
-sed -i.bak s/"modelName = \'\'"/"modelName = \"$model_name\""/ ./model.dart
+sed -i.bak "s|modelDir = ''|modelDir = \"$model_dir\"|" ./model.dart
+sed -i.bak s/"modelName = ''"/"modelName = \"$model_name\""/ ./model.dart
 
 {% if tts_model.rule_fsts %}
   rule_fsts={{ tts_model.rule_fsts }}
-  sed -i.bak s%"ruleFsts = \'\'"%"ruleFsts = \"$rule_fsts\""% ./model.dart
+  sed -i.bak "s|ruleFsts = ''|ruleFsts = \"$rule_fsts\"|" ./model.dart
 {% endif %}
 
 {% if tts_model.rule_fars %}
   rule_fars={{ tts_model.rule_fars }}
-  sed -i.bak s%"ruleFsts = \'\'"%"ruleFars = \"$rule_fars\""% ./model.dart
+  sed -i.bak "s|ruleFars = ''|ruleFars = \"$rule_fars\"|" ./model.dart
 {% endif %}
 
 {% if tts_model.dict_dir %}
   dict_dir={{ tts_model.dict_dir }}
-  sed -i.bak s%"dictDir = \'\'"%"dictDir = \"$dict_dir\""% ./model.dart
+  sed -i.bak "s|dictDir = ''|dictDir = \"$dict_dir\"|" ./model.dart
 {% endif %}
 
 {% if tts_model.data_dir %}
   data_dir={{ tts_model.data_dir }}
-  sed -i.bak s%"dataDir = \'\'"%"dataDir = \"$data_dir\""% ./model.dart
+  sed -i.bak "s|dataDir = ''|dataDir = \"$data_dir\"|" ./model.dart
 {% elif not tts_model.is_char %}
-  sed -i.bak s/"lexicon = \'\'"/"lexicon = \'lexicon.txt\'"/ ./model.dart
+  sed -i.bak "s|lexicon = ''|lexicon = \"lexicon.txt\"|" ./model.dart
 {% endif %}
 
 git status
@@ -123,5 +122,4 @@ popd
 popd
 
 popd
-
 {% endfor %}

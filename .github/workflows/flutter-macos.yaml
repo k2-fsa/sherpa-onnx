@@ -3,7 +3,7 @@ name: flutter-macos
 on:
   push:
     branches:
-      - flutter2
+      - flutter
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
@@ -15,7 +15,6 @@ concurrency:
 
 jobs:
   asr:
-    if: false
     name: asr ${{ matrix.arch }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -85,7 +84,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -191,7 +190,7 @@ jobs:
           ls -lh *.tar.bz2
 
       - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
