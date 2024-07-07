@@ -137,9 +137,11 @@ jobs:
           ./generate-tts.py --total $total --index $index
 
           chmod +x *.sh
-          ./build-linux-tts.sh
+          ./build-android-tts.sh
+
           cd ../../
-          ls -lh *.tar.bz2
+
+          ls -lh *.apk
 
       - name: Display generated files
         shell: bash
