@@ -40,6 +40,7 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y build-essential jq git cmake
           sudo apt-get install -y curl
+          sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
@@ -139,13 +140,19 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
             git clone https://huggingface.co/csukuangfj/sherpa-onnx-flutter huggingface
             cd huggingface
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
-            mkdir -p flutter/tts/linux
-            cp -v ../*.tar.bz2 ./flutter/tts/linux
+
+            dst=flutter/tts/linux/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
+
+            cp -v ../*.tar.bz2 $dst
 
             git status
             git lfs track "*.bz2"

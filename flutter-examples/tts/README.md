@@ -1,16 +1,27 @@
 # tts
 
-A new Flutter project.
 
-## Getting Started
+# Fix for Linux
 
-This project is a starting point for a Flutter application.
+If you get the following errors on Linux,
 
-A few resources to get you started if this is your first Flutter project:
+```
+Building Linux application...
+CMake Error at /usr/local/share/cmake-3.29/Modules/FindPkgConfig.cmake:634 (message):
+  The following required packages were not found:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+   - gstreamer-1.0
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Call Stack (most recent call first):
+  /usr/local/share/cmake-3.29/Modules/FindPkgConfig.cmake:862 (_pkg_check_modules_internal)
+  flutter/ephemeral/.plugin_symlinks/audioplayers_linux/linux/CMakeLists.txt:24 (pkg_check_modules)
+```
+
+please run:
+
+```bash
+sudo apt-get install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+```
+
+See also <https://github.com/bluefireteam/audioplayers/tree/main/packages/audioplayers_linux#setup-for-linux>
+for the above error.
