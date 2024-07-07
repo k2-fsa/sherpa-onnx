@@ -48,7 +48,7 @@ git diff .
 
 flutter pub get
 
-flutter build --release windows
+flutter build windows
 
 pushd build/windows/x64/runner/
 ls -lh

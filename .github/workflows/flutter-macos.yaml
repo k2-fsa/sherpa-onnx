@@ -15,6 +15,7 @@ concurrency:
 
 jobs:
   asr:
+    if: false
     name: asr ${{ matrix.arch }} ${{ matrix.index }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -133,7 +134,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          python3 -m pip install --break-system-packages --upgrade pip jinja2
+          python3 -m pip install --break-system-packages --upgrade pip jinja2 iso639-lang
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3

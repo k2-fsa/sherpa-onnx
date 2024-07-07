@@ -78,7 +78,7 @@ flutter pub get
 export FLUTTER_XCODE_ARCHS=$arch
 log "FLUTTER_XCODE_ARCHS: $FLUTTER_XCODE_ARCHS"
 
-flutter build --release macos
+flutter build macos
 
 pushd build/macos/Build/Products/Release/
 ls -lh
