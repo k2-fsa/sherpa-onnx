@@ -44,7 +44,8 @@ popd # assets
 ./generate-asset-list.py
 
 pushd lib
-sed -i.bak "s|modelDir = \'\'|modelDir = \'$modelDir\'|" ./model.dart
+
+sed -i.bak s%"modelDir = \'\'"%"modelDir = \"$model_dir\""% ./model.dart
 sed -i.bak s/"modelName = \'\'"/"modelName = \"$model_name\""/ ./model.dart
 
 {% if tts_model.rule_fsts %}
