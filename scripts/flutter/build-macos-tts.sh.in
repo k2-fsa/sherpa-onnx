@@ -23,6 +23,7 @@ log "arch: $arch"
 
 {% for tts_model in tts_model_list %}
 pushd $SHERPA_ONNX_DIR/flutter-examples/tts/
+rm -rf build
 
 git checkout .
 
@@ -42,6 +43,10 @@ popd # assets
 # Now we are at the project root directory
 
 ./generate-asset-list.py
+echo "----pubspec.yaml----"
+grep -n --color "assets" -C 10 ./pubspec.yaml
+
+tail ./pubspec.yaml
 
 pushd lib
 
