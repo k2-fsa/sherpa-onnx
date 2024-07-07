@@ -87,7 +87,7 @@ ls -lh
 app=sherpa-onnx-$SHERPA_ONNX_VERSION-osx-$arch-$lang-tts-$model_dir.app
 
 mv tts.app $app
-tar cjfv $app.tar.bz2 $app
+tar cjf $app.tar.bz2 $app
 ls -lh
 mv $app.tar.bz2 $SHERPA_ONNX_DIR
 popd
