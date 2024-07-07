@@ -40,7 +40,7 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y build-essential jq git cmake
           sudo apt-get install -y curl
-          sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+          sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
