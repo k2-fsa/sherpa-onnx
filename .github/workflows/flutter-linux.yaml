@@ -31,27 +31,38 @@ jobs:
       #   with:
       #     fetch-depth: 0
 
+      - name: Install deps
+        shell: bash
+        run: |
+          apt-get update -y
+          apt-get install -y build-essential jq git cmake
+          apt-get install -y curl
+          apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev
+
       - name: Clone repo
         shell: bash
         run: |
           echo "PWD"
+          p=$PWD
+
+          cd ..
           git clone https://github.com/csukuangfj/sherpa-onnx
           cd sherpa-onnx
           git fetch
           git checkout flutter-tts-app
+          cd ..
+          mv ./sherpa-onnx/* $p
+
+      - name: Show files
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
 
       - name: Install Python dependencies
         shell: bash
         run: |
           python3 -m pip install --upgrade pip jinja2 iso639-lang
-
-      - name: Install deps
-        shell: bash
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y build-essential jq git cmake
-          sudo apt-get install -y curl
-          sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
@@ -62,7 +73,7 @@ jobs:
       - name: Install ninja
         shell: bash
         run: |
-          sudo apt-get install -y ninja-build
+          apt-get install -y ninja-build
 
       - name: Display ninja version
         shell: bash
@@ -100,7 +111,7 @@ jobs:
       - name: Install libgtk-3-dev
         shell: bash
         run: |
-          sudo apt install -y libgtk-3-dev tree clang pkg-config
+          apt install -y libgtk-3-dev tree clang pkg-config
 
       - name: Display flutter info (2)
         shell: bash
