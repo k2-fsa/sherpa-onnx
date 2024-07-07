@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import './model.dart';
 import './utils.dart';
+import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
 
 void main() {
   runApp(const MyApp());
@@ -59,7 +61,23 @@ class _MyHomePageState extends State<MyHomePage> {
   int _counter = 0;
 
   Future<void> _incrementCounter() async {
-    await copyAllAssetFiles();
+    final tts = await createOfflineTts();
+    final audio =
+        tts.generate(text: 'How are you doing? Fantastic!', sid: 0, speed: 1.0);
+    final filename = await generateWaveFilename();
+
+    sherpa_onnx.writeWave(
+      filename: filename,
+      samples: audio.samples,
+      sampleRate: audio.sampleRate,
+    );
+    print('Saved to $filename');
+
+    print('tts, ${tts.ptr}');
+
+    // remember to free the returned tts to avoid memory leak
+    tts.free();
+
     setState(() {
       // This call to setState tells the Flutter framework that something has
       // changed in this State, which causes it to rerun the build method below

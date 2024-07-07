@@ -1,10 +1,19 @@
 // Copyright (c)  2024  Xiaomi Corporation
-import "dart:io";
+import 'dart:io';
 import 'dart:typed_data';
 
 import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
+
+Future<String> generateWaveFilename() async {
+  final Directory directory = await getApplicationDocumentsDirectory();
+  DateTime now = DateTime.now();
+  final filename =
+      '${now.year.toString()}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}-${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}-${now.second.toString().padLeft(2, '0')}.wav';
+
+  return p.join(directory.path, filename);
+}
 
 // https://stackoverflow.com/questions/68862225/flutter-how-to-get-all-files-from-assets-folder-in-one-list
 Future<List<String>> getAllAssetFiles() async {
