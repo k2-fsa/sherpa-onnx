@@ -3,7 +3,8 @@ name: flutter-windows-x64
 on:
   push:
     branches:
-      - flutter2
+      - flutter
+      - flutter-tts-app
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
