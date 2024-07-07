@@ -65,6 +65,7 @@ ls -lh
 app=sherpa-onnx-$SHERPA_ONNX_VERSION-osx-$arch-asr-$lang-$short_name.app
 mv streaming_asr.app $app
 tar cjfv $app.tar.bz2 $app
+rm -rf $app
 ls -lh
 mv $app.tar.bz2 $SHERPA_ONNX_DIR
 popd
