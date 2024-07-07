@@ -41,6 +41,9 @@ tar xvf ${model_name}.tar.bz2
 rm -rf  *.tar.bz2
 ls -lh $model_name
 
+ls -lh
+ls -lh *
+
 popd
 
 git checkout ./

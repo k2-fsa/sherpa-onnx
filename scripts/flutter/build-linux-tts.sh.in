@@ -39,6 +39,9 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$
 tar xf $model_dir.tar.bz2
 rm $model_dir.tar.bz2
 
+ls -lh
+ls -lh *
+
 popd # assets
 # Now we are at the project root directory
 
