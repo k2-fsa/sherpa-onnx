@@ -84,7 +84,7 @@ flutter build macos
 pushd build/macos/Build/Products/Release/
 ls -lh
 
-app=sherpa-onnx-$SHERPA_ONNX_VERSION-osx-$arch-$lang-tts-$modelDir.app
+app=sherpa-onnx-$SHERPA_ONNX_VERSION-osx-$arch-$lang-tts-$model_dir.app
 
 mv tts.app $app
 tar cjfv $app.tar.bz2 $app
