@@ -26,9 +26,11 @@ pushd $SHERPA_ONNX_DIR/flutter-examples/tts/
 
 git checkout .
 
-pushd assets
+rm -rf assets
 
-rm -rf ./*
+mkdir -p assets
+
+pushd assets
 
 model_dir={{ tts_model.model_dir }}
 model_name={{ tts_model.model_name }}
@@ -37,6 +39,10 @@ lang={{ tts_model.lang }}
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$model_dir.tar.bz2
 tar xf $model_dir.tar.bz2
 rm $model_dir.tar.bz2
+
+ls -lh
+
+ls -lh *
 
 popd # assets
 # Now we are at the project root directory
@@ -86,7 +92,7 @@ ls -lh ./Release/
 
 dst=sherpa-onnx-$SHERPA_ONNX_VERSION-win-$arch-$lang-tts-$model_dir
 mv Release $dst
-tar cjfv $dst.tar.bz2 ./$dst
+tar cjf $dst.tar.bz2 ./$dst
 rm -rf $dst
 mv $dst.tar.bz2 $SHERPA_ONNX_DIR
 

@@ -28,6 +28,9 @@ lang={{ model.lang }}
 type={{ model.idx }}
 short_name={{ model.short_name }}
 
+rm -rf assets
+mkdir assets
+
 pushd assets
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${model_name}.tar.bz2

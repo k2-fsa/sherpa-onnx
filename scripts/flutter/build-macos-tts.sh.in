@@ -26,9 +26,10 @@ pushd $SHERPA_ONNX_DIR/flutter-examples/tts/
 
 git checkout .
 
-pushd assets
+rm -rf assets
+mkdir assets
 
-rm -rf ./*
+pushd assets
 
 model_dir={{ tts_model.model_dir }}
 model_name={{ tts_model.model_name }}
