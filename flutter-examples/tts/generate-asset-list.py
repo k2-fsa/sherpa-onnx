@@ -19,6 +19,7 @@ def main():
         ".onnx.json",
         ".py",
         ".sh",
+        "*.md",
         "MODEL_CARD",
     ]
     sep = "    "
