@@ -79,17 +79,22 @@ flutter pub get
 export FLUTTER_XCODE_ARCHS=$arch
 log "FLUTTER_XCODE_ARCHS: $FLUTTER_XCODE_ARCHS"
 
-flutter build macos
+flutter build linux
 
-pushd build/macos/Build/Products/Release/
+pushd build/linux/x64/release/
+
 ls -lh
+echo "----"
+ls -lh bundle
 
-app=sherpa-onnx-$SHERPA_ONNX_VERSION-osx-$arch-$lang-tts-$model_dir.app
+app=sherpa-onnx-$SHERPA_ONNX_VERSION-linux-$arch-$lang-tts-$model_dir
 
-mv tts.app $app
+mv bundle $app
 tar cjf $app.tar.bz2 $app
-ls -lh
+rm -rf $app
 mv $app.tar.bz2 $SHERPA_ONNX_DIR
+ls -lh $SHERPA_ONNX_DIR/*.tar.bz2
+
 popd
 
 popd

@@ -90,6 +90,8 @@ mv tts.app $app
 tar cjf $app.tar.bz2 $app
 ls -lh
 mv $app.tar.bz2 $SHERPA_ONNX_DIR
+rm -rf $app
+ls -lh $SHERPA_ONNX_DIR/*.tar.bz2
 popd
 
 popd

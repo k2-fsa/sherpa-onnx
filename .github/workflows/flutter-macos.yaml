@@ -3,7 +3,7 @@ name: flutter-macos
 on:
   push:
     branches:
-      - flutter
+      - flutter2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 

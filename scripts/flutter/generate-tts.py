@@ -394,7 +394,10 @@ def main():
         d["tts_model_list"].append(all_model_list[s])
         print(f"{s}/{num_models}")
 
-    filename_list = ["./build-macos-tts.sh"]
+    filename_list = [
+        "./build-macos-tts.sh",
+        "./build-linux-tts.sh",
+    ]
     for filename in filename_list:
         environment = jinja2.Environment()
         with open(f"{filename}.in") as f:
