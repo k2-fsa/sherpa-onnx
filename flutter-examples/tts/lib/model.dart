@@ -16,8 +16,12 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
 
   sherpa_onnx.initBindings();
 
-  // Such a design it to make it easier to build flutter APPs with
+  // Such a design is to make it easier to build flutter APPs with
   // github actions for a variety of tts models
+  //
+  // See https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/flutter/generate-tts.py
+  // for details
+
   String modelDir = '';
   String modelName = '';
   String ruleFsts = '';
