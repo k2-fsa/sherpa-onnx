@@ -68,6 +68,11 @@ tar cjfv $app.tar.bz2 $app
 rm -rf $app
 ls -lh
 mv $app.tar.bz2 $SHERPA_ONNX_DIR
+
+pushd $SHERPA_ONNX_DIR
+ls -lh *.tar.bz2
+popd
+
 popd
 
 popd

@@ -105,7 +105,10 @@ mv bundle $app
 tar cjf $app.tar.bz2 $app
 rm -rf $app
 mv $app.tar.bz2 $SHERPA_ONNX_DIR
-ls -lh $SHERPA_ONNX_DIR/*.tar.bz2
+
+pushd $SHERPA_ONNX_DIR
+ls -lh *.tar.bz2
+popd
 
 popd
 

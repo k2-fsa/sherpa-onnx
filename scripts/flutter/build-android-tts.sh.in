@@ -81,7 +81,9 @@ for arch in armeabi-v7a arm64-v8a x86_64; do
   mv $src $dst
 done
 
-ls -lh $SHERPA_ONNX_DIR/*.apk
+pushd $SHERPA_ONNX_DIR
+ls -lh *.apk
+popd
 
 popd
 
