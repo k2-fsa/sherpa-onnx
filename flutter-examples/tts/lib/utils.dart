@@ -6,11 +6,11 @@ import 'package:flutter/services.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-Future<String> generateWaveFilename() async {
+Future<String> generateWaveFilename([String suffix = '']) async {
   final Directory directory = await getApplicationDocumentsDirectory();
   DateTime now = DateTime.now();
   final filename =
-      '${now.year.toString()}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}-${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}-${now.second.toString().padLeft(2, '0')}.wav';
+      '${now.year.toString()}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}-${now.hour.toString().padLeft(2, '0')}-${now.minute.toString().padLeft(2, '0')}-${now.second.toString().padLeft(2, '0')}$suffix.wav';
 
   return p.join(directory.path, filename);
 }
@@ -53,17 +53,4 @@ Future<String> copyAssetFile(String src, [String? dst]) async {
   }
 
   return target;
-}
-
-Float32List convertBytesToFloat32(Uint8List bytes, [endian = Endian.little]) {
-  final values = Float32List(bytes.length ~/ 2);
-
-  final data = ByteData.view(bytes.buffer);
-
-  for (var i = 0; i < bytes.length; i += 2) {
-    int short = data.getInt16(i, endian);
-    values[i ~/ 2] = short / 32678.0;
-  }
-
-  return values;
 }
