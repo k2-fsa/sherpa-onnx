@@ -22,6 +22,7 @@ lang={{ model.lang }}
 type={{ model.idx }}
 short_name={{ model.short_name }}
 
+rm -rf build
 rm -rf assets
 mkdir assets
 

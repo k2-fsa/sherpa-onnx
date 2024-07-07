@@ -23,6 +23,7 @@ log "arch: $arch"
 
 {% for tts_model in tts_model_list %}
 pushd $SHERPA_ONNX_DIR/flutter-examples/tts/
+rm -rf build
 
 git checkout .
 
