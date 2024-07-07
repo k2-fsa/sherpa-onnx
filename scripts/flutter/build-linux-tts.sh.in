@@ -87,6 +87,21 @@ ls -lh
 echo "----"
 ls -lh bundle
 
+echo "----"
+ls -lh bundle/lib
+
+echo "----"
+ls -lh bundle/data
+
+echo "----"
+file bundle/tts
+
+echo "----"
+readelf -d bundle/tts
+
+echo "----"
+ldd bundle/tts
+
 app=sherpa-onnx-$SHERPA_ONNX_VERSION-linux-$arch-$lang-tts-$model_dir
 
 mv bundle $app
