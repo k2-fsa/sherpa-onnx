@@ -15,6 +15,8 @@ concurrency:
   cancel-in-progress: true
 
 # See https://github.com/actions/checkout/issues/1590#issuecomment-2207052044 
+# and
+# https://github.blog/changelog/2023-06-13-github-actions-all-actions-will-run-on-node16-instead-of-node12-by-default/
 env:
   ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
 
@@ -31,12 +33,59 @@ jobs:
         index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
 
     steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Install deps
         shell: bash
         run: |
           apt-get update -y
-          apt-get install -y bc curl git-lfs
+          apt-get install -y bc curl git
+
+      - name: Show files
+        shell: bash
+        run: |
+          git config --global --add safe.directory /__w/sherpa-onnx/sherpa-onnx
+
+          ls -lha
+
+          git init
+          git add .
+          git config user.name "foo"
+          git config user.email "bar@g.com"
+          git commit -m "test"
+
+      - name: Generate tts script
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux2014_x86_64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
+
+              find /opt -name "python*"
+              export PATH=/opt/_internal/cpython-3.8.19/bin:$PATH
+              python3 --version
+              python3 -m pip install --upgrade pip jinja2 iso639-lang
+
+              total=${{ matrix.total }}
+              index=${{ matrix.index }}
+
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+              cd scripts/flutter
+              ls -lh
+              echo "---"
+              python3 ./generate-tts.py --total $total --index $index
+              chmod +x *.sh
+              ls -lh
 
       # Ubuntu 18.04 uses cmake 3.10 by default, but we need cmake >= 3.11
       - name: Install cmake
@@ -72,31 +121,13 @@ jobs:
           apt-get install -y curl
           apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev
 
-      - name: Clone repo
-        shell: bash
-        run: |
-          p=$PWD
-          echo "p:$PWD"
-          ls -lh
-
-          cd ..
-          rm -rf sherpa-onnx
-
-          echo "pwd2:$PWD"
-          # git config --global --add safe.directory /__w/sherpa-onnx/sherpa-onnx
-
-          git clone https://github.com/csukuangfj/sherpa-onnx
-          cd sherpa-onnx
-          git fetch
-          git checkout flutter-tts-app
-
-          ls -lh $p/
-
       - name: Show files
         shell: bash
         run: |
           echo "pwd: $PWD"
           ls -lh
+          echo "---"
+          ls -lh scripts/flutter
 
       - name: Install Python dependencies
         shell: bash
@@ -189,11 +220,9 @@ jobs:
           name: ${{ matrix.os }}-${{ matrix.total }}-${{ matrix.index }}
           path: ./*.tar.bz2
 
-
-
   tts_upload:
     needs: [tts]
-    name: tts ${{ matrix.index }}/${{ matrix.total }}
+    name: tts upload ${{ matrix.index }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
