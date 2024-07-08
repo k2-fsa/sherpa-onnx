@@ -34,23 +34,23 @@ def get_dict():
     }
 
 
-def process_linux(s):
+def process_linux(s, rid):
     libs = [
         "libonnxruntime.so.1.17.1",
         "libsherpa-onnx-c-api.so",
     ]
-    prefix = f"{src_dir}/linux/"
+    prefix = f"{src_dir}/linux-{rid}/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
     d = get_dict()
-    d["dotnet_rid"] = "linux-x64"
+    d["dotnet_rid"] = f"linux-{rid}"
     d["libs"] = libs
 
     environment = jinja2.Environment()
     template = environment.from_string(s)
     s = template.render(**d)
-    with open("./linux/sherpa-onnx.runtime.csproj", "w") as f:
+    with open(f"./linux-{rid}/sherpa-onnx.runtime.csproj", "w") as f:
         f.write(s)
 
 
@@ -101,7 +101,8 @@ def main():
     s = read_proj_file("./sherpa-onnx.csproj.runtime.in")
     process_macos(s, "x64")
     process_macos(s, "arm64")
-    process_linux(s)
+    process_linux(s, "x64")
+    process_linux(s, "arm64")
     process_windows(s, "x64")
     process_windows(s, "x86")
     process_windows(s, "arm64")
