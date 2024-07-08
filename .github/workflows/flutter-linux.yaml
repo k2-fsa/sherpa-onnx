@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - flutter
-      - flutter-tts-app
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 

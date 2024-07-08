@@ -5,8 +5,8 @@ This file assumes that
   assets:
 is the last line in ./pubspec.yaml
 
-It read the file names of all files from the ./assets folder
-and turn them as assets and write them into ./pubspec.yaml
+It reads the file names of all files from the ./assets folder
+and turns them as assets and writes them into ./pubspec.yaml
 """
 
 import os
@@ -35,7 +35,7 @@ def main():
             if skip:
                 continue
 
-            t = os.path.join(root, f).replace('\\', '/')
+            t = os.path.join(root, f).replace("\\", "/")
             ss.append("{sep}- {t}".format(sep=sep, t=t))
 
     # read pub.spec.yaml
