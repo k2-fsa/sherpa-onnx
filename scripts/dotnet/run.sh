@@ -24,10 +24,13 @@ export src_dir
 mkdir -p $src_dir
 pushd $src_dir
 
-mkdir -p linux macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64
+mkdir -p linux-x64 linux-arm64 macos-x64 macos-arm64 windows-x64 windows-x86 windows-arm64
 
-linux_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
-linux_wheel=$src_dir/$linux_wheel_filename
+linux_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+linux_x64_wheel=$src_dir/$linux_x64_wheel_filename
+
+linux_arm64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+linux_arm64_wheel=$src_dir/$linux_arm64_wheel_filename
 
 macos_x64_wheel_filename=sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_x86_64.whl
 macos_x64_wheel=$src_dir/$macos_x64_wheel_filename
@@ -44,17 +47,35 @@ windows_x86_wheel=$src_dir/$windows_x86_wheel_filename
 windows_arm64_wheel_filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-win-arm64.tar.bz2
 windows_arm64_wheel=$src_dir/$windows_arm64_wheel_filename
 
-if [ ! -f $src_dir/linux/libsherpa-onnx-c-api.so ]; then
+if [ ! -f $src_dir/linux-x64/libsherpa-onnx-c-api.so ]; then
   echo "---linux x86_64---"
-  cd linux
+  cd linux-x64
   mkdir -p wheel
   cd wheel
-  if [ -f $linux_wheel ]; then
-    cp -v $linux_wheel .
+  if [ -f $linux_x64_wheel ]; then
+    cp -v $linux_x64_wheel .
   else
-    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$linux_wheel_filename
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$linux_x64_wheel_filename
   fi
-  unzip $linux_wheel_filename
+  unzip $linux_x64_wheel_filename
+  cp -v sherpa_onnx/lib/*.so* ../
+  cd ..
+  rm -rf wheel
+  ls -lh
+  cd ..
+fi
+
+if [ ! -f $src_dir/linux-arm64/libsherpa-onnx-c-api.so ]; then
+  echo "---linux arm64---"
+  cd linux-arm64
+  mkdir -p wheel
+  cd wheel
+  if [ -f $linux_arm64_wheel ]; then
+    cp -v $linux_arm64_wheel .
+  else
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$linux_arm64_wheel_filename
+  fi
+  unzip $linux_arm64_wheel_filename
   cp -v sherpa_onnx/lib/*.so* ../
   cd ..
   rm -rf wheel
@@ -161,13 +182,18 @@ fi
 
 popd
 
-mkdir -p macos-x64 macos-arm64 linux windows-x64 windows-x86 windows-arm64 all
+mkdir -p macos-x64 macos-arm64 linux-x64 linux-arm64 windows-x64 windows-x86 windows-arm64 all
 
 cp ./*.cs all
 
 ./generate.py
 
-pushd linux
+pushd linux-x64
+dotnet build -c Release
+dotnet pack -c Release -o ../packages
+popd
+
+pushd linux-arm64
 dotnet build -c Release
 dotnet pack -c Release -o ../packages
 popd
