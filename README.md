@@ -79,9 +79,23 @@ with the following APIs
 
 ### Links for pre-built Flutter APPs
 
-| Description                    | URL                                                                                     | 中国用户                                                                             |
-|--------------------------------|-----------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------|
-| Streaming speech recognition             | [Address](https://k2-fsa.github.io/sherpa/onnx/flutter/asr/app.html)                        | [点此](https://k2-fsa.github.io/sherpa/onnx/flutter/asr/app-cn.html)                        |
+#### Real-time speech recognition
+
+| Description                    | URL                                                                 | 中国用户                                                            |
+|--------------------------------|---------------------------------------------------------------------|---------------------------------------------------------------------|
+| Streaming speech recognition   | [Address](https://k2-fsa.github.io/sherpa/onnx/flutter/asr/app.html)| [点此](https://k2-fsa.github.io/sherpa/onnx/flutter/asr/app-cn.html)|
+
+#### Text-to-speech
+
+| Description                    | URL                                                          | 中国用户                                                                    |
+|--------------------------------|--------------------------------------------------------------|-----------------------------------------------------------------------------|
+| Android (arm64-v8a, armeabi-v7a, x86_64) | [Address](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-android.html) | [点此](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-android-cn.html)|
+| Linux (x64)    | [Address](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-linux.html)       | [点此](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-linux-cn.html)      |
+| macOS (x64)    | [Address](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-macos-x64.html)   | [点此](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-macos-x64-cn.html)  |
+| macOS (arm64)  | [Address](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-macos-arm64.html) | [点此](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-macos-arm64-cn.html)|
+| Windows (x64)  | [Address](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-win.html)         | [点此](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-win-cn.html)        |
+
+> Note: You need to build from source for iOS.
 
 ### Links for pre-trained models
 

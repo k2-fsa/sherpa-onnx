@@ -37,6 +37,7 @@ class _TtsScreenState extends State<TtsScreen> {
     _controller_text_input = TextEditingController();
     _controller_hint = TextEditingController();
     _controller_sid = TextEditingController(text: '0');
+
     super.initState();
   }
 
@@ -73,6 +74,9 @@ class _TtsScreenState extends State<TtsScreen> {
                   keyboardType: TextInputType.number,
                   maxLines: 1,
                   controller: _controller_sid,
+                  onTapOutside: (PointerDownEvent event) {
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  },
                   inputFormatters: <TextInputFormatter>[
                     FilteringTextInputFormatter.digitsOnly
                   ]),
@@ -99,6 +103,9 @@ class _TtsScreenState extends State<TtsScreen> {
                 ),
                 maxLines: 5,
                 controller: _controller_text_input,
+                onTapOutside: (PointerDownEvent event) {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                },
               ),
               const SizedBox(height: 5),
               Row(

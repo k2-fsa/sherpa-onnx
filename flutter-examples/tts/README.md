@@ -10,6 +10,12 @@ It works on the following platforms:
   - macOS (both arm64 and x86_64 are supported)
   - Windows
 
+Screenshots are given below:
+
+|Android|iOS|Linux|macOS|Windows|
+|-------|---|-----|-----|-------|
+|![](./android.jpg)|![](./ios.jpg)|![](./ubuntu.jpg)|![](./macos.jpg)|![](./windows.jpg)|
+
 ## How to build
 
 Before you run `flutter build`, you have to select a TTS model and change
@@ -108,8 +114,75 @@ flutter build apk --split-per-abi
 
   - 5. For iOS
 
+First, connect your iPhone to your computer and use `flutter devices` to show
+available devices. You will see something like below:
+
 ```
-flutter build ios
+Found 3 connected devices:
+  iPhone (mobile) • 00008030-001064212E85802E • ios            • iOS 16.3 20D47
+  macOS (desktop) • macos                     • darwin-x64     • macOS 13.1 22C65 darwin-x64
+  Chrome (web)    • chrome                    • web-javascript • Google Chrome 126.0.6478.127
+
+No wireless devices were found.
+
+Run "flutter emulators" to list and start any available device emulators.
+
+If you expected another device to be detected, please run "flutter doctor" to diagnose potential issues. You may also try increasing the time to wait for connected devices with the "--device-timeout" flag. Visit https://flutter.dev/setup/ for troubleshooting tips.
+```
+
+Then you can use
+```
+flutter run -d 00008030-001064212E85802E --release
+```
+
+You would see something like below:
+```
+Launching lib/main.dart on iPhone in release mode...
+Automatically signing iOS for device deployment using specified development team in Xcode project: N5ZH3Z63A6
+Running pod install...                                           1,773ms
+Running Xcode build...
+Xcode build done.                                            7.9s
+Failed to build iOS app
+Could not build the precompiled application for the device.
+Error (Xcode): No profiles for 'com.k2fsa.sherpa.onnx.tts' were found: Xcode couldn't find any iOS App Development provisioning profiles matching
+'com.k2fsa.sherpa.onnx.tts'. Automatic signing is disabled and unable to generate a profile. To enable automatic signing, pass
+-allowProvisioningUpdates to xcodebuild.
+/Users/fangjun/open-source/sherpa-onnx/flutter-examples/tts/ios/Runner.xcodeproj
+
+
+
+It appears that there was a problem signing your application prior to installation on the device.
+
+Verify that the Bundle Identifier in your project is your signing id in Xcode
+  open ios/Runner.xcworkspace
+
+Also try selecting 'Product > Build' to fix the problem.
+
+Error running application on iPhone.
+```
+
+After you have followed the instructions in the above log, run gain
+
+> Note: I have run `open ios/Runner.xcworkspace` and click `Product -> Build`.
+
+```
+flutter run -d 00008030-001064212E85802E --release
+```
+
+Finally, it will show something like below:
+
+```
+Launching lib/main.dart on iPhone in release mode...
+Automatically signing iOS for device deployment using specified development team in Xcode project: N5ZH3Z63A6
+Running Xcode build...
+ └─Compiling, linking and signing...                         6.5s
+Xcode build done.                                           18.3s
+Installing and launching...                                        22.9s
+
+Flutter run key commands.
+h List all available interactive commands.
+c Clear the screen
+q Quit (terminate the application on the device).
 ```
 
 ## Fix for Linux
