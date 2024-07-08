@@ -234,6 +234,10 @@ jobs:
         # index: ["0"]
 
     steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
       - name: Retrieve artifact from ubuntu-latest
         uses: actions/download-artifact@v3
         with:
