@@ -12,13 +12,9 @@ It works on the following platforms:
 
 Screenshots are given below:
 
-|Platform|Screenshot|
-|---|---|
-|Android|![](./android.jpg)|
-|iOS|![](./ios.jpg)|
-|Linux|![](./ubuntu.jpg)|
-|macOS|![](./macos.jpg)|
-|Windows|![](./windows.jpg)|
+|Android|iOS|Linux|macOS|Windows|
+|-------|---|-----|-----|-------|
+|![](./android.jpg)|![](./ios.jpg)|![](./ubuntu.jpg)|![](./macos.jpg)|![](./windows.jpg)|
 
 ## How to build
 
