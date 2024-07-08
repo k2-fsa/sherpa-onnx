@@ -14,7 +14,7 @@ void PybindTensorrtConfig(py::module *m) {
   using PyClass = TensorrtConfig;
   py::class_<PyClass>(*m, "TensorrtConfig")
         .def(py::init<>())
-        .def(py::init([](int32_t trt_max_workspace_size,
+        .def(py::init([](int64_t trt_max_workspace_size,
                       int32_t trt_max_partition_iterations,
                       int32_t trt_min_subgraph_size,
                       bool trt_fp16_enable,
