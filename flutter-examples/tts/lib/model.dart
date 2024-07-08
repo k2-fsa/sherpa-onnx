@@ -91,7 +91,7 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
     final all = ruleFsts.split(',');
     var tmp = <String>[];
     for (final f in all) {
-      tmp.add(p.join(directory.path, modelDir, f));
+      tmp.add(p.join(directory.path, f));
     }
     ruleFsts = tmp.join(',');
   }
@@ -106,7 +106,7 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   }
 
   if (lexicon != '') {
-    lexicon = p.join(directory.path, lexicon);
+    lexicon = p.join(directory.path, modelDir, lexicon);
   }
 
   if (dataDir != '') {
