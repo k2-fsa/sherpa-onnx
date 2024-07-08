@@ -373,6 +373,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
+				OTHER_LDFLAGS = "-lc++";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Profile;
@@ -390,6 +391,7 @@
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				OTHER_LDFLAGS = "-lc++";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
 			};
 			name = Debug;
@@ -405,6 +407,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.k2fsa.sherpa.onnx.tts.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
+				OTHER_LDFLAGS = "-lc++";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
 			};
 			name = Release;
@@ -420,6 +423,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.k2fsa.sherpa.onnx.tts.RunnerTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
+				OTHER_LDFLAGS = "-lc++";
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Runner.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Runner";
 			};
 			name = Profile;
@@ -554,6 +558,7 @@
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.0;
+				OTHER_LDFLAGS = "-lc++";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Debug;
@@ -576,6 +581,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Runner/Runner-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
+				OTHER_LDFLAGS = "-lc++";
 				VERSIONING_SYSTEM = "apple-generic";
 			};
 			name = Release;
