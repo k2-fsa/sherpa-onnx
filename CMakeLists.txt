@@ -263,7 +263,9 @@ include(simple-sentencepiece)
 set(ONNXRUNTIME_DIR ${onnxruntime_SOURCE_DIR})
 message(STATUS "ONNXRUNTIME_DIR: ${ONNXRUNTIME_DIR}")
 
-if(SHERPA_ONNX_ENABLE_PORTAUDIO)
+if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
+  # portaudio is used only in building demo binaries and the sherpa-onnx-core
+  # library does not depend on it.
   include(portaudio)
 endif()
 
