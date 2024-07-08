@@ -1,0 +1,25 @@
+name: tts
+description: >
+  This example shows how to implement text to speech, i.e., speech synthesis,
+  using sherpa-onnx.
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.6
+  path_provider: ^2.1.3
+  path: ^1.9.0
+  sherpa_onnx: ^1.10.11
+  url_launcher: ^6.2.6
+  audioplayers: ^5.0.0
+
+flutter:
+  uses-material-design: true

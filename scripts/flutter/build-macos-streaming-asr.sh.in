@@ -23,10 +23,14 @@ log "arch: $arch"
 
 {% for model in model_list %}
 pushd $SHERPA_ONNX_DIR/flutter-examples/streaming_asr/
+
 model_name={{ model.model_name }}
 lang={{ model.lang }}
 type={{ model.idx }}
 short_name={{ model.short_name }}
+
+rm -rf assets
+mkdir assets
 
 pushd assets
 
@@ -37,6 +41,9 @@ tar xvf ${model_name}.tar.bz2
 
 rm -rf  *.tar.bz2
 ls -lh $model_name
+
+ls -lh
+ls -lh *
 
 popd
 
@@ -64,9 +71,15 @@ ls -lh
 
 app=sherpa-onnx-$SHERPA_ONNX_VERSION-osx-$arch-asr-$lang-$short_name.app
 mv streaming_asr.app $app
-tar cjfv $app.tar.bz2 $app
+tar cjf $app.tar.bz2 $app
+rm -rf $app
 ls -lh
 mv $app.tar.bz2 $SHERPA_ONNX_DIR
+
+pushd $SHERPA_ONNX_DIR
+ls -lh *.tar.bz2
+popd
+
 popd
 
 popd

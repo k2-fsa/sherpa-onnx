@@ -12,11 +12,14 @@ Future<String> copyAssetFile(String src, [String? dst]) async {
     dst = basename(src);
   }
   final target = join(directory.path, dst);
+  bool exists = await new File(target).exists();
 
-  final data = await rootBundle.load(src);
-  final List<int> bytes =
-      data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
-  await File(target).writeAsBytes(bytes);
+  if (!exists) {
+    final data = await rootBundle.load(src);
+    final List<int> bytes =
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    await File(target).writeAsBytes(bytes);
+  }
 
   return target;
 }

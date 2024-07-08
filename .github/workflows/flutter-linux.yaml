@@ -6,23 +6,6 @@ on:
       - flutter
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
-    paths:
-      - '.github/workflows/flutter-linux.yaml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'sherpa-onnx/flutter/**'
-  pull_request:
-    branches:
-      - master
-    paths:
-      - '.github/workflows/flutter-linux.yaml'
-      - 'CMakeLists.txt'
-      - 'cmake/**'
-      - 'sherpa-onnx/csrc/*'
-      - 'sherpa-onnx/c-api/*'
-      - 'sherpa-onnx/flutter/**'
 
   workflow_dispatch:
 
@@ -30,19 +13,26 @@ concurrency:
   group: flutter-linux-${{ github.ref }}
   cancel-in-progress: true
 
+# See https://github.com/actions/checkout/issues/1590#issuecomment-2207052044 
+# and
+# https://github.blog/changelog/2023-06-13-github-actions-all-actions-will-run-on-node16-instead-of-node12-by-default/
+env:
+  ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION: true
+
 jobs:
-  flutter_linux:
-    if: false
-    name: linux
+  tts:
+    name: tts ${{ matrix.index }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
     container: ubuntu:18.04
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        total: ["20"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
@@ -50,8 +40,98 @@ jobs:
         shell: bash
         run: |
           apt-get update -y
-          apt-get install -y build-essential jq git cmake
+          apt-get install -y bc curl git
+
+      - name: Show files
+        shell: bash
+        run: |
+          git config --global --add safe.directory /__w/sherpa-onnx/sherpa-onnx
+
+          ls -lha
+
+          git init
+          git add .
+          git config user.name "foo"
+          git config user.email "bar@g.com"
+          git commit -m "test"
+
+      - name: Generate tts script
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux2014_x86_64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
+
+              find /opt -name "python*"
+              export PATH=/opt/_internal/cpython-3.8.19/bin:$PATH
+              python3 --version
+              python3 -m pip install --upgrade pip jinja2 iso639-lang
+
+              total=${{ matrix.total }}
+              index=${{ matrix.index }}
+
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+              cd scripts/flutter
+              ls -lh
+              echo "---"
+              python3 ./generate-tts.py --total $total --index $index
+              chmod +x *.sh
+              ls -lh
+
+      # Ubuntu 18.04 uses cmake 3.10 by default, but we need cmake >= 3.11
+      - name: Install cmake
+        shell: bash
+        run: |
+          # see https://askubuntu.com/questions/355565/how-do-i-install-the-latest-version-of-cmake-from-the-command-line
+          version=3.28
+          build=1
+          ## don't modify from here
+          limit=3.20
+          result=$(echo "$version >= $limit" | bc -l)
+          os=$([ "$result" == 1 ] && echo "linux" || echo "Linux")
+          mkdir ~/temp
+          cd ~/temp
+          curl -SL -O https://cmake.org/files/v$version/cmake-$version.$build-$os-x86_64.sh
+          mkdir /opt/cmake
+          sh cmake-$version.$build-$os-x86_64.sh --skip-license --prefix=/opt/cmake
+          ln -s /opt/cmake/bin/cmake /usr/local/bin/cmake
+
+          echo "/opt/cmake/bin" >> $GITHUB_PATH
+
+      - name: Display cmake version
+        shell: bash
+        run: |
+          cmake --version
+          which cmake
+
+      - name: Install deps
+        shell: bash
+        run: |
+          apt-get update -y
+          apt-get install -y build-essential jq git python3-pip
           apt-get install -y curl
+          apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libunwind-dev
+
+      - name: Show files
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+          echo "---"
+          ls -lh scripts/flutter
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2 iso639-lang dataclasses
 
       - name: Setup Flutter SDK
         uses: flutter-actions/setup-flutter@v3
@@ -112,112 +192,88 @@ jobs:
           dart --version
           flutter doctor
 
-      - name: Build sherpa-onnx
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_x86_64
-            options: |
-              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
-            shell: bash
-            run: |
-              uname -a
-              gcc --version
-              cmake --version
-              cat /etc/*release
-              id
-              pwd
-
-              cd /home/runner/work/sherpa-onnx/sherpa-onnx
-
-              mkdir build
-              cd build
-
-              cmake \
-                -D BUILD_SHARED_LIBS=ON \
-                -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-                -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-                -DBUILD_ESPEAK_NG_EXE=OFF \
-                -DSHERPA_ONNX_ENABLE_BINARY=OFF \
-                -DCMAKE_INSTALL_PREFIX=./install \
-                ..
-
-              make -j2
-              make install
-
-      - name: Copy libs
-        shell: bash
-        run: |
-          cp -v build/install/lib/lib* ./sherpa-onnx/flutter/linux/
-
-          echo "--------------------"
-
-          ls -lh ./sherpa-onnx/flutter/linux/
-
-      - name: Download model files
-        shell: bash
-        run: |
-          cd sherpa-onnx/flutter
-          cd example/assets
-
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
-          cd sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
-          rm encoder-epoch-99-avg-1.onnx
-          rm decoder-epoch-99-avg-1.int8.onnx
-          rm joiner-epoch-99-avg-1.onnx
-          rm README.md
-          rm bpe.model
-          rm bpe.vocab
-          rm -rf test_wavs
-          ls -lh
           cd ..
 
       - name: Build flutter
         shell: bash
         run: |
+          cd scripts/flutter
 
-          d=$PWD
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
 
-          pushd sherpa-onnx/flutter
-          dart pub get
+          ./generate-tts.py --total $total --index $index
 
-          cd example
-          flutter build linux
+          chmod +x *.sh
+          ./build-linux-tts.sh
+          cd ../../
+          ls -lh *.tar.bz2
 
-          ls -lh build/linux/x64/release/bundle/sherpa_onnx
-          file build/linux/x64/release/bundle/sherpa_onnx
+      - name: Display generated files
+        shell: bash
+        run: |
+          ls -lh *.tar.bz2
 
-          tree build/linux/x64/release/bundle/
-          cd build/linux/x64/release/
-
-          dst=flutter_sherpa_onnx_linux_x64
-          mv bundle $dst
-
-          pushd $dst/lib
-
-          ls -lh
-          mv -v libonnxruntime.so libonnxruntime.so.1.17.1
-          mv -v libpiper_phonemize.so libpiper_phonemize.so.1
-          popd
-
-          tar cjfv $dst.tar.bz2 $dst
-          ls -lh
-          mv $dst.tar.bz2 $d
-          popd
-
-          ls -lh $dst.tar.bz2
-
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
-          name: flutter-sherpa-onnx-linux-x64
+          name: ${{ matrix.os }}-${{ matrix.total }}-${{ matrix.index }}
           path: ./*.tar.bz2
 
-      # - name: Release android libs
-      #   if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-      #   uses: svenstaro/upload-release-action@v2
-      #   with:
-      #     file_glob: true
-      #     overwrite: true
-      #     file: flutter*.tar.bz2
+  tts_upload:
+    needs: [tts]
+    name: tts upload ${{ matrix.index }}/${{ matrix.total }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        total: ["20"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19"]
+        # total: ["1"]
+        # index: ["0"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Retrieve artifact from ubuntu-latest
+        uses: actions/download-artifact@v3
+        with:
+          name: ${{ matrix.os }}-${{ matrix.total }}-${{ matrix.index }}
+          path: /tmp/files/
+
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-flutter huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+            dst=flutter/tts/linux/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
+            cp -v /tmp/files/*.tar.bz2 $dst
+
+            git status
+            git lfs track "*.bz2"
+            git add .
+            git commit -m "add more files"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter main

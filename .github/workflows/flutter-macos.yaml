@@ -14,8 +14,8 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  flutter_macos:
-    name: macos ${{ matrix.arch }} ${{ matrix.index }}
+  asr:
+    name: asr ${{ matrix.arch }}/${{ matrix.total }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -78,13 +78,13 @@ jobs:
           cd ../../
           ls -lh *.tar.bz2
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: sherpa-onnx-osx-${{ matrix.arch }}-${{ matrix.index }}
-          path: ./*.tar.bz2
+      - name: Display generated files
+        shell: bash
+        run: |
+          ls -lh *.tar.bz2
 
       - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -100,13 +100,123 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
             git clone https://huggingface.co/csukuangfj/sherpa-onnx-flutter huggingface
             cd huggingface
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
-            mkdir -p flutter/asr
-            cp -v ../*.tar.bz2 ./flutter/asr
+
+            dst=flutter/asr/macos/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
+
+            cp -v ../*.tar.bz2 $dst
+
+            git status
+            git lfs track "*.bz2"
+            git add .
+            git commit -m "add more files"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-flutter main
+
+  tts:
+    name: tts ${{ matrix.arch }} ${{ matrix.index }}/${{ matrix.total }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        arch: [x86_64, arm64]
+        total: ["10"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --break-system-packages --upgrade pip jinja2 iso639-lang
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display PWD
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+
+      - name: Display machine info
+        shell: bash
+        run: |
+          uname -a
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build flutter
+        shell: bash
+        run: |
+          export arch=${{ matrix.arch }}
+          cd scripts/flutter
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-tts.py --total $total --index $index
+
+          chmod +x *.sh
+          ./build-macos-tts.sh
+          cd ../../
+          ls -lh *.tar.bz2
+
+      - name: Display generated files
+        shell: bash
+        run: |
+          ls -lh *.tar.bz2
+
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-flutter huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+            dst=flutter/tts/macos/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
+            cp -v ../*.tar.bz2 $dst
 
             git status
             git lfs track "*.bz2"

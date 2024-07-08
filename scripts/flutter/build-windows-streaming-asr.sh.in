@@ -17,10 +17,15 @@ log "SHERPA_ONNX_VERSION: $SHERPA_ONNX_VERSION"
 
 {% for model in model_list %}
 pushd $SHERPA_ONNX_DIR/flutter-examples/streaming_asr/
+
 model_name={{ model.model_name }}
 lang={{ model.lang }}
 type={{ model.idx }}
 short_name={{ model.short_name }}
+
+rm -rf build
+rm -rf assets
+mkdir assets
 
 pushd assets
 
@@ -31,6 +36,9 @@ tar xvf ${model_name}.tar.bz2
 
 rm -rf  *.tar.bz2
 ls -lh $model_name
+
+ls -lh
+ls -lh *
 
 popd
 
@@ -55,8 +63,13 @@ ls -lh
 
 dst=sherpa-onnx-$SHERPA_ONNX_VERSION-win-x64-asr-$lang-$short_name
 mv Release $dst
-tar cjfv $dst.tar.bz2 ./$dst
+tar cjf $dst.tar.bz2 ./$dst
+rm -rf $dst
 mv $dst.tar.bz2 $SHERPA_ONNX_DIR
+
+pushd $SHERPA_ONNX_DIR
+ls -lh *.tar.bz2
+popd
 
 popd
 
