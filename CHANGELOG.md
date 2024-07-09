@@ -5,7 +5,7 @@
 
 ## 1.10.11
 
-* Support the iOS platform for iOS.
+* Support the iOS platform for Flutter.
 
 ## 1.10.10
 

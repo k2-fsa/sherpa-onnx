@@ -162,7 +162,7 @@ jobs:
           tree /tmp/windows*
           echo "----"
 
-          rm -v /tmp/windows*/*.lib
+          rm -fv /tmp/windows*/*.lib
           tree /tmp/windows*
 
       - name: Build
