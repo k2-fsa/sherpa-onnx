@@ -815,6 +815,9 @@ SHERPA_ONNX_API void SherpaOnnxDestroySpeechSegment(
 SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorReset(
     SherpaOnnxVoiceActivityDetector *p);
 
+SHERPA_ONNX_API void SherpaOnnxVoiceActivityDetectorFlush(
+    SherpaOnnxVoiceActivityDetector *p);
+
 // ============================================================
 // For offline Text-to-Speech (i.e., non-streaming TTS)
 // ============================================================
