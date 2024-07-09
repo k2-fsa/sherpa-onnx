@@ -332,18 +332,23 @@ def get_vits_models() -> List[TtsModel]:
             model_name="vits-zh-hf-fanchen-unity.onnx",
             lang="zh",
         ),
+        TtsModel(
+            model_dir="sherpa-onnx-vits-zh-ll",
+            model_name="model.onnx",
+            lang="zh",
+        ),
     ]
 
     rule_fsts = ["phone.fst", "date.fst", "number.fst", "new_heteronym.fst"]
     for m in chinese_models:
         s = [f"{m.model_dir}/{r}" for r in rule_fsts]
-        if "vits-zh-hf" in m.model_dir:
+        if "vits-zh-hf" in m.model_dir or "sherpa-onnx-vits-zh-ll" == m.model_dir:
             s = s[:-1]
             m.dict_dir = m.model_dir + "/dict"
 
         m.rule_fsts = ",".join(s)
 
-        if "vits-zh-hf" not in m.model_dir:
+        if "vits-zh-hf" not in m.model_dir and "zh-ll" not in m.model_dir:
             m.rule_fars = f"{m.model_dir}/rule.far"
 
     all_models = chinese_models + [
