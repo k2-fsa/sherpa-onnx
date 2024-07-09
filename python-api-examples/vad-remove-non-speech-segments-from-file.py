@@ -105,6 +105,12 @@ def main():
             speech_samples.extend(vad.front.samples)
             vad.pop()
 
+    vad.flush()
+
+    while not vad.empty():
+        speech_samples.extend(vad.front.samples)
+        vad.pop()
+
     speech_samples = np.array(speech_samples, dtype=np.float32)
 
     sf.write(args.output, speech_samples, samplerate=sample_rate)

@@ -633,6 +633,10 @@ class SherpaOnnxVoiceActivityDetectorWrapper {
   func reset() {
     SherpaOnnxVoiceActivityDetectorReset(vad)
   }
+
+  func flush() {
+    SherpaOnnxVoiceActivityDetectorFlush(vad)
+  }
 }
 
 // offline tts

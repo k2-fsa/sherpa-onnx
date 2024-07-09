@@ -59,6 +59,16 @@ public class VadRemoveSilence {
       }
     }
 
+    vad.flush();
+    while (!vad.empty()) {
+
+      // if you want to get the starting time of this segment, you can use
+      /* float startTime = vad.front().getStart() / 16000.0f; */
+
+      segments.add(vad.front().getSamples());
+      vad.pop();
+    }
+
     // get total number of samples
     int n = 0;
     for (float[] s : segments) {

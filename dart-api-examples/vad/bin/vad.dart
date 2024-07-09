@@ -65,6 +65,12 @@ void main(List<String> arguments) async {
     }
   }
 
+  vad.flush();
+  while (!vad.isEmpty()) {
+    allSamples.add(vad.front().samples);
+    vad.pop();
+  }
+
   vad.free();
 
   final s = Float32List.fromList(allSamples.expand((x) => x).toList());

@@ -57,6 +57,26 @@ class VadNonStreamingAsrParaformer
         }
       }
     }
+
+    vad.Flush();
+
+    while (!vad.IsEmpty()) {
+      SpeechSegment segment = vad.Front();
+      float startTime = segment.Start / (float)sampleRate;
+      float duration = segment.Samples.Length / (float)sampleRate;
+
+      OfflineStream stream = recognizer.CreateStream();
+      stream.AcceptWaveform(sampleRate, segment.Samples);
+      recognizer.Decode(stream);
+      String text = stream.Result.Text;
+
+      if (!String.IsNullOrEmpty(text)) {
+        Console.WriteLine("{0}--{1}: {2}", String.Format("{0:0.00}", startTime),
+            String.Format("{0:0.00}", startTime+duration), text);
+      }
+
+      vad.Pop();
+    }
   }
 }
 

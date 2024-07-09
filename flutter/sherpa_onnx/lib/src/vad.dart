@@ -207,6 +207,10 @@ class VoiceActivityDetector {
     SherpaOnnxBindings.voiceActivityDetectorReset?.call(ptr);
   }
 
+  void flush() {
+    SherpaOnnxBindings.voiceActivityDetectorFlush?.call(ptr);
+  }
+
   Pointer<SherpaOnnxVoiceActivityDetector> ptr;
   final VadModelConfig config;
 }

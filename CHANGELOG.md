@@ -1,3 +1,8 @@
+## 1.10.12
+
+* Add Flush to VAD so that the last speech segment can be detected. See also
+  https://github.com/k2-fsa/sherpa-onnx/discussions/1077#discussioncomment-9979740
+
 ## 1.10.11
 
 * Support the iOS platform for iOS.

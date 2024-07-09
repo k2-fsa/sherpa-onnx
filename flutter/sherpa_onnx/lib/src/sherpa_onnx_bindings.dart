@@ -491,6 +491,12 @@ typedef SherpaOnnxVoiceActivityDetectorResetNative = Void Function(
 typedef SherpaOnnxVoiceActivityDetectorReset = void Function(
     Pointer<SherpaOnnxVoiceActivityDetector>);
 
+typedef SherpaOnnxVoiceActivityDetectorFlushNative = Void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
+typedef SherpaOnnxVoiceActivityDetectorFlush = void Function(
+    Pointer<SherpaOnnxVoiceActivityDetector>);
+
 typedef SherpaOnnxVoiceActivityDetectorFrontNative
     = Pointer<SherpaOnnxSpeechSegment> Function(
         Pointer<SherpaOnnxVoiceActivityDetector>);
@@ -779,6 +785,8 @@ class SherpaOnnxBindings {
 
   static SherpaOnnxVoiceActivityDetectorReset? voiceActivityDetectorReset;
 
+  static SherpaOnnxVoiceActivityDetectorFlush? voiceActivityDetectorFlush;
+
   static SherpaOnnxCreateCircularBuffer? createCircularBuffer;
 
   static SherpaOnnxDestroyCircularBuffer? destroyCircularBuffer;
@@ -1034,6 +1042,11 @@ class SherpaOnnxBindings {
     voiceActivityDetectorReset ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorResetNative>>(
             'SherpaOnnxVoiceActivityDetectorReset')
+        .asFunction();
+
+    voiceActivityDetectorFlush ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxVoiceActivityDetectorFlushNative>>(
+            'SherpaOnnxVoiceActivityDetectorFlush')
         .asFunction();
 
     createCircularBuffer ??= dynamicLibrary

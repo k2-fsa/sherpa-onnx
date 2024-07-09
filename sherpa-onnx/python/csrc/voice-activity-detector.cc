@@ -38,6 +38,7 @@ void PybindVoiceActivityDetector(py::module *m) {
       .def("is_speech_detected", &PyClass::IsSpeechDetected,
            py::call_guard<py::gil_scoped_release>())
       .def("reset", &PyClass::Reset, py::call_guard<py::gil_scoped_release>())
+      .def("flush", &PyClass::Flush, py::call_guard<py::gil_scoped_release>())
       .def_property_readonly("front", &PyClass::Front);
 }
 

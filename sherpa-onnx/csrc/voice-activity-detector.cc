@@ -118,6 +118,29 @@ class VoiceActivityDetector::Impl {
     start_ = -1;
   }
 
+  void Flush() {
+    if (start_ == -1 || buffer_.Size() == 0) {
+      return;
+    }
+
+    int32_t end = buffer_.Tail() - model_->MinSilenceDurationSamples();
+    if (end <= start_) {
+      return;
+    }
+
+    std::vector<float> s = buffer_.Get(start_, end - start_);
+
+    SpeechSegment segment;
+
+    segment.start = start_;
+    segment.samples = std::move(s);
+
+    segments_.push(std::move(segment));
+
+    buffer_.Pop(end - buffer_.Head());
+    start_ = -1;
+  }
+
   bool IsSpeechDetected() const { return start_ != -1; }
 
   const VadModelConfig &GetConfig() const { return config_; }
@@ -164,7 +187,9 @@ const SpeechSegment &VoiceActivityDetector::Front() const {
   return impl_->Front();
 }
 
-void VoiceActivityDetector::Reset() { impl_->Reset(); }
+void VoiceActivityDetector::Reset() const { impl_->Reset(); }
+
+void VoiceActivityDetector::Flush() const { impl_->Flush(); }
 
 bool VoiceActivityDetector::IsSpeechDetected() const {
   return impl_->IsSpeechDetected();

@@ -876,6 +876,10 @@ void SherpaOnnxVoiceActivityDetectorReset(SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Reset();
 }
 
+void SherpaOnnxVoiceActivityDetectorFlush(SherpaOnnxVoiceActivityDetector *p) {
+  p->impl->Flush();
+}
+
 #if SHERPA_ONNX_ENABLE_TTS == 1
 struct SherpaOnnxOfflineTts {
   std::unique_ptr<sherpa_onnx::OfflineTts> impl;
