@@ -53,6 +53,11 @@ namespace SherpaOnnx
             SherpaOnnxVoiceActivityDetectorReset(_handle.Handle);
         }
 
+        public void Flush()
+        {
+            SherpaOnnxVoiceActivityDetectorFlush(_handle.Handle);
+        }
+
         public void Dispose()
         {
             Cleanup();
@@ -106,5 +111,7 @@ namespace SherpaOnnx
         [DllImport(Dll.Filename)]
         private static extern void SherpaOnnxVoiceActivityDetectorReset(IntPtr handle);
 
+        [DllImport(Dll.Filename)]
+        private static extern void SherpaOnnxVoiceActivityDetectorFlush(IntPtr handle);
     }
 }
