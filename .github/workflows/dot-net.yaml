@@ -52,11 +52,6 @@ jobs:
           cmake --build . --target install --config Release
           rm -rf install/pkgconfig
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: windows-${{ matrix.arch }}
-          path: ./build/install/lib/
-
       - name: Create tar file
         shell: bash
         run: |
@@ -71,6 +66,11 @@ jobs:
           tar cjvf $dst.tar.bz2 $dst
           ls -lh *.tar.bz2
           mv *.tar.bz2 ../
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows-${{ matrix.arch }}
+          path: ./*.tar.bz2
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -88,7 +88,9 @@ jobs:
 
             rm -rf huggingface
             export GIT_CLONE_PROTECTION_ACTIVE=false
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
             mkdir -p windows-for-dotnet
