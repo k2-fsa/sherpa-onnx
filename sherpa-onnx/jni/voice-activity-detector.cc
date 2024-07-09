@@ -173,3 +173,11 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(JNIEnv * /*env*/,
   auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
   model->Reset();
 }
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_flush(JNIEnv * /*env*/,
+                                                            jobject /*obj*/,
+                                                            jlong ptr) {
+  auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
+  model->Flush();
+}
