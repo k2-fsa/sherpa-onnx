@@ -29,7 +29,7 @@ class CircularBuffer {
   }
 
   reset() {
-    return addon.circularBufferReset(this.handle);
+    addon.circularBufferReset(this.handle);
   }
 }
 
@@ -79,7 +79,11 @@ config = {
   }
 
   reset() {
-    return addon.VoiceActivityDetectorResetWrapper(this.handle);
+    addon.VoiceActivityDetectorResetWrapper(this.handle);
+  }
+
+  flush() {
+    addon.VoiceActivityDetectorFlushWrapper(this.handle);
   }
 }
 
