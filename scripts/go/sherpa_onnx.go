@@ -856,6 +856,10 @@ func (vad *VoiceActivityDetector) Reset() {
 	C.SherpaOnnxVoiceActivityDetectorReset(vad.impl)
 }
 
+func (vad *VoiceActivityDetector) Flush() {
+	C.SherpaOnnxVoiceActivityDetectorFlush(vad.impl)
+}
+
 // Spoken language identification
 
 type SpokenLanguageIdentificationWhisperConfig struct {
