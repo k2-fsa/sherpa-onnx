@@ -98,6 +98,25 @@ public class VadNonStreamingParaformer {
       }
     }
 
+    vad.flush();
+    while (!vad.empty()) {
+      SpeechSegment segment = vad.front();
+      float startTime = segment.getStart() / 16000.0f;
+      float duration = segment.getSamples().length / 16000.0f;
+
+      OfflineStream stream = recognizer.createStream();
+      stream.acceptWaveform(segment.getSamples(), 16000);
+      recognizer.decode(stream);
+      String text = recognizer.getResult(stream).getText();
+      stream.release();
+
+      if (!text.isEmpty()) {
+        System.out.printf("%.3f--%.3f: %s\n", startTime, startTime + duration, text);
+      }
+
+      vad.pop();
+    }
+
     vad.release();
     recognizer.release();
   }
