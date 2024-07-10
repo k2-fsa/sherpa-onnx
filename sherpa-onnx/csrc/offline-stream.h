@@ -30,6 +30,8 @@ struct OfflineRecognitionResult {
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   std::vector<float> timestamps;
 
+  std::vector<int32_t> words;
+
   std::string AsJsonString() const;
 };
 

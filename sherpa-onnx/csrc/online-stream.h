@@ -15,7 +15,6 @@
 #include "sherpa-onnx/csrc/online-ctc-decoder.h"
 #include "sherpa-onnx/csrc/online-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
-#include "sherpa-onnx/csrc/transducer-keyword-decoder.h"
 
 namespace sherpa_onnx {
 
@@ -90,6 +89,9 @@ class OnlineStream {
 
   void SetStates(std::vector<Ort::Value> states);
   std::vector<Ort::Value> &GetStates();
+
+  void SetNeMoDecoderStates(std::vector<Ort::Value> decoder_states);
+  std::vector<Ort::Value> &GetNeMoDecoderStates();
 
   /**
    * Get the context graph corresponding to this stream.

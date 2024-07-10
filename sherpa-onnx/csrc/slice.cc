@@ -4,9 +4,8 @@
 
 #include "sherpa-onnx/csrc/slice.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
 namespace sherpa_onnx {
@@ -25,8 +24,6 @@ Ort::Value Slice(OrtAllocator *allocator, const Ort::Value *v,
   assert(0 <= dim1_start);
   assert(dim1_start < dim1_end);
   assert(dim1_end <= shape[1]);
-
-  const T *src = v->GetTensorData<T>();
 
   std::array<int64_t, 3> ans_shape{dim0_end - dim0_start, dim1_end - dim1_start,
                                    shape[2]};

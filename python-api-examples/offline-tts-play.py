@@ -228,6 +228,13 @@ def generated_audio_callback(samples: np.ndarray, progress: float):
         logging.info("Start playing ...")
     started = True
 
+    # 1 means to keep generating
+    # 0 means to stop generating
+    if killed:
+        return 0
+
+    return 1
+
 
 # see https://python-sounddevice.readthedocs.io/en/0.4.6/api/streams.html#sounddevice.OutputStream
 def play_audio_callback(

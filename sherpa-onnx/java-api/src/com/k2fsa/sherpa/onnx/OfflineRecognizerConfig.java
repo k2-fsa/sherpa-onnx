@@ -9,6 +9,8 @@ public class OfflineRecognizerConfig {
     private final int maxActivePaths;
     private final String hotwordsFile;
     private final float hotwordsScore;
+    private final String ruleFsts;
+    private final String ruleFars;
 
     private OfflineRecognizerConfig(Builder builder) {
         this.featConfig = builder.featConfig;
@@ -17,6 +19,8 @@ public class OfflineRecognizerConfig {
         this.maxActivePaths = builder.maxActivePaths;
         this.hotwordsFile = builder.hotwordsFile;
         this.hotwordsScore = builder.hotwordsScore;
+        this.ruleFsts = builder.ruleFsts;
+        this.ruleFars = builder.ruleFars;
     }
 
     public static Builder builder() {
@@ -34,6 +38,8 @@ public class OfflineRecognizerConfig {
         private int maxActivePaths = 4;
         private String hotwordsFile = "";
         private float hotwordsScore = 1.5f;
+        private String ruleFsts = "";
+        private String ruleFars = "";
 
         public OfflineRecognizerConfig build() {
             return new OfflineRecognizerConfig(this);
@@ -66,6 +72,16 @@ public class OfflineRecognizerConfig {
 
         public Builder setHotwordsScore(float hotwordsScore) {
             this.hotwordsScore = hotwordsScore;
+            return this;
+        }
+
+        public Builder setRuleFsts(String ruleFsts) {
+            this.ruleFsts = ruleFsts;
+            return this;
+        }
+
+        public Builder setRuleFars(String ruleFars) {
+            this.ruleFars = ruleFars;
             return this;
         }
     }

@@ -16,6 +16,45 @@ echo "PATH: $PATH"
 which $EXE
 
 log "------------------------------------------------------------"
+log "Run NeMo transducer (English)"
+log "------------------------------------------------------------"
+repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
+curl -SL -O $repo_url
+tar xvf sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
+rm sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms.tar.bz2
+repo=sherpa-onnx-nemo-streaming-fast-conformer-transducer-en-80ms
+
+log "Start testing ${repo_url}"
+
+waves=(
+$repo/test_wavs/0.wav
+$repo/test_wavs/1.wav
+$repo/test_wavs/8k.wav
+)
+
+for wave in ${waves[@]}; do
+  time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  --num-threads=2 \
+  $wave
+done
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder.onnx \
+  --decoder=$repo/decoder.onnx \
+  --joiner=$repo/joiner.onnx \
+  --num-threads=2 \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/8k.wav
+
+rm -rf $repo
+
+log "------------------------------------------------------------"
 log "Run LSTM transducer (English)"
 log "------------------------------------------------------------"
 

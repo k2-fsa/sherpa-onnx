@@ -5,7 +5,7 @@ on:
     branches:
       - master
     tags:
-      - '*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
       - '.github/workflows/windows-x64.yaml'
       - '.github/scripts/test-online-transducer.sh'
@@ -63,16 +63,27 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A x64 -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake \
+            -A x64 \
+            -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
 
       - name: Build sherpa-onnx for windows
         shell: bash
         run: |
           cd build
-          cmake --build . --config Release -- -m:2
+          cmake --build . --config Release  -- -m:2
           cmake --build . --config Release --target install -- -m:2
 
           ls -lh ./bin/Release/sherpa-onnx.exe
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}
+          path: build/install/*
 
       - name: Test offline punctuation
         shell: bash
@@ -219,7 +230,6 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
-            git lfs pull
             mkdir -p win64
 
             cp -v ../sherpa-onnx-*.tar.bz2 ./win64

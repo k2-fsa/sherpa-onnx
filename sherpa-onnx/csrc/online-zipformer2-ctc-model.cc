@@ -4,10 +4,8 @@
 
 #include "sherpa-onnx/csrc/online-zipformer2-ctc-model.h"
 
-#include <assert.h>
-#include <math.h>
-
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <numeric>
 #include <string>
@@ -90,7 +88,6 @@ class OnlineZipformer2CtcModel::Impl {
   std::vector<Ort::Value> StackStates(
       std::vector<std::vector<Ort::Value>> states) const {
     int32_t batch_size = static_cast<int32_t>(states.size());
-    int32_t num_encoders = static_cast<int32_t>(num_encoder_layers_.size());
 
     std::vector<const Ort::Value *> buf(batch_size);
 
@@ -168,7 +165,6 @@ class OnlineZipformer2CtcModel::Impl {
     assert(states.size() == m * 6 + 2);
 
     int32_t batch_size = states[0].GetTensorTypeAndShapeInfo().GetShape()[1];
-    int32_t num_encoders = num_encoder_layers_.size();
 
     std::vector<std::vector<Ort::Value>> ans;
     ans.resize(batch_size);

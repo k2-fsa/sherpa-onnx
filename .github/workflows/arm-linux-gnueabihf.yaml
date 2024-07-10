@@ -13,7 +13,7 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'toolchains/arm-linux-gnueabihf.toolchain.cmake'
     tags:
-      - '*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
   pull_request:
     branches:
       - master
@@ -208,7 +208,6 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
-            git lfs pull
             mkdir -p arm32
 
             cp -v ../sherpa-onnx-*.tar.bz2 ./arm32

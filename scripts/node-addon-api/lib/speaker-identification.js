@@ -18,9 +18,9 @@ class SpeakerEmbeddingExtractor {
   }
 
   // return a float32 array
-  compute(stream) {
+  compute(stream, enableExternalBuffer = true) {
     return addon.speakerEmbeddingExtractorComputeEmbedding(
-        this.handle, stream.handle);
+        this.handle, stream.handle, enableExternalBuffer);
   }
 }
 

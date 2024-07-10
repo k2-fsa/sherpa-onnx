@@ -24,6 +24,7 @@ struct OfflineModelConfig {
   OfflineTdnnModelConfig tdnn;
   OfflineZipformerCtcModelConfig zipformer_ctc;
   OfflineWenetCtcModelConfig wenet_ctc;
+  std::string telespeech_ctc;
 
   std::string tokens;
   int32_t num_threads = 2;
@@ -52,6 +53,7 @@ struct OfflineModelConfig {
                      const OfflineTdnnModelConfig &tdnn,
                      const OfflineZipformerCtcModelConfig &zipformer_ctc,
                      const OfflineWenetCtcModelConfig &wenet_ctc,
+                     const std::string &telespeech_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
                      const std::string &provider, const std::string &model_type,
                      const std::string &modeling_unit,
@@ -63,6 +65,7 @@ struct OfflineModelConfig {
         tdnn(tdnn),
         zipformer_ctc(zipformer_ctc),
         wenet_ctc(wenet_ctc),
+        telespeech_ctc(telespeech_ctc),
         tokens(tokens),
         num_threads(num_threads),
         debug(debug),

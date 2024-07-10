@@ -82,7 +82,7 @@ std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is) {
   std::string line;
 
   std::string sym;
-  int32_t id;
+  int32_t id = -1;
   while (std::getline(is, line)) {
     std::istringstream iss(line);
     iss >> sym;
@@ -254,6 +254,7 @@ std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsChinese(
           this_sentence.push_back(eos);
         }
         ans.push_back(std::move(this_sentence));
+        this_sentence = {};
 
         if (sil != -1) {
           this_sentence.push_back(sil);
@@ -324,6 +325,7 @@ std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsNotChinese(
       if (w != ",") {
         this_sentence.push_back(blank);
         ans.push_back(std::move(this_sentence));
+        this_sentence = {};
       }
 
       continue;

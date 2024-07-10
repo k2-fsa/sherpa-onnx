@@ -4,9 +4,8 @@
 
 #include "sherpa-onnx/csrc/unbind.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <functional>
 #include <numeric>
 #include <utility>
@@ -58,7 +57,7 @@ std::vector<Ort::Value> Unbind(OrtAllocator *allocator, const Ort::Value *value,
     }
   }
 
-  return std::move(ans);
+  return ans;
 }
 
 template std::vector<Ort::Value> Unbind<float>(OrtAllocator *allocator,

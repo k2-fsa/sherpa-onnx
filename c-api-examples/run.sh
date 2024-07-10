@@ -11,7 +11,7 @@ if [ ! -d ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20 ]; then
   exit 1
 fi
 
-if [[ ! -f ../build/lib/libsherpa-onnx-core.a && ! -f ../build/lib/libsherpa-onnx-core.dylib  && ! -f ../build/lib/libsherpa-onnx-core.so ]]; then
+if [[ ! -f ../build/lib/libsherpa-onnx-c-api.a && ! -f ../build/lib/libsherpa-onnx-c-api.dylib  && ! -f ../build/lib/libsherpa-onnx-c-api.so ]]; then
   echo "Please build sherpa-onnx first. You can use"
   echo ""
   echo "  cd /path/to/sherpa-onnx"

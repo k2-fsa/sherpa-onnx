@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "sherpa-onnx/csrc/provider-config.h"
 namespace sherpa_onnx {
 
 // Please refer to
@@ -18,6 +19,7 @@ enum class Provider {
   kCoreML = 2,   // CoreMLExecutionProvider
   kXnnpack = 3,  // XnnpackExecutionProvider
   kNNAPI = 4,    // NnapiExecutionProvider
+  kTRT = 5,     // TensorRTExecutionProvider
 };
 
 /**

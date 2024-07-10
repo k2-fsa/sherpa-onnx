@@ -5,7 +5,7 @@ on:
     branches:
       - wheel
     tags:
-      - '*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
 
 env:
@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11]
+        os: [macos-13]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
 
     steps:
@@ -65,7 +65,7 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface
-        if: matrix.python-version == 'cp38'
+        if: matrix.python-version == 'cp39'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -99,7 +99,13 @@ jobs:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install wheel twine setuptools
+          opts='--break-system-packages'
+          v=${{ matrix.python-version }}
+          if [[ $v == cp37 || $v == cp38 || $v == cp39 ]]; then
+            opts=''
+          fi
+
+          python3 -m pip install $opts --upgrade pip
+          python3 -m pip install $opts wheel twine setuptools
 
           twine upload ./wheelhouse/*.whl

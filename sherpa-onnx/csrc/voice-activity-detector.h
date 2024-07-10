@@ -41,7 +41,11 @@ class VoiceActivityDetector {
 
   bool IsSpeechDetected() const;
 
-  void Reset();
+  void Reset() const;
+
+  // At the end of the utterance, you can invoke this method so that
+  // the last speech segment can be detected.
+  void Flush() const;
 
   const VadModelConfig &GetConfig() const;
 

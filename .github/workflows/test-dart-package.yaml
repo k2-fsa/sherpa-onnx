@@ -1,0 +1,97 @@
+name: test-dart-package
+
+on:
+  schedule:
+    # minute (0-59)
+    # hour (0-23)
+    # day of the month (1-31)
+    # month (1-12)
+    # day of the week (0-6)
+    # nightly build at 15:50 UTC time every day
+    - cron: "50 15 * * *"
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-dart-package-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_dart_package:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest] #, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Display sherpa-onnx package info
+        shell: bash
+        run: |
+          cd dart-api-examples/vad
+          flutter pub get
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            echo "-----"
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev
+
+            echo "-----"
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*
+
+            echo "-----"
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*/*
+
+            echo "-----"
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-*
+
+            # sudo mkdir /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib
+            # sudo touch /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-1.10.7/lib/.gitkeep
+
+            echo "-----"
+            ls -lh /home/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_linux-*/linux
+          elif [[ ${{ matrix.os }} == macos-latest ]]; then
+            echo "-----"
+            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev
+
+            echo "-----"
+            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*
+
+            echo "-----"
+            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx*/*
+
+            echo "-----"
+            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-*/
+
+            echo "-----"
+            ls -lh /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-*/macos
+
+            # sudo mkdir /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib
+            # sudo touch /Users/runner/work/_temp/pub-cache/hosted/pub.dev/sherpa_onnx_macos-1.10.7/lib/.gitkeep
+          fi
+
+
+      - name: Run tests
+        shell: bash
+        run: |
+          .github/scripts/test-dart.sh

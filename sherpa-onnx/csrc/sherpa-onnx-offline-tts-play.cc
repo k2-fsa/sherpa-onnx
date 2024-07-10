@@ -47,8 +47,8 @@ static void Handler(int32_t /*sig*/) {
   fprintf(stderr, "\nCaught Ctrl + C. Exiting\n");
 }
 
-static void AudioGeneratedCallback(const float *s, int32_t n,
-                                   float /*progress*/) {
+static int32_t AudioGeneratedCallback(const float *s, int32_t n,
+                                      float /*progress*/) {
   if (n > 0) {
     Samples samples;
     samples.data = std::vector<float>{s, s + n};
@@ -57,6 +57,12 @@ static void AudioGeneratedCallback(const float *s, int32_t n,
     g_buffer.samples.push(std::move(samples));
     g_started = true;
   }
+  if (g_killed) {
+    return 0;  // stop generating
+  }
+
+  // continue generating
+  return 1;
 }
 
 static int PlayCallback(const void * /*in*/, void *out,
@@ -85,7 +91,7 @@ static int PlayCallback(const void * /*in*/, void *out,
   }
 
   int32_t k = 0;
-  for (; k < n && !g_buffer.samples.empty();) {
+  for (; k < static_cast<int32_t>(n) && !g_buffer.samples.empty();) {
     int32_t this_block = n - k;
 
     auto &p = g_buffer.samples.front();
@@ -99,7 +105,7 @@ static int PlayCallback(const void * /*in*/, void *out,
 
       k = n;
 
-      if (p.consumed == p.data.size()) {
+      if (p.consumed == static_cast<int32_t>(p.data.size())) {
         g_buffer.samples.pop();
       }
       break;
@@ -110,7 +116,7 @@ static int PlayCallback(const void * /*in*/, void *out,
     g_buffer.samples.pop();
   }
 
-  if (k < n) {
+  if (k < static_cast<int32_t>(n)) {
     std::fill_n(pout + k, n - k, 0);
   }
 
@@ -121,7 +127,7 @@ static int PlayCallback(const void * /*in*/, void *out,
   return paContinue;
 }
 
-static void PlayCallbackFinished(void *userData) { g_cv.notify_all(); }
+static void PlayCallbackFinished(void * /*userData*/) { g_cv.notify_all(); }
 
 static void StartPlayback(int32_t sample_rate) {
   int32_t frames_per_buffer = 1024;

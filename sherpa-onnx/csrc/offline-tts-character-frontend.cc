@@ -30,7 +30,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
 
   std::string sym;
   std::u32string s;
-  int32_t id;
+  int32_t id = 0;
   while (std::getline(is, line)) {
     std::istringstream iss(line);
     iss >> sym;
@@ -96,7 +96,7 @@ OfflineTtsCharacterFrontend::OfflineTtsCharacterFrontend(
 
 std::vector<std::vector<int64_t>>
 OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
-    const std::string &_text, const std::string &voice /*= ""*/) const {
+    const std::string &_text, const std::string & /*voice = ""*/) const {
   // see
   // https://github.com/coqui-ai/TTS/blob/dev/TTS/tts/utils/text/tokenizer.py#L87
   int32_t use_eos_bos = meta_data_.use_eos_bos;
@@ -138,6 +138,7 @@ OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
         }
 
         ans.push_back(std::move(this_sentence));
+        this_sentence = {};
 
         // re-initialize this_sentence
         if (use_eos_bos) {
@@ -151,7 +152,7 @@ OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
       this_sentence.push_back(eos_id);
     }
 
-    if (this_sentence.size() > 1 + use_eos_bos) {
+    if (static_cast<int32_t>(this_sentence.size()) > 1 + use_eos_bos) {
       ans.push_back(std::move(this_sentence));
     }
   } else {
@@ -172,6 +173,7 @@ OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
         }
 
         ans.push_back(std::move(this_sentence));
+        this_sentence = {};
 
         // re-initialize this_sentence
         if (use_eos_bos) {

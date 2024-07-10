@@ -126,6 +126,9 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
   SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(modeling_unit, modelingUnit);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(bpe_vocab, bpeVocab);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(telespeech_ctc, teleSpeechCtc);
 
   return c;
 }
@@ -177,6 +180,8 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
   SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords_file, hotwordsFile);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
 
   SherpaOnnxOfflineRecognizer *recognizer = CreateOfflineRecognizer(&c);
 
@@ -232,6 +237,18 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
     delete[] c.model_config.model_type;
   }
 
+  if (c.model_config.modeling_unit) {
+    delete[] c.model_config.modeling_unit;
+  }
+
+  if (c.model_config.bpe_vocab) {
+    delete[] c.model_config.bpe_vocab;
+  }
+
+  if (c.model_config.telespeech_ctc) {
+    delete[] c.model_config.telespeech_ctc;
+  }
+
   if (c.lm_config.model) {
     delete[] c.lm_config.model;
   }
@@ -242,6 +259,14 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
 
   if (c.hotwords_file) {
     delete[] c.hotwords_file;
+  }
+
+  if (c.rule_fsts) {
+    delete[] c.rule_fsts;
+  }
+
+  if (c.rule_fars) {
+    delete[] c.rule_fars;
   }
 
   if (!recognizer) {

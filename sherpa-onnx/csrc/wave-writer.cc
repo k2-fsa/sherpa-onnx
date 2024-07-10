@@ -37,7 +37,7 @@ struct WaveHeader {
 
 bool WriteWave(const std::string &filename, int32_t sampling_rate,
                const float *samples, int32_t n) {
-  WaveHeader header;
+  WaveHeader header{};
   header.chunk_id = 0x46464952;      // FFIR
   header.format = 0x45564157;        // EVAW
   header.subchunk1_id = 0x20746d66;  // "fmt "

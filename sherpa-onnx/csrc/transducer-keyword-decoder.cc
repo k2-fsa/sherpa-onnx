@@ -151,7 +151,6 @@ void TransducerKeywordDecoder::Decode(
 
       if (matched) {
         float ys_prob = 0.0;
-        int32_t length = best_hyp.ys_probs.size();
         for (int32_t i = 0; i < matched_state->level; ++i) {
           ys_prob += best_hyp.ys_probs[i];
         }

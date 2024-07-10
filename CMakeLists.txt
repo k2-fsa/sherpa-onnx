@@ -2,9 +2,16 @@ cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
 
 set(CMAKE_OSX_DEPLOYMENT_TARGET "10.14" CACHE STRING "Minimum OS X deployment version. Used only for macOS")
 
+set(CMAKE_POLICY_DEFAULT_CMP0063 NEW)
+set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
+
 project(sherpa-onnx)
 
-set(SHERPA_ONNX_VERSION "1.9.25")
+# Remember to update
+# ./nodejs-addon-examples
+# ./dart-api-examples/
+# ./CHANGELOG.md
+set(SHERPA_ONNX_VERSION "1.10.12")
 
 # Disable warning about
 #
@@ -13,6 +20,21 @@ set(SHERPA_ONNX_VERSION "1.9.25")
 if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
 endif()
+
+
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo)
+
+if(ipo)
+  message(STATUS "IPO is enabled")
+  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+else()
+  message(STATUS "IPO is not available")
+endif()
+
+set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 option(SHERPA_ONNX_ENABLE_PYTHON "Whether to build Python" OFF)
 option(SHERPA_ONNX_ENABLE_TESTS "Whether to build tests" OFF)
@@ -32,6 +54,8 @@ option(SHERPA_ONNX_ENABLE_BINARY "Whether to build binaries" ON)
 option(SHERPA_ONNX_ENABLE_TTS "Whether to build TTS related code" ON)
 option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically. Used only when BUILD_SHARED_LIBS is OFF on Linux" ON)
 option(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE "True to use pre-installed onnxruntime if available" ON)
+option(SHERPA_ONNX_ENABLE_SANITIZER "Whether to enable ubsan and asan" OFF)
+option(SHERPA_ONNX_BUILD_C_API_EXAMPLES "Whether to enable C API examples" ON)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
@@ -47,15 +71,17 @@ else()
   set(SHERPA_ONNX_RPATH_ORIGIN "@loader_path")
 endif()
 
-set(CMAKE_INSTALL_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
-set(CMAKE_BUILD_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
+if(NOT WIN32)
+  set(CMAKE_INSTALL_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
+  set(CMAKE_BUILD_RPATH ${SHERPA_ONNX_RPATH_ORIGIN})
+endif()
 
 if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "No CMAKE_BUILD_TYPE given, default to Release")
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-if(DEFINED ANDROID_ABI AND NOT SHERPA_ONNX_ENABLE_JNI)
+if(DEFINED ANDROID_ABI AND NOT SHERPA_ONNX_ENABLE_JNI AND NOT SHERPA_ONNX_ENABLE_C_API)
   message(STATUS "Set SHERPA_ONNX_ENABLE_JNI to ON for Android")
   set(SHERPA_ONNX_ENABLE_JNI ON CACHE BOOL "" FORCE)
 endif()
@@ -83,22 +109,16 @@ to install CUDA toolkit if you have not installed it.")
   endif()
 endif()
 
-if(BUILD_SHARED_LIBS AND MSVC)
-  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
-endif()
-
-if(NOT BUILD_SHARED_LIBS AND MSVC)
-  # see https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
-  # https://stackoverflow.com/questions/14172856/compile-with-mt-instead-of-md-using-cmake
-  if(MSVC)
-      add_compile_options(
-          $<$<CONFIG:>:/MT> #---------|
-          $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
-          $<$<CONFIG:Release>:/MT> #--|
-          $<$<CONFIG:RelWithDebInfo>:/MT>
-          $<$<CONFIG:MinSizeRel>:/MT>
-      )
-  endif()
+# see https://cmake.org/cmake/help/latest/prop_tgt/MSVC_RUNTIME_LIBRARY.html
+# https://stackoverflow.com/questions/14172856/compile-with-mt-instead-of-md-using-cmake
+if(MSVC)
+  add_compile_options(
+      $<$<CONFIG:>:/MT> #---------|
+      $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
+      $<$<CONFIG:Release>:/MT> #--|
+      $<$<CONFIG:RelWithDebInfo>:/MT>
+      $<$<CONFIG:MinSizeRel>:/MT>
+  )
 endif()
 
 message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
@@ -121,6 +141,8 @@ message(STATUS "SHERPA_ONNX_ENABLE_BINARY ${SHERPA_ONNX_ENABLE_BINARY}")
 message(STATUS "SHERPA_ONNX_ENABLE_TTS ${SHERPA_ONNX_ENABLE_TTS}")
 message(STATUS "SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY ${SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY}")
 message(STATUS "SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE ${SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE}")
+message(STATUS "SHERPA_ONNX_ENABLE_SANITIZER: ${SHERPA_ONNX_ENABLE_SANITIZER}")
+message(STATUS "SHERPA_ONNX_BUILD_C_API_EXAMPLES: ${SHERPA_ONNX_BUILD_C_API_EXAMPLES}")
 
 if(SHERPA_ONNX_ENABLE_TTS)
   message(STATUS "TTS is enabled")
@@ -161,7 +183,7 @@ if(SHERPA_ONNX_ENABLE_WASM_KWS)
 endif()
 
 if(NOT CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 14 CACHE STRING "The C++ version to be used.")
+  set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ version to be used.")
 endif()
 set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "C++ Standard version: ${CMAKE_CXX_STANDARD}")
@@ -241,7 +263,9 @@ include(simple-sentencepiece)
 set(ONNXRUNTIME_DIR ${onnxruntime_SOURCE_DIR})
 message(STATUS "ONNXRUNTIME_DIR: ${ONNXRUNTIME_DIR}")
 
-if(SHERPA_ONNX_ENABLE_PORTAUDIO)
+if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
+  # portaudio is used only in building demo binaries and the sherpa-onnx-core
+  # library does not depend on it.
   include(portaudio)
 endif()
 
@@ -267,9 +291,36 @@ if(SHERPA_ONNX_ENABLE_TTS)
   include(cppjieba) # For Chinese TTS. It is a header-only C++ library
 endif()
 
+# if(NOT MSVC AND CMAKE_BUILD_TYPE STREQUAL Debug AND (CMAKE_CXX_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "AppleClang"))
+if(SHERPA_ONNX_ENABLE_SANITIZER)
+  message(WARNING "enable ubsan and asan")
+  set(CMAKE_REQUIRED_LIBRARIES -lubsan -lasan)
+  include(CheckCCompilerFlag)
+
+  set(flags -fsanitize=undefined )
+  string(APPEND flags " -fno-sanitize-recover=undefined ")
+  string(APPEND flags " -fsanitize=integer ")
+  string(APPEND flags " -fsanitize=nullability ")
+  string(APPEND flags " -fsanitize=implicit-conversion ")
+  string(APPEND flags " -fsanitize=bounds ")
+  string(APPEND flags " -fsanitize=address ")
+
+  if(OFF)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flags} -Wall -Wextra")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flags} -Wall -Wextra")
+  else()
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${flags}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${flags}")
+  endif()
+
+  set(CMAKE_EXECUTBLE_LINKER_FLAGS "${CMAKE_EXECUTBLE_LINKER_FLAGS} ${flags}")
+
+  add_compile_options(-fno-omit-frame-pointer)
+endif()
+
 add_subdirectory(sherpa-onnx)
 
-if(SHERPA_ONNX_ENABLE_C_API AND SHERPA_ONNX_ENABLE_BINARY)
+if(SHERPA_ONNX_ENABLE_C_API AND SHERPA_ONNX_ENABLE_BINARY AND SHERPA_ONNX_BUILD_C_API_EXAMPLES)
   set(SHERPA_ONNX_PKG_WITH_CARGS "-lcargs")
   add_subdirectory(c-api-examples)
 endif()
@@ -290,17 +341,21 @@ if(NOT BUILD_SHARED_LIBS)
   endif()
 endif()
 
+if(NOT BUILD_SHARED_LIBS)
 # See https://people.freedesktop.org/~dbn/pkg-config-guide.html
-if(SHERPA_ONNX_ENABLE_TTS)
-  configure_file(cmake/sherpa-onnx.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  if(SHERPA_ONNX_ENABLE_TTS)
+    configure_file(cmake/sherpa-onnx-static.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  else()
+    configure_file(cmake/sherpa-onnx-static-no-tts.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  endif()
 else()
-  configure_file(cmake/sherpa-onnx-no-tts.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
+  configure_file(cmake/sherpa-onnx-shared.pc.in ${PROJECT_BINARY_DIR}/sherpa-onnx.pc @ONLY)
 endif()
 
 install(
   FILES
     ${PROJECT_BINARY_DIR}/sherpa-onnx.pc
   DESTINATION
-    .
+    ./
 )
 message(STATUS "CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")

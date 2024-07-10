@@ -56,6 +56,12 @@ popd
 git checkout .
 pushd android/SherpaOnnxVadAsr/app/src/main/java/com/k2fsa/sherpa/onnx
 sed -i.bak s/"asrModelType = 0/asrModelType = $type/" ./MainActivity.kt
+
+{% if model.rule_fsts %}
+  rule_fsts={{ model.rule_fsts }}
+  sed -i.bak s%"asrRuleFsts = null"%"asrRuleFsts = \"$rule_fsts\""% ./MainActivity.kt
+{% endif %}
+
 git diff
 popd
 

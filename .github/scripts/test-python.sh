@@ -10,6 +10,18 @@ log() {
 
 export GIT_CLONE_PROTECTION_ACTIVE=false
 
+log "test offline TeleSpeech CTC"
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
+name=$(basename $url)
+repo=$(basename -s .tar.bz2 $name)
+
+curl -SL -O $url
+tar xvf $name
+rm $name
+ls -lh $repo
+python3 ./python-api-examples/offline-telespeech-ctc-decode-files.py
+rm -rf $repo
+
 log "test online NeMo CTC"
 
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-streaming-fast-conformer-ctc-en-80ms.tar.bz2
@@ -236,7 +248,7 @@ if [[ x$OS != x'windows-latest' ]]; then
   python3 ./python-api-examples/online-decode-files.py \
     --tokens=$repo/tokens.txt \
     --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
-    --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+    --decoder=$repo/decoder-epoch-99-avg-1.onnx \
     --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
     $repo/test_wavs/0.wav \
     $repo/test_wavs/1.wav \
@@ -244,7 +256,18 @@ if [[ x$OS != x'windows-latest' ]]; then
     $repo/test_wavs/3.wav \
     $repo/test_wavs/8k.wav
 
+  ln -s $repo $PWD/
+
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+
+  python3 ./python-api-examples/inverse-text-normalization-online-asr.py
+
   python3 sherpa-onnx/python/tests/test_online_recognizer.py --verbose
+
+  rm -rfv sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+
+  rm -rf $repo
 fi
 
 log "Test non-streaming transducer models"
@@ -274,7 +297,7 @@ python3 ./python-api-examples/offline-decode-files.py \
 python3 ./python-api-examples/offline-decode-files.py \
   --tokens=$repo/tokens.txt \
   --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
-  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
   --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
   $repo/test_wavs/0.wav \
   $repo/test_wavs/1.wav \
@@ -317,6 +340,15 @@ if [[ x$OS != x'windows-latest' ]]; then
     $repo/test_wavs/8k.wav
 
   python3 sherpa-onnx/python/tests/test_offline_recognizer.py --verbose
+
+  ln -s $repo $PWD/
+
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+
+  python3 ./python-api-examples/inverse-text-normalization-offline-asr.py
+
+  rm -rfv sherpa-onnx-paraformer-zh-2023-03-28
 
   rm -rf $repo
 fi

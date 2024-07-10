@@ -4,7 +4,7 @@
 // to decode files.
 import com.k2fsa.sherpa.onnx.*;
 
-public class NonStreamingDecodeFileTransducer {
+public class NonStreamingDecodeFileParaformer {
   public static void main(String[] args) {
     // please refer to
     // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-03-28-chinese-english

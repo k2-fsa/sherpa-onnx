@@ -63,6 +63,7 @@ class ParseOptions {
 
   void Register(const std::string &name, bool *ptr, const std::string &doc);
   void Register(const std::string &name, int32_t *ptr, const std::string &doc);
+  void Register(const std::string &name, int64_t *ptr, const std::string &doc);
   void Register(const std::string &name, uint32_t *ptr, const std::string &doc);
   void Register(const std::string &name, float *ptr, const std::string &doc);
   void Register(const std::string &name, double *ptr, const std::string &doc);
@@ -134,6 +135,9 @@ class ParseOptions {
   /// Register int32_t variable
   void RegisterSpecific(const std::string &name, const std::string &idx,
                         int32_t *i, const std::string &doc, bool is_standard);
+  /// Register int64_t variable
+  void RegisterSpecific(const std::string &name, const std::string &idx,
+                        int64_t *i, const std::string &doc, bool is_standard);
   /// Register unsigned  int32_t variable
   void RegisterSpecific(const std::string &name, const std::string &idx,
                         uint32_t *u, const std::string &doc, bool is_standard);
@@ -163,6 +167,7 @@ class ParseOptions {
 
   bool ToBool(std::string str) const;
   int32_t ToInt(const std::string &str) const;
+  int64_t ToInt64(const std::string &str) const;
   uint32_t ToUint(const std::string &str) const;
   float ToFloat(const std::string &str) const;
   double ToDouble(const std::string &str) const;
@@ -170,6 +175,7 @@ class ParseOptions {
   // maps for option variables
   std::unordered_map<std::string, bool *> bool_map_;
   std::unordered_map<std::string, int32_t *> int_map_;
+  std::unordered_map<std::string, int64_t *> int64_map_;
   std::unordered_map<std::string, uint32_t *> uint_map_;
   std::unordered_map<std::string, float *> float_map_;
   std::unordered_map<std::string, double *> double_map_;

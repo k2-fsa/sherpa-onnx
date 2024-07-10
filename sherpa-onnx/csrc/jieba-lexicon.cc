@@ -103,6 +103,7 @@ class JiebaLexicon::Impl {
 
       if (w == "。" || w == "！" || w == "？" || w == "，") {
         ans.push_back(std::move(this_sentence));
+        this_sentence = {};
       }
     }  // for (const auto &w : words)
 
@@ -217,7 +218,7 @@ JiebaLexicon::JiebaLexicon(const std::string &lexicon,
                                    debug)) {}
 
 std::vector<std::vector<int64_t>> JiebaLexicon::ConvertTextToTokenIds(
-    const std::string &text, const std::string &unused_voice /*= ""*/) const {
+    const std::string &text, const std::string & /*unused_voice = ""*/) const {
   return impl_->ConvertTextToTokenIds(text);
 }
 

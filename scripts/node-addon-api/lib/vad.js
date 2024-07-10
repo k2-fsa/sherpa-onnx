@@ -11,8 +11,9 @@ class CircularBuffer {
   }
 
   // return a float32 array
-  get(startIndex, n) {
-    return addon.circularBufferGet(this.handle, startIndex, n);
+  get(startIndex, n, enableExternalBuffer = true) {
+    return addon.circularBufferGet(
+        this.handle, startIndex, n, enableExternalBuffer);
   }
 
   pop(n) {
@@ -28,7 +29,7 @@ class CircularBuffer {
   }
 
   reset() {
-    return addon.circularBufferReset(this.handle);
+    addon.circularBufferReset(this.handle);
   }
 }
 
@@ -48,23 +49,23 @@ config = {
   }
 
   acceptWaveform(samples) {
-    addon.voiceActivityDetectorAcceptWaveform(this.handle, samples)
+    addon.voiceActivityDetectorAcceptWaveform(this.handle, samples);
   }
 
   isEmpty() {
-    return addon.voiceActivityDetectorIsEmpty(this.handle)
+    return addon.voiceActivityDetectorIsEmpty(this.handle);
   }
 
   isDetected() {
-    return addon.voiceActivityDetectorIsDetected(this.handle)
+    return addon.voiceActivityDetectorIsDetected(this.handle);
   }
 
   pop() {
-    addon.voiceActivityDetectorPop(this.handle)
+    addon.voiceActivityDetectorPop(this.handle);
   }
 
   clear() {
-    addon.VoiceActivityDetectorClearWrapper(this.handle)
+    addon.VoiceActivityDetectorClearWrapper(this.handle);
   }
 
   /*
@@ -73,12 +74,16 @@ config = {
   start: a int32
 }
    */
-  front() {
-    return addon.voiceActivityDetectorFront(this.handle)
+  front(enableExternalBuffer = true) {
+    return addon.voiceActivityDetectorFront(this.handle, enableExternalBuffer);
   }
 
   reset() {
-    return addon.VoiceActivityDetectorResetWrapper(this.handle)
+    addon.VoiceActivityDetectorResetWrapper(this.handle);
+  }
+
+  flush() {
+    addon.VoiceActivityDetectorFlushWrapper(this.handle);
   }
 }
 

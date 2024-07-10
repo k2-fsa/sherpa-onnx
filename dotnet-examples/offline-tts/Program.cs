@@ -18,49 +18,49 @@ class OfflineTtsDemo
   {
 
     [Option("tts-rule-fsts", Required = false, Default = "", HelpText = "path to rule.fst")]
-    public string RuleFsts { get; set; }
+    public string RuleFsts { get; set; } = "";
 
     [Option("tts-rule-fars", Required = false, Default = "", HelpText = "path to rule.far")]
-    public string RuleFars { get; set; }
+    public string RuleFars { get; set; } = "";
 
     [Option("vits-dict-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for jieba.")]
-    public string DictDir { get; set; }
+    public string DictDir { get; set; } = "";
 
     [Option("vits-data-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for espeak-ng.")]
-    public string DataDir { get; set; }
+    public string DataDir { get; set; } = "";
 
     [Option("vits-length-scale", Required = false, Default = 1, HelpText = "speech speed. Larger->Slower; Smaller->faster")]
-    public float LengthScale { get; set; }
+    public float LengthScale { get; set; } = 1;
 
     [Option("vits-noise-scale", Required = false, Default = 0.667f, HelpText = "noise_scale for VITS models")]
-    public float NoiseScale { get; set; }
+    public float NoiseScale { get; set; } = 0.667F;
 
-    [Option("vits-noise-scale-w", Required = false, Default = 0.8f, HelpText = "noise_scale_w for VITS models")]
-    public float NoiseScaleW { get; set; }
+    [Option("vits-noise-scale-w", Required = false, Default = 0.8F, HelpText = "noise_scale_w for VITS models")]
+    public float NoiseScaleW { get; set; } = 0.8F;
 
     [Option("vits-lexicon", Required = false, Default = "", HelpText = "Path to lexicon.txt")]
-    public string Lexicon { get; set; }
+    public string Lexicon { get; set; } = "";
 
     [Option("vits-tokens", Required = false, Default = "", HelpText = "Path to tokens.txt")]
-    public string Tokens { get; set; }
+    public string Tokens { get; set; } = "";
 
     [Option("tts-max-num-sentences", Required = false, Default = 1, HelpText = "Maximum number of sentences that we process at a time.")]
-    public int MaxNumSentences { get; set; }
+    public int MaxNumSentences { get; set; } = 1;
 
     [Option(Required = false, Default = 0, HelpText = "1 to show debug messages.")]
-    public int Debug { get; set; }
+    public int Debug { get; set; } = 0;
 
     [Option("vits-model", Required = true, HelpText = "Path to VITS model")]
-    public string Model { get; set; }
+    public string Model { get; set; } = "";
 
     [Option("sid", Required = false, Default = 0, HelpText = "Speaker ID")]
-    public int SpeakerId { get; set; }
+    public int SpeakerId { get; set; } = 0;
 
     [Option("text", Required = true, HelpText = "Text to synthesize")]
-    public string Text { get; set; }
+    public string Text { get; set; } = "";
 
     [Option("output-filename", Required = true, Default = "./generated.wav", HelpText = "Path to save the generated audio")]
-    public string OutputFilename { get; set; }
+    public string OutputFilename { get; set; } = "./generated.wav";
   }
 
   static void Main(string[] args)

@@ -4,9 +4,8 @@
 
 #include "sherpa-onnx/csrc/pad-sequence.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <vector>
 
 namespace sherpa_onnx {

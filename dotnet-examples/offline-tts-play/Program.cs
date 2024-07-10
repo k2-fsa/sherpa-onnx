@@ -187,6 +187,10 @@ to download more models.
       Marshal.Copy(samples, data, 0, n);
 
       dataItems.Add(data);
+
+      // 1 means to keep generating
+      // 0 means to stop generating
+      return 1;
     };
 
     bool playFinished = false;

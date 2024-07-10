@@ -16,6 +16,7 @@ void OnlineModelConfig::Register(ParseOptions *po) {
   wenet_ctc.Register(po);
   zipformer2_ctc.Register(po);
   nemo_ctc.Register(po);
+  provider_config.Register(po);
 
   po->Register("tokens", &tokens, "Path to tokens.txt");
 
@@ -28,9 +29,6 @@ void OnlineModelConfig::Register(ParseOptions *po) {
 
   po->Register("debug", &debug,
                "true to print model information while loading it.");
-
-  po->Register("provider", &provider,
-               "Specify a provider to use: cpu, cuda, coreml");
 
   po->Register("modeling-unit", &modeling_unit,
                "The modeling unit of the model, commonly used units are bpe, "
@@ -66,7 +64,7 @@ bool OnlineModelConfig::Validate() const {
   if (!modeling_unit.empty() &&
       (modeling_unit == "bpe" || modeling_unit == "cjkchar+bpe")) {
     if (!FileExists(bpe_vocab)) {
-      SHERPA_ONNX_LOGE("bpe_vocab: %s does not exist", bpe_vocab.c_str());
+      SHERPA_ONNX_LOGE("bpe_vocab: '%s' does not exist", bpe_vocab.c_str());
       return false;
     }
   }
@@ -87,6 +85,10 @@ bool OnlineModelConfig::Validate() const {
     return nemo_ctc.Validate();
   }
 
+  if (!provider_config.Validate()) {
+    return false;
+  }
+
   return transducer.Validate();
 }
 
@@ -99,11 +101,11 @@ std::string OnlineModelConfig::ToString() const {
   os << "wenet_ctc=" << wenet_ctc.ToString() << ", ";
   os << "zipformer2_ctc=" << zipformer2_ctc.ToString() << ", ";
   os << "nemo_ctc=" << nemo_ctc.ToString() << ", ";
+  os << "provider_config=" << provider_config.ToString() << ", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "warm_up=" << warm_up << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
-  os << "provider=\"" << provider << "\", ";
   os << "model_type=\"" << model_type << "\", ";
   os << "modeling_unit=\"" << modeling_unit << "\", ";
   os << "bpe_vocab=\"" << bpe_vocab << "\")";

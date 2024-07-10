@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11, macos-14]
+        os: [macos-13, macos-14]
         python-version: ["3.8"]
 
     steps:

@@ -64,7 +64,7 @@ class Endpoint {
 
   /// This function returns true if this set of endpointing rules thinks we
   /// should terminate decoding.
-  bool IsEndpoint(int num_frames_decoded, int trailing_silence_frames,
+  bool IsEndpoint(int32_t num_frames_decoded, int32_t trailing_silence_frames,
                   float frame_shift_in_seconds) const;
 
  private:

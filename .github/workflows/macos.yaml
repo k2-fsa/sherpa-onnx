@@ -5,7 +5,7 @@ on:
     branches:
       - master
     tags:
-      - '*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
       - '.github/workflows/macos.yaml'
       - '.github/scripts/test-kws.sh'
@@ -84,7 +84,13 @@ jobs:
             BUILD_SHARED_LIBS=ON
           fi
 
-          cmake -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_OSX_ARCHITECTURES='arm64;x86_64' -DCMAKE_INSTALL_PREFIX=./install ..
+          cmake \
+            -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
+            -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -D CMAKE_OSX_ARCHITECTURES='arm64;x86_64' \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            ..
 
       - name: Build sherpa-onnx for macos
         shell: bash
@@ -106,6 +112,14 @@ jobs:
           file bin/sherpa-onnx
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
+
+      - name: Test offline CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-ctc.sh
 
       - name: Test offline transducer
         shell: bash
@@ -192,13 +206,7 @@ jobs:
 
           .github/scripts/test-offline-whisper.sh
 
-      - name: Test offline CTC
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
 
-          .github/scripts/test-offline-ctc.sh
 
       - name: Test online transducer
         shell: bash

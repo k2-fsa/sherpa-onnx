@@ -39,6 +39,7 @@ set(sources
   offline-stream.cc
   offline-tdnn-ctc-model.cc
   offline-tdnn-model-config.cc
+  offline-telespeech-ctc-model.cc
   offline-transducer-greedy-search-decoder.cc
   offline-transducer-greedy-search-nemo-decoder.cc
   offline-transducer-model-config.cc
@@ -74,6 +75,8 @@ set(sources
   online-transducer-model-config.cc
   online-transducer-model.cc
   online-transducer-modified-beam-search-decoder.cc
+  online-transducer-nemo-model.cc
+  online-transducer-greedy-search-nemo-decoder.cc
   online-wenet-ctc-model-config.cc
   online-wenet-ctc-model.cc
   online-zipformer-transducer-model.cc
@@ -84,6 +87,7 @@ set(sources
   packed-sequence.cc
   pad-sequence.cc
   parse-options.cc
+  provider-config.cc
   provider.cc
   resample.cc
   session.cc
@@ -151,7 +155,18 @@ endif()
 if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
-add_library(sherpa-onnx-core ${sources})
+
+# Always static build
+add_library(sherpa-onnx-core STATIC ${sources})
+
+set_target_properties(
+    sherpa-onnx-core
+  PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    C_VISIBILITY_PRESET hidden
+    CXX_VISIBILITY_PRESET hidden
+)
+
 if(APPLE)
   target_compile_options(sherpa-onnx-core PRIVATE
     -Wno-deprecated-declarations
@@ -181,15 +196,18 @@ else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
 endif()
 
-target_link_libraries(sherpa-onnx-core -lm)
+if(NOT WIN32)
+  target_link_libraries(sherpa-onnx-core -lm)
+endif()
 
 if(NOT BUILD_SHARED_LIBS AND APPLE)
   target_link_libraries(sherpa-onnx-core "-framework Foundation")
 endif()
 
+target_link_libraries(sherpa-onnx-core fstfar fst)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   target_link_libraries(sherpa-onnx-core piper_phonemize)
-  target_link_libraries(sherpa-onnx-core fstfar fst)
   target_link_libraries(sherpa-onnx-core cppjieba)
 endif()
 
@@ -206,6 +224,7 @@ if(SHERPA_ONNX_ENABLE_CHECK)
 endif()
 
 if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
+  # This is for linux arm32 and arm64
   target_link_libraries(sherpa-onnx-core -ldl)
 endif()
 
@@ -257,14 +276,8 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   endif()
 endif()
 
-if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-  install(TARGETS sherpa-onnx-core DESTINATION ..)
-else()
+if(NOT BUILD_SHARED_LIBS)
   install(TARGETS sherpa-onnx-core DESTINATION lib)
-endif()
-
-if(WIN32 AND BUILD_SHARED_LIBS)
-  install(TARGETS sherpa-onnx-core DESTINATION bin)
 endif()
 
 if(SHERPA_ONNX_ENABLE_BINARY)
@@ -303,6 +316,9 @@ if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
       sherpa-onnx-offline-tts-play-alsa
     )
   endif()
+
+  #   # To fix the following error for Windows when building exe
+  #   #  mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_Dynamic Release'
 
   foreach(exe IN LISTS exes)
     target_link_libraries(${exe} sherpa-onnx-core)
@@ -379,12 +395,6 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
-  if(BUILD_SHARED_LIBS)
-    set(PA_LIB portaudio)
-  else()
-    set(PA_LIB portaudio_static)
-  endif()
-
   set(exes
     sherpa-onnx-microphone
     sherpa-onnx-keyword-spotter-microphone
@@ -401,7 +411,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
   endif()
 
   foreach(exe IN LISTS exes)
-    target_link_libraries(${exe} ${PA_LIB} sherpa-onnx-core)
+    target_link_libraries(${exe} portaudio_static sherpa-onnx-core)
   endforeach()
 
   if(NOT WIN32)
@@ -466,7 +476,7 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET AND SHERPA_ONNX_ENABLE_BINARY)
     target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
     target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
 
-    if(SHERPA_ONNX_ENABLE_PYTHON)
+    if(SHERPA_ONNX_ENABLE_PYTHON AND NOT WIN32)
       target_link_libraries(sherpa-onnx-online-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
       target_link_libraries(sherpa-onnx-online-websocket-client "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
       target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
@@ -530,3 +540,16 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     sherpa_onnx_add_test(${source})
   endforeach()
 endif()
+
+set(srcs_to_check)
+foreach(s IN LISTS sources)
+  list(APPEND srcs_to_check ${CMAKE_CURRENT_LIST_DIR}/${s})
+endforeach()
+
+# For clang-tidy
+add_custom_target(
+  clang-tidy-check
+  clang-tidy -p ${CMAKE_BINARY_DIR}/compile_commands.json --config-file ${CMAKE_SOURCE_DIR}/.clang-tidy ${srcs_to_check}
+  DEPENDS ${sources})
+
+add_custom_target(check DEPENDS clang-tidy-check)

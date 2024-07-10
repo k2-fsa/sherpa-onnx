@@ -73,12 +73,16 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
       SHERPA_ONNX_OR(config->model_config.tokens, "");
   recognizer_config.model_config.num_threads =
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
-  recognizer_config.model_config.provider =
+  recognizer_config.model_config.provider_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
   recognizer_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
   recognizer_config.model_config.debug =
       SHERPA_ONNX_OR(config->model_config.debug, 0);
+  recognizer_config.model_config.modeling_unit =
+      SHERPA_ONNX_OR(config->model_config.modeling_unit, "cjkchar");
+  recognizer_config.model_config.bpe_vocab =
+      SHERPA_ONNX_OR(config->model_config.bpe_vocab, "");
 
   recognizer_config.decoding_method =
       SHERPA_ONNX_OR(config->decoding_method, "greedy_search");
@@ -105,6 +109,9 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
       SHERPA_ONNX_OR(config->ctc_fst_decoder_config.graph, "");
   recognizer_config.ctc_fst_decoder_config.max_active =
       SHERPA_ONNX_OR(config->ctc_fst_decoder_config.max_active, 3000);
+
+  recognizer_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
+  recognizer_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
 
   if (config->model_config.debug) {
     SHERPA_ONNX_LOGE("%s\n", recognizer_config.ToString().c_str());
@@ -187,7 +194,7 @@ const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
   r->text = pText;
 
   // copy json
-  const auto &json = result.AsJsonString();
+  std::string json = result.AsJsonString();
   char *pJson = new char[json.size() + 1];
   std::copy(json.begin(), json.end(), pJson);
   pJson[json.size()] = 0;
@@ -215,7 +222,7 @@ const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
     }
     r->tokens_arr = tokens_temp;
 
-    if (!result.timestamps.empty()) {
+    if (!result.timestamps.empty() && result.timestamps.size() == r->count) {
       r->timestamps = new float[r->count];
       std::copy(result.timestamps.begin(), result.timestamps.end(),
                 r->timestamps);
@@ -357,6 +364,13 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
   recognizer_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
+  recognizer_config.model_config.modeling_unit =
+      SHERPA_ONNX_OR(config->model_config.modeling_unit, "cjkchar");
+  recognizer_config.model_config.bpe_vocab =
+      SHERPA_ONNX_OR(config->model_config.bpe_vocab, "");
+
+  recognizer_config.model_config.telespeech_ctc =
+      SHERPA_ONNX_OR(config->model_config.telespeech_ctc, "");
 
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");
@@ -376,6 +390,9 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
   recognizer_config.hotwords_file = SHERPA_ONNX_OR(config->hotwords_file, "");
   recognizer_config.hotwords_score =
       SHERPA_ONNX_OR(config->hotwords_score, 1.5);
+
+  recognizer_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
+  recognizer_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
 
   if (config->model_config.debug) {
     SHERPA_ONNX_LOGE("%s", recognizer_config.ToString().c_str());
@@ -444,14 +461,49 @@ const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
   pText[text.size()] = 0;
   r->text = pText;
 
-  if (!result.timestamps.empty()) {
-    r->timestamps = new float[result.timestamps.size()];
-    std::copy(result.timestamps.begin(), result.timestamps.end(),
-              r->timestamps);
-    r->count = result.timestamps.size();
+  // copy json
+  std::string json = result.AsJsonString();
+  char *pJson = new char[json.size() + 1];
+  std::copy(json.begin(), json.end(), pJson);
+  pJson[json.size()] = 0;
+  r->json = pJson;
+
+  // copy tokens
+  auto count = result.tokens.size();
+  if (count > 0) {
+    size_t total_length = 0;
+    for (const auto &token : result.tokens) {
+      // +1 for the null character at the end of each token
+      total_length += token.size() + 1;
+    }
+
+    r->count = count;
+    // Each word ends with nullptr
+    char *tokens = new char[total_length]{};
+    char **tokens_temp = new char *[r->count];
+    int32_t pos = 0;
+    for (int32_t i = 0; i < r->count; ++i) {
+      tokens_temp[i] = tokens + pos;
+      memcpy(tokens + pos, result.tokens[i].c_str(), result.tokens[i].size());
+      // +1 to move past the null character
+      pos += result.tokens[i].size() + 1;
+    }
+    r->tokens_arr = tokens_temp;
+
+    if (!result.timestamps.empty() && result.timestamps.size() == r->count) {
+      r->timestamps = new float[r->count];
+      std::copy(result.timestamps.begin(), result.timestamps.end(),
+                r->timestamps);
+    } else {
+      r->timestamps = nullptr;
+    }
+
+    r->tokens = tokens;
   } else {
-    r->timestamps = nullptr;
     r->count = 0;
+    r->timestamps = nullptr;
+    r->tokens = nullptr;
+    r->tokens_arr = nullptr;
   }
 
   return r;
@@ -462,6 +514,9 @@ void DestroyOfflineRecognizerResult(
   if (r) {
     delete[] r->text;
     delete[] r->timestamps;
+    delete[] r->tokens;
+    delete[] r->tokens_arr;
+    delete[] r->json;
     delete r;
   }
 }
@@ -515,7 +570,7 @@ SherpaOnnxKeywordSpotter *CreateKeywordSpotter(
       SHERPA_ONNX_OR(config->model_config.tokens, "");
   spotter_config.model_config.num_threads =
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
-  spotter_config.model_config.provider =
+  spotter_config.model_config.provider_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
   spotter_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
@@ -561,6 +616,13 @@ SherpaOnnxOnlineStream *CreateKeywordStream(
   return stream;
 }
 
+SherpaOnnxOnlineStream *CreateKeywordStreamWithKeywords(
+    const SherpaOnnxKeywordSpotter *spotter, const char *keywords) {
+  SherpaOnnxOnlineStream *stream =
+      new SherpaOnnxOnlineStream(spotter->impl->CreateStream(keywords));
+  return stream;
+}
+
 int32_t IsKeywordStreamReady(SherpaOnnxKeywordSpotter *spotter,
                              SherpaOnnxOnlineStream *stream) {
   return spotter->impl->IsReady(stream->impl.get());
@@ -598,7 +660,7 @@ const SherpaOnnxKeywordResult *GetKeywordResult(
   r->keyword = pKeyword;
 
   // copy json
-  const auto &json = result.AsJsonString();
+  std::string json = result.AsJsonString();
   char *pJson = new char[json.size() + 1];
   std::copy(json.begin(), json.end(), pJson);
   pJson[json.size()] = 0;
@@ -814,6 +876,10 @@ void SherpaOnnxVoiceActivityDetectorReset(SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Reset();
 }
 
+void SherpaOnnxVoiceActivityDetectorFlush(SherpaOnnxVoiceActivityDetector *p) {
+  p->impl->Flush();
+}
+
 #if SHERPA_ONNX_ENABLE_TTS == 1
 struct SherpaOnnxOfflineTts {
   std::unique_ptr<sherpa_onnx::OfflineTts> impl;
@@ -873,7 +939,7 @@ int32_t SherpaOnnxOfflineTtsNumSpeakers(const SherpaOnnxOfflineTts *tts) {
 
 static const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateInternal(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
-    std::function<void(const float *, int32_t, float)> callback) {
+    std::function<int32_t(const float *, int32_t, float)> callback) {
   sherpa_onnx::GeneratedAudio audio =
       tts->impl->Generate(text, sid, speed, callback);
 
@@ -903,7 +969,9 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallback(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
     SherpaOnnxGeneratedAudioCallback callback) {
   auto wrapper = [callback](const float *samples, int32_t n,
-                            float /*progress*/) { callback(samples, n); };
+                            float /*progress*/) {
+    return callback(samples, n);
+  };
 
   return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);
 }
@@ -913,7 +981,7 @@ SherpaOnnxOfflineTtsGenerateWithProgressCallback(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
     SherpaOnnxGeneratedAudioProgressCallback callback) {
   auto wrapper = [callback](const float *samples, int32_t n, float progress) {
-    callback(samples, n, progress);
+    return callback(samples, n, progress);
   };
   return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);
 }
@@ -923,7 +991,7 @@ const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
     SherpaOnnxGeneratedAudioCallbackWithArg callback, void *arg) {
   auto wrapper = [callback, arg](const float *samples, int32_t n,
                                  float /*progress*/) {
-    callback(samples, n, arg);
+    return callback(samples, n, arg);
   };
 
   return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);

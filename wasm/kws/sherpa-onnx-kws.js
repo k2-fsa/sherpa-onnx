@@ -67,7 +67,7 @@ function initModelConfig(config, Module) {
   const paraformer_len = 2 * 4
   const ctc_len = 1 * 4
 
-  const len = transducer.len + paraformer_len + ctc_len + 5 * 4;
+  const len = transducer.len + paraformer_len + ctc_len + 7 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -76,7 +76,10 @@ function initModelConfig(config, Module) {
   const tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
   const providerLen = Module.lengthBytesUTF8(config.provider) + 1;
   const modelTypeLen = Module.lengthBytesUTF8(config.modelType) + 1;
-  const bufferLen = tokensLen + providerLen + modelTypeLen;
+  const modelingUnitLen = Module.lengthBytesUTF8(config.modelingUnit || '') + 1;
+  const bpeVocabLen = Module.lengthBytesUTF8(config.bpeVocab || '') + 1;
+  const bufferLen =
+      tokensLen + providerLen + modelTypeLen + modelingUnitLen + bpeVocabLen;
   const buffer = Module._malloc(bufferLen);
 
   offset = 0;
@@ -87,6 +90,14 @@ function initModelConfig(config, Module) {
   offset += providerLen;
 
   Module.stringToUTF8(config.modelType, buffer + offset, modelTypeLen);
+  offset += modelTypeLen;
+
+  Module.stringToUTF8(
+      config.modelingUnit || '', buffer + offset, modelingUnitLen);
+  offset += modelingUnitLen;
+
+  Module.stringToUTF8(config.bpeVocab || '', buffer + offset, bpeVocabLen);
+  offset += bpeVocabLen;
 
   offset = transducer.len + paraformer_len + ctc_len;
   Module.setValue(ptr + offset, buffer, 'i8*');  // tokens
@@ -103,6 +114,17 @@ function initModelConfig(config, Module) {
 
   Module.setValue(
       ptr + offset, buffer + tokensLen + providerLen, 'i8*');  // modelType
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset, buffer + tokensLen + providerLen + modelTypeLen,
+      'i8*');  // modelingUnit
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset,
+      buffer + tokensLen + providerLen + modelTypeLen + modelingUnitLen,
+      'i8*');  // bpeVocab
   offset += 4;
 
   return {
@@ -248,7 +270,9 @@ function createKws(Module, myConfig) {
     provider: 'cpu',
     modelType: '',
     numThreads: 1,
-    debug: 1
+    debug: 1,
+    modelingUnit: 'cjkchar',
+    bpeVocab: '',
   };
 
   let featConfig = {

@@ -100,13 +100,13 @@ struct WaveHeader {
   int32_t subchunk2_id;    // a tag of this chunk
   int32_t subchunk2_size;  // size of subchunk2
 };
-static_assert(sizeof(WaveHeader) == 44, "");
+static_assert(sizeof(WaveHeader) == 44);
 
 // Read a wave file of mono-channel.
 // Return its samples normalized to the range [-1, 1).
 std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
                                 bool *is_ok) {
-  WaveHeader header;
+  WaveHeader header{};
   is.read(reinterpret_cast<char *>(&header), sizeof(header));
   if (!is) {
     *is_ok = false;
@@ -116,6 +116,30 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
   if (!header.Validate()) {
     *is_ok = false;
     return {};
+  }
+
+  if (header.subchunk1_size == 18) {
+    // this is for NAudio. It puts extra bytes after bits_per_sample
+    // See
+    // https://github.com/naudio/NAudio/blob/master/NAudio.Core/Wave/WaveFormats/WaveFormat.cs#L223
+
+    is.seekg(36, std::istream::beg);
+
+    int16_t extra_size = -1;
+    is.read(reinterpret_cast<char *>(&extra_size), sizeof(int16_t));
+    if (extra_size != 0) {
+      SHERPA_ONNX_LOGE(
+          "Extra size should be 0 for wave from NAudio. Current extra size "
+          "%d\n",
+          extra_size);
+      *is_ok = false;
+      return {};
+    }
+
+    is.read(reinterpret_cast<char *>(&header.subchunk2_id),
+            sizeof(header.subchunk2_id));
+    is.read(reinterpret_cast<char *>(&header.subchunk2_size),
+            sizeof(header.subchunk2_size));
   }
 
   header.SeekToDataChunk(is);
@@ -137,7 +161,7 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
   }
 
   std::vector<float> ans(samples.size());
-  for (int32_t i = 0; i != ans.size(); ++i) {
+  for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
     ans[i] = samples[i] / 32768.;
   }
 

@@ -158,7 +158,7 @@ def add_model_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--paraformer-decoder",
         type=str,
-        help="Path to the transducer decoder model.",
+        help="Path to the paraformer decoder model.",
     )
 
     parser.add_argument(

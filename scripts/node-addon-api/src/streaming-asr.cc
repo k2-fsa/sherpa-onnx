@@ -118,6 +118,8 @@ SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
   }
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(modeling_unit, modelingUnit);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(bpe_vocab, bpeVocab);
 
   return c;
 }
@@ -187,6 +189,8 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
                                 rule3MinUtteranceLength);
   SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords_file, hotwordsFile);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
 
   c.ctc_fst_decoder_config = GetCtcFstDecoderConfig(o);
 
@@ -228,12 +232,28 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     delete[] c.model_config.model_type;
   }
 
+  if (c.model_config.modeling_unit) {
+    delete[] c.model_config.modeling_unit;
+  }
+
+  if (c.model_config.bpe_vocab) {
+    delete[] c.model_config.bpe_vocab;
+  }
+
   if (c.decoding_method) {
     delete[] c.decoding_method;
   }
 
   if (c.hotwords_file) {
     delete[] c.hotwords_file;
+  }
+
+  if (c.rule_fsts) {
+    delete[] c.rule_fsts;
+  }
+
+  if (c.rule_fars) {
+    delete[] c.rule_fars;
   }
 
   if (c.ctc_fst_decoder_config.graph) {

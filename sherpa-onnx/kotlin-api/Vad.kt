@@ -52,6 +52,8 @@ class Vad(
 
     fun reset() = reset(ptr)
 
+    fun flush() = flush(ptr)
+
     private external fun delete(ptr: Long)
 
     private external fun newFromAsset(
@@ -70,6 +72,7 @@ class Vad(
     private external fun front(ptr: Long): Array<Any>
     private external fun isSpeechDetected(ptr: Long): Boolean
     private external fun reset(ptr: Long)
+    private external fun flush(ptr: Long)
 
     companion object {
         init {

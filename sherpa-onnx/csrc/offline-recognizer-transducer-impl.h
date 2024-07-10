@@ -74,12 +74,17 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerTransducerImpl(
       const OfflineRecognizerConfig &config)
-      : config_(config),
+      : OfflineRecognizerImpl(config),
+        config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerModel>(config_.model_config)) {
+    if (symbol_table_.Contains("<unk>")) {
+      unk_id_ = symbol_table_["<unk>"];
+    }
+
     if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineTransducerGreedySearchDecoder>(
-          model_.get(), config_.blank_penalty);
+          model_.get(), unk_id_, config_.blank_penalty);
     } else if (config_.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
         lm_ = OfflineLM::Create(config.lm_config);
@@ -96,7 +101,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
       decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
           model_.get(), lm_.get(), config_.max_active_paths,
-          config_.lm_config.scale, config_.blank_penalty);
+          config_.lm_config.scale, unk_id_, config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -107,13 +112,18 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 #if __ANDROID_API__ >= 9
   explicit OfflineRecognizerTransducerImpl(
       AAssetManager *mgr, const OfflineRecognizerConfig &config)
-      : config_(config),
+      : OfflineRecognizerImpl(mgr, config),
+        config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
         model_(std::make_unique<OfflineTransducerModel>(mgr,
                                                         config_.model_config)) {
+    if (symbol_table_.Contains("<unk>")) {
+      unk_id_ = symbol_table_["<unk>"];
+    }
+
     if (config_.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OfflineTransducerGreedySearchDecoder>(
-          model_.get(), config_.blank_penalty);
+          model_.get(), unk_id_, config_.blank_penalty);
     } else if (config_.decoding_method == "modified_beam_search") {
       if (!config_.lm_config.model.empty()) {
         lm_ = OfflineLM::Create(mgr, config.lm_config);
@@ -131,7 +141,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
 
       decoder_ = std::make_unique<OfflineTransducerModifiedBeamSearchDecoder>(
           model_.get(), lm_.get(), config_.max_active_paths,
-          config_.lm_config.scale, config_.blank_penalty);
+          config_.lm_config.scale, unk_id_, config_.blank_penalty);
     } else {
       SHERPA_ONNX_LOGE("Unsupported decoding method: %s",
                        config_.decoding_method.c_str());
@@ -145,15 +155,35 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     auto hws = std::regex_replace(hotwords, std::regex("/"), "\n");
     std::istringstream is(hws);
     std::vector<std::vector<int32_t>> current;
+    std::vector<float> current_scores;
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
-                        bpe_encoder_.get(), &current)) {
+                        bpe_encoder_.get(), &current, &current_scores)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
                        hotwords.c_str());
     }
+
+    int32_t num_default_hws = hotwords_.size();
+    int32_t num_hws = current.size();
+
     current.insert(current.end(), hotwords_.begin(), hotwords_.end());
 
-    auto context_graph =
-        std::make_shared<ContextGraph>(current, config_.hotwords_score);
+    if (!current_scores.empty() && !boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), boost_scores_.begin(),
+                            boost_scores_.end());
+    } else if (!current_scores.empty() && boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), num_default_hws,
+                            config_.hotwords_score);
+    } else if (current_scores.empty() && !boost_scores_.empty()) {
+      current_scores.insert(current_scores.end(), num_hws,
+                            config_.hotwords_score);
+      current_scores.insert(current_scores.end(), boost_scores_.begin(),
+                            boost_scores_.end());
+    } else {
+      // Do nothing.
+    }
+
+    auto context_graph = std::make_shared<ContextGraph>(
+        current, config_.hotwords_score, current_scores);
     return std::make_unique<OfflineStream>(config_.feat_config, context_graph);
   }
 
@@ -210,6 +240,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     for (int32_t i = 0; i != n; ++i) {
       auto r = Convert(results[i], symbol_table_, frame_shift_ms,
                        model_->SubsamplingFactor());
+      r.text = ApplyInverseTextNormalization(std::move(r.text));
 
       ss[i]->SetResult(r);
     }
@@ -226,13 +257,13 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     }
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
-                        bpe_encoder_.get(), &hotwords_)) {
+                        bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
       SHERPA_ONNX_LOGE(
           "Failed to encode some hotwords, skip them already, see logs above "
           "for details.");
     }
-    hotwords_graph_ =
-        std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
+    hotwords_graph_ = std::make_shared<ContextGraph>(
+        hotwords_, config_.hotwords_score, boost_scores_);
   }
 
 #if __ANDROID_API__ >= 9
@@ -250,13 +281,13 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     }
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, symbol_table_,
-                        bpe_encoder_.get(), &hotwords_)) {
+                        bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
       SHERPA_ONNX_LOGE(
           "Failed to encode some hotwords, skip them already, see logs above "
           "for details.");
     }
-    hotwords_graph_ =
-        std::make_shared<ContextGraph>(hotwords_, config_.hotwords_score);
+    hotwords_graph_ = std::make_shared<ContextGraph>(
+        hotwords_, config_.hotwords_score, boost_scores_);
   }
 #endif
 
@@ -264,11 +295,13 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::vector<std::vector<int32_t>> hotwords_;
+  std::vector<float> boost_scores_;
   ContextGraphPtr hotwords_graph_;
   std::unique_ptr<ssentencepiece::Ssentencepiece> bpe_encoder_;
   std::unique_ptr<OfflineTransducerModel> model_;
   std::unique_ptr<OfflineTransducerDecoder> decoder_;
   std::unique_ptr<OfflineLM> lm_;
+  int32_t unk_id_ = -1;
 };
 
 }  // namespace sherpa_onnx

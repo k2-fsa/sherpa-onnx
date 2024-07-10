@@ -13,7 +13,7 @@ on:
     - cron: "50 23 * * *"
 
 concurrency:
-  group: test-dot-net-nuget
+  group: test-dot-net-nuget-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:

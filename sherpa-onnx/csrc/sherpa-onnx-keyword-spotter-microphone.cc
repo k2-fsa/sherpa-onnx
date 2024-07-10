@@ -31,7 +31,7 @@ static int32_t RecordCallback(const void *input_buffer,
   return stop ? paComplete : paContinue;
 }
 
-static void Handler(int32_t sig) {
+static void Handler(int32_t /*sig*/) {
   stop = true;
   fprintf(stderr, "\nCaught Ctrl + C. Exiting...\n");
 }
@@ -123,8 +123,6 @@ for a list of pre-trained models to download.
     fprintf(stderr, "Use sample rate %f for mic\n", mic_sample_rate);
     mic_sample_rate = atof(pSampleRateStr);
   }
-
-  float sample_rate = 16000;
 
   PaStream *stream;
   PaError err =

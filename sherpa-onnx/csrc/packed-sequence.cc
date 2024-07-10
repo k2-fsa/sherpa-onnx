@@ -4,9 +4,8 @@
 
 #include "sherpa-onnx/csrc/packed-sequence.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <numeric>
 #include <utility>
 
@@ -57,7 +56,7 @@ PackedSequence PackPaddedSequence(OrtAllocator *allocator,
 
   int64_t max_T = p_length[indexes[0]];
 
-  int32_t sum_T = std::accumulate(p_length, p_length + n, 0);
+  auto sum_T = std::accumulate(p_length, p_length + n, static_cast<int64_t>(0));
 
   std::array<int64_t, 2> data_shape{sum_T, v_shape[2]};
 

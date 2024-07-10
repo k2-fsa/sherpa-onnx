@@ -34,6 +34,8 @@ static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
           })
       .def_property_readonly("tokens",
                              [](const PyClass &self) { return self.tokens; })
+      .def_property_readonly("words",
+                             [](const PyClass &self) { return self.words; })
       .def_property_readonly(
           "timestamps", [](const PyClass &self) { return self.timestamps; });
 }

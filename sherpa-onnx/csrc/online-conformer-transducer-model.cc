@@ -4,9 +4,8 @@
 
 #include "sherpa-onnx/csrc/online-conformer-transducer-model.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <sstream>
 #include <string>
