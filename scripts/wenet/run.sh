@@ -9,6 +9,8 @@
 
 set -ex
 
+export PYTHONPATH=/tmp/wenet:$PYTHONPATH
+
 function install_dependencies() {
   pip install soundfile
   pip install torch==2.1.0+cpu torchaudio==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
@@ -35,7 +37,7 @@ function install_dependencies() {
     cp -av ./wenet/wenet/finetune $wenet_dir/
   fi
 
-  rm -rf wenet
+  mv wenet /tmp
 }
 
 function aishell() {
