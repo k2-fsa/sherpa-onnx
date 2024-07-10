@@ -155,6 +155,7 @@ class SpeakerEmbeddingManager::Impl {
     std::sort(score_indices.rbegin(), score_indices.rend(),
               [](const auto &a, const auto &b) { return a.first < b.first; });
 
+    matches.reserve(score_indices.size());
     for (int i = 0; i < std::min(n, static_cast<int32_t>(score_indices.size()));
          ++i) {
       const auto &pair = score_indices[i];
