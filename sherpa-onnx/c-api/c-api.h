@@ -1116,7 +1116,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch {
 
 SHERPA_ONNX_API typedef struct
     SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult {
-  SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch *matches;
+  const SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch *matches;
   int32_t count;
 } SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult;
 
