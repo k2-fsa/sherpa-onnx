@@ -13,8 +13,8 @@ export PYTHONPATH=/tmp/wenet:$PYTHONPATH
 
 function install_dependencies() {
   pip install soundfile
-  pip install torch==2.1.0+cpu torchaudio==2.1.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-  pip install k2==1.24.4.dev20231022+cpu.torch2.1.0 -f https://k2-fsa.github.io/k2/cpu.html
+  pip install torch==2.3.1+cpu torchaudio==2.3.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
+  pip install k2==1.24.4.dev20240606+cpu.torch2.3.1 -f https://k2-fsa.github.io/k2/cpu.html
 
   pip install onnxruntime onnx kaldi-native-fbank pyyaml
 
