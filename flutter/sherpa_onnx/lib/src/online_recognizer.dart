@@ -7,6 +7,7 @@ import 'package:ffi/ffi.dart';
 import './feature_config.dart';
 import './online_stream.dart';
 import './sherpa_onnx_bindings.dart';
+import './utils.dart';
 
 class OnlineTransducerModelConfig {
   const OnlineTransducerModelConfig({
@@ -268,7 +269,7 @@ class OnlineRecognizer {
       return OnlineRecognizerResult(text: '', tokens: [], timestamps: []);
     }
 
-    final parsedJson = jsonDecode(json.toDartString());
+    final parsedJson = jsonDecode(toDartString(json));
 
     SherpaOnnxBindings.destroyOnlineStreamResultJson?.call(json);
 

@@ -7,6 +7,7 @@ import 'package:ffi/ffi.dart';
 import './feature_config.dart';
 import './offline_stream.dart';
 import './sherpa_onnx_bindings.dart';
+import './utils.dart';
 
 class OfflineTransducerModelConfig {
   const OfflineTransducerModelConfig({
@@ -287,7 +288,7 @@ class OfflineRecognizer {
       return OfflineRecognizerResult(text: '', tokens: [], timestamps: []);
     }
 
-    final parsedJson = jsonDecode(json.toDartString());
+    final parsedJson = jsonDecode(toDartString(json));
 
     SherpaOnnxBindings.destroyOfflineStreamResultJson?.call(json);
 
