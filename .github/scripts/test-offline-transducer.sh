@@ -192,35 +192,6 @@ log "------------------------------------------------------------"
 # See https://github.com/microsoft/onnxruntime/issues/8115
 # We need to re-export this model using a recent version of onnxruntime and onnx
 
-repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
-rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
-repo=sherpa-onnx-paraformer-zh-2023-09-14
-log "Start testing ${repo_url}"
-
-time $EXE \
-  --tokens=$repo/tokens.txt \
-  --paraformer=$repo/model.onnx \
-  --num-threads=2 \
-  --decoding-method=greedy_search \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav \
-  $repo/test_wavs/8k.wav
-
-time $EXE \
-  --tokens=$repo/tokens.txt \
-  --paraformer=$repo/model.int8.onnx \
-  --num-threads=2 \
-  --decoding-method=greedy_search \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav \
-  $repo/test_wavs/8k.wav
-
-rm -rf $repo
-
 log "------------------------------------------------------------"
 log "Run Paraformer (Chinese) with timestamps"
 log "------------------------------------------------------------"
