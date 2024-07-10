@@ -28,10 +28,16 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
         Key-value pairs.
     """
     model = onnx.load(filename)
+
+    while len(model.metadata_props):
+        model.metadata_props.pop()
+
     for key, value in meta_data.items():
         meta = model.metadata_props.add()
         meta.key = key
         meta.value = str(value)
+
+    model = onnx.version_converter.convert_version(model, 21)
 
     onnx.save(model, filename)
 
@@ -146,7 +152,7 @@ def main():
     offset = torch.tensor([offset], dtype=torch.int64)
     required_cache_size = torch.tensor([required_cache_size], dtype=torch.int64)
 
-    opset_version = 13
+    opset_version = 17
     torch.onnx.export(
         onnx_model,
         (x, offset, required_cache_size, attn_cache, conv_cache, attn_mask),

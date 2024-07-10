@@ -94,7 +94,7 @@ def main():
     x_lens = torch.full((N,), fill_value=T, dtype=torch.int64)
 
     # https://github.com/pytorch/pytorch/issues/114801
-    opset_version = 18
+    opset_version = 17
     onnx_model = torch.jit.script(onnx_model)
     torch.onnx.export(
         onnx_model,
