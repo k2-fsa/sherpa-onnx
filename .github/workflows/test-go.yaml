@@ -94,11 +94,6 @@ jobs:
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* $upload_dir
 
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* ./lib/
-            rm -v ./lib/libonnxruntime.so
-
-            cd lib
-            ln -s libonnxruntime.so.1.17.1 libonnxruntime.so
-            cd ..
 
             rm -v ./lib/*.a
             ls -h ./lib
@@ -121,7 +116,7 @@ jobs:
             rm ./lib/*.a
             rm ./lib/libonnxruntime.dylib
             cd lib
-            ln -s libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+            ln -s libonnxruntime.1.18.0.dylib libonnxruntime.dylib
             cd ..
           fi
 
@@ -211,7 +206,7 @@ jobs:
           echo "Test paraformer"
           ./run-paraformer.sh
           ./run-paraformer-itn.sh
-          rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+          rm -rf sherpa-onnx-paraformer-zh-2023-09-14
 
           echo "Test NeMo CTC"
           ./run-nemo-ctc.sh

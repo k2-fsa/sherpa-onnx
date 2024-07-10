@@ -67,7 +67,7 @@ def get_2nd_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-paraformer-zh-2023-03-28",
+            model_name="sherpa-onnx-paraformer-zh-2023-09-14",
             idx=0,
             lang="zh",
             short_name="paraformer",
@@ -270,7 +270,7 @@ def get_models():
     combinations = [
         (
             "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
-            "sherpa-onnx-paraformer-zh-2023-03-28",
+            "sherpa-onnx-paraformer-zh-2023-09-14",
         ),
         (
             "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",

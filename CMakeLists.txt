@@ -11,7 +11,7 @@ project(sherpa-onnx)
 # ./nodejs-addon-examples
 # ./dart-api-examples/
 # ./CHANGELOG.md
-set(SHERPA_ONNX_VERSION "1.10.12")
+set(SHERPA_ONNX_VERSION "1.10.13")
 
 # Disable warning about
 #
@@ -22,19 +22,9 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
 endif()
 
 
-include(CheckIPOSupported)
-check_ipo_supported(RESULT ipo)
 
-if(ipo)
-  message(STATUS "IPO is enabled")
-  set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
-else()
-  message(STATUS "IPO is not available")
-endif()
 
-set(CMAKE_CXX_VISIBILITY_PRESET hidden)
-set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 
 option(SHERPA_ONNX_ENABLE_PYTHON "Whether to build Python" OFF)
 option(SHERPA_ONNX_ENABLE_TESTS "Whether to build tests" OFF)
@@ -143,6 +133,29 @@ message(STATUS "SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY ${SHERPA_ONNX_LINK_LIBSTDC
 message(STATUS "SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE ${SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE}")
 message(STATUS "SHERPA_ONNX_ENABLE_SANITIZER: ${SHERPA_ONNX_ENABLE_SANITIZER}")
 message(STATUS "SHERPA_ONNX_BUILD_C_API_EXAMPLES: ${SHERPA_ONNX_BUILD_C_API_EXAMPLES}")
+
+if(BUILD_SHARED_LIBS)
+  set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+  set(CMAKE_VISIBILITY_INLINES_HIDDEN 1)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif()
+
+if(BUILD_SHARED_LIBS AND NOT CMAKE_SYSTEM_NAME STREQUAL iOS)
+  # Don't use LTO for iOS since it causes the following error
+  # error: unable to find any architecture information in the binary
+  # at '/Users/fangjun/open-source/sherpa-onnx/build-ios/build/os64/sherpa-onnx.a':
+  # Unknown header: 0xb17c0de
+  # See also https://forums.developer.apple.com/forums/thread/714324
+
+  include(CheckIPOSupported)
+  check_ipo_supported(RESULT ipo)
+  if(ipo)
+    message(STATUS "IPO is enabled")
+    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION ON)
+  else()
+    message(STATUS "IPO is not available")
+  endif()
+endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
   message(STATUS "TTS is enabled")

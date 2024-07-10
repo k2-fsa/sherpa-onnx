@@ -338,10 +338,10 @@ void CNonStreamingSpeechRecognitionDlg::ShowInitRecognizerHelpMessage() {
   msg +=
       "wget "
       "https://huggingface.co/csukuangfj/"
-      "sherpa-onnx-paraformer-zh-2023-03-28/resolve/main/model.onnx\r\n";
+      "sherpa-onnx-paraformer-zh-2023-09-14/resolve/main/model.onnx\r\n";
   msg +=
       "wget "
-      "https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28/"
+      "https://huggingface.co/csukuangfj/sherpa-onnx-paraformer-zh-2023-09-14/"
       "resolve/main/tokens.txt\r\n\r\n";
   msg += "\r\n Now rename them\r\n";
   msg += "mv model.onnx paraformer.onnx\r\n\r\n";

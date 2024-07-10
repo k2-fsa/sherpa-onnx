@@ -19,7 +19,7 @@ function createOfflineRecognizer() {
       joiner: '',
     },
     paraformer: {
-      model: './sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx',
+      model: './sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx',
     },
     nemoCtc: {
       model: '',
@@ -34,7 +34,7 @@ function createOfflineRecognizer() {
     tdnn: {
       model: '',
     },
-    tokens: './sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt',
+    tokens: './sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt',
     numThreads: 1,
     debug: 0,
     provider: 'cpu',
@@ -63,7 +63,7 @@ function createOfflineRecognizer() {
 const recognizer = createOfflineRecognizer();
 const stream = recognizer.createStream();
 
-const waveFilename = './sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav';
+const waveFilename = './sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/0.wav';
 
 const reader = new wav.Reader();
 const readable = new Readable().wrap(reader);

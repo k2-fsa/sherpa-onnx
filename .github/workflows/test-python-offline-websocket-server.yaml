@@ -104,13 +104,13 @@ jobs:
         if: matrix.model_type == 'paraformer' && matrix.os != 'windows-latest'
         shell: bash
         run: |
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-          tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-          rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+          tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+          rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 
           python3 ./python-api-examples/non_streaming_server.py \
-            --paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx \
-            --tokens ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt &
+            --paraformer ./sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx \
+            --tokens ./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt &
 
           echo "sleep 10 seconds to wait the server start"
           sleep 10
@@ -120,16 +120,16 @@ jobs:
         shell: bash
         run: |
           python3 ./python-api-examples/offline-websocket-client-decode-files-paralell.py \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav
+            ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/0.wav \
+            ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/1.wav \
+            ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/2.wav \
+            ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/8k.wav
 
           python3 ./python-api-examples/offline-websocket-client-decode-files-sequential.py \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav \
-            ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav
+            ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/0.wav \
+            ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/1.wav \
+            ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/2.wav \
+            ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/8k.wav
 
       - name: Start server for nemo_ctc models
         if: matrix.model_type == 'nemo_ctc'

@@ -121,9 +121,9 @@ rm sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
 node ./test_asr_non_streaming_nemo_ctc.js
 rm -rf sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 
 node ./test_asr_non_streaming_paraformer.js
 
@@ -134,7 +134,7 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/i
 
 node ./test_asr_non_streaming_paraformer_itn.js
 
-rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+rm -rf sherpa-onnx-paraformer-zh-2023-09-14
 
 echo "----------tts----------"
 

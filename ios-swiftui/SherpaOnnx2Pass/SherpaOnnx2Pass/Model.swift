@@ -76,9 +76,9 @@ func getStreamingEn20MZipformer20230217() -> SherpaOnnxOnlineModelConfig {
 ///   Non-streaming models
 /// ========================================
 
-/// csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28 (Chinese)
-/// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-03-28-chinese
-func getNonStreamingZhParaformer20230328() -> SherpaOnnxOfflineModelConfig {
+/// csukuangfj/sherpa-onnx-paraformer-zh-2023-09-14 (Chinese)
+/// https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-09-14-chinese
+func getNonStreamingZhParaformer20230914() -> SherpaOnnxOfflineModelConfig {
   let model = getResource("model.int8", "onnx")
   let tokens = getResource("paraformer-tokens", "txt")
 

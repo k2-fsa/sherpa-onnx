@@ -128,8 +128,8 @@ by following the code)
 
 @param type
 
-0 - csukuangfj/sherpa-onnx-paraformer-zh-2023-03-28 (Chinese)
-    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-03-28-chinese
+0 - csukuangfj/sherpa-onnx-paraformer-zh-2023-09-14 (Chinese)
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-09-14-chinese
     int8
 
 1 - icefall-asr-multidataset-pruned_transducer_stateless7-2023-05-04 (English)
@@ -152,7 +152,7 @@ by following the code)
 fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
     when (type) {
         0 -> {
-            val modelDir = "sherpa-onnx-paraformer-zh-2023-03-28"
+            val modelDir = "sherpa-onnx-paraformer-zh-2023-09-14"
             return OfflineModelConfig(
                 paraformer = OfflineParaformerModelConfig(
                     model = "$modelDir/model.int8.onnx",

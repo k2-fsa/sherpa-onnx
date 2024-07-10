@@ -69,7 +69,7 @@ def get_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-paraformer-zh-2023-03-28",
+            model_name="sherpa-onnx-paraformer-zh-2023-09-14",
             idx=0,
             lang="zh",
             short_name="paraformer",

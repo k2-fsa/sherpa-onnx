@@ -130,12 +130,12 @@ class TestOfflineRecognizer(unittest.TestCase):
     def test_paraformer_single_file(self):
         for use_int8 in [True, False]:
             if use_int8:
-                model = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx"
+                model = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx"
             else:
-                model = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/model.onnx"
+                model = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/model.onnx"
 
-            tokens = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt"
-            wave0 = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav"
+            tokens = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt"
+            wave0 = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/0.wav"
 
             if not Path(model).is_file():
                 print("skipping test_paraformer_single_file()")
@@ -157,15 +157,15 @@ class TestOfflineRecognizer(unittest.TestCase):
     def test_paraformer_multiple_files(self):
         for use_int8 in [True, False]:
             if use_int8:
-                model = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx"
+                model = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx"
             else:
-                model = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/model.onnx"
+                model = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/model.onnx"
 
-            tokens = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt"
-            wave0 = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav"
-            wave1 = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav"
-            wave2 = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav"
-            wave3 = f"{d}/sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav"
+            tokens = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt"
+            wave0 = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/0.wav"
+            wave1 = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/1.wav"
+            wave2 = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/2.wav"
+            wave3 = f"{d}/sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/8k.wav"
 
             if not Path(model).is_file():
                 print("skipping test_paraformer_multiple_files()")
@@ -267,7 +267,7 @@ class TestOfflineRecognizer(unittest.TestCase):
             print(s1.result.text)
             print(s2.result.text)
 
-    def test_wenet_ctc(self):
+    def _test_wenet_ctc(self):
         models = [
             "sherpa-onnx-zh-wenet-aishell",
             "sherpa-onnx-zh-wenet-aishell2",

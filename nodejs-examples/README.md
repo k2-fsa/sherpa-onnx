@@ -78,13 +78,13 @@ node ./test-offline-nemo-ctc.js
 
 [./test-offline-paraformer.js](./test-offline-paraformer.js) demonstrates
 how to decode a file with a non-streaming Paraformer model. In the code we use
-[sherpa-onnx-paraformer-zh-2023-03-28](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-03-28-chinese).
+[sherpa-onnx-paraformer-zh-2023-09-14](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-09-14-chinese).
 
 You can use the following command to run it:
 
 ```bash
-wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 node ./test-offline-paraformer.js
 ```
 

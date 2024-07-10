@@ -32,10 +32,6 @@ function linux() {
 
   cp -v sherpa_onnx/lib/*.so* $dst
 
-  pushd $dst
-  cp -v libonnxruntime.so.1.17.1 libonnxruntime.so
-  popd
-
   cd ..
   rm -rf t
 
@@ -48,10 +44,6 @@ function linux() {
 
   cp -v sherpa_onnx/lib/*.so* $dst
 
-  pushd $dst
-  cp -v libonnxruntime.so.1.17.1 libonnxruntime.so
-  popd
-
   cd ..
   rm -rf t
 
@@ -63,10 +55,6 @@ function linux() {
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
 
   cp -v sherpa_onnx/lib/*.so* $dst
-
-  pushd $dst
-  cp -v libonnxruntime.so.1.17.1 libonnxruntime.so
-  popd
 
   cd ..
   rm -rf t
@@ -102,7 +90,7 @@ function osx() {
   cp -v sherpa_onnx/lib/*.dylib $dst/
 
   pushd $dst
-  cp -v libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+  cp -v libonnxruntime.1.18.0.dylib libonnxruntime.dylib
   popd
 
   cd ..
@@ -120,7 +108,7 @@ function osx() {
   cp -v sherpa_onnx/lib/*.dylib $dst/
 
   pushd $dst
-  cp -v libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+  cp -v libonnxruntime.1.18.0.dylib libonnxruntime.dylib
   popd
 
   cd ..

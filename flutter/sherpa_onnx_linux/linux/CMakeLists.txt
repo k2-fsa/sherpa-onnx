@@ -12,6 +12,6 @@ project(${PROJECT_NAME} LANGUAGES CXX)
 # external build triggered from this build file.
 set(sherpa_onnx_linux_bundled_libraries
   "${CMAKE_CURRENT_SOURCE_DIR}/libsherpa-onnx-c-api.so"
-  "${CMAKE_CURRENT_SOURCE_DIR}/libonnxruntime.so.1.17.1"
+  "${CMAKE_CURRENT_SOURCE_DIR}/libonnxruntime.so"
   PARENT_SCOPE
 )

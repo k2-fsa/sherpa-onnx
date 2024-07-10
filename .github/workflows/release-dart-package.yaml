@@ -85,7 +85,6 @@ jobs:
               make install
 
               ls -lh ./install/lib
-              rm -v ./install/lib/libonnxruntime.so
 
       - name: Copy pre-built libs
         shell: bash

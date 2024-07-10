@@ -140,9 +140,9 @@ node ./test_audio_tagging_zipformer.js
 ### Audio tagging with CED
 
 ```bash
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-ced-mini-audio-tagging-2024-04-19.tar.bz2
-tar xvf sherpa-onnx-ced-mini-audio-tagging-2024-04-19.tar.bz2
-rm sherpa-onnx-ced-mini-audio-tagging-2024-04-19.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-ced-mini-audio-tagging-2024-09-14.tar.bz2
+tar xvf sherpa-onnx-ced-mini-audio-tagging-2024-09-14.tar.bz2
+rm sherpa-onnx-ced-mini-audio-tagging-2024-09-14.tar.bz2
 
 node ./test_audio_tagging_ced.js
 ```
@@ -241,9 +241,9 @@ node ./test_vad_asr_non_streaming_nemo_ctc_microphone.js
 ### Non-streaming speech recognition with Paraformer
 
 ```bash
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 
 node ./test_asr_non_streaming_paraformer.js
 

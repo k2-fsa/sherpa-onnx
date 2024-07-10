@@ -27,8 +27,8 @@ python3 ./python-api-examples/two-pass-speech-recognition-from-microphone.py \
   --first-joiner ./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/joiner-epoch-99-avg-1.onnx \
   --first-tokens ./sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23/tokens.txt \
   \
-  --second-paraformer ./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx \
-  --second-tokens ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt
+  --second-paraformer ./sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx \
+  --second-tokens ./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt
 
 (2) English: Streaming zipformer (1st pass) + Non-streaming whisper (2nd pass)
 

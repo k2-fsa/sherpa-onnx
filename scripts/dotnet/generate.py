@@ -36,7 +36,7 @@ def get_dict():
 
 def process_linux(s, rid):
     libs = [
-        "libonnxruntime.so.1.17.1",
+        "libonnxruntime.so",
         "libsherpa-onnx-c-api.so",
     ]
     prefix = f"{src_dir}/linux-{rid}/"
@@ -56,7 +56,7 @@ def process_linux(s, rid):
 
 def process_macos(s, rid):
     libs = [
-        "libonnxruntime.1.17.1.dylib",
+        "libonnxruntime.1.18.0.dylib",
         "libsherpa-onnx-c-api.dylib",
     ]
     prefix = f"{src_dir}/macos-{rid}/"

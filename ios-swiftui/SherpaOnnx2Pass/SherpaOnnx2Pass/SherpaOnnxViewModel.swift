@@ -90,7 +90,7 @@ class SherpaOnnxViewModel: ObservableObject {
     }
 
     private func initOfflineRecognizer() {
-        // let modelConfig = getNonStreamingZhParaformer20230328()
+        // let modelConfig = getNonStreamingZhParaformer20230914()
         let modelConfig = getNonStreamingWhisperTinyEn()
 
         // let modelConfig = getNonStreamingEnZipformer20230504()

@@ -184,35 +184,13 @@ rm -rf $repo
 log "------------------------------------------------------------"
 log "Run Paraformer (Chinese)"
 log "------------------------------------------------------------"
-
-repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-repo=sherpa-onnx-paraformer-zh-2023-03-28
-log "Start testing ${repo_url}"
-
-time $EXE \
-  --tokens=$repo/tokens.txt \
-  --paraformer=$repo/model.onnx \
-  --num-threads=2 \
-  --decoding-method=greedy_search \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav \
-  $repo/test_wavs/8k.wav
-
-time $EXE \
-  --tokens=$repo/tokens.txt \
-  --paraformer=$repo/model.int8.onnx \
-  --num-threads=2 \
-  --decoding-method=greedy_search \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav \
-  $repo/test_wavs/8k.wav
-
-rm -rf $repo
+# For onnxruntime 1.18.0, sherpa-onnx-paraformer-zh-2023-03-28 throws the following error
+# libc++abi: terminating with uncaught exception of type Ort::Exception: Node (Loop_5471)
+# Op (Loop) [TypeInferenceError] Graph attribute inferencing failed: Node (Concat_5490)
+# Op (Concat) [ShapeInferenceError] All inputs to Concat must have same rank. Input 1 has rank 2 != 1
+#
+# See https://github.com/microsoft/onnxruntime/issues/8115
+# We need to re-export this model using a recent version of onnxruntime and onnx
 
 log "------------------------------------------------------------"
 log "Run Paraformer (Chinese) with timestamps"

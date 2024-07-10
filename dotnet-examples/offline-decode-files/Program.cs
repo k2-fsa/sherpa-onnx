@@ -118,13 +118,13 @@ to download pre-trained non-streaming zipformer models.
 # Paraformer
 
 dotnet run \
-  --tokens=./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt \
-  --paraformer=./sherpa-onnx-paraformer-zh-2023-03-28/model.onnx \
+  --tokens=./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt \
+  --paraformer=./sherpa-onnx-paraformer-zh-2023-09-14/model.onnx \
   --files ./sherpa-onnx-zipformer-en-2023-04-01/test_wavs/0.wav \
-  ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav \
-  ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav \
-  ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav \
-  ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav
+  ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/0.wav \
+  ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/1.wav \
+  ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/2.wav \
+  ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/8k.wav
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/index.html
