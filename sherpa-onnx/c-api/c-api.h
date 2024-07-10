@@ -1111,7 +1111,7 @@ SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeSearch(
 
 SHERPA_ONNX_API typedef struct SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch {
   float score;
-  char *name;
+  const char *name;
 } SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch;
 
 SHERPA_ONNX_API typedef struct
