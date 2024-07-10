@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace SherpaOnnx
 {
@@ -19,6 +20,13 @@ namespace SherpaOnnx
         public OnlineStream CreateStream()
         {
             IntPtr p = CreateKeywordStream(_handle.Handle);
+            return new OnlineStream(p);
+        }
+
+        public OnlineStream CreateStream(string keywords)
+        {
+            byte[] utf8Bytes = Encoding.UTF8.GetBytes(keywords);
+            IntPtr p = CreateKeywordStreamWithKeywords(_handle.Handle, utf8Bytes);
             return new OnlineStream(p);
         }
 
