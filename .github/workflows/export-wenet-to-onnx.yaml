@@ -73,7 +73,14 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-aishell main || true
 
             cd ..
-            rm -rf huggingface
+
+            rm -rf huggingface/.git
+            dst=sherpa-onnx-zh-wenet-aishell
+
+            mv huggingface $dst
+
+            tar cjvf $dst.tar.bz2 $dst
+            rm -rf $dst
 
       - name: Publish to huggingface (aishell2)
         env:
@@ -115,7 +122,14 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-aishell2 main || true
 
             cd ..
-            rm -rf huggingface
+
+            rm -rf huggingface/.git
+            dst=sherpa-onnx-zh-wenet-aishell2
+
+            mv huggingface $dst
+
+            tar cjvf $dst.tar.bz2 $dst
+            rm -rf $dst
 
       - name: Publish to huggingface (multi_cn)
         env:
@@ -157,7 +171,14 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-multi-cn main || true
 
             cd ..
-            rm -rf huggingface
+
+            rm -rf huggingface/.git
+            dst=sherpa-onnx-zh-wenet-multi-cn
+
+            mv huggingface $dst
+
+            tar cjvf $dst.tar.bz2 $dst
+            rm -rf $dst
 
       - name: Publish to huggingface (wenetspeech)
         env:
@@ -199,7 +220,14 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-wenetspeech main || true
 
             cd ..
-            rm -rf huggingface
+
+            rm -rf huggingface/.git
+            dst=sherpa-onnx-zh-wenet-wenetspeech
+
+            mv huggingface $dst
+
+            tar cjvf $dst.tar.bz2 $dst
+            rm -rf $dst
 
       - name: Publish to huggingface (librispeech)
         env:
@@ -242,7 +270,14 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-en-wenet-librispeech main || true
 
             cd ..
-            rm -rf huggingface
+
+            rm -rf huggingface/.git
+            dst=sherpa-onnx-en-wenet-librispeech
+
+            mv huggingface $dst
+
+            tar cjvf $dst.tar.bz2 $dst
+            rm -rf $dst
 
       - name: Publish to huggingface (gigaspeech)
         env:
@@ -285,4 +320,21 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-en-wenet-gigaspeech main || true
 
             cd ..
-            rm -rf huggingface
+
+            rm -rf huggingface/.git
+            dst=sherpa-onnx-en-wenet-gigaspeech
+
+            mv huggingface $dst
+
+            tar cjvf $dst.tar.bz2 $dst
+            rm -rf $dst
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
