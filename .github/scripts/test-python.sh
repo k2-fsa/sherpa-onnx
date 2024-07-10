@@ -312,13 +312,13 @@ log "Test non-streaming paraformer models"
 if [[ x$OS != x'windows-latest' ]]; then
   echo "OS: $OS"
   pushd $dir
-  repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+  repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
   curl -SL -O $repo_url
-  tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-  rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+  tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+  rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 
   log "Start testing ${repo_url}"
-  repo=$dir/sherpa-onnx-paraformer-zh-2023-03-28
+  repo=$dir/sherpa-onnx-paraformer-zh-2023-09-14
 
   ls -lh $repo
   popd
@@ -348,7 +348,7 @@ if [[ x$OS != x'windows-latest' ]]; then
 
   python3 ./python-api-examples/inverse-text-normalization-offline-asr.py
 
-  rm -rfv sherpa-onnx-paraformer-zh-2023-03-28
+  rm -rfv sherpa-onnx-paraformer-zh-2023-09-14
 
   rm -rf $repo
 fi

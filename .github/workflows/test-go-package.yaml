@@ -269,7 +269,7 @@ jobs:
 
           echo "Test paraformer"
           ./run-paraformer.sh
-          rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+          rm -rf sherpa-onnx-paraformer-zh-2023-09-14
 
           echo "Test NeMo CTC"
           ./run-nemo-ctc.sh
@@ -306,7 +306,7 @@ jobs:
 
           echo "Test paraformer"
           ./run-paraformer.sh
-          rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+          rm -rf sherpa-onnx-paraformer-zh-2023-09-14
 
           echo "Test NeMo CTC"
           ./run-nemo-ctc.sh
@@ -351,7 +351,7 @@ jobs:
 
           echo "Test paraformer"
           ./run-paraformer.sh
-          rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+          rm -rf sherpa-onnx-paraformer-zh-2023-09-14
 
           echo "Test NeMo CTC"
           ./run-nemo-ctc.sh

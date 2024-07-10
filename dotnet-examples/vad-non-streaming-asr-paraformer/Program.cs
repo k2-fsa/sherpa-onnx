@@ -13,8 +13,8 @@ class VadNonStreamingAsrParaformer
     // please download model files from
     // https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
     OfflineRecognizerConfig config = new OfflineRecognizerConfig();
-    config.ModelConfig.Paraformer.Model = "./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx";
-    config.ModelConfig.Tokens = "./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt";
+    config.ModelConfig.Paraformer.Model = "./sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx";
+    config.ModelConfig.Tokens = "./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt";
     config.ModelConfig.Debug = 0;
     OfflineRecognizer recognizer = new OfflineRecognizer(config);
 
