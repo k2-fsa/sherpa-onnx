@@ -1,8 +1,10 @@
 all
 macos-arm64
 macos-x64
-linux
-windows
+linux-x64
+linux-arm64
+windows-arm64
 windows-x64
 windows-x86
 packages
+tmp

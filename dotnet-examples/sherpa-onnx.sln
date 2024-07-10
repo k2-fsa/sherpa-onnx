@@ -25,6 +25,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "vad-non-streaming-asr-paraf
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{401E963F-E25A-43CE-987D-8DB2D4715756}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "keyword-spotting-from-files", "keyword-spotting-from-files\keyword-spotting-from-files.csproj", "{A87EDD31-D654-4C9F-AED7-F6F2825659BD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,6 +77,10 @@ Global
 		{401E963F-E25A-43CE-987D-8DB2D4715756}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{401E963F-E25A-43CE-987D-8DB2D4715756}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{401E963F-E25A-43CE-987D-8DB2D4715756}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A87EDD31-D654-4C9F-AED7-F6F2825659BD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A87EDD31-D654-4C9F-AED7-F6F2825659BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A87EDD31-D654-4C9F-AED7-F6F2825659BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A87EDD31-D654-4C9F-AED7-F6F2825659BD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

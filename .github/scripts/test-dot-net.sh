@@ -2,7 +2,10 @@
 
 cd dotnet-examples/
 
-cd ./online-decode-files
+cd ./keyword-spotting-from-files
+./run.sh
+
+cd ../online-decode-files
 ./run-transducer-itn.sh
 ./run-zipformer2-ctc.sh
 ./run-transducer.sh

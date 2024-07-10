@@ -21,11 +21,6 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL "3.24.0")
   cmake_policy(SET CMP0135 NEW)
 endif()
 
-
-
-
-
-
 option(SHERPA_ONNX_ENABLE_PYTHON "Whether to build Python" OFF)
 option(SHERPA_ONNX_ENABLE_TESTS "Whether to build tests" OFF)
 option(SHERPA_ONNX_ENABLE_CHECK "Whether to build with assert" OFF)

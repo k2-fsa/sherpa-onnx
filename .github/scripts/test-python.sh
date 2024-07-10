@@ -125,12 +125,15 @@ for name in ${wenet_models[@]}; do
   repo=$name
   log "Start testing ${repo_url}"
 
-  python3 ./python-api-examples/offline-decode-files.py \
-    --tokens=$repo/tokens.txt \
-    --wenet-ctc=$repo/model.onnx \
-    $repo/test_wavs/0.wav \
-    $repo/test_wavs/1.wav \
-    $repo/test_wavs/8k.wav
+  if false; then
+    # offline wenet ctc models are not supported by onnxruntime >= 1.18
+    python3 ./python-api-examples/offline-decode-files.py \
+      --tokens=$repo/tokens.txt \
+      --wenet-ctc=$repo/model.onnx \
+      $repo/test_wavs/0.wav \
+      $repo/test_wavs/1.wav \
+      $repo/test_wavs/8k.wav
+  fi
 
   python3 ./python-api-examples/online-decode-files.py \
     --tokens=$repo/tokens.txt \

@@ -139,7 +139,7 @@ time $EXE \
 time $EXE \
   --tokens=$repo/tokens.txt \
   --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
-  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
   --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
   --num-threads=2 \
   $repo/test_wavs/0.wav \
@@ -172,7 +172,7 @@ time $EXE \
 time $EXE \
   --tokens=$repo/tokens.txt \
   --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
-  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
   --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
   --num-threads=2 \
   $repo/test_wavs/0.wav \

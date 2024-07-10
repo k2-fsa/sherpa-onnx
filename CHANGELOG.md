@@ -1,6 +1,7 @@
 ## 1.10.13
 
 * Update onnxruntime from 1.17.1 to 1.18.0
+* Add C# API for Keyword spotting
 
 ## 1.10.12
 
