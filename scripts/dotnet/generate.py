@@ -56,7 +56,7 @@ def process_linux(s, rid):
 
 def process_macos(s, rid):
     libs = [
-        "libonnxruntime.1.18.0.dylib",
+        "libonnxruntime.1.18.1.dylib",
         "libsherpa-onnx-c-api.dylib",
     ]
     prefix = f"{src_dir}/macos-{rid}/"

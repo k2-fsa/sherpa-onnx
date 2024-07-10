@@ -1,5 +1,6 @@
 ## 1.10.14 (to-be-released)
 
+* Update onnxruntime from v1.18.0 to v1.18.1
 * Fix invalid utf8 sequence from Whisper for Dart API.
 
 ## 1.10.13

@@ -19,18 +19,18 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
   message(FATAL_ERROR "This file is for building a release version on Windows x64")
 endif()
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-win-x64-static_lib-1.18.0.tar.bz2")
-set(onnxruntime_URL2 "https://hub.nuaa.cf/github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-win-x64-static_lib-1.18.0.tar.bz2")
-set(onnxruntime_HASH "SHA256=dcbe48216fe0e5356ddd14e2f48fa1567bbb22792fe156c6252afb044178b2de")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.1/onnxruntime-win-x64-static_lib-1.18.1.tar.bz2")
+set(onnxruntime_URL2 "https://hub.nuaa.cf/github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.1/onnxruntime-win-x64-static_lib-1.18.1.tar.bz2")
+set(onnxruntime_HASH "SHA256=b0e24b77552593227e843c9f8fcade5dff2615f85945ec5a3e7adb181bb1d24a")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-win-x64-static_lib-1.18.0.tar.bz2
-  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-static_lib-1.18.0.tar.bz2
-  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-static_lib-1.18.0.tar.bz2
-  /tmp/onnxruntime-win-x64-static_lib-1.18.0.tar.bz2
+  $ENV{HOME}/Downloads/onnxruntime-win-x64-static_lib-1.18.1.tar.bz2
+  ${CMAKE_SOURCE_DIR}/onnxruntime-win-x64-static_lib-1.18.1.tar.bz2
+  ${CMAKE_BINARY_DIR}/onnxruntime-win-x64-static_lib-1.18.1.tar.bz2
+  /tmp/onnxruntime-win-x64-static_lib-1.18.1.tar.bz2
 )
 
 foreach(f IN LISTS possible_file_locations)
