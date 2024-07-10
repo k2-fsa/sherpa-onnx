@@ -5,6 +5,7 @@
 | Functions | URL | Supported Platforms|
 |---|---|---|
 |Streaming speech recognition| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples/streaming_asr)| Android, macOS, Windows|
+|Speech synthesis| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter-examples/tts)| Android, iOS, Linux, macOS, Windows|
 
 ## Pure dart-examples
 
