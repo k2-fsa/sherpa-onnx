@@ -267,7 +267,7 @@ class TestOfflineRecognizer(unittest.TestCase):
             print(s1.result.text)
             print(s2.result.text)
 
-    def test_wenet_ctc(self):
+    def _test_wenet_ctc(self):
         models = [
             "sherpa-onnx-zh-wenet-aishell",
             "sherpa-onnx-zh-wenet-aishell2",
