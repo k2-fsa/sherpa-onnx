@@ -94,7 +94,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
           std::to_string(trt_config.trt_timing_cache_enable);
       auto trt_dump_subgraphs =
           std::to_string(trt_config.trt_dump_subgraphs);
-
+      // SHERPA_ONNX_LOGE("max workspace : %s",trt_max_workspace_size.c_str());
       std::vector<TrtPairs> trt_options = {
         {"device_id", device_id.c_str()},
         {"trt_max_workspace_size", trt_max_workspace_size.c_str()},
@@ -219,6 +219,21 @@ static Ort::SessionOptions GetSessionOptionsImpl(int32_t num_threads,
 }
 
 Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config) {
+  return GetSessionOptionsImpl(config.num_threads,
+        config.provider_config.provider, &config.provider_config);
+}
+
+Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config,
+      const std::string &model_type) {
+  /*
+    Transducer models : Only encoder will run with tensorrt,
+                        decoder and joiner will run with cuda
+  */
+  if(config.provider_config.provider == "trt" &&
+      (model_type == "decoder" || model_type == "joiner")) {
+    return GetSessionOptionsImpl(config.num_threads,
+        std::string("cuda"), &config.provider_config);
+  }
   return GetSessionOptionsImpl(config.num_threads,
         config.provider_config.provider, &config.provider_config);
 }

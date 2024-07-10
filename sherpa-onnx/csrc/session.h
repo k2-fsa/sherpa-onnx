@@ -24,6 +24,9 @@ namespace sherpa_onnx {
 
 Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config);
 
+Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config,
+      const std::string &model_type);
+
 Ort::SessionOptions GetSessionOptions(const OfflineModelConfig &config);
 
 Ort::SessionOptions GetSessionOptions(const OfflineLMConfig &config);
