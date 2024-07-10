@@ -1266,20 +1266,21 @@ SherpaOnnxSpeakerEmbeddingManagerGetBestMatches(
     return nullptr;
   }
 
-  auto *result = new SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult();
-  result->count = matches.size();
-  result->matches =
+  auto resultMatches =
       new SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch[matches.size()];
-
   for (int i = 0; i < matches.size(); ++i) {
-    result->matches[i].score = matches[i].score;
+    resultMatches[i].score = matches[i].score;
 
     char *name = new char[matches[i].name.size() + 1];
     std::copy(matches[i].name.begin(), matches[i].name.end(), name);
     name[matches[i].name.size()] = '\0';
 
-    result->matches[i].name = name;
+    resultMatches[i].name = name;
   }
+
+  auto *result = new SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult();
+  result->count = matches.size();
+  result->matches = resultMatches;
 
   return result;
 }
