@@ -36,7 +36,7 @@ def get_dict():
 
 def process_linux(s, rid):
     libs = [
-        "libonnxruntime.so.1.17.1",
+        "libonnxruntime.so",
         "libsherpa-onnx-c-api.so",
     ]
     prefix = f"{src_dir}/linux-{rid}/"

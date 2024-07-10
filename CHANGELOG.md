@@ -1,3 +1,7 @@
+## 1.10.13
+
+* Update onnxruntime from 1.17.1 to 1.18.0
+
 ## 1.10.12
 
 * Add Flush to VAD so that the last speech segment can be detected. See also

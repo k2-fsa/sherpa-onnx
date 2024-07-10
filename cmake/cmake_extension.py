@@ -216,9 +216,6 @@ class BuildExtension(build_ext):
         shutil.rmtree(f"{install_dir}/share")
         shutil.rmtree(f"{install_dir}/lib/pkgconfig")
 
-        if is_linux():
-            os.remove(f"{install_dir}/lib/libonnxruntime.so")
-
         if is_macos():
             os.remove(f"{install_dir}/lib/libonnxruntime.dylib")
 

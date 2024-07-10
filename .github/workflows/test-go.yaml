@@ -94,11 +94,6 @@ jobs:
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* $upload_dir
 
             cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* ./lib/
-            rm -v ./lib/libonnxruntime.so
-
-            cd lib
-            ln -s libonnxruntime.so.1.17.1 libonnxruntime.so
-            cd ..
 
             rm -v ./lib/*.a
             ls -h ./lib
