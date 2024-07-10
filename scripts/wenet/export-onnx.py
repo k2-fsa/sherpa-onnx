@@ -41,7 +41,7 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
         meta.key = key
         meta.value = str(value)
 
-    model = onnx.version_converter.convert_version(model, 21)
+    #  model = onnx.version_converter.convert_version(model, 21)
 
     onnx.save(model, filename)
 
@@ -94,7 +94,7 @@ def main():
     x_lens = torch.full((N,), fill_value=T, dtype=torch.int64)
 
     # https://github.com/pytorch/pytorch/issues/114801
-    opset_version = 17
+    opset_version = 13
     onnx_model = torch.jit.script(onnx_model)
     torch.onnx.export(
         onnx_model,
