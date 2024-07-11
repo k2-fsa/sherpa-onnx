@@ -43,7 +43,7 @@ def get_args():
         choices=[
             "tiny", "tiny.en", "base", "base.en",
             "small", "small.en", "medium", "medium.en",
-            "large", "large-v1", "large-v2", "large-v3"
+            "large", "large-v1", "large-v2", "large-v3",
             "distil-medium.en", "distil-small.en", "distil-large-v2",
             # for fine-tuned models from icefall
             "medium-aishell",
