@@ -9,6 +9,11 @@
 #include <string>
 #include <vector>
 
+struct SpeakerMatch {
+  const std::string name;
+  float score;
+};
+
 namespace sherpa_onnx {
 
 class SpeakerEmbeddingManager {
@@ -61,6 +66,25 @@ class SpeakerEmbeddingManager {
    *        empty string.
    */
   std::string Search(const float *p, float threshold) const;
+
+  /**
+   * It is for speaker identification.
+   *
+   * It computes the cosine similarity between a given embedding and all
+   * other embeddings and finds the embeddings that have the largest scores
+   * and the scores are above or equal to the threshold. Returns a vector of
+   * SpeakerMatch structures containing the speaker names and scores for the
+   * embeddings if found; otherwise, returns an empty vector.
+   *
+   * @param p A pointer to the input embedding.
+   * @param threshold A value between 0 and 1.
+   * @param n The number of top matches to return.
+   * @return A vector of SpeakerMatch structures. If matches are found, the
+   *         vector contains the names and scores of the speakers. Otherwise,
+   *         it returns an empty vector.
+   */
+  std::vector<SpeakerMatch> GetBestMatches(const float *p, float threshold,
+                                           int32_t n) const;
 
   /* Check whether the input embedding matches the embedding of the input
    * speaker.

@@ -1256,6 +1256,44 @@ void SherpaOnnxSpeakerEmbeddingManagerFreeSearch(const char *name) {
   delete[] name;
 }
 
+const SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult *
+SherpaOnnxSpeakerEmbeddingManagerGetBestMatches(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const float *v, float threshold,
+    int32_t n) {
+  auto matches = p->impl->GetBestMatches(v, threshold, n);
+
+  if (matches.empty()) {
+    return nullptr;
+  }
+
+  auto resultMatches =
+      new SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch[matches.size()];
+  for (int i = 0; i < matches.size(); ++i) {
+    resultMatches[i].score = matches[i].score;
+
+    char *name = new char[matches[i].name.size() + 1];
+    std::copy(matches[i].name.begin(), matches[i].name.end(), name);
+    name[matches[i].name.size()] = '\0';
+
+    resultMatches[i].name = name;
+  }
+
+  auto *result = new SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult();
+  result->count = matches.size();
+  result->matches = resultMatches;
+
+  return result;
+}
+
+void SherpaOnnxSpeakerEmbeddingManagerFreeBestMatches(
+    const SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult *r) {
+  for (int32_t i = 0; i < r->count; ++i) {
+    delete[] r->matches[i].name;
+  }
+  delete[] r->matches;
+  delete r;
+};
+
 int32_t SherpaOnnxSpeakerEmbeddingManagerVerify(
     const SherpaOnnxSpeakerEmbeddingManager *p, const char *name,
     const float *v, float threshold) {

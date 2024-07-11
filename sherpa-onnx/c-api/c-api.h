@@ -1109,6 +1109,39 @@ SHERPA_ONNX_API const char *SherpaOnnxSpeakerEmbeddingManagerSearch(
 SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeSearch(
     const char *name);
 
+SHERPA_ONNX_API typedef struct SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch {
+  float score;
+  const char *name;
+} SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch;
+
+SHERPA_ONNX_API typedef struct
+    SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult {
+  const SherpaOnnxSpeakerEmbeddingManagerSpeakerMatch *matches;
+  int32_t count;
+} SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult;
+
+// Get the best matching speakers whose embeddings match the given
+// embedding.
+//
+// @param p Pointer to the SherpaOnnxSpeakerEmbeddingManager instance.
+// @param v Pointer to an array containing the embedding vector.
+// @param threshold Minimum similarity score required for a match (between 0 and
+// 1).
+// @param n Number of best matches to retrieve.
+// @return Returns a pointer to
+// SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult
+//         containing the best matches found. Returns NULL if no matches are
+//         found. The caller is responsible for freeing the returned pointer
+//         using SherpaOnnxSpeakerEmbeddingManagerFreeBestMatches() to
+//         avoid memory leaks.
+SHERPA_ONNX_API const SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult *
+SherpaOnnxSpeakerEmbeddingManagerGetBestMatches(
+    const SherpaOnnxSpeakerEmbeddingManager *p, const float *v, float threshold,
+    int32_t n);
+
+SHERPA_ONNX_API void SherpaOnnxSpeakerEmbeddingManagerFreeBestMatches(
+    const SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult *r);
+
 // Check whether the input embedding matches the embedding of the input
 // speaker.
 //
