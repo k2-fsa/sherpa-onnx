@@ -94,7 +94,8 @@ Hint: You don't need sudo permission to install CUDA toolkit. Please refer to
   https://k2-fsa.github.io/k2/installation/cuda-cudnn.html
 to install CUDA toolkit if you have not installed it.")
   if(NOT BUILD_SHARED_LIBS)
-    message(STATUS "Set BUILD_SHARED_LIBS to ON since SHERPA_ONNX_ENABLE_GPU is ON") set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+    message(STATUS "Set BUILD_SHARED_LIBS to ON since SHERPA_ONNX_ENABLE_GPU is ON")
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
   endif()
 endif()
 
