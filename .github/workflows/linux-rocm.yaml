@@ -1,0 +1,205 @@
+name: linux-rocm
+
+on:
+  push:
+    branches:
+      - master
+      - rocm
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+    paths:
+      - '.github/workflows/linux-rocm.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-transducer.sh'
+      - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-online-ctc.sh'
+      - '.github/scripts/test-offline-tts.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'c-api-examples/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/linux-rocm.yaml'
+      - '.github/scripts/test-online-transducer.sh'
+      - '.github/scripts/test-online-paraformer.sh'
+      - '.github/scripts/test-offline-transducer.sh'
+      - '.github/scripts/test-offline-ctc.sh'
+      - '.github/scripts/test-online-ctc.sh'
+      - '.github/scripts/test-online-ctc.sh'
+      - '.github/scripts/test-offline-tts.sh'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: linux-rocm-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux_rocm:
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.build_type }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # build_type: [Release, Debug]
+        build_type: [Release]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.build_type }}-rocm
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+          cmake \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D BUILD_SHARED_LIBS=ON \
+            -D SHERPA_ONNX_ENABLE_ROCM=ON \
+            ..
+
+      - name: Build sherpa-onnx for ubuntu
+        shell: bash
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cd build
+          make -j2
+          make install
+
+          ls -lh lib
+          ls -lh bin
+
+          echo "----"
+          ls -lh install/lib
+
+          echo "----"
+          ls -lh install/bin
+
+      - name: Display dependencies of sherpa-onnx for linux
+        shell: bash
+        run: |
+          file build/bin/sherpa-onnx
+          readelf -d build/bin/sherpa-onnx
+          echo "----"
+          ldd build/bin/sherpa-onnx
+
+      - name: Test spoken language identification
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-language-identification
+
+          .github/scripts/test-spoken-language-identification.sh
+
+      - name: Test online CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-ctc.sh
+
+      - name: Test offline TTS
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-tts
+
+          .github/scripts/test-offline-tts.sh
+
+      - name: Test online paraformer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-paraformer.sh
+
+
+      - name: Test offline Whisper
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-whisper.sh
+
+      - name: Test offline CTC
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-ctc.sh
+
+      - name: Test offline transducer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-transducer.sh
+
+      - name: Test online transducer
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx
+
+          .github/scripts/test-online-transducer.sh
+
+      - name: Test online transducer (C API)
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=decode-file-c-api
+
+          .github/scripts/test-online-transducer.sh
+
+      - name: Copy files
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-rocm
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+          cp -a build/install/lib $dst/
+          cp -a build/install/include $dst/
+
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - name: Release pre-compiled binaries and libs for linux x64
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-x64-rocm.tar.bz2
