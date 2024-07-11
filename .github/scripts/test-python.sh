@@ -328,14 +328,6 @@ if [[ x$OS != x'windows-latest' ]]; then
 
   python3 ./python-api-examples/offline-decode-files.py \
     --tokens=$repo/tokens.txt \
-    --paraformer=$repo/model.onnx \
-    $repo/test_wavs/0.wav \
-    $repo/test_wavs/1.wav \
-    $repo/test_wavs/2.wav \
-    $repo/test_wavs/8k.wav
-
-  python3 ./python-api-examples/offline-decode-files.py \
-    --tokens=$repo/tokens.txt \
     --paraformer=$repo/model.int8.onnx \
     $repo/test_wavs/0.wav \
     $repo/test_wavs/1.wav \

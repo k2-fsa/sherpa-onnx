@@ -90,7 +90,7 @@ function osx() {
   cp -v sherpa_onnx/lib/*.dylib $dst/
 
   pushd $dst
-  cp -v libonnxruntime.1.18.0.dylib libonnxruntime.dylib
+  cp -v libonnxruntime.1.18.1.dylib libonnxruntime.dylib
   popd
 
   cd ..
@@ -108,7 +108,7 @@ function osx() {
   cp -v sherpa_onnx/lib/*.dylib $dst/
 
   pushd $dst
-  cp -v libonnxruntime.1.18.0.dylib libonnxruntime.dylib
+  cp -v libonnxruntime.1.18.1.dylib libonnxruntime.dylib
   popd
 
   cd ..
