@@ -32,6 +32,8 @@ from whisper.model import (
     TextDecoder,
 )
 
+torch.set_num_threads(1)
+torch.set_num_interop_threads(1)
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -396,10 +398,10 @@ def main():
     assert audio.shape == (16000 * 30,), audio.shape
 
     # make log-Mel spectrogram and move to the same device as the model
-    mel = whisper.log_mel_spectrogram(audio).to(model.device).unsqueeze(0)
-    batch_size = 1
     n_mels = 80 if "large-v3" not in args.model else 128
-    assert mel.shape == (batch_size, n_mels, 30 * 100)
+    mel = whisper.log_mel_spectrogram(audio, n_mels=n_mels).to(model.device).unsqueeze(0)
+    batch_size = 1
+    assert mel.shape == (batch_size, n_mels, 30 * 100), mel.shape
 
     encoder = AudioEncoderTensorCache(model.encoder, model.decoder)
 
