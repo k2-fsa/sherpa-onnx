@@ -226,7 +226,7 @@ def load_tokens(filename):
     return tokens
 
 
-def compute_features(filename: str) -> torch.Tensor:
+def compute_features(filename: str, dim: int = 80) -> torch.Tensor:
     """
     Args:
       filename:
@@ -242,7 +242,9 @@ def compute_features(filename: str) -> torch.Tensor:
         )
 
     features = []
-    online_whisper_fbank = knf.OnlineWhisperFbank(knf.FrameExtractionOptions())
+    opts = knf.FrameExtractionOptions()
+    opts.dim = dim
+    online_whisper_fbank = knf.OnlineWhisperFbank(opts)
     online_whisper_fbank.accept_waveform(16000, audio.numpy())
     online_whisper_fbank.input_finished()
     for i in range(online_whisper_fbank.num_frames_ready):
@@ -280,8 +282,9 @@ def compute_features(filename: str) -> torch.Tensor:
 def main():
     args = get_args()
 
-    mel = compute_features(args.sound_file)
     model = OnnxModel(args.encoder, args.decoder)
+    dim = 80 if "large-v3" not in args.encoder else 128
+    mel = compute_features(args.sound_file, dim=dim)
 
     n_layer_cross_k, n_layer_cross_v = model.run_encoder(mel)
 
