@@ -18,7 +18,7 @@ jobs:
         os: [macos-latest]
         # model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "large", "large-v1", "large-v2", "distil-large-v2"]
         # model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "medium-aishell"]
-        model: ["large", "large-v1", "large-v2", "large-v3", "distil-large-v2", "distil-large-v3"]
+        model: ["large", "large-v1", "large-v2", "large-v3", "distil-large-v2"]
         python-version: ["3.8"]
 
     steps:
@@ -33,7 +33,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install torch==1.13.0 torchaudio==0.13.0 -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          python3 -m pip install openai-whisper==20230314 onnxruntime onnx soundfile librosa
+          python3 -m pip install openai-whisper==20231117 onnxruntime onnx soundfile librosa
 
       - name: export ${{ matrix.model }}
         shell: bash
@@ -46,9 +46,6 @@ jobs:
             ls -lh
           elif [[ $model == distil-large-v2 ]]; then
             wget -q -O distil-large-v2-original-model.bin https://huggingface.co/distil-whisper/distil-large-v2/resolve/main/original-model.bin
-            ls -lh
-          elif [[ $model == distil-large-v3 ]]; then
-            wget -q -O distil-large-v3-original-model.bin https://huggingface.co/distil-whisper/distil-large-v3/resolve/main/original-model.bin
             ls -lh
           elif [[ $model == distil-small.en ]]; then
             wget -q -O distil-small-en-original-model.bin https://huggingface.co/distil-whisper/distil-small.en/resolve/main/original-model.bin
@@ -80,7 +77,7 @@ jobs:
           mkdir $src
           mv -v whisper/*.onnx $src/
           mv -v whisper/*.txt $src/
-          if [[ $model == large || $model == large-v1 || $model == large-v2 || $model == large-v3 || $model == distil-large-v2 || $model == distil-large-v3 ]]; then
+          if [[ $model == large || $model == large-v1 || $model == large-v2 || $model == large-v3 || $model == distil-large-v2 ]]; then
             mv -v whisper/*.weights $src/
           fi
 
@@ -105,7 +102,7 @@ jobs:
           ls -lh $src
           echo "--------------------"
 
-          if [[ $model == large || $model == large-v1 || $model == large-v2 || $model == distil-large-v2 || $model == distil-large-v3 ]]; then
+          if [[ $model == large || $model == large-v1 || $model == large-v2 || $model == distil-large-v2  ]]; then
             echo "Don't release model to github for large models. $model"
           else
             tar cvjf $src.tar.bz2 $src
@@ -114,7 +111,7 @@ jobs:
           ls -lh
 
       - name: Release
-        if: matrix.model != 'large' && matrix.model != 'large-v1' && matrix.model != 'large-v2' && matrix.model != 'large-v3' && matrix.model != 'distil-large-v2' && matrix.model != 'distil-large-v3'
+        if: matrix.model != 'large' && matrix.model != 'large-v1' && matrix.model != 'large-v2' && matrix.model != 'large-v3' && matrix.model != 'distil-large-v2'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
