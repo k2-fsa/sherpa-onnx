@@ -88,7 +88,9 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
   }
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
-    return std::make_unique<OfflineStream>(WhisperTag{});
+    WhisperTag tag;
+    tag.dim = model_->FeatureDim();
+    return std::make_unique<OfflineStream>(tag);
   }
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override {

@@ -217,6 +217,8 @@ class OfflineWhisperModel::Impl {
 
   int32_t VocabSize() const { return n_vocab_; }
 
+  int32_t FeatureDim() const { return n_mels_; }
+
   int32_t Translate() const { return translate_; }
 
   bool IsMultiLingual() const { return is_multilingual_; }
@@ -242,6 +244,7 @@ class OfflineWhisperModel::Impl {
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
+    SHERPA_ONNX_READ_META_DATA(n_mels_, "n_mels");
     SHERPA_ONNX_READ_META_DATA(n_text_layer_, "n_text_layer");
     SHERPA_ONNX_READ_META_DATA(n_text_ctx_, "n_text_ctx");
     SHERPA_ONNX_READ_META_DATA(n_text_state_, "n_text_state");
@@ -316,6 +319,7 @@ class OfflineWhisperModel::Impl {
   std::unordered_map<int32_t, std::string> id2lang_;
 
   // model meta data
+  int32_t n_mels_ = 80;
   int32_t n_text_layer_ = 0;
   int32_t n_text_ctx_ = 0;
   int32_t n_text_state_ = 0;
@@ -413,6 +417,8 @@ int32_t OfflineWhisperModel::SOT() const { return impl_->SOT(); }
 int32_t OfflineWhisperModel::TextCtx() const { return impl_->TextCtx(); }
 
 int32_t OfflineWhisperModel::VocabSize() const { return impl_->VocabSize(); }
+
+int32_t OfflineWhisperModel::FeatureDim() const { return impl_->FeatureDim(); }
 
 int32_t OfflineWhisperModel::Translate() const { return impl_->Translate(); }
 

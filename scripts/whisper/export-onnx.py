@@ -404,8 +404,10 @@ def main():
     audio = whisper.pad_or_trim(audio)
     assert audio.shape == (16000 * 30,), audio.shape
 
-    # make log-Mel spectrogram and move to the same device as the model
-    n_mels = 80 if "large-v3" not in args.model else 128
+    if args.model in ("large", "large-v3"):
+        n_mels = 128
+    else:
+        n_mels = 80
     mel = (
         whisper.log_mel_spectrogram(audio, n_mels=n_mels).to(model.device).unsqueeze(0)
     )

@@ -75,11 +75,7 @@ jobs:
 
           cd ..
           mkdir $src
-          mv -v whisper/*.onnx $src/
-          mv -v whisper/*.txt $src/
-          if [[ $model == large || $model == large-v1 || $model == large-v2 || $model == large-v3 || $model == distil-large-v2 ]]; then
-            mv -v whisper/*.weights $src/
-          fi
+          mv -v whisper/$model* $src/
 
           echo "------------------------------"
 
@@ -161,7 +157,7 @@ jobs:
           git checkout .
           model=${{ matrix.model }}
           src=sherpa-onnx-whisper-$model
-          python3 scripts/whisper/test.py \
+          time python3 scripts/whisper/test.py \
             --encoder $src/$model-encoder.onnx \
             --decoder $src/$model-decoder.onnx \
             --tokens $src/$model-tokens.txt \
