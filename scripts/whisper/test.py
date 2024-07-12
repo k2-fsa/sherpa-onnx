@@ -99,8 +99,10 @@ class OnnxModel:
         self.blank = int(meta["blank_id"])
 
         self.sot_sequence = list(map(int, meta["sot_sequence"].split(",")))
-
         self.sot_sequence.append(self.no_timestamps)
+
+        if 'large-v3' in encoder:
+            self.sot_sequence = [50258, 50260, 50360, 50364]
 
         self.all_language_tokens = list(
             map(int, meta["all_language_tokens"].split(","))
@@ -328,6 +330,7 @@ def main():
 
     n_layer_self_k_cache, n_layer_self_v_cache = model.get_self_cache()
 
+    print(model.sot_sequence)
     tokens = torch.tensor([model.sot_sequence], dtype=torch.int64)
     offset = torch.zeros(1, dtype=torch.int64)
     logits, n_layer_self_k_cache, n_layer_self_v_cache = model.run_decoder(
@@ -346,7 +349,7 @@ def main():
     # for greedy search, we don't need to compute softmax or log_softmax
     max_token_id = logits.argmax(dim=-1)
     results = []
-    for i in range(model.n_text_ctx):
+    for i in range(model.n_text_ctx//2):
         if max_token_id == model.eot:
             break
         results.append(max_token_id.item())
