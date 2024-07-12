@@ -32,7 +32,7 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install torch==1.13.0 torchaudio==0.13.0 -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          python3 -m pip install openai-whisper==20230314 onnxruntime onnx
+          python3 -m pip install openai-whisper==20230314 onnxruntime onnx soundfile librosa
 
       - name: export ${{ matrix.model }}
         shell: bash

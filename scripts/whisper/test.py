@@ -9,9 +9,10 @@ import base64
 from typing import Tuple
 
 import kaldi_native_fbank as knf
+import numpy as np
 import onnxruntime as ort
+import soundfile as sf
 import torch
-import torchaudio
 
 
 def get_args():
@@ -226,6 +227,17 @@ def load_tokens(filename):
     return tokens
 
 
+def load_audio(filename: str) -> Tuple[np.ndarray, int]:
+    data, sample_rate = sf.read(
+        filename,
+        always_2d=True,
+        dtype="float32",
+    )
+    data = data[:, 0]  # use only the first channel
+    samples = np.ascontiguousarray(data)
+    return samples, sample_rate
+
+
 def compute_features(filename: str, dim: int = 80) -> torch.Tensor:
     """
     Args:
@@ -234,18 +246,18 @@ def compute_features(filename: str, dim: int = 80) -> torch.Tensor:
     Returns:
       Return a 1-D float32 tensor of shape (1, 80, 3000) containing the features.
     """
-    wave, sample_rate = torchaudio.load(filename)
-    audio = wave[0].contiguous()  # only use the first channel
+    wave, sample_rate = load_audio(filename)
     if sample_rate != 16000:
-        audio = torchaudio.functional.resample(
-            audio, orig_freq=sample_rate, new_freq=16000
-        )
+        import librosa
+
+        wave = librosa.resample(wave, orig_sr=sample_rate, target_sr=16000)
+        sample_rate = 16000
 
     features = []
     opts = knf.FrameExtractionOptions()
     opts.dim = dim
     online_whisper_fbank = knf.OnlineWhisperFbank(opts)
-    online_whisper_fbank.accept_waveform(16000, audio.numpy())
+    online_whisper_fbank.accept_waveform(16000, wave)
     online_whisper_fbank.input_finished()
     for i in range(online_whisper_fbank.num_frames_ready):
         f = online_whisper_fbank.get_frame(i)
