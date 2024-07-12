@@ -48,6 +48,7 @@ def get_args():
             "small", "small.en", "medium", "medium.en",
             "large", "large-v1", "large-v2", "large-v3",
             "distil-medium.en", "distil-small.en", "distil-large-v2",
+            # "distil-large-v3", # distil-large-v3 is not supported!
             # for fine-tuned models from icefall
             "medium-aishell",
             ],
@@ -75,14 +76,17 @@ def add_meta_data(filename: str, meta_data: Dict[str, Any]):
         meta.key = key
         meta.value = str(value)
 
-    external_filename = filename.split(".onnx")[0]
-    onnx.save(
-        model,
-        filename,
-        save_as_external_data=True,
-        all_tensors_to_one_file=True,
-        location=external_filename + ".weights",
-    )
+    if "large" in filename:
+        external_filename = filename.split(".onnx")[0]
+        onnx.save(
+            model,
+            filename,
+            save_as_external_data=True,
+            all_tensors_to_one_file=True,
+            location=external_filename + ".weights",
+        )
+    else:
+        onnx.save(model, filename)
 
 
 def modified_audio_encoder_forward(self: AudioEncoder, x: torch.Tensor):

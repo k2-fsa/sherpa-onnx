@@ -101,9 +101,6 @@ class OnnxModel:
         self.sot_sequence = list(map(int, meta["sot_sequence"].split(",")))
         self.sot_sequence.append(self.no_timestamps)
 
-        if "large-v3" in encoder:
-            self.sot_sequence = [50258, 50260, 50360, 50364]
-
         self.all_language_tokens = list(
             map(int, meta["all_language_tokens"].split(","))
         )
