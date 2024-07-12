@@ -43,7 +43,7 @@ def get_args():
         choices=[
             "tiny", "tiny.en", "base", "base.en",
             "small", "small.en", "medium", "medium.en",
-            "large", "large-v1", "large-v2",
+            "large", "large-v1", "large-v2", "large-v3"
             "distil-medium.en", "distil-small.en", "distil-large-v2",
             # for fine-tuned models from icefall
             "medium-aishell",
@@ -63,12 +63,23 @@ def add_meta_data(filename: str, meta_data: Dict[str, Any]):
         Key-value pairs.
     """
     model = onnx.load(filename)
+
+    while len(model.metadata_props):
+        model.metadata_props.pop()
+
     for key, value in meta_data.items():
         meta = model.metadata_props.add()
         meta.key = key
         meta.value = str(value)
 
-    onnx.save(model, filename)
+    external_filename = filename.split(".onnx")[0]
+    onnx.save(
+        model,
+        filename,
+        save_as_external_data=True,
+        all_tensors_to_one_file=True,
+        location=external_filename + ".weights",
+    )
 
 
 def modified_audio_encoder_forward(self: AudioEncoder, x: torch.Tensor):
@@ -545,6 +556,17 @@ def main():
             "n_layer_cross_v": {1: "n_audio", 2: "T"},
         },
     )
+
+    if "large" in args.model:
+        decoder_external_filename = decoder_filename.split(".onnx")[0]
+        decoder_model = onnx.load(decoder_filename)
+        onnx.save(
+            decoder_model,
+            decoder_filename,
+            save_as_external_data=True,
+            all_tensors_to_one_file=True,
+            location=decoder_external_filename + ".weights",
+        )
 
     if "large" in args.model:
         # it causes errors for large models, so skip it.
