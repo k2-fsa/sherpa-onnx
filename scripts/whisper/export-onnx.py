@@ -398,7 +398,8 @@ def main():
     # make log-Mel spectrogram and move to the same device as the model
     mel = whisper.log_mel_spectrogram(audio).to(model.device).unsqueeze(0)
     batch_size = 1
-    assert mel.shape == (batch_size, 80, 30 * 100)
+    n_mels = 80 if "large-v3" not in args.model else 128
+    assert mel.shape == (batch_size, n_mels, 30 * 100)
 
     encoder = AudioEncoderTensorCache(model.encoder, model.decoder)
 
