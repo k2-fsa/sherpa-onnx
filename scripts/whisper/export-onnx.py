@@ -35,6 +35,7 @@ from whisper.model import (
 torch.set_num_threads(1)
 torch.set_num_interop_threads(1)
 
+
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -389,7 +390,9 @@ def main():
 
     # write tokens
 
-    tokenizer = whisper.tokenizer.get_tokenizer(model.is_multilingual)
+    tokenizer = whisper.tokenizer.get_tokenizer(
+        model.is_multilingual, num_languages=model.num_languages
+    )
 
     model.eval()
     print(model.dims)
@@ -399,7 +402,9 @@ def main():
 
     # make log-Mel spectrogram and move to the same device as the model
     n_mels = 80 if "large-v3" not in args.model else 128
-    mel = whisper.log_mel_spectrogram(audio, n_mels=n_mels).to(model.device).unsqueeze(0)
+    mel = (
+        whisper.log_mel_spectrogram(audio, n_mels=n_mels).to(model.device).unsqueeze(0)
+    )
     batch_size = 1
     assert mel.shape == (batch_size, n_mels, 30 * 100), mel.shape
 
