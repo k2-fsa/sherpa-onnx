@@ -35,7 +35,10 @@ struct OfflineRecognitionResult {
   std::string AsJsonString() const;
 };
 
-struct WhisperTag {};
+struct WhisperTag {
+  int32_t dim = 80;
+};
+
 struct CEDTag {};
 
 class OfflineStream {

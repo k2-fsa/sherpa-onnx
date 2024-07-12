@@ -97,12 +97,16 @@ class OfflineStream::Impl {
     }
   }
 
-  explicit Impl(WhisperTag /*tag*/) {
+  explicit Impl(WhisperTag tag) {
     config_.normalize_samples = true;
     opts_.frame_opts.samp_freq = 16000;
-    opts_.mel_opts.num_bins = 80;  // not used
-    whisper_fbank_ =
-        std::make_unique<knf::OnlineWhisperFbank>(opts_.frame_opts);
+    opts_.mel_opts.num_bins = tag.dim;
+
+    knf::WhisperFeatureOptions whisper_opts;
+    whisper_opts.frame_opts = opts_.frame_opts;
+    whisper_opts.dim = tag.dim;
+
+    whisper_fbank_ = std::make_unique<knf::OnlineWhisperFbank>(whisper_opts);
     config_.sampling_rate = opts_.frame_opts.samp_freq;
   }
 

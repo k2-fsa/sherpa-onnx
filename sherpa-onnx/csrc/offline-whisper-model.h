@@ -102,6 +102,7 @@ class OfflineWhisperModel {
   int32_t SOT() const;
   int32_t TextCtx() const;
   int32_t VocabSize() const;
+  int32_t FeatureDim() const;
   int32_t Translate() const;
   bool IsMultiLingual() const;
 
