@@ -254,7 +254,7 @@ def compute_features(filename: str, dim: int = 80) -> torch.Tensor:
         sample_rate = 16000
 
     features = []
-    opts = knf.FrameExtractionOptions()
+    opts = knf.WhisperFeatureOptions()
     opts.dim = dim
     online_whisper_fbank = knf.OnlineWhisperFbank(opts)
     online_whisper_fbank.accept_waveform(16000, wave)
