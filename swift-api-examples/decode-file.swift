@@ -91,6 +91,7 @@ func run() {
 
   let result = recognizer.getResult()
   print("\nresult is:\n\(result.text)")
+  print("\nresult is:\n\(result.timestamps)")
 }
 
 @main
