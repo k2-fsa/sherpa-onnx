@@ -101,7 +101,7 @@ class OnnxModel:
         self.sot_sequence = list(map(int, meta["sot_sequence"].split(",")))
         self.sot_sequence.append(self.no_timestamps)
 
-        if 'large-v3' in encoder:
+        if "large-v3" in encoder:
             self.sot_sequence = [50258, 50260, 50360, 50364]
 
         self.all_language_tokens = list(
@@ -349,7 +349,7 @@ def main():
     # for greedy search, we don't need to compute softmax or log_softmax
     max_token_id = logits.argmax(dim=-1)
     results = []
-    for i in range(model.n_text_ctx//2):
+    for i in range(model.n_text_ctx):
         if max_token_id == model.eot:
             break
         results.append(max_token_id.item())
