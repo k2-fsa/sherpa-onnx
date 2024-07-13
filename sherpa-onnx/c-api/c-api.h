@@ -496,8 +496,6 @@ SHERPA_ONNX_API void DecodeMultipleOfflineStreams(
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
   const char *text;
 
-  const char *lang;
-
     // Pointer to continuous memory which holds timestamps
   //
   // It is NULL if the model does not support timestamps
@@ -526,6 +524,10 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
    *   }
    */
   const char *json;
+
+  //return recognized language
+  const char *lang;
+
 } SherpaOnnxOfflineRecognizerResult;
 
 /// Get the result of the offline stream.
