@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -ex
 
 cur_dir=$(cd $(dirname $BASH_SOURCE) && pwd)
 sherpa_onnx_dir=$(cd $cur_dir/../.. && pwd)
@@ -28,8 +29,8 @@ function export_large() {
   dst=sherpa-onnx-zipformer-en-libriheavy-20230830-large-punct-case
   mkdir $dst
 
-  cp -v $src/data/lang_bpe_500/bpe.model $dst/
-  cp -v $src/data/lang_bpe_500/tokens.txt $dst/
+  cp -v $src/data/lang_bpe_756/bpe.model $dst/
+  cp -v $src/data/lang_bpe_756/tokens.txt $dst/
   cp -v $src/exp/*.onnx $dst/
   download_test_wavs $dst
 
@@ -61,8 +62,8 @@ function export_medium() {
   dst=sherpa-onnx-zipformer-en-libriheavy-20230830-medium-punct-case
   mkdir $dst
 
-  cp -v $src/data/lang_bpe_500/bpe.model $dst/
-  cp -v $src/data/lang_bpe_500/tokens.txt $dst/
+  cp -v $src/data/lang_bpe_756/bpe.model $dst/
+  cp -v $src/data/lang_bpe_756/tokens.txt $dst/
   cp -v $src/exp_medium_subset/*.onnx $dst/
   download_test_wavs $dst
 
@@ -94,8 +95,8 @@ function export_small() {
   dst=sherpa-onnx-zipformer-en-libriheavy-20230830-small-punct-case
   mkdir $dst
 
-  cp -v $src/data/lang_bpe_500/bpe.model $dst/
-  cp -v $src/data/lang_bpe_500/tokens.txt $dst/
+  cp -v $src/data/lang_bpe_756/bpe.model $dst/
+  cp -v $src/data/lang_bpe_756/tokens.txt $dst/
   cp -v $src/exp_small_subset/*.onnx $dst/
   download_test_wavs $dst
 

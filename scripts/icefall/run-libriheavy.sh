@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -ex
+
 cur_dir=$(cd $(dirname $BASH_SOURCE) && pwd)
 sherpa_onnx_dir=$(cd $cur_dir/../.. && pwd)
 echo "sherpa_onnx_dir: $sherpa_onnx_dir"
