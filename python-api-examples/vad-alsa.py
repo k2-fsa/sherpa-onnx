@@ -55,7 +55,7 @@ def main():
     if not Path(args.silero_vad_model).is_file():
         raise RuntimeError(
             f"{args.silero_vad_model} does not exist. Please download it from "
-            "https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx"
+            "https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx"
         )
 
     device_name = args.device_name

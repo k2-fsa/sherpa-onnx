@@ -15,7 +15,7 @@ func main() {
 	config := sherpa.VadModelConfig{}
 
 	// Please download silero_vad.onnx from
-	// https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx
+	// https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
 
 	config.SileroVad.Model = "./silero_vad.onnx"
 	config.SileroVad.Threshold = 0.5
