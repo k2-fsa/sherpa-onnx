@@ -429,7 +429,7 @@ SHERPA_ONNX_API SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
     const SherpaOnnxOfflineRecognizerConfig *config);
 
 /// @param config  Config for the recognizer.
-SHERPA_ONNX_API void SetSherpaOnnxOfflineRecognizerConfig(
+SHERPA_ONNX_API void SherpaOnnxOfflineRecognizerSetConfig(
     const SherpaOnnxOfflineRecognizer *recognizer,
     const SherpaOnnxOfflineRecognizerConfig *config);
 

@@ -308,7 +308,7 @@ struct SherpaOnnxOfflineStream {
       : impl(std::move(p)) {}
 };
 
-sherpa_onnx::OfflineRecognizerConfig convertConfig(
+static sherpa_onnx::OfflineRecognizerConfig convertConfig(
     const SherpaOnnxOfflineRecognizerConfig *config);
 SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
     const SherpaOnnxOfflineRecognizerConfig *config) {
@@ -420,7 +420,7 @@ sherpa_onnx::OfflineRecognizerConfig convertConfig(
   return recognizer_config;
 }
 
-void SetSherpaOnnxOfflineRecognizerConfig(
+void SherpaOnnxOfflineRecognizerSetConfig(
     const SherpaOnnxOfflineRecognizer *recognizer,
     const SherpaOnnxOfflineRecognizerConfig *config){
   sherpa_onnx::OfflineRecognizerConfig recognizer_config =
@@ -541,6 +541,7 @@ void DestroyOfflineRecognizerResult(
     delete[] r->tokens;
     delete[] r->tokens_arr;
     delete[] r->json;
+    delete[] r->lang;
     delete r;
   }
 }

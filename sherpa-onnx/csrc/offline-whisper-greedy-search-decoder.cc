@@ -28,7 +28,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   //
   // For non-multilingual models, initial_tokens contains [sot]
   std::vector<int64_t> initial_tokens = model_->GetInitialTokens();
-  
+
   if (model_->IsMultiLingual()) {
     if (!config_.language.empty()) {
       const auto &lang2id = model_->GetLang2ID();
