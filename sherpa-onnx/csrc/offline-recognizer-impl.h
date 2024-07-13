@@ -48,6 +48,10 @@ class OfflineRecognizerImpl {
 
   virtual void DecodeStreams(OfflineStream **ss, int32_t n) const = 0;
 
+  virtual void SetConfig(const OfflineRecognizerConfig &config);
+
+  virtual OfflineRecognizerConfig GetConfig() const = 0;
+
   std::string ApplyInverseTextNormalization(std::string text) const;
 
  private:

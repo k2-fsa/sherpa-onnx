@@ -431,4 +431,8 @@ std::string OfflineRecognizerImpl::ApplyInverseTextNormalization(
   return text;
 }
 
+void OfflineRecognizerImpl::SetConfig(const OfflineRecognizerConfig &config) {
+  config_ = config;
+}
+
 }  // namespace sherpa_onnx

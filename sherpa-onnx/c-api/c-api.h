@@ -428,6 +428,11 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineStream SherpaOnnxOfflineStream;
 SHERPA_ONNX_API SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
     const SherpaOnnxOfflineRecognizerConfig *config);
 
+/// @param config  Config for the recognizer.
+SHERPA_ONNX_API void SetSherpaOnnxOfflineRecognizerConfig(
+    const SherpaOnnxOfflineRecognizer *recognizer,
+    const SherpaOnnxOfflineRecognizerConfig *config);
+
 /// Free a pointer returned by CreateOfflineRecognizer()
 ///
 /// @param p A pointer returned by CreateOfflineRecognizer()
@@ -491,7 +496,9 @@ SHERPA_ONNX_API void DecodeMultipleOfflineStreams(
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
   const char *text;
 
-  // Pointer to continuous memory which holds timestamps
+  const char *lang;
+
+    // Pointer to continuous memory which holds timestamps
   //
   // It is NULL if the model does not support timestamps
   float *timestamps;

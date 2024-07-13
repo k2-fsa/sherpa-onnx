@@ -6,14 +6,17 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_WHISPER_DECODER_H_
 
 #include <vector>
+#include <string>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/offline-whisper-model-config.h"
 
 namespace sherpa_onnx {
 
 struct OfflineWhisperDecoderResult {
   /// The decoded token IDs
   std::vector<int32_t> tokens;
+  std::string lang;
 };
 
 class OfflineWhisperDecoder {
@@ -31,6 +34,9 @@ class OfflineWhisperDecoder {
    */
   virtual std::vector<OfflineWhisperDecoderResult> Decode(
       Ort::Value n_layer_cross_k, Ort::Value n_layer_cross_v) = 0;
+
+  virtual void SetConfig(const OfflineWhisperModelConfig &config) = 0;
+
 };
 
 }  // namespace sherpa_onnx
