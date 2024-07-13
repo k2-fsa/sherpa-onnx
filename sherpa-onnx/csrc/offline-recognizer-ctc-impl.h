@@ -212,6 +212,11 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     }
   }
 
+  OfflineRecognizerConfig GetConfig() const override {
+    return config_;
+  }
+
+
  private:
   // Decode a single stream.
   // Some models do not support batch size > 1, e.g., WeNet CTC models.

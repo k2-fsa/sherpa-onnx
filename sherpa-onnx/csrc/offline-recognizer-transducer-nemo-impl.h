@@ -139,6 +139,10 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
     }
   }
 
+  OfflineRecognizerConfig GetConfig() const override {
+    return config_;
+  }
+
  private:
   void PostInit() {
     config_.feat_config.nemo_normalize_type =

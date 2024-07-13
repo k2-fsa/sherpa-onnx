@@ -12,6 +12,10 @@
 
 namespace sherpa_onnx {
 
+void OfflineWhisperGreedySearchDecoder::SetConfig(const OfflineWhisperModelConfig &config) {
+  config_ = config;
+}
+
 std::vector<OfflineWhisperDecoderResult>
 OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
                                           Ort::Value cross_v) {
@@ -128,6 +132,13 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   }
 
   std::vector<OfflineWhisperDecoderResult> ans(1);
+
+  const auto &id2lang = model_->GetID2Lang();
+  if (id2lang.count(initial_tokens[1])) {
+      ans[0].lang = id2lang.at(initial_tokens[1]);
+  } else {
+      ans[0].lang = "";
+  }
 
   ans[0].tokens = std::move(predicted_tokens);
 

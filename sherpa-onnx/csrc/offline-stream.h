@@ -26,7 +26,9 @@ struct OfflineRecognitionResult {
   // For instance, for BPE-based models it consists of a list of BPE tokens.
   std::vector<std::string> tokens;
 
-  /// timestamps.size() == tokens.size()
+  std::string lang;
+
+    /// timestamps.size() == tokens.size()
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   std::vector<float> timestamps;
 

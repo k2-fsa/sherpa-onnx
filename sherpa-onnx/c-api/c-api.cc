@@ -308,7 +308,26 @@ struct SherpaOnnxOfflineStream {
       : impl(std::move(p)) {}
 };
 
+static sherpa_onnx::OfflineRecognizerConfig convertConfig(
+    const SherpaOnnxOfflineRecognizerConfig *config);
 SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
+    const SherpaOnnxOfflineRecognizerConfig *config) {
+  sherpa_onnx::OfflineRecognizerConfig recognizer_config =
+      convertConfig(config);
+
+  if (!recognizer_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config");
+    return nullptr;
+  }
+
+  SherpaOnnxOfflineRecognizer *recognizer = new SherpaOnnxOfflineRecognizer;
+
+  recognizer->impl =
+      std::make_unique<sherpa_onnx::OfflineRecognizer>(recognizer_config);
+
+  return recognizer;
+}
+sherpa_onnx::OfflineRecognizerConfig convertConfig(
     const SherpaOnnxOfflineRecognizerConfig *config) {
   sherpa_onnx::OfflineRecognizerConfig recognizer_config;
 
@@ -398,17 +417,15 @@ SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
     SHERPA_ONNX_LOGE("%s", recognizer_config.ToString().c_str());
   }
 
-  if (!recognizer_config.Validate()) {
-    SHERPA_ONNX_LOGE("Errors in config");
-    return nullptr;
-  }
+  return recognizer_config;
+}
 
-  SherpaOnnxOfflineRecognizer *recognizer = new SherpaOnnxOfflineRecognizer;
-
-  recognizer->impl =
-      std::make_unique<sherpa_onnx::OfflineRecognizer>(recognizer_config);
-
-  return recognizer;
+void SherpaOnnxOfflineRecognizerSetConfig(
+    const SherpaOnnxOfflineRecognizer *recognizer,
+    const SherpaOnnxOfflineRecognizerConfig *config){
+  sherpa_onnx::OfflineRecognizerConfig recognizer_config =
+      convertConfig(config);
+    recognizer->impl->SetConfig(recognizer_config);
 }
 
 void DestroyOfflineRecognizer(SherpaOnnxOfflineRecognizer *recognizer) {
@@ -460,6 +477,13 @@ const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
   std::copy(text.begin(), text.end(), pText);
   pText[text.size()] = 0;
   r->text = pText;
+
+  //lang
+  const auto &lang = result.lang;
+  char *c_lang = new char[lang.size() + 1];
+  std::copy(lang.begin(), lang.end(), c_lang);
+  c_lang[lang.size()] = '\0';
+  r->lang = c_lang;
 
   // copy json
   std::string json = result.AsJsonString();
@@ -517,6 +541,7 @@ void DestroyOfflineRecognizerResult(
     delete[] r->tokens;
     delete[] r->tokens_arr;
     delete[] r->json;
+    delete[] r->lang;
     delete r;
   }
 }

@@ -246,6 +246,11 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     }
   }
 
+  OfflineRecognizerConfig GetConfig() const override {
+    return config_;
+  }
+
+
   void InitHotwords() {
     // each line in hotwords_file contains space-separated words
 

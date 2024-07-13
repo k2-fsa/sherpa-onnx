@@ -211,6 +211,10 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     }
   }
 
+  OfflineRecognizerConfig GetConfig() const override {
+    return config_;
+  }
+
  private:
   std::vector<float> ApplyLFR(const std::vector<float> &in) const {
     int32_t lfr_window_size = model_->LfrWindowSize();

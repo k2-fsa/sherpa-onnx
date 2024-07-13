@@ -45,6 +45,7 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
   }
 
   r.text = text;
+  r.lang = src.lang;
 
   return r;
 }
@@ -100,8 +101,18 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     }
   }
 
+  void SetConfig(const OfflineRecognizerConfig &config) override {
+    config_.model_config.whisper = config.model_config.whisper;
+  }
+
+  OfflineRecognizerConfig GetConfig() const override {
+    return config_;
+  }
+
  private:
   void DecodeStream(OfflineStream *s) const {
+    decoder_->SetConfig(config_.model_config.whisper);
+
     int32_t max_num_frames = 3000;
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
