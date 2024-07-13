@@ -24,8 +24,8 @@ function download_test_wavs() {
 
 function export_large() {
   echo "----------large----------"
-  src=icefall-asr-zipformer-libriheavy-20230830
-  dst=http://sherpa-onnx-zipformer-en-libriheavy-20230830-large-punct-case
+  src=icefall-asr-zipformer-libriheavy-punc-20230830
+  dst=sherpa-onnx-zipformer-en-libriheavy-20230830-large-punct-case
   mkdir $dst
 
   cp -v $src/data/lang_bpe_500/bpe.model $dst/
@@ -57,7 +57,7 @@ function export_large() {
 
 function export_medium() {
   echo "----------medium subset----------"
-  src=icefall-asr-zipformer-libriheavy-20230830
+  src=icefall-asr-zipformer-libriheavy-punc-20230830
   dst=sherpa-onnx-zipformer-en-libriheavy-20230830-medium-punct-case
   mkdir $dst
 
@@ -90,7 +90,7 @@ function export_medium() {
 
 function export_small() {
   echo "----------small subset----------"
-  src=icefall-asr-zipformer-libriheavy-20230830
+  src=icefall-asr-zipformer-libriheavy-punc-20230830
   dst=sherpa-onnx-zipformer-en-libriheavy-20230830-small-punct-case
   mkdir $dst
 
@@ -127,4 +127,4 @@ export_large
 export_medium
 export_small
 
-rm -rf icefall-asr-zipformer-libriheavy-20230830
+rm -rf icefall-asr-zipformer-libriheavy-punc-20230830
