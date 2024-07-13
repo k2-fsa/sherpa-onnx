@@ -3,7 +3,7 @@
 set -ex
 
 if [ ! -f ./silero_vad.onnx ]; then
-  curl -SL -O https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
+  curl -SL -O https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
 fi
 
 if [ ! -f ./sherpa-onnx-paraformer-trilingual-zh-cantonese-en/model.int8.onnx ]; then
