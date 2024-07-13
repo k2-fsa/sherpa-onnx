@@ -90,6 +90,7 @@ class OnnxModel:
         self.n_text_layer = int(meta["n_text_layer"])
         self.n_text_ctx = int(meta["n_text_ctx"])
         self.n_text_state = int(meta["n_text_state"])
+        self.n_mels = int(meta["n_mels"])
         self.sot = int(meta["sot"])
         self.eot = int(meta["eot"])
         self.translate = int(meta["translate"])
@@ -294,8 +295,9 @@ def main():
     args = get_args()
 
     model = OnnxModel(args.encoder, args.decoder)
-    dim = 80 if "large-v3" not in args.encoder else 128
-    mel = compute_features(args.sound_file, dim=dim)
+    n_mels = model.n_mels
+
+    mel = compute_features(args.sound_file, dim=n_mels)
 
     n_layer_cross_k, n_layer_cross_v = model.run_encoder(mel)
 
