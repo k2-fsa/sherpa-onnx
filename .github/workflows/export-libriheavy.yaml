@@ -1,0 +1,136 @@
+name: export-libriheavy-to-onnx
+
+on:
+  push:
+    branches:
+      - libriheavy-model
+  workflow_dispatch:
+
+concurrency:
+  group: export-libriheavy-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-libriheavy-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export libriheavy
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/icefall
+          ./run-libriheavy.sh
+          ./run-libriheavy-punct-case.sh
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            for m in large medium small; do
+              rm -rf huggingface
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+
+              src=sherpa-onnx-zipformer-en-libriheavy-20230926-$m
+              echo "Process $src"
+
+              git clone https://huggingface.co/csukuangfj/$src huggingface
+              cd huggingface
+              git fetch
+              git pull
+
+              cp -av ../scripts/icefall/$src/* .
+
+              git lfs track "*.onnx"
+              git add .
+
+              git commit -m "add large"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$src main || true
+
+              cd ..
+
+              rm -rf huggingface/.git*
+
+              mv huggingface $src
+
+              tar cjvf $src.tar.bz2 $src
+              rm -rf $src
+              ls -lh
+            done
+
+      - name: Publish to huggingface (case and punct)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            for m in large medium small; do
+              rm -rf huggingface
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+
+              src=sherpa-onnx-zipformer-en-libriheavy-20230830-$m-punct-case
+              echo "Process $src"
+
+              git clone https://huggingface.co/csukuangfj/$src huggingface
+              cd huggingface
+              git fetch
+              git pull
+
+              cp -av ../scripts/icefall/$src/* .
+
+              git lfs track "*.onnx"
+              git add .
+
+              git commit -m "add large"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$src main || true
+
+              cd ..
+
+              rm -rf huggingface/.git*
+
+              mv huggingface $src
+
+              tar cjvf $src.tar.bz2 $src
+              rm -rf $src
+              ls -lh
+            done
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+

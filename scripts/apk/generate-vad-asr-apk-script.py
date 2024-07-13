@@ -82,7 +82,7 @@ def get_models():
 
             rm -fv README.md
             rm -rfv test_wavs
-            rm model.onnx
+            rm -fv model.onnx
 
             ls -lh
 
@@ -189,7 +189,7 @@ def get_models():
             pushd $model_name
 
             rm -rfv test_wavs
-            rm test.py
+            rm -fv test.py
 
             ls -lh
 
@@ -208,8 +208,8 @@ def get_models():
             rm -fv README.md
             rm -fv bpe.model
 
-            rm encoder-epoch-12-avg-5.onnx
-            rm decoder-epoch-12-avg-5.int8.onnx
+            rm -fv encoder-epoch-12-avg-5.onnx
+            rm -fv decoder-epoch-12-avg-5.int8.onnx
             rm joiner-epoch-12-avg-5.onnx
 
             ls -lh
@@ -229,9 +229,9 @@ def get_models():
             rm -fv README.md
             rm -fv bpe.model
 
-            rm encoder-epoch-99-avg-1.onnx
-            rm decoder-epoch-99-avg-1.int8.onnx
-            rm joiner-epoch-99-avg-1.onnx
+            rm -fv encoder-epoch-99-avg-1.onnx
+            rm -fv decoder-epoch-99-avg-1.int8.onnx
+            rm -fv joiner-epoch-99-avg-1.onnx
 
             ls -lh
 
