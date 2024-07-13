@@ -97,7 +97,7 @@ jobs:
           ls -lh $src
           echo "--------------------"
 
-          if [[ -f $model-encoder.weights ]]; then
+          if [[ -f $src/$model-encoder.weights ]]; then
             # we only publish int8 models to GitHub for large Whisper models
             mkdir -p bak
             mv -v $src/*weights ./bak
