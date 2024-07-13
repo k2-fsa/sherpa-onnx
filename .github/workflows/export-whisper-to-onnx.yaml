@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "medium-aishell", "large", "large-v1", "large-v2", "distil-large-v2"]
+        model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "medium-aishell", "large", "large-v1", "large-v2", "large-v3", "distil-large-v2"]
         # model: ["large", "large-v1", "large-v2", "large-v3", "distil-large-v2"]
         python-version: ["3.8"]
 
@@ -56,11 +56,7 @@ jobs:
           python3 ./export-onnx.py --model ${{ matrix.model }}
           # python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
           #
-          if [[ $model == medium-aishell ]]; then
-            ls -lh *.onnx
-            rm -fv medium-aishell-encoder.onnx
-            rm -fv medium-aishell-decoder.onnx
-          fi
+
 
           ls -lh
 
@@ -97,16 +93,34 @@ jobs:
           ls -lh $src
           echo "--------------------"
 
-          if [[ $model == large || $model == large-v1 || $model == large-v2 || $model == distil-large-v2  ]]; then
-            echo "Don't release model to github for large models. $model"
+          if [[ $model == medium-aishell ]]; then
+            ls -lh *.onnx # the float32 onnx model for medium-aishell is too large to be uploaded to GitHub
+            mkdir -p bak
+            mv -v $src/$model-encoder.onnx ./bak
+            mv -v $src/$model-decoder.onnx ./bak
+            ls -lh $src
+
+            tar cvjf $src.tar.bz2 $src
+            mv -v ./bak/* $src/
+            rm -rf bak
+          elif [[ -f $src/$model-encoder.weights ]]; then
+            # we only publish int8 models to GitHub for large Whisper models
+            mkdir -p bak
+            mv -v $src/*weights ./bak
+            mv -v $src/$model-encoder.onnx ./bak
+            mv -v $src/$model-decoder.onnx ./bak
+            ls -lh $src
+
+            tar cvjf $src.tar.bz2 $src
+            mv -v ./bak/* $src/
+            rm -rf bak
           else
             tar cvjf $src.tar.bz2 $src
           fi
 
-          ls -lh
+          ls -lh *.tar.bz2
 
       - name: Release
-        if: matrix.model != 'large' && matrix.model != 'large-v1' && matrix.model != 'large-v2' && matrix.model != 'large-v3' && matrix.model != 'distil-large-v2'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -132,9 +146,7 @@ jobs:
 
           git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} huggingface
 
-          if [[ $model != medium-aishell ]]; then
-            rm -rf huggingface/*
-          fi
+          rm -rf huggingface/*
 
           cp -av $src/* ./huggingface/
 
@@ -149,15 +161,25 @@ jobs:
           git commit -m "upload ${{ matrix.model }}"
           git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} main
 
-      - name: Test ${{ matrix.model }}
+      - name: Test float32 ${{ matrix.model }}
         shell: bash
         run: |
           python3 -m pip install kaldi-native-fbank
-          git checkout .
           model=${{ matrix.model }}
           src=sherpa-onnx-whisper-$model
           time python3 scripts/whisper/test.py \
             --encoder $src/$model-encoder.onnx \
             --decoder $src/$model-decoder.onnx \
+            --tokens $src/$model-tokens.txt \
+            $src/test_wavs/0.wav
+
+      - name: Test int8 ${{ matrix.model }}
+        shell: bash
+        run: |
+          model=${{ matrix.model }}
+          src=sherpa-onnx-whisper-$model
+          time python3 scripts/whisper/test.py \
+            --encoder $src/$model-encoder.int8.onnx \
+            --decoder $src/$model-decoder.int8.onnx \
             --tokens $src/$model-tokens.txt \
             $src/test_wavs/0.wav
