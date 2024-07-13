@@ -82,7 +82,7 @@ class Vad(
 }
 
 // Please visit
-// https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx
+// https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
 // to download silero_vad.onnx
 // and put it inside the assets/
 // directory

@@ -2,6 +2,8 @@ name: apk-vad
 
 on:
   push:
+    branches:
+      - apk
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
