@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "medium-aishell", "large", "large-v1", "large-v2", "distil-large-v2"]
+        model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "medium-aishell", "large", "large-v1", "large-v2", "large-v3", "distil-large-v2"]
         # model: ["large", "large-v1", "large-v2", "large-v3", "distil-large-v2"]
         python-version: ["3.8"]
 
@@ -56,11 +56,7 @@ jobs:
           python3 ./export-onnx.py --model ${{ matrix.model }}
           # python3 -m onnxruntime.tools.convert_onnx_models_to_ort --optimization_style=Fixed ./
           #
-          if [[ $model == medium-aishell ]]; then
-            ls -lh *.onnx
-            rm -fv medium-aishell-encoder.onnx
-            rm -fv medium-aishell-decoder.onnx
-          fi
+
 
           ls -lh
 
@@ -97,7 +93,17 @@ jobs:
           ls -lh $src
           echo "--------------------"
 
-          if [[ -f $src/$model-encoder.weights ]]; then
+          if [[ $model == medium-aishell ]]; then
+            ls -lh *.onnx # the float32 onnx model for medium-aishell is too large to be uploaded to GitHub
+            mkdir -p bak
+            mv -v $src/$model-encoder.onnx ./bak
+            mv -v $src/$model-decoder.onnx ./bak
+            ls -lh $src
+
+            tar cvjf $src.tar.bz2 $src
+            mv -v ./bak/* $src/
+            rm -rf bak
+          elif [[ -f $src/$model-encoder.weights ]]; then
             # we only publish int8 models to GitHub for large Whisper models
             mkdir -p bak
             mv -v $src/*weights ./bak
@@ -140,9 +146,7 @@ jobs:
 
           git clone https://huggingface.co/csukuangfj/sherpa-onnx-whisper-${{ matrix.model }} huggingface
 
-          if [[ $model != medium-aishell ]]; then
-            rm -rf huggingface/*
-          fi
+          rm -rf huggingface/*
 
           cp -av $src/* ./huggingface/
 
