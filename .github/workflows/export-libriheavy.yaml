@@ -13,7 +13,7 @@ concurrency:
 jobs:
   export-libriheavy-to-onnx:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: export wenet
+    name: export libriheavy
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -61,7 +61,7 @@ jobs:
               git fetch
               git pull
 
-              cp -v ../scripts/icefall/$src/* .
+              cp -av ../scripts/icefall/$src/* .
 
               git lfs track "*.onnx"
               git add .
@@ -77,6 +77,7 @@ jobs:
 
               tar cjvf $src.tar.bz2 $src
               rm -rf $src
+              ls -lh
             done
 
       - name: Publish to huggingface (case and punct)
@@ -104,7 +105,7 @@ jobs:
               git fetch
               git pull
 
-              cp -v ../scripts/icefall/$src/* .
+              cp -av ../scripts/icefall/$src/* .
 
               git lfs track "*.onnx"
               git add .
@@ -120,6 +121,7 @@ jobs:
 
               tar cjvf $src.tar.bz2 $src
               rm -rf $src
+              ls -lh
             done
 
       - name: Release
