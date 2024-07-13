@@ -46,6 +46,9 @@ dependencies:
   # sherpa_onnx_ios:
     # path: ../sherpa_onnx_ios
 
+dev_dependencies:
+  flutter_lints: ^3.0.0
+
 flutter:
   plugin:
     platforms:
