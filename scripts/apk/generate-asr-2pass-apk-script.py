@@ -80,7 +80,7 @@ def get_2nd_models():
 
             rm -fv README.md
             rm -rfv test_wavs
-            rm model.onnx
+            rm -fv model.onnx
 
             ls -lh
 
