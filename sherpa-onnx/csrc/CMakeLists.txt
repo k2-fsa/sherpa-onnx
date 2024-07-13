@@ -190,6 +190,13 @@ if(SHERPA_ONNX_ENABLE_GPU)
   )
 endif()
 
+if(SHERPA_ONNX_ENABLE_ROCM)
+  target_link_libraries(sherpa-onnx-core
+    onnxruntime_providers_rocm
+    onnxruntime_providers_shared
+  )
+endif()
+
 if(BUILD_SHARED_LIBS)
   target_link_libraries(sherpa-onnx-core onnxruntime)
 else()

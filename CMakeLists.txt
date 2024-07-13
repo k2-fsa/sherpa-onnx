@@ -29,7 +29,8 @@ option(SHERPA_ONNX_ENABLE_PORTAUDIO "Whether to build with portaudio" ON)
 option(SHERPA_ONNX_ENABLE_JNI "Whether to build JNI internface" OFF)
 option(SHERPA_ONNX_ENABLE_C_API "Whether to build C API" ON)
 option(SHERPA_ONNX_ENABLE_WEBSOCKET "Whether to build webscoket server/client" ON)
-option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime GPU support" OFF)
+option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime NVIDIA GPU support" OFF)
+option(SHERPA_ONNX_ENABLE_ROCM "Enable ONNX Runtime AMD GPU support" OFF)
 option(SHERPA_ONNX_ENABLE_WASM "Whether to enable WASM" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_TTS "Whether to enable WASM for TTS" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_ASR "Whether to enable WASM for ASR" OFF)
@@ -82,6 +83,10 @@ if(SHERPA_ONNX_ENABLE_JNI AND NOT BUILD_SHARED_LIBS)
 endif()
 
 if(SHERPA_ONNX_ENABLE_GPU)
+  if(SHERPA_ONNX_ENABLE_ROCM)
+    message(FATAL_ERROR "Both SHERPA_ONNX_ENABLE_GPU and SHERPA_ONNX_ENABLE_ROCM are ON. Please set at most one of them to ON.")
+  endif()
+
   message(WARNING "\
 Compiling for NVIDIA GPU is enabled. Please make sure cudatoolkit
 is installed on your system. Otherwise, you will get errors at runtime.
@@ -90,6 +95,16 @@ Hint: You don't need sudo permission to install CUDA toolkit. Please refer to
 to install CUDA toolkit if you have not installed it.")
   if(NOT BUILD_SHARED_LIBS)
     message(STATUS "Set BUILD_SHARED_LIBS to ON since SHERPA_ONNX_ENABLE_GPU is ON")
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+if(SHERPA_ONNX_ENABLE_ROCM)
+  message(WARNING "\
+Compiling for AMD GPU is enabled. Please make sure ROCm
+is installed on your system. Otherwise, you will get errors at runtime.")
+  if(NOT BUILD_SHARED_LIBS)
+    message(STATUS "Set BUILD_SHARED_LIBS to ON since SHERPA_ONNX_ENABLE_ROCM is ON")
     set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
   endif()
 endif()
@@ -117,6 +132,7 @@ message(STATUS "SHERPA_ONNX_ENABLE_JNI ${SHERPA_ONNX_ENABLE_JNI}")
 message(STATUS "SHERPA_ONNX_ENABLE_C_API ${SHERPA_ONNX_ENABLE_C_API}")
 message(STATUS "SHERPA_ONNX_ENABLE_WEBSOCKET ${SHERPA_ONNX_ENABLE_WEBSOCKET}")
 message(STATUS "SHERPA_ONNX_ENABLE_GPU ${SHERPA_ONNX_ENABLE_GPU}")
+message(STATUS "SHERPA_ONNX_ENABLE_ROCM ${SHERPA_ONNX_ENABLE_ROCM}")
 message(STATUS "SHERPA_ONNX_ENABLE_WASM ${SHERPA_ONNX_ENABLE_WASM}")
 message(STATUS "SHERPA_ONNX_ENABLE_WASM_TTS ${SHERPA_ONNX_ENABLE_WASM_TTS}")
 message(STATUS "SHERPA_ONNX_ENABLE_WASM_ASR ${SHERPA_ONNX_ENABLE_WASM_ASR}")
