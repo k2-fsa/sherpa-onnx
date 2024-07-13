@@ -27,6 +27,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "keyword-spotting-from-files", "keyword-spotting-from-files\keyword-spotting-from-files.csproj", "{A87EDD31-D654-4C9F-AED7-F6F2825659BD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "keyword-spotting-from-microphone", "keyword-spotting-from-microphone\keyword-spotting-from-microphone.csproj", "{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -81,6 +83,10 @@ Global
 		{A87EDD31-D654-4C9F-AED7-F6F2825659BD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A87EDD31-D654-4C9F-AED7-F6F2825659BD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A87EDD31-D654-4C9F-AED7-F6F2825659BD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
