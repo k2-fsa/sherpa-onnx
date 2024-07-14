@@ -1,4 +1,4 @@
-name: export-mel-tts-to-onnx
+name: export-melo-tts-to-onnx
 
 on:
   push:
@@ -6,9 +6,9 @@ on:
       - export-melo-tts-onnx
   workflow_dispatch:
 
-# concurrency:
-#   group: export-melo-tts-to-onnx-${{ github.ref }}
-#   cancel-in-progress: true
+concurrency:
+  group: export-melo-tts-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   export-melo-tts-to-onnx:
@@ -35,6 +35,11 @@ jobs:
           cd scripts/melo-tts
           ./run.sh
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test.wav
+          path: scripts/melo-tts/test.wav
+
       - name: Publish to huggingface (aishell)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -51,14 +56,23 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/csukuangfj/vits-melo-tts-zh-en huggingface
+            git clone https://huggingface.co/csukuangfj/vits-melo-tts-zh_en huggingface
             cd huggingface
             git fetch
             git pull
+            echo "pwd: $PWD"
+            ls -lh ../scripts/melo-tts
 
             cp -v ../scripts/melo-tts/*.onnx .
             cp -v ../scripts/melo-tts/lexicon.txt .
             cp -v ../scripts/melo-tts/tokens.txt .
+
+            curl -SL -O https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
+            curl -SL -O https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
+            curl -SL -O https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
+            curl -SL -O https://github.com/csukuangfj/cppjieba/releases/download/sherpa-onnx-2024-04-19/dict.tar.bz2
+            tar xvf dict.tar.bz2
+            rm dict.tar.bz2
 
             git lfs track "*.onnx"
             git add .
@@ -68,7 +82,7 @@ jobs:
 
             cd ..
 
-            rm -rf huggingface/.git
+            rm -rf huggingface/.git*
             dst=vits-melo-tts-zh_en
 
             mv huggingface $dst

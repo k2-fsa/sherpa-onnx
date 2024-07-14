@@ -35,3 +35,7 @@ echo "---"
 head tokens.txt
 echo "---"
 tail tokens.txt
+
+./test.py
+
+ls -lh
