@@ -310,6 +310,17 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 modelType = "transducer",
             )
         }
+
+        14 -> {
+            val modelDir = "sherpa-onnx-paraformer-zh-small-2024-03-09"
+            return OfflineModelConfig(
+                paraformer = OfflineParaformerModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "paraformer",
+            )
+        }
     }
     return null
 }

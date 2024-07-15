@@ -90,6 +90,29 @@ def get_models():
             """,
         ),
         Model(
+            model_name="sherpa-onnx-paraformer-zh-small-2024-03-09",
+            idx=14,
+            lang="zh",
+            short_name="small_paraformer",
+            rule_fsts="itn_zh_number.fst",
+            cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
+            pushd $model_name
+
+            rm -fv README.md
+            rm -fv *.py
+            rm -fv *.yaml
+            rm -fv *.mvn
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
             model_name="icefall-asr-zipformer-wenetspeech-20230615",
             idx=4,
             lang="zh",
