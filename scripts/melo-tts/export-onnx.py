@@ -6,7 +6,10 @@ import torch
 from melo.api import TTS
 from melo.text import language_id_map, language_tone_start_map
 from melo.text.chinese import pinyin_to_symbol_map
+from melo.text.english import eng_dict, refine_syllables
 from pypinyin import Style, lazy_pinyin, phrases_dict, pinyin_dict
+from melo.text.symbols import language_tone_start_map
+
 
 for k, v in pinyin_to_symbol_map.items():
     pinyin_to_symbol_map[k] = v.split()
@@ -79,6 +82,16 @@ def generate_lexicon():
     word_dict = pinyin_dict.pinyin_dict
     phrases = phrases_dict.phrases_dict
     with open("lexicon.txt", "w", encoding="utf-8") as f:
+        for word in eng_dict:
+            phones, tones = refine_syllables(eng_dict[word])
+            tones = [t + language_tone_start_map["EN"] for t in tones]
+            tones = [str(t) for t in tones]
+
+            phones = " ".join(phones)
+            tones = " ".join(tones)
+
+            f.write(f"{word.lower()} {phones} {tones}\n")
+
         for key in word_dict:
             if not (0x4E00 <= key <= 0x9FA5):
                 continue
@@ -244,7 +257,9 @@ def main():
         "ja_bert_dim": 768,
         "speaker_id": list(model.hps.data.spk2id.values())[0],
         "lang_id": language_id_map[model.language],
-        "tone_start": language_tone_start_map[model.language],
+        "tone_start_zh": language_tone_start_map["ZH"],
+        "tone_start_zh_en": language_tone_start_map["ZH_MIX_EN"],
+        "tone_start_en": language_tone_start_map["EN"],
         "url": "https://github.com/myshell-ai/MeloTTS",
         "license": "MIT license",
         "description": "MeloTTS is a high-quality multi-lingual text-to-speech library by MyShell.ai",

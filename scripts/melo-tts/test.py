@@ -30,6 +30,8 @@ class Lexicon:
                 tones = [int(t) for t in tones]
 
                 lexicon[word_or_phrase] = (phones, tones)
+        lexicon["呣"] = lexicon["母"]
+        lexicon["嗯"] = lexicon["恩"]
         self.lexicon = lexicon
 
         punctuation = ["!", "?", "…", ",", ".", "'", "-"]
@@ -140,10 +142,25 @@ class OnnxModel:
 def main():
     lexicon = Lexicon(lexion_filename="./lexicon.txt", tokens_filename="./tokens.txt")
 
-    text = "永远相信，美好的事情即将发生。多音字测试， 银行，行不行？长沙长大"
+    text = "永远相信，美好的事情即将发生。"
     s = jieba.cut(text, HMM=True)
 
     phones, tones = lexicon.convert(s)
+
+    en_text = "how are you ?".split()
+
+    phones_en, tones_en = lexicon.convert(en_text)
+
+    phones += phones_en
+    tones += tones_en
+
+    text = "多音字测试， 银行，行不行？长沙长大"
+    s = jieba.cut(text, HMM=True)
+
+    phones2, tones2 = lexicon.convert(s)
+
+    phones += phones2
+    tones += tones2
 
     model = OnnxModel("./model.onnx")
     langs = [model.lang_id] * len(phones)
