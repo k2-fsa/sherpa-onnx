@@ -34,8 +34,8 @@ OnlineZipformer2TransducerModel::OnlineZipformer2TransducerModel(
     const OnlineModelConfig &config)
     : env_(ORT_LOGGING_LEVEL_WARNING),
       encoder_sess_opts_(GetSessionOptions(config)),
-      decoder_sess_opts_(GetSessionOptions(config,"decoder")),
-      joiner_sess_opts_(GetSessionOptions(config,"joiner")),
+      decoder_sess_opts_(GetSessionOptions(config, "decoder")),
+      joiner_sess_opts_(GetSessionOptions(config, "joiner")),
       config_(config),
       allocator_{} {
   {

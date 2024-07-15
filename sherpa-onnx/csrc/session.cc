@@ -231,7 +231,7 @@ Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config,
   if(config.provider_config.provider == "trt" &&
       (model_type == "decoder" || model_type == "joiner")) {
     return GetSessionOptionsImpl(config.num_threads,
-        std::string("cuda"), &config.provider_config);
+        "cuda", &config.provider_config);
   }
   return GetSessionOptionsImpl(config.num_threads,
         config.provider_config.provider, &config.provider_config);
