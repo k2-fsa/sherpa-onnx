@@ -10,7 +10,7 @@ set -e
 dir=build-ios-shared
 mkdir -p $dir
 cd $dir
-onnxruntime_version=1.18.1
+onnxruntime_version=1.17.1
 onnxruntime_dir=ios-onnxruntime/$onnxruntime_version
 
 SHERPA_ONNX_GITHUB=github.com

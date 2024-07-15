@@ -26,7 +26,7 @@
 		C9FE9FE42B0F33CD009F1003 /* ViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModel.swift; sourceTree = "<group>"; };
 		C9FE9FE62B0F3620009F1003 /* SherpaOnnx.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = SherpaOnnx.swift; path = "../../../swift-api-examples/SherpaOnnx.swift"; sourceTree = "<group>"; };
 		C9FE9FE92B0F3754009F1003 /* sherpa-onnx.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = "sherpa-onnx.xcframework"; path = "../../build-ios/sherpa-onnx.xcframework"; sourceTree = "<group>"; };
-		C9FE9FEB2B0F3785009F1003 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.18.1/onnxruntime.xcframework"; sourceTree = "<group>"; };
+		C9FE9FEB2B0F3785009F1003 /* onnxruntime.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = onnxruntime.xcframework; path = "../../build-ios/ios-onnxruntime/1.17.1/onnxruntime.xcframework"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
