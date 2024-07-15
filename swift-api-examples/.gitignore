@@ -9,3 +9,4 @@ sherpa-onnx-paraformer-zh-2023-09-14
 *.bak
 streaming-hlg-decode-file
 keyword-spotting-from-file
+add-punctuations
