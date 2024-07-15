@@ -1,3 +1,7 @@
+## 1.10.15
+
+* Downgrade onnxruntime from v1.18.1 to v1.17.1
+
 ## 1.10.14
 
 * Support whisper large v3
