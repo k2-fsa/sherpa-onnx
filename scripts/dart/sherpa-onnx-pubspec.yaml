@@ -17,7 +17,7 @@ topics:
   - voice-activity-detection
 
 # remember to change the version in ../sherpa_onnx_macos/macos/sherpa_onnx.podspec
-version: 1.10.14
+version: 1.10.15
 
 homepage: https://github.com/k2-fsa/sherpa-onnx
 
