@@ -28,6 +28,8 @@ echo "pwd: $PWD"
 
 ls -lh
 
+./show-info.py
+
 head lexicon.txt
 echo "---"
 tail lexicon.txt
