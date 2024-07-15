@@ -7,6 +7,10 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-add-punctuations.sh
+rm ./add-punctuations
+rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
+
 ./run-keyword-spotting-from-file.sh
 rm ./keyword-spotting-from-file
 rm -rf sherpa-onnx-kws-*
