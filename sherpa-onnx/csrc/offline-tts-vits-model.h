@@ -40,6 +40,10 @@ class OfflineTtsVitsModel {
    */
   Ort::Value Run(Ort::Value x, int64_t sid = 0, float speed = 1.0);
 
+  // This is for MeloTTS
+  Ort::Value Run(Ort::Value x, Ort::Value tones, int64_t sid = 0,
+                 float speed = 1.0);
+
   const OfflineTtsVitsModelMetaData &GetMetaData() const;
 
  private:
