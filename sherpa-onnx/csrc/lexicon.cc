@@ -172,7 +172,7 @@ Lexicon::Lexicon(AAssetManager *mgr, const std::string &lexicon,
 }
 #endif
 
-std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIds(
+std::vector<TokenIDs> Lexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*voice*/ /*= ""*/) const {
   switch (language_) {
     case Language::kChinese:
@@ -187,7 +187,7 @@ std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIds(
   return {};
 }
 
-std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsChinese(
+std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
     const std::string &_text) const {
   std::string text(_text);
   ToLowerCase(&text);
@@ -209,7 +209,7 @@ std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsChinese(
     fprintf(stderr, "\n");
   }
 
-  std::vector<std::vector<int64_t>> ans;
+  std::vector<TokenIDs> ans;
   std::vector<int64_t> this_sentence;
 
   int32_t blank = -1;
@@ -288,7 +288,7 @@ std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsChinese(
   return ans;
 }
 
-std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsNotChinese(
+std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsNotChinese(
     const std::string &_text) const {
   std::string text(_text);
   ToLowerCase(&text);
@@ -311,7 +311,7 @@ std::vector<std::vector<int64_t>> Lexicon::ConvertTextToTokenIdsNotChinese(
 
   int32_t blank = token2id_.at(" ");
 
-  std::vector<std::vector<int64_t>> ans;
+  std::vector<TokenIDs> ans;
   std::vector<int64_t> this_sentence;
 
   for (const auto &w : words) {

@@ -33,7 +33,7 @@ class JiebaLexicon : public OfflineTtsFrontend {
                const OfflineTtsVitsModelMetaData &meta_data);
 #endif
 
-  std::vector<std::vector<int64_t>> ConvertTextToTokenIds(
+  std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text,
       const std::string &unused_voice = "") const override;
 

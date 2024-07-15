@@ -8,7 +8,24 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/macros.h"
+
 namespace sherpa_onnx {
+
+struct TokenIDs {
+  TokenIDs() = default;
+
+  /*implicit*/ TokenIDs(const std::vector<int64_t> &tokens)  // NONLINT
+      : tokens{tokens} {}
+
+  /*implicit*/ TokenIDs(const std::vector<int64_t> &tokens,
+                        const std::vector<int64_t> &tones)
+      : tokens{tokens}, tones{tones} {}
+  std::vector<int64_t> tokens;
+
+  // Used only in MeloTTS
+  std::vector<int64_t> tones;
+};
 
 class OfflineTtsFrontend {
  public:
@@ -26,7 +43,7 @@ class OfflineTtsFrontend {
    *         If a frontend does not support splitting the text into sentences,
    *         the resulting vector contains only one subvector.
    */
-  virtual std::vector<std::vector<int64_t>> ConvertTextToTokenIds(
+  virtual std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text, const std::string &voice = "") const = 0;
 };
 

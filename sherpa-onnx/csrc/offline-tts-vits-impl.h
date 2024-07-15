@@ -174,12 +174,19 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       }
     }
 
-    std::vector<std::vector<int64_t>> x =
+    std::vector<TokenIDs> token_ids =
         frontend_->ConvertTextToTokenIds(text, meta_data.voice);
 
-    if (x.empty() || (x.size() == 1 && x[0].empty())) {
+    if (token_ids.empty() ||
+        (token_ids.size() == 1 && token_ids[0].tokens.empty())) {
       SHERPA_ONNX_LOGE("Failed to convert %s to token IDs", text.c_str());
       return {};
+    }
+
+    std::vector<std::vector<int64_t>> x;
+    x.reserve(token_ids.size());
+    for (auto &i : token_ids) {
+      x.push_back(std::move(i.tokens));
     }
 
     // TODO(fangjun): add blank inside the frontend, not here

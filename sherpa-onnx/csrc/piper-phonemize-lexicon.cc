@@ -214,7 +214,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
 }
 #endif
 
-std::vector<std::vector<int64_t>> PiperPhonemizeLexicon::ConvertTextToTokenIds(
+std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string &voice /*= ""*/) const {
   piper::eSpeakPhonemeConfig config;
 
@@ -232,7 +232,7 @@ std::vector<std::vector<int64_t>> PiperPhonemizeLexicon::ConvertTextToTokenIds(
     piper::phonemize_eSpeak(text, config, phonemes);
   }
 
-  std::vector<std::vector<int64_t>> ans;
+  std::vector<TokenIDs> ans;
 
   std::vector<int64_t> phoneme_ids;
 
