@@ -30,6 +30,8 @@ class Lexicon:
                 tones = [int(t) for t in tones]
 
                 lexicon[word_or_phrase] = (phones, tones)
+        lexicon["呣"] = lexicon["母"]
+        lexicon["嗯"] = lexicon["恩"]
         self.lexicon = lexicon
 
         punctuation = ["!", "?", "…", ",", ".", "'", "-"]
@@ -98,20 +100,16 @@ class OnnxModel:
         self.lang_id = int(meta["lang_id"])
         self.sample_rate = int(meta["sample_rate"])
 
-    def __call__(self, x, tones, lang):
+    def __call__(self, x, tones):
         """
         Args:
           x: 1-D int64 torch tensor
           tones: 1-D int64 torch tensor
-          lang: 1-D int64 torch tensor
         """
         x = x.unsqueeze(0)
         tones = tones.unsqueeze(0)
-        lang = lang.unsqueeze(0)
 
-        print(x.shape, tones.shape, lang.shape)
-        bert = torch.zeros(1, self.bert_dim, x.shape[-1])
-        ja_bert = torch.zeros(1, self.ja_bert_dim, x.shape[-1])
+        print(x.shape, tones.shape)
         sid = torch.tensor([self.speaker_id], dtype=torch.int64)
         noise_scale = torch.tensor([0.6], dtype=torch.float32)
         length_scale = torch.tensor([1.0], dtype=torch.float32)
@@ -125,9 +123,6 @@ class OnnxModel:
                 "x": x.numpy(),
                 "x_lengths": x_lengths.numpy(),
                 "tones": tones.numpy(),
-                "lang_id": lang.numpy(),
-                "bert": bert.numpy(),
-                "ja_bert": ja_bert.numpy(),
                 "sid": sid.numpy(),
                 "noise_scale": noise_scale.numpy(),
                 "noise_scale_w": noise_scale_w.numpy(),
@@ -140,34 +135,46 @@ class OnnxModel:
 def main():
     lexicon = Lexicon(lexion_filename="./lexicon.txt", tokens_filename="./tokens.txt")
 
-    text = "永远相信，美好的事情即将发生。多音字测试， 银行，行不行？长沙长大"
+    text = "永远相信，美好的事情即将发生。"
     s = jieba.cut(text, HMM=True)
 
     phones, tones = lexicon.convert(s)
 
+    en_text = "how are you ?".split()
+
+    phones_en, tones_en = lexicon.convert(en_text)
+    phones += [0]
+    tones += [0]
+
+    phones += phones_en
+    tones += tones_en
+
+    text = "多音字测试， 银行，行不行？长沙长大"
+    s = jieba.cut(text, HMM=True)
+
+    phones2, tones2 = lexicon.convert(s)
+
+    phones += phones2
+    tones += tones2
+
     model = OnnxModel("./model.onnx")
-    langs = [model.lang_id] * len(phones)
 
     if model.add_blank:
         new_phones = [0] * (2 * len(phones) + 1)
         new_tones = [0] * (2 * len(tones) + 1)
-        new_langs = [0] * (2 * len(langs) + 1)
 
         new_phones[1::2] = phones
         new_tones[1::2] = tones
-        new_langs[1::2] = langs
 
         phones = new_phones
         tones = new_tones
-        langs = new_langs
 
     phones = torch.tensor(phones, dtype=torch.int64)
     tones = torch.tensor(tones, dtype=torch.int64)
-    langs = torch.tensor(langs, dtype=torch.int64)
 
-    print(phones.shape, tones.shape, langs.shape)
+    print(phones.shape, tones.shape)
 
-    y = model(x=phones, tones=tones, lang=langs)
+    y = model(x=phones, tones=tones)
     sf.write("./test.wav", y, model.sample_rate)
 
 
