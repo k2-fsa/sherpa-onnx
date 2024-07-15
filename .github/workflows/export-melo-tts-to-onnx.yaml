@@ -1,0 +1,101 @@
+name: export-melo-tts-to-onnx
+
+on:
+  push:
+    branches:
+      - export-melo-tts-onnx
+  workflow_dispatch:
+
+concurrency:
+  group: export-melo-tts-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-melo-tts-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export melo-tts
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/melo-tts
+          ./run.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: test.wav
+          path: scripts/melo-tts/test.wav
+
+      - name: Publish to huggingface (aishell)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://huggingface.co/csukuangfj/vits-melo-tts-zh_en huggingface
+            cd huggingface
+            git fetch
+            git pull
+            echo "pwd: $PWD"
+            ls -lh ../scripts/melo-tts
+
+            cp -v ../scripts/melo-tts/*.onnx .
+            cp -v ../scripts/melo-tts/lexicon.txt .
+            cp -v ../scripts/melo-tts/tokens.txt .
+
+            curl -SL -O https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
+            curl -SL -O https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
+            curl -SL -O https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
+            curl -SL -O https://github.com/csukuangfj/cppjieba/releases/download/sherpa-onnx-2024-04-19/dict.tar.bz2
+            tar xvf dict.tar.bz2
+            rm dict.tar.bz2
+
+            git lfs track "*.onnx"
+            git add .
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/vits-melo-tts-zh_en main || true
+
+            cd ..
+
+            rm -rf huggingface/.git*
+            dst=vits-melo-tts-zh_en
+
+            mv huggingface $dst
+
+            tar cjvf $dst.tar.bz2 $dst
+            rm -rf $dst
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
