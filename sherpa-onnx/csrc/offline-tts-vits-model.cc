@@ -180,10 +180,18 @@ class OfflineTtsVitsModel::Impl {
 
     if (comment.find("melo") != std::string::npos) {
       meta_data_.is_melo_tts = true;
-      if (meta_data_.version < 2) {
-        SHERPA_ONNX_LOGE("Please download the latest MeloTTS model and retry");
+      int32_t expected_version = 2;
+      if (meta_data_.version < expected_version) {
+        SHERPA_ONNX_LOGE(
+            "Please download the latest MeloTTS model and retry. Current "
+            "version: %d. Expected version: 2",
+            meta_data_.version);
         exit(-1);
       }
+
+      // NOTE(fangjun):
+      // version 0 is the first version
+      // version 2: add jieba=1 to the metadata
     }
   }
 

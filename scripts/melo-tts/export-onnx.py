@@ -237,9 +237,11 @@ def main():
     meta_data = {
         "model_type": "melo-vits",
         "comment": "melo",
+        "version": 2,
         "language": "Chinese + English",
         "add_blank": int(model.hps.data.add_blank),
         "n_speakers": 1,
+        "jieba": 1,
         "sample_rate": model.hps.data.sampling_rate,
         "bert_dim": 1024,
         "ja_bert_dim": 768,
