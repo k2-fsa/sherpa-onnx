@@ -15,18 +15,19 @@ namespace sherpa_onnx {
 struct TokenIDs {
   TokenIDs() = default;
 
-  /*implicit*/ TokenIDs(const std::vector<int64_t> &tokens)  // NONLINT
+  /*implicit*/ TokenIDs(const std::vector<int64_t> &tokens)  // NOLINT
       : tokens{tokens} {}
 
-  /*implicit*/ TokenIDs(const std::vector<int64_t> &tokens,
-                        const std::vector<int64_t> &tones)
+  TokenIDs(const std::vector<int64_t> &tokens,
+           const std::vector<int64_t> &tones)
       : tokens{tokens}, tones{tones} {}
+
+  std::string ToString() const;
+
   std::vector<int64_t> tokens;
 
   // Used only in MeloTTS
   std::vector<int64_t> tones;
-
-  std::string ToString() const;
 };
 
 class OfflineTtsFrontend {

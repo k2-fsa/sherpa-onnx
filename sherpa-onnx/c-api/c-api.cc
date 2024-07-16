@@ -422,10 +422,10 @@ sherpa_onnx::OfflineRecognizerConfig convertConfig(
 
 void SherpaOnnxOfflineRecognizerSetConfig(
     const SherpaOnnxOfflineRecognizer *recognizer,
-    const SherpaOnnxOfflineRecognizerConfig *config){
+    const SherpaOnnxOfflineRecognizerConfig *config) {
   sherpa_onnx::OfflineRecognizerConfig recognizer_config =
       convertConfig(config);
-    recognizer->impl->SetConfig(recognizer_config);
+  recognizer->impl->SetConfig(recognizer_config);
 }
 
 void DestroyOfflineRecognizer(SherpaOnnxOfflineRecognizer *recognizer) {
@@ -478,7 +478,7 @@ const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
   pText[text.size()] = 0;
   r->text = pText;
 
-  //lang
+  // lang
   const auto &lang = result.lang;
   char *c_lang = new char[lang.size() + 1];
   std::copy(lang.begin(), lang.end(), c_lang);
@@ -1317,7 +1317,7 @@ void SherpaOnnxSpeakerEmbeddingManagerFreeBestMatches(
   }
   delete[] r->matches;
   delete r;
-};
+}
 
 int32_t SherpaOnnxSpeakerEmbeddingManagerVerify(
     const SherpaOnnxSpeakerEmbeddingManager *p, const char *name,

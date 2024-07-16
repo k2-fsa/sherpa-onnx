@@ -184,8 +184,8 @@ class OfflineTtsVitsModel::Impl {
       if (meta_data_.version < expected_version) {
         SHERPA_ONNX_LOGE(
             "Please download the latest MeloTTS model and retry. Current "
-            "version: %d. Expected version: 2",
-            meta_data_.version);
+            "version: %d. Expected version: %d",
+            meta_data_.version, expected_version);
         exit(-1);
       }
 
