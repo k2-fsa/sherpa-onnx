@@ -45,6 +45,21 @@ jobs:
         run: |
           node --version
 
+      - name: Show node-addon
+        shell: bash
+        run: |
+          cd scripts/node-addon-api/
+
+          npm i || true
+          cat node_modules/node-addon-api/package.json
+          cd node_modules/
+          tar cjf node-addon-api.tar.bz2 ./node-addon-api
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: node-addon-api
+          path: ./scripts/node-addon-api/node_modules/node-addon-api.tar.bz2
+
       - name: Build sherpa-onnx
         shell: bash
         run: |
