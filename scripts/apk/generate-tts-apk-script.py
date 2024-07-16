@@ -344,7 +344,7 @@ def get_vits_models() -> List[TtsModel]:
         ),
     ]
 
-    rule_fsts = ["phone.fst", "date.fst", "number.fst", "new_heteronym.fst"]
+    rule_fsts = ["phone.fst", "date.fst", "number.fst"]
     for m in chinese_models:
         s = [f"{m.model_dir}/{r}" for r in rule_fsts]
         if (
