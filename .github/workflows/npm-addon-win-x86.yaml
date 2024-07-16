@@ -123,13 +123,19 @@ jobs:
         shell: bash
         run: |
           ls -lh ./sherpa-onnx-node
+          tar cjvf ./sherpa-onnx-node.tar.bz2 ./sherpa-onnx-node
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-node
+          path: ./sherpa-onnx-node.tar.bz2
 
       - name: Publish
         shell: bash
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          token: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN2 }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN2 }}
+          token: ${{ secrets.NPM_TOKEN2 }}
         run: |
           cd ./sherpa-onnx-node
           npm install
