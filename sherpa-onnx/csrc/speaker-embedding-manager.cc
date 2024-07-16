@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include <utility>
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/macros.h"

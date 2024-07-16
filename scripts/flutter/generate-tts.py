@@ -6,9 +6,6 @@ from typing import List, Optional
 
 import jinja2
 
-# pip install iso639-lang
-from iso639 import Lang
-
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -37,13 +34,6 @@ class TtsModel:
     data_dir: Optional[str] = None
     dict_dir: Optional[str] = None
     is_char: bool = False
-    lang_iso_639_3: str = ""
-
-
-def convert_lang_to_iso_639_3(models: List[TtsModel]):
-    for m in models:
-        if m.lang_iso_639_3 == "":
-            m.lang_iso_639_3 = Lang(m.lang).pt3
 
 
 def get_coqui_models() -> List[TtsModel]:
@@ -313,6 +303,11 @@ def get_vits_models() -> List[TtsModel]:
             lang="zh",
         ),
         TtsModel(
+            model_dir="vits-melo-tts-zh_en",
+            model_name="model.onnx",
+            lang="zh_en",
+        ),
+        TtsModel(
             model_dir="vits-zh-hf-fanchen-C",
             model_name="vits-zh-hf-fanchen-C.onnx",
             lang="zh",
@@ -332,26 +327,33 @@ def get_vits_models() -> List[TtsModel]:
             model_name="vits-zh-hf-fanchen-unity.onnx",
             lang="zh",
         ),
+        TtsModel(
+            model_dir="sherpa-onnx-vits-zh-ll",
+            model_name="model.onnx",
+            lang="zh",
+        ),
     ]
 
-    rule_fsts = ["phone.fst", "date.fst", "number.fst", "new_heteronym.fst"]
+    rule_fsts = ["phone.fst", "date.fst", "number.fst"]
     for m in chinese_models:
         s = [f"{m.model_dir}/{r}" for r in rule_fsts]
-        if "vits-zh-hf" in m.model_dir:
+        if (
+            "vits-zh-hf" in m.model_dir
+            or "sherpa-onnx-vits-zh-ll" == m.model_dir
+            or "melo-tts" in m.model_dir
+        ):
             s = s[:-1]
             m.dict_dir = m.model_dir + "/dict"
+        else:
+            m.rule_fars = f"{m.model_dir}/rule.far"
 
         m.rule_fsts = ",".join(s)
-
-        if "vits-zh-hf" not in m.model_dir:
-            m.rule_fars = f"{m.model_dir}/rule.far"
 
     all_models = chinese_models + [
         TtsModel(
             model_dir="vits-cantonese-hf-xiaomaiiwn",
             model_name="vits-cantonese-hf-xiaomaiiwn.onnx",
             lang="cantonese",
-            lang_iso_639_3="yue",
             rule_fsts="vits-cantonese-hf-xiaomaiiwn/rule.fst",
         ),
         # English (US)
@@ -374,7 +376,6 @@ def main():
     all_model_list += get_piper_models()
     all_model_list += get_mimic3_models()
     all_model_list += get_coqui_models()
-    convert_lang_to_iso_639_3(all_model_list)
 
     num_models = len(all_model_list)
 

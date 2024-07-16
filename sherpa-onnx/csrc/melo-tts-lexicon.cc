@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/jieba-lexicon.cc
+// sherpa-onnx/csrc/melo-tts-lexicon.cc
 //
 // Copyright (c)  2022-2024  Xiaomi Corporation
 
-#include "sherpa-onnx/csrc/jieba-lexicon.h"
+#include "sherpa-onnx/csrc/melo-tts-lexicon.h"
 
 #include <fstream>
 #include <regex>  // NOLINT
@@ -22,7 +22,7 @@ std::vector<int32_t> ConvertTokensToIds(
     const std::unordered_map<std::string, int32_t> &token2id,
     const std::vector<std::string> &tokens);
 
-class JiebaLexicon::Impl {
+class MeloTtsLexicon::Impl {
  public:
   Impl(const std::string &lexicon, const std::string &tokens,
        const std::string &dict_dir,
@@ -54,20 +54,21 @@ class JiebaLexicon::Impl {
     }
   }
 
-  std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &text) const {
+  std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
+    std::string text = ToLowerCase(_text);
     // see
     // https://github.com/Plachtaa/VITS-fast-fine-tuning/blob/main/text/mandarin.py#L244
     std::regex punct_re{"：|、|；"};
-    std::string s = std::regex_replace(text, punct_re, "，");
+    std::string s = std::regex_replace(text, punct_re, ",");
 
-    std::regex punct_re2("[.]");
-    s = std::regex_replace(s, punct_re2, "。");
+    std::regex punct_re2("。");
+    s = std::regex_replace(s, punct_re2, ".");
 
-    std::regex punct_re3("[?]");
-    s = std::regex_replace(s, punct_re3, "？");
+    std::regex punct_re3("？");
+    s = std::regex_replace(s, punct_re3, "?");
 
-    std::regex punct_re4("[!]");
-    s = std::regex_replace(s, punct_re4, "！");
+    std::regex punct_re4("！");
+    s = std::regex_replace(s, punct_re4, "!");
 
     std::vector<std::string> words;
     bool is_hmm = true;
@@ -88,26 +89,28 @@ class JiebaLexicon::Impl {
     }
 
     std::vector<TokenIDs> ans;
-    std::vector<int64_t> this_sentence;
+    TokenIDs this_sentence;
 
-    int32_t blank = token2id_.at(" ");
+    int32_t blank = token2id_.at("_");
     for (const auto &w : words) {
       auto ids = ConvertWordToIds(w);
-      if (ids.empty()) {
+      if (ids.tokens.empty()) {
         SHERPA_ONNX_LOGE("Ignore OOV '%s'", w.c_str());
         continue;
       }
 
-      this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
-      this_sentence.push_back(blank);
+      this_sentence.tokens.insert(this_sentence.tokens.end(),
+                                  ids.tokens.begin(), ids.tokens.end());
+      this_sentence.tones.insert(this_sentence.tones.end(), ids.tones.begin(),
+                                 ids.tones.end());
 
-      if (w == "。" || w == "！" || w == "？" || w == "，") {
+      if (w == "." || w == "!" || w == "?" || w == ",") {
         ans.push_back(std::move(this_sentence));
         this_sentence = {};
       }
     }  // for (const auto &w : words)
 
-    if (!this_sentence.empty()) {
+    if (!this_sentence.tokens.empty()) {
       ans.push_back(std::move(this_sentence));
     }
 
@@ -115,22 +118,24 @@ class JiebaLexicon::Impl {
   }
 
  private:
-  std::vector<int32_t> ConvertWordToIds(const std::string &w) const {
+  TokenIDs ConvertWordToIds(const std::string &w) const {
     if (word2ids_.count(w)) {
       return word2ids_.at(w);
     }
 
     if (token2id_.count(w)) {
-      return {token2id_.at(w)};
+      return {{token2id_.at(w)}, {0}};
     }
 
-    std::vector<int32_t> ans;
+    TokenIDs ans;
 
     std::vector<std::string> words = SplitUtf8(w);
     for (const auto &word : words) {
       if (word2ids_.count(word)) {
         auto ids = ConvertWordToIds(word);
-        ans.insert(ans.end(), ids.begin(), ids.end());
+        ans.tokens.insert(ans.tokens.end(), ids.tokens.begin(),
+                          ids.tokens.end());
+        ans.tones.insert(ans.tones.end(), ids.tones.begin(), ids.tones.end());
       }
     }
 
@@ -139,6 +144,7 @@ class JiebaLexicon::Impl {
 
   void InitTokens(std::istream &is) {
     token2id_ = ReadTokens(is);
+    token2id_[" "] = token2id_["_"];
 
     std::vector<std::pair<std::string, std::string>> puncts = {
         {",", "，"}, {".", "。"}, {"!", "！"}, {"?", "？"}};
@@ -161,6 +167,10 @@ class JiebaLexicon::Impl {
   void InitLexicon(std::istream &is) {
     std::string word;
     std::vector<std::string> token_list;
+
+    std::vector<std::string> phone_list;
+    std::vector<int64_t> tone_list;
+
     std::string line;
     std::string phone;
     int32_t line_num = 0;
@@ -171,6 +181,8 @@ class JiebaLexicon::Impl {
       std::istringstream iss(line);
 
       token_list.clear();
+      phone_list.clear();
+      tone_list.clear();
 
       iss >> word;
       ToLowerCase(&word);
@@ -185,18 +197,47 @@ class JiebaLexicon::Impl {
         token_list.push_back(std::move(phone));
       }
 
-      std::vector<int32_t> ids = ConvertTokensToIds(token2id_, token_list);
+      if ((token_list.size() & 1) != 0) {
+        SHERPA_ONNX_LOGE("Invalid line %d: '%s'", line_num, line.c_str());
+        exit(-1);
+      }
+
+      int32_t num_phones = token_list.size() / 2;
+      phone_list.reserve(num_phones);
+      tone_list.reserve(num_phones);
+
+      for (int32_t i = 0; i != num_phones; ++i) {
+        phone_list.push_back(std::move(token_list[i]));
+        tone_list.push_back(std::stoi(token_list[i + num_phones], nullptr));
+        if (tone_list.back() < 0 || tone_list.back() > 50) {
+          SHERPA_ONNX_LOGE("Invalid line %d: '%s'", line_num, line.c_str());
+          exit(-1);
+        }
+      }
+
+      std::vector<int32_t> ids = ConvertTokensToIds(token2id_, phone_list);
       if (ids.empty()) {
         continue;
       }
 
-      word2ids_.insert({std::move(word), std::move(ids)});
+      if (ids.size() != num_phones) {
+        SHERPA_ONNX_LOGE("Invalid line %d: '%s'", line_num, line.c_str());
+        exit(-1);
+      }
+
+      std::vector<int64_t> ids64{ids.begin(), ids.end()};
+
+      word2ids_.insert(
+          {std::move(word), TokenIDs{std::move(ids64), std::move(tone_list)}});
     }
+
+    word2ids_["呣"] = word2ids_["母"];
+    word2ids_["嗯"] = word2ids_["恩"];
   }
 
  private:
   // lexicon.txt is saved in word2ids_
-  std::unordered_map<std::string, std::vector<int32_t>> word2ids_;
+  std::unordered_map<std::string, TokenIDs> word2ids_;
 
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
@@ -207,17 +248,17 @@ class JiebaLexicon::Impl {
   bool debug_ = false;
 };
 
-JiebaLexicon::~JiebaLexicon() = default;
+MeloTtsLexicon::~MeloTtsLexicon() = default;
 
-JiebaLexicon::JiebaLexicon(const std::string &lexicon,
-                           const std::string &tokens,
-                           const std::string &dict_dir,
-                           const OfflineTtsVitsModelMetaData &meta_data,
-                           bool debug)
+MeloTtsLexicon::MeloTtsLexicon(const std::string &lexicon,
+                               const std::string &tokens,
+                               const std::string &dict_dir,
+                               const OfflineTtsVitsModelMetaData &meta_data,
+                               bool debug)
     : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, meta_data,
                                    debug)) {}
 
-std::vector<TokenIDs> JiebaLexicon::ConvertTextToTokenIds(
+std::vector<TokenIDs> MeloTtsLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {
   return impl_->ConvertTextToTokenIds(text);
 }

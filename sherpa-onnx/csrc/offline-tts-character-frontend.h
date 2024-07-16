@@ -41,7 +41,7 @@ class OfflineTtsCharacterFrontend : public OfflineTtsFrontend {
    *         If a frontend does not support splitting the text into
    * sentences, the resulting vector contains only one subvector.
    */
-  std::vector<std::vector<int64_t>> ConvertTextToTokenIds(
+  std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text, const std::string &voice = "") const override;
 
  private:

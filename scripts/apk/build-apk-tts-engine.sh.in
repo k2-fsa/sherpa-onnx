@@ -78,6 +78,10 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
 git diff
 popd
 
+if [[ $model_dir == vits-melo-tts-zh_en ]]; then
+  lang=zh_en
+fi
+
 for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   log "------------------------------------------------------------"
   log "build tts apk for $arch"

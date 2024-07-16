@@ -8,7 +8,6 @@ from melo.text import language_id_map, language_tone_start_map
 from melo.text.chinese import pinyin_to_symbol_map
 from melo.text.english import eng_dict, refine_syllables
 from pypinyin import Style, lazy_pinyin, phrases_dict, pinyin_dict
-from melo.text.symbols import language_tone_start_map
 
 for k, v in pinyin_to_symbol_map.items():
     if isinstance(v, list):
@@ -82,6 +81,7 @@ def generate_tokens(symbol_list):
 def generate_lexicon():
     word_dict = pinyin_dict.pinyin_dict
     phrases = phrases_dict.phrases_dict
+    eng_dict["kaldi"] = [["K", "AH0"], ["L", "D", "IH0"]]
     with open("lexicon.txt", "w", encoding="utf-8") as f:
         for word in eng_dict:
             phones, tones = refine_syllables(eng_dict[word])
@@ -237,9 +237,11 @@ def main():
     meta_data = {
         "model_type": "melo-vits",
         "comment": "melo",
+        "version": 2,
         "language": "Chinese + English",
         "add_blank": int(model.hps.data.add_blank),
         "n_speakers": 1,
+        "jieba": 1,
         "sample_rate": model.hps.data.sampling_rate,
         "bert_dim": 1024,
         "ja_bert_dim": 768,

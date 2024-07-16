@@ -63,10 +63,16 @@ jobs:
             echo "pwd: $PWD"
             ls -lh ../scripts/melo-tts
 
+            rm -rf ./
+
             cp -v ../scripts/melo-tts/*.onnx .
             cp -v ../scripts/melo-tts/lexicon.txt .
             cp -v ../scripts/melo-tts/tokens.txt .
+            cp -v ../scripts/melo-tts/README.md .
 
+            curl -SL -O https://raw.githubusercontent.com/myshell-ai/MeloTTS/main/LICENSE
+
+            curl -SL -O https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/new_heteronym.fst
             curl -SL -O https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
             curl -SL -O https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
             curl -SL -O https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
@@ -76,6 +82,10 @@ jobs:
 
             git lfs track "*.onnx"
             git add .
+
+            ls -lh
+
+            git status
 
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/vits-melo-tts-zh_en main || true
