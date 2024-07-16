@@ -4,6 +4,7 @@ import re
 from pathlib import Path
 from typing import List, Optional, Union
 
+
 def text2token(
     texts: List[str],
     tokens: str,
@@ -33,20 +34,20 @@ def text2token(
       is True, or it is a list of list of tokens.
     """
     try:
-      import sentencepiece as spm
+        import sentencepiece as spm
     except ImportError:
-        print('Please run')
-        print('  pip install sentencepiece')
-        print('before you continue')
+        print("Please run")
+        print("  pip install sentencepiece")
+        print("before you continue")
         raise
 
     try:
         from pypinyin import pinyin
         from pypinyin.contrib.tone_convert import to_initials, to_finals_tone
     except ImportError:
-        print('Please run')
-        print('  pip install pypinyin')
-        print('before you continue')
+        print("Please run")
+        print("  pip install pypinyin")
+        print("before you continue")
         raise
 
     assert Path(tokens).is_file(), f"File not exists, {tokens}"
@@ -119,7 +120,10 @@ def text2token(
             if txt in tokens_table:
                 text_list.append(tokens_table[txt] if output_ids else txt)
             else:
-                print(f"OOV token : {txt}, skipping text : {text}.")
+                print(
+                    f"Can't find token {txt} in token table, check your "
+                    f"tokens.txt see if {txt} in it. skipping text : {text}."
+                )
                 contain_oov = True
                 break
         if contain_oov:
