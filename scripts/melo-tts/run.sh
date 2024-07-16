@@ -12,7 +12,7 @@ function install() {
   cd MeloTTS
   pip install -r ./requirements.txt
 
-  pip install soundfile onnx onnxruntime
+  pip install soundfile onnx==1.15.0 onnxruntime==1.16.3
 
   python3 -m unidic download
   popd
