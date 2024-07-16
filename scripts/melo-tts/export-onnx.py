@@ -7,8 +7,8 @@ from melo.api import TTS
 from melo.text import language_id_map, language_tone_start_map
 from melo.text.chinese import pinyin_to_symbol_map
 from melo.text.english import eng_dict, refine_syllables
+from onnxruntime.quantization import QuantType, quantize_dynamic
 from pypinyin import Style, lazy_pinyin, phrases_dict, pinyin_dict
-from melo.text.symbols import language_tone_start_map
 
 for k, v in pinyin_to_symbol_map.items():
     if isinstance(v, list):
@@ -254,6 +254,17 @@ def main():
         "description": "MeloTTS is a high-quality multi-lingual text-to-speech library by MyShell.ai",
     }
     add_meta_data(filename, meta_data)
+
+    print("Generate int8 quantization models")
+
+    filename_int8 = "model.int8.onnx"
+    quantize_dynamic(
+        model_input=filename,
+        model_output=filename_int8,
+        weight_type=QuantType.QUInt8,
+    )
+
+    print(f"Saved to {filename} and {filename_int8}")
 
 
 if __name__ == "__main__":
