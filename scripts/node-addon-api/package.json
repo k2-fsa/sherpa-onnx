@@ -4,7 +4,7 @@
   "description": "Speech-to-text and text-to-speech using Next-gen Kaldi without internet connection",
   "dependencies": {
     "cmake-js": "^6.0.0",
-    "node-addon-api": "^8.0.0",
+    "node-addon-api": "^1.1.0",
     "perf_hooks": "*"
   },
   "scripts": {
