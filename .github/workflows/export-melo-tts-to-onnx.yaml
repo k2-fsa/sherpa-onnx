@@ -63,6 +63,8 @@ jobs:
             echo "pwd: $PWD"
             ls -lh ../scripts/melo-tts
 
+            rm -rf ./
+
             cp -v ../scripts/melo-tts/*.onnx .
             cp -v ../scripts/melo-tts/lexicon.txt .
             cp -v ../scripts/melo-tts/tokens.txt .
@@ -79,6 +81,10 @@ jobs:
 
             git lfs track "*.onnx"
             git add .
+
+            ls -lh
+
+            git status
 
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/vits-melo-tts-zh_en main || true

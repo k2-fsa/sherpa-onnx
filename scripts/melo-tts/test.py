@@ -135,7 +135,7 @@ class OnnxModel:
 def main():
     lexicon = Lexicon(lexion_filename="./lexicon.txt", tokens_filename="./tokens.txt")
 
-    text = "这是一个使用 next generation kaldi 的 text to speech 中英文例子. 越来越流行. 你觉得如何呢? are you ok? Fantastic! How about you?"
+    text = "这是一个使用 next generation kaldi 的 text to speech 中英文例子. Thank you! 你觉得如何呢? are you ok? Fantastic! How about you?"
     s = jieba.cut(text, HMM=True)
 
     phones, tones = lexicon.convert(s)
