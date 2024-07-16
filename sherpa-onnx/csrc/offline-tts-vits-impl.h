@@ -250,10 +250,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       batch_tones.clear();
       for (int32_t i = 0; i != batch_size; ++i, ++k) {
         batch_x.push_back(std::move(x[k]));
-      }
 
-      if (!tones.empty()) {
-        for (int32_t i = 0; i != batch_size; ++i, ++k) {
+        if (!tones.empty()) {
           batch_tones.push_back(std::move(tones[k]));
         }
       }
@@ -306,17 +304,6 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (meta_data.frontend == "characters") {
       frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
           mgr, config_.model.vits.tokens, meta_data);
-    } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty() &&
-               meta_data.is_melo_tts) {
-      frontend_ = std::make_unique<MeloTtsLexicon>(
-          mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, model_->GetMetaData(),
-          config_.model.debug);
-    } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty()) {
-      frontend_ = std::make_unique<JiebaLexicon>(
-          mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, model_->GetMetaData(),
-          config_.model.debug);
     } else if ((meta_data.is_piper || meta_data.is_coqui ||
                 meta_data.is_icefall) &&
                !config_.model.vits.data_dir.empty()) {

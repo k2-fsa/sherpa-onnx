@@ -59,16 +59,16 @@ class MeloTtsLexicon::Impl {
     // see
     // https://github.com/Plachtaa/VITS-fast-fine-tuning/blob/main/text/mandarin.py#L244
     std::regex punct_re{"：|、|；"};
-    std::string s = std::regex_replace(text, punct_re, "，");
+    std::string s = std::regex_replace(text, punct_re, ",");
 
-    std::regex punct_re2("[.]");
-    s = std::regex_replace(s, punct_re2, "。");
+    std::regex punct_re2("。");
+    s = std::regex_replace(s, punct_re2, ".");
 
-    std::regex punct_re3("[?]");
-    s = std::regex_replace(s, punct_re3, "？");
+    std::regex punct_re3("？");
+    s = std::regex_replace(s, punct_re3, "?");
 
-    std::regex punct_re4("[!]");
-    s = std::regex_replace(s, punct_re4, "！");
+    std::regex punct_re4("！");
+    s = std::regex_replace(s, punct_re4, "!");
 
     std::vector<std::string> words;
     bool is_hmm = true;
@@ -104,7 +104,7 @@ class MeloTtsLexicon::Impl {
       this_sentence.tones.insert(this_sentence.tones.end(), ids.tones.begin(),
                                  ids.tones.end());
 
-      if (w == "。" || w == "！" || w == "？" || w == "，") {
+      if (w == "." || w == "!" || w == "?" || w == ",") {
         ans.push_back(std::move(this_sentence));
         this_sentence = {};
       }
@@ -230,6 +230,9 @@ class MeloTtsLexicon::Impl {
       word2ids_.insert(
           {std::move(word), TokenIDs{std::move(ids64), std::move(tone_list)}});
     }
+
+    word2ids_["呣"] = word2ids_["母"];
+    word2ids_["嗯"] = word2ids_["恩"];
   }
 
  private:
