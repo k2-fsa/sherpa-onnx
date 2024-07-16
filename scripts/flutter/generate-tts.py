@@ -6,9 +6,6 @@ from typing import List, Optional
 
 import jinja2
 
-# pip install iso639-lang
-from iso639 import Lang
-
 
 def get_args():
     parser = argparse.ArgumentParser()
@@ -37,13 +34,6 @@ class TtsModel:
     data_dir: Optional[str] = None
     dict_dir: Optional[str] = None
     is_char: bool = False
-    lang_iso_639_3: str = ""
-
-
-def convert_lang_to_iso_639_3(models: List[TtsModel]):
-    for m in models:
-        if m.lang_iso_639_3 == "":
-            m.lang_iso_639_3 = Lang(m.lang).pt3
 
 
 def get_coqui_models() -> List[TtsModel]:
@@ -315,7 +305,7 @@ def get_vits_models() -> List[TtsModel]:
         TtsModel(
             model_dir="vits-melo-tts-zh_en",
             model_name="model.onnx",
-            lang="zh",
+            lang="zh_en",
         ),
         TtsModel(
             model_dir="vits-zh-hf-fanchen-C",
@@ -364,7 +354,6 @@ def get_vits_models() -> List[TtsModel]:
             model_dir="vits-cantonese-hf-xiaomaiiwn",
             model_name="vits-cantonese-hf-xiaomaiiwn.onnx",
             lang="cantonese",
-            lang_iso_639_3="yue",
             rule_fsts="vits-cantonese-hf-xiaomaiiwn/rule.fst",
         ),
         # English (US)
@@ -387,7 +376,6 @@ def main():
     all_model_list += get_piper_models()
     all_model_list += get_mimic3_models()
     all_model_list += get_coqui_models()
-    convert_lang_to_iso_639_3(all_model_list)
 
     num_models = len(all_model_list)
 
