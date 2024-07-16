@@ -82,6 +82,7 @@ def generate_tokens(symbol_list):
 def generate_lexicon():
     word_dict = pinyin_dict.pinyin_dict
     phrases = phrases_dict.phrases_dict
+    eng_dict["kaldi"] = [["K", "AH0"], ["L", "D", "IH0"]]
     with open("lexicon.txt", "w", encoding="utf-8") as f:
         for word in eng_dict:
             phones, tones = refine_syllables(eng_dict[word])
