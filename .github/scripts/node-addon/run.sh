@@ -12,12 +12,10 @@ arch=$(node -p "require('os').arch()")
 echo "platform: $platform"
 echo "arch: $arch"
 
-platform2=$platform
-arch2=$arch
+# ia32 for win x86
 
-if [[ $platform == win32 && $arch == ia32 ]]; then
-  arch2=x86
-fi
+platform2=$platform
+
 
 if [[ $platform == win32 ]]; then
   platform2=win
@@ -37,7 +35,6 @@ sed -i.bak s/SHERPA_ONNX_VERSION/$SHERPA_ONNX_VERSION/g $src_dir/package-optiona
 sed -i.bak s/k2-fsa/$owner/g $src_dir/package-optional.json
 sed -i.bak s/PLATFORM2/$platform2/g $src_dir/package-optional.json
 sed -i.bak s/PLATFORM/$platform/g $src_dir/package-optional.json
-sed -i.bak s/ARCH2/$arch2/g $src_dir/package-optional.json
 sed -i.bak s/ARCH/$arch/g $src_dir/package-optional.json
 
 git diff $src_dir/package-optional.json

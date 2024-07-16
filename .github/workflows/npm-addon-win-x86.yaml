@@ -16,7 +16,7 @@ permissions:
   id-token: write
 
 jobs:
-  npm-addon-win-x86:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -127,8 +127,44 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-node
+          name: sherpa-onnx-win-ia32
           path: ./sherpa-onnx-node.tar.bz2
+
+  upload:
+    needs: [build]
+    name: upload
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Display node version
+        shell: bash
+        run: |
+          node --version
+
+      - name: Retrieve artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sherpa-onnx-win-ia32
+          path: /tmp/files/
+
+      - name: Unzip
+        shell: bash
+        run: |
+          cd /tmp/files
+          tar xvf sherpa-onnx-node.tar.bz2
 
       - name: Publish
         shell: bash
@@ -137,8 +173,5 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN2 }}
           token: ${{ secrets.NPM_TOKEN2 }}
         run: |
-          cd ./sherpa-onnx-node
-          npm install
-          npm ci
-          # see https://docs.npmjs.com/generating-provenance-statements
-          npm publish --provenance --access public
+          cd /tmp/files/sherpa-onnx-node
+          npm publish --access public
