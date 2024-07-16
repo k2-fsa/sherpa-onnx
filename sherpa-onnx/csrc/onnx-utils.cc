@@ -153,14 +153,20 @@ Ort::Value View(Ort::Value *v) {
   }
 }
 
+template <typename T /*= float*/>
 void Print1D(Ort::Value *v) {
   std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
-  const float *d = v->GetTensorData<float>();
+  const T *d = v->GetTensorData<T>();
+  std::ostringstream os;
   for (int32_t i = 0; i != static_cast<int32_t>(shape[0]); ++i) {
-    fprintf(stderr, "%.3f ", d[i]);
+    os << *d << " ";
   }
-  fprintf(stderr, "\n");
+  os << "\n";
+  fprintf(stderr, "%s\n", os.str().c_str());
 }
+
+template void Print1D<int64_t>(Ort::Value *v);
+template void Print1D<float>(Ort::Value *v);
 
 template <typename T /*= float*/>
 void Print2D(Ort::Value *v) {

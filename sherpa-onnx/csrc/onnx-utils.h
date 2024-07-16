@@ -69,6 +69,7 @@ Ort::Value Clone(OrtAllocator *allocator, const Ort::Value *v);
 Ort::Value View(Ort::Value *v);
 
 // Print a 1-D tensor to stderr
+template <typename T = float>
 void Print1D(Ort::Value *v);
 
 // Print a 2-D tensor to stderr

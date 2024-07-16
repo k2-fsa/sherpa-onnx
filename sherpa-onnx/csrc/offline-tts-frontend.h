@@ -25,6 +25,8 @@ struct TokenIDs {
 
   // Used only in MeloTTS
   std::vector<int64_t> tones;
+
+  std::string ToString() const;
 };
 
 class OfflineTtsFrontend {

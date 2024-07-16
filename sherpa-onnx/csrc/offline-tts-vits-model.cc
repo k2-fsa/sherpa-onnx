@@ -46,6 +46,9 @@ class OfflineTtsVitsModel::Impl {
   }
 
   Ort::Value Run(Ort::Value x, Ort::Value tones, int64_t sid, float speed) {
+    // For MeloTTS, we hardcode sid to the one contained in the meta data
+    sid = meta_data_.speaker_id;
+
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -138,6 +141,10 @@ class OfflineTtsVitsModel::Impl {
     SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.add_blank, "add_blank",
                                             0);
+
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.speaker_id, "speaker_id",
+                                            0);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 0);
     SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
     SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.punctuations,
                                                 "punctuation", "");
@@ -173,6 +180,10 @@ class OfflineTtsVitsModel::Impl {
 
     if (comment.find("melo") != std::string::npos) {
       meta_data_.is_melo_tts = true;
+      if (meta_data_.version < 2) {
+        SHERPA_ONNX_LOGE("Please download the latest MeloTTS model and retry");
+        exit(-1);
+      }
     }
   }
 
