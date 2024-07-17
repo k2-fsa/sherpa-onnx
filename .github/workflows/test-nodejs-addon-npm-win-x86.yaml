@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - fix-node-addon-win64
     paths:
       - '.github/workflows/test-nodejs-addon-npm-win-x86.yaml'
       - 'CMakeLists.txt'
