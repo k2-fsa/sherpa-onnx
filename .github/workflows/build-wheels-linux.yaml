@@ -56,7 +56,6 @@ jobs:
           ls -lh ./wheelhouse/
 
       - name: Install patchelf
-        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           sudo apt-get update -q
@@ -65,7 +64,6 @@ jobs:
 
       - name: Patch wheels
         shell: bash
-        if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir ./wheels
           sudo ./scripts/wheel/patch_wheel.py --in-dir ./wheelhouse --out-dir ./wheels
