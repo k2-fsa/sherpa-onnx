@@ -1,9 +1,10 @@
-name: build-wheels-linux-cuda
+name: build-wheels-win64-cuda
 
 on:
   push:
     branches:
       - wheel
+      - wheel-cuda
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
@@ -12,17 +13,17 @@ env:
   SHERPA_ONNX_IS_IN_GITHUB_ACTIONS: 1
 
 concurrency:
-  group: build-wheels-linux-cuda-${{ github.ref }}
+  group: build-wheels-win64-cuda-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build_wheels_linux_cuda:
-    name: ${{ matrix.manylinux }} ${{ matrix.python-version }}
+  build_wheels_win64_cuda:
+    name: ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
+        os: [windows-2019]
         python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
 
     steps:
@@ -33,37 +34,16 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Python dependencies
+      - name: Build wheels
         shell: bash
         run: |
-          pip install -U pip wheel setuptools twine
+          pip install setuptools wheel
 
-      - name: Build alsa-lib
-        shell: bash
-        run: |
-          git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
-          cd alsa-lib
-          ./gitcompile
-
-      - name: Build sherpa-onnx
-        shell: bash
-        run: |
-          export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
-          export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
-          export LD_LIBRARY_PATH=$SHERPA_ONNX_ALSA_LIB_DIR:$LD_LIBRARY_PATH
-
-          echo "CPLUS_INCLUDE_PATH: $CPLUS_INCLUDE_PATH"
-          ls -lh $PWD/alsa-lib/include
-          echo "---"
-          ls -lh $PWD/alsa-lib/src/.libs
-
-          export SHERPA_ONNX_MAKE_ARGS="VERBOSE=1"
-          export SHERPA_ONNX_ENABLE_ALSA=1
           export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_GPU=ON"
 
           python3 setup.py bdist_wheel
 
-          ls -lh dist
+          ls -lh ./dist/
 
           mv dist wheelhouse
 
@@ -72,26 +52,9 @@ jobs:
         run: |
           ls -lh ./wheelhouse/
 
-      - name: Install patchelf
-        shell: bash
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -q -y patchelf
-          patchelf --help
-
-      - name: Patch wheels
-        shell: bash
-        run: |
-          mkdir ./wheels
-          sudo ./scripts/wheel/patch_wheel.py --in-dir ./wheelhouse --out-dir ./wheels
-
-          ls -lh ./wheels/
-          rm -rf ./wheelhouse
-          mv ./wheels ./wheelhouse
-
       - uses: actions/upload-artifact@v4
         with:
-          name: wheel-cuda-${{ matrix.python-version }}
+          name: wheel-${{ matrix.python-version }}
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface
@@ -129,3 +92,13 @@ jobs:
             git add .
             git commit -m "add more wheels"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
+
+      - name: Publish wheels to PyPI
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine setuptools
+
+          twine upload ./wheelhouse/*.whl
