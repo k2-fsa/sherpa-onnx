@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - wheel
-      - wheel-cuda
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
@@ -92,13 +91,3 @@ jobs:
             git add .
             git commit -m "add more wheels"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels main
-
-      - name: Publish wheels to PyPI
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install wheel twine setuptools
-
-          twine upload ./wheelhouse/*.whl
