@@ -2,8 +2,6 @@
 
 set -ex
 
-
-
 function install() {
   pip install torch==2.3.1+cpu torchaudio==2.3.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
 
