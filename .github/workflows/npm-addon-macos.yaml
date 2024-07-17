@@ -102,6 +102,12 @@ jobs:
         shell: bash
         run: |
           ls -lh ./sherpa-onnx-node
+          tar cjvf ./sherpa-onnx-node.tar.bz2 ./sherpa-onnx-node
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-${{ matrix.os }}
+          path: ./sherpa-onnx-node.tar.bz2
 
       - name: Publish
         shell: bash

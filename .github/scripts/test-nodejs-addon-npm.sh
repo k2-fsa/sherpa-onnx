@@ -6,6 +6,66 @@ d=nodejs-addon-examples
 echo "dir: $d"
 cd $d
 
+arch=$(node -p "require('os').arch()")
+platform=$(node -p "require('os').platform()")
+node_version=$(node -p "process.versions.node.split('.')[0]")
+
+echo "----------asr----------"
+
+if [[ $arch != "ia32" && $platform != "win32" ]]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
+  tar xvf sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
+  rm sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
+
+  node ./test_asr_non_streaming_nemo_ctc.js
+  rm -rf sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
+
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+  tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+  rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+
+  node ./test_asr_non_streaming_paraformer.js
+
+  rm -f itn*
+
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+
+  node ./test_asr_non_streaming_paraformer_itn.js
+
+  rm -rf sherpa-onnx-paraformer-zh-2023-09-14
+fi
+
+echo "----------tts----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-cori-medium.tar.bz2
+tar xf vits-piper-en_GB-cori-medium.tar.bz2
+rm vits-piper-en_GB-cori-medium.tar.bz2
+
+node ./test_tts_non_streaming_vits_piper_en.js
+rm -rf vits-piper-en_GB-cori-medium
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
+tar xvf vits-coqui-de-css10.tar.bz2
+rm vits-coqui-de-css10.tar.bz2
+
+node ./test_tts_non_streaming_vits_coqui_de.js
+rm -rf vits-coqui-de-css10
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2
+tar xvf sherpa-onnx-vits-zh-ll.tar.bz2
+rm sherpa-onnx-vits-zh-ll.tar.bz2
+
+node ./test_tts_non_streaming_vits_zh_ll.js
+rm -rf sherpa-onnx-vits-zh-ll
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+tar xvf vits-icefall-zh-aishell3.tar.bz2
+rm vits-icefall-zh-aishell3.tar.bz2
+
+node ./test_tts_non_streaming_vits_zh_aishell3.js
+rm -rf vits-icefall-zh-aishell3
+
 echo "----------keyword spotting----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
@@ -15,14 +75,23 @@ rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
 node ./test_keyword_spotter_transducer.js
 rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
-echo "----------add punctuations----------"
+if [[ $arch != "ia32" && $platform != "win32" && $node_version != 21 ]]; then
+  # The punctuation model is so large that it cause memory allocation failure on windows x86
+  # 2024-07-17 03:24:34.2388391 [E:onnxruntime:, inference_session.cc:1981
+  # onnxruntime::InferenceSession::Initialize::<lambda_d603a8c74863bd6b58a1c7996295ed04>::operator ()]
+  # Exception during initialization: bad allocation
+  # Error: Process completed with exit code 127.
+  #
+  # Node 21 does not have such an issue
+  echo "----------add punctuations----------"
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
-tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
-rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+  tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+  rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 
-node ./test_punctuation.js
-rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
+  node ./test_punctuation.js
+  rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
+fi
 
 echo "----------audio tagging----------"
 
@@ -75,9 +144,10 @@ rm -f itn*
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
 
-node test_asr_streaming_transducer_itn.js
-
-node test_asr_streaming_transducer.js
+if [[ $arch != "ia32" && $platform != "win32" ]]; then
+  node test_asr_streaming_transducer_itn.js
+  node test_asr_streaming_transducer.js
+fi
 
 rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
@@ -114,56 +184,6 @@ rm sherpa-onnx-whisper-tiny.en.tar.bz2
 node ./test_asr_non_streaming_whisper.js
 rm -rf sherpa-onnx-whisper-tiny.en
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
-tar xvf sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
-rm sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k.tar.bz2
 
-node ./test_asr_non_streaming_nemo_ctc.js
-rm -rf sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
-tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
-rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
-
-node ./test_asr_non_streaming_paraformer.js
-
-rm -f itn*
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
-
-node ./test_asr_non_streaming_paraformer_itn.js
-
-rm -rf sherpa-onnx-paraformer-zh-2023-09-14
-
-echo "----------tts----------"
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_GB-cori-medium.tar.bz2
-tar xvf vits-piper-en_GB-cori-medium.tar.bz2
-rm vits-piper-en_GB-cori-medium.tar.bz2
-
-node ./test_tts_non_streaming_vits_piper_en.js
-rm -rf vits-piper-en_GB-cori-medium
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
-tar xvf vits-coqui-de-css10.tar.bz2
-rm vits-coqui-de-css10.tar.bz2
-
-node ./test_tts_non_streaming_vits_coqui_de.js
-rm -rf vits-coqui-de-css10
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2
-tar xvf sherpa-onnx-vits-zh-ll.tar.bz2
-rm sherpa-onnx-vits-zh-ll.tar.bz2
-
-node ./test_tts_non_streaming_vits_zh_ll.js
-rm -rf sherpa-onnx-vits-zh-ll
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
-tar xvf vits-icefall-zh-aishell3.tar.bz2
-rm vits-icefall-zh-aishell3.tar.bz2
-
-node ./test_tts_non_streaming_vits_zh_aishell3.js
-rm -rf vits-icefall-zh-aishell3
 
 ls -lh

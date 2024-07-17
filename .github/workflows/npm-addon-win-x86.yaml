@@ -1,4 +1,4 @@
-name: npm-addon-win-x64
+name: npm-addon-win-x86
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: npm-addon-win-x64-${{ github.ref }}
+  group: npm-addon-win-x86-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -15,7 +15,7 @@ permissions:
   id-token: write
 
 jobs:
-  npm-addon-win-x64:
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -36,11 +36,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           registry-url: 'https://registry.npmjs.org'
+          architecture: 'x86'
+          node-version: 16
 
       - name: Display node version
         shell: bash
         run: |
           node --version
+
+      - name: Show node-addon
+        shell: bash
+        run: |
+          cd scripts/node-addon-api/
+
+          npm i || true
+          cat node_modules/node-addon-api/package.json
+          cd node_modules/
+          tar cjf node-addon-api.tar.bz2 ./node-addon-api
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: node-addon-api
+          path: ./scripts/node-addon-api/node_modules/node-addon-api.tar.bz2
 
       - name: Build sherpa-onnx
         shell: bash
@@ -48,6 +65,7 @@ jobs:
           mkdir build
           cd build
           cmake \
+            -A Win32 \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_INSTALL_PREFIX=./install \
             -DBUILD_SHARED_LIBS=ON \
@@ -83,7 +101,8 @@ jobs:
 
           npm i
 
-          ./node_modules/.bin/cmake-js compile --log-level verbose
+          npm config set cmake_js_A "Win32"
+          ./node_modules/.bin/cmake-js compile -A Win32 --log-level verbose
 
       - name: Prepare for publish
         shell: bash
@@ -107,16 +126,51 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-win-x64
+          name: sherpa-onnx-win-ia32
           path: ./sherpa-onnx-node.tar.bz2
+
+  upload:
+    needs: [build]
+    name: upload
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Display node version
+        shell: bash
+        run: |
+          node --version
+
+      - name: Retrieve artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sherpa-onnx-win-ia32
+          path: /tmp/files/
+
+      - name: Unzip
+        shell: bash
+        run: |
+          cd /tmp/files
+          tar xvf sherpa-onnx-node.tar.bz2
 
       - name: Publish
         shell: bash
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN2 }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN2 }}
+          token: ${{ secrets.NPM_TOKEN2 }}
         run: |
-          cd ./sherpa-onnx-node
-          npm install
-          npm ci
-          # see https://docs.npmjs.com/generating-provenance-statements
-          npm publish --provenance --access public
+          cd /tmp/files/sherpa-onnx-node
+          npm publish --access public
