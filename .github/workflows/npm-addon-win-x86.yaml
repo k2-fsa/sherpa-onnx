@@ -130,42 +130,6 @@ jobs:
           name: sherpa-onnx-win-ia32
           path: ./sherpa-onnx-node.tar.bz2
 
-  upload:
-    needs: [build]
-    name: upload
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest]
-        python-version: ["3.8"]
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-node@v4
-        with:
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Display node version
-        shell: bash
-        run: |
-          node --version
-
-      - name: Retrieve artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: sherpa-onnx-win-ia32
-          path: /tmp/files/
-
-      - name: Unzip
-        shell: bash
-        run: |
-          cd /tmp/files
-          tar xvf sherpa-onnx-node.tar.bz2
-
       - name: Publish
         shell: bash
         env:
@@ -173,5 +137,5 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN2 }}
           token: ${{ secrets.NPM_TOKEN2 }}
         run: |
-          cd /tmp/files/sherpa-onnx-node
+          cd ./sherpa-onnx-node
           npm publish --access public
