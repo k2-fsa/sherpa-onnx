@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import re
 from pathlib import Path
 
@@ -32,7 +33,12 @@ def get_package_version():
 package_name = "sherpa-onnx"
 
 with open("sherpa-onnx/python/sherpa_onnx/__init__.py", "a") as f:
-    f.write(f"__version__ = '{get_package_version()}'\n")
+    cmake_args = os.environ.get("SHERPA_ONNX_CMAKE_ARGS", "")
+    extra_version = ""
+    if "-DSHERPA_ONNX_ENABLE_GPU=ON" in cmake_args:
+        extra_version = "+cuda"
+
+    f.write(f"__version__ = '{get_package_version()}{extra_version}'\n")
 
 
 def get_binaries_to_install():
