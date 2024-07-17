@@ -40,7 +40,7 @@ jobs:
           name: test.wav
           path: scripts/melo-tts/test.wav
 
-      - name: Publish to huggingface (aishell)
+      - name: Publish to huggingface
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
