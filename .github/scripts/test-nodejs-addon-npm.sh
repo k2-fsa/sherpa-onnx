@@ -8,6 +8,7 @@ cd $d
 
 arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
+node_version=$(node -p "process.versions.node.split('.')[0]")
 
 echo "----------keyword spotting----------"
 
@@ -18,12 +19,14 @@ rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
 node ./test_keyword_spotter_transducer.js
 rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
-if [[ $arch != "ia32" && $platform != "win32" ]]; then
+if [[ $arch != "ia32" && $platform != "win32" && $node_version != 21 ]]; then
   # The punctuation model is so large that it cause memory allocation failure on windows x86
   # 2024-07-17 03:24:34.2388391 [E:onnxruntime:, inference_session.cc:1981
   # onnxruntime::InferenceSession::Initialize::<lambda_d603a8c74863bd6b58a1c7996295ed04>::operator ()]
   # Exception during initialization: bad allocation
   # Error: Process completed with exit code 127.
+  #
+  # Node 21 does not have such an issue
   echo "----------add punctuations----------"
 
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2

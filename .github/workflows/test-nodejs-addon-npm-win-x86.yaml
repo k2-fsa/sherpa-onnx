@@ -1,4 +1,4 @@
-name: test-node-addon-npm
+name: test-node-addon-npm-win-x86
 
 on:
   push:
@@ -14,6 +14,7 @@ on:
       - 'scripts/node-addon-api/**'
       - 'scripts/node-addon-api/*.js'
       - 'nodejs-addon-examples/package.json'
+      - '.github/scripts/test-nodejs-addon-npm.sh'
 
   pull_request:
     branches:
@@ -26,18 +27,19 @@ on:
       - 'sherpa-onnx/c-api/*'
       - 'scripts/node-addon-api/*.js'
       - 'nodejs-addon-examples/package.json'
+      - '.github/scripts/test-nodejs-addon-npm.sh'
 
   workflow_dispatch:
 
 concurrency:
-  group: test-node-addon-npm-${{ github.ref }}
+  group: test-node-addon-npm-win-x86-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  test-node-addon-npm:
+  test-node-addon-npm-win-x86:
     name: ${{ matrix.os }} node v${{ matrix.node-version }}
     runs-on: ${{ matrix.os }}
     strategy:
