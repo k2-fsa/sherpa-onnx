@@ -6,6 +6,9 @@ d=nodejs-addon-examples
 echo "dir: $d"
 cd $d
 
+arch=$(node -p "require('os').arch()")
+platform=$(node -p "require('os').platform()")
+
 echo "----------keyword spotting----------"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
@@ -15,14 +18,21 @@ rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
 node ./test_keyword_spotter_transducer.js
 rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
-echo "----------add punctuations----------"
+if [[ $arch != "ia32" && $platform != "win32" ]]; then
+  # The punctuation model is so large that it cause memory allocation failure on windows x86
+  # 2024-07-17 03:24:34.2388391 [E:onnxruntime:, inference_session.cc:1981
+  # onnxruntime::InferenceSession::Initialize::<lambda_d603a8c74863bd6b58a1c7996295ed04>::operator ()]
+  # Exception during initialization: bad allocation
+  # Error: Process completed with exit code 127.
+  echo "----------add punctuations----------"
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
-tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
-rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+  tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+  rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
 
-node ./test_punctuation.js
-rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
+  node ./test_punctuation.js
+  rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
+fi
 
 echo "----------audio tagging----------"
 
