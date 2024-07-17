@@ -27,18 +27,21 @@ def get_package_version():
 
     match = re.search(r"set\(SHERPA_ONNX_VERSION (.*)\)", content)
     latest_version = match.group(1).strip('"')
+
+    cmake_args = os.environ.get("SHERPA_ONNX_CMAKE_ARGS", "")
+    extra_version = ""
+    if "-DSHERPA_ONNX_ENABLE_GPU=ON" in cmake_args:
+        extra_version = "+cuda"
+
+    latest_version += extra_version
+
     return latest_version
 
 
 package_name = "sherpa-onnx"
 
 with open("sherpa-onnx/python/sherpa_onnx/__init__.py", "a") as f:
-    cmake_args = os.environ.get("SHERPA_ONNX_CMAKE_ARGS", "")
-    extra_version = ""
-    if "-DSHERPA_ONNX_ENABLE_GPU=ON" in cmake_args:
-        extra_version = "+cuda"
-
-    f.write(f"__version__ = '{get_package_version()}{extra_version}'\n")
+    f.write(f"__version__ = '{get_package_version()}'\n")
 
 
 def get_binaries_to_install():
