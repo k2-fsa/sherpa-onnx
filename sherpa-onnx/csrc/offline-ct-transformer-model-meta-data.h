@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/offline-ct-transformer-model-meta_data.h
+// sherpa-onnx/csrc/offline-ct-transformer-model-meta-data.h
 //
 // Copyright (c)  2024  Xiaomi Corporation
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_CT_TRANSFORMER_MODEL_META_DATA_H_

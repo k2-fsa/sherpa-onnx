@@ -212,10 +212,7 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     }
   }
 
-  OfflineRecognizerConfig GetConfig() const override {
-    return config_;
-  }
-
+  OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
   // Decode a single stream.

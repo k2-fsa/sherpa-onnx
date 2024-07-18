@@ -15,7 +15,30 @@ echo "PATH: $PATH"
 
 which $EXE
 
-if false; then
+log "------------------------------------------------------------"
+log "Run SenseVoice models"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+repo=sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+
+for m in model.onnx model.int8.onnx; do
+  for w in zh en yue ja ko; do
+    for use_itn in 0 1; do
+      echo "$m $w $use_itn"
+      time $EXE \
+        --tokens=$repo/tokens.txt \
+        --sense-voice-model=$repo/$m \
+        --sense-voice-use-itn=$use_itn \
+        $repo/test_wavs/$w.wav
+    done
+  done
+done
+
+rm -rf $repo
+
+if true; then
   # It has problems with onnxruntime 1.18
   log "------------------------------------------------------------"
   log "Run Wenet models"

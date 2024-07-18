@@ -355,6 +355,18 @@ func sherpaOnnxOfflineTdnnModelConfig(
   )
 }
 
+func sherpaOnnxOfflineSenseVoiceModelConfig(
+  model: String = "",
+  language: String = "",
+  useInverseTextNormalization: Bool = false
+) -> SherpaOnnxOfflineSenseVoiceModelConfig {
+  return SherpaOnnxOfflineSenseVoiceModelConfig(
+    model: toCPointer(model),
+    language: toCPointer(language),
+    use_itn: useInverseTextNormalization ? 1 : 0
+  )
+}
+
 func sherpaOnnxOfflineLMConfig(
   model: String = "",
   scale: Float = 1.0
@@ -378,7 +390,8 @@ func sherpaOnnxOfflineModelConfig(
   modelType: String = "",
   modelingUnit: String = "cjkchar",
   bpeVocab: String = "",
-  teleSpeechCtc: String = ""
+  teleSpeechCtc: String = "",
+  senseVoice: SherpaOnnxOfflineSenseVoiceModelConfig = sherpaOnnxOfflineSenseVoiceModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -393,7 +406,8 @@ func sherpaOnnxOfflineModelConfig(
     model_type: toCPointer(modelType),
     modeling_unit: toCPointer(modelingUnit),
     bpe_vocab: toCPointer(bpeVocab),
-    telespeech_ctc: toCPointer(teleSpeechCtc)
+    telespeech_ctc: toCPointer(teleSpeechCtc),
+    sense_voice: senseVoice
   )
 }
 

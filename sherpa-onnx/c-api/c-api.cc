@@ -310,6 +310,7 @@ struct SherpaOnnxOfflineStream {
 
 static sherpa_onnx::OfflineRecognizerConfig convertConfig(
     const SherpaOnnxOfflineRecognizerConfig *config);
+
 SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
     const SherpaOnnxOfflineRecognizerConfig *config) {
   sherpa_onnx::OfflineRecognizerConfig recognizer_config =
@@ -390,6 +391,15 @@ sherpa_onnx::OfflineRecognizerConfig convertConfig(
 
   recognizer_config.model_config.telespeech_ctc =
       SHERPA_ONNX_OR(config->model_config.telespeech_ctc, "");
+
+  recognizer_config.model_config.sense_voice.model =
+      SHERPA_ONNX_OR(config->model_config.sense_voice.model, "");
+
+  recognizer_config.model_config.sense_voice.language =
+      SHERPA_ONNX_OR(config->model_config.sense_voice.language, "");
+
+  recognizer_config.model_config.sense_voice.use_itn =
+      config->model_config.sense_voice.use_itn;
 
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");

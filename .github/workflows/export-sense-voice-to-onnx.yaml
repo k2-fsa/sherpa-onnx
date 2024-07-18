@@ -73,7 +73,7 @@ jobs:
             echo "pwd: $PWD"
             ls -lh ../scripts/sense-voice
 
-            rm -rf ./
+            rm -rf ./*
 
             cp -v ../scripts/sense-voice/*.onnx .
             cp -v ../scripts/sense-voice/tokens.txt .

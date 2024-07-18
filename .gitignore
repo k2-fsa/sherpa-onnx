@@ -111,3 +111,4 @@ sherpa-onnx-telespeech-ctc-*
 *.fst
 .ccache
 lib*.a
+sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17

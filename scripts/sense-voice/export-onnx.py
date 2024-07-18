@@ -162,7 +162,9 @@ def main():
         "neg_mean": neg_mean,
         "inv_stddev": inv_stddev,
         "model_type": "sense_voice_ctc",
-        "version": "1",
+        # version 1: Use QInt8
+        # version 2: Use QUInt8
+        "version": "2",
         "model_author": "iic",
         "maintainer": "k2-fsa",
         "vocab_size": vocab_size,
@@ -185,7 +187,10 @@ def main():
         model_input=filename,
         model_output=filename_int8,
         op_types_to_quantize=["MatMul"],
-        weight_type=QuantType.QInt8,
+        # Note that we have to use QUInt8 here.
+        #
+        # When QInt8 is used, C++ onnxruntime produces incorrect results
+        weight_type=QuantType.QUInt8,
     )
 
 

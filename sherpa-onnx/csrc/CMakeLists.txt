@@ -36,6 +36,8 @@ set(sources
   offline-recognizer-impl.cc
   offline-recognizer.cc
   offline-rnn-lm.cc
+  offline-sense-voice-model-config.cc
+  offline-sense-voice-model.cc
   offline-stream.cc
   offline-tdnn-ctc-model.cc
   offline-tdnn-model-config.cc

@@ -1,3 +1,7 @@
+## 1.10.17
+
+* Support SenseVoice CTC models.
+
 ## 1.10.16
 
 * Support zh-en TTS model from MeloTTS.

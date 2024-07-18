@@ -102,9 +102,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
       exit(-1);
     }
 
-    // Paraformer models assume input samples are in the range
-    // [-32768, 32767], so we set normalize_samples to false
-    config_.feat_config.normalize_samples = false;
+    InitFeatConfig();
   }
 
 #if __ANDROID_API__ >= 9
@@ -124,9 +122,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
       exit(-1);
     }
 
-    // Paraformer models assume input samples are in the range
-    // [-32768, 32767], so we set normalize_samples to false
-    config_.feat_config.normalize_samples = false;
+    InitFeatConfig();
   }
 #endif
 
@@ -211,11 +207,18 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     }
   }
 
-  OfflineRecognizerConfig GetConfig() const override {
-    return config_;
-  }
+  OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
+  void InitFeatConfig() {
+    // Paraformer models assume input samples are in the range
+    // [-32768, 32767], so we set normalize_samples to false
+    config_.feat_config.normalize_samples = false;
+    config_.feat_config.window_type = "hamming";
+    config_.feat_config.high_freq = 0;
+    config_.feat_config.snip_edges = true;
+  }
+
   std::vector<float> ApplyLFR(const std::vector<float> &in) const {
     int32_t lfr_window_size = model_->LfrWindowSize();
     int32_t lfr_window_shift = model_->LfrWindowShift();

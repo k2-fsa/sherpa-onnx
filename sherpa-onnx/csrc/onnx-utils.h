@@ -68,19 +68,24 @@ Ort::Value Clone(OrtAllocator *allocator, const Ort::Value *v);
 // Return a shallow copy
 Ort::Value View(Ort::Value *v);
 
+float ComputeSum(const Ort::Value *v, int32_t n = -1);
+float ComputeMean(const Ort::Value *v, int32_t n = -1);
+
 // Print a 1-D tensor to stderr
 template <typename T = float>
-void Print1D(Ort::Value *v);
+void Print1D(const Ort::Value *v);
 
 // Print a 2-D tensor to stderr
 template <typename T = float>
-void Print2D(Ort::Value *v);
+void Print2D(const Ort::Value *v);
 
 // Print a 3-D tensor to stderr
-void Print3D(Ort::Value *v);
+void Print3D(const Ort::Value *v);
 
 // Print a 4-D tensor to stderr
-void Print4D(Ort::Value *v);
+void Print4D(const Ort::Value *v);
+
+void PrintShape(const Ort::Value *v);
 
 template <typename T = float>
 void Fill(Ort::Value *tensor, T value) {

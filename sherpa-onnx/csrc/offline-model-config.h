@@ -8,6 +8,7 @@
 
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-paraformer-model-config.h"
+#include "sherpa-onnx/csrc/offline-sense-voice-model-config.h"
 #include "sherpa-onnx/csrc/offline-tdnn-model-config.h"
 #include "sherpa-onnx/csrc/offline-transducer-model-config.h"
 #include "sherpa-onnx/csrc/offline-wenet-ctc-model-config.h"
@@ -24,6 +25,7 @@ struct OfflineModelConfig {
   OfflineTdnnModelConfig tdnn;
   OfflineZipformerCtcModelConfig zipformer_ctc;
   OfflineWenetCtcModelConfig wenet_ctc;
+  OfflineSenseVoiceModelConfig sense_voice;
   std::string telespeech_ctc;
 
   std::string tokens;
@@ -53,6 +55,7 @@ struct OfflineModelConfig {
                      const OfflineTdnnModelConfig &tdnn,
                      const OfflineZipformerCtcModelConfig &zipformer_ctc,
                      const OfflineWenetCtcModelConfig &wenet_ctc,
+                     const OfflineSenseVoiceModelConfig &sense_voice,
                      const std::string &telespeech_ctc,
                      const std::string &tokens, int32_t num_threads, bool debug,
                      const std::string &provider, const std::string &model_type,
@@ -65,6 +68,7 @@ struct OfflineModelConfig {
         tdnn(tdnn),
         zipformer_ctc(zipformer_ctc),
         wenet_ctc(wenet_ctc),
+        sense_voice(sense_voice),
         telespeech_ctc(telespeech_ctc),
         tokens(tokens),
         num_threads(num_threads),
