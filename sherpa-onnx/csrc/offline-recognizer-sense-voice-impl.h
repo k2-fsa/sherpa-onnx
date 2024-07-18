@@ -26,11 +26,34 @@
 
 namespace sherpa_onnx {
 
-// defined in ./offline-recognizer-ctc-impl.h
-OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
-                                 const SymbolTable &sym_table,
-                                 int32_t frame_shift_ms,
-                                 int32_t subsampling_factor);
+static OfflineRecognitionResult ConvertSenseVoiceResult(
+    const OfflineCtcDecoderResult &src, const SymbolTable &sym_table,
+    int32_t frame_shift_ms, int32_t subsampling_factor) {
+  OfflineRecognitionResult r;
+  r.tokens.reserve(src.tokens.size());
+  r.timestamps.reserve(src.timestamps.size());
+
+  std::string text;
+
+  for (int32_t i = 4; i < src.tokens.size(); ++i) {
+    auto sym = sym_table[src.tokens[i]];
+    text.append(sym);
+
+    r.tokens.push_back(std::move(sym));
+  }
+  r.text = std::move(text);
+
+  float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
+
+  for (int32_t i = 4; i < src.timestamps.size(); ++i) {
+    float time = frame_shift_s * (src.timestamps[i] - 4);
+    r.timestamps.push_back(time);
+  }
+
+  r.words = std::move(src.words);
+
+  return r;
+}
 
 class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
  public:
@@ -80,6 +103,11 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
   }
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override {
+    if (n == 1) {
+      DecodeOneStream(ss[0]);
+      return;
+    }
+
     const auto &meta_data = model_->GetModelMetadata();
     // 1. Apply LFR
     // 2. Apply CMVN
@@ -188,10 +216,10 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
         decoder_->Decode(std::move(logits), std::move(logits_length));
 
     int32_t frame_shift_ms = 10;
-    int32_t subsampling_factor = 1;
+    int32_t subsampling_factor = meta_data.window_shift;
     for (int32_t i = 0; i != n; ++i) {
-      auto r = Convert(results[i], symbol_table_, frame_shift_ms,
-                       subsampling_factor);
+      auto r = ConvertSenseVoiceResult(results[i], symbol_table_,
+                                       frame_shift_ms, subsampling_factor);
       r.text = ApplyInverseTextNormalization(std::move(r.text));
       ss[i]->SetResult(r);
     }
@@ -200,6 +228,75 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
   OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
+  void DecodeOneStream(OfflineStream *s) const {
+    const auto &meta_data = model_->GetModelMetadata();
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    int32_t feat_dim = config_.feat_config.feature_dim * meta_data.window_size;
+    std::vector<float> f = s->GetFrames();
+    f = ApplyLFR(f);
+    ApplyCMVN(&f);
+    int32_t num_frames = f.size() / feat_dim;
+    std::array<int64_t, 3> shape = {1, num_frames, feat_dim};
+    Ort::Value x = Ort::Value::CreateTensor(memory_info, f.data(), f.size(),
+                                            shape.data(), shape.size());
+
+    int64_t scale_shape = 1;
+
+    Ort::Value x_length =
+        Ort::Value::CreateTensor(memory_info, &num_frames, 1, &scale_shape, 1);
+
+    int32_t language = 0;
+    if (config_.model_config.sense_voice.language.empty()) {
+      language = 0;
+    } else if (meta_data.lang2id.count(
+                   config_.model_config.sense_voice.language)) {
+      language =
+          meta_data.lang2id.at(config_.model_config.sense_voice.language);
+    } else {
+      SHERPA_ONNX_LOGE("Unknown language: %s. Use 0 instead.",
+                       config_.model_config.sense_voice.language.c_str());
+    }
+
+    int32_t text_norm = config_.model_config.sense_voice.use_itn
+                            ? meta_data.with_itn_id
+                            : meta_data.without_itn_id;
+
+    Ort::Value language_tensor =
+        Ort::Value::CreateTensor(memory_info, &language, 1, &scale_shape, 1);
+
+    Ort::Value text_norm_tensor =
+        Ort::Value::CreateTensor(memory_info, &text_norm, 1, &scale_shape, 1);
+
+    Ort::Value logits{nullptr};
+    try {
+      logits = model_->Forward(std::move(x), std::move(x_length),
+                               std::move(language_tensor),
+                               std::move(text_norm_tensor));
+    } catch (const Ort::Exception &ex) {
+      SHERPA_ONNX_LOGE("\n\nCaught exception:\n\n%s\n\nReturn an empty result",
+                       ex.what());
+      return;
+    }
+
+    int64_t new_num_frames = num_frames + 4;
+    Ort::Value logits_length = Ort::Value::CreateTensor(
+        memory_info, &new_num_frames, 1, &scale_shape, 1);
+
+    auto results =
+        decoder_->Decode(std::move(logits), std::move(logits_length));
+
+    int32_t frame_shift_ms = 10;
+    int32_t subsampling_factor = meta_data.window_shift;
+    auto r = ConvertSenseVoiceResult(results[0], symbol_table_, frame_shift_ms,
+                                     subsampling_factor);
+
+    r.text = ApplyInverseTextNormalization(std::move(r.text));
+    s->SetResult(r);
+  }
+
   void InitFeatConfig() {
     const auto &meta_data = model_->GetModelMetadata();
 
