@@ -71,17 +71,6 @@ class OfflineSenseVoiceModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
       PrintModelMetadata(os, meta_data);
-
-      os << "---inputs names---\n";
-      for (const auto &s : input_names_) {
-        os << s << "\n";
-      }
-
-      os << "---outputs names---\n";
-      for (const auto &s : output_names_) {
-        os << s << "\n";
-      }
-
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
     }
 
