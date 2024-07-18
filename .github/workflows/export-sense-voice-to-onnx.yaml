@@ -1,9 +1,6 @@
 name: export-sense-voice-to-onnx
 
 on:
-  push:
-    branches:
-      - cpp-sense-voice
   workflow_dispatch:
 
 concurrency:
