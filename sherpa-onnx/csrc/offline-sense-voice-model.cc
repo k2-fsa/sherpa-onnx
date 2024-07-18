@@ -9,7 +9,6 @@
 #include <utility>
 
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
@@ -72,6 +71,17 @@ class OfflineSenseVoiceModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
       PrintModelMetadata(os, meta_data);
+
+      os << "---inputs names---\n";
+      for (const auto &s : input_names_) {
+        os << s << "\n";
+      }
+
+      os << "---outputs names---\n";
+      for (const auto &s : output_names_) {
+        os << s << "\n";
+      }
+
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
     }
 
@@ -105,8 +115,8 @@ class OfflineSenseVoiceModel::Impl {
         {"ko", lang_ko},     {"yue", lang_yue},
     };
 
-    SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(meta_data_.neg_mean_, "neg_mean");
-    SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(meta_data_.inv_stddev_, "inv_stddev");
+    SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(meta_data_.neg_mean, "neg_mean");
+    SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(meta_data_.inv_stddev, "inv_stddev");
   }
 
  private:

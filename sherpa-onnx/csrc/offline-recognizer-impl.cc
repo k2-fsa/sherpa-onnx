@@ -21,6 +21,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-ctc-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-sense-voice-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-nemo-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-whisper-impl.h"
@@ -31,6 +32,28 @@ namespace sherpa_onnx {
 
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     const OfflineRecognizerConfig &config) {
+  if (!config.model_config.sense_voice.model.empty()) {
+    return std::make_unique<OfflineRecognizerSenseVoiceImpl>(config);
+  }
+
+  if (!config.model_config.paraformer.model.empty()) {
+    return std::make_unique<OfflineRecognizerParaformerImpl>(config);
+  }
+
+  if (!config.model_config.nemo_ctc.model.empty() ||
+      !config.model_config.zipformer_ctc.model.empty() ||
+      !config.model_config.tdnn.model.empty() ||
+      !config.model_config.wenet_ctc.model.empty()) {
+    return std::make_unique<OfflineRecognizerCtcImpl>(config);
+  }
+
+  if (!config.model_config.whisper.encoder.empty()) {
+    return std::make_unique<OfflineRecognizerWhisperImpl>(config);
+  }
+
+  // TODO(fangjun): Refactor it. We only need to use model type for the
+  // following models:
+  //  1. transducer and nemo_transducer
   if (!config.model_config.model_type.empty()) {
     const auto &model_type = config.model_config.model_type;
     if (model_type == "transducer") {
@@ -180,6 +203,28 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 #if __ANDROID_API__ >= 9
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     AAssetManager *mgr, const OfflineRecognizerConfig &config) {
+  if (!config.model_config.sense_voice.model.empty()) {
+    return std::make_unique<OfflineRecognizerSenseVoiceImpl>(mgr, config);
+  }
+
+  if (!config.model_config.paraformer.model.empty()) {
+    return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
+  }
+
+  if (!config.model_config.nemo_ctc.model.empty() ||
+      !config.model_config.zipformer_ctc.model.empty() ||
+      !config.model_config.tdnn.model.empty() ||
+      !config.model_type.wenet_ctc.model.empty()) {
+    return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
+  }
+
+  if (!config.model_config.whisper.encoder.empty()) {
+    return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
+  }
+
+  // TODO(fangjun): Refactor it. We only need to use model type for the
+  // following models:
+  //  1. transducer and nemo_transducer
   if (!config.model_config.model_type.empty()) {
     const auto &model_type = config.model_config.model_type;
     if (model_type == "transducer") {

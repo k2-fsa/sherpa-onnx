@@ -93,6 +93,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
 std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     const OfflineModelConfig &config) {
+  // TODO(fangjun): Refactor it. We don't need to use model_type here
   ModelType model_type = ModelType::kUnknown;
 
   std::string filename;
@@ -148,6 +149,7 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
 
 std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     AAssetManager *mgr, const OfflineModelConfig &config) {
+  // TODO(fangjun): Refactor it. We don't need to use model_type here
   ModelType model_type = ModelType::kUnknown;
 
   std::string filename;

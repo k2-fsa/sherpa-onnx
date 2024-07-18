@@ -119,6 +119,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "tdnn=" << tdnn.ToString() << ", ";
   os << "zipformer_ctc=" << zipformer_ctc.ToString() << ", ";
   os << "wenet_ctc=" << wenet_ctc.ToString() << ", ";
+  os << "sense_voice=" << sense_voice.ToString() << ", ";
   os << "telespeech_ctc=\"" << telespeech_ctc << "\", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";

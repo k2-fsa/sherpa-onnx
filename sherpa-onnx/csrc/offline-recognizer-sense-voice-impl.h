@@ -1,9 +1,9 @@
-// sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h
+// sherpa-onnx/csrc/offline-recognizer-sense-voice-impl.h
 //
 // Copyright (c)  2022-2023  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_PARAFORMER_IMPL_H_
-#define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_PARAFORMER_IMPL_H_
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_SENSE_VOICE_IMPL_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_SENSE_VOICE_IMPL_H_
 
 #include <algorithm>
 #include <memory>
@@ -16,86 +16,34 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#include "sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
-#include "sherpa-onnx/csrc/offline-paraformer-decoder.h"
-#include "sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h"
-#include "sherpa-onnx/csrc/offline-paraformer-model.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/offline-sense-voice-model.h"
 #include "sherpa-onnx/csrc/pad-sequence.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
 namespace sherpa_onnx {
 
-static OfflineRecognitionResult Convert(
-    const OfflineParaformerDecoderResult &src, const SymbolTable &sym_table) {
-  OfflineRecognitionResult r;
-  r.tokens.reserve(src.tokens.size());
-  r.timestamps = src.timestamps;
+// defined in ./offline-recognizer-ctc-impl.h
+OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
+                                 const SymbolTable &sym_table,
+                                 int32_t frame_shift_ms,
+                                 int32_t subsampling_factor);
 
-  std::string text;
-
-  // When the current token ends with "@@" we set mergeable to true
-  bool mergeable = false;
-
-  for (int32_t i = 0; i != src.tokens.size(); ++i) {
-    auto sym = sym_table[src.tokens[i]];
-    r.tokens.push_back(sym);
-
-    if ((sym.back() != '@') || (sym.size() > 2 && sym[sym.size() - 2] != '@')) {
-      // sym does not end with "@@"
-      const uint8_t *p = reinterpret_cast<const uint8_t *>(sym.c_str());
-      if (p[0] < 0x80) {
-        // an ascii
-        if (mergeable) {
-          mergeable = false;
-          text.append(sym);
-        } else {
-          text.append(" ");
-          text.append(sym);
-        }
-      } else {
-        // not an ascii
-        mergeable = false;
-
-        if (i > 0) {
-          const uint8_t p = reinterpret_cast<const uint8_t *>(
-              sym_table[src.tokens[i - 1]].c_str())[0];
-          if (p < 0x80) {
-            // put a space between ascii and non-ascii
-            text.append(" ");
-          }
-        }
-        text.append(sym);
-      }
-    } else {
-      // this sym ends with @@
-      sym = std::string(sym.data(), sym.size() - 2);
-      if (mergeable) {
-        text.append(sym);
-      } else {
-        text.append(" ");
-        text.append(sym);
-        mergeable = true;
-      }
-    }
-  }
-  r.text = std::move(text);
-
-  return r;
-}
-
-class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
+class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
  public:
-  explicit OfflineRecognizerParaformerImpl(
+  explicit OfflineRecognizerSenseVoiceImpl(
       const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(config),
         config_(config),
         symbol_table_(config_.model_config.tokens),
-        model_(std::make_unique<OfflineParaformerModel>(config.model_config)) {
+        model_(std::make_unique<OfflineSenseVoiceModel>(config.model_config)) {
+    const auto &meta_data = model_->GetModelMetadata();
     if (config.decoding_method == "greedy_search") {
-      int32_t eos_id = symbol_table_["</s>"];
-      decoder_ = std::make_unique<OfflineParaformerGreedySearchDecoder>(eos_id);
+      decoder_ =
+          std::make_unique<OfflineCtcGreedySearchDecoder>(meta_data.blank_id);
     } else {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
@@ -106,16 +54,17 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
   }
 
 #if __ANDROID_API__ >= 9
-  OfflineRecognizerParaformerImpl(AAssetManager *mgr,
+  OfflineRecognizerSenseVoiceImpl(AAssetManager *mgr,
                                   const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
-        model_(std::make_unique<OfflineParaformerModel>(mgr,
+        model_(std::make_unique<OfflineSenseVoiceModel>(mgr,
                                                         config.model_config)) {
+    const auto &meta_data = model_->GetModelMetadata();
     if (config.decoding_method == "greedy_search") {
-      int32_t eos_id = symbol_table_["</s>"];
-      decoder_ = std::make_unique<OfflineParaformerGreedySearchDecoder>(eos_id);
+      decoder_ =
+          std::make_unique<OfflineCtcGreedySearchDecoder>(meta_data.blank_id);
     } else {
       SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
                        config.decoding_method.c_str());
@@ -131,6 +80,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
   }
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override {
+    const auto &meta_data = model_->GetModelMetadata();
     // 1. Apply LFR
     // 2. Apply CMVN
     //
@@ -145,8 +95,7 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     std::vector<Ort::Value> features;
     features.reserve(n);
 
-    int32_t feat_dim =
-        config_.feat_config.feature_dim * model_->LfrWindowSize();
+    int32_t feat_dim = config_.feat_config.feature_dim * meta_data.window_size;
 
     std::vector<std::vector<float>> features_vec(n);
     std::vector<int32_t> features_length_vec(n);
@@ -183,25 +132,61 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     // i.e., -23.025850929940457f
     Ort::Value x = PadSequence(model_->Allocator(), features_pointer, 0);
 
-    std::vector<Ort::Value> t;
+    int32_t language = 0;
+    if (config_.model_config.sense_voice.language.empty()) {
+      language = 0;
+    } else if (meta_data.lang2id.count(
+                   config_.model_config.sense_voice.language)) {
+      language =
+          meta_data.lang2id.at(config_.model_config.sense_voice.language);
+    } else {
+      SHERPA_ONNX_LOGE("Unknown language: %s. Use 0 instead.",
+                       config_.model_config.sense_voice.language.c_str());
+    }
+
+    std::vector<int32_t> language_array(n);
+    std::fill(language_array.begin(), language_array.end(), language);
+
+    std::vector<int32_t> text_norm_array(n);
+    std::fill(text_norm_array.begin(), text_norm_array.end(),
+              config_.model_config.sense_voice.use_itn
+                  ? meta_data.with_itn_id
+                  : meta_data.without_itn_id);
+
+    Ort::Value language_tensor = Ort::Value::CreateTensor(
+        memory_info, language_array.data(), n, features_length_shape.data(),
+        features_length_shape.size());
+
+    Ort::Value text_norm_tensor = Ort::Value::CreateTensor(
+        memory_info, text_norm_array.data(), n, features_length_shape.data(),
+        features_length_shape.size());
+
+    Ort::Value logits{nullptr};
     try {
-      t = model_->Forward(std::move(x), std::move(x_length));
+      logits = model_->Forward(std::move(x), std::move(x_length),
+                               std::move(language_tensor),
+                               std::move(text_norm_tensor));
     } catch (const Ort::Exception &ex) {
       SHERPA_ONNX_LOGE("\n\nCaught exception:\n\n%s\n\nReturn an empty result",
                        ex.what());
       return;
     }
 
-    std::vector<OfflineParaformerDecoderResult> results;
-    if (t.size() == 2) {
-      results = decoder_->Decode(std::move(t[0]), std::move(t[1]));
-    } else {
-      results =
-          decoder_->Decode(std::move(t[0]), std::move(t[1]), std::move(t[3]));
+    for (auto &i : features_length_vec) {
+      i += 4;
     }
+    Ort::Value logits_length = Ort::Value::CreateTensor(
+        memory_info, features_length_vec.data(), n,
+        features_length_shape.data(), features_length_shape.size());
 
+    auto results =
+        decoder_->Decode(std::move(logits), std::move(logits_length));
+
+    int32_t frame_shift_ms = 10;
+    int32_t subsampling_factor = 1;
     for (int32_t i = 0; i != n; ++i) {
-      auto r = Convert(results[i], symbol_table_);
+      auto r = Convert(results[i], symbol_table_, frame_shift_ms,
+                       subsampling_factor);
       r.text = ApplyInverseTextNormalization(std::move(r.text));
       ss[i]->SetResult(r);
     }
@@ -211,17 +196,18 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
 
  private:
   void InitFeatConfig() {
-    // Paraformer models assume input samples are in the range
-    // [-32768, 32767], so we set normalize_samples to false
-    config_.feat_config.normalize_samples = false;
+    const auto &meta_data = model_->GetModelMetadata();
+
+    config_.feat_config.normalize_samples = meta_data.normalize_samples;
     config_.feat_config.window_type = "hamming";
     config_.feat_config.high_freq = 0;
     config_.feat_config.snip_edges = true;
   }
-
   std::vector<float> ApplyLFR(const std::vector<float> &in) const {
-    int32_t lfr_window_size = model_->LfrWindowSize();
-    int32_t lfr_window_shift = model_->LfrWindowShift();
+    const auto &meta_data = model_->GetModelMetadata();
+
+    int32_t lfr_window_size = meta_data.window_size;
+    int32_t lfr_window_shift = meta_data.window_shift;
     int32_t in_feat_dim = config_.feat_config.feature_dim;
 
     int32_t in_num_frames = in.size() / in_feat_dim;
@@ -245,8 +231,10 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
   }
 
   void ApplyCMVN(std::vector<float> *v) const {
-    const std::vector<float> &neg_mean = model_->NegativeMean();
-    const std::vector<float> &inv_stddev = model_->InverseStdDev();
+    const auto &meta_data = model_->GetModelMetadata();
+
+    const std::vector<float> &neg_mean = meta_data.neg_mean;
+    const std::vector<float> &inv_stddev = meta_data.inv_stddev;
 
     int32_t dim = neg_mean.size();
     int32_t num_frames = v->size() / dim;
@@ -264,10 +252,10 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
 
   OfflineRecognizerConfig config_;
   SymbolTable symbol_table_;
-  std::unique_ptr<OfflineParaformerModel> model_;
-  std::unique_ptr<OfflineParaformerDecoder> decoder_;
+  std::unique_ptr<OfflineSenseVoiceModel> model_;
+  std::unique_ptr<OfflineCtcDecoder> decoder_;
 };
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_PARAFORMER_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_RECOGNIZER_SENSE_VOICE_IMPL_H_

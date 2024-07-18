@@ -28,6 +28,8 @@ struct OfflineSenseVoiceModelMetaData {
   // feature extractor
   int32_t normalize_samples = 0;
 
+  int32_t blank_id = 0;
+
   // possible values:
   // zh, en, ja, ko, yue, auto
   // where
@@ -39,8 +41,8 @@ struct OfflineSenseVoiceModelMetaData {
   //  auto is to let the model recognize the language
   std::unordered_map<std::string, int32_t> lang2id;
 
-  std::vector<float> neg_mean_;
-  std::vector<float> inv_stddev_;
+  std::vector<float> neg_mean;
+  std::vector<float> inv_stddev;
 };
 
 }  // namespace sherpa_onnx

@@ -27,10 +27,10 @@
 
 namespace sherpa_onnx {
 
-static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
-                                        const SymbolTable &sym_table,
-                                        int32_t frame_shift_ms,
-                                        int32_t subsampling_factor) {
+OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
+                                 const SymbolTable &sym_table,
+                                 int32_t frame_shift_ms,
+                                 int32_t subsampling_factor) {
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
@@ -212,10 +212,7 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     }
   }
 
-  OfflineRecognizerConfig GetConfig() const override {
-    return config_;
-  }
-
+  OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
   // Decode a single stream.

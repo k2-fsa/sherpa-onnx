@@ -10,7 +10,8 @@
 namespace sherpa_onnx {
 
 void OfflineSenseVoiceModelConfig::Register(ParseOptions *po) {
-  po->Register("sense-voice", &model, "Path to model.onnx of SenseVoice.");
+  po->Register("sense-voice-model", &model,
+               "Path to model.onnx of SenseVoice.");
   po->Register(
       "sense-voice-language", &language,
       "Valid values: auto, zh, en, ja, ko, yue. If left empty, auto is used");
