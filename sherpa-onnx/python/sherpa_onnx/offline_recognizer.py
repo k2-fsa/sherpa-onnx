@@ -10,6 +10,7 @@ from _sherpa_onnx import (
     OfflineModelConfig,
     OfflineNemoEncDecCtcModelConfig,
     OfflineParaformerModelConfig,
+    OfflineSenseVoiceModelConfig,
 )
 from _sherpa_onnx import OfflineRecognizer as _Recognizer
 from _sherpa_onnx import (

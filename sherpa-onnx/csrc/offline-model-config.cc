@@ -18,6 +18,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   tdnn.Register(po);
   zipformer_ctc.Register(po);
   wenet_ctc.Register(po);
+  sense_voice.Register(po);
 
   po->Register("telespeech-ctc", &telespeech_ctc,
                "Path to model.onnx for telespeech ctc");
@@ -94,12 +95,14 @@ bool OfflineModelConfig::Validate() const {
     return wenet_ctc.Validate();
   }
 
+  if (!sense_voice.model.empty()) {
+    return sense_voice.Validate();
+  }
+
   if (!telespeech_ctc.empty() && !FileExists(telespeech_ctc)) {
     SHERPA_ONNX_LOGE("telespeech_ctc: '%s' does not exist",
                      telespeech_ctc.c_str());
     return false;
-  } else {
-    return true;
   }
 
   return transducer.Validate();
