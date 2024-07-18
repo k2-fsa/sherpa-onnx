@@ -105,7 +105,11 @@ bool OfflineModelConfig::Validate() const {
     return false;
   }
 
-  return transducer.Validate();
+  if (!transducer.encoder_filename.empty()) {
+    return transducer.Validate();
+  }
+
+  return true;
 }
 
 std::string OfflineModelConfig::ToString() const {
