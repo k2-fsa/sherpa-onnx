@@ -196,7 +196,7 @@ void Print1D(const Ort::Value *v) {
   const T *d = v->GetTensorData<T>();
   std::ostringstream os;
   for (int32_t i = 0; i != static_cast<int32_t>(shape[0]); ++i) {
-    os << *d << " ";
+    os << d[i] << " ";
   }
   os << "\n";
   fprintf(stderr, "%s\n", os.str().c_str());

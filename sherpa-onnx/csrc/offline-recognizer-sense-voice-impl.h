@@ -172,11 +172,16 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
       return;
     }
 
-    for (auto &i : features_length_vec) {
+    // decoder_->Decode() requires that logits_length is of dtype int64
+    std::vector<int64_t> features_length_vec_64;
+    features_length_vec_64.reserve(n);
+    for (auto i : features_length_vec) {
       i += 4;
+      features_length_vec_64.push_back(i);
     }
+
     Ort::Value logits_length = Ort::Value::CreateTensor(
-        memory_info, features_length_vec.data(), n,
+        memory_info, features_length_vec_64.data(), n,
         features_length_shape.data(), features_length_shape.size());
 
     auto results =
