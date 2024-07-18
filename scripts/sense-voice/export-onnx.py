@@ -158,6 +158,7 @@ def main():
     meta_data = {
         "lfr_window_size": lfr_window_size,
         "lfr_window_shift": lfr_window_shift,
+        "normalize_samples": 0,  # input should be in the range [-32768, 32767]
         "neg_mean": neg_mean,
         "inv_stddev": inv_stddev,
         "model_type": "sense_voice_ctc",
