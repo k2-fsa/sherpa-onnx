@@ -370,6 +370,12 @@ type OfflineTdnnModelConfig struct {
 	Model string
 }
 
+type OfflineSenseVoiceModelConfig struct {
+	Model                       string
+	Language                    string
+	UseInverseTextNormalization int
+}
+
 // Configuration for offline LM.
 type OfflineLMConfig struct {
 	Model string  // Path to the model
@@ -382,6 +388,7 @@ type OfflineModelConfig struct {
 	NemoCTC    OfflineNemoEncDecCtcModelConfig
 	Whisper    OfflineWhisperModelConfig
 	Tdnn       OfflineTdnnModelConfig
+	SenseVoice OfflineSenseVoiceModelConfig
 	Tokens     string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -477,6 +484,14 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 
 	c.model_config.tdnn.model = C.CString(config.ModelConfig.Tdnn.Model)
 	defer C.free(unsafe.Pointer(c.model_config.tdnn.model))
+
+	c.model_config.sense_voice.model = C.CString(config.ModelConfig.SenseVoice.Model)
+	defer C.free(unsafe.Pointer(c.model_config.sense_voice.model))
+
+	c.model_config.sense_voice.language = C.CString(config.ModelConfig.SenseVoice.Language)
+	defer C.free(unsafe.Pointer(c.model_config.sense_voice.language))
+
+	c.model_config.sense_voice.use_itn = C.int(config.ModelConfig.SenseVoice.UseInverseTextNormalization)
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))

@@ -35,6 +35,10 @@ func main() {
 
 	flag.StringVar(&config.ModelConfig.Tdnn.Model, "tdnn-model", "", "Path to the tdnn model")
 
+	flag.StringVar(&config.ModelConfig.SenseVoice.Model, "sense-voice-model", "", "Path to the SenseVoice model")
+	flag.StringVar(&config.ModelConfig.SenseVoice.Language, "sense-voice-language", "", "If not empty, specify the Language for the input wave")
+	flag.IntVar(&config.ModelConfig.SenseVoice.UseInverseTextNormalization, "sense-voice-use-itn", 1, " 1 to use inverse text normalization")
+
 	flag.StringVar(&config.ModelConfig.Tokens, "tokens", "", "Path to the tokens file")
 	flag.IntVar(&config.ModelConfig.NumThreads, "num-threads", 1, "Number of threads for computing")
 	flag.IntVar(&config.ModelConfig.Debug, "debug", 0, "Whether to show debug message")
