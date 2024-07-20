@@ -55,7 +55,7 @@ if [ ! -f $src_dir/linux-x64/libsherpa-onnx-c-api.so ]; then
   if [ -f $linux_x64_wheel ]; then
     cp -v $linux_x64_wheel .
   else
-    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$linux_x64_wheel_filename
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$linux_x64_wheel_filename
   fi
   unzip $linux_x64_wheel_filename
   cp -v sherpa_onnx/lib/*.so* ../
@@ -73,7 +73,7 @@ if [ ! -f $src_dir/linux-arm64/libsherpa-onnx-c-api.so ]; then
   if [ -f $linux_arm64_wheel ]; then
     cp -v $linux_arm64_wheel .
   else
-    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$linux_arm64_wheel_filename
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$linux_arm64_wheel_filename
   fi
   unzip $linux_arm64_wheel_filename
   cp -v sherpa_onnx/lib/*.so* ../
@@ -91,7 +91,7 @@ if [ ! -f $src_dir/macos-x64/libsherpa-onnx-c-api.dylib ]; then
   if [ -f $macos_x64_wheel  ]; then
     cp -v $macos_x64_wheel .
   else
-    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$macos_x64_wheel_filename
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$macos_x64_wheel_filename
   fi
   unzip $macos_x64_wheel_filename
   cp -v sherpa_onnx/lib/*.dylib ../
@@ -111,7 +111,7 @@ if [ ! -f $src_dir/macos-arm64/libsherpa-onnx-c-api.dylib ]; then
   if [ -f $macos_arm64_wheel  ]; then
     cp -v $macos_arm64_wheel .
   else
-    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$macos_arm64_wheel_filename
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$macos_arm64_wheel_filename
   fi
   unzip $macos_arm64_wheel_filename
   cp -v sherpa_onnx/lib/*.dylib ../
@@ -131,7 +131,7 @@ if [ ! -f $src_dir/windows-x64/sherpa-onnx-c-api.dll ]; then
   if [ -f $windows_x64_wheel ]; then
     cp -v $windows_x64_wheel .
   else
-    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$windows_x64_wheel_filename
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$windows_x64_wheel_filename
   fi
   unzip $windows_x64_wheel_filename
   cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../

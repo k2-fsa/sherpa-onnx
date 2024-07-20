@@ -61,6 +61,12 @@ class OfflineDecodeFiles
     [Option("telespeech-ctc", Required = false, HelpText = "Path to model.onnx. Used only for TeleSpeech CTC models")]
     public string TeleSpeechCtc { get; set; } = "";
 
+    [Option("sense-voice-model", Required = false, HelpText = "Path to model.onnx. Used only for SenseVoice CTC models")]
+    public string SenseVoiceModel { get; set; } = "";
+
+    [Option("sense-voice-use-itn", Required = false, HelpText = "1 to use inverse text normalization for sense voice.")]
+    public int SenseVoiceUseItn { get; set; } = 1;
+
     [Option("num-threads", Required = false, Default = 1, HelpText = "Number of threads for computation")]
     public int NumThreads { get; set; } = 1;
 
@@ -224,6 +230,11 @@ to download pre-trained Tdnn models.
     else if (!String.IsNullOrEmpty(options.TdnnModel))
     {
       config.ModelConfig.Tdnn.Model = options.TdnnModel;
+    }
+    else if (!String.IsNullOrEmpty(options.SenseVoiceModel))
+    {
+      config.ModelConfig.SenseVoice.Model = options.SenseVoiceModel;
+      config.ModelConfig.SenseVoice.UseInverseTextNormalization = options.SenseVoiceUseItn;
     }
     else
     {

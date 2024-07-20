@@ -23,6 +23,7 @@ namespace SherpaOnnx
             ModelingUnit = "cjkchar";
             BpeVocab = "";
             TeleSpeechCtc = "";
+            SenseVoice = new OfflineSenseVoiceModelConfig();
         }
         public OfflineTransducerModelConfig Transducer;
         public OfflineParaformerModelConfig Paraformer;
@@ -51,7 +52,7 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string TeleSpeechCtc;
+
+        public OfflineSenseVoiceModelConfig SenseVoice;
     }
-
-
 }
