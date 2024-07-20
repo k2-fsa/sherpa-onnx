@@ -19,7 +19,7 @@
 #include "nnapi_provider_factory.h"  // NOLINT
 #endif
 
-#if defined(_WIN32) && defined(SHERPA_ONNX_ENABLE_DIRECTML)
+#if defined(_WIN32) && SHERPA_ONNX_ENABLE_DIRECTML == 1
 #include "dml_provider_factory.h"  // NOLINT
 #endif
 
@@ -172,7 +172,7 @@ static Ort::SessionOptions GetSessionOptionsImpl(
       break;
     }
     case Provider::kDirectML: {
-#if defined(_WIN32)
+#if defined(_WIN32) && SHERPA_ONNX_ENABLE_DIRECTML == 1
       sess_opts.DisableMemPattern();
       sess_opts.SetExecutionMode(ORT_SEQUENTIAL);
       int32_t device_id = 0;
