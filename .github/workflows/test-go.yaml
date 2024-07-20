@@ -191,6 +191,10 @@ jobs:
           go build
           ls -lh
 
+          echo "Test SenseVoice ctc"
+          ./run-sense-voice-small.sh
+          rm -rf sherpa-onnx-sense-*
+
           echo "Test telespeech ctc"
           ./run-telespeech-ctc.sh
           rm -rf sherpa-onnx-telespeech-ctc-*
