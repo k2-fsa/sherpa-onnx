@@ -2,16 +2,8 @@
 
 cd dotnet-examples/
 
-cd ./keyword-spotting-from-files
-./run.sh
-
-cd ../online-decode-files
-./run-transducer-itn.sh
-./run-zipformer2-ctc.sh
-./run-transducer.sh
-./run-paraformer.sh
-
-cd ../offline-decode-files
+cd ./offline-decode-files
+./run-sense-voice-ctc.sh
 ./run-paraformer-itn.sh
 ./run-telespeech-ctc.sh
 ./run-nemo-ctc.sh
@@ -20,6 +12,15 @@ cd ../offline-decode-files
 ./run-hotwords.sh
 ./run-whisper.sh
 ./run-tdnn-yesno.sh
+
+cd ../keyword-spotting-from-files
+./run.sh
+
+cd ../online-decode-files
+./run-transducer-itn.sh
+./run-zipformer2-ctc.sh
+./run-transducer.sh
+./run-paraformer.sh
 
 cd ../vad-non-streaming-asr-paraformer
 ./run.sh
