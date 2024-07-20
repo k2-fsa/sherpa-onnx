@@ -60,7 +60,7 @@ message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 # for static libraries, we use onnxruntime_lib_files directly below
 include_directories(${onnxruntime_SOURCE_DIR}/build/native/include)
 
-file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/runtimes/win-x64/native/*")
+file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/runtimes/win-x64/native/onnxruntime.*")
 
 set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
 
