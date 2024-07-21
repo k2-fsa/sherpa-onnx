@@ -46,36 +46,22 @@ int32_t main() {
 
   // Offline model config
   SherpaOnnxOfflineModelConfig offline_model_config;
+  memset(&offline_model_config, 0, sizeof(offline_model_config));
   offline_model_config.bpe_vocab = "";
   offline_model_config.debug = 1;
-  offline_model_config.model_type = NULL;
-  offline_model_config.modeling_unit = NULL;
-  offline_model_config.nemo_ctc =
-      (SherpaOnnxOfflineNemoEncDecCtcModelConfig){NULL};
   offline_model_config.num_threads = 1;
-  offline_model_config.paraformer =
-      (SherpaOnnxOfflineParaformerModelConfig){NULL};
   offline_model_config.provider = provider;
-  offline_model_config.tdnn = (SherpaOnnxOfflineTdnnModelConfig){NULL};
-  offline_model_config.telespeech_ctc = NULL;
   offline_model_config.tokens = tokens_filename;
-  offline_model_config.transducer =
-      (SherpaOnnxOfflineTransducerModelConfig){NULL, NULL, NULL};
   offline_model_config.whisper = whisper_config;
   offline_model_config.sense_voice =
       (SherpaOnnxOfflineSenseVoiceModelConfig){"", "", 0};
 
   // Recognizer config
   SherpaOnnxOfflineRecognizerConfig recognizer_config;
+  memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
   recognizer_config.feat_config = (SherpaOnnxFeatureConfig){16000, 512};
-  recognizer_config.hotwords_file = NULL;
-  recognizer_config.hotwords_score = 0.0;
-  recognizer_config.lm_config = (SherpaOnnxOfflineLMConfig){NULL, 0.0};
-  recognizer_config.max_active_paths = 0;
   recognizer_config.model_config = offline_model_config;
-  recognizer_config.rule_fars = NULL;
-  recognizer_config.rule_fsts = NULL;
 
   SherpaOnnxOfflineRecognizer *recognizer =
       CreateOfflineRecognizer(&recognizer_config);
