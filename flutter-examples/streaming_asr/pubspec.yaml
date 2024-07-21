@@ -5,7 +5,7 @@ description: >
 
 publish_to: 'none'
 
-version: 1.10.16
+version: 1.10.17
 
 topics:
   - speech-recognition
@@ -30,7 +30,7 @@ dependencies:
   record: ^5.1.0
   url_launcher: ^6.2.6
 
-  sherpa_onnx: ^1.10.16
+  sherpa_onnx: ^1.10.17
   # sherpa_onnx:
     # path: ../../flutter/sherpa_onnx
 

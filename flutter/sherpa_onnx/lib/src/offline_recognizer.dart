@@ -79,6 +79,23 @@ class OfflineTdnnModelConfig {
   final String model;
 }
 
+class OfflineSenseVoiceModelConfig {
+  const OfflineSenseVoiceModelConfig({
+    this.model = '',
+    this.language = '',
+    this.useInverseTextNormalization = false,
+  });
+
+  @override
+  String toString() {
+    return 'OfflineSenseVoiceModelConfig(model: $model, language: $language, useInverseTextNormalization: $useInverseTextNormalization)';
+  }
+
+  final String model;
+  final String language;
+  final bool useInverseTextNormalization;
+}
+
 class OfflineLMConfig {
   const OfflineLMConfig({this.model = '', this.scale = 1.0});
 
@@ -98,6 +115,7 @@ class OfflineModelConfig {
     this.nemoCtc = const OfflineNemoEncDecCtcModelConfig(),
     this.whisper = const OfflineWhisperModelConfig(),
     this.tdnn = const OfflineTdnnModelConfig(),
+    this.senseVoice = const OfflineSenseVoiceModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -110,7 +128,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   final OfflineTransducerModelConfig transducer;
@@ -118,6 +136,7 @@ class OfflineModelConfig {
   final OfflineNemoEncDecCtcModelConfig nemoCtc;
   final OfflineWhisperModelConfig whisper;
   final OfflineTdnnModelConfig tdnn;
+  final OfflineSenseVoiceModelConfig senseVoice;
 
   final String tokens;
   final int numThreads;
@@ -219,6 +238,14 @@ class OfflineRecognizer {
 
     c.ref.model.tdnn.model = config.model.tdnn.model.toNativeUtf8();
 
+    c.ref.model.senseVoice.model = config.model.senseVoice.model.toNativeUtf8();
+
+    c.ref.model.senseVoice.language =
+        config.model.senseVoice.language.toNativeUtf8();
+
+    c.ref.model.senseVoice.useInverseTextNormalization =
+        config.model.senseVoice.useInverseTextNormalization ? 1 : 0;
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -254,6 +281,8 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.senseVoice.language);
+    calloc.free(c.ref.model.senseVoice.model);
     calloc.free(c.ref.model.tdnn.model);
     calloc.free(c.ref.model.whisper.task);
     calloc.free(c.ref.model.whisper.language);
