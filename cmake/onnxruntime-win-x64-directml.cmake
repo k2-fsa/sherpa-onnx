@@ -93,3 +93,69 @@ else()
 endif()
 
 install(FILES ${onnxruntime_lib_files} DESTINATION bin)
+
+# Setup DirectML
+
+set(directml_URL "https://www.nuget.org/api/v2/package/Microsoft.AI.DirectML/1.15.0")
+set(directml_HASH "SHA256=10d175f8e97447712b3680e3ac020bbb8eafdf651332b48f09ffee2eec801c23")
+
+set(possible_directml_file_locations
+    $ENV{HOME}/Downloads/Microsoft.AI.DirectML.1.15.0.nupkg
+    ${PROJECT_SOURCE_DIR}/Microsoft.AI.DirectML.1.15.0.nupkg
+    ${PROJECT_BINARY_DIR}/Microsoft.AI.DirectML.1.15.0.nupkg
+    /tmp/Microsoft.AI.DirectML.1.15.0.nupkg
+)
+
+foreach(f IN LISTS possible_directml_file_locations)
+  if(EXISTS ${f})
+    set(directml_URL  "${f}")
+    file(TO_CMAKE_PATH "${directml_URL}" directml_URL)
+    message(STATUS "Found local downloaded DirectML: ${directml_URL}")
+    break()
+  endif()
+endforeach()
+
+FetchContent_Declare(directml
+  URL
+    ${directml_URL}
+  URL_HASH ${directml_HASH}
+)
+
+FetchContent_GetProperties(directml)
+if(NOT directml_POPULATED)
+  message(STATUS "Downloading DirectML from ${directml_URL}")
+  FetchContent_Populate(directml)
+endif()
+message(STATUS "DirectML is downloaded to ${directml_SOURCE_DIR}")
+
+find_library(location_directml DirectML
+  PATHS
+  "${directml_SOURCE_DIR}/bin/x64-win"
+  NO_CMAKE_SYSTEM_PATH
+)
+
+message(STATUS "location_directml: ${location_directml}")
+
+add_library(directml SHARED IMPORTED)
+
+set_target_properties(directml PROPERTIES
+  IMPORTED_LOCATION ${location_directml}
+  INTERFACE_INCLUDE_DIRECTORIES "${directml_SOURCE_DIR}/bin/x64-win"
+)
+
+set_property(TARGET directml
+  PROPERTY
+    IMPORTED_IMPLIB "${directml_SOURCE_DIR}/bin/x64-win/DirectML.lib"
+)
+
+file(COPY ${directml_SOURCE_DIR}/bin/x64-win/DirectML.dll
+  DESTINATION
+    ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
+)
+
+file(GLOB directml_lib_files "${directml_SOURCE_DIR}/bin/x64-win/DirectML.*")
+
+message(STATUS "DirectML lib files: ${directml_lib_files}")
+
+install(FILES ${directml_lib_files} DESTINATION lib)
+install(FILES ${directml_lib_files} DESTINATION bin)
