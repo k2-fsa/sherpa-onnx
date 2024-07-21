@@ -13,26 +13,12 @@ function createOfflineRecognizer() {
   };
 
   let modelConfig = {
-    transducer: {
-      encoder: '',
-      decoder: '',
-      joiner: '',
-    },
-    paraformer: {
-      model: '',
-    },
-    nemoCtc: {
-      model: '',
-    },
     whisper: {
       encoder: './sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx',
       decoder: './sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx',
       language: '',
       task: 'transcribe',
       tailPaddings: -1,
-    },
-    tdnn: {
-      model: '',
     },
     tokens: './sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt',
     numThreads: 1,
@@ -41,19 +27,10 @@ function createOfflineRecognizer() {
     modelType: 'whisper',
   };
 
-  let lmConfig = {
-    model: '',
-    scale: 1.0,
-  };
-
   let config = {
     featConfig: featConfig,
     modelConfig: modelConfig,
-    lmConfig: lmConfig,
     decodingMethod: 'greedy_search',
-    maxActivePaths: 4,
-    hotwordsFile: '',
-    hotwordsScore: 1.5,
   };
 
   return sherpa_onnx.createOfflineRecognizer(config);

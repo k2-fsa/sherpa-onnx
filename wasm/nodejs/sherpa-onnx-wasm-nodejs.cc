@@ -16,6 +16,7 @@ static_assert(sizeof(SherpaOnnxOfflineParaformerModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 5 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTdnnModelConfig) == 4, "");
+static_assert(sizeof(SherpaOnnxOfflineSenseVoiceModelConfig) == 3 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineLMConfig) == 2 * 4, "");
 
 static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
@@ -23,7 +24,8 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineParaformerModelConfig) +
                       sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) +
                       sizeof(SherpaOnnxOfflineWhisperModelConfig) +
-                      sizeof(SherpaOnnxOfflineTdnnModelConfig) + 8 * 4,
+                      sizeof(SherpaOnnxOfflineTdnnModelConfig) + 8 * 4 +
+                      sizeof(SherpaOnnxOfflineSenseVoiceModelConfig),
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineRecognizerConfig) ==
@@ -63,6 +65,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   auto nemo_ctc = &model_config->nemo_ctc;
   auto whisper = &model_config->whisper;
   auto tdnn = &model_config->tdnn;
+  auto sense_voice = &model_config->sense_voice;
 
   fprintf(stdout, "----------offline transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer->encoder);
@@ -84,6 +87,11 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
 
   fprintf(stdout, "----------offline tdnn model config----------\n");
   fprintf(stdout, "model: %s\n", tdnn->model);
+
+  fprintf(stdout, "----------offline sense_voice model config----------\n");
+  fprintf(stdout, "model: %s\n", sense_voice->model);
+  fprintf(stdout, "language: %s\n", sense_voice->language);
+  fprintf(stdout, "use_itn: %d\n", sense_voice->use_itn);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);

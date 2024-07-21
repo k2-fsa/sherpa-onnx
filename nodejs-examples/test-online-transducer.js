@@ -16,19 +16,8 @@ function createOnlineRecognizer() {
         './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx',
   };
 
-  let onlineParaformerModelConfig = {
-    encoder: '',
-    decoder: '',
-  };
-
-  let onlineZipformer2CtcModelConfig = {
-    model: '',
-  };
-
   let onlineModelConfig = {
     transducer: onlineTransducerModelConfig,
-    paraformer: onlineParaformerModelConfig,
-    zipformer2Ctc: onlineZipformer2CtcModelConfig,
     tokens:
         './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt',
     numThreads: 1,
@@ -51,12 +40,6 @@ function createOnlineRecognizer() {
     rule1MinTrailingSilence: 2.4,
     rule2MinTrailingSilence: 1.2,
     rule3MinUtteranceLength: 20,
-    hotwordsFile: '',
-    hotwordsScore: 1.5,
-    ctcFstDecoderConfig: {
-      graph: '',
-      maxActive: 3000,
-    }
   };
 
   return sherpa_onnx.createOnlineRecognizer(recognizerConfig);

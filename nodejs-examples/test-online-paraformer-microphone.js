@@ -6,12 +6,6 @@ console.log(portAudio.getDevices());
 const sherpa_onnx = require('sherpa-onnx');
 
 function createOnlineRecognizer() {
-  let onlineTransducerModelConfig = {
-    encoder: '',
-    decoder: '',
-    joiner: '',
-  };
-
   let onlineParaformerModelConfig = {
     encoder:
         './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx',
@@ -19,14 +13,8 @@ function createOnlineRecognizer() {
         './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx',
   };
 
-  let onlineZipformer2CtcModelConfig = {
-    model: '',
-  };
-
   let onlineModelConfig = {
-    transducer: onlineTransducerModelConfig,
     paraformer: onlineParaformerModelConfig,
-    zipformer2Ctc: onlineZipformer2CtcModelConfig,
     tokens: './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt',
     numThreads: 1,
     provider: 'cpu',
@@ -48,12 +36,6 @@ function createOnlineRecognizer() {
     rule1MinTrailingSilence: 2.4,
     rule2MinTrailingSilence: 1.2,
     rule3MinUtteranceLength: 20,
-    hotwordsFile: '',
-    hotwordsScore: 1.5,
-    ctcFstDecoderConfig: {
-      graph: '',
-      maxActive: 3000,
-    }
   };
 
   return sherpa_onnx.createOnlineRecognizer(recognizerConfig);
