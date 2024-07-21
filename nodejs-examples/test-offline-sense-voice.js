@@ -19,7 +19,7 @@ function createOfflineRecognizer() {
       language: '',
       useInverseTextNormalization: 1,
     },
-    tokens: './sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt',
+    tokens: './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt',
     numThreads: 1,
     debug: 0,
     provider: 'cpu',
@@ -29,9 +29,6 @@ function createOfflineRecognizer() {
     featConfig: featConfig,
     modelConfig: modelConfig,
     decodingMethod: 'greedy_search',
-    maxActivePaths: 4,
-    hotwordsFile: '',
-    hotwordsScore: 1.5,
   };
 
   return sherpa_onnx.createOfflineRecognizer(config);

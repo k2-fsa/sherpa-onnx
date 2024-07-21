@@ -13,26 +13,8 @@ function createOfflineRecognizer() {
   };
 
   let modelConfig = {
-    transducer: {
-      encoder: '',
-      decoder: '',
-      joiner: '',
-    },
     paraformer: {
       model: './sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx',
-    },
-    nemoCtc: {
-      model: '',
-    },
-    whisper: {
-      encoder: '',
-      decoder: '',
-      language: '',
-      task: '',
-      tailPaddings: -1,
-    },
-    tdnn: {
-      model: '',
     },
     tokens: './sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt',
     numThreads: 1,
@@ -41,19 +23,10 @@ function createOfflineRecognizer() {
     modelType: 'paraformer',
   };
 
-  let lmConfig = {
-    model: '',
-    scale: 1.0,
-  };
-
   let config = {
     featConfig: featConfig,
     modelConfig: modelConfig,
-    lmConfig: lmConfig,
     decodingMethod: 'greedy_search',
-    maxActivePaths: 4,
-    hotwordsFile: '',
-    hotwordsScore: 1.5,
   };
 
   return sherpa_onnx.createOfflineRecognizer(config);

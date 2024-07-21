@@ -21,22 +21,6 @@ function createOfflineRecognizer() {
       joiner:
           './sherpa-onnx-zipformer-en-2023-06-26/joiner-epoch-99-avg-1.int8.onnx',
     },
-    paraformer: {
-      model: '',
-    },
-    nemoCtc: {
-      model: '',
-    },
-    whisper: {
-      encoder: '',
-      decoder: '',
-      language: '',
-      task: '',
-      tailPaddings: -1,
-    },
-    tdnn: {
-      model: '',
-    },
     tokens: './sherpa-onnx-zipformer-en-2023-06-26/tokens.txt',
     numThreads: 1,
     debug: 0,
@@ -44,15 +28,9 @@ function createOfflineRecognizer() {
     modelType: 'transducer',
   };
 
-  let lmConfig = {
-    model: '',
-    scale: 1.0,
-  };
-
   let config = {
     featConfig: featConfig,
     modelConfig: modelConfig,
-    lmConfig: lmConfig,
     decodingMethod: 'greedy_search',
     maxActivePaths: 4,
     hotwordsFile: '',
