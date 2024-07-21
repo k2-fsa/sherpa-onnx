@@ -11,12 +11,12 @@ if(NOT (CMAKE_VS_PLATFORM_NAME STREQUAL X64 OR CMAKE_VS_PLATFORM_NAME STREQUAL x
   message(FATAL_ERROR "This file is for Windows x64 only. Given: ${CMAKE_VS_PLATFORM_NAME}")
 endif()
 
-if(BUILD_SHARED_LIBS)
-  message(FATAL_ERROR "This file is for building static libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
+if(NOT BUILD_SHARED_LIBS)
+  message(FATAL_ERROR "This file is for building shared libraries. BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS}")
 endif()
 
-if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
-  message(FATAL_ERROR "This file is for building a release version on Windows x64")
+if(NOT SHERPA_ONNX_ENABLE_DIRECTML)
+  message(FATAL_ERROR "This file is for DirectML. Given SHERPA_ONNX_ENABLE_DIRECTML: ${SHERPA_ONNX_ENABLE_DIRECTML}")
 endif()
 
 set(onnxruntime_URL  "https://globalcdn.nuget.org/packages/microsoft.ml.onnxruntime.directml.1.14.1.nupkg")
@@ -57,16 +57,39 @@ if(NOT onnxruntime_POPULATED)
 endif()
 message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-# for static libraries, we use onnxruntime_lib_files directly below
-include_directories(${onnxruntime_SOURCE_DIR}/build/native/include)
+find_library(location_onnxruntime onnxruntime
+  PATHS
+  "${onnxruntime_SOURCE_DIR}/runtimes/win-x64/native"
+  NO_CMAKE_SYSTEM_PATH
+)
+
+message(STATUS "location_onnxruntime: ${location_onnxruntime}")
+
+add_library(onnxruntime SHARED IMPORTED)
+
+set_target_properties(onnxruntime PROPERTIES
+  IMPORTED_LOCATION ${location_onnxruntime}
+  INTERFACE_INCLUDE_DIRECTORIES "${onnxruntime_SOURCE_DIR}/build/native/include"
+)
+
+set_property(TARGET onnxruntime
+  PROPERTY
+    IMPORTED_IMPLIB "${onnxruntime_SOURCE_DIR}/runtimes/win-x64/native/onnxruntime.lib"
+)
+
+file(COPY ${onnxruntime_SOURCE_DIR}/runtimes/win-x64/native/onnxruntime.dll
+  DESTINATION
+    ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE}
+)
 
 file(GLOB onnxruntime_lib_files "${onnxruntime_SOURCE_DIR}/runtimes/win-x64/native/onnxruntime.*")
 
-set(onnxruntime_lib_files ${onnxruntime_lib_files} PARENT_SCOPE)
-
 message(STATUS "onnxruntime lib files: ${onnxruntime_lib_files}")
+
 if(SHERPA_ONNX_ENABLE_PYTHON)
   install(FILES ${onnxruntime_lib_files} DESTINATION ..)
 else()
   install(FILES ${onnxruntime_lib_files} DESTINATION lib)
 endif()
+
+install(FILES ${onnxruntime_lib_files} DESTINATION bin)
