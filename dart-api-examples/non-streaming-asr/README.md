@@ -11,4 +11,5 @@ This folder contains examples for non-streaming ASR with Dart API.
 |[./bin/whisper.dart](./bin/whisper.dart)| Use whisper for speech recognition. See [./run-whisper.sh](./run-whisper.sh)|
 |[./bin/zipformer-transducer.dart](./bin/zipformer-transducer.dart)| Use a zipformer transducer for speech recognition. See [./run-zipformer-transducer.sh](./run-zipformer-transducer.sh)|
 |[./bin/vad-with-paraformer.dart](./bin/vad-with-paraformer.dart)| Use a [silero-vad](https://github.com/snakers4/silero-vad) with paraformer for speech recognition. See [./run-vad-with-paraformer.sh](./run-vad-with-paraformer.sh)|
+|[./bin/sense-voice.dart](./bin/sense-voice.dart)| Use a SenseVoice CTC model for speech recognition. See [./run-sense-voice.sh](./run-sense-voice.sh)|
 

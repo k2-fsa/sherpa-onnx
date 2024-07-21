@@ -87,6 +87,14 @@ final class SherpaOnnxOfflineTdnnModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
 
+final class SherpaOnnxOfflineSenseVoiceModelConfig extends Struct {
+  external Pointer<Utf8> model;
+  external Pointer<Utf8> language;
+
+  @Int32()
+  external int useInverseTextNormalization;
+}
+
 final class SherpaOnnxOfflineLMConfig extends Struct {
   external Pointer<Utf8> model;
 
@@ -115,6 +123,8 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external Pointer<Utf8> modelingUnit;
   external Pointer<Utf8> bpeVocab;
   external Pointer<Utf8> telespeechCtc;
+
+  external SherpaOnnxOfflineSenseVoiceModelConfig senseVoice;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
