@@ -96,6 +96,24 @@ static SherpaOnnxOfflineTdnnModelConfig GetOfflineTdnnModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineSenseVoiceModelConfig GetOfflineSenseVoiceModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineSenseVoiceModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("senseVoice") || !obj.Get("senseVoice").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("senseVoice").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(language, language);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(use_itn, useInverseTextNormalization);
+
+  return c;
+}
+
 static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   SherpaOnnxOfflineModelConfig c;
   memset(&c, 0, sizeof(c));
@@ -111,6 +129,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.nemo_ctc = GetOfflineNeMoCtcModelConfig(o);
   c.whisper = GetOfflineWhisperModelConfig(o);
   c.tdnn = GetOfflineTdnnModelConfig(o);
+  c.sense_voice = GetOfflineSenseVoiceModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -223,6 +242,14 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
 
   if (c.model_config.tdnn.model) {
     delete[] c.model_config.tdnn.model;
+  }
+
+  if (c.model_config.sense_voice.model) {
+    delete[] c.model_config.sense_voice.model;
+  }
+
+  if (c.model_config.sense_voice.language) {
+    delete[] c.model_config.sense_voice.language;
   }
 
   if (c.model_config.tokens) {

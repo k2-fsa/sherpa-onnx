@@ -20,6 +20,13 @@ if [[ $arch != "ia32" && $platform != "win32" ]]; then
   node ./test_asr_non_streaming_nemo_ctc.js
   rm -rf sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
 
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+  tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+  rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+
+  node ./test_asr_non_streaming_sense_voice.js
+  rm -rf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
   tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
   rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
