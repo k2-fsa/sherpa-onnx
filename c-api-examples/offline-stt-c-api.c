@@ -38,6 +38,7 @@ int32_t main() {
 
   // Whisper config
   SherpaOnnxOfflineWhisperModelConfig whisper_config;
+  memset(&whisper_config, 0, sizeof(whisper_config));
   whisper_config.decoder = decoder_filename;
   whisper_config.encoder = encoder_filename;
   whisper_config.language = language;
