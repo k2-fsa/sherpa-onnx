@@ -21,8 +21,6 @@
 #include "sherpa-onnx/c-api/c-api.h"
 
 int32_t main() {
-  // You can find more test waves from
-  // https://hf-mirror.com/spaces/k2-fsa/spoken-language-identification/tree/main/test_wavs
   const char *wav_filename = "./sherpa-onnx-whisper-tiny/test_wavs/0.wav";
   const char *encoder_filename = "sherpa-onnx-whisper-tiny/tiny-encoder.onnx";
   const char *decoder_filename = "sherpa-onnx-whisper-tiny/tiny-decoder.onnx";
@@ -62,6 +60,14 @@ int32_t main() {
 
   SherpaOnnxOfflineRecognizer *recognizer =
       CreateOfflineRecognizer(&recognizer_config);
+
+  if (recognizer == NULL) {
+    fprintf(stderr, "Please check your config!\n");
+
+    SherpaOnnxFreeWave(wave);
+
+    return -1;
+  }
 
   SherpaOnnxOfflineStream *stream = CreateOfflineStream(recognizer);
 
