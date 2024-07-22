@@ -18,10 +18,10 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 ```bash
 ./run-non-streaming-decode-file-paraformer.sh
+./run-non-streaming-decode-file-sense-voice.sh
 ./run-non-streaming-decode-file-transducer.sh
 ./run-non-streaming-decode-file-whisper.sh
 ./run-non-streaming-decode-file-nemo.sh
-./run-non-streaming-decode-file-sense-voice.sh
 ```
 
 ## Non-Streaming text-to-speech
@@ -87,6 +87,12 @@ The punctuation model supports both English and Chinese.
 
 ```bash
 ./run-vad-remove-slience.sh
+```
+
+## VAD + Non-streaming SenseVoice for speech recognition
+
+```bash
+./run-vad-non-streaming-sense-voice.sh
 ```
 
 ## VAD + Non-streaming Paraformer for speech recognition
