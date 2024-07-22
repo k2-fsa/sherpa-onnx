@@ -61,6 +61,12 @@ int32_t main() {
   SherpaOnnxOfflineRecognizer *recognizer =
       CreateOfflineRecognizer(&recognizer_config);
 
+  if (recognizer == NULL) {
+    fprintf(stderr, "Please check your config!\n");
+    SherpaOnnxFreeWave(wave);
+    return -1;
+  }
+
   SherpaOnnxOfflineStream *stream = CreateOfflineStream(recognizer);
 
   AcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
