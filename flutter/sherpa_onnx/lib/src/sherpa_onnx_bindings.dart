@@ -283,6 +283,28 @@ final class SherpaOnnxSpeakerEmbeddingExtractorConfig extends Struct {
   external Pointer<Utf8> provider;
 }
 
+final class SherpaOnnxKeywordSpotterConfig extends Struct {
+  external SherpaOnnxFeatureConfig feat;
+
+  external SherpaOnnxOnlineModelConfig model;
+
+  @Int32()
+  external int maxActivePaths;
+
+  @Int32()
+  external int numTrailingBlanks;
+
+  @Float()
+  external double keywordsScore;
+
+  @Float()
+  external double keywordsThreshold;
+
+  external Pointer<Utf8> keywordsFile;
+}
+
+final class SherpaOnnxKeywordSpotter extends Opaque {}
+
 final class SherpaOnnxOfflineTts extends Opaque {}
 
 final class SherpaOnnxCircularBuffer extends Opaque {}
@@ -300,6 +322,48 @@ final class SherpaOnnxOfflineStream extends Opaque {}
 final class SherpaOnnxSpeakerEmbeddingExtractor extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingManager extends Opaque {}
+
+typedef CreateKeywordSpotterNative = Pointer<SherpaOnnxKeywordSpotter> Function(
+    Pointer<SherpaOnnxKeywordSpotterConfig>);
+
+typedef CreateKeywordSpotter = CreateKeywordSpotterNative;
+
+typedef DestroyKeywordSpotterNative = Void Function(
+    Pointer<SherpaOnnxKeywordSpotter>);
+
+typedef DestroyKeywordSpotter = void Function(
+    Pointer<SherpaOnnxKeywordSpotter>);
+
+typedef CreateKeywordStreamNative = Pointer<SherpaOnnxOnlineStream> Function(
+    Pointer<SherpaOnnxKeywordSpotter>);
+
+typedef CreateKeywordStream = CreateKeywordStreamNative;
+
+typedef CreateKeywordStreamWithKeywordsNative = Pointer<SherpaOnnxOnlineStream>
+    Function(Pointer<SherpaOnnxKeywordSpotter>, Pointer<Utf8>);
+
+typedef CreateKeywordStreamWithKeywords = CreateKeywordStreamWithKeywordsNative;
+
+typedef IsKeywordStreamReadyNative = Int32 Function(
+    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef IsKeywordStreamReady = int Function(
+    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef DecodeKeywordStreamNative = Void Function(
+    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef DecodeKeywordStream = void Function(
+    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef GetKeywordResultAsJsonNative = Pointer<Utf8> Function(
+    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef GetKeywordResultAsJson = GetKeywordResultAsJsonNative;
+
+typedef FreeKeywordResultJsonNative = Void Function(Pointer<Utf8>);
+
+typedef FreeKeywordResultJson = void Function(Pointer<Utf8>);
 
 typedef SherpaOnnxCreateOfflineTtsNative = Pointer<SherpaOnnxOfflineTts>
     Function(Pointer<SherpaOnnxOfflineTtsConfig>);
@@ -735,6 +799,15 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
+  static CreateKeywordSpotter? createKeywordSpotter;
+  static DestroyKeywordSpotter? destroyKeywordSpotter;
+  static CreateKeywordStream? createKeywordStream;
+  static CreateKeywordStreamWithKeywords? createKeywordStreamWithKeywords;
+  static IsKeywordStreamReady? isKeywordStreamReady;
+  static DecodeKeywordStream? decodeKeywordStream;
+  static GetKeywordResultAsJson? getKeywordResultAsJson;
+  static FreeKeywordResultJson? freeKeywordResultJson;
+
   static SherpaOnnxCreateOfflineTts? createOfflineTts;
   static SherpaOnnxDestroyOfflineTts? destroyOfflineTts;
   static SherpaOnnxOfflineTtsSampleRate? offlineTtsSampleRate;
@@ -879,6 +952,46 @@ class SherpaOnnxBindings {
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
+    createKeywordSpotter ??= dynamicLibrary
+        .lookup<NativeFunction<CreateKeywordSpotterNative>>(
+            'CreateKeywordSpotter')
+        .asFunction();
+
+    destroyKeywordSpotter ??= dynamicLibrary
+        .lookup<NativeFunction<DestroyKeywordSpotterNative>>(
+            'DestroyKeywordSpotter')
+        .asFunction();
+
+    createKeywordStream ??= dynamicLibrary
+        .lookup<NativeFunction<CreateKeywordStreamNative>>(
+            'CreateKeywordStream')
+        .asFunction();
+
+    createKeywordStreamWithKeywords ??= dynamicLibrary
+        .lookup<NativeFunction<CreateKeywordStreamWithKeywordsNative>>(
+            'CreateKeywordStreamWithKeywords')
+        .asFunction();
+
+    isKeywordStreamReady ??= dynamicLibrary
+        .lookup<NativeFunction<IsKeywordStreamReadyNative>>(
+            'IsKeywordStreamReady')
+        .asFunction();
+
+    decodeKeywordStream ??= dynamicLibrary
+        .lookup<NativeFunction<DecodeKeywordStreamNative>>(
+            'DecodeKeywordStream')
+        .asFunction();
+
+    getKeywordResultAsJson ??= dynamicLibrary
+        .lookup<NativeFunction<GetKeywordResultAsJsonNative>>(
+            'GetKeywordResultAsJson')
+        .asFunction();
+
+    freeKeywordResultJson ??= dynamicLibrary
+        .lookup<NativeFunction<FreeKeywordResultJsonNative>>(
+            'FreeKeywordResultJson')
+        .asFunction();
+
     createOfflineTts ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateOfflineTtsNative>>(
             'SherpaOnnxCreateOfflineTts')
