@@ -90,6 +90,23 @@ def get_models():
             """,
         ),
         Model(
+            model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
+            idx=15,
+            lang="zh_en_ko_ja_yue",
+            short_name="sense_voice",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -fv model.onnx
+            rm -fv *.py
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
             model_name="sherpa-onnx-paraformer-zh-small-2024-03-09",
             idx=14,
             lang="zh",

@@ -114,6 +114,16 @@ jobs:
           ./run-kws-from-file.sh
           rm -rf sherpa-onnx-*
 
+      - name:  Run java test (VAD + Non-streaming SenseVoice)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-vad-non-streaming-sense-voice.sh
+          rm *.onnx
+          ls -lh *.wav
+          rm *.wav
+          rm -rf sherpa-onnx-*
+
       - name:  Run java test (VAD + Non-streaming Paraformer)
         shell: bash
         run: |
@@ -193,6 +203,10 @@ jobs:
         shell: bash
         run: |
           cd ./java-api-examples
+
+          ./run-non-streaming-decode-file-sense-voice.sh
+          rm -rf sherpa-onnx-sense-voice-*
+
           ./run-inverse-text-normalization-paraformer.sh
 
           ./run-non-streaming-decode-file-paraformer.sh
