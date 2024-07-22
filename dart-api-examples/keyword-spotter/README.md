@@ -1,2 +1,4 @@
-A sample command-line application with an entrypoint in `bin/`, library code
-in `lib/`, and example unit test in `test/`.
+# Introduction
+
+This directory contains keyword spotting examples using
+Dart API from [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)
