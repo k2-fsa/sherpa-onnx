@@ -1,6 +1,7 @@
 ## 1.10.17
 
 * Support SenseVoice CTC models.
+* Add Dart API for keyword spotter.
 
 ## 1.10.16
 

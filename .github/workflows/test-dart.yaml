@@ -108,6 +108,7 @@ jobs:
           cp scripts/dart/non-streaming-asr-pubspec.yaml dart-api-examples/non-streaming-asr/pubspec.yaml
           cp scripts/dart/streaming-asr-pubspec.yaml dart-api-examples/streaming-asr/pubspec.yaml
           cp scripts/dart/tts-pubspec.yaml dart-api-examples/tts/pubspec.yaml
+          cp scripts/dart/kws-pubspec.yaml dart-api-examples/keyword-spotter/pubspec.yaml
           cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
 
           .github/scripts/test-dart.sh

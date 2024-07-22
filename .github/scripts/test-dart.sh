@@ -4,6 +4,10 @@ set -ex
 
 cd dart-api-examples
 
+pushd keyword-spotter
+./run-zh.sh
+popd
+
 pushd non-streaming-asr
 
 echo '----------SenseVoice----------'
