@@ -14,12 +14,13 @@ namespace sherpa_onnx {
 // https://github.com/microsoft/onnxruntime/blob/main/java/src/main/java/ai/onnxruntime/OrtProvider.java
 // for a list of available providers
 enum class Provider {
-  kCPU = 0,      // CPUExecutionProvider
-  kCUDA = 1,     // CUDAExecutionProvider
-  kCoreML = 2,   // CoreMLExecutionProvider
-  kXnnpack = 3,  // XnnpackExecutionProvider
-  kNNAPI = 4,    // NnapiExecutionProvider
-  kTRT = 5,     // TensorRTExecutionProvider
+  kCPU = 0,       // CPUExecutionProvider
+  kCUDA = 1,      // CUDAExecutionProvider
+  kCoreML = 2,    // CoreMLExecutionProvider
+  kXnnpack = 3,   // XnnpackExecutionProvider
+  kNNAPI = 4,     // NnapiExecutionProvider
+  kTRT = 5,       // TensorRTExecutionProvider
+  kDirectML = 6,  // DmlExecutionProvider
 };
 
 /**

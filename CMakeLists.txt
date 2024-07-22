@@ -30,6 +30,7 @@ option(SHERPA_ONNX_ENABLE_JNI "Whether to build JNI internface" OFF)
 option(SHERPA_ONNX_ENABLE_C_API "Whether to build C API" ON)
 option(SHERPA_ONNX_ENABLE_WEBSOCKET "Whether to build webscoket server/client" ON)
 option(SHERPA_ONNX_ENABLE_GPU "Enable ONNX Runtime GPU support" OFF)
+option(SHERPA_ONNX_ENABLE_DIRECTML "Enable ONNX Runtime DirectML support" OFF)
 option(SHERPA_ONNX_ENABLE_WASM "Whether to enable WASM" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_TTS "Whether to enable WASM for TTS" OFF)
 option(SHERPA_ONNX_ENABLE_WASM_ASR "Whether to enable WASM for ASR" OFF)
@@ -90,6 +91,19 @@ Hint: You don't need sudo permission to install CUDA toolkit. Please refer to
 to install CUDA toolkit if you have not installed it.")
   if(NOT BUILD_SHARED_LIBS)
     message(STATUS "Set BUILD_SHARED_LIBS to ON since SHERPA_ONNX_ENABLE_GPU is ON")
+    set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+if(SHERPA_ONNX_ENABLE_DIRECTML)
+  message(WARNING "\
+Compiling with DirectML enabled. Please make sure Windows 10 SDK
+is installed on your system. Otherwise, you will get errors at runtime.
+Please refer to
+  https://onnxruntime.ai/docs/execution-providers/DirectML-ExecutionProvider.html#requirements
+to install Windows 10 SDK if you have not installed it.")
+  if(NOT BUILD_SHARED_LIBS)
+    message(STATUS "Set BUILD_SHARED_LIBS to ON since SHERPA_ONNX_ENABLE_DIRECTML is ON")
     set(BUILD_SHARED_LIBS ON CACHE BOOL "" FORCE)
   endif()
 endif()
@@ -158,6 +172,14 @@ if(SHERPA_ONNX_ENABLE_TTS)
 else()
   message(WARNING "TTS is disabled")
   add_definitions(-DSHERPA_ONNX_ENABLE_TTS=0)
+endif()
+
+if(SHERPA_ONNX_ENABLE_DIRECTML)
+  message(STATUS "DirectML is enabled")
+  add_definitions(-DSHERPA_ONNX_ENABLE_DIRECTML=1)
+else()
+  message(WARNING "DirectML is disabled")
+  add_definitions(-DSHERPA_ONNX_ENABLE_DIRECTML=0)
 endif()
 
 if(SHERPA_ONNX_ENABLE_WASM_TTS)
