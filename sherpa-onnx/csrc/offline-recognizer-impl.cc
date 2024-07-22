@@ -214,7 +214,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
   if (!config.model_config.nemo_ctc.model.empty() ||
       !config.model_config.zipformer_ctc.model.empty() ||
       !config.model_config.tdnn.model.empty() ||
-      !config.model_type.wenet_ctc.model.empty()) {
+      !config.model_config.wenet_ctc.model.empty()) {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }
 
