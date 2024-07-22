@@ -12,7 +12,22 @@ echo "SLID_EXE is $SLID_EXE"
 echo "SID_EXE is $SID_EXE"
 echo "AT_EXE is $AT_EXE"
 echo "PUNCT_EXE is $PUNCT_EXE"
+echo "OFFLINE_STT_EXE is $OFFLINE_STT_EXE"
 echo "PATH: $PATH"
+
+log "------------------------------------------------------------"
+log "Test offline whisper ASR                                    "
+log "------------------------------------------------------------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2
+tar xvf sherpa-onnx-whisper-tiny.tar.bz2
+rm sherpa-onnx-whisper-tiny.tar.bz2
+
+$OFFLINE_STT_EXE
+
+rm -rf sherpa-onnx-whisper-tiny
+
+
 
 log "------------------------------------------------------------"
 log "Test adding punctuations                                    "

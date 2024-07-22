@@ -153,6 +153,7 @@ jobs:
           export SID_EXE=speaker-identification-c-api
           export AT_EXE=audio-tagging-c-api
           export PUNCT_EXE=add-punctuation-c-api
+          export OFFLINE_STT_EXE=offline-stt-c-api
 
           .github/scripts/test-c-api.sh
 
