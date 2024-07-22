@@ -27,6 +27,9 @@ target_link_libraries(add-punctuation-c-api sherpa-onnx-c-api)
 add_executable(offline-stt-c-api offline-stt-c-api.c)
 target_link_libraries(offline-stt-c-api sherpa-onnx-c-api)
 
+add_executable(sense-voice-c-api sense-voice-c-api.c)
+target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
+
 if(SHERPA_ONNX_HAS_ALSA)
   add_subdirectory(./asr-microphone-example)
 elseif((UNIX AND NOT APPLE) OR LINUX)
