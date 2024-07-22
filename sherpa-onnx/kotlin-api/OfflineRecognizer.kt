@@ -30,11 +30,18 @@ data class OfflineWhisperModelConfig(
     var tailPaddings: Int = 1000, // Padding added at the end of the samples
 )
 
+data class OfflineSenseVoiceModelConfig(
+    var model: String = "",
+    var language: String = "",
+    var useInverseTextNormalization: Boolean = true,
+)
+
 data class OfflineModelConfig(
     var transducer: OfflineTransducerModelConfig = OfflineTransducerModelConfig(),
     var paraformer: OfflineParaformerModelConfig = OfflineParaformerModelConfig(),
     var whisper: OfflineWhisperModelConfig = OfflineWhisperModelConfig(),
     var nemo: OfflineNemoEncDecCtcModelConfig = OfflineNemoEncDecCtcModelConfig(),
+    var senseVoice: OfflineSenseVoiceModelConfig = OfflineSenseVoiceModelConfig(),
     var teleSpeech: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
@@ -319,6 +326,16 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "paraformer",
+            )
+        }
+
+        15 -> {
+            val modelDir = "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17"
+            return OfflineModelConfig(
+                senseVoice = OfflineSenseVoiceModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
             )
         }
     }

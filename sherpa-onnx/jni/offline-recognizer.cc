@@ -171,6 +171,31 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.whisper.tail_paddings =
       env->GetIntField(whisper_config, fid);
 
+  // sense voice
+  fid = env->GetFieldID(model_config_cls, "senseVoice",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineSenseVoiceModelConfig;");
+  jobject sense_voice_config = env->GetObjectField(model_config, fid);
+  jclass sense_voice_config_cls = env->GetObjectClass(sense_voice_config);
+
+  fid = env->GetFieldID(sense_voice_config_cls, "model", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(sense_voice_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.sense_voice.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid =
+      env->GetFieldID(sense_voice_config_cls, "language", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(sense_voice_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.sense_voice.language = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(sense_voice_config_cls, "useInverseTextNormalization",
+                        "Z");
+  ans.model_config.sense_voice.use_itn =
+      env->GetBooleanField(sense_voice_config, fid);
+
+  // nemo
   fid = env->GetFieldID(
       model_config_cls, "nemo",
       "Lcom/k2fsa/sherpa/onnx/OfflineNemoEncDecCtcModelConfig;");
