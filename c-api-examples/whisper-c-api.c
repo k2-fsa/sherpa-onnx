@@ -21,8 +21,6 @@
 #include "sherpa-onnx/c-api/c-api.h"
 
 int32_t main() {
-  // You can find more test waves from
-  // https://hf-mirror.com/spaces/k2-fsa/spoken-language-identification/tree/main/test_wavs
   const char *wav_filename = "./sherpa-onnx-whisper-tiny/test_wavs/0.wav";
   const char *encoder_filename = "sherpa-onnx-whisper-tiny/tiny-encoder.onnx";
   const char *decoder_filename = "sherpa-onnx-whisper-tiny/tiny-decoder.onnx";
@@ -48,31 +46,36 @@ int32_t main() {
   // Offline model config
   SherpaOnnxOfflineModelConfig offline_model_config;
   memset(&offline_model_config, 0, sizeof(offline_model_config));
-  offline_model_config.bpe_vocab = "";
   offline_model_config.debug = 1;
   offline_model_config.num_threads = 1;
   offline_model_config.provider = provider;
   offline_model_config.tokens = tokens_filename;
   offline_model_config.whisper = whisper_config;
-  offline_model_config.sense_voice =
-      (SherpaOnnxOfflineSenseVoiceModelConfig){"", "", 0};
 
   // Recognizer config
   SherpaOnnxOfflineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "greedy_search";
-  recognizer_config.feat_config = (SherpaOnnxFeatureConfig){16000, 512};
   recognizer_config.model_config = offline_model_config;
 
   SherpaOnnxOfflineRecognizer *recognizer =
       CreateOfflineRecognizer(&recognizer_config);
+
+  if (recognizer == NULL) {
+    fprintf(stderr, "Please check your config!\n");
+
+    SherpaOnnxFreeWave(wave);
+
+    return -1;
+  }
 
   SherpaOnnxOfflineStream *stream = CreateOfflineStream(recognizer);
 
   AcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
                         wave->num_samples);
   DecodeOfflineStream(recognizer, stream);
-  SherpaOnnxOfflineRecognizerResult *result = GetOfflineStreamResult(stream);
+  const SherpaOnnxOfflineRecognizerResult *result =
+      GetOfflineStreamResult(stream);
 
   fprintf(stderr, "Decoded text: %s\n", result->text);
 

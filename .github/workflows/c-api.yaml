@@ -1,0 +1,147 @@
+name: c-api
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+    paths:
+      - '.github/workflows/c-api.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'c-api-examples/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/c-api.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'c-api-examples/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: c-api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  c_api:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-c-api-shared
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+          make -j2 install
+
+          ls -lh install/lib
+          ls -lh install/include
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./install/lib/libsherpa-onnx-c-api.so
+            echo "---"
+            readelf -d ./install/lib/libsherpa-onnx-c-api.so
+          fi
+
+          if [[ ${{ matrix.os }} == macos-latest ]]; then
+            otool -L ./install/lib/libsherpa-onnx-c-api.dylib
+          fi
+
+      - name: Test sense-voice
+        shell: bash
+        run: |
+          gcc -o sense-voice-c-api ./c-api-examples/sense-voice-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh sense-voice-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./sense-voice-c-api
+            echo "----"
+            readelf -d ./sense-voice-c-api
+          fi
+
+          # Now download models
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+          tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+          rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+
+          ls -lh sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+          echo "---"
+          ls -lh sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./sense-voice-c-api
+
+          rm -rf sherpa-onnx-sense-voice-*
+
+      - name: Test whisper
+        shell: bash
+        run: |
+          gcc -o whisper-c-api ./c-api-examples/whisper-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh whisper-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./whisper-c-api
+            echo "----"
+            readelf -d ./whisper-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2
+          tar xvf sherpa-onnx-whisper-tiny.tar.bz2
+          rm sherpa-onnx-whisper-tiny.tar.bz2
+
+          ls -lh sherpa-onnx-whisper-tiny
+          echo "---"
+          ls -lh sherpa-onnx-whisper-tiny/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./whisper-c-api
+
+          rm -rf sherpa-onnx-whisper-*
