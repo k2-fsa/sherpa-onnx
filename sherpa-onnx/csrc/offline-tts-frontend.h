@@ -15,12 +15,12 @@ namespace sherpa_onnx {
 struct TokenIDs {
   TokenIDs() = default;
 
-  /*implicit*/ TokenIDs(const std::vector<int64_t> &tokens)  // NOLINT
-      : tokens{tokens} {}
+  /*implicit*/ TokenIDs(std::vector<int64_t> tokens)  // NOLINT
+      : tokens{std::move(tokens)} {}
 
-  TokenIDs(const std::vector<int64_t> &tokens,
-           const std::vector<int64_t> &tones)
-      : tokens{tokens}, tones{tones} {}
+  TokenIDs(std::vector<int64_t> tokens,  // NOLINT
+           std::vector<int64_t> tones)   // NOLINT
+      : tokens{std::move(tokens)}, tones{std::move(tones)} {}
 
   std::string ToString() const;
 

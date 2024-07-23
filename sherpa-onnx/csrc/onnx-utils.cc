@@ -157,8 +157,8 @@ Ort::Value View(Ort::Value *v) {
 
 float ComputeSum(const Ort::Value *v, int32_t n /*= -1*/) {
   std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
-  auto size = static_cast<int32_t>(std::accumulate(
-      shape.begin(), shape.end(), 1, std::multiplies<int64_t>()));
+  auto size = static_cast<int32_t>(
+      std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<>()));
   if (n != -1 && n < size && n > 0) {
     size = n;
   }
@@ -170,8 +170,8 @@ float ComputeSum(const Ort::Value *v, int32_t n /*= -1*/) {
 
 float ComputeMean(const Ort::Value *v, int32_t n /*= -1*/) {
   std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
-  auto size = static_cast<int32_t>(std::accumulate(
-      shape.begin(), shape.end(), 1, std::multiplies<int64_t>()));
+  auto size = static_cast<int32_t>(
+      std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<>()));
 
   if (n != -1 && n < size && n > 0) {
     size = n;

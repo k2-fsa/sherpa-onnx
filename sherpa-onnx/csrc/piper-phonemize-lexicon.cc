@@ -239,12 +239,12 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIds(
   if (meta_data_.is_piper || meta_data_.is_icefall) {
     for (const auto &p : phonemes) {
       phoneme_ids = PiperPhonemesToIds(token2id_, p);
-      ans.push_back(std::move(phoneme_ids));
+      ans.emplace_back(std::move(phoneme_ids));
     }
   } else if (meta_data_.is_coqui) {
     for (const auto &p : phonemes) {
       phoneme_ids = CoquiPhonemesToIds(token2id_, p, meta_data_);
-      ans.push_back(std::move(phoneme_ids));
+      ans.emplace_back(std::move(phoneme_ids));
     }
 
   } else {
