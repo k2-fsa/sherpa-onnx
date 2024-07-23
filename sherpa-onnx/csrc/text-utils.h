@@ -124,6 +124,11 @@ std::vector<std::string> SplitUtf8(const std::string &text);
 std::string ToLowerCase(const std::string &s);
 void ToLowerCase(std::string *in_out);
 
+template <typename T>
+std::string VecToString(const std::vector<T> &vec, int32_t precision = 6);
+
+std::string VecToString(const std::vector<std::string> &vec);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_

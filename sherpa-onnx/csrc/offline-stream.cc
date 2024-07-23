@@ -14,6 +14,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -309,18 +310,8 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   os << "\"" << text << "\""
      << ", ";
 
-  os << "\""
-     << "timestamps"
-     << "\""
-     << ": ";
-  os << "[";
-
-  std::string sep = "";
-  for (auto t : timestamps) {
-    os << sep << std::fixed << std::setprecision(2) << t;
-    sep = ", ";
-  }
-  os << "], ";
+  os << "\"timestamps\": " << VecToString(timestamps, 2) << ", ";
+  os << "\"stop_timestamps\": " << VecToString(stop_timestamps, 2) << ", ";
 
   os << "\""
      << "tokens"
@@ -328,7 +319,7 @@ std::string OfflineRecognitionResult::AsJsonString() const {
      << ":";
   os << "[";
 
-  sep = "";
+  std::string sep = "";
   auto oldFlags = os.flags();
   for (const auto &t : tokens) {
     if (t.size() == 1 && static_cast<uint8_t>(t[0]) > 0x7f) {
@@ -345,19 +336,10 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   }
   os << "], ";
 
-  sep = "";
+  os << "\"words\": " << VecToString(words, 0) << ", ";
 
-  os << "\""
-     << "words"
-     << "\""
-     << ": ";
-  os << "[";
-  for (int32_t w : words) {
-    os << sep << w;
-    sep = ", ";
-  }
+  os << "\"word_start_timestamps\": " << VecToString(word_start_timestamps, 2);
 
-  os << "]";
   os << "}";
 
   return os.str();

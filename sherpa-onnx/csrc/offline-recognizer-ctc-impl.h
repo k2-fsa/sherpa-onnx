@@ -34,6 +34,9 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
   OfflineRecognitionResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.timestamps.size());
+  r.stop_timestamps.reserve(src.stop_timestamps.size());
+
+  r.word_start_timestamps.reserve(src.word_start_timestamps.size());
 
   std::string text;
 
@@ -63,6 +66,16 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
   for (auto t : src.timestamps) {
     float time = frame_shift_s * t;
     r.timestamps.push_back(time);
+  }
+
+  for (auto t : src.stop_timestamps) {
+    float time = frame_shift_s * t;
+    r.stop_timestamps.push_back(time);
+  }
+
+  for (auto t : src.word_start_timestamps) {
+    float time = frame_shift_s * t;
+    r.word_start_timestamps.push_back(time);
   }
 
   r.words = std::move(src.words);

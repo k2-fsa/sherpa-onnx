@@ -9,6 +9,7 @@
 #include <cassert>
 #include <cctype>
 #include <cstdint>
+#include <iomanip>
 #include <limits>
 #include <sstream>
 #include <string>
@@ -394,6 +395,40 @@ std::string ToLowerCase(const std::string &s) {
 void ToLowerCase(std::string *in_out) {
   std::transform(in_out->begin(), in_out->end(), in_out->begin(),
                  [](unsigned char c) { return std::tolower(c); });
+}
+
+template <typename T>
+std::string VecToString(const std::vector<T> &vec, int32_t precision /*= 6*/) {
+  std::ostringstream os;
+  if (precision != 0) {
+    os << std::fixed << std::setprecision(precision);
+  }
+  os << "[";
+  std::string sep = "";
+  for (const auto &item : vec) {
+    os << sep << item;
+    sep = ", ";
+  }
+  os << "]";
+  return os.str();
+}
+
+template std::string VecToString<int32_t>(const std::vector<int32_t> &vec,
+                                          int32_t precision /*= 6*/);
+
+template std::string VecToString<float>(const std::vector<float> &vec,
+                                        int32_t precision /*= 6*/);
+
+std::string VecToString(const std::vector<std::string> &vec) {
+  std::ostringstream os;
+  os << "[";
+  std::string sep = "";
+  for (const auto &item : vec) {
+    os << sep << "\"" << item << "\"";
+    sep = ", ";
+  }
+  os << "]";
+  return os.str();
 }
 
 }  // namespace sherpa_onnx
