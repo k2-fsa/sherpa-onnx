@@ -91,7 +91,6 @@ class MeloTtsLexicon::Impl {
     std::vector<TokenIDs> ans;
     TokenIDs this_sentence;
 
-    int32_t blank = token2id_.at("_");
     for (const auto &w : words) {
       auto ids = ConvertWordToIds(w);
       if (ids.tokens.empty()) {

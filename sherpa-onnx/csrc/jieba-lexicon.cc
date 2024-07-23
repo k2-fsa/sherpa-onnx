@@ -102,13 +102,13 @@ class JiebaLexicon::Impl {
       this_sentence.push_back(blank);
 
       if (w == "。" || w == "！" || w == "？" || w == "，") {
-        ans.push_back(std::move(this_sentence));
+        ans.emplace_back(std::move(this_sentence));
         this_sentence = {};
       }
     }  // for (const auto &w : words)
 
     if (!this_sentence.empty()) {
-      ans.push_back(std::move(this_sentence));
+      ans.emplace_back(std::move(this_sentence));
     }
 
     return ans;

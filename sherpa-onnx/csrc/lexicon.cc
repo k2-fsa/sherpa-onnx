@@ -253,7 +253,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
         if (eos != -1) {
           this_sentence.push_back(eos);
         }
-        ans.push_back(std::move(this_sentence));
+        ans.emplace_back(std::move(this_sentence));
         this_sentence = {};
 
         if (sil != -1) {
@@ -283,7 +283,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
   if (eos != -1) {
     this_sentence.push_back(eos);
   }
-  ans.push_back(std::move(this_sentence));
+  ans.emplace_back(std::move(this_sentence));
 
   return ans;
 }
@@ -324,7 +324,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsNotChinese(
 
       if (w != ",") {
         this_sentence.push_back(blank);
-        ans.push_back(std::move(this_sentence));
+        ans.emplace_back(std::move(this_sentence));
         this_sentence = {};
       }
 
@@ -348,7 +348,7 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsNotChinese(
   }
 
   if (!this_sentence.empty()) {
-    ans.push_back(std::move(this_sentence));
+    ans.emplace_back(std::move(this_sentence));
   }
 
   return ans;
