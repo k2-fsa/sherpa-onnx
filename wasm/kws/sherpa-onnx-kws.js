@@ -189,7 +189,7 @@ class Stream {
 
   free() {
     if (this.handle) {
-      this.Module._DestroyOnlineKwsStream(this.handle);
+      this.Module._SherpaOnnxDestroyOnlineStream(this.handle);
       this.handle = null;
       this.Module._free(this.pointer);
       this.pointer = null;
@@ -210,12 +210,12 @@ class Stream {
     }
 
     this.Module.HEAPF32.set(samples, this.pointer / samples.BYTES_PER_ELEMENT);
-    this.Module._AcceptWaveform(
+    this.Module._SherpaOnnxOnlineStreamAcceptWaveform(
         this.handle, sampleRate, this.pointer, samples.length);
   }
 
   inputFinished() {
-    this.Module._InputFinished(this.handle);
+    this.Module._SherpaOnnxOnlineStreamInputFinished(this.handle);
   }
 };
 
@@ -223,7 +223,7 @@ class Kws {
   constructor(configObj, Module) {
     this.config = configObj;
     let config = initKwsConfig(configObj, Module)
-    let handle = Module._CreateKeywordSpotter(config.ptr);
+    let handle = Module._SherpaOnnxCreateKeywordSpotter(config.ptr);
 
     freeConfig(config, Module);
 
@@ -232,28 +232,30 @@ class Kws {
   }
 
   free() {
-    this.Module._DestroyKeywordSpotter(this.handle);
+    this.Module._SherpaOnnxDestroyKeywordSpotter(this.handle);
     this.handle = 0
   }
 
   createStream() {
-    let handle = this.Module._CreateKeywordStream(this.handle);
+    let handle = this.Module._SherpaOnnxCreateKeywordStream(this.handle);
     return new Stream(handle, this.Module);
   }
 
   isReady(stream) {
-    return this.Module._IsKeywordStreamReady(this.handle, stream.handle) === 1;
+    return this.Module._SherpaOnnxIsKeywordStreamReady(
+               this.handle, stream.handle) == 1;
   }
 
   decode(stream) {
-    return this.Module._DecodeKeywordStream(this.handle, stream.handle);
+    return this.Module._SherpaOnnxDecodeKeywordStream(
+        this.handle, stream.handle);
   }
 
   getResult(stream) {
-    let r = this.Module._GetKeywordResult(this.handle, stream.handle);
+    let r = this.Module._SherpaOnnxGetKeywordResult(this.handle, stream.handle);
     let jsonPtr = this.Module.getValue(r + 24, 'i8*');
     let json = this.Module.UTF8ToString(jsonPtr);
-    this.Module._DestroyKeywordResult(r);
+    this.Module._SherpaOnnxDestroyKeywordResult(r);
     return JSON.parse(json);
   }
 }

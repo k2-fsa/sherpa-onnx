@@ -869,7 +869,7 @@ class OfflineStream {
 
   free() {
     if (this.handle) {
-      this.Module._DestroyOfflineStream(this.handle);
+      this.Module._SherpaOnnxDestroyOfflineStream(this.handle);
       this.handle = null;
     }
   }
@@ -882,7 +882,7 @@ class OfflineStream {
     const pointer =
         this.Module._malloc(samples.length * samples.BYTES_PER_ELEMENT);
     this.Module.HEAPF32.set(samples, pointer / samples.BYTES_PER_ELEMENT);
-    this.Module._AcceptWaveformOffline(
+    this.Module._SherpaOnnxAcceptWaveformOffline(
         this.handle, sampleRate, pointer, samples.length);
     this.Module._free(pointer);
   }
@@ -892,7 +892,7 @@ class OfflineRecognizer {
   constructor(configObj, Module) {
     this.config = configObj;
     const config = initSherpaOnnxOfflineRecognizerConfig(configObj, Module);
-    const handle = Module._CreateOfflineRecognizer(config.ptr);
+    const handle = Module._SherpaOnnxCreateOfflineRecognizer(config.ptr);
     freeConfig(config, Module);
 
     this.handle = handle;
@@ -900,24 +900,25 @@ class OfflineRecognizer {
   }
 
   free() {
-    this.Module._DestroyOfflineRecognizer(this.handle);
+    this.Module._SherpaOnnxDestroyOfflineRecognizer(this.handle);
     this.handle = 0
   }
 
   createStream() {
-    const handle = this.Module._CreateOfflineStream(this.handle);
+    const handle = this.Module._SherpaOnnxCreateOfflineStream(this.handle);
     return new OfflineStream(handle, this.Module);
   }
 
   decode(stream) {
-    this.Module._DecodeOfflineStream(this.handle, stream.handle);
+    this.Module._SherpaOnnxDecodeOfflineStream(this.handle, stream.handle);
   }
 
   getResult(stream) {
-    const r = this.Module._GetOfflineStreamResultAsJson(stream.handle);
+    const r =
+        this.Module._SherpaOnnxGetOfflineStreamResultAsJson(stream.handle);
     const jsonStr = this.Module.UTF8ToString(r);
     const ans = JSON.parse(jsonStr);
-    this.Module._DestroyOfflineStreamResultJson(r);
+    this.Module._SherpaOnnxDestroyOfflineStreamResultJson(r);
 
     return ans;
   }
@@ -933,7 +934,7 @@ class OnlineStream {
 
   free() {
     if (this.handle) {
-      this.Module._DestroyOnlineStream(this.handle);
+      this.Module._SherpaOnnxDestroyOnlineStream(this.handle);
       this.handle = null;
       this.Module._free(this.pointer);
       this.pointer = null;
@@ -954,12 +955,12 @@ class OnlineStream {
     }
 
     this.Module.HEAPF32.set(samples, this.pointer / samples.BYTES_PER_ELEMENT);
-    this.Module._AcceptWaveform(
+    this.Module._SherpaOnnxOnlineStreamAcceptWaveform(
         this.handle, sampleRate, this.pointer, samples.length);
   }
 
   inputFinished() {
-    this.Module._InputFinished(this.handle);
+    this.Module._SherpaOnnxOnlineStreamInputFinished(this.handle);
   }
 };
 
@@ -967,7 +968,7 @@ class OnlineRecognizer {
   constructor(configObj, Module) {
     this.config = configObj;
     const config = initSherpaOnnxOnlineRecognizerConfig(configObj, Module)
-    const handle = Module._CreateOnlineRecognizer(config.ptr);
+    const handle = Module._SherpaOnnxCreateOnlineRecognizer(config.ptr);
 
     freeConfig(config, Module);
 
@@ -976,37 +977,39 @@ class OnlineRecognizer {
   }
 
   free() {
-    this.Module._DestroyOnlineRecognizer(this.handle);
+    this.Module._SherpaOnnxDestroyOnlineRecognizer(this.handle);
     this.handle = 0
   }
 
   createStream() {
-    const handle = this.Module._CreateOnlineStream(this.handle);
+    const handle = this.Module._SherpaOnnxCreateOnlineStream(this.handle);
     return new OnlineStream(handle, this.Module);
   }
 
   isReady(stream) {
-    return this.Module._IsOnlineStreamReady(this.handle, stream.handle) == 1;
+    return this.Module._SherpaOnnxIsOnlineStreamReady(
+               this.handle, stream.handle) == 1;
   }
 
   decode(stream) {
-    this.Module._DecodeOnlineStream(this.handle, stream.handle);
+    this.Module._SherpaOnnxDecodeOnlineStream(this.handle, stream.handle);
   }
 
   isEndpoint(stream) {
-    return this.Module._IsEndpoint(this.handle, stream.handle) == 1;
+    return this.Module._SherpaOnnxOnlineStreamIsEndpoint(
+               this.handle, stream.handle) == 1;
   }
 
   reset(stream) {
-    this.Module._Reset(this.handle, stream.handle);
+    this.Module._SherpaOnnxOnlineStreamReset(this.handle, stream.handle);
   }
 
   getResult(stream) {
-    const r =
-        this.Module._GetOnlineStreamResultAsJson(this.handle, stream.handle);
+    const r = this.Module._SherpaOnnxGetOnlineStreamResultAsJson(
+        this.handle, stream.handle);
     const jsonStr = this.Module.UTF8ToString(r);
     const ans = JSON.parse(jsonStr);
-    this.Module._DestroyOnlineStreamResultJson(r);
+    this.Module._SherpaOnnxDestroyOnlineStreamResultJson(r);
 
     return ans;
   }
