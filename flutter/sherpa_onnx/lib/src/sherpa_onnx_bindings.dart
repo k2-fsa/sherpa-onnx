@@ -489,7 +489,7 @@ typedef SherpaOnnxCreateOnlineStreamWithHotwords
 typedef IsOnlineStreamReadyNative = Int32 Function(
     Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
 
-typedef SherpaOnnxIsOnlineStreamReady = int Function(
+typedef IsOnlineStreamReady = int Function(
     Pointer<SherpaOnnxOnlineRecognizer>, Pointer<SherpaOnnxOnlineStream>);
 
 typedef SherpaOnnxDecodeOnlineStreamNative = Void Function(
@@ -841,7 +841,7 @@ class SherpaOnnxBindings {
   static SherpaOnnxCreateOnlineStreamWithHotwords?
       createOnlineStreamWithHotwords;
 
-  static SherpaOnnxIsOnlineStreamReady? isOnlineStreamReady;
+  static IsOnlineStreamReady? isOnlineStreamReady;
 
   static SherpaOnnxDecodeOnlineStream? decodeOnlineStream;
 
@@ -1096,7 +1096,7 @@ class SherpaOnnxBindings {
         .asFunction();
 
     isOnlineStreamReady ??= dynamicLibrary
-        .lookup<NativeFunction<SherpaOnnxIsOnlineStreamReadyNative>>(
+        .lookup<NativeFunction<IsOnlineStreamReadyNative>>(
             'SherpaOnnxIsOnlineStreamReady')
         .asFunction();
 
@@ -1115,7 +1115,8 @@ class SherpaOnnxBindings {
         .asFunction();
 
     isEndpoint ??= dynamicLibrary
-        .lookup<NativeFunction<IsEndpointNative>>('SherpaOnnxIsEndpoint')
+        .lookup<NativeFunction<IsEndpointNative>>(
+            'SherpaOnnxOnlineStreamIsEndpoint')
         .asFunction();
 
     destroyOnlineStreamResultJson ??= dynamicLibrary
