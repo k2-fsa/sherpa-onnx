@@ -130,7 +130,7 @@ SpeakerEmbeddingExtractorCreateStreamWrapper(const Napi::CallbackInfo &info) {
   return Napi::External<SherpaOnnxOnlineStream>::New(
       env, const_cast<SherpaOnnxOnlineStream *>(stream),
       [](Napi::Env env, SherpaOnnxOnlineStream *stream) {
-        DestroyOnlineStream(stream);
+        SherpaOnnxDestroyOnlineStream(stream);
       });
 }
 

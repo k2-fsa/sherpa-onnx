@@ -13,20 +13,20 @@ namespace SherpaOnnx
     {
         public KeywordSpotter(KeywordSpotterConfig config)
         {
-            IntPtr h = CreateKeywordSpotter(ref config);
+            IntPtr h = SherpaOnnxCreateKeywordSpotter(ref config);
             _handle = new HandleRef(this, h);
         }
 
         public OnlineStream CreateStream()
         {
-            IntPtr p = CreateKeywordStream(_handle.Handle);
+            IntPtr p = SherpaOnnxCreateKeywordStream(_handle.Handle);
             return new OnlineStream(p);
         }
 
         public OnlineStream CreateStream(string keywords)
         {
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(keywords);
-            IntPtr p = CreateKeywordStreamWithKeywords(_handle.Handle, utf8Bytes);
+            IntPtr p = SherpaOnnxCreateKeywordStreamWithKeywords(_handle.Handle, utf8Bytes);
             return new OnlineStream(p);
         }
 
@@ -81,7 +81,7 @@ namespace SherpaOnnx
 
         private void Cleanup()
         {
-            DestroyKeywordSpotter(_handle.Handle);
+            SherpaOnnxDestroyKeywordSpotter(_handle.Handle);
 
             // Don't permit the handle to be used again.
             _handle = new HandleRef(this, IntPtr.Zero);
@@ -90,30 +90,30 @@ namespace SherpaOnnx
         private HandleRef _handle;
 
         [DllImport(Dll.Filename)]
-        private static extern IntPtr CreateKeywordSpotter(ref KeywordSpotterConfig config);
+        private static extern IntPtr SherpaOnnxCreateKeywordSpotter(ref KeywordSpotterConfig config);
 
         [DllImport(Dll.Filename)]
-        private static extern void DestroyKeywordSpotter(IntPtr handle);
+        private static extern void SherpaOnnxDestroyKeywordSpotter(IntPtr handle);
 
         [DllImport(Dll.Filename)]
-        private static extern IntPtr CreateKeywordStream(IntPtr handle);
+        private static extern IntPtr SherpaOnnxCreateKeywordStream(IntPtr handle);
 
         [DllImport(Dll.Filename)]
-        private static extern IntPtr CreateKeywordStreamWithKeywords(IntPtr handle, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Keywords);
+        private static extern IntPtr SherpaOnnxCreateKeywordStreamWithKeywords(IntPtr handle, [MarshalAs(UnmanagedType.LPArray, ArraySubType = UnmanagedType.I1)] byte[] utf8Keywords);
 
-        [DllImport(Dll.Filename, EntryPoint = "IsKeywordStreamReady")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxIsKeywordStreamReady")]
         private static extern int IsReady(IntPtr handle, IntPtr stream);
 
-        [DllImport(Dll.Filename, EntryPoint = "DecodeKeywordStream")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxDecodeKeywordStream")]
         private static extern void Decode(IntPtr handle, IntPtr stream);
 
-        [DllImport(Dll.Filename, EntryPoint = "DecodeMultipleKeywordStreams")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxDecodeMultipleKeywordStreams")]
         private static extern void Decode(IntPtr handle, IntPtr[] streams, int n);
 
-        [DllImport(Dll.Filename, EntryPoint = "GetKeywordResult")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxGetKeywordResult")]
         private static extern IntPtr GetResult(IntPtr handle, IntPtr stream);
 
-        [DllImport(Dll.Filename, EntryPoint = "DestroyKeywordResult")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxDestroyKeywordResult")]
         private static extern void DestroyResult(IntPtr result);
     }
 }

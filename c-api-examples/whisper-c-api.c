@@ -59,7 +59,7 @@ int32_t main() {
   recognizer_config.model_config = offline_model_config;
 
   SherpaOnnxOfflineRecognizer *recognizer =
-      CreateOfflineRecognizer(&recognizer_config);
+      SherpaOnnxCreateOfflineRecognizer(&recognizer_config);
 
   if (recognizer == NULL) {
     fprintf(stderr, "Please check your config!\n");
@@ -69,19 +69,19 @@ int32_t main() {
     return -1;
   }
 
-  SherpaOnnxOfflineStream *stream = CreateOfflineStream(recognizer);
+  SherpaOnnxOfflineStream *stream = SherpaOnnxCreateOfflineStream(recognizer);
 
-  AcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
-                        wave->num_samples);
-  DecodeOfflineStream(recognizer, stream);
+  SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
+                                  wave->num_samples);
+  SherpaOnnxDecodeOfflineStream(recognizer, stream);
   const SherpaOnnxOfflineRecognizerResult *result =
-      GetOfflineStreamResult(stream);
+      SherpaOnnxGetOfflineStreamResult(stream);
 
   fprintf(stderr, "Decoded text: %s\n", result->text);
 
-  DestroyOfflineRecognizerResult(result);
-  DestroyOfflineStream(stream);
-  DestroyOfflineRecognizer(recognizer);
+  SherpaOnnxDestroyOfflineRecognizerResult(result);
+  SherpaOnnxDestroyOfflineStream(stream);
+  SherpaOnnxDestroyOfflineRecognizer(recognizer);
   SherpaOnnxFreeWave(wave);
 
   return 0;

@@ -50,8 +50,8 @@ int32_t main() {
   SherpaOnnxOfflineStream *stream =
       SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(slid);
 
-  AcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
-                        wave->num_samples);
+  SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
+                                  wave->num_samples);
 
   const SherpaOnnxSpokenLanguageIdentificationResult *result =
       SherpaOnnxSpokenLanguageIdentificationCompute(slid, stream);
@@ -60,7 +60,7 @@ int32_t main() {
   fprintf(stderr, "Detected language: %s\n", result->lang);
 
   SherpaOnnxDestroySpokenLanguageIdentificationResult(result);
-  DestroyOfflineStream(stream);
+  SherpaOnnxDestroyOfflineStream(stream);
   SherpaOnnxFreeWave(wave);
   SherpaOnnxDestroySpokenLanguageIdentification(slid);
 

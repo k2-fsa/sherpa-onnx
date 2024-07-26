@@ -111,7 +111,7 @@ CNonStreamingSpeechRecognitionDlg::CNonStreamingSpeechRecognitionDlg(
 
 CNonStreamingSpeechRecognitionDlg::~CNonStreamingSpeechRecognitionDlg() {
   if (recognizer_) {
-    DestroyOfflineRecognizer(recognizer_);
+    SherpaOnnxDestroyOfflineRecognizer(recognizer_);
     recognizer_ = nullptr;
   }
 }
@@ -256,12 +256,12 @@ void CNonStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     }
     pa_stream_ = nullptr;
 
-    SherpaOnnxOfflineStream *stream = CreateOfflineStream(recognizer_);
+    SherpaOnnxOfflineStream *stream = SherpaOnnxCreateOfflineStream(recognizer_);
 
-    AcceptWaveformOffline(stream, config_.feat_config.sample_rate,
+    SherpaOnnxAcceptWaveformOffline(stream, config_.feat_config.sample_rate,
                           samples_.data(), static_cast<int32_t>(samples_.size()));
-    DecodeOfflineStream(recognizer_, stream);
-    auto r = GetOfflineStreamResult(stream);
+    SherpaOnnxDecodeOfflineStream(recognizer_, stream);
+    auto r = SherpaOnnxGetOfflineStreamResult(stream);
     results_.emplace_back(r->text);
 
     auto str = Utf8ToUtf16(Cat(results_).c_str());
@@ -269,9 +269,9 @@ void CNonStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     my_text_.SetFocus();
     my_text_.SetSel(-1);
 
-    DestroyOfflineRecognizerResult(r);
+    SherpaOnnxDestroyOfflineRecognizerResult(r);
 
-    DestroyOfflineStream(stream);
+    SherpaOnnxDestroyOfflineStream(stream);
     // AfxMessageBox("Stopped", MB_OK);
     my_btn_.SetWindowText(_T("Start"));
     AppendLineToMultilineEditCtrl("\r\nStopped. Please click start and speak");
@@ -417,7 +417,7 @@ void CNonStreamingSpeechRecognitionDlg::InitWhisper() {
   config_.decoding_method = "greedy_search";
   config_.max_active_paths = 4;
 
-  recognizer_ = CreateOfflineRecognizer(&config_);
+  recognizer_ = SherpaOnnxCreateOfflineRecognizer(&config_);
 }
 
 void CNonStreamingSpeechRecognitionDlg::InitParaformer() {
@@ -459,7 +459,7 @@ void CNonStreamingSpeechRecognitionDlg::InitParaformer() {
   config_.decoding_method = "greedy_search";
   config_.max_active_paths = 4;
 
-  recognizer_ = CreateOfflineRecognizer(&config_);
+  recognizer_ = SherpaOnnxCreateOfflineRecognizer(&config_);
 }
 
 void CNonStreamingSpeechRecognitionDlg::InitRecognizer() {
@@ -525,7 +525,7 @@ void CNonStreamingSpeechRecognitionDlg::InitRecognizer() {
   config_.decoding_method = "greedy_search";
   config_.max_active_paths = 4;
 
-  recognizer_ = CreateOfflineRecognizer(&config_);
+  recognizer_ = SherpaOnnxCreateOfflineRecognizer(&config_);
 }
 
 void CNonStreamingSpeechRecognitionDlg::AppendTextToEditCtrl(

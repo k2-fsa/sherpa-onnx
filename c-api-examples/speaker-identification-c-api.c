@@ -37,8 +37,9 @@ static const float *ComputeEmbedding(
   const SherpaOnnxOnlineStream *stream =
       SherpaOnnxSpeakerEmbeddingExtractorCreateStream(ex);
 
-  AcceptWaveform(stream, wave->sample_rate, wave->samples, wave->num_samples);
-  InputFinished(stream);
+  SherpaOnnxOnlineStreamAcceptWaveform(stream, wave->sample_rate, wave->samples,
+                                       wave->num_samples);
+  SherpaOnnxOnlineStreamInputFinished(stream);
 
   if (!SherpaOnnxSpeakerEmbeddingExtractorIsReady(ex, stream)) {
     fprintf(stderr, "The input wave file %s is too short!\n", wav_filename);
@@ -49,7 +50,7 @@ static const float *ComputeEmbedding(
   const float *v =
       SherpaOnnxSpeakerEmbeddingExtractorComputeEmbedding(ex, stream);
 
-  DestroyOnlineStream(stream);
+  SherpaOnnxDestroyOnlineStream(stream);
   SherpaOnnxFreeWave(wave);
 
   // Remeber to free v to avoid memory leak

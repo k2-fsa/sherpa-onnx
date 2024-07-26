@@ -20,7 +20,7 @@ namespace SherpaOnnx
 
         public OnlineStream CreateStream()
         {
-            IntPtr p = CreateOnlineStream(_handle.Handle);
+            IntPtr p = SherpaOnnxCreateOnlineStream(_handle.Handle);
             return new OnlineStream(p);
         }
 
@@ -35,7 +35,7 @@ namespace SherpaOnnx
         /// true.
         public bool IsEndpoint(OnlineStream stream)
         {
-            return IsEndpoint(_handle.Handle, stream.Handle) != 0;
+            return SherpaOnnxOnlineStreamIsEndpoint(_handle.Handle, stream.Handle) != 0;
         }
 
         /// You have to ensure that IsReady(stream) returns true before
@@ -71,7 +71,7 @@ namespace SherpaOnnx
         /// When this method returns, IsEndpoint(stream) will return false.
         public void Reset(OnlineStream stream)
         {
-            Reset(_handle.Handle, stream.Handle);
+            SherpaOnnxOnlineStreamReset(_handle.Handle, stream.Handle);
         }
 
         public void Dispose()
@@ -89,7 +89,7 @@ namespace SherpaOnnx
 
         private void Cleanup()
         {
-            DestroyOnlineRecognizer(_handle.Handle);
+            SherpaOnnxDestroyOnlineRecognizer(_handle.Handle);
 
             // Don't permit the handle to be used again.
             _handle = new HandleRef(this, IntPtr.Zero);
@@ -101,30 +101,30 @@ namespace SherpaOnnx
         private static extern IntPtr SherpaOnnxCreateOnlineRecognizer(ref OnlineRecognizerConfig config);
 
         [DllImport(Dll.Filename)]
-        private static extern void DestroyOnlineRecognizer(IntPtr handle);
+        private static extern void SherpaOnnxDestroyOnlineRecognizer(IntPtr handle);
 
         [DllImport(Dll.Filename)]
-        private static extern IntPtr CreateOnlineStream(IntPtr handle);
+        private static extern IntPtr SherpaOnnxCreateOnlineStream(IntPtr handle);
 
-        [DllImport(Dll.Filename, EntryPoint = "IsOnlineStreamReady")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxIsOnlineStreamReady")]
         private static extern int IsReady(IntPtr handle, IntPtr stream);
 
-        [DllImport(Dll.Filename, EntryPoint = "DecodeOnlineStream")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxDecodeOnlineStream")]
         private static extern void Decode(IntPtr handle, IntPtr stream);
 
-        [DllImport(Dll.Filename, EntryPoint = "DecodeMultipleOnlineStreams")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxDecodeMultipleOnlineStreams")]
         private static extern void Decode(IntPtr handle, IntPtr[] streams, int n);
 
-        [DllImport(Dll.Filename, EntryPoint = "GetOnlineStreamResult")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxGetOnlineStreamResult")]
         private static extern IntPtr GetResult(IntPtr handle, IntPtr stream);
 
-        [DllImport(Dll.Filename, EntryPoint = "DestroyOnlineRecognizerResult")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxDestroyOnlineRecognizerResult")]
         private static extern void DestroyResult(IntPtr result);
 
         [DllImport(Dll.Filename)]
-        private static extern void Reset(IntPtr handle, IntPtr stream);
+        private static extern void SherpaOnnxOnlineStreamReset(IntPtr handle, IntPtr stream);
 
         [DllImport(Dll.Filename)]
-        private static extern int IsEndpoint(IntPtr handle, IntPtr stream);
+        private static extern int SherpaOnnxOnlineStreamIsEndpoint(IntPtr handle, IntPtr stream);
     }
 }

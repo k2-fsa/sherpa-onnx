@@ -141,7 +141,7 @@ AudioTaggingCreateOfflineStreamWrapper(const Napi::CallbackInfo &info) {
   return Napi::External<SherpaOnnxOfflineStream>::New(
       env, const_cast<SherpaOnnxOfflineStream *>(stream),
       [](Napi::Env env, SherpaOnnxOfflineStream *stream) {
-        DestroyOfflineStream(stream);
+        SherpaOnnxDestroyOfflineStream(stream);
       });
 }
 
