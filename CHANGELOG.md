@@ -1,3 +1,8 @@
+## 1.10.18
+
+* Fix the case when recognition results contain the symbol `"`. It caused
+  issues when converting results to a json string.
+
 ## 1.10.17
 
 * Support SenseVoice CTC models.

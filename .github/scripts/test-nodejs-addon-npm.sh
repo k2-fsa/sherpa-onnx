@@ -10,6 +10,19 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------non-streaming asr + vad----------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+rm sherpa-onnx-whisper-tiny.en.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+node ./test_vad_with_non_streaming_asr_whisper.js
+rm -rf sherpa-onnx-whisper*
+rm *.wav
+rm *.onnx
+
 echo "----------asr----------"
 
 if [[ $arch != "ia32" && $platform != "win32" ]]; then
