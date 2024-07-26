@@ -65,7 +65,7 @@ config = {
   }
 
   clear() {
-    addon.VoiceActivityDetectorClearWrapper(this.handle);
+    addon.voiceActivityDetectorClear(this.handle);
   }
 
   /*
@@ -79,11 +79,11 @@ config = {
   }
 
   reset() {
-    addon.VoiceActivityDetectorResetWrapper(this.handle);
+    addon.voiceActivityDetectorReset(this.handle);
   }
 
   flush() {
-    addon.VoiceActivityDetectorFlushWrapper(this.handle);
+    addon.voiceActivityDetectorFlush(this.handle);
   }
 }
 

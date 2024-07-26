@@ -306,8 +306,7 @@ std::string OfflineRecognitionResult::AsJsonString() const {
   os << "{";
   os << "\"text\""
      << ": ";
-  os << "\"" << text << "\""
-     << ", ";
+  os << std::quoted(text) << ", ";
 
   os << "\""
      << "timestamps"
@@ -339,7 +338,7 @@ std::string OfflineRecognitionResult::AsJsonString() const {
          << "\"";
       os.flags(oldFlags);
     } else {
-      os << sep << "\"" << t << "\"";
+      os << sep << std::quoted(t);
     }
     sep = ", ";
   }
