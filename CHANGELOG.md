@@ -1,3 +1,7 @@
+## 1.10.19
+
+* Prefix all C API functions with SherpaOnnx
+
 ## 1.10.18
 
 * Fix the case when recognition results contain the symbol `"`. It caused

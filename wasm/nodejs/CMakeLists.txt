@@ -14,7 +14,6 @@ set(exported_functions
   SherpaOnnxOfflineTtsSampleRate
   SherpaOnnxWriteWave
   # streaming asr
-  IsEndpoint
   SherpaOnnxCreateOnlineRecognizer
   SherpaOnnxCreateOnlineStream
   SherpaOnnxDecodeOnlineStream
@@ -27,6 +26,7 @@ set(exported_functions
   SherpaOnnxIsOnlineStreamReady
   SherpaOnnxOnlineStreamAcceptWaveform
   SherpaOnnxOnlineStreamInputFinished
+  SherpaOnnxOnlineStreamIsEndpoint
   SherpaOnnxOnlineStreamReset
   # non-streaming ASR
   PrintOfflineRecognizerConfig
