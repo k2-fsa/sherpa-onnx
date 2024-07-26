@@ -151,7 +151,7 @@ type OnlineStream struct {
 
 // Free the internal pointer inside the recognizer to avoid memory leak.
 func DeleteOnlineRecognizer(recognizer *OnlineRecognizer) {
-	C.DestroyOnlineRecognizer(recognizer.impl)
+	C.SherpaOnnxDestroyOnlineRecognizer(recognizer.impl)
 	recognizer.impl = nil
 }
 
@@ -224,14 +224,14 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 	c.ctc_fst_decoder_config.max_active = C.int(config.CtcFstDecoderConfig.MaxActive)
 
 	recognizer := &OnlineRecognizer{}
-	recognizer.impl = C.CreateOnlineRecognizer(&c)
+	recognizer.impl = C.SherpaOnnxCreateOnlineRecognizer(&c)
 
 	return recognizer
 }
 
 // Delete the internal pointer inside the stream to avoid memory leak.
 func DeleteOnlineStream(stream *OnlineStream) {
-	C.DestroyOnlineStream(stream.impl)
+	C.SherpaOnnxDestroyOnlineStream(stream.impl)
 	stream.impl = nil
 }
 
@@ -239,7 +239,7 @@ func DeleteOnlineStream(stream *OnlineStream) {
 // the returned stream to avoid memory leak
 func NewOnlineStream(recognizer *OnlineRecognizer) *OnlineStream {
 	stream := &OnlineStream{}
-	stream.impl = C.CreateOnlineStream(recognizer.impl)
+	stream.impl = C.SherpaOnnxCreateOnlineStream(recognizer.impl)
 	return stream
 }
 
@@ -251,7 +251,7 @@ func NewOnlineStream(recognizer *OnlineRecognizer) *OnlineStream {
 //
 // samples contains audio samples. Each sample is in the range [-1, 1]
 func (s *OnlineStream) AcceptWaveform(sampleRate int, samples []float32) {
-	C.AcceptWaveform(s.impl, C.int(sampleRate), (*C.float)(&samples[0]), C.int(len(samples)))
+	C.SherpaOnnxOnlineStreamAcceptWaveform(s.impl, C.int(sampleRate), (*C.float)(&samples[0]), C.int(len(samples)))
 }
 
 // Signal that there will be no incoming audio samples.
@@ -260,7 +260,7 @@ func (s *OnlineStream) AcceptWaveform(sampleRate int, samples []float32) {
 // The main purpose of this function is to flush the remaining audio samples
 // buffered inside for feature extraction.
 func (s *OnlineStream) InputFinished() {
-	C.InputFinished(s.impl)
+	C.SherpaOnnxOnlineStreamInputFinished(s.impl)
 }
 
 // Check whether the stream has enough feature frames for decoding.
@@ -272,7 +272,7 @@ func (s *OnlineStream) InputFinished() {
 //	   recognizer.Decode(s)
 //	}
 func (recognizer *OnlineRecognizer) IsReady(s *OnlineStream) bool {
-	return C.IsOnlineStreamReady(recognizer.impl, s.impl) == 1
+	return C.SherpaOnnxIsOnlineStreamReady(recognizer.impl, s.impl) == 1
 }
 
 // Return true if an endpoint is detected.
@@ -285,14 +285,14 @@ func (recognizer *OnlineRecognizer) IsReady(s *OnlineStream) bool {
 //	   recognizer.Reset(s)
 //	}
 func (recognizer *OnlineRecognizer) IsEndpoint(s *OnlineStream) bool {
-	return C.IsEndpoint(recognizer.impl, s.impl) == 1
+	return C.SherpaOnnxOnlineStreamIsEndpoint(recognizer.impl, s.impl) == 1
 }
 
 // After calling this function, the internal neural network model states
 // are reset and IsEndpoint(s) would return false. GetResult(s) would also
 // return an empty string.
 func (recognizer *OnlineRecognizer) Reset(s *OnlineStream) {
-	C.Reset(recognizer.impl, s.impl)
+	C.SherpaOnnxOnlineStreamReset(recognizer.impl, s.impl)
 }
 
 // Decode the stream. Before calling this function, you have to ensure
@@ -304,7 +304,7 @@ func (recognizer *OnlineRecognizer) Reset(s *OnlineStream) {
 //	  recognizer.Decode(s)
 //	}
 func (recognizer *OnlineRecognizer) Decode(s *OnlineStream) {
-	C.DecodeOnlineStream(recognizer.impl, s.impl)
+	C.SherpaOnnxDecodeOnlineStream(recognizer.impl, s.impl)
 }
 
 // Decode multiple streams in parallel, i.e., in batch.
@@ -316,13 +316,13 @@ func (recognizer *OnlineRecognizer) DecodeStreams(s []*OnlineStream) {
 		ss[i] = v.impl
 	}
 
-	C.DecodeMultipleOnlineStreams(recognizer.impl, &ss[0], C.int(len(s)))
+	C.SherpaOnnxDecodeMultipleOnlineStreams(recognizer.impl, &ss[0], C.int(len(s)))
 }
 
 // Get the current result of stream since the last invoke of Reset()
 func (recognizer *OnlineRecognizer) GetResult(s *OnlineStream) *OnlineRecognizerResult {
-	p := C.GetOnlineStreamResult(recognizer.impl, s.impl)
-	defer C.DestroyOnlineRecognizerResult(p)
+	p := C.SherpaOnnxGetOnlineStreamResult(recognizer.impl, s.impl)
+	defer C.SherpaOnnxDestroyOnlineRecognizerResult(p)
 	result := &OnlineRecognizerResult{}
 	result.Text = C.GoString(p.text)
 
@@ -442,7 +442,7 @@ type OfflineRecognizerResult struct {
 
 // Frees the internal pointer of the recognition to avoid memory leak.
 func DeleteOfflineRecognizer(recognizer *OfflineRecognizer) {
-	C.DestroyOfflineRecognizer(recognizer.impl)
+	C.SherpaOnnxDestroyOfflineRecognizer(recognizer.impl)
 	recognizer.impl = nil
 }
 
@@ -537,14 +537,14 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 	defer C.free(unsafe.Pointer(c.rule_fars))
 
 	recognizer := &OfflineRecognizer{}
-	recognizer.impl = C.CreateOfflineRecognizer(&c)
+	recognizer.impl = C.SherpaOnnxCreateOfflineRecognizer(&c)
 
 	return recognizer
 }
 
 // Frees the internal pointer of the stream to avoid memory leak.
 func DeleteOfflineStream(stream *OfflineStream) {
-	C.DestroyOfflineStream(stream.impl)
+	C.SherpaOnnxDestroyOfflineStream(stream.impl)
 	stream.impl = nil
 }
 
@@ -552,7 +552,7 @@ func DeleteOfflineStream(stream *OfflineStream) {
 // the returned stream to avoid memory leak
 func NewOfflineStream(recognizer *OfflineRecognizer) *OfflineStream {
 	stream := &OfflineStream{}
-	stream.impl = C.CreateOfflineStream(recognizer.impl)
+	stream.impl = C.SherpaOnnxCreateOfflineStream(recognizer.impl)
 	return stream
 }
 
@@ -564,12 +564,12 @@ func NewOfflineStream(recognizer *OfflineRecognizer) *OfflineStream {
 //
 // samples contains the actual audio samples. Each sample is in the range [-1, 1].
 func (s *OfflineStream) AcceptWaveform(sampleRate int, samples []float32) {
-	C.AcceptWaveformOffline(s.impl, C.int(sampleRate), (*C.float)(&samples[0]), C.int(len(samples)))
+	C.SherpaOnnxAcceptWaveformOffline(s.impl, C.int(sampleRate), (*C.float)(&samples[0]), C.int(len(samples)))
 }
 
 // Decode the offline stream.
 func (recognizer *OfflineRecognizer) Decode(s *OfflineStream) {
-	C.DecodeOfflineStream(recognizer.impl, s.impl)
+	C.SherpaOnnxDecodeOfflineStream(recognizer.impl, s.impl)
 }
 
 // Decode multiple streams in parallel, i.e., in batch.
@@ -579,13 +579,13 @@ func (recognizer *OfflineRecognizer) DecodeStreams(s []*OfflineStream) {
 		ss[i] = v.impl
 	}
 
-	C.DecodeMultipleOfflineStreams(recognizer.impl, &ss[0], C.int(len(s)))
+	C.SherpaOnnxDecodeMultipleOfflineStreams(recognizer.impl, &ss[0], C.int(len(s)))
 }
 
 // Get the recognition result of the offline stream.
 func (s *OfflineStream) GetResult() *OfflineRecognizerResult {
-	p := C.GetOfflineStreamResult(s.impl)
-	defer C.DestroyOfflineRecognizerResult(p)
+	p := C.SherpaOnnxGetOfflineStreamResult(s.impl)
+	defer C.SherpaOnnxDestroyOfflineRecognizerResult(p)
 	result := &OfflineRecognizerResult{}
 	result.Text = C.GoString(p.text)
 

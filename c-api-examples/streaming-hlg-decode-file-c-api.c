@@ -45,15 +45,16 @@ int32_t main() {
   config.model_config.debug = 0;
   config.ctc_fst_decoder_config.graph = graph;
   const SherpaOnnxOnlineRecognizer *recognizer =
-      CreateOnlineRecognizer(&config);
+      SherpaOnnxCreateOnlineRecognizer(&config);
   if (!recognizer) {
     fprintf(stderr, "Failed to create recognizer");
     exit(-1);
   }
 
-  const SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
+  const SherpaOnnxOnlineStream *stream =
+      SherpaOnnxCreateOnlineStream(recognizer);
 
-  const SherpaOnnxDisplay *display = CreateDisplay(50);
+  const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;
 
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
@@ -76,52 +77,53 @@ int32_t main() {
         (start + N > wave->num_samples) ? wave->num_samples : (start + N);
     k += N;
 
-    AcceptWaveform(stream, wave->sample_rate, wave->samples + start,
-                   end - start);
-    while (IsOnlineStreamReady(recognizer, stream)) {
-      DecodeOnlineStream(recognizer, stream);
+    SherpaOnnxOnlineStreamAcceptWaveform(stream, wave->sample_rate,
+                                         wave->samples + start, end - start);
+    while (SherpaOnnxIsOnlineStreamReady(recognizer, stream)) {
+      SherpaOnnxDecodeOnlineStream(recognizer, stream);
     }
 
     const SherpaOnnxOnlineRecognizerResult *r =
-        GetOnlineStreamResult(recognizer, stream);
+        SherpaOnnxGetOnlineStreamResult(recognizer, stream);
 
     if (strlen(r->text)) {
       SherpaOnnxPrint(display, segment_id, r->text);
     }
 
-    if (IsEndpoint(recognizer, stream)) {
+    if (SherpaOnnxOnlineStreamIsEndpoint(recognizer, stream)) {
       if (strlen(r->text)) {
         ++segment_id;
       }
-      Reset(recognizer, stream);
+      SherpaOnnxOnlineStreamReset(recognizer, stream);
     }
 
-    DestroyOnlineRecognizerResult(r);
+    SherpaOnnxDestroyOnlineRecognizerResult(r);
   }
 
   // add some tail padding
   float tail_paddings[4800] = {0};  // 0.3 seconds at 16 kHz sample rate
-  AcceptWaveform(stream, wave->sample_rate, tail_paddings, 4800);
+  SherpaOnnxOnlineStreamAcceptWaveform(stream, wave->sample_rate, tail_paddings,
+                                       4800);
 
   SherpaOnnxFreeWave(wave);
 
-  InputFinished(stream);
-  while (IsOnlineStreamReady(recognizer, stream)) {
-    DecodeOnlineStream(recognizer, stream);
+  SherpaOnnxOnlineStreamInputFinished(stream);
+  while (SherpaOnnxIsOnlineStreamReady(recognizer, stream)) {
+    SherpaOnnxDecodeOnlineStream(recognizer, stream);
   }
 
   const SherpaOnnxOnlineRecognizerResult *r =
-      GetOnlineStreamResult(recognizer, stream);
+      SherpaOnnxGetOnlineStreamResult(recognizer, stream);
 
   if (strlen(r->text)) {
     SherpaOnnxPrint(display, segment_id, r->text);
   }
 
-  DestroyOnlineRecognizerResult(r);
+  SherpaOnnxDestroyOnlineRecognizerResult(r);
 
-  DestroyDisplay(display);
-  DestroyOnlineStream(stream);
-  DestroyOnlineRecognizer(recognizer);
+  SherpaOnnxDestroyDisplay(display);
+  SherpaOnnxDestroyOnlineStream(stream);
+  SherpaOnnxDestroyOnlineRecognizer(recognizer);
   fprintf(stderr, "\n");
 
   return 0;

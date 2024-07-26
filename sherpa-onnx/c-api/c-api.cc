@@ -45,7 +45,7 @@ struct SherpaOnnxDisplay {
 
 #define SHERPA_ONNX_OR(x, y) (x ? x : y)
 
-SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
+SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
     const SherpaOnnxOnlineRecognizerConfig *config) {
   sherpa_onnx::OnlineRecognizerConfig recognizer_config;
 
@@ -130,46 +130,49 @@ SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
   return recognizer;
 }
 
-void DestroyOnlineRecognizer(const SherpaOnnxOnlineRecognizer *recognizer) {
+void SherpaOnnxDestroyOnlineRecognizer(
+    const SherpaOnnxOnlineRecognizer *recognizer) {
   delete recognizer;
 }
 
-SherpaOnnxOnlineStream *CreateOnlineStream(
+SherpaOnnxOnlineStream *SherpaOnnxCreateOnlineStream(
     const SherpaOnnxOnlineRecognizer *recognizer) {
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(recognizer->impl->CreateStream());
   return stream;
 }
 
-SherpaOnnxOnlineStream *CreateOnlineStreamWithHotwords(
+SherpaOnnxOnlineStream *SherpaOnnxCreateOnlineStreamWithHotwords(
     const SherpaOnnxOnlineRecognizer *recognizer, const char *hotwords) {
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(recognizer->impl->CreateStream(hotwords));
   return stream;
 }
 
-void DestroyOnlineStream(const SherpaOnnxOnlineStream *stream) {
+void SherpaOnnxDestroyOnlineStream(const SherpaOnnxOnlineStream *stream) {
   delete stream;
 }
 
-void AcceptWaveform(const SherpaOnnxOnlineStream *stream, int32_t sample_rate,
-                    const float *samples, int32_t n) {
+void SherpaOnnxOnlineStreamAcceptWaveform(const SherpaOnnxOnlineStream *stream,
+                                          int32_t sample_rate,
+                                          const float *samples, int32_t n) {
   stream->impl->AcceptWaveform(sample_rate, samples, n);
 }
 
-int32_t IsOnlineStreamReady(const SherpaOnnxOnlineRecognizer *recognizer,
-                            const SherpaOnnxOnlineStream *stream) {
+int32_t SherpaOnnxIsOnlineStreamReady(
+    const SherpaOnnxOnlineRecognizer *recognizer,
+    const SherpaOnnxOnlineStream *stream) {
   return recognizer->impl->IsReady(stream->impl.get());
 }
 
-void DecodeOnlineStream(const SherpaOnnxOnlineRecognizer *recognizer,
-                        const SherpaOnnxOnlineStream *stream) {
+void SherpaOnnxDecodeOnlineStream(const SherpaOnnxOnlineRecognizer *recognizer,
+                                  const SherpaOnnxOnlineStream *stream) {
   recognizer->impl->DecodeStream(stream->impl.get());
 }
 
-void DecodeMultipleOnlineStreams(const SherpaOnnxOnlineRecognizer *recognizer,
-                                 const SherpaOnnxOnlineStream **streams,
-                                 int32_t n) {
+void SherpaOnnxDecodeMultipleOnlineStreams(
+    const SherpaOnnxOnlineRecognizer *recognizer,
+    const SherpaOnnxOnlineStream **streams, int32_t n) {
   std::vector<sherpa_onnx::OnlineStream *> ss(n);
   for (int32_t i = 0; i != n; ++i) {
     ss[i] = streams[i]->impl.get();
@@ -177,7 +180,7 @@ void DecodeMultipleOnlineStreams(const SherpaOnnxOnlineRecognizer *recognizer,
   recognizer->impl->DecodeStreams(ss.data(), n);
 }
 
-const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
+const SherpaOnnxOnlineRecognizerResult *SherpaOnnxGetOnlineStreamResult(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream *stream) {
   sherpa_onnx::OnlineRecognizerResult result =
@@ -241,7 +244,8 @@ const SherpaOnnxOnlineRecognizerResult *GetOnlineStreamResult(
   return r;
 }
 
-void DestroyOnlineRecognizerResult(const SherpaOnnxOnlineRecognizerResult *r) {
+void SherpaOnnxDestroyOnlineRecognizerResult(
+    const SherpaOnnxOnlineRecognizerResult *r) {
   if (r) {
     delete[] r->text;
     delete[] r->json;
@@ -252,7 +256,7 @@ void DestroyOnlineRecognizerResult(const SherpaOnnxOnlineRecognizerResult *r) {
   }
 }
 
-const char *GetOnlineStreamResultAsJson(
+const char *SherpaOnnxGetOnlineStreamResultAsJson(
     const SherpaOnnxOnlineRecognizer *recognizer,
     const SherpaOnnxOnlineStream *stream) {
   sherpa_onnx::OnlineRecognizerResult result =
@@ -264,29 +268,32 @@ const char *GetOnlineStreamResultAsJson(
   return pJson;
 }
 
-void DestroyOnlineStreamResultJson(const char *s) { delete[] s; }
+void SherpaOnnxDestroyOnlineStreamResultJson(const char *s) { delete[] s; }
 
-void Reset(const SherpaOnnxOnlineRecognizer *recognizer,
-           const SherpaOnnxOnlineStream *stream) {
+void SherpaOnnxOnlineStreamReset(const SherpaOnnxOnlineRecognizer *recognizer,
+                                 const SherpaOnnxOnlineStream *stream) {
   recognizer->impl->Reset(stream->impl.get());
 }
 
-void InputFinished(const SherpaOnnxOnlineStream *stream) {
+void SherpaOnnxOnlineStreamInputFinished(const SherpaOnnxOnlineStream *stream) {
   stream->impl->InputFinished();
 }
 
-int32_t IsEndpoint(const SherpaOnnxOnlineRecognizer *recognizer,
-                   const SherpaOnnxOnlineStream *stream) {
+int32_t SherpaOnnxOnlineStreamIsEndpoint(
+    const SherpaOnnxOnlineRecognizer *recognizer,
+    const SherpaOnnxOnlineStream *stream) {
   return recognizer->impl->IsEndpoint(stream->impl.get());
 }
 
-const SherpaOnnxDisplay *CreateDisplay(int32_t max_word_per_line) {
+const SherpaOnnxDisplay *SherpaOnnxCreateDisplay(int32_t max_word_per_line) {
   SherpaOnnxDisplay *ans = new SherpaOnnxDisplay;
   ans->impl = std::make_unique<sherpa_onnx::Display>(max_word_per_line);
   return ans;
 }
 
-void DestroyDisplay(const SherpaOnnxDisplay *display) { delete display; }
+void SherpaOnnxDestroyDisplay(const SherpaOnnxDisplay *display) {
+  delete display;
+}
 
 void SherpaOnnxPrint(const SherpaOnnxDisplay *display, int32_t idx,
                      const char *s) {
@@ -311,7 +318,7 @@ struct SherpaOnnxOfflineStream {
 static sherpa_onnx::OfflineRecognizerConfig convertConfig(
     const SherpaOnnxOfflineRecognizerConfig *config);
 
-SherpaOnnxOfflineRecognizer *CreateOfflineRecognizer(
+SherpaOnnxOfflineRecognizer *SherpaOnnxCreateOfflineRecognizer(
     const SherpaOnnxOfflineRecognizerConfig *config) {
   sherpa_onnx::OfflineRecognizerConfig recognizer_config =
       convertConfig(config);
@@ -438,35 +445,37 @@ void SherpaOnnxOfflineRecognizerSetConfig(
   recognizer->impl->SetConfig(recognizer_config);
 }
 
-void DestroyOfflineRecognizer(SherpaOnnxOfflineRecognizer *recognizer) {
+void SherpaOnnxDestroyOfflineRecognizer(
+    SherpaOnnxOfflineRecognizer *recognizer) {
   delete recognizer;
 }
 
-SherpaOnnxOfflineStream *CreateOfflineStream(
+SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStream(
     const SherpaOnnxOfflineRecognizer *recognizer) {
   SherpaOnnxOfflineStream *stream =
       new SherpaOnnxOfflineStream(recognizer->impl->CreateStream());
   return stream;
 }
 
-void DestroyOfflineStream(const SherpaOnnxOfflineStream *stream) {
+void SherpaOnnxDestroyOfflineStream(const SherpaOnnxOfflineStream *stream) {
   delete stream;
 }
 
-void AcceptWaveformOffline(const SherpaOnnxOfflineStream *stream,
-                           int32_t sample_rate, const float *samples,
-                           int32_t n) {
+void SherpaOnnxAcceptWaveformOffline(const SherpaOnnxOfflineStream *stream,
+                                     int32_t sample_rate, const float *samples,
+                                     int32_t n) {
   stream->impl->AcceptWaveform(sample_rate, samples, n);
 }
 
-void DecodeOfflineStream(const SherpaOnnxOfflineRecognizer *recognizer,
-                         const SherpaOnnxOfflineStream *stream) {
+void SherpaOnnxDecodeOfflineStream(
+    const SherpaOnnxOfflineRecognizer *recognizer,
+    const SherpaOnnxOfflineStream *stream) {
   recognizer->impl->DecodeStream(stream->impl.get());
 }
 
-void DecodeMultipleOfflineStreams(SherpaOnnxOfflineRecognizer *recognizer,
-                                  SherpaOnnxOfflineStream **streams,
-                                  int32_t n) {
+void SherpaOnnxDecodeMultipleOfflineStreams(
+    SherpaOnnxOfflineRecognizer *recognizer, SherpaOnnxOfflineStream **streams,
+    int32_t n) {
   std::vector<sherpa_onnx::OfflineStream *> ss(n);
   for (int32_t i = 0; i != n; ++i) {
     ss[i] = streams[i]->impl.get();
@@ -474,7 +483,7 @@ void DecodeMultipleOfflineStreams(SherpaOnnxOfflineRecognizer *recognizer,
   recognizer->impl->DecodeStreams(ss.data(), n);
 }
 
-const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
+const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
     const SherpaOnnxOfflineStream *stream) {
   const sherpa_onnx::OfflineRecognitionResult &result =
       stream->impl->GetResult();
@@ -543,7 +552,7 @@ const SherpaOnnxOfflineRecognizerResult *GetOfflineStreamResult(
   return r;
 }
 
-void DestroyOfflineRecognizerResult(
+void SherpaOnnxDestroyOfflineRecognizerResult(
     const SherpaOnnxOfflineRecognizerResult *r) {
   if (r) {
     delete[] r->text;
@@ -556,7 +565,7 @@ void DestroyOfflineRecognizerResult(
   }
 }
 
-const char *GetOfflineStreamResultAsJson(
+const char *SherpaOnnxGetOfflineStreamResultAsJson(
     const SherpaOnnxOfflineStream *stream) {
   const sherpa_onnx::OfflineRecognitionResult &result =
       stream->impl->GetResult();
@@ -567,7 +576,7 @@ const char *GetOfflineStreamResultAsJson(
   return pJson;
 }
 
-void DestroyOfflineStreamResultJson(const char *s) { delete[] s; }
+void SherpaOnnxDestroyOfflineStreamResultJson(const char *s) { delete[] s; }
 
 // ============================================================
 // For Keyword Spot
@@ -577,7 +586,7 @@ struct SherpaOnnxKeywordSpotter {
   std::unique_ptr<sherpa_onnx::KeywordSpotter> impl;
 };
 
-SherpaOnnxKeywordSpotter *CreateKeywordSpotter(
+SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
     const SherpaOnnxKeywordSpotterConfig *config) {
   sherpa_onnx::KeywordSpotterConfig spotter_config;
 
@@ -640,36 +649,37 @@ SherpaOnnxKeywordSpotter *CreateKeywordSpotter(
   return spotter;
 }
 
-void DestroyKeywordSpotter(SherpaOnnxKeywordSpotter *spotter) {
+void SherpaOnnxDestroyKeywordSpotter(SherpaOnnxKeywordSpotter *spotter) {
   delete spotter;
 }
 
-SherpaOnnxOnlineStream *CreateKeywordStream(
+SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStream(
     const SherpaOnnxKeywordSpotter *spotter) {
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(spotter->impl->CreateStream());
   return stream;
 }
 
-SherpaOnnxOnlineStream *CreateKeywordStreamWithKeywords(
+SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStreamWithKeywords(
     const SherpaOnnxKeywordSpotter *spotter, const char *keywords) {
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(spotter->impl->CreateStream(keywords));
   return stream;
 }
 
-int32_t IsKeywordStreamReady(SherpaOnnxKeywordSpotter *spotter,
-                             SherpaOnnxOnlineStream *stream) {
+int32_t SherpaOnnxIsKeywordStreamReady(SherpaOnnxKeywordSpotter *spotter,
+                                       SherpaOnnxOnlineStream *stream) {
   return spotter->impl->IsReady(stream->impl.get());
 }
 
-void DecodeKeywordStream(SherpaOnnxKeywordSpotter *spotter,
-                         SherpaOnnxOnlineStream *stream) {
+void SherpaOnnxDecodeKeywordStream(SherpaOnnxKeywordSpotter *spotter,
+                                   SherpaOnnxOnlineStream *stream) {
   return spotter->impl->DecodeStream(stream->impl.get());
 }
 
-void DecodeMultipleKeywordStreams(SherpaOnnxKeywordSpotter *spotter,
-                                  SherpaOnnxOnlineStream **streams, int32_t n) {
+void SherpaOnnxDecodeMultipleKeywordStreams(SherpaOnnxKeywordSpotter *spotter,
+                                            SherpaOnnxOnlineStream **streams,
+                                            int32_t n) {
   std::vector<sherpa_onnx::OnlineStream *> ss(n);
   for (int32_t i = 0; i != n; ++i) {
     ss[i] = streams[i]->impl.get();
@@ -677,7 +687,7 @@ void DecodeMultipleKeywordStreams(SherpaOnnxKeywordSpotter *spotter,
   spotter->impl->DecodeStreams(ss.data(), n);
 }
 
-const SherpaOnnxKeywordResult *GetKeywordResult(
+const SherpaOnnxKeywordResult *SherpaOnnxGetKeywordResult(
     SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream *stream) {
   const sherpa_onnx::KeywordResult &result =
       spotter->impl->GetResult(stream->impl.get());
@@ -742,7 +752,7 @@ const SherpaOnnxKeywordResult *GetKeywordResult(
   return r;
 }
 
-void DestroyKeywordResult(const SherpaOnnxKeywordResult *r) {
+void SherpaOnnxDestroyKeywordResult(const SherpaOnnxKeywordResult *r) {
   if (r) {
     delete[] r->keyword;
     delete[] r->json;
@@ -753,8 +763,8 @@ void DestroyKeywordResult(const SherpaOnnxKeywordResult *r) {
   }
 }
 
-const char *GetKeywordResultAsJson(SherpaOnnxKeywordSpotter *spotter,
-                                   SherpaOnnxOnlineStream *stream) {
+const char *SherpaOnnxGetKeywordResultAsJson(SherpaOnnxKeywordSpotter *spotter,
+                                             SherpaOnnxOnlineStream *stream) {
   const sherpa_onnx::KeywordResult &result =
       spotter->impl->GetResult(stream->impl.get());
 
@@ -765,7 +775,7 @@ const char *GetKeywordResultAsJson(SherpaOnnxKeywordSpotter *spotter,
   return pJson;
 }
 
-void FreeKeywordResultJson(const char *s) { delete[] s; }
+void SherpaOnnxFreeKeywordResultJson(const char *s) { delete[] s; }
 
 // ============================================================
 // For VAD

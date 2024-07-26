@@ -14,41 +14,41 @@ set(exported_functions
   SherpaOnnxOfflineTtsSampleRate
   SherpaOnnxWriteWave
   # streaming asr
-  AcceptWaveform
-  CreateOnlineRecognizer
-  CreateOnlineStream
-  DecodeOnlineStream
-  DestroyOnlineRecognizer
-  DestroyOnlineRecognizerResult
-  DestroyOnlineStream
-  DestroyOnlineStreamResultJson
-  GetOnlineStreamResult
-  GetOnlineStreamResultAsJson
-  InputFinished
-  IsEndpoint
-  IsOnlineStreamReady
-  Reset
+  SherpaOnnxCreateOnlineRecognizer
+  SherpaOnnxCreateOnlineStream
+  SherpaOnnxDecodeOnlineStream
+  SherpaOnnxDestroyOnlineRecognizer
+  SherpaOnnxDestroyOnlineRecognizerResult
+  SherpaOnnxDestroyOnlineStream
+  SherpaOnnxDestroyOnlineStreamResultJson
+  SherpaOnnxGetOnlineStreamResult
+  SherpaOnnxGetOnlineStreamResultAsJson
+  SherpaOnnxIsOnlineStreamReady
+  SherpaOnnxOnlineStreamAcceptWaveform
+  SherpaOnnxOnlineStreamInputFinished
+  SherpaOnnxOnlineStreamIsEndpoint
+  SherpaOnnxOnlineStreamReset
   # non-streaming ASR
-  AcceptWaveformOffline
-  CreateOfflineRecognizer
-  CreateOfflineStream
-  DecodeMultipleOfflineStreams
-  DecodeOfflineStream
-  DestroyOfflineRecognizer
-  DestroyOfflineRecognizerResult
-  DestroyOfflineStream
-  DestroyOfflineStreamResultJson
-  GetOfflineStreamResult
-  GetOfflineStreamResultAsJson
   PrintOfflineRecognizerConfig
+  SherpaOnnxAcceptWaveformOffline
+  SherpaOnnxCreateOfflineRecognizer
+  SherpaOnnxCreateOfflineStream
+  SherpaOnnxDecodeMultipleOfflineStreams
+  SherpaOnnxDecodeOfflineStream
+  SherpaOnnxDestroyOfflineRecognizer
+  SherpaOnnxDestroyOfflineRecognizerResult
+  SherpaOnnxDestroyOfflineStream
+  SherpaOnnxDestroyOfflineStreamResultJson
+  SherpaOnnxGetOfflineStreamResult
+  SherpaOnnxGetOfflineStreamResultAsJson
   # online kws
-  CreateKeywordSpotter
-  DestroyKeywordSpotter
-  CreateKeywordStream
-  DecodeKeywordStream
-  GetKeywordResult
-  DestroyKeywordResult
-  IsKeywordStreamReady
+  SherpaOnnxCreateKeywordSpotter
+  SherpaOnnxCreateKeywordStream
+  SherpaOnnxDecodeKeywordStream
+  SherpaOnnxDestroyKeywordResult
+  SherpaOnnxDestroyKeywordSpotter
+  SherpaOnnxGetKeywordResult
+  SherpaOnnxIsKeywordStreamReady
 )
 
 

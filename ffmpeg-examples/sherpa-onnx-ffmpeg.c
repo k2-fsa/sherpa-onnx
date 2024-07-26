@@ -224,25 +224,25 @@ static void sherpa_decode_frame(const AVFrame *frame,
   const int16_t *p = (int16_t *)frame->data[0];
 
   if (frame->nb_samples + nb_samples > N) {
-    AcceptWaveform(stream, 16000, samples, nb_samples);
-    while (IsOnlineStreamReady(recognizer, stream)) {
-      DecodeOnlineStream(recognizer, stream);
+    SherpaOnnxOnlineStreamAcceptWaveform(stream, 16000, samples, nb_samples);
+    while (SherpaOnnxIsOnlineStreamReady(recognizer, stream)) {
+      SherpaOnnxDecodeOnlineStream(recognizer, stream);
     }
 
     SherpaOnnxOnlineRecognizerResult *r =
-        GetOnlineStreamResult(recognizer, stream);
+        SherpaOnnxGetOnlineStreamResult(recognizer, stream);
     if (strlen(r->text)) {
       SherpaOnnxPrint(display, *segment_id, r->text);
     }
 
-    if (IsEndpoint(recognizer, stream)) {
+    if (SherpaOnnxOnlineStreamIsEndpoint(recognizer, stream)) {
       if (strlen(r->text)) {
         ++*segment_id;
       }
-      Reset(recognizer, stream);
+      SherpaOnnxOnlineStreamReset(recognizer, stream);
     }
 
-    DestroyOnlineRecognizerResult(r);
+    SherpaOnnxDestroyOnlineRecognizerResult(r);
     nb_samples = 0;
   }
 
@@ -317,9 +317,10 @@ int main(int argc, char **argv) {
   config.rule2_min_trailing_silence = 1.2;
   config.rule3_min_utterance_length = 300;
 
-  SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&config);
-  SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
-  SherpaOnnxDisplay *display = CreateDisplay(50);
+  SherpaOnnxOnlineRecognizer *recognizer =
+      SherpaOnnxCreateOnlineRecognizer(&config);
+  SherpaOnnxOnlineStream *stream = SherpaOnnxCreateOnlineStream(recognizer);
+  SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;
 
   if ((ret = open_input_file(argv[5])) < 0) exit(1);
@@ -375,24 +376,24 @@ int main(int argc, char **argv) {
 
   // add some tail padding
   float tail_paddings[4800] = {0};  // 0.3 seconds at 16 kHz sample rate
-  AcceptWaveform(stream, 16000, tail_paddings, 4800);
-  InputFinished(stream);
+  SherpaOnnxOnlineStreamAcceptWaveform(stream, 16000, tail_paddings, 4800);
+  SherpaOnnxOnlineStreamInputFinished(stream);
 
-  while (IsOnlineStreamReady(recognizer, stream)) {
-    DecodeOnlineStream(recognizer, stream);
+  while (SherpaOnnxIsOnlineStreamReady(recognizer, stream)) {
+    SherpaOnnxDecodeOnlineStream(recognizer, stream);
   }
 
   SherpaOnnxOnlineRecognizerResult *r =
-      GetOnlineStreamResult(recognizer, stream);
+      SherpaOnnxGetOnlineStreamResult(recognizer, stream);
   if (strlen(r->text)) {
     SherpaOnnxPrint(display, segment_id, r->text);
   }
 
-  DestroyOnlineRecognizerResult(r);
+  SherpaOnnxDestroyOnlineRecognizerResult(r);
 
-  DestroyDisplay(display);
-  DestroyOnlineStream(stream);
-  DestroyOnlineRecognizer(recognizer);
+  SherpaOnnxDestroyDisplay(display);
+  SherpaOnnxDestroyOnlineStream(stream);
+  SherpaOnnxDestroyOnlineRecognizer(recognizer);
 
   avfilter_graph_free(&filter_graph);
   avcodec_free_context(&dec_ctx);

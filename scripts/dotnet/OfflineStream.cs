@@ -44,7 +44,7 @@ namespace SherpaOnnx
 
         private void Cleanup()
         {
-            DestroyOfflineStream(Handle);
+            SherpaOnnxDestroyOfflineStream(Handle);
 
             // Don't permit the handle to be used again.
             _handle = new HandleRef(this, IntPtr.Zero);
@@ -54,15 +54,15 @@ namespace SherpaOnnx
         public IntPtr Handle => _handle.Handle;
 
         [DllImport(Dll.Filename)]
-        private static extern void DestroyOfflineStream(IntPtr handle);
+        private static extern void SherpaOnnxDestroyOfflineStream(IntPtr handle);
 
-        [DllImport(Dll.Filename, EntryPoint = "AcceptWaveformOffline")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxAcceptWaveformOffline")]
         private static extern void AcceptWaveform(IntPtr handle, int sampleRate, float[] samples, int n);
 
-        [DllImport(Dll.Filename, EntryPoint = "GetOfflineStreamResult")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxGetOfflineStreamResult")]
         private static extern IntPtr GetResult(IntPtr handle);
 
-        [DllImport(Dll.Filename, EntryPoint = "DestroyOfflineRecognizerResult")]
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxDestroyOfflineRecognizerResult")]
         private static extern void DestroyResult(IntPtr handle);
     }
 

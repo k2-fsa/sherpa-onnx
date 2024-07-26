@@ -8,15 +8,15 @@ if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/assets/decoder-epoch-12-avg-2-chunk-1
 endif()
 
 set(exported_functions
-        AcceptWaveform
-        CreateKeywordSpotter
-        DestroyKeywordSpotter
-        CreateKeywordStream
-        DecodeKeywordStream
-        GetKeywordResult
-        DestroyKeywordResult
-        IsKeywordStreamReady
-        InputFinished
+  SherpaOnnxCreateKeywordSpotter
+  SherpaOnnxCreateKeywordStream
+  SherpaOnnxDecodeKeywordStream
+  SherpaOnnxDestroyKeywordResult
+  SherpaOnnxDestroyKeywordSpotter
+  SherpaOnnxGetKeywordResult
+  SherpaOnnxIsKeywordStreamReady
+  SherpaOnnxOnlineStreamAcceptWaveform
+  SherpaOnnxOnlineStreamInputFinished
 )
 set(mangled_exported_functions)
 foreach(x IN LISTS exported_functions)

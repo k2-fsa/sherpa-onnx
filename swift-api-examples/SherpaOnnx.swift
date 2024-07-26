@@ -213,7 +213,7 @@ class SherpaOnnxOnlineRecongitionResult {
 
   deinit {
     if let result {
-      DestroyOnlineRecognizerResult(result)
+      SherpaOnnxDestroyOnlineRecognizerResult(result)
     }
   }
 }
@@ -227,17 +227,17 @@ class SherpaOnnxRecognizer {
   init(
     config: UnsafePointer<SherpaOnnxOnlineRecognizerConfig>!
   ) {
-    recognizer = CreateOnlineRecognizer(config)
-    stream = CreateOnlineStream(recognizer)
+    recognizer = SherpaOnnxCreateOnlineRecognizer(config)
+    stream = SherpaOnnxCreateOnlineStream(recognizer)
   }
 
   deinit {
     if let stream {
-      DestroyOnlineStream(stream)
+      SherpaOnnxDestroyOnlineStream(stream)
     }
 
     if let recognizer {
-      DestroyOnlineRecognizer(recognizer)
+      SherpaOnnxDestroyOnlineRecognizer(recognizer)
     }
   }
 
@@ -248,22 +248,22 @@ class SherpaOnnxRecognizer {
   ///   - sampleRate: Sample rate of the input audio samples. Must match
   ///                 the one expected by the model.
   func acceptWaveform(samples: [Float], sampleRate: Int = 16000) {
-    AcceptWaveform(stream, Int32(sampleRate), samples, Int32(samples.count))
+    SherpaOnnxOnlineStreamAcceptWaveform(stream, Int32(sampleRate), samples, Int32(samples.count))
   }
 
   func isReady() -> Bool {
-    return IsOnlineStreamReady(recognizer, stream) == 1 ? true : false
+    return SherpaOnnxIsOnlineStreamReady(recognizer, stream) == 1 ? true : false
   }
 
   /// If there are enough number of feature frames, it invokes the neural
   /// network computation and decoding. Otherwise, it is a no-op.
   func decode() {
-    DecodeOnlineStream(recognizer, stream)
+    SherpaOnnxDecodeOnlineStream(recognizer, stream)
   }
 
   /// Get the decoding results so far
   func getResult() -> SherpaOnnxOnlineRecongitionResult {
-    let result: UnsafePointer<SherpaOnnxOnlineRecognizerResult>? = GetOnlineStreamResult(
+    let result: UnsafePointer<SherpaOnnxOnlineRecognizerResult>? = SherpaOnnxGetOnlineStreamResult(
       recognizer, stream)
     return SherpaOnnxOnlineRecongitionResult(result: result)
   }
@@ -275,15 +275,15 @@ class SherpaOnnxRecognizer {
   /// the given hotWords appended to the default hotwords.
   func reset(hotwords: String? = nil) {
     guard let words = hotwords, !words.isEmpty else {
-      Reset(recognizer, stream)
+      SherpaOnnxOnlineStreamReset(recognizer, stream)
       return
     }
 
     words.withCString { cString in
-      let newStream = CreateOnlineStreamWithHotwords(recognizer, cString)
+      let newStream = SherpaOnnxCreateOnlineStreamWithHotwords(recognizer, cString)
       // lock while release and replace stream
       objc_sync_enter(self)
-      DestroyOnlineStream(stream)
+      SherpaOnnxDestroyOnlineStream(stream)
       stream = newStream
       objc_sync_exit(self)
     }
@@ -292,12 +292,12 @@ class SherpaOnnxRecognizer {
   /// Signal that no more audio samples would be available.
   /// After this call, you cannot call acceptWaveform() any more.
   func inputFinished() {
-    InputFinished(stream)
+    SherpaOnnxOnlineStreamInputFinished(stream)
   }
 
   /// Return true is an endpoint has been detected.
   func isEndpoint() -> Bool {
-    return IsEndpoint(recognizer, stream) == 1 ? true : false
+    return SherpaOnnxOnlineStreamIsEndpoint(recognizer, stream) == 1 ? true : false
   }
 }
 
@@ -469,7 +469,7 @@ class SherpaOnnxOfflineRecongitionResult {
 
   deinit {
     if let result {
-      DestroyOfflineRecognizerResult(result)
+      SherpaOnnxDestroyOfflineRecognizerResult(result)
     }
   }
 }
@@ -481,12 +481,12 @@ class SherpaOnnxOfflineRecognizer {
   init(
     config: UnsafePointer<SherpaOnnxOfflineRecognizerConfig>!
   ) {
-    recognizer = CreateOfflineRecognizer(config)
+    recognizer = SherpaOnnxCreateOfflineRecognizer(config)
   }
 
   deinit {
     if let recognizer {
-      DestroyOfflineRecognizer(recognizer)
+      SherpaOnnxDestroyOfflineRecognizer(recognizer)
     }
   }
 
@@ -497,16 +497,17 @@ class SherpaOnnxOfflineRecognizer {
   ///   - sampleRate: Sample rate of the input audio samples. Must match
   ///                 the one expected by the model.
   func decode(samples: [Float], sampleRate: Int = 16000) -> SherpaOnnxOfflineRecongitionResult {
-    let stream: OpaquePointer! = CreateOfflineStream(recognizer)
+    let stream: OpaquePointer! = SherpaOnnxCreateOfflineStream(recognizer)
 
-    AcceptWaveformOffline(stream, Int32(sampleRate), samples, Int32(samples.count))
+    SherpaOnnxAcceptWaveformOffline(stream, Int32(sampleRate), samples, Int32(samples.count))
 
-    DecodeOfflineStream(recognizer, stream)
+    SherpaOnnxDecodeOfflineStream(recognizer, stream)
 
-    let result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>? = GetOfflineStreamResult(
-      stream)
+    let result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>? =
+      SherpaOnnxGetOfflineStreamResult(
+        stream)
 
-    DestroyOfflineStream(stream)
+    SherpaOnnxDestroyOfflineStream(stream)
 
     return SherpaOnnxOfflineRecongitionResult(result: result)
   }
@@ -852,14 +853,14 @@ class SherpaOnnxSpokenLanguageIdentificationWrapper {
     -> SherpaOnnxSpokenLanguageIdentificationResultWrapper
   {
     let stream: OpaquePointer! = SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(slid)
-    AcceptWaveformOffline(stream, Int32(sampleRate), samples, Int32(samples.count))
+    SherpaOnnxAcceptWaveformOffline(stream, Int32(sampleRate), samples, Int32(samples.count))
 
     let result: UnsafePointer<SherpaOnnxSpokenLanguageIdentificationResult>? =
       SherpaOnnxSpokenLanguageIdentificationCompute(
         slid,
         stream)
 
-    DestroyOfflineStream(stream)
+    SherpaOnnxDestroyOfflineStream(stream)
     return SherpaOnnxSpokenLanguageIdentificationResultWrapper(result: result)
   }
 }
@@ -900,7 +901,7 @@ class SherpaOnnxKeywordResultWrapper {
 
   deinit {
     if let result {
-      DestroyKeywordResult(result)
+      SherpaOnnxDestroyKeywordResult(result)
     }
   }
 }
@@ -933,34 +934,34 @@ class SherpaOnnxKeywordSpotterWrapper {
   init(
     config: UnsafePointer<SherpaOnnxKeywordSpotterConfig>!
   ) {
-    spotter = CreateKeywordSpotter(config)
-    stream = CreateKeywordStream(spotter)
+    spotter = SherpaOnnxCreateKeywordSpotter(config)
+    stream = SherpaOnnxCreateKeywordStream(spotter)
   }
 
   deinit {
     if let stream {
-      DestroyOnlineStream(stream)
+      SherpaOnnxDestroyOnlineStream(stream)
     }
 
     if let spotter {
-      DestroyKeywordSpotter(spotter)
+      SherpaOnnxDestroyKeywordSpotter(spotter)
     }
   }
 
   func acceptWaveform(samples: [Float], sampleRate: Int = 16000) {
-    AcceptWaveform(stream, Int32(sampleRate), samples, Int32(samples.count))
+    SherpaOnnxOnlineStreamAcceptWaveform(stream, Int32(sampleRate), samples, Int32(samples.count))
   }
 
   func isReady() -> Bool {
-    return IsKeywordStreamReady(spotter, stream) == 1 ? true : false
+    return SherpaOnnxIsKeywordStreamReady(spotter, stream) == 1 ? true : false
   }
 
   func decode() {
-    DecodeKeywordStream(spotter, stream)
+    SherpaOnnxDecodeKeywordStream(spotter, stream)
   }
 
   func getResult() -> SherpaOnnxKeywordResultWrapper {
-    let result: UnsafePointer<SherpaOnnxKeywordResult>? = GetKeywordResult(
+    let result: UnsafePointer<SherpaOnnxKeywordResult>? = SherpaOnnxGetKeywordResult(
       spotter, stream)
     return SherpaOnnxKeywordResultWrapper(result: result)
   }
@@ -968,7 +969,7 @@ class SherpaOnnxKeywordSpotterWrapper {
   /// Signal that no more audio samples would be available.
   /// After this call, you cannot call acceptWaveform() any more.
   func inputFinished() {
-    InputFinished(stream)
+    SherpaOnnxOnlineStreamInputFinished(stream)
   }
 }
 

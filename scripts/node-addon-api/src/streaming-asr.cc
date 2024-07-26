@@ -194,7 +194,7 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
 
   c.ctc_fst_decoder_config = GetCtcFstDecoderConfig(o);
 
-  SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&c);
+  SherpaOnnxOnlineRecognizer *recognizer = SherpaOnnxCreateOnlineRecognizer(&c);
 
   if (c.model_config.transducer.encoder) {
     delete[] c.model_config.transducer.encoder;
@@ -270,7 +270,7 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   return Napi::External<SherpaOnnxOnlineRecognizer>::New(
       env, recognizer,
       [](Napi::Env env, SherpaOnnxOnlineRecognizer *recognizer) {
-        DestroyOnlineRecognizer(recognizer);
+        SherpaOnnxDestroyOnlineRecognizer(recognizer);
       });
 }
 
@@ -298,11 +298,11 @@ static Napi::External<SherpaOnnxOnlineStream> CreateOnlineStreamWrapper(
   SherpaOnnxOnlineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
 
-  SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
+  SherpaOnnxOnlineStream *stream = SherpaOnnxCreateOnlineStream(recognizer);
 
   return Napi::External<SherpaOnnxOnlineStream>::New(
       env, stream, [](Napi::Env env, SherpaOnnxOnlineStream *stream) {
-        DestroyOnlineStream(stream);
+        SherpaOnnxDestroyOnlineStream(stream);
       });
 }
 
@@ -369,7 +369,8 @@ static void AcceptWaveformWrapper(const Napi::CallbackInfo &info) {
   Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
   int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
 
-  AcceptWaveform(stream, sample_rate, samples.Data(), samples.ElementLength());
+  SherpaOnnxOnlineStreamAcceptWaveform(stream, sample_rate, samples.Data(),
+                                       samples.ElementLength());
 }
 
 static Napi::Boolean IsOnlineStreamReadyWrapper(
@@ -405,7 +406,7 @@ static Napi::Boolean IsOnlineStreamReadyWrapper(
   SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
-  int32_t is_ready = IsOnlineStreamReady(recognizer, stream);
+  int32_t is_ready = SherpaOnnxIsOnlineStreamReady(recognizer, stream);
 
   return Napi::Boolean::New(env, is_ready);
 }
@@ -442,7 +443,7 @@ static void DecodeOnlineStreamWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
-  DecodeOnlineStream(recognizer, stream);
+  SherpaOnnxDecodeOnlineStream(recognizer, stream);
 }
 
 static Napi::String GetOnlineStreamResultAsJsonWrapper(
@@ -478,10 +479,10 @@ static Napi::String GetOnlineStreamResultAsJsonWrapper(
   SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
-  const char *json = GetOnlineStreamResultAsJson(recognizer, stream);
+  const char *json = SherpaOnnxGetOnlineStreamResultAsJson(recognizer, stream);
   Napi::String s = Napi::String::New(env, json);
 
-  DestroyOnlineStreamResultJson(json);
+  SherpaOnnxDestroyOnlineStreamResultJson(json);
 
   return s;
 }
@@ -508,7 +509,7 @@ static void InputFinishedWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxOnlineStream *stream =
       info[0].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
-  InputFinished(stream);
+  SherpaOnnxOnlineStreamInputFinished(stream);
 }
 
 static void ResetOnlineStreamWrapper(const Napi::CallbackInfo &info) {
@@ -543,7 +544,7 @@ static void ResetOnlineStreamWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
-  Reset(recognizer, stream);
+  SherpaOnnxOnlineStreamReset(recognizer, stream);
 }
 
 static Napi::Boolean IsEndpointWrapper(const Napi::CallbackInfo &info) {
@@ -578,7 +579,7 @@ static Napi::Boolean IsEndpointWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
-  int32_t is_endpoint = IsEndpoint(recognizer, stream);
+  int32_t is_endpoint = SherpaOnnxOnlineStreamIsEndpoint(recognizer, stream);
 
   return Napi::Boolean::New(env, is_endpoint);
 }
@@ -603,12 +604,12 @@ static Napi::External<SherpaOnnxDisplay> CreateDisplayWrapper(
   }
   int32_t max_word_per_line = info[0].As<Napi::Number>().Int32Value();
 
-  const SherpaOnnxDisplay *display = CreateDisplay(max_word_per_line);
+  const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(max_word_per_line);
 
   return Napi::External<SherpaOnnxDisplay>::New(
       env, const_cast<SherpaOnnxDisplay *>(display),
       [](Napi::Env env, SherpaOnnxDisplay *display) {
-        DestroyDisplay(display);
+        SherpaOnnxDestroyDisplay(display);
       });
 }
 
