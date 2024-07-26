@@ -194,18 +194,18 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineStream SherpaOnnxOnlineStream;
 /// @param config  Config for the recognizer.
 /// @return Return a pointer to the recognizer. The user has to invoke
 //          DestroyOnlineRecognizer() to free it to avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOnlineRecognizer *CreateOnlineRecognizer(
+SHERPA_ONNX_API SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
     const SherpaOnnxOnlineRecognizerConfig *config);
 
-/// Free a pointer returned by CreateOnlineRecognizer()
+/// Free a pointer returned by SherpaOnnxCreateOnlineRecognizer()
 ///
-/// @param p A pointer returned by CreateOnlineRecognizer()
+/// @param p A pointer returned by SherpaOnnxCreateOnlineRecognizer()
 SHERPA_ONNX_API void DestroyOnlineRecognizer(
     const SherpaOnnxOnlineRecognizer *recognizer);
 
 /// Create an online stream for accepting wave samples.
 ///
-/// @param recognizer  A pointer returned by CreateOnlineRecognizer()
+/// @param recognizer  A pointer returned by SherpaOnnxCreateOnlineRecognizer()
 /// @return Return a pointer to an OnlineStream. The user has to invoke
 ///         DestroyOnlineStream() to free it to avoid memory leak.
 SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineStream(
@@ -214,7 +214,7 @@ SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineStream(
 /// Create an online stream for accepting wave samples with the specified hot
 /// words.
 ///
-/// @param recognizer  A pointer returned by CreateOnlineRecognizer()
+/// @param recognizer  A pointer returned by SherpaOnnxCreateOnlineRecognizer()
 /// @return Return a pointer to an OnlineStream. The user has to invoke
 ///         DestroyOnlineStream() to free it to avoid memory leak.
 SHERPA_ONNX_API SherpaOnnxOnlineStream *CreateOnlineStreamWithHotwords(
@@ -243,7 +243,7 @@ SHERPA_ONNX_API void AcceptWaveform(const SherpaOnnxOnlineStream *stream,
 /// Return 1 if there are enough number of feature frames for decoding.
 /// Return 0 otherwise.
 ///
-/// @param recognizer  A pointer returned by CreateOnlineRecognizer
+/// @param recognizer  A pointer returned by SherpaOnnxCreateOnlineRecognizer
 /// @param stream  A pointer returned by CreateOnlineStream
 SHERPA_ONNX_API int32_t
 IsOnlineStreamReady(const SherpaOnnxOnlineRecognizer *recognizer,
@@ -269,9 +269,9 @@ SHERPA_ONNX_API void DecodeOnlineStream(
 /// Caution: The caller has to ensure each OnlineStream is ready, i.e.,
 /// IsOnlineStreamReady() for that stream should return 1.
 ///
-/// @param recognizer  A pointer returned by CreateOnlineRecognizer()
+/// @param recognizer  A pointer returned by SherpaOnnxCreateOnlineRecognizer()
 /// @param streams  A pointer array containing pointers returned by
-///                 CreateOnlineRecognizer()
+///                 SherpaOnnxCreateOnlineRecognizer()
 /// @param n  Number of elements in the given streams array.
 SHERPA_ONNX_API void DecodeMultipleOnlineStreams(
     const SherpaOnnxOnlineRecognizer *recognizer,
@@ -279,7 +279,7 @@ SHERPA_ONNX_API void DecodeMultipleOnlineStreams(
 
 /// Get the decoding results so far for an OnlineStream.
 ///
-/// @param recognizer A pointer returned by CreateOnlineRecognizer().
+/// @param recognizer A pointer returned by SherpaOnnxCreateOnlineRecognizer().
 /// @param stream A pointer returned by CreateOnlineStream().
 /// @return A pointer containing the result. The user has to invoke
 ///         DestroyOnlineRecognizerResult() to free the returned pointer to
@@ -307,7 +307,7 @@ SHERPA_ONNX_API void DestroyOnlineStreamResultJson(const char *s);
 /// Reset an OnlineStream , which clears the neural network model state
 /// and the state for decoding.
 ///
-/// @param recognizer A pointer returned by CreateOnlineRecognizer().
+/// @param recognizer A pointer returned by SherpaOnnxCreateOnlineRecognizer().
 /// @param stream A pointer returned by CreateOnlineStream
 SHERPA_ONNX_API void Reset(const SherpaOnnxOnlineRecognizer *recognizer,
                            const SherpaOnnxOnlineStream *stream);
@@ -320,7 +320,7 @@ SHERPA_ONNX_API void InputFinished(const SherpaOnnxOnlineStream *stream);
 
 /// Return 1 if an endpoint has been detected.
 ///
-/// @param recognizer A pointer returned by CreateOnlineRecognizer()
+/// @param recognizer A pointer returned by SherpaOnnxCreateOnlineRecognizer()
 /// @param stream A pointer returned by CreateOnlineStream()
 /// @return Return 1 if an endpoint is detected. Return 0 otherwise.
 SHERPA_ONNX_API int32_t IsEndpoint(const SherpaOnnxOnlineRecognizer *recognizer,

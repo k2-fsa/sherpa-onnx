@@ -317,7 +317,8 @@ int main(int argc, char **argv) {
   config.rule2_min_trailing_silence = 1.2;
   config.rule3_min_utterance_length = 300;
 
-  SherpaOnnxOnlineRecognizer *recognizer = CreateOnlineRecognizer(&config);
+  SherpaOnnxOnlineRecognizer *recognizer =
+      SherpaOnnxCreateOnlineRecognizer(&config);
   SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
   SherpaOnnxDisplay *display = CreateDisplay(50);
   int32_t segment_id = 0;

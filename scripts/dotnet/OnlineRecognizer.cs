@@ -14,7 +14,7 @@ namespace SherpaOnnx
     {
         public OnlineRecognizer(OnlineRecognizerConfig config)
         {
-            IntPtr h = CreateOnlineRecognizer(ref config);
+            IntPtr h = SherpaOnnxCreateOnlineRecognizer(ref config);
             _handle = new HandleRef(this, h);
         }
 
@@ -98,7 +98,7 @@ namespace SherpaOnnx
         private HandleRef _handle;
 
         [DllImport(Dll.Filename)]
-        private static extern IntPtr CreateOnlineRecognizer(ref OnlineRecognizerConfig config);
+        private static extern IntPtr SherpaOnnxCreateOnlineRecognizer(ref OnlineRecognizerConfig config);
 
         [DllImport(Dll.Filename)]
         private static extern void DestroyOnlineRecognizer(IntPtr handle);

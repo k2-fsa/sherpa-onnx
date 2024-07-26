@@ -10,7 +10,6 @@ set(exported_functions
   MyPrint
   # online ASR
   AcceptWaveform
-  CreateOnlineRecognizer
   CreateOnlineStream
   DecodeOnlineStream
   DestroyOfflineStreamResultJson
@@ -25,6 +24,7 @@ set(exported_functions
   IsEndpoint
   IsOnlineStreamReady
   Reset
+  SherpaOnnxCreateOnlineRecognizer
   #
 )
 set(mangled_exported_functions)

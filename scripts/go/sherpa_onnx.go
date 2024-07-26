@@ -224,7 +224,7 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 	c.ctc_fst_decoder_config.max_active = C.int(config.CtcFstDecoderConfig.MaxActive)
 
 	recognizer := &OnlineRecognizer{}
-	recognizer.impl = C.CreateOnlineRecognizer(&c)
+	recognizer.impl = C.SherpaOnnxCreateOnlineRecognizer(&c)
 
 	return recognizer
 }

@@ -15,7 +15,6 @@ set(exported_functions
   SherpaOnnxWriteWave
   # streaming asr
   AcceptWaveform
-  CreateOnlineRecognizer
   CreateOnlineStream
   DecodeOnlineStream
   DestroyOnlineRecognizer
@@ -28,6 +27,7 @@ set(exported_functions
   IsEndpoint
   IsOnlineStreamReady
   Reset
+  SherpaOnnxCreateOnlineRecognizer
   # non-streaming ASR
   AcceptWaveformOffline
   CreateOfflineRecognizer

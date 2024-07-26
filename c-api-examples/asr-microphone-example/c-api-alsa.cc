@@ -189,7 +189,7 @@ int32_t main(int32_t argc, char *argv[]) {
   }
 
   const SherpaOnnxOnlineRecognizer *recognizer =
-      CreateOnlineRecognizer(&config);
+      SherpaOnnxCreateOnlineRecognizer(&config);
   const SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
 
   const SherpaOnnxDisplay *display = CreateDisplay(50);

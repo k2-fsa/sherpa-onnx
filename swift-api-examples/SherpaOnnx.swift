@@ -227,7 +227,7 @@ class SherpaOnnxRecognizer {
   init(
     config: UnsafePointer<SherpaOnnxOnlineRecognizerConfig>!
   ) {
-    recognizer = CreateOnlineRecognizer(config)
+    recognizer = SherpaOnnxCreateOnlineRecognizer(config)
     stream = CreateOnlineStream(recognizer)
   }
 

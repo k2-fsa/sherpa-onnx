@@ -356,7 +356,7 @@ void CStreamingSpeechRecognitionDlg::InitParaformer() {
   config.model_config.paraformer.encoder = paraformer_encoder.c_str();
   config.model_config.paraformer.decoder = paraformer_decoder.c_str();
 
-  recognizer_ = CreateOnlineRecognizer(&config);
+  recognizer_ = SherpaOnnxCreateOnlineRecognizer(&config);
 }
 
 void CStreamingSpeechRecognitionDlg::InitRecognizer() {
@@ -422,7 +422,7 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
   config.model_config.transducer.decoder = decoder.c_str();
   config.model_config.transducer.joiner = joiner.c_str();
 
-  recognizer_ = CreateOnlineRecognizer(&config);
+  recognizer_ = SherpaOnnxCreateOnlineRecognizer(&config);
 }
 
 // see

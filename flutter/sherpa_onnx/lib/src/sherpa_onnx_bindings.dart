@@ -461,10 +461,12 @@ typedef DestroyOfflineStreamResultJsonNative = Void Function(Pointer<Utf8>);
 
 typedef DestroyOfflineStreamResultJson = void Function(Pointer<Utf8>);
 
-typedef CreateOnlineRecognizerNative = Pointer<SherpaOnnxOnlineRecognizer>
-    Function(Pointer<SherpaOnnxOnlineRecognizerConfig>);
+typedef SherpaOnnxCreateOnlineRecognizerNative
+    = Pointer<SherpaOnnxOnlineRecognizer> Function(
+        Pointer<SherpaOnnxOnlineRecognizerConfig>);
 
-typedef CreateOnlineRecognizer = CreateOnlineRecognizerNative;
+typedef SherpaOnnxCreateOnlineRecognizer
+    = SherpaOnnxCreateOnlineRecognizerNative;
 
 typedef DestroyOnlineRecognizerNative = Void Function(
     Pointer<SherpaOnnxOnlineRecognizer>);
@@ -827,7 +829,7 @@ class SherpaOnnxBindings {
   static GetOfflineStreamResultAsJson? getOfflineStreamResultAsJson;
   static DestroyOfflineStreamResultJson? destroyOfflineStreamResultJson;
 
-  static CreateOnlineRecognizer? createOnlineRecognizer;
+  static SherpaOnnxCreateOnlineRecognizer? createOnlineRecognizer;
 
   static DestroyOnlineRecognizer? destroyOnlineRecognizer;
 
@@ -1070,8 +1072,8 @@ class SherpaOnnxBindings {
         .asFunction();
 
     createOnlineRecognizer ??= dynamicLibrary
-        .lookup<NativeFunction<CreateOnlineRecognizerNative>>(
-            'CreateOnlineRecognizer')
+        .lookup<NativeFunction<SherpaOnnxCreateOnlineRecognizerNative>>(
+            'SherpaOnnxCreateOnlineRecognizer')
         .asFunction();
 
     destroyOnlineRecognizer ??= dynamicLibrary

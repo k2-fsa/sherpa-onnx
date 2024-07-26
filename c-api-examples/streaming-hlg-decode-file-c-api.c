@@ -45,7 +45,7 @@ int32_t main() {
   config.model_config.debug = 0;
   config.ctc_fst_decoder_config.graph = graph;
   const SherpaOnnxOnlineRecognizer *recognizer =
-      CreateOnlineRecognizer(&config);
+      SherpaOnnxCreateOnlineRecognizer(&config);
   if (!recognizer) {
     fprintf(stderr, "Failed to create recognizer");
     exit(-1);
