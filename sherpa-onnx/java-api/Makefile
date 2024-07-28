@@ -38,6 +38,7 @@ java_files += OfflineTtsVitsModelConfig.java
 java_files += OfflineTtsModelConfig.java
 java_files += OfflineTtsConfig.java
 java_files += GeneratedAudio.java
+java_files += OfflineTtsCallback.java
 java_files += OfflineTts.java
 
 java_files += SpokenLanguageIdentificationWhisperConfig.java
