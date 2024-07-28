@@ -4,6 +4,11 @@ set -ex
 
 cd dart-api-examples
 
+pushd vad-with-non-streaming-asr
+./run-sense-voice-zh.sh
+./run-sense-voice-en.sh
+popd
+
 pushd keyword-spotter
 ./run-zh.sh
 popd
