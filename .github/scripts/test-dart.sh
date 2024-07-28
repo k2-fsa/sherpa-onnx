@@ -5,7 +5,16 @@ set -ex
 cd dart-api-examples
 
 pushd vad-with-non-streaming-asr
+echo "----whisper----"
+./run-whisper.sh
+
+echo "----paraformer----"
+./run-paraformer.sh
+
+echo "----SenseVoice zh----"
 ./run-sense-voice-zh.sh
+
+echo "----SenseVoice en----"
 ./run-sense-voice-en.sh
 popd
 
