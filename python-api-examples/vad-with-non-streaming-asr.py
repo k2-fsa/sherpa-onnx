@@ -45,6 +45,14 @@ Note that you need a non-streaming model for this script.
   --whisper-task=transcribe \
   --num-threads=2
 
+(4) For SenseVoice CTC models
+
+./python-api-examples/vad-with-non-streaming-asr.py  \
+  --silero-vad-model=/path/to/silero_vad.onnx \
+  --sense-voice=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.onnx \
+  --tokens=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt \
+  --num-threads=2
+
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/index.html
 to install sherpa-onnx and to download non-streaming pre-trained models
@@ -121,6 +129,13 @@ def get_args():
         default="",
         type=str,
         help="Path to the model.onnx from Paraformer",
+    )
+
+    parser.add_argument(
+        "--sense-voice",
+        default="",
+        type=str,
+        help="Path to the model.onnx from SenseVoice",
     )
 
     parser.add_argument(
@@ -233,6 +248,7 @@ def assert_file_exists(filename: str):
 def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     if args.encoder:
         assert len(args.paraformer) == 0, args.paraformer
+        assert len(args.sense_voice) == 0, args.sense_voice
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
 
@@ -253,6 +269,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             debug=args.debug,
         )
     elif args.paraformer:
+        assert len(args.sense_voice) == 0, args.sense_voice
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
 
@@ -265,6 +282,18 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             sample_rate=args.sample_rate,
             feature_dim=args.feature_dim,
             decoding_method=args.decoding_method,
+            debug=args.debug,
+        )
+    elif args.sense_voice:
+        assert len(args.whisper_encoder) == 0, args.whisper_encoder
+        assert len(args.whisper_decoder) == 0, args.whisper_decoder
+
+        assert_file_exists(args.sense_voice)
+        recognizer = sherpa_onnx.OfflineRecognizer.from_sense_voice(
+            model=args.sense_voice,
+            tokens=args.tokens,
+            num_threads=args.num_threads,
+            use_itn=True,
             debug=args.debug,
         )
     elif args.whisper_encoder:

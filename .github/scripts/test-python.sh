@@ -20,6 +20,38 @@ tar xvf $name
 rm $name
 ls -lh $repo
 python3 ./python-api-examples/offline-sense-voice-ctc-decode-files.py
+
+if [[ $(uname) == Linux ]]; then
+  # It needs ffmpeg
+  log  "generate subtitles (Chinese)"
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+
+  python3 ./python-api-examples/generate-subtitles.py \
+    --silero-vad-model=./silero_vad.onnx \
+    --sense-voice=$repo/model.onnx \
+    --tokens=$repo/tokens.txt \
+    --num-threads=2 \
+    ./lei-jun-test.wav
+
+  cat lei-jun-test.srt
+
+  rm lei-jun-test.wav
+
+  log  "generate subtitles (English)"
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+
+  python3 ./python-api-examples/generate-subtitles.py \
+    --silero-vad-model=./silero_vad.onnx \
+    --sense-voice=$repo/model.onnx \
+    --tokens=$repo/tokens.txt \
+    --num-threads=2 \
+    ./Obama.wav
+
+  cat Obama.srt
+  rm Obama.wav
+  rm silero_vad.onnx
+fi
 rm -rf $repo
 
 log "test offline TeleSpeech CTC"
