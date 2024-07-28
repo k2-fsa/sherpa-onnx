@@ -525,7 +525,7 @@ int CStreamingSpeechRecognitionDlg::RunThread() {
 
     auto r = SherpaOnnxGetOnlineStreamResult(recognizer_, stream_);
     std::string text = r->text;
-    SherpaOnnxDestroyOnlineRecognizer(r);
+    SherpaOnnxDestroyOnlineRecognizerResult(r);
     if (!text.empty() && last_text != text) {
       // CString str;
       // str.Format(_T("%s"), Cat(results, text).c_str());
