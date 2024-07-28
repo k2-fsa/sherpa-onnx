@@ -1,4 +1,4 @@
-name: vad
+name: vad_with_non_streaming_asr
 
 description: >
   This example demonstrates how to use the Dart API for VAD (voice activity detection)
