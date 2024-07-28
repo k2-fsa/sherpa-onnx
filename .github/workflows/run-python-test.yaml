@@ -79,6 +79,11 @@ jobs:
           python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile
           python3 -m pip install wheel twine setuptools
 
+      - name: Install ffmpeg
+        shell: bash
+        run: |
+          sudo apt-get install ffmpeg
+
       - name: Install ninja
         shell: bash
         run: |
