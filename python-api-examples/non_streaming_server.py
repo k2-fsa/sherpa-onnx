@@ -92,6 +92,16 @@ python3 ./python-api-examples/non_streaming_server.py \
   --tdnn-model=./sherpa-onnx-tdnn-yesno/model-epoch-14-avg-2.onnx \
   --tokens=./sherpa-onnx-tdnn-yesno/tokens.txt
 
+(6) Use a Non-streaming SenseVoice model
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+
+python3 ./python-api-examples/non_streaming_server.py \
+  --sense-voice=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx \
+  --tokens=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt
+
 ----
 
 To use a certificate so that you can use https, please use
@@ -208,6 +218,15 @@ def add_paraformer_model_args(parser: argparse.ArgumentParser):
     )
 
 
+def add_sense_voice_model_args(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--sense-voice",
+        default="",
+        type=str,
+        help="Path to the model.onnx from SenseVoice",
+    )
+
+
 def add_nemo_ctc_model_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--nemo-ctc",
@@ -287,6 +306,7 @@ def add_whisper_model_args(parser: argparse.ArgumentParser):
 def add_model_args(parser: argparse.ArgumentParser):
     add_transducer_model_args(parser)
     add_paraformer_model_args(parser)
+    add_sense_voice_model_args(parser)
     add_nemo_ctc_model_args(parser)
     add_wenet_ctc_model_args(parser)
     add_tdnn_ctc_model_args(parser)
@@ -850,6 +870,7 @@ def assert_file_exists(filename: str):
 def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     if args.encoder:
         assert len(args.paraformer) == 0, args.paraformer
+        assert len(args.sense_voice) == 0, args.sense_voice
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
         assert len(args.wenet_ctc) == 0, args.wenet_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
@@ -876,6 +897,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             provider=args.provider,
         )
     elif args.paraformer:
+        assert len(args.sense_voice) == 0, args.sense_voice
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
         assert len(args.wenet_ctc) == 0, args.wenet_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
@@ -892,6 +914,20 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             feature_dim=args.feat_dim,
             decoding_method=args.decoding_method,
             provider=args.provider,
+        )
+    elif args.sense_voice:
+        assert len(args.nemo_ctc) == 0, args.nemo_ctc
+        assert len(args.wenet_ctc) == 0, args.wenet_ctc
+        assert len(args.whisper_encoder) == 0, args.whisper_encoder
+        assert len(args.whisper_decoder) == 0, args.whisper_decoder
+        assert len(args.tdnn_model) == 0, args.tdnn_model
+
+        assert_file_exists(args.sense_voice)
+        recognizer = sherpa_onnx.OfflineRecognizer.from_sense_voice(
+            model=args.sense_voice,
+            tokens=args.tokens,
+            num_threads=args.num_threads,
+            use_itn=True,
         )
     elif args.nemo_ctc:
         assert len(args.wenet_ctc) == 0, args.wenet_ctc
