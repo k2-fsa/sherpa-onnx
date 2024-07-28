@@ -4,6 +4,33 @@ set -ex
 
 cd dart-api-examples
 
+pushd vad-with-non-streaming-asr
+echo '----------TeleSpeech CTC----------'
+./run-telespeech-ctc.sh
+rm -rf sherpa-onnx-*
+
+echo "----zipformer transducer----"
+./run-zipformer-transducer.sh
+rm -rf sherpa-onnx-*
+
+echo "----whisper----"
+./run-whisper.sh
+rm -rf sherpa-onnx-*
+
+echo "----paraformer----"
+./run-paraformer.sh
+rm -rf sherpa-onnx-*
+
+echo "----SenseVoice zh----"
+./run-sense-voice-zh.sh
+rm -rf sherpa-onnx-*
+
+echo "----SenseVoice en----"
+./run-sense-voice-en.sh
+rm -rf sherpa-onnx-*
+
+popd
+
 pushd keyword-spotter
 ./run-zh.sh
 popd

@@ -11,7 +11,7 @@ void main(List<String> arguments) async {
   await initSherpaOnnx();
 
   final parser = ArgParser()
-    ..addOption('model', help: 'Path to the paraformer model')
+    ..addOption('model', help: 'Path to the SenseVoice model')
     ..addOption('tokens', help: 'Path to tokens.txt')
     ..addOption('language',
         help: 'auto, zh, en, ja, ko, yue, or leave it empty to use auto',
