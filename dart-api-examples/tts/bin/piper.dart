@@ -80,5 +80,5 @@ void main(List<String> arguments) async {
     samples: audio.samples,
     sampleRate: audio.sampleRate,
   );
-  print('Saved to ${outputWav}');
+  print('Saved to $outputWav');
 }

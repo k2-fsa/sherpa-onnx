@@ -2,6 +2,41 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
+final class SherpaOnnxOfflineZipformerAudioTaggingModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
+final class SherpaOnnxAudioTaggingModelConfig extends Struct {
+  external SherpaOnnxOfflineZipformerAudioTaggingModelConfig zipformer;
+  external Pointer<Utf8> ced;
+
+  @Int32()
+  external int numThreads;
+
+  @Int32()
+  external int debug;
+
+  external Pointer<Utf8> provider;
+}
+
+final class SherpaOnnxAudioTaggingConfig extends Struct {
+  external SherpaOnnxAudioTaggingModelConfig model;
+  external Pointer<Utf8> labels;
+
+  @Int32()
+  external int topK;
+}
+
+final class SherpaOnnxAudioEvent extends Struct {
+  external Pointer<Utf8> name;
+
+  @Int32()
+  external int index;
+
+  @Float()
+  external double prob;
+}
+
 final class SherpaOnnxOfflineTtsVitsModelConfig extends Struct {
   external Pointer<Utf8> model;
   external Pointer<Utf8> lexicon;
@@ -303,6 +338,8 @@ final class SherpaOnnxKeywordSpotterConfig extends Struct {
   external Pointer<Utf8> keywordsFile;
 }
 
+final class SherpaOnnxAudioTagging extends Opaque {}
+
 final class SherpaOnnxKeywordSpotter extends Opaque {}
 
 final class SherpaOnnxOfflineTts extends Opaque {}
@@ -322,6 +359,40 @@ final class SherpaOnnxOfflineStream extends Opaque {}
 final class SherpaOnnxSpeakerEmbeddingExtractor extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingManager extends Opaque {}
+
+typedef SherpaOnnxCreateAudioTaggingNative = Pointer<SherpaOnnxAudioTagging>
+    Function(Pointer<SherpaOnnxAudioTaggingConfig>);
+
+typedef SherpaOnnxCreateAudioTagging = SherpaOnnxCreateAudioTaggingNative;
+
+typedef SherpaOnnxDestroyAudioTaggingNative = Void Function(
+    Pointer<SherpaOnnxAudioTagging>);
+
+typedef SherpaOnnxDestroyAudioTagging = void Function(
+    Pointer<SherpaOnnxAudioTagging>);
+
+typedef SherpaOnnxAudioTaggingCreateOfflineStreamNative
+    = Pointer<SherpaOnnxOfflineStream> Function(
+        Pointer<SherpaOnnxAudioTagging>);
+
+typedef SherpaOnnxAudioTaggingCreateOfflineStream
+    = SherpaOnnxAudioTaggingCreateOfflineStreamNative;
+
+typedef SherpaOnnxAudioTaggingComputeNative
+    = Pointer<Pointer<SherpaOnnxAudioEvent>> Function(
+        Pointer<SherpaOnnxAudioTagging>,
+        Pointer<SherpaOnnxOfflineStream>,
+        Int32);
+
+typedef SherpaOnnxAudioTaggingCompute
+    = Pointer<Pointer<SherpaOnnxAudioEvent>> Function(
+        Pointer<SherpaOnnxAudioTagging>, Pointer<SherpaOnnxOfflineStream>, int);
+
+typedef SherpaOnnxAudioTaggingFreeResultsNative = Void Function(
+    Pointer<Pointer<SherpaOnnxAudioEvent>>);
+
+typedef SherpaOnnxAudioTaggingFreeResults = void Function(
+    Pointer<Pointer<SherpaOnnxAudioEvent>>);
 
 typedef CreateKeywordSpotterNative = Pointer<SherpaOnnxKeywordSpotter> Function(
     Pointer<SherpaOnnxKeywordSpotterConfig>);
@@ -804,6 +875,13 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
+  static SherpaOnnxCreateAudioTagging? sherpaOnnxCreateAudioTagging;
+  static SherpaOnnxDestroyAudioTagging? sherpaOnnxDestroyAudioTagging;
+  static SherpaOnnxAudioTaggingCreateOfflineStream?
+      sherpaOnnxAudioTaggingCreateOfflineStream;
+  static SherpaOnnxAudioTaggingCompute? sherpaOnnxAudioTaggingCompute;
+  static SherpaOnnxAudioTaggingFreeResults? sherpaOnnxAudioTaggingFreeResults;
+
   static CreateKeywordSpotter? createKeywordSpotter;
   static DestroyKeywordSpotter? destroyKeywordSpotter;
   static CreateKeywordStream? createKeywordStream;
@@ -958,6 +1036,33 @@ class SherpaOnnxBindings {
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
+    sherpaOnnxCreateAudioTagging ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCreateAudioTaggingNative>>(
+            'SherpaOnnxCreateAudioTagging')
+        .asFunction();
+
+    sherpaOnnxDestroyAudioTagging ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyAudioTaggingNative>>(
+            'SherpaOnnxDestroyAudioTagging')
+        .asFunction();
+
+    sherpaOnnxAudioTaggingCreateOfflineStream ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxAudioTaggingCreateOfflineStreamNative>>(
+            'SherpaOnnxAudioTaggingCreateOfflineStream')
+        .asFunction();
+
+    sherpaOnnxAudioTaggingCompute ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxAudioTaggingComputeNative>>(
+            'SherpaOnnxAudioTaggingCompute')
+        .asFunction();
+
+    sherpaOnnxAudioTaggingFreeResults ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxAudioTaggingFreeResultsNative>>(
+            'SherpaOnnxAudioTaggingFreeResults')
+        .asFunction();
+
     createKeywordSpotter ??= dynamicLibrary
         .lookup<NativeFunction<CreateKeywordSpotterNative>>(
             'SherpaOnnxCreateKeywordSpotter')

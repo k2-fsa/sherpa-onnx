@@ -4,6 +4,14 @@ set -ex
 
 cd dart-api-examples
 
+pushd audio-tagging
+echo '----------zipformer----------'
+./run-zipformer.sh
+
+echo '----------ced----------'
+./run-ced.sh
+popd
+
 pushd vad-with-non-streaming-asr
 echo '----------TeleSpeech CTC----------'
 ./run-telespeech-ctc.sh

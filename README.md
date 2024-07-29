@@ -4,9 +4,13 @@
 |------------------|------------------|----------------------|------------------------|
 |   ✔️              |         ✔️        |          ✔️           |                ✔️       |
 
-| Spoken Language identification | Audio tagging | Voice activity detection | Keyword spotting |
-|--------------------------------|---------------|--------------------------|------------------|
-|                 ✔️              |          ✔️    |                ✔️         |         ✔️        |
+| Spoken Language identification | Audio tagging | Voice activity detection |
+|--------------------------------|---------------|--------------------------|
+|                 ✔️              |          ✔️    |                ✔️         |
+
+| Keyword spotting | Add punctuation |
+|------------------|-----------------|
+|     ✔️            |       ✔️         |
 
 ### Supported platforms
 

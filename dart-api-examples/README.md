@@ -5,7 +5,7 @@ This directory contains examples for Dart API.
 You can find the package at
 https://pub.dev/packages/sherpa_onnx
 
-## Descirption
+## Description
 
 | Directory | Description |
 |-----------|-------------|
@@ -15,6 +15,7 @@ https://pub.dev/packages/sherpa_onnx
 | [./tts](./tts)| Example for text to speech|
 | [./vad](./vad)| Example for voice activity detection|
 | [./vad-with-non-streaming-asr](./vad-with-non-streaming-asr)| Example for voice activity detection with non-streaming speech recognition. You can use it to generate subtitles.|
+| [./audio-tagging](./audio-tagging)| Example for audio tagging.|
 
 ## How to create an example in this folder
 
