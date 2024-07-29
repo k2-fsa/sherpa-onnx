@@ -77,5 +77,5 @@ void main(List<String> arguments) async {
   sherpa_onnx.writeWave(
       filename: outputWav, samples: s, sampleRate: waveData.sampleRate);
 
-  print('Saved to ${outputWav}');
+  print('Saved to $outputWav');
 }

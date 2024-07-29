@@ -1,6 +1,5 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:args/args.dart';
 import 'package:sherpa_onnx/sherpa_onnx.dart' as sherpa_onnx;
