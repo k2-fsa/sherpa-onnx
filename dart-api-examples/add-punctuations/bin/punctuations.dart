@@ -41,4 +41,6 @@ void main(List<String> arguments) async {
     print('After: $textWithPunct');
   }
   print('----------');
+
+  punct.free();
 }
