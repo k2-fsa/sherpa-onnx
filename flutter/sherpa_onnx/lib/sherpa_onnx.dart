@@ -2,6 +2,7 @@
 import 'dart:io';
 import 'dart:ffi';
 
+export 'src/audio_tagging.dart';
 export 'src/feature_config.dart';
 export 'src/keyword_spotter.dart';
 export 'src/offline_recognizer.dart';
