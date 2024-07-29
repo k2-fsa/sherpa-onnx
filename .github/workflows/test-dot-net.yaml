@@ -48,6 +48,7 @@ jobs:
           fetch-depth: 0
 
       - name: Free space
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           df -h
@@ -55,6 +56,7 @@ jobs:
           df -h
 
       - name: Free more space
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           # https://github.com/orgs/community/discussions/25678
@@ -66,6 +68,7 @@ jobs:
           sudo rm -rf "$AGENT_TOOLSDIRECTORY"
 
       - name: Free Disk Space (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         uses: jlumbroso/free-disk-space@main
         with:
           # this might remove tools that are actually needed,
@@ -75,13 +78,14 @@ jobs:
           # all of these default to true, but feel free to set to
           # "false" if necessary for your workflow
           android: true
-          dotnet: true
+          dotnet: false
           haskell: true
           large-packages: true
           docker-images: false
           swap-storage: true
 
       - name: Check space
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           df -h
