@@ -13,6 +13,7 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'c-api-examples/**'
+      - 'ffmpeg-examples/**'
   pull_request:
     branches:
       - master
@@ -23,6 +24,7 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'c-api-examples/**'
+      - 'ffmpeg-examples/**'
 
   workflow_dispatch:
 
@@ -80,6 +82,22 @@ jobs:
           if [[ ${{ matrix.os }} == macos-latest ]]; then
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
+
+      - name: Test ffmpeg
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          brew install ffmpeg
+
+          cd ffmpeg-examples
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+
+          make
+          ls -lh
+          ./run.sh
+          rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
       - name: Test sense-voice
         shell: bash
