@@ -73,16 +73,15 @@ class OfflinePunctuation {
             ?.call(ptr, textPtr) ??
         nullptr;
 
+    calloc.free(textPtr);
+
     if (p == nullptr) {
-      calloc.free(textPtr);
       return '';
     }
 
     final ans = p.toDartString();
 
     SherpaOnnxBindings.sherpaOfflinePunctuationFreeText?.call(p);
-
-    calloc.free(textPtr);
 
     return ans;
   }
