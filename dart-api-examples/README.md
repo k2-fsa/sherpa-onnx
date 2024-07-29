@@ -16,6 +16,7 @@ https://pub.dev/packages/sherpa_onnx
 | [./vad](./vad)| Example for voice activity detection|
 | [./vad-with-non-streaming-asr](./vad-with-non-streaming-asr)| Example for voice activity detection with non-streaming speech recognition. You can use it to generate subtitles.|
 | [./audio-tagging](./audio-tagging)| Example for audio tagging.|
+| [./add-punctuations](./add-punctuations)| Example for adding punctuations to text.|
 
 ## How to create an example in this folder
 

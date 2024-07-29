@@ -1,7 +1,7 @@
-name: vad
+name: add_punctuations
 
 description: >
-  This example demonstrates how to use the Dart API for VAD (voice activity detection).
+  This example demonstrates how to use the Dart API to add punctuations to text.
 
 version: 1.0.0
 

@@ -1,6 +1,7 @@
 ## 1.10.20
 
 * Add Dart API for audio tagging
+* Add Dart API for adding punctuations to text
 
 ## 1.10.19
 

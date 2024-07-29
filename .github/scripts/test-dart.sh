@@ -4,6 +4,11 @@ set -ex
 
 cd dart-api-examples
 
+pushd add-punctuations
+echo '----------CT Transformer----------'
+./run-ct-transformer.sh
+popd
+
 pushd audio-tagging
 echo '----------zipformer----------'
 ./run-zipformer.sh
