@@ -103,7 +103,8 @@ class MeloTtsLexicon::Impl {
       this_sentence.tones.insert(this_sentence.tones.end(), ids.tones.begin(),
                                  ids.tones.end());
 
-      if (w == "." || w == "!" || w == "?" || w == ",") {
+      if (w == "." || w == "!" || w == "?" || w == "," || w == "。" ||
+          w == "！" || w == "？" || w == "，") {
         ans.push_back(std::move(this_sentence));
         this_sentence = {};
       }
