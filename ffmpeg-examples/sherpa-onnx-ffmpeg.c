@@ -216,7 +216,7 @@ end:
 static void sherpa_decode_frame(const AVFrame *frame,
                                 SherpaOnnxOnlineRecognizer *recognizer,
                                 SherpaOnnxOnlineStream *stream,
-                                SherpaOnnxDisplay *display,
+                                const SherpaOnnxDisplay *display,
                                 int32_t *segment_id) {
 #define N 3200  // 100s. Sample rate is fixed to 16 kHz
   static float samples[N];
@@ -229,7 +229,7 @@ static void sherpa_decode_frame(const AVFrame *frame,
       SherpaOnnxDecodeOnlineStream(recognizer, stream);
     }
 
-    SherpaOnnxOnlineRecognizerResult *r =
+    const SherpaOnnxOnlineRecognizerResult *r =
         SherpaOnnxGetOnlineStreamResult(recognizer, stream);
     if (strlen(r->text)) {
       SherpaOnnxPrint(display, *segment_id, r->text);
@@ -290,10 +290,11 @@ int main(int argc, char **argv) {
   }
 
   SherpaOnnxOnlineRecognizerConfig config;
+	memset(&config, 0, sizeof(config));
   config.model_config.tokens = argv[1];
-  config.model_config.encoder = argv[2];
-  config.model_config.decoder = argv[3];
-  config.model_config.joiner = argv[4];
+  config.model_config.transducer.encoder = argv[2];
+  config.model_config.transducer.decoder = argv[3];
+  config.model_config.transducer.joiner = argv[4];
 
   if (argc == 7 && atoi(argv[6]) > 0) {
     num_threads = atoi(argv[6]);
@@ -320,7 +321,7 @@ int main(int argc, char **argv) {
   SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&config);
   SherpaOnnxOnlineStream *stream = SherpaOnnxCreateOnlineStream(recognizer);
-  SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
+  const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;
 
   if ((ret = open_input_file(argv[5])) < 0) exit(1);
@@ -383,7 +384,7 @@ int main(int argc, char **argv) {
     SherpaOnnxDecodeOnlineStream(recognizer, stream);
   }
 
-  SherpaOnnxOnlineRecognizerResult *r =
+  const SherpaOnnxOnlineRecognizerResult *r =
       SherpaOnnxGetOnlineStreamResult(recognizer, stream);
   if (strlen(r->text)) {
     SherpaOnnxPrint(display, segment_id, r->text);

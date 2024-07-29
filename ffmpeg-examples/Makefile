@@ -14,18 +14,17 @@ ifeq ($(GDB), TRUE)
 	OPTFLAG += -g
 endif
 
-# CFLAGS := $(shell pkg-config --cflags $(SHARED_LIBS)) -I.. -Wall -std=c++11 -fopenmp ${OPTFLAG}
-CFLAGS := $(shell pkg-config --cflags $(SHARED_LIBS)) -I.. -Wall -std=c++11 ${OPTFLAG}
+# CFLAGS := $(shell pkg-config --cflags $(SHARED_LIBS)) -I.. -Wall -std=c++17 -fopenmp ${OPTFLAG}
+CFLAGS := $(shell pkg-config --cflags $(SHARED_LIBS)) -I.. -Wall -std=c++17  ${OPTFLAG}
 LDLIBS := $(shell pkg-config --libs $(SHARED_LIBS))
 
 CUR_DIR :=$(shell pwd)
 
 LDLIBS += -L ../build/lib
 LDLIBS += -L ../build/_deps/onnxruntime-src/lib
-LDLIBS += -lsherpa-onnx-c-api -lsherpa-onnx-core -lonnxruntime -lkaldi-native-fbank-core
+LDLIBS += -lsherpa-onnx-c-api -lonnxruntime
 LDLIBS += -Wl,-rpath,${CUR_DIR}/../build/lib
 LDLIBS += -Wl,-rpath,${CUR_DIR}/../build/_deps/onnxruntime-src/lib
-
 
 #Get libavutil version and extract major, minor and micro
 LIBAVUTIL_VERSION := $(shell pkg-config --modversion libavutil)
