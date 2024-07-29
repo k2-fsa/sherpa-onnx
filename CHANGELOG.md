@@ -1,3 +1,7 @@
+## 1.10.20
+
+* Add Dart API for audio tagging
+
 ## 1.10.19
 
 * Prefix all C API functions with SherpaOnnx
