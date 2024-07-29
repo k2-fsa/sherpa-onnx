@@ -1,15 +1,19 @@
 name: audio_tagging
-description: A sample command-line application.
+
+description: >
+  This example demonstrates how to use the Dart API for audio tagging.
+
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
 
 environment:
   sdk: ^3.4.0
 
-# Add regular dependencies here.
 dependencies:
-  # path: ^1.8.0
+  # sherpa_onnx: ^1.10.19
+  sherpa_onnx:
+    path: ../../flutter/sherpa_onnx
+  path: ^1.9.0
+  args: ^2.5.0
 
 dev_dependencies:
   lints: ^3.0.0
-  test: ^1.24.0
