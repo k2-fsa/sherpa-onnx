@@ -9,6 +9,7 @@ export 'src/offline_recognizer.dart';
 export 'src/offline_stream.dart';
 export 'src/online_recognizer.dart';
 export 'src/online_stream.dart';
+export 'src/punctuation.dart';
 export 'src/speaker_identification.dart';
 export 'src/tts.dart';
 export 'src/vad.dart';

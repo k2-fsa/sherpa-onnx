@@ -2,6 +2,22 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
+final class SherpaOnnxOfflinePunctuationModelConfig extends Struct {
+  external Pointer<Utf8> ctTransformer;
+
+  @Int32()
+  external int numThreads;
+
+  @Int32()
+  external int debug;
+
+  external Pointer<Utf8> provider;
+}
+
+final class SherpaOnnxOfflinePunctuationConfig extends Struct {
+  external SherpaOnnxOfflinePunctuationModelConfig model;
+}
+
 final class SherpaOnnxOfflineZipformerAudioTaggingModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
@@ -338,6 +354,8 @@ final class SherpaOnnxKeywordSpotterConfig extends Struct {
   external Pointer<Utf8> keywordsFile;
 }
 
+final class SherpaOnnxOfflinePunctuation extends Opaque {}
+
 final class SherpaOnnxAudioTagging extends Opaque {}
 
 final class SherpaOnnxKeywordSpotter extends Opaque {}
@@ -359,6 +377,29 @@ final class SherpaOnnxOfflineStream extends Opaque {}
 final class SherpaOnnxSpeakerEmbeddingExtractor extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingManager extends Opaque {}
+
+typedef SherpaOnnxCreateOfflinePunctuationNative
+    = Pointer<SherpaOnnxOfflinePunctuation> Function(
+        Pointer<SherpaOnnxOfflinePunctuationConfig>);
+
+typedef SherpaOnnxCreateOfflinePunctuation
+    = SherpaOnnxCreateOfflinePunctuationNative;
+
+typedef SherpaOnnxDestroyOfflinePunctuationNative = Void Function(
+    Pointer<SherpaOnnxOfflinePunctuation>);
+
+typedef SherpaOnnxDestroyOfflinePunctuation = void Function(
+    Pointer<SherpaOnnxOfflinePunctuation>);
+
+typedef SherpaOfflinePunctuationAddPunctNative = Pointer<Utf8> Function(
+    Pointer<SherpaOnnxOfflinePunctuation>, Pointer<Utf8>);
+
+typedef SherpaOfflinePunctuationAddPunct
+    = SherpaOfflinePunctuationAddPunctNative;
+
+typedef SherpaOfflinePunctuationFreeTextNative = Void Function(Pointer<Utf8>);
+
+typedef SherpaOfflinePunctuationFreeText = void Function(Pointer<Utf8>);
 
 typedef SherpaOnnxCreateAudioTaggingNative = Pointer<SherpaOnnxAudioTagging>
     Function(Pointer<SherpaOnnxAudioTaggingConfig>);
@@ -875,6 +916,12 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
+  static SherpaOnnxCreateOfflinePunctuation? sherpaOnnxCreateOfflinePunctuation;
+  static SherpaOnnxDestroyOfflinePunctuation?
+      sherpaOnnxDestroyOfflinePunctuation;
+  static SherpaOfflinePunctuationAddPunct? sherpaOfflinePunctuationAddPunct;
+  static SherpaOfflinePunctuationFreeText? sherpaOfflinePunctuationFreeText;
+
   static SherpaOnnxCreateAudioTagging? sherpaOnnxCreateAudioTagging;
   static SherpaOnnxDestroyAudioTagging? sherpaOnnxDestroyAudioTagging;
   static SherpaOnnxAudioTaggingCreateOfflineStream?
@@ -1036,6 +1083,26 @@ class SherpaOnnxBindings {
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
+    sherpaOnnxCreateOfflinePunctuation ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCreateOfflinePunctuationNative>>(
+            'SherpaOnnxCreateOfflinePunctuation')
+        .asFunction();
+
+    sherpaOnnxDestroyOfflinePunctuation ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyOfflinePunctuationNative>>(
+            'SherpaOnnxDestroyOfflinePunctuation')
+        .asFunction();
+
+    sherpaOfflinePunctuationAddPunct ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOfflinePunctuationAddPunctNative>>(
+            'SherpaOfflinePunctuationAddPunct')
+        .asFunction();
+
+    sherpaOfflinePunctuationFreeText ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOfflinePunctuationFreeTextNative>>(
+            'SherpaOfflinePunctuationFreeText')
+        .asFunction();
+
     sherpaOnnxCreateAudioTagging ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateAudioTaggingNative>>(
             'SherpaOnnxCreateAudioTagging')
