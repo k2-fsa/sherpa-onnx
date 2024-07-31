@@ -9,14 +9,15 @@ https://pub.dev/packages/sherpa_onnx
 
 | Directory | Description |
 |-----------|-------------|
+| [./add-punctuations](./add-punctuations)| Example for adding punctuations to text.|
+| [./audio-tagging](./audio-tagging)| Example for audio tagging.|
 | [./keyword-spotter](./keyword-spotter)| Example for keyword spotting|
 | [./non-streaming-asr](./non-streaming-asr)| Example for non-streaming speech recognition|
+| [./speaker-identification](./speaker-identification)| Example for speaker identification and verification.|
 | [./streaming-asr](./streaming-asr)| Example for streaming speech recognition|
 | [./tts](./tts)| Example for text to speech|
-| [./vad](./vad)| Example for voice activity detection|
 | [./vad-with-non-streaming-asr](./vad-with-non-streaming-asr)| Example for voice activity detection with non-streaming speech recognition. You can use it to generate subtitles.|
-| [./audio-tagging](./audio-tagging)| Example for audio tagging.|
-| [./add-punctuations](./add-punctuations)| Example for adding punctuations to text.|
+| [./vad](./vad)| Example for voice activity detection|
 
 ## How to create an example in this folder
 
