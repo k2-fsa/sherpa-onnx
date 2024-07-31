@@ -4,6 +4,11 @@ set -ex
 
 cd dart-api-examples
 
+pushd speaker-identification
+echo '----------3d speaker----------'
+./run-3d-speaker.sh
+popd
+
 pushd add-punctuations
 echo '----------CT Transformer----------'
 ./run-ct-transformer.sh
