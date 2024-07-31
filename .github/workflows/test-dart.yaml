@@ -112,6 +112,7 @@ jobs:
           cp scripts/dart/vad-non-streaming-asr-pubspec.yaml dart-api-examples/vad-with-non-streaming-asr/pubspec.yaml
           cp scripts/dart/audio-tagging-pubspec.yaml dart-api-examples/audio-tagging/pubspec.yaml
           cp scripts/dart/add-punctuations-pubspec.yaml dart-api-examples/add-punctuations/pubspec.yaml
+          cp scripts/dart/speaker-id-pubspec.yaml dart-api-examples/speaker-identification/pubspec.yaml
 
           cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
 
