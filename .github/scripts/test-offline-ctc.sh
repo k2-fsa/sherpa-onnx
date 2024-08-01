@@ -36,6 +36,17 @@ for m in model.onnx model.int8.onnx; do
   done
 done
 
+
+# test wav reader for non-standard wav files
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/naudio.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/junk-padding.wav
+
+time $EXE \
+  --tokens=$repo/tokens.txt \
+  --sense-voice-model=$repo/model.int8.onnx \
+  ./naudio.wav \
+  ./junk-padding.wav
+
 rm -rf $repo
 
 if true; then
