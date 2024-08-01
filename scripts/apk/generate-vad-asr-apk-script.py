@@ -278,6 +278,25 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01",
+            idx=16,
+            lang="ja",
+            short_name="zipformer_reazonspeech",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            rm -fv encoder-epoch-99-avg-1.onnx
+            rm -fv decoder-epoch-99-avg-1.int8.onnx
+            rm -fv joiner-epoch-99-avg-1.onnx
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
