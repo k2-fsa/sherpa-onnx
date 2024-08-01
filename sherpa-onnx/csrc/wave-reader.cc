@@ -18,58 +18,6 @@ namespace {
 // Note: We assume little endian here
 // TODO(fangjun): Support big endian
 struct WaveHeader {
-  bool Validate() const {
-    //                 F F I R
-    if (chunk_id != 0x46464952) {
-      SHERPA_ONNX_LOGE("Expected chunk_id RIFF. Given: 0x%08x\n", chunk_id);
-      return false;
-    }
-    //               E V A W
-    if (format != 0x45564157) {
-      SHERPA_ONNX_LOGE("Expected format WAVE. Given: 0x%08x\n", format);
-      return false;
-    }
-
-    if (subchunk1_id != 0x20746d66) {
-      SHERPA_ONNX_LOGE("Expected subchunk1_id 0x20746d66. Given: 0x%08x\n",
-                       subchunk1_id);
-      return false;
-    }
-
-    // NAudio uses 18
-    // See https://github.com/naudio/NAudio/issues/1132
-    if (subchunk1_size != 16 && subchunk1_size != 18) {  // 16 for PCM
-      SHERPA_ONNX_LOGE("Expected subchunk1_size 16. Given: %d\n",
-                       subchunk1_size);
-      return false;
-    }
-
-    if (audio_format != 1) {  // 1 for PCM
-      SHERPA_ONNX_LOGE("Expected audio_format 1. Given: %d\n", audio_format);
-      return false;
-    }
-
-    if (num_channels != 1) {  // we support only single channel for now
-      SHERPA_ONNX_LOGE("Expected single channel. Given: %d\n", num_channels);
-      return false;
-    }
-    if (byte_rate != (sample_rate * num_channels * bits_per_sample / 8)) {
-      return false;
-    }
-
-    if (block_align != (num_channels * bits_per_sample / 8)) {
-      return false;
-    }
-
-    if (bits_per_sample != 16) {  // we support only 16 bits per sample
-      SHERPA_ONNX_LOGE("Expected bits_per_sample 16. Given: %d\n",
-                       bits_per_sample);
-      return false;
-    }
-
-    return true;
-  }
-
   // See
   // https://en.wikipedia.org/wiki/WAV#Metadata
   // and
@@ -107,13 +55,115 @@ static_assert(sizeof(WaveHeader) == 44);
 std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
                                 bool *is_ok) {
   WaveHeader header{};
-  is.read(reinterpret_cast<char *>(&header), sizeof(header));
-  if (!is) {
+  is.read(reinterpret_cast<char *>(&header.chunk_id), sizeof(header.chunk_id));
+
+  //                        F F I R
+  if (header.chunk_id != 0x46464952) {
+    SHERPA_ONNX_LOGE("Expected chunk_id RIFF. Given: 0x%08x\n",
+                     header.chunk_id);
     *is_ok = false;
     return {};
   }
 
-  if (!header.Validate()) {
+  is.read(reinterpret_cast<char *>(&header.chunk_size),
+          sizeof(header.chunk_size));
+
+  is.read(reinterpret_cast<char *>(&header.format), sizeof(header.format));
+
+  //                      E V A W
+  if (header.format != 0x45564157) {
+    SHERPA_ONNX_LOGE("Expected format WAVE. Given: 0x%08x\n", header.format);
+    *is_ok = false;
+    return {};
+  }
+
+  is.read(reinterpret_cast<char *>(&header.subchunk1_id),
+          sizeof(header.subchunk1_id));
+
+  is.read(reinterpret_cast<char *>(&header.subchunk1_size),
+          sizeof(header.subchunk1_size));
+
+  if (header.subchunk1_id == 0x4b4e554a) {
+    // skip junk padding
+    is.seekg(header.subchunk1_size, std::istream::cur);
+
+    is.read(reinterpret_cast<char *>(&header.subchunk1_id),
+            sizeof(header.subchunk1_id));
+
+    is.read(reinterpret_cast<char *>(&header.subchunk1_size),
+            sizeof(header.subchunk1_size));
+  }
+
+  if (header.subchunk1_id != 0x20746d66) {
+    SHERPA_ONNX_LOGE("Expected subchunk1_id 0x20746d66. Given: 0x%08x\n",
+                     header.subchunk1_id);
+    *is_ok = false;
+    return {};
+  }
+
+  // NAudio uses 18
+  // See https://github.com/naudio/NAudio/issues/1132
+  if (header.subchunk1_size != 16 &&
+      header.subchunk1_size != 18) {  // 16 for PCM
+    SHERPA_ONNX_LOGE("Expected subchunk1_size 16. Given: %d\n",
+                     header.subchunk1_size);
+    *is_ok = false;
+    return {};
+  }
+
+  is.read(reinterpret_cast<char *>(&header.audio_format),
+          sizeof(header.audio_format));
+
+  if (header.audio_format != 1) {  // 1 for PCM
+    SHERPA_ONNX_LOGE("Expected audio_format 1. Given: %d\n",
+                     header.audio_format);
+    *is_ok = false;
+    return {};
+  }
+
+  is.read(reinterpret_cast<char *>(&header.num_channels),
+          sizeof(header.num_channels));
+
+  if (header.num_channels != 1) {  // we support only single channel for now
+    SHERPA_ONNX_LOGE("Expected single channel. Given: %d\n",
+                     header.num_channels);
+    *is_ok = false;
+    return {};
+  }
+
+  is.read(reinterpret_cast<char *>(&header.sample_rate),
+          sizeof(header.sample_rate));
+
+  is.read(reinterpret_cast<char *>(&header.byte_rate),
+          sizeof(header.byte_rate));
+
+  is.read(reinterpret_cast<char *>(&header.block_align),
+          sizeof(header.block_align));
+
+  is.read(reinterpret_cast<char *>(&header.bits_per_sample),
+          sizeof(header.bits_per_sample));
+
+  if (header.byte_rate !=
+      (header.sample_rate * header.num_channels * header.bits_per_sample / 8)) {
+    SHERPA_ONNX_LOGE("Incorrect byte rate: %d. Expected: %d", header.byte_rate,
+                     (header.sample_rate * header.num_channels *
+                      header.bits_per_sample / 8));
+    *is_ok = false;
+    return {};
+  }
+
+  if (header.block_align !=
+      (header.num_channels * header.bits_per_sample / 8)) {
+    SHERPA_ONNX_LOGE("Incorrect block align: %d. Expected: %d\n",
+                     header.block_align,
+                     (header.num_channels * header.bits_per_sample / 8));
+    *is_ok = false;
+    return {};
+  }
+
+  if (header.bits_per_sample != 16) {  // we support only 16 bits per sample
+    SHERPA_ONNX_LOGE("Expected bits_per_sample 16. Given: %d\n",
+                     header.bits_per_sample);
     *is_ok = false;
     return {};
   }
@@ -122,8 +172,6 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
     // this is for NAudio. It puts extra bytes after bits_per_sample
     // See
     // https://github.com/naudio/NAudio/blob/master/NAudio.Core/Wave/WaveFormats/WaveFormat.cs#L223
-
-    is.seekg(36, std::istream::beg);
 
     int16_t extra_size = -1;
     is.read(reinterpret_cast<char *>(&extra_size), sizeof(int16_t));
@@ -135,12 +183,13 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
       *is_ok = false;
       return {};
     }
-
-    is.read(reinterpret_cast<char *>(&header.subchunk2_id),
-            sizeof(header.subchunk2_id));
-    is.read(reinterpret_cast<char *>(&header.subchunk2_size),
-            sizeof(header.subchunk2_size));
   }
+
+  is.read(reinterpret_cast<char *>(&header.subchunk2_id),
+          sizeof(header.subchunk2_id));
+
+  is.read(reinterpret_cast<char *>(&header.subchunk2_size),
+          sizeof(header.subchunk2_size));
 
   header.SeekToDataChunk(is);
   if (!is) {
