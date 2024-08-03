@@ -78,10 +78,52 @@ def generate_tokens(symbol_list):
             f.write(f"{s} {i}\n")
 
 
+def add_new_english_words(lexicon):
+    """
+    Args:
+      lexicon:
+        Please modify it in-place.
+    """
+
+    # Please have a look at
+    # https://github.com/myshell-ai/MeloTTS/blob/main/melo/text/cmudict.rep
+
+    # We give several examples below about how to add new words
+
+    # Example 1. Add a new word kaldi
+
+    # It does not contain the word kaldi in cmudict.rep
+    # so if we add the following line to cmudict.rep
+    #
+    #  KALDI K AH0 - L D IH0
+    #
+    # then we need to change the lexicon like below
+    lexicon["kaldi"] = [["K", "AH0"], ["L", "D", "IH0"]]
+    #
+    # K AH0 and L D IH0 are separated by a dash "-", so
+    # ["K", "AH0"] is a in list and ["L", "D", "IH0"] is in a separate list
+
+    # Note: Either kaldi or KALDI is fine. You can use either lowercase or
+    # uppercase or both
+
+    # Example 2. Add a new word SF
+    #
+    # If we add the following line to cmudict.rep
+    #
+    #  SF EH1 S - EH1 F
+    #
+    # to cmudict.rep, then we need to change the lexicon like below:
+    lexicon["SF"] = [["EH1", "S"], ["EH1", "F"]]
+
+    # Please add your new words here
+
+    # No need to return lexicon since it is changed in-place
+
+
 def generate_lexicon():
     word_dict = pinyin_dict.pinyin_dict
     phrases = phrases_dict.phrases_dict
-    eng_dict["kaldi"] = [["K", "AH0"], ["L", "D", "IH0"]]
+    add_new_english_words(eng_dict)
     with open("lexicon.txt", "w", encoding="utf-8") as f:
         for word in eng_dict:
             phones, tones = refine_syllables(eng_dict[word])

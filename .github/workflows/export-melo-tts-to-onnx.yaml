@@ -87,6 +87,8 @@ jobs:
 
             git status
 
+            git diff
+
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/vits-melo-tts-zh_en main || true
 
