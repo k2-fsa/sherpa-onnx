@@ -189,7 +189,6 @@ target_link_libraries(sherpa-onnx-core
 
 if(SHERPA_ONNX_ENABLE_GPU)
   target_link_libraries(sherpa-onnx-core
-    onnxruntime_providers_cuda
     onnxruntime_providers_shared
   )
 endif()
