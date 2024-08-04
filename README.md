@@ -25,9 +25,15 @@
 
 ### Supported programming languages
 
-| C++ | C  | Python | C# | Java | JavaScript | Kotlin | Swift | Go | Dart |
-|-----|----|--------|----|------|------------|--------|-------|----|------|
-| ✔️   | ✔️  | ✔️      | ✔️  |  ✔️   | ✔️          | ✔️      |  ✔️    | ✔️  |  ✔️   |
+| 1. C++ | 2. C  | 3. Python | 4. C# | 5. Java | 6. JavaScript |
+|--------|-------|-----------|-------|---------|---------------|
+|   ✔️    | ✔️     | ✔️         | ✔️     |  ✔️      |      ✔️        |
+
+| 7. Kotlin | 8. Swift | 9. Go | 10. Dart | 11. Rust |
+|-----------|----------|-------|----------|----------|
+| ✔️         |  ✔️       | ✔️     |  ✔️       |  ✔️       |
+
+For Rust support, please see https://github.com/thewh1teagle/sherpa-rs
 
 It also supports WebAssembly.
 
