@@ -100,8 +100,8 @@ class OfflineSenseVoiceModel::Impl {
     SHERPA_ONNX_READ_META_DATA(lang_yue, "lang_yue");
 
     meta_data_.lang2id = {
-        {"auto", lang_auto}, {"zh", lang_zh},   {"ja", lang_ja},
-        {"ko", lang_ko},     {"yue", lang_yue},
+        {"auto", lang_auto}, {"zh", lang_zh}, {"en", lang_en},
+        {"ja", lang_ja},     {"ko", lang_ko}, {"yue", lang_yue},
     };
 
     SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(meta_data_.neg_mean, "neg_mean");
