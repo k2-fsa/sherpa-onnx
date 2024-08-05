@@ -757,6 +757,14 @@ class SherpaOnnxGeneratedAudioWrapper {
   }
 }
 
+typealias TtsCallbackWithArg = (
+  @convention(c) (
+    UnsafePointer<Float>?,  // const float* samples
+    Int32,  // int32_t n
+    UnsafeMutableRawPointer?  // void *arg
+  ) -> Int32
+)?
+
 class SherpaOnnxOfflineTtsWrapper {
   /// A pointer to the underlying counterpart in C
   let tts: OpaquePointer!
@@ -777,6 +785,17 @@ class SherpaOnnxOfflineTtsWrapper {
   func generate(text: String, sid: Int = 0, speed: Float = 1.0) -> SherpaOnnxGeneratedAudioWrapper {
     let audio: UnsafePointer<SherpaOnnxGeneratedAudio>? = SherpaOnnxOfflineTtsGenerate(
       tts, toCPointer(text), Int32(sid), speed)
+
+    return SherpaOnnxGeneratedAudioWrapper(audio: audio)
+  }
+
+  func generateWithCallbackWithArg(
+    text: String, callback: TtsCallbackWithArg, arg: UnsafeMutableRawPointer, sid: Int = 0,
+    speed: Float = 1.0
+  ) -> SherpaOnnxGeneratedAudioWrapper {
+    let audio: UnsafePointer<SherpaOnnxGeneratedAudio>? =
+      SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+        tts, toCPointer(text), Int32(sid), speed, callback, arg)
 
     return SherpaOnnxGeneratedAudioWrapper(audio: audio)
   }
