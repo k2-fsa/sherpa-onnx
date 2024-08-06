@@ -39,96 +39,90 @@ echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
 # The symbol _NSLog is not defined
 #
 
-if [[ ! -f ./build/simulator_x86_64/lib/libsherpa-onnx-c-api.a ]]; then
-  cmake \
-    -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-    -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-    -DBUILD_ESPEAK_NG_EXE=OFF \
-    -DBUILD_ESPEAK_NG_TESTS=OFF \
-    -S .. \
-    -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
-    -DPLATFORM=SIMULATOR64 \
-    -DENABLE_BITCODE=0 \
-    -DENABLE_ARC=1 \
-    -DENABLE_VISIBILITY=0 \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_SHARED_LIBS=OFF \
-    -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
-    -DSHERPA_ONNX_ENABLE_TESTS=OFF \
-    -DSHERPA_ONNX_ENABLE_CHECK=OFF \
-    -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-    -DSHERPA_ONNX_ENABLE_JNI=OFF \
-    -DSHERPA_ONNX_ENABLE_C_API=ON \
-    -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-    -DDEPLOYMENT_TARGET=13.0 \
-    -B build/simulator_x86_64
+cmake \
+  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
+  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
+  -DBUILD_ESPEAK_NG_EXE=OFF \
+  -DBUILD_ESPEAK_NG_TESTS=OFF \
+  -S .. \
+  -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
+  -DPLATFORM=SIMULATOR64 \
+  -DENABLE_BITCODE=0 \
+  -DENABLE_ARC=1 \
+  -DENABLE_VISIBILITY=0 \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+  -DSHERPA_ONNX_ENABLE_TESTS=OFF \
+  -DSHERPA_ONNX_ENABLE_CHECK=OFF \
+  -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+  -DSHERPA_ONNX_ENABLE_JNI=OFF \
+  -DSHERPA_ONNX_ENABLE_C_API=ON \
+  -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+  -DDEPLOYMENT_TARGET=13.0 \
+  -B build/simulator_x86_64
 
-  cmake --build build/simulator_x86_64 -j 4 --verbose
-fi
+cmake --build build/simulator_x86_64 -j 4 --verbose
 
 echo "Building for simulator (arm64)"
 
-if [[ ! -f ./build/simulator_arm64/lib/libsherpa-onnx-c-api.a ]]; then
-  cmake \
-    -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-    -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-    -DBUILD_ESPEAK_NG_EXE=OFF \
-    -DBUILD_ESPEAK_NG_TESTS=OFF \
-    -S .. \
-    -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
-    -DPLATFORM=SIMULATORARM64 \
-    -DENABLE_BITCODE=0 \
-    -DENABLE_ARC=1 \
-    -DENABLE_VISIBILITY=0 \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_INSTALL_PREFIX=./install \
-    -DBUILD_SHARED_LIBS=OFF \
-    -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
-    -DSHERPA_ONNX_ENABLE_TESTS=OFF \
-    -DSHERPA_ONNX_ENABLE_CHECK=OFF \
-    -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-    -DSHERPA_ONNX_ENABLE_JNI=OFF \
-    -DSHERPA_ONNX_ENABLE_C_API=ON \
-    -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-    -DDEPLOYMENT_TARGET=13.0 \
-    -B build/simulator_arm64
+cmake \
+  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
+  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
+  -DBUILD_ESPEAK_NG_EXE=OFF \
+  -DBUILD_ESPEAK_NG_TESTS=OFF \
+  -S .. \
+  -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
+  -DPLATFORM=SIMULATORARM64 \
+  -DENABLE_BITCODE=0 \
+  -DENABLE_ARC=1 \
+  -DENABLE_VISIBILITY=0 \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_INSTALL_PREFIX=./install \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+  -DSHERPA_ONNX_ENABLE_TESTS=OFF \
+  -DSHERPA_ONNX_ENABLE_CHECK=OFF \
+  -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+  -DSHERPA_ONNX_ENABLE_JNI=OFF \
+  -DSHERPA_ONNX_ENABLE_C_API=ON \
+  -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+  -DDEPLOYMENT_TARGET=13.0 \
+  -B build/simulator_arm64
 
-  cmake --build build/simulator_arm64 -j 4 --verbose
-fi
+cmake --build build/simulator_arm64 -j 4 --verbose
 
 echo "Building for arm64"
 
 export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframework/ios-arm64
 
-if [[ ! -f ./build/os64/lib/libsherpa-onnx-c-api.a ]]; then
-  cmake \
-    -DBUILD_PIPER_PHONMIZE_EXE=OFF \
-    -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
-    -DBUILD_ESPEAK_NG_EXE=OFF \
-    -DBUILD_ESPEAK_NG_TESTS=OFF \
-    -S .. \
-    -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
-    -DPLATFORM=OS64 \
-    -DENABLE_BITCODE=0 \
-    -DENABLE_ARC=1 \
-    -DENABLE_VISIBILITY=0 \
-    -DCMAKE_INSTALL_PREFIX=./install \
-    -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_SHARED_LIBS=OFF \
-    -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
-    -DSHERPA_ONNX_ENABLE_TESTS=OFF \
-    -DSHERPA_ONNX_ENABLE_CHECK=OFF \
-    -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-    -DSHERPA_ONNX_ENABLE_JNI=OFF \
-    -DSHERPA_ONNX_ENABLE_C_API=ON \
-    -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
-    -DDEPLOYMENT_TARGET=13.0 \
-    -B build/os64
+cmake \
+  -DBUILD_PIPER_PHONMIZE_EXE=OFF \
+  -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
+  -DBUILD_ESPEAK_NG_EXE=OFF \
+  -DBUILD_ESPEAK_NG_TESTS=OFF \
+  -S .. \
+  -DCMAKE_TOOLCHAIN_FILE=./toolchains/ios.toolchain.cmake \
+  -DPLATFORM=OS64 \
+  -DENABLE_BITCODE=0 \
+  -DENABLE_ARC=1 \
+  -DENABLE_VISIBILITY=0 \
+  -DCMAKE_INSTALL_PREFIX=./install \
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_SHARED_LIBS=OFF \
+  -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
+  -DSHERPA_ONNX_ENABLE_TESTS=OFF \
+  -DSHERPA_ONNX_ENABLE_CHECK=OFF \
+  -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+  -DSHERPA_ONNX_ENABLE_JNI=OFF \
+  -DSHERPA_ONNX_ENABLE_C_API=ON \
+  -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+  -DDEPLOYMENT_TARGET=13.0 \
+  -B build/os64
 
-  cmake --build build/os64 -j 4
-  # Generate headers for sherpa-onnx.xcframework
-  cmake --build build/os64 --target install
-fi
+cmake --build build/os64 -j 4
+# Generate headers for sherpa-onnx.xcframework
+cmake --build build/os64 --target install
 
 echo "Generate xcframework"
 
