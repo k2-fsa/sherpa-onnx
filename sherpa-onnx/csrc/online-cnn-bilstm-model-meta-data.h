@@ -11,11 +11,6 @@
 namespace sherpa_onnx {
 
 struct OnlineCNNBiLSTMModelMetaData {
-  std::unordered_map<std::string, int32_t> punct2id;
-  std::vector<std::string> id2punct;
-  std::unordered_map<std::string, int32_t> case2id;
-  std::vector<std::string> id2case;
-
   int32_t comma_id;
   int32_t period_id;
   int32_t quest_id;
