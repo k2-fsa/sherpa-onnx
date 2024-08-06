@@ -23,12 +23,11 @@ namespace sherpa_onnx {
  */
 class OnlineCNNBiLSTMModel {
  public:
-  explicit OnlineCNNBiLSTMModel(
-      const OnlinePunctuationModelConfig &config);
+  explicit OnlineCNNBiLSTMModel(const OnlinePunctuationModelConfig &config);
 
 #if __ANDROID_API__ >= 9
   OnlineCNNBiLSTMModel(AAssetManager *mgr,
-                            const OnlinePunctuationModelConfig &config);
+                       const OnlinePunctuationModelConfig &config);
 #endif
 
   ~OnlineCNNBiLSTMModel();
@@ -43,7 +42,9 @@ class OnlineCNNBiLSTMModel {
    *  - case_logits:  A 2-D tensor of shape (T', num_cases).
    *  - punct_logits: A 2-D tensor of shape (T', num_puncts).
    */
-  std::pair<Ort::Value, Ort::Value> Forward(Ort::Value token_ids, Ort::Value valid_ids, Ort::Value label_lens) const;
+  std::pair<Ort::Value, Ort::Value> Forward(Ort::Value token_ids,
+                                            Ort::Value valid_ids,
+                                            Ort::Value label_lens) const;
 
   /** Return an allocator for allocating memory
    */

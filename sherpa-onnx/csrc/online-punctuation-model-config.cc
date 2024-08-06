@@ -13,8 +13,7 @@ void OnlinePunctuationModelConfig::Register(ParseOptions *po) {
   po->Register("cnn-bilstm", &cnn_bilstm,
                "Path to the light-weight CNN-BiLSTM model");
 
-  po->Register("bpe-vocab", &bpe_vocab,
-               "Path to the bpe vocab file");
+  po->Register("bpe-vocab", &bpe_vocab, "Path to the bpe vocab file");
 
   po->Register("num-threads", &num_threads,
                "Number of threads to run the neural network");
@@ -33,8 +32,7 @@ bool OnlinePunctuationModelConfig::Validate() const {
   }
 
   if (!FileExists(cnn_bilstm)) {
-    SHERPA_ONNX_LOGE("--cnn-bilstm '%s' does not exist",
-                     cnn_bilstm.c_str());
+    SHERPA_ONNX_LOGE("--cnn-bilstm '%s' does not exist", cnn_bilstm.c_str());
     return false;
   }
 
@@ -44,8 +42,7 @@ bool OnlinePunctuationModelConfig::Validate() const {
   }
 
   if (!FileExists(bpe_vocab)) {
-    SHERPA_ONNX_LOGE("--bpe-vocab '%s' does not exist",
-                     bpe_vocab.c_str());
+    SHERPA_ONNX_LOGE("--bpe-vocab '%s' does not exist", bpe_vocab.c_str());
     return false;
   }
 

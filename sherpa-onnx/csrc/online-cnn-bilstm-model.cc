@@ -35,8 +35,11 @@ class OnlineCNNBiLSTMModel::Impl {
   }
 #endif
 
-  std::pair<Ort::Value, Ort::Value> Forward(Ort::Value token_ids, Ort::Value valid_ids, Ort::Value label_lens) {
-    std::array<Ort::Value, 3> inputs = {std::move(token_ids), std::move(valid_ids), std::move(label_lens)};
+  std::pair<Ort::Value, Ort::Value> Forward(Ort::Value token_ids,
+                                            Ort::Value valid_ids,
+                                            Ort::Value label_lens) {
+    std::array<Ort::Value, 3> inputs = {
+        std::move(token_ids), std::move(valid_ids), std::move(label_lens)};
 
     auto ans =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
@@ -117,18 +120,18 @@ OnlineCNNBiLSTMModel::OnlineCNNBiLSTMModel(
 
 OnlineCNNBiLSTMModel::~OnlineCNNBiLSTMModel() = default;
 
-std::pair<Ort::Value, Ort::Value> OnlineCNNBiLSTMModel::Forward(Ort::Value token_ids,
-                                                               Ort::Value valid_ids,
-                                                               Ort::Value label_lens) const {
-  return impl_->Forward(std::move(token_ids), std::move(valid_ids), std::move(label_lens));
+std::pair<Ort::Value, Ort::Value> OnlineCNNBiLSTMModel::Forward(
+    Ort::Value token_ids, Ort::Value valid_ids, Ort::Value label_lens) const {
+  return impl_->Forward(std::move(token_ids), std::move(valid_ids),
+                        std::move(label_lens));
 }
 
 OrtAllocator *OnlineCNNBiLSTMModel::Allocator() const {
   return impl_->Allocator();
 }
 
-const OnlineCNNBiLSTMModelMetaData &
-OnlineCNNBiLSTMModel::GetModelMetadata() const {
+const OnlineCNNBiLSTMModelMetaData &OnlineCNNBiLSTMModel::GetModelMetadata()
+    const {
   return impl_->GetModelMetadata();
 }
 

@@ -3,9 +3,9 @@
 // Copyright (c) 2024 Jian You (jianyou@cisco.com, Cisco Systems)
 
 #include <stdio.h>
-#include <iostream>
 
 #include <chrono>  // NOLINT
+#include <iostream>
 
 #include "sherpa-onnx/csrc/online-punctuation.h"
 #include "sherpa-onnx/csrc/parse-options.h"
@@ -57,7 +57,7 @@ The output text should look like below:
   std::string text = po.GetArg(1);
 
   std::string text_with_punct_case = punct.AddPunctuationWithCase(text);
-  
+
   const auto end = std::chrono::steady_clock::now();
   fprintf(stderr, "Done\n");
 

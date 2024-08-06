@@ -14,9 +14,7 @@
 
 namespace sherpa_onnx {
 
-void OnlinePunctuationConfig::Register(ParseOptions *po) {
-  model.Register(po);
-}
+void OnlinePunctuationConfig::Register(ParseOptions *po) { model.Register(po); }
 
 bool OnlinePunctuationConfig::Validate() const {
   if (!model.Validate()) {
@@ -40,13 +38,14 @@ OnlinePunctuation::OnlinePunctuation(const OnlinePunctuationConfig &config)
 
 #if __ANDROID_API__ >= 9
 OnlinePunctuation::OnlinePunctuation(AAssetManager *mgr,
-                                       const OnlinePunctuationConfig &config)
+                                     const OnlinePunctuationConfig &config)
     : impl_(OnlinePunctuationImpl::Create(mgr, config)) {}
 #endif
 
 OnlinePunctuation::~OnlinePunctuation() = default;
 
-std::string OnlinePunctuation::AddPunctuationWithCase(const std::string &text) const {
+std::string OnlinePunctuation::AddPunctuationWithCase(
+    const std::string &text) const {
   return impl_->AddPunctuationWithCase(text);
 }
 
