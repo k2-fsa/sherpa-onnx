@@ -25,6 +25,7 @@
 #include "sherpa-onnx/csrc/online-punctuation.h"
 #include "sherpa-onnx/csrc/online-cnn-bilstm-model-meta-data.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "ssentencepiece/csrc/ssentencepiece.h"
 #include <chrono>  // NOLINT
 
