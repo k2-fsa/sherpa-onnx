@@ -138,6 +138,10 @@ list(APPEND sources
   offline-punctuation-impl.cc
   offline-punctuation-model-config.cc
   offline-punctuation.cc
+  online-cnn-bilstm-model.cc
+  online-punctuation-impl.cc
+  online-punctuation-model-config.cc
+  online-punctuation.cc
 )
 
 if(SHERPA_ONNX_ENABLE_TTS)
@@ -243,6 +247,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-offline-language-identification sherpa-onnx-offline-language-identification.cc)
   add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
   add_executable(sherpa-onnx-offline-punctuation sherpa-onnx-offline-punctuation.cc)
+  add_executable(sherpa-onnx-online-punctuation sherpa-onnx-online-punctuation.cc)
 
   if(SHERPA_ONNX_ENABLE_TTS)
     add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
@@ -256,6 +261,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-offline-language-identification
     sherpa-onnx-offline-parallel
     sherpa-onnx-offline-punctuation
+    sherpa-onnx-online-punctuation
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND main_exes

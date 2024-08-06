@@ -300,4 +300,9 @@ Ort::SessionOptions GetSessionOptions(
   return GetSessionOptionsImpl(config.num_threads, config.provider);
 }
 
+Ort::SessionOptions GetSessionOptions(
+    const OnlinePunctuationModelConfig &config) {
+  return GetSessionOptionsImpl(config.num_threads, config.provider);
+}
+
 }  // namespace sherpa_onnx
