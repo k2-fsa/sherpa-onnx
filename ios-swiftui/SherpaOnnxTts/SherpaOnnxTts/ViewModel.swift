@@ -93,12 +93,50 @@ func getTtsFor_en_US_amy_low() -> SherpaOnnxOfflineTtsWrapper {
   return SherpaOnnxOfflineTtsWrapper(config: &config)
 }
 
+// https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#vits-melo-tts-zh-en-chinese-english-1-speaker
+func getTtsFor_zh_en_melo_tts() -> SherpaOnnxOfflineTtsWrapper {
+  // please see https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
+
+  let model = getResource("model", "onnx")
+
+  let tokens = getResource("tokens", "txt")
+  let lexicon = getResource("lexicon", "txt")
+
+  let dictDir = resourceURL(to: "dict")
+
+  let numFst = getResource("number", "fst")
+  let dateFst = getResource("date", "fst")
+  let phoneFst = getResource("phone", "fst")
+  let ruleFsts = "\(dateFst),\(phoneFst),\(numFst)"
+
+  let vits = sherpaOnnxOfflineTtsVitsModelConfig(
+    model: model, lexicon: lexicon, tokens: tokens,
+    dataDir: "",
+    noiseScale: 0.667,
+    noiseScaleW: 0.8,
+    lengthScale: 1.0,
+    dictDir: dictDir
+  )
+
+  let modelConfig = sherpaOnnxOfflineTtsModelConfig(vits: vits)
+  var config = sherpaOnnxOfflineTtsConfig(
+    model: modelConfig,
+    ruleFsts: ruleFsts
+  )
+
+  return SherpaOnnxOfflineTtsWrapper(config: &config)
+}
+
 func createOfflineTts() -> SherpaOnnxOfflineTtsWrapper {
+  // Please enable only one of them
+
   return getTtsFor_en_US_amy_low()
 
   // return getTtsForVCTK()
 
   // return getTtsForAishell3()
+
+  // return getTtsFor_zh_en_melo_tts()
 
   // please add more models on need by following the above two examples
 }
