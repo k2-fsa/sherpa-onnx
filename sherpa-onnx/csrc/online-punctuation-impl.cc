@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/online-punctuation-impl.cc
 //
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c) 2024 Jian You (jianyou@cisco.com, Cisco Systems)
 
 #include "sherpa-onnx/csrc/online-punctuation-impl.h"
 

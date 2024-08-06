@@ -1,6 +1,7 @@
 // sherpa-onnx/csrc/sherpa-onnx-online-punctuation.cc
 //
-// Copyright (c)  2022-2024  Xiaomi Corporation
+// Copyright (c) 2024 Jian You (jianyou@cisco.com, Cisco Systems)
+
 #include <stdio.h>
 #include <iostream>
 
@@ -26,6 +27,7 @@ https://huggingface.co/frankyoujian/Edge-Punct-Casing/resolve/main/sherpa-onnx-c
   "how are you i am fine thank you"
 
 The output text should look like below:
+  "How are you? I am fine. Thank you."
 )usage";
 
   sherpa_onnx::ParseOptions po(kUsageMessage);
@@ -34,7 +36,7 @@ The output text should look like below:
   po.Read(argc, argv);
   if (po.NumArgs() != 1) {
     fprintf(stderr,
-            "Error: Please provide only 1 position argument containing the "
+            "Error: Please provide only 1 positional argument containing the "
             "input text.\n\n");
     po.PrintUsage();
     exit(EXIT_FAILURE);
@@ -55,8 +57,9 @@ The output text should look like below:
   std::string text = po.GetArg(1);
 
   std::string text_with_punct_case = punct.AddPunctuationWithCase(text);
-  fprintf(stderr, "Done\n");
+  
   const auto end = std::chrono::steady_clock::now();
+  fprintf(stderr, "Done\n");
 
   float elapsed_seconds =
       std::chrono::duration_cast<std::chrono::milliseconds>(end - begin)

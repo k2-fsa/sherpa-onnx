@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/online-punctuation-model-config.cc
 //
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c) 2024 Jian You (jianyou@cisco.com, Cisco Systems)
 
 #include "sherpa-onnx/csrc/online-punctuation-model-config.h"
 
@@ -33,7 +33,7 @@ bool OnlinePunctuationModelConfig::Validate() const {
   }
 
   if (!FileExists(cnn_bilstm)) {
-    SHERPA_ONNX_LOGE("--cnn-bilstm %s does not exist",
+    SHERPA_ONNX_LOGE("--cnn-bilstm '%s' does not exist",
                      cnn_bilstm.c_str());
     return false;
   }
@@ -44,7 +44,7 @@ bool OnlinePunctuationModelConfig::Validate() const {
   }
 
   if (!FileExists(bpe_vocab)) {
-    SHERPA_ONNX_LOGE("--bpe-vocab %s does not exist",
+    SHERPA_ONNX_LOGE("--bpe-vocab '%s' does not exist",
                      bpe_vocab.c_str());
     return false;
   }
