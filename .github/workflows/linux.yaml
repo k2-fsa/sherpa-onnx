@@ -17,6 +17,7 @@ on:
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-audio-tagging.sh'
       - '.github/scripts/test-offline-punctuation.sh'
+      - '.github/scripts/test-online-punctuation.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -36,6 +37,7 @@ on:
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-audio-tagging.sh'
       - '.github/scripts/test-offline-punctuation.sh'
+      - '.github/scripts/test-online-punctuation.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -140,6 +142,16 @@ jobs:
         with:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: install/*
+
+      - name: Test online punctuation
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-online-punctuation
+
+          .github/scripts/test-online-punctuation.sh
+          du -h -d1 .
 
       - name: Test offline transducer
         shell: bash

@@ -17,6 +17,7 @@ on:
       - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-audio-tagging.sh'
       - '.github/scripts/test-offline-punctuation.sh'
+      - '.github/scripts/test-online-punctuation.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -35,6 +36,7 @@ on:
       - '.github/scripts/test-online-ctc.sh'
       - '.github/scripts/test-audio-tagging.sh'
       - '.github/scripts/test-offline-punctuation.sh'
+      - '.github/scripts/test-online-punctuation.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -112,6 +114,14 @@ jobs:
           file bin/sherpa-onnx
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
+
+      - name: Test online punctuation
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-online-punctuation
+
+          .github/scripts/test-online-punctuation.sh
 
       - name: Test offline transducer
         shell: bash
