@@ -18,7 +18,7 @@ The input text can contain English words.
 Usage:
 
 Please download the model from: 
-https://huggingface.co/frankyoujian/Edge-Punct-Casing/resolve/main/sherpa-onnx-cnn-bilstm-unigram-bpe.7z
+https://huggingface.co/frankyoujian/Edge-Punct-Casing/resolve/main/sherpa-onnx-cnn-bilstm-unigram-bpe-en.7z
 
 ./bin/Release/sherpa-onnx-online-punctuation \
   --cnn-bilstm=/path/to/model.onnx \
