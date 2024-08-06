@@ -58,6 +58,7 @@ def get_binaries():
         "sherpa-onnx-offline-tts",
         "sherpa-onnx-offline-tts-play",
         "sherpa-onnx-offline-websocket-server",
+        "sherpa-onnx-online-punctuation",
         "sherpa-onnx-online-websocket-client",
         "sherpa-onnx-online-websocket-server",
         "sherpa-onnx-vad-microphone",

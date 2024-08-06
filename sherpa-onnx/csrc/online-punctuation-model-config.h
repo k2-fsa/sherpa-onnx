@@ -22,9 +22,9 @@ struct OnlinePunctuationModelConfig {
   OnlinePunctuationModelConfig() = default;
 
   OnlinePunctuationModelConfig(const std::string &cnn_bilstm,
-                                const std::string &bpe_vocab,
-                                int32_t num_threads, bool debug,
-                                const std::string &provider)
+                               const std::string &bpe_vocab,
+                               int32_t num_threads, bool debug,
+                               const std::string &provider)
       : cnn_bilstm(cnn_bilstm),
         bpe_vocab(bpe_vocab),
         num_threads(num_threads),

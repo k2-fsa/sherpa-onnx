@@ -40,8 +40,7 @@ class OnlinePunctuation {
   explicit OnlinePunctuation(const OnlinePunctuationConfig &config);
 
 #if __ANDROID_API__ >= 9
-  OnlinePunctuation(AAssetManager *mgr,
-                     const OnlinePunctuationConfig &config);
+  OnlinePunctuation(AAssetManager *mgr, const OnlinePunctuationConfig &config);
 #endif
 
   ~OnlinePunctuation();

@@ -20,7 +20,9 @@ std::unique_ptr<OnlinePunctuationImpl> OnlinePunctuationImpl::Create(
     return std::make_unique<OnlinePunctuationCNNBiLSTMImpl>(config);
   }
 
-  SHERPA_ONNX_LOGE("Please specify a punctuation model and bpe vocab! Return a null pointer");
+  SHERPA_ONNX_LOGE(
+      "Please specify a punctuation model and bpe vocab! Return a null "
+      "pointer");
   return nullptr;
 }
 
@@ -31,7 +33,9 @@ std::unique_ptr<OnlinePunctuationImpl> OnlinePunctuationImpl::Create(
     return std::make_unique<OnlinePunctuationCNNBiLSTMImpl>(mgr, config);
   }
 
-  SHERPA_ONNX_LOGE("Please specify a punctuation model and bpe vocab! Return a null pointer");
+  SHERPA_ONNX_LOGE(
+      "Please specify a punctuation model and bpe vocab! Return a null "
+      "pointer");
   return nullptr;
 }
 #endif
