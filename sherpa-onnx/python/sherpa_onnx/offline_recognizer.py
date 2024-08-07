@@ -156,6 +156,8 @@ class OfflineRecognizer(object):
         lm_config = OfflineLMConfig(
             model=lm,
             scale=lm_scale,
+            lm_num_threads=num_threads,
+            lm_provider=provider,
         )
 
         recognizer_config = OfflineRecognizerConfig(
