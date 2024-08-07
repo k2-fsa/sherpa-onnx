@@ -335,11 +335,10 @@ def create_second_pass_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
 
 def run_second_pass(
     recognizer: sherpa_onnx.OfflineRecognizer,
-    sample_buffers: List[np.ndarray],
+    samples: np.ndarray,
     sample_rate: int,
 ):
     stream = recognizer.create_stream()
-    samples = np.concatenate(sample_buffers)
     stream.accept_waveform(sample_rate, samples)
 
     recognizer.decode_stream(stream)
@@ -407,14 +406,20 @@ def main():
 
             if is_endpoint:
                 if result:
+                    samples = np.concatenate(sample_buffers)
+                    # There are internal sample buffers inside the streaming
+                    # feature extractor, so we cannot send all samples to
+                    # the 2nd pass. Here 8000 is just an empirical value
+                    # that should work for most streaming models in sherpa-onnx
+                    sample_buffers = [samples[-8000:]]
+                    samples = samples[:-8000]
                     result = run_second_pass(
                         recognizer=second_recognizer,
-                        sample_buffers=sample_buffers,
+                        samples=samples,
                         sample_rate=sample_rate,
                     )
                     result = result.lower().strip()
 
-                    sample_buffers = []
                     print(
                         "\r{}:{}".format(segment_id, " " * len(last_result)),
                         end="",
