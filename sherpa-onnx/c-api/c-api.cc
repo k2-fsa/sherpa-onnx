@@ -105,7 +105,7 @@ SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
   recognizer_config.hotwords_score =
       SHERPA_ONNX_OR(config->hotwords_score, 1.5);
 
-  recognizer_config.blank_penalty = SHERPA_ONNX_OR(config->blank_penalty, 0.0);
+  recognizer_config.blank_penalty = config->blank_penalty;
 
   recognizer_config.ctc_fst_decoder_config.graph =
       SHERPA_ONNX_OR(config->ctc_fst_decoder_config.graph, "");
@@ -428,6 +428,8 @@ sherpa_onnx::OfflineRecognizerConfig convertConfig(
   recognizer_config.hotwords_file = SHERPA_ONNX_OR(config->hotwords_file, "");
   recognizer_config.hotwords_score =
       SHERPA_ONNX_OR(config->hotwords_score, 1.5);
+
+  recognizer_config.blank_penalty = config->blank_penalty;
 
   recognizer_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
   recognizer_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
