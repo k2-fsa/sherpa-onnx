@@ -11,6 +11,7 @@ public class OfflineRecognizerConfig {
     private final float hotwordsScore;
     private final String ruleFsts;
     private final String ruleFars;
+    private final float blankPenalty;
 
     private OfflineRecognizerConfig(Builder builder) {
         this.featConfig = builder.featConfig;
@@ -21,6 +22,7 @@ public class OfflineRecognizerConfig {
         this.hotwordsScore = builder.hotwordsScore;
         this.ruleFsts = builder.ruleFsts;
         this.ruleFars = builder.ruleFars;
+        this.blankPenalty = builder.blankPenalty;
     }
 
     public static Builder builder() {
@@ -40,6 +42,7 @@ public class OfflineRecognizerConfig {
         private float hotwordsScore = 1.5f;
         private String ruleFsts = "";
         private String ruleFars = "";
+        private float blankPenalty = 0.0f;
 
         public OfflineRecognizerConfig build() {
             return new OfflineRecognizerConfig(this);
@@ -82,6 +85,11 @@ public class OfflineRecognizerConfig {
 
         public Builder setRuleFars(String ruleFars) {
             this.ruleFars = ruleFars;
+            return this;
+        }
+
+        public Builder setBlankPenalty(float blankPenalty) {
+            this.blankPenalty = blankPenalty;
             return this;
         }
     }
