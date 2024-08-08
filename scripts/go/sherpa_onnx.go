@@ -129,6 +129,7 @@ type OnlineRecognizerConfig struct {
 	Rule3MinUtteranceLength float32
 	HotwordsFile            string
 	HotwordsScore           float32
+	BlankPenalty            float32
 	CtcFstDecoderConfig     OnlineCtcFstDecoderConfig
 	RuleFsts                string
 	RuleFars                string
@@ -212,6 +213,7 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 	defer C.free(unsafe.Pointer(c.hotwords_file))
 
 	c.hotwords_score = C.float(config.HotwordsScore)
+	c.blank_penalty = C.float(config.BlankPenalty)
 
 	c.rule_fsts = C.CString(config.RuleFsts)
 	defer C.free(unsafe.Pointer(c.rule_fsts))
@@ -421,6 +423,7 @@ type OfflineRecognizerConfig struct {
 	MaxActivePaths int
 	HotwordsFile   string
 	HotwordsScore  float32
+	BlankPenalty   float32
 	RuleFsts       string
 	RuleFars       string
 }
@@ -529,6 +532,8 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 	defer C.free(unsafe.Pointer(c.hotwords_file))
 
 	c.hotwords_score = C.float(config.HotwordsScore)
+
+	c.blank_penalty = C.float(config.BlankPenalty)
 
 	c.rule_fsts = C.CString(config.RuleFsts)
 	defer C.free(unsafe.Pointer(c.rule_fsts))

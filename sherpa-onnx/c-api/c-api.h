@@ -142,6 +142,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
 
   /// Bonus score for each token in hotwords.
   float hotwords_score;
+  float blank_penalty;
 
   SherpaOnnxOnlineCtcFstDecoderConfig ctc_fst_decoder_config;
   const char *rule_fsts;
