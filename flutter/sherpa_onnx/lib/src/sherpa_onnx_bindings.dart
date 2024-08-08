@@ -194,6 +194,9 @@ final class SherpaOnnxOfflineRecognizerConfig extends Struct {
 
   external Pointer<Utf8> ruleFsts;
   external Pointer<Utf8> ruleFars;
+
+  @Float()
+  external double blankPenalty;
 }
 
 final class SherpaOnnxOnlineTransducerModelConfig extends Struct {
@@ -269,6 +272,9 @@ final class SherpaOnnxOnlineRecognizerConfig extends Struct {
 
   external Pointer<Utf8> ruleFsts;
   external Pointer<Utf8> ruleFars;
+
+  @Float()
+  external double blankPenalty;
 }
 
 final class SherpaOnnxSileroVadModelConfig extends Struct {

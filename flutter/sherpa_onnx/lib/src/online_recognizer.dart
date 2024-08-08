@@ -114,11 +114,12 @@ class OnlineRecognizerConfig {
     this.ctcFstDecoderConfig = const OnlineCtcFstDecoderConfig(),
     this.ruleFsts = '',
     this.ruleFars = '',
+    this.blankPenalty = 0.0,
   });
 
   @override
   String toString() {
-    return 'OnlineRecognizerConfig(feat: $feat, model: $model, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, enableEndpoint: $enableEndpoint, rule1MinTrailingSilence: $rule1MinTrailingSilence, rule2MinTrailingSilence: $rule2MinTrailingSilence, rule3MinUtteranceLength: $rule3MinUtteranceLength, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ctcFstDecoderConfig: $ctcFstDecoderConfig, ruleFsts: $ruleFsts, ruleFars: $ruleFars)';
+    return 'OnlineRecognizerConfig(feat: $feat, model: $model, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, enableEndpoint: $enableEndpoint, rule1MinTrailingSilence: $rule1MinTrailingSilence, rule2MinTrailingSilence: $rule2MinTrailingSilence, rule3MinUtteranceLength: $rule3MinUtteranceLength, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ctcFstDecoderConfig: $ctcFstDecoderConfig, ruleFsts: $ruleFsts, ruleFars: $ruleFars, blankPenalty: $blankPenalty)';
   }
 
   final FeatureConfig feat;
@@ -142,6 +143,8 @@ class OnlineRecognizerConfig {
   final OnlineCtcFstDecoderConfig ctcFstDecoderConfig;
   final String ruleFsts;
   final String ruleFars;
+
+  final double blankPenalty;
 }
 
 class OnlineRecognizerResult {
@@ -208,6 +211,8 @@ class OnlineRecognizer {
     c.ref.ctcFstDecoderConfig.maxActive = config.ctcFstDecoderConfig.maxActive;
     c.ref.ruleFsts = config.ruleFsts.toNativeUtf8();
     c.ref.ruleFars = config.ruleFars.toNativeUtf8();
+
+    c.ref.blankPenalty = config.blankPenalty;
 
     final ptr = SherpaOnnxBindings.createOnlineRecognizer?.call(c) ?? nullptr;
 
