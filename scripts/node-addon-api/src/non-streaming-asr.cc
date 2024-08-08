@@ -201,6 +201,7 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(blank_penalty, blankPenalty);
 
   SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&c);
