@@ -137,7 +137,8 @@ func sherpaOnnxOnlineRecognizerConfig(
   hotwordsScore: Float = 1.5,
   ctcFstDecoderConfig: SherpaOnnxOnlineCtcFstDecoderConfig = sherpaOnnxOnlineCtcFstDecoderConfig(),
   ruleFsts: String = "",
-  ruleFars: String = ""
+  ruleFars: String = "",
+  blankPenalty: Float = 0.0
 ) -> SherpaOnnxOnlineRecognizerConfig {
   return SherpaOnnxOnlineRecognizerConfig(
     feat_config: featConfig,
@@ -152,7 +153,8 @@ func sherpaOnnxOnlineRecognizerConfig(
     hotwords_score: hotwordsScore,
     ctc_fst_decoder_config: ctcFstDecoderConfig,
     rule_fsts: toCPointer(ruleFsts),
-    rule_fars: toCPointer(ruleFars)
+    rule_fars: toCPointer(ruleFars),
+    blank_penalty: blankPenalty
   )
 }
 
@@ -420,7 +422,8 @@ func sherpaOnnxOfflineRecognizerConfig(
   hotwordsFile: String = "",
   hotwordsScore: Float = 1.5,
   ruleFsts: String = "",
-  ruleFars: String = ""
+  ruleFars: String = "",
+  blankPenalty: Float = 0.0
 ) -> SherpaOnnxOfflineRecognizerConfig {
   return SherpaOnnxOfflineRecognizerConfig(
     feat_config: featConfig,
@@ -431,7 +434,8 @@ func sherpaOnnxOfflineRecognizerConfig(
     hotwords_file: toCPointer(hotwordsFile),
     hotwords_score: hotwordsScore,
     rule_fsts: toCPointer(ruleFsts),
-    rule_fars: toCPointer(ruleFars)
+    rule_fars: toCPointer(ruleFars),
+    blank_penalty: blankPenalty
   )
 }
 
