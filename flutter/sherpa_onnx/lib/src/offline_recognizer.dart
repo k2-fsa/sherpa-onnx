@@ -159,7 +159,7 @@ class OfflineRecognizerConfig {
     this.hotwordsScore = 1.5,
     this.ruleFsts = '',
     this.ruleFars = '',
-    this.blankPenalty = 1.5,
+    this.blankPenalty = 0.0,
   });
 
   @override
