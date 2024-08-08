@@ -1,3 +1,22 @@
+## 1.10.21
+
+* Fix ffmpeg c api example (#1185)
+* Fix splitting sentences for MeloTTS (#1186)
+* Non-streaming WebSocket client for Java. (#1190)
+* Fix copying asset files for flutter examples. (#1191)
+* Add Chinese+English tts example for flutter (#1192)
+* Add speaker identification and verification exmaple for Dart API (#1194)
+* Fix reading non-standard wav files. (#1199)
+* Add ReazonSpeech Japanese pre-trained model (#1203)
+* Describe how to add new words for MeloTTS models (#1209)
+* Remove libonnxruntime_providers_cuda.so as a dependency. (#1210)
+* Fix setting SenseVoice language. (#1214)
+* Support passing TTS callback in Swift API (#1218)
+* Add MeloTTS example for ios (#1223)
+* Add online punctuation and casing prediction model for English language (#1224)
+* Fix python two pass ASR examples (#1230)
+* Add blank penalty for various language bindings
+
 ## 1.10.20
 
 * Add Dart API for audio tagging
