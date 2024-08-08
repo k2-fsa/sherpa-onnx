@@ -4,7 +4,6 @@ using System.Runtime.InteropServices;
 
 namespace SherpaOnnx
 {
-
     [StructLayout(LayoutKind.Sequential)]
     public struct OfflineRecognizerConfig
     {
@@ -20,6 +19,7 @@ namespace SherpaOnnx
             HotwordsScore = 1.5F;
             RuleFsts = "";
             RuleFars = "";
+            BlankPenalty = 0.0F;
         }
         public FeatureConfig FeatConfig;
         public OfflineModelConfig ModelConfig;
@@ -40,7 +40,7 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string RuleFars;
+
+        public float BlankPenalty;
     }
-
-
 }

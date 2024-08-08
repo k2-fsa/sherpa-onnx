@@ -46,6 +46,9 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.rule_fars = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(cls, "blankPenalty", "F");
+  ans.blank_penalty = env->GetFloatField(config, fid);
+
   //---------- feat config ----------
   fid = env->GetFieldID(cls, "featConfig",
                         "Lcom/k2fsa/sherpa/onnx/FeatureConfig;");

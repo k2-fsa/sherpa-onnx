@@ -159,11 +159,12 @@ class OfflineRecognizerConfig {
     this.hotwordsScore = 1.5,
     this.ruleFsts = '',
     this.ruleFars = '',
+    this.blankPenalty = 0.0,
   });
 
   @override
   String toString() {
-    return 'OfflineRecognizerConfig(feat: $feat, model: $model, lm: $lm, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ruleFsts: $ruleFsts, ruleFars: $ruleFars)';
+    return 'OfflineRecognizerConfig(feat: $feat, model: $model, lm: $lm, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ruleFsts: $ruleFsts, ruleFars: $ruleFars, blankPenalty: $blankPenalty)';
   }
 
   final FeatureConfig feat;
@@ -179,6 +180,8 @@ class OfflineRecognizerConfig {
 
   final String ruleFsts;
   final String ruleFars;
+
+  final double blankPenalty;
 }
 
 class OfflineRecognizerResult {
@@ -267,6 +270,8 @@ class OfflineRecognizer {
 
     c.ref.ruleFsts = config.ruleFsts.toNativeUtf8();
     c.ref.ruleFars = config.ruleFars.toNativeUtf8();
+
+    c.ref.blankPenalty = config.blankPenalty;
 
     final ptr = SherpaOnnxBindings.createOfflineRecognizer?.call(c) ?? nullptr;
 

@@ -25,6 +25,7 @@ namespace SherpaOnnx
             CtcFstDecoderConfig = new OnlineCtcFstDecoderConfig();
             RuleFsts = "";
             RuleFars = "";
+            BlankPenalty = 0.0F;
         }
         public FeatureConfig FeatConfig;
         public OnlineModelConfig ModelConfig;
@@ -69,6 +70,7 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string RuleFars;
-    }
 
+        public float BlankPenalty;
+    }
 }

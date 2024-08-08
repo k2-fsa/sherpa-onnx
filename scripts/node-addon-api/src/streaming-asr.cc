@@ -191,6 +191,7 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(blank_penalty, blankPenalty);
 
   c.ctc_fst_decoder_config = GetCtcFstDecoderConfig(o);
 
