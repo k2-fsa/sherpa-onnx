@@ -21,6 +21,7 @@ def main():
         ".sh",
         "*.md",
         "MODEL_CARD",
+        ".DS_Store",
     ]
     sep = "    "
     ss = []
