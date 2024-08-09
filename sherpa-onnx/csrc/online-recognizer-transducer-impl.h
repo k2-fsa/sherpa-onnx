@@ -186,7 +186,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     std::vector<std::vector<int32_t>> current;
     std::vector<float> current_scores;
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,
-                        bpe_encoder_.get(), &current, &current_scores)) {
+                        config_.tokenize_hotwords, bpe_encoder_.get(), &current,
+                        &current_scores)) {
       SHERPA_ONNX_LOGE("Encode hotwords failed, skipping, hotwords are : %s",
                        hotwords.c_str());
     }
@@ -401,7 +402,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     }
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,
-                        bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
+                        config_.tokenize_hotwords, bpe_encoder_.get(),
+                        &hotwords_, &boost_scores_)) {
       SHERPA_ONNX_LOGE(
           "Failed to encode some hotwords, skip them already, see logs above "
           "for details.");
@@ -425,7 +427,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     }
 
     if (!EncodeHotwords(is, config_.model_config.modeling_unit, sym_,
-                        bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
+                        config_.tokenize_hotwords, bpe_encoder_.get(),
+                        &hotwords_, &boost_scores_)) {
       SHERPA_ONNX_LOGE(
           "Failed to encode some hotwords, skip them already, see logs above "
           "for details.");
