@@ -1,0 +1,112 @@
+name: pascal
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/pascal.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'pascal-api-examples/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/pascal-api/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/pascal.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'pascal-api-examples/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/pascal-api/*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: pascal-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  pascal:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, macos-13]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}
+
+      - name: Install Free pascal compiler (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -q -y fpc
+
+      - name: Install Free pascal compiler (macos)
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-13'
+        shell: bash
+        run: |
+          brew install fpc
+          # brew install --cask lazarus
+
+      - name: FPC info
+        shell: bash
+        run: |
+          which fpc
+          fpc -i
+
+      - name: OS info
+        shell: bash
+        run: |
+          uname -a
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -D BUILD_SHARED_LIBS=ON \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            -D CMAKE_BUILD_TYPE=Release \
+            ..
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cd build
+          make -j2 sherpa-onnx-c-api
+
+      - name:  Run Pascal test
+        shell: bash
+        run: |
+          cd ./pascal-api-examples
+
+          echo "----read-wav test-----"
+          pushd read-wav
+          ./run.sh
+          ls -lh
+          popd
