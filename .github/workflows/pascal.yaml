@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - pascal-api-wav
     paths:
       - '.github/workflows/pascal.yaml'
       - 'CMakeLists.txt'
@@ -40,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, macos-13]
 
     steps:
       - uses: actions/checkout@v4
@@ -60,10 +59,11 @@ jobs:
           sudo apt-get install -q -y fpc
 
       - name: Install Free pascal compiler (macos)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-13'
         shell: bash
         run: |
           brew install fpc
+          # brew install --cask lazarus
 
       - name: FPC info
         shell: bash

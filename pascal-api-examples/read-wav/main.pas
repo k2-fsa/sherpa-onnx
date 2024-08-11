@@ -1,3 +1,4 @@
+{ Copyright (c)  2024  Xiaomi Corporation }
 program main;
 
 {$mode objfpc}
@@ -10,7 +11,7 @@ var
   S: Single;
   I: Integer;
 begin
-  Wave := SherpaOnnxReadWaveWrapper('./lei-jun-test.wav');
+  Wave := SherpaOnnxReadWave('./lei-jun-test.wav');
   WriteLn('info ', Wave.SampleRate, ' ', Length(Wave.Samples));
   S := 0;
   for i := Low(Wave.Samples) to High(Wave.Samples) do
