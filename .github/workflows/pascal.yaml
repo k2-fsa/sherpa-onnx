@@ -148,6 +148,10 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
+          ./run-whisper.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
           ./run-nemo-transducer.sh
           rm -rf sherpa-onnx-*
           echo "---"
@@ -182,7 +186,12 @@ jobs:
           cd ./pascal-api-examples
 
           pushd streaming-asr
+
           ./run-zipformer-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-nemo-transducer.sh
           rm -rf sherpa-onnx-*
           echo "---"
 
