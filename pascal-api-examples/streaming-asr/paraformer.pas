@@ -29,13 +29,12 @@ begin
 
   {Please visit https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
   to download model files used in this file.}
-  Config.ModelConfig.Transducer.Encoder := './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/encoder-epoch-99-avg-1.int8.onnx';
-  Config.ModelConfig.Transducer.Decoder := './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/decoder-epoch-99-avg-1.onnx';
-  Config.ModelConfig.Transducer.Joiner := './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx';
-  Config.ModelConfig.Tokens := './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt';
+  Config.ModelConfig.Paraformer.Encoder := './sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx';
+  Config.ModelConfig.Paraformer.Decoder := './sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx';
+  Config.ModelConfig.Tokens := './sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt"';
   Config.ModelConfig.Debug := False;
 
-  WaveFilename := './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs/0.wav';
+  WaveFilename := './sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/2.wav';
 
   Recognizer := TSherpaOnnxOnlineRecognizer.Create(Config);
 
