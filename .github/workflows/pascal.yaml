@@ -156,6 +156,13 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
+          ./run-paraformer.sh
+
+          ./run-paraformer-itn.sh
+
+          rm -rf sherpa-onnx-*
+          echo "---"
+
           ls -lh
           popd
 

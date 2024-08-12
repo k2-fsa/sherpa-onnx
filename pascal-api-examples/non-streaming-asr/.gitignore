@@ -1,5 +1,7 @@
+!run-*.sh
 zipformer_transducer
 whisper
 nemo_transducer
 nemo_ctc
-!run-*.sh
+paraformer
+paraformer_itn
