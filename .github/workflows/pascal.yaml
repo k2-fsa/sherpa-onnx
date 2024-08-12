@@ -160,6 +160,10 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
+          ./run-telespeech-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
           ./run-paraformer.sh
 
           ./run-paraformer-itn.sh
