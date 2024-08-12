@@ -1,7 +1,7 @@
 { Copyright (c)  2024  Xiaomi Corporation }
 
 {
-This file shows how to use a streaming Paaraformer model to decode files.
+This file shows how to use a streaming Paraformer model to decode files.
 
 You can download the model files from
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
@@ -9,7 +9,7 @@ https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
 
 program paraformer;
 
-{$mode delphi}
+{$mode objfpc}
 
 uses
   sherpa_onnx,
@@ -53,7 +53,6 @@ begin
   Start := Now;
 
   Stream := Recognizer.CreateStream();
-
 
   Stream.AcceptWaveform(Wave.Samples, Wave.SampleRate);
 

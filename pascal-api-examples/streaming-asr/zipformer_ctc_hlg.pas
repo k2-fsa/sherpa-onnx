@@ -10,13 +10,12 @@ https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
 
 program zipformer_ctc_hlg;
 
-{$mode delphi}
+{$mode objfpc}
 
 uses
   sherpa_onnx,
   DateUtils,
   SysUtils;
-
 
 var
   Config: TSherpaOnnxOnlineRecognizerConfig;
@@ -54,7 +53,6 @@ begin
   Start := Now;
 
   Stream := Recognizer.CreateStream();
-
 
   Stream.AcceptWaveform(Wave.Samples, Wave.SampleRate);
 

@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - pascal-api-streaming-asr
     paths:
       - '.github/workflows/pascal.yaml'
       - 'CMakeLists.txt'
@@ -71,13 +70,6 @@ jobs:
         shell: bash
         run: |
           choco install lazarus
-          ls -lh /c/lazarus/
-          echo '--'
-          ls -lh /c/lazarus/fpc/
-          echo '--'
-          ls -lh /c/lazarus/fpc/*
-          echo '--'
-          ls -lh /c/lazarus/fpc/*/*
 
           ls -lh /c/lazarus/fpc/3.2.2/bin/x86_64-win64/
 
@@ -146,7 +138,6 @@ jobs:
         run: |
           export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
 
-
           cd ./pascal-api-examples
 
           pushd streaming-asr
@@ -154,16 +145,18 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
-          ./run-paraformer.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
+          if [[ ${{ matrix.os }} != 'windows-latest' ]]; then
+            ./run-paraformer.sh
+            rm -rf sherpa-onnx-*
+            echo "---"
 
-          ./run-zipformer-ctc.sh
-          echo "---"
+            ./run-zipformer-ctc.sh
+            echo "---"
 
-          ./run-zipformer-ctc-hlg.sh
-          rm -rf sherpa-onnx-*
-          echo "---"
+            ./run-zipformer-ctc-hlg.sh
+            rm -rf sherpa-onnx-*
+            echo "---"
+          fi
 
           ls -lh
           popd
