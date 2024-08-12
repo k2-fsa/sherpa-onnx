@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - pascal-api-non-streaming-asr
     paths:
       - '.github/workflows/pascal.yaml'
       - 'CMakeLists.txt'
