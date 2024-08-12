@@ -1,3 +1,4 @@
 zipformer_transducer
 whisper
+nemo_transducer
 !run-*.sh
