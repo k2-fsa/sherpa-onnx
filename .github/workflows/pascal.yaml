@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - pascal-api-streaming-asr
     paths:
       - '.github/workflows/pascal.yaml'
       - 'CMakeLists.txt'
@@ -100,13 +101,24 @@ jobs:
           cd build
           make -j2 sherpa-onnx-c-api
 
-      - name:  Run Pascal test
+      - name:  Run Pascal test (Read wav test)
         shell: bash
         run: |
           cd ./pascal-api-examples
 
-          echo "----read-wav test-----"
           pushd read-wav
           ./run.sh
+          echo "---"
+          ls -lh
+          popd
+
+      - name:  Run Pascal test (Streaming ASR)
+        shell: bash
+        run: |
+          cd ./pascal-api-examples
+
+          pushd streaming-asr
+          ./run-zipformer-transducer.sh
+          echo "---"
           ls -lh
           popd

@@ -79,14 +79,35 @@ type
 
   TSherpaOnnxOnlineRecognizerResult = record
     Text: AnsiString;
+    Tokens: array of AnsiString;
+    Timestamps: array of Single;
+    function ToString: AnsiString;
+  end;
+
+  TSherpaOnnxOnlineStream = class
+  private
+   Handle: Pointer;
+  public
+    constructor Create(P: Pointer);
+    destructor Destroy; override;
+    procedure AcceptWaveform(Samples: array of Single; SampleRate: Integer);
+    procedure InputFinished;
   end;
 
   TSherpaOnnxOnlineRecognizer = class
   private
-   handle: Pointer;
+   Handle: Pointer;
   public
     constructor Create(Config: TSherpaOnnxOnlineRecognizerConfig);
     destructor Destroy; override;
+
+    function CreateStream: TSherpaOnnxOnlineStream; overload;
+    function CreateStream(Hotwords: AnsiString): TSherpaOnnxOnlineStream; overload;
+    function IsReady(Stream: TSherpaOnnxOnlineStream): Boolean;
+    procedure Decode(Stream: TSherpaOnnxOnlineStream);
+    procedure Reset(Stream: TSherpaOnnxOnlineStream);
+    function IsEndpoint(Stream: TSherpaOnnxOnlineStream): Boolean;
+    function GetResult(Stream: TSherpaOnnxOnlineStream): TSherpaOnnxOnlineRecognizerResult;
   end;
 
 { It supports reading a single channel wave with 16-bit encoded samples.
@@ -98,6 +119,12 @@ implementation
 
 uses
   ctypes,
+  fpjson,
+    { See
+      - https://wiki.freepascal.org/fcl-json
+      - https://www.freepascal.org/daily/doc/fcl/fpjson/getjson.html
+    }
+  jsonparser,
   SysUtils;
 
 const
@@ -177,11 +204,45 @@ type
 
   PSherpaOnnxOnlineRecognizerConfig = ^SherpaOnnxOnlineRecognizerConfig;
 
-function SherpaOnnxCreateOnlineRecognizerWrapper(Config: PSherpaOnnxOnlineRecognizerConfig): Pointer; cdecl;
-  external SherpaOnnxLibName name 'SherpaOnnxCreateOnlineRecognizer';
+function SherpaOnnxCreateOnlineRecognizer(Config: PSherpaOnnxOnlineRecognizerConfig): Pointer; cdecl;
+  external SherpaOnnxLibName;
 
-procedure SherpaOnnxDestroyOnlineRecognizer(p: Pointer); cdecl;
-  external SherpaOnnxLibName name 'SherpaOnnxDestroyOnlineRecognizer';
+procedure SherpaOnnxDestroyOnlineRecognizer(Recognizer: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxCreateOnlineStream(Recognizer: Pointer): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxCreateOnlineStreamWithHotwords(Recognizer: Pointer; Hotwords: PAnsiChar): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyOnlineStream(Recognizer: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxOnlineStreamAcceptWaveform(Stream: Pointer;
+  SampleRate: cint32; Samples: pcfloat; N: cint32 ); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxOnlineStreamInputFinished(Stream: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxIsOnlineStreamReady(Recognizer: Pointer; Stream: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDecodeOnlineStream(Recognizer: Pointer; Stream: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxOnlineStreamReset(Recognizer: Pointer; Stream: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOnlineStreamIsEndpoint(Recognizer: Pointer; Stream: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxGetOnlineStreamResultAsJson(Recognizer: Pointer; Stream: Pointer): PAnsiChar; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyOnlineStreamResultJson(PJson: PAnsiChar); cdecl;
+  external SherpaOnnxLibName;
 
 function SherpaOnnxReadWaveWrapper(Filename: PAnsiChar): PSherpaOnnxWave; cdecl;
   external SherpaOnnxLibName name 'SherpaOnnxReadWave';
@@ -198,6 +259,7 @@ begin
   PFilename := PAnsiChar(Filename);
   PWave := SherpaOnnxReadWaveWrapper(PFilename);
 
+  Result.Samples := nil;
   SetLength(Result.Samples, PWave^.NumSamples);
 
   Result.SampleRate := PWave^.SampleRate;
@@ -285,6 +347,39 @@ begin
     ]);
 end;
 
+function TSherpaOnnxOnlineRecognizerResult.ToString: AnsiString;
+var
+  TokensStr: AnsiString;
+  S: AnsiString;
+  TimestampStr: AnsiString;
+  T: Single;
+  Sep: AnsiString;
+begin
+  TokensStr := '[';
+  Sep := '';
+  for S in Self.Tokens do
+  begin
+    TokensStr := TokensStr + Sep + S;
+    Sep := ', ';
+  end;
+  TokensStr := TokensStr + ']';
+
+  TimestampStr := '[';
+  Sep := '';
+  for T in Self.Timestamps do
+  begin
+    TimestampStr := TimestampStr + Sep + Format('%.2f', [T]);
+    Sep := ', ';
+  end;
+  TimestampStr := TimestampStr + ']';
+
+  Result := Format('TSherpaOnnxOnlineRecognizerResult(Text := %s, ' +
+    'Tokens := %s, ' +
+    'Timestamps := %s, ' +
+    ')',
+    [Self.Text, TokensStr, TimestampStr]);
+end;
+
 constructor TSherpaOnnxOnlineRecognizer.Create(Config: TSherpaOnnxOnlineRecognizerConfig);
 var
   C: SherpaOnnxOnlineRecognizerConfig;
@@ -325,13 +420,115 @@ begin
   C.RuleFars := PAnsiChar(Config.RuleFars);
   C.BlankPenalty := Config.BlankPenalty;
 
-  Self.handle := SherpaOnnxCreateOnlineRecognizerWrapper(@C);
+  Self.Handle := SherpaOnnxCreateOnlineRecognizer(@C);
 end;
 
 destructor TSherpaOnnxOnlineRecognizer.Destroy;
 begin
-  SherpaOnnxDestroyOnlineRecognizer(Self.handle);
-  Self.handle := nil;
+  SherpaOnnxDestroyOnlineRecognizer(Self.Handle);
+  Self.Handle := nil;
+end;
+
+function TSherpaOnnxOnlineRecognizer.CreateStream: TSherpaOnnxOnlineStream;
+var
+  Stream: Pointer;
+begin
+  Stream := SherpaOnnxCreateOnlineStream(Self.Handle);
+  Result := TSherpaOnnxOnlineStream.Create(Stream);
+end;
+
+function TSherpaOnnxOnlineRecognizer.CreateStream(Hotwords: AnsiString): TSherpaOnnxOnlineStream;
+var
+  Stream: Pointer;
+begin
+  Stream := SherpaOnnxCreateOnlineStreamWithHotwords(Self.Handle, PAnsiChar(Hotwords));
+  Result := TSherpaOnnxOnlineStream.Create(Stream);
+end;
+
+function TSherpaOnnxOnlineRecognizer.IsReady(Stream: TSherpaOnnxOnlineStream): Boolean;
+begin
+  Result := SherpaOnnxIsOnlineStreamReady(Self.Handle, Stream.Handle) = 1;
+end;
+
+procedure TSherpaOnnxOnlineRecognizer.Decode(Stream: TSherpaOnnxOnlineStream);
+begin
+  SherpaOnnxDecodeOnlineStream(Self.Handle, Stream.Handle);
+end;
+
+procedure TSherpaOnnxOnlineRecognizer.Reset(Stream: TSherpaOnnxOnlineStream);
+begin
+  SherpaOnnxOnlineStreamReset(Self.Handle, Stream.Handle);
+end;
+
+function TSherpaOnnxOnlineRecognizer.IsEndpoint(Stream: TSherpaOnnxOnlineStream): Boolean;
+begin
+  Result := SherpaOnnxOnlineStreamIsEndpoint(Self.Handle, Stream.Handle) = 1;
+end;
+
+function TSherpaOnnxOnlineRecognizer.GetResult(Stream: TSherpaOnnxOnlineStream): TSherpaOnnxOnlineRecognizerResult;
+var
+  pJson: PAnsiChar;
+  JsonData: TJSONData;
+  JsonObject : TJSONObject;
+  JsonEnum: TJSONEnum;
+  I: Integer;
+begin
+  pJson := SherpaOnnxGetOnlineStreamResultAsJson(Self.Handle, Stream.Handle);
+
+  {
+   - https://www.freepascal.org/daily/doc/fcl/fpjson/getjson.html
+   - https://www.freepascal.org/daily/doc/fcl/fpjson/tjsondata.html
+   - https://www.freepascal.org/daily/doc/fcl/fpjson/tjsonobject.html
+   - https://www.freepascal.org/daily/doc/fcl/fpjson/tjsonenum.html
+  }
+
+  JsonData := GetJSON(AnsiString(pJson), False);
+
+  JsonObject := JsonData as TJSONObject;
+
+  Result.Text := JsonObject.Strings['text'];
+
+  SetLength(Result.Tokens, JsonObject.Arrays['tokens'].Count);
+
+  I := 0;
+  for JsonEnum in JsonObject.Arrays['tokens'] do
+  begin
+    Result.Tokens[I] := JsonEnum.Value.AsString;
+    Inc(I);
+  end;
+
+  SetLength(Result.Timestamps, JsonObject.Arrays['timestamps'].Count);
+  I := 0;
+  for JsonEnum in JsonObject.Arrays['timestamps'] do
+  begin
+    Result.Timestamps[I] := JsonEnum.Value.AsFloat;
+    Inc(I);
+  end;
+
+  SherpaOnnxDestroyOnlineStreamResultJson(pJson);
+end;
+
+
+constructor TSherpaOnnxOnlineStream.Create(P: Pointer);
+begin
+  Self.Handle := P;
+end;
+
+destructor TSherpaOnnxOnlineStream.Destroy;
+begin
+  SherpaOnnxDestroyOnlineStream(Self.Handle);
+  Self.Handle := nil;
+end;
+
+procedure TSherpaOnnxOnlineStream.AcceptWaveform(Samples: array of Single; SampleRate: Integer);
+begin
+  SherpaOnnxOnlineStreamAcceptWaveform(Self.Handle, SampleRate,
+    pcfloat(Samples), Length(Samples));
+end;
+
+procedure TSherpaOnnxOnlineStream.InputFinished;
+begin
+  SherpaOnnxOnlineStreamInputFinished(Self.Handle);
 end;
 
 end.
