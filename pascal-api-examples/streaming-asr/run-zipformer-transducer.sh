@@ -7,10 +7,11 @@ SHERPA_ONNX_DIR=$(cd $SCRIPT_DIR/../.. && pwd)
 
 echo "SHERPA_ONNX_DIR: $SHERPA_ONNX_DIR"
 
-if [[ ! -f ../../build/lib/libsherpa-onnx-c-api.dylib  && ! -f ../../build/lib/libsherpa-onnx-c-api.so ]]; then
+if [[ ! -f ../../build/install/lib/libsherpa-onnx-c-api.dylib  && ! -f ../../build/install/lib/libsherpa-onnx-c-api.so && ! -f ../../build/install/lib/sherpa-onnx-c-api.dll ]]; then
   mkdir -p ../../build
   pushd ../../build
   cmake \
+    -DCMAKE_INSTALL_PREFIX=./install \
     -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
     -DSHERPA_ONNX_ENABLE_CHECK=OFF \
@@ -18,7 +19,7 @@ if [[ ! -f ../../build/lib/libsherpa-onnx-c-api.dylib  && ! -f ../../build/lib/l
     -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
     ..
 
-  make -j4 sherpa-onnx-c-api
+  cmake --build . --target install --config Release
   ls -lh lib
   popd
 fi
@@ -32,10 +33,10 @@ fi
 
 fpc \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
-  -Fl$SHERPA_ONNX_DIR/build/lib \
+  -Fl$SHERPA_ONNX_DIR/build/install/lib \
   ./zipformer_transducer.pas
 
-export LD_LIBRARY_PATH=$SHERPA_ONNX_DIR/build/lib:$LD_LIBRARY_PATH
-export DYLD_LIBRARY_PATH=$SHERPA_ONNX_DIR/build/lib:$DYLD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$SHERPA_ONNX_DIR/build/install/lib:$LD_LIBRARY_PATH
+export DYLD_LIBRARY_PATH=$SHERPA_ONNX_DIR/build/install/lib:$DYLD_LIBRARY_PATH
 
 ./zipformer_transducer
