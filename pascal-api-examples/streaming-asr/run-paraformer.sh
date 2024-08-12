@@ -20,19 +20,23 @@ if [[ ! -f ../../build/install/lib/libsherpa-onnx-c-api.dylib  && ! -f ../../bui
     ..
 
   cmake --build . --target install --config Release
+  ls -lh lib
   popd
 fi
 
-if [ ! -f ./lei-jun-test.wav ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+
+if [ ! -f ./sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+  tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+  rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 fi
 
 fpc \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
-  ./main.pas
+  ./paraformer.pas
 
 export LD_LIBRARY_PATH=$SHERPA_ONNX_DIR/build/install/lib:$LD_LIBRARY_PATH
 export DYLD_LIBRARY_PATH=$SHERPA_ONNX_DIR/build/install/lib:$DYLD_LIBRARY_PATH
 
-./main
+./paraformer

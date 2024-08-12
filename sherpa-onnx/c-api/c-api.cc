@@ -75,17 +75,31 @@ SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
   recognizer_config.model_config.provider_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
+
+  if (recognizer_config.model_config.provider_config.provider.empty()) {
+    recognizer_config.model_config.provider_config.provider = "cpu";
+  }
+
   recognizer_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
   recognizer_config.model_config.debug =
       SHERPA_ONNX_OR(config->model_config.debug, 0);
   recognizer_config.model_config.modeling_unit =
       SHERPA_ONNX_OR(config->model_config.modeling_unit, "cjkchar");
+
+  if (recognizer_config.model_config.modeling_unit.empty()) {
+    recognizer_config.model_config.modeling_unit = "cjkchar";
+  }
+
   recognizer_config.model_config.bpe_vocab =
       SHERPA_ONNX_OR(config->model_config.bpe_vocab, "");
 
   recognizer_config.decoding_method =
       SHERPA_ONNX_OR(config->decoding_method, "greedy_search");
+  if (recognizer_config.decoding_method.empty()) {
+    recognizer_config.decoding_method = "greedy_search";
+  }
+
   recognizer_config.max_active_paths =
       SHERPA_ONNX_OR(config->max_active_paths, 4);
 
@@ -391,10 +405,19 @@ sherpa_onnx::OfflineRecognizerConfig convertConfig(
       SHERPA_ONNX_OR(config->model_config.debug, 0);
   recognizer_config.model_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
+  if (recognizer_config.model_config.provider.empty()) {
+    recognizer_config.model_config.provider = "cpu";
+  }
+
   recognizer_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
   recognizer_config.model_config.modeling_unit =
       SHERPA_ONNX_OR(config->model_config.modeling_unit, "cjkchar");
+
+  if (recognizer_config.model_config.modeling_unit.empty()) {
+    recognizer_config.model_config.modeling_unit = "cjkchar";
+  }
+
   recognizer_config.model_config.bpe_vocab =
       SHERPA_ONNX_OR(config->model_config.bpe_vocab, "");
 
@@ -620,6 +643,10 @@ SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
   spotter_config.model_config.provider_config.provider =
       SHERPA_ONNX_OR(config->model_config.provider, "cpu");
+  if (spotter_config.model_config.provider_config.provider.empty()) {
+    spotter_config.model_config.provider_config.provider = "cpu";
+  }
+
   spotter_config.model_config.model_type =
       SHERPA_ONNX_OR(config->model_config.model_type, "");
   spotter_config.model_config.debug =
@@ -855,6 +882,10 @@ SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
   vad_config.sample_rate = SHERPA_ONNX_OR(config->sample_rate, 16000);
   vad_config.num_threads = SHERPA_ONNX_OR(config->num_threads, 1);
   vad_config.provider = SHERPA_ONNX_OR(config->provider, "cpu");
+  if (vad_config.provider.empty()) {
+    vad_config.provider = "cpu";
+  }
+
   vad_config.debug = SHERPA_ONNX_OR(config->debug, false);
 
   if (vad_config.debug) {
@@ -956,6 +987,10 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
   tts_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+  if (tts_config.model.provider.empty()) {
+    tts_config.model.provider = "cpu";
+  }
+
   tts_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
   tts_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
   tts_config.max_num_sentences = SHERPA_ONNX_OR(config->max_num_sentences, 2);
@@ -1101,6 +1136,9 @@ SherpaOnnxCreateSpokenLanguageIdentification(
   slid_config.num_threads = SHERPA_ONNX_OR(config->num_threads, 1);
   slid_config.debug = config->debug;
   slid_config.provider = SHERPA_ONNX_OR(config->provider, "cpu");
+  if (slid_config.provider.empty()) {
+    slid_config.provider = "cpu";
+  }
 
   if (slid_config.debug) {
     SHERPA_ONNX_LOGE("%s\n", slid_config.ToString().c_str());
@@ -1167,6 +1205,9 @@ SherpaOnnxCreateSpeakerEmbeddingExtractor(
   c.num_threads = SHERPA_ONNX_OR(config->num_threads, 1);
   c.debug = SHERPA_ONNX_OR(config->debug, 0);
   c.provider = SHERPA_ONNX_OR(config->provider, "cpu");
+  if (c.provider.empty()) {
+    c.provider = "cpu";
+  }
 
   if (config->debug) {
     SHERPA_ONNX_LOGE("%s\n", c.ToString().c_str());
@@ -1401,6 +1442,10 @@ const SherpaOnnxAudioTagging *SherpaOnnxCreateAudioTagging(
   ac.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   ac.model.debug = config->model.debug;
   ac.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+  if (ac.model.provider.empty()) {
+    ac.model.provider = "cpu";
+  }
+
   ac.labels = SHERPA_ONNX_OR(config->labels, "");
   ac.top_k = SHERPA_ONNX_OR(config->top_k, 5);
 
@@ -1487,6 +1532,9 @@ const SherpaOnnxOfflinePunctuation *SherpaOnnxCreateOfflinePunctuation(
   c.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   c.model.debug = config->model.debug;
   c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+  if (c.model.provider.empty()) {
+    c.model.provider = "cpu";
+  }
 
   if (c.model.debug) {
     SHERPA_ONNX_LOGE("%s\n", c.ToString().c_str());

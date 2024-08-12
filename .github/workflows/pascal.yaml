@@ -39,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, macos-13]
+        os: [ubuntu-latest, macos-latest, macos-13, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -64,10 +64,19 @@ jobs:
         run: |
           brew install fpc
           # brew install --cask lazarus
+          #
+      - name: Install Free pascal compiler (windows)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          choco install lazarus
+
+          ls -lh /c/lazarus/fpc/3.2.2/bin/x86_64-win64/
 
       - name: FPC info
         shell: bash
         run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
           which fpc
           fpc -i
 
@@ -87,6 +96,7 @@ jobs:
           cd build
 
           cmake \
+            -DCMAKE_INSTALL_PREFIX=./install \
             -D BUILD_SHARED_LIBS=ON \
             -D SHERPA_ONNX_ENABLE_BINARY=OFF \
             -D CMAKE_BUILD_TYPE=Release \
@@ -98,15 +108,55 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
 
           cd build
-          make -j2 sherpa-onnx-c-api
+          cmake --build . --target install --config Release
 
-      - name:  Run Pascal test
+          ls -lh install/lib/
+
+          if [[ ${{ matrix.os }} == 'windows-latest' ]]; then
+            cp -v install/lib/*.dll ../pascal-api-examples/read-wav
+            cp -v install/lib/*.dll ../pascal-api-examples/streaming-asr
+
+            cp -v ../sherpa-onnx/pascal-api/sherpa_onnx.pas ../pascal-api-examples/read-wav
+            cp -v ../sherpa-onnx/pascal-api/sherpa_onnx.pas ../pascal-api-examples/streaming-asr
+          fi
+
+      - name:  Run Pascal test (Read wav test)
         shell: bash
         run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
           cd ./pascal-api-examples
 
-          echo "----read-wav test-----"
           pushd read-wav
           ./run.sh
+          echo "---"
+          ls -lh
+          popd
+
+      - name:  Run Pascal test (Streaming ASR)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd streaming-asr
+          ./run-zipformer-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          if [[ ${{ matrix.os }} != 'windows-latest' ]]; then
+            ./run-paraformer.sh
+            rm -rf sherpa-onnx-*
+            echo "---"
+
+            ./run-zipformer-ctc.sh
+            echo "---"
+
+            ./run-zipformer-ctc-hlg.sh
+            rm -rf sherpa-onnx-*
+            echo "---"
+          fi
+
           ls -lh
           popd
