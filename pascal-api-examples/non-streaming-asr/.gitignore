@@ -1,4 +1,5 @@
 zipformer_transducer
 whisper
 nemo_transducer
+nemo_ctc
 !run-*.sh

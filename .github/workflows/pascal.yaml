@@ -148,7 +148,16 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
+          ./run-nemo-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-nemo-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
           ls -lh
+          popd
 
       - name:  Run Pascal test (Streaming ASR)
         shell: bash
