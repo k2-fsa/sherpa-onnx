@@ -1,4 +1,6 @@
+!run-*.sh
 zipformer_transducer
 paraformer
 zipformer_ctc
 zipformer_ctc_hlg
+nemo_transducer

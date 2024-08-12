@@ -115,9 +115,11 @@ jobs:
           if [[ ${{ matrix.os }} == 'windows-latest' ]]; then
             cp -v install/lib/*.dll ../pascal-api-examples/read-wav
             cp -v install/lib/*.dll ../pascal-api-examples/streaming-asr
+            cp -v install/lib/*.dll ../pascal-api-examples/non-streaming-asr
 
             cp -v ../sherpa-onnx/pascal-api/sherpa_onnx.pas ../pascal-api-examples/read-wav
             cp -v ../sherpa-onnx/pascal-api/sherpa_onnx.pas ../pascal-api-examples/streaming-asr
+            cp -v ../sherpa-onnx/pascal-api/sherpa_onnx.pas ../pascal-api-examples/non-streaming-asr
           fi
 
       - name:  Run Pascal test (Read wav test)
@@ -133,6 +135,48 @@ jobs:
           ls -lh
           popd
 
+      - name:  Run Pascal test (Non Streaming ASR)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd non-streaming-asr
+          ./run-zipformer-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-whisper.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-nemo-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-nemo-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-sense-voice.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-telespeech-ctc.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-paraformer.sh
+
+          ./run-paraformer-itn.sh
+
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ls -lh
+          popd
+
       - name:  Run Pascal test (Streaming ASR)
         shell: bash
         run: |
@@ -141,7 +185,12 @@ jobs:
           cd ./pascal-api-examples
 
           pushd streaming-asr
+
           ./run-zipformer-transducer.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ./run-nemo-transducer.sh
           rm -rf sherpa-onnx-*
           echo "---"
 
