@@ -1,14 +1,14 @@
 { Copyright (c)  2024  Xiaomi Corporation }
 
 {
-This file shows how to use a non-streaming Paraformer model
-to decode files with inverse text normalization for numbers.
+This file shows how to use a non-streaming SenseVoice model
+to decode files.
 
 You can download the model files from
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
 }
 
-program paraformer_itn;
+program sense_voice;
 
 {$mode objfpc}
 
@@ -33,14 +33,15 @@ var
   Duration: Single;
   RealTimeFactor: Single;
 begin
-  Config.ModelConfig.Paraformer.Model := './sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx';
-  Config.ModelConfig.Tokens := './sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt';
+  Config.ModelConfig.SenseVoice.Model := './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx';
+  Config.ModelConfig.SenseVoice.Language := 'auto';
+  Config.ModelConfig.SenseVoice.UseItn := False;
+  Config.ModelConfig.Tokens := './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt';
   Config.ModelConfig.Provider := 'cpu';
   Config.ModelConfig.NumThreads := 1;
   Config.ModelConfig.Debug := False;
-  Config.RuleFsts := './itn_zh_number.fst';
 
-  WaveFilename := './itn-zh-number.wav';
+  WaveFilename := './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/test_wavs/zh.wav';
 
   Wave := SherpaOnnxReadWave(WaveFilename);
 

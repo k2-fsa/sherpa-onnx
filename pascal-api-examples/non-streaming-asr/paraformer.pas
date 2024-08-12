@@ -1,7 +1,7 @@
 { Copyright (c)  2024  Xiaomi Corporation }
 
 {
-This file shows how to use a non-streaming Zipformer transducer
+This file shows how to use a non-streaming Paraformer model
 to decode files.
 
 You can download the model files from

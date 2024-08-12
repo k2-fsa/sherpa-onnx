@@ -156,6 +156,10 @@ jobs:
           rm -rf sherpa-onnx-*
           echo "---"
 
+          ./run-sense-voice.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
           ./run-paraformer.sh
 
           ./run-paraformer-itn.sh
