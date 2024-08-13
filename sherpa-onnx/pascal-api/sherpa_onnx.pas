@@ -255,15 +255,40 @@ type
     procedure Push(Samples: array of Single);
     function Get(StartIndex: Integer; N: Integer): TSherpaOnnxSamplesArray;
     procedure Pop(N: Integer);
-    procedure Reset();
-    function Size(): Integer;
-    function Head(): Integer;
+    procedure Reset;
+    function Size: Integer;
+    function Head: Integer;
+  end;
+
+  TSherpaOnnxSpeechSegment = record
+    Samples: array of Single;
+    Start: Integer;
+  end;
+
+  TSherpaOnnxVoiceActivityDetector = class
+  private
+    Handle: Pointer;
+  public
+    constructor Create(Config: TSherpaOnnxVadModelConfig; BufferSizeInSeconds: Single);
+    destructor Destroy; override;
+    procedure AcceptWaveform(Samples: array of Single); overload;
+    procedure AcceptWaveform(Samples: array of Single; Offset: Integer; N: Integer); overload;
+    function IsEmpty: Boolean;
+    function IsDetected: Boolean;
+    procedure Pop;
+    procedure Clear;
+    function Front: TSherpaOnnxSpeechSegment;
+    procedure Reset;
+    procedure Flush;
   end;
 
   { It supports reading a single channel wave with 16-bit encoded samples.
     Samples are normalized to the range [-1, 1].
   }
   function SherpaOnnxReadWave(Filename: AnsiString): TSherpaOnnxWave;
+
+  function SherpaOnnxWriteWave(Filename: AnsiString;
+    Samples: array of Single; SampleRate: Integer): Boolean;
 
 implementation
 
@@ -432,6 +457,49 @@ type
   end;
   PSherpaOnnxVadModelConfig = ^SherpaOnnxVadModelConfig;
 
+  SherpaOnnxSpeechSegment = record
+    Start: cint32;
+    Samples: pcfloat;
+    N: cint32;
+  end;
+
+  PSherpaOnnxSpeechSegment = ^SherpaOnnxSpeechSegment;
+
+function SherpaOnnxCreateVoiceActivityDetector(Config: PSherpaOnnxVadModelConfig;
+  BufferSizeInSeconds: cfloat): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyVoiceActivityDetector(Vad: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxVoiceActivityDetectorAcceptWaveform(Vad: Pointer;
+  Samples: pcfloat; N: cint32); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxVoiceActivityDetectorEmpty(Vad: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxVoiceActivityDetectorDetected(Vad: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxVoiceActivityDetectorPop(Vad: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxVoiceActivityDetectorClear(Vad: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxVoiceActivityDetectorFront(Vad: Pointer): PSherpaOnnxSpeechSegment; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroySpeechSegment(P: PSherpaOnnxSpeechSegment); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxVoiceActivityDetectorReset(P: PSherpaOnnxSpeechSegment); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxVoiceActivityDetectorFlush(P: PSherpaOnnxSpeechSegment); cdecl;
+  external SherpaOnnxLibName;
+
 function SherpaOnnxCreateCircularBuffer(Capacity: cint32): Pointer; cdecl;
   external SherpaOnnxLibName;
 
@@ -527,8 +595,19 @@ procedure SherpaOnnxDestroyOfflineStreamResultJson(Json: PAnsiChar); cdecl;
 function SherpaOnnxReadWaveWrapper(Filename: PAnsiChar): PSherpaOnnxWave; cdecl;
   external SherpaOnnxLibName name 'SherpaOnnxReadWave';
 
+function SherpaOnnxWriteWaveWrapper(Samples: pcfloat; N: cint32;
+  SampleRate: cint32; Filename: PAnsiChar): cint32; cdecl;
+  external SherpaOnnxLibName name 'SherpaOnnxWriteWave';
+
 procedure SherpaOnnxFreeWaveWrapper(P: PSherpaOnnxWave); cdecl;
   external SherpaOnnxLibName name 'SherpaOnnxFreeWave';
+
+function SherpaOnnxWriteWave(Filename: AnsiString;
+    Samples: array of Single; SampleRate: Integer): Boolean;
+begin
+  Result := SherpaOnnxWriteWaveWrapper(pcfloat(Samples), Length(Samples),
+    SampleRate, PAnsiChar(Filename)) = 1;
+end;
 
 function SherpaOnnxReadWave(Filename: AnsiString): TSherpaOnnxWave;
 var
@@ -1078,9 +1157,9 @@ function TSherpaOnnxSileroVadModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxSileroVadModelConfig(' +
     'Model := %s, ' +
-    'Threshold := %.1f, ' +
-    'MinSilenceDuration := %.1f, ' +
-    'MinSpeechDuration := %.1f, ' +
+    'Threshold := %.2f, ' +
+    'MinSilenceDuration := %.2f, ' +
+    'MinSpeechDuration := %.2f, ' +
     'WindowSize := %d' +
     ')',
     [Self.Model, Self.Threshold, Self.MinSilenceDuration,
@@ -1201,6 +1280,8 @@ var
 begin
   P := SherpaOnnxCircularBufferGet(Self.Handle, StartIndex, N);
 
+  Result := nil;
+
   SetLength(Result, N);
 
   for I := Low(Result) to High(Result) do
@@ -1214,19 +1295,110 @@ begin
   SherpaOnnxCircularBufferPop(Self.Handle, N);
 end;
 
-procedure TSherpaOnnxCircularBuffer.Reset();
+procedure TSherpaOnnxCircularBuffer.Reset;
 begin
   SherpaOnnxCircularBufferReset(Self.Handle);
 end;
 
-function TSherpaOnnxCircularBuffer.Size(): Integer;
+function TSherpaOnnxCircularBuffer.Size: Integer;
 begin
   Result := SherpaOnnxCircularBufferSize(Self.Handle);
 end;
 
-function TSherpaOnnxCircularBuffer.Head(): Integer;
+function TSherpaOnnxCircularBuffer.Head: Integer;
 begin
   Result := SherpaOnnxCircularBufferHead(Self.Handle);
+end;
+
+constructor TSherpaOnnxVoiceActivityDetector.Create(Config: TSherpaOnnxVadModelConfig; BufferSizeInSeconds: Single);
+var
+  C: SherpaOnnxVadModelConfig;
+begin
+  Initialize(C);
+
+  C.SileroVad.Model := PAnsiChar(Config.SileroVad.Model);
+  C.SileroVad.Threshold := Config.SileroVad.Threshold;
+  C.SileroVad.MinSilenceDuration := Config.SileroVad.MinSilenceDuration;
+  C.SileroVad.MinSpeechDuration := Config.SileroVad.MinSpeechDuration;
+  C.SileroVad.WindowSize := Config.SileroVad.WindowSize;
+
+  C.SampleRate := Config.SampleRate;
+  C.NumThreads := Config.NumThreads;
+  C.Provider := PAnsiChar(Config.Provider);
+  C.Debug := Ord(Config.Debug);
+
+  Self.Handle := SherpaOnnxCreateVoiceActivityDetector(@C, BufferSizeInSeconds);
+end;
+
+destructor TSherpaOnnxVoiceActivityDetector.Destroy;
+begin
+  SherpaOnnxDestroyVoiceActivityDetector(Self.Handle);
+  Self.Handle := nil;
+end;
+
+procedure TSherpaOnnxVoiceActivityDetector.AcceptWaveform(Samples: array of Single);
+begin
+  SherpaOnnxVoiceActivityDetectorAcceptWaveform(Self.Handle, pcfloat(Samples), Length(Samples));
+end;
+
+procedure TSherpaOnnxVoiceActivityDetector.AcceptWaveform(Samples: array of Single; Offset: Integer; N: Integer);
+begin
+  if Offset + N > Length(Samples) then
+    begin
+      WriteLn(Format('Invalid arguments!. Array length: %d, Offset: %d, N: %d',
+        [Length(Samples), Offset, N]
+      ));
+      Exit;
+    end;
+
+  SherpaOnnxVoiceActivityDetectorAcceptWaveform(Self.Handle,
+    pcfloat(Samples) + Offset, N);
+end;
+
+function TSherpaOnnxVoiceActivityDetector.IsEmpty: Boolean;
+begin
+  Result := SherpaOnnxVoiceActivityDetectorEmpty(Self.Handle) = 1;
+end;
+
+function TSherpaOnnxVoiceActivityDetector.IsDetected: Boolean;
+begin
+  Result := SherpaOnnxVoiceActivityDetectorDetected(Self.Handle) = 1;
+end;
+
+procedure TSherpaOnnxVoiceActivityDetector.Pop;
+begin
+  SherpaOnnxVoiceActivityDetectorPop(Self.Handle);
+end;
+
+procedure TSherpaOnnxVoiceActivityDetector.Clear;
+begin
+  SherpaOnnxVoiceActivityDetectorClear(Self.Handle);
+end;
+
+function TSherpaOnnxVoiceActivityDetector.Front: TSherpaOnnxSpeechSegment;
+var
+  P: PSherpaOnnxSpeechSegment;
+  I: Integer;
+begin
+  P := SherpaOnnxVoiceActivityDetectorFront(Self.Handle);
+  Result.Start := P^.Start;
+  Result.Samples := nil;
+  SetLength(Result.Samples, P^.N);
+
+  for I := Low(Result.Samples) to High(Result.Samples) do
+    Result.Samples[I] := P^.Samples[I];
+
+  SherpaOnnxDestroySpeechSegment(P);
+end;
+
+procedure TSherpaOnnxVoiceActivityDetector.Reset;
+begin
+  SherpaOnnxVoiceActivityDetectorReset(Self.Handle);
+end;
+
+procedure TSherpaOnnxVoiceActivityDetector.Flush;
+begin
+  SherpaOnnxVoiceActivityDetectorFlush(Self.Handle);
 end;
 
 end.

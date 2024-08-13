@@ -1,5 +1,8 @@
 { Copyright (c)  2024  Xiaomi Corporation }
 program circular_buffer;
+{
+This file shows how to use the CircularBuffer API of sherpa-onnx
+}
 
 {$mode objfpc}
 {$ASSERTIONS ON}
