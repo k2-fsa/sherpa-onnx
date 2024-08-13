@@ -1,0 +1,182 @@
+name: lazarus
+
+on:
+  push:
+    branches:
+      - master
+      - lazarus-examples-2
+    paths:
+      - '.github/workflows/lazarus-examples.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'lazarus-examples/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/pascal-api/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/lazarus-examples.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'lazarus-examples/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/pascal-api/*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: lazarus-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  lazarus:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, macos-latest, macos-13, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}
+
+      # See https://github.com/gcarreno/setup-lazarus
+      - uses: gcarreno/setup-lazarus@v3
+        with:
+          lazarus-version: "stable"
+          with-cache: true
+
+      - name: Lazarus info
+        shell: bash
+        run: |
+          which lazbuild
+          lazbuild --help
+
+      - name: FPC info
+        shell: bash
+        run: |
+          which fpc
+          fpc -i
+
+      - name: OS info
+        shell: bash
+        run: |
+          uname -a
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -D BUILD_SHARED_LIBS=ON \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            -D CMAKE_BUILD_TYPE=Release \
+            ..
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cd build
+          cmake --build . --target install --config Release -j 2
+
+          ls -lh install/lib/
+
+          cp -v install/lib/*.dll ../lazarus-examples/generate_subtitles/ || true
+          cp -v install/lib/*.so* ../lazarus-examples/generate_subtitles/ || true
+          cp -v install/lib/*dylib* ../lazarus-examples/generate_subtitles/ || true
+
+      - name: Build generating subtitles
+        shell: bash
+        run: |
+          cd lazarus-examples/generate_subtitles
+          os=${{ matrix.os }}
+          if [[ $os == macos-latest || $os == macos-13 ]]; then
+            lazbuild --verbose --ws=cocoa ./generate_subtitles.lpi
+          else
+            lazbuild --verbose ./generate_subtitles.lpi
+          fi
+
+      - name: Display generating subtitles
+        shell: bash
+        run: |
+          cd lazarus-examples/generate_subtitles
+          ls -lh
+
+      - name: Collect generating subtitles (Ubuntu)
+        if: matrix.os == 'ubuntu-20.04'
+        shell: bash
+        run: |
+          cd lazarus-examples/generate_subtitles
+          ls -lh
+          readelf -d ./generate_subtitles
+          echo '----------'
+          ldd ./generate_subtitles
+          d=${{ matrix.os }}-generate-subtitles
+          mkdir -p $d
+          cp -v ./generate_subtitles $d/
+          cp -v *.so $d/
+          tar cvjf $d.tar.bz2 $d
+          ls -lh
+          mv $d.tar.bz2 ../..
+
+      - name: Collect generating subtitles (windows)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          cd lazarus-examples/generate_subtitles
+          ls -lh
+
+          d=${{ matrix.os }}-generate-subtitles
+          mkdir -p $d
+          cp -v ./generate_subtitles.exe $d/
+          cp -v onnxruntime.dll $d/
+          cp -v sherpa-onnx-c-api.dll $d/
+          tar cvjf $d.tar.bz2 $d
+          ls -lh
+          mv $d.tar.bz2 ../..
+
+      - name: Collect generating subtitles (macos)
+        if: matrix.os == 'macos-13' || matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          cd lazarus-examples/generate_subtitles
+          ls -lh
+          file ./generate_subtitles
+          echo '----------'
+          otool -L ./generate_subtitles
+          d=${{ matrix.os }}-generate-subtitles
+          mkdir -p $d
+          cp -v ./generate_subtitles $d/
+          cp -av ./generate_subtitles.app $d/
+          cp -v libonnxruntime.1.*dylib  $d/
+          cp -v libsherpa-onnx-c-api.dylib  $d/
+
+          tar cvjf $d.tar.bz2 $d
+          ls -lh
+          mv $d.tar.bz2 ../..
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-generate-subtitles
+          path: ./*.tar.bz2

@@ -11,7 +11,7 @@ object Form1: TForm1
   LCLVersion = '3.4.0.0'
   object FileNameEdt: TEdit
     Left = 128
-    Height = 25
+    Height = 22
     Top = 40
     Width = 440
     TabOrder = 0
@@ -49,6 +49,9 @@ object Form1: TForm1
     Height = 496
     Top = 88
     Width = 704
+    Lines.Strings = (
+      'Note: It supports only 1 channel, 16000Hz, 16-bit encoded wav files.'
+    )
     ScrollBars = ssAutoBoth
     TabOrder = 4
   end
