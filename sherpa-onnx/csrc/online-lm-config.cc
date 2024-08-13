@@ -37,7 +37,7 @@ std::string OnlineLMConfig::ToString() const {
   os << "OnlineLMConfig(";
   os << "model=\"" << model << "\", ";
   os << "scale=" << scale << ", ";
-  os << "shallow_fusion=\"" << (shallow_fusion ? "True" : "False") << "\")";
+  os << "shallow_fusion=" << (shallow_fusion ? "True" : "False") << ")";
 
   return os.str();
 }

@@ -51,7 +51,8 @@ struct Hypothesis {
   // LM log prob if any.
   double lm_log_prob = 0;
 
-  // the nn lm score for next token given the current ys, when using shallow fusion
+  // the nn lm score for next token given the current ys,
+  // when using shallow fusion
   CopyableOrtValue nn_lm_scores;
 
   // cur scored tokens by RNN LM, when rescoring
