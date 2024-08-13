@@ -33,6 +33,8 @@ var
   Duration: Single;
   RealTimeFactor: Single;
 begin
+  Initialize(Config);
+
   Config.ModelConfig.Paraformer.Model := './sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx';
   Config.ModelConfig.Tokens := './sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt';
   Config.ModelConfig.Provider := 'cpu';

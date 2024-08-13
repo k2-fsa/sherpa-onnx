@@ -33,6 +33,8 @@ var
   Duration: Single;
   RealTimeFactor: Single;
 begin
+  Initialize(Config);
+
   Config.ModelConfig.Transducer.Encoder := './sherpa-onnx-zipformer-gigaspeech-2023-12-12/encoder-epoch-30-avg-1.int8.onnx';
   Config.ModelConfig.Transducer.Decoder := './sherpa-onnx-zipformer-gigaspeech-2023-12-12/decoder-epoch-30-avg-1.onnx';
   Config.ModelConfig.Transducer.Joiner := './sherpa-onnx-zipformer-gigaspeech-2023-12-12/joiner-epoch-30-avg-1.onnx';

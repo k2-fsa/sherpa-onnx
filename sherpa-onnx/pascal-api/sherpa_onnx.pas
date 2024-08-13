@@ -2,9 +2,11 @@
 
 unit sherpa_onnx;
 
-{$mode objfpc}
+{$IFDEF FPC}
+  {$mode objfpc}
+  {$modeSwitch advancedRecords} { to support records with methods }
+{$ENDIF}
 
-{$modeSwitch advancedRecords} { to support records with methods }
 (* {$LongStrings ON} *)
 
 interface
@@ -45,18 +47,21 @@ type
     ModelingUnit: AnsiString;
     BpeVocab: AnsiString;
     function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineModelConfig);
   end;
 
   TSherpaOnnxFeatureConfig = record
     SampleRate: Integer;
     FeatureDim: Integer;
     function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxFeatureConfig);
   end;
 
   TSherpaOnnxOnlineCtcFstDecoderConfig = record
     Graph: AnsiString;
     MaxActive: Integer;
     function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineCtcFstDecoderConfig);
   end;
 
   TSherpaOnnxOnlineRecognizerConfig = record
@@ -75,6 +80,7 @@ type
     RuleFars: AnsiString;
     BlankPenalty: Single;
     function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineRecognizerConfig);
   end;
 
   TSherpaOnnxOnlineRecognizerResult = record
@@ -134,6 +140,7 @@ type
     Task: AnsiString;
     TailPaddings: Integer;
     function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineWhisperModelConfig);
   end;
 
   TSherpaOnnxOfflineTdnnModelConfig = record
@@ -145,12 +152,14 @@ type
     Model: AnsiString;
     Scale: Single;
     function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineLMConfig);
   end;
 
   TSherpaOnnxOfflineSenseVoiceModelConfig = record
     Model: AnsiString;
     Language: AnsiString;
     UseItn: Boolean;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSenseVoiceModelConfig);
     function ToString: AnsiString;
   end;
 
@@ -169,6 +178,7 @@ type
     BpeVocab: AnsiString;
     TeleSpeechCtc: AnsiString;
     SenseVoice: TSherpaOnnxOfflineSenseVoiceModelConfig;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
     function ToString: AnsiString;
   end;
 
@@ -183,6 +193,7 @@ type
     RuleFsts: AnsiString;
     RuleFars: AnsiString;
     BlankPenalty: Single;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineRecognizerConfig);
     function ToString: AnsiString;
   end;
 
@@ -213,10 +224,46 @@ type
     function GetResult(Stream: TSherpaOnnxOfflineStream): TSherpaOnnxOfflineRecognizerResult;
   end;
 
-{ It supports reading a single channel wave with 16-bit encoded samples.
-  Samples are normalized to the range [-1, 1].
-}
-function SherpaOnnxReadWave(Filename: AnsiString): TSherpaOnnxWave;
+  TSherpaOnnxSileroVadModelConfig = record
+    Model: AnsiString;
+    Threshold: Single;
+    MinSilenceDuration: Single;
+    MinSpeechDuration: Single;
+    WindowSize: Integer;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxSileroVadModelConfig);
+  end;
+
+  TSherpaOnnxVadModelConfig = record
+    SileroVad: TSherpaOnnxSileroVadModelConfig;
+    SampleRate: Integer;
+    NumThreads: Integer;
+    Provider: AnsiString;
+    Debug: Boolean;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxVadModelConfig);
+  end;
+
+  TSherpaOnnxSamplesArray = array of Single;
+
+  TSherpaOnnxCircularBuffer = class
+  private
+    Handle: Pointer;
+  public
+    constructor Create(Capacity: Integer);
+    destructor Destroy; override;
+    procedure Push(Samples: array of Single);
+    function Get(StartIndex: Integer; N: Integer): TSherpaOnnxSamplesArray;
+    procedure Pop(N: Integer);
+    procedure Reset();
+    function Size(): Integer;
+    function Head(): Integer;
+  end;
+
+  { It supports reading a single channel wave with 16-bit encoded samples.
+    Samples are normalized to the range [-1, 1].
+  }
+  function SherpaOnnxReadWave(Filename: AnsiString): TSherpaOnnxWave;
 
 implementation
 
@@ -294,15 +341,15 @@ type
     DecodingMethod: PAnsiChar;
     MaxActivePaths: cint32;
     EnableEndpoint: cint32;
-    Rule1MinTrailingSilence: Single;
-    Rule2MinTrailingSilence: Single;
-    Rule3MinUtteranceLength: Single;
+    Rule1MinTrailingSilence: cfloat;
+    Rule2MinTrailingSilence: cfloat;
+    Rule3MinUtteranceLength: cfloat;
     HotwordsFile: PAnsiChar;
-    HotwordsScore: Single;
+    HotwordsScore: cfloat;
     CtcFstDecoderConfig: SherpaOnnxOnlineCtcFstDecoderConfig;
     RuleFsts: PAnsiChar;
     RuleFars: PAnsiChar;
-    BlankPenalty: Single;
+    BlankPenalty: cfloat;
   end;
 
   PSherpaOnnxOnlineRecognizerConfig = ^SherpaOnnxOnlineRecognizerConfig;
@@ -330,7 +377,7 @@ type
   end;
   SherpaOnnxOfflineLMConfig = record
     Model: PAnsiChar;
-    Scale: Single;
+    Scale: cfloat;
   end;
   SherpaOnnxOfflineSenseVoiceModelConfig = record
     Model: PAnsiChar;
@@ -361,13 +408,56 @@ type
     DecodingMethod: PAnsiChar;
     MaxActivePaths: cint32;
     HotwordsFile: PAnsiChar;
-    HotwordsScore: Single;
+    HotwordsScore: cfloat;
     RuleFsts: PAnsiChar;
     RuleFars: PAnsiChar;
-    BlankPenalty: Single;
+    BlankPenalty: cfloat;
   end;
 
   PSherpaOnnxOfflineRecognizerConfig = ^SherpaOnnxOfflineRecognizerConfig;
+
+  SherpaOnnxSileroVadModelConfig = record
+    Model: PAnsiChar;
+    Threshold: cfloat;
+    MinSilenceDuration: cfloat;
+    MinSpeechDuration: cfloat;
+    WindowSize: cint32;
+  end;
+  SherpaOnnxVadModelConfig = record
+    SileroVad: SherpaOnnxSileroVadModelConfig;
+    SampleRate: cint32;
+    NumThreads: cint32;
+    Provider: PAnsiChar;
+    Debug: cint32;
+  end;
+  PSherpaOnnxVadModelConfig = ^SherpaOnnxVadModelConfig;
+
+function SherpaOnnxCreateCircularBuffer(Capacity: cint32): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyCircularBuffer(Buffer: Pointer) ; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxCircularBufferPush(Buffer: Pointer; Samples: pcfloat; N: cint32); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxCircularBufferGet(Buffer: Pointer; StartIndex: cint32; N: cint32): pcfloat ; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxCircularBufferFree(P: pcfloat); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxCircularBufferPop(Buffer: Pointer; N: cint32); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxCircularBufferSize(Buffer: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxCircularBufferHead(Buffer: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxCircularBufferReset(Buffer: Pointer); cdecl;
+  external SherpaOnnxLibName;
 
 function SherpaOnnxCreateOnlineRecognizer(Config: PSherpaOnnxOnlineRecognizerConfig): Pointer; cdecl;
   external SherpaOnnxLibName;
@@ -982,6 +1072,161 @@ begin
     'Timestamps := %s' +
     ')',
     [Self.Text, TokensStr, TimestampStr]);
+end;
+
+function TSherpaOnnxSileroVadModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxSileroVadModelConfig(' +
+    'Model := %s, ' +
+    'Threshold := %.1f, ' +
+    'MinSilenceDuration := %.1f, ' +
+    'MinSpeechDuration := %.1f, ' +
+    'WindowSize := %d' +
+    ')',
+    [Self.Model, Self.Threshold, Self.MinSilenceDuration,
+     Self.MinSpeechDuration, Self.WindowSize
+    ]);
+end;
+
+class operator TSherpaOnnxSileroVadModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxSileroVadModelConfig);
+begin
+  Dest.Threshold := 0.5;
+  Dest.MinSilenceDuration := 0.5;
+  Dest.MinSpeechDuration := 0.25;
+  Dest.WindowSize := 512;
+end;
+
+function TSherpaOnnxVadModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxVadModelConfig(' +
+    'SileroVad := %s, ' +
+    'SampleRate := %d, ' +
+    'NumThreads := %d, ' +
+    'Provider := %s, ' +
+    'Debug := %s' +
+    ')',
+    [Self.SileroVad.ToString, Self.SampleRate, Self.NumThreads, Self.Provider,
+     Self.Debug.ToString
+    ]);
+end;
+
+class operator TSherpaOnnxVadModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxVadModelConfig);
+begin
+  Dest.SampleRate := 16000;
+  Dest.NumThreads := 1;
+  Dest.Provider := 'cpu';
+  Dest.Debug := False;
+end;
+
+class operator TSherpaOnnxFeatureConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxFeatureConfig);
+begin
+  Dest.SampleRate := 16000;
+  Dest.FeatureDim := 80;
+end;
+
+class operator TSherpaOnnxOnlineCtcFstDecoderConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineCtcFstDecoderConfig);
+begin
+  Dest.MaxActive := 3000;
+end;
+
+class operator TSherpaOnnxOnlineRecognizerConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineRecognizerConfig);
+begin
+  Dest.DecodingMethod := 'greedy_search';
+  Dest.EnableEndpoint := False;
+  Dest.Rule1MinTrailingSilence := 2.4;
+  Dest.Rule2MinTrailingSilence := 1.2;
+  Dest.Rule3MinUtteranceLength := 20;
+  Dest.HotwordsScore := 1.5;
+  Dest.BlankPenalty := 0;
+end;
+
+class operator TSherpaOnnxOnlineModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineModelConfig);
+begin
+  Dest.NumThreads := 1;
+  Dest.Provider := 'cpu';
+  Dest.Debug := False;
+end;
+
+class operator TSherpaOnnxOfflineWhisperModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineWhisperModelConfig);
+begin
+  Dest.Task := 'transcribe';
+  Dest.TailPaddings := -1;
+end;
+
+class operator TSherpaOnnxOfflineLMConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineLMConfig);
+begin
+  Dest.Scale := 1.0;
+end;
+
+class operator TSherpaOnnxOfflineSenseVoiceModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSenseVoiceModelConfig);
+begin
+  Dest.UseItn := True;
+end;
+
+class operator TSherpaOnnxOfflineModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
+begin
+  Dest.NumThreads := 1;
+  Dest.Debug := False;
+  Dest.Provider := 'cpu';
+end;
+
+class operator TSherpaOnnxOfflineRecognizerConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineRecognizerConfig);
+begin
+  Dest.DecodingMethod := 'greedy_search';
+  Dest.MaxActivePaths := 4;
+  Dest.HotwordsScore := 1.5;
+  Dest.BlankPenalty := 0;
+end;
+
+constructor TSherpaOnnxCircularBuffer.Create(Capacity: Integer);
+begin
+  Self.Handle := SherpaOnnxCreateCircularBuffer(Capacity);
+end;
+
+destructor TSherpaOnnxCircularBuffer.Destroy;
+begin
+  SherpaOnnxDestroyCircularBuffer(Self.Handle);
+  Self.Handle := nil;
+end;
+
+procedure TSherpaOnnxCircularBuffer.Push(Samples: array of Single);
+begin
+  SherpaOnnxCircularBufferPush(Self.Handle, pcfloat(Samples), Length(Samples));
+end;
+
+function TSherpaOnnxCircularBuffer.Get(StartIndex: Integer; N: Integer): TSherpaOnnxSamplesArray;
+var
+  P: pcfloat;
+  I: Integer;
+begin
+  P := SherpaOnnxCircularBufferGet(Self.Handle, StartIndex, N);
+
+  SetLength(Result, N);
+
+  for I := Low(Result) to High(Result) do
+    Result[I] := P[I];
+
+  SherpaOnnxCircularBufferFree(P);
+end;
+
+procedure TSherpaOnnxCircularBuffer.Pop(N: Integer);
+begin
+  SherpaOnnxCircularBufferPop(Self.Handle, N);
+end;
+
+procedure TSherpaOnnxCircularBuffer.Reset();
+begin
+  SherpaOnnxCircularBufferReset(Self.Handle);
+end;
+
+function TSherpaOnnxCircularBuffer.Size(): Integer;
+begin
+  Result := SherpaOnnxCircularBufferSize(Self.Handle);
+end;
+
+function TSherpaOnnxCircularBuffer.Head(): Integer;
+begin
+  Result := SherpaOnnxCircularBufferHead(Self.Handle);
 end;
 
 end.

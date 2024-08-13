@@ -33,6 +33,8 @@ var
   Duration: Single;
   RealTimeFactor: Single;
 begin
+  Initialize(Config);
+
   Config.ModelConfig.NeMoCtC.Model := './sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k/model.onnx';
   Config.ModelConfig.Tokens := './sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k/tokens.txt';
   Config.ModelConfig.Provider := 'cpu';

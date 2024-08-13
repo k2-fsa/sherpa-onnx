@@ -95,6 +95,8 @@ void CircularBuffer::Push(const float *p, int32_t n) {
         "capacity to: %d",
         n, size, n + size, capacity, new_capacity);
     Resize(new_capacity);
+
+    capacity = new_capacity;
   }
 
   int32_t start = tail_ % capacity;

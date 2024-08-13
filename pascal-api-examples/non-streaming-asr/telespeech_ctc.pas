@@ -33,6 +33,8 @@ var
   Duration: Single;
   RealTimeFactor: Single;
 begin
+  Initialize(Config);
+
   Config.ModelConfig.TeleSpeechCtc := './sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/model.int8.onnx';
   Config.ModelConfig.Tokens := './sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/tokens.txt';
   Config.ModelConfig.Provider := 'cpu';
