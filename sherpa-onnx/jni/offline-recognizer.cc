@@ -264,6 +264,20 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromFile(JNIEnv *env,
   return (jlong)model;
 }
 
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_setConfig(JNIEnv *env,
+                                                         jobject /*obj*/,
+                                                         jlong ptr,
+                                                         jobject _config) {
+  auto config = sherpa_onnx::GetOfflineConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
+  auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
+  recognizer->SetConfig(config);
+}
+
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_delete(
     JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
