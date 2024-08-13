@@ -66,6 +66,23 @@ begin
   Result := TSherpaOnnxVoiceActivityDetector.Create(Config, 30);
 end;
 
+function CreateOfflineRecognizerSenseVoice(): TSherpaOnnxOfflineRecognizer;
+var
+  Config: TSherpaOnnxOfflineRecognizerConfig;
+begin
+  Initialize(Config);
+
+  Config.ModelConfig.SenseVoice.Model := 'sense-voice.onnx';
+  Config.ModelConfig.SenseVoice.Language := 'auto';
+  Config.ModelConfig.SenseVoice.UseItn := True;
+  Config.ModelConfig.Tokens := 'tokens.txt';
+  Config.ModelConfig.Provider := 'cpu';
+  Config.ModelConfig.NumThreads := 2;
+  Config.ModelConfig.Debug := False;
+
+  Result := TSherpaOnnxOfflineRecognizer.Create(Config);
+end;
+
 function CreateOfflineRecognizerWhisper(): TSherpaOnnxOfflineRecognizer;
 var
   Config: TSherpaOnnxOfflineRecognizerConfig;
@@ -165,6 +182,8 @@ begin
 
   if FileExists('./whisper-encoder.onnx') and FileExists('./whisper-decoder.onnx') then
     OfflineRecognizer := CreateOfflineRecognizerWhisper()
+  else if FileExists('./sense-voice.onnx') then
+    OfflineRecognizer := CreateOfflineRecognizerSenseVoice()
   else
     begin
       ShowMessage('Please download at least one non-streaming speech recognition model first.');

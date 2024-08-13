@@ -75,11 +75,16 @@ begin
       Status := Format('Failed to read %s. We only support 1 channel, 16000Hz, 16-bit encoded wave files',
         [Wavefilename]);
       Synchronize(@ShowStatus);
+
+      Status := 'DONE!';
+      Synchronize(@ShowStatus);
       Exit;
     end;
   if Wave.SampleRate <> 16000 then
     begin
       Status := Format('Expected sample rate 16000. Given %d. Please select a new file', [Wave.SampleRate]);
+      Synchronize(@ShowStatus);
+      Status := 'DONE!';
       Synchronize(@ShowStatus);
       Exit;
     end;
