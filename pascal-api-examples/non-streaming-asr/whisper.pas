@@ -33,6 +33,8 @@ var
   Duration: Single;
   RealTimeFactor: Single;
 begin
+  Initialize(Config);
+
   Config.ModelConfig.Whisper.Encoder := './sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx';
   Config.ModelConfig.Whisper.Decoder := './sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx';
   Config.ModelConfig.Tokens := './sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt';

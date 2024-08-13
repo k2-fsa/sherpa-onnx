@@ -33,6 +33,8 @@ var
   Duration: Single;
   RealTimeFactor: Single;
 begin
+  Initialize(Config);
+
   Config.ModelConfig.SenseVoice.Model := './sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx';
   Config.ModelConfig.SenseVoice.Language := 'auto';
   Config.ModelConfig.SenseVoice.UseItn := False;

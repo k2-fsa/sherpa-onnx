@@ -116,11 +116,53 @@ jobs:
             cp -v install/lib/*.dll ../pascal-api-examples/read-wav
             cp -v install/lib/*.dll ../pascal-api-examples/streaming-asr
             cp -v install/lib/*.dll ../pascal-api-examples/non-streaming-asr
+            cp -v install/lib/*.dll ../pascal-api-examples/vad
+            cp -v install/lib/*.dll ../pascal-api-examples/vad-with-non-streaming-asr
 
             cp -v ../sherpa-onnx/pascal-api/sherpa_onnx.pas ../pascal-api-examples/read-wav
             cp -v ../sherpa-onnx/pascal-api/sherpa_onnx.pas ../pascal-api-examples/streaming-asr
             cp -v ../sherpa-onnx/pascal-api/sherpa_onnx.pas ../pascal-api-examples/non-streaming-asr
+            cp -v ../sherpa-onnx/pascal-api/sherpa_onnx.pas ../pascal-api-examples/vad
+            cp -v ../sherpa-onnx/pascal-api/sherpa_onnx.pas ../pascal-api-examples/vad-with-non-streaming-asr
           fi
+
+      - name:  Run Pascal test (VAD + non-streaming ASR)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd vad-with-non-streaming-asr
+          time ./run-vad-with-whisper.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          time ./run-vad-with-sense-voice.sh
+          rm -rf sherpa-onnx-*
+          echo "---"
+
+          ls -lh
+
+          popd
+
+      - name:  Run Pascal test (VAD test)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+
+          pushd vad
+          ./run-circular-buffer.sh
+          echo "---"
+
+          time ./run-remove-silence.sh
+          echo "---"
+
+          ls -lh
+
+          popd
 
       - name:  Run Pascal test (Read wav test)
         shell: bash
