@@ -6,6 +6,7 @@ object Form1: TForm1
   Caption = 'Next-gen Kaldi: Generate Subtitles'
   ClientHeight = 601
   ClientWidth = 832
+  OnClose = FormClose
   OnCreate = FormCreate
   LCLVersion = '3.4.0.0'
   object FileNameEdt: TEdit

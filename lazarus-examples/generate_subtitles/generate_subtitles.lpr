@@ -5,12 +5,13 @@ program generate_subtitles;
 uses
   {$IFDEF UNIX}
   cthreads,
+  cmem,
   {$ENDIF}
   {$IFDEF HASAMIGA}
   athreads,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, unit1
+  Forms, unit1, my_worker
   { you can add units after this };
 
 {$R *.res}

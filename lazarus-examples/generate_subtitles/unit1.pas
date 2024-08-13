@@ -21,21 +21,25 @@ type
     SelectFileBtn: TButton;
     FileNameEdt: TEdit;
     procedure FileNameEdtChange(Sender: TObject);
+    procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure InitBtnClick(Sender: TObject);
     procedure SelectFileBtnClick(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure StartBtnClick(Sender: TObject);
   private
+
+  public
     Vad: TSherpaOnnxVoiceActivityDetector;
     OfflineRecognizer: TSherpaOnnxOfflineRecognizer;
-  public
-
   end;
 
 var
   Form1: TForm1;
 
 implementation
+
+uses
+  my_worker;
 
 function CreateVad(): TSherpaOnnxVoiceActivityDetector;
 var
@@ -91,82 +95,28 @@ begin
 end;
 
 procedure TForm1.StartBtnClick(Sender: TObject);
-var
-  Wave: TSherpaOnnxWave;
-  WindowSize: Integer;
-  Offset: Integer;
-  SpeechSegment: TSherpaOnnxSpeechSegment;
-  Start: Single;
-  Duration: Single;
-  Stop: Single;
-
-  Stream: TSherpaOnnxOfflineStream;
-  RecognitionResult: TSherpaOnnxOfflineRecognizerResult;
-  ResultStr: AnsiString;
 begin
-  Wave := SherpaOnnxReadWave(FileNameEdt.Text);
-  if Length(Wave.Samples) = 0 then
+  if StartBtn.Caption = 'Stop' then
     begin
-      ShowMessage(Format('Failed to read %s. We only support 1 channel, 16000Hz, 16-bit encoded wave files',
-        [FileNameEdt.Text]));
-      Exit;
-    end;
-  if Wave.SampleRate <> 16000 then
-    begin
-      ShowMessage(Format('Expected sample rate 16000. Given %d. Please select a new file', [Wave.SampleRate]));
+      if (MyWorkerThread <> nil) and not MyWorkerThread.Finished then
+        MyWorkerThread.Terminate;
+
+      StartBtn.Caption := 'Start';
       Exit;
     end;
 
-  WindowSize := Vad.Config.SileroVad.WindowSize;
-  Offset := 0;
-  Vad.Reset();
   ResultMemo.Lines.Clear();
-  ResultMemo.Lines.Add('processing');
-  while Offset + WindowSize <= Length(Wave.Samples) do
+  ResultMemo.Lines.Add('Start processing');
+  if (MyWorkerThread <> nil) and not MyWorkerThread.Finished then
     begin
-      Vad.AcceptWaveform(Wave.Samples, Offset, WindowSize);
-      Offset += WindowSize;
-
-      while not Vad.IsEmpty do
-        begin
-
-          SpeechSegment := Vad.Front();
-          Vad.Pop();
-          Stream := OfflineRecognizer.CreateStream();
-
-          Stream.AcceptWaveform(SpeechSegment.Samples, Wave.SampleRate);
-          OfflineRecognizer.Decode(Stream);
-          RecognitionResult := OfflineRecognizer.GetResult(Stream);
-
-          Start := SpeechSegment.Start / Wave.SampleRate;
-          Duration := Length(SpeechSegment.Samples) / Wave.SampleRate;
-          Stop := Start + Duration;
-          ResultStr := Format('%.3f -- %.3f %s', [Start, Stop, RecognitionResult.Text]);
-          ResultMemo.Lines.Add(ResultStr);
-          FreeAndNil(Stream);
-        end;
+     ResultMemo.Lines.Add('Stop it');
+     MyWorkerThread.Terminate;
     end;
 
-  Vad.Flush;
-  while not Vad.IsEmpty do
-    begin
-      SpeechSegment := Vad.Front();
-      Vad.Pop();
-      Stream := OfflineRecognizer.CreateStream();
 
-      Stream.AcceptWaveform(SpeechSegment.Samples, Wave.SampleRate);
-      OfflineRecognizer.Decode(Stream);
-      RecognitionResult := OfflineRecognizer.GetResult(Stream);
+  MyWorkerThread := TMyWorkerThread.Create(False, FileNameEdt.Text);
 
-      Start := SpeechSegment.Start / Wave.SampleRate;
-      Duration := Length(SpeechSegment.Samples) / Wave.SampleRate;
-      Stop := Start + Duration;
-      ResultStr := Format('%.3f -- %.3f %s', [Start, Stop, RecognitionResult.Text]);
-      ResultMemo.Lines.Add(ResultStr);
-      FreeAndNil(Stream);
-    end;
-
-  ResultMemo.Lines.Add('processing done');
+  StartBtn.Caption := 'Stop';
 end;
 
 procedure TForm1.SelectFileBtnClick(Sender: TObject);
@@ -183,6 +133,17 @@ begin
     StartBtn.Enabled := True
   else
     StartBtn.Enabled := False;
+end;
+
+procedure TForm1.FormClose(Sender: TObject; var CloseAction: TCloseAction);
+begin
+  if (MyWorkerThread <> nil) and not MyWorkerThread.Finished then
+    begin
+      MyWorkerThread.Terminate;
+      MyWorkerThread.WaitFor;
+    end;
+  FreeAndNil(Vad);
+  FreeAndNil(OfflineRecognizer);
 end;
 
 procedure TForm1.InitBtnClick(Sender: TObject);
