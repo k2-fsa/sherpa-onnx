@@ -29,7 +29,6 @@ var
   N: Integer;
   I: Integer;
 begin
-
   SampleRate := 16000; {Please don't change it unless you know the details}
 
   Wave := SherpaOnnxReadWave('./lei-jun-test.wav');
@@ -78,6 +77,21 @@ begin
         end;
     end;
 
+  Vad.Flush;
+
+  while not Vad.IsEmpty do
+    begin
+      SetLength(AllSpeechSegment, Length(AllSpeechSegment) + 1);
+
+      SpeechSegment := Vad.Front();
+      Vad.Pop();
+      AllSpeechSegment[Length(AllSpeechSegment)-1] := SpeechSegment;
+
+      Start := SpeechSegment.Start / SampleRate;
+      Duration := Length(SpeechSegment.Samples) / SampleRate;
+      WriteLn(Format('%.3f -- %.3f', [Start, Start + Duration]));
+    end;
+
   N := 0;
   for SpeechSegment in AllSpeechSegment do
     Inc(N, Length(SpeechSegment.Samples));
@@ -97,4 +111,5 @@ begin
   SherpaOnnxWriteWave('./lei-jun-test-no-silence.wav', AllSamples, SampleRate);
   WriteLn('Saved to ./lei-jun-test-no-silence.wav');
 
+  FreeAndNil(Vad);
 end.

@@ -103,6 +103,7 @@ type
   TSherpaOnnxOnlineRecognizer = class
   private
    Handle: Pointer;
+   _Config: TSherpaOnnxOnlineRecognizerConfig;
   public
     constructor Create(Config: TSherpaOnnxOnlineRecognizerConfig);
     destructor Destroy; override;
@@ -114,6 +115,7 @@ type
     procedure Reset(Stream: TSherpaOnnxOnlineStream);
     function IsEndpoint(Stream: TSherpaOnnxOnlineStream): Boolean;
     function GetResult(Stream: TSherpaOnnxOnlineStream): TSherpaOnnxOnlineRecognizerResult;
+    property Config: TSherpaOnnxOnlineRecognizerConfig Read _Config;
   end;
 
   TSherpaOnnxOfflineTransducerModelConfig = record
@@ -216,12 +218,14 @@ type
   TSherpaOnnxOfflineRecognizer = class
   private
    Handle: Pointer;
+   _Config: TSherpaOnnxOfflineRecognizerConfig;
   public
     constructor Create(Config: TSherpaOnnxOfflineRecognizerConfig);
     destructor Destroy; override;
     function CreateStream: TSherpaOnnxOfflineStream;
     procedure Decode(Stream: TSherpaOnnxOfflineStream);
     function GetResult(Stream: TSherpaOnnxOfflineStream): TSherpaOnnxOfflineRecognizerResult;
+    property Config: TSherpaOnnxOfflineRecognizerConfig Read _Config;
   end;
 
   TSherpaOnnxSileroVadModelConfig = record
@@ -268,6 +272,7 @@ type
   TSherpaOnnxVoiceActivityDetector = class
   private
     Handle: Pointer;
+    _Config: TSherpaOnnxVadModelConfig;
   public
     constructor Create(Config: TSherpaOnnxVadModelConfig; BufferSizeInSeconds: Single);
     destructor Destroy; override;
@@ -280,6 +285,7 @@ type
     function Front: TSherpaOnnxSpeechSegment;
     procedure Reset;
     procedure Flush;
+    property Config: TSherpaOnnxVadModelConfig Read _Config;
   end;
 
   { It supports reading a single channel wave with 16-bit encoded samples.
@@ -780,6 +786,7 @@ begin
   C.BlankPenalty := Config.BlankPenalty;
 
   Self.Handle := SherpaOnnxCreateOnlineRecognizer(@C);
+  Self._Config := Config;
 end;
 
 destructor TSherpaOnnxOnlineRecognizer.Destroy;
@@ -1046,6 +1053,7 @@ begin
   C.BlankPenalty := Config.BlankPenalty;
 
   Self.Handle := SherpaOnnxCreateOfflineRecognizer(@C);
+  Self._Config := Config;
 end;
 
 destructor TSherpaOnnxOfflineRecognizer.Destroy;
@@ -1314,6 +1322,8 @@ constructor TSherpaOnnxVoiceActivityDetector.Create(Config: TSherpaOnnxVadModelC
 var
   C: SherpaOnnxVadModelConfig;
 begin
+  Self._Config := Config;
+
   Initialize(C);
 
   C.SileroVad.Model := PAnsiChar(Config.SileroVad.Model);
