@@ -309,19 +309,42 @@ uses
   SysUtils;
 
 const
-  {See https://www.freepascal.org/docs-html/prog/progap7.html}
+  {
+  See
+   - https://www.freepascal.org/docs-html/prog/progap7.html
+   - https://downloads.freepascal.org/fpc/docs-pdf/
+   - https://downloads.freepascal.org/fpc/docs-pdf/CinFreePascal.pdf
+  }
 
-  {$IFDEF WINDOWS}
-    SherpaOnnxLibName = 'sherpa-onnx-c-api.dll';
-  {$ENDIF}
+  {$IFNDEF SHERPA_ONNX_USE_SHARED_LIBS}
+   {By default, use static libraries.}
+   {$linklib sherpa-onnx-c-api}
+   {$linklib sherpa-onnx-core}
+   {$linklib kaldi-decoder-core}
+   {$linklib sherpa-onnx-kaldifst-core}
+   {$linklib sherpa-onnx-fstfar}
+   {$linklib sherpa-onnx-fst}
+   {$linklib kaldi-native-fbank-core}
+   {$linklib piper_phonemize}
+   {$linklib espeak-ng}
+   {$linklib ucd}
+   {$linklib onnxruntime}
+   {$linklib ssentencepiece_core}
+   {$linklib c++}
+    SherpaOnnxLibName = '';
+  {$ELSE}
+    {$IFDEF WINDOWS}
+      SherpaOnnxLibName = 'sherpa-onnx-c-api.dll';
+    {$ENDIF}
 
-  {$IFDEF DARWIN}
-    SherpaOnnxLibName = 'sherpa-onnx-c-api';
-    {$linklib sherpa-onnx-c-api}
-  {$ENDIF}
+    {$IFDEF DARWIN}
+      SherpaOnnxLibName = 'sherpa-onnx-c-api';
+      {$linklib sherpa-onnx-c-api}
+    {$ENDIF}
 
-  {$IFDEF LINUX}
-    SherpaOnnxLibName = 'libsherpa-onnx-c-api.so';
+    {$IFDEF LINUX}
+      SherpaOnnxLibName = 'libsherpa-onnx-c-api.so';
+    {$ENDIF}
   {$ENDIF}
 
 type

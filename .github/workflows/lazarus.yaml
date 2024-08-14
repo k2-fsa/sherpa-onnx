@@ -87,7 +87,7 @@ jobs:
 
           cmake \
             -DCMAKE_INSTALL_PREFIX=./install \
-            -D BUILD_SHARED_LIBS=ON \
+            -D BUILD_SHARED_LIBS=OFF \
             -D SHERPA_ONNX_ENABLE_BINARY=OFF \
             -D CMAKE_BUILD_TYPE=Release \
             ..
@@ -102,21 +102,17 @@ jobs:
 
           ls -lh install/lib/
 
-          cp -v install/lib/*.dll ../lazarus-examples/generate_subtitles/ || true
-          cp -v install/lib/*.so* ../lazarus-examples/generate_subtitles/ || true
-          cp -v install/lib/*dylib* ../lazarus-examples/generate_subtitles/ || true
-
       - name: Build generating subtitles
         shell: bash
         run: |
           cd lazarus-examples/generate_subtitles
           os=${{ matrix.os }}
           if [[ $os == macos-13 ]]; then
-            lazbuild --verbose --widgetset=cocoa ./generate_subtitles.lpi
+            lazbuild --verbose --build-mode=Release --widgetset=cocoa ./generate_subtitles.lpi
           elif [[ $os == macos-latest ]]; then
-            lazbuild --verbose --widgetset=cocoa --cpu=aarch64 ./generate_subtitles.lpi
+            lazbuild --verbose --build-mode=Release --widgetset=cocoa --cpu=aarch64 ./generate_subtitles.lpi
           else
-            lazbuild --verbose ./generate_subtitles.lpi
+            lazbuild --verbose --build-mode=Release ./generate_subtitles.lpi
           fi
 
       - name: Display generating subtitles
@@ -152,8 +148,6 @@ jobs:
           d=${{ matrix.os }}-generate-subtitles
           mkdir -p $d
           cp -v ./generate_subtitles.exe $d/
-          cp -v onnxruntime.dll $d/
-          cp -v sherpa-onnx-c-api.dll $d/
           tar cvjf $d.tar.bz2 $d
           ls -lh
           mv $d.tar.bz2 ../..
@@ -167,11 +161,13 @@ jobs:
           file ./generate_subtitles
           echo '----------'
           otool -L ./generate_subtitles
-          d=${{ matrix.os }}-generate-subtitles
           mkdir -p $d
-          cp -v ./generate_subtitles $d/
-          cp -v libonnxruntime.1.*dylib  $d/
-          cp -v libsherpa-onnx-c-api.dylib  $d/
+          rm -v generate_subtitles.app/Contents/MacOS/generate_subtitles
+          cp -v ./generate_subtitles generate_subtitles.app/Contents/MacOS/generate_subtitles
+
+          d=${{ matrix.os }}-generate-subtitles.app
+
+          mv -v ./generate_subtitles.app $d
 
           tar cvjf $d.tar.bz2 $d
           ls -lh
