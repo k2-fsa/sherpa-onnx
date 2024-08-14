@@ -304,6 +304,19 @@ const OfflineRecognitionResult &OfflineStream::GetResult() const {
 std::string OfflineRecognitionResult::AsJsonString() const {
   std::ostringstream os;
   os << "{";
+
+  os << "\"lang\""
+     << ": ";
+  os << std::quoted(lang) << ", ";
+
+  os << "\"emotion\""
+     << ": ";
+  os << std::quoted(emotion) << ", ";
+
+  os << "\"event\""
+     << ": ";
+  os << std::quoted(event) << ", ";
+
   os << "\"text\""
      << ": ";
   os << std::quoted(text) << ", ";

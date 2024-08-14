@@ -6,6 +6,9 @@ data class OfflineRecognizerResult(
     val text: String,
     val tokens: Array<String>,
     val timestamps: FloatArray,
+    val lang: String,
+    val emotion: String,
+    val event: String,
 )
 
 data class OfflineTransducerModelConfig(
@@ -96,7 +99,10 @@ class OfflineRecognizer(
         val text = objArray[0] as String
         val tokens = objArray[1] as Array<String>
         val timestamps = objArray[2] as FloatArray
-        return OfflineRecognizerResult(text = text, tokens = tokens, timestamps = timestamps)
+        val lang = objArray[3] as String
+        val emotion = objArray[4] as String
+        val event = objArray[5] as String
+        return OfflineRecognizerResult(text = text, tokens = tokens, timestamps = timestamps, lang = lang, emotion = emotion, event = event)
     }
 
     fun decode(stream: OfflineStream) = decode(ptr, stream.ptr)

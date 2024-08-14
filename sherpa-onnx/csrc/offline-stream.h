@@ -28,6 +28,12 @@ struct OfflineRecognitionResult {
 
   std::string lang;
 
+  // emotion target of the audio.
+  std::string emotion;
+
+  // event target of the audio.
+  std::string event;
+
     /// timestamps.size() == tokens.size()
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   std::vector<float> timestamps;

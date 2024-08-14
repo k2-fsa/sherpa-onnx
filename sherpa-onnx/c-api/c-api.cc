@@ -531,6 +531,20 @@ const SherpaOnnxOfflineRecognizerResult *SherpaOnnxGetOfflineStreamResult(
   c_lang[lang.size()] = '\0';
   r->lang = c_lang;
 
+  // emotion
+  const auto &emotion = result.emotion;
+  char *c_emotion = new char[emotion.size() + 1];
+  std::copy(emotion.begin(), emotion.end(), c_emotion);
+  c_emotion[emotion.size()] = '\0';
+  r->emotion = c_emotion;
+
+  // event
+  const auto &event = result.event;
+  char *c_event = new char[event.size() + 1];
+  std::copy(event.begin(), event.end(), c_event);
+  c_event[event.size()] = '\0';
+  r->event = c_event;
+
   // copy json
   std::string json = result.AsJsonString();
   char *pJson = new char[json.size() + 1];
@@ -588,6 +602,8 @@ void SherpaOnnxDestroyOfflineRecognizerResult(
     delete[] r->tokens_arr;
     delete[] r->json;
     delete[] r->lang;
+    delete[] r->emotion;
+    delete[] r->event;
     delete r;
   }
 }
