@@ -320,8 +320,11 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   // [0]: text, jstring
   // [1]: tokens, array of jstring
   // [2]: timestamps, array of float
+  // [3]: lang, jstring
+  // [4]: emotion, jstring
+  // [5]: event, jstring
   jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      3, env->FindClass("java/lang/Object"), nullptr);
+      6, env->FindClass("java/lang/Object"), nullptr);
 
   jstring text = env->NewStringUTF(result.text.c_str());
   env->SetObjectArrayElement(obj_arr, 0, text);
@@ -343,6 +346,13 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
                            result.timestamps.data());
 
   env->SetObjectArrayElement(obj_arr, 2, timestamps_arr);
+
+  // [3]: lang, jstring
+  // [4]: emotion, jstring
+  // [5]: event, jstring
+  env->SetObjectArrayElement(obj_arr, 3, env->NewStringUTF(result.lang.c_str()));
+  env->SetObjectArrayElement(obj_arr, 4, env->NewStringUTF(result.emotion.c_str()));
+  env->SetObjectArrayElement(obj_arr, 5, env->NewStringUTF(result.event.c_str()));
 
   return obj_arr;
 }
