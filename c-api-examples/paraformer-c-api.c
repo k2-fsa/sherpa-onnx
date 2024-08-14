@@ -1,16 +1,14 @@
-// c-api-examples/whisper-c-api.c
+// c-api-examples/paraformer-c-api.c
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
-// We assume you have pre-downloaded the whisper multi-lingual models
-// from https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
-// An example command to download the "tiny" whisper model is given below:
 //
+// This file demonstrates how to use non-streaming Paraformer with sherpa-onnx's C API.
 // clang-format off
 //
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2
-// tar xvf sherpa-onnx-whisper-tiny.tar.bz2
-// rm sherpa-onnx-whisper-tiny.tar.bz2
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-small-2024-03-09.tar.bz2
+// tar xvf sherpa-onnx-paraformer-zh-small-2024-03-09.tar.bz2
+// rm sherpa-onnx-paraformer-zh-small-2024-03-09.tar.bz2
 //
 // clang-format on
 
@@ -21,27 +19,23 @@
 #include "sherpa-onnx/c-api/c-api.h"
 
 int32_t main() {
-  const char *wav_filename = "./sherpa-onnx-whisper-tiny/test_wavs/0.wav";
-  const char *encoder_filename = "sherpa-onnx-whisper-tiny/tiny-encoder.onnx";
-  const char *decoder_filename = "sherpa-onnx-whisper-tiny/tiny-decoder.onnx";
-  const char *tokens_filename = "sherpa-onnx-whisper-tiny/tiny-tokens.txt";
-  const char *language = "en";
+
+  const char *wav_filename = "sherpa-onnx-paraformer-zh-small-2024-03-09/test_wavs/0.wav";
+  const char *model_filename = "sherpa-onnx-paraformer-zh-small-2024-03-09/model.int8.onnx";
+  const char *tokens_filename = "sherpa-onnx-paraformer-zh-small-2024-03-09/tokens.txt";
   const char *provider = "cpu";
+
 
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
     fprintf(stderr, "Failed to read %s\n", wav_filename);
     return -1;
   }
-
-  // Whisper config
-  SherpaOnnxOfflineWhisperModelConfig whisper_config;
-  memset(&whisper_config, 0, sizeof(whisper_config));
-  whisper_config.decoder = decoder_filename;
-  whisper_config.encoder = encoder_filename;
-  whisper_config.language = language;
-  whisper_config.tail_paddings = 0;
-  whisper_config.task = "transcribe";
+  
+  // Paraformer config
+  SherpaOnnxOfflineParaformerModelConfig paraformer_config;
+  memset(&paraformer_config, 0, sizeof(paraformer_config));
+  paraformer_config.model = model_filename;
 
   // Offline model config
   SherpaOnnxOfflineModelConfig offline_model_config;
@@ -50,7 +44,7 @@ int32_t main() {
   offline_model_config.num_threads = 1;
   offline_model_config.provider = provider;
   offline_model_config.tokens = tokens_filename;
-  offline_model_config.whisper = whisper_config;
+  offline_model_config.paraformer = paraformer_config;
 
   // Recognizer config
   SherpaOnnxOfflineRecognizerConfig recognizer_config;
@@ -63,9 +57,7 @@ int32_t main() {
 
   if (recognizer == NULL) {
     fprintf(stderr, "Please check your config!\n");
-
     SherpaOnnxFreeWave(wave);
-
     return -1;
   }
 
