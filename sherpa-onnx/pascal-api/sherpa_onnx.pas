@@ -315,22 +315,45 @@ const
    - https://downloads.freepascal.org/fpc/docs-pdf/
    - https://downloads.freepascal.org/fpc/docs-pdf/CinFreePascal.pdf
   }
-
   {$IFNDEF SHERPA_ONNX_USE_SHARED_LIBS}
    {By default, use static libraries.}
-   {$linklib sherpa-onnx-c-api}
-   {$linklib sherpa-onnx-core}
-   {$linklib kaldi-decoder-core}
-   {$linklib sherpa-onnx-kaldifst-core}
-   {$linklib sherpa-onnx-fstfar}
-   {$linklib sherpa-onnx-fst}
-   {$linklib kaldi-native-fbank-core}
-   {$linklib piper_phonemize}
-   {$linklib espeak-ng}
-   {$linklib ucd}
-   {$linklib onnxruntime}
-   {$linklib ssentencepiece_core}
-   {$linklib c++}
+   {$IFDEF WINDOWS}
+     {$linklib sherpa-onnx-c-api.lib}
+     {$linklib sherpa-onnx-core.lib}
+     {$linklib kaldi-decoder-core.lib}
+     {$linklib sherpa-onnx-kaldifst-core.lib}
+     {$linklib sherpa-onnx-fstfar.lib}
+     {$linklib sherpa-onnx-fst.lib}
+     {$linklib kaldi-native-fbank-core.lib}
+     {$linklib piper_phonemize.lib}
+     {$linklib espeak-ng.lib}
+     {$linklib ucd.lib}
+     {$linklib onnxruntime.lib}
+     {$linklib ssentencepiece_core.lib}
+   {$ELSE}
+     {$linklib sherpa-onnx-c-api}
+     {$linklib sherpa-onnx-core}
+     {$linklib kaldi-decoder-core}
+     {$linklib sherpa-onnx-kaldifst-core}
+     {$linklib sherpa-onnx-fstfar}
+     {$linklib sherpa-onnx-fst}
+     {$linklib kaldi-native-fbank-core}
+     {$linklib piper_phonemize}
+     {$linklib espeak-ng}
+     {$linklib ucd}
+     {$linklib onnxruntime}
+     {$linklib ssentencepiece_core}
+
+     {$IFDEF LINUX}
+       {$linklib m}
+       {$LINKLIB stdc++}
+       {$LINKLIB gcc_s}
+     {$ENDIF}
+
+     {$IFDEF DARWIN}
+       {$linklib c++}
+     {$ENDIF}
+   {$ENDIF}
     SherpaOnnxLibName = '';
   {$ELSE}
     {$IFDEF WINDOWS}

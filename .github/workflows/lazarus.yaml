@@ -133,7 +133,6 @@ jobs:
           d=${{ matrix.os }}-generate-subtitles
           mkdir -p $d
           cp -v ./generate_subtitles $d/
-          cp -v *.so $d/
           tar cvjf $d.tar.bz2 $d
           ls -lh
           mv $d.tar.bz2 ../..
@@ -161,7 +160,6 @@ jobs:
           file ./generate_subtitles
           echo '----------'
           otool -L ./generate_subtitles
-          mkdir -p $d
           rm -v generate_subtitles.app/Contents/MacOS/generate_subtitles
           cp -v ./generate_subtitles generate_subtitles.app/Contents/MacOS/generate_subtitles
 
