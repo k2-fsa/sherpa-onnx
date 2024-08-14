@@ -6,7 +6,7 @@ on:
       - master
       - lazarus-examples-2
     paths:
-      - '.github/workflows/lazarus-examples.yaml'
+      - '.github/workflows/lazarus.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'lazarus-examples/**'
@@ -17,7 +17,7 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/lazarus-examples.yaml'
+      - '.github/workflows/lazarus.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'lazarus-examples/**'
@@ -111,8 +111,10 @@ jobs:
         run: |
           cd lazarus-examples/generate_subtitles
           os=${{ matrix.os }}
-          if [[ $os == macos-latest || $os == macos-13 ]]; then
-            lazbuild --verbose --ws=cocoa ./generate_subtitles.lpi
+          if [[ $os == macos-13 ]]; then
+            lazbuild --verbose --widgetset=cocoa ./generate_subtitles.lpi
+          elif [[ $os == macos-latest ]]; then
+            lazbuild --verbose --widgetset=cocoa --cpu=aarch64 ./generate_subtitles.lpi
           else
             lazbuild --verbose ./generate_subtitles.lpi
           fi
@@ -168,7 +170,6 @@ jobs:
           d=${{ matrix.os }}-generate-subtitles
           mkdir -p $d
           cp -v ./generate_subtitles $d/
-          cp -av ./generate_subtitles.app $d/
           cp -v libonnxruntime.1.*dylib  $d/
           cp -v libsherpa-onnx-c-api.dylib  $d/
 
