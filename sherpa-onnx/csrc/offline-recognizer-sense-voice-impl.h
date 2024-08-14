@@ -53,9 +53,11 @@ static OfflineRecognitionResult ConvertSenseVoiceResult(
   r.words = std::move(src.words);
 
   // parse lang, emotion and event from tokens.
-  r.lang = sym_table[src.tokens[0]];
-  r.emotion = sym_table[src.tokens[1]];
-  r.event = sym_table[src.tokens[2]];
+  if (src.tokens.size() >= 3) {
+    r.lang = sym_table[src.tokens[0]];
+    r.emotion = sym_table[src.tokens[1]];
+    r.event = sym_table[src.tokens[2]];
+  }
 
   return r;
 }
