@@ -30,6 +30,21 @@ target_link_libraries(whisper-c-api sherpa-onnx-c-api)
 add_executable(sense-voice-c-api sense-voice-c-api.c)
 target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
 
+add_executable(zipformer-c-api zipformer-c-api.c)
+target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
+
+add_executable(streaming-zipformer-c-api streaming-zipformer-c-api.c)
+target_link_libraries(streaming-zipformer-c-api sherpa-onnx-c-api)
+
+add_executable(paraformer-c-api paraformer-c-api.c)
+target_link_libraries(paraformer-c-api sherpa-onnx-c-api)
+
+add_executable(streaming-paraformer-c-api streaming-paraformer-c-api.c)
+target_link_libraries(streaming-paraformer-c-api sherpa-onnx-c-api)
+
+add_executable(telespeech-c-api telespeech-c-api.c)
+target_link_libraries(telespeech-c-api sherpa-onnx-c-api)
+
 if(SHERPA_ONNX_HAS_ALSA)
   add_subdirectory(./asr-microphone-example)
 elseif((UNIX AND NOT APPLE) OR LINUX)
