@@ -42,7 +42,7 @@ int32_t main() {
   zipformer_config.joiner = joiner_filename;
   
 
-  // Offline model config
+  // Online model config
   SherpaOnnxOnlineModelConfig online_model_config;
   memset(&online_model_config, 0, sizeof(online_model_config));
   online_model_config.debug = 1;

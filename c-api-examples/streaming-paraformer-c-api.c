@@ -33,14 +33,14 @@ int32_t main() {
     return -1;
   }
   
-  // Zipformer config
+  // Paraformer config
   SherpaOnnxOnlineParaformerModelConfig paraformer_config;
   memset(&paraformer_config, 0, sizeof(paraformer_config));
   paraformer_config.encoder = encoder_filename;
   paraformer_config.decoder = decoder_filename;
   
 
-  // Offline model config
+  // Online model config
   SherpaOnnxOnlineModelConfig online_model_config;
   memset(&online_model_config, 0, sizeof(online_model_config));
   online_model_config.debug = 1;
