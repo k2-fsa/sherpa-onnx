@@ -84,10 +84,15 @@ jobs:
 
           mkdir build
           cd build
+          if [[ ${{ matrix.os }} == 'windows-latest' ]]; then
+            BUILD_SHARED_LIBS=ON
+          else
+            BUILD_SHARED_LIBS=OFF
+          fi
 
           cmake \
             -DCMAKE_INSTALL_PREFIX=./install \
-            -D BUILD_SHARED_LIBS=OFF \
+            -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
             -D SHERPA_ONNX_ENABLE_BINARY=OFF \
             -D CMAKE_BUILD_TYPE=Release \
             ..
@@ -101,6 +106,10 @@ jobs:
           cmake --build . --target install --config Release -j 2
 
           ls -lh install/lib/
+
+          if [[ ${{ matrix.os }} == 'windows-latest' ]]; then
+            cp -v install/lib/*.dll ../lazarus-examples/generate_subtitles/
+          fi
 
       - name: Build generating subtitles
         shell: bash
@@ -125,12 +134,14 @@ jobs:
         if: matrix.os == 'ubuntu-20.04'
         shell: bash
         run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
           cd lazarus-examples/generate_subtitles
           ls -lh
           readelf -d ./generate_subtitles
           echo '----------'
           ldd ./generate_subtitles
-          d=${{ matrix.os }}-generate-subtitles
+
+          d=generate_subtitles-linux-x64-$SHERPA_ONNX_VERSION
           mkdir -p $d
           cp -v ./generate_subtitles $d/
           tar cvjf $d.tar.bz2 $d
@@ -141,12 +152,15 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
           cd lazarus-examples/generate_subtitles
           ls -lh
 
-          d=${{ matrix.os }}-generate-subtitles
+          d=generate-subtitles-windows-x64-$SHERPA_ONNX_VERSION
           mkdir -p $d
           cp -v ./generate_subtitles.exe $d/
+          cp -v onnxruntime.dll $d/
+          cp -v sherpa-onnx-c-api.dll $d/
           tar cvjf $d.tar.bz2 $d
           ls -lh
           mv $d.tar.bz2 ../..
@@ -155,6 +169,7 @@ jobs:
         if: matrix.os == 'macos-13' || matrix.os == 'macos-latest'
         shell: bash
         run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
           cd lazarus-examples/generate_subtitles
           ls -lh
           file ./generate_subtitles
@@ -163,7 +178,11 @@ jobs:
           rm -v generate_subtitles.app/Contents/MacOS/generate_subtitles
           cp -v ./generate_subtitles generate_subtitles.app/Contents/MacOS/generate_subtitles
 
-          d=${{ matrix.os }}-generate-subtitles.app
+          if [[ ${{ matrix.os }} == 'macos-latest' ]]; then
+            d=generate-subtitles-macos-arm64-$SHERPA_ONNX_VERSION.app
+          else
+            d=generate-subtitles-macos-x64-$SHERPA_ONNX_VERSION.app
+          fi
 
           mv -v ./generate_subtitles.app $d
 
@@ -175,3 +194,39 @@ jobs:
         with:
           name: ${{ matrix.os }}-generate-subtitles
           path: ./*.tar.bz2
+
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa' || github.repository_owner == 'csu-fangjun') && ((github.event_name == 'push' || github.event_name == 'workflow_dispatch') || contains(github.ref, 'refs/tags/'))
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-bin huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            d=generate-subtitles/$SHERPA_ONNX_VERSION
+            mkdir -p $d
+
+            cp -v ../*.tar.bz2 $d/
+            git status
+            git lfs track "*.tar.bz2"
+            git add .
+            git commit -m "add more files"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-bin main
