@@ -101,15 +101,33 @@ begin
   Result := TSherpaOnnxVoiceActivityDetector.Create(Config, 30);
 end;
 
-function CreateOfflineRecognizerParaformer(
+function CreateOfflineRecognizerTeleSpeech(
   Tokens: AnsiString;
-  SenseVoice: AnsiString): TSherpaOnnxOfflineRecognizer;
+  TeleSpeech: AnsiString): TSherpaOnnxOfflineRecognizer;
 var
   Config: TSherpaOnnxOfflineRecognizerConfig;
 begin
   Initialize(Config);
 
-  Config.ModelConfig.Paraformer.Model := SenseVoice;
+  Config.ModelConfig.TeleSpeechCtc := TeleSpeech;
+
+  Config.ModelConfig.Tokens := Tokens;
+  Config.ModelConfig.Provider := 'cpu';
+  Config.ModelConfig.NumThreads := 2;
+  Config.ModelConfig.Debug := False;
+
+  Result := TSherpaOnnxOfflineRecognizer.Create(Config);
+end;
+
+function CreateOfflineRecognizerParaformer(
+  Tokens: AnsiString;
+  Paraformer: AnsiString): TSherpaOnnxOfflineRecognizer;
+var
+  Config: TSherpaOnnxOfflineRecognizerConfig;
+begin
+  Initialize(Config);
+
+  Config.ModelConfig.Paraformer.Model := Paraformer;
 
   Config.ModelConfig.Tokens := Tokens;
   Config.ModelConfig.Provider := 'cpu';
@@ -281,6 +299,8 @@ var
   SenseVoice: AnsiString;
 
   Paraformer: AnsiString;
+
+  TeleSpeech: AnsiString;
 begin
   {$IFDEF DARWIN}
     ModelDir := GetResourcesPath;
@@ -347,6 +367,24 @@ begin
   }
   Paraformer := ModelDir + 'paraformer.onnx';
 
+
+  {
+    please refer to
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/telespeech/models.html
+    to download TeleSpeech models.
+
+    Note that you have to rename model files after downloading. The following
+    is an example
+
+       mv model.onnx telespeech.onnx
+
+       // or to use int8.onnx
+
+       mv model.int8.onnx telespeech.onnx
+  }
+
+  TeleSpeech := ModelDir + 'telespeech.onnx';
+
   if not FileExists(VadFilename) then
     begin
       ShowMessage(VadFilename + ' does not exist! Please download it from' +
@@ -377,6 +415,11 @@ begin
     begin
       OfflineRecognizer := CreateOfflineRecognizerParaformer(Tokens, Paraformer);
       Msg := 'Paraformer';
+    end
+  else if FileExists(TeleSpeech) then
+    begin
+      OfflineRecognizer := CreateOfflineRecognizerTeleSpeech(Tokens, TeleSpeech);
+      Msg := 'TeleSpeech';
     end
   else
     begin
