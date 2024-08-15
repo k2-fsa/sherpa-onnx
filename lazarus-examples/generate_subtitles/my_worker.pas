@@ -25,7 +25,11 @@ type
   TMyWorkerThread = class(TThread)
   private
     Status: AnsiString;
+    StartTime: Single;
+    StopTime: Single;
+    TotalDuration: Single;
     procedure ShowStatus;
+    procedure ShowProgress;
   protected
     procedure Execute; override;
   public
@@ -50,46 +54,48 @@ end;
 
 procedure TMyWorkerThread.ShowStatus;
 begin
-  if Status = 'DONE!' then
-  begin
-    Form1.StartBtn.Caption := 'Start';
-  end;
-  Form1.ResultMemo.Lines.Add(Status);
+  Form1.UpdateResult(Status, StartTime, StopTime, TotalDuration);
 end;
+
+procedure TMyWorkerThread.ShowProgress;
+begin
+  Form1.UpdateProgress(StopTime, TotalDuration);
+end;
+
 procedure TMyWorkerThread.Execute;
 var
   Wave: TSherpaOnnxWave;
   WindowSize: Integer;
   Offset: Integer;
   SpeechSegment: TSherpaOnnxSpeechSegment;
-  StartTime: Single;
+
   Duration: Single;
-  StopTime: Single;
+
 
   Stream: TSherpaOnnxOfflineStream;
   RecognitionResult: TSherpaOnnxOfflineRecognizerResult;
 begin
   Wave := SherpaOnnxReadWave(WaveFilename);
-  if Length(Wave.Samples) = 0 then
+  TotalDuration := 0;
+  StartTime := 0;
+  StopTime := 0;
+  if (Wave.Samples = nil) or (Length(Wave.Samples) = 0) then
     begin
       Status := Format('Failed to read %s. We only support 1 channel, 16000Hz, 16-bit encoded wave files',
         [Wavefilename]);
       Synchronize(@ShowStatus);
 
-      Status := 'DONE!';
-      Synchronize(@ShowStatus);
       Exit;
     end;
   if Wave.SampleRate <> 16000 then
     begin
       Status := Format('Expected sample rate 16000. Given %d. Please select a new file', [Wave.SampleRate]);
       Synchronize(@ShowStatus);
-      Status := 'DONE!';
-      Synchronize(@ShowStatus);
       Exit;
     end;
-
+  TotalDuration := Length(Wave.Samples) / Wave.SampleRate;
   WindowSize := Form1.Vad.Config.SileroVad.WindowSize;
+
   Offset := 0;
   Form1.Vad.Reset;
 
@@ -97,6 +103,10 @@ begin
       begin
         Form1.Vad.AcceptWaveform(Wave.Samples, Offset, WindowSize);
         Offset += WindowSize;
+        StopTime := Offset / Wave.SampleRate;
+
+        if (Offset mod 20480) = 0 then
+          Synchronize(@ShowProgress);
 
         while not Terminated and not Form1.Vad.IsEmpty do
           begin
@@ -111,7 +121,8 @@ begin
             StartTime := SpeechSegment.Start / Wave.SampleRate;
             Duration := Length(SpeechSegment.Samples) / Wave.SampleRate;
             StopTime := StartTime + Duration;
-            Status := Format('%.3f -- %.3f %s', [StartTime, StopTime, RecognitionResult.Text]);
+            Status := RecognitionResult.Text;
+
             Synchronize(@ShowStatus);
             FreeAndNil(Stream);
           end;
@@ -131,13 +142,18 @@ begin
         StartTime := SpeechSegment.Start / Wave.SampleRate;
         Duration := Length(SpeechSegment.Samples) / Wave.SampleRate;
         StopTime := StartTime + Duration;
-        Status := Format('%.3f -- %.3f %s', [StartTime, StopTime, RecognitionResult.Text]);
+        Status := RecognitionResult.Text;
+
 
         Synchronize(@ShowStatus);
         FreeAndNil(Stream);
       end;
 
-    Status := 'DONE!';
+    if Terminated then
+      Status := 'Cancelled!'
+    else
+      Status := 'DONE!';
+
     Synchronize(@ShowStatus);
 end;
 

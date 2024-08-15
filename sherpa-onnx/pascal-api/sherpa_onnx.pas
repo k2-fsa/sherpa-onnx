@@ -652,10 +652,17 @@ var
   PWave: PSherpaOnnxWave;
   I: Integer;
 begin
+  Result.Samples := nil;
+  Result.SampleRate := 0;
+
   PFilename := PAnsiChar(Filename);
+
   PWave := SherpaOnnxReadWaveWrapper(PFilename);
 
-  Result.Samples := nil;
+  if PWave = nil then
+    Exit;
+
+
   SetLength(Result.Samples, PWave^.NumSamples);
 
   Result.SampleRate := PWave^.SampleRate;

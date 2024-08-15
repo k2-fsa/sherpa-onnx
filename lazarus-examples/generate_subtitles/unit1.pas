@@ -9,9 +9,9 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, Forms, Controls,
+  Classes, SysUtils, StrUtils, Forms, Controls,
   Graphics, Dialogs, StdCtrls,
-  sherpa_onnx;
+  sherpa_onnx, ComCtrls;
 
 type
 
@@ -19,11 +19,13 @@ type
 
   TForm1 = class(TForm)
     InitBtn: TButton;
+    ProgressBar: TProgressBar;
     ResultMemo: TMemo;
     StartBtn: TButton;
     SelectFileDlg: TOpenDialog;
     SelectFileBtn: TButton;
     FileNameEdt: TEdit;
+    ProgressLabel: TLabel;
     procedure FileNameEdtChange(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
     procedure InitBtnClick(Sender: TObject);
@@ -32,6 +34,13 @@ type
     procedure StartBtnClick(Sender: TObject);
   private
 
+  public
+    procedure UpdateResult(
+      Msg: AnsiString;
+      StartTime: Single;
+      StopTime: Single;
+      TotalDuration: Single);
+    procedure UpdateProgress(StopTime: Single; TotalDuration: Single);
   public
     Vad: TSherpaOnnxVoiceActivityDetector;
     OfflineRecognizer: TSherpaOnnxOfflineRecognizer;
@@ -142,6 +151,9 @@ begin
   SelectFileBtn.Enabled := False;
   ResultMemo.Lines.Add('1. It supports only 1 channel, 16-bit, 16000Hz wav files');
   ResultMemo.Lines.Add('2. There should be no Chinese characters in the file path.');
+
+  ProgressBar.Position := 0;
+  ProgressLabel.Caption := '';
 end;
 
 procedure TForm1.StartBtnClick(Sender: TObject);
@@ -157,12 +169,9 @@ begin
 
   ResultMemo.Lines.Clear();
   ResultMemo.Lines.Add('Start processing');
-  if (MyWorkerThread <> nil) and not MyWorkerThread.Finished then
-    begin
-     ResultMemo.Lines.Add('Stop it');
-     MyWorkerThread.Terminate;
-    end;
 
+  ProgressBar.Position := 0;
+  ProgressLabel.Caption := Format('%d%%', [ProgressBar.Position]);
 
   MyWorkerThread := TMyWorkerThread.Create(False, FileNameEdt.Text);
 
@@ -194,6 +203,51 @@ begin
     end;
   FreeAndNil(Vad);
   FreeAndNil(OfflineRecognizer);
+end;
+
+procedure TForm1.UpdateProgress(StopTime: Single; TotalDuration: Single);
+var
+  Percent: Single;
+begin
+  if (StopTime <> 0) and (TotalDuration <> 0) then
+    begin
+      Percent := StopTime / TotalDuration * 100;
+      ProgressBar.Position := Round(Percent);
+      ProgressLabel.Caption := Format('%d%%', [ProgressBar.Position]);
+    end;
+end;
+
+procedure TForm1.UpdateResult(
+  Msg: AnsiString;
+  StartTime: Single;
+  StopTime: Single;
+  TotalDuration: Single);
+var
+  NewResult: AnsiString;
+begin
+  UpdateProgress(StopTime, TotalDuration);
+
+  if (Msg = 'DONE!') or
+     (Msg = 'Cancelled!') or
+     EndsStr('16-bit encoded wave files', Msg) or
+     EndsStr('. Please select a new file', Msg) then
+    begin
+      Form1.StartBtn.Caption := 'Start';
+      NewResult := Msg;
+    end
+  else
+    begin
+      NewResult := Format('%.3f -- %.3f%s', [StartTime, StopTime, Msg]);
+    end;
+
+  if Msg = 'DONE!' then
+    begin
+      ProgressBar.Position := 100;
+
+      ProgressLabel.Caption := '100%';
+    end;
+
+  Form1.ResultMemo.Lines.Add(NewResult);
 end;
 
 procedure TForm1.InitBtnClick(Sender: TObject);
