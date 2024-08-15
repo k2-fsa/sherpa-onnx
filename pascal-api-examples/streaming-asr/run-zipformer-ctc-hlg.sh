@@ -31,6 +31,7 @@ if [ ! -f ./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/tokens.txt ]; t
 fi
 
 fpc \
+  -dSHERPA_ONNX_USE_SHARED_LIBS \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
   ./zipformer_ctc_hlg.pas

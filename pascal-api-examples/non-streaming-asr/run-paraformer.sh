@@ -32,6 +32,7 @@ if [ ! -f ./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt ]; then
 fi
 
 fpc \
+  -dSHERPA_ONNX_USE_SHARED_LIBS \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
   ./paraformer.pas

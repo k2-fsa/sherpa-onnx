@@ -31,6 +31,7 @@ if [ ! -f ./sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20
 fi
 
 fpc \
+  -dSHERPA_ONNX_USE_SHARED_LIBS \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
   ./nemo_ctc.pas

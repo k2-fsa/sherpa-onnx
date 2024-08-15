@@ -39,6 +39,7 @@ if [ ! -f ./sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt ]; then
 fi
 
 fpc \
+  -dSHERPA_ONNX_USE_SHARED_LIBS \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
   ./vad_with_whisper.pas

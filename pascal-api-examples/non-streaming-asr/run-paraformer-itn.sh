@@ -40,6 +40,7 @@ if [ ! -f ./itn_zh_number.fst ]; then
 fi
 
 fpc \
+  -dSHERPA_ONNX_USE_SHARED_LIBS \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
   ./paraformer_itn.pas
