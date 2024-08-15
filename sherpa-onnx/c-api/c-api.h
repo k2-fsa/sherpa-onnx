@@ -544,6 +544,12 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
 
   // return recognized language
   const char *lang;
+
+  // return emotion.
+  const char *emotion;
+
+  // return event.
+  const char *event;
 } SherpaOnnxOfflineRecognizerResult;
 
 /// Get the result of the offline stream.
