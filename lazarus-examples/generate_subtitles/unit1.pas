@@ -101,6 +101,30 @@ begin
   Result := TSherpaOnnxVoiceActivityDetector.Create(Config, 30);
 end;
 
+function CreateOfflineRecognizerTransducer(
+  Tokens: AnsiString;
+  Encoder: AnsiString;
+  Decoder: AnsiString;
+  Joiner: AnsiString;
+  ModelType: AnsiString): TSherpaOnnxOfflineRecognizer;
+var
+  Config: TSherpaOnnxOfflineRecognizerConfig;
+begin
+  Initialize(Config);
+
+  Config.ModelConfig.Transducer.Encoder := Encoder;
+  Config.ModelConfig.Transducer.Decoder := Decoder;
+  Config.ModelConfig.Transducer.Joiner := Joiner;
+
+  Config.ModelConfig.ModelType := ModelType;
+  Config.ModelConfig.Tokens := Tokens;
+  Config.ModelConfig.Provider := 'cpu';
+  Config.ModelConfig.NumThreads := 2;
+  Config.ModelConfig.Debug := False;
+
+  Result := TSherpaOnnxOfflineRecognizer.Create(Config);
+end;
+
 function CreateOfflineRecognizerTeleSpeech(
   Tokens: AnsiString;
   TeleSpeech: AnsiString): TSherpaOnnxOfflineRecognizer;
@@ -301,6 +325,14 @@ var
   Paraformer: AnsiString;
 
   TeleSpeech: AnsiString;
+
+  TransducerEncoder: AnsiString; // from icefall
+  TransducerDecoder: AnsiString;
+  TransducerJoiner: AnsiString;
+
+  NeMoTransducerEncoder: AnsiString;
+  NeMoTransducerDecoder: AnsiString;
+  NeMoTransducerJoiner: AnsiString;
 begin
   {$IFDEF DARWIN}
     ModelDir := GetResourcesPath;
@@ -385,6 +417,27 @@ begin
 
   TeleSpeech := ModelDir + 'telespeech.onnx';
 
+
+  {
+    Please refer to
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/index.html
+    to download an icefall offline transducer model. Note that you need to rename the
+    model files to transducer-encoder.onnx, transducer-decoder.onnx, and
+    transducer-joiner.onnx
+  }
+  TransducerEncoder := ModelDir + 'transducer-encoder.onnx';
+  TransducerDecoder := ModelDir + 'transducer-decoder.onnx';
+  TransducerJoiner := ModelDir + 'transducer-joiner.onnx';
+
+  {
+    Please visit
+    https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
+    to donwload a NeMo transducer model.
+  }
+  NeMoTransducerEncoder := ModelDir + 'nemo-transducer-encoder.onnx';
+  NeMoTransducerDecoder := ModelDir + 'nemo-transducer-decoder.onnx';
+  NeMoTransducerJoiner := ModelDir + 'nemo-transducer-joiner.onnx';
+
   if not FileExists(VadFilename) then
     begin
       ShowMessage(VadFilename + ' does not exist! Please download it from' +
@@ -421,6 +474,18 @@ begin
       OfflineRecognizer := CreateOfflineRecognizerTeleSpeech(Tokens, TeleSpeech);
       Msg := 'TeleSpeech';
     end
+  else if FileExists(TransducerEncoder) and FileExists(TransducerDecoder) and FileExists(TransducerJoiner) then
+      begin
+        OfflineRecognizer := CreateOfflineRecognizerTransducer(Tokens,
+          TransducerEncoder, TransducerDecoder, TransducerJoiner, 'transducer');
+        Msg := 'Zipformer transducer';
+      end
+  else if FileExists(NeMoTransducerEncoder) and FileExists(NeMoTransducerDecoder) and FileExists(NeMoTransducerJoiner) then
+      begin
+        OfflineRecognizer := CreateOfflineRecognizerTransducer(Tokens,
+          NeMoTransducerEncoder, NeMoTransducerDecoder, NeMoTransducerJoiner, 'nemo_transducer');
+        Msg := 'NeMo transducer';
+      end
   else
     begin
       ShowMessage('Please download at least one non-streaming speech recognition model first.');

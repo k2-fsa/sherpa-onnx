@@ -144,7 +144,6 @@ begin
         StopTime := StartTime + Duration;
         Status := RecognitionResult.Text;
 
-
         Synchronize(@ShowStatus);
         FreeAndNil(Stream);
       end;
