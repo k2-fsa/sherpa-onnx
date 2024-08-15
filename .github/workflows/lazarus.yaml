@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - lazarus-examples-2
     paths:
       - '.github/workflows/lazarus.yaml'
       - 'CMakeLists.txt'
@@ -263,7 +262,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: windows-x64
-          path: /tmp/
+          path: /tmp/windows-x64
 
       - name: Retrieve artifact from linux x64
         uses: actions/download-artifact@v4
