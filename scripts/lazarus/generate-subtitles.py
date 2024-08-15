@@ -61,6 +61,71 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-paraformer-zh-2023-09-14",
+            lang="zh_en",
+            short_name="paraformer_2023_09_14",
+            cmd="""
+            pushd $model_name
+            rm -fv model.onnx
+            mv -v model.int8.onnx paraformer.onnx
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-paraformer-zh-small-2024-03-09",
+            lang="zh_en",
+            short_name="paraformer_small_2024_03_09",
+            cmd="""
+            pushd $model_name
+            rm -fv model.onnx
+            mv -v model.int8.onnx paraformer.onnx
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-zipformer-gigaspeech-2023-12-12",
+            lang="en",
+            short_name="zipformer_gigaspeech_2023_12_12",
+            cmd="""
+            pushd $model_name
+            mv encoder-epoch-30-avg-1.int8.onnx transducer-encoder.onnx
+            mv decoder-epoch-30-avg-1.onnx transducer-decoder.onnx
+            mv joiner-epoch-30-avg-1.int8.onnx transducer-joiner.onnx
+
+            rm -fv encoder-epoch-30-avg-1.onnx
+            rm -fv decoder-epoch-30-avg-1.int8.onnx
+            rm -fv joiner-epoch-30-avg-1.onnx
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="icefall-asr-zipformer-wenetspeech-20230615",
+            lang="zh",
+            short_name="zipformer_wenetspeech",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -fv README.md
+            mv -v data/lang_char/tokens.txt ./
+            rm -rfv data/lang_char
+
+            mv -v exp/encoder-epoch-12-avg-4.int8.onnx ./
+            mv -v exp/decoder-epoch-12-avg-4.onnx ./
+            mv -v exp/joiner-epoch-12-avg-4.int8.onnx ./
+            rm -rfv exp
+
+            mv -v encoder-epoch-12-avg-4.int8.onnx transducer-encoder.onnx
+            mv -v decoder-epoch-12-avg-4.onnx transducer-decoder.onnx
+            mv -v joiner-epoch-12-avg-4.int8.onnx transducer-joiner.onnx
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

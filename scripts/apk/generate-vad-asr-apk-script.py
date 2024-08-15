@@ -71,7 +71,7 @@ def get_models():
         Model(
             model_name="sherpa-onnx-paraformer-zh-2023-09-14",
             idx=0,
-            lang="zh",
+            lang="zh_en",
             short_name="paraformer",
             rule_fsts="itn_zh_number.fst",
             cmd="""
@@ -109,7 +109,7 @@ def get_models():
         Model(
             model_name="sherpa-onnx-paraformer-zh-small-2024-03-09",
             idx=14,
-            lang="zh",
+            lang="zh_en",
             short_name="small_paraformer",
             rule_fsts="itn_zh_number.fst",
             cmd="""
