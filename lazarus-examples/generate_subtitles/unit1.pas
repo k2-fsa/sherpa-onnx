@@ -101,6 +101,24 @@ begin
   Result := TSherpaOnnxVoiceActivityDetector.Create(Config, 30);
 end;
 
+function CreateOfflineRecognizerParaformer(
+  Tokens: AnsiString;
+  SenseVoice: AnsiString): TSherpaOnnxOfflineRecognizer;
+var
+  Config: TSherpaOnnxOfflineRecognizerConfig;
+begin
+  Initialize(Config);
+
+  Config.ModelConfig.Paraformer.Model := SenseVoice;
+
+  Config.ModelConfig.Tokens := Tokens;
+  Config.ModelConfig.Provider := 'cpu';
+  Config.ModelConfig.NumThreads := 2;
+  Config.ModelConfig.Debug := False;
+
+  Result := TSherpaOnnxOfflineRecognizer.Create(Config);
+end;
+
 function CreateOfflineRecognizerSenseVoice(
   Tokens: AnsiString;
   SenseVoice: AnsiString): TSherpaOnnxOfflineRecognizer;
@@ -261,6 +279,8 @@ var
   WhisperDecoder: AnsiString;
 
   SenseVoice: AnsiString;
+
+  Paraformer: AnsiString;
 begin
   {$IFDEF DARWIN}
     ModelDir := GetResourcesPath;
@@ -312,6 +332,21 @@ begin
 
   SenseVoice := ModelDir + 'sense-voice.onnx';
 
+  {
+    Please refer to
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/index.html
+    to download paraformer models.
+
+    Note that you have to rename model.onnx or model.int8.onnx to paraformer.onnx.
+    An example is given below for the rename:
+
+      cp model.onnx paraformer.onnx
+
+      // or use int8.onnx
+      cp model.int8.onnx paraformer.onnx
+  }
+  Paraformer := ModelDir + 'paraformer.onnx';
+
   if not FileExists(VadFilename) then
     begin
       ShowMessage(VadFilename + ' does not exist! Please download it from' +
@@ -337,6 +372,11 @@ begin
     begin
       OfflineRecognizer := CreateOfflineRecognizerSenseVoice(Tokens, SenseVoice);
       Msg := 'SenseVoice';
+    end
+  else if FileExists(Paraformer) then
+    begin
+      OfflineRecognizer := CreateOfflineRecognizerParaformer(Tokens, Paraformer);
+      Msg := 'Paraformer';
     end
   else
     begin
