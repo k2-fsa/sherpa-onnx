@@ -58,6 +58,9 @@ static_assert(sizeof(WaveHeader) == 44);
 
 /*
 sox int16-1-channel-zh.wav -b 8 int8-1-channel-zh.wav
+we use audacity to generate int32-1-channel-zh.wav and float32-1-channel-zh.wav
+because sox use WAVE_FORMAT_EXTENSIBLE, which is not easy to support
+in sherpa-onnx.
  */
 
 // Read a wave file of mono-channel.
@@ -297,17 +300,6 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
     *is_ok = false;
     return {};
   }
-
-  SHERPA_ONNX_LOGE("number of samples: %d", (int)ans.size());
-  float mean = 0, sum = 0, max = -1000, min = 1000;
-  for (auto f : ans) {
-    sum += f;
-    max = (f > max) ? f : max;
-    min = (f < min) ? f : min;
-  }
-  mean = sum / ans.size();
-  SHERPA_ONNX_LOGE("sum: %.3f, mean: %.3f, n: %d, max: %.3f, min: %.3f\n", sum,
-                   mean, (int)ans.size(), max, min);
 
   *is_ok = true;
   return ans;
