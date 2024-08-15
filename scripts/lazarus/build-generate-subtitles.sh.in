@@ -25,7 +25,7 @@ os_array=(
 linux-x64
 macos-x64
 macos-arm64
-# windows-x64
+windows-x64
 )
 
 for os in ${os_array[@]}; do

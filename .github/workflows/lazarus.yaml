@@ -41,8 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # os: [ubuntu-20.04, macos-latest, macos-13, windows-latest]
-        os: [ubuntu-20.04, macos-latest, macos-13]
+        os: [ubuntu-20.04, macos-latest, macos-13, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -238,7 +237,6 @@ jobs:
           fetch-depth: 0
 
       - name: Retrieve artifact from windows x64
-        if: false
         uses: actions/download-artifact@v4
         with:
           name: windows-x64
@@ -279,8 +277,8 @@ jobs:
           mkdir -p /tmp/macos-arm64/Contents/Resources
           chmod +x /tmp/macos-arm64/Contents/MacOS/generate_subtitles
 
-          # echo "---windows-x64---"
-          # ls -lh /tmp/windows-x64/
+          echo "---windows-x64---"
+          ls -lh /tmp/windows-x64/
 
       - name: Install Python dependencies
         shell: bash
