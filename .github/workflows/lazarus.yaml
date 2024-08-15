@@ -76,6 +76,21 @@ jobs:
         run: |
           uname -a
 
+      - name: Install patchelf for ubuntu
+        if: matrix.os == 'ubuntu-20.04'
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y patchelf
+
+      - name: Show Patchelf version (ubuntu)
+        if: matrix.os == 'ubuntu-20.04'
+        shell: bash
+        run: |
+          patchelf --version
+          patchelf --help
+          which patchelf
+
       - name: Configure CMake
         shell: bash
         run: |
@@ -146,6 +161,14 @@ jobs:
           ldd ./generate_subtitles
 
           d=generate_subtitles-linux-x64-$SHERPA_ONNX_VERSION
+          echo "---before running patchelf---"
+          readelf -d ./generate_subtitles
+
+          patchelf --set-rpath '$ORIGIN' ./generate_subtitles
+
+          echo "---after running patchelf---"
+          readelf -d ./generate_subtitles
+
           mkdir -p $d
           cp -v ./generate_subtitles $d/
           cp -v *.so $d/
@@ -266,6 +289,9 @@ jobs:
           ls -lh /tmp
           echo "---linux-x64---"
           ls -lh /tmp/linux-x64/
+          readelf -d /tmp/linux-x64/generate_subtitles
+          echo "---"
+          ldd /tmp/linux-x64/generate_subtitles
 
           echo "---macos-x64---"
           ls -lh /tmp/macos-x64/
