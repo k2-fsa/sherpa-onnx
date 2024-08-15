@@ -44,10 +44,10 @@ implementation
 
 uses
   my_worker
-  {IFDEF DARWIN}
+  {$IFDEF DARWIN}
   ,MacOSAll
   ,CocoaAll
-  {ENDIF}
+  {$ENDIF}
   ;
 {See https://wiki.lazarus.freepascal.org/Locating_the_macOS_application_resources_directory}
 
@@ -211,7 +211,7 @@ begin
   {$IFDEF DARWIN}
     ModelDir := GetResourcesPath;
   {$ELSE}
-    ModelDir := './'
+    ModelDir := './';
   {$ENDIF}
 
   VadFilename := ModelDir + 'silero_vad.onnx';
