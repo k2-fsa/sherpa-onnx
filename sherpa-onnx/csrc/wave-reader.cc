@@ -224,8 +224,6 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
     // header.subchunk2_size contains the number of bytes in the data.
     // As we assume each sample contains two bytes, so it is divided by 2 here
     std::vector<int16_t> samples(header.subchunk2_size / 2);
-    SHERPA_ONNX_LOGE("%d samples, bytes: %d", (int)samples.size(),
-                     header.subchunk2_size);
 
     is.read(reinterpret_cast<char *>(samples.data()), header.subchunk2_size);
     if (!is) {

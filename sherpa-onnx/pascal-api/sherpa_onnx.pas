@@ -309,19 +309,50 @@ uses
   SysUtils;
 
 const
-  {See https://www.freepascal.org/docs-html/prog/progap7.html}
+  {
+  See
+   - https://www.freepascal.org/docs-html/prog/progap7.html
+   - https://downloads.freepascal.org/fpc/docs-pdf/
+   - https://downloads.freepascal.org/fpc/docs-pdf/CinFreePascal.pdf
+  }
 
   {$IFDEF WINDOWS}
-    SherpaOnnxLibName = 'sherpa-onnx-c-api.dll';
-  {$ENDIF}
+   { For windows, we always use dynamic link. See
+     https://forum.lazarus.freepascal.org/index.php/topic,15712.msg84781.html#msg84781
+     We need to rebuild the static lib for windows using Mingw or cygwin
+   }
+     SherpaOnnxLibName = 'sherpa-onnx-c-api.dll';
+  {$ELSE}
+     {$IFNDEF SHERPA_ONNX_USE_SHARED_LIBS}
+       {static link for linux and macos}
+       {$linklib sherpa-onnx-c-api}
+       {$linklib sherpa-onnx-core}
+       {$linklib kaldi-decoder-core}
+       {$linklib sherpa-onnx-kaldifst-core}
+       {$linklib sherpa-onnx-fstfar}
+       {$linklib sherpa-onnx-fst}
+       {$linklib kaldi-native-fbank-core}
+       {$linklib piper_phonemize}
+       {$linklib espeak-ng}
+       {$linklib ucd}
+       {$linklib onnxruntime}
+       {$linklib ssentencepiece_core}
 
-  {$IFDEF DARWIN}
-    SherpaOnnxLibName = 'sherpa-onnx-c-api';
-    {$linklib sherpa-onnx-c-api}
-  {$ENDIF}
+       {$IFDEF LINUX}
+         {$linklib m}
+         {$LINKLIB stdc++}
+         {$LINKLIB gcc_s}
+       {$ENDIF}
 
-  {$IFDEF LINUX}
-    SherpaOnnxLibName = 'libsherpa-onnx-c-api.so';
+       {$IFDEF DARWIN}
+         {$linklib c++}
+       {$ENDIF}
+       SherpaOnnxLibName = '';
+     {$ELSE}
+      {dynamic link for linux and macos}
+      SherpaOnnxLibName = 'sherpa-onnx-c-api';
+      {$linklib sherpa-onnx-c-api}
+    {$ENDIF}
   {$ENDIF}
 
 type
@@ -621,10 +652,17 @@ var
   PWave: PSherpaOnnxWave;
   I: Integer;
 begin
+  Result.Samples := nil;
+  Result.SampleRate := 0;
+
   PFilename := PAnsiChar(Filename);
+
   PWave := SherpaOnnxReadWaveWrapper(PFilename);
 
-  Result.Samples := nil;
+  if PWave = nil then
+    Exit;
+
+
   SetLength(Result.Samples, PWave^.NumSamples);
 
   Result.SampleRate := PWave^.SampleRate;

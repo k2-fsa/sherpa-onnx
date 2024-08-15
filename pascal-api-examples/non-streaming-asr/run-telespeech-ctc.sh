@@ -32,6 +32,7 @@ if [ ! -f ./sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/tokens.txt ]; then
 fi
 
 fpc \
+  -dSHERPA_ONNX_USE_SHARED_LIBS \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
   ./telespeech_ctc.pas

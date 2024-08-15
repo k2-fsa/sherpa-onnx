@@ -24,6 +24,7 @@ if [[ ! -f ../../build/install/lib/libsherpa-onnx-c-api.dylib  && ! -f ../../bui
 fi
 
 fpc \
+  -dSHERPA_ONNX_USE_SHARED_LIBS \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
   ./circular_buffer.pas

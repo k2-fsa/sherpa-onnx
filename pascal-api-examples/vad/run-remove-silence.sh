@@ -32,6 +32,7 @@ if [ ! -f ./lei-jun-test.wav ]; then
 fi
 
 fpc \
+  -dSHERPA_ONNX_USE_SHARED_LIBS \
   -Fu$SHERPA_ONNX_DIR/sherpa-onnx/pascal-api \
   -Fl$SHERPA_ONNX_DIR/build/install/lib \
   ./remove_silence.pas
