@@ -50,6 +50,10 @@ struct WaveHeader {
 };
 static_assert(sizeof(WaveHeader) == 44);
 
+/*
+sox int16-1-channel-zh.wav -b 8 int8-1-channel-zh.wav
+ */
+
 // Read a wave file of mono-channel.
 // Return its samples normalized to the range [-1, 1).
 std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
@@ -161,8 +165,8 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
     return {};
   }
 
-  if (header.bits_per_sample != 16) {  // we support only 16 bits per sample
-    SHERPA_ONNX_LOGE("Expected bits_per_sample 16. Given: %d\n",
+  if (header.bits_per_sample != 8 && header.bits_per_sample != 16) {
+    SHERPA_ONNX_LOGE("Expected bits_per_sample 8 or 16. Given: %d\n",
                      header.bits_per_sample);
     *is_ok = false;
     return {};
@@ -199,20 +203,64 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
 
   *sampling_rate = header.sample_rate;
 
-  // header.subchunk2_size contains the number of bytes in the data.
-  // As we assume each sample contains two bytes, so it is divided by 2 here
-  std::vector<int16_t> samples(header.subchunk2_size / 2);
+  std::vector<float> ans;
 
-  is.read(reinterpret_cast<char *>(samples.data()), header.subchunk2_size);
-  if (!is) {
+  if (header.bits_per_sample == 16) {
+    // header.subchunk2_size contains the number of bytes in the data.
+    // As we assume each sample contains two bytes, so it is divided by 2 here
+    std::vector<int16_t> samples(header.subchunk2_size / 2);
+
+    is.read(reinterpret_cast<char *>(samples.data()), header.subchunk2_size);
+    if (!is) {
+      SHERPA_ONNX_LOGE("Failed to read %d bytes", header.subchunk2_size);
+      *is_ok = false;
+      return {};
+    }
+
+    ans.resize(samples.size());
+    for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
+      ans[i] = samples[i] / 32768.;
+    }
+  } else if (header.bits_per_sample == 8) {
+    // number of samples == number of bytes for 8-bit encoded samples
+    //
+    // For 8-bit encoded samples, they are unsigned!
+    std::vector<uint8_t> samples(header.subchunk2_size);
+
+    is.read(reinterpret_cast<char *>(samples.data()), header.subchunk2_size);
+    if (!is) {
+      SHERPA_ONNX_LOGE("Failed to read %d bytes", header.subchunk2_size);
+      *is_ok = false;
+      return {};
+    }
+
+    ans.resize(samples.size());
+    for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
+      // Note(fangjun): We want to normalize each sample into the range [-1, 1]
+      // Since each original sample is in the range [0, 256], dividing
+      // them by 128 converts them to the range [0, 2];
+      // so after subtracting 1, we get the range [-1, 1]
+      //
+      ans[i] = samples[i] / 128. - 1;
+    }
+  } else {
+    SHERPA_ONNX_LOGE(
+        "Unsupported %d bits per sample. Supported values are: 8, 16",
+        header.bits_per_sample);
     *is_ok = false;
     return {};
   }
 
-  std::vector<float> ans(samples.size());
-  for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
-    ans[i] = samples[i] / 32768.;
+  SHERPA_ONNX_LOGE("number of samples: %d", (int)ans.size());
+  float mean = 0, sum = 0, max = -1000, min = 1000;
+  for (auto f : ans) {
+    sum += f;
+    max = (f > max) ? f : max;
+    min = (f < min) ? f : min;
   }
+  mean = sum / ans.size();
+  SHERPA_ONNX_LOGE("sum: %.3f, mean: %.3f, n: %d, max: %.3f, min: %.3f\n", sum,
+                   mean, (int)ans.size(), max, min);
 
   *is_ok = true;
   return ans;
