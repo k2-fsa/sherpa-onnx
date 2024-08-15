@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_FRONTEND_H_
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
