@@ -297,7 +297,7 @@ begin
     end
   else
     begin
-      NewResult := Format('%.3f -- %.3f%s', [StartTime, StopTime, Msg]);
+      NewResult := Format('%.3f -- %.3f  %s', [StartTime, StopTime, Msg]);
     end;
 
   if Msg = 'DONE!' then

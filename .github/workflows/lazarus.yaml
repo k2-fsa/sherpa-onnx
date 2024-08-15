@@ -86,7 +86,9 @@ jobs:
 
           mkdir build
           cd build
-          if [[ ${{ matrix.os }} == 'windows-latest' ]]; then
+          os=${{ matrix.os }}
+
+          if [[ $os == 'windows-latest' || $os == 'ubuntu-20.04' ]]; then
             BUILD_SHARED_LIBS=ON
           else
             BUILD_SHARED_LIBS=OFF
@@ -109,9 +111,8 @@ jobs:
 
           ls -lh install/lib/
 
-          if [[ ${{ matrix.os }} == 'windows-latest' ]]; then
-            cp -v install/lib/*.dll ../lazarus-examples/generate_subtitles/
-          fi
+          cp -v install/lib/*.dll ../lazarus-examples/generate_subtitles/ || true
+          cp -v install/lib/*.so* ../lazarus-examples/generate_subtitles/ || true
 
       - name: Build generating subtitles
         shell: bash
@@ -122,6 +123,8 @@ jobs:
             lazbuild --verbose --build-mode=Release --widgetset=cocoa ./generate_subtitles.lpi
           elif [[ $os == macos-latest ]]; then
             lazbuild --verbose --build-mode=Release --widgetset=cocoa --cpu=aarch64 ./generate_subtitles.lpi
+          elif [[ $os == 'ubuntu-20.04' ]]; then
+            lazbuild --verbose --build-mode=Release-Linux ./generate_subtitles.lpi
           else
             lazbuild --verbose --build-mode=Release ./generate_subtitles.lpi
           fi
@@ -146,8 +149,11 @@ jobs:
           d=generate_subtitles-linux-x64-$SHERPA_ONNX_VERSION
           mkdir -p $d
           cp -v ./generate_subtitles $d/
+          cp -v *.so $d/
 
-          mv $d /tmp/linux-x64
+          mv -v $d /tmp/linux-x64
+
+          ls -lh /tmp/linux-x64
 
       - name: Collect generating subtitles (windows)
         if: matrix.os == 'windows-latest'
