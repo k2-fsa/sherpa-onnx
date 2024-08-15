@@ -39,12 +39,18 @@ struct WaveHeader {
   int32_t format;
   int32_t subchunk1_id;
   int32_t subchunk1_size;
+
   int16_t audio_format;
   int16_t num_channels;
+
   int32_t sample_rate;
+
   int32_t byte_rate;
+
   int16_t block_align;
+
   int16_t bits_per_sample;
+
   int32_t subchunk2_id;    // a tag of this chunk
   int32_t subchunk2_size;  // size of subchunk2
 };
@@ -118,9 +124,18 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
   is.read(reinterpret_cast<char *>(&header.audio_format),
           sizeof(header.audio_format));
 
-  if (header.audio_format != 1) {  // 1 for PCM
+  if (header.audio_format != 1 && header.audio_format != 3) {
+    // 1 for integer PCM
+    // 3 for floating point PCM
+    // see https://www.mmsp.ece.mcgill.ca/Documents/AudioFormats/WAVE/WAVE.html
+    // and https://github.com/microsoft/DirectXTK/wiki/Wave-Formats
     SHERPA_ONNX_LOGE("Expected audio_format 1. Given: %d\n",
                      header.audio_format);
+
+    if (header.audio_format == static_cast<int16_t>(0xfffe)) {
+      SHERPA_ONNX_LOGE("We don't support WAVE_FORMAT_EXTENSIBLE files.");
+    }
+
     *is_ok = false;
     return {};
   }
@@ -165,8 +180,9 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
     return {};
   }
 
-  if (header.bits_per_sample != 8 && header.bits_per_sample != 16) {
-    SHERPA_ONNX_LOGE("Expected bits_per_sample 8 or 16. Given: %d\n",
+  if (header.bits_per_sample != 8 && header.bits_per_sample != 16 &&
+      header.bits_per_sample != 32) {
+    SHERPA_ONNX_LOGE("Expected bits_per_sample 8, 16 or 32. Given: %d\n",
                      header.bits_per_sample);
     *is_ok = false;
     return {};
@@ -205,7 +221,7 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
 
   std::vector<float> ans;
 
-  if (header.bits_per_sample == 16) {
+  if (header.bits_per_sample == 16 && header.audio_format == 1) {
     // header.subchunk2_size contains the number of bytes in the data.
     // As we assume each sample contains two bytes, so it is divided by 2 here
     std::vector<int16_t> samples(header.subchunk2_size / 2);
@@ -221,7 +237,7 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
     for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
       ans[i] = samples[i] / 32768.;
     }
-  } else if (header.bits_per_sample == 8) {
+  } else if (header.bits_per_sample == 8 && header.audio_format == 1) {
     // number of samples == number of bytes for 8-bit encoded samples
     //
     // For 8-bit encoded samples, they are unsigned!
@@ -242,6 +258,37 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
       // so after subtracting 1, we get the range [-1, 1]
       //
       ans[i] = samples[i] / 128. - 1;
+    }
+  } else if (header.bits_per_sample == 32 && header.audio_format == 1) {
+    // 32 here is for int32
+    //
+    // header.subchunk2_size contains the number of bytes in the data.
+    // As we assume each sample contains 4 bytes, so it is divided by 4 here
+    std::vector<int32_t> samples(header.subchunk2_size / 4);
+
+    is.read(reinterpret_cast<char *>(samples.data()), header.subchunk2_size);
+    if (!is) {
+      SHERPA_ONNX_LOGE("Failed to read %d bytes", header.subchunk2_size);
+      *is_ok = false;
+      return {};
+    }
+
+    ans.resize(samples.size());
+    for (int32_t i = 0; i != static_cast<int32_t>(ans.size()); ++i) {
+      ans[i] = static_cast<float>(samples[i]) / (1 << 31);
+    }
+  } else if (header.bits_per_sample == 32 && header.audio_format == 3) {
+    // 32 here is for float32
+    //
+    // header.subchunk2_size contains the number of bytes in the data.
+    // As we assume each sample contains 4 bytes, so it is divided by 4 here
+    ans.resize(header.subchunk2_size / 4);
+
+    is.read(reinterpret_cast<char *>(ans.data()), header.subchunk2_size);
+    if (!is) {
+      SHERPA_ONNX_LOGE("Failed to read %d bytes", header.subchunk2_size);
+      *is_ok = false;
+      return {};
     }
   } else {
     SHERPA_ONNX_LOGE(
