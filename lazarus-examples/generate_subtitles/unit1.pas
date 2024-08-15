@@ -2,6 +2,10 @@ unit Unit1;
 
 {$mode objfpc}{$H+}
 
+{$IFDEF DARWIN}
+{$modeswitch objectivec1}   {For getting resource directory}
+{$ENDIF}
+
 interface
 
 uses
@@ -39,9 +43,31 @@ var
 implementation
 
 uses
-  my_worker;
+  my_worker
+  {IFDEF DARWIN}
+  ,MacOSAll
+  ,CocoaAll
+  {ENDIF}
+  ;
+{See https://wiki.lazarus.freepascal.org/Locating_the_macOS_application_resources_directory}
 
-function CreateVad(): TSherpaOnnxVoiceActivityDetector;
+{$IFDEF DARWIN}
+{Note: The returned path contains a trailing /}
+function GetResourcesPath(): AnsiString;
+var
+  pathStr: shortstring;
+  status: Boolean = false;
+begin
+  status := CFStringGetPascalString(CFStringRef(NSBundle.mainBundle.resourcePath), @pathStr, 255, CFStringGetSystemEncoding());
+
+  if status = true then
+    Result := pathStr + PathDelim
+  else
+    raise Exception.Create('Error in GetResourcesPath()');
+end;
+{$ENDIF}
+
+function CreateVad(VadFilename: AnsiString): TSherpaOnnxVoiceActivityDetector;
 var
   Config: TSherpaOnnxVadModelConfig;
 
@@ -53,7 +79,7 @@ begin
   SampleRate := 16000; {Please don't change it unless you know the details}
   WindowSize := 512; {Please don't change it unless you know the details}
 
-  Config.SileroVad.Model := './silero_vad.onnx';
+  Config.SileroVad.Model := VadFilename;
   Config.SileroVad.MinSpeechDuration := 0.5;
   Config.SileroVad.MinSilenceDuration := 0.5;
   Config.SileroVad.Threshold := 0.5;
@@ -66,16 +92,18 @@ begin
   Result := TSherpaOnnxVoiceActivityDetector.Create(Config, 30);
 end;
 
-function CreateOfflineRecognizerSenseVoice(): TSherpaOnnxOfflineRecognizer;
+function CreateOfflineRecognizerSenseVoice(
+  Tokens: AnsiString;
+  SenseVoice: AnsiString): TSherpaOnnxOfflineRecognizer;
 var
   Config: TSherpaOnnxOfflineRecognizerConfig;
 begin
   Initialize(Config);
 
-  Config.ModelConfig.SenseVoice.Model := 'sense-voice.onnx';
+  Config.ModelConfig.SenseVoice.Model := SenseVoice;
   Config.ModelConfig.SenseVoice.Language := 'auto';
   Config.ModelConfig.SenseVoice.UseItn := True;
-  Config.ModelConfig.Tokens := 'tokens.txt';
+  Config.ModelConfig.Tokens := Tokens;
   Config.ModelConfig.Provider := 'cpu';
   Config.ModelConfig.NumThreads := 2;
   Config.ModelConfig.Debug := False;
@@ -83,15 +111,18 @@ begin
   Result := TSherpaOnnxOfflineRecognizer.Create(Config);
 end;
 
-function CreateOfflineRecognizerWhisper(): TSherpaOnnxOfflineRecognizer;
+function CreateOfflineRecognizerWhisper(
+  Tokens: AnsiString;
+  WhisperEncoder: AnsiString;
+  WhisperDecoder: AnsiString): TSherpaOnnxOfflineRecognizer;
 var
   Config: TSherpaOnnxOfflineRecognizerConfig;
 begin
   Initialize(Config);
 
-  Config.ModelConfig.Whisper.Encoder := './whisper-encoder.onnx';
-  Config.ModelConfig.Whisper.Decoder := './whisper-decoder.onnx';
-  Config.ModelConfig.Tokens := './tokens.txt';
+  Config.ModelConfig.Whisper.Encoder := WhisperEncoder;
+  Config.ModelConfig.Whisper.Decoder := WhisperDecoder;
+  Config.ModelConfig.Tokens := Tokens;
   Config.ModelConfig.Provider := 'cpu';
   Config.ModelConfig.NumThreads := 2;
   Config.ModelConfig.Debug := False;
@@ -109,6 +140,8 @@ begin
   SelectFileDlg.Filter := 'All Files|*.wav';
   FileNameEdt.Enabled := False;
   SelectFileBtn.Enabled := False;
+  ResultMemo.Lines.Add('1. It supports only 1 channel, 16-bit, 16000Hz wav files');
+  ResultMemo.Lines.Add('2. There should be no Chinese characters in the file path.');
 end;
 
 procedure TForm1.StartBtnClick(Sender: TObject);
@@ -164,33 +197,100 @@ begin
 end;
 
 procedure TForm1.InitBtnClick(Sender: TObject);
+var
+  Msg: AnsiString;
+  ModelDir: AnsiString;
+  VadFilename: AnsiString;
+  Tokens: AnsiString;
+
+  WhisperEncoder: AnsiString;
+  WhisperDecoder: AnsiString;
+
+  SenseVoice: AnsiString;
 begin
-  if not FileExists('./silero_vad.onnx') then
+  {$IFDEF DARWIN}
+    ModelDir := GetResourcesPath;
+  {$ELSE}
+    ModelDir := './'
+  {$ENDIF}
+
+  VadFilename := ModelDir + 'silero_vad.onnx';
+  Tokens := ModelDir + 'tokens.txt';
+
+  {
+    Please refer to
+    https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/export-onnx.html#available-models
+    for a list of whisper models.
+
+    In the code, we use the normalized filename whisper-encoder.onnx, whisper-decoder.onnx, and tokens.txt
+    You need to rename the existing model files.
+
+    For instance, if you use sherpa-onnx-whisper-tiny.en, you have to do
+      mv tiny.en-tokens.txt tokens.txt
+
+      mv tiny.en-encoder.onnx whisper-encoder.onnx
+      mv tiny.en-decoder.onnx whisper-decoder.onnx
+
+      // or use the int8.onnx
+
+      mv tiny.en-encoder.int8.onnx whisper-encoder.onnx
+      mv tiny.en-decoder.int8.onnx whisper-decoder.onnx
+  }
+  WhisperEncoder := ModelDir + 'whisper-encoder.onnx';
+  WhisperDecoder := ModelDir + 'whisper-decoder.onnx';
+
+
+  {
+    Please refer to
+    https://k2-fsa.github.io/sherpa/onnx/sense-voice/pretrained.html#pre-trained-models
+    to download models for SenseVoice.
+
+    In the code, we use the normalized model name sense-voice.onnx. You have
+    to rename the downloaded model files.
+
+    For example, you need to use
+
+        mv model.onnx sense-voice.onnx
+
+        // or use the int8.onnx
+        mv model.int8.onnx sense-voice.onnx
+  }
+
+  SenseVoice := ModelDir + 'sense-voice.onnx';
+
+  if not FileExists(VadFilename) then
     begin
-      ShowMessage('./silero_vad.onnx does not exist! Please download it from' +
+      ShowMessage(VadFilename + ' does not exist! Please download it from' +
         sLineBreak + 'https://github.com/k2-fsa/sherpa-onnx/tree/asr-models'
       );
       Exit;
     end;
-  Self.Vad := CreateVad();
 
-  if not FileExists('./tokens.txt') then
+  Self.Vad := CreateVad(VadFilename);
+
+  if not FileExists(Tokens) then
     begin
-      ShowMessage('./tokens.txt not found. Please download a non-streaming ASR model first!');
+      ShowMessage(Tokens + ' not found. Please download a non-streaming ASR model first!');
       Exit;
     end;
 
-  if FileExists('./whisper-encoder.onnx') and FileExists('./whisper-decoder.onnx') then
-    OfflineRecognizer := CreateOfflineRecognizerWhisper()
-  else if FileExists('./sense-voice.onnx') then
-    OfflineRecognizer := CreateOfflineRecognizerSenseVoice()
+  if FileExists(WhisperEncoder) and FileExists(WhisperDecoder) then
+    begin
+      OfflineRecognizer := CreateOfflineRecognizerWhisper(Tokens, WhisperEncoder, WhisperDecoder);
+      Msg := 'Whisper';
+    end
+  else if FileExists(SenseVoice) then
+    begin
+      OfflineRecognizer := CreateOfflineRecognizerSenseVoice(Tokens, SenseVoice);
+      Msg := 'SenseVoice';
+    end
   else
     begin
       ShowMessage('Please download at least one non-streaming speech recognition model first.');
       Exit;
     end;
 
-   MessageDlg('Congrat! Model initialized succesfully!', mtInformation, [mbOk], 0);
+   MessageDlg('Congrat! The ' + Msg + ' model is initialized succesfully!', mtInformation, [mbOk], 0);
    FileNameEdt.Enabled := True;
    SelectFileBtn.Enabled := True;
    InitBtn.Enabled := False;

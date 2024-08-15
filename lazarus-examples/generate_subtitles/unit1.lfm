@@ -1,7 +1,7 @@
 object Form1: TForm1
-  Left = 405
+  Left = 408
   Height = 601
-  Top = 181
+  Top = 240
   Width = 832
   Caption = 'Next-gen Kaldi: Generate Subtitles'
   ClientHeight = 601
@@ -29,7 +29,7 @@ object Form1: TForm1
   object StartBtn: TButton
     Left = 584
     Height = 25
-    Top = 40
+    Top = 37
     Width = 75
     Caption = 'Start'
     TabOrder = 2
@@ -48,10 +48,7 @@ object Form1: TForm1
     Left = 24
     Height = 496
     Top = 88
-    Width = 704
-    Lines.Strings = (
-      'Note: It supports only 1 channel, 16000Hz, 16-bit encoded wav files.'
-    )
+    Width = 784
     ScrollBars = ssAutoBoth
     TabOrder = 4
   end
