@@ -38,14 +38,28 @@ done
 
 
 # test wav reader for non-standard wav files
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/naudio.wav
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/junk-padding.wav
+waves=(
+  naudio.wav
+  junk-padding.wav
+  int8-1-channel-zh.wav
+  int8-2-channel-zh.wav
+  int8-4-channel-zh.wav
+  int16-1-channel-zh.wav
+  int16-2-channel-zh.wav
+  int32-1-channel-zh.wav
+  int32-2-channel-zh.wav
+  float32-1-channel-zh.wav
+  float32-2-channel-zh.wav
+)
+for w in ${waves[@]}; do
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$w
 
-time $EXE \
-  --tokens=$repo/tokens.txt \
-  --sense-voice-model=$repo/model.int8.onnx \
-  ./naudio.wav \
-  ./junk-padding.wav
+  time $EXE \
+    --tokens=$repo/tokens.txt \
+    --sense-voice-model=$repo/model.int8.onnx \
+    $w
+  rm -v $w
+done
 
 rm -rf $repo
 

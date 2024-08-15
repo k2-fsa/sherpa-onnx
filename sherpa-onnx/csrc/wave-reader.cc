@@ -39,18 +39,12 @@ struct WaveHeader {
   int32_t format;
   int32_t subchunk1_id;
   int32_t subchunk1_size;
-
   int16_t audio_format;
   int16_t num_channels;
-
   int32_t sample_rate;
-
   int32_t byte_rate;
-
   int16_t block_align;
-
   int16_t bits_per_sample;
-
   int32_t subchunk2_id;    // a tag of this chunk
   int32_t subchunk2_size;  // size of subchunk2
 };
@@ -62,7 +56,7 @@ sox int16-1-channel-zh.wav -b 8 int8-1-channel-zh.wav
 sox int16-1-channel-zh.wav -c 2 int16-2-channel-zh.wav
 
 we use audacity to generate int32-1-channel-zh.wav and float32-1-channel-zh.wav
-because sox use WAVE_FORMAT_EXTENSIBLE, which is not easy to support
+because sox uses WAVE_FORMAT_EXTENSIBLE, which is not easy to support
 in sherpa-onnx.
  */
 
@@ -306,8 +300,9 @@ std::vector<float> ReadWaveImpl(std::istream &is, int32_t *sampling_rate,
     }
   } else {
     SHERPA_ONNX_LOGE(
-        "Unsupported %d bits per sample. Supported values are: 8, 16",
-        header.bits_per_sample);
+        "Unsupported %d bits per sample and audio format: %d. Supported values "
+        "are: 8, 16, 32.",
+        header.bits_per_sample, header.audio_format);
     *is_ok = false;
     return {};
   }
