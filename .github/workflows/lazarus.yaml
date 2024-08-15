@@ -185,6 +185,7 @@ jobs:
           otool -L ./generate_subtitles
           rm -v generate_subtitles.app/Contents/MacOS/generate_subtitles
           cp -v ./generate_subtitles generate_subtitles.app/Contents/MacOS/generate_subtitles
+          chmod +x generate_subtitles.app/Contents/MacOS/generate_subtitles
 
           if [[ ${{ matrix.os }} == 'macos-latest' ]]; then
             mv generate_subtitles.app /tmp/macos-arm64
@@ -271,10 +272,12 @@ jobs:
           echo "---macos-x64---"
           ls -lh /tmp/macos-x64/
           mkdir -p /tmp/macos-x64/Contents/Resources
+          chmod +x /tmp/macos-x64/Contents/MacOS/generate_subtitles
 
           echo "---macos-arm64---"
           ls -lh /tmp/macos-arm64/
           mkdir -p /tmp/macos-arm64/Contents/Resources
+          chmod +x /tmp/macos-arm64/Contents/MacOS/generate_subtitles
 
           # echo "---windows-x64---"
           # ls -lh /tmp/windows-x64/
