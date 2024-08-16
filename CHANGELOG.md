@@ -1,3 +1,17 @@
+## 1.10.22
+
+* Add Pascal API for reading wave files (#1243)
+* Pascal API for streaming ASR (#1246)
+* Pascal API for non-streaming ASR (#1247)
+* Pascal API for VAD (#1249)
+* Add more C API examples (#1255)
+* Add emotion, event of SenseVoice. (#1257)
+* Support reading multi-channel wave files with 8/16/32-bit encoded samples (#1258)
+* Enable IPO only for Release build. (#1261)
+* Add Lazarus example for generating subtitles using Silero VAD with non-streaming ASR (#1251)
+* Fix looking up OOVs in lexicon.txt for MeloTTS models. (#1266)
+
+
 ## 1.10.21
 
 * Fix ffmpeg c api example (#1185)
