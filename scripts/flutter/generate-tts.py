@@ -342,7 +342,6 @@ def get_vits_models() -> List[TtsModel]:
             or "sherpa-onnx-vits-zh-ll" == m.model_dir
             or "melo-tts" in m.model_dir
         ):
-            s = s[:-1]
             m.dict_dir = m.model_dir + "/dict"
         else:
             m.rule_fars = f"{m.model_dir}/rule.far"

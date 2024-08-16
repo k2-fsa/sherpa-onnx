@@ -126,6 +126,62 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01",
+            lang="ja",
+            short_name="zipformer_reazonspeech_2024_08_01",
+            cmd="""
+            pushd $model_name
+            mv encoder-epoch-99-avg-1.int8.onnx transducer-encoder.onnx
+            mv decoder-epoch-99-avg-1.onnx transducer-decoder.onnx
+            mv joiner-epoch-99-avg-1.int8.onnx transducer-joiner.onnx
+
+            rm -fv encoder-epoch-99-avg-1.onnx
+            rm -fv decoder-epoch-99-avg-1.int8.onnx
+            rm -fv joiner-epoch-99-avg-1.onnx
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-zipformer-thai-2024-06-20",
+            lang="th",
+            short_name="zipformer_gigaspeech2",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -fv README.md
+            rm -fv bpe.model
+
+            mv encoder-epoch-12-avg-5.int8.onnx transducer-encoder.onnx
+            mv decoder-epoch-12-avg-5.onnx transducer-decoder.onnx
+            mv joiner-epoch-12-avg-5.int8.onnx transducer-joiner.onnx
+
+            rm -fv encoder-epoch-12-avg-5.onnx
+            rm -fv decoder-epoch-12-avg-5.int8.onnx
+            rm -fv joiner-epoch-12-avg-5.onnx
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04",
+            lang="zh",
+            short_name="telespeech_ctc",
+            cmd="""
+            pushd $model_name
+
+            mv model.int8.onnx telespeech.onnx
+            rm -fv model.onnx
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

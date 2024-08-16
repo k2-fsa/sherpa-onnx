@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - lazarus
     paths:
       - '.github/workflows/lazarus.yaml'
       - 'CMakeLists.txt'
@@ -12,6 +13,7 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'sherpa-onnx/pascal-api/*'
+      - 'scripts/lazarus/*'
   pull_request:
     branches:
       - master
@@ -23,6 +25,7 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'sherpa-onnx/pascal-api/*'
+      - 'scripts/lazarus/*'
 
   workflow_dispatch:
 

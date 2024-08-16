@@ -3,6 +3,9 @@
 This directory contains examples for how to use the [Object Pascal](https://en.wikipedia.org/wiki/Object_Pascal)
 APIs of [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx).
 
+**Documentation for this directory**:
+https://k2-fsa.github.io/sherpa/onnx/pascal-api/index.html
+
 |Directory| Description|
 |---------|------------|
 |[read-wav](./read-wav)|It shows how to read a wave file.|
