@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+      - lazarus
+      - lazarus-more-models
     paths:
       - '.github/workflows/lazarus.yaml'
       - 'CMakeLists.txt'
