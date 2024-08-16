@@ -25,17 +25,17 @@
 
 ### Supported programming languages
 
-| 1. C++ | 2. C  | 3. Python | 4. C# | 5. Java |
-|--------|-------|-----------|-------|---------|
-|   ✔️    | ✔️     | ✔️         | ✔️     |  ✔️      |
+| 1. C++ | 2. C  | 3. Python | 4. JavaScript |
+|--------|-------|-----------|---------------|
+|   ✔️    | ✔️     | ✔️         |    ✔️          |
 
-| 6. JavaScript | 7. Kotlin | 8. Swift | 9. Go | 10. Dart |
-|---------------|-----------|----------|-------|----------|
-|      ✔️        | ✔️         |  ✔️       | ✔️     |  ✔️       |
+|5. Java | 6. C# | 7. Kotlin | 8. Swift |
+|--------|-------|-----------|----------|
+| ✔️      |  ✔️    | ✔️         |  ✔️       |
 
-| 11. Rust | 12. Pascal |
-|----------|------------|
-|  ✔️       |    ✔️       |
+| 9. Go | 10. Dart | 11. Rust | 12. Pascal |
+|-------|----------|----------|------------|
+| ✔️     |  ✔️       |   ✔️      |    ✔️       |
 
 For Rust support, please see https://github.com/thewh1teagle/sherpa-rs
 
@@ -73,8 +73,8 @@ with the following APIs
 
   - C++, C, Python, Go, ``C#``
   - Java, Kotlin, JavaScript
-  - Swift
-  - Dart
+  - Swift, Rust
+  - Dart, Object Pascal
 
 ### Links for pre-built Android APKs
 
@@ -110,6 +110,15 @@ with the following APIs
 | Windows (x64)  | [Address](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-win.html)         | [点此](https://k2-fsa.github.io/sherpa/onnx/flutter/tts-win-cn.html)        |
 
 > Note: You need to build from source for iOS.
+
+### Links for pre-built Lazarus APPs
+
+#### Generating subtitles
+
+| Description                    | URL                                                                 | 中国用户                                                            |
+|--------------------------------|---------------------------------------------------------------------|---------------------------------------------------------------------|
+| Generate subtitles (生成字幕)   | [Address](https://k2-fsa.github.io/sherpa/onnx/lazarus/download-generated-subtitles.html)| [点此](https://k2-fsa.github.io/sherpa/onnx/lazarus/download-generated-subtitles-cn.html)|
+
 
 ### Links for pre-trained models
 

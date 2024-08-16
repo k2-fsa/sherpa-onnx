@@ -5,7 +5,6 @@ on:
     branches:
       - master
       - lazarus
-      - lazarus-more-models
     paths:
       - '.github/workflows/lazarus.yaml'
       - 'CMakeLists.txt'
@@ -26,6 +25,7 @@ on:
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
       - 'sherpa-onnx/pascal-api/*'
+      - 'scripts/lazarus/*'
 
   workflow_dispatch:
 
