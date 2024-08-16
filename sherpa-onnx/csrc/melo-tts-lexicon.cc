@@ -136,6 +136,22 @@ class MeloTtsLexicon::Impl {
         ans.tokens.insert(ans.tokens.end(), ids.tokens.begin(),
                           ids.tokens.end());
         ans.tones.insert(ans.tones.end(), ids.tones.begin(), ids.tones.end());
+      } else {
+        // If the lexicon does not contain the word, we split the word into
+        // characters.
+        //
+        // For instance, if the word is TTS and it is does not exist
+        // in the lexicon, we split it into 3 characters: T T S
+        std::string s;
+        for (char c : word) {
+          s = c;
+          if (word2ids_.count(s)) {
+            const auto &t = word2ids_.at(s);
+            ans.tokens.insert(ans.tokens.end(), t.tokens.begin(),
+                              t.tokens.end());
+            ans.tones.insert(ans.tones.end(), t.tones.begin(), t.tones.end());
+          }
+        }
       }
     }
 
