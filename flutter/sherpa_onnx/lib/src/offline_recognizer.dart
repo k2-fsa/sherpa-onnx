@@ -186,16 +186,24 @@ class OfflineRecognizerConfig {
 
 class OfflineRecognizerResult {
   OfflineRecognizerResult(
-      {required this.text, required this.tokens, required this.timestamps});
+      {required this.text,
+      required this.tokens,
+      required this.timestamps,
+      required this.lang,
+      required this.emotion,
+      required this.event});
 
   @override
   String toString() {
-    return 'OfflineRecognizerResult(text: $text, tokens: $tokens, timestamps: $timestamps)';
+    return 'OfflineRecognizerResult(text: $text, tokens: $tokens, timestamps: $timestamps, lang: $lang, emotion: $emotion, event: $event)';
   }
 
   final String text;
   final List<String> tokens;
   final List<double> timestamps;
+  final String lang;
+  final String emotion;
+  final String event;
 }
 
 class OfflineRecognizer {
@@ -319,7 +327,13 @@ class OfflineRecognizer {
         SherpaOnnxBindings.getOfflineStreamResultAsJson?.call(stream.ptr) ??
             nullptr;
     if (json == nullptr) {
-      return OfflineRecognizerResult(text: '', tokens: [], timestamps: []);
+      return OfflineRecognizerResult(
+          text: '',
+          tokens: [],
+          timestamps: [],
+          lang: '',
+          emotion: '',
+          event: '');
     }
 
     final parsedJson = jsonDecode(toDartString(json));
@@ -329,7 +343,10 @@ class OfflineRecognizer {
     return OfflineRecognizerResult(
         text: parsedJson['text'],
         tokens: List<String>.from(parsedJson['tokens']),
-        timestamps: List<double>.from(parsedJson['timestamps']));
+        timestamps: List<double>.from(parsedJson['timestamps']),
+        lang: parsedJson['lang'],
+        emotion: parsedJson['emotion'],
+        event: parsedJson['event']);
   }
 
   Pointer<SherpaOnnxOfflineRecognizer> ptr;
