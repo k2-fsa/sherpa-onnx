@@ -143,6 +143,30 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-zipformer-thai-2024-06-20",
+            lang="th",
+            short_name="zipformer_gigaspeech2",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -fv README.md
+            rm -fv bpe.model
+
+            mv encoder-epoch-12-avg-5.int8.onnx transducer-encoder.onnx
+            mv decoder-epoch-12-avg-5.onnx transducer-decoder.onnx
+            mv joiner-epoch-12-avg-5.int8.onnx transducer-joiner.onnx
+
+            rm -fv encoder-epoch-12-avg-5.onnx
+            rm -fv decoder-epoch-12-avg-5.int8.onnx
+            rm -fv joiner-epoch-12-avg-5.onnx
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
