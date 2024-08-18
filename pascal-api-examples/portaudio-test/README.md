@@ -1,7 +1,7 @@
 # Introduction
 
 [portaudio.pas](./portaudio.pas)
-requires the portaudio library installed on your system.
+requires that the portaudio library is installed on your system.
 
 
 On macOS, you can use
