@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - lazarus
+      - fix-lazarus
     paths:
       - '.github/workflows/lazarus.yaml'
       - 'CMakeLists.txt'
