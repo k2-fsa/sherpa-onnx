@@ -10,6 +10,8 @@ unit sherpa_onnx;
 (* {$LongStrings ON} *)
 
 interface
+uses
+  ctypes;
 
 type
   TSherpaOnnxWave = record
@@ -260,7 +262,8 @@ type
   public
     constructor Create(Capacity: Integer);
     destructor Destroy; override;
-    procedure Push(Samples: array of Single);
+    procedure Push(Samples: array of Single); overload;
+    procedure Push(Samples: pcfloat; N: Integer); overload;
     function Get(StartIndex: Integer; N: Integer): TSherpaOnnxSamplesArray;
     procedure Pop(N: Integer);
     procedure Reset;
@@ -305,7 +308,6 @@ type
 implementation
 
 uses
-  ctypes,
   fpjson,
     { See
       - https://wiki.freepascal.org/fcl-json
@@ -1321,6 +1323,11 @@ end;
 procedure TSherpaOnnxCircularBuffer.Push(Samples: array of Single);
 begin
   SherpaOnnxCircularBufferPush(Self.Handle, pcfloat(Samples), Length(Samples));
+end;
+
+procedure TSherpaOnnxCircularBuffer.Push(Samples: pcfloat; N: Integer);
+begin
+  SherpaOnnxCircularBufferPush(Self.Handle, Samples, N);
 end;
 
 function TSherpaOnnxCircularBuffer.Get(StartIndex: Integer; N: Integer): TSherpaOnnxSamplesArray;
