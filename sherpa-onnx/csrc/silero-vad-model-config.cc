@@ -69,7 +69,7 @@ bool SileroVadModelConfig::Validate() const {
 std::string SileroVadModelConfig::ToString() const {
   std::ostringstream os;
 
-  os << "SilerVadModelConfig(";
+  os << "SileroVadModelConfig(";
   os << "model=\"" << model << "\", ";
   os << "threshold=" << threshold << ", ";
   os << "min_silence_duration=" << min_silence_duration << ", ";

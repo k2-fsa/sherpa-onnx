@@ -11,7 +11,7 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the LCL widgetset
-  Forms, unit1, my_worker
+  Forms, unit1, my_worker, my_init
   { you can add units after this };
 
 {$R *.res}

@@ -98,6 +98,7 @@ type
     destructor Destroy; override;
     procedure AcceptWaveform(Samples: array of Single; SampleRate: Integer);
     procedure InputFinished;
+    property GetHandle: Pointer Read Handle;
   end;
 
   TSherpaOnnxOnlineRecognizer = class
@@ -116,6 +117,7 @@ type
     function IsEndpoint(Stream: TSherpaOnnxOnlineStream): Boolean;
     function GetResult(Stream: TSherpaOnnxOnlineStream): TSherpaOnnxOnlineRecognizerResult;
     property Config: TSherpaOnnxOnlineRecognizerConfig Read _Config;
+    property GetHandle: Pointer Read Handle;
   end;
 
   TSherpaOnnxOfflineTransducerModelConfig = record
@@ -213,6 +215,7 @@ type
     constructor Create(P: Pointer);
     destructor Destroy; override;
     procedure AcceptWaveform(Samples: array of Single; SampleRate: Integer);
+    property GetHandle: Pointer Read Handle;
   end;
 
   TSherpaOnnxOfflineRecognizer = class
@@ -226,6 +229,7 @@ type
     procedure Decode(Stream: TSherpaOnnxOfflineStream);
     function GetResult(Stream: TSherpaOnnxOfflineStream): TSherpaOnnxOfflineRecognizerResult;
     property Config: TSherpaOnnxOfflineRecognizerConfig Read _Config;
+    property GetHandle: Pointer Read Handle;
   end;
 
   TSherpaOnnxSileroVadModelConfig = record
@@ -262,6 +266,7 @@ type
     procedure Reset;
     function Size: Integer;
     function Head: Integer;
+    property GetHandle: Pointer Read Handle;
   end;
 
   TSherpaOnnxSpeechSegment = record
@@ -286,6 +291,7 @@ type
     procedure Reset;
     procedure Flush;
     property Config: TSherpaOnnxVadModelConfig Read _Config;
+    property GetHandle: Pointer Read Handle;
   end;
 
   { It supports reading a single channel wave with 16-bit encoded samples.
