@@ -1315,6 +1315,52 @@ SHERPA_ONNX_API const char *SherpaOfflinePunctuationAddPunct(
 
 SHERPA_ONNX_API void SherpaOfflinePunctuationFreeText(const char *text);
 
+// for resampling
+SHERPA_ONNX_API typedef struct SherpaOnnxLinearResampler
+    SherpaOnnxLinearResampler;
+
+/*
+      float min_freq = min(sampling_rate_in_hz, samp_rate_out_hz);
+      float lowpass_cutoff = 0.99 * 0.5 * min_freq;
+      int32_t lowpass_filter_width = 6;
+
+      You can set filter_cutoff_hz to lowpass_cutoff
+      sand set num_zeros to lowpass_filter_width
+*/
+// The user has to invoke SherpaOnnxDestroyLinearResampler()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API SherpaOnnxLinearResampler *SherpaOnnxCreateLinearResampler(
+    int32_t samp_rate_in_hz, int32_t samp_rate_out_hz, float filter_cutoff_hz,
+    int32_t num_zeros);
+
+SHERPA_ONNX_API void SherpaOnnxDestroyLinearResampler(
+    SherpaOnnxLinearResampler *p);
+
+SHERPA_ONNX_API void SherpaOnnxLinearResamplerReset(
+    SherpaOnnxLinearResampler *p);
+
+typedef struct SherpaOnnxResampleOut {
+  const float *samples;
+  int32_t n;
+} SherpaOnnxResampleOut;
+// The user has to invoke SherpaOnnxLinearResamplerResampleFree()
+// to free the returned pointer to avoid memory leak.
+//
+// If this is the last segment, you can set flush to 1; otherwise, please
+// set flush to 0
+SHERPA_ONNX_API const SherpaOnnxResampleOut *SherpaOnnxLinearResamplerResample(
+    SherpaOnnxLinearResampler *p, const float *input, int32_t input_dim,
+    int32_t flush);
+
+SHERPA_ONNX_API void SherpaOnnxLinearResamplerResampleFree(
+    const SherpaOnnxResampleOut *p);
+
+SHERPA_ONNX_API int32_t SherpaOnnxLinearResamplerResampleGetInputSampleRate(
+    const SherpaOnnxLinearResampler *p);
+
+SHERPA_ONNX_API int32_t SherpaOnnxLinearResamplerResampleGetOutputSampleRate(
+    const SherpaOnnxLinearResampler *p);
+
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif

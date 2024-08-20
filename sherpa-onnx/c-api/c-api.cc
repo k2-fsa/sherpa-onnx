@@ -18,6 +18,7 @@
 #include "sherpa-onnx/csrc/offline-punctuation.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
+#include "sherpa-onnx/csrc/resample.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 #include "sherpa-onnx/csrc/speaker-embedding-manager.h"
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
@@ -1584,3 +1585,56 @@ const char *SherpaOfflinePunctuationAddPunct(
 }
 
 void SherpaOfflinePunctuationFreeText(const char *text) { delete[] text; }
+
+struct SherpaOnnxLinearResampler {
+  std::unique_ptr<sherpa_onnx::LinearResample> impl;
+};
+
+SherpaOnnxLinearResampler *SherpaOnnxCreateLinearResampler(
+    int32_t samp_rate_in_hz, int32_t samp_rate_out_hz, float filter_cutoff_hz,
+    int32_t num_zeros) {
+  SherpaOnnxLinearResampler *p = new SherpaOnnxLinearResampler;
+  p->impl = std::make_unique<sherpa_onnx::LinearResample>(
+      samp_rate_in_hz, samp_rate_out_hz, filter_cutoff_hz, num_zeros);
+
+  return p;
+}
+
+void SherpaOnnxDestroyLinearResampler(SherpaOnnxLinearResampler *p) {
+  delete p;
+}
+
+const SherpaOnnxResampleOut *SherpaOnnxLinearResamplerResample(
+    SherpaOnnxLinearResampler *p, const float *input, int32_t input_dim,
+    int32_t flush) {
+  std::vector<float> o;
+  p->impl->Resample(input, input_dim, flush, &o);
+
+  float *s = new float[o.size()];
+  std::copy(o.begin(), o.end(), s);
+
+  SherpaOnnxResampleOut *ans = new SherpaOnnxResampleOut;
+  ans->samples = s;
+  ans->n = static_cast<int32_t>(o.size());
+
+  return ans;
+}
+
+void SherpaOnnxLinearResamplerResampleFree(const SherpaOnnxResampleOut *p) {
+  delete[] p->samples;
+  delete p;
+}
+
+int32_t SherpaOnnxLinearResamplerResampleGetInputSampleRate(
+    const SherpaOnnxLinearResampler *p) {
+  return p->impl->GetInputSamplingRate();
+}
+
+int32_t SherpaOnnxLinearResamplerResampleGetOutputSampleRate(
+    const SherpaOnnxLinearResampler *p) {
+  return p->impl->GetOutputSamplingRate();
+}
+
+void SherpaOnnxLinearResamplerReset(SherpaOnnxLinearResampler *p) {
+  p->impl->Reset();
+}

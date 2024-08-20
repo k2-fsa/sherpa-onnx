@@ -1,4 +1,9 @@
-{ Copyright (c)  2024  Xiaomi Corporation }
+{ Copyright (c)  2024  Xiaomi Corporation
+
+Please see
+https://github.com/k2-fsa/sherpa-onnx/tree/master/pascal-api-examples
+for how to use APIs in this file.
+}
 
 unit sherpa_onnx;
 
@@ -7,13 +12,35 @@ unit sherpa_onnx;
   {$modeSwitch advancedRecords} { to support records with methods }
 {$ENDIF}
 
-(* {$LongStrings ON} *)
+{$LongStrings ON}
 
 interface
 uses
   ctypes;
 
 type
+  TSherpaOnnxSamplesArray = array of Single;
+
+  TSherpaOnnxLinearResampler = class
+  private
+    Handle: Pointer;
+    InputSampleRate: Integer;
+    OutputSampleRate: Integer;
+  public
+    constructor Create(SampleRateIn: Integer; SampleRateOut: Integer);
+    destructor Destroy; override;
+
+    function Resample(Samples: pcfloat;
+      N: Integer; Flush: Boolean): TSherpaOnnxSamplesArray; overload;
+
+    function Resample(Samples: array of Single;
+      Flush: Boolean): TSherpaOnnxSamplesArray; overload;
+
+    procedure Reset;
+
+    property GetInputSampleRate: Integer Read InputSampleRate;
+    property GetOutputSampleRate: Integer Read OutputSampleRate;
+  end;
 
   PSherpaOnnxGeneratedAudioCallbackWithArg = ^TSherpaOnnxGeneratedAudioCallbackWithArg;
 
@@ -73,11 +100,11 @@ type
     function Generate(Text: AnsiString; SpeakerId: Integer;
       Speed: Single): TSherpaOnnxGeneratedAudio; overload;
 
-    { function Generate(Text: AnsiString; SpeakerId: Integer; }
-    {   Speed: Single; }
-    {   Callback:PSherpaOnnxGeneratedAudioCallbackWithArg; }
-    {   Arg: Pointer }
-    {   ): TSherpaOnnxGeneratedAudio; overload; }
+    function Generate(Text: AnsiString; SpeakerId: Integer;
+      Speed: Single;
+      Callback:PSherpaOnnxGeneratedAudioCallbackWithArg;
+      Arg: Pointer
+      ): TSherpaOnnxGeneratedAudio; overload;
 
     property GetHandle: Pointer Read Handle;
     property GetSampleRate: Integer Read SampleRate;
@@ -324,7 +351,6 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxVadModelConfig);
   end;
 
-  TSherpaOnnxSamplesArray = array of Single;
 
   TSherpaOnnxCircularBuffer = class
   private
@@ -374,10 +400,6 @@ type
 
   function SherpaOnnxWriteWave(Filename: AnsiString;
     Samples: array of Single; SampleRate: Integer): Boolean;
-
-
-
-
 
 implementation
 
@@ -617,6 +639,33 @@ type
 
   PSherpaOnnxGeneratedAudio = ^SherpaOnnxGeneratedAudio;
 
+  SherpaOnnxResampleOut = record
+    Samples: pcfloat;
+    N: cint32;
+  end;
+
+  PSherpaOnnxResampleOut = ^SherpaOnnxResampleOut;
+
+function SherpaOnnxCreateLinearResampler(SampleRateInHz: cint32;
+  SampleRateOutHz: cint32;
+  FilterCutoffHz: cfloat;
+  NumZeros: cint32): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyLinearResampler(P: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxLinearResamplerResample(P: Pointer;
+  Samples: pcfloat;
+  N: Integer;
+  Flush: Integer): PSherpaOnnxResampleOut; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxLinearResamplerResampleFree(P: PSherpaOnnxResampleOut); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxLinearResamplerReset(P: Pointer); cdecl;
+  external SherpaOnnxLibName;
 
 function SherpaOnnxCreateOfflineTts(Config: PSherpaOnnxOfflineTtsConfig): Pointer; cdecl;
   external SherpaOnnxLibName;
@@ -1709,5 +1758,80 @@ begin
   SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
 end;
 
-end.
+function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
+  Speed: Single;
+  Callback:PSherpaOnnxGeneratedAudioCallbackWithArg;
+  Arg: Pointer
+  ): TSherpaOnnxGeneratedAudio;
+var
+  Audio: PSherpaOnnxGeneratedAudio;
+  I: Integer;
+begin
+  Result := Default(TSherpaOnnxGeneratedAudio);
 
+  Audio := SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(Self.Handle, PAnsiChar(Text),
+    SpeakerId, Speed, Callback, Arg);
+
+  SetLength(Result.Samples, Audio^.N);
+  Result.SampleRate := Audio^.SampleRate;
+
+  for I := Low(Result.Samples) to High(Result.Samples) do
+  begin
+    Result.Samples[I] := Audio^.Samples[I];
+  end;
+
+  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+end;
+
+constructor TSherpaOnnxLinearResampler.Create(SampleRateIn: Integer; SampleRateOut: Integer);
+var
+  MinFreq: Single;
+  LowpassCutoff: Single;
+  LowpassFilterWidth: Integer = 6;
+begin
+  if SampleRateIn > SampleRateOut then
+    MinFreq := SampleRateOut
+  else
+    MinFreq := SampleRateIn;
+
+  LowpassCutoff := 0.99 * 0.5 * MinFreq;
+
+  Self.Handle := SherpaOnnxCreateLinearResampler(SampleRateIn,
+    SampleRateOut, LowpassCutoff, LowpassFilterWidth);
+  Self.InputSampleRate := SampleRateIn;
+  Self.OutputSampleRate := SampleRateOut;
+end;
+
+destructor TSherpaOnnxLinearResampler.Destroy;
+begin
+  SherpaOnnxDestroyLinearResampler(Self.Handle);
+  Self.Handle := nil;
+end;
+
+function TSherpaOnnxLinearResampler.Resample(Samples: pcfloat;
+  N: Integer; Flush: Boolean): TSherpaOnnxSamplesArray;
+var
+  P: PSherpaOnnxResampleOut;
+  I: Integer;
+begin
+  Result := Default(TSherpaOnnxSamplesArray);
+  P := SherpaOnnxLinearResamplerResample(Self.Handle, Samples, N, Ord(Flush));
+  SetLength(Result, P^.N);
+
+  for I := Low(Result) to High(Result) do
+    Result[I] := P^.Samples[I];
+
+  SherpaOnnxLinearResamplerResampleFree(P);
+end;
+
+function TSherpaOnnxLinearResampler.Resample(Samples: array of Single; Flush: Boolean): TSherpaOnnxSamplesArray;
+begin
+  Result := Self.Resample(pcfloat(Samples), Length(Samples), Flush);
+end;
+
+procedure TSherpaOnnxLinearResampler.Reset;
+begin
+  SherpaOnnxLinearResamplerReset(Self.Handle);
+end;
+
+end.

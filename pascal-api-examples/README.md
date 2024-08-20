@@ -13,3 +13,5 @@ https://k2-fsa.github.io/sherpa/onnx/pascal-api/index.html
 |[non-streaming-asr](./non-streaming-asr)| It shows how to use non-streaming models for speech recognition.|
 |[vad](./vad)| It shows how to use the voice activity detection API.|
 |[vad-with-non-streaming-asr](./vad-with-non-streaming-asr)| It shows how to use the voice activity detection API with non-streaming models for speech recognition.|
+|[portaudio-test](./portaudio-test)| It shows how to use PortAudio for recording and playing.|
+|[tts](./tts)| It shows how to use the text-to-speech API.|

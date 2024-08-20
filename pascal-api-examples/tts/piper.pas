@@ -4,14 +4,13 @@ program piper;
 This file shows how to use the text to speech API of sherpa-onnx
 with Piper models.
 
-It generates speech fro text and saves it to a wave file.
+It generates speech from text and saves it to a wave file.
 
 If you want to play it while it is generating, please see
 ./piper-playback.pas
 }
 
 {$mode objfpc}
-{$ASSERTIONS ON}
 
 uses
   SysUtils,
@@ -36,7 +35,7 @@ var
   Audio: TSherpaOnnxGeneratedAudio;
 
   Text: AnsiString;
-  Speed: Single = 1.0;  {Use a large value to speak faster}
+  Speed: Single = 1.0;  {Use a larger value to speak faster}
   SpeakerId: Integer = 0;
 
 begin

@@ -134,11 +134,13 @@ jobs:
 
           cd ./pascal-api-examples
           pushd tts
+
           ./run-piper.sh
-          popd
           rm -rf vits-piper-*
           ls -lh
           echo "---"
+
+          popd
 
       - name:  Run Pascal test (VAD + non-streaming ASR)
         shell: bash
