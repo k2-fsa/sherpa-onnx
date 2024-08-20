@@ -1,4 +1,9 @@
-{ Copyright (c)  2024  Xiaomi Corporation }
+{ Copyright (c)  2024  Xiaomi Corporation
+
+Please see
+https://github.com/k2-fsa/sherpa-onnx/tree/master/pascal-api-examples
+for how to use APIs in this file.
+}
 
 unit sherpa_onnx;
 
@@ -7,13 +12,105 @@ unit sherpa_onnx;
   {$modeSwitch advancedRecords} { to support records with methods }
 {$ENDIF}
 
-(* {$LongStrings ON} *)
+{$LongStrings ON}
 
 interface
 uses
   ctypes;
 
 type
+  TSherpaOnnxSamplesArray = array of Single;
+
+  TSherpaOnnxLinearResampler = class
+  private
+    Handle: Pointer;
+    InputSampleRate: Integer;
+    OutputSampleRate: Integer;
+  public
+    constructor Create(SampleRateIn: Integer; SampleRateOut: Integer);
+    destructor Destroy; override;
+
+    function Resample(Samples: pcfloat;
+      N: Integer; Flush: Boolean): TSherpaOnnxSamplesArray; overload;
+
+    function Resample(Samples: array of Single;
+      Flush: Boolean): TSherpaOnnxSamplesArray; overload;
+
+    procedure Reset;
+
+    property GetInputSampleRate: Integer Read InputSampleRate;
+    property GetOutputSampleRate: Integer Read OutputSampleRate;
+  end;
+
+  PSherpaOnnxGeneratedAudioCallbackWithArg = ^TSherpaOnnxGeneratedAudioCallbackWithArg;
+
+  TSherpaOnnxGeneratedAudioCallbackWithArg = function(
+      Samples: pcfloat; N: cint32;
+      Arg: Pointer): cint; cdecl;
+
+  TSherpaOnnxOfflineTtsVitsModelConfig = record
+    Model: AnsiString;
+    Lexicon: AnsiString;
+    Tokens: AnsiString;
+    DataDir: AnsiString;
+    NoiseScale: Single;
+    NoiseScaleW: Single;
+    LengthScale: Single;
+    DictDir: AnsiString;
+
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsVitsModelConfig);
+  end;
+
+  TSherpaOnnxOfflineTtsModelConfig = record
+    Vits: TSherpaOnnxOfflineTtsVitsModelConfig;
+    NumThreads: Integer;
+    Debug: Boolean;
+    Provider: AnsiString;
+
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsModelConfig);
+  end;
+
+  TSherpaOnnxOfflineTtsConfig = record
+    Model: TSherpaOnnxOfflineTtsModelConfig;
+    RuleFsts: AnsiString;
+    MaxNumSentences: Integer;
+    RuleFars: AnsiString;
+
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsConfig);
+  end;
+
+  TSherpaOnnxGeneratedAudio = record
+    Samples: array of Single;
+    SampleRate: Integer;
+  end;
+
+  TSherpaOnnxOfflineTts = class
+  private
+   Handle: Pointer;
+   SampleRate: Integer;
+   NumSpeakers: Integer;
+   _Config: TSherpaOnnxOfflineTtsConfig;
+  public
+    constructor Create(Config: TSherpaOnnxOfflineTtsConfig);
+    destructor Destroy; override;
+
+    function Generate(Text: AnsiString; SpeakerId: Integer;
+      Speed: Single): TSherpaOnnxGeneratedAudio; overload;
+
+    function Generate(Text: AnsiString; SpeakerId: Integer;
+      Speed: Single;
+      Callback:PSherpaOnnxGeneratedAudioCallbackWithArg;
+      Arg: Pointer
+      ): TSherpaOnnxGeneratedAudio; overload;
+
+    property GetHandle: Pointer Read Handle;
+    property GetSampleRate: Integer Read SampleRate;
+    property GetNumSpeakers: Integer Read NumSpeakers;
+  end;
+
   TSherpaOnnxWave = record
     Samples: array of Single; { normalized to the range [-1, 1] }
     SampleRate: Integer;
@@ -254,7 +351,6 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxVadModelConfig);
   end;
 
-  TSherpaOnnxSamplesArray = array of Single;
 
   TSherpaOnnxCircularBuffer = class
   private
@@ -507,6 +603,94 @@ type
   end;
 
   PSherpaOnnxSpeechSegment = ^SherpaOnnxSpeechSegment;
+
+  SherpaOnnxOfflineTtsVitsModelConfig = record
+    Model: PAnsiChar;
+    Lexicon: PAnsiChar;
+    Tokens: PAnsiChar;
+    DataDir: PAnsiChar;
+    NoiseScale: cfloat;
+    NoiseScaleW: cfloat;
+    LengthScale: cfloat;
+    DictDir: PAnsiChar;
+  end;
+
+  SherpaOnnxOfflineTtsModelConfig = record
+    Vits: SherpaOnnxOfflineTtsVitsModelConfig;
+    NumThreads: cint32;
+    Debug: cint32;
+    Provider: PAnsiChar;
+  end;
+
+  SherpaOnnxOfflineTtsConfig = record
+    Model: SherpaOnnxOfflineTtsModelConfig;
+    RuleFsts: PAnsiChar;
+    MaxNumSentences: cint32;
+    RuleFars: PAnsiChar;
+  end;
+
+  PSherpaOnnxOfflineTtsConfig = ^SherpaOnnxOfflineTtsConfig;
+
+  SherpaOnnxGeneratedAudio = record
+    Samples: pcfloat;
+    N: cint32;
+    SampleRate: cint32;
+  end;
+
+  PSherpaOnnxGeneratedAudio = ^SherpaOnnxGeneratedAudio;
+
+  SherpaOnnxResampleOut = record
+    Samples: pcfloat;
+    N: cint32;
+  end;
+
+  PSherpaOnnxResampleOut = ^SherpaOnnxResampleOut;
+
+function SherpaOnnxCreateLinearResampler(SampleRateInHz: cint32;
+  SampleRateOutHz: cint32;
+  FilterCutoffHz: cfloat;
+  NumZeros: cint32): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyLinearResampler(P: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxLinearResamplerResample(P: Pointer;
+  Samples: pcfloat;
+  N: Integer;
+  Flush: Integer): PSherpaOnnxResampleOut; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxLinearResamplerResampleFree(P: PSherpaOnnxResampleOut); cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxLinearResamplerReset(P: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxCreateOfflineTts(Config: PSherpaOnnxOfflineTtsConfig): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyOfflineTts(Tts: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOfflineTtsSampleRate(Tts: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOfflineTtsNumSpeakers(Tts: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOfflineTtsGenerate(Tts: Pointer;
+  Text: PAnsiChar; Sid: cint32; Speed: cfloat): PSherpaOnnxGeneratedAudio; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(Tts: Pointer;
+  Text: PAnsiChar; Sid: cint32; Speed: cfloat;
+  Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
+  Arg: Pointer): PSherpaOnnxGeneratedAudio; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyOfflineTtsGeneratedAudio(Audio: Pointer); cdecl;
+  external SherpaOnnxLibName;
 
 function SherpaOnnxCreateVoiceActivityDetector(Config: PSherpaOnnxVadModelConfig;
   BufferSizeInSeconds: cfloat): Pointer; cdecl;
@@ -793,8 +977,7 @@ constructor TSherpaOnnxOnlineRecognizer.Create(Config: TSherpaOnnxOnlineRecogniz
 var
   C: SherpaOnnxOnlineRecognizerConfig;
 begin
-  Initialize(C);
-
+  C := Default(SherpaOnnxOnlineRecognizerConfig);
   C.FeatConfig.SampleRate := Config.FeatConfig.SampleRate;
   C.FeatConfig.FeatureDim := Config.FeatConfig.FeatureDim;
 
@@ -1051,8 +1234,7 @@ constructor TSherpaOnnxOfflineRecognizer.Create(Config: TSherpaOnnxOfflineRecogn
 var
   C: SherpaOnnxOfflineRecognizerConfig;
 begin
-  Initialize(C);
-
+  C := Default(SherpaOnnxOfflineRecognizerConfig);
   C.FeatConfig.SampleRate := Config.FeatConfig.SampleRate;
   C.FeatConfig.FeatureDim := Config.FeatConfig.FeatureDim;
 
@@ -1369,11 +1551,10 @@ end;
 
 constructor TSherpaOnnxVoiceActivityDetector.Create(Config: TSherpaOnnxVadModelConfig; BufferSizeInSeconds: Single);
 var
-  C: SherpaOnnxVadModelConfig;
+  C: SherpaOnnxVadModelConfig ;
 begin
+  C := Default(SherpaOnnxVadModelConfig);
   Self._Config := Config;
-
-  Initialize(C);
 
   C.SileroVad.Model := PAnsiChar(Config.SileroVad.Model);
   C.SileroVad.Threshold := Config.SileroVad.Threshold;
@@ -1460,5 +1641,197 @@ begin
   SherpaOnnxVoiceActivityDetectorFlush(Self.Handle);
 end;
 
-end.
+function TSherpaOnnxOfflineTtsVitsModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineTtsVitsModelConfig(' +
+    'Model := %s, ' +
+    'Lexicon := %s, ' +
+    'Tokens := %s, ' +
+    'DataDir := %s, ' +
+    'NoiseScale := %.2f, ' +
+    'NoiseScaleW := %.2f, ' +
+    'LengthScale := %.2f, ' +
+    'DictDir := %s' +
+    ')',
+    [Self.Model, Self.Lexicon, Self.Tokens, Self.DataDir, Self.NoiseScale,
+     Self.NoiseScaleW, Self.LengthScale, Self.DictDir
+    ]);
+end;
 
+class operator TSherpaOnnxOfflineTtsVitsModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsVitsModelConfig);
+begin
+  Dest.NoiseScale := 0.667;
+  Dest.NoiseScaleW := 0.8;
+  Dest.LengthScale := 1.0;
+end;
+
+function TSherpaOnnxOfflineTtsModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineTtsModelConfig(' +
+    'Vits := %s, ' +
+    'NumThreads := %d, ' +
+    'Debug := %s, ' +
+    'Provider := %s' +
+    ')',
+    [Self.Vits.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider
+    ]);
+end;
+
+class operator TSherpaOnnxOfflineTtsModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsModelConfig);
+begin
+  Dest.NumThreads := 1;
+  Dest.Debug := False;
+  Dest.Provider := 'cpu';
+end;
+
+function TSherpaOnnxOfflineTtsConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineTtsConfig(' +
+    'Model := %s, ' +
+    'RuleFsts := %s, ' +
+    'MaxNumSentences := %d, ' +
+    'RuleFars := %s' +
+    ')',
+    [Self.Model.ToString, Self.RuleFsts, Self.MaxNumSentences, Self.RuleFars
+    ]);
+end;
+
+class operator TSherpaOnnxOfflineTtsConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsConfig);
+begin
+  Dest.MaxNumSentences := 1;
+end;
+
+constructor TSherpaOnnxOfflineTts.Create(Config: TSherpaOnnxOfflineTtsConfig);
+var
+  C: SherpaOnnxOfflineTtsConfig;
+begin
+  C := Default(SherpaOnnxOfflineTtsConfig);
+  Self._Config := Config;
+
+  C.Model.Vits.Model := PAnsiChar(Config.Model.Vits.Model);
+  C.Model.Vits.Lexicon := PAnsiChar(Config.Model.Vits.Lexicon);
+  C.Model.Vits.Tokens := PAnsiChar(Config.Model.Vits.Tokens);
+  C.Model.Vits.DataDir := PAnsiChar(Config.Model.Vits.DataDir);
+  C.Model.Vits.NoiseScale := Config.Model.Vits.NoiseScale;
+  C.Model.Vits.NoiseScaleW := Config.Model.Vits.NoiseScaleW;
+  C.Model.Vits.LengthScale := Config.Model.Vits.LengthScale;
+  C.Model.Vits.DictDir := PAnsiChar(Config.Model.Vits.DictDir);
+
+  C.Model.NumThreads := Config.Model.NumThreads;
+  C.Model.Provider := PAnsiChar(Config.Model.Provider);
+  C.Model.Debug := Ord(Config.Model.Debug);
+
+  C.RuleFsts := PAnsiChar(Config.RuleFsts);
+  C.MaxNumSentences := Config.MaxNumSentences;
+  C.RuleFars := PAnsiChar(Config.RuleFars);
+
+  Self.Handle := SherpaOnnxCreateOfflineTts(@C);
+
+  Self.SampleRate := SherpaOnnxOfflineTtsSampleRate(Self.Handle);
+  Self.NumSpeakers := SherpaOnnxOfflineTtsNumSpeakers(Self.Handle);
+end;
+
+destructor TSherpaOnnxOfflineTts.Destroy;
+begin
+  SherpaOnnxDestroyOfflineTts(Self.Handle);
+  Self.Handle := nil;
+end;
+
+function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
+  Speed: Single): TSherpaOnnxGeneratedAudio;
+var
+  Audio: PSherpaOnnxGeneratedAudio;
+  I: Integer;
+begin
+  Result := Default(TSherpaOnnxGeneratedAudio);
+
+  Audio := SherpaOnnxOfflineTtsGenerate(Self.Handle, PAnsiChar(Text), SpeakerId, Speed);
+
+  SetLength(Result.Samples, Audio^.N);
+  Result.SampleRate := Audio^.SampleRate;
+
+  for I := Low(Result.Samples) to High(Result.Samples) do
+  begin
+    Result.Samples[I] := Audio^.Samples[I];
+  end;
+
+  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+end;
+
+function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
+  Speed: Single;
+  Callback:PSherpaOnnxGeneratedAudioCallbackWithArg;
+  Arg: Pointer
+  ): TSherpaOnnxGeneratedAudio;
+var
+  Audio: PSherpaOnnxGeneratedAudio;
+  I: Integer;
+begin
+  Result := Default(TSherpaOnnxGeneratedAudio);
+
+  Audio := SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(Self.Handle, PAnsiChar(Text),
+    SpeakerId, Speed, Callback, Arg);
+
+  SetLength(Result.Samples, Audio^.N);
+  Result.SampleRate := Audio^.SampleRate;
+
+  for I := Low(Result.Samples) to High(Result.Samples) do
+  begin
+    Result.Samples[I] := Audio^.Samples[I];
+  end;
+
+  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+end;
+
+constructor TSherpaOnnxLinearResampler.Create(SampleRateIn: Integer; SampleRateOut: Integer);
+var
+  MinFreq: Single;
+  LowpassCutoff: Single;
+  LowpassFilterWidth: Integer = 6;
+begin
+  if SampleRateIn > SampleRateOut then
+    MinFreq := SampleRateOut
+  else
+    MinFreq := SampleRateIn;
+
+  LowpassCutoff := 0.99 * 0.5 * MinFreq;
+
+  Self.Handle := SherpaOnnxCreateLinearResampler(SampleRateIn,
+    SampleRateOut, LowpassCutoff, LowpassFilterWidth);
+  Self.InputSampleRate := SampleRateIn;
+  Self.OutputSampleRate := SampleRateOut;
+end;
+
+destructor TSherpaOnnxLinearResampler.Destroy;
+begin
+  SherpaOnnxDestroyLinearResampler(Self.Handle);
+  Self.Handle := nil;
+end;
+
+function TSherpaOnnxLinearResampler.Resample(Samples: pcfloat;
+  N: Integer; Flush: Boolean): TSherpaOnnxSamplesArray;
+var
+  P: PSherpaOnnxResampleOut;
+  I: Integer;
+begin
+  Result := Default(TSherpaOnnxSamplesArray);
+  P := SherpaOnnxLinearResamplerResample(Self.Handle, Samples, N, Ord(Flush));
+  SetLength(Result, P^.N);
+
+  for I := Low(Result) to High(Result) do
+    Result[I] := P^.Samples[I];
+
+  SherpaOnnxLinearResamplerResampleFree(P);
+end;
+
+function TSherpaOnnxLinearResampler.Resample(Samples: array of Single; Flush: Boolean): TSherpaOnnxSamplesArray;
+begin
+  Result := Self.Resample(pcfloat(Samples), Length(Samples), Flush);
+end;
+
+procedure TSherpaOnnxLinearResampler.Reset;
+begin
+  SherpaOnnxLinearResamplerReset(Self.Handle);
+end;
+
+end.
