@@ -21,11 +21,11 @@ class OnlineLM {
 
   static std::unique_ptr<OnlineLM> Create(const OnlineLMConfig &config);
 
-   // init states for classic rescore
-   virtual std::vector<Ort::Value> GetInitStates() = 0;
+  // init states for classic rescore
+  virtual std::vector<Ort::Value> GetInitStates() = 0;
 
-   // init states for shallow fusion
-   virtual std::pair<Ort::Value, std::vector<Ort::Value>> GetInitStatesSF() = 0;
+  // init states for shallow fusion
+  virtual std::pair<Ort::Value, std::vector<Ort::Value>> GetInitStatesSF() = 0;
 
    /** ScoreToken a batch of sentences (shallow fusion).
    *
