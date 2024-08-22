@@ -72,7 +72,7 @@ class OfflineRecognizer(
     assetManager: AssetManager? = null,
     config: OfflineRecognizerConfig,
 ) {
-    private val ptr: Long
+    private var ptr: Long
 
     init {
         ptr = if (assetManager != null) {
@@ -83,7 +83,10 @@ class OfflineRecognizer(
     }
 
     protected fun finalize() {
-        delete(ptr)
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
 
     fun release() = finalize()
@@ -102,7 +105,14 @@ class OfflineRecognizer(
         val lang = objArray[3] as String
         val emotion = objArray[4] as String
         val event = objArray[5] as String
-        return OfflineRecognizerResult(text = text, tokens = tokens, timestamps = timestamps, lang = lang, emotion = emotion, event = event)
+        return OfflineRecognizerResult(
+            text = text,
+            tokens = tokens,
+            timestamps = timestamps,
+            lang = lang,
+            emotion = emotion,
+            event = event
+        )
     }
 
     fun decode(stream: OfflineStream) = decode(ptr, stream.ptr)
