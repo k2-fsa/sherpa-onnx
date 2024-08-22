@@ -5,12 +5,12 @@
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 #include <cassert>
+#include <cstdint>
 #include <fstream>
 #include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
-#include <cstdint>
 
 namespace sherpa_onnx {
 namespace {
