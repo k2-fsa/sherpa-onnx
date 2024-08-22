@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"
+#include <cstdint>
 
 namespace sherpa_onnx {
 namespace {
