@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: |
-          python3 -m pip install onnxruntime onnx
+          python3 -m pip install onnxruntime==1.16.3 onnx==1.15.0
 
       - name: Run
         shell: bash
