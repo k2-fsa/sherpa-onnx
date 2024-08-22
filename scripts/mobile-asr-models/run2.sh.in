@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+set -e
+
+{% for model in model_list %}
+
+src={{ model.model_name }}
+
+if [[ $src == *kws* ]]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/$src.tar.bz2
+
+else
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/$src.tar.bz2
+fi
+
+tar xvf $src.tar.bz2
+rm $src.tar.bz2
+
+dst=$src-mobile
+
+mkdir -p $dst
+
+{{ model.cmd }}
+
+echo "---$src---"
+ls -lh $src
+echo "---$dst---"
+ls -lh $dst
+rm -rf $src
+
+tar cjfv $dst.tar.bz2 $dst
+
+if [[ $src == *kws* ]]; then
+  mkdir -p ../../kws
+  mv *.tar.bz2 ../../kws/
+else
+  mv *.tar.bz2 ../../
+fi
+rm -rf $dst
+
+{% endfor %}
