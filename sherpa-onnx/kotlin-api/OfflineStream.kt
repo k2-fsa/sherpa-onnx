@@ -13,6 +13,14 @@ class OfflineStream(var ptr: Long) {
 
     fun release() = finalize()
 
+    fun use(block: (OfflineStream) -> Unit) {
+        try {
+            block(this)
+        } finally {
+            release()
+        }
+    }
+
     private external fun acceptWaveform(ptr: Long, samples: FloatArray, sampleRate: Int)
     private external fun delete(ptr: Long)
 

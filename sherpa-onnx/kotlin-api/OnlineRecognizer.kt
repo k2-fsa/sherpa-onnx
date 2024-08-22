@@ -62,7 +62,7 @@ data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineModelConfig,
     var lmConfig: OnlineLMConfig = OnlineLMConfig(),
-    var ctcFstDecoderConfig : OnlineCtcFstDecoderConfig = OnlineCtcFstDecoderConfig(),
+    var ctcFstDecoderConfig: OnlineCtcFstDecoderConfig = OnlineCtcFstDecoderConfig(),
     var endpointConfig: EndpointConfig = EndpointConfig(),
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",
@@ -85,7 +85,7 @@ class OnlineRecognizer(
     assetManager: AssetManager? = null,
     val config: OnlineRecognizerConfig,
 ) {
-    private val ptr: Long
+    private var ptr: Long
 
     init {
         ptr = if (assetManager != null) {
@@ -96,7 +96,10 @@ class OnlineRecognizer(
     }
 
     protected fun finalize() {
-        delete(ptr)
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
 
     fun release() = finalize()

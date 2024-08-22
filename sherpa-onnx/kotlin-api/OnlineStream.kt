@@ -15,9 +15,18 @@ class OnlineStream(var ptr: Long = 0) {
 
     fun release() = finalize()
 
+    fun use(block: (OnlineStream) -> Unit) {
+        try {
+            block(this)
+        } finally {
+            release()
+        }
+    }
+
     private external fun acceptWaveform(ptr: Long, samples: FloatArray, sampleRate: Int)
     private external fun inputFinished(ptr: Long)
     private external fun delete(ptr: Long)
+
 
     companion object {
         init {
