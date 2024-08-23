@@ -76,6 +76,32 @@ with the following APIs
   - Swift, Rust
   - Dart, Object Pascal
 
+### Links for Huggingface Spaces
+
+You can visit the following Huggingface spaces to try `sherpa-onnx` without
+installing anything. All you need is a browser.
+
+| Description | URL |
+|---|---|
+| Speech recognition | https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition|
+| Speech recognition with Whisper| https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition-with-whisper|
+| Speech synthesis | https://huggingface.co/spaces/k2-fsa/text-to-speech|
+| Generate subtitles| https://huggingface.co/spaces/k2-fsa/generate-subtitles-for-videos|
+|Audio tagging| https://huggingface.co/spaces/k2-fsa/audio-tagging |
+|Spoken language identification with Whisper|https://huggingface.co/spaces/k2-fsa/spoken-language-identification|
+
+We also have spaces built using WebAssembly. The are listed below:
+
+| Description | URL|
+|---|---|
+|Voice activity detection with silero-vad| https://huggingface.co/spaces/k2-fsa/web-assembly-vad-sherpa-onnx|
+|Real-time speech recognition (Chinese + English) with Zipformer | https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en|
+|Real-time speech recognition (Chinese + English) with Paraformer| https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en-paraformer|
+|Real-time speech recognition (Chinese + English + Cantonese) with Paraformer| https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer|
+|Real-time speech recognition (English) | https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-en|
+|Speech synthesis (English) | https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-en |
+|Speech synthesis (German)| https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-de|
+
 ### Links for pre-built Android APKs
 
 | Description                    | URL                                                                                     | 中国用户                                                                             |
