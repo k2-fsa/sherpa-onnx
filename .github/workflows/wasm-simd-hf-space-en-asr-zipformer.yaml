@@ -1,9 +1,11 @@
 name: wasm-simd-hf-space-en-asr-zipformer
 
 on:
-  release:
-    types:
-      - published
+  push:
+    branches:
+      - wasm
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
@@ -72,6 +74,14 @@ jobs:
         with:
           name: sherpa-onnx-wasm-simd-en-asr-zipformer
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
+
+      - name: Release
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./*.tar.bz2
 
       - name: Publish to ModelScope
         # if: false

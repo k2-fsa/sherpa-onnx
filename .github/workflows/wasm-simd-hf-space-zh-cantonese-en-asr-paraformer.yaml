@@ -1,9 +1,11 @@
 name: wasm-simd-hf-space-zh-cantonese-en-asr-paraformer
 
 on:
-  release:
-    types:
-      - published
+  push:
+    branches:
+      - wasm
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
@@ -79,6 +81,14 @@ jobs:
         with:
           name: sherpa-onnx-wasm-simd-zh-cantonese-en-asr-paraformer
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
+
+      - name: Release
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./*.tar.bz2
 
       - name: Publish to huggingface
         env:
