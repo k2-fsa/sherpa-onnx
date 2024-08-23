@@ -1,4 +1,4 @@
-name: wasm-simd-hf-space-vad-asr-whisper-tiny-en
+name: wasm-simd-hf-space-vad-asr-zipformer-japanese
 
 on:
   push:
@@ -11,11 +11,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: wasm-simd-hf-space-vad-asr-whisper-tiny-en-${{ github.ref }}
+  group: wasm-simd-hf-space-vad-asr-zipformer-japanese-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  wasm-simd-hf-space-vad-asr-whisper-tiny-en:
+  wasm-simd-hf-space-vad-asr-zipformer-japanese:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -47,19 +47,21 @@ jobs:
           echo "----------"
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
-          tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2
 
-          rm sherpa-onnx-whisper-tiny.en.tar.bz2
-          mv -v sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx whisper-encoder.onnx
-          mv -v sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx whisper-decoder.onnx
-          mv -v sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt tokens.txt
-          rm -rf sherpa-onnx-whisper-tiny.en
+          tar xvf sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2
+          rm sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2
+          mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/encoder-epoch-99-avg-1.int8.onnx ./zipformer-encoder.onnx
+          mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/decoder-epoch-99-avg-1.onnx ./zipformer-decoder.onnx
+          mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/joiner-epoch-99-avg-1.int8.onnx ./zipformer-joiner.onnx
+          mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/tokens.txt ./
+
+          rm -rf sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01
 
           ls -lh
 
           cd ..
-          sed -i.bak 's/Zipformer/Whisper tiny.en supporting only English/g' ./index.html
+          sed -i.bak 's/Zipformer/Zipformer supporting Japanese 日语/g' ./index.html
           cat index.html
           git diff
 
@@ -73,16 +75,15 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-vad-asr-en-whisper-tiny.en
+          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-vad-asr-ja-zipformer
           mv build-wasm-simd-vad-asr/install/bin/wasm/vad-asr $dst
-
           ls -lh $dst
           tar cjfv $dst.tar.bz2 ./$dst
 
       - name: Upload wasm files
         uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-wasm-simd-vad-asr-en-whisper-tiny.en
+          name: sherpa-onnx-wasm-simd-vad-asr-japanese-zipformer
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
 
       - name: Release
@@ -112,7 +113,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-en-whisper-tiny.git ms
+            git clone https://www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-ja-zipformer.git ms
             cd ms
             rm -fv *.js
             rm -fv *.data
@@ -129,7 +130,7 @@ jobs:
 
             git add .
             git commit -m "update model"
-            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-en-whisper-tiny.git
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-ja-zipformer.git
 
       - name: Publish to huggingface
         env:
@@ -149,7 +150,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-en-whisper-tiny huggingface
+            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-ja-zipformer huggingface
             cd huggingface
             rm -fv *.js
             rm -fv *.data
@@ -166,4 +167,4 @@ jobs:
 
             git add .
             git commit -m "update model"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-en-whisper-tiny main
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-ja-zipformer main

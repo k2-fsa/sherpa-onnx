@@ -50,10 +50,10 @@ jobs:
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-thai-2024-06-20.tar.bz2
           tar xvf sherpa-onnx-zipformer-thai-2024-06-20.tar.bz2
           rm sherpa-onnx-zipformer-thai-2024-06-20.tar.bz2
-          mv -v sherpa-onnx-zipformer-thai-2024-06-20/encoder-epoch-12-avg-5.int8.onnx ../zipformer-encoder.onnx
-          mv -v sherpa-onnx-zipformer-thai-2024-06-20/decoder-epoch-12-avg-5.onnx ../zipformer-decoder.onnx
-          mv -v sherpa-onnx-zipformer-thai-2024-06-20/joiner-epoch-12-avg-5.int8.onnx ../zipformer-joiner.onnx
-          mv -v sherpa-onnx-zipformer-thai-2024-06-20/tokens.txt ../tokens.txt
+          mv -v sherpa-onnx-zipformer-thai-2024-06-20/encoder-epoch-12-avg-5.int8.onnx ./zipformer-encoder.onnx
+          mv -v sherpa-onnx-zipformer-thai-2024-06-20/decoder-epoch-12-avg-5.onnx ./zipformer-decoder.onnx
+          mv -v sherpa-onnx-zipformer-thai-2024-06-20/joiner-epoch-12-avg-5.int8.onnx ./zipformer-joiner.onnx
+          mv -v sherpa-onnx-zipformer-thai-2024-06-20/tokens.txt ./tokens.txt
 
           rm -rf sherpa-onnx-zipformer-thai-2024-06-20
 

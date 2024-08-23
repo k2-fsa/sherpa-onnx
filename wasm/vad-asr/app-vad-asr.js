@@ -91,6 +91,29 @@ function initOfflineRecognizer() {
       encoder: './whisper-encoder.onnx',
       decoder: './whisper-decoder.onnx',
     };
+  } else if (fileExists('transducer-encoder.onnx')) {
+    config.modelConfig.transducer = {
+      encoder: './transducer-encoder.onnx',
+      decoder: './transducer-decoder.onnx',
+      joiner: './transducer-joiner.onnx',
+    };
+    config.modelConfig.modelType = 'transducer';
+  } else if (fileExists('nemo-transducer-encoder.onnx')) {
+    config.modelConfig.transducer = {
+      encoder: './nemo-transducer-encoder.onnx',
+      decoder: './nemo-transducer-decoder.onnx',
+      joiner: './nemo-transducer-joiner.onnx',
+    };
+    config.modelConfig.modelType = 'nemo_transducer';
+  } else if (fileExists('paraformer.onnx')) {
+    config.modelConfig.paraformer = {
+      model: './paraformer.onnx',
+    };
+  } else if (fileExists('telespeech.onnx')) {
+    config.modelConfig.telespeechCtc = './telespeech.onnx';
+  } else {
+    console.log('Please specify a model.');
+    alert('Please specify a model.');
   }
 
   recognizer = new OfflineRecognizer(config, Module);
