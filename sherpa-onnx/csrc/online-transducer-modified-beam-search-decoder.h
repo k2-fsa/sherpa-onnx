@@ -53,7 +53,7 @@ class OnlineTransducerModifiedBeamSearchDecoder
 
   int32_t max_active_paths_;
   float lm_scale_;  // used only when lm_ is not nullptr
-  bool shallow_fusion_; // used only when lm_ is not nullptr
+  bool shallow_fusion_;  // used only when lm_ is not nullptr
   int32_t unk_id_;
   float blank_penalty_;
   float temperature_scale_;

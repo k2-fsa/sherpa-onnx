@@ -8,6 +8,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <algorithm>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
@@ -76,8 +77,8 @@ class OnlineRnnLM::Impl {
             Ort::Value x = Ort::Value::CreateTensor<int64_t>(
                 allocator, x_shape.data(), x_shape.size());
             int64_t *p_x = x.GetTensorMutableData<int64_t>();
-            std::copy(ys.begin() + context_size + h.cur_scored_pos, ys.end() - 1,
-                      p_x);
+            std::copy(ys.begin() + context_size + h.cur_scored_pos,
+                               ys.end() - 1, p_x);
 
             // streaming forward by NN LM
             auto out = ScoreToken(std::move(x),
@@ -176,7 +177,8 @@ class OnlineRnnLM::Impl {
     states.push_back(std::move(c));
     auto pair = ScoreToken(std::move(x), std::move(states));
 
-    init_scores_.value = std::move(pair.first); // only used during shallow fusion
+    init_scores_.value = std::move(pair.first);  // only used during
+                                                 // shallow fusion
     init_states_ = std::move(pair.second);
   }
 

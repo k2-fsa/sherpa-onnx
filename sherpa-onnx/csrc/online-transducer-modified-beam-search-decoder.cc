@@ -156,7 +156,6 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
 
     // add log_prob of each hypothesis to p_logprob before taking top_k
     for (int32_t i = 0; i != num_hyps; ++i) {
-
       float log_prob = prev[i].log_prob;
       if (lm_ && shallow_fusion_) {
          log_prob += prev[i].lm_log_prob;
@@ -208,7 +207,9 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
                            prev_lm_log_prob;  // log_prob only includes the
                                               // score of the transducer
         } else {
-           new_hyp.log_prob = p_logprob[k] + context_score; // for rescoring or no LM, previous token score is ignored
+           new_hyp.log_prob = p_logprob[k] + context_score;  // rescore or no LM
+                                                             // previous token
+                                                             // score is ignored
         }
 
         // export the per-token log scores
@@ -216,7 +217,8 @@ void OnlineTransducerModifiedBeamSearchDecoder::Decode(
           float y_prob = logit_with_temperature[start * vocab_size + k];
           new_hyp.ys_probs.push_back(y_prob);
 
-          if (lm_ && shallow_fusion_) {  // export only when LM shallow fusion is used
+          if (lm_ && shallow_fusion_) {  // export only if
+                                         // LM shallow fusion is used
             float lm_prob = new_hyp.lm_log_prob - prev_lm_log_prob;
 
             if (lm_scale_ != 0.0) {
