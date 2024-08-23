@@ -1,4 +1,4 @@
-name: wasm-simd-hf-space-vad-asr-sense-voice
+name: wasm-simd-hf-space-vad-asr-whisper-tiny-en
 
 on:
   push:
@@ -11,11 +11,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: wasm-simd-hf-space-vad-asr-sense-voice-${{ github.ref }}
+  group: wasm-simd-hf-space-vad-asr-whisper-tiny-en-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  wasm-simd-hf-space-vad-asr-sense-voice:
+  wasm-simd-hf-space-vad-asr-whisper-tiny-en:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -47,17 +47,19 @@ jobs:
           echo "----------"
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-          tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-          rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-          mv sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx ./sense-voice.onnx
-          mv sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt ./
-          rm -rf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+          tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+
+          rm sherpa-onnx-whisper-tiny.en.tar.bz2
+          mv sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx whisper-encoder.onnx
+          mv sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx whisper-decoder.onnx
+          mv sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt tokens.txt
+          rm -rf sherpa-onnx-whisper-tiny.en
 
           ls -lh
 
           cd ..
-          sed -i.bak 's/Zipformer/SenseVoice Small supporting English, Chinese, Korean, Japanese, Cantonese/g' ./index.html
+          sed -i.bak 's/Zipformer/Whisper tiny.en supporting only English/g' ./index.html
           cat index.html
           git diff
 
@@ -71,15 +73,16 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-vad-asr-zh-en-ko-ja-cantonese-sense-voice
+          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-vad-asr-en-whisper-tiny.en
           mv build-wasm-simd-vad-asr/install/bin/wasm/vad-asr $dst
+
           ls -lh $dst
           tar cjfv $dst.tar.bz2 ./$dst
 
       - name: Upload wasm files
         uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-wasm-simd-vad-asr-zh-en-ko-ja-cantonese-sense-voice
+          name: sherpa-onnx-wasm-simd-vad-asr-en-whisper-tiny.en
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
 
       - name: Release
@@ -109,7 +112,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-zh-en-jp-ko-cantonese-sense-voice.git ms
+            git clone https://www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-en-whisper-tiny.git ms
             cd ms
             rm -fv *.js
             rm -fv *.data
@@ -126,7 +129,7 @@ jobs:
 
             git add .
             git commit -m "update model"
-            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-zh-en-jp-ko-cantonese-sense-voice.git
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-en-whisper-tiny.git
 
       - name: Publish to huggingface
         env:
@@ -146,7 +149,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-en-ja-ko-cantonese-sense-voice huggingface
+            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-en-whisper-tiny huggingface
             cd huggingface
             rm -fv *.js
             rm -fv *.data
@@ -163,4 +166,4 @@ jobs:
 
             git add .
             git commit -m "update model"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-en-ja-ko-cantonese-sense-voice main
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-en-whisper-tiny main

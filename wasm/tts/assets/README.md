@@ -30,3 +30,8 @@ assets fangjun$ tree -L 1
 
 1 directory, 3 files
 ```
+
+You can find example build scripts at:
+
+  - English TTS: https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/wasm-simd-hf-space-en-tts.yaml
+  - German TTS: https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/wasm-simd-hf-space-de-tts.yaml

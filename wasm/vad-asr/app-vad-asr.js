@@ -86,6 +86,11 @@ function initOfflineRecognizer() {
       model: './sense-voice.onnx',
       useInverseTextNormalization: 1,
     };
+  } else if (fileExists('whisper-encoder.onnx')) {
+    config.modelConfig.whisper = {
+      encoder: './whisper-encoder.onnx',
+      decoder: './whisper-decoder.onnx',
+    };
   }
 
   recognizer = new OfflineRecognizer(config, Module);
