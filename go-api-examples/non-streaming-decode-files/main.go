@@ -3,12 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
-	flag "github.com/spf13/pflag"
-	"github.com/youpy/go-wav"
 	"log"
 	"os"
 	"strings"
+
+	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
+	flag "github.com/spf13/pflag"
+	"github.com/youpy/go-wav"
 )
 
 func main() {
@@ -80,7 +81,16 @@ func main() {
 	log.Println("Decoding done!")
 	result := stream.GetResult()
 
-	log.Println(strings.ToLower(result.Text))
+	log.Println("Text: " + strings.ToLower(result.Text))
+	log.Println("Emotion: " + result.Emotion)
+	log.Println("Lang: " + result.Lang)
+	log.Println("Event: " + result.Event)
+	for _, v := range result.Timestamps {
+		log.Printf("Timestamp: %+v\n", v)
+	}
+	for _, v := range result.Tokens {
+		log.Println("Token: " + v)
+	}
 	log.Printf("Wave duration: %v seconds", float32(len(samples))/float32(sampleRate))
 }
 
