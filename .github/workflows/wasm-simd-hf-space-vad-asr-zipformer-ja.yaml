@@ -51,9 +51,9 @@ jobs:
 
           tar xvf sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2
           rm sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2
-          mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/encoder-epoch-99-avg-1.int8.onnx ./zipformer-encoder.onnx
-          mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/decoder-epoch-99-avg-1.onnx ./zipformer-decoder.onnx
-          mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/joiner-epoch-99-avg-1.int8.onnx ./zipformer-joiner.onnx
+          mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/encoder-epoch-99-avg-1.int8.onnx ./transducer-encoder.onnx
+          mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/decoder-epoch-99-avg-1.onnx ./transducer-decoder.onnx
+          mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/joiner-epoch-99-avg-1.int8.onnx ./transducer-joiner.onnx
           mv -v sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01/tokens.txt ./
 
           rm -rf sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01
