@@ -1,4 +1,4 @@
-name: mobile-asr-models
+name: mobile-kws-models
 
 on:
   push:
@@ -8,11 +8,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: mobile-asr-models-${{ github.ref }}
+  group: mobile-kws-models-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  mobile-asr-models:
+  mobile-kws-models:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj' || github.repository_owner == 'csu-fangjun'
     runs-on: ${{ matrix.os }}
     name: ${{ matrix.index }}/${{ matrix.total }}
@@ -21,8 +21,8 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.8"]
-        total: ["11"]
-        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+        total: ["2"]
+        index: ["0", "1"]
 
     steps:
       - uses: actions/checkout@v4
@@ -45,7 +45,7 @@ jobs:
           total=${{ matrix.total }}
           index=${{ matrix.index }}
 
-          ./generate-asr.py --total $total --index $index
+          ./generate-kws.py --total $total --index $index
           chmod +x run2.sh
           mv run2.sh run.sh
           ls -lh
@@ -60,8 +60,8 @@ jobs:
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
-          file: ./*.tar.bz2
+          file: ./kws/*.tar.bz2
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: asr-models
+          tag: kws-models

@@ -11,6 +11,7 @@ input=
 output1=
 output2=
 batch_dim=N
+
 source ./parse_options.sh
 
 if [ -z $input ]; then
@@ -35,6 +36,7 @@ echo "output2: $output2"
 
 python3 -m onnxruntime.tools.make_dynamic_shape_fixed --dim_param $batch_dim --dim_value 1 $input tmp.fixed.onnx
 python3 -m onnxruntime.quantization.preprocess --input tmp.fixed.onnx --output $output1
+
 python3 ./dynamic_quantization.py --input $output1 --output $output2
 
 ls -lh $input tmp.fixed.onnx $output1 $output2
