@@ -88,7 +88,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://www.modelscope.cn/studios/k2-fsa/web-assembly-vad-sherpa-onnx.git ms
+            git clone https://www.modelscope.cn/studios/csukuangfj/web-assembly-vad-sherpa-onnx.git ms
             cd ms
             rm -fv *.js
             rm -fv *.data
@@ -105,7 +105,7 @@ jobs:
 
             git add .
             git commit -m "update model"
-            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/k2-fsa/web-assembly-vad-sherpa-onnx.git
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/csukuangfj/web-assembly-vad-sherpa-onnx.git
 
       - name: Publish to huggingface
         env:
