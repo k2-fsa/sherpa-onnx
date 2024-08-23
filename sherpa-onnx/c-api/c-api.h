@@ -1361,6 +1361,9 @@ SHERPA_ONNX_API int32_t SherpaOnnxLinearResamplerResampleGetInputSampleRate(
 SHERPA_ONNX_API int32_t SherpaOnnxLinearResamplerResampleGetOutputSampleRate(
     const SherpaOnnxLinearResampler *p);
 
+// Return 1 if the file exists; return 0 if the file does not exist.
+SHERPA_ONNX_API int32_t SherpaOnnxFileExists(const char *filename);
+
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop
 #endif

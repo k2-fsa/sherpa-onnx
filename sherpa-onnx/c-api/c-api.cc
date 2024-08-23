@@ -13,6 +13,7 @@
 #include "sherpa-onnx/csrc/audio-tagging.h"
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/display.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-punctuation.h"
@@ -1637,4 +1638,8 @@ int32_t SherpaOnnxLinearResamplerResampleGetOutputSampleRate(
 
 void SherpaOnnxLinearResamplerReset(SherpaOnnxLinearResampler *p) {
   p->impl->Reset();
+}
+
+int32_t SherpaOnnxFileExists(const char *filename) {
+  return sherpa_onnx::FileExists(filename);
 }
