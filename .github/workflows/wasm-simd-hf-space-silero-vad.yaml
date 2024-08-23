@@ -1,4 +1,4 @@
-name: wasm-simd-hf-space-zh-en-asr-paraformer
+name: wasm-simd-hf-space-silero-vad
 
 on:
   push:
@@ -10,11 +10,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: wasm-simd-hf-space-zh-en-asr-paraformer-${{ github.ref }}
+  group: wasm-simd-hf-space-silero-vad-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  wasm-simd-hf-space-zh-en-asr-paraformer:
+  wasm-simd-hf-space-silero-vad:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -27,6 +27,9 @@ jobs:
           fetch-depth: 0
       - name: Install emsdk
         uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.51
+          actions-cache-folder: 'emsdk-cache'
 
       - name: View emsdk version
         shell: bash
@@ -38,48 +41,31 @@ jobs:
       - name: Download model files
         shell: bash
         run: |
-          cd wasm/asr/assets
+          cd wasm/vad/assets
           ls -lh
           echo "----------"
-
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
-          tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
-          rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
-
-          mv sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx encoder.onnx
-          mv sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx decoder.onnx
-          mv sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt ./
-
-          rm -rf sherpa-onnx-streaming-paraformer-bilingual-zh-en
-
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
           ls -lh
 
-          cd ../
-
-          sed -i.bak s/"type = 0"/"type = 1"/g ./sherpa-onnx-asr.js
-          sed -i.bak s/Zipformer/Paraformer/g ./index.html
-
-          git diff
-
-      - name: Build sherpa-onnx for WebAssembly (ASR)
+      - name: Build sherpa-onnx for WebAssembly
         shell: bash
         run: |
-          ./build-wasm-simd-asr.sh
+          ./build-wasm-simd-vad.sh
 
       - name: collect files
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-zh-en-asr-paraformer
-          mv build-wasm-simd-asr/install/bin/wasm/asr $dst
+          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-vad
+          mv build-wasm-simd-vad/install/bin/wasm/vad $dst
           ls -lh $dst
-          tar cjfv ${dst}.tar.bz2 ./${dst}
+          tar cjfv $dst.tar.bz2 ./$dst
 
       - name: Upload wasm files
         uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-wasm-simd-zh-en-asr-paraformer
+          name: sherpa-onnx-wasm-simd-vad
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
 
       - name: Release
@@ -109,7 +95,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en-paraformer.git ms
+            git clone https://www.modelscope.cn/studios/csukuangfj/web-assembly-vad-sherpa-onnx.git ms
             cd ms
             rm -fv *.js
             rm -fv *.data
@@ -117,7 +103,7 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
 
-            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-*/* .
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-vad/* .
 
             git status
             git lfs track "*.data"
@@ -126,7 +112,7 @@ jobs:
 
             git add .
             git commit -m "update model"
-            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en-paraformer.git
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/csukuangfj/web-assembly-vad-sherpa-onnx.git
 
       - name: Publish to huggingface
         env:
@@ -146,7 +132,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en-paraformer huggingface
+            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-vad-sherpa-onnx huggingface
             cd huggingface
             rm -fv *.js
             rm -fv *.data
@@ -154,7 +140,7 @@ jobs:
             git pull
             git merge -m "merge remote" --ff origin main
 
-            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-*/* .
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-vad/* .
 
             git status
             git lfs track "*.data"
@@ -163,4 +149,4 @@ jobs:
 
             git add .
             git commit -m "update model"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en-paraformer main
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-vad-sherpa-onnx main

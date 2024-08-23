@@ -1,4 +1,9 @@
-#!/usr/bin/env  bash
+#!/usr/bin/env bash
+# Copyright (c)  2024  Xiaomi Corporation
+#
+# This script is to build sherpa-onnx for WebAssembly (VAD)
+
+set -ex
 
 if [ x"$EMSCRIPTEN" == x"" ]; then
   if ! command -v emcc &> /dev/null; then
@@ -26,8 +31,8 @@ if [ ! -f $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ]; then
   exit 1
 fi
 
-mkdir -p build-wasm-simd-kws
-pushd build-wasm-simd-kws
+mkdir -p build-wasm-simd-vad
+pushd build-wasm-simd-vad
 
 export SHERPA_ONNX_IS_USING_BUILD_WASM_SH=ON
 
@@ -42,16 +47,16 @@ cmake \
   -DBUILD_SHARED_LIBS=OFF \
   -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
   -DSHERPA_ONNX_ENABLE_JNI=OFF \
-  -DSHERPA_ONNX_ENABLE_C_API=ON \
   -DSHERPA_ONNX_ENABLE_TTS=OFF \
+  -DSHERPA_ONNX_ENABLE_C_API=ON \
   -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
   -DSHERPA_ONNX_ENABLE_GPU=OFF \
   -DSHERPA_ONNX_ENABLE_WASM=ON \
-  -DSHERPA_ONNX_ENABLE_WASM_KWS=ON \
+  -DSHERPA_ONNX_ENABLE_WASM_VAD=ON \
   -DSHERPA_ONNX_ENABLE_BINARY=OFF \
   -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
   ..
-make -j8
+make -j2
 make install
 
-ls -lh install/bin/wasm
+ls -lh install/bin/wasm/vad

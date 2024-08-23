@@ -71,7 +71,7 @@ config = {
   /*
 {
   samples: a 1-d float32 array,
-  start: a int32
+  start: an int32
 }
    */
   front(enableExternalBuffer = true) {

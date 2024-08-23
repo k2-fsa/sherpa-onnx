@@ -76,6 +76,32 @@ with the following APIs
   - Swift, Rust
   - Dart, Object Pascal
 
+### Links for Huggingface Spaces
+
+You can visit the following Huggingface spaces to try `sherpa-onnx` without
+installing anything. All you need is a browser.
+
+| Description | URL |
+|---|---|
+| Speech recognition | [Click me](https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition)|
+| Speech recognition with [Whisper](https://github.com/openai/whisper)| [Click me](https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition-with-whisper)|
+| Speech synthesis | [Click me](https://huggingface.co/spaces/k2-fsa/text-to-speech)|
+| Generate subtitles| [Click me](https://huggingface.co/spaces/k2-fsa/generate-subtitles-for-videos)|
+|Audio tagging| [Click me](https://huggingface.co/spaces/k2-fsa/audio-tagging)|
+|Spoken language identification with [Whisper](https://github.com/openai/whisper)|[Click me](https://huggingface.co/spaces/k2-fsa/spoken-language-identification)|
+
+We also have spaces built using WebAssembly. The are listed below:
+
+| Description | URL| Chinese users|
+|---|---|---|
+|Voice activity detection with [silero-vad](https://github.com/snakers4/silero-vad)| [Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-sherpa-onnx)|[地址](https://modelscope.cn/studios/csukuangfj/web-assembly-vad-sherpa-onnx)|
+|Real-time speech recognition (Chinese + English) with Zipformer | [Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en)|[地址](https://modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en)|
+|Real-time speech recognition (Chinese + English) with Paraformer|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en-paraformer)| [地址](https://modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en-paraformer)|
+|Real-time speech recognition (Chinese + English + Cantonese) with Paraformer|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer)| [地址](https://modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer)|
+|Real-time speech recognition (English) |[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-en)|[地址](https://modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-en)|
+|Speech synthesis (English) |[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-en)| [地址](https://modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-en)|
+|Speech synthesis (German)|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-de)| [地址](https://modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-de)|
+
 ### Links for pre-built Android APKs
 
 | Description                    | URL                                                                                     | 中国用户                                                                             |
@@ -130,7 +156,7 @@ with the following APIs
 | Keyword spotting |[Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/kws-models)|
 | Audio tagging                  | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/audio-tagging-models)|
 | Speaker identification (Speaker ID)         | [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models)|
-| Spoken language identification (Language ID) | See multi-lingual Whisper ASR models from  [Speech recognition](https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models) |
+| Spoken language identification (Language ID) | See multi-lingual [Whisper](https://github.com/openai/whisper) ASR models from  [Speech recognition](https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models) |
 | Punctuation| [Address](https://github.com/k2-fsa/sherpa-onnx/releases/tag/punctuation-models)|
 
 ### Useful links
