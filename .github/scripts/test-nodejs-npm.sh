@@ -15,7 +15,7 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/s
 tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
 rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
 
-node ./test_keyword_spotter_transducer.js
+node ./test-keyword_spotter-transducer.js
 rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 
 # offline asr

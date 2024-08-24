@@ -72,6 +72,9 @@ set(exported_functions
   SherpaOnnxVoiceActivityDetectorFlush
   #
   SherpaOnnxFileExists
+  SherpaOnnxReadWave
+  SherpaOnnxFreeWave
+  SherpaOnnxWriteWave
 )
 
 
@@ -106,6 +109,7 @@ install(
   ${CMAKE_SOURCE_DIR}/wasm/tts/sherpa-onnx-tts.js
   ${CMAKE_SOURCE_DIR}/wasm/kws/sherpa-onnx-kws.js
   ${CMAKE_SOURCE_DIR}/wasm/vad/sherpa-onnx-vad.js
+  ${CMAKE_SOURCE_DIR}/wasm/nodejs/sherpa-onnx-wave.js
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-nodejs>/sherpa-onnx-wasm-nodejs.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-nodejs>/sherpa-onnx-wasm-nodejs.wasm"
   DESTINATION

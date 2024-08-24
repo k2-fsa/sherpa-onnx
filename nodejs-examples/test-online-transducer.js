@@ -20,26 +20,10 @@ function createOnlineRecognizer() {
     transducer: onlineTransducerModelConfig,
     tokens:
         './sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt',
-    numThreads: 1,
-    provider: 'cpu',
-    debug: 1,
-    modelType: 'zipformer',
-  };
-
-  let featureConfig = {
-    sampleRate: 16000,
-    featureDim: 80,
   };
 
   let recognizerConfig = {
-    featConfig: featureConfig,
     modelConfig: onlineModelConfig,
-    decodingMethod: 'greedy_search',
-    maxActivePaths: 4,
-    enableEndpoint: 1,
-    rule1MinTrailingSilence: 2.4,
-    rule2MinTrailingSilence: 1.2,
-    rule3MinUtteranceLength: 20,
   };
 
   return sherpa_onnx.createOnlineRecognizer(recognizerConfig);

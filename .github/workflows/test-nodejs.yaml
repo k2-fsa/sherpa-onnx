@@ -112,6 +112,7 @@ jobs:
           node --version
           npm --version
           export d=scripts/nodejs
+          cat index.js
 
           pushd $d
           npm install

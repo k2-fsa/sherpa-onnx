@@ -69,13 +69,14 @@ function initModelConfig(config, Module) {
 
   const len = transducer.len + paraformer_len + ctc_len + 7 * 4;
   const ptr = Module._malloc(len);
+  Module.HEAPU8.fill(0, ptr, ptr + len);
 
   let offset = 0;
   Module._CopyHeap(transducer.ptr, transducer.len, ptr + offset);
 
   const tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
-  const providerLen = Module.lengthBytesUTF8(config.provider) + 1;
-  const modelTypeLen = Module.lengthBytesUTF8(config.modelType) + 1;
+  const providerLen = Module.lengthBytesUTF8(config.provider || 'cpu') + 1;
+  const modelTypeLen = Module.lengthBytesUTF8(config.modelType || '') + 1;
   const modelingUnitLen = Module.lengthBytesUTF8(config.modelingUnit || '') + 1;
   const bpeVocabLen = Module.lengthBytesUTF8(config.bpeVocab || '') + 1;
   const bufferLen =
@@ -86,10 +87,10 @@ function initModelConfig(config, Module) {
   Module.stringToUTF8(config.tokens, buffer, tokensLen);
   offset += tokensLen;
 
-  Module.stringToUTF8(config.provider, buffer + offset, providerLen);
+  Module.stringToUTF8(config.provider || 'cpu', buffer + offset, providerLen);
   offset += providerLen;
 
-  Module.stringToUTF8(config.modelType, buffer + offset, modelTypeLen);
+  Module.stringToUTF8(config.modelType || '', buffer + offset, modelTypeLen);
   offset += modelTypeLen;
 
   Module.stringToUTF8(
@@ -103,7 +104,7 @@ function initModelConfig(config, Module) {
   Module.setValue(ptr + offset, buffer, 'i8*');  // tokens
   offset += 4;
 
-  Module.setValue(ptr + offset, config.numThreads, 'i32');
+  Module.setValue(ptr + offset, config.numThreads || 1, 'i32');
   offset += 4;
 
   Module.setValue(ptr + offset, buffer + tokensLen, 'i8*');  // provider
@@ -134,14 +135,21 @@ function initModelConfig(config, Module) {
 
 function initFeatureExtractorConfig(config, Module) {
   let ptr = Module._malloc(4 * 2);
-  Module.setValue(ptr, config.samplingRate, 'i32');
-  Module.setValue(ptr + 4, config.featureDim, 'i32');
+  Module.setValue(ptr, config.samplingRate || 16000, 'i32');
+  Module.setValue(ptr + 4, config.featureDim || 80, 'i32');
   return {
     ptr: ptr, len: 8,
   }
 }
 
 function initKwsConfig(config, Module) {
+  if (!('featConfig' in config)) {
+    config.featConfig = {
+      sampleRate: 16000,
+      featureDim: 80,
+    };
+  }
+
   let featConfig = initFeatureExtractorConfig(config.featConfig, Module);
 
   let modelConfig = initModelConfig(config.modelConfig, Module);
@@ -155,16 +163,16 @@ function initKwsConfig(config, Module) {
   Module._CopyHeap(modelConfig.ptr, modelConfig.len, ptr + offset)
   offset += modelConfig.len;
 
-  Module.setValue(ptr + offset, config.maxActivePaths, 'i32');
+  Module.setValue(ptr + offset, config.maxActivePaths || 4, 'i32');
   offset += 4;
 
-  Module.setValue(ptr + offset, config.numTrailingBlanks, 'i32');
+  Module.setValue(ptr + offset, config.numTrailingBlanks || 1, 'i32');
   offset += 4;
 
-  Module.setValue(ptr + offset, config.keywordsScore, 'float');
+  Module.setValue(ptr + offset, config.keywordsScore || 1.0, 'float');
   offset += 4;
 
-  Module.setValue(ptr + offset, config.keywordsThreshold, 'float');
+  Module.setValue(ptr + offset, config.keywordsThreshold || 0.25, 'float');
   offset += 4;
 
   let keywordsLen = Module.lengthBytesUTF8(config.keywords) + 1;
