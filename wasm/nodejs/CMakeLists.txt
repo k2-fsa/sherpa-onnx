@@ -49,6 +49,29 @@ set(exported_functions
   SherpaOnnxDestroyKeywordSpotter
   SherpaOnnxGetKeywordResult
   SherpaOnnxIsKeywordStreamReady
+  # VAD
+  SherpaOnnxCreateCircularBuffer
+  SherpaOnnxDestroyCircularBuffer
+  SherpaOnnxCircularBufferPush
+  SherpaOnnxCircularBufferGet
+  SherpaOnnxCircularBufferFree
+  SherpaOnnxCircularBufferPop
+  SherpaOnnxCircularBufferSize
+  SherpaOnnxCircularBufferHead
+  SherpaOnnxCircularBufferReset
+  SherpaOnnxCreateVoiceActivityDetector
+  SherpaOnnxDestroyVoiceActivityDetector
+  SherpaOnnxVoiceActivityDetectorAcceptWaveform
+  SherpaOnnxVoiceActivityDetectorEmpty
+  SherpaOnnxVoiceActivityDetectorDetected
+  SherpaOnnxVoiceActivityDetectorPop
+  SherpaOnnxVoiceActivityDetectorClear
+  SherpaOnnxVoiceActivityDetectorFront
+  SherpaOnnxDestroySpeechSegment
+  SherpaOnnxVoiceActivityDetectorReset
+  SherpaOnnxVoiceActivityDetectorFlush
+  #
+  SherpaOnnxFileExists
 )
 
 
@@ -82,6 +105,7 @@ install(
   ${CMAKE_SOURCE_DIR}/wasm/asr/sherpa-onnx-asr.js
   ${CMAKE_SOURCE_DIR}/wasm/tts/sherpa-onnx-tts.js
   ${CMAKE_SOURCE_DIR}/wasm/kws/sherpa-onnx-kws.js
+  ${CMAKE_SOURCE_DIR}/wasm/vad/sherpa-onnx-vad.js
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-nodejs>/sherpa-onnx-wasm-nodejs.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-nodejs>/sherpa-onnx-wasm-nodejs.wasm"
   DESTINATION
