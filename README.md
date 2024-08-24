@@ -92,17 +92,22 @@ installing anything. All you need is a browser.
 
 We also have spaces built using WebAssembly. The are listed below:
 
-| Description | URL| Chinese users|
+| Description | Huggingface space| ModelScope space|
 |---|---|---|
 |Voice activity detection with [silero-vad](https://github.com/snakers4/silero-vad)| [Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-sherpa-onnx)|[地址](https://modelscope.cn/studios/csukuangfj/web-assembly-vad-sherpa-onnx)|
 |Real-time speech recognition (Chinese + English) with Zipformer | [Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en)|[地址](https://modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en)|
 |Real-time speech recognition (Chinese + English) with Paraformer|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en-paraformer)| [地址](https://modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-en-paraformer)|
 |Real-time speech recognition (Chinese + English + Cantonese) with [Paraformer](https://www.modelscope.cn/models/damo/speech_paraformer-large_asr_nat-zh-cn-16k-common-vocab8404-pytorch/summary)|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer)| [地址](https://modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer)|
+|Real-time speech recognition (English) |[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-en)|[地址](https://modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-en)|
 |VAD + speech recognition (Chinese + English + Korean + Japanese + Cantonese) with [SenseVoice](https://github.com/FunAudioLLM/SenseVoice)|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-en-ja-ko-cantonese-sense-voice)| [地址](https://www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-zh-en-jp-ko-cantonese-sense-voice)|
 |VAD + speech recognition (English) with [Whisper](https://github.com/openai/whisper) tiny.en|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-en-whisper-tiny)| [地址](https://www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-en-whisper-tiny)|
+|VAD + speech recognition (English) with Zipformer trained with GigaSpeech|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-en-zipformer-gigaspeech)| [地址](https://www.modelscope.cn/studios/k2-fsa/web-assembly-vad-asr-sherpa-onnx-en-zipformer-gigaspeech)|
+|VAD + speech recognition (Chinese) with Zipformer trained with WenetSpeech|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-zipformer-wenetspeech)| [地址](https://www.modelscope.cn/studios/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-zipformer-wenetspeech)|
 |VAD + speech recognition (Japanese) with Zipformer trained with [ReazonSpeech](https://research.reazon.jp/_static/reazonspeech_nlp2023.pdf)|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-ja-zipformer)| [地址](https://www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-ja-zipformer)|
 |VAD + speech recognition (Thai) with Zipformer trained with [GigaSpeech2](https://github.com/SpeechColab/GigaSpeech2)|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-th-zipformer)| [地址](https://www.modelscope.cn/studios/csukuangfj/web-assembly-vad-asr-sherpa-onnx-th-zipformer)|
-|Real-time speech recognition (English) |[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-en)|[地址](https://modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-en)|
+|VAD + speech recognition (Chinese 多种方言) with a [TeleSpeech-ASR](https://github.com/Tele-AI/TeleSpeech-ASR) CTC model|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-telespeech)| [地址](https://www.modelscope.cn/studios/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-telespeech)|
+|VAD + speech recognition (English + Chinese, 及多种中文方言) with Paraformer-large |[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-en-paraformer)| [地址](https://www.modelscope.cn/studios/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-en-paraformer)|
+|VAD + speech recognition (English + Chinese, 及多种中文方言) with Paraformer-small |[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-en-paraformer-small)| [地址](https://www.modelscope.cn/studios/k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-en-paraformer-small)|
 |Speech synthesis (English) |[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-en)| [地址](https://modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-en)|
 |Speech synthesis (German)|[Click me](https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-de)| [地址](https://modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-de)|
 

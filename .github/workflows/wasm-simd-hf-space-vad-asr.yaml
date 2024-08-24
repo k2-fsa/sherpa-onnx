@@ -1,0 +1,93 @@
+name: wasm-simd-hf-space-vad-asr
+
+on:
+  push:
+    branches:
+      - wasm
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: wasm-simd-hf-space-vad-asr${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wasm-simd-hf-space-vad-asr:
+    name: ${{ matrix.index }}/${{ matrix.total }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        total: ["8"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
+
+      - name: Install emsdk
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.51
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: View emsdk version
+        shell: bash
+        run: |
+          emcc -v
+          echo "--------------------"
+          emcc --check
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/wasm
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-vad-asr.py --total $total --index $index
+
+          chmod +x run-vad-asr.sh
+          mv -v ./run-vad-asr.sh ../..
+
+      - name: Show build scripts
+        shell: bash
+        run: |
+          cat ./run-vad-asr.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: run-vad-asr-${{ matrix.index }}
+          path: ./run-vad-asr.sh
+
+      - name: Build sherpa-onnx for WebAssembly
+        shell: bash
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          ./run-vad-asr.sh
+
+      - name: Release jar
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./*.tar.bz2
+
+      - name: Upload wasm files
+        uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-wasm-simd-vad-asr-${{ matrix.index }}
+          path: ./sherpa-onnx-wasm-simd-*.tar.bz2

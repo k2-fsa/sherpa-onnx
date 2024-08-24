@@ -18,7 +18,6 @@ Please refer to
 https://k2-fsa.github.io/sherpa/onnx/lazarus/generate-subtitles.html#download-a-speech-recognition-model
 for how to rename.
 
-You can find example build scripts at the following addresses:
+You can find example build scripts at the following address:
 
-  - SenseVoice: https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/wasm-simd-hf-space-vad-asr-sense-voice.yaml
-  - Whisper tiny.en: https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/wasm-simd-hf-space-vad-asr-whisper-tiny-en.yaml
+  https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/wasm-simd-hf-space-vad-asr.yaml
