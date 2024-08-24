@@ -172,7 +172,6 @@ class Vad {
   constructor(configObj, Module) {
     this.config = configObj;
     const config = initSherpaOnnxVadModelConfig(configObj, Module);
-    Module._MyPrint(config.ptr);
     const handle = Module._SherpaOnnxCreateVoiceActivityDetector(
         config.ptr, configObj.bufferSizeInSeconds || 30);
     freeConfig(config, Module);

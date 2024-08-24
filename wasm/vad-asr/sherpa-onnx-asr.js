@@ -1,0 +1,1 @@
+../asr/sherpa-onnx-asr.js

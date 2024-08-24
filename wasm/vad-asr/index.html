@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width" />
-  <title>Next-gen Kaldi WebAssembly with sherpa-onnx for ASR</title>
+  <title>Next-gen Kaldi WebAssembly with sherpa-onnx for VAD + ASR</title>
   <style>
     h1,div {
       text-align: center;
@@ -17,7 +17,7 @@
 <body>
   <h1>
     Next-gen Kaldi + WebAssembly<br/>
-    ASR Demo with <a href="https://github.com/k2-fsa/sherpa-onnx">sherpa-onnx</a><br/>
+    VAD+ASR Demo with <a href="https://github.com/k2-fsa/sherpa-onnx">sherpa-onnx</a><br/>
     (with Zipformer)
   </h1>
 
@@ -37,6 +37,7 @@
   </section>
 
   <script src="sherpa-onnx-asr.js"></script>
-  <script src="app-asr.js"></script>
-  <script src="sherpa-onnx-wasm-main-asr.js"></script>
+  <script src="sherpa-onnx-vad.js"></script>
+  <script src="app-vad-asr.js"></script>
+  <script src="sherpa-onnx-wasm-main-vad-asr.js"></script>
 </body>

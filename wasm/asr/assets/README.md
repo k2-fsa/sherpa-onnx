@@ -80,3 +80,10 @@ assets fangjun$ tree -L 1
 
 0 directories, 4 files
 ```
+
+You can find example build scripts at:
+
+  - Streaming Zipformer (English + Chinese): https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/ wasm-simd-hf-space-zh-en-asr-zipformer.yaml
+  - Streaming Zipformer (English): https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/wasm-simd-hf-space-en-asr-zipformer.yaml
+  - Streaming Paraformer (English + Chinese): https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/wasm-simd-hf-space-zh-en-asr-paraformer.yaml
+  - Streaming Paraformer (English + Chinese + Cantonese): https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/wasm-simd-hf-space-zh-cantonese-en-asr-paraformer.yaml
