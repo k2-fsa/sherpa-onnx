@@ -206,6 +206,7 @@ if(SHERPA_ONNX_ENABLE_WASM_NODEJS)
   if(NOT SHERPA_ONNX_ENABLE_WASM)
     message(FATAL_ERROR "Please set SHERPA_ONNX_ENABLE_WASM to ON if you enable WASM for NodeJS")
   endif()
+  add_definitions(-DSHERPA_ONNX_ENABLE_WASM_KWS=1)
 endif()
 
 if(SHERPA_ONNX_ENABLE_WASM)
