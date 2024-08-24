@@ -55,6 +55,9 @@ jobs:
 
       - name: Install emsdk
         uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.51
+          actions-cache-folder: 'emsdk-cache'
 
       - name: View emsdk version
         shell: bash
@@ -109,6 +112,7 @@ jobs:
           node --version
           npm --version
           export d=scripts/nodejs
+          cat $d/index.js
 
           pushd $d
           npm install

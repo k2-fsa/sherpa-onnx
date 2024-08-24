@@ -1,2 +1,4 @@
 node_modules
 jslint.mjs
+sherpa-onnx-*.js
+sherpa-onnx-*.wasm

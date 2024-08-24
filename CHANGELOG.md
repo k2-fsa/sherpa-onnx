@@ -1,3 +1,14 @@
+## 1.10.23
+
+* flutter: add lang, emotion, event to OfflineRecognizerResult (#1268)
+* Use a separate thread to initialize models for lazarus examples. (#1270)
+* Object pascal examples for recording and playing audio with portaudio. (#1271)
+* Text to speech API for Object Pascal. (#1273)
+* update kotlin api for better release native object and add user-friendly apis. (#1275)
+* Update wave-reader.cc to support 8/16/32-bit waves (#1278)
+* Add WebAssembly for VAD (#1281)
+* WebAssembly example for VAD + Non-streaming ASR (#1284)
+
 ## 1.10.22
 
 * Add Pascal API for reading wave files (#1243)

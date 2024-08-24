@@ -1,28 +1,23 @@
 // Copyright (c)  2023-2024  Xiaomi Corporation (authors: Fangjun Kuang)
 
-const sherpa_onnx = require('sherpa-onnx-node');
+const sherpa_onnx = require('sherpa-onnx');
 
 function createRecognizer() {
   // Please download test files from
   // https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models
   const config = {
-    'featConfig': {
-      'sampleRate': 16000,
-      'featureDim': 80,
-    },
     'modelConfig': {
       'whisper': {
         'encoder': './sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx',
         'decoder': './sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx',
+        'tailPaddings': 2000,
       },
       'tokens': './sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt',
-      'numThreads': 2,
-      'provider': 'cpu',
-      'debug': 1,
+      'debug': 0,
     }
   };
 
-  return new sherpa_onnx.OfflineRecognizer(config);
+  return sherpa_onnx.createOfflineRecognizer(config);
 }
 
 function createVad() {
@@ -39,11 +34,10 @@ function createVad() {
     sampleRate: 16000,
     debug: true,
     numThreads: 1,
+    bufferSizeInSeconds: 60,
   };
 
-  const bufferSizeInSeconds = 60;
-
-  return new sherpa_onnx.Vad(config, bufferSizeInSeconds);
+  return sherpa_onnx.createVad(config);
 }
 
 const recognizer = createRecognizer();
@@ -78,8 +72,7 @@ for (let i = 0; i < wave.samples.length; i += windowSize) {
     end_time = end_time.toFixed(2);
 
     const stream = recognizer.createStream();
-    stream.acceptWaveform(
-        {samples: segment.samples, sampleRate: wave.sampleRate});
+    stream.acceptWaveform(wave.sampleRate, segment.samples);
 
     recognizer.decode(stream);
     const r = recognizer.getResult(stream);
@@ -87,6 +80,8 @@ for (let i = 0; i < wave.samples.length; i += windowSize) {
       const text = r.text.toLowerCase().trim();
       console.log(`${start_time} -- ${end_time}: ${text}`);
     }
+
+    stream.free();
   }
 }
 
@@ -103,8 +98,7 @@ while (!vad.isEmpty()) {
   end_time = end_time.toFixed(2);
 
   const stream = recognizer.createStream();
-  stream.acceptWaveform(
-      {samples: segment.samples, sampleRate: wave.sampleRate});
+  stream.acceptWaveform(wave.sampleRate, segment.samples);
 
   recognizer.decode(stream);
   const r = recognizer.getResult(stream);
@@ -125,3 +119,6 @@ console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
 console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
     real_time_factor.toFixed(3))
+
+vad.free();
+recognizer.free();

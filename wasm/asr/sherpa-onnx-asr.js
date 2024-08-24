@@ -546,7 +546,7 @@ function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   Module.setValue(ptr + 12, buffer + offset, 'i8*');
   offset += taskLen;
 
-  Module.setValue(ptr + 16, config.tailPaddings || -1, 'i32');
+  Module.setValue(ptr + 16, config.tailPaddings || 2000, 'i32');
 
   return {
     buffer: buffer, ptr: ptr, len: len,
