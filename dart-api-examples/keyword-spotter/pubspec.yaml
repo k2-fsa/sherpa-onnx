@@ -9,7 +9,7 @@ environment:
   sdk: ^3.4.0
 
 dependencies:
-  sherpa_onnx: ^1.10.22
+  sherpa_onnx: ^1.10.23
   # sherpa_onnx:
   #   path: ../../flutter/sherpa_onnx
   path: ^1.9.0

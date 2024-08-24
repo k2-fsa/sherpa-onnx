@@ -1,6 +1,9 @@
 name: npm
 
 on:
+  push:
+    branches:
+      - npm
   workflow_dispatch:
 
 concurrency:
@@ -89,7 +92,6 @@ jobs:
           path: ./*.tar.bz2
 
       - name: Build nodejs package
-        if: false
         shell: bash
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
