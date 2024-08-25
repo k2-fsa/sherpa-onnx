@@ -11,60 +11,88 @@ and turns them as assets and writes them into ./pubspec.yaml
 
 import os
 
-
 def main():
-    target = "./assets"
-    excluded_ext = [
-        ".gitkeep",
-        ".onnx.json",
-        ".py",
-        ".sh",
-        "*.md",
-        "MODEL_CARD",
-        ".DS_Store",
-    ]
-    sep = "    "
-    ss = []
-    for root, d, files in os.walk(target):
-        for f in files:
-            skip = False
-            for p in excluded_ext:
-                if f.endswith(p):
-                    skip = True
-                    break
+    target = "./assets/"
+    space = "    "
+    subfolders = []
+    patterns_to_skip = ["1.5x", "2.x", "3.x", "4.x"]
+    for root, dirs, files in os.walk(target):
+        for d in dirs:
+            path = os.path.join(root, d).replace("\\", "/")
+            if os.listdir(path):
+                path = path.lstrip('./')
+                if any(path.endswith(pattern) for pattern in patterns_to_skip):
+                    continue
+                subfolders.append("{space}- {path}/".format(space=space, path=path))
 
-            if skip:
-                continue
+    assert subfolders, "The subfolders list is empty."
 
-            t = os.path.join(root, f).replace("\\", "/")
-            ss.append("{sep}- {t}".format(sep=sep, t=t))
+    subfolders = sorted(subfolders)
 
-    # read pub.spec.yaml
+    loc_of_flutter = -1
+    loc_of_flutter_asset = -1
+    loc_of_end_flutter_asset = -1
+    loc_of_end_flutter = -1
+
     with open("./pubspec.yaml", encoding="utf-8") as f:
         lines = f.readlines()
-
-    found_assets = False
-    with open("./pubspec.yaml", "w", encoding="utf-8") as f:
-        for line in lines:
-            if line == "  assets:\n":
-                assert found_assets is False
-                found_assets = True
-                if len(ss) > 0:
-                    f.write(line)
-
-            if not found_assets:
-                f.write(line)
+        for index, line in enumerate(lines):
+            if line == "flutter:\n":
+                loc_of_flutter = index + 1
+                if index == len(lines) - 1:
+                    loc_of_end_flutter = index + 2
+                continue
+            if loc_of_flutter >= 0 and loc_of_flutter_asset < 0 and line == "  assets:\n":
+                loc_of_flutter_asset = index + 1
                 continue
 
-            for s in ss:
-                f.write("{s}\n".format(s=s))
-            break
+    with open("./pubspec.yaml", encoding="utf-8") as f:
+        lines = f.readlines()
+        for index, line in enumerate(lines):
+            if index < loc_of_flutter:
+                continue
+            if loc_of_flutter_asset >= 0:
+                if line.startswith("    - assets/"):
+                    loc_of_end_flutter_asset = index + 1
+                    continue
+                else:
+                    loc_of_end_flutter = index + 1
+                    continue
+            else:
+                if line.startswith("  ") is False:
+                    loc_of_end_flutter = index + 1
+                    continue
+                else:
+                    loc_of_end_flutter = index + 2
+                    break
 
-        if not found_assets and ss:
+    assert loc_of_flutter >= 0, "The 'flutter:' section is missing in the pubspec.yaml file."
+
+    with open("./pubspec.yaml", "w", encoding="utf-8") as f:
+        for index, line in enumerate(lines):
+            if loc_of_end_flutter_asset >= 0:
+                if index + 1 < loc_of_flutter_asset or index + 1 > loc_of_end_flutter_asset:
+                    f.write(line)
+                if index + 1 == loc_of_flutter_asset:
+                    f.write("  assets:\n")
+                    for folder in subfolders:
+                        f.write("{folder}\n".format(folder=folder))
+            else:
+                if index + 1 < loc_of_end_flutter or index + 1 > loc_of_end_flutter:
+                    f.write(line)
+                if index + 1 == loc_of_end_flutter:
+                    f.write("  assets:\n")
+                    for indexOfFolder, folder in enumerate(subfolders):
+                        f.write("{folder}\n".format(folder=folder))
+                        if indexOfFolder == len(subfolders) - 1:
+                            f.write("\n")
+                            break
+
+        if loc_of_end_flutter == len(lines) + 1:
+            f.write("\n")
             f.write("  assets:\n")
-            for s in ss:
-                f.write("{s}\n".format(s=s))
-
+            for folder in subfolders:
+                f.write("{folder}\n".format(folder=folder))
 
 if __name__ == "__main__":
     main()
