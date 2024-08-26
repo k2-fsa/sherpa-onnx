@@ -440,7 +440,12 @@ type OfflineStream struct {
 
 // It contains recognition result of an offline stream.
 type OfflineRecognizerResult struct {
-	Text string
+	Text       string
+	Tokens     []string
+	Timestamps []float32
+	Lang       string
+	Emotion    string
+	Event      string
 }
 
 // Frees the internal pointer of the recognition to avoid memory leak.
@@ -593,7 +598,23 @@ func (s *OfflineStream) GetResult() *OfflineRecognizerResult {
 	defer C.SherpaOnnxDestroyOfflineRecognizerResult(p)
 	result := &OfflineRecognizerResult{}
 	result.Text = C.GoString(p.text)
-
+	result.Lang = C.GoString(p.lang)
+	result.Emotion = C.GoString(p.emotion)
+	result.Event = C.GoString(p.event)
+	n := int(p.count)
+	result.Tokens = make([]string, n)
+	tokens := (*[1 << 28]*C.char)(unsafe.Pointer(p.tokens_arr))[:n:n]
+	for i := 0; i < n; i++ {
+		result.Tokens[i] = C.GoString(tokens[i])
+	}
+	if p.timestamps == nil {
+		return result
+	}
+	result.Timestamps = make([]float32, n)
+	timestamps := (*[1 << 28]C.float)(unsafe.Pointer(p.timestamps))[:n:n]
+	for i := 0; i < n; i++ {
+		result.Timestamps[i] = float32(timestamps[i])
+	}
 	return result
 }
 
