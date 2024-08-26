@@ -174,9 +174,8 @@ class MainActivity : AppCompatActivity() {
 
                 vad.acceptWaveform(samples)
                 while(!vad.empty()) {
-                    var objArray = vad.front()
-                    val samples = objArray[1] as FloatArray
-                    val text = runSecondPass(samples)
+                    var segment = vad.front()
+                    val text = runSecondPass(segment.samples)
 
                     if (text.isNotBlank()) {
                         lastText = "${lastText}\n${idx}: ${text}"
