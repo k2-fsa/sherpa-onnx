@@ -3,7 +3,8 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 //
-// This file demonstrates how to use streaming Paraformer with sherpa-onnx's C API.
+// This file demonstrates how to use streaming Paraformer with sherpa-onnx's C
+// API.
 // clang-format off
 // 
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
@@ -19,26 +20,27 @@
 #include "sherpa-onnx/c-api/c-api.h"
 
 int32_t main() {
-
-  const char *wav_filename = "sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/0.wav";
-  const char *encoder_filename = "sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx";
-  const char *decoder_filename = "sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx";
-  const char *tokens_filename = "sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt";
+  const char *wav_filename =
+      "sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/0.wav";
+  const char *encoder_filename =
+      "sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx";
+  const char *decoder_filename =
+      "sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx";
+  const char *tokens_filename =
+      "sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt";
   const char *provider = "cpu";
-
 
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
     fprintf(stderr, "Failed to read %s\n", wav_filename);
     return -1;
   }
-  
+
   // Paraformer config
   SherpaOnnxOnlineParaformerModelConfig paraformer_config;
   memset(&paraformer_config, 0, sizeof(paraformer_config));
   paraformer_config.encoder = encoder_filename;
   paraformer_config.decoder = decoder_filename;
-  
 
   // Online model config
   SherpaOnnxOnlineModelConfig online_model_config;
