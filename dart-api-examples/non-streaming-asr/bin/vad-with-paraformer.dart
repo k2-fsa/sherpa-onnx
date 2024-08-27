@@ -69,27 +69,25 @@ void main(List<String> arguments) async {
     vad.acceptWaveform(Float32List.sublistView(
         waveData.samples, start, start + vadConfig.sileroVad.windowSize));
 
-    if (vad.isDetected()) {
-      while (!vad.isEmpty()) {
-        final stream = recognizer.createStream();
-        final segment = vad.front();
-        stream.acceptWaveform(
-            samples: segment.samples, sampleRate: waveData.sampleRate);
-        recognizer.decode(stream);
+    while (!vad.isEmpty()) {
+      final stream = recognizer.createStream();
+      final segment = vad.front();
+      stream.acceptWaveform(
+          samples: segment.samples, sampleRate: waveData.sampleRate);
+      recognizer.decode(stream);
 
-        final result = recognizer.getResult(stream);
+      final result = recognizer.getResult(stream);
 
-        final startTime = segment.start * 1.0 / waveData.sampleRate;
-        final duration = segment.samples.length * 1.0 / waveData.sampleRate;
-        final stopTime = startTime + duration;
-        if (result.text != '') {
-          print(
-              '${startTime.toStringAsPrecision(4)} -- ${stopTime.toStringAsPrecision(4)}: ${result.text}');
-        }
-
-        stream.free();
-        vad.pop();
+      final startTime = segment.start * 1.0 / waveData.sampleRate;
+      final duration = segment.samples.length * 1.0 / waveData.sampleRate;
+      final stopTime = startTime + duration;
+      if (result.text != '') {
+        print(
+            '${startTime.toStringAsPrecision(4)} -- ${stopTime.toStringAsPrecision(4)}: ${result.text}');
       }
+
+      stream.free();
+      vad.pop();
     }
   }
 
