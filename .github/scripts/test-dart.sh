@@ -40,6 +40,7 @@ echo "----paraformer----"
 rm -rf sherpa-onnx-*
 
 echo "----SenseVoice zh----"
+./run-sense-voice-zh-2.sh
 ./run-sense-voice-zh.sh
 rm -rf sherpa-onnx-*
 
