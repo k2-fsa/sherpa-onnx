@@ -99,6 +99,45 @@ jobs:
           ./run.sh
           rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
 
+      - name: Test vad + sense-voice
+        shell: bash
+        run: |
+          gcc -o vad-sense-voice-c-api ./c-api-examples/vad-sense-voice-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh vad-sense-voice-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./vad-sense-voice-c-api
+            echo "----"
+            readelf -d ./vad-sense-voice-c-api
+          fi
+
+          # Now download models
+          #
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+          tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+          rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+
+          ls -lh sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+          echo "---"
+          ls -lh sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./vad-sense-voice-c-api
+
+          rm -rf sherpa-onnx-sense-voice-*
+          rm -rf *.onnx
+          rm *.wav
+
       - name: Test sense-voice
         shell: bash
         run: |

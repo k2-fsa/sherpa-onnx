@@ -3,7 +3,8 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 //
-// This file demonstrates how to use non-streaming Paraformer with sherpa-onnx's C API.
+// This file demonstrates how to use non-streaming Paraformer with sherpa-onnx's
+// C API.
 // clang-format off
 //
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-small-2024-03-09.tar.bz2
@@ -19,19 +20,20 @@
 #include "sherpa-onnx/c-api/c-api.h"
 
 int32_t main() {
-
-  const char *wav_filename = "sherpa-onnx-paraformer-zh-small-2024-03-09/test_wavs/0.wav";
-  const char *model_filename = "sherpa-onnx-paraformer-zh-small-2024-03-09/model.int8.onnx";
-  const char *tokens_filename = "sherpa-onnx-paraformer-zh-small-2024-03-09/tokens.txt";
+  const char *wav_filename =
+      "sherpa-onnx-paraformer-zh-small-2024-03-09/test_wavs/0.wav";
+  const char *model_filename =
+      "sherpa-onnx-paraformer-zh-small-2024-03-09/model.int8.onnx";
+  const char *tokens_filename =
+      "sherpa-onnx-paraformer-zh-small-2024-03-09/tokens.txt";
   const char *provider = "cpu";
-
 
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
     fprintf(stderr, "Failed to read %s\n", wav_filename);
     return -1;
   }
-  
+
   // Paraformer config
   SherpaOnnxOfflineParaformerModelConfig paraformer_config;
   memset(&paraformer_config, 0, sizeof(paraformer_config));

@@ -3,7 +3,8 @@
 // Copyright (c)  2024  Xiaomi Corporation
 
 //
-// This file demonstrates how to use TeleSpeech-ASR CTC model with sherpa-onnx's C API.
+// This file demonstrates how to use TeleSpeech-ASR CTC model with sherpa-onnx's
+// C API.
 // clang-format off
 //
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
@@ -19,10 +20,12 @@
 #include "sherpa-onnx/c-api/c-api.h"
 
 int32_t main() {
-
-  const char *wav_filename = "sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/test_wavs/3-sichuan.wav";
-  const char *model_filename = "sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/model.int8.onnx";
-  const char *tokens_filename = "sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/tokens.txt";
+  const char *wav_filename =
+      "sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/test_wavs/3-sichuan.wav";
+  const char *model_filename =
+      "sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/model.int8.onnx";
+  const char *tokens_filename =
+      "sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/tokens.txt";
   const char *provider = "cpu";
 
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);

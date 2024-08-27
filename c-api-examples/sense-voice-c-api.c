@@ -19,8 +19,6 @@
 #include "sherpa-onnx/c-api/c-api.h"
 
 int32_t main() {
-  // You can find more test waves from
-  // https://hf-mirror.com/spaces/k2-fsa/spoken-language-identification/tree/main/test_wavs
   const char *wav_filename =
       "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/test_wavs/en.wav";
   const char *model_filename =
