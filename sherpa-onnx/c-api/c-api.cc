@@ -1395,6 +1395,10 @@ SherpaOnnxSpeakerEmbeddingManagerGetBestMatches(
 
 void SherpaOnnxSpeakerEmbeddingManagerFreeBestMatches(
     const SherpaOnnxSpeakerEmbeddingManagerBestMatchesResult *r) {
+  if (r == nullptr) {
+    return;
+  }
+
   for (int32_t i = 0; i < r->count; ++i) {
     delete[] r->matches[i].name;
   }
