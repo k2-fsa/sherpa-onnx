@@ -11,6 +11,18 @@
 
 namespace sherpa_onnx {
 
+const sherpa_onnx::OfflinePunctuation *GetPunctuation() {
+  sherpa_onnx::OfflinePunctuationConfig punctConfig;
+  memset(&punctConfig, 0, sizeof(punctConfig));
+  punctConfig.model.ct_transformer = "./punct.onnx";
+  punctConfig.model.num_threads = 1;
+  punctConfig.model.debug = 1;
+  punctConfig.model.provider = "cpu";
+  sherpa_onnx::OfflinePunctuation *punct =
+      new sherpa_onnx::OfflinePunctuation(punctConfig);
+  return punct;
+}
+
 void OnlineWebsocketDecoderConfig::Register(ParseOptions *po) {
   recognizer_config.Register(po);
 
@@ -46,8 +58,12 @@ void OnlineWebsocketServerConfig::Validate() const {
 OnlineWebsocketDecoder::OnlineWebsocketDecoder(OnlineWebsocketServer *server)
     : server_(server),
       config_(server->GetConfig().decoder_config),
-      timer_(server->GetWorkContext()) {
+      timer_(server->GetWorkContext()),
+      punct(GetPunctuation()) {
   recognizer_ = std::make_unique<OnlineRecognizer>(config_.recognizer_config);
+  if (punct == NULL) {
+    printf("punct is NULL\n");
+  }
 }
 
 std::shared_ptr<Connection> OnlineWebsocketDecoder::GetOrCreateConnection(
@@ -212,6 +228,10 @@ void OnlineWebsocketDecoder::Decode() {
       result.is_final = true;
     }
 
+    if (punct != NULL) {
+      result.text = punct->AddPunctuation(result.text);
+    }
+
     asio::post(server_->GetConnectionContext(),
                [this, hdl = c->hdl, str = result.AsJsonString()]() {
                  server_->Send(hdl, str);
@@ -236,6 +256,8 @@ OnlineWebsocketServer::OnlineWebsocketServer(
   server_.set_open_handler([this](connection_hdl hdl) { OnOpen(hdl); });
 
   server_.set_close_handler([this](connection_hdl hdl) { OnClose(hdl); });
+
+  SetupVAD();
 
   server_.set_message_handler(
       [this](connection_hdl hdl, server::message_ptr msg) {
@@ -276,6 +298,18 @@ void OnlineWebsocketServer::SetupLog() {
   // So that it also prints to std::cout and std::cerr
   server_.get_alog().set_ostream(&tee_);
   server_.get_elog().set_ostream(&tee_);
+}
+
+void OnlineWebsocketServer::SetupVAD()
+{
+  sherpa_onnx::VadModelConfig vad_config;
+  vad_config.silero_vad.model = "./silero_vad.onnx";
+  if (!vad_config.Validate()) {
+    fprintf(stderr, "Errors in config!\n");
+    exit(1);
+    return;
+  }
+  vad = std::make_unique<sherpa_onnx::VoiceActivityDetector>(vad_config);
 }
 
 void OnlineWebsocketServer::Send(connection_hdl hdl, const std::string &text) {
@@ -330,8 +364,14 @@ void OnlineWebsocketServer::OnMessage(connection_hdl hdl,
       auto p = reinterpret_cast<const float *>(payload.data());
       int32_t num_samples = payload.size() / sizeof(float);
       std::vector<float> samples(p, p + num_samples);
-
-      {
+      if (vad.get() != NULL) {
+        std::lock_guard<std::mutex> lock(c->mutex);
+        vad->AcceptWaveform(samples.data(), samples.size());
+        while (!vad->Empty()) {
+          c->samples.push_back(vad->Front().samples);
+          vad->Pop();
+        }
+      } else {
         std::lock_guard<std::mutex> lock(c->mutex);
         c->samples.push_back(std::move(samples));
       }
