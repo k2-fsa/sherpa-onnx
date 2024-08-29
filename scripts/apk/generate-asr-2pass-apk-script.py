@@ -113,6 +113,23 @@ def get_2nd_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
+            idx=15,
+            lang="zh_en_ko_ja_yue",
+            short_name="sense_voice",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -fv model.onnx
+            rm -fv *.py
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
@@ -276,8 +293,16 @@ def get_models():
             "icefall-asr-zipformer-wenetspeech-20230615",
         ),
         (
+            "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
+            "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
+        ),
+        (
             "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
             "sherpa-onnx-whisper-tiny.en",
+        ),
+        (
+            "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+            "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
         ),
     ]
     models = []
