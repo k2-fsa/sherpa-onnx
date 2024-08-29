@@ -71,8 +71,11 @@ jobs:
 
           file ./bin/sherpa-onnx
 
-          rm -rf ./install/pkgconfig
-          rm -rf ./install/share
+          rm -rf ./install/lib/pkgconfig
+          rm -rf ./install/lib/share
+          rm -rf ./install/lib/cargs.h
+          rm -rf ./install/include/cargs.h
+          rm -rf ./install/lib/libcargs.dylib
 
       - uses: actions/upload-artifact@v4
         with:
