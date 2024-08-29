@@ -58,7 +58,9 @@ jobs:
 
           ls -lh ./bin/Release/sherpa-onnx.exe
           rm -rf install/share
+          rm -rf install/lib/share
           rm -rf install/lib/pkgconfig
+          rm -rf install/lib/sherpa-onnx-c-api.*
 
       - uses: actions/upload-artifact@v4
         with:
