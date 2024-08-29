@@ -64,8 +64,8 @@ git lfs track "*.wasm"
 ls -lh
 
 git add .
-git commit -m "update model"
-git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/$ms_name.git
+git commit -m "update model" || true
+git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/$ms_name.git || true
 cd ..
 rm -rf ms
 
@@ -81,8 +81,8 @@ git lfs track "*.wasm"
 ls -lh
 
 git add .
-git commit -m "update model"
-git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/$hf_name main
+git commit -m "update model" || true
+git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/$hf_name main || true
 cd ..
 rm -rf huggingface
 rm -rf $dst

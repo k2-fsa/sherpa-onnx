@@ -85,6 +85,9 @@ jobs:
           file_glob: true
           overwrite: true
           file: ./*.tar.bz2
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.10.23
 
       - name: Upload wasm files
         uses: actions/upload-artifact@v4
