@@ -21,8 +21,8 @@ topics:
   - voice-activity-detection
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
-  flutter: '>=3.3.0'
+  sdk: ">=3.0.0 <4.0.0"
+  flutter: ">=2.8.1"
 
 dependencies:
   flutter:
