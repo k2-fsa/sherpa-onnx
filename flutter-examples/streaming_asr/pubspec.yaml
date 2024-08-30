@@ -15,7 +15,8 @@ issue_tracker: https://github.com/k2-fsa/sherpa-onnx/issues
 repository: https://github.com/k2-fsa/sherpa-onnx/tree/master/sherpa-onnx/flutter
 
 environment:
-  sdk: '>=3.4.0 <4.0.0'
+  sdk: ">=2.17.0 <4.0.0"
+  flutter: ">=2.8.1"
 
 dependencies:
   flutter:
@@ -32,7 +33,7 @@ dependencies:
 
   sherpa_onnx: ^1.10.23
   # sherpa_onnx:
-    # path: ../../flutter/sherpa_onnx
+  #   path: ../../flutter/sherpa_onnx
 
 dev_dependencies:
   flutter_test:
