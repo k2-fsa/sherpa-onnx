@@ -30,7 +30,7 @@ namespace sherpa_onnx {
 
 OnlineZipformerTransducerModel::OnlineZipformerTransducerModel(
     const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_WARNING),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {
@@ -53,7 +53,7 @@ OnlineZipformerTransducerModel::OnlineZipformerTransducerModel(
 #if __ANDROID_API__ >= 9
 OnlineZipformerTransducerModel::OnlineZipformerTransducerModel(
     AAssetManager *mgr, const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_WARNING),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {

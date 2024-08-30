@@ -28,7 +28,7 @@ namespace sherpa_onnx {
 std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     const OnlineRecognizerConfig &config) {
   if (!config.model_config.transducer.encoder.empty()) {
-    Ort::Env env(ORT_LOGGING_LEVEL_WARNING);
+    Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 
     auto decoder_model = ReadFile(config.model_config.transducer.decoder);
     auto sess = std::make_unique<Ort::Session>(
@@ -61,7 +61,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     AAssetManager *mgr, const OnlineRecognizerConfig &config) {
   if (!config.model_config.transducer.encoder.empty()) {
-    Ort::Env env(ORT_LOGGING_LEVEL_WARNING);
+    Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 
     auto decoder_model = ReadFile(mgr, config.model_config.transducer.decoder);
     auto sess = std::make_unique<Ort::Session>(
