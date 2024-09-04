@@ -1,3 +1,20 @@
+## 1.10.24
+
+* Add VAD and keyword spotting for the Node package with WebAssembly (#1286)
+* Fix releasing npm package and fix building Android VAD+ASR example (#1288)
+* add Tokens []string, Timestamps []float32, Lang string, Emotion string, Event string (#1277)
+* add vad+sense voice example for C API (#1291)
+* ADD VAD+ASR example for dart with CircularBuffer. (#1293)
+* Fix VAD+ASR example for Dart API. (#1294)
+* Avoid SherpaOnnxSpeakerEmbeddingManagerFreeBestMatches freeing null. (#1296)
+* Fix releasing wasm app for vad+asr (#1300)
+* remove extra files from linux/macos/windows jni libs (#1301)
+* two-pass Android APK for SenseVoice (#1302)
+* Downgrade flutter sdk versions. (#1305)
+* Reduce onnxruntime log output. (#1306)
+* Provide prebuilt .jar files for different java versions. (#1307)
+
+
 ## 1.10.23
 
 * flutter: add lang, emotion, event to OfflineRecognizerResult (#1268)
