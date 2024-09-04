@@ -108,7 +108,17 @@ if (navigator.mediaDevices.getUserMedia) {
       }
 
       let isEndpoint = recognizer.isEndpoint(recognizer_stream);
+
       let result = recognizer.getResult(recognizer_stream).text;
+
+      if (recognizer.config.modelConfig.paraformer.encoder != '') {
+        let tailPaddings = new Float32Array(expectedSampleRate);
+        recognizer_stream.acceptWaveform(expectedSampleRate, tailPaddings);
+        while (recognizer.isReady(recognizer_stream)) {
+          recognizer.decode(recognizer_stream);
+        }
+        result = recognizer.getResult(recognizer_stream).text;
+      }
 
 
       if (result.length > 0 && lastResult != result) {
