@@ -64,7 +64,7 @@ class OnlineRecognizer(object):
         bpe_vocab: str = "",
         lm: str = "",
         lm_scale: float = 0.1,
-        lm_shallow_fusion = True,
+        lm_shallow_fusion: bool = True,
         temperature_scale: float = 2.0,
         debug: bool = False,
         rule_fsts: str = "",

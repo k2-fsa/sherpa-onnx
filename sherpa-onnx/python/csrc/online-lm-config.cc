@@ -16,8 +16,8 @@ void PybindOnlineLMConfig(py::module *m) {
       .def(py::init<const std::string &, float, int32_t,
            const std::string &, bool>(),
            py::arg("model") = "", py::arg("scale") = 0.5f,
-           py::arg("lm_num_threads") = 1, py::arg("lm_provider") = "cpu"),
-           py::arg("shallow_fusion") = true
+           py::arg("lm_num_threads") = 1, py::arg("lm_provider") = "cpu",
+           py::arg("shallow_fusion") = true)
       .def_readwrite("model", &PyClass::model)
       .def_readwrite("scale", &PyClass::scale)
       .def_readwrite("lm_provider", &PyClass::lm_provider)
