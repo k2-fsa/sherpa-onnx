@@ -18,6 +18,8 @@ void OnlineLMConfig::Register(ParseOptions *po) {
                "Number of threads to run the neural network of LM model");
   po->Register("lm-provider", &lm_provider,
                "Specify a provider to LM model use: cpu, cuda, coreml");
+  po->Register("lm-shallow-fusion", &shallow_fusion,
+               "Boolean whether to use shallow fusion or rescore.");
 }
 
 bool OnlineLMConfig::Validate() const {
@@ -34,7 +36,8 @@ std::string OnlineLMConfig::ToString() const {
 
   os << "OnlineLMConfig(";
   os << "model=\"" << model << "\", ";
-  os << "scale=" << scale << ")";
+  os << "scale=" << scale << ", ";
+  os << "shallow_fusion=" << (shallow_fusion ? "True" : "False") << ")";
 
   return os.str();
 }
