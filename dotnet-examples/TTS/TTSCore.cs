@@ -7,7 +7,7 @@ namespace TTS
     {
         public const string Filename = "sherpa-onnx-c-api";
 
-        [DllImport(Filename)]
+        [DllImport(Filename, CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr SherpaOnnxCreateOfflineTts(SherpaOnnxOfflineTtsConfig handle);
 
         [DllImport(Filename)]
@@ -23,7 +23,12 @@ namespace TTS
 
         public TTSCore(SherpaOnnxOfflineTtsConfig modelConfig)
         {
-            thisHandle = SherpaOnnxCreateOfflineTts(modelConfig);
+          IntPtr ttsHandle = SherpaOnnxCreateOfflineTts(modelConfig);
+          if (ttsHandle == IntPtr.Zero)
+          {
+            throw new InvalidOperationException("Failed to create SherpaOnnx TTS engine.");
+          }
+          thisHandle = ttsHandle;
         }
 
         /// <summary>
