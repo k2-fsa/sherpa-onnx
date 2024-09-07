@@ -14,9 +14,13 @@ internal class Program
             provider = "cpu",
             vits = new SherpaOnnxOfflineTtsVitsModelConfig
             {
-                lexicon = "vits-zh-aishell3/lexicon.txt",
-                model = "vits-zh-aishell3/vits-aishell3.onnx",
-                tokens = "vits-zh-aishell3/tokens.txt",
+                //lexicon = "vits-zh-aishell3/lexicon.txt",
+                //model = "vits-zh-aishell3/vits-aishell3.onnx",
+                //tokens = "vits-zh-aishell3/tokens.txt",
+                model = @"C:\Services\Sherpa\model.onnx",
+                lexicon = "",
+                tokens = @"C:\Services\Sherpa\tokens.txt",
+                data_dir = @"C:\Services\Sherpa\espeak-ng-data",
 
                 noise_scale = 0.667f,
                 noise_scale_w = 0.8f,

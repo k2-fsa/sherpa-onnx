@@ -23,11 +23,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "offline-punctuation", "offl
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "vad-non-streaming-asr-paraformer", "vad-non-streaming-asr-paraformer\vad-non-streaming-asr-paraformer.csproj", "{8CD6B7E5-F59F-47B3-BB87-2B2E3678924D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Common", "Common\Common.csproj", "{401E963F-E25A-43CE-987D-8DB2D4715756}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Common", "Common\Common.csproj", "{401E963F-E25A-43CE-987D-8DB2D4715756}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "keyword-spotting-from-files", "keyword-spotting-from-files\keyword-spotting-from-files.csproj", "{A87EDD31-D654-4C9F-AED7-F6F2825659BD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "keyword-spotting-from-files", "keyword-spotting-from-files\keyword-spotting-from-files.csproj", "{A87EDD31-D654-4C9F-AED7-F6F2825659BD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "keyword-spotting-from-microphone", "keyword-spotting-from-microphone\keyword-spotting-from-microphone.csproj", "{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "keyword-spotting-from-microphone", "keyword-spotting-from-microphone\keyword-spotting-from-microphone.csproj", "{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TTS", "TTS\TTS.csproj", "{DACE4A18-4FC8-4437-92BF-5A90BA81286C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -87,6 +89,10 @@ Global
 		{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
