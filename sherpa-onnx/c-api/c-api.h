@@ -88,6 +88,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineModelConfig {
   //  - cjkchar+bpe
   const char *modeling_unit;
   const char *bpe_vocab;
+  /// if non-null, loading the tokens from the buffered string directly in prioriy
+  const char *tokens_buf_str; 
 } SherpaOnnxOnlineModelConfig;
 
 /// It expects 16 kHz 16-bit single channel wave format.
@@ -147,6 +149,9 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerConfig {
   const char *rule_fsts;
   const char *rule_fars;
   float blank_penalty;
+  
+  /// if non-nullptr, loading the hotwords from the buffered string directly in
+  const char *hotwords_buf_str;
 } SherpaOnnxOnlineRecognizerConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOnlineRecognizerResult {

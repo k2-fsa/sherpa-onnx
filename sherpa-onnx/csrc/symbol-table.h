@@ -19,13 +19,13 @@ namespace sherpa_onnx {
 class SymbolTable {
  public:
   SymbolTable() = default;
-  /// Construct a symbol table from a file.
+  /// Construct a symbol table from a file or from a buffered string.
   /// Each line in the file contains two fields:
   ///
   ///    sym ID
   ///
   /// Fields are separated by space(s).
-  explicit SymbolTable(const std::string &filename);
+  explicit SymbolTable(const std::string &filename, bool is_file = true);
 
 #if __ANDROID_API__ >= 9
   SymbolTable(AAssetManager *mgr, const std::string &filename);

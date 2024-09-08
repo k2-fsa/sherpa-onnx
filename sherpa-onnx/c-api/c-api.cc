@@ -73,6 +73,8 @@ SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
 
   recognizer_config.model_config.tokens =
       SHERPA_ONNX_OR(config->model_config.tokens, "");
+  recognizer_config.model_config.tokens_buf_str =
+      SHERPA_ONNX_OR(config->model_config.tokens_buf_str, "");
   recognizer_config.model_config.num_threads =
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
   recognizer_config.model_config.provider_config.provider =
@@ -118,6 +120,8 @@ SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
       SHERPA_ONNX_OR(config->rule3_min_utterance_length, 20);
 
   recognizer_config.hotwords_file = SHERPA_ONNX_OR(config->hotwords_file, "");
+  recognizer_config.hotwords_buf_str =
+      SHERPA_ONNX_OR(config->hotwords_buf_str, "");
   recognizer_config.hotwords_score =
       SHERPA_ONNX_OR(config->hotwords_score, 1.5);
 

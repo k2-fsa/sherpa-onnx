@@ -45,6 +45,10 @@ struct OnlineModelConfig {
   std::string modeling_unit = "cjkchar";
   std::string bpe_vocab;
 
+  /// if tokens_buf_str is non-empty, 
+  /// the tokens will be loaded from the buffered string in prior to the ${tokens} file
+  std::string tokens_buf_str;
+
   OnlineModelConfig() = default;
   OnlineModelConfig(const OnlineTransducerModelConfig &transducer,
                     const OnlineParaformerModelConfig &paraformer,
@@ -69,7 +73,8 @@ struct OnlineModelConfig {
         debug(debug),
         model_type(model_type),
         modeling_unit(modeling_unit),
-        bpe_vocab(bpe_vocab) {}
+        bpe_vocab(bpe_vocab),
+        tokens_buf_str("") {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

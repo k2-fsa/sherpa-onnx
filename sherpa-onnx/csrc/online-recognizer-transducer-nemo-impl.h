@@ -44,7 +44,8 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
       const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(config),
         config_(config),
-        symbol_table_(config.model_config.tokens),
+        symbol_table_(config.model_config.tokens_buf_str.empty() ? config.model_config.tokens :
+             config.model_config.tokens_buf_str, config.model_config.tokens_buf_str.empty() ? true : false),
         endpoint_(config_.endpoint_config),
         model_(
             std::make_unique<OnlineTransducerNeMoModel>(config.model_config)) {
