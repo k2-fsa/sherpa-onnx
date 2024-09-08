@@ -123,7 +123,7 @@ class VoiceActivityDetector::Impl {
       return;
     }
 
-    int32_t end = buffer_.Tail() - model_->MinSilenceDurationSamples();
+    int32_t end = buffer_.Tail()
     if (end <= start_) {
       return;
     }
