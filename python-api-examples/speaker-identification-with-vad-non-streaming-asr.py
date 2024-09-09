@@ -52,7 +52,7 @@ to download a non-streaming ASR model.
 
 Assume the filename of the text file is speaker.txt.
 
-python3 ./python-api-examples/speaker-identification-with-vad.py \
+python3 ./python-api-examples/speaker-identification-with-vad-non-streaming-asr.py \
   --silero-vad-model=/path/to/silero_vad.onnx \
   --speaker-file ./speaker.txt \
   --model ./wespeaker_zh_cnceleb_resnet34.onnx
