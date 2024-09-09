@@ -20,6 +20,7 @@
 #include "sherpa-onnx/python/csrc/online-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/python/csrc/online-lm-config.h"
 #include "sherpa-onnx/python/csrc/online-model-config.h"
+#include "sherpa-onnx/python/csrc/online-punctuation.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
 #include "sherpa-onnx/python/csrc/online-stream.h"
 #include "sherpa-onnx/python/csrc/speaker-embedding-extractor.h"
@@ -42,6 +43,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindWaveWriter(&m);
   PybindAudioTagging(&m);
   PybindOfflinePunctuation(&m);
+  PybindOnlinePunctuation(&m);
 
   PybindFeatures(&m);
   PybindOnlineCtcFstDecoderConfig(&m);
