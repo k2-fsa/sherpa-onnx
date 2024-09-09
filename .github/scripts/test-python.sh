@@ -91,6 +91,18 @@ python3 ./python-api-examples/add-punctuation.py
 
 rm -rf $repo
 
+log "test online punctuation"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+repo=sherpa-onnx-online-punct-en-2024-08-06
+ls -lh $repo
+
+python3 ./python-api-examples/add-punctuation-online.py
+
+rm -rf $repo
+
 log "test audio tagging"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/audio-tagging-models/sherpa-onnx-zipformer-audio-tagging-2024-04-09.tar.bz2
