@@ -91,7 +91,7 @@ installing anything. All you need is a browser.
 | Audio tagging                                         | [Click me][hf-space-audio-tagging] |
 | Spoken language identification with [Whisper][Whisper]| [Click me][hf-space-slid-whisper]  |
 
-We also have spaces built using WebAssembly. The are listed below:
+We also have spaces built using WebAssembly. They are listed below:
 
 | Description                                                                              | Huggingface space| ModelScope space|
 |------------------------------------------------------------------------------------------|------------------|-----------------|
