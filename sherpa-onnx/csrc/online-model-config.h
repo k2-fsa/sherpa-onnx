@@ -47,7 +47,7 @@ struct OnlineModelConfig {
 
   /// if tokens_buf_str is non-empty, 
   /// the tokens will be loaded from the buffered string in prior to the ${tokens} file
-  std::string tokens_buf_str;
+  std::string tokens_buf;
 
   OnlineModelConfig() = default;
   OnlineModelConfig(const OnlineTransducerModelConfig &transducer,
