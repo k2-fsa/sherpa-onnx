@@ -107,6 +107,8 @@ jobs:
           cp bpe.model sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/
           rm bpe.model
           
+          printf "▁A ▁T ▁P :1.5\n▁A ▁B ▁C :3.0" > hotwords.txt
+
           ls -lh sherpa-onnx-streaming-zipformer-en-20M-2023-02-17
           echo "---"
           ls -lh sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/test_wavs
