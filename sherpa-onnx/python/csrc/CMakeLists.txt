@@ -27,6 +27,7 @@ set(srcs
   online-model-config.cc
   online-nemo-ctc-model-config.cc
   online-paraformer-model-config.cc
+  online-punctuation.cc
   online-recognizer.cc
   online-stream.cc
   online-transducer-model-config.cc
