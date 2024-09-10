@@ -73,8 +73,7 @@ struct OnlineModelConfig {
         debug(debug),
         model_type(model_type),
         modeling_unit(modeling_unit),
-        bpe_vocab(bpe_vocab),
-        tokens_buf_str("") {}
+        bpe_vocab(bpe_vocab) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
