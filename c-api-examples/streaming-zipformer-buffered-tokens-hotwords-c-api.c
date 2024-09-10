@@ -1,6 +1,7 @@
-// c-api-examples/streaming-zipformer-c-api.c
+// c-api-examples/streaming-zipformer-buffered-tokens-hotwords-c-api.c
 //
 // Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2024  Luo Xiao
 
 //
 // This file demonstrates how to use streaming Zipformer with sherpa-onnx's C and
@@ -20,8 +21,33 @@
 
 #include "sherpa-onnx/c-api/c-api.h"
 
-extern const char* tokens_buf_str;
-extern const char* hotwords_buf_str;
+size_t read_file(const char* filename, const char** buffer_out) {
+  FILE *file = fopen(filename, "rb");
+  if (file == NULL) {
+    fprintf(stderr, "Failed to open %s\n", filename);
+    return -1;
+  }
+  fseek(file, 0L, SEEK_END);
+  long size = ftell(file);
+  rewind(file);
+  *buffer_out = malloc(size + 1);
+  if (*buffer_out == NULL) {
+    fclose(file);
+    fprintf(stderr, "Memory error\n");
+    return -1;
+  }
+  size_t read_bytes = fread(*buffer_out, 1, size, file);
+  if (read_bytes != size) {
+      printf("Errors occured in reading the file %s\n", filename);
+      free(*buffer_out);
+      *buffer_out = NULL;
+      fclose(file);
+      return -1;
+  }
+  fclose(file);
+  return read_bytes;
+}
+
 int32_t main() {
   const char *wav_filename =
       "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/test_wavs/0.wav";
@@ -36,12 +62,30 @@ int32_t main() {
       "joiner-epoch-99-avg-1.onnx";
   const char *provider = "cpu";
   const char *modeling_unit = "bpe";
+  const char *tokens_filename = "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/tokens.txt";
+  const char *hotwords_filename = "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/hotwords.txt";
   const char *bpe_vocab  =  
       "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
       "bpe.vocab";
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
     fprintf(stderr, "Failed to read %s\n", wav_filename);
+    return -1;
+  }
+
+  // reading tokens and hotwords to buffers
+  const *tokens_buf;
+  size_t token_buf_size = read_file(tokens_filename, &tokens_buf);
+  if(token_buf_size < 0) {
+    fprintf(stderr, "Please check your tokens.txt!\n");
+    free(tokens_buf);
+    return -1;
+  }
+  const *hotwords_buf;
+  size_t hotwords_buf_size = read_file(hotwords_filename, &hotwords_buf);
+  if(hotwords_buf_size < 0) {
+    fprintf(stderr, "Please check your hotwords.txt!\n");
+    free(hotwords_buf);
     return -1;
   }
 
@@ -58,7 +102,8 @@ int32_t main() {
   online_model_config.debug = 1;
   online_model_config.num_threads = 1;
   online_model_config.provider = provider;
-  online_model_config.tokens_buf_str = tokens_buf_str;
+  online_model_config.tokens_buf = tokens_buf;
+  online_model_config.tokens_buf_size = token_buf_size;
   online_model_config.transducer = zipformer_config;
 
   // Recognizer config
@@ -66,7 +111,8 @@ int32_t main() {
   memset(&recognizer_config, 0, sizeof(recognizer_config));
   recognizer_config.decoding_method = "modified_beam_search";
   recognizer_config.model_config = online_model_config;
-  recognizer_config.hotwords_buf_str = hotwords_buf_str;
+  recognizer_config.hotwords_buf = hotwords_buf;
+  recognizer_config.hotwords_buf_size = hotwords_buf_size;
 
   SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);
@@ -148,10 +194,10 @@ int32_t main() {
   return 0;
 }
 
-const char* hotwords_buf_str = "▁A ▁T ▁P :1.5\n \
+const char* hotwords_buf = "▁A ▁T ▁P :1.5\n \
 ▁A ▁B ▁C :3.0";
 
-const char* tokens_buf_str = "<blk> 0 \n \
+const char* tokens_buf = "<blk> 0 \n \
 <sos/eos> 1 \n \
 <unk> 2 \n \
 S 3 \n \

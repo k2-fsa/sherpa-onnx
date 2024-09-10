@@ -45,7 +45,7 @@ struct OnlineModelConfig {
   std::string modeling_unit = "cjkchar";
   std::string bpe_vocab;
 
-  /// if tokens_buf_str is non-empty, 
+  /// if tokens_buf is non-empty, 
   /// the tokens will be loaded from the buffered string in prior to the ${tokens} file
   std::string tokens_buf;
 

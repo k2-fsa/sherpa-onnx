@@ -83,9 +83,14 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       : OnlineRecognizerImpl(config),
         config_(config),
         model_(OnlineTransducerModel::Create(config.model_config)),
-        sym_(config.model_config.tokens_buf_str.empty() ? config.model_config.tokens :
-             config.model_config.tokens_buf_str, config.model_config.tokens_buf_str.empty() ? true : false),
         endpoint_(config_.endpoint_config) {
+    if(!config.model_config.tokens_buf.empty()) {
+      sym_ = std::move(SymbolTable(config.model_config.tokens_buf, false));
+    } else {
+      /// assuming tokens_buf and tokens are guaranteed not being both empty
+      sym_ = std::move(SymbolTable(config.model_config.tokens, true));
+    } 
+    
     if (sym_.Contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
@@ -98,7 +103,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
             config_.model_config.bpe_vocab);
       }
 
-      if(!config_.hotwords_buf_str.empty()) {
+      if(!config_.hotwords_buf.empty()) {
         InitHotwordsFromBufStr();
       } else if (!config_.hotwords_file.empty()) {
         InitHotwords();
@@ -443,7 +448,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
   void InitHotwordsFromBufStr() {
     // each line in hotwords_file contains space-separated words
 
-    std::istringstream iss(config_.hotwords_buf_str);
+    std::istringstream iss(config_.hotwords_buf);
     if (!EncodeHotwords(iss, config_.model_config.modeling_unit, sym_,
                         bpe_encoder_.get(), &hotwords_, &boost_scores_)) {
       SHERPA_ONNX_LOGE(

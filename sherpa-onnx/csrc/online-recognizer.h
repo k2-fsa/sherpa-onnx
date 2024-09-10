@@ -106,9 +106,9 @@ struct OnlineRecognizerConfig {
   // If there are multiple FST archives, they are applied from left to right.
   std::string rule_fars;
 
-  /// used only for modified_beam_search, if hotwords_buf_str is non-empty,
+  /// used only for modified_beam_search, if hotwords_buf is non-empty,
   /// the hotwords will be loaded from the buffered string in prior to the ${hotwords_file}
-  std::string hotwords_buf_str;
+  std::string hotwords_buf;
 
   OnlineRecognizerConfig() = default;
 
@@ -134,8 +134,7 @@ struct OnlineRecognizerConfig {
         blank_penalty(blank_penalty),
         temperature_scale(temperature_scale),
         rule_fsts(rule_fsts),
-        rule_fars(rule_fars),
-        hotwords_buf_str("") {}
+        rule_fars(rule_fars) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
