@@ -74,14 +74,14 @@ int32_t main() {
   }
 
   // reading tokens and hotwords to buffers
-  const *tokens_buf;
+  const char *tokens_buf;
   size_t token_buf_size = read_file(tokens_filename, &tokens_buf);
   if(token_buf_size < 1) {
     fprintf(stderr, "Please check your tokens.txt!\n");
     free(tokens_buf);
     return -1;
   }
-  const *hotwords_buf;
+  const char *hotwords_buf;
   size_t hotwords_buf_size = read_file(hotwords_filename, &hotwords_buf);
   if(hotwords_buf_size < 1) {
     fprintf(stderr, "Please check your hotwords.txt!\n");
