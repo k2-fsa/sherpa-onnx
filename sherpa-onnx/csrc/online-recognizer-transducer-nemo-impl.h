@@ -51,7 +51,7 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
       symbol_table_ = SymbolTable(config.model_config.tokens_buf, false);
     } else {
       /// assuming tokens_buf and tokens are guaranteed not being both empty
-      symbol_table_ = std::move(SymbolTable(config.model_config.tokens, true));
+      symbol_table_ = SymbolTable(config.model_config.tokens, true);
     }
 
     if (config.decoding_method == "greedy_search") {
