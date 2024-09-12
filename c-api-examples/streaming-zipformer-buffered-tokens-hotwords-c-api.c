@@ -21,7 +21,7 @@
 
 #include "sherpa-onnx/c-api/c-api.h"
 
-size_t read_file(const char *filename, const char **buffer_out) {
+static size_t ReadFile(const char *filename, const char **buffer_out) {
   FILE *file = fopen(filename, "rb");
   if (file == NULL) {
     fprintf(stderr, "Failed to open %s\n", filename);
