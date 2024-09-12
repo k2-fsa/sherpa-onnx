@@ -77,8 +77,6 @@ SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
       config->model_config.tokens_buf_size > 0) {
     recognizer_config.model_config.tokens_buf = std::string(
         config->model_config.tokens_buf, config->model_config.tokens_buf_size);
-  } else {
-    recognizer_config.model_config.tokens_buf = "";
   }
 
   recognizer_config.model_config.num_threads =
