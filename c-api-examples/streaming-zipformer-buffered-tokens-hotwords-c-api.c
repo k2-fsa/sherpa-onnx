@@ -77,14 +77,14 @@ int32_t main() {
 
   // reading tokens and hotwords to buffers
   const char *tokens_buf;
-  size_t token_buf_size = read_file(tokens_filename, &tokens_buf);
+  size_t token_buf_size = ReadFile(tokens_filename, &tokens_buf);
   if (token_buf_size < 1) {
     fprintf(stderr, "Please check your tokens.txt!\n");
     free(tokens_buf);
     return -1;
   }
   const char *hotwords_buf;
-  size_t hotwords_buf_size = read_file(hotwords_filename, &hotwords_buf);
+  size_t hotwords_buf_size = ReadFile(hotwords_filename, &hotwords_buf);
   if (hotwords_buf_size < 1) {
     fprintf(stderr, "Please check your hotwords.txt!\n");
     free(hotwords_buf);
@@ -118,6 +118,11 @@ int32_t main() {
 
   SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);
+
+  free(tokens_buf);
+  tokens_buf = NULL;
+  free(hotwords_buf);
+  hotwords_buf = NULL;
 
   if (recognizer == NULL) {
     fprintf(stderr, "Please check your config!\n");

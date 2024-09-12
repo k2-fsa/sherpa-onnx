@@ -129,8 +129,6 @@ SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
   if (config->hotwords_buf && config->hotwords_buf_size > 0) {
     recognizer_config.hotwords_buf =
         std::string(config->hotwords_buf, config->hotwords_buf_size);
-  } else {
-    recognizer_config.hotwords_buf = "";
   }
 
   recognizer_config.blank_penalty = config->blank_penalty;
