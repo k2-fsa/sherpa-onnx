@@ -85,7 +85,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
         model_(OnlineTransducerModel::Create(config.model_config)),
         endpoint_(config_.endpoint_config) {
     if (!config.model_config.tokens_buf.empty()) {
-      sym_ = std::move(SymbolTable(config.model_config.tokens_buf, false));
+      sym_ = SymbolTable(config.model_config.tokens_buf, false);
     } else {
       /// assuming tokens_buf and tokens are guaranteed not being both empty
       sym_ = std::move(SymbolTable(config.model_config.tokens, true));
