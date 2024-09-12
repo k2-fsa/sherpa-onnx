@@ -88,7 +88,7 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       sym_ = SymbolTable(config.model_config.tokens_buf, false);
     } else {
       /// assuming tokens_buf and tokens are guaranteed not being both empty
-      sym_ = std::move(SymbolTable(config.model_config.tokens, true));
+      sym_ = SymbolTable(config.model_config.tokens, true);
     }
 
     if (sym_.Contains("<unk>")) {
