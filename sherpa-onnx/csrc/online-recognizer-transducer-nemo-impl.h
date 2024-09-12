@@ -238,7 +238,6 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     }
   }
 
- private:
   OnlineRecognizerConfig config_;
   SymbolTable symbol_table_;
   std::unique_ptr<OnlineTransducerNeMoModel> model_;
