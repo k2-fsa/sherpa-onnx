@@ -59,7 +59,7 @@ bool OnlineModelConfig::Validate() const {
   if (!tokens_buf.empty() && FileExists(tokens)) {
     SHERPA_ONNX_LOGE(
         "you can not provide a tokens_buf and a tokens file: '%s', "
-        "at the same, which is confusing",
+        "at the same time, which is confusing",
         tokens.c_str());
     return false;
   }
