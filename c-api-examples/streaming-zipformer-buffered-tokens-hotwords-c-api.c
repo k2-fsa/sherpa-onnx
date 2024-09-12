@@ -5,7 +5,7 @@
 
 //
 // This file demonstrates how to use streaming Zipformer with sherpa-onnx's C
-// and with tokens and hotwords loaded from buffered strings instread external
+// and with tokens and hotwords loaded from buffered strings instead of from external
 // files API.
 // clang-format off
 // 
