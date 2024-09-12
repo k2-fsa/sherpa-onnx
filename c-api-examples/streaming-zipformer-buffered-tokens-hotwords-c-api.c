@@ -4,9 +4,9 @@
 // Copyright (c)  2024  Luo Xiao
 
 //
-// This file demonstrates how to use streaming Zipformer with sherpa-onnx's C and
-// with tokens and hotwords loaded from buffered strings instread external files
-// API.
+// This file demonstrates how to use streaming Zipformer with sherpa-onnx's C
+// and with tokens and hotwords loaded from buffered strings instread external
+// files API.
 // clang-format off
 // 
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
@@ -21,7 +21,7 @@
 
 #include "sherpa-onnx/c-api/c-api.h"
 
-size_t read_file(const char* filename, const char** buffer_out) {
+size_t read_file(const char *filename, const char **buffer_out) {
   FILE *file = fopen(filename, "rb");
   if (file == NULL) {
     fprintf(stderr, "Failed to open %s\n", filename);
@@ -38,11 +38,11 @@ size_t read_file(const char* filename, const char** buffer_out) {
   }
   size_t read_bytes = fread(*buffer_out, 1, size, file);
   if (read_bytes != size) {
-      printf("Errors occured in reading the file %s\n", filename);
-      free(*buffer_out);
-      *buffer_out = NULL;
-      fclose(file);
-      return -1;
+    printf("Errors occured in reading the file %s\n", filename);
+    free(*buffer_out);
+    *buffer_out = NULL;
+    fclose(file);
+    return -1;
   }
   fclose(file);
   return read_bytes;
@@ -62,9 +62,11 @@ int32_t main() {
       "joiner-epoch-99-avg-1.onnx";
   const char *provider = "cpu";
   const char *modeling_unit = "bpe";
-  const char *tokens_filename = "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/tokens.txt";
-  const char *hotwords_filename = "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/hotwords.txt";
-  const char *bpe_vocab  =  
+  const char *tokens_filename =
+      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/tokens.txt";
+  const char *hotwords_filename =
+      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/hotwords.txt";
+  const char *bpe_vocab =
       "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
       "bpe.vocab";
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
@@ -76,14 +78,14 @@ int32_t main() {
   // reading tokens and hotwords to buffers
   const char *tokens_buf;
   size_t token_buf_size = read_file(tokens_filename, &tokens_buf);
-  if(token_buf_size < 1) {
+  if (token_buf_size < 1) {
     fprintf(stderr, "Please check your tokens.txt!\n");
     free(tokens_buf);
     return -1;
   }
   const char *hotwords_buf;
   size_t hotwords_buf_size = read_file(hotwords_filename, &hotwords_buf);
-  if(hotwords_buf_size < 1) {
+  if (hotwords_buf_size < 1) {
     fprintf(stderr, "Please check your hotwords.txt!\n");
     free(hotwords_buf);
     return -1;

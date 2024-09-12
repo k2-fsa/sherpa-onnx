@@ -57,14 +57,18 @@ bool OnlineModelConfig::Validate() const {
   }
 
   if (!tokens_buf.empty() && FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("you can not provide a tokens_buf and a tokens file: '%s', "
-                     "at the same, which is confusing", tokens.c_str());
+    SHERPA_ONNX_LOGE(
+        "you can not provide a tokens_buf and a tokens file: '%s', "
+        "at the same, which is confusing",
+        tokens.c_str());
     return false;
   }
 
   if (tokens_buf.empty() && !FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("tokens: '%s' does not exist, you should provide "
-                     "either a tokens buffer or a tokens file" , tokens.c_str());
+    SHERPA_ONNX_LOGE(
+        "tokens: '%s' does not exist, you should provide "
+        "either a tokens buffer or a tokens file",
+        tokens.c_str());
     return false;
   }
 

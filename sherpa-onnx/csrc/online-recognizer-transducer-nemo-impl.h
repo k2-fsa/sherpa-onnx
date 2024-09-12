@@ -47,12 +47,13 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
         endpoint_(config_.endpoint_config),
         model_(
             std::make_unique<OnlineTransducerNeMoModel>(config.model_config)) {
-    if(!config.model_config.tokens_buf.empty()) {
-      symbol_table_ = std::move(SymbolTable(config.model_config.tokens_buf, false));
+    if (!config.model_config.tokens_buf.empty()) {
+      symbol_table_ =
+          std::move(SymbolTable(config.model_config.tokens_buf, false));
     } else {
       /// assuming tokens_buf and tokens are guaranteed not being both empty
       symbol_table_ = std::move(SymbolTable(config.model_config.tokens, true));
-    } 
+    }
 
     if (config.decoding_method == "greedy_search") {
       decoder_ = std::make_unique<OnlineTransducerGreedySearchNeMoDecoder>(

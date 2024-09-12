@@ -107,7 +107,8 @@ struct OnlineRecognizerConfig {
   std::string rule_fars;
 
   /// used only for modified_beam_search, if hotwords_buf is non-empty,
-  /// the hotwords will be loaded from the buffered string in prior to the ${hotwords_file}
+  /// the hotwords will be loaded from the buffered string in prior to the
+  /// ${hotwords_file}
   std::string hotwords_buf;
 
   OnlineRecognizerConfig() = default;
