@@ -30,7 +30,7 @@ size_t read_file(const char *filename, const char **buffer_out) {
   fseek(file, 0L, SEEK_END);
   long size = ftell(file);
   rewind(file);
-  *buffer_out = malloc(size + 1);
+  *buffer_out = malloc(size);
   if (*buffer_out == NULL) {
     fclose(file);
     fprintf(stderr, "Memory error\n");
