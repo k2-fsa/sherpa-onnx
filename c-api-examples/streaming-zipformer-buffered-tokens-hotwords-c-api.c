@@ -5,8 +5,8 @@
 
 //
 // This file demonstrates how to use streaming Zipformer with sherpa-onnx's C
-// and with tokens and hotwords loaded from buffered strings instead of from external
-// files API.
+// and with tokens and hotwords loaded from buffered strings instead of from
+// external files API.
 // clang-format off
 // 
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
@@ -22,7 +22,7 @@
 #include "sherpa-onnx/c-api/c-api.h"
 
 static size_t ReadFile(const char *filename, const char **buffer_out) {
-  FILE *file = fopen(filename, "rb");
+  FILE *file = fopen(filename, "r");
   if (file == NULL) {
     fprintf(stderr, "Failed to open %s\n", filename);
     return -1;
@@ -39,7 +39,7 @@ static size_t ReadFile(const char *filename, const char **buffer_out) {
   size_t read_bytes = fread(*buffer_out, 1, size, file);
   if (read_bytes != size) {
     printf("Errors occured in reading the file %s\n", filename);
-    free(*buffer_out);
+    free((void *)*buffer_out);
     *buffer_out = NULL;
     fclose(file);
     return -1;
@@ -80,14 +80,14 @@ int32_t main() {
   size_t token_buf_size = ReadFile(tokens_filename, &tokens_buf);
   if (token_buf_size < 1) {
     fprintf(stderr, "Please check your tokens.txt!\n");
-    free(tokens_buf);
+    free((void *)tokens_buf);
     return -1;
   }
   const char *hotwords_buf;
   size_t hotwords_buf_size = ReadFile(hotwords_filename, &hotwords_buf);
   if (hotwords_buf_size < 1) {
     fprintf(stderr, "Please check your hotwords.txt!\n");
-    free(hotwords_buf);
+    free((void *)hotwords_buf);
     return -1;
   }
 
@@ -119,9 +119,9 @@ int32_t main() {
   SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);
 
-  free(tokens_buf);
+  free((void *)tokens_buf);
   tokens_buf = NULL;
-  free(hotwords_buf);
+  free((void *)hotwords_buf);
   hotwords_buf = NULL;
 
   if (recognizer == NULL) {

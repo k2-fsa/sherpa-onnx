@@ -155,6 +155,14 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
     };
   }
 
+  if (!('tokensBuf' in config)) {
+    config.tokensBuf = '';
+  }
+
+  if (!('tokensBufSize' in config)) {
+    config.tokensBufSize = 0;
+  }
+
   const transducer =
       initSherpaOnnxOnlineTransducerModelConfig(config.transducer, Module);
 
@@ -164,7 +172,7 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
   const ctc = initSherpaOnnxOnlineZipformer2CtcModelConfig(
       config.zipformer2Ctc, Module);
 
-  const len = transducer.len + paraformer.len + ctc.len + 7 * 4;
+  const len = transducer.len + paraformer.len + ctc.len + 9 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -182,9 +190,10 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
   const modelTypeLen = Module.lengthBytesUTF8(config.modelType || '') + 1;
   const modelingUnitLen = Module.lengthBytesUTF8(config.modelingUnit || '') + 1;
   const bpeVocabLen = Module.lengthBytesUTF8(config.bpeVocab || '') + 1;
+  const tokensBufLen = Module.lengthBytesUTF8(config.tokensBuf || '') + 1;
 
-  const bufferLen =
-      tokensLen + providerLen + modelTypeLen + modelingUnitLen + bpeVocabLen;
+  const bufferLen = tokensLen + providerLen + modelTypeLen + modelingUnitLen +
+      bpeVocabLen + tokensBufLen;
   const buffer = Module._malloc(bufferLen);
 
   offset = 0;
@@ -203,6 +212,9 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
 
   Module.stringToUTF8(config.bpeVocab || '', buffer + offset, bpeVocabLen);
   offset += bpeVocabLen;
+
+  Module.stringToUTF8(config.tokensBuf || '', buffer + offset, tokensBufLen);
+  offset += tokensBufLen;
 
   offset = transducer.len + paraformer.len + ctc.len;
   Module.setValue(ptr + offset, buffer, 'i8*');  // tokens
@@ -230,6 +242,16 @@ function initSherpaOnnxOnlineModelConfig(config, Module) {
       ptr + offset,
       buffer + tokensLen + providerLen + modelTypeLen + modelingUnitLen,
       'i8*');  // bpeVocab
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset,
+      buffer + tokensLen + providerLen + modelTypeLen + modelingUnitLen +
+          bpeVocabLen,
+      'i8*');  // tokens_buf
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.tokensBufSize || 0, 'i32');
   offset += 4;
 
   return {
@@ -275,12 +297,20 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
     };
   }
 
+  if (!('hotwordsBuf' in config)) {
+    config.hotwordsBuf = '';
+  }
+
+  if (!('hotwordsBufSize' in config)) {
+    config.hotwordsBufSize = 0;
+  }
+
   const feat = initSherpaOnnxFeatureConfig(config.featConfig, Module);
   const model = initSherpaOnnxOnlineModelConfig(config.modelConfig, Module);
   const ctcFstDecoder = initSherpaOnnxOnlineCtcFstDecoderConfig(
       config.ctcFstDecoderConfig, Module)
 
-  const len = feat.len + model.len + 8 * 4 + ctcFstDecoder.len + 3 * 4;
+  const len = feat.len + model.len + 8 * 4 + ctcFstDecoder.len + 5 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -295,8 +325,9 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   const hotwordsFileLen = Module.lengthBytesUTF8(config.hotwordsFile || '') + 1;
   const ruleFstsFileLen = Module.lengthBytesUTF8(config.ruleFsts || '') + 1;
   const ruleFarsFileLen = Module.lengthBytesUTF8(config.ruleFars || '') + 1;
-  const bufferLen =
-      decodingMethodLen + hotwordsFileLen + ruleFstsFileLen + ruleFarsFileLen;
+  const hotwordsBufLen = Module.lengthBytesUTF8(config.hotwordsBuf || '') + 1;
+  const bufferLen = decodingMethodLen + hotwordsFileLen + ruleFstsFileLen +
+      ruleFarsFileLen + hotwordsBufLen;
   const buffer = Module._malloc(bufferLen);
 
   offset = 0;
@@ -313,6 +344,10 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
 
   Module.stringToUTF8(config.ruleFars || '', buffer + offset, ruleFarsFileLen);
   offset += ruleFarsFileLen;
+
+  Module.stringToUTF8(
+      config.hotwordsBuf || '', buffer + offset, hotwordsBufLen);
+  offset += hotwordsBufLen;
 
   offset = feat.len + model.len;
   Module.setValue(ptr + offset, buffer, 'i8*');  // decoding method
@@ -352,6 +387,16 @@ function initSherpaOnnxOnlineRecognizerConfig(config, Module) {
   offset += 4;
 
   Module.setValue(ptr + offset, config.blankPenalty || 0, 'float');
+  offset += 4;
+
+  Module.setValue(
+      ptr + offset,
+      buffer + decodingMethodLen + hotwordsFileLen + ruleFstsFileLen +
+          ruleFarsFileLen,
+      'i8*');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.hotwordsBufSize || 0, 'i32');
   offset += 4;
 
   return {

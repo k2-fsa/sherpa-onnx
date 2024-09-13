@@ -91,7 +91,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineModelConfig {
   /// if non-null, loading the tokens from the buffered string directly in
   /// prioriy
   const char *tokens_buf;
-  /// byte size excluding the tailing '\0'
+  /// byte size excluding the trailing '\0'
   int32_t tokens_buf_size;
 } SherpaOnnxOnlineModelConfig;
 

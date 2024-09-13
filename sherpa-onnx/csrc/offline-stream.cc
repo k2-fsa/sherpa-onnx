@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-stream.h"
 
+#include <math.h>
+
 #include <algorithm>
 #include <cassert>
 #include <cmath>
@@ -245,7 +247,7 @@ class OfflineStream::Impl {
     for (int32_t i = 0; i != n; ++i) {
       float x = p[i];
       x = (x > amin) ? x : amin;
-      x = std::log10f(x) * multiplier;
+      x = log10f(x) * multiplier;
 
       max_x = (x > max_x) ? x : max_x;
       p[i] = x;

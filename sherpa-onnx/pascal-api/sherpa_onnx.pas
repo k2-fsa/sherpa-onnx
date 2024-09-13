@@ -145,6 +145,8 @@ type
     ModelType: AnsiString;
     ModelingUnit: AnsiString;
     BpeVocab: AnsiString;
+    TokensBuf: AnsiString;
+    TokensBufSize: Integer;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineModelConfig);
   end;
@@ -178,6 +180,8 @@ type
     RuleFsts: AnsiString;
     RuleFars: AnsiString;
     BlankPenalty: Single;
+    HotwordsBuf: AnsiString;
+    HotwordsBufSize: Integer;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOnlineRecognizerConfig);
   end;
@@ -490,6 +494,8 @@ type
     ModelType: PAnsiChar;
     ModelingUnit: PAnsiChar;
     BpeVocab: PAnsiChar;
+    TokensBuf: PAnsiChar;
+    TokensBufSize: cint32;
   end;
   SherpaOnnxFeatureConfig = record
     SampleRate: cint32;
@@ -514,6 +520,8 @@ type
     RuleFsts: PAnsiChar;
     RuleFars: PAnsiChar;
     BlankPenalty: cfloat;
+    HotwordsBuf: PAnsiChar;
+    HotwordsBufSize: cint32;
   end;
 
   PSherpaOnnxOnlineRecognizerConfig = ^SherpaOnnxOnlineRecognizerConfig;
