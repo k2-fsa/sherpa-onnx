@@ -1,13 +1,14 @@
-name: c-api-test-loading-tokens-hotwords-from-memory
+name: c-api-from-memory
 
 on:
   push:
     branches:
       - master
+      - small-fixes
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
-      - '.github/workflows/c-api.yaml'
+      - '.github/workflows/c-api-from-buffer.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -18,7 +19,7 @@ on:
     branches:
       - master
     paths:
-      - '.github/workflows/c-api.yaml'
+      - '.github/workflows/c-api-from-buffer.yaml'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -29,11 +30,11 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: c-api-${{ github.ref }}
+  group: c-api-from-buffer-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  c_api:
+  c_api_from_buffer:
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
