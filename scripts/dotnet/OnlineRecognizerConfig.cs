@@ -26,6 +26,8 @@ namespace SherpaOnnx
             RuleFsts = "";
             RuleFars = "";
             BlankPenalty = 0.0F;
+            HotwordsBuf = "";
+            HotwordsBufSize = 0;
         }
         public FeatureConfig FeatConfig;
         public OnlineModelConfig ModelConfig;
@@ -72,5 +74,10 @@ namespace SherpaOnnx
         public string RuleFars;
 
         public float BlankPenalty;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string HotwordsBuf;
+
+        public int HotwordsBufSize;
     }
 }

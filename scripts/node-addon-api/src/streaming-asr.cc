@@ -120,6 +120,8 @@ SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj) {
   SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
   SHERPA_ONNX_ASSIGN_ATTR_STR(modeling_unit, modelingUnit);
   SHERPA_ONNX_ASSIGN_ATTR_STR(bpe_vocab, bpeVocab);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens_buf, tokensBuf);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(tokens_buf_size, tokensBufSize);
 
   return c;
 }
@@ -192,6 +194,8 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(blank_penalty, blankPenalty);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords_buf, hotwordsBuf);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(hotwords_buf_size, hotwordsBufSize);
 
   c.ctc_fst_decoder_config = GetCtcFstDecoderConfig(o);
 
@@ -241,6 +245,10 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
     delete[] c.model_config.bpe_vocab;
   }
 
+  if (c.model_config.tokens_buf) {
+    delete[] c.model_config.tokens_buf;
+  }
+
   if (c.decoding_method) {
     delete[] c.decoding_method;
   }
@@ -255,6 +263,10 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
 
   if (c.rule_fars) {
     delete[] c.rule_fars;
+  }
+
+  if (c.hotwords_buf) {
+    delete[] c.hotwords_buf;
   }
 
   if (c.ctc_fst_decoder_config.graph) {

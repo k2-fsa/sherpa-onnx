@@ -234,6 +234,11 @@ final class SherpaOnnxOnlineModelConfig extends Struct {
   external Pointer<Utf8> modelingUnit;
 
   external Pointer<Utf8> bpeVocab;
+
+  external Pointer<Utf8> tokensBuf;
+
+  @Int32()
+  external int tokensBufSize;
 }
 
 final class SherpaOnnxOnlineCtcFstDecoderConfig extends Struct {
@@ -275,6 +280,11 @@ final class SherpaOnnxOnlineRecognizerConfig extends Struct {
 
   @Float()
   external double blankPenalty;
+
+  external Pointer<Utf8> hotwordsBuf;
+
+  @Int32()
+  external int hotwordsBufSize;
 }
 
 final class SherpaOnnxSileroVadModelConfig extends Struct {

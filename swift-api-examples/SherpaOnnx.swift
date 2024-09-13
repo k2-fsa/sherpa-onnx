@@ -90,7 +90,9 @@ func sherpaOnnxOnlineModelConfig(
   debug: Int = 0,
   modelType: String = "",
   modelingUnit: String = "cjkchar",
-  bpeVocab: String = ""
+  bpeVocab: String = "",
+  tokensBuf: String = "",
+  tokensBufSize: Int = 0
 ) -> SherpaOnnxOnlineModelConfig {
   return SherpaOnnxOnlineModelConfig(
     transducer: transducer,
@@ -102,7 +104,9 @@ func sherpaOnnxOnlineModelConfig(
     debug: Int32(debug),
     model_type: toCPointer(modelType),
     modeling_unit: toCPointer(modelingUnit),
-    bpe_vocab: toCPointer(bpeVocab)
+    bpe_vocab: toCPointer(bpeVocab),
+    tokens_buf: toCPointer(tokensBuf),
+    tokens_buf_size: Int32(tokensBufSize)
   )
 }
 
@@ -138,7 +142,9 @@ func sherpaOnnxOnlineRecognizerConfig(
   ctcFstDecoderConfig: SherpaOnnxOnlineCtcFstDecoderConfig = sherpaOnnxOnlineCtcFstDecoderConfig(),
   ruleFsts: String = "",
   ruleFars: String = "",
-  blankPenalty: Float = 0.0
+  blankPenalty: Float = 0.0,
+  hotwordsBuf: String = "",
+  hotwordsBufSize: Int = 0
 ) -> SherpaOnnxOnlineRecognizerConfig {
   return SherpaOnnxOnlineRecognizerConfig(
     feat_config: featConfig,
@@ -154,7 +160,9 @@ func sherpaOnnxOnlineRecognizerConfig(
     ctc_fst_decoder_config: ctcFstDecoderConfig,
     rule_fsts: toCPointer(ruleFsts),
     rule_fars: toCPointer(ruleFars),
-    blank_penalty: blankPenalty
+    blank_penalty: blankPenalty,
+    hotwords_buf: toCPointer(hotwordsBuf),
+    hotwords_buf_size: Int32(hotwordsBufSize)
   )
 }
 
