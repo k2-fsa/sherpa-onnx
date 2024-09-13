@@ -475,6 +475,26 @@ class SherpaOnnxOfflineRecongitionResult {
     }
   }
 
+  // For SenseVoice models, it can be zh, en, ja, yue, ko
+  // where zh is for Chinese
+  // en is for English
+  // ja is for Japanese
+  // yue is for Cantonese
+  // ko is for Korean
+  var lang: String {
+    return String(cString: result.pointee.lang)
+  }
+
+  // for SenseVoice models
+  var emotion: String {
+    return String(cString: result.pointee.emotion)
+  }
+
+  // for SenseVoice models
+  var event: String {
+    return String(cString: result.pointee.event)
+  }
+
   init(result: UnsafePointer<SherpaOnnxOfflineRecognizerResult>!) {
     self.result = result
   }
