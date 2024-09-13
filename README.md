@@ -180,6 +180,22 @@ Please see
 https://k2-fsa.github.io/sherpa/social-groups.html
 for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
+## Projects using sherpa-onnx
+
+### [voiceapi](https://github.com/ruzhila/voiceapi)
+
+<details>
+  <summary>Streaming ASR and TTS based on FastAPI</summary>
+
+
+It shows how to use the ASR and TTS Python APIs with FastAPI.
+</details>
+
+### [TMSpeech](https://github.com/jxlpzqc/TMSpeech)
+
+Uses streaming ASR in C# with graphical user interface.
+
+
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/
