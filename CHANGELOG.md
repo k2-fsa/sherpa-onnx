@@ -1,3 +1,15 @@
+## 1.10.25
+
+* Allow tokens and hotwords to be loaded from buffered string driectly (#1339)
+* Fix computing features for CED audio tagging models. (#1341)
+* Preserve previous result as context for next segment (#1335)
+* Add Python binding for online punctuation models (#1312)
+* Fix vad.Flush(). (#1329)
+* Fix wasm app for streaming paraformer (#1328)
+* Build websocket related binaries for embedded systems. (#1327)
+* Fixed the C api calls and created the TTS project file (#1324)
+* Re-implement LM rescore for online transducer (#1231)
+
 ## 1.10.24
 
 * Add VAD and keyword spotting for the Node package with WebAssembly (#1286)
