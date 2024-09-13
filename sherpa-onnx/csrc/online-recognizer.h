@@ -106,6 +106,11 @@ struct OnlineRecognizerConfig {
   // If there are multiple FST archives, they are applied from left to right.
   std::string rule_fars;
 
+  /// used only for modified_beam_search, if hotwords_buf is non-empty,
+  /// the hotwords will be loaded from the buffered string instead of from
+  /// ${hotwords_file}
+  std::string hotwords_buf;
+
   OnlineRecognizerConfig() = default;
 
   OnlineRecognizerConfig(

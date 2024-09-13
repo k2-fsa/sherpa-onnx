@@ -48,6 +48,10 @@ target_link_libraries(telespeech-c-api sherpa-onnx-c-api)
 add_executable(vad-sense-voice-c-api vad-sense-voice-c-api.c)
 target_link_libraries(vad-sense-voice-c-api sherpa-onnx-c-api)
 
+add_executable(streaming-zipformer-buffered-tokens-hotwords-c-api
+               streaming-zipformer-buffered-tokens-hotwords-c-api.c)
+target_link_libraries(streaming-zipformer-buffered-tokens-hotwords-c-api sherpa-onnx-c-api)
+
 if(SHERPA_ONNX_HAS_ALSA)
   add_subdirectory(./asr-microphone-example)
 elseif((UNIX AND NOT APPLE) OR LINUX)

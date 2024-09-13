@@ -73,6 +73,12 @@ SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
 
   recognizer_config.model_config.tokens =
       SHERPA_ONNX_OR(config->model_config.tokens, "");
+  if (config->model_config.tokens_buf &&
+      config->model_config.tokens_buf_size > 0) {
+    recognizer_config.model_config.tokens_buf = std::string(
+        config->model_config.tokens_buf, config->model_config.tokens_buf_size);
+  }
+
   recognizer_config.model_config.num_threads =
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
   recognizer_config.model_config.provider_config.provider =
@@ -120,6 +126,10 @@ SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
   recognizer_config.hotwords_file = SHERPA_ONNX_OR(config->hotwords_file, "");
   recognizer_config.hotwords_score =
       SHERPA_ONNX_OR(config->hotwords_score, 1.5);
+  if (config->hotwords_buf && config->hotwords_buf_size > 0) {
+    recognizer_config.hotwords_buf =
+        std::string(config->hotwords_buf, config->hotwords_buf_size);
+  }
 
   recognizer_config.blank_penalty = config->blank_penalty;
 

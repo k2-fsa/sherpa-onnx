@@ -45,6 +45,11 @@ struct OnlineModelConfig {
   std::string modeling_unit = "cjkchar";
   std::string bpe_vocab;
 
+  /// if tokens_buf is non-empty,
+  /// the tokens will be loaded from the buffered string instead of from the
+  /// ${tokens} file
+  std::string tokens_buf;
+
   OnlineModelConfig() = default;
   OnlineModelConfig(const OnlineTransducerModelConfig &transducer,
                     const OnlineParaformerModelConfig &paraformer,
@@ -53,8 +58,7 @@ struct OnlineModelConfig {
                     const OnlineNeMoCtcModelConfig &nemo_ctc,
                     const ProviderConfig &provider_config,
                     const std::string &tokens, int32_t num_threads,
-                    int32_t warm_up, bool debug,
-                    const std::string &model_type,
+                    int32_t warm_up, bool debug, const std::string &model_type,
                     const std::string &modeling_unit,
                     const std::string &bpe_vocab)
       : transducer(transducer),

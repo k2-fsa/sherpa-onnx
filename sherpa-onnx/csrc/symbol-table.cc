@@ -20,9 +20,14 @@
 
 namespace sherpa_onnx {
 
-SymbolTable::SymbolTable(const std::string &filename) {
-  std::ifstream is(filename);
-  Init(is);
+SymbolTable::SymbolTable(const std::string &filename, bool is_file) {
+  if (is_file) {
+    std::ifstream is(filename);
+    Init(is);
+  } else {
+    std::istringstream iss(filename);
+    Init(iss);
+  }
 }
 
 #if __ANDROID_API__ >= 9
