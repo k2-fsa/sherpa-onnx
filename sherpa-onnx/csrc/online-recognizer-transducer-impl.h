@@ -372,7 +372,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       // segment is incremented only when the last
       // result is not empty, contains non-blanks and longer than context_size)
       const auto &r = s->GetResult();
-      if (!r.tokens.empty() && r.tokens.back() != 0 && r.tokens.size() > context_size) {
+      if (!r.tokens.empty() && r.tokens.back() != 0 &&
+          r.tokens.size() > context_size) {
         s->GetCurrentSegment() += 1;
       }
     }
@@ -392,7 +393,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     // if last result is not empty, then
     // preserve last tokens as the context for next result
     if (static_cast<int32_t>(last_result.tokens.size()) > context_size) {
-      std::vector<int64_t> context(last_result.tokens.end() - context_size, last_result.tokens.end());
+      std::vector<int64_t> context(last_result.tokens.end() - context_size,
+                                   last_result.tokens.end());
 
       Hypotheses context_hyp({{context, 0}});
       r.hyps = std::move(context_hyp);
