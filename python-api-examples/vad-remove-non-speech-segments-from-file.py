@@ -90,6 +90,15 @@ def main():
 
     config = sherpa_onnx.VadModelConfig()
     config.silero_vad.model = args.silero_vad_model
+    config.silero_vad.threshold = 0.5
+    config.silero_vad.min_silence_duration = 0.25  # seconds
+    config.silero_vad.min_speech_duration = 0.25  # seconds
+
+    # If the current segment is larger than this value, then it increases
+    # the threshold to 0.9 internally. After detecting this segment,
+    # it resets the threshold to its original value.
+    config.silero_vad.max_speech_duration = 5  # seconds
+
     config.sample_rate = sample_rate
 
     window_size = config.silero_vad.window_size

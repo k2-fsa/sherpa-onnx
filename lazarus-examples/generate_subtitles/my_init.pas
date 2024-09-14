@@ -48,8 +48,9 @@ begin
   WindowSize := 512; {Please don't change it unless you know the details}
 
   Config.SileroVad.Model := VadFilename;
-  Config.SileroVad.MinSpeechDuration := 0.5;
+  Config.SileroVad.MinSpeechDuration := 0.25;
   Config.SileroVad.MinSilenceDuration := 0.5;
+  Config.SileroVad.MaxSpeechDuration := 5.0;
   Config.SileroVad.Threshold := 0.5;
   Config.SileroVad.WindowSize := WindowSize;
   Config.NumThreads:= 2;

@@ -341,6 +341,7 @@ type
     MinSilenceDuration: Single;
     MinSpeechDuration: Single;
     WindowSize: Integer;
+    MaxSpeechDuration: Single;
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxSileroVadModelConfig);
   end;
@@ -594,6 +595,7 @@ type
     MinSilenceDuration: cfloat;
     MinSpeechDuration: cfloat;
     WindowSize: cint32;
+    MaxSpeechDuration: cfloat;
   end;
   SherpaOnnxVadModelConfig = record
     SileroVad: SherpaOnnxSileroVadModelConfig;
@@ -1402,10 +1404,11 @@ begin
     'Threshold := %.2f, ' +
     'MinSilenceDuration := %.2f, ' +
     'MinSpeechDuration := %.2f, ' +
-    'WindowSize := %d' +
+    'WindowSize := %d, ' +
+    'MaxSpeechDuration := %.2f' +
     ')',
     [Self.Model, Self.Threshold, Self.MinSilenceDuration,
-     Self.MinSpeechDuration, Self.WindowSize
+     Self.MinSpeechDuration, Self.WindowSize, Self.MaxSpeechDuration
     ]);
 end;
 
@@ -1415,6 +1418,7 @@ begin
   Dest.MinSilenceDuration := 0.5;
   Dest.MinSpeechDuration := 0.25;
   Dest.WindowSize := 512;
+  Dest.MaxSpeechDuration := 5.0;
 end;
 
 function TSherpaOnnxVadModelConfig.ToString: AnsiString;
@@ -1569,6 +1573,7 @@ begin
   C.SileroVad.MinSilenceDuration := Config.SileroVad.MinSilenceDuration;
   C.SileroVad.MinSpeechDuration := Config.SileroVad.MinSpeechDuration;
   C.SileroVad.WindowSize := Config.SileroVad.WindowSize;
+  C.SileroVad.MaxSpeechDuration := Config.SileroVad.MaxSpeechDuration;
 
   C.SampleRate := Config.SampleRate;
   C.NumThreads := Config.NumThreads;
