@@ -11,11 +11,12 @@ class SileroVadModelConfig {
       this.threshold = 0.5,
       this.minSilenceDuration = 0.5,
       this.minSpeechDuration = 0.25,
-      this.windowSize = 512});
+      this.windowSize = 512,
+      this.maxSpeechDuration = 5.0});
 
   @override
   String toString() {
-    return 'SileroVadModelConfig(model: $model, threshold: $threshold, minSilenceDuration: $minSilenceDuration, minSpeechDuration: $minSpeechDuration, windowSize: $windowSize)';
+    return 'SileroVadModelConfig(model: $model, threshold: $threshold, minSilenceDuration: $minSilenceDuration, minSpeechDuration: $minSpeechDuration, windowSize: $windowSize, maxSpeechDuration: $maxSpeechDuration)';
   }
 
   final String model;
@@ -23,6 +24,7 @@ class SileroVadModelConfig {
   final double minSilenceDuration;
   final double minSpeechDuration;
   final int windowSize;
+  final double maxSpeechDuration;
 }
 
 class VadModelConfig {
@@ -127,6 +129,7 @@ class VoiceActivityDetector {
     c.ref.sileroVad.minSilenceDuration = config.sileroVad.minSilenceDuration;
     c.ref.sileroVad.minSpeechDuration = config.sileroVad.minSpeechDuration;
     c.ref.sileroVad.windowSize = config.sileroVad.windowSize;
+    c.ref.sileroVad.maxSpeechDuration = config.sileroVad.maxSpeechDuration;
 
     c.ref.sampleRate = config.sampleRate;
     c.ref.numThreads = config.numThreads;

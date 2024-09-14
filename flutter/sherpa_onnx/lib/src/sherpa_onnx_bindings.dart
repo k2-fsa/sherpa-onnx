@@ -301,6 +301,9 @@ final class SherpaOnnxSileroVadModelConfig extends Struct {
 
   @Int32()
   external int windowSize;
+
+  @Float()
+  external double maxSpeechDuration;
 }
 
 final class SherpaOnnxVadModelConfig extends Struct {
