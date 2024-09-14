@@ -1,3 +1,10 @@
+## 1.10.26
+
+* Add links to projects using sherpa-onnx. (#1345)
+* Support lang/emotion/event results from SenseVoice in Swift API. (#1346)
+* Support specifying max speech duration for VAD. (#1348)
+* Add APIs about max speech duration in VAD for various programming languages (#1349)
+
 ## 1.10.25
 
 * Allow tokens and hotwords to be loaded from buffered string driectly (#1339)
