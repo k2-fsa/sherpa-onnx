@@ -9,6 +9,7 @@ data class SileroVadModelConfig(
     var minSilenceDuration: Float = 0.25F,
     var minSpeechDuration: Float = 0.25F,
     var windowSize: Int = 512,
+    var maxSpeechDuration: Float = 5.0F,
 )
 
 data class VadModelConfig(

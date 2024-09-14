@@ -18,6 +18,7 @@ public class VadNonStreamingSenseVoice {
             .setMinSilenceDuration(0.25f)
             .setMinSpeechDuration(0.5f)
             .setWindowSize(512)
+            .setMaxSpeechDuration(5.0f)
             .build();
 
     VadModelConfig config =
