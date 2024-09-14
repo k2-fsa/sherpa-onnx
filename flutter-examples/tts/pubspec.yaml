@@ -21,7 +21,8 @@ dependencies:
   sherpa_onnx: ^1.10.26
   # sherpa_onnx:
   #   path: ../../flutter/sherpa_onnx
-  url_launcher: ^6.2.6
+  url_launcher: 6.2.6
+  url_launcher_linux: 3.1.0
   audioplayers: ^5.0.0
 
 flutter:
