@@ -14,6 +14,7 @@ namespace SherpaOnnx
             MinSilenceDuration = 0.5F;
             MinSpeechDuration = 0.25F;
             WindowSize = 512;
+            MaxSpeechDuration = 5.0F;
         }
 
         [MarshalAs(UnmanagedType.LPStr)]
@@ -26,5 +27,7 @@ namespace SherpaOnnx
         public float MinSpeechDuration;
 
         public int WindowSize;
+
+        public float MaxSpeechDuration;
     }
 }
