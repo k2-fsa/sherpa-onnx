@@ -13,7 +13,7 @@
 
 extern "C" {
 
-static_assert(sizeof(SherpaOnnxSileroVadModelConfig) == 5 * 4, "");
+static_assert(sizeof(SherpaOnnxSileroVadModelConfig) == 6 * 4, "");
 
 static_assert(sizeof(SherpaOnnxVadModelConfig) ==
                   sizeof(SherpaOnnxSileroVadModelConfig) + 4 * 4,
@@ -29,6 +29,8 @@ void MyPrint(SherpaOnnxVadModelConfig *config) {
   fprintf(stdout, "min_speech_duration: %.3f\n",
           silero_vad->min_speech_duration);
   fprintf(stdout, "window_size: %d\n", silero_vad->window_size);
+  fprintf(stdout, "max_speech_duration: %.3f\n",
+          silero_vad->max_speech_duration);
 
   fprintf(stdout, "----------config----------\n");
 

@@ -29,6 +29,7 @@ function createVad() {
       threshold: 0.5,
       minSpeechDuration: 0.25,
       minSilenceDuration: 0.5,
+      maxSpeechDuration: 5,
       windowSize: 512,
     },
     sampleRate: 16000,
