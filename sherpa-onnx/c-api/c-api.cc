@@ -907,6 +907,9 @@ SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
   vad_config.silero_vad.window_size =
       SHERPA_ONNX_OR(config->silero_vad.window_size, 512);
 
+  vad_config.silero_vad.max_speech_duration =
+      SHERPA_ONNX_OR(config->silero_vad.max_speech_duration, 20);
+
   vad_config.sample_rate = SHERPA_ONNX_OR(config->sample_rate, 16000);
   vad_config.num_threads = SHERPA_ONNX_OR(config->num_threads, 1);
   vad_config.provider = SHERPA_ONNX_OR(config->provider, "cpu");

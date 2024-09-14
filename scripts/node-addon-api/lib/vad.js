@@ -39,6 +39,9 @@ config = {
   sileroVad: {
     model: "./silero_vad.onnx",
     threshold: 0.5,
+    minSilenceDuration: 0.5,
+    minSpeechDuration: 0.25,
+    maxSpeechDuration: 5,
   }
 }
    */

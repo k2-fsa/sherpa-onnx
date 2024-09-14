@@ -32,6 +32,7 @@ void main(List<String> arguments) async {
     model: sileroVad,
     minSilenceDuration: 0.25,
     minSpeechDuration: 0.5,
+    maxSpeechDuration: 5.0,
   );
 
   final vadConfig = sherpa_onnx.VadModelConfig(

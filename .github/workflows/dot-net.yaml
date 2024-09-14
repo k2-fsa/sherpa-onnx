@@ -93,6 +93,8 @@ jobs:
             git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
+            git fetch
+            git pull
             mkdir -p windows-for-dotnet
 
             cp -v ../sherpa-onnx-*.tar.bz2 ./windows-for-dotnet

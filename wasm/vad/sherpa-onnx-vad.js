@@ -19,7 +19,7 @@ function initSherpaOnnxSileroVadModelConfig(config, Module) {
 
   const buffer = Module._malloc(n);
 
-  const len = 5 * 4;
+  const len = 6 * 4;
   const ptr = Module._malloc(len);
 
   Module.stringToUTF8(config.model || '', buffer, modelLen);
@@ -40,6 +40,9 @@ function initSherpaOnnxSileroVadModelConfig(config, Module) {
   Module.setValue(ptr + offset, config.windowSize || 512, 'i32');
   offset += 4;
 
+  Module.setValue(ptr + offset, config.maxSpeechDuration || 20, 'float');
+  offset += 4;
+
   return {
     buffer: buffer, ptr: ptr, len: len,
   }
@@ -53,6 +56,7 @@ function initSherpaOnnxVadModelConfig(config, Module) {
       minSilenceDuration: 0.50,
       minSpeechDuration: 0.25,
       windowSize: 512,
+      maxSpeechDuration: 20,
     };
   }
 
@@ -93,6 +97,7 @@ function createVad(Module, myConfig) {
     threshold: 0.50,
     minSilenceDuration: 0.50,
     minSpeechDuration: 0.25,
+    maxSpeechDuration: 20,
     windowSize: 512,
   };
 

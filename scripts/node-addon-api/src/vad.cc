@@ -279,6 +279,7 @@ static SherpaOnnxSileroVadModelConfig GetSileroVadConfig(
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_silence_duration, minSilenceDuration);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_speech_duration, minSpeechDuration);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(window_size, windowSize);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(max_speech_duration, maxSpeechDuration);
 
   return c;
 }

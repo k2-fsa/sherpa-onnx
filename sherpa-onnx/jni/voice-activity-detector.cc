@@ -40,6 +40,10 @@ static VadModelConfig GetVadModelConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(silero_vad_config_cls, "windowSize", "I");
   ans.silero_vad.window_size = env->GetIntField(silero_vad_config, fid);
 
+  fid = env->GetFieldID(silero_vad_config_cls, "maxSpeechDuration", "F");
+  ans.silero_vad.max_speech_duration =
+      env->GetFloatField(silero_vad_config, fid);
+
   fid = env->GetFieldID(cls, "sampleRate", "I");
   ans.sample_rate = env->GetIntField(config, fid);
 
