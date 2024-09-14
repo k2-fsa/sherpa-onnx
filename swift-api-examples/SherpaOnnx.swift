@@ -550,14 +550,16 @@ func sherpaOnnxSileroVadModelConfig(
   threshold: Float = 0.5,
   minSilenceDuration: Float = 0.25,
   minSpeechDuration: Float = 0.5,
-  windowSize: Int = 512
+  windowSize: Int = 512,
+  maxSpeechDuration: Float = 5.0
 ) -> SherpaOnnxSileroVadModelConfig {
   return SherpaOnnxSileroVadModelConfig(
     model: toCPointer(model),
     threshold: threshold,
     min_silence_duration: minSilenceDuration,
     min_speech_duration: minSpeechDuration,
-    window_size: Int32(windowSize)
+    window_size: Int32(windowSize),
+    max_speech_duration: maxSpeechDuration
   )
 }
 
