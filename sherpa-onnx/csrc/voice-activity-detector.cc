@@ -18,14 +18,18 @@ class VoiceActivityDetector::Impl {
   explicit Impl(const VadModelConfig &config, float buffer_size_in_seconds = 60)
       : model_(VadModel::Create(config)),
         config_(config),
-        buffer_(buffer_size_in_seconds * config.sample_rate) {}
+        buffer_(buffer_size_in_seconds * config.sample_rate) {
+    Init();
+  }
 
 #if __ANDROID_API__ >= 9
   Impl(AAssetManager *mgr, const VadModelConfig &config,
        float buffer_size_in_seconds = 60)
       : model_(VadModel::Create(mgr, config)),
         config_(config),
-        buffer_(buffer_size_in_seconds * config.sample_rate) {}
+        buffer_(buffer_size_in_seconds * config.sample_rate) {
+    Init();
+  }
 #endif
 
   void AcceptWaveform(const float *samples, int32_t n) {
@@ -146,6 +150,15 @@ class VoiceActivityDetector::Impl {
   const VadModelConfig &GetConfig() const { return config_; }
 
  private:
+  void Init() {
+    // TODO(fangjun): Currently, we support only one vad model.
+    // If a new vad model is added, we need to change the place
+    // where max_speech_duration is placed.
+    max_utterance_length_ =
+        config_.sample_rate * config_.silero_vad.max_speech_duration;
+  }
+
+ private:
   std::queue<SpeechSegment> segments_;
 
   std::unique_ptr<VadModel> model_;
@@ -153,9 +166,9 @@ class VoiceActivityDetector::Impl {
   CircularBuffer buffer_;
   std::vector<float> last_;
 
-  int max_utterance_length_ = 16000 * 20;  // in samples
+  int max_utterance_length_ = -1;  // in samples
   float new_min_silence_duration_s_ = 0.1;
-  float new_threshold_ = 1.10;
+  float new_threshold_ = 0.90;
 
   int32_t start_ = -1;
 };
