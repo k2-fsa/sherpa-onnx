@@ -22,6 +22,7 @@ func main() {
 	config.SileroVad.MinSilenceDuration = 0.5
 	config.SileroVad.MinSpeechDuration = 0.25
 	config.SileroVad.WindowSize = 512
+	config.SileroVad.MaxSpeechDuration = 5.0
 	config.SampleRate = 16000
 	config.NumThreads = 1
 	config.Provider = "cpu"

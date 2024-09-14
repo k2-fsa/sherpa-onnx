@@ -771,6 +771,7 @@ type SileroVadModelConfig struct {
 	MinSilenceDuration float32
 	MinSpeechDuration  float32
 	WindowSize         int
+	MaxSpeechDuration  float32
 }
 
 type VadModelConfig struct {
@@ -849,6 +850,7 @@ func NewVoiceActivityDetector(config *VadModelConfig, bufferSizeInSeconds float3
 	c.silero_vad.min_silence_duration = C.float(config.SileroVad.MinSilenceDuration)
 	c.silero_vad.min_speech_duration = C.float(config.SileroVad.MinSpeechDuration)
 	c.silero_vad.window_size = C.int(config.SileroVad.WindowSize)
+	c.silero_vad.max_speech_duration = C.float(config.SileroVad.MaxSpeechDuration)
 
 	c.sample_rate = C.int(config.SampleRate)
 	c.num_threads = C.int(config.NumThreads)
