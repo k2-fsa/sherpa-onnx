@@ -106,7 +106,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
       /// assuming tokens_buf and tokens are guaranteed not being both empty
       sym_ = SymbolTable(config.model_config.tokens, true);
     }
-    
+
     if (config.decoding_method != "greedy_search") {
       SHERPA_ONNX_LOGE(
           "Unsupported decoding method: %s. Support only greedy_search at "

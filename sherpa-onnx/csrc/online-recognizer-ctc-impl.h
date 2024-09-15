@@ -78,7 +78,7 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
       /// assuming tokens_buf and tokens are guaranteed not being both empty
       sym_ = SymbolTable(config.model_config.tokens, true);
     }
-    
+
     if (!config.model_config.wenet_ctc.model.empty()) {
       // WeNet CTC models assume input samples are in the range
       // [-32768, 32767], so we set normalize_samples to false
