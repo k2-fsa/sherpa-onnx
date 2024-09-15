@@ -52,6 +52,15 @@ add_executable(streaming-zipformer-buffered-tokens-hotwords-c-api
                streaming-zipformer-buffered-tokens-hotwords-c-api.c)
 target_link_libraries(streaming-zipformer-buffered-tokens-hotwords-c-api sherpa-onnx-c-api)
 
+add_executable(streaming-paraformer-buffered-tokens-hotwords-c-api
+               streaming-paraformer-buffered-tokens-hotwords-c-api.c)
+target_link_libraries(streaming-paraformer-buffered-tokens-hotwords-c-api sherpa-onnx-c-api)
+
+add_executable(streaming-ctc-buffered-tokens-hotwords-c-api
+               streaming-ctc-buffered-tokens-hotwords-c-api.c)
+target_link_libraries(streaming-ctc-buffered-tokens-hotwords-c-api sherpa-onnx-c-api)
+
+
 if(SHERPA_ONNX_HAS_ALSA)
   add_subdirectory(./asr-microphone-example)
 elseif((UNIX AND NOT APPLE) OR LINUX)
