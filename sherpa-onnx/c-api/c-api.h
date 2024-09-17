@@ -88,8 +88,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineModelConfig {
   //  - cjkchar+bpe
   const char *modeling_unit;
   const char *bpe_vocab;
-  /// if non-null, loading the tokens from the buffered string directly in
-  /// prioriy
+  /// if non-null, loading the tokens from the buffer instead of from the
+  /// "tokens" file
   const char *tokens_buf;
   /// byte size excluding the trailing '\0'
   int32_t tokens_buf_size;
@@ -637,6 +637,11 @@ SHERPA_ONNX_API typedef struct SherpaOnnxKeywordSpotterConfig {
   float keywords_score;
   float keywords_threshold;
   const char *keywords_file;
+  /// if non-null, loading the keywords from the buffer instead of from the
+  /// keywords_file
+  const char *keywords_buf;
+  /// byte size excluding the trailing '\0'
+  int32_t keywords_buf_size;
 } SherpaOnnxKeywordSpotterConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxKeywordSpotter

@@ -184,3 +184,35 @@ jobs:
           ./streaming-ctc-buffered-tokens-hotwords-c-api
 
           rm -rf sherpa-onnx-streaming-ctc-*
+
+      - name: Test keywords spotting with tokens and hotwords loaded from buffers
+        shell: bash
+        run: |
+          gcc -o keywords-spotter-buffered-tokens-keywords-c-api ./c-api-examples/keywords-spotter-buffered-tokens-keywords-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh keywords-spotter-buffered-tokens-keywords-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./keywords-spotter-buffered-tokens-keywords-c-api
+            echo "----"
+            readelf -d ./keywords-spotter-buffered-tokens-keywords-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+          tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+          rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+
+          ls -lh sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile
+          echo "---"
+          ls -lh sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./keywords-spotter-buffered-tokens-keywords-c-api
+
+          rm -rf sherpa-onnx-kws-zipformer-*

@@ -667,6 +667,12 @@ SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
 
   spotter_config.model_config.tokens =
       SHERPA_ONNX_OR(config->model_config.tokens, "");
+  if (config->model_config.tokens_buf &&
+      config->model_config.tokens_buf_size > 0) {
+    spotter_config.model_config.tokens_buf = std::string(
+        config->model_config.tokens_buf, config->model_config.tokens_buf_size);
+  }
+
   spotter_config.model_config.num_threads =
       SHERPA_ONNX_OR(config->model_config.num_threads, 1);
   spotter_config.model_config.provider_config.provider =
@@ -691,6 +697,10 @@ SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
       SHERPA_ONNX_OR(config->keywords_threshold, 0.25);
 
   spotter_config.keywords_file = SHERPA_ONNX_OR(config->keywords_file, "");
+  if (config->keywords_buf && config->keywords_buf_size > 0) {
+    spotter_config.keywords_buf =
+        std::string(config->keywords_buf, config->keywords_buf_size);
+  }
 
   if (config->model_config.debug) {
     SHERPA_ONNX_LOGE("%s\n", spotter_config.ToString().c_str());
