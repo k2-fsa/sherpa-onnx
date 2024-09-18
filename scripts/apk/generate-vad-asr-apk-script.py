@@ -296,6 +296,46 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-zipformer-ru-2024-09-18",
+            idx=17,
+            lang="ru",
+            short_name="zipformer",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            rm -fv encoder.onnx
+            rm -fv decoder.int8.onnx
+            rm -fv joiner.onnx
+            rm -fv bpe.model
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-small-zipformer-ru-2024-09-18",
+            idx=18,
+            lang="ru",
+            short_name="small_zipformer",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            rm -fv encoder.onnx
+            rm -fv decoder.int8.onnx
+            rm -fv joiner.onnx
+            rm -fv bpe.model
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
