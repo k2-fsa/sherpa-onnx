@@ -1,0 +1,108 @@
+name: export-russian-onnx-models
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: export-russian-onnx-models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-russian-onnx-models:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export Russian onnx models
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: vosk-model-ru (zipformer v1)
+        shell: bash
+        run: |
+          cat >README.md <<EOF
+          # Introduction
+          Models in this directory are from
+          https://huggingface.co/alphacep/vosk-model-ru/tree/main
+          EOF
+
+          cat README.md
+
+          d=sherpa-onnx-zipformer-ru-2024-09-18
+          mkdir $d
+          pushd $d
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-ru/resolve/main/lang/bpe.model
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-ru/resolve/main/lang/tokens.txt
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-ru/resolve/main/am-onnx/encoder.int8.onnx
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-ru/resolve/main/am-onnx/decoder.int8.onnx
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-ru/resolve/main/am-onnx/joiner.int8.onnx
+
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-ru/resolve/main/am-onnx/encoder.onnx
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-ru/resolve/main/am-onnx/decoder.onnx
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-ru/resolve/main/am-onnx/joiner.onnx
+
+          mkdir test_wavs
+          cd test_wavs
+          curl -SL -O https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/main/test_wavs/russian/russian-i-love-you.wav
+          curl -SL -O https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/main/test_wavs/russian/test.wav
+
+          mv russian-i-love-you.wav 0.wav
+          mv test.wav 1.wav
+          popd
+
+          ls -lh $d
+
+          tar cjvf $d.tar.bz2 $d
+          rm -rf $d
+
+      - name: vosk-model-ru-small (zipformer v1)
+        shell: bash
+        run: |
+          cat >README.md <<EOF
+          # Introduction
+          Models in this directory are from
+          https://huggingface.co/alphacep/vosk-model-small-ru/tree/main
+          EOF
+
+          cat README.md
+
+          d=sherpa-onnx-small-zipformer-ru-2024-09-18
+          mkdir $d
+          pushd $d
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-small-ru/resolve/main/lang/bpe.model
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-small-ru/resolve/main/lang/tokens.txt
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-small-ru/resolve/main/am/encoder.int8.onnx
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-small-ru/resolve/main/am/decoder.int8.onnx
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-small-ru/resolve/main/am/joiner.int8.onnx
+
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-small-ru/resolve/main/am/encoder.onnx
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-small-ru/resolve/main/am/decoder.onnx
+          curl -SL -O https://huggingface.co/alphacep/vosk-model-small-ru/resolve/main/am/joiner.onnx
+
+          mkdir test_wavs
+          cd test_wavs
+          curl -SL -O https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/main/test_wavs/russian/russian-i-love-you.wav
+          curl -SL -O https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition/resolve/main/test_wavs/russian/test.wav
+
+          mv russian-i-love-you.wav 0.wav
+          mv test.wav 1.wav
+          popd
+
+          ls -lh $d
+
+          tar cjvf $d.tar.bz2 $d
+          rm -rf $d
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
