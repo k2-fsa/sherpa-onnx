@@ -1,17 +1,17 @@
-// c-api-examples/streaming-ctc-buffered-tokens-hotwords-c-api.c
+// c-api-examples/streaming-paraformer-buffered-tokens-c-api.c
 //
 // Copyright (c)  2024  Xiaomi Corporation
 // Copyright (c)  2024  Luo Xiao
 
 //
-// This file demonstrates how to use streaming Zipformer2 Ctc with sherpa-onnx's
-// C API and with tokens and hotwords loaded from buffered strings instead of
-// from external files API.
+// This file demonstrates how to use streaming Paraformer with sherpa-onnx's C
+// API and with tokens loaded from buffered strings instead of from
+// external files API.
 // clang-format off
 // 
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
-// tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
-// rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+// tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+// rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 //
 // clang-format on
 
@@ -50,13 +50,13 @@ static size_t ReadFile(const char *filename, const char **buffer_out) {
 
 int32_t main() {
   const char *wav_filename =
-      "sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/"
-      "DEV_T0000000000.wav";
-  const char *model_filename =
-      "sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/"
-      "ctc-epoch-20-avg-1-chunk-16-left-128.int8.onnx";
+      "sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs/0.wav";
+  const char *encoder_filename =
+      "sherpa-onnx-streaming-paraformer-bilingual-zh-en/encoder.int8.onnx";
+  const char *decoder_filename =
+      "sherpa-onnx-streaming-paraformer-bilingual-zh-en/decoder.int8.onnx";
   const char *tokens_filename =
-      "sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt";
+      "sherpa-onnx-streaming-paraformer-bilingual-zh-en/tokens.txt";
   const char *provider = "cpu";
 
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
@@ -65,7 +65,7 @@ int32_t main() {
     return -1;
   }
 
-  // reading tokens and hotwords to buffers
+  // reading tokens to buffers
   const char *tokens_buf;
   size_t token_buf_size = ReadFile(tokens_filename, &tokens_buf);
   if (token_buf_size < 1) {
@@ -74,10 +74,11 @@ int32_t main() {
     return -1;
   }
 
-  // Zipformer2Ctc config
-  SherpaOnnxOnlineZipformer2CtcModelConfig zipformer2_ctc_config;
-  memset(&zipformer2_ctc_config, 0, sizeof(zipformer2_ctc_config));
-  zipformer2_ctc_config.model = model_filename;
+  // Paraformer config
+  SherpaOnnxOnlineParaformerModelConfig paraformer_config;
+  memset(&paraformer_config, 0, sizeof(paraformer_config));
+  paraformer_config.encoder = encoder_filename;
+  paraformer_config.decoder = decoder_filename;
 
   // Online model config
   SherpaOnnxOnlineModelConfig online_model_config;
@@ -87,7 +88,7 @@ int32_t main() {
   online_model_config.provider = provider;
   online_model_config.tokens_buf = tokens_buf;
   online_model_config.tokens_buf_size = token_buf_size;
-  online_model_config.zipformer2_ctc = zipformer2_ctc_config;
+  online_model_config.paraformer = paraformer_config;
 
   // Recognizer config
   SherpaOnnxOnlineRecognizerConfig recognizer_config;

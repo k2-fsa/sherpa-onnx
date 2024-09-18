@@ -65,15 +65,15 @@ int32_t main() {
   const char *tokens_filename =
       "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/tokens.txt";
   const char *keywords_filename =
-      "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
-      "keywords.txt";
+      "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/test_wavs/"
+      "test_keywords.txt";
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
     fprintf(stderr, "Failed to read %s\n", wav_filename);
     return -1;
   }
 
-  // reading tokens and hotwords to buffers
+  // reading tokens and keywords to buffers
   const char *tokens_buf;
   size_t token_buf_size = ReadFile(tokens_filename, &tokens_buf);
   if (token_buf_size < 1) {
@@ -84,7 +84,7 @@ int32_t main() {
   const char *keywords_buf;
   size_t keywords_buf_size = ReadFile(keywords_filename, &keywords_buf);
   if (keywords_buf_size < 1) {
-    fprintf(stderr, "Please check your hotwords.txt!\n");
+    fprintf(stderr, "Please check your keywords.txt!\n");
     free((void *)keywords_buf);
     return -1;
   }
