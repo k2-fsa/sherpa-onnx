@@ -143,6 +143,16 @@ jobs:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: install/*
 
+      - name: Test offline transducer
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-transducer.sh
+          du -h -d1 .
+
       - name: Test offline CTC
         shell: bash
         run: |
@@ -161,16 +171,6 @@ jobs:
           export EXE=sherpa-onnx-online-punctuation
 
           .github/scripts/test-online-punctuation.sh
-          du -h -d1 .
-
-      - name: Test offline transducer
-        shell: bash
-        run: |
-          du -h -d1 .
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
-
-          .github/scripts/test-offline-transducer.sh
           du -h -d1 .
 
       - name: Test online transducer

@@ -16,6 +16,46 @@ echo "PATH: $PATH"
 which $EXE
 
 log "------------------------------------------------------------------------"
+log "Run zipformer transducer models (Russian)                              "
+log "------------------------------------------------------------------------"
+for type in small-zipformer zipformer; do
+  url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-$type-ru-2024-09-18.tar.bz2
+  name=$(basename $url)
+  curl -SL -O $url
+  tar xvf $name
+  rm $name
+  repo=$(basename -s .tar.bz2 $name)
+  ls -lh $repo
+
+  log "test $repo"
+  test_wavs=(
+  0.wav
+  1.wav
+  )
+
+  for w in ${test_wavs[@]}; do
+    time $EXE \
+      --tokens=$repo/tokens.txt \
+      --encoder=$repo/encoder.onnx \
+      --decoder=$repo/decoder.onnx \
+      --joiner=$repo/joiner.onnx \
+      --debug=1 \
+      $repo/test_wavs/$w
+  done
+
+  for w in ${test_wavs[@]}; do
+    time $EXE \
+      --tokens=$repo/tokens.txt \
+      --encoder=$repo/encoder.int8.onnx \
+      --decoder=$repo/decoder.onnx \
+      --joiner=$repo/joiner.int8.onnx \
+      --debug=1 \
+      $repo/test_wavs/$w
+  done
+  rm -rf $repo
+done
+
+log "------------------------------------------------------------------------"
 log "Run zipformer transducer models (Japanese from ReazonSpeech)                              "
 log "------------------------------------------------------------------------"
 url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2

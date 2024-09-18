@@ -610,12 +610,15 @@ func (recognizer *OfflineRecognizer) DecodeStreams(s []*OfflineStream) {
 func (s *OfflineStream) GetResult() *OfflineRecognizerResult {
 	p := C.SherpaOnnxGetOfflineStreamResult(s.impl)
 	defer C.SherpaOnnxDestroyOfflineRecognizerResult(p)
+	n := int(p.count)
+	if n == 0 {
+		return nil
+	}
 	result := &OfflineRecognizerResult{}
 	result.Text = C.GoString(p.text)
 	result.Lang = C.GoString(p.lang)
 	result.Emotion = C.GoString(p.emotion)
 	result.Event = C.GoString(p.event)
-	n := int(p.count)
 	result.Tokens = make([]string, n)
 	tokens := (*[1 << 28]*C.char)(unsafe.Pointer(p.tokens_arr))[:n:n]
 	for i := 0; i < n; i++ {
