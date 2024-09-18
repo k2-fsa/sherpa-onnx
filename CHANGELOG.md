@@ -1,3 +1,10 @@
+## 1.10.27
+
+* Add non-streaming ONNX models for Russian ASR (#1358)
+* Fix building Flutter TTS examples for Linux (#1356)
+* Support passing utf-8 strings from JavaScript to C++. (#1355)
+* Fix sherpa_onnx.go to support returning empty recognition results (#1353)
+
 ## 1.10.26
 
 * Add links to projects using sherpa-onnx. (#1345)
