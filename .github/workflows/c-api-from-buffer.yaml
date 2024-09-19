@@ -124,7 +124,7 @@ jobs:
       - name: Test streaming paraformer with tokens and hotwords loaded from buffers
         shell: bash
         run: |
-          gcc -o streaming-paraformer-buffered-tokens-hotwords-c-api ./c-api-examples/streaming-paraformer-buffered-tokens-hotwords-c-api.c \
+          gcc -o streaming-paraformer-buffered-tokens-hotwords-c-api ./c-api-examples/streaming-paraformer-buffered-tokens-c-api.c \
             -I ./build/install/include \
             -L ./build/install/lib/ \
             -l sherpa-onnx-c-api \
