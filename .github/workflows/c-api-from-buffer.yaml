@@ -135,7 +135,7 @@ jobs:
           if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
             ldd ./streaming-paraformer-buffered-tokens-c-api
             echo "----"
-            readelf -d ./streaming-paraformer-buffered-tokens-hotwords-c-api
+            readelf -d ./streaming-paraformer-buffered-tokens-c-api
           fi
 
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
