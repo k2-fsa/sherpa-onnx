@@ -11,7 +11,7 @@ project(sherpa-onnx)
 # ./nodejs-addon-examples
 # ./dart-api-examples/
 # ./CHANGELOG.md
-set(SHERPA_ONNX_VERSION "1.10.26")
+set(SHERPA_ONNX_VERSION "1.10.27")
 
 # Disable warning about
 #
