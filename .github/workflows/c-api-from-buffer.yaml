@@ -149,7 +149,7 @@ jobs:
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
-          ./streaming-paraformer-buffered-tokens-hotwords-c-api
+          ./streaming-paraformer-buffered-tokens-c-api
 
           rm -rf sherpa-onnx-streaming-paraformer-*
 
