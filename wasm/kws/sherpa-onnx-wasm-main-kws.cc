@@ -24,7 +24,7 @@ static_assert(sizeof(SherpaOnnxOnlineModelConfig) ==
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxKeywordSpotterConfig) ==
                   sizeof(SherpaOnnxFeatureConfig) +
-                      sizeof(SherpaOnnxOnlineModelConfig) + 5 * 4,
+                      sizeof(SherpaOnnxOnlineModelConfig) + 7 * 4,
               "");
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {
