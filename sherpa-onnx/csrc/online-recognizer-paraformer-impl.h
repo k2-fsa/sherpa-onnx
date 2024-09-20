@@ -99,8 +99,14 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
       : OnlineRecognizerImpl(config),
         config_(config),
         model_(config.model_config),
-        sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
+    if (!config.model_config.tokens_buf.empty()) {
+      sym_ = SymbolTable(config.model_config.tokens_buf, false);
+    } else {
+      /// assuming tokens_buf and tokens are guaranteed not being both empty
+      sym_ = SymbolTable(config.model_config.tokens, true);
+    }
+
     if (config.decoding_method != "greedy_search") {
       SHERPA_ONNX_LOGE(
           "Unsupported decoding method: %s. Support only greedy_search at "

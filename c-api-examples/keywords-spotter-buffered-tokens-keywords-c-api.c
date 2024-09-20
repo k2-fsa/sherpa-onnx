@@ -1,17 +1,17 @@
-// c-api-examples/streaming-zipformer-buffered-tokens-hotwords-c-api.c
+// c-api-examples/keywords-spotter-buffered-tokens-keywords-c-api.c
 //
 // Copyright (c)  2024  Xiaomi Corporation
 // Copyright (c)  2024  Luo Xiao
 
 //
-// This file demonstrates how to use streaming Zipformer with sherpa-onnx's C
-// API and with tokens and hotwords loaded from buffered strings instead of from
+// This file demonstrates how to use keywords spotter with sherpa-onnx's C
+// API and with tokens and keywords loaded from buffered strings instead of from
 // external files API.
 // clang-format off
 // 
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
-// tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
-// rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+// tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+// rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
 //
 // clang-format on
 
@@ -50,32 +50,30 @@ static size_t ReadFile(const char *filename, const char **buffer_out) {
 
 int32_t main() {
   const char *wav_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/test_wavs/0.wav";
+      "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/test_wavs/"
+      "6.wav";
   const char *encoder_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "encoder-epoch-99-avg-1.onnx";
+      "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
+      "encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx";
   const char *decoder_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "decoder-epoch-99-avg-1.onnx";
+      "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
+      "decoder-epoch-12-avg-2-chunk-16-left-64.onnx";
   const char *joiner_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "joiner-epoch-99-avg-1.onnx";
+      "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
+      "joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx";
   const char *provider = "cpu";
-  const char *modeling_unit = "bpe";
   const char *tokens_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/tokens.txt";
-  const char *hotwords_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/hotwords.txt";
-  const char *bpe_vocab =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "bpe.vocab";
+      "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/tokens.txt";
+  const char *keywords_filename =
+      "sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/test_wavs/"
+      "test_keywords.txt";
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
     fprintf(stderr, "Failed to read %s\n", wav_filename);
     return -1;
   }
 
-  // reading tokens and hotwords to buffers
+  // reading tokens and keywords to buffers
   const char *tokens_buf;
   size_t token_buf_size = ReadFile(tokens_filename, &tokens_buf);
   if (token_buf_size < 1) {
@@ -83,11 +81,11 @@ int32_t main() {
     free((void *)tokens_buf);
     return -1;
   }
-  const char *hotwords_buf;
-  size_t hotwords_buf_size = ReadFile(hotwords_filename, &hotwords_buf);
-  if (hotwords_buf_size < 1) {
-    fprintf(stderr, "Please check your hotwords.txt!\n");
-    free((void *)hotwords_buf);
+  const char *keywords_buf;
+  size_t keywords_buf_size = ReadFile(keywords_filename, &keywords_buf);
+  if (keywords_buf_size < 1) {
+    fprintf(stderr, "Please check your keywords.txt!\n");
+    free((void *)keywords_buf);
     return -1;
   }
 
@@ -108,29 +106,32 @@ int32_t main() {
   online_model_config.tokens_buf_size = token_buf_size;
   online_model_config.transducer = zipformer_config;
 
-  // Recognizer config
-  SherpaOnnxOnlineRecognizerConfig recognizer_config;
-  memset(&recognizer_config, 0, sizeof(recognizer_config));
-  recognizer_config.decoding_method = "modified_beam_search";
-  recognizer_config.model_config = online_model_config;
-  recognizer_config.hotwords_buf = hotwords_buf;
-  recognizer_config.hotwords_buf_size = hotwords_buf_size;
+  // Keywords-spotter config
+  SherpaOnnxKeywordSpotterConfig keywords_spotter_config;
+  memset(&keywords_spotter_config, 0, sizeof(keywords_spotter_config));
+  keywords_spotter_config.max_active_paths = 4;
+  keywords_spotter_config.keywords_threshold = 0.1;
+  keywords_spotter_config.keywords_score = 3.0;
+  keywords_spotter_config.model_config = online_model_config;
+  keywords_spotter_config.keywords_buf = keywords_buf;
+  keywords_spotter_config.keywords_buf_size = keywords_buf_size;
 
-  SherpaOnnxOnlineRecognizer *recognizer =
-      SherpaOnnxCreateOnlineRecognizer(&recognizer_config);
+  SherpaOnnxKeywordSpotter *keywords_spotter =
+      SherpaOnnxCreateKeywordSpotter(&keywords_spotter_config);
 
   free((void *)tokens_buf);
   tokens_buf = NULL;
-  free((void *)hotwords_buf);
-  hotwords_buf = NULL;
+  free((void *)keywords_buf);
+  keywords_buf = NULL;
 
-  if (recognizer == NULL) {
+  if (keywords_spotter == NULL) {
     fprintf(stderr, "Please check your config!\n");
     SherpaOnnxFreeWave(wave);
     return -1;
   }
 
-  SherpaOnnxOnlineStream *stream = SherpaOnnxCreateOnlineStream(recognizer);
+  SherpaOnnxOnlineStream *stream =
+      SherpaOnnxCreateKeywordStream(keywords_spotter);
 
   const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;
@@ -151,25 +152,18 @@ int32_t main() {
 
     SherpaOnnxOnlineStreamAcceptWaveform(stream, wave->sample_rate,
                                          wave->samples + start, end - start);
-    while (SherpaOnnxIsOnlineStreamReady(recognizer, stream)) {
-      SherpaOnnxDecodeOnlineStream(recognizer, stream);
+    while (SherpaOnnxIsKeywordStreamReady(keywords_spotter, stream)) {
+      SherpaOnnxDecodeKeywordStream(keywords_spotter, stream);
     }
 
-    const SherpaOnnxOnlineRecognizerResult *r =
-        SherpaOnnxGetOnlineStreamResult(recognizer, stream);
+    const SherpaOnnxKeywordResult *r =
+        SherpaOnnxGetKeywordResult(keywords_spotter, stream);
 
-    if (strlen(r->text)) {
-      SherpaOnnxPrint(display, segment_id, r->text);
+    if (strlen(r->keyword)) {
+      SherpaOnnxPrint(display, segment_id, r->keyword);
     }
 
-    if (SherpaOnnxOnlineStreamIsEndpoint(recognizer, stream)) {
-      if (strlen(r->text)) {
-        ++segment_id;
-      }
-      SherpaOnnxOnlineStreamReset(recognizer, stream);
-    }
-
-    SherpaOnnxDestroyOnlineRecognizerResult(r);
+    SherpaOnnxDestroyKeywordResult(r);
   }
 
   // add some tail padding
@@ -180,22 +174,22 @@ int32_t main() {
   SherpaOnnxFreeWave(wave);
 
   SherpaOnnxOnlineStreamInputFinished(stream);
-  while (SherpaOnnxIsOnlineStreamReady(recognizer, stream)) {
-    SherpaOnnxDecodeOnlineStream(recognizer, stream);
+  while (SherpaOnnxIsKeywordStreamReady(keywords_spotter, stream)) {
+    SherpaOnnxDecodeKeywordStream(keywords_spotter, stream);
   }
 
-  const SherpaOnnxOnlineRecognizerResult *r =
-      SherpaOnnxGetOnlineStreamResult(recognizer, stream);
+  const SherpaOnnxKeywordResult *r =
+      SherpaOnnxGetKeywordResult(keywords_spotter, stream);
 
-  if (strlen(r->text)) {
-    SherpaOnnxPrint(display, segment_id, r->text);
+  if (strlen(r->keyword)) {
+    SherpaOnnxPrint(display, segment_id, r->keyword);
   }
 
-  SherpaOnnxDestroyOnlineRecognizerResult(r);
+  SherpaOnnxDestroyKeywordResult(r);
 
   SherpaOnnxDestroyDisplay(display);
   SherpaOnnxDestroyOnlineStream(stream);
-  SherpaOnnxDestroyOnlineRecognizer(recognizer);
+  SherpaOnnxDestroyKeywordSpotter(keywords_spotter);
   fprintf(stderr, "\n");
 
   return 0;

@@ -1,17 +1,17 @@
-// c-api-examples/streaming-zipformer-buffered-tokens-hotwords-c-api.c
+// c-api-examples/streaming-ctc-buffered-tokens-c-api.c
 //
 // Copyright (c)  2024  Xiaomi Corporation
 // Copyright (c)  2024  Luo Xiao
 
 //
-// This file demonstrates how to use streaming Zipformer with sherpa-onnx's C
-// API and with tokens and hotwords loaded from buffered strings instead of from
-// external files API.
+// This file demonstrates how to use streaming Zipformer2 Ctc with sherpa-onnx's
+// C API and with tokens loaded from buffered strings instead of
+// from external files API.
 // clang-format off
 // 
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
-// tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
-// rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+// tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+// rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
 //
 // clang-format on
 
@@ -50,32 +50,22 @@ static size_t ReadFile(const char *filename, const char **buffer_out) {
 
 int32_t main() {
   const char *wav_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/test_wavs/0.wav";
-  const char *encoder_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "encoder-epoch-99-avg-1.onnx";
-  const char *decoder_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "decoder-epoch-99-avg-1.onnx";
-  const char *joiner_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "joiner-epoch-99-avg-1.onnx";
-  const char *provider = "cpu";
-  const char *modeling_unit = "bpe";
+      "sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs/"
+      "DEV_T0000000000.wav";
+  const char *model_filename =
+      "sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/"
+      "ctc-epoch-20-avg-1-chunk-16-left-128.int8.onnx";
   const char *tokens_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/tokens.txt";
-  const char *hotwords_filename =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/hotwords.txt";
-  const char *bpe_vocab =
-      "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/"
-      "bpe.vocab";
+      "sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt";
+  const char *provider = "cpu";
+
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
     fprintf(stderr, "Failed to read %s\n", wav_filename);
     return -1;
   }
 
-  // reading tokens and hotwords to buffers
+  // reading tokens to buffers
   const char *tokens_buf;
   size_t token_buf_size = ReadFile(tokens_filename, &tokens_buf);
   if (token_buf_size < 1) {
@@ -83,20 +73,11 @@ int32_t main() {
     free((void *)tokens_buf);
     return -1;
   }
-  const char *hotwords_buf;
-  size_t hotwords_buf_size = ReadFile(hotwords_filename, &hotwords_buf);
-  if (hotwords_buf_size < 1) {
-    fprintf(stderr, "Please check your hotwords.txt!\n");
-    free((void *)hotwords_buf);
-    return -1;
-  }
 
-  // Zipformer config
-  SherpaOnnxOnlineTransducerModelConfig zipformer_config;
-  memset(&zipformer_config, 0, sizeof(zipformer_config));
-  zipformer_config.encoder = encoder_filename;
-  zipformer_config.decoder = decoder_filename;
-  zipformer_config.joiner = joiner_filename;
+  // Zipformer2Ctc config
+  SherpaOnnxOnlineZipformer2CtcModelConfig zipformer2_ctc_config;
+  memset(&zipformer2_ctc_config, 0, sizeof(zipformer2_ctc_config));
+  zipformer2_ctc_config.model = model_filename;
 
   // Online model config
   SherpaOnnxOnlineModelConfig online_model_config;
@@ -106,23 +87,19 @@ int32_t main() {
   online_model_config.provider = provider;
   online_model_config.tokens_buf = tokens_buf;
   online_model_config.tokens_buf_size = token_buf_size;
-  online_model_config.transducer = zipformer_config;
+  online_model_config.zipformer2_ctc = zipformer2_ctc_config;
 
   // Recognizer config
   SherpaOnnxOnlineRecognizerConfig recognizer_config;
   memset(&recognizer_config, 0, sizeof(recognizer_config));
-  recognizer_config.decoding_method = "modified_beam_search";
+  recognizer_config.decoding_method = "greedy_search";
   recognizer_config.model_config = online_model_config;
-  recognizer_config.hotwords_buf = hotwords_buf;
-  recognizer_config.hotwords_buf_size = hotwords_buf_size;
 
   SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);
 
   free((void *)tokens_buf);
   tokens_buf = NULL;
-  free((void *)hotwords_buf);
-  hotwords_buf = NULL;
 
   if (recognizer == NULL) {
     fprintf(stderr, "Please check your config!\n");

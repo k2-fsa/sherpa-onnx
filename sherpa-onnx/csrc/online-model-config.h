@@ -46,8 +46,8 @@ struct OnlineModelConfig {
   std::string bpe_vocab;
 
   /// if tokens_buf is non-empty,
-  /// the tokens will be loaded from the buffered string instead of from the
-  /// ${tokens} file
+  /// the tokens will be loaded from the buffer instead of from the
+  /// "tokens" file
   std::string tokens_buf;
 
   OnlineModelConfig() = default;

@@ -89,8 +89,17 @@ void KeywordSpotterConfig::Register(ParseOptions *po) {
 }
 
 bool KeywordSpotterConfig::Validate() const {
-  if (keywords_file.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --keywords-file.");
+  if (!keywords_file.empty() && !keywords_buf.empty()) {
+    SHERPA_ONNX_LOGE(
+        "you can not provide a keywords_buf and a keywords file: '%s', "
+        "at the same time, which is confusing",
+        keywords_file.c_str());
+    return false;
+  }
+
+  if (keywords_file.empty() && keywords_buf.empty()) {
+    SHERPA_ONNX_LOGE(
+        "Please provide either a keywords-file or the keywords-buf");
     return false;
   }
 
@@ -99,7 +108,7 @@ bool KeywordSpotterConfig::Validate() const {
   // keywords file will be packaged into the sherpa-onnx-wasm-kws-main.data file
   // Solution: take keyword_file variable is directly
   // parsed as a string of keywords
-  if (!std::ifstream(keywords_file.c_str()).good()) {
+  if (keywords_buf.empty() && !std::ifstream(keywords_file.c_str()).good()) {
     SHERPA_ONNX_LOGE("Keywords file '%s' does not exist.",
                      keywords_file.c_str());
     return false;
