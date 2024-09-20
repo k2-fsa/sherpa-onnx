@@ -371,6 +371,11 @@ final class SherpaOnnxKeywordSpotterConfig extends Struct {
   external double keywordsThreshold;
 
   external Pointer<Utf8> keywordsFile;
+
+  external Pointer<Utf8> keywordsBuf;
+
+  @Int32()
+  external int keywordsBufSize;
 }
 
 final class SherpaOnnxOfflinePunctuation extends Opaque {}

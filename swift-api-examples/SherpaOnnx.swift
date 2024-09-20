@@ -966,7 +966,9 @@ func sherpaOnnxKeywordSpotterConfig(
   maxActivePaths: Int = 4,
   numTrailingBlanks: Int = 1,
   keywordsScore: Float = 1.0,
-  keywordsThreshold: Float = 0.25
+  keywordsThreshold: Float = 0.25,
+  keywordsBuf: String = "",
+  keywordsBufSize: Int = 0
 ) -> SherpaOnnxKeywordSpotterConfig {
   return SherpaOnnxKeywordSpotterConfig(
     feat_config: featConfig,
@@ -975,7 +977,9 @@ func sherpaOnnxKeywordSpotterConfig(
     num_trailing_blanks: Int32(numTrailingBlanks),
     keywords_score: keywordsScore,
     keywords_threshold: keywordsThreshold,
-    keywords_file: toCPointer(keywordsFile)
+    keywords_file: toCPointer(keywordsFile),
+    keywords_buf: toCPointer(keywordsBuf),
+    keywords_buf_size: Int32(keywordsBufSize)
   )
 }
 

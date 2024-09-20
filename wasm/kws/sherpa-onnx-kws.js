@@ -172,10 +172,18 @@ function initKwsConfig(config, Module) {
     };
   }
 
+  if (!('keywordsBuf' in config)) {
+    config.keywordsBuf = '';
+  }
+
+  if (!('keywordsBufSize' in config)) {
+    config.keywordsBufSize = 0;
+  }
+
   let featConfig = initFeatureExtractorConfig(config.featConfig, Module);
 
   let modelConfig = initModelConfig(config.modelConfig, Module);
-  let numBytes = featConfig.len + modelConfig.len + 4 * 5;
+  let numBytes = featConfig.len + modelConfig.len + 4 * 7;
 
   let ptr = Module._malloc(numBytes);
   let offset = 0;
@@ -198,9 +206,20 @@ function initKwsConfig(config, Module) {
   offset += 4;
 
   let keywordsLen = Module.lengthBytesUTF8(config.keywords) + 1;
-  let keywordsBuffer = Module._malloc(keywordsLen);
+  let keywordsBufLen = Module.lengthBytesUTF8(config.keywordsBuf) + 1;
+
+  let keywordsBuffer = Module._malloc(keywordsLen + keywordsBufLen);
   Module.stringToUTF8(config.keywords, keywordsBuffer, keywordsLen);
+  Module.stringToUTF8(
+      config.keywordsBuf, keywordsBuffer + keywordsLen, keywordsBufLen);
+
   Module.setValue(ptr + offset, keywordsBuffer, 'i8*');
+  offset += 4;
+
+  Module.setValue(ptr + offset, keywordsBuffer + keywordsLen, 'i8*');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.keywordsBufLen, 'i32');
   offset += 4;
 
   return {

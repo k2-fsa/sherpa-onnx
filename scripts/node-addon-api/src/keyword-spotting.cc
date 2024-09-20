@@ -43,6 +43,8 @@ static Napi::External<SherpaOnnxKeywordSpotter> CreateKeywordSpotterWrapper(
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(keywords_score, keywordsScore);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(keywords_threshold, keywordsThreshold);
   SHERPA_ONNX_ASSIGN_ATTR_STR(keywords_file, keywordsFile);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(keywords_buf, keywordsBuf);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(keywords_buf_size, keywordsBufSize);
 
   SherpaOnnxKeywordSpotter *kws = SherpaOnnxCreateKeywordSpotter(&c);
 
@@ -84,6 +86,10 @@ static Napi::External<SherpaOnnxKeywordSpotter> CreateKeywordSpotterWrapper(
 
   if (c.keywords_file) {
     delete[] c.keywords_file;
+  }
+
+  if (c.keywords_buf) {
+    delete[] c.keywords_buf;
   }
 
   if (!kws) {
