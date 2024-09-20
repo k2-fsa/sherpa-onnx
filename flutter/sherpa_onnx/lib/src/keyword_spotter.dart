@@ -19,11 +19,13 @@ class KeywordSpotterConfig {
     this.keywordsScore = 1.0,
     this.keywordsThreshold = 0.25,
     this.keywordsFile = '',
+    this.keywordsBuf = '',
+    this.keywordsBufSize = 0,
   });
 
   @override
   String toString() {
-    return 'KeywordSpotterConfig(feat: $feat, model: $model, maxActivePaths: $maxActivePaths, numTrailingBlanks: $numTrailingBlanks, keywordsScore: $keywordsScore, keywordsThreshold: $keywordsThreshold, keywordsFile: $keywordsFile)';
+    return 'KeywordSpotterConfig(feat: $feat, model: $model, maxActivePaths: $maxActivePaths, numTrailingBlanks: $numTrailingBlanks, keywordsScore: $keywordsScore, keywordsThreshold: $keywordsThreshold, keywordsFile: $keywordsFile, keywordsBuf: $keywordsBuf, keywordsBufSize: $keywordsBufSize)';
   }
 
   final FeatureConfig feat;
@@ -35,6 +37,8 @@ class KeywordSpotterConfig {
   final double keywordsScore;
   final double keywordsThreshold;
   final String keywordsFile;
+  final String keywordsBuf;
+  final int keywordsBufSize;
 }
 
 class KeywordResult {
@@ -89,9 +93,12 @@ class KeywordSpotter {
     c.ref.keywordsScore = config.keywordsScore;
     c.ref.keywordsThreshold = config.keywordsThreshold;
     c.ref.keywordsFile = config.keywordsFile.toNativeUtf8();
+    c.ref.keywordsBuf = config.keywordsBuf.toNativeUtf8();
+    c.ref.keywordsBufSize = config.keywordsBufSize;
 
     final ptr = SherpaOnnxBindings.createKeywordSpotter?.call(c) ?? nullptr;
 
+    calloc.free(c.ref.keywordsBuf);
     calloc.free(c.ref.keywordsFile);
     calloc.free(c.ref.model.bpeVocab);
     calloc.free(c.ref.model.modelingUnit);
