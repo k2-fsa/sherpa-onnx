@@ -121,10 +121,10 @@ jobs:
 
           rm -rf sherpa-onnx-streaming-zipformer-*
 
-      - name: Test streaming paraformer with tokens and hotwords loaded from buffers
+      - name: Test streaming paraformer with tokens loaded from buffers
         shell: bash
         run: |
-          gcc -o streaming-paraformer-buffered-tokens-hotwords-c-api ./c-api-examples/streaming-paraformer-buffered-tokens-c-api.c \
+          gcc -o streaming-paraformer-buffered-tokens-c-api ./c-api-examples/streaming-paraformer-buffered-tokens-c-api.c \
             -I ./build/install/include \
             -L ./build/install/lib/ \
             -l sherpa-onnx-c-api \
@@ -153,21 +153,21 @@ jobs:
 
           rm -rf sherpa-onnx-streaming-paraformer-*
 
-      - name: Test streaming ctc with tokens and hotwords loaded from buffers
+      - name: Test streaming ctc with tokens loaded from buffers
         shell: bash
         run: |
-          gcc -o streaming-ctc-buffered-tokens-hotwords-c-api ./c-api-examples/streaming-ctc-buffered-tokens-hotwords-c-api.c \
+          gcc -o streaming-ctc-buffered-tokens-c-api ./c-api-examples/streaming-ctc-buffered-tokens-c-api.c \
             -I ./build/install/include \
             -L ./build/install/lib/ \
             -l sherpa-onnx-c-api \
             -l onnxruntime
 
-          ls -lh streaming-ctc-buffered-tokens-hotwords-c-api
+          ls -lh streaming-ctc-buffered-tokens-c-api
 
           if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
-            ldd ./streaming-ctc-buffered-tokens-hotwords-c-api
+            ldd ./streaming-ctc-buffered-tokens-c-api
             echo "----"
-            readelf -d ./streaming-ctc-buffered-tokens-hotwords-c-api
+            readelf -d ./streaming-ctc-buffered-tokens-c-api
           fi
 
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
@@ -181,11 +181,11 @@ jobs:
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
-          ./streaming-ctc-buffered-tokens-hotwords-c-api
+          ./streaming-ctc-buffered-tokens-c-api
 
           rm -rf sherpa-onnx-streaming-ctc-*
 
-      - name: Test keywords spotting with tokens and hotwords loaded from buffers
+      - name: Test keywords spotting with tokens and keywords loaded from buffers
         shell: bash
         run: |
           gcc -o keywords-spotter-buffered-tokens-keywords-c-api ./c-api-examples/keywords-spotter-buffered-tokens-keywords-c-api.c \
