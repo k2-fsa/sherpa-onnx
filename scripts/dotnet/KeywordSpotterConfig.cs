@@ -17,6 +17,8 @@ namespace SherpaOnnx
             KeywordsScore = 1.0F;
             KeywordsThreshold = 0.25F;
             KeywordsFile = "";
+            KeywordsBuf= "";
+            KeywordsBufSize= 0;
         }
         public FeatureConfig FeatConfig;
         public OnlineModelConfig ModelConfig;
@@ -28,5 +30,10 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string KeywordsFile;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string KeywordsBuf;
+
+        public int KeywordsBufSize;
     }
 }
