@@ -52,13 +52,6 @@ static OfflineRecognitionResult ConvertSenseVoiceResult(
 
   r.words = std::move(src.words);
 
-  // parse lang, emotion and event from tokens.
-  if (src.tokens.size() >= 3) {
-    r.lang = sym_table[src.tokens[0]];
-    r.emotion = sym_table[src.tokens[1]];
-    r.event = sym_table[src.tokens[2]];
-  }
-
   return r;
 }
 
@@ -130,22 +123,38 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     std::vector<Ort::Value> features;
     features.reserve(n);
 
-    int32_t feat_dim = config_.feat_config.feature_dim * meta_data.window_size;
+    // int32_t feat_dim = config_.feat_config.feature_dim *
+    // meta_data.window_size;
 
     std::vector<std::vector<float>> features_vec(n);
     std::vector<int32_t> features_length_vec(n);
     for (int32_t i = 0; i != n; ++i) {
-      std::vector<float> f = ss[i]->GetFrames();
+      std::vector<float> fs = ss[i]->GetFrames();
+      SHERPA_ONNX_LOGE("feat:%f,%f,%f", fs[0], fs[1], fs[2]);
+      int32_t feat_dim = ss[i]->FeatureDim();
+      std::vector<std::vector<float>> feats;
+      int32_t num_frames = fs.size() / feat_dim;
+      float *p = fs.data();
+      for (int32_t i = 0; i != num_frames; ++i) {
+        std::vector<float> frame_vector(p, p + feat_dim);
+        feats.emplace_back(std::move(frame_vector));
+        p += feat_dim;
+      }
 
-      f = ApplyLFR(f);
-      ApplyCMVN(&f);
+      LfrCmvn(feats);
+      num_frames = feats.size();
+      const int feature_dim = feats[0].size();
 
-      int32_t num_frames = f.size() / feat_dim;
+      std::vector<float> f;
+      for (const auto &feat : feats) {
+        f.insert(f.end(), feat.begin(), feat.end());
+      }
+      SHERPA_ONNX_LOGE("LfrCmvn feat:%.8f,%.8f,%.8f", f[0], f[1], f[2]);
+
       features_vec[i] = std::move(f);
-
       features_length_vec[i] = num_frames;
 
-      std::array<int64_t, 2> shape = {num_frames, feat_dim};
+      std::array<int64_t, 2> shape = {num_frames, feature_dim};
 
       Ort::Value x = Ort::Value::CreateTensor(
           memory_info, features_vec[i].data(), features_vec[i].size(),
@@ -241,12 +250,27 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
-    int32_t feat_dim = config_.feat_config.feature_dim * meta_data.window_size;
-    std::vector<float> f = s->GetFrames();
-    f = ApplyLFR(f);
-    ApplyCMVN(&f);
-    int32_t num_frames = f.size() / feat_dim;
-    std::array<int64_t, 3> shape = {1, num_frames, feat_dim};
+    std::vector<float> fs = s->GetFrames();
+   // SHERPA_ONNX_LOGE("feat:%f,%f,%f", fs[0], fs[1], fs[2]);
+    int32_t feat_dim = s->FeatureDim();
+    std::vector<std::vector<float>> feats;
+    int32_t num_frames = fs.size() / feat_dim;
+    float *p = fs.data();
+    for (int32_t i = 0; i != num_frames; ++i) {
+      std::vector<float> frame_vector(p, p + feat_dim);
+      feats.emplace_back(std::move(frame_vector));
+      p += feat_dim;
+    }
+    LfrCmvn(feats);
+    num_frames = feats.size();
+    const int feature_dim = feats[0].size();
+
+    std::vector<float> f;
+    for (const auto &feat : feats) {
+      f.insert(f.end(), feat.begin(), feat.end());
+    }
+    //SHERPA_ONNX_LOGE("LfrCmvn feat:%.8f,%.8f,%.8f, num_frames:%2d", f[0], f[1], f[2], num_frames);
+    std::array<int64_t, 3> shape = {1, num_frames, feature_dim};
     Ort::Value x = Ort::Value::CreateTensor(memory_info, f.data(), f.size(),
                                             shape.data(), shape.size());
 
@@ -295,6 +319,14 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     auto results =
         decoder_->Decode(std::move(logits), std::move(logits_length));
 
+    /*
+    for(int i=0; i< results.size(); i++){
+      for(int j=0; j< results[i].tokens.size(); j++){
+        SHERPA_ONNX_LOGE("token:%ld, timestamp:%d",
+                       results[i].tokens[j],results[i].timestamps[j]);        
+      }
+    }
+    */
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = meta_data.window_shift;
     auto r = ConvertSenseVoiceResult(results[0], symbol_table_, frame_shift_ms,
@@ -311,52 +343,61 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     config_.feat_config.window_type = "hamming";
     config_.feat_config.high_freq = 0;
     config_.feat_config.snip_edges = true;
+    config_.feat_config.dither = 1.0f;
   }
-  std::vector<float> ApplyLFR(const std::vector<float> &in) const {
-    const auto &meta_data = model_->GetModelMetadata();
 
-    int32_t lfr_window_size = meta_data.window_size;
-    int32_t lfr_window_shift = meta_data.window_shift;
+  void LfrCmvn(std::vector<std::vector<float>> &vad_feats) const {
+    const auto &meta_data = model_->GetModelMetadata();
+    int32_t lfr_m = meta_data.window_size;
+    int32_t lfr_n = meta_data.window_shift;
     int32_t in_feat_dim = config_.feat_config.feature_dim;
 
-    int32_t in_num_frames = in.size() / in_feat_dim;
-    int32_t out_num_frames =
-        (in_num_frames - lfr_window_size) / lfr_window_shift + 1;
-    int32_t out_feat_dim = in_feat_dim * lfr_window_size;
+    std::vector<std::vector<float>> out_feats;
+    int T = vad_feats.size();
+    int T_lrf = ceil(1.0 * T / lfr_n);
 
-    std::vector<float> out(out_num_frames * out_feat_dim);
-
-    const float *p_in = in.data();
-    float *p_out = out.data();
-
-    for (int32_t i = 0; i != out_num_frames; ++i) {
-      std::copy(p_in, p_in + out_feat_dim, p_out);
-
-      p_out += out_feat_dim;
-      p_in += lfr_window_shift * in_feat_dim;
+    // Pad frames at start(copy first frame)
+    for (int i = 0; i < (lfr_m - 1) / 2; i++) {
+      vad_feats.insert(vad_feats.begin(), vad_feats[0]);
+    }
+    // Merge lfr_m frames as one,lfr_n frames per window
+    T = T + (lfr_m - 1) / 2;
+    std::vector<float> p;
+    for (int i = 0; i < T_lrf; i++) {
+      if (lfr_m <= T - i * lfr_n) {
+        for (int j = 0; j < lfr_m; j++) {
+          p.insert(p.end(), vad_feats[i * lfr_n + j].begin(),
+                   vad_feats[i * lfr_n + j].end());
+        }
+        out_feats.emplace_back(p);
+        p.clear();
+      } else {
+        // Fill to lfr_m frames at last window if less than lfr_m frames  (copy
+        // last frame)
+        int num_padding = lfr_m - (T - i * lfr_n);
+        for (int j = 0; j < (vad_feats.size() - i * lfr_n); j++) {
+          p.insert(p.end(), vad_feats[i * lfr_n + j].begin(),
+                   vad_feats[i * lfr_n + j].end());
+        }
+        for (int j = 0; j < num_padding; j++) {
+          p.insert(p.end(), vad_feats[vad_feats.size() - 1].begin(),
+                   vad_feats[vad_feats.size() - 1].end());
+        }
+        out_feats.emplace_back(p);
+        p.clear();
+      }
     }
 
-    return out;
-  }
-
-  void ApplyCMVN(std::vector<float> *v) const {
-    const auto &meta_data = model_->GetModelMetadata();
-
+    // Apply cmvn
     const std::vector<float> &neg_mean = meta_data.neg_mean;
     const std::vector<float> &inv_stddev = meta_data.inv_stddev;
 
-    int32_t dim = neg_mean.size();
-    int32_t num_frames = v->size() / dim;
-
-    float *p = v->data();
-
-    for (int32_t i = 0; i != num_frames; ++i) {
-      for (int32_t k = 0; k != dim; ++k) {
-        p[k] = (p[k] + neg_mean[k]) * inv_stddev[k];
+    for (auto &out_feat : out_feats) {
+      for (int j = 0; j < neg_mean.size(); j++) {
+        out_feat[j] = (out_feat[j] + neg_mean[j]) * inv_stddev[j];
       }
-
-      p += dim;
     }
+    vad_feats = out_feats;
   }
 
   OfflineRecognizerConfig config_;
