@@ -130,7 +130,7 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     std::vector<int32_t> features_length_vec(n);
     for (int32_t i = 0; i != n; ++i) {
       std::vector<float> fs = ss[i]->GetFrames();
-      SHERPA_ONNX_LOGE("feat:%f,%f,%f", fs[0], fs[1], fs[2]);
+      //SHERPA_ONNX_LOGE("feat:%f,%f,%f", fs[0], fs[1], fs[2]);
       int32_t feat_dim = ss[i]->FeatureDim();
       std::vector<std::vector<float>> feats;
       int32_t num_frames = fs.size() / feat_dim;
@@ -149,7 +149,7 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
       for (const auto &feat : feats) {
         f.insert(f.end(), feat.begin(), feat.end());
       }
-      SHERPA_ONNX_LOGE("LfrCmvn feat:%.8f,%.8f,%.8f", f[0], f[1], f[2]);
+      //SHERPA_ONNX_LOGE("LfrCmvn feat:%.8f,%.8f,%.8f", f[0], f[1], f[2]);
 
       features_vec[i] = std::move(f);
       features_length_vec[i] = num_frames;
@@ -319,14 +319,7 @@ class OfflineRecognizerSenseVoiceImpl : public OfflineRecognizerImpl {
     auto results =
         decoder_->Decode(std::move(logits), std::move(logits_length));
 
-    /*
-    for(int i=0; i< results.size(); i++){
-      for(int j=0; j< results[i].tokens.size(); j++){
-        SHERPA_ONNX_LOGE("token:%ld, timestamp:%d",
-                       results[i].tokens[j],results[i].timestamps[j]);        
-      }
-    }
-    */
+
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = meta_data.window_shift;
     auto r = ConvertSenseVoiceResult(results[0], symbol_table_, frame_shift_ms,
