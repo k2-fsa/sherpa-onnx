@@ -31,8 +31,7 @@ void SileroVadModelConfig::Register(ParseOptions *po) {
   po->Register(
       "silero-vad-max-speech-duration", &max_speech_duration,
       "In seconds. If a speech segment is longer than this value, then we "
-      "increase the threshold to 0.9. After finishing detecting the segment, "
-      "the threshold value is reset to its original value.");
+      "cut a segment.");  
 
   po->Register(
       "silero-vad-window-size", &window_size,
@@ -102,12 +101,12 @@ bool SileroVadModelConfig::Validate() const {
 std::string SileroVadModelConfig::ToString() const {
   std::ostringstream os;
 
-  os << "SileroVadModelConfig(";
+  os << "SilerVadModelConfig(";
   os << "model=\"" << model << "\", ";
   os << "threshold=" << threshold << ", ";
   os << "min_silence_duration=" << min_silence_duration << ", ";
   os << "min_speech_duration=" << min_speech_duration << ", ";
-  os << "max_speech_duration=" << max_speech_duration << ", ";
+  os << "max_speech_duration=" << max_speech_duration << ", ";  
   os << "window_size=" << window_size << ")";
 
   return os.str();
