@@ -57,7 +57,7 @@ Future<sherpa_onnx.OnlineModelConfig> getOnlineModelConfig(
           decoder: await copyAssetFile(
               '$modelDir/decoder-epoch-29-avg-9-with-averaged-model.onnx'),
           joiner: await copyAssetFile(
-              '$modelDir/joincoder-epoch-29-avg-9-with-averaged-model.onnx'),
+              '$modelDir/joiner-epoch-29-avg-9-with-averaged-model.onnx'),
         ),
         tokens: await copyAssetFile('$modelDir/tokens.txt'),
         modelType: 'zipformer',
