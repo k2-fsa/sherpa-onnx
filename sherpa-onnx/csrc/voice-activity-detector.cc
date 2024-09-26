@@ -92,7 +92,6 @@ class VoiceActivityDetector::Impl {
     for (int32_t i = 0; i < k; ++i, p += window_shift) {
       float speech_prob = model_->Run(p, window_size);
       current_sample += window_shift;
-      // 语音分片
       // Voice fragmentation
       if ((speech_prob >= threshold)) {
 #ifdef __DEBUG_SPEECH_PROB___
@@ -102,16 +101,13 @@ class VoiceActivityDetector::Impl {
         printf("{ start: %.3f s (%.3f) %08d}\n", 1.0 * speech / sample_rate,
                speech_prob, current_sample - window_shift);
 #endif  //__DEBUG_SPEECH_PROB___
-        // 临时结束点重置
         // Temporary end point reset
         if (temp_end != 0) {
           temp_end = 0;
-          // 下次的预计开始点小于上次的结束点，重置
           // The next estimated start point is less than the last end point,
           // reset
           if (next_start < prev_end) next_start = current_sample - window_shift;
         }
-        // 第一次语音分片,记录开始点
         // First voice segmentation, record start point
         if (triggered == false) {
           triggered = true;
@@ -121,7 +117,6 @@ class VoiceActivityDetector::Impl {
       }
 
       if (
-          // 大于语音分片的最大采样数，强制分片
           // If the number of samples is greater than the maximum number of
           // voice fragments, forced fragmentation
           (triggered == true) &&
@@ -169,7 +164,7 @@ class VoiceActivityDetector::Impl {
         }
         continue;
       }
-      // 混沌状态，保持原状
+      // Chaos, stay the same
       if ((speech_prob >= (threshold - 0.15)) && (speech_prob < threshold)) {
         if (triggered) {
 #ifdef __DEBUG_SPEECH_PROB___
@@ -205,13 +200,11 @@ class VoiceActivityDetector::Impl {
                speech_prob, current_sample - window_shift);
 #endif  //__DEBUG_SPEECH_PROB___
         if (triggered == true) {
-          // 语音分片后第一次遇到静音片，记录可能结束点
           //(The first silent segment after voice segmentation, recording
           // possible end point)
           if (temp_end == 0) {
             temp_end = current_sample;
           }
-          // 大于累计静音最大值，记录可能结束点，用于大语音片强制分片时用
           // （If it is greater than the maximum value of accumulated silence,
           // the possible end point is recorded and used for forced segmentation
           // of large audio clips.）
@@ -271,7 +264,7 @@ class VoiceActivityDetector::Impl {
     std::queue<SpeechSegment>().swap(segments_);
     model_->Reset();
     buffer_.Reset();
-    // 重置相关变量
+    // Reset related variables 
     current_sample = 0;
     current_speech = timestamp_t();
     prev_end = 0;
