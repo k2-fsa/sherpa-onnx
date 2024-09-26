@@ -229,7 +229,7 @@ def main():
 
     torch_model = ModelWrapper(model)
 
-    opset_version = 13
+    opset_version = 18
     x = torch.randint(low=0, high=10, size=(60,), dtype=torch.int64)
     print(x.shape)
     x_lengths = torch.tensor([x.size(0)], dtype=torch.int64)
