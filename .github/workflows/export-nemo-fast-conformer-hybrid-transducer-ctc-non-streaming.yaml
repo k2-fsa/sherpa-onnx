@@ -31,7 +31,7 @@ jobs:
         run: |
           BRANCH='main'
           pip install git+https://github.com/NVIDIA/NeMo.git@$BRANCH#egg=nemo_toolkit[asr]
-          pip install onnxruntime
+          pip install onnxruntime ipython
           pip install kaldi-native-fbank
           pip install soundfile librosa
 
@@ -47,10 +47,11 @@ jobs:
         shell: bash
         run: |
           dirs=(
-            sherpa-onnx-nemo-fast-conformer-ctc-en-24500
-            sherpa-onnx-nemo-fast-conformer-ctc-es-1424
-            sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
-            sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
+            # sherpa-onnx-nemo-fast-conformer-ctc-en-24500
+            # sherpa-onnx-nemo-fast-conformer-ctc-es-1424
+            # sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
+            # sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
+            sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000
           )
           for d in ${dirs[@]}; do
             tar cjvf ${d}.tar.bz2 ./$d
