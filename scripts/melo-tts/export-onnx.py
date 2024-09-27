@@ -116,7 +116,6 @@ def add_new_english_words(lexicon):
     lexicon["SF"] = [["EH1", "S"], ["EH1", "F"]]
 
     # Please add your new words here
-    lexicon["AI"] = [["EH1", "AY1"]]
 
     # No need to return lexicon since it is changed in-place
 
