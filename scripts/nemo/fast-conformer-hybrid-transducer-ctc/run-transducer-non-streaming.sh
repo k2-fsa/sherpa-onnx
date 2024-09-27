@@ -22,7 +22,6 @@ mv -v *.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
 
-if false; then
 # 8500 hours of English speech
 url=https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/stt_en_fastconformer_hybrid_large_pc
 name=$(basename $url)
@@ -72,7 +71,6 @@ mkdir -p $d
 mv -v *.onnx $d/
 mv -v tokens.txt $d/
 ls -lh $d
-fi
 
 # Now test the exported model
 log "Download test data"
@@ -97,13 +95,11 @@ python3 ./test-onnx-transducer-non-streaming.py \
   --decoder $d/decoder.onnx \
   --joiner $d/joiner.onnx \
   --tokens $d/tokens.txt \
-  --wav $data/en.wav
+  --wav ./en.wav
 
 mkdir -p $d/test_wavs
 cp en.wav $d/test_wavs/0.wav
 cp -v $data/en-english.wav $d/test_wavs
-
-exit 0
 
 d=sherpa-onnx-nemo-fast-conformer-transducer-en-24500
 python3 ./test-onnx-transducer-non-streaming.py \
