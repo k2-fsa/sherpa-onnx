@@ -103,6 +103,14 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
       config_.feat_config.is_mfcc = true;
     }
 
+    if (!config_.model_config.nemo_ctc.model.empty()) {
+      config_.feat_config.low_freq = 0;
+      config_.feat_config.high_freq = 0;
+      config_.feat_config.is_librosa = true;
+      config_.feat_config.remove_dc_offset = false;
+      config_.feat_config.window_type = "hann";
+    }
+
     if (!config_.model_config.wenet_ctc.model.empty()) {
       // WeNet CTC models assume input samples are in the range
       // [-32768, 32767], so we set normalize_samples to false

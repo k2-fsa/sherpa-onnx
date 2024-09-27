@@ -31,7 +31,7 @@ jobs:
         run: |
           BRANCH='main'
           pip install git+https://github.com/NVIDIA/NeMo.git@$BRANCH#egg=nemo_toolkit[asr]
-          pip install onnxruntime
+          pip install onnxruntime ipython
           pip install kaldi-native-fbank
           pip install soundfile librosa
 
