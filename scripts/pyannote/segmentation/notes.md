@@ -70,3 +70,9 @@ PyanNet(
 "sample_rate":  16000
 "sincnet":      {'stride': 10, 'sample_rate': 16000}
 ```
+
+## Papers
+
+- [pyannote.audio 2.1 speaker diarization pipeline: principle, benchmark, and recipe](https://hal.science/hal-04247212/document)
+- [pyannote.audio speaker diarization pipeline at VoxSRC 2023](https://mmai.io/datasets/voxceleb/voxsrc/data_workshop_2023/reports/pyannote_report.pdf)
+
