@@ -39,6 +39,7 @@ def main():
     model = Model.from_pretrained(pt_filename)
     model.eval()
     assert model.dimension == 7, model.dimension
+    print(model.specifications)
 
     assert (
         model.specifications.problem == Problem.MONO_LABEL_CLASSIFICATION
@@ -82,8 +83,8 @@ def main():
         input_names=["x"],
         output_names=["y"],
         dynamic_axes={
-            "x": {2: "T"},
-            "y": {1: "T"},
+            "x": {0: "N", 2: "T"},
+            "y": {0: "N", 1: "T"},
         },
     )
 

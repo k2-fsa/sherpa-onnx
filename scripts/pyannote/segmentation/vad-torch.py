@@ -14,8 +14,6 @@ def main():
     model.eval()
 
     pipeline = VoiceActivityDetectionPipeline(segmentation=model)
-    print(pipeline.segmentation.example_output)
-    return
 
     # https://huggingface.co/pyannote/voice-activity-detection/blob/main/config.yaml
     # https://github.com/pyannote/pyannote-audio/issues/1215
