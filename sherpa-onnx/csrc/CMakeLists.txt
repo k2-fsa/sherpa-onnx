@@ -160,6 +160,13 @@ if(SHERPA_ONNX_ENABLE_TTS)
   )
 endif()
 
+if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+  list(APPEND sources
+    fast-clustering-config.cc
+    fast-clustering.cc
+  )
+endif()
+
 if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
@@ -520,6 +527,12 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     list(APPEND sherpa_onnx_test_srcs
       cppjieba-test.cc
       piper-phonemize-test.cc
+    )
+  endif()
+
+  if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+    list(APPEND sherpa_onnx_test_srcs
+      fast-clustering-test.cc
     )
   endif()
 

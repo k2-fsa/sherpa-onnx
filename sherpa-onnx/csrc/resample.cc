@@ -41,7 +41,7 @@
 namespace sherpa_onnx {
 
 template <class I>
-I Gcd(I m, I n) {
+static I Gcd(I m, I n) {
   // this function is copied from kaldi/src/base/kaldi-math.h
   if (m == 0 || n == 0) {
     if (m == 0 && n == 0) {  // gcd not defined, as all integers are divisors.
@@ -65,7 +65,7 @@ I Gcd(I m, I n) {
 /// Returns the least common multiple of two integers.  Will
 /// crash unless the inputs are positive.
 template <class I>
-I Lcm(I m, I n) {
+static I Lcm(I m, I n) {
   // This function is copied from kaldi/src/base/kaldi-math.h
   assert(m > 0 && n > 0);
   I gcd = Gcd(m, n);
