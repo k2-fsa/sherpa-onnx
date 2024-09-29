@@ -8,16 +8,16 @@
 namespace sherpa_onnx {
 
 struct OnlineCNNBiLSTMModelMetaData {
-  int32_t comma_id;
-  int32_t period_id;
-  int32_t quest_id;
+  int32_t comma_id = -1;
+  int32_t period_id = -1;
+  int32_t quest_id = -1;
 
-  int32_t upper_id;
-  int32_t cap_id;
-  int32_t mix_case_id;
+  int32_t upper_id = -1;
+  int32_t cap_id = -1;
+  int32_t mix_case_id = -1;
 
-  int32_t num_cases;
-  int32_t num_punctuations;
+  int32_t num_cases = -1;
+  int32_t num_punctuations = -1;
 };
 
 }  // namespace sherpa_onnx

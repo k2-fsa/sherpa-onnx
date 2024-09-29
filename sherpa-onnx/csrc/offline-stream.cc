@@ -4,8 +4,6 @@
 
 #include "sherpa-onnx/csrc/offline-stream.h"
 
-#include <math.h>
-
 #include <algorithm>
 #include <cassert>
 #include <cmath>

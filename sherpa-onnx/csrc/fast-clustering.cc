@@ -17,6 +17,14 @@ class FastClustering::Impl {
 
   std::vector<int32_t> Cluster(float *features, int32_t num_rows,
                                int32_t num_cols) {
+    if (num_rows <= 0) {
+      return {};
+    }
+
+    if (num_rows == 1) {
+      return {0};
+    }
+
     Eigen::Map<
         Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>>
         m(features, num_rows, num_cols);
