@@ -117,7 +117,7 @@ def main():
     quantize_dynamic(
         model_input=filename,
         model_output=filename_int8,
-        weight_type=QuantType.QInt8,
+        weight_type=QuantType.QUInt8,
     )
 
     print(f"Saved to {filename} and {filename_int8}")

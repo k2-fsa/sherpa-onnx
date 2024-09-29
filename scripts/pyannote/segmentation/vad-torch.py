@@ -9,6 +9,8 @@ from pyannote.audio.pipelines import (
 
 @torch.no_grad()
 def main():
+    # Please download it from
+    # https://huggingface.co/csukuangfj/pyannote-models/tree/main/segmentation-3.0
     pt_filename = "./pytorch_model.bin"
     model = Model.from_pretrained(pt_filename)
     model.eval()
@@ -26,7 +28,8 @@ def main():
 
     pipeline.instantiate(initial_params)
 
-    t = pipeline("./test_16k.wav")
+    # wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+    t = pipeline("./lei-jun-test.wav")
     print(type(t))
     print(t)
 
