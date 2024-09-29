@@ -15,9 +15,7 @@ import librosa
 import numpy as np
 import onnxruntime as ort
 import soundfile as sf
-import torch
 from numpy.lib.stride_tricks import as_strided
-from pyannote.audio import Model
 
 
 def get_args():
@@ -50,9 +48,9 @@ class OnnxModel:
         self.window_shift = int(0.1 * self.window_size)
         self.receptive_field_size = int(meta["receptive_field_size"])
         self.receptive_field_shift = int(meta["receptive_field_shift"])
-
-        self.gt = Model.from_pretrained('./pytorch_model.bin')
-        self.gt.eval()
+        self.num_speakers = int(meta["num_speakers"])
+        self.powerset_max_classes = int(meta["powerset_max_classes"])
+        self.num_classes = int(meta["num_classes"])
 
     def __call__(self, x):
         """
@@ -62,7 +60,6 @@ class OnnxModel:
           A tensor of shape (N, num_frames, num_classes)
         """
         x = np.expand_dims(x, axis=1)
-        return self.gt(torch.from_numpy(x)).numpy()
 
         (y,) = self.model.run(
             [self.model.get_outputs()[0].name], {self.model.get_inputs()[0].name: x}
@@ -83,11 +80,11 @@ def load_wav(filename, expected_sample_rate) -> np.ndarray:
     return audio
 
 
-def get_powerset_mapping(num_rows, num_speakers, max_set_size):
-    mapping = np.zeros((num_rows, num_speakers))
+def get_powerset_mapping(num_classes, num_speakers, powerset_max_classes):
+    mapping = np.zeros((num_classes, num_speakers))
 
     k = 1
-    for i in range(1, max_set_size + 1):
+    for i in range(1, powerset_max_classes + 1):
         if i == 1:
             for j in range(0, num_speakers):
                 mapping[k, j] = 1
@@ -104,7 +101,7 @@ def get_powerset_mapping(num_rows, num_speakers, max_set_size):
     return mapping
 
 
-def to_multi_label(y):
+def to_multi_label(y, mapping):
     """
     Args:
       y: (num_chunks, num_frames, num_classes)
@@ -112,12 +109,10 @@ def to_multi_label(y):
       A tensor of shape (num_chunks, num_frames, num_speakers)
     """
     y = np.argmax(y, axis=-1)
-    mapping = get_powerset_mapping(7, 3, 2)
     labels = mapping[y.reshape(-1)].reshape(y.shape[0], y.shape[1], -1)
     return labels
 
 
-@torch.no_grad()
 def main():
     args = get_args()
     assert Path(args.model).is_file(), args.model
@@ -126,7 +121,7 @@ def main():
     m = OnnxModel(args.model)
     audio = load_wav(args.wav, m.sample_rate)
     # audio: (num_samples,)
-    print(audio.shape, audio.min(), audio.max(), audio.sum())
+    print("audio", audio.shape, audio.min(), audio.max(), audio.sum())
 
     num = (audio.shape[0] - m.window_size) // m.window_shift + 1
 
@@ -137,13 +132,13 @@ def main():
     )
 
     # or use torch.Tensor.unfold
-    samples = torch.from_numpy(audio).unfold(0, m.window_size, m.window_shift).numpy()
+    #  samples = torch.from_numpy(audio).unfold(0, m.window_size, m.window_shift).numpy()
 
     print(
         "samples",
         samples.shape,
         samples.mean(),
-        samples.reshape(-1).sum(),
+        samples.sum(),
         samples[:3, :3].sum(axis=-1),
     )
 
@@ -162,40 +157,31 @@ def main():
         start = i
         end = i + batch_size
         # it's perfectly ok to use end > num_chunks
-        print(
-            "here samples",
-            samples[start:end].shape,
-            samples[start:end].sum(),
-            samples[start:end].mean(),
-        )
         y = m(samples[start:end])
-        print("here y", y.shape, y.sum(), y.mean())
-
-        k = to_multi_label(y)
-        print("here k", k.shape, k.sum(), k.mean())
         output.append(y)
 
     if has_last_chunk:
-        last_chunk = audio[num_chunks * m.window_shift :]
+        last_chunk = audio[num_chunks * m.window_shift :]  # noqa
         pad_size = m.window_size - last_chunk.shape[0]
-        print('last samples', last_chunk.shape, last_chunk.sum(), last_chunk.mean())
         last_chunk = np.pad(last_chunk, (0, pad_size))
         last_chunk = np.expand_dims(last_chunk, axis=0)
         y = m(last_chunk)
-        print('last', y.shape, y.sum(), y.mean())
         output.append(y)
 
     y = np.vstack(output)
+    # y: (num_chunks, num_frames, num_classes)
 
-    print("y", y.sum(), y.mean(), y.shape)
-    labels = to_multi_label(y)
+    mapping = get_powerset_mapping(
+        num_classes=m.num_classes,
+        num_speakers=m.num_speakers,
+        powerset_max_classes=m.powerset_max_classes,
+    )
+    labels = to_multi_label(y, mapping=mapping)
     # labels: (num_chunks, num_frames, num_speakers)
-    print("multi", labels.sum(), labels.mean())
 
     # binary classification
     labels = np.max(labels, axis=-1)
     # labels: (num_chunk, num_frames)
-    print("labels.shape", labels.shape, labels.sum(), labels.mean())
 
     num_frames = (
         int(
@@ -204,33 +190,24 @@ def main():
         )
         + 1
     )
-    print("num_frames", num_frames)
 
     count = np.zeros((num_frames,))
     classification = np.zeros((num_frames,))
-    ones = np.ones((labels.shape[1],))
     weight = np.hamming(labels.shape[1])
-    #  weight = np.ones(labels.shape[1])
-    print('weight', weight.shape, weight.sum(), weight.mean())
 
     for i in range(labels.shape[0]):
         this_chunk = labels[i]
-        start = int(i * m.window_shift  / m.receptive_field_shift + 0.5)
+        start = int(i * m.window_shift / m.receptive_field_shift + 0.5)
         end = start + this_chunk.shape[0]
 
         classification[start:end] += this_chunk * weight
         count[start:end] += weight
 
-    print('classification', classification.shape, classification.sum(), classification.mean())
-    print('count', count.shape, count.sum(), count.mean())
     classification /= np.maximum(count, 1e-12)
-    print('average', classification.shape, classification.sum(), classification.mean())
 
     if has_last_chunk:
         stop_frame = int(audio.shape[0] / m.receptive_field_shift)
         classification = classification[:stop_frame]
-        print('stop_frame', stop_frame)
-    print('final', classification.shape, classification.sum(), classification.mean())
 
     classification = classification.tolist()
 
@@ -242,23 +219,20 @@ def main():
 
     scale = m.receptive_field_shift / m.sample_rate
     scale_offset = m.receptive_field_size / m.sample_rate * 0.5
-    print(scale, offset)
 
     for i in range(len(classification)):
-        #  print(i, classification[i])
         if is_active:
             if classification[i] < offset:
-                #  print('on->off', start , start*scale+scale_offset, i, classification[i])
-                print(f"{start*scale + scale_offset:.3f} -- {i*scale + scale_offset:.3f}")
+                print(
+                    f"{start*scale + scale_offset:.3f} -- {i*scale + scale_offset:.3f}"
+                )
                 is_active = False
         else:
             if classification[i] > onset:
                 start = i
-                #  print('off->on', start, start*scale+scale_offset, classification[i])
                 is_active = True
 
     if is_active:
-        print('last')
         print(
             f"{start*scale + scale_offset:.3f} -- {(len(classification)-1)*scale + scale_offset:.3f}"
         )

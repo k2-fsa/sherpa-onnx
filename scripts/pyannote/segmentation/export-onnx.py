@@ -97,6 +97,7 @@ def main():
     meta_data = {
         "num_speakers": len(model.specifications.classes),
         "powerset_max_classes": model.specifications.powerset_max_classes,
+        "num_classes": model.dimension,
         "sample_rate": sample_rate,
         "window_size": window_size,
         "receptive_field_size": receptive_field_size,
