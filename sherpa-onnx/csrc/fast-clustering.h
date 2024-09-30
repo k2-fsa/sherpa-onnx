@@ -32,7 +32,7 @@ class FastClustering {
    *         matrix.
    */
   std::vector<int32_t> Cluster(float *features, int32_t num_rows,
-                               int32_t num_cols);
+                               int32_t num_cols) const;
 
  private:
   class Impl;

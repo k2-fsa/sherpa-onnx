@@ -19,6 +19,7 @@ SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " 
 log "Building keyword spotting APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 
 export SHERPA_ONNX_ENABLE_TTS=OFF
+export SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=OFF
 
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh

@@ -26,11 +26,13 @@ void FastClusteringConfig::Register(ParseOptions *po) {
 
   p.Register("num-clusters", &num_clusters,
              "Number of cluster. If greater than 0, then --cluster-thresold is "
-             "ignored");
+             "ignored. Please provide it if you know the actual number of "
+             "clusters in advance.");
 
   p.Register("cluster-threshold", &threshold,
              "If --num-clusters is not specified, then it specifies the "
-             "distance threshold for clustering.");
+             "distance threshold for clustering. smaller value -> more "
+             "clusters. larger value -> fewer clusters");
 }
 
 bool FastClusteringConfig::Validate() const {

@@ -20,6 +20,8 @@ SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " 
 
 log "Building Speaker identification APK for sherpa-onnx v${SHERPA_ONNX_VERSION}"
 
+export SHERPA_ONNX_ENABLE_TTS=OFF
+
 log "====================arm64-v8a================="
 ./build-android-arm64-v8a.sh
 log "====================armv7-eabi================"
@@ -28,8 +30,6 @@ log "====================x86-64===================="
 ./build-android-x86-64.sh
 log "====================x86===================="
 ./build-android-x86.sh
-
-export SHERPA_ONNX_ENABLE_TTS=OFF
 
 mkdir -p apks
 

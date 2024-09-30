@@ -8,6 +8,18 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test_clustering"
+pushd /tmp/
+mkdir test-cluster
+cd test-cluster
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+git clone https://github.com/csukuangfj/sr-data
+popd
+
+python3 ./sherpa-onnx/python/tests/test_fast_clustering.py
+
+rm -rf /tmp/test-cluster
+
 export GIT_CLONE_PROTECTION_ACTIVE=false
 
 log "test offline SenseVoice CTC"
