@@ -59,6 +59,12 @@ if(SHERPA_ONNX_ENABLE_TTS)
   )
 endif()
 
+if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+  list(APPEND srcs
+    fast-clustering.cc
+  )
+endif()
+
 pybind11_add_module(_sherpa_onnx ${srcs})
 
 if(APPLE)

@@ -6,6 +6,8 @@ from _sherpa_onnx import (
     AudioTaggingModelConfig,
     CircularBuffer,
     Display,
+    FastClustering,
+    FastClusteringConfig,
     OfflinePunctuation,
     OfflinePunctuationConfig,
     OfflinePunctuationModelConfig,

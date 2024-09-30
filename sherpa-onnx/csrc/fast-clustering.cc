@@ -16,7 +16,7 @@ class FastClustering::Impl {
   explicit Impl(const FastClusteringConfig &config) : config_(config) {}
 
   std::vector<int32_t> Cluster(float *features, int32_t num_rows,
-                               int32_t num_cols) {
+                               int32_t num_cols) const {
     if (num_rows <= 0) {
       return {};
     }
@@ -77,7 +77,7 @@ FastClustering::FastClustering(const FastClusteringConfig &config)
 FastClustering::~FastClustering() = default;
 
 std::vector<int32_t> FastClustering::Cluster(float *features, int32_t num_rows,
-                                             int32_t num_cols) {
+                                             int32_t num_cols) const {
   return impl_->Cluster(features, num_rows, num_cols);
 }
 }  // namespace sherpa_onnx
