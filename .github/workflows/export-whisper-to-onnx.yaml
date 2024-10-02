@@ -16,7 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-latest]
-        model: ["distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "medium-aishell", "large", "large-v1", "large-v2", "large-v3", "distil-large-v2"]
+        model: ["turbo", "distil-medium.en", "distil-small.en",  "tiny.en", "base.en", "small.en", "medium.en", "tiny", "base", "small", "medium", "medium-aishell", "large", "large-v1", "large-v2", "large-v3", "distil-large-v2"]
         # model: ["large", "large-v1", "large-v2", "large-v3", "distil-large-v2"]
         python-version: ["3.8"]
 
@@ -32,7 +32,8 @@ jobs:
         shell: bash
         run: |
           python3 -m pip install torch==1.13.0 torchaudio==0.13.0 -f https://download.pytorch.org/whl/cpu/torch_stable.html
-          python3 -m pip install openai-whisper==20231117 onnxruntime onnx soundfile librosa
+          python3 -m pip install -U openai-whisper
+          python3 -m pip install onnxruntime onnx soundfile librosa
 
       - name: export ${{ matrix.model }}
         shell: bash

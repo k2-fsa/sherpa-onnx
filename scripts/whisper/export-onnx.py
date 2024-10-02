@@ -46,7 +46,8 @@ def get_args():
         choices=[
             "tiny", "tiny.en", "base", "base.en",
             "small", "small.en", "medium", "medium.en",
-            "large", "large-v1", "large-v2", "large-v3",
+            "large-v1", "large-v2",
+            "large", "large-v3", "turbo", # these three have feature dim 128
             "distil-medium.en", "distil-small.en", "distil-large-v2",
             # "distil-large-v3", # distil-large-v3 is not supported!
             # for fine-tuned models from icefall
@@ -76,7 +77,7 @@ def add_meta_data(filename: str, meta_data: Dict[str, Any]):
         meta.key = key
         meta.value = str(value)
 
-    if "large" in filename:
+    if "large" in filename or "turbo" in filename:
         external_filename = filename.split(".onnx")[0]
         onnx.save(
             model,
@@ -404,7 +405,7 @@ def main():
     audio = whisper.pad_or_trim(audio)
     assert audio.shape == (16000 * 30,), audio.shape
 
-    if args.model in ("large", "large-v3"):
+    if args.model in ("large", "large-v3", "turbo"):
         n_mels = 128
     else:
         n_mels = 80
