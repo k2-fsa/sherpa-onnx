@@ -382,13 +382,6 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     // s->SetStates(model_->GetEncoderInitStates());
 
     auto r = decoder_->GetEmptyResult();
-    if (config_.decoding_method == "modified_beam_search" &&
-        nullptr != s->GetContextGraph()) {
-      for (auto it = r.hyps.begin(); it != r.hyps.end(); ++it) {
-        it->second.context_state = s->GetContextGraph()->Root();
-      }
-    }
-
     auto last_result = s->GetResult();
     // if last result is not empty, then
     // preserve last tokens as the context for next result
@@ -399,6 +392,13 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       Hypotheses context_hyp({{context, 0}});
       r.hyps = std::move(context_hyp);
       r.tokens = std::move(context);
+    }
+
+    if (config_.decoding_method == "modified_beam_search" &&
+        nullptr != s->GetContextGraph()) {
+      for (auto it = r.hyps.begin(); it != r.hyps.end(); ++it) {
+        it->second.context_state = s->GetContextGraph()->Root();
+      }
     }
 
     s->SetResult(r);
