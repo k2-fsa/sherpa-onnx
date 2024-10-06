@@ -14,14 +14,22 @@ wget https://huggingface.co/hbredin/wespeaker-voxceleb-resnet34-LM/resolve/main/
 ```
 """
 
-import torch
+import argparse
 from pathlib import Path
+
+import torch
 from pyannote.audio import Model
 from pyannote.audio.pipelines import SpeakerDiarization as SpeakerDiarizationPipeline
 from pyannote.audio.pipelines.speaker_verification import (
-    PretrainedSpeakerEmbedding,
     ONNXWeSpeakerPretrainedSpeakerEmbedding,
 )
+
+
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--wav", type=str, required=True, help="Path to test.wav")
+
+    return parser.parse_args()
 
 
 def build_pipeline():
@@ -29,7 +37,7 @@ def build_pipeline():
     if Path(embedding_filename).is_file():
         # You need to modify line 166
         # of pyannote/audio/pipelines/speaker_diarization.py
-        # Please see the comments at the begin of this script for details
+        # Please see the comments at the start of this script for details
         embedding = ONNXWeSpeakerPretrainedSpeakerEmbedding(embedding_filename)
     else:
         embedding = "hbredin/wespeaker-voxceleb-resnet34-LM"
@@ -59,14 +67,11 @@ def build_pipeline():
 
 @torch.no_grad()
 def main():
+    args = get_args()
+    assert Path(args.wav).is_file(), args.wav
     pipeline = build_pipeline()
     print(pipeline)
-    #  t = pipeline("./lei-jun-test.wav")
-    #  t = pipeline("./test_16k.wav")
-    #  t = pipeline("./2speakers_example.wav")
-    #  t = pipeline("./data_afjiv.wav")
-    t = pipeline("./fc-2speakers.wav")
-    #  t = pipeline("./ML16091-Audio.wav")
+    t = pipeline(args.wav)
     print(type(t))
     print(t)
 

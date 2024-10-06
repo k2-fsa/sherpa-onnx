@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
+# Copyright    2024  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 
 import argparse
+from datetime import timedelta
 from pathlib import Path
-
 from typing import List
-import sherpa_onnx
+
 import librosa
 import numpy as np
 import onnxruntime as ort
+import sherpa_onnx
 import soundfile as sf
 from numpy.lib.stride_tricks import as_strided
-
-import torch
-from pyannote.audio import Model
 
 
 class Segment:
@@ -41,8 +40,12 @@ class Segment:
     def duration(self):
         return self.end - self.start
 
-    def __str__(self) -> str:
-        return f"{self.start:.3f} -- {self.end:.3f}  speaker {self.speaker}"
+    def __str__(self):
+        s = f"{timedelta(seconds=self.start)}"[:-3]
+        s += " --> "
+        s += f"{timedelta(seconds=self.end)}"[:-3]
+        s += f" speaker_{self.speaker:02d}"
+        return s
 
 
 def merge_segment_list(in_out: List[Segment], min_duration_off: float):
@@ -109,10 +112,6 @@ class OnnxSegmentationModel:
         self.powerset_max_classes = int(meta["powerset_max_classes"])
         self.num_classes = int(meta["num_classes"])
 
-        pt_filename = "./pytorch_model.bin"
-        self.model = Model.from_pretrained(pt_filename)
-        self.model.eval()
-
     def __call__(self, x):
         """
         Args:
@@ -121,8 +120,6 @@ class OnnxSegmentationModel:
           A tensor of shape (N, num_frames, num_classes)
         """
         x = np.expand_dims(x, axis=1)
-
-        return self.model(torch.from_numpy(x)).numpy()
 
         (y,) = self.model.run(
             [self.model.get_outputs()[0].name], {self.model.get_inputs()[0].name: x}
@@ -291,14 +288,6 @@ def get_embeddings(embedding_filename, audio, labels, seg_m, exclude_overlap):
             embedding = np.array(embedding)
 
             ans_chunk_speaker_pair.append([i, j])
-            print("computing", i, j, idx, idx / seg_m.sample_rate)
-            sf.write(
-                f"chunk-{i}-speaker-{j}.wav",
-                buffer[:idx],
-                samplerate=seg_m.sample_rate,
-                subtype="PCM_16",
-            )
-
             ans_embeddings.append(embedding)
 
     assert len(ans_chunk_speaker_pair) == len(ans_embeddings), (
@@ -308,7 +297,6 @@ def get_embeddings(embedding_filename, audio, labels, seg_m, exclude_overlap):
     return ans_chunk_speaker_pair, np.array(ans_embeddings)
 
 
-@torch.no_grad()
 def main():
     args = get_args()
     assert Path(args.seg_model).is_file(), args.seg_model
@@ -317,7 +305,6 @@ def main():
     seg_m = OnnxSegmentationModel(args.seg_model)
     audio = load_wav(args.wav, seg_m.sample_rate)
     # audio: (num_samples,)
-    print("audio", audio.shape, audio.min(), audio.max(), audio.sum())
 
     num = (audio.shape[0] - seg_m.window_size) // seg_m.window_shift + 1
 
@@ -329,14 +316,6 @@ def main():
 
     # or use torch.Tensor.unfold
     #  samples = torch.from_numpy(audio).unfold(0, seg_m.window_size, seg_m.window_shift).numpy()
-
-    print(
-        "samples",
-        samples.shape,
-        samples.mean(),
-        samples.sum(),
-        samples[:3, :3].sum(axis=-1),
-    )
 
     if (
         audio.shape[0] < seg_m.window_size
@@ -374,26 +353,12 @@ def main():
     )
     labels = to_multi_label(y, mapping=mapping)
     # labels: (num_chunks, num_frames, num_speakers)
-    print(
-        "labels",
-        labels.shape,
-        labels.sum(),
-        labels.mean(),
-        labels.sum(axis=(0, 1)),
-        labels.mean(axis=(0, 1)),
-    )
 
     inactive = (labels.sum(axis=1) == 0).astype(np.int8)
     # inactive: (num_chunks, num_speakers)
 
     speakers_per_frame = speaker_count(labels=labels, seg_m=seg_m)
     # speakers_per_frame: (num_frames, speakers_per_frame)
-    print(
-        "speaker count",
-        speakers_per_frame.shape,
-        speakers_per_frame.sum(),
-        speakers_per_frame.mean(),
-    )
 
     if speakers_per_frame.max() == 0:
         print("No speakers found in the audio file!")
@@ -414,14 +379,11 @@ def main():
     # chunk_speaker_pair: a list of (chunk_idx, speaker_idx)
     # embeddings: (batch_size, embedding_dim)
 
+    # Please change num_clusters or threshold by yourself.
     clustering_config = sherpa_onnx.FastClusteringConfig(num_clusters=2)
     #  clustering_config = sherpa_onnx.FastClusteringConfig(threshold=0.8)
     clustering = sherpa_onnx.FastClustering(clustering_config)
     cluster_labels = clustering(embeddings)
-    print(chunk_speaker_pair, len(chunk_speaker_pair))
-    print(cluster_labels, len(cluster_labels))
-
-    print("embeddings", embeddings.shape, len(chunk_speaker_pair))
 
     chunk_speaker_to_cluster = dict()
     for (chunk_idx, speaker_idx), cluster_idx in zip(
@@ -431,7 +393,6 @@ def main():
             print("skip ", chunk_idx, speaker_idx)
             continue
         chunk_speaker_to_cluster[(chunk_idx, speaker_idx)] = cluster_idx
-    print("chunk to speaker cluster", chunk_speaker_to_cluster)
 
     num_speakers = max(cluster_labels) + 1
     relabels = np.zeros((labels.shape[0], labels.shape[1], num_speakers))
@@ -445,8 +406,6 @@ def main():
                 if labels[i, j, k] == 1:
                     relabels[i, j, t] = 1
 
-    print("relabels.shape", relabels.shape, relabels.sum(), relabels.mean())
-
     num_frames = (
         int(
             (seg_m.window_size + (relabels.shape[0] - 1) * seg_m.window_shift)
@@ -456,26 +415,17 @@ def main():
     )
 
     count = np.zeros((num_frames, relabels.shape[-1]))
-    weight = np.zeros((num_frames, relabels.shape[-1]))
-    ones = np.hamming(relabels.shape[-1])[None]
-    #  ones = 1
     for i in range(relabels.shape[0]):
         this_chunk = relabels[i]
-        #  print("this_chunk", this_chunk.sum(), this_chunk.mean())
         start = int(i * seg_m.window_shift / seg_m.receptive_field_shift + 0.5)
         end = start + this_chunk.shape[0]
         count[start:end] += this_chunk
-        weight[start:end] += ones
-        #  print("count", start, end)
-    print(count.shape, count.sum(axis=0), count.mean(axis=0))
-    count /= weight
 
     if has_last_chunk:
         stop_frame = int(audio.shape[0] / seg_m.receptive_field_shift)
         count = count[:stop_frame]
 
     sorted_count = np.argsort(-count, axis=-1)
-    print("sorted_count", sorted_count.shape)
     final = np.zeros((count.shape[0], count.shape[1]))
 
     for i, (c, sc) in enumerate(zip(speakers_per_frame, sorted_count)):
@@ -509,9 +459,6 @@ def main():
                         speaker=kk,
                     )
                     segment_list.append(segment)
-                    #  print(
-                    #      f"{start*scale + scale_offset:.3f} -- {i*scale + scale_offset:.3f} speaker {kk}"
-                    #  )
                     is_active = False
             else:
                 if frames[i] > onset:
@@ -519,9 +466,6 @@ def main():
                     is_active = True
 
         if is_active:
-            #  print(
-            #      f"{start*scale + scale_offset:.3f} -- {(len(frames)-1)*scale + scale_offset:.3f} speaker {kk}"
-            #  )
             segment = Segment(
                 start=start * scale + scale_offset,
                 end=(len(frames) - 1) * scale + scale_offset,
