@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
 """
+Please refer to
+https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/speaker-diarization.yaml
+for usages.
+"""
+
+"""
 1. Go to https://huggingface.co/hbredin/wespeaker-voxceleb-resnet34-LM/tree/main
 wget https://huggingface.co/hbredin/wespeaker-voxceleb-resnet34-LM/resolve/main/speaker-embedding.onnx
 

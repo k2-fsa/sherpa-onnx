@@ -25,6 +25,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-speaker-diarization
+
       - name: Setup Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
@@ -35,10 +40,29 @@ jobs:
         run: |
           pip install pyannote.audio onnx onnxruntime
 
+      - name: Install sherpa-onnx from source
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine setuptools
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cat sherpa-onnx/python/sherpa_onnx/__init__.py
+
+          python3 setup.py bdist_wheel
+          ls -lh dist
+          pip install ./dist/*.whl
+
       - name: Run tests
         shell: bash
         run: |
           pushd scripts/pyannote/segmentation
+
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)"
+          python3 -c "import sherpa_onnx; print(dir(sherpa_onnx))"
 
           curl -SL -O https://huggingface.co/csukuangfj/pyannote-models/resolve/main/segmentation-3.0/pytorch_model.bin
 
@@ -52,6 +76,8 @@ jobs:
           for w in ${test_wavs[@]}; do
             curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/$w
           done
+
+          soxi *.wav
 
           curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
           tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2

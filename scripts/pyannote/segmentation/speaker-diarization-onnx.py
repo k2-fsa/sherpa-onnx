@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # Copyright    2024  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+"""
+Please refer to
+https://github.com/k2-fsa/sherpa-onnx/blob/master/.github/workflows/speaker-diarization.yaml
+for usages.
+"""
 
 import argparse
 from datetime import timedelta
@@ -63,8 +68,6 @@ def merge_segment_list(in_out: List[Segment], min_duration_off: float):
             in_out[i] = new_segment
             changed = True
             break
-
-    pass
 
 
 def get_args():
