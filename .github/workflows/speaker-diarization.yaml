@@ -35,13 +35,38 @@ jobs:
         run: |
           pip install pyannote.audio onnx onnxruntime
 
-      - name: Run
+      - name: Run tests
         shell: bash
         run: |
           pushd scripts/pyannote/segmentation
+
           curl -SL -O https://huggingface.co/csukuangfj/pyannote-models/resolve/main/segmentation-3.0/pytorch_model.bin
-          curl -SL -O https://github.com/pengzhendong/pyannote-onnx/raw/refs/heads/master/data/test_16k.wav
 
-          echo "----------./speaker-diarization-torch.py----------"
-          ./speaker-diarization-torch.py
+          test_wavs=(
+            0-two-speakers-zh.wav
+            1-two-speakers-en.wav
+            2-two-speakers-en.wav
+            3-two-speakers-en.wav
+          )
 
+          for w in ${test_wavs[@]}; do
+            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/$w
+          done
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+          tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+          rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+          ls -lh sherpa-onnx-pyannote-segmentation-3-0
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+
+          for w in ${test_wavs[@]}; do
+            echo "---------test $w (onnx)----------"
+            time ./speaker-diarization-onnx.py \
+              --seg-model ./sherpa-onnx-pyannote-segmentation-3-0/model.onnx \
+              --speaker-embedding-model ./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx \
+              --wav $w
+
+            echo "---------test $w (torch)----------"
+            time ./speaker-diarization-torch.py  --wav $w
+          done
