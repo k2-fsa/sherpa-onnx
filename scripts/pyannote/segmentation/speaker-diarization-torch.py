@@ -50,7 +50,7 @@ def build_pipeline():
             "min_cluster_size": 12,
             "threshold": 0.7045654963945799,
         },
-        "segmentation": {"min_duration_off": 0},
+        "segmentation": {"min_duration_off": 0.5},
     }
 
     pipeline.instantiate(params)
@@ -62,7 +62,11 @@ def main():
     pipeline = build_pipeline()
     print(pipeline)
     #  t = pipeline("./lei-jun-test.wav")
-    t = pipeline("./test_16k.wav")
+    #  t = pipeline("./test_16k.wav")
+    #  t = pipeline("./2speakers_example.wav")
+    #  t = pipeline("./data_afjiv.wav")
+    t = pipeline("./fc-2speakers.wav")
+    #  t = pipeline("./ML16091-Audio.wav")
     print(type(t))
     print(t)
 
