@@ -7,6 +7,7 @@
 
 #include <functional>
 #include <memory>
+#include <string>
 
 #include "sherpa-onnx/csrc/offline-speaker-diarization-result.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-model-config.h"

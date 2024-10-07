@@ -72,7 +72,7 @@ def main():
         model.receptive_field.duration * 16000
     )
 
-    opset_version = 18
+    opset_version = 15
 
     filename = "model.onnx"
     torch.onnx.export(

@@ -35,9 +35,9 @@ static void OrtStatusFailure(OrtStatus *status, const char *s) {
   api.ReleaseStatus(status);
 }
 
-static Ort::SessionOptions GetSessionOptionsImpl(
+Ort::SessionOptions GetSessionOptionsImpl(
     int32_t num_threads, const std::string &provider_str,
-    const ProviderConfig *provider_config = nullptr) {
+    const ProviderConfig *provider_config /*= nullptr*/) {
   Provider p = StringToProvider(provider_str);
 
   Ort::SessionOptions sess_opts;
@@ -259,50 +259,12 @@ Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config,
                                &config.provider_config);
 }
 
-Ort::SessionOptions GetSessionOptions(const OfflineModelConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
-}
-
 Ort::SessionOptions GetSessionOptions(const OfflineLMConfig &config) {
   return GetSessionOptionsImpl(config.lm_num_threads, config.lm_provider);
 }
 
 Ort::SessionOptions GetSessionOptions(const OnlineLMConfig &config) {
   return GetSessionOptionsImpl(config.lm_num_threads, config.lm_provider);
-}
-
-Ort::SessionOptions GetSessionOptions(const VadModelConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
-}
-
-#if SHERPA_ONNX_ENABLE_TTS
-Ort::SessionOptions GetSessionOptions(const OfflineTtsModelConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
-}
-#endif
-
-Ort::SessionOptions GetSessionOptions(
-    const SpeakerEmbeddingExtractorConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
-}
-
-Ort::SessionOptions GetSessionOptions(
-    const SpokenLanguageIdentificationConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
-}
-
-Ort::SessionOptions GetSessionOptions(const AudioTaggingModelConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
-}
-
-Ort::SessionOptions GetSessionOptions(
-    const OfflinePunctuationModelConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
-}
-
-Ort::SessionOptions GetSessionOptions(
-    const OnlinePunctuationModelConfig &config) {
-  return GetSessionOptionsImpl(config.num_threads, config.provider);
 }
 
 }  // namespace sherpa_onnx

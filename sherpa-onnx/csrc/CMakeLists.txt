@@ -169,6 +169,7 @@ if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
     offline-speaker-diarization.cc
     offline-speaker-segmentation-model-config.cc
     offline-speaker-segmentation-pyannote-model-config.cc
+    offline-speaker-segmentation-pyannote-model.cc
   )
 endif()
 

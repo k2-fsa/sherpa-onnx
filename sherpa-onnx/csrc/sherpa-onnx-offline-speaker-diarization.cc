@@ -13,7 +13,14 @@ Usage example:
   sherpa_onnx::OfflineSpeakerDiarizationConfig config;
   sherpa_onnx::ParseOptions po(kUsageMessage);
   config.Register(&po);
-  po.PrintUsage();
   po.Read(argc, argv);
+
   std::cout << config.ToString() << "\n";
+
+  if (!config.Validate()) {
+    po.PrintUsage();
+    std::cerr << "Errors in config!\n";
+    exit(-1);
+  }
+  sherpa_onnx::OfflineSpeakerDiarization sd(config);
 }

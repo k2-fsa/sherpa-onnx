@@ -4,6 +4,7 @@
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-model-config.h"
 
 #include <sstream>
+#include <string>
 
 #include "sherpa-onnx/csrc/macros.h"
 

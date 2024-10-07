@@ -15,8 +15,9 @@ struct OfflineSpeakerSegmentationPyannoteModelConfig {
 
   OfflineSpeakerSegmentationPyannoteModelConfig() = default;
 
-  OfflineSpeakerSegmentationPyannoteModelConfig(const std::string &model)
-      : model(model){};
+  explicit OfflineSpeakerSegmentationPyannoteModelConfig(
+      const std::string &model)
+      : model(model) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

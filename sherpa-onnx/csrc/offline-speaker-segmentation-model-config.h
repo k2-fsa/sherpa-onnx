@@ -4,6 +4,8 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_SPEAKER_SEGMENTATION_MODEL_CONFIG_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_SPEAKER_SEGMENTATION_MODEL_CONFIG_H_
 
+#include <string>
+
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 

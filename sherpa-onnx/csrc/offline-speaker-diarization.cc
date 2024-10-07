@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 
+#include <string>
+
 #include "sherpa-onnx/csrc/offline-speaker-diarization-impl.h"
 
 namespace sherpa_onnx {
@@ -39,7 +41,8 @@ std::string OfflineSpeakerDiarizationConfig::ToString() const {
 }
 
 OfflineSpeakerDiarization::OfflineSpeakerDiarization(
-    const OfflineSpeakerDiarizationConfig &config) {}
+    const OfflineSpeakerDiarizationConfig &config)
+    : impl_(OfflineSpeakerDiarizationImpl::Create(config)) {}
 
 OfflineSpeakerDiarization::~OfflineSpeakerDiarization() = default;
 
