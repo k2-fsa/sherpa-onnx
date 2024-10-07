@@ -169,4 +169,6 @@
     }                                                                   \
   } while (0)
 
+#define SHERPA_ONNX_EXIT(code) exit(code)
+
 #endif  // SHERPA_ONNX_CSRC_MACROS_H_
