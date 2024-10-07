@@ -55,6 +55,7 @@ def get_binaries():
         "sherpa-onnx-offline-audio-tagging",
         "sherpa-onnx-offline-language-identification",
         "sherpa-onnx-offline-punctuation",
+        "sherpa-onnx-offline-speaker-diarization",
         "sherpa-onnx-offline-tts",
         "sherpa-onnx-offline-tts-play",
         "sherpa-onnx-offline-websocket-server",

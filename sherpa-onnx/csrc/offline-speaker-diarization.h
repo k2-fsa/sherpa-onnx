@@ -9,10 +9,24 @@
 #include <memory>
 
 #include "sherpa-onnx/csrc/offline-speaker-diarization-result.h"
+#include "sherpa-onnx/csrc/offline-speaker-segmentation-model-config.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 
 namespace sherpa_onnx {
 
-struct OfflineSpeakerDiarizationConfig {};
+struct OfflineSpeakerDiarizationConfig {
+  OfflineSpeakerSegmentationModelConfig segmentation;
+  SpeakerEmbeddingExtractorConfig embedding;
+
+  OfflineSpeakerDiarizationConfig() = default;
+  OfflineSpeakerDiarizationConfig(
+      const OfflineSpeakerSegmentationModelConfig &segmentation,
+      const SpeakerEmbeddingExtractorConfig &embedding);
+
+  void Register(ParseOptions *po);
+  bool Validate() const;
+  std::string ToString() const;
+};
 
 class OfflineSpeakerDiarizationImpl;
 
