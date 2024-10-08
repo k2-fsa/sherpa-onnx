@@ -20,6 +20,55 @@ int main(int32_t argc, char *argv[]) {
 Offline/Non-streaming speaker diarization with sherpa-onnx
 Usage example:
 
+Step 1: Download a speaker segmentation model
+
+Please visit https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-segmentation-models
+for a list of available models. The following is an example
+
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+  tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+  rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+
+Step 2: Download a speaker embedding extractor model
+
+Please visit https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
+for a list of available models. The following is an example
+
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+
+Step 3. Download test wave files
+
+Please visit https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-segmentation-models
+for a list of available test wave files. The following is an example
+
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-two-speakers-zh.wav
+
+Step 4. Build sherpa-onnx
+
+Step 5. Run it
+
+  ./bin/sherpa-onnx-offline-speaker-diarization \
+    --clustering.num-clusters=2 \
+    --segmentation.debug=0 \
+    --segmentation.pyannote-model=./sherpa-onnx-pyannote-segmentation-3-0/model.onnx \
+    --embedding.model=../3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx \
+    ./0-two-speakers-zh.wav
+
+Since we know that there are two speakers in the test wave file, we use
+--clustering.num-clusters=2 in the above example.
+
+If we don't know number of speakers in the given wave file, we can use
+the argument --clustering.cluster-threshold. The following is an example:
+
+  ./bin/sherpa-onnx-offline-speaker-diarization \
+    --clustering.cluster-threshold=0.75 \
+    --segmentation.debug=0 \
+    --segmentation.pyannote-model=./sherpa-onnx-pyannote-segmentation-3-0/model.onnx \
+    --embedding.model=../3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx \
+    ./0-two-speakers-zh.wav
+
+A larger threshold leads to few clusters, i.e., few speakers;
+a smaller threshold leads to more clusters, i.e., more speakers
   )usage";
   sherpa_onnx::OfflineSpeakerDiarizationConfig config;
   sherpa_onnx::ParseOptions po(kUsageMessage);
