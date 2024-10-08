@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 
+#include "sherpa-onnx/csrc/fast-clustering-config.h"
 #include "sherpa-onnx/csrc/offline-speaker-diarization-result.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-model-config.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
@@ -18,11 +19,17 @@ namespace sherpa_onnx {
 struct OfflineSpeakerDiarizationConfig {
   OfflineSpeakerSegmentationModelConfig segmentation;
   SpeakerEmbeddingExtractorConfig embedding;
+  FastClusteringConfig clustering;
 
   OfflineSpeakerDiarizationConfig() = default;
+
   OfflineSpeakerDiarizationConfig(
       const OfflineSpeakerSegmentationModelConfig &segmentation,
-      const SpeakerEmbeddingExtractorConfig &embedding);
+      const SpeakerEmbeddingExtractorConfig &embedding,
+      const FastClusteringConfig &clustering)
+      : segmentation(segmentation),
+        embedding(embedding),
+        clustering(clustering) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

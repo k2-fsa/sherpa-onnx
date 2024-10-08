@@ -16,6 +16,9 @@ void OfflineSpeakerDiarizationConfig::Register(ParseOptions *po) {
 
   ParseOptions po_embedding("embedding", po);
   embedding.Register(&po_embedding);
+
+  ParseOptions po_clustering("clustering", po);
+  clustering.Register(&po_clustering);
 }
 
 bool OfflineSpeakerDiarizationConfig::Validate() const {
@@ -27,6 +30,10 @@ bool OfflineSpeakerDiarizationConfig::Validate() const {
     return false;
   }
 
+  if (!clustering.Validate()) {
+    return false;
+  }
+
   return true;
 }
 
@@ -35,7 +42,8 @@ std::string OfflineSpeakerDiarizationConfig::ToString() const {
 
   os << "OfflineSpeakerDiarizationConfig(";
   os << "segmentation=" << segmentation.ToString() << ", ";
-  os << "embedding=" << embedding.ToString() << ")";
+  os << "embedding=" << embedding.ToString() << ", ";
+  os << "clustering=" << clustering.ToString() << ")";
 
   return os.str();
 }

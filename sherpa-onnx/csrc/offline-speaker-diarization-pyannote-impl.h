@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Eigen/Dense"
+#include "sherpa-onnx/csrc/fast-clustering.h"
 #include "sherpa-onnx/csrc/offline-speaker-diarization-impl.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
@@ -35,7 +36,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
       const OfflineSpeakerDiarizationConfig &config)
       : config_(config),
         segmentation_model_(config_.segmentation),
-        embedding_extractor_(config_.embedding) {
+        embedding_extractor_(config_.embedding),
+        clustering_(config_.clustering) {
     Init();
   }
 
@@ -80,9 +82,12 @@ class OfflineSpeakerDiarizationPyannoteImpl
         ComputeEmbeddings(audio, n, chunk_speaker_samples_list_pair.second,
                           callback, callback_arg);
 
-    std::cout << "embeddings.shape " << embeddings.rows() << ", "
-              << embeddings.cols() << "\n"
-              << embeddings.rowwise().sum() << "\n";
+    std::vector<int32_t> cluster_labels = clustering_.Cluster(
+        &embeddings(0, 0), embeddings.rows(), embeddings.cols());
+
+    for (int32_t i = 0; i != cluster_labels.size(); ++i) {
+      std::cout << i << "->" << cluster_labels[i] << "\n";
+    }
 
     return {};
   }
@@ -402,6 +407,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
   OfflineSpeakerDiarizationConfig config_;
   OfflineSpeakerSegmentationPyannoteModel segmentation_model_;
   SpeakerEmbeddingExtractor embedding_extractor_;
+  FastClustering clustering_;
   Matrix2DInt32 powerset_mapping_;
 };
 
