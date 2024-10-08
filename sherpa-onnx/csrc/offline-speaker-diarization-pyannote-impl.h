@@ -20,6 +20,9 @@ using Matrix2D =
 using Matrix2DInt32 =
     Eigen::Matrix<int32_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
+using FloatRowVector = Eigen::Matrix<float, 1, Eigen::Dynamic>;
+using Int32RowVector = Eigen::Matrix<int32_t, 1, Eigen::Dynamic>;
+
 class OfflineSpeakerDiarizationPyannoteImpl
     : public OfflineSpeakerDiarizationImpl {
  public:
@@ -57,6 +60,16 @@ class OfflineSpeakerDiarizationPyannoteImpl
     segmentations.clear();
 
     // labels[i] is a 0-1 matrix of shape (num_frames, num_speakers)
+
+    // speaker count per frame
+    Int32RowVector speaker_count = ComputeSpeakerCount(labels);
+    std::cout << "speaker count: " << speaker_count.cast<float>().sum() << ", "
+              << speaker_count.cast<float>().mean() << "\n";
+
+    if (speaker_count.maxCoeff() == 0) {
+      SHERPA_ONNX_LOGE("No speakers found in the audio samples");
+      return {};
+    }
 
     return {};
   }
@@ -197,6 +210,39 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     std::cout << "sum labels: " << ans.colwise().sum() << "\n";
     return ans;
+  }
+
+  // See also
+  // https://github.com/pyannote/pyannote-audio/blob/develop/pyannote/audio/pipelines/utils/diarization.py#L122
+  Int32RowVector ComputeSpeakerCount(
+      const std::vector<Matrix2DInt32> &labels) const {
+    const auto &meta_data = segmentation_model_.GetModelMetaData();
+    int32_t window_size = meta_data.window_size;
+    int32_t window_shift = meta_data.window_shift;
+    int32_t receptive_field_shift = meta_data.receptive_field_shift;
+
+    int32_t num_chunks = labels.size();
+
+    int32_t num_frames = (window_size + (num_chunks - 1) * window_shift) /
+                             receptive_field_shift +
+                         1;
+
+    FloatRowVector count(num_frames);
+    FloatRowVector weight(num_frames);
+    count.setZero();
+    weight.setZero();
+
+    for (int32_t i = 0; i != num_chunks; ++i) {
+      int32_t start = float(i) * window_shift / receptive_field_shift + 0.5;
+
+      auto seq = Eigen::seqN(start, labels[i].rows());
+
+      count(seq).array() += labels[i].rowwise().sum().array().cast<float>();
+
+      weight(seq).array() += 1;
+    }
+
+    return ((count.array() / (weight.array() + 1e-12f)) + 0.5).cast<int32_t>();
   }
 
  private:
