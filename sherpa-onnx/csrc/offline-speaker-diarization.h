@@ -21,6 +21,14 @@ struct OfflineSpeakerDiarizationConfig {
   SpeakerEmbeddingExtractorConfig embedding;
   FastClusteringConfig clustering;
 
+  // if a segment is less than this value, then it is discarded
+  float min_duration_on = 0.3;  // in seconds
+
+  // if the gap between to segments of the same speaker is less than this value,
+  // then these two segments are merged into a single segment.
+  // We do this recursively.
+  float min_duration_off = 0.5;  // in seconds
+
   OfflineSpeakerDiarizationConfig() = default;
 
   OfflineSpeakerDiarizationConfig(

@@ -19,6 +19,15 @@ void OfflineSpeakerDiarizationConfig::Register(ParseOptions *po) {
 
   ParseOptions po_clustering("clustering", po);
   clustering.Register(&po_clustering);
+
+  po->Register("min-duration-on", &min_duration_on,
+               "if a segment is less than this value, then it is discarded. "
+               "Set it to 0 so that no segment is discarded");
+
+  po->Register("min-duration-off", &min_duration_off,
+               "if the gap between to segments of the same speaker is less "
+               "than this value, then these two segments are merged into a "
+               "single segment. We do it recursively.");
 }
 
 bool OfflineSpeakerDiarizationConfig::Validate() const {
@@ -43,7 +52,9 @@ std::string OfflineSpeakerDiarizationConfig::ToString() const {
   os << "OfflineSpeakerDiarizationConfig(";
   os << "segmentation=" << segmentation.ToString() << ", ";
   os << "embedding=" << embedding.ToString() << ", ";
-  os << "clustering=" << clustering.ToString() << ")";
+  os << "clustering=" << clustering.ToString() << ", ";
+  os << "min_duration_on=" << min_duration_on << ", ";
+  os << "min_duration_off=" << min_duration_off << ")";
 
   return os.str();
 }

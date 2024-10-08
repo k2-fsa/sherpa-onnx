@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <optional>
+#include <string>
 #include <vector>
 
 namespace sherpa_onnx {
@@ -19,6 +20,10 @@ class OfflineSpeakerDiarizationSegment {
   // merge them and return a new segment. Otherwise, it returns null.
   std::optional<OfflineSpeakerDiarizationSegment> Merge(
       const OfflineSpeakerDiarizationSegment &other, float gap) const;
+
+  float Duration() const { return end_ - start_; }
+
+  std::string ToString() const;
 
  private:
   float start_;      // in seconds
@@ -34,6 +39,8 @@ class OfflineSpeakerDiarizationResult {
   // Number of distinct speakers contained in this object at this point
   int32_t NumSpeakers() const;
 
+  int32_t NumSegments() const;
+
   // Return a list of segments sorted by segment.start time
   std::vector<OfflineSpeakerDiarizationSegment> SortByStartTime() const;
 
@@ -42,7 +49,7 @@ class OfflineSpeakerDiarizationResult {
   std::vector<std::vector<OfflineSpeakerDiarizationSegment>> SortBySpeaker()
       const;
 
- private:
+ public:
   std::vector<OfflineSpeakerDiarizationSegment> segments_;
 };
 
