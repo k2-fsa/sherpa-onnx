@@ -75,10 +75,6 @@ class OfflineSpeakerDiarizationPyannoteImpl
       return {};
     }
 
-    std::cout << "segmentations.size() " << segmentations.size() << "---"
-              << segmentations[0].rows() << ", " << segmentations[1].cols()
-              << "\n";
-
     std::vector<Matrix2DInt32> labels;
     labels.reserve(segmentations.size());
 
@@ -92,8 +88,6 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     // speaker count per frame
     Int32RowVector speakers_per_frame = ComputeSpeakersPerFrame(labels);
-    std::cout << "speaker count: " << speakers_per_frame.cast<float>().sum()
-              << ", " << speakers_per_frame.cast<float>().mean() << "\n";
 
     if (speakers_per_frame.maxCoeff() == 0) {
       SHERPA_ONNX_LOGE("No speakers found in the audio samples");
@@ -124,11 +118,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
     auto result = ComputeResult(final_labels);
 
-    for (const auto &r : result.segments_) {
-      std::cout << r.ToString() << "\n";
-    }
-
-    return {};
+    return result;
   }
 
  private:
@@ -252,7 +242,6 @@ class OfflineSpeakerDiarizationPyannoteImpl
       ans.row(i) = powerset_mapping_.row(col_id);
     }
 
-    std::cout << "sum labels: " << ans.colwise().sum() << "\n";
     return ans;
   }
 
@@ -486,9 +475,6 @@ class OfflineSpeakerDiarizationPyannoteImpl
           }
         }
       }
-
-      std::cout << "chunk " << chunk_index << ", " << new_label.colwise().sum()
-                << "\n";
 
       new_labels.push_back(std::move(new_label));
 

@@ -63,7 +63,12 @@ Usage example:
 
   // sd.Process(samples.data(), samples.size() < 160000 ? samples.size() :
   // 160000);
-  sd.Process(samples.data(), samples.size(), ProgressCallback, nullptr);
+  auto result =
+      sd.Process(samples.data(), samples.size(), ProgressCallback, nullptr);
+
+  for (const auto &r : result.segments_) {
+    std::cout << r.ToString() << "\n";
+  }
 
   const auto end = std::chrono::steady_clock::now();
   float elapsed_seconds =
@@ -71,6 +76,7 @@ Usage example:
           .count() /
       1000.;
 
+  fprintf(stderr, "Duration : %.3f s\n", duration);
   fprintf(stderr, "Elapsed seconds: %.3f s\n", elapsed_seconds);
   float rtf = elapsed_seconds / duration;
   fprintf(stderr, "Real time factor (RTF): %.3f / %.3f = %.3f\n",
