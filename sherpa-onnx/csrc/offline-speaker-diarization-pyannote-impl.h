@@ -23,6 +23,8 @@ using Matrix2DInt32 =
 using FloatRowVector = Eigen::Matrix<float, 1, Eigen::Dynamic>;
 using Int32RowVector = Eigen::Matrix<int32_t, 1, Eigen::Dynamic>;
 
+using Int32Pair = std::pair<int32_t, int32_t>;
+
 class OfflineSpeakerDiarizationPyannoteImpl
     : public OfflineSpeakerDiarizationImpl {
  public:
@@ -69,6 +71,18 @@ class OfflineSpeakerDiarizationPyannoteImpl
     if (speaker_count.maxCoeff() == 0) {
       SHERPA_ONNX_LOGE("No speakers found in the audio samples");
       return {};
+    }
+
+    auto chunk_speaker_samples_list_pair = GetChunkSpeakerSampleIndexes(labels);
+    std::cout << "pair size: " << chunk_speaker_samples_list_pair.first.size()
+              << "\n";
+    int32_t kk = 0;
+    for (const auto &p : chunk_speaker_samples_list_pair.first) {
+      std::cout << p.first << ", " << p.second << "\n";
+      for (const auto &pp : chunk_speaker_samples_list_pair.second[kk]) {
+        std::cout << "  " << pp.first << ", " << pp.second << "\n";
+      }
+      kk += 1;
     }
 
     return {};
@@ -243,6 +257,104 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
 
     return ((count.array() / (weight.array() + 1e-12f)) + 0.5).cast<int32_t>();
+  }
+
+  // ans.first: a list of (chunk_id, speaker_id)
+  // ans.second: a list of list of (start_sample_index, end_sample_index)
+  //
+  // ans.first[i] corresponds to ans.second[i]
+  std::pair<std::vector<Int32Pair>, std::vector<std::vector<Int32Pair>>>
+  GetChunkSpeakerSampleIndexes(const std::vector<Matrix2DInt32> &labels) const {
+    auto new_labels = ExcludeOverlap(labels);
+
+    std::vector<Int32Pair> chunk_speaker_list;
+    std::vector<std::vector<Int32Pair>> samples_index_list;
+
+    const auto &meta_data = segmentation_model_.GetModelMetaData();
+    int32_t window_size = meta_data.window_size;
+    int32_t window_shift = meta_data.window_shift;
+    int32_t receptive_field_shift = meta_data.receptive_field_shift;
+    int32_t num_speakers = meta_data.num_speakers;
+
+    int32_t chunk_index = 0;
+    for (const auto &label : new_labels) {
+      Matrix2DInt32 tmp = label.transpose();
+      // tmp: (num_speakers, num_frames)
+      int32_t num_frames = tmp.cols();
+
+      int32_t sample_offset = chunk_index * window_shift;
+
+      for (int32_t speaker_index = 0; speaker_index != num_speakers;
+           ++speaker_index) {
+        auto d = tmp.row(speaker_index);
+        if (d.sum() < 10) {
+          // skip segments less than 10 frames
+          continue;
+        }
+
+        Int32Pair this_chunk_speaker = {chunk_index, speaker_index};
+        std::vector<Int32Pair> this_speaker_samples;
+
+        bool started = false;
+        int32_t start_index;
+
+        for (int32_t k = 0; k != num_frames; ++k) {
+          if (d[k] != 0) {
+            if (!started) {
+              started = true;
+              start_index = k;
+            }
+          } else if (started) {
+            started = false;
+
+            int32_t start_samples =
+                float(start_index) / num_frames * window_size + sample_offset;
+            int32_t end_samples =
+                float(k) / num_frames * window_size + sample_offset;
+
+            this_speaker_samples.emplace_back(start_samples, end_samples);
+          }
+        }
+
+        if (started) {
+          int32_t start_samples =
+              float(start_index) / num_frames * window_size + sample_offset;
+          int32_t end_samples =
+              float(num_frames - 1) / num_frames * window_size + sample_offset;
+          this_speaker_samples.emplace_back(start_samples, end_samples);
+        }
+
+        chunk_speaker_list.push_back(std::move(this_chunk_speaker));
+        samples_index_list.push_back(std::move(this_speaker_samples));
+      }  // for (int32_t speaker_index = 0;
+      chunk_index += 1;
+    }  // for (const auto &label : new_labels)
+
+    return {chunk_speaker_list, samples_index_list};
+  }
+
+  // If there are multiple speakers at a frame, then this frame is excluded.
+  std::vector<Matrix2DInt32> ExcludeOverlap(
+      const std::vector<Matrix2DInt32> &labels) const {
+    int32_t num_chunks = labels.size();
+    std::vector<Matrix2DInt32> ans;
+    ans.reserve(num_chunks);
+
+    for (const auto &label : labels) {
+      Matrix2DInt32 new_label(label.rows(), label.cols());
+      new_label.setZero();
+      Int32RowVector v = label.rowwise().sum();
+
+      for (int32_t i = 0; i != v.cols(); ++i) {
+        if (v[i] < 2) {
+          new_label.row(i) = label.row(i);
+        }
+      }
+
+      ans.push_back(std::move(new_label));
+    }
+
+    return ans;
   }
 
  private:
