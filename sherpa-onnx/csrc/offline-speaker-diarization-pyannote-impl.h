@@ -17,6 +17,9 @@ namespace sherpa_onnx {
 using Matrix2D =
     Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
+using Matrix2DInt32 =
+    Eigen::Matrix<int32_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
 class OfflineSpeakerDiarizationPyannoteImpl
     : public OfflineSpeakerDiarizationImpl {
  public:
@@ -24,7 +27,9 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
   explicit OfflineSpeakerDiarizationPyannoteImpl(
       const OfflineSpeakerDiarizationConfig &config)
-      : config_(config), segmentation_model_(config_.segmentation) {}
+      : config_(config), segmentation_model_(config_.segmentation) {
+    Init();
+  }
 
   OfflineSpeakerDiarizationResult Process(
       const float *audio, int32_t n,
@@ -38,15 +43,59 @@ class OfflineSpeakerDiarizationPyannoteImpl
       return {};
     }
 
-    std::cout << "segmentations.size() " << segmentations.size() << "\n";
+    std::cout << "segmentations.size() " << segmentations.size() << "---"
+              << segmentations[0].rows() << ", " << segmentations[1].cols()
+              << "\n";
+
+    std::vector<Matrix2DInt32> labels;
+    labels.reserve(segmentations.size());
+
     for (const auto &m : segmentations) {
-      std::cout << m.rows() << ", " << m.cols() << "\n";
+      labels.push_back(ToMultiLabel(m));
     }
+
+    segmentations.clear();
+
+    // labels[i] is a 0-1 matrix of shape (num_frames, num_speakers)
 
     return {};
   }
 
  private:
+  void Init() { InitPowersetMapping(); }
+
+  // see also
+  // https://github.com/pyannote/pyannote-audio/blob/develop/pyannote/audio/utils/powerset.py#L68
+  void InitPowersetMapping() {
+    const auto &meta_data = segmentation_model_.GetModelMetaData();
+    int32_t num_classes = meta_data.num_classes;
+    int32_t powerset_max_classes = meta_data.powerset_max_classes;
+    int32_t num_speakers = meta_data.num_speakers;
+
+    powerset_mapping_ = Matrix2DInt32(num_classes, num_speakers);
+    powerset_mapping_.setZero();
+
+    int32_t k = 1;
+    for (int32_t i = 1; i <= powerset_max_classes; ++i) {
+      if (i == 1) {
+        for (int32_t j = 0; j != num_speakers; ++j, ++k) {
+          powerset_mapping_(k, j) = 1;
+        }
+      } else if (i == 2) {
+        for (int32_t j = 0; j != num_speakers; ++j) {
+          for (int32_t m = j + 1; m < num_speakers; ++m, ++k) {
+            powerset_mapping_(k, j) = 1;
+            powerset_mapping_(k, m) = 1;
+          }
+        }
+      } else {
+        SHERPA_ONNX_LOGE(
+            "powerset_max_classes = %d is currently not supported!", i);
+        SHERPA_ONNX_EXIT(-1);
+      }
+    }
+  }
+
   std::vector<Matrix2D> RunSpeakerSegmentationModel(
       const float *audio, int32_t n,
       OfflineSpeakerDiarizationProgressCallback callback,
@@ -135,9 +184,25 @@ class OfflineSpeakerDiarizationPyannoteImpl
     return m;
   }
 
+  Matrix2DInt32 ToMultiLabel(const Matrix2D &m) const {
+    int32_t num_rows = m.rows();
+    Matrix2DInt32 ans(num_rows, powerset_mapping_.cols());
+
+    std::ptrdiff_t col_id;
+
+    for (int32_t i = 0; i != num_rows; ++i) {
+      m.row(i).maxCoeff(&col_id);
+      ans.row(i) = powerset_mapping_.row(col_id);
+    }
+
+    std::cout << "sum labels: " << ans.colwise().sum() << "\n";
+    return ans;
+  }
+
  private:
   OfflineSpeakerDiarizationConfig config_;
   OfflineSpeakerSegmentationPyannoteModel segmentation_model_;
+  Matrix2DInt32 powerset_mapping_;
 };
 
 }  // namespace sherpa_onnx
