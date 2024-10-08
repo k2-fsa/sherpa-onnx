@@ -48,8 +48,9 @@ OfflineSpeakerDiarization::~OfflineSpeakerDiarization() = default;
 
 OfflineSpeakerDiarizationResult OfflineSpeakerDiarization::Process(
     const float *audio, int32_t n,
-    OfflineSpeakerDiarizationProgressCallback callback /*= nullptr*/) const {
-  return impl_->Process(audio, n, callback);
+    OfflineSpeakerDiarizationProgressCallback callback /*= nullptr*/,
+    void *callback_arg /*= nullptr*/) const {
+  return impl_->Process(audio, n, callback, callback_arg);
 }
 
 }  // namespace sherpa_onnx

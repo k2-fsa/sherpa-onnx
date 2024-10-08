@@ -24,7 +24,17 @@ class OfflineSpeakerSegmentationPyannoteModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-  Ort::Value Forward(Ort::Value x) { return Ort::Value(nullptr); }
+  const OfflineSpeakerSegmentationPyannoteModelMetaData &GetModelMetaData()
+      const {
+    return meta_data_;
+  }
+
+  Ort::Value Forward(Ort::Value x) {
+    auto out = sess_->Run({}, input_names_ptr_.data(), &x, 1,
+                          output_names_ptr_.data(), output_names_ptr_.size());
+
+    return std::move(out[0]);
+  }
 
  private:
   void Init(void *model_data, size_t model_data_length) {
@@ -85,7 +95,13 @@ OfflineSpeakerSegmentationPyannoteModel::
 OfflineSpeakerSegmentationPyannoteModel::
     ~OfflineSpeakerSegmentationPyannoteModel() = default;
 
-Ort::Value OfflineSpeakerSegmentationPyannoteModel::Forward(Ort::Value x) {
+const OfflineSpeakerSegmentationPyannoteModelMetaData &
+OfflineSpeakerSegmentationPyannoteModel::GetModelMetaData() const {
+  return impl_->GetModelMetaData();
+}
+
+Ort::Value OfflineSpeakerSegmentationPyannoteModel::Forward(
+    Ort::Value x) const {
   return impl_->Forward(std::move(x));
 }
 

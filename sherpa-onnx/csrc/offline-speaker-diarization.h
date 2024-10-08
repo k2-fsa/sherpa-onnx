@@ -43,7 +43,8 @@ class OfflineSpeakerDiarization {
 
   OfflineSpeakerDiarizationResult Process(
       const float *audio, int32_t n,
-      OfflineSpeakerDiarizationProgressCallback callback = nullptr) const;
+      OfflineSpeakerDiarizationProgressCallback callback = nullptr,
+      void *callback_arg = nullptr) const;
 
  private:
   std::unique_ptr<OfflineSpeakerDiarizationImpl> impl_;

@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_SPEAKER_DIARIZATION_IMPL_H_
 
 #include <functional>
+#include <memory>
 
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 namespace sherpa_onnx {
@@ -19,7 +20,8 @@ class OfflineSpeakerDiarizationImpl {
 
   virtual OfflineSpeakerDiarizationResult Process(
       const float *audio, int32_t n,
-      OfflineSpeakerDiarizationProgressCallback callback = nullptr) const = 0;
+      OfflineSpeakerDiarizationProgressCallback callback = nullptr,
+      void *callback_arg = nullptr) const = 0;
 };
 
 }  // namespace sherpa_onnx

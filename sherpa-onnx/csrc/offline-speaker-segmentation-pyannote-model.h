@@ -19,7 +19,8 @@ class OfflineSpeakerSegmentationPyannoteModel {
 
   ~OfflineSpeakerSegmentationPyannoteModel();
 
-  const OfflineSpeakerSegmentationPyannoteModelMetaData &GetMetaData() const;
+  const OfflineSpeakerSegmentationPyannoteModelMetaData &GetModelMetaData()
+      const;
 
   /**
    * @param x A 3-D float tensor of shape (batch_size, 1, num_samples)
@@ -27,7 +28,7 @@ class OfflineSpeakerSegmentationPyannoteModel {
    *         shape (batch_size, num_frames, num_speakers). Note that
    *         num_speakers here uses powerset encoding.
    */
-  Ort::Value Forward(Ort::Value x);
+  Ort::Value Forward(Ort::Value x) const;
 
  private:
   class Impl;
