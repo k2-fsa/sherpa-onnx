@@ -11,6 +11,7 @@
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/offline-speaker-diarization-impl.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-pyannote-model.h"
+#include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 
 namespace sherpa_onnx {
 
@@ -32,7 +33,9 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
   explicit OfflineSpeakerDiarizationPyannoteImpl(
       const OfflineSpeakerDiarizationConfig &config)
-      : config_(config), segmentation_model_(config_.segmentation) {
+      : config_(config),
+        segmentation_model_(config_.segmentation),
+        embedding_extractor_(config_.embedding) {
     Init();
   }
 
@@ -40,8 +43,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
       const float *audio, int32_t n,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,
       void *callback_arg = nullptr) const override {
-    std::vector<Matrix2D> segmentations =
-        RunSpeakerSegmentationModel(audio, n, callback, callback_arg);
+    std::vector<Matrix2D> segmentations = RunSpeakerSegmentationModel(audio, n);
     // segmentations[i] is for chunk_i
     // Each matrix is of shape (num_frames, num_powerset_classes)
     if (segmentations.empty()) {
@@ -74,16 +76,13 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
 
     auto chunk_speaker_samples_list_pair = GetChunkSpeakerSampleIndexes(labels);
-    std::cout << "pair size: " << chunk_speaker_samples_list_pair.first.size()
-              << "\n";
-    int32_t kk = 0;
-    for (const auto &p : chunk_speaker_samples_list_pair.first) {
-      std::cout << p.first << ", " << p.second << "\n";
-      for (const auto &pp : chunk_speaker_samples_list_pair.second[kk]) {
-        std::cout << "  " << pp.first << ", " << pp.second << "\n";
-      }
-      kk += 1;
-    }
+    Matrix2D embeddings =
+        ComputeEmbeddings(audio, n, chunk_speaker_samples_list_pair.second,
+                          callback, callback_arg);
+
+    std::cout << "embeddings.shape " << embeddings.rows() << ", "
+              << embeddings.cols() << "\n"
+              << embeddings.rowwise().sum() << "\n";
 
     return {};
   }
@@ -123,10 +122,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
     }
   }
 
-  std::vector<Matrix2D> RunSpeakerSegmentationModel(
-      const float *audio, int32_t n,
-      OfflineSpeakerDiarizationProgressCallback callback,
-      void *callback_arg) const {
+  std::vector<Matrix2D> RunSpeakerSegmentationModel(const float *audio,
+                                                    int32_t n) const {
     std::vector<Matrix2D> ans;
 
     const auto &meta_data = segmentation_model_.GetModelMetaData();
@@ -151,10 +148,6 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
       ans.push_back(std::move(m));
 
-      if (callback) {
-        callback(1, 1, callback_arg);
-      }
-
       return ans;
     }
 
@@ -169,10 +162,6 @@ class OfflineSpeakerDiarizationPyannoteImpl
       Matrix2D m = ProcessChunk(p);
 
       ans.push_back(std::move(m));
-
-      if (callback) {
-        callback(i + 1, num_chunks + has_last_chunk, callback_arg);
-      }
     }
 
     if (has_last_chunk) {
@@ -182,9 +171,6 @@ class OfflineSpeakerDiarizationPyannoteImpl
       Matrix2D m = ProcessChunk(buf.data());
 
       ans.push_back(std::move(m));
-      if (callback) {
-        callback(num_chunks + 1, num_chunks + 1, callback_arg);
-      }
     }
 
     return ans;
@@ -247,7 +233,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
     weight.setZero();
 
     for (int32_t i = 0; i != num_chunks; ++i) {
-      int32_t start = float(i) * window_shift / receptive_field_shift + 0.5;
+      int32_t start =
+          static_cast<float>(i) * window_shift / receptive_field_shift + 0.5;
 
       auto seq = Eigen::seqN(start, labels[i].rows());
 
@@ -308,9 +295,11 @@ class OfflineSpeakerDiarizationPyannoteImpl
             started = false;
 
             int32_t start_samples =
-                float(start_index) / num_frames * window_size + sample_offset;
+                static_cast<float>(start_index) / num_frames * window_size +
+                sample_offset;
             int32_t end_samples =
-                float(k) / num_frames * window_size + sample_offset;
+                static_cast<float>(k) / num_frames * window_size +
+                sample_offset;
 
             this_speaker_samples.emplace_back(start_samples, end_samples);
           }
@@ -318,9 +307,11 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
         if (started) {
           int32_t start_samples =
-              float(start_index) / num_frames * window_size + sample_offset;
+              static_cast<float>(start_index) / num_frames * window_size +
+              sample_offset;
           int32_t end_samples =
-              float(num_frames - 1) / num_frames * window_size + sample_offset;
+              static_cast<float>(num_frames - 1) / num_frames * window_size +
+              sample_offset;
           this_speaker_samples.emplace_back(start_samples, end_samples);
         }
 
@@ -357,9 +348,60 @@ class OfflineSpeakerDiarizationPyannoteImpl
     return ans;
   }
 
+  /**
+   * @param sample_indexes[i] contains the sample segment start and end indexes
+   *                          for the i-th (chunk, speaker) pair
+   * @return Return a matrix of shape (sample_indexes.size(), embedding_dim)
+   *         where ans.row[i] contains the embedding for the
+   *         i-th (chunk, speaker) pair
+   */
+  Matrix2D ComputeEmbeddings(
+      const float *audio, int32_t n,
+      const std::vector<std::vector<Int32Pair>> &sample_indexes,
+      OfflineSpeakerDiarizationProgressCallback callback,
+      void *callback_arg) const {
+    const auto &meta_data = segmentation_model_.GetModelMetaData();
+    int32_t sample_rate = meta_data.sample_rate;
+    Matrix2D ans(sample_indexes.size(), embedding_extractor_.Dim());
+
+    int32_t k = 0;
+    for (const auto &v : sample_indexes) {
+      auto stream = embedding_extractor_.CreateStream();
+      for (const auto &p : v) {
+        int32_t end = (p.second <= n) ? p.second : n;
+        int32_t num_samples = end - p.first;
+
+        if (num_samples > 0) {
+          stream->AcceptWaveform(sample_rate, audio + p.first, num_samples);
+        }
+      }
+
+      stream->InputFinished();
+      if (!embedding_extractor_.IsReady(stream.get())) {
+        SHERPA_ONNX_LOGE(
+            "This segment is too short, which should not happen since we have "
+            "already filtered short segments");
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      std::vector<float> embedding = embedding_extractor_.Compute(stream.get());
+
+      std::copy(embedding.begin(), embedding.end(), &ans(k, 0));
+
+      k += 1;
+
+      if (callback) {
+        callback(k, ans.rows(), callback_arg);
+      }
+    }
+
+    return ans;
+  }
+
  private:
   OfflineSpeakerDiarizationConfig config_;
   OfflineSpeakerSegmentationPyannoteModel segmentation_model_;
+  SpeakerEmbeddingExtractor embedding_extractor_;
   Matrix2DInt32 powerset_mapping_;
 };
 
