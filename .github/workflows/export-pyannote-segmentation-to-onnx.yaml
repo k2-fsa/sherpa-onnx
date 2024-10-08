@@ -29,7 +29,7 @@ jobs:
       - name: Install pyannote
         shell: bash
         run: |
-          pip install pyannote.audio onnx onnxruntime
+          pip install pyannote.audio onnx==1.15.0 onnxruntime==1.16.3
 
       - name: Run
         shell: bash
