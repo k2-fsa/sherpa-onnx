@@ -40,5 +40,5 @@ commands to convert it to `3-two-speakers-en.wav`
 
 
 ```bash
-sox ML16091-Audio.mp3 3-two-speakers-en.wav
+sox ML16091-Audio.mp3 -r 16k 3-two-speakers-en.wav
 ```
