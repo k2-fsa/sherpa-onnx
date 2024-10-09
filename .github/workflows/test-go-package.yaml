@@ -68,6 +68,50 @@ jobs:
         run: |
           gcc --version
 
+      - name: Test non-streaming speaker diarization
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd go-api-examples/non-streaming-speaker-diarization/
+          ./run.sh
+
+      - name: Test non-streaming speaker diarization
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x64'
+        shell: bash
+        run: |
+          cd go-api-examples/non-streaming-speaker-diarization/
+          go mod tidy
+          cat go.mod
+          go build
+
+          echo $PWD
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
+          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/x86_64-pc-windows-gnu/*.dll .
+
+          ./run.sh
+
+      - name: Test non-streaming speaker diarization
+        if: matrix.os == 'windows-latest' && matrix.arch == 'x86'
+        shell: bash
+        run: |
+          cd go-api-examples/non-streaming-speaker-diarization/
+
+          go env GOARCH
+          go env -w GOARCH=386
+          go env -w CGO_ENABLED=1
+
+          go mod tidy
+          cat go.mod
+          go build
+
+          echo $PWD
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/
+          ls -lh /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/*
+          cp -v /C/Users/runneradmin/go/pkg/mod/github.com/k2-fsa/sherpa-onnx-go-windows*/lib/i686-pc-windows-gnu/*.dll .
+
+          ./run.sh
+
       - name: Test streaming HLG decoding (Linux/macOS)
         if: matrix.os != 'windows-latest'
         shell: bash

@@ -1,0 +1,1 @@
+../../../../go-api-examples/non-streaming-speaker-diarization/main.go
