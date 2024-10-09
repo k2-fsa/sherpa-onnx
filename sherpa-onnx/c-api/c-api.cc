@@ -31,6 +31,10 @@
 #include "sherpa-onnx/csrc/offline-tts.h"
 #endif
 
+#if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
+#include "sherpa-onnx/csrc/offline-speaker-diarization.h"
+#endif
+
 struct SherpaOnnxOnlineRecognizer {
   std::unique_ptr<sherpa_onnx::OnlineRecognizer> impl;
 };
@@ -1670,3 +1674,144 @@ void SherpaOnnxLinearResamplerReset(SherpaOnnxLinearResampler *p) {
 int32_t SherpaOnnxFileExists(const char *filename) {
   return sherpa_onnx::FileExists(filename);
 }
+
+#if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
+
+struct SherpaOnnxOfflineSpeakerDiarization {
+  std::unique_ptr<sherpa_onnx::OfflineSpeakerDiarization> impl;
+};
+
+struct SherpaOnnxOfflineSpeakerDiarizationResult {
+  sherpa_onnx::OfflineSpeakerDiarizationResult impl;
+};
+
+const SherpaOnnxOfflineSpeakerDiarization *
+SherpaOnnxCreateOfflineSpeakerDiarization(
+    const SherpaOnnxOfflineSpeakerDiarizationConfig *config) {
+  sherpa_onnx::OfflineSpeakerDiarizationConfig sd_config;
+
+  sd_config.segmentation.pyannote.model =
+      SHERPA_ONNX_OR(config->segmentation.pyannote.model, "");
+  sd_config.segmentation.num_threads =
+      SHERPA_ONNX_OR(config->segmentation.num_threads, 1);
+  sd_config.segmentation.debug = config->segmentation.debug;
+  sd_config.segmentation.provider =
+      SHERPA_ONNX_OR(config->segmentation.provider, "cpu");
+  if (sd_config.segmentation.provider.empty()) {
+    sd_config.segmentation.provider = "cpu";
+  }
+
+  sd_config.embedding.model = SHERPA_ONNX_OR(config->embedding.model, "");
+  sd_config.embedding.num_threads =
+      SHERPA_ONNX_OR(config->embedding.num_threads, 1);
+  sd_config.embedding.debug = config->embedding.debug;
+  sd_config.embedding.provider =
+      SHERPA_ONNX_OR(config->embedding.provider, "cpu");
+  if (sd_config.embedding.provider.empty()) {
+    sd_config.embedding.provider = "cpu";
+  }
+
+  sd_config.clustering.num_clusters =
+      SHERPA_ONNX_OR(config->clustering.num_clusters, -1);
+
+  sd_config.clustering.threshold =
+      SHERPA_ONNX_OR(config->clustering.threshold, 0.5);
+
+  sd_config.min_duration_on = SHERPA_ONNX_OR(config->min_duration_on, 0.3);
+
+  sd_config.min_duration_off = SHERPA_ONNX_OR(config->min_duration_off, 0.5);
+
+  if (!sd_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config");
+    return nullptr;
+  }
+
+  SherpaOnnxOfflineSpeakerDiarization *sd =
+      new SherpaOnnxOfflineSpeakerDiarization;
+
+  sd->impl =
+      std::make_unique<sherpa_onnx::OfflineSpeakerDiarization>(sd_config);
+
+  if (sd_config.segmentation.debug || sd_config.embedding.debug) {
+    SHERPA_ONNX_LOGE("%s\n", sd_config.ToString().c_str());
+  }
+
+  return sd;
+}
+
+void SherpaOnnxDestroyOfflineSpeakerDiarization(
+    const SherpaOnnxOfflineSpeakerDiarization *sd) {
+  delete sd;
+}
+
+int32_t SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(
+    const SherpaOnnxOfflineSpeakerDiarization *sd) {
+  return sd->impl->SampleRate();
+}
+
+int32_t SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
+  return r->impl.NumSpeakers();
+}
+
+int32_t SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
+  return r->impl.NumSegments();
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationSegment *
+SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
+  if (r->impl.NumSegments() == 0) {
+    return nullptr;
+  }
+
+  auto segments = r->impl.SortByStartTime();
+
+  int32_t n = segments.size();
+  SherpaOnnxOfflineSpeakerDiarizationSegment *ans =
+      new SherpaOnnxOfflineSpeakerDiarizationSegment[n];
+
+  for (int32_t i = 0; i != n; ++i) {
+    const auto &s = segments[i];
+
+    ans[i].start = s.Start();
+    ans[i].end = s.End();
+    ans[i].speaker = s.Speaker();
+  }
+
+  return ans;
+}
+
+void SherpaOnnxOfflineSpeakerDiarizationDestroySegment(
+    const SherpaOnnxOfflineSpeakerDiarizationSegment *s) {
+  delete[] s;
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcess(
+    const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
+    int32_t n) {
+  auto ans = new SherpaOnnxOfflineSpeakerDiarizationResult;
+  ans->impl = sd->impl->Process(samples, n);
+
+  return ans;
+}
+
+void SherpaOnnxOfflineSpeakerDiarizationDestroyResult(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
+  delete r;
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(
+    const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
+    int32_t n, SherpaOnnxOfflineSpeakerDiarizationProgressCallback callback,
+    void *arg) {
+  auto ans = new SherpaOnnxOfflineSpeakerDiarizationResult;
+  ans->impl = sd->impl->Process(samples, n, callback, arg);
+
+  return ans;
+}
+
+#endif

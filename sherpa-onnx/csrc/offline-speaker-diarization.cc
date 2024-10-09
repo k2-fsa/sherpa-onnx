@@ -43,6 +43,16 @@ bool OfflineSpeakerDiarizationConfig::Validate() const {
     return false;
   }
 
+  if (min_duration_on < 0) {
+    SHERPA_ONNX_LOGE("min_duration_on %.3f is negative", min_duration_on);
+    return false;
+  }
+
+  if (min_duration_off < 0) {
+    SHERPA_ONNX_LOGE("min_duration_off %.3f is negative", min_duration_off);
+    return false;
+  }
+
   return true;
 }
 
