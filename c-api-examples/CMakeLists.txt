@@ -9,6 +9,11 @@ if(SHERPA_ONNX_ENABLE_TTS)
   target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)
 endif()
 
+if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+  add_executable(offline-speaker-diarization-c-api offline-speaker-diarization-c-api.c)
+  target_link_libraries(offline-speaker-diarization-c-api sherpa-onnx-c-api)
+endif()
+
 add_executable(spoken-language-identification-c-api spoken-language-identification-c-api.c)
 target_link_libraries(spoken-language-identification-c-api sherpa-onnx-c-api)
 

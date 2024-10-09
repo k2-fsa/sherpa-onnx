@@ -20,8 +20,8 @@ struct FastClusteringConfig {
 
   // distance threshold.
   //
-  // The lower, the more clusters it will generate.
-  // The higher, the fewer clusters it will generate.
+  // The smaller, the more clusters it will generate.
+  // The larger, the fewer clusters it will generate.
   float threshold = 0.5;
 
   FastClusteringConfig() = default;

@@ -7,7 +7,7 @@
 #include "sherpa-onnx/csrc/wave-reader.h"
 
 static int32_t ProgressCallback(int32_t processed_chunks, int32_t num_chunks,
-                                void *arg) {
+                                void *) {
   float progress = 100.0 * processed_chunks / num_chunks;
   fprintf(stderr, "progress %.2f%%\n", progress);
 

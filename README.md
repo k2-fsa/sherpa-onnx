@@ -1,8 +1,12 @@
 ### Supported functions
 
-|Speech recognition| Speech synthesis | Speaker verification | Speaker identification |
-|------------------|------------------|----------------------|------------------------|
-|   ✔️              |         ✔️        |          ✔️           |                ✔️       |
+|Speech recognition| Speech synthesis |
+|------------------|------------------|
+|   ✔️              |         ✔️        |
+
+|Speaker identification| Speaker diarization | Speaker identification |
+|----------------------|-------------------- |------------------------|
+|   ✔️                  |         ✔️           |            ✔️           |
 
 | Spoken Language identification | Audio tagging | Voice activity detection |
 |--------------------------------|---------------|--------------------------|
@@ -47,6 +51,7 @@ This repository supports running the following functions **locally**
 
   - Speech-to-text (i.e., ASR); both streaming and non-streaming are supported
   - Text-to-speech (i.e., TTS)
+  - Speaker diarization
   - Speaker identification
   - Speaker verification
   - Spoken language identification
