@@ -56,6 +56,9 @@ class OfflineSpeakerDiarization {
 
   ~OfflineSpeakerDiarization();
 
+  // Expected sample rate of the input audio samples
+  int32_t SampleRate() const;
+
   OfflineSpeakerDiarizationResult Process(
       const float *audio, int32_t n,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,

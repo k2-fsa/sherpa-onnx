@@ -14,21 +14,28 @@ namespace sherpa_onnx {
 
 class OfflineSpeakerDiarizationSegment {
  public:
-  OfflineSpeakerDiarizationSegment(float start, float end, int32_t speaker);
+  OfflineSpeakerDiarizationSegment(float start, float end, int32_t speaker,
+                                   const std::string &text = {});
 
   // If the gap between the two segments is less than the given gap, then we
   // merge them and return a new segment. Otherwise, it returns null.
   std::optional<OfflineSpeakerDiarizationSegment> Merge(
       const OfflineSpeakerDiarizationSegment &other, float gap) const;
 
+  float Start() const { return start_; }
+  float End() const { return end_; }
+  int32_t Speaker() const { return speaker_; }
+  const std::string &Text() const { return text_; }
   float Duration() const { return end_ - start_; }
 
   std::string ToString() const;
 
  private:
-  float start_;      // in seconds
-  float end_;        // in seconds
-  int32_t speaker_;  // ID of the speaker, starting from 0
+  float start_;       // in seconds
+  float end_;         // in seconds
+  int32_t speaker_;   // ID of the speaker, starting from 0
+  std::string text_;  // If not empty, it contains the speech recognition result
+                      // of this segment
 };
 
 class OfflineSpeakerDiarizationResult {

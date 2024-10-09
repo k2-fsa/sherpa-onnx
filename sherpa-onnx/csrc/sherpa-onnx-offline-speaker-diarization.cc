@@ -41,31 +41,29 @@ Step 3. Download test wave files
 Please visit https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-segmentation-models
 for a list of available test wave files. The following is an example
 
-  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-two-speakers-zh.wav
+  wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
 
 Step 4. Build sherpa-onnx
 
 Step 5. Run it
 
   ./bin/sherpa-onnx-offline-speaker-diarization \
-    --clustering.num-clusters=2 \
-    --segmentation.debug=0 \
+    --clustering.num-clusters=4 \
     --segmentation.pyannote-model=./sherpa-onnx-pyannote-segmentation-3-0/model.onnx \
-    --embedding.model=../3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx \
-    ./0-two-speakers-zh.wav
+    --embedding.model=./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx \
+    ./0-four-speakers-zh.wav
 
-Since we know that there are two speakers in the test wave file, we use
---clustering.num-clusters=2 in the above example.
+Since we know that there are four speakers in the test wave file, we use
+--clustering.num-clusters=4 in the above example.
 
 If we don't know number of speakers in the given wave file, we can use
 the argument --clustering.cluster-threshold. The following is an example:
 
   ./bin/sherpa-onnx-offline-speaker-diarization \
-    --clustering.cluster-threshold=0.75 \
-    --segmentation.debug=0 \
+    --clustering.cluster-threshold=0.90 \
     --segmentation.pyannote-model=./sherpa-onnx-pyannote-segmentation-3-0/model.onnx \
-    --embedding.model=../3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx \
-    ./0-two-speakers-zh.wav
+    --embedding.model=./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx \
+    ./0-four-speakers-zh.wav
 
 A larger threshold leads to few clusters, i.e., few speakers;
 a smaller threshold leads to more clusters, i.e., more speakers
@@ -103,19 +101,19 @@ a smaller threshold leads to more clusters, i.e., more speakers
     return -1;
   }
 
-  if (sample_rate != 16000) {
-    std::cerr << "Expect sample rate 16000. Given: " << sample_rate << "\n";
+  if (sample_rate != sd.SampleRate()) {
+    std::cerr << "Expect sample rate " << sd.SampleRate()
+              << ". Given: " << sample_rate << "\n";
     return -1;
   }
 
   float duration = samples.size() / static_cast<float>(sample_rate);
 
-  // sd.Process(samples.data(), samples.size() < 160000 ? samples.size() :
-  // 160000);
   auto result =
-      sd.Process(samples.data(), samples.size(), ProgressCallback, nullptr);
+      sd.Process(samples.data(), samples.size(), ProgressCallback, nullptr)
+          .SortByStartTime();
 
-  for (const auto &r : result.segments_) {
+  for (const auto &r : result) {
     std::cout << r.ToString() << "\n";
   }
 

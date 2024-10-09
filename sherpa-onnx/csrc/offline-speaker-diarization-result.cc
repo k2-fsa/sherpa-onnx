@@ -4,14 +4,18 @@
 
 #include "sherpa-onnx/csrc/offline-speaker-diarization-result.h"
 
+#include <algorithm>
+#include <sstream>
 #include <string>
+#include <unordered_set>
+#include <utility>
 
 #include "sherpa-onnx/csrc/macros.h"
 
 namespace sherpa_onnx {
 
 OfflineSpeakerDiarizationSegment::OfflineSpeakerDiarizationSegment(
-    float start, float end, int32_t speaker) {
+    float start, float end, int32_t speaker, const std::string &text /*= {}*/) {
   if (start > end) {
     SHERPA_ONNX_LOGE("start %.3f should be less than end %.3f", start, end);
     SHERPA_ONNX_EXIT(-1);
@@ -20,6 +24,7 @@ OfflineSpeakerDiarizationSegment::OfflineSpeakerDiarizationSegment(
   start_ = start;
   end_ = end;
   speaker_ = speaker;
+  text_ = text;
 }
 
 std::optional<OfflineSpeakerDiarizationSegment>
@@ -44,10 +49,16 @@ OfflineSpeakerDiarizationSegment::Merge(
 
 std::string OfflineSpeakerDiarizationSegment::ToString() const {
   char s[128];
-  int32_t n = snprintf(s, sizeof(s), "%.3f -- %.3f speaker_%02d", start_, end_,
-                       speaker_);
+  snprintf(s, sizeof(s), "%.3f -- %.3f speaker_%02d", start_, end_, speaker_);
 
-  return {&s[0]};
+  std::ostringstream os;
+  os << s;
+
+  if (!text_.empty()) {
+    os << " " << text_;
+  }
+
+  return os.str();
 }
 
 void OfflineSpeakerDiarizationResult::Add(
@@ -55,8 +66,45 @@ void OfflineSpeakerDiarizationResult::Add(
   segments_.push_back(segment);
 }
 
+int32_t OfflineSpeakerDiarizationResult::NumSpeakers() const {
+  std::unordered_set<int32_t> count;
+  for (const auto &s : segments_) {
+    count.insert(s.Speaker());
+  }
+
+  return count.size();
+}
+
 int32_t OfflineSpeakerDiarizationResult::NumSegments() const {
   return segments_.size();
+}
+
+// Return a list of segments sorted by segment.start time
+std::vector<OfflineSpeakerDiarizationSegment>
+OfflineSpeakerDiarizationResult::SortByStartTime() const {
+  auto ans = segments_;
+  std::sort(ans.begin(), ans.end(), [](const auto &a, const auto &b) {
+    return (a.Start() < b.Start()) ||
+           ((a.Start() == b.Start()) && (a.Speaker() < b.Speaker()));
+  });
+
+  return ans;
+}
+
+std::vector<std::vector<OfflineSpeakerDiarizationSegment>>
+OfflineSpeakerDiarizationResult::SortBySpeaker() const {
+  auto tmp = segments_;
+  std::sort(tmp.begin(), tmp.end(), [](const auto &a, const auto &b) {
+    return (a.Speaker() < b.Speaker()) ||
+           ((a.Speaker() == b.Speaker()) && (a.Start() < b.Start()));
+  });
+
+  std::vector<std::vector<OfflineSpeakerDiarizationSegment>> ans(NumSpeakers());
+  for (auto &s : tmp) {
+    ans[s.Speaker()].push_back(std::move(s));
+  }
+
+  return ans;
 }
 
 }  // namespace sherpa_onnx

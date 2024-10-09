@@ -18,7 +18,7 @@
 
 namespace sherpa_onnx {
 
-namespace {
+namespace {  // NOLINT
 
 // copied from https://github.com/k2-fsa/k2/blob/master/k2/csrc/host/util.h#L41
 template <class T>
@@ -62,6 +62,12 @@ class OfflineSpeakerDiarizationPyannoteImpl
         embedding_extractor_(config_.embedding),
         clustering_(config_.clustering) {
     Init();
+  }
+
+  int32_t SampleRate() const override {
+    const auto &meta_data = segmentation_model_.GetModelMetaData();
+
+    return meta_data.sample_rate;
   }
 
   OfflineSpeakerDiarizationResult Process(
