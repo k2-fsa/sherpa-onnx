@@ -34,10 +34,13 @@ struct OfflineSpeakerDiarizationConfig {
   OfflineSpeakerDiarizationConfig(
       const OfflineSpeakerSegmentationModelConfig &segmentation,
       const SpeakerEmbeddingExtractorConfig &embedding,
-      const FastClusteringConfig &clustering)
+      const FastClusteringConfig &clustering, float min_duration_on,
+      float min_duration_off)
       : segmentation(segmentation),
         embedding(embedding),
-        clustering(clustering) {}
+        clustering(clustering),
+        min_duration_on(min_duration_on),
+        min_duration_off(min_duration_off) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
