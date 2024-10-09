@@ -134,6 +134,12 @@ jobs:
           name: ${{ matrix.os }}-libs
           path: to-upload/
 
+      - name: Test non-streaming speaker diarization
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-speaker-diarization/
+          ./run.sh
+
       - name: Test speaker identification
         shell: bash
         run: |
