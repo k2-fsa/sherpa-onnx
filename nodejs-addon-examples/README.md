@@ -12,41 +12,32 @@ Note: [../nodejs-examples](../nodejs-examples) uses WebAssembly to wrap
 Before you continue, please first run
 
 ```bash
-npm install
+npm install # or pnpm install
 
 # For macOS x64
+## With npm
 export DYLD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-x64:$DYLD_LIBRARY_PATH
+## With pnpm
+export DYLD_LIBRARY_PATH=$PWD/node_modules/.pnpm/sherpa-onnx-node@<REPLACE-THIS-WITH-THE-INSTALLED-VERSION>/node_modules/sherpa-onnx-darwin-x64:$DYLD_LIBRARY_PATH
 
 # For macOS arm64
+## With npm
 export DYLD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRARY_PATH
+## With pnpm
+export DYLD_LIBRARY_PATH=$PWD/node_modules/.pnpm/sherpa-onnx-node@<REPLACE-THIS-WITH-THE-INSTALLED-VERSION>/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRARY_PATH
 
 # For Linux x64
+## With npm
 export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-x64:$LD_LIBRARY_PATH
+## With pnpm
+export LD_LIBRARY_PATH=$PWD/node_modules/.pnpm/sherpa-onnx-node@<REPLACE-THIS-WITH-THE-INSTALLED-VERSION>/node_modules/sherpa-onnx-linux-x64:$LD_LIBRARY_PATH
 
 # For Linux arm64, e.g., Raspberry Pi 4
+## With npm
 export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-arm64:$LD_LIBRARY_PATH
+## With pnpm
+export LD_LIBRARY_PATH=$PWD/node_modules/.pnpm/sherpa-onnx-node@<REPLACE-THIS-WITH-THE-INSTALLED-VERSION>/node_modules/sherpa-onnx-linux-arm64:$LD_LIBRARY_PATH
 ```
-
-For [pnpm](https://pnpm.io/) users, should add following section to `package.json`:
-
-```json
-{
-    // ...
-    "optionalDependencies": {
-        // ...
-        "sherpa-onnx-darwin-arm64": "^1.10.27",
-        "sherpa-onnx-darwin-x64": "^1.10.27",
-        "sherpa-onnx-linux-x64": "^1.10.27",
-        "sherpa-onnx-linux-arm64": "^1.10.27",
-        "sherpa-onnx-win-x64": "^1.10.27",
-        "sherpa-onnx-win-ia32": "^1.10.27",
-        // ...
-    },
-    //...
-}
-```
-
-You can replace the version to same as `sherpa-onnx-node` in `dependencies`.
 
 # Examples
 
