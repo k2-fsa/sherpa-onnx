@@ -21,18 +21,16 @@ std::string FastClusteringConfig::ToString() const {
 }
 
 void FastClusteringConfig::Register(ParseOptions *po) {
-  std::string prefix = "ctc";
-  ParseOptions p(prefix, po);
+  po->Register(
+      "num-clusters", &num_clusters,
+      "Number of cluster. If greater than 0, then cluster threshold is "
+      "ignored. Please provide it if you know the actual number of "
+      "clusters in advance.");
 
-  p.Register("num-clusters", &num_clusters,
-             "Number of cluster. If greater than 0, then --cluster-thresold is "
-             "ignored. Please provide it if you know the actual number of "
-             "clusters in advance.");
-
-  p.Register("cluster-threshold", &threshold,
-             "If --num-clusters is not specified, then it specifies the "
-             "distance threshold for clustering. smaller value -> more "
-             "clusters. larger value -> fewer clusters");
+  po->Register("cluster-threshold", &threshold,
+               "If num_clusters is not specified, then it specifies the "
+               "distance threshold for clustering. smaller value -> more "
+               "clusters. larger value -> fewer clusters");
 }
 
 bool FastClusteringConfig::Validate() const {

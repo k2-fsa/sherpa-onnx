@@ -9,14 +9,15 @@
 #include "sherpa-onnx/csrc/parse-options.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
-int32_t audioCallback(const float * /*samples*/, int32_t n, float progress) {
+static int32_t AudioCallback(const float * /*samples*/, int32_t n,
+                             float progress) {
   printf("sample=%d, progress=%f\n", n, progress);
   return 1;
 }
 
 int main(int32_t argc, char *argv[]) {
   const char *kUsageMessage = R"usage(
-Offline text-to-speech with sherpa-onnx
+Offline/Non-streaming text-to-speech with sherpa-onnx
 
 Usage example:
 
@@ -79,7 +80,7 @@ or details.
   sherpa_onnx::OfflineTts tts(config);
 
   const auto begin = std::chrono::steady_clock::now();
-  auto audio = tts.Generate(po.GetArg(1), sid, 1.0, audioCallback);
+  auto audio = tts.Generate(po.GetArg(1), sid, 1.0, AudioCallback);
   const auto end = std::chrono::steady_clock::now();
 
   if (audio.samples.empty()) {

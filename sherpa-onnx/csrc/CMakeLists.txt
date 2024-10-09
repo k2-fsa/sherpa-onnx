@@ -164,6 +164,12 @@ if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   list(APPEND sources
     fast-clustering-config.cc
     fast-clustering.cc
+    offline-speaker-diarization-impl.cc
+    offline-speaker-diarization-result.cc
+    offline-speaker-diarization.cc
+    offline-speaker-segmentation-model-config.cc
+    offline-speaker-segmentation-pyannote-model-config.cc
+    offline-speaker-segmentation-pyannote-model.cc
   )
 endif()
 
@@ -260,6 +266,10 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
   endif()
 
+  if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+    add_executable(sherpa-onnx-offline-speaker-diarization sherpa-onnx-offline-speaker-diarization.cc)
+  endif()
+
   set(main_exes
     sherpa-onnx
     sherpa-onnx-keyword-spotter
@@ -273,6 +283,12 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND main_exes
       sherpa-onnx-offline-tts
+    )
+  endif()
+
+  if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+    list(APPEND main_exes
+      sherpa-onnx-offline-speaker-diarization
     )
   endif()
 

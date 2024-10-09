@@ -36,7 +36,7 @@ static size_t ReadFile(const char *filename, const char **buffer_out) {
     fprintf(stderr, "Memory error\n");
     return -1;
   }
-  size_t read_bytes = fread(*buffer_out, 1, size, file);
+  size_t read_bytes = fread((void *)*buffer_out, 1, size, file);
   if (read_bytes != size) {
     printf("Errors occured in reading the file %s\n", filename);
     free((void *)*buffer_out);

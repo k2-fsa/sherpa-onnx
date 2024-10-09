@@ -17,6 +17,7 @@ on:
       - '.github/scripts/test-audio-tagging.sh'
       - '.github/scripts/test-offline-punctuation.sh'
       - '.github/scripts/test-online-punctuation.sh'
+      - '.github/scripts/test-speaker-diarization.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -34,6 +35,7 @@ on:
       - '.github/scripts/test-audio-tagging.sh'
       - '.github/scripts/test-offline-punctuation.sh'
       - '.github/scripts/test-online-punctuation.sh'
+      - '.github/scripts/test-speaker-diarization.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -86,6 +88,15 @@ jobs:
         with:
           name: release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}
           path: build/install/*
+
+      - name: Test offline speaker diarization
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-speaker-diarization.exe
+
+          .github/scripts/test-speaker-diarization.sh
 
       - name: Test online punctuation
         shell: bash

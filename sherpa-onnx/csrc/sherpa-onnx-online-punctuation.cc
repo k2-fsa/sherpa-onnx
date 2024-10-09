@@ -19,7 +19,7 @@ The input text can contain English words.
 Usage:
 
 Please download the model from:
-https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
+https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
 
 ./bin/Release/sherpa-onnx-online-punctuation \
   --cnn-bilstm=/path/to/model.onnx \

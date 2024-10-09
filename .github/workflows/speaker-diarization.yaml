@@ -67,7 +67,7 @@ jobs:
           curl -SL -O https://huggingface.co/csukuangfj/pyannote-models/resolve/main/segmentation-3.0/pytorch_model.bin
 
           test_wavs=(
-            0-two-speakers-zh.wav
+            0-four-speakers-zh.wav
             1-two-speakers-en.wav
             2-two-speakers-en.wav
             3-two-speakers-en.wav

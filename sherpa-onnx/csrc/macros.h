@@ -5,6 +5,7 @@
 #ifndef SHERPA_ONNX_CSRC_MACROS_H_
 #define SHERPA_ONNX_CSRC_MACROS_H_
 #include <stdio.h>
+#include <stdlib.h>
 
 #if __ANDROID_API__ >= 8
 #include "android/log.h"
@@ -168,5 +169,7 @@
       }                                                                 \
     }                                                                   \
   } while (0)
+
+#define SHERPA_ONNX_EXIT(code) exit(code)
 
 #endif  // SHERPA_ONNX_CSRC_MACROS_H_

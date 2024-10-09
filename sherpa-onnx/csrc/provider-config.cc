@@ -61,8 +61,10 @@ void TensorrtConfig::Register(ParseOptions *po) {
 
 bool TensorrtConfig::Validate() const {
   if (trt_max_workspace_size < 0) {
-    SHERPA_ONNX_LOGE("trt_max_workspace_size: %ld is not valid.",
-                     trt_max_workspace_size);
+    std::ostringstream os;
+    os << "trt_max_workspace_size: " << trt_max_workspace_size
+       << " is not valid.";
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
     return false;
   }
   if (trt_max_partition_iterations < 0) {

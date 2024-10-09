@@ -3,12 +3,9 @@
 Please download test wave files from
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-segmentation-models
 
-## 0-two-speakers-zh.wav
+## 0-four-speakers-zh.wav
 
-This file is from
-https://www.modelscope.cn/models/iic/speech_campplus_speaker-diarization_common/file/view/master?fileName=examples%252F2speakers_example.wav&status=0
-
-Note that we have renamed it from `2speakers_example.wav` to `0-two-speakers-zh.wav`.
+It is recorded by @csukuangfj
 
 ## 1-two-speakers-en.wav
 
@@ -40,5 +37,5 @@ commands to convert it to `3-two-speakers-en.wav`
 
 
 ```bash
-sox ML16091-Audio.mp3 3-two-speakers-en.wav
+sox ML16091-Audio.mp3 -r 16k 3-two-speakers-en.wav
 ```
