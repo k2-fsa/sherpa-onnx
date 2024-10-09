@@ -27,6 +27,27 @@ export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-x64:$LD_LIBRARY_PATH
 export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-arm64:$LD_LIBRARY_PATH
 ```
 
+For [pnpm](https://pnpm.io/) users, should add following section to `package.json`:
+
+```json
+{
+    // ...
+    "optionalDependencies": {
+        // ...
+        "sherpa-onnx-darwin-arm64": "^1.10.27",
+        "sherpa-onnx-darwin-x64": "^1.10.27",
+        "sherpa-onnx-linux-x64": "^1.10.27",
+        "sherpa-onnx-linux-arm64": "^1.10.27",
+        "sherpa-onnx-win-x64": "^1.10.27",
+        "sherpa-onnx-win-ia32": "^1.10.27",
+        // ...
+    },
+    //...
+}
+```
+
+You can replace the version to same as `sherpa-onnx-node` in `dependencies`.
+
 # Examples
 
 The following tables list the examples in this folder.
