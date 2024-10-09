@@ -72,6 +72,11 @@ func main() {
 
 	defer sherpa.DeleteOfflineSpeakerDiarization(sd)
 
+	if wave.SampleRate != sd.SampleRate() {
+		log.Printf("Expected sample rate: %v, given: %d\n", sd.SampleRate(), wave.SampleRate)
+		return
+	}
+
 	log.Println("Started")
 	segments := sd.Process(wave.Samples)
 	n := len(segments)
