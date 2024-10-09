@@ -28,6 +28,8 @@ class OfflineSpeakerDiarizationSegment {
   const std::string &Text() const { return text_; }
   float Duration() const { return end_ - start_; }
 
+  void SetText(const std::string &text) { text_ = text; }
+
   std::string ToString() const;
 
  private:

@@ -103,7 +103,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
     auto chunk_speaker_samples_list_pair = GetChunkSpeakerSampleIndexes(labels);
     Matrix2D embeddings =
         ComputeEmbeddings(audio, n, chunk_speaker_samples_list_pair.second,
-                          callback, callback_arg);
+                          std::move(callback), callback_arg);
 
     std::vector<int32_t> cluster_labels = clustering_.Cluster(
         &embeddings(0, 0), embeddings.rows(), embeddings.cols());

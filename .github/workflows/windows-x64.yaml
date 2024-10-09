@@ -93,7 +93,7 @@ jobs:
         shell: bash
         run: |
           du -h -d1 .
-          export PATH=$PWD/build/bin:$PATH
+          export PATH=$PWD/build/bin/Release:$PATH
           export EXE=sherpa-onnx-offline-speaker-diarization.exe
 
           .github/scripts/test-speaker-diarization.sh

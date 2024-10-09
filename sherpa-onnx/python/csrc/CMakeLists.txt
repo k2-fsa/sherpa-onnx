@@ -62,6 +62,8 @@ endif()
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   list(APPEND srcs
     fast-clustering.cc
+    offline-speaker-diarization-result.cc
+    offline-speaker-diarization.cc
   )
 endif()
 
