@@ -196,9 +196,17 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 It shows how to use the ASR and TTS Python APIs with FastAPI.
 </details>
 
-### [TMSpeech](https://github.com/jxlpzqc/TMSpeech)
+### [腾讯会议摸鱼工具 TMSpeech](https://github.com/jxlpzqc/TMSpeech)
 
 Uses streaming ASR in C# with graphical user interface.
+
+Video demo in Chinese: [【开源】Windows实时字幕软件（网课/开会必备）](https://www.bilibili.com/video/BV1rX4y1p7Nx)
+
+### [lol互动助手](https://github.com/l1veIn/lol-wom-electron)
+
+It uses the JavaScript API of sherpa-onnx along with [Electron](https://electronjs.org/)
+
+Video demo in Chinese: [爆了！炫神教你开打字挂！真正影响胜率的英雄联盟工具！英雄联盟的最后一块拼图！和游戏中的每个人无障碍沟通！](https://www.bilibili.com/video/BV142tje9E74)
 
 
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
