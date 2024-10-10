@@ -68,6 +68,7 @@ void PybindOfflineSpeakerDiarization(py::module *m) {
       .def(py::init<const OfflineSpeakerDiarizationConfig &>(),
            py::arg("config"))
       .def_property_readonly("sample_rate", &PyClass::SampleRate)
+      .def("set_config", &PyClass::SetConfig, py::arg("config"))
       .def(
           "process",
           [](const PyClass &self, const std::vector<float> samples,

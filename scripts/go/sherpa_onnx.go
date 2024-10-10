@@ -1276,6 +1276,16 @@ func (sd *OfflineSpeakerDiarization) SampleRate() int {
 	return int(C.SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(sd.impl))
 }
 
+// only config.Clustering is used. All other fields are ignored
+func (sd *OfflineSpeakerDiarization) SetConfig(config *OfflineSpeakerDiarizationConfig) {
+	c := C.struct_SherpaOnnxOfflineSpeakerDiarizationConfig{}
+
+	c.clustering.num_clusters = C.int(config.Clustering.NumClusters)
+	c.clustering.threshold = C.float(config.Clustering.Threshold)
+
+	SherpaOnnxOfflineSpeakerDiarizationSetConfig(sd.impl, &c)
+}
+
 type OfflineSpeakerDiarizationSegment struct {
 	Start   float32
 	End     float32

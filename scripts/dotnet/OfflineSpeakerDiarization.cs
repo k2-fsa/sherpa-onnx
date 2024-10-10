@@ -16,6 +16,11 @@ namespace SherpaOnnx
             _handle = new HandleRef(this, h);
         }
 
+        public void SetConfig(OfflineSpeakerDiarizationConfig config)
+        {
+            SherpaOnnxOfflineSpeakerDiarizationSetConfig(_handle.Handle, ref config);
+        }
+
         public OfflineSpeakerDiarizationSegment[] Process(float[] samples)
         {
             IntPtr result = SherpaOnnxOfflineSpeakerDiarizationProcess(_handle.Handle, samples, samples.Length);
@@ -117,6 +122,9 @@ namespace SherpaOnnx
 
         [DllImport(Dll.Filename)]
         private static extern void SherpaOnnxOfflineSpeakerDiarizationDestroySegment(IntPtr handle);
+
+        [DllImport(Dll.Filename)]
+        private static extern void SherpaOnnxOfflineSpeakerDiarizationSetConfig(IntPtr handle, ref OfflineSpeakerDiarizationConfig config);
     }
 }
 

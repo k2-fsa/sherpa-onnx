@@ -25,6 +25,11 @@ class OfflineSpeakerDiarization {
   process(samples) {
     return addon.offlineSpeakerDiarizationProcess(this.handle, samples);
   }
+
+  setConfig(config) {
+    addon.offlineSpeakerDiarizationSetConfig(config);
+    this.config.clustering = config.clustering;
+  }
 }
 
 module.exports = {

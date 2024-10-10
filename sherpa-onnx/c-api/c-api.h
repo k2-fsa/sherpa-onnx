@@ -1449,6 +1449,11 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineSpeakerDiarization(
 SHERPA_ONNX_API int32_t SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(
     const SherpaOnnxOfflineSpeakerDiarization *sd);
 
+// Only config->clustering is used. All other fields are ignored
+SHERPA_ONNX_API void SherpaOnnxOfflineSpeakerDiarizationSetConfig(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineSpeakerDiarizationConfig *config);
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeakerDiarizationResult
     SherpaOnnxOfflineSpeakerDiarizationResult;
 

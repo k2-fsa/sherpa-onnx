@@ -173,6 +173,7 @@ We also have spaces built using WebAssembly. They are listed below:
 | Speaker identification (Speaker ID)         | [Address][sid-models]                                                                 |
 | Spoken language identification (Language ID)| See multi-lingual [Whisper][Whisper] ASR models from  [Speech recognition][asr-models]|
 | Punctuation                                 | [Address][punct-models]                                                               |
+| Speaker segmentation                        | [Address][speaker-segmentation-models]                                                |
 
 ### Useful links
 
@@ -303,5 +304,6 @@ Video demo in Chinese: [爆了！炫神教你开打字挂！真正影响胜率�
 [sid-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
 [slid-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
 [punct-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/punctuation-models
+[speaker-segmentation-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-segmentation-models
 [GigaSpeech]: https://github.com/SpeechColab/GigaSpeech
 [WenetSpeech]: https://github.com/wenet-e2e/WenetSpeech

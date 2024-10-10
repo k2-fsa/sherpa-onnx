@@ -251,6 +251,46 @@ static Napi::Array OfflineSpeakerDiarizationProcessWrapper(
   return ans;
 }
 
+static void OfflineSpeakerDiarizationSetConfigWrapper(
+    const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(
+        env, "Argument 0 should be an offline speaker diarization pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  const SherpaOnnxOfflineSpeakerDiarization *sd =
+      info[0].As<Napi::External<SherpaOnnxOfflineSpeakerDiarization>>().Data();
+
+  if (!info[1].IsObject()) {
+    Napi::TypeError::New(env, "Expect an object as the argument")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  Napi::Object o = info[0].As<Napi::Object>();
+
+  SherpaOnnxOfflineSpeakerDiarizationConfig c;
+  memset(&c, 0, sizeof(c));
+
+  c.clustering = GetFastClusteringConfig(o);
+  SherpaOnnxOfflineSpeakerDiarizationSetConfig(sd, &c);
+}
+
 void InitNonStreamingSpeakerDiarization(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "createOfflineSpeakerDiarization"),
               Napi::Function::New(env, CreateOfflineSpeakerDiarizationWrapper));
@@ -262,4 +302,8 @@ void InitNonStreamingSpeakerDiarization(Napi::Env env, Napi::Object exports) {
   exports.Set(
       Napi::String::New(env, "offlineSpeakerDiarizationProcess"),
       Napi::Function::New(env, OfflineSpeakerDiarizationProcessWrapper));
+
+  exports.Set(
+      Napi::String::New(env, "offlineSpeakerDiarizationSetConfig"),
+      Napi::Function::New(env, OfflineSpeakerDiarizationSetConfigWrapper));
 }

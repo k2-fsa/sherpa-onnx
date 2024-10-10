@@ -79,6 +79,11 @@ int32_t OfflineSpeakerDiarization::SampleRate() const {
   return impl_->SampleRate();
 }
 
+void OfflineSpeakerDiarization::SetConfig(
+    const OfflineSpeakerDiarizationConfig &config) {
+  impl_->SetConfig(config);
+}
+
 OfflineSpeakerDiarizationResult OfflineSpeakerDiarization::Process(
     const float *audio, int32_t n,
     OfflineSpeakerDiarizationProgressCallback callback /*= nullptr*/,

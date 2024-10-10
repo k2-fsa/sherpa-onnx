@@ -60,7 +60,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
       : config_(config),
         segmentation_model_(config_.segmentation),
         embedding_extractor_(config_.embedding),
-        clustering_(config_.clustering) {
+        clustering_(std::make_unique<FastClustering>(config_.clustering)) {
     Init();
   }
 
@@ -68,6 +68,15 @@ class OfflineSpeakerDiarizationPyannoteImpl
     const auto &meta_data = segmentation_model_.GetModelMetaData();
 
     return meta_data.sample_rate;
+  }
+
+  void SetConfig(const OfflineSpeakerDiarizationConfig &config) override {
+    if (!config.clustering.Validate()) {
+      SHERPA_ONNX_LOGE("Invalid clustering config. Skip it");
+      return;
+    }
+    clustering_ = std::make_unique<FastClustering>(config.clustering);
+    config_.clustering = config.clustering;
   }
 
   OfflineSpeakerDiarizationResult Process(
@@ -105,7 +114,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
         ComputeEmbeddings(audio, n, chunk_speaker_samples_list_pair.second,
                           std::move(callback), callback_arg);
 
-    std::vector<int32_t> cluster_labels = clustering_.Cluster(
+    std::vector<int32_t> cluster_labels = clustering_->Cluster(
         &embeddings(0, 0), embeddings.rows(), embeddings.cols());
 
     int32_t max_cluster_index =
@@ -636,7 +645,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
   OfflineSpeakerDiarizationConfig config_;
   OfflineSpeakerSegmentationPyannoteModel segmentation_model_;
   SpeakerEmbeddingExtractor embedding_extractor_;
-  FastClustering clustering_;
+  std::unique_ptr<FastClustering> clustering_;
   Matrix2DInt32 powerset_mapping_;
 };
 
