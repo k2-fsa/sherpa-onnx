@@ -31,6 +31,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "keyword-spotting-from-micro
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TTS", "TTS\TTS.csproj", "{DACE4A18-4FC8-4437-92BF-5A90BA81286C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-speaker-diarization", "offline-speaker-diarization\offline-speaker-diarization.csproj", "{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -93,6 +95,10 @@ Global
 		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
