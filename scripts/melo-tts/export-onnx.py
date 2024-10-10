@@ -222,7 +222,7 @@ class ModelWrapper(torch.nn.Module):
 def main():
     generate_lexicon()
 
-    language = "ZH"
+    language = "JP"
     model = TTS(language=language, device="cpu")
 
     generate_tokens(model.hps["symbols"])
