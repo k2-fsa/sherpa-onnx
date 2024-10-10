@@ -1,20 +1,21 @@
-name: wasm-simd-hf-space-zh-cantonese-en-asr-paraformer
+name: wasm-simd-hf-space-speaker-diarization
 
 on:
   push:
     branches:
       - wasm
+      - wasm-speaker-diarization
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
   workflow_dispatch:
 
 concurrency:
-  group: wasm-simd-hf-space-zh-cantonese-en-asr-paraformer-${{ github.ref }}
+  group: wasm-simd-hf-space-speaker-diarization-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  wasm-simd-hf-space-zh-cantonese-en-asr-paraformer:
+  wasm-simd-hf-space-speaker-diarization:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -42,48 +43,42 @@ jobs:
       - name: Download model files
         shell: bash
         run: |
-          cd wasm/asr/assets
+          cd wasm/speaker-diarization/assets/
           ls -lh
           echo "----------"
 
-          wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en.tar.bz2
-          tar xvf sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en.tar.bz2
-          rm sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en.tar.bz2
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+          tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+          rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+          mv sherpa-onnx-pyannote-segmentation-3-0/model.onnx ./segmentation.onnx
+          rm -rf sherpa-onnx-pyannote-segmentation-3-0
 
-          mv sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en/encoder.int8.onnx encoder.onnx
-          mv sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en/decoder.int8.onnx decoder.onnx
-          mv sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en/tokens.txt ./
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+          mv 3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx ./embedding.onnx
 
-          rm -rf sherpa-onnx-streaming-paraformer-trilingual-zh-cantonese-en
+          echo "----------"
 
           ls -lh
 
-          cd ../
-
-          sed -i.bak s/"type = 0"/"type = 1"/g ./sherpa-onnx-asr.js
-          sed -i.bak s/Zipformer/Paraformer/g ./index.html
-
-          git diff
-
-      - name: Build sherpa-onnx for WebAssembly (ASR)
+      - name: Build sherpa-onnx for WebAssembly
         shell: bash
         run: |
-          ./build-wasm-simd-asr.sh
+          ./build-wasm-simd-speaker-diarization.sh
 
       - name: collect files
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-zh-cantonese-en-asr-paraformer
-          mv build-wasm-simd-asr/install/bin/wasm/asr $dst
+          dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-speaker-diarization
+          mv build-wasm-simd-speaker-diarization/install/bin/wasm/speaker-diarization $dst
           ls -lh $dst
-          tar cjfv ${dst}.tar.bz2 ./${dst}
+          tar cjfv $dst.tar.bz2 ./$dst
 
       - name: Upload wasm files
         uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-wasm-simd-zh-cantonese-en-asr-paraformer
+          name: sherpa-onnx-wasm-simd-speaker-diarization
           path: ./sherpa-onnx-wasm-simd-*.tar.bz2
 
       - name: Release
@@ -93,6 +88,44 @@ jobs:
           file_glob: true
           overwrite: true
           file: ./*.tar.bz2
+
+      - name: Publish to ModelScope
+        # if: false
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf ms
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://www.modelscope.cn/studios/csukuangfj/web-assembly-speaker-diarization-sherpa-onnx.git ms
+            cd ms
+            rm -fv *.js
+            rm -fv *.data
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-*/* .
+
+            git status
+            git lfs track "*.data"
+            git lfs track "*.wasm"
+            ls -lh
+
+            git add .
+            git commit -m "update model"
+            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/csukuangfj/web-assembly-speaker-diarization-sherpa-onnx.git
 
       - name: Publish to huggingface
         env:
@@ -112,7 +145,9 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-speaker-diarization-sherpa-onnx huggingface
+            ls -lh
+
             cd huggingface
             rm -fv *.js
             rm -fv *.data
@@ -129,44 +164,4 @@ jobs:
 
             git add .
             git commit -m "update model"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer main
-
-      - name: Publish to ModelScope
-        # if: false
-        env:
-          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
-        uses: nick-fields/retry@v2
-        with:
-          max_attempts: 10
-          timeout_seconds: 600
-          shell: bash
-          command: |
-            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
-
-            git config --global user.email "csukuangfj@gmail.com"
-            git config --global user.name "Fangjun Kuang"
-
-            rm -rf ms
-            export GIT_LFS_SKIP_SMUDGE=1
-            export GIT_CLONE_PROTECTION_ACTIVE=false
-
-            git clone https://www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer.git ms
-            cd ms
-            rm -fv *.js
-            rm -fv *.data
-            git config lfs.locksverify true
-            git fetch
-            git pull
-            git merge -m "merge remote" --ff origin main
-
-            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-*/* .
-
-            git status
-            git lfs track "*.data"
-            git lfs track "*.wasm"
-            ls -lh
-
-            git add .
-            git commit -m "update model"
-            git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/k2-fsa/web-assembly-asr-sherpa-onnx-zh-cantonese-en-paraformer.git
-
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/web-assembly-speaker-diarization-sherpa-onnx main
