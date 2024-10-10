@@ -20,6 +20,10 @@ class OfflineSpeakerDiarizationImpl {
 
   virtual int32_t SampleRate() const = 0;
 
+  // Note: Only config.clustering is used. All other fields in config are
+  // ignored
+  virtual void SetConfig(const OfflineSpeakerDiarizationConfig &config) = 0;
+
   virtual OfflineSpeakerDiarizationResult Process(
       const float *audio, int32_t n,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,

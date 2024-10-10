@@ -1,0 +1,48 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width" />
+  <title>Next-gen Kaldi WebAssembly with sherpa-onnx for Speaker Diarization</title>
+  <style>
+    h1,div {
+      text-align: center;
+    }
+    textarea {
+      width:100%;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>
+    Next-gen Kaldi + WebAssembly<br/>
+    Speaker Diarization <br> with <a href="https://github.com/k2-fsa/sherpa-onnx">sherpa-onnx</a>
+  </h1>
+  <div>
+    <span id="hint">Loading model ... ...</span>
+    <br/>
+    <br/>
+    <label for="avatar">Choose a wav file:</label>
+    <input type="file" id="file" accept=".wav" onchange="onFileChange()" disabled></input>
+    <br/>
+    <br/>
+    <label for="numClusters" id="numClustersID">Number of speakers: </label>
+    <input type="text" id="numClustersInputID" name="numClusters" value="-1" />
+    <br/>
+    <br/>
+    <label for="clusteringThreshold" id="thresholdID">Clustering threshold: </label>
+    <input type="text" id="thresholdInputID" name="clusteringThreshold" value="0.5" />
+    <br/>
+    <br/>
+
+    <textarea id="text" rows="10" placeholder="If you know the actual number of speakers in the input wave file, please provide it via Number of speakers. Otherwise, please leave Number of speakers to -1 and provide Clustering threshold instead. A larger threshold leads to fewer clusters, i.e., fewer speakers; a smaller threshold leads to more clusters, i.e., more speakers."></textarea>
+    <br/>
+    <br/>
+    <button id="startBtn" disabled>Start</button>
+  </div>
+
+  <script src="app-speaker-diarization.js"></script>
+  <script src="sherpa-onnx-speaker-diarization.js"></script>
+  <script src="sherpa-onnx-wasm-main-speaker-diarization.js"></script>
+</body>

@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 # Copyright (c)  2024  Xiaomi Corporation
 #
-# This script is to build sherpa-onnx for WebAssembly (NodeJS)
-#
-# Please use NodeJS >= 18
+# This script is to build sherpa-onnx for WebAssembly (speaker diarization)
 
 set -ex
 
@@ -33,8 +31,8 @@ if [ ! -f $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ]; then
   exit 1
 fi
 
-mkdir -p build-wasm-simd-nodejs
-pushd build-wasm-simd-nodejs
+mkdir -p build-wasm-simd-speaker-diarization
+pushd build-wasm-simd-speaker-diarization
 
 export SHERPA_ONNX_IS_USING_BUILD_WASM_SH=ON
 
@@ -53,11 +51,11 @@ cmake \
   -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
   -DSHERPA_ONNX_ENABLE_GPU=OFF \
   -DSHERPA_ONNX_ENABLE_WASM=ON \
-  -DSHERPA_ONNX_ENABLE_WASM_NODEJS=ON \
+  -DSHERPA_ONNX_ENABLE_WASM_SPEAKER_DIARIZATION=ON \
   -DSHERPA_ONNX_ENABLE_BINARY=OFF \
   -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
   ..
-make -j3
+make -j2
 make install
 
-ls -lh install/bin/wasm/nodejs
+ls -lh install/bin/wasm/speaker-diarization

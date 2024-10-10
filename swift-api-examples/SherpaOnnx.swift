@@ -1161,6 +1161,11 @@ class SherpaOnnxOfflineSpeakerDiarizationWrapper {
     return Int(SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(impl))
   }
 
+  // only config.clustering is used. All other fields are ignored
+  func setConfig(config: UnsafePointer<SherpaOnnxOfflineSpeakerDiarizationConfig>!) {
+    SherpaOnnxOfflineSpeakerDiarizationSetConfig(impl, config)
+  }
+
   func process(samples: [Float]) -> [SherpaOnnxOfflineSpeakerDiarizationSegmentWrapper] {
     let result = SherpaOnnxOfflineSpeakerDiarizationProcess(
       impl, samples, Int32(samples.count))

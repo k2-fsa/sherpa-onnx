@@ -116,6 +116,7 @@ We also have spaces built using WebAssembly. They are listed below:
 |VAD + speech recognition (English + Chinese, 及多种中文方言) with Paraformer-small          |[Click me][wasm-hf-vad-asr-zh-en-paraformer-small]| [地址][wasm-ms-vad-asr-zh-en-paraformer-small]|
 |Speech synthesis (English)                                                                  |[Click me][wasm-hf-tts-piper-en]| [地址][wasm-ms-tts-piper-en]|
 |Speech synthesis (German)                                                                   |[Click me][wasm-hf-tts-piper-de]| [地址][wasm-ms-tts-piper-de]|
+|Speaker diarization                                                                         |[Click me][wasm-hf-speaker-diarization]|[地址][wasm-ms-speaker-diarization]|
 
 ### Links for pre-built Android APKs
 
@@ -173,6 +174,7 @@ We also have spaces built using WebAssembly. They are listed below:
 | Speaker identification (Speaker ID)         | [Address][sid-models]                                                                 |
 | Spoken language identification (Language ID)| See multi-lingual [Whisper][Whisper] ASR models from  [Speech recognition][asr-models]|
 | Punctuation                                 | [Address][punct-models]                                                               |
+| Speaker segmentation                        | [Address][speaker-segmentation-models]                                                |
 
 ### Useful links
 
@@ -261,6 +263,8 @@ Video demo in Chinese: [爆了！炫神教你开打字挂！真正影响胜率�
 [wasm-ms-tts-piper-en]: https://modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-en
 [wasm-hf-tts-piper-de]: https://huggingface.co/spaces/k2-fsa/web-assembly-tts-sherpa-onnx-de
 [wasm-ms-tts-piper-de]: https://modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-de
+[wasm-hf-speaker-diarization]: https://huggingface.co/spaces/k2-fsa/web-assembly-speaker-diarization-sherpa-onnx
+[wasm-ms-speaker-diarization]: https://www.modelscope.cn/studios/csukuangfj/web-assembly-speaker-diarization-sherpa-onnx
 [apk-streaming-asr]: https://k2-fsa.github.io/sherpa/onnx/android/apk.html
 [apk-streaming-asr-cn]: https://k2-fsa.github.io/sherpa/onnx/android/apk-cn.html
 [apk-tts]: https://k2-fsa.github.io/sherpa/onnx/tts/apk-engine.html
@@ -303,5 +307,6 @@ Video demo in Chinese: [爆了！炫神教你开打字挂！真正影响胜率�
 [sid-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
 [slid-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
 [punct-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/punctuation-models
+[speaker-segmentation-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-segmentation-models
 [GigaSpeech]: https://github.com/SpeechColab/GigaSpeech
 [WenetSpeech]: https://github.com/wenet-e2e/WenetSpeech

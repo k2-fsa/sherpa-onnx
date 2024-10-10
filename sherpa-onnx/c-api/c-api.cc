@@ -1749,6 +1749,20 @@ int32_t SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(
   return sd->impl->SampleRate();
 }
 
+void SherpaOnnxOfflineSpeakerDiarizationSetConfig(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineSpeakerDiarizationConfig *config) {
+  sherpa_onnx::OfflineSpeakerDiarizationConfig sd_config;
+
+  sd_config.clustering.num_clusters =
+      SHERPA_ONNX_OR(config->clustering.num_clusters, -1);
+
+  sd_config.clustering.threshold =
+      SHERPA_ONNX_OR(config->clustering.threshold, 0.5);
+
+  sd->impl->SetConfig(sd_config);
+}
+
 int32_t SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers(
     const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
   return r->impl.NumSpeakers();

@@ -18,6 +18,10 @@ if(SHERPA_ONNX_ENABLE_WASM_VAD_ASR)
   add_subdirectory(vad-asr)
 endif()
 
+if(SHERPA_ONNX_ENABLE_WASM_SPEAKER_DIARIZATION)
+  add_subdirectory(speaker-diarization)
+endif()
+
 if(SHERPA_ONNX_ENABLE_WASM_NODEJS)
   add_subdirectory(nodejs)
 endif()

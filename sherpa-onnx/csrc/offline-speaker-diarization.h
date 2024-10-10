@@ -62,6 +62,10 @@ class OfflineSpeakerDiarization {
   // Expected sample rate of the input audio samples
   int32_t SampleRate() const;
 
+  // Note: Only config.clustering is used. All other fields in config are
+  // ignored
+  void SetConfig(const OfflineSpeakerDiarizationConfig &config);
+
   OfflineSpeakerDiarizationResult Process(
       const float *audio, int32_t n,
       OfflineSpeakerDiarizationProgressCallback callback = nullptr,
