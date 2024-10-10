@@ -1,4 +1,4 @@
-/// Copyright (c)  2024.5 by 东风破
+/// Copyright (c)  2024  Xiaomi Corporation
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -19,7 +19,17 @@ namespace SherpaOnnx
         public OfflineSpeakerDiarizationSegment[] Process(float[] samples)
         {
             IntPtr result = SherpaOnnxOfflineSpeakerDiarizationProcess(_handle.Handle, samples, samples.Length);
+            return ProcessImpl(result);
+        }
 
+        public OfflineSpeakerDiarizationSegment[] ProcessWithCallback(float[] samples, OfflineSpeakerDiarizationProgressCallback callback, IntPtr arg)
+        {
+            IntPtr result = SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(_handle.Handle, samples, samples.Length, callback, arg);
+            return ProcessImpl(result);
+        }
+
+        private OfflineSpeakerDiarizationSegment[] ProcessImpl(IntPtr result)
+        {
             if (result == IntPtr.Zero)
             {
               return new OfflineSpeakerDiarizationSegment[] {};
@@ -47,6 +57,7 @@ namespace SherpaOnnx
             SherpaOnnxOfflineSpeakerDiarizationDestroyResult(result);
 
             return ans;
+
         }
 
         public void Dispose()
@@ -94,6 +105,9 @@ namespace SherpaOnnx
 
         [DllImport(Dll.Filename)]
         private static extern IntPtr SherpaOnnxOfflineSpeakerDiarizationProcess(IntPtr handle, float[] samples, int n);
+
+        [DllImport(Dll.Filename, CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(IntPtr handle, float[] samples, int n, OfflineSpeakerDiarizationProgressCallback callback, IntPtr arg);
 
         [DllImport(Dll.Filename)]
         private static extern void SherpaOnnxOfflineSpeakerDiarizationDestroyResult(IntPtr handle);

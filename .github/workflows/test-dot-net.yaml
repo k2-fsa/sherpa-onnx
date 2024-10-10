@@ -47,53 +47,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Free space
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          df -h
-          rm -rf /opt/hostedtoolcache
-          df -h
-
-      - name: Free more space
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          # https://github.com/orgs/community/discussions/25678
-          cd /opt
-          find . -maxdepth 1 -mindepth 1 '!' -path ./containerd '!' -path ./actionarchivecache '!' -path ./runner '!' -path ./runner-cache -exec rm -rf '{}' ';'
-
-          sudo rm -rf /usr/share/dotnet
-          sudo rm -rf "/usr/local/share/boost"
-          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
-
-      - name: Free Disk Space (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        uses: jlumbroso/free-disk-space@main
-        with:
-          # this might remove tools that are actually needed,
-          # if set to "true" but frees about 6 GB
-          tool-cache: false
-
-          # all of these default to true, but feel free to set to
-          # "false" if necessary for your workflow
-          android: true
-          dotnet: false
-          haskell: true
-          large-packages: true
-          docker-images: false
-          swap-storage: true
-
-      - name: Check space
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          df -h
-
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-release-shared
+          key: ${{ matrix.os }}-dotnet-release-shared
 
       - name: Build sherpa-onnx
         shell: bash
@@ -110,10 +67,15 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DBUILD_ESPEAK_NG_EXE=OFF \
-            -DSHERPA_ONNX_ENABLE_BINARY=ON \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             ..
 
           cmake --build . --target install --config Release
+
+          rm -rf install/share
+          rm -rf install/lib/pkg*
+
+          ls -lh ./install/lib
 
       - uses: actions/upload-artifact@v4
         with:
@@ -148,7 +110,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ubuntu-latest
-          path: /tmp/linux
+          path: /tmp/linux-x64
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -162,17 +124,21 @@ jobs:
       - name: Display files
         shell: bash
         run: |
-          echo "----------/tmp/----------"
-          ls -lh /tmp/
+          echo "----------/tmp----------"
+          ls -lh /tmp
 
-          echo "----------/tmp/linux----------"
-          ls -lh /tmp/linux
+          echo "----------/tmp/linux-x64----------"
+          ls -lh /tmp/linux-x64
+          df -h
 
       - name: Build
         shell: bash
         run: |
           cd scripts/dotnet
           ./run.sh
+          df -h
+
+          ls -lh /tmp/packages
 
       - name: Copy files
         shell: bash
@@ -181,9 +147,14 @@ jobs:
 
           ls -lh /tmp
 
+          df -h
+
       - name: Run tests
         shell: bash
         run: |
+          dotnet nuget locals all --clear
+          df -h
+
           .github/scripts/test-dot-net.sh
 
       - uses: actions/upload-artifact@v4

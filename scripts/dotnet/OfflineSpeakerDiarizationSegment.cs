@@ -1,4 +1,4 @@
-/// Copyright (c)  2024  Xiaomi Corporation (authors: Fangjun Kuang)
+/// Copyright (c)  2024  Xiaomi Corporation
 using System;
 using System.Runtime.InteropServices;
 using System.Text;
