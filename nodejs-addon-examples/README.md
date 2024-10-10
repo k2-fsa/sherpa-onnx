@@ -43,6 +43,12 @@ export LD_LIBRARY_PATH=$PWD/node_modules/.pnpm/sherpa-onnx-node@<REPLACE-THIS-WI
 
 The following tables list the examples in this folder.
 
+## Speaker diarization
+
+|File| Description|
+|---|---|
+|[./test_offline_speaker_diarization.js](./test_offline_speaker_diarization.js)| It demonstrates how to use sherpa-onnx JavaScript API for speaker diarization. It supports speaker segmentation models from [pyannote-audio](https://github.com/pyannote/pyannote-audio)|
+
 ## Add punctuations to text
 
 |File| Description|
@@ -129,6 +135,21 @@ The following tables list the examples in this folder.
 |[./test_tts_non_streaming_vits_zh_ll.js](./test_tts_non_streaming_vits_zh_ll.js)| Text-to-speech with a Chinese model using [cppjieba](https://github.com/yanyiwu/cppjieba)|
 |[./test_tts_non_streaming_vits_zh_aishell3.js](./test_tts_non_streaming_vits_zh_aishell3.js)| Text-to-speech with a Chinese TTS model|
 
+
+### Speaker diarization
+
+```bash
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
+
+node ./test_offline_speaker_diarization.js
+```
 
 ### Voice Activity detection (VAD)
 

@@ -10,6 +10,20 @@ arch=$(node -p "require('os').arch()")
 platform=$(node -p "require('os').platform()")
 node_version=$(node -p "process.versions.node.split('.')[0]")
 
+echo "----------non-streaming speaker diarization----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
+
+node ./test_offline_speaker_diarization.js
+
+rm -rfv *.onnx *.wav sherpa-onnx-pyannote-*
+
 echo "----------non-streaming asr + vad----------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
 tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
