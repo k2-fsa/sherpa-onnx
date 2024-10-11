@@ -22,6 +22,22 @@ In the following, we describe how to use [sherpa-onnx](https://github.com/k2-fsa
 for text-to-speech and speech-to-text.
 
 
+# Speaker diarization
+
+In the following, we demonstrate how to run speaker diarization.
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
+
+node ./test-offline-speaker-diarization.js
+```
+
 # Text-to-speech
 
 In the following, we demonstrate how to run text-to-speech.
