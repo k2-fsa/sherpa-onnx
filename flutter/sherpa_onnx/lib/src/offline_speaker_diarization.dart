@@ -1,5 +1,4 @@
 // Copyright (c)  2024  Xiaomi Corporation
-import 'dart:convert';
 import 'dart:ffi';
 import 'dart:typed_data';
 
@@ -7,7 +6,6 @@ import 'package:ffi/ffi.dart';
 
 import './sherpa_onnx_bindings.dart';
 import './speaker_identification.dart';
-import './utils.dart';
 
 class OfflineSpeakerDiarizationSegment {
   const OfflineSpeakerDiarizationSegment({
@@ -226,7 +224,7 @@ class OfflineSpeakerDiarization {
 
     final ans = <OfflineSpeakerDiarizationSegment>[];
     for (int i = 0; i != numSegments; ++i) {
-      final s = segments.elementAt(i);
+      final s = segments + i;
 
       final tmp = OfflineSpeakerDiarizationSegment(
           start: s.ref.start, end: s.ref.end, speaker: s.ref.speaker);
