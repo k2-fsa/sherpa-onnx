@@ -58,7 +58,7 @@ class OfflineSpeakerDiarizationResult {
   std::vector<std::vector<OfflineSpeakerDiarizationSegment>> SortBySpeaker()
       const;
 
- public:
+ private:
   std::vector<OfflineSpeakerDiarizationSegment> segments_;
 };
 
