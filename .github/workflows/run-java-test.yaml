@@ -107,6 +107,13 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run java test (speaker diarization)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-offline-speaker-diarization.sh
+          rm -rfv *.onnx *.wav sherpa-onnx-pyannote-*
+
       - name:  Run java test (kws)
         shell: bash
         run: |

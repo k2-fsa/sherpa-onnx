@@ -4,6 +4,12 @@ This directory contains examples for the JAVA API of sherpa-onnx.
 
 # Usage
 
+## Non-streaming speaker diarization
+
+```bash
+./run-offline-speaker-diarization.sh
+```
+
 ## Streaming Speech recognition
 
 ```
