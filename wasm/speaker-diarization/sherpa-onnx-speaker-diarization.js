@@ -64,7 +64,7 @@ function initSherpaOnnxOfflineSpeakerSegmentationModelConfig(config, Module) {
   Module.setValue(ptr + offset, config.numThreads || 1, 'i32');
   offset += 4;
 
-  Module.setValue(ptr + offset, config.debug || 1, 'i32');
+  Module.setValue(ptr + offset, config.debug || 0, 'i32');
   offset += 4;
 
   const providerLen = Module.lengthBytesUTF8(config.provider || 'cpu') + 1;
@@ -103,7 +103,7 @@ function initSherpaOnnxSpeakerEmbeddingExtractorConfig(config, Module) {
   Module.setValue(ptr + offset, config.numThreads || 1, 'i32');
   offset += 4;
 
-  Module.setValue(ptr + offset, config.debug || 1, 'i32');
+  Module.setValue(ptr + offset, config.debug || 0, 'i32');
   offset += 4;
 
   Module.setValue(ptr + offset, buffer + modelLen, 'i8*');
@@ -270,11 +270,15 @@ class OfflineSpeakerDiarization {
 }
 
 function createOfflineSpeakerDiarization(Module, myConfig) {
-  const config = {
+  let config = {
     segmentation: {
       pyannote: {model: './segmentation.onnx'},
+      debug: 1,
     },
-    embedding: {model: './embedding.onnx'},
+    embedding: {
+      model: './embedding.onnx',
+      debug: 1,
+    },
     clustering: {numClusters: -1, threshold: 0.5},
     minDurationOn: 0.3,
     minDurationOff: 0.5,

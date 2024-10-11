@@ -7,6 +7,8 @@ const sherpa_onnx_tts = require('./sherpa-onnx-tts.js');
 const sherpa_onnx_kws = require('./sherpa-onnx-kws.js');
 const sherpa_onnx_wave = require('./sherpa-onnx-wave.js');
 const sherpa_onnx_vad = require('./sherpa-onnx-vad.js');
+const sherpa_onnx_speaker_diarization =
+    require('./sherpa-onnx-speaker-diarization.js');
 
 function createOnlineRecognizer(config) {
   return sherpa_onnx_asr.createOnlineRecognizer(wasmModule, config);
@@ -32,6 +34,11 @@ function createVad(config) {
   return sherpa_onnx_vad.createVad(wasmModule, config);
 }
 
+function createOfflineSpeakerDiarization(config) {
+  return sherpa_onnx_speaker_diarization.createOfflineSpeakerDiarization(
+      wasmModule, config);
+}
+
 function readWave(filename) {
   return sherpa_onnx_wave.readWave(filename, wasmModule);
 }
@@ -51,4 +58,5 @@ module.exports = {
   writeWave,
   createCircularBuffer,
   createVad,
+  createOfflineSpeakerDiarization,
 };
