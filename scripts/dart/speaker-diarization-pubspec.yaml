@@ -8,9 +8,8 @@ environment:
   sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
-  sherpa_onnx: ^1.10.27
-  # sherpa_onnx:
-  #   path: ../../flutter/sherpa_onnx
+  sherpa_onnx:
+    path: ../../flutter/sherpa_onnx
   path: ^1.9.0
 
 dev_dependencies:

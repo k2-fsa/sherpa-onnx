@@ -1,6 +1,7 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'dart:convert';
 import 'dart:ffi';
+import 'dart:typed_data';
 
 import 'package:ffi/ffi.dart';
 
@@ -9,7 +10,7 @@ import './speaker_identification.dart';
 import './utils.dart';
 
 class OfflineSpeakerDiarizationSegment {
-  OfflineSpeakerSegmentationSegment({
+  const OfflineSpeakerDiarizationSegment({
     required this.start,
     required this.end,
     required this.speaker,
@@ -76,7 +77,7 @@ class FastClusteringConfig {
 class OfflineSpeakerDiarizationConfig {
   const OfflineSpeakerDiarizationConfig({
     this.segmentation = const OfflineSpeakerSegmentationModelConfig(),
-    this.embedding = const SpeakerEmbeddingExtractorConfig(),
+    this.embedding = const SpeakerEmbeddingExtractorConfig(model: ''),
     this.clustering = const FastClusteringConfig(),
     this.minDurationOn = 0.2,
     this.minDurationOff = 0.5,
@@ -95,7 +96,8 @@ class OfflineSpeakerDiarizationConfig {
 }
 
 class OfflineSpeakerDiarization {
-  OfflineSpeakerDiarization._({required this.ptr, required this.config});
+  OfflineSpeakerDiarization._(
+      {required this.ptr, required this.config, required this.sampleRate});
 
   void free() {
     SherpaOnnxBindings.sherpaOnnxDestroyOfflineSpeakerDiarization?.call(ptr);
@@ -125,7 +127,7 @@ class OfflineSpeakerDiarization {
     c.ref.minDurationOff = config.minDurationOff;
 
     final ptr =
-        SherpaOnnxBindings.SherpaOnnxCreateOfflineSpeakerDiarization?.call(c) ??
+        SherpaOnnxBindings.sherpaOnnxCreateOfflineSpeakerDiarization?.call(c) ??
             nullptr;
 
     calloc.free(c.ref.embedding.provider);
@@ -133,17 +135,21 @@ class OfflineSpeakerDiarization {
     calloc.free(c.ref.segmentation.provider);
     calloc.free(c.ref.segmentation.pyannote.model);
 
-    final sampleRate = SherpaOnnxBindings
-            .SherpaOnnxOfflineSpeakerDiarizationGetSampleRate?.call(ptr) ??
-        0;
+    int sampleRate = 0;
+    if (ptr != nullptr) {
+      sampleRate = SherpaOnnxBindings
+              .sherpaOnnxOfflineSpeakerDiarizationGetSampleRate
+              ?.call(ptr) ??
+          0;
+    }
     return OfflineSpeakerDiarization._(
         ptr: ptr, config: config, sampleRate: sampleRate);
   }
 
   List<OfflineSpeakerDiarizationSegment> process(
-      {required samples: Float32List}) {
+      {required Float32List samples}) {
     if (ptr == nullptr) {
-      return <OfflineSpeakerSegmentationSegment>[];
+      return <OfflineSpeakerDiarizationSegment>[];
     }
 
     final n = samples.length;
@@ -156,8 +162,53 @@ class OfflineSpeakerDiarization {
             ?.call(ptr, p, n) ??
         nullptr;
 
+    final ans = _processImpl(r);
+
+    SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationDestroyResult
+        ?.call(r);
+
+    return ans;
+  }
+
+  List<OfflineSpeakerDiarizationSegment> processWithCallback({
+    required Float32List samples,
+    required int Function(int numProcessedChunks, int numTotalChunks) callback,
+  }) {
+    if (ptr == nullptr) {
+      return <OfflineSpeakerDiarizationSegment>[];
+    }
+
+    final n = samples.length;
+    final Pointer<Float> p = calloc<Float>(n);
+
+    final pList = p.asTypedList(n);
+    pList.setAll(0, samples);
+
+    final wrapper = NativeCallable<
+            SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>.isolateLocal(
+        (int numProcessedChunks, int numTotalChunks) {
+      return callback(numProcessedChunks, numTotalChunks);
+    }, exceptionalReturn: 0);
+
+    final r = SherpaOnnxBindings
+            .sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg
+            ?.call(ptr, p, n, wrapper.nativeFunction) ??
+        nullptr;
+
+    wrapper.close();
+
+    final ans = _processImpl(r);
+
+    SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationDestroyResult
+        ?.call(r);
+
+    return ans;
+  }
+
+  List<OfflineSpeakerDiarizationSegment> _processImpl(
+      Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> r) {
     if (r == nullptr) {
-      return <OfflineSpeakerSegmentationSegment>[];
+      return <OfflineSpeakerDiarizationSegment>[];
     }
 
     final numSegments = SherpaOnnxBindings
@@ -170,20 +221,20 @@ class OfflineSpeakerDiarization {
         nullptr;
 
     if (segments == nullptr) {
-      return <OfflineSpeakerSegmentationSegment>[];
+      return <OfflineSpeakerDiarizationSegment>[];
     }
 
-    final ans = <String>[];
+    final ans = <OfflineSpeakerDiarizationSegment>[];
     for (int i = 0; i != numSegments; ++i) {
       final s = segments.elementAt(i);
 
-      final tmp = OfflineSpeakerSegmentationSegment(
+      final tmp = OfflineSpeakerDiarizationSegment(
           start: s.ref.start, end: s.ref.end, speaker: s.ref.speaker);
       ans.add(tmp);
     }
 
-    SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationDestroyResult
-        ?.call(r);
+    SherpaOnnxBindings.sherpaOnnxOfflineSpeakerDiarizationDestroySegment
+        ?.call(segments);
 
     return ans;
   }

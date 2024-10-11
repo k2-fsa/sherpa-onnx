@@ -514,6 +514,27 @@ typedef SherpaOnnxOfflineSpeakerDiarizationProcess
     = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
         Pointer<SherpaOnnxOfflineSpeakerDiarization>, Pointer<Float>, int);
 
+typedef SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative = Int32
+    Function(Int32, Int32);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArgNative
+    = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
+        Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+        Pointer<Float>,
+        Int32,
+        Pointer<
+            NativeFunction<
+                SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg
+    = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
+        Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+        Pointer<Float>,
+        int,
+        Pointer<
+            NativeFunction<
+                SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>>);
+
 typedef SherpaOnnxOfflineSpeakerDiarizationDestroyResultNative = Void Function(
     Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
 
@@ -1078,6 +1099,8 @@ class SherpaOnnxBindings {
       sherpaOnnxOfflineSpeakerDiarizationProcess;
   static SherpaOnnxOfflineSpeakerDiarizationDestroyResult?
       sherpaOnnxOfflineSpeakerDiarizationDestroyResult;
+  static SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg?
+      sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg;
 
   static SherpaOnnxCreateOfflinePunctuation? sherpaOnnxCreateOfflinePunctuation;
   static SherpaOnnxDestroyOfflinePunctuation?
@@ -1249,7 +1272,7 @@ class SherpaOnnxBindings {
     sherpaOnnxCreateOfflineSpeakerDiarization ??= dynamicLibrary
         .lookup<
                 NativeFunction<
-                    SherpaOnnxCreateOfflineSpeakerDiarizatioNativen>>(
+                    SherpaOnnxCreateOfflineSpeakerDiarizationNative>>(
             'SherpaOnnxCreateOfflineSpeakerDiarization')
         .asFunction();
 
@@ -1307,6 +1330,13 @@ class SherpaOnnxBindings {
                 NativeFunction<
                     SherpaOnnxOfflineSpeakerDiarizationProcessNative>>(
             'SherpaOnnxOfflineSpeakerDiarizationProcess')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArgNative>>(
+            'SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg')
         .asFunction();
 
     sherpaOnnxOfflineSpeakerDiarizationDestroyResult ??= dynamicLibrary

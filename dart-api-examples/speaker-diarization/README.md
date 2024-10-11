@@ -1,2 +1,7 @@
-A sample command-line application with an entrypoint in `bin/`, library code
-in `lib/`, and example unit test in `test/`.
+# Introduction
+
+This example shows how to use the Dart API from sherpa-onnx for speaker diarization.
+
+# Usage
+
+Please see [./run.sh](./run.sh)

@@ -1,8 +1,8 @@
 name: sherpa_onnx
 
 description: >
-  Speech recognition, speech synthesis, and speaker recognition using next-gen Kaldi
-  with onnxruntime without Internet connection.
+  Speech recognition, speech synthesis, speaker diarization, and speaker recognition
+  using next-gen Kaldi with onnxruntime without Internet connection.
 
 repository: https://github.com/k2-fsa/sherpa-onnx/tree/master/flutter
 
@@ -12,7 +12,7 @@ documentation: https://k2-fsa.github.io/sherpa/onnx/
 topics:
   - speech-recognition
   - speech-synthesis
-  - speaker-identification
+  - speaker-diarization
   - audio-tagging
   - voice-activity-detection
 
@@ -41,7 +41,7 @@ dependencies:
   sherpa_onnx_linux: ^1.10.27
   # sherpa_onnx_linux:
   #   path: ../sherpa_onnx_linux
-    #
+
   sherpa_onnx_windows: ^1.10.27
   # sherpa_onnx_windows:
   #   path: ../sherpa_onnx_windows
