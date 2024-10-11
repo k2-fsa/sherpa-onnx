@@ -2,14 +2,14 @@
 
 package com.k2fsa.sherpa.onnx;
 
-public class SpeakerEmbeddingExtractorConfig {
-    private final String model;
+public class OfflineSpeakerSegmentationModelConfig {
+    private final OfflineSpeakerSegmentationPyannoteModelConfig pyannote;
     private final int numThreads;
     private final boolean debug;
     private final String provider;
 
-    private SpeakerEmbeddingExtractorConfig(Builder builder) {
-        this.model = builder.model;
+    private OfflineSpeakerSegmentationModelConfig(Builder builder) {
+        this.pyannote = builder.pyannote;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
         this.provider = builder.provider;
@@ -20,18 +20,17 @@ public class SpeakerEmbeddingExtractorConfig {
     }
 
     public static class Builder {
-        private String model = "";
+        private OfflineSpeakerSegmentationPyannoteModelConfig pyannote = OfflineSpeakerSegmentationPyannoteModelConfig.builder().build();
         private int numThreads = 1;
         private boolean debug = true;
         private String provider = "cpu";
 
-        public SpeakerEmbeddingExtractorConfig build() {
-            return new SpeakerEmbeddingExtractorConfig(this);
+        public OfflineSpeakerSegmentationModelConfig build() {
+            return new OfflineSpeakerSegmentationModelConfig(this);
         }
 
-
-        public Builder setModel(String model) {
-            this.model = model;
+        public Builder setPyannote(OfflineSpeakerSegmentationPyannoteModelConfig pyannote) {
+            this.pyannote = pyannote;
             return this;
         }
 

@@ -68,6 +68,15 @@ java_files += KeywordSpotterConfig.java
 java_files += KeywordSpotterResult.java
 java_files += KeywordSpotter.java
 
+java_files += OfflineSpeakerSegmentationPyannoteModelConfig.java
+java_files += OfflineSpeakerSegmentationModelConfig.java
+java_files += FastClusteringConfig.java
+java_files += OfflineSpeakerDiarizationConfig.java
+java_files += OfflineSpeakerDiarizationSegment.java
+java_files += OfflineSpeakerDiarizationCallback.java
+java_files += OfflineSpeakerDiarization.java
+
+
 class_files := $(java_files:%.java=%.class)
 
 java_files := $(addprefix src/$(package_dir)/,$(java_files))
