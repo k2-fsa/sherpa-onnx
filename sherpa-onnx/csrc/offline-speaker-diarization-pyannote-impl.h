@@ -5,6 +5,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_SPEAKER_DIARIZATION_PYANNOTE_IMPL_H_
 
 #include <algorithm>
+#include <memory>
 #include <unordered_map>
 #include <utility>
 #include <vector>

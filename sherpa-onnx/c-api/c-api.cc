@@ -1828,4 +1828,20 @@ SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(
   return ans;
 }
 
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
+    const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
+    int32_t n,
+    SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg callback) {
+  auto wrapper = [callback](int32_t num_processed_chunks,
+                            int32_t num_total_chunks, void *) {
+    return callback(num_processed_chunks, num_total_chunks);
+  };
+
+  auto ans = new SherpaOnnxOfflineSpeakerDiarizationResult;
+  ans->impl = sd->impl->Process(samples, n, wrapper);
+
+  return ans;
+}
+
 #endif

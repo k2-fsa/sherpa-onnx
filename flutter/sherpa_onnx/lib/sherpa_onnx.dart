@@ -6,6 +6,7 @@ export 'src/audio_tagging.dart';
 export 'src/feature_config.dart';
 export 'src/keyword_spotter.dart';
 export 'src/offline_recognizer.dart';
+export 'src/offline_speaker_diarization.dart';
 export 'src/offline_stream.dart';
 export 'src/online_recognizer.dart';
 export 'src/online_stream.dart';

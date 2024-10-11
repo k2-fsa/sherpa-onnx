@@ -9,6 +9,7 @@ https://pub.dev/packages/sherpa_onnx
 
 | Directory | Description |
 |-----------|-------------|
+| [./speaker-diarization](./speaker-diarization)| Example for speaker diarization.|
 | [./add-punctuations](./add-punctuations)| Example for adding punctuations to text.|
 | [./audio-tagging](./audio-tagging)| Example for audio tagging.|
 | [./keyword-spotter](./keyword-spotter)| Example for keyword spotting|

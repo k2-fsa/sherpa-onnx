@@ -2,6 +2,66 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
+final class SherpaOnnxSpeakerEmbeddingExtractorConfig extends Struct {
+  external Pointer<Utf8> model;
+
+  @Int32()
+  external int numThreads;
+
+  @Int32()
+  external int debug;
+
+  external Pointer<Utf8> provider;
+}
+
+final class SherpaOnnxOfflineSpeakerDiarizationSegment extends Struct {
+  @Float()
+  external double start;
+
+  @Float()
+  external double end;
+
+  @Int32()
+  external int speaker;
+}
+
+final class SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig
+    extends Struct {
+  external Pointer<Utf8> model;
+}
+
+final class SherpaOnnxOfflineSpeakerSegmentationModelConfig extends Struct {
+  external SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig pyannote;
+
+  @Int32()
+  external int numThreads;
+
+  @Int32()
+  external int debug;
+
+  external Pointer<Utf8> provider;
+}
+
+final class SherpaOnnxFastClusteringConfig extends Struct {
+  @Int32()
+  external int numClusters;
+
+  @Float()
+  external double threshold;
+}
+
+final class SherpaOnnxOfflineSpeakerDiarizationConfig extends Struct {
+  external SherpaOnnxOfflineSpeakerSegmentationModelConfig segmentation;
+  external SherpaOnnxSpeakerEmbeddingExtractorConfig embedding;
+  external SherpaOnnxFastClusteringConfig clustering;
+
+  @Float()
+  external double minDurationOn;
+
+  @Float()
+  external double minDurationOff;
+}
+
 final class SherpaOnnxOfflinePunctuationModelConfig extends Struct {
   external Pointer<Utf8> ctTransformer;
 
@@ -341,18 +401,6 @@ final class SherpaOnnxWave extends Struct {
   external int numSamples;
 }
 
-final class SherpaOnnxSpeakerEmbeddingExtractorConfig extends Struct {
-  external Pointer<Utf8> model;
-
-  @Int32()
-  external int numThreads;
-
-  @Int32()
-  external int debug;
-
-  external Pointer<Utf8> provider;
-}
-
 final class SherpaOnnxKeywordSpotterConfig extends Struct {
   external SherpaOnnxFeatureConfig feat;
 
@@ -402,9 +450,100 @@ final class SherpaOnnxSpeakerEmbeddingExtractor extends Opaque {}
 
 final class SherpaOnnxSpeakerEmbeddingManager extends Opaque {}
 
+final class SherpaOnnxOfflineSpeakerDiarization extends Opaque {}
+
+final class SherpaOnnxOfflineSpeakerDiarizationResult extends Opaque {}
+
+typedef SherpaOnnxCreateOfflineSpeakerDiarizationNative
+    = Pointer<SherpaOnnxOfflineSpeakerDiarization> Function(
+        Pointer<SherpaOnnxOfflineSpeakerDiarizationConfig>);
+
+typedef SherpaOnnxCreateOfflineSpeakerDiarization
+    = SherpaOnnxCreateOfflineSpeakerDiarizationNative;
+
+typedef SherpaOnnxDestroyOfflineSpeakerDiarizationNative = Void Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarization>);
+
+typedef SherpaOnnxDestroyOfflineSpeakerDiarization = void Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarization>);
+
 typedef SherpaOnnxCreateOfflinePunctuationNative
     = Pointer<SherpaOnnxOfflinePunctuation> Function(
         Pointer<SherpaOnnxOfflinePunctuationConfig>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationGetSampleRateNative = Int32 Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarization>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationGetSampleRate = int Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarization>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationSetConfigNative = Void Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+    Pointer<SherpaOnnxOfflineSpeakerDiarizationConfig>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakersNative = Int32
+    Function(Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers = int Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegmentsNative = Int32
+    Function(Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments = int Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTimeNative
+    = Pointer<SherpaOnnxOfflineSpeakerDiarizationSegment> Function(
+        Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime
+    = SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTimeNative;
+
+typedef SherpaOnnxOfflineSpeakerDiarizationDestroySegmentNative = Void Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarizationSegment>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationDestroySegment = void Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarizationSegment>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProcessNative
+    = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
+        Pointer<SherpaOnnxOfflineSpeakerDiarization>, Pointer<Float>, Int32);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProcess
+    = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
+        Pointer<SherpaOnnxOfflineSpeakerDiarization>, Pointer<Float>, int);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative = Int32
+    Function(Int32, Int32);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArgNative
+    = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
+        Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+        Pointer<Float>,
+        Int32,
+        Pointer<
+            NativeFunction<
+                SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg
+    = Pointer<SherpaOnnxOfflineSpeakerDiarizationResult> Function(
+        Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+        Pointer<Float>,
+        int,
+        Pointer<
+            NativeFunction<
+                SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArgNative>>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationDestroyResultNative = Void Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationDestroyResult = void Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarizationResult>);
+
+typedef SherpaOnnxOfflineSpeakerDiarizationSetConfig = void Function(
+    Pointer<SherpaOnnxOfflineSpeakerDiarization>,
+    Pointer<SherpaOnnxOfflineSpeakerDiarizationConfig>);
 
 typedef SherpaOnnxCreateOfflinePunctuation
     = SherpaOnnxCreateOfflinePunctuationNative;
@@ -940,6 +1079,29 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
+  static SherpaOnnxCreateOfflineSpeakerDiarization?
+      sherpaOnnxCreateOfflineSpeakerDiarization;
+  static SherpaOnnxDestroyOfflineSpeakerDiarization?
+      sherpaOnnxDestroyOfflineSpeakerDiarization;
+  static SherpaOnnxOfflineSpeakerDiarizationGetSampleRate?
+      sherpaOnnxOfflineSpeakerDiarizationGetSampleRate;
+  static SherpaOnnxOfflineSpeakerDiarizationSetConfig?
+      sherpaOnnxOfflineSpeakerDiarizationSetConfig;
+  static SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers?
+      sherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers;
+  static SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments?
+      sherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments;
+  static SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime?
+      sherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime;
+  static SherpaOnnxOfflineSpeakerDiarizationDestroySegment?
+      sherpaOnnxOfflineSpeakerDiarizationDestroySegment;
+  static SherpaOnnxOfflineSpeakerDiarizationProcess?
+      sherpaOnnxOfflineSpeakerDiarizationProcess;
+  static SherpaOnnxOfflineSpeakerDiarizationDestroyResult?
+      sherpaOnnxOfflineSpeakerDiarizationDestroyResult;
+  static SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg?
+      sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg;
+
   static SherpaOnnxCreateOfflinePunctuation? sherpaOnnxCreateOfflinePunctuation;
   static SherpaOnnxDestroyOfflinePunctuation?
       sherpaOnnxDestroyOfflinePunctuation;
@@ -1107,6 +1269,83 @@ class SherpaOnnxBindings {
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
+    sherpaOnnxCreateOfflineSpeakerDiarization ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxCreateOfflineSpeakerDiarizationNative>>(
+            'SherpaOnnxCreateOfflineSpeakerDiarization')
+        .asFunction();
+
+    sherpaOnnxDestroyOfflineSpeakerDiarization ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxDestroyOfflineSpeakerDiarizationNative>>(
+            'SherpaOnnxDestroyOfflineSpeakerDiarization')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationGetSampleRate ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeakerDiarizationGetSampleRateNative>>(
+            'SherpaOnnxOfflineSpeakerDiarizationGetSampleRate')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationSetConfig ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeakerDiarizationSetConfigNative>>(
+            'SherpaOnnxOfflineSpeakerDiarizationSetConfig')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakersNative>>(
+            'SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegmentsNative>>(
+            'SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTimeNative>>(
+            'SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationDestroySegment ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeakerDiarizationDestroySegmentNative>>(
+            'SherpaOnnxOfflineSpeakerDiarizationDestroySegment')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationProcess ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeakerDiarizationProcessNative>>(
+            'SherpaOnnxOfflineSpeakerDiarizationProcess')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArgNative>>(
+            'SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeakerDiarizationDestroyResult ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeakerDiarizationDestroyResultNative>>(
+            'SherpaOnnxOfflineSpeakerDiarizationDestroyResult')
+        .asFunction();
+
     sherpaOnnxCreateOfflinePunctuation ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOnnxCreateOfflinePunctuationNative>>(
             'SherpaOnnxCreateOfflinePunctuation')

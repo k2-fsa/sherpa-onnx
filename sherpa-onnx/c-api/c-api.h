@@ -1485,6 +1485,9 @@ SHERPA_ONNX_API void SherpaOnnxOfflineSpeakerDiarizationDestroySegment(
 typedef int32_t (*SherpaOnnxOfflineSpeakerDiarizationProgressCallback)(
     int32_t num_processed_chunk, int32_t num_total_chunks, void *arg);
 
+typedef int32_t (*SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg)(
+    int32_t num_processed_chunk, int32_t num_total_chunks);
+
 // The user has to invoke SherpaOnnxOfflineSpeakerDiarizationDestroyResult()
 // to free the returned pointer to avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxOfflineSpeakerDiarizationResult *
@@ -1499,6 +1502,12 @@ SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(
     const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
     int32_t n, SherpaOnnxOfflineSpeakerDiarizationProgressCallback callback,
     void *arg);
+
+SHERPA_ONNX_API const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
+    const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
+    int32_t n,
+    SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg callback);
 
 SHERPA_ONNX_API void SherpaOnnxOfflineSpeakerDiarizationDestroyResult(
     const SherpaOnnxOfflineSpeakerDiarizationResult *r);

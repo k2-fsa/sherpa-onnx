@@ -4,6 +4,11 @@ set -ex
 
 cd dart-api-examples
 
+pushd speaker-diarization
+echo '----------speaker diarization----------'
+./run.sh
+popd
+
 pushd speaker-identification
 echo '----------3d speaker----------'
 ./run-3d-speaker.sh

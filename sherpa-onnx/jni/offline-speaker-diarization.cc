@@ -204,7 +204,8 @@ Java_com_k2fsa_sherpa_onnx_OfflineSpeakerDiarization_processWithCallback(
   jfloat *p = env->GetFloatArrayElements(samples, nullptr);
   jsize n = env->GetArrayLength(samples);
   auto segments =
-      sd->Process(p, n, callback_wrapper, (void *)arg).SortByStartTime();
+      sd->Process(p, n, callback_wrapper, reinterpret_cast<void *>(arg))
+          .SortByStartTime();
   env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
 
   return ProcessImpl(env, segments);
