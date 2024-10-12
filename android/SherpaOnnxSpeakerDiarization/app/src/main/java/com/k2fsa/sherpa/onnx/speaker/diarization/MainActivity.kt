@@ -32,6 +32,8 @@ import com.k2fsa.sherpa.onnx.speaker.diarization.screens.HelpScreen
 import com.k2fsa.sherpa.onnx.speaker.diarization.screens.HomeScreen
 import com.k2fsa.sherpa.onnx.speaker.diarization.ui.theme.SherpaOnnxSpeakerDiarizationTheme
 
+const val TAG = "sherpa-onnx-sd"
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +49,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+        SpeakerDiarizationObject.initSpeakerDiarization(this.assets)
     }
 }
 

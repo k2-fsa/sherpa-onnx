@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 
 @Composable
 fun HelpScreen() {
@@ -17,11 +18,23 @@ fun HelpScreen() {
         Column(
             modifier = Modifier.padding(16.dp)
         ) {
+            Text(
+                "This app accepts only 16kHz 16-bit 1-channel *.wav files. " +
+                        "It has two arguments: Number of speakers and clustering threshold. " +
+                        "If you know the actual number of speaker in the file, please set it. " +
+                        "Otherwise, please set it to 0. In that case, you have to set threshold. " +
+                        "A larger threshold leads to fewer segmented speakers."
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            Text("The speaker segmentation model is from " +
+                "pyannote-audio (https://huggingface.co/pyannote/segmentation-3.0), "+
+                 "whereas the embedding extractor model is from 3D-Speaker (https://github.com/modelscope/3D-Speaker)")
+            Spacer(modifier = Modifier.height(16.dp))
             Text("Please see http://github.com/k2-fsa/sherpa-onnx ")
             Spacer(modifier = Modifier.height(16.dp))
             Text("https://k2-fsa.github.io/sherpa/social-groups.html")
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Everything is open-sourced!")
+            Spacer(modifier = Modifier.height(20.dp))
+            Text("Everything is open-sourced!", fontSize = 25.sp)
         }
     }
 }

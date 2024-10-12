@@ -34,7 +34,7 @@ data class OfflineSpeakerDiarizationSegment(
 
 class OfflineSpeakerDiarization(
     assetManager: AssetManager? = null,
-    config: OfflineSpeakerDiarizationConfig,
+    val config: OfflineSpeakerDiarizationConfig,
 ) {
     private var ptr: Long
 
