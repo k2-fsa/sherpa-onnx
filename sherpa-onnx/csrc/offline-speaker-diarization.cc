@@ -73,6 +73,12 @@ OfflineSpeakerDiarization::OfflineSpeakerDiarization(
     const OfflineSpeakerDiarizationConfig &config)
     : impl_(OfflineSpeakerDiarizationImpl::Create(config)) {}
 
+#if __ANDROID_API__ >= 9
+OfflineSpeakerDiarization::OfflineSpeakerDiarization(
+    AAssetManager *mgr, const OfflineSpeakerDiarizationConfig &config)
+    : impl_(OfflineSpeakerDiarizationImpl::Create(mgr, config)) {}
+#endif
+
 OfflineSpeakerDiarization::~OfflineSpeakerDiarization() = default;
 
 int32_t OfflineSpeakerDiarization::SampleRate() const {

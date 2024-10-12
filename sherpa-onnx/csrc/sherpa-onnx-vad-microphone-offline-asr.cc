@@ -211,7 +211,7 @@ to download models for offline ASR.
     }
 
     while (!vad->Empty()) {
-      auto &segment = vad->Front();
+      const auto &segment = vad->Front();
       auto s = recognizer.CreateStream();
       s->AcceptWaveform(sample_rate, segment.samples.data(),
                         segment.samples.size());

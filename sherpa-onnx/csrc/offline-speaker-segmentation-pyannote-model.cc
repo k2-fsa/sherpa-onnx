@@ -24,6 +24,17 @@ class OfflineSpeakerSegmentationPyannoteModel::Impl {
     Init(buf.data(), buf.size());
   }
 
+#if __ANDROID_API__ >= 9
+  Impl(AAssetManager *mgr, const OfflineSpeakerSegmentationModelConfig &config)
+      : config_(config),
+        env_(ORT_LOGGING_LEVEL_ERROR),
+        sess_opts_(GetSessionOptions(config)),
+        allocator_{} {
+    auto buf = ReadFile(mgr, config_.pyannote.model);
+    Init(buf.data(), buf.size());
+  }
+#endif
+
   const OfflineSpeakerSegmentationPyannoteModelMetaData &GetModelMetaData()
       const {
     return meta_data_;
@@ -91,6 +102,13 @@ OfflineSpeakerSegmentationPyannoteModel::
     OfflineSpeakerSegmentationPyannoteModel(
         const OfflineSpeakerSegmentationModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
+
+#if __ANDROID_API__ >= 9
+OfflineSpeakerSegmentationPyannoteModel::
+    OfflineSpeakerSegmentationPyannoteModel(
+        AAssetManager *mgr, const OfflineSpeakerSegmentationModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
 
 OfflineSpeakerSegmentationPyannoteModel::
     ~OfflineSpeakerSegmentationPyannoteModel() = default;
