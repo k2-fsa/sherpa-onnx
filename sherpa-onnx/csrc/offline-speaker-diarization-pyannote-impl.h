@@ -10,6 +10,11 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/fast-clustering.h"
 #include "sherpa-onnx/csrc/math.h"
@@ -64,6 +69,17 @@ class OfflineSpeakerDiarizationPyannoteImpl
         clustering_(std::make_unique<FastClustering>(config_.clustering)) {
     Init();
   }
+
+#if __ANDROID_API__ >= 9
+  OfflineSpeakerDiarizationPyannoteImpl(
+      AAssetManager *mgr, const OfflineSpeakerDiarizationConfig &config)
+      : config_(config),
+        segmentation_model_(mgr, config_.segmentation),
+        embedding_extractor_(mgr, config_.embedding),
+        clustering_(std::make_unique<FastClustering>(config_.clustering)) {
+    Init();
+  }
+#endif
 
   int32_t SampleRate() const override {
     const auto &meta_data = segmentation_model_.GetModelMetaData();

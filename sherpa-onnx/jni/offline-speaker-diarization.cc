@@ -101,7 +101,24 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL
 Java_com_k2fsa_sherpa_onnx_OfflineSpeakerDiarization_newFromAsset(
     JNIEnv *env, jobject /*obj*/, jobject asset_manager, jobject _config) {
-  return 0;
+#if __ANDROID_API__ >= 9
+  AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
+  if (!mgr) {
+    SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+    return 0;
+  }
+#endif
+
+  auto config = sherpa_onnx::GetOfflineSpeakerDiarizationConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
+  auto sd = new sherpa_onnx::OfflineSpeakerDiarization(
+#if __ANDROID_API__ >= 9
+      mgr,
+#endif
+      config);
+
+  return (jlong)sd;
 }
 
 SHERPA_ONNX_EXTERN_C

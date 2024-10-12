@@ -53,10 +53,12 @@ Java_com_k2fsa_sherpa_onnx_OfflinePunctuation_newFromAsset(
   AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
   if (!mgr) {
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+    return 0;
   }
 #endif
   auto config = sherpa_onnx::GetOfflinePunctuationConfig(env, _config);
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
   auto model = new sherpa_onnx::OfflinePunctuation(
 #if __ANDROID_API__ >= 9
       mgr,

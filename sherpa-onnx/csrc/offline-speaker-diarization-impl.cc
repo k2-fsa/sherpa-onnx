@@ -23,4 +23,18 @@ OfflineSpeakerDiarizationImpl::Create(
   return nullptr;
 }
 
+#if __ANDROID_API__ >= 9
+std::unique_ptr<OfflineSpeakerDiarizationImpl>
+OfflineSpeakerDiarizationImpl::Create(
+    AAssetManager *mgr, const OfflineSpeakerDiarizationConfig &config) {
+  if (!config.segmentation.pyannote.model.empty()) {
+    return std::make_unique<OfflineSpeakerDiarizationPyannoteImpl>(mgr, config);
+  }
+
+  SHERPA_ONNX_LOGE("Please specify a speaker segmentation model.");
+
+  return nullptr;
+}
+#endif
+
 }  // namespace sherpa_onnx

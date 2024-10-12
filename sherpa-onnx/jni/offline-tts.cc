@@ -105,6 +105,7 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset(
   AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
   if (!mgr) {
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+    return 0;
   }
 #endif
   auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
