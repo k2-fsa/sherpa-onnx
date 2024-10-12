@@ -127,6 +127,21 @@ jobs:
             cp -v ../sherpa-onnx/pascal-api/*.pas ../pascal-api-examples/tts
           fi
 
+      - name:  Run Pascal test (Speaker diarization)
+        shell: bash
+        run: |
+          export PATH=/c/lazarus/fpc/3.2.2/bin/x86_64-win64:$PATH
+
+          cd ./pascal-api-examples
+          pushd speaker-diarization
+
+          ./run.sh
+          rm -rfv *.onnx *.wav sherpa-onnx-*
+          ls -lh
+          echo "---"
+
+          popd
+
       - name:  Run Pascal test (TTS)
         shell: bash
         run: |
