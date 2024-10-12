@@ -89,7 +89,7 @@ begin
     end;
 
   {
-    // If you don't want to use a call back
+    // If you don't want to use a callback
     Segments := Sd.Process(Wave.Samples);
   }
   Segments := Sd.Process(Wave.Samples, @ProgressCallback);
