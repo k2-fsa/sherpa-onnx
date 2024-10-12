@@ -3,13 +3,6 @@ package com.k2fsa.sherpa.onnx
 import android.content.res.AssetManager
 import android.util.Log
 
-data class SpeakerEmbeddingExtractorConfig(
-    val model: String,
-    var numThreads: Int = 1,
-    var debug: Boolean = false,
-    var provider: String = "cpu",
-)
-
 class SpeakerEmbeddingExtractor(
     assetManager: AssetManager? = null,
     config: SpeakerEmbeddingExtractorConfig,
