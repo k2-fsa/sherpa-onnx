@@ -9,6 +9,7 @@ https://k2-fsa.github.io/sherpa/onnx/pascal-api/index.html
 |Directory| Description|
 |---------|------------|
 |[read-wav](./read-wav)|It shows how to read a wave file.|
+|[speaker-diarization](./speaker-diarization)|It shows how to use Pascal API for speaker diarization.|
 |[streaming-asr](./streaming-asr)| It shows how to use streaming models for speech recognition.|
 |[non-streaming-asr](./non-streaming-asr)| It shows how to use non-streaming models for speech recognition.|
 |[vad](./vad)| It shows how to use the voice activity detection API.|
