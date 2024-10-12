@@ -102,7 +102,7 @@ type
 
     function Generate(Text: AnsiString; SpeakerId: Integer;
       Speed: Single;
-      Callback:PSherpaOnnxGeneratedAudioCallbackWithArg;
+      Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
       Arg: Pointer
       ): TSherpaOnnxGeneratedAudio; overload;
 
@@ -398,6 +398,78 @@ type
     property GetHandle: Pointer Read Handle;
   end;
 
+
+  TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig = record
+    Model: AnsiString;
+    function ToString: AnsiString;
+  end;
+
+  TSherpaOnnxOfflineSpeakerSegmentationModelConfig = record
+    Pyannote: TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig;
+    NumThreads: Integer;
+    Debug: Boolean;
+    Provider: AnsiString;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSpeakerSegmentationModelConfig);
+  end;
+
+  TSherpaOnnxFastClusteringConfig = record
+    NumClusters: Integer;
+    Threshold: Single;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxFastClusteringConfig);
+  end;
+
+  TSherpaOnnxSpeakerEmbeddingExtractorConfig = record
+    Model: AnsiString;
+    NumThreads: Integer;
+    Debug: Boolean;
+    Provider: AnsiString;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxSpeakerEmbeddingExtractorConfig);
+  end;
+
+  TSherpaOnnxOfflineSpeakerDiarizationConfig = record
+    Segmentation: TSherpaOnnxOfflineSpeakerSegmentationModelConfig;
+    Embedding: TSherpaOnnxSpeakerEmbeddingExtractorConfig;
+    Clustering: TSherpaOnnxFastClusteringConfig;
+    MinDurationOn: Single;
+    MinDurationOff: Single;
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSpeakerDiarizationConfig);
+  end;
+
+  TSherpaOnnxOfflineSpeakerDiarizationSegment = record
+    Start: Single;
+    Stop: Single;
+    Speaker: Integer;
+    function ToString: AnsiString;
+  end;
+
+  TSherpaOnnxOfflineSpeakerDiarizationSegmentArray = array of TSherpaOnnxOfflineSpeakerDiarizationSegment;
+
+  PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg = ^TSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg;
+
+  TSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg = function(
+      NumProcessChunks: cint32;
+      NumTotalChunks: cint32): cint32; cdecl;
+
+  TSherpaOnnxOfflineSpeakerDiarization = class
+  private
+    Handle: Pointer;
+    SampleRate: Integer;
+    _Config: TSherpaOnnxOfflineSpeakerDiarizationConfig;
+  public
+    constructor Create(Config: TSherpaOnnxOfflineSpeakerDiarizationConfig);
+    destructor Destroy; override;
+    procedure SetConfig(Config: TSherpaOnnxOfflineSpeakerDiarizationConfig);
+    function Process(Samples: array of Single): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray; overload;
+    function Process(Samples: array of Single; Callback: PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray; overload;
+    property GetHandle: Pointer Read Handle;
+    property GetSampleRate: Integer Read SampleRate;
+  end;
+
+
   { It supports reading a single channel wave with 16-bit encoded samples.
     Samples are normalized to the range [-1, 1].
   }
@@ -656,6 +728,47 @@ type
 
   PSherpaOnnxResampleOut = ^SherpaOnnxResampleOut;
 
+  SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig = record
+    Model: PAnsiChar;
+  end;
+
+  SherpaOnnxOfflineSpeakerSegmentationModelConfig = record
+    Pyannote: SherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig;
+    NumThreads: cint32;
+    Debug: cint32;
+    Provider: PAnsiChar;
+  end;
+
+  SherpaOnnxFastClusteringConfig = record
+    NumClusters: cint32;
+    Threshold: cfloat;
+  end;
+
+  SherpaOnnxSpeakerEmbeddingExtractorConfig = record
+    Model: PAnsiChar;
+    NumThreads: cint32;
+    Debug: cint32;
+    Provider: PAnsiChar;
+  end;
+
+  SherpaOnnxOfflineSpeakerDiarizationConfig = record
+    Segmentation: SherpaOnnxOfflineSpeakerSegmentationModelConfig;
+    Embedding: SherpaOnnxSpeakerEmbeddingExtractorConfig;
+    Clustering: SherpaOnnxFastClusteringConfig;
+    MinDurationOn: cfloat;
+    MinDurationOff: cfloat;
+  end;
+
+  SherpaOnnxOfflineSpeakerDiarizationSegment = record
+    Start: cfloat;
+    Stop: cfloat;
+    Speaker: cint32;
+  end;
+
+  PSherpaOnnxOfflineSpeakerDiarizationSegment = ^SherpaOnnxOfflineSpeakerDiarizationSegment;
+
+  PSherpaOnnxOfflineSpeakerDiarizationConfig = ^SherpaOnnxOfflineSpeakerDiarizationConfig;
+
 function SherpaOnnxCreateLinearResampler(SampleRateInHz: cint32;
   SampleRateOutHz: cint32;
   FilterCutoffHz: cfloat;
@@ -675,6 +788,37 @@ procedure SherpaOnnxLinearResamplerResampleFree(P: PSherpaOnnxResampleOut); cdec
   external SherpaOnnxLibName;
 
 procedure SherpaOnnxLinearResamplerReset(P: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxCreateOfflineSpeakerDiarization(Config: PSherpaOnnxOfflineSpeakerDiarizationConfig): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxDestroyOfflineSpeakerDiarization(P: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(P: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxOfflineSpeakerDiarizationSetConfig(P: Pointer; Config: PSherpaOnnxOfflineSpeakerDiarizationConfig); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(P: Pointer): cint32; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(P: Pointer): PSherpaOnnxOfflineSpeakerDiarizationSegment; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxOfflineSpeakerDiarizationDestroySegment(P: Pointer); cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOfflineSpeakerDiarizationProcess(P: Pointer; Samples: pcfloat; N: cint32): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(P: Pointer;
+  Samples: pcfloat; N: cint32;  Callback: PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+procedure SherpaOnnxOfflineSpeakerDiarizationDestroyResult(P: Pointer); cdecl;
   external SherpaOnnxLibName;
 
 function SherpaOnnxCreateOfflineTts(Config: PSherpaOnnxOfflineTtsConfig): Pointer; cdecl;
@@ -1773,7 +1917,7 @@ end;
 
 function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   Speed: Single;
-  Callback:PSherpaOnnxGeneratedAudioCallbackWithArg;
+  Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
   Arg: Pointer
   ): TSherpaOnnxGeneratedAudio;
 var
@@ -1845,6 +1989,197 @@ end;
 procedure TSherpaOnnxLinearResampler.Reset;
 begin
   SherpaOnnxLinearResamplerReset(Self.Handle);
+end;
+
+function TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(' +
+    'Model := %s)',[Self.Model]);
+end;
+
+function TSherpaOnnxOfflineSpeakerSegmentationModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineSpeakerSegmentationPyannoteModelConfig(' +
+    'Pyannote := %s, ' +
+    'NumThreads := %d, ' +
+    'Debug := %s, ' +
+    'Provider := %s)',
+    [Self.Pyannote.ToString, Self.NumThreads,
+     Self.Debug.ToString, Self.Provider]);
+end;
+
+class operator TSherpaOnnxOfflineSpeakerSegmentationModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSpeakerSegmentationModelConfig);
+begin
+  Dest.NumThreads := 1;
+  Dest.Debug := False;
+  Dest.Provider := 'cpu';
+end;
+
+function TSherpaOnnxFastClusteringConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxFastClusteringConfig(' +
+    'NumClusters := %d, Threshold := %.3f)',
+    [Self.NumClusters, Self.Threshold]);
+end;
+
+class operator TSherpaOnnxFastClusteringConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxFastClusteringConfig);
+begin
+  Dest.NumClusters := -1;
+  Dest.Threshold := 0.5;
+end;
+
+function TSherpaOnnxSpeakerEmbeddingExtractorConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxSpeakerEmbeddingExtractorConfig(' +
+    'Model := %s, '+
+    'NumThreads := %d, '+
+    'Debug := %s, '+
+    'Provider := %s)',
+    [Self.Model, Self.NumThreads, Self.Debug.ToString, Self.Provider]);
+end;
+
+class operator TSherpaOnnxSpeakerEmbeddingExtractorConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxSpeakerEmbeddingExtractorConfig);
+begin
+  Dest.NumThreads := 1;
+  Dest.Debug := False;
+  Dest.Provider := 'cpu';
+end;
+
+function TSherpaOnnxOfflineSpeakerDiarizationConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineSpeakerDiarizationConfig(' +
+    'Segmentation := %s, '+
+    'Embedding := %s, '+
+    'Clustering := %s, '+
+    'MinDurationOn := %.3f, '+
+    'MinDurationOff := %.3f)',
+    [Self.Segmentation.ToString, Self.Embedding.ToString,
+     Self.Clustering.ToString, Self.MinDurationOn, Self.MinDurationOff]);
+end;
+
+class operator TSherpaOnnxOfflineSpeakerDiarizationConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineSpeakerDiarizationConfig);
+begin
+  Dest.MinDurationOn := 0.2;
+  Dest.MinDurationOff := 0.5;
+end;
+
+function TSherpaOnnxOfflineSpeakerDiarizationSegment.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineSpeakerDiarizationSegment(' +
+    'Start := %.3f, '+
+    'Stop := %.3f, '+
+    'Speaker := %d)',
+    [Self.Start, Self.Stop, Self.Speaker]);
+end;
+
+constructor TSherpaOnnxOfflineSpeakerDiarization.Create(Config: TSherpaOnnxOfflineSpeakerDiarizationConfig);
+var
+  C: SherpaOnnxOfflineSpeakerDiarizationConfig;
+begin
+  C := Default(SherpaOnnxOfflineSpeakerDiarizationConfig);
+  C.Segmentation.Pyannote.Model := PAnsiChar(Config.Segmentation.Pyannote.Model);
+  C.Segmentation.NumThreads := Config.Segmentation.NumThreads;
+  C.Segmentation.Debug := Ord(Config.Segmentation.Debug);
+  C.Segmentation.Provider := PAnsiChar(Config.Segmentation.Provider);
+
+  C.Embedding.Model := PAnsiChar(Config.Embedding.Model);
+  C.Embedding.NumThreads := Config.Embedding.NumThreads;
+  C.Embedding.Debug := Ord(Config.Embedding.Debug);
+  C.Embedding.Provider := PAnsiChar(Config.Embedding.Provider);
+
+  C.Clustering.NumClusters := Config.Clustering.NumClusters;
+  C.Clustering.Threshold := Config.Clustering.Threshold;
+
+  C.MinDurationOn := Config.MinDurationOn;
+  C.MinDurationOff := Config.MinDurationOff;
+
+  Self.Handle := SherpaOnnxCreateOfflineSpeakerDiarization(@C);
+  Self._Config := Config;
+  Self.SampleRate :=  0;
+
+  if Self.Handle <> nil then
+    begin
+      Self.SampleRate := SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(Self.Handle);
+    end;
+end;
+
+destructor TSherpaOnnxOfflineSpeakerDiarization.Destroy;
+begin
+  SherpaOnnxDestroyOfflineSpeakerDiarization(Self.Handle);
+  Self.Handle := nil;
+end;
+
+procedure TSherpaOnnxOfflineSpeakerDiarization.SetConfig(Config: TSherpaOnnxOfflineSpeakerDiarizationConfig);
+var
+  C: SherpaOnnxOfflineSpeakerDiarizationConfig;
+begin
+  C := Default(SherpaOnnxOfflineSpeakerDiarizationConfig);
+
+  C.Clustering.NumClusters := Config.Clustering.NumClusters;
+  C.Clustering.Threshold := Config.Clustering.Threshold;
+
+  SherpaOnnxOfflineSpeakerDiarizationSetConfig(Self.Handle, @C);
+end;
+
+function TSherpaOnnxOfflineSpeakerDiarization.Process(Samples: array of Single): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray;
+var
+  R: Pointer;
+  NumSegments: Integer;
+  I: Integer;
+  Segments: PSherpaOnnxOfflineSpeakerDiarizationSegment;
+begin
+  Result := nil;
+
+  R := SherpaOnnxOfflineSpeakerDiarizationProcess(Self.Handle, pcfloat(Samples), Length(Samples));
+  if R = nil then
+    begin
+      Exit
+    end;
+  NumSegments := SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(R);
+
+  Segments := SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(R);
+
+  SetLength(Result, NumSegments);
+  for I := Low(Result) to High(Result) do
+    begin
+      Result[I].Start := Segments[I].Start;
+      Result[I].Stop := Segments[I].Stop;
+      Result[I].Speaker := Segments[I].Speaker;
+    end;
+
+  SherpaOnnxOfflineSpeakerDiarizationDestroySegment(Segments);
+  SherpaOnnxOfflineSpeakerDiarizationDestroyResult(R);
+end;
+
+function TSherpaOnnxOfflineSpeakerDiarization.Process(Samples: array of Single;
+  callback: PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray;
+var
+  R: Pointer;
+  NumSegments: Integer;
+  I: Integer;
+  Segments: PSherpaOnnxOfflineSpeakerDiarizationSegment;
+begin
+  Result := nil;
+
+  R := SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(Self.Handle, pcfloat(Samples), Length(Samples), callback);
+  if R = nil then
+    begin
+      Exit
+    end;
+  NumSegments := SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(R);
+
+  Segments := SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(R);
+
+  SetLength(Result, NumSegments);
+  for I := Low(Result) to High(Result) do
+    begin
+      Result[I].Start := Segments[I].Start;
+      Result[I].Stop := Segments[I].Stop;
+      Result[I].Speaker := Segments[I].Speaker;
+    end;
+
+  SherpaOnnxOfflineSpeakerDiarizationDestroySegment(Segments);
+  SherpaOnnxOfflineSpeakerDiarizationDestroyResult(R);
 end;
 
 end.
