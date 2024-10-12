@@ -102,7 +102,7 @@ type
 
     function Generate(Text: AnsiString; SpeakerId: Integer;
       Speed: Single;
-      Callback:PSherpaOnnxGeneratedAudioCallbackWithArg;
+      Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
       Arg: Pointer
       ): TSherpaOnnxGeneratedAudio; overload;
 
@@ -448,6 +448,12 @@ type
 
   TSherpaOnnxOfflineSpeakerDiarizationSegmentArray = array of TSherpaOnnxOfflineSpeakerDiarizationSegment;
 
+  PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg = ^TSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg;
+
+  TSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg = function(
+      NumProcessChunks: cint32;
+      NumTotalChunks: cint32): cint32; cdecl;
+
   TSherpaOnnxOfflineSpeakerDiarization = class
   private
     Handle: Pointer;
@@ -457,7 +463,8 @@ type
     constructor Create(Config: TSherpaOnnxOfflineSpeakerDiarizationConfig);
     destructor Destroy; override;
     procedure SetConfig(Config: TSherpaOnnxOfflineSpeakerDiarizationConfig);
-    function Process(Samples: array of Single): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray;
+    function Process(Samples: array of Single): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray; overload;
+    function Process(Samples: array of Single; Callback: PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray; overload;
     property GetHandle: Pointer Read Handle;
     property GetSampleRate: Integer Read SampleRate;
   end;
@@ -805,6 +812,10 @@ procedure SherpaOnnxOfflineSpeakerDiarizationDestroySegment(P: Pointer); cdecl;
   external SherpaOnnxLibName;
 
 function SherpaOnnxOfflineSpeakerDiarizationProcess(P: Pointer; Samples: pcfloat; N: cint32): Pointer; cdecl;
+  external SherpaOnnxLibName;
+
+function SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(P: Pointer;
+  Samples: pcfloat; N: cint32;  Callback: PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg): Pointer; cdecl;
   external SherpaOnnxLibName;
 
 procedure SherpaOnnxOfflineSpeakerDiarizationDestroyResult(P: Pointer); cdecl;
@@ -1906,7 +1917,7 @@ end;
 
 function TSherpaOnnxOfflineTts.Generate(Text: AnsiString; SpeakerId: Integer;
   Speed: Single;
-  Callback:PSherpaOnnxGeneratedAudioCallbackWithArg;
+  Callback: PSherpaOnnxGeneratedAudioCallbackWithArg;
   Arg: Pointer
   ): TSherpaOnnxGeneratedAudio;
 var
@@ -2120,6 +2131,37 @@ begin
   Result := nil;
 
   R := SherpaOnnxOfflineSpeakerDiarizationProcess(Self.Handle, pcfloat(Samples), Length(Samples));
+  if R = nil then
+    begin
+      Exit
+    end;
+  NumSegments := SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(R);
+
+  Segments := SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(R);
+
+  SetLength(Result, NumSegments);
+  for I := Low(Result) to High(Result) do
+    begin
+      Result[I].Start := Segments[I].Start;
+      Result[I].Stop := Segments[I].Stop;
+      Result[I].Speaker := Segments[I].Speaker;
+    end;
+
+  SherpaOnnxOfflineSpeakerDiarizationDestroySegment(Segments);
+  SherpaOnnxOfflineSpeakerDiarizationDestroyResult(R);
+end;
+
+function TSherpaOnnxOfflineSpeakerDiarization.Process(Samples: array of Single;
+  callback: PSherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg): TSherpaOnnxOfflineSpeakerDiarizationSegmentArray;
+var
+  R: Pointer;
+  NumSegments: Integer;
+  I: Integer;
+  Segments: PSherpaOnnxOfflineSpeakerDiarizationSegment;
+begin
+  Result := nil;
+
+  R := SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(Self.Handle, pcfloat(Samples), Length(Samples), callback);
   if R = nil then
     begin
       Exit

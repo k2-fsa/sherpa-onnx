@@ -37,7 +37,20 @@ program main;
 
 uses
   sherpa_onnx,
+  ctypes,
   SysUtils;
+
+function ProgressCallback(
+      NumProcessedChunks: cint32;
+      NumTotalChunks: cint32): cint32; cdecl;
+var
+  Progress: Single;
+begin
+  Progress := 100.0 * NumProcessedChunks / NumTotalChunks;
+  WriteLn(Format('Progress: %.3f%%', [Progress]));
+
+  Result := 0;
+end;
 
 var
   Wave: TSherpaOnnxWave;
@@ -75,7 +88,11 @@ begin
       Exit;
     end;
 
-  Segments := Sd.Process(Wave.Samples);
+  {
+    // If you don't want to use a call back
+    Segments := Sd.Process(Wave.Samples);
+  }
+  Segments := Sd.Process(Wave.Samples, @ProgressCallback);
 
   for I := Low(Segments) to High(Segments) do
     begin
