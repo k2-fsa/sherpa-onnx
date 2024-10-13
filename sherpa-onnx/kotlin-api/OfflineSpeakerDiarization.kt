@@ -34,7 +34,7 @@ data class OfflineSpeakerDiarizationSegment(
 
 class OfflineSpeakerDiarization(
     assetManager: AssetManager? = null,
-    config: OfflineSpeakerDiarizationConfig,
+    val config: OfflineSpeakerDiarizationConfig,
 ) {
     private var ptr: Long
 
@@ -64,7 +64,7 @@ class OfflineSpeakerDiarization(
     fun process(samples: FloatArray) = process(ptr, samples)
 
     fun processWithCallback(
-        samples: FloatArray, 
+        samples: FloatArray,
         callback: (numProcessedChunks: Int, numTotalChunks: Int, arg: Long) -> Int,
         arg: Long = 0,
     ) = processWithCallback(ptr, samples, callback, arg)
@@ -84,14 +84,17 @@ class OfflineSpeakerDiarization(
 
     private external fun getSampleRate(ptr: Long): Int
 
-    private external fun process(ptr: Long, samples: FloatArray): Array<OfflineSpeakerDiarizationSegment>
+    private external fun process(
+        ptr: Long,
+        samples: FloatArray
+    ): Array<OfflineSpeakerDiarizationSegment>
 
     private external fun processWithCallback(
         ptr: Long,
         samples: FloatArray,
         callback: (numProcessedChunks: Int, numTotalChunks: Int, arg: Long) -> Int,
         arg: Long,
-        ): Array<OfflineSpeakerDiarizationSegment>
+    ): Array<OfflineSpeakerDiarizationSegment>
 
     companion object {
         init {

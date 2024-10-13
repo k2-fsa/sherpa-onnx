@@ -84,8 +84,9 @@ with the following APIs
 
 ### Links for Huggingface Spaces
 
-You can visit the following Huggingface spaces to try `sherpa-onnx` without
-installing anything. All you need is a browser.
+<details>
+<summary>You can visit the following Huggingface spaces to try sherpa-onnx without
+installing anything. All you need is a browser.</summary>
 
 | Description                                           | URL                                |
 |-------------------------------------------------------|------------------------------------|
@@ -118,22 +119,33 @@ We also have spaces built using WebAssembly. They are listed below:
 |Speech synthesis (German)                                                                   |[Click me][wasm-hf-tts-piper-de]| [地址][wasm-ms-tts-piper-de]|
 |Speaker diarization                                                                         |[Click me][wasm-hf-speaker-diarization]|[地址][wasm-ms-speaker-diarization]|
 
+</details>
+
 ### Links for pre-built Android APKs
 
-| Description                            | URL                          | 中国用户                    |
-|----------------------------------------|------------------------------|-----------------------------|
-| Streaming speech recognition           | [Address][apk-streaming-asr] | [点此][apk-streaming-asr-cn]|
-| Text-to-speech                         | [Address][apk-tts]           | [点此][apk-tts-cn]          |
-| Voice activity detection (VAD)         | [Address][apk-vad]           | [点此][apk-vad-cn]          |
-| VAD + non-streaming speech recognition | [Address][apk-vad-asr]       | [点此][apk-vad-asr-cn]      |
-| Two-pass speech recognition            | [Address][apk-2pass]         | [点此][apk-2pass-cn]        |
-| Audio tagging                          | [Address][apk-at]            | [点此][apk-at-cn]           |
-| Audio tagging (WearOS)                 | [Address][apk-at-wearos]     | [点此][apk-at-wearos-cn]    |
-| Speaker identification                 | [Address][apk-sid]           | [点此][apk-sid-cn]          |
-| Spoken language identification         | [Address][apk-slid]          | [点此][apk-slid-cn]         |
-| Keyword spotting                       | [Address][apk-kws]           | [点此][apk-kws-cn]          |
+<details>
+
+<summary>You can find pre-built Android APKs for this repository in the following table</summary>
+
+| Description                            | URL                                | 中国用户                          |
+|----------------------------------------|------------------------------------|-----------------------------------|
+| Speaker diarization                    | [Address][apk-speaker-diarization] | [点此][apk-speaker-diarization-cn]|
+| Streaming speech recognition           | [Address][apk-streaming-asr]       | [点此][apk-streaming-asr-cn]      |
+| Text-to-speech                         | [Address][apk-tts]                 | [点此][apk-tts-cn]                |
+| Voice activity detection (VAD)         | [Address][apk-vad]                 | [点此][apk-vad-cn]                |
+| VAD + non-streaming speech recognition | [Address][apk-vad-asr]             | [点此][apk-vad-asr-cn]            |
+| Two-pass speech recognition            | [Address][apk-2pass]               | [点此][apk-2pass-cn]              |
+| Audio tagging                          | [Address][apk-at]                  | [点此][apk-at-cn]                 |
+| Audio tagging (WearOS)                 | [Address][apk-at-wearos]           | [点此][apk-at-wearos-cn]          |
+| Speaker identification                 | [Address][apk-sid]                 | [点此][apk-sid-cn]                |
+| Spoken language identification         | [Address][apk-slid]                | [点此][apk-slid-cn]               |
+| Keyword spotting                       | [Address][apk-kws]                 | [点此][apk-kws-cn]                |
+
+</details>
 
 ### Links for pre-built Flutter APPs
+
+<details>
 
 #### Real-time speech recognition
 
@@ -153,7 +165,11 @@ We also have spaces built using WebAssembly. They are listed below:
 
 > Note: You need to build from source for iOS.
 
+</details>
+
 ### Links for pre-built Lazarus APPs
+
+<details>
 
 #### Generating subtitles
 
@@ -161,8 +177,11 @@ We also have spaces built using WebAssembly. They are listed below:
 |--------------------------------|----------------------------|----------------------------|
 | Generate subtitles (生成字幕)  | [Address][lazarus-subtitle]| [点此][lazarus-subtitle-cn]|
 
+</details>
 
 ### Links for pre-trained models
+
+<details>
 
 | Description                                 | URL                                                                                   |
 |---------------------------------------------|---------------------------------------------------------------------------------------|
@@ -175,6 +194,8 @@ We also have spaces built using WebAssembly. They are listed below:
 | Spoken language identification (Language ID)| See multi-lingual [Whisper][Whisper] ASR models from  [Speech recognition][asr-models]|
 | Punctuation                                 | [Address][punct-models]                                                               |
 | Speaker segmentation                        | [Address][speaker-segmentation-models]                                                |
+
+</details>
 
 ### Useful links
 
@@ -265,6 +286,8 @@ Video demo in Chinese: [爆了！炫神教你开打字挂！真正影响胜率�
 [wasm-ms-tts-piper-de]: https://modelscope.cn/studios/k2-fsa/web-assembly-tts-sherpa-onnx-de
 [wasm-hf-speaker-diarization]: https://huggingface.co/spaces/k2-fsa/web-assembly-speaker-diarization-sherpa-onnx
 [wasm-ms-speaker-diarization]: https://www.modelscope.cn/studios/csukuangfj/web-assembly-speaker-diarization-sherpa-onnx
+[apk-speaker-diarization]: https://k2-fsa.github.io/sherpa/onnx/speaker-diarization/apk.html
+[apk-speaker-diarization-cn]: https://k2-fsa.github.io/sherpa/onnx/speaker-diarization/apk-cn.html
 [apk-streaming-asr]: https://k2-fsa.github.io/sherpa/onnx/android/apk.html
 [apk-streaming-asr-cn]: https://k2-fsa.github.io/sherpa/onnx/android/apk-cn.html
 [apk-tts]: https://k2-fsa.github.io/sherpa/onnx/tts/apk-engine.html

@@ -48,6 +48,7 @@ function testSpeakerEmbeddingExtractor() {
     test_speaker_id.kt \
     OnlineStream.kt \
     Speaker.kt \
+    SpeakerEmbeddingExtractorConfig.kt \
     WaveReader.kt \
     faked-asset-manager.kt \
     faked-log.kt
@@ -305,6 +306,7 @@ function testOfflineSpeakerDiarization() {
     test_offline_speaker_diarization.kt \
     OfflineSpeakerDiarization.kt \
     Speaker.kt \
+    SpeakerEmbeddingExtractorConfig.kt \
     OnlineStream.kt \
     WaveReader.kt \
     faked-asset-manager.kt \
