@@ -88,14 +88,15 @@ with the following APIs
 <summary>You can visit the following Huggingface spaces to try sherpa-onnx without
 installing anything. All you need is a browser.</summary>
 
-| Description                                           | URL                                |
-|-------------------------------------------------------|------------------------------------|
-| Speech recognition                                    | [Click me][hf-space-asr]           |
-| Speech recognition with [Whisper][Whisper]            | [Click me][hf-space-asr-whisper]   |
-| Speech synthesis                                      | [Click me][hf-space-tts]           |
-| Generate subtitles                                    | [Click me][hf-space-subtitle]      |
-| Audio tagging                                         | [Click me][hf-space-audio-tagging] |
-| Spoken language identification with [Whisper][Whisper]| [Click me][hf-space-slid-whisper]  |
+| Description                                           | URL                                     |
+|-------------------------------------------------------|-----------------------------------------|
+| Speaker diarization                                   | [Click me][hf-space-speaker-diarization]|
+| Speech recognition                                    | [Click me][hf-space-asr]                |
+| Speech recognition with [Whisper][Whisper]            | [Click me][hf-space-asr-whisper]        |
+| Speech synthesis                                      | [Click me][hf-space-tts]                |
+| Generate subtitles                                    | [Click me][hf-space-subtitle]           |
+| Audio tagging                                         | [Click me][hf-space-audio-tagging]      |
+| Spoken language identification with [Whisper][Whisper]| [Click me][hf-space-slid-whisper]       |
 
 We also have spaces built using WebAssembly. They are listed below:
 
@@ -240,6 +241,7 @@ Video demo in Chinese: [爆了！炫神教你开打字挂！真正影响胜率�
 [VisionFive 2]: https://www.starfivetech.com/en/site/boards
 [旭日X3派]: https://developer.horizon.ai/api/v1/fileData/documents_pi/index.html
 [爱芯派]: https://wiki.sipeed.com/hardware/zh/maixIII/ax-pi/axpi.html
+[hf-space-speaker-diarization]: https://huggingface.co/spaces/k2-fsa/speaker-diarization
 [hf-space-asr]: https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition
 [Whisper]: https://github.com/openai/whisper
 [hf-space-asr-whisper]: https://huggingface.co/spaces/k2-fsa/automatic-speech-recognition-with-whisper
