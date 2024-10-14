@@ -11,7 +11,7 @@ function install_nemo() {
 
   pip install wget text-unidecode matplotlib>=3.3.2 onnx onnxruntime pybind11 Cython einops kaldi-native-fbank soundfile
 
-  sudo apt-get install -q -y sox libsndfile1 ffmpeg python3-pip
+  sudo apt-get install -q -y sox libsndfile1 ffmpeg python3-pip ipython
 
   BRANCH='main'
   python3 -m pip install git+https://github.com/NVIDIA/NeMo.git@$BRANCH#egg=nemo_toolkit[asr]
