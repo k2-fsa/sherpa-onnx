@@ -4,7 +4,7 @@
 |------------------|------------------|
 |   ✔️              |         ✔️        |
 
-|Speaker identification| Speaker diarization | Speaker identification |
+|Speaker identification| Speaker diarization | Speaker verification |
 |----------------------|-------------------- |------------------------|
 |   ✔️                  |         ✔️           |            ✔️           |
 
