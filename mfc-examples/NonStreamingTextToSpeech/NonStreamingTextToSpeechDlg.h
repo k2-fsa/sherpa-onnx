@@ -60,5 +60,8 @@ public:
 private:
     Microphone mic_;
 	std::unique_ptr<std::thread> play_thread_;
+	std::unique_ptr<std::thread> generate_thread_;
 
+   public:
+    afx_msg void OnBnClickedStop();
 };

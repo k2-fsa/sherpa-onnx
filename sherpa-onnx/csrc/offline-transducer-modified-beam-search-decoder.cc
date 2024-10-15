@@ -42,7 +42,7 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
   std::vector<ContextGraphPtr> context_graphs(batch_size, nullptr);
 
   for (int32_t i = 0; i < batch_size; ++i) {
-    const ContextState *context_state;
+    const ContextState *context_state = nullptr;
     if (ss != nullptr) {
       context_graphs[i] =
           ss[packed_encoder_out.sorted_indexes[i]]->GetContextGraph();
@@ -131,8 +131,9 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
 
         float context_score = 0;
         auto context_state = new_hyp.context_state;
-        if (new_token != 0) {
-          // blank id is fixed to 0
+        // blank is hardcoded to 0
+        // also, it treats unk as blank
+        if (new_token != 0 && new_token != unk_id_) {
           new_hyp.ys.push_back(new_token);
           new_hyp.timestamps.push_back(t);
           if (context_graphs[i] != nullptr) {

@@ -21,6 +21,9 @@ namespace TTS.Struct
         [MarshalAs(UnmanagedType.LPStr)]
         public string tokens;
 
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string data_dir;
+
         /// <summary>
         /// VITS模型的noise_scale (float，默认值= 0.667)
         /// </summary>
@@ -34,6 +37,9 @@ namespace TTS.Struct
         /// </summary>
         public float length_scale = 1f;
 
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string dict_dir;
+
         public SherpaOnnxOfflineTtsVitsModelConfig()
         {
             noise_scale = 0.667f;
@@ -43,6 +49,8 @@ namespace TTS.Struct
             model = "vits-zh-aishell3/vits-aishell3.onnx";
             lexicon = "vits-zh-aishell3/lexicon.txt";
             tokens = "vits-zh-aishell3/tokens.txt";
+            data_dir = "";
+            dict_dir = "";
         }
     }
 }

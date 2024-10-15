@@ -14,6 +14,7 @@ if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
     -DSHERPA_ONNX_ENABLE_CHECK=OFF \
     -DBUILD_SHARED_LIBS=ON \
+    -DBUILD_SHARED_LIBS=ON \
     -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
     -DSHERPA_ONNX_ENABLE_JNI=ON \
     ..
@@ -47,6 +48,7 @@ function testSpeakerEmbeddingExtractor() {
     test_speaker_id.kt \
     OnlineStream.kt \
     Speaker.kt \
+    SpeakerEmbeddingExtractorConfig.kt \
     WaveReader.kt \
     faked-asset-manager.kt \
     faked-log.kt
@@ -166,6 +168,12 @@ function testSpokenLanguageIdentification() {
 }
 
 function testOfflineAsr() {
+  if [ ! -f ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+    tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+    rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+  fi
+
   if [ ! -f ./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
     tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
@@ -178,10 +186,10 @@ function testOfflineAsr() {
     rm sherpa-onnx-nemo-ctc-en-citrinet-512.tar.bz2
   fi
 
-  if [ ! -f ./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt ]; then
-    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-    tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-    rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+  if [ ! -f ./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+    tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+    rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
   fi
 
   if [ ! -f ./sherpa-onnx-zipformer-multi-zh-hans-2023-9-2/tokens.txt ]; then
@@ -196,6 +204,62 @@ function testOfflineAsr() {
     FeatureConfig.kt \
     OfflineRecognizer.kt \
     OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+function testInverseTextNormalizationOfflineAsr() {
+  if [ ! -f ./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+    tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+    rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+  fi
+
+  if [ ! -f ./itn-zh-number.wav ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+  fi
+
+  if [ ! -f ./itn_zh_number.fst ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+  fi
+
+  out_filename=test_itn_offline_asr.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_itn_offline_asr.kt \
+    FeatureConfig.kt \
+    OfflineRecognizer.kt \
+    OfflineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt
+
+  ls -lh $out_filename
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+function testInverseTextNormalizationOnlineAsr() {
+  if [ ! -f ./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+    tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+    rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+  fi
+
+  if [ ! -f ./itn-zh-number.wav ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
+  fi
+
+  if [ ! -f ./itn_zh_number.fst ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+  fi
+
+  out_filename=test_itn_online_asr.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_itn_online_asr.kt \
+    FeatureConfig.kt \
+    OnlineRecognizer.kt \
+    OnlineStream.kt \
     WaveReader.kt \
     faked-asset-manager.kt
 
@@ -222,6 +286,38 @@ function testPunctuation() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineSpeakerDiarization() {
+  if [ ! -f ./sherpa-onnx-pyannote-segmentation-3-0/model.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+    tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+    rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+  fi
+
+  if [ ! -f ./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+  fi
+
+  if [ ! -f ./0-four-speakers-zh.wav ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
+  fi
+
+  out_filename=test_offline_speaker_diarization.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_speaker_diarization.kt \
+    OfflineSpeakerDiarization.kt \
+    Speaker.kt \
+    SpeakerEmbeddingExtractorConfig.kt \
+    OnlineStream.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+testOfflineSpeakerDiarization
 testSpeakerEmbeddingExtractor
 testOnlineAsr
 testTts
@@ -229,3 +325,5 @@ testAudioTagging
 testSpokenLanguageIdentification
 testOfflineAsr
 testPunctuation
+testInverseTextNormalizationOfflineAsr
+testInverseTextNormalizationOnlineAsr

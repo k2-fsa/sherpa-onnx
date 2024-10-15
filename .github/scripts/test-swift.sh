@@ -7,6 +7,19 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-speaker-diarization.sh
+rm -rf *.onnx
+rm -rf sherpa-onnx-pyannote-segmentation-3-0
+rm -fv *.wav
+
+./run-add-punctuations.sh
+rm ./add-punctuations
+rm -rf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12
+
+./run-keyword-spotting-from-file.sh
+rm ./keyword-spotting-from-file
+rm -rf sherpa-onnx-kws-*
+
 ./run-streaming-hlg-decode-file.sh
 rm ./streaming-hlg-decode-file
 rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18

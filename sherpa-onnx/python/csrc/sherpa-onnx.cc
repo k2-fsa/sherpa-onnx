@@ -20,6 +20,7 @@
 #include "sherpa-onnx/python/csrc/online-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/python/csrc/online-lm-config.h"
 #include "sherpa-onnx/python/csrc/online-model-config.h"
+#include "sherpa-onnx/python/csrc/online-punctuation.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
 #include "sherpa-onnx/python/csrc/online-stream.h"
 #include "sherpa-onnx/python/csrc/speaker-embedding-extractor.h"
@@ -34,6 +35,12 @@
 #include "sherpa-onnx/python/csrc/offline-tts.h"
 #endif
 
+#if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
+#include "sherpa-onnx/python/csrc/fast-clustering.h"
+#include "sherpa-onnx/python/csrc/offline-speaker-diarization-result.h"
+#include "sherpa-onnx/python/csrc/offline-speaker-diarization.h"
+#endif
+
 namespace sherpa_onnx {
 
 PYBIND11_MODULE(_sherpa_onnx, m) {
@@ -42,6 +49,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindWaveWriter(&m);
   PybindAudioTagging(&m);
   PybindOfflinePunctuation(&m);
+  PybindOnlinePunctuation(&m);
 
   PybindFeatures(&m);
   PybindOnlineCtcFstDecoderConfig(&m);
@@ -51,7 +59,6 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindEndpoint(&m);
   PybindOnlineRecognizer(&m);
   PybindKeywordSpotter(&m);
-
   PybindDisplay(&m);
 
   PybindOfflineStream(&m);
@@ -72,6 +79,12 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindSpeakerEmbeddingExtractor(&m);
   PybindSpeakerEmbeddingManager(&m);
   PybindSpokenLanguageIdentification(&m);
+
+#if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
+  PybindFastClustering(&m);
+  PybindOfflineSpeakerDiarizationResult(&m);
+  PybindOfflineSpeakerDiarization(&m);
+#endif
 
   PybindAlsa(&m);
 }

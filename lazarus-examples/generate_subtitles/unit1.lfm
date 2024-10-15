@@ -1,0 +1,74 @@
+object Form1: TForm1
+  Left = 366
+  Height = 623
+  Top = 117
+  Width = 852
+  Caption = 'Next-gen Kaldi: Generate Subtitles'
+  ClientHeight = 623
+  ClientWidth = 852
+  OnClose = FormClose
+  OnCreate = FormCreate
+  LCLVersion = '3.4.0.0'
+  object FileNameEdt: TEdit
+    Left = 200
+    Height = 22
+    Top = 40
+    Width = 440
+    TabOrder = 0
+    OnChange = FileNameEdtChange
+  end
+  object SelectFileBtn: TButton
+    Left = 96
+    Height = 25
+    Top = 40
+    Width = 97
+    Caption = 'Select a file...'
+    TabOrder = 1
+    OnClick = SelectFileBtnClick
+  end
+  object StartBtn: TButton
+    Left = 656
+    Height = 25
+    Top = 37
+    Width = 75
+    Caption = 'Start'
+    TabOrder = 2
+    OnClick = StartBtnClick
+  end
+  object InitBtn: TButton
+    Left = 280
+    Height = 25
+    Top = 8
+    Width = 280
+    Caption = 'Click me to intialize models before you start'
+    TabOrder = 3
+    OnClick = InitBtnClick
+  end
+  object ResultMemo: TMemo
+    Left = 24
+    Height = 488
+    Top = 72
+    Width = 800
+    ScrollBars = ssAutoBoth
+    TabOrder = 4
+  end
+  object ProgressBar: TProgressBar
+    Left = 32
+    Height = 16
+    Top = 592
+    Width = 792
+    TabOrder = 5
+  end
+  object ProgressLabel: TLabel
+    Left = 770
+    Height = 16
+    Top = 568
+    Width = 8
+    Caption = '0'
+  end
+  object SelectFileDlg: TOpenDialog
+    Title = 'Open a wave file'
+    Left = 600
+    Top = 488
+  end
+end

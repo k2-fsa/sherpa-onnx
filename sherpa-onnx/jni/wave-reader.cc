@@ -18,7 +18,9 @@ static jobjectArray ReadWaveImpl(JNIEnv *env, std::istream &is,
 
   if (!is_ok) {
     SHERPA_ONNX_LOGE("Failed to read '%s'", p_filename);
-    exit(-1);
+    jclass exception_class = env->FindClass("java/lang/Exception");
+    env->ThrowNew(exception_class, "Failed to read wave file.");
+    return nullptr;
   }
 
   jfloatArray samples_arr = env->NewFloatArray(samples.size());

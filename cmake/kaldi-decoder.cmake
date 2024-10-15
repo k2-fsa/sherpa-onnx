@@ -1,9 +1,9 @@
 function(download_kaldi_decoder)
   include(FetchContent)
 
-  set(kaldi_decoder_URL  "https://github.com/k2-fsa/kaldi-decoder/archive/refs/tags/v0.2.5.tar.gz")
-  set(kaldi_decoder_URL2 "https://hub.nuaa.cf/k2-fsa/kaldi-decoder/archive/refs/tags/v0.2.5.tar.gz")
-  set(kaldi_decoder_HASH "SHA256=f663e58aef31b33cd8086eaa09ff1383628039845f31300b5abef817d8cc2fff")
+  set(kaldi_decoder_URL  "https://github.com/k2-fsa/kaldi-decoder/archive/refs/tags/v0.2.6.tar.gz")
+  set(kaldi_decoder_URL2 "https://hub.nuaa.cf/k2-fsa/kaldi-decoder/archive/refs/tags/v0.2.6.tar.gz")
+  set(kaldi_decoder_HASH "SHA256=b13c78b37495cafc6ef3f8a7b661b349c55a51abbd7f7f42f389408dcf86a463")
 
   set(KALDI_DECODER_BUILD_PYTHON OFF CACHE BOOL "" FORCE)
   set(KALDI_DECODER_ENABLE_TESTS OFF CACHE BOOL "" FORCE)
@@ -12,11 +12,11 @@ function(download_kaldi_decoder)
   # If you don't have access to the Internet,
   # please pre-download kaldi-decoder
   set(possible_file_locations
-    $ENV{HOME}/Downloads/kaldi-decoder-0.2.5.tar.gz
-    ${CMAKE_SOURCE_DIR}/kaldi-decoder-0.2.5.tar.gz
-    ${CMAKE_BINARY_DIR}/kaldi-decoder-0.2.5.tar.gz
-    /tmp/kaldi-decoder-0.2.5.tar.gz
-    /star-fj/fangjun/download/github/kaldi-decoder-0.2.5.tar.gz
+    $ENV{HOME}/Downloads/kaldi-decoder-0.2.6.tar.gz
+    ${CMAKE_SOURCE_DIR}/kaldi-decoder-0.2.6.tar.gz
+    ${CMAKE_BINARY_DIR}/kaldi-decoder-0.2.6.tar.gz
+    /tmp/kaldi-decoder-0.2.6.tar.gz
+    /star-fj/fangjun/download/github/kaldi-decoder-0.2.6.tar.gz
   )
 
   foreach(f IN LISTS possible_file_locations)
@@ -45,7 +45,24 @@ function(download_kaldi_decoder)
   message(STATUS "kaldi-decoder's binary dir is ${kaldi_decoder_BINARY_DIR}")
 
   include_directories(${kaldi_decoder_SOURCE_DIR})
+
+  if(BUILD_SHARED_LIBS)
+    set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
+  endif()
+
   add_subdirectory(${kaldi_decoder_SOURCE_DIR} ${kaldi_decoder_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  if(_build_shared_libs_bak)
+    set_target_properties(
+        kaldi-decoder-core
+      PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        C_VISIBILITY_PRESET hidden
+        CXX_VISIBILITY_PRESET hidden
+    )
+    set(BUILD_SHARED_LIBS ON)
+  endif()
 
   if(WIN32 AND MSVC)
     target_compile_options(kaldi-decoder-core PUBLIC
@@ -58,41 +75,13 @@ function(download_kaldi_decoder)
     INTERFACE
       ${kaldi-decoder_SOURCE_DIR}/
   )
-  if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
+  if(NOT BUILD_SHARED_LIBS)
     install(TARGETS
       kaldi-decoder-core
       kaldifst_core
       fst
-    DESTINATION ..)
-    if(SHERPA_ONNX_ENABLE_TTS)
-      install(TARGETS
-        fstfar
-      DESTINATION ..)
-    endif()
-  else()
-    install(TARGETS
-      kaldi-decoder-core
-      kaldifst_core
-      fst
+      fstfar
     DESTINATION lib)
-    if(SHERPA_ONNX_ENABLE_TTS)
-      install(TARGETS
-        fstfar
-      DESTINATION lib)
-    endif()
-  endif()
-
-  if(WIN32 AND BUILD_SHARED_LIBS)
-    install(TARGETS
-      kaldi-decoder-core
-      kaldifst_core
-      fst
-    DESTINATION bin)
-    if(SHERPA_ONNX_ENABLE_TTS)
-      install(TARGETS
-        fstfar
-      DESTINATION bin)
-    endif()
   endif()
 endfunction()
 

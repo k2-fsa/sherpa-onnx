@@ -47,6 +47,8 @@ struct OnlineRecognizerResult {
   /// log-domain scores from "hot-phrase" contextual boosting
   std::vector<float> context_scores;
 
+  std::vector<int32_t> words;
+
   /// ID of this segment
   /// When an endpoint is detected, it is incremented
   int32_t segment = 0;
@@ -98,6 +100,17 @@ struct OnlineRecognizerConfig {
 
   float temperature_scale = 2.0;
 
+  // If there are multiple rules, they are applied from left to right.
+  std::string rule_fsts;
+
+  // If there are multiple FST archives, they are applied from left to right.
+  std::string rule_fars;
+
+  /// used only for modified_beam_search, if hotwords_buf is non-empty,
+  /// the hotwords will be loaded from the buffered string instead of from the
+  /// "hotwords_file"
+  std::string hotwords_buf;
+
   OnlineRecognizerConfig() = default;
 
   OnlineRecognizerConfig(
@@ -107,7 +120,8 @@ struct OnlineRecognizerConfig {
       const OnlineCtcFstDecoderConfig &ctc_fst_decoder_config,
       bool enable_endpoint, const std::string &decoding_method,
       int32_t max_active_paths, const std::string &hotwords_file,
-      float hotwords_score, float blank_penalty, float temperature_scale)
+      float hotwords_score, float blank_penalty, float temperature_scale,
+      const std::string &rule_fsts, const std::string &rule_fars)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
@@ -119,7 +133,9 @@ struct OnlineRecognizerConfig {
         hotwords_file(hotwords_file),
         hotwords_score(hotwords_score),
         blank_penalty(blank_penalty),
-        temperature_scale(temperature_scale) {}
+        temperature_scale(temperature_scale),
+        rule_fsts(rule_fsts),
+        rule_fars(rule_fars) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

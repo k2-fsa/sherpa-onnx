@@ -189,10 +189,11 @@ int32_t main(int32_t argc, char *argv[]) {
   }
 
   const SherpaOnnxOnlineRecognizer *recognizer =
-      CreateOnlineRecognizer(&config);
-  const SherpaOnnxOnlineStream *stream = CreateOnlineStream(recognizer);
+      SherpaOnnxCreateOnlineRecognizer(&config);
+  const SherpaOnnxOnlineStream *stream =
+      SherpaOnnxCreateOnlineStream(recognizer);
 
-  const SherpaOnnxDisplay *display = CreateDisplay(50);
+  const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;
 
   const char *device_name = argv[context.index];
@@ -218,17 +219,17 @@ int32_t main(int32_t argc, char *argv[]) {
 
   while (!stop) {
     const std::vector<float> &samples = alsa.Read(chunk);
-    AcceptWaveform(stream, expected_sample_rate, samples.data(),
-                   samples.size());
-    while (IsOnlineStreamReady(recognizer, stream)) {
-      DecodeOnlineStream(recognizer, stream);
+    SherpaOnnxOnlineStreamAcceptWaveform(stream, expected_sample_rate,
+                                         samples.data(), samples.size());
+    while (SherpaOnnxIsOnlineStreamReady(recognizer, stream)) {
+      SherpaOnnxDecodeOnlineStream(recognizer, stream);
     }
 
     const SherpaOnnxOnlineRecognizerResult *r =
-        GetOnlineStreamResult(recognizer, stream);
+        SherpaOnnxGetOnlineStreamResult(recognizer, stream);
 
     std::string text = r->text;
-    DestroyOnlineRecognizerResult(r);
+    SherpaOnnxDestroyOnlineRecognizerResult(r);
 
     if (!text.empty() && last_text != text) {
       last_text = text;
@@ -240,18 +241,18 @@ int32_t main(int32_t argc, char *argv[]) {
       fflush(stderr);
     }
 
-    if (IsEndpoint(recognizer, stream)) {
+    if (SherpaOnnxOnlineStreamIsEndpoint(recognizer, stream)) {
       if (!text.empty()) {
         ++segment_index;
       }
-      Reset(recognizer, stream);
+      SherpaOnnxOnlineStreamReset(recognizer, stream);
     }
   }
 
   // free allocated resources
-  DestroyDisplay(display);
-  DestroyOnlineStream(stream);
-  DestroyOnlineRecognizer(recognizer);
+  SherpaOnnxDestroyDisplay(display);
+  SherpaOnnxDestroyOnlineStream(stream);
+  SherpaOnnxDestroyOnlineRecognizer(recognizer);
   fprintf(stderr, "\n");
 
   return 0;

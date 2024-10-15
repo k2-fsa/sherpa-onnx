@@ -1,0 +1,19 @@
+name: vad_with_non_streaming_asr
+
+description: >
+  This example demonstrates how to use the Dart API for VAD (voice activity detection)
+  with non-streaming speech recognition.
+
+version: 1.0.0
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  sherpa_onnx:
+    path: ../../flutter/sherpa_onnx
+  path: ^1.9.0
+  args: ^2.5.0
+
+dev_dependencies:
+  lints: ^3.0.0

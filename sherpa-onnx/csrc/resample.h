@@ -130,11 +130,11 @@ class LinearResample {
   // the following variables keep track of where we are in a particular signal,
   // if it is being provided over multiple calls to Resample().
 
-  int64_t input_sample_offset_;   ///< The number of input samples we have
-                                  ///< already received for this signal
-                                  ///< (including anything in remainder_)
-  int64_t output_sample_offset_;  ///< The number of samples we have already
-                                  ///< output for this signal.
+  int64_t input_sample_offset_ = 0;   ///< The number of input samples we have
+                                      ///< already received for this signal
+                                      ///< (including anything in remainder_)
+  int64_t output_sample_offset_ = 0;  ///< The number of samples we have already
+                                      ///< output for this signal.
   std::vector<float> input_remainder_;  ///< A small trailing part of the
                                         ///< previously seen input signal.
 };

@@ -9,22 +9,22 @@ endif()
 set(exported_functions
   MyPrint
   # online ASR
-  AcceptWaveform
-  CreateOnlineRecognizer
-  CreateOnlineStream
-  DecodeOnlineStream
-  DestroyOfflineStreamResultJson
-  DestroyOnlineRecognizer
-  DestroyOnlineRecognizerResult
-  DestroyOnlineStream
-  DestroyOnlineStreamResultJson
-  GetOfflineStreamResultAsJson
-  GetOnlineStreamResult
-  GetOnlineStreamResultAsJson
-  InputFinished
-  IsEndpoint
-  IsOnlineStreamReady
-  Reset
+  SherpaOnnxCreateOnlineRecognizer
+  SherpaOnnxCreateOnlineStream
+  SherpaOnnxDecodeOnlineStream
+  SherpaOnnxDestroyOfflineStreamResultJson
+  SherpaOnnxDestroyOnlineRecognizer
+  SherpaOnnxDestroyOnlineRecognizerResult
+  SherpaOnnxDestroyOnlineStream
+  SherpaOnnxDestroyOnlineStreamResultJson
+  SherpaOnnxGetOfflineStreamResultAsJson
+  SherpaOnnxGetOnlineStreamResult
+  SherpaOnnxGetOnlineStreamResultAsJson
+  SherpaOnnxIsOnlineStreamReady
+  SherpaOnnxOnlineStreamAcceptWaveform
+  SherpaOnnxOnlineStreamInputFinished
+  SherpaOnnxOnlineStreamIsEndpoint
+  SherpaOnnxOnlineStreamReset
   #
 )
 set(mangled_exported_functions)
@@ -39,6 +39,8 @@ string(APPEND MY_FLAGS " -sSTACK_SIZE=10485760 ") # 10MB
 string(APPEND MY_FLAGS " -sEXPORTED_FUNCTIONS=[_CopyHeap,_malloc,_free,${all_exported_functions}] ")
 string(APPEND MY_FLAGS "--preload-file ${CMAKE_CURRENT_SOURCE_DIR}/assets@. ")
 string(APPEND MY_FLAGS " -sEXPORTED_RUNTIME_METHODS=['ccall','stringToUTF8','setValue','getValue','lengthBytesUTF8','UTF8ToString'] ")
+
+message(STATUS "MY_FLAGS: ${MY_FLAGS}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${MY_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MY_FLAGS}")

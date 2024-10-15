@@ -17,14 +17,17 @@ echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 function linux() {
   echo "Process linux"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-linux.git
+  rm -v ./sherpa-onnx-go-linux/*.go
+
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-linux/
   cp -v ./_internal/c-api.h ./sherpa-onnx-go-linux/
+  cp -v ./_internal/build_linux_*.go ./sherpa-onnx-go-linux/
 
   rm -rf sherpa-onnx-go-linux/lib/x86_64-unknown-linux-gnu/lib*
   dst=$(realpath sherpa-onnx-go-linux/lib/x86_64-unknown-linux-gnu)
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 
   cp -v sherpa_onnx/lib/*.so* $dst
@@ -36,7 +39,7 @@ function linux() {
   dst=$(realpath sherpa-onnx-go-linux/lib/aarch64-unknown-linux-gnu)
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl
 
   cp -v sherpa_onnx/lib/*.so* $dst
@@ -48,7 +51,7 @@ function linux() {
   dst=$(realpath sherpa-onnx-go-linux/lib/arm-unknown-linux-gnueabihf)
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-linux_armv7l.whl
 
   cp -v sherpa_onnx/lib/*.so* $dst
@@ -71,18 +74,24 @@ function linux() {
 function osx() {
   echo "Process osx-x64"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-macos.git
+  rm -v ./sherpa-onnx-go-macos/*.go
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-macos/
   cp -v ./_internal/c-api.h ./sherpa-onnx-go-macos/
+  cp -v ./_internal/build_darwin_*.go ./sherpa-onnx-go-macos/
 
   rm -rf sherpa-onnx-go-macos/lib/x86_64-apple-darwin/lib*
   dst=$(realpath sherpa-onnx-go-macos/lib/x86_64-apple-darwin/)
 
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_x86_64.whl
-  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_x86_64.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_x86_64.whl
+  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_x86_64.whl
 
   cp -v sherpa_onnx/lib/*.dylib $dst/
+
+  pushd $dst
+  cp -v libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+  popd
 
   cd ..
   rm -rf t
@@ -93,10 +102,14 @@ function osx() {
 
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_arm64.whl
-  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-macosx_11_0_arm64.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_arm64.whl
+  unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp39-cp39-macosx_11_0_arm64.whl
 
   cp -v sherpa_onnx/lib/*.dylib $dst/
+
+  pushd $dst
+  cp -v libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+  popd
 
   cd ..
   rm -rf t
@@ -115,18 +128,19 @@ function osx() {
 function windows() {
   echo "Process windows"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-windows.git
+  rm -v ./sherpa-onnx-go-windows/*.go
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-windows/
   cp -v ./_internal/c-api.h ./sherpa-onnx-go-windows/
+  cp -v ./_internal/build_windows_*.go ./sherpa-onnx-go-windows/
 
   rm -fv sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu/*
   dst=$(realpath sherpa-onnx-go-windows/lib/x86_64-pc-windows-gnu)
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win_amd64.whl
 
   cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll $dst
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.lib $dst
 
   cd ..
   rm -rf t
@@ -135,11 +149,10 @@ function windows() {
   dst=$(realpath sherpa-onnx-go-windows/lib/i686-pc-windows-gnu)
   mkdir t
   cd t
-  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win32.whl
+  wget -q https://huggingface.co/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win32.whl
   unzip ./sherpa_onnx-${SHERPA_ONNX_VERSION}-cp38-cp38-win32.whl
 
   cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll $dst
-  cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.lib $dst
 
   cd ..
   rm -rf t

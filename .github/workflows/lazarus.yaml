@@ -1,0 +1,372 @@
+name: lazarus
+
+on:
+  push:
+    branches:
+      - master
+      - lazarus
+    paths:
+      - '.github/workflows/lazarus.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'lazarus-examples/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/pascal-api/*'
+      - 'scripts/lazarus/*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/lazarus.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'lazarus-examples/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'sherpa-onnx/pascal-api/*'
+      - 'scripts/lazarus/*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: lazarus-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-20.04, macos-latest, macos-13, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}
+
+      # See https://github.com/gcarreno/setup-lazarus
+      - uses: gcarreno/setup-lazarus@v3
+        with:
+          lazarus-version: "stable"
+          with-cache: true
+
+      - name: Lazarus info
+        shell: bash
+        run: |
+          which lazbuild
+          lazbuild --help
+
+      - name: FPC info
+        shell: bash
+        run: |
+          which fpc
+          fpc -i
+
+      - name: OS info
+        shell: bash
+        run: |
+          uname -a
+
+      - name: Install patchelf for ubuntu
+        if: matrix.os == 'ubuntu-20.04'
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -q -y patchelf
+
+      - name: Show Patchelf version (ubuntu)
+        if: matrix.os == 'ubuntu-20.04'
+        shell: bash
+        run: |
+          patchelf --version
+          patchelf --help
+          which patchelf
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+          os=${{ matrix.os }}
+
+          if [[ $os == 'windows-latest' || $os == 'ubuntu-20.04' ]]; then
+            BUILD_SHARED_LIBS=ON
+          else
+            BUILD_SHARED_LIBS=OFF
+          fi
+
+          cmake \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -D BUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            -D CMAKE_BUILD_TYPE=Release \
+            ..
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cd build
+          cmake --build . --target install --config Release -j 2
+
+          ls -lh install/lib/
+
+          cp -v install/lib/*.dll ../lazarus-examples/generate_subtitles/ || true
+          cp -v install/lib/*.so* ../lazarus-examples/generate_subtitles/ || true
+
+      - name: Build generating subtitles
+        shell: bash
+        run: |
+          cd lazarus-examples/generate_subtitles
+          os=${{ matrix.os }}
+          if [[ $os == macos-13 ]]; then
+            lazbuild --verbose --build-mode=Release --widgetset=cocoa ./generate_subtitles.lpi
+          elif [[ $os == macos-latest ]]; then
+            lazbuild --verbose --build-mode=Release --widgetset=cocoa --cpu=aarch64 ./generate_subtitles.lpi
+          elif [[ $os == 'ubuntu-20.04' ]]; then
+            lazbuild --verbose --build-mode=Release-Linux ./generate_subtitles.lpi
+          else
+            lazbuild --verbose --build-mode=Release ./generate_subtitles.lpi
+          fi
+
+      - name: Display generating subtitles
+        shell: bash
+        run: |
+          cd lazarus-examples/generate_subtitles
+          ls -lh
+
+      - name: Collect generating subtitles (Ubuntu)
+        if: matrix.os == 'ubuntu-20.04'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          cd lazarus-examples/generate_subtitles
+          ls -lh
+          readelf -d ./generate_subtitles
+          echo '----------'
+          ldd ./generate_subtitles
+
+          d=generate_subtitles-linux-x64-$SHERPA_ONNX_VERSION
+          echo "---before running patchelf---"
+          readelf -d ./generate_subtitles
+
+          patchelf --set-rpath '$ORIGIN' ./generate_subtitles
+
+          echo "---after running patchelf---"
+          readelf -d ./generate_subtitles
+
+          mkdir -p $d
+          cp -v ./generate_subtitles $d/
+          cp -v *.so $d/
+
+          mv -v $d /tmp/linux-x64
+
+          ls -lh /tmp/linux-x64
+
+      - name: Collect generating subtitles (windows)
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          cd lazarus-examples/generate_subtitles
+          ls -lh
+
+          d=generate-subtitles-windows-x64-$SHERPA_ONNX_VERSION
+          mkdir -p $d
+          cp -v ./generate_subtitles.exe $d/
+          cp -v onnxruntime.dll $d/
+          cp -v sherpa-onnx-c-api.dll $d/
+          mv $d ../../windows-x64
+          cd ../..
+
+          ls -lh windows-x64
+
+      - name: Collect generating subtitles (macos)
+        if: matrix.os == 'macos-13' || matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          cd lazarus-examples/generate_subtitles
+          ls -lh
+          file ./generate_subtitles
+          echo '----------'
+          otool -L ./generate_subtitles
+          rm -v generate_subtitles.app/Contents/MacOS/generate_subtitles
+          cp -v ./generate_subtitles generate_subtitles.app/Contents/MacOS/generate_subtitles
+          chmod +x generate_subtitles.app/Contents/MacOS/generate_subtitles
+
+          if [[ ${{ matrix.os }} == 'macos-latest' ]]; then
+            mv generate_subtitles.app /tmp/macos-arm64
+          else
+            mv generate_subtitles.app /tmp/macos-x64
+            d=generate-subtitles-macos-x64-$SHERPA_ONNX_VERSION.app
+          fi
+
+          ls -lh /tmp
+          echo "---"
+          ls -lh /tmp/macos-*
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'ubuntu-20.04'
+        with:
+          name: linux-x64
+          path: /tmp/linux-x64
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'macos-latest'
+        with:
+          name: macos-arm64
+          path: /tmp/macos-arm64
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'macos-13'
+        with:
+          name: macos-x64
+          path: /tmp/macos-x64
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.os == 'windows-latest'
+        with:
+          name: windows-x64
+          path: ./windows-x64
+
+  release:
+    runs-on: ${{ matrix.os }}
+    needs: [build]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        total: ["2"]
+        index: ["0", "1"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Retrieve artifact from windows x64
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x64
+          path: /tmp/windows-x64
+
+      - name: Retrieve artifact from linux x64
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-x64
+          path: /tmp/linux-x64
+
+      - name: Retrieve artifact from macos x64
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-x64
+          path: /tmp/macos-x64
+
+      - name: Retrieve artifact from macos arm64
+        uses: actions/download-artifact@v4
+        with:
+          name: macos-arm64
+          path: /tmp/macos-arm64
+
+      - name: Display build files
+        shell: bash
+        run: |
+          ls -lh /tmp
+          echo "---linux-x64---"
+          ls -lh /tmp/linux-x64/
+          readelf -d /tmp/linux-x64/generate_subtitles
+          echo "---"
+          ldd /tmp/linux-x64/generate_subtitles
+
+          echo "---macos-x64---"
+          ls -lh /tmp/macos-x64/
+          mkdir -p /tmp/macos-x64/Contents/Resources
+          chmod +x /tmp/macos-x64/Contents/MacOS/generate_subtitles
+
+          echo "---macos-arm64---"
+          ls -lh /tmp/macos-arm64/
+          mkdir -p /tmp/macos-arm64/Contents/Resources
+          chmod +x /tmp/macos-arm64/Contents/MacOS/generate_subtitles
+
+          echo "---windows-x64---"
+          ls -lh /tmp/windows-x64/
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/lazarus
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-subtitles.py --total $total --index $index
+
+          chmod +x build-generate-subtitles.sh
+          mv -v ./build-generate-subtitles.sh ../..
+
+      - name: Generate tar files
+        shell: bash
+        run: |
+          ./build-generate-subtitles.sh
+
+      - name: Display tar files
+        shell: bash
+        run: |
+          ls -lh /tmp/out
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-bin huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            d=generate-subtitles/$SHERPA_ONNX_VERSION
+            mkdir -p $d
+
+            cp -v /tmp/out/*.tar.bz2 $d/
+            git status
+            git lfs track "*.tar.bz2"
+            git add .
+            git commit -m "add more files"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-bin main

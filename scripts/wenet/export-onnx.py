@@ -32,10 +32,16 @@ def add_meta_data(filename: str, meta_data: Dict[str, str]):
         Key-value pairs.
     """
     model = onnx.load(filename)
+
+    while len(model.metadata_props):
+        model.metadata_props.pop()
+
     for key, value in meta_data.items():
         meta = model.metadata_props.add()
         meta.key = key
         meta.value = str(value)
+
+    #  model = onnx.version_converter.convert_version(model, 21)
 
     onnx.save(model, filename)
 
@@ -87,6 +93,7 @@ def main():
     x = torch.rand(N, T, C, dtype=torch.float)
     x_lens = torch.full((N,), fill_value=T, dtype=torch.int64)
 
+    # https://github.com/pytorch/pytorch/issues/114801
     opset_version = 13
     onnx_model = torch.jit.script(onnx_model)
     torch.onnx.export(

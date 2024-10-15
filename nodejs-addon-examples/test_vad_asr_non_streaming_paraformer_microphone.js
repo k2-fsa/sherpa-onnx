@@ -15,9 +15,9 @@ function createRecognizer() {
     },
     'modelConfig': {
       'paraformer': {
-        'model': './sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx',
+        'model': './sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx',
       },
-      'tokens': './sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt',
+      'tokens': './sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt',
       'numThreads': 2,
       'provider': 'cpu',
       'debug': 1,

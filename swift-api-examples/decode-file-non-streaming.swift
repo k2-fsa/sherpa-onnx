@@ -17,6 +17,7 @@ func run() {
   var modelConfig: SherpaOnnxOfflineModelConfig
   var modelType = "whisper"
   // modelType = "paraformer"
+  // modelType = "sense_voice"
 
   if modelType == "whisper" {
     let encoder = "./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx"
@@ -47,6 +48,19 @@ func run() {
       debug: 0,
       modelType: "paraformer"
     )
+  } else if modelType == "sense_voice" {
+    let model = "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx"
+    let tokens = "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt"
+    let senseVoiceConfig = sherpaOnnxOfflineSenseVoiceModelConfig(
+      model: model,
+      useInverseTextNormalization: true
+    )
+
+    modelConfig = sherpaOnnxOfflineModelConfig(
+      tokens: tokens,
+      debug: 0,
+      senseVoice: senseVoiceConfig
+    )
   } else {
     print("Please specify a supported modelType \(modelType)")
     return
@@ -63,7 +77,10 @@ func run() {
 
   recognizer = SherpaOnnxOfflineRecognizer(config: &config)
 
-  let filePath = "./sherpa-onnx-whisper-tiny.en/test_wavs/0.wav"
+  var filePath = "./sherpa-onnx-whisper-tiny.en/test_wavs/0.wav"
+  if modelType == "sense_voice" {
+    filePath = "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/test_wavs/zh.wav"
+  }
   let fileURL: NSURL = NSURL(fileURLWithPath: filePath)
   let audioFile = try! AVAudioFile(forReading: fileURL as URL)
 

@@ -32,6 +32,49 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Free space
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          df -h
+          rm -rf /opt/hostedtoolcache
+          df -h
+
+      - name: Free more space
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          # https://github.com/orgs/community/discussions/25678
+          cd /opt
+          find . -maxdepth 1 -mindepth 1 '!' -path ./containerd '!' -path ./actionarchivecache '!' -path ./runner '!' -path ./runner-cache -exec rm -rf '{}' ';'
+
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Free Disk Space (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: false
+          haskell: true
+          large-packages: true
+          docker-images: false
+          swap-storage: true
+
+      - name: Check space
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          df -h
+
       - name: Setup .NET 6.0
         uses: actions/setup-dotnet@v4
         with:

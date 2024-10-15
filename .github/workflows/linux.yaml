@@ -5,7 +5,7 @@ on:
     branches:
       - master
     tags:
-      - '*'
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
       - '.github/workflows/linux.yaml'
       - '.github/scripts/test-kws.sh'
@@ -17,6 +17,8 @@ on:
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-audio-tagging.sh'
       - '.github/scripts/test-offline-punctuation.sh'
+      - '.github/scripts/test-online-punctuation.sh'
+      - '.github/scripts/test-speaker-diarization.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -36,6 +38,8 @@ on:
       - '.github/scripts/test-offline-tts.sh'
       - '.github/scripts/test-audio-tagging.sh'
       - '.github/scripts/test-offline-punctuation.sh'
+      - '.github/scripts/test-online-punctuation.sh'
+      - '.github/scripts/test-speaker-diarization.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -88,7 +92,7 @@ jobs:
 
               cd /home/runner/work/sherpa-onnx/sherpa-onnx
 
-              git clone --depth 1 https://github.com/alsa-project/alsa-lib
+              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
               pushd alsa-lib
               ./gitcompile
               popd
@@ -99,13 +103,24 @@ jobs:
               mkdir build
               cd build
 
-              cmake -DSHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} -DCMAKE_INSTALL_PREFIX=./install ..
+              cmake \
+                -D SHERPA_ONNX_ENABLE_TTS=${{ matrix.with_tts }} \
+                -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+                -D BUILD_SHARED_LIBS=${{ matrix.shared_lib }} \
+                -D CMAKE_INSTALL_PREFIX=./install \
+                ..
 
               make -j2
               make install
 
               ls -lh lib
               ls -lh bin
+
+              echo "----"
+              ls -lh install/lib
+
+              echo "----"
+              ls -lh install/bin
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash
@@ -130,6 +145,45 @@ jobs:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: install/*
 
+      - name: Test offline speaker diarization
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-speaker-diarization
+
+          .github/scripts/test-speaker-diarization.sh
+
+      - name: Test offline transducer
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-transducer.sh
+          du -h -d1 .
+
+      - name: Test offline CTC
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-ctc.sh
+          du -h -d1 .
+
+      - name: Test online punctuation
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-online-punctuation
+
+          .github/scripts/test-online-punctuation.sh
+          du -h -d1 .
+
       - name: Test online transducer
         shell: bash
         run: |
@@ -150,16 +204,6 @@ jobs:
           .github/scripts/test-online-transducer.sh
           du -h -d1 .
 
-      - name: Test offline CTC
-        shell: bash
-        run: |
-          du -h -d1 .
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
-
-          .github/scripts/test-offline-ctc.sh
-          du -h -d1 .
-
       - name: Test spoken language identification (C++ API)
         shell: bash
         run: |
@@ -178,16 +222,6 @@ jobs:
           export EXE=sherpa-onnx
 
           .github/scripts/test-online-ctc.sh
-          du -h -d1 .
-
-      - name: Test offline transducer
-        shell: bash
-        run: |
-          du -h -d1 .
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline
-
-          .github/scripts/test-offline-transducer.sh
           du -h -d1 .
 
       - name: Test C API

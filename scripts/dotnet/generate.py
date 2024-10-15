@@ -34,80 +34,50 @@ def get_dict():
     }
 
 
-def process_linux(s):
+def process_linux(s, rid):
     libs = [
-        "libespeak-ng.so",
-        "libkaldi-decoder-core.so",
-        "libkaldi-native-fbank-core.so",
-        "libonnxruntime.so.1.17.1",
-        "libssentencepiece_core.so",
-        "libpiper_phonemize.so.1",
+        "libonnxruntime.so",
         "libsherpa-onnx-c-api.so",
-        "libsherpa-onnx-core.so",
-        "libsherpa-onnx-fstfar.so",
-        "libsherpa-onnx-fst.so",
-        "libsherpa-onnx-kaldifst-core.so",
-        "libucd.so",
     ]
-    prefix = f"{src_dir}/linux/"
+    prefix = f"{src_dir}/linux-{rid}/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
     d = get_dict()
-    d["dotnet_rid"] = "linux-x64"
+    d["dotnet_rid"] = f"linux-{rid}"
     d["libs"] = libs
 
     environment = jinja2.Environment()
     template = environment.from_string(s)
     s = template.render(**d)
-    with open("./linux/sherpa-onnx.runtime.csproj", "w") as f:
+    with open(f"./linux-{rid}/sherpa-onnx.runtime.csproj", "w") as f:
         f.write(s)
 
 
-def process_macos(s):
+def process_macos(s, rid):
     libs = [
-        "libespeak-ng.dylib",
-        "libkaldi-decoder-core.dylib",
-        "libkaldi-native-fbank-core.dylib",
         "libonnxruntime.1.17.1.dylib",
-        "libssentencepiece_core.dylib",
-        "libpiper_phonemize.1.dylib",
         "libsherpa-onnx-c-api.dylib",
-        "libsherpa-onnx-core.dylib",
-        "libsherpa-onnx-fstfar.dylib",
-        "libsherpa-onnx-fst.dylib",
-        "libsherpa-onnx-kaldifst-core.dylib",
-        "libucd.dylib",
     ]
-    prefix = f"{src_dir}/macos/"
+    prefix = f"{src_dir}/macos-{rid}/"
     libs = [prefix + lib for lib in libs]
     libs = "\n      ;".join(libs)
 
     d = get_dict()
-    d["dotnet_rid"] = "osx-x64"
+    d["dotnet_rid"] = f"osx-{rid}"
     d["libs"] = libs
 
     environment = jinja2.Environment()
     template = environment.from_string(s)
     s = template.render(**d)
-    with open("./macos/sherpa-onnx.runtime.csproj", "w") as f:
+    with open(f"./macos-{rid}/sherpa-onnx.runtime.csproj", "w") as f:
         f.write(s)
 
 
 def process_windows(s, rid):
     libs = [
-        "espeak-ng.dll",
-        "kaldi-decoder-core.dll",
-        "kaldi-native-fbank-core.dll",
         "onnxruntime.dll",
-        "ssentencepiece_core.dll",
-        "piper_phonemize.dll",
         "sherpa-onnx-c-api.dll",
-        "sherpa-onnx-core.dll",
-        "sherpa-onnx-fstfar.lib",
-        "sherpa-onnx-fst.lib",
-        "sherpa-onnx-kaldifst-core.lib",
-        "ucd.dll",
     ]
 
     version = get_version()
@@ -129,10 +99,13 @@ def process_windows(s, rid):
 
 def main():
     s = read_proj_file("./sherpa-onnx.csproj.runtime.in")
-    process_macos(s)
-    process_linux(s)
+    process_macos(s, "x64")
+    process_macos(s, "arm64")
+    process_linux(s, "x64")
+    process_linux(s, "arm64")
     process_windows(s, "x64")
     process_windows(s, "x86")
+    process_windows(s, "arm64")
 
     s = read_proj_file("./sherpa-onnx.csproj.in")
     d = get_dict()

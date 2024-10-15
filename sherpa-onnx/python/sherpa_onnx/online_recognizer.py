@@ -11,6 +11,9 @@ from _sherpa_onnx import (
 )
 from _sherpa_onnx import OnlineRecognizer as _Recognizer
 from _sherpa_onnx import (
+    CudaConfig,
+    TensorrtConfig,
+    ProviderConfig,
     OnlineRecognizerConfig,
     OnlineRecognizerResult,
     OnlineStream,
@@ -56,14 +59,29 @@ class OnlineRecognizer(object):
         hotwords_score: float = 1.5,
         blank_penalty: float = 0.0,
         hotwords_file: str = "",
-        provider: str = "cpu",
         model_type: str = "",
         modeling_unit: str = "cjkchar",
         bpe_vocab: str = "",
         lm: str = "",
         lm_scale: float = 0.1,
+        lm_shallow_fusion: bool = True,
         temperature_scale: float = 2.0,
         debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
+        provider: str = "cpu",
+        device: int = 0,
+        cudnn_conv_algo_search: int = 1,
+        trt_max_workspace_size: int = 2147483647,
+        trt_max_partition_iterations: int = 10,
+        trt_min_subgraph_size: int = 5,
+        trt_fp16_enable: bool = True,
+        trt_detailed_build_log: bool = False,
+        trt_engine_cache_enable: bool = True,
+        trt_timing_cache_enable: bool = True,
+        trt_engine_cache_path: str ="",
+        trt_timing_cache_path: str ="",
+        trt_dump_subgraphs: bool = False,
     ):
         """
         Please refer to
@@ -133,8 +151,6 @@ class OnlineRecognizer(object):
             Temperature scaling for output symbol confidence estiamation.
             It affects only confidence values, the decoding uses the original
             logits without temperature.
-          provider:
-            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
           model_type:
             Online transducer model type. Valid values are: conformer, lstm,
             zipformer, zipformer2. All other values lead to loading the model twice.
@@ -148,6 +164,38 @@ class OnlineRecognizer(object):
             the log probability, you can get it from the directory where
             your bpe model is generated. Only used when hotwords provided
             and the modeling unit is bpe or cjkchar+bpe.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          device:
+            onnxruntime cuda device index.
+          cudnn_conv_algo_search:
+            onxrt CuDNN convolution search algorithm selection. CUDA EP
+          trt_max_workspace_size:
+            Set TensorRT EP GPU memory usage limit. TensorRT EP
+          trt_max_partition_iterations:
+            Limit partitioning iterations for model conversion. TensorRT EP
+          trt_min_subgraph_size:
+            Set minimum size for subgraphs in partitioning. TensorRT EP
+          trt_fp16_enable: bool = True,
+            Enable FP16 precision for faster performance. TensorRT EP
+          trt_detailed_build_log: bool = False,
+            Enable detailed logging of build steps. TensorRT EP
+          trt_engine_cache_enable: bool = True,
+            Enable caching of TensorRT engines. TensorRT EP
+          trt_timing_cache_enable: bool = True,
+            "Enable use of timing cache to speed up builds." TensorRT EP
+          trt_engine_cache_path: str ="",
+            "Set path to store cached TensorRT engines." TensorRT EP
+          trt_timing_cache_path: str ="",
+            "Set path for storing timing cache." TensorRT EP
+          trt_dump_subgraphs: bool = False,
+            "Dump optimized subgraphs for debugging." TensorRT EP
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -163,11 +211,35 @@ class OnlineRecognizer(object):
             joiner=joiner,
         )
 
+        cuda_config = CudaConfig(
+          cudnn_conv_algo_search=cudnn_conv_algo_search,
+        )
+
+        trt_config = TensorrtConfig(
+          trt_max_workspace_size=trt_max_workspace_size,
+          trt_max_partition_iterations=trt_max_partition_iterations,
+          trt_min_subgraph_size=trt_min_subgraph_size,
+          trt_fp16_enable=trt_fp16_enable,
+          trt_detailed_build_log=trt_detailed_build_log,
+          trt_engine_cache_enable=trt_engine_cache_enable,
+          trt_timing_cache_enable=trt_timing_cache_enable,
+          trt_engine_cache_path=trt_engine_cache_path,
+          trt_timing_cache_path=trt_timing_cache_path,
+          trt_dump_subgraphs=trt_dump_subgraphs,
+        )
+
+        provider_config = ProviderConfig(
+          trt_config=trt_config,
+          cuda_config=cuda_config,
+          provider=provider,
+          device=device,
+        )
+
         model_config = OnlineModelConfig(
             transducer=transducer_config,
             tokens=tokens,
             num_threads=num_threads,
-            provider=provider,
+            provider_config=provider_config,
             model_type=model_type,
             modeling_unit=modeling_unit,
             bpe_vocab=bpe_vocab,
@@ -203,6 +275,7 @@ class OnlineRecognizer(object):
         lm_config = OnlineLMConfig(
             model=lm,
             scale=lm_scale,
+            shallow_fusion=lm_shallow_fusion,
         )
 
         recognizer_config = OnlineRecognizerConfig(
@@ -217,6 +290,8 @@ class OnlineRecognizer(object):
             hotwords_file=hotwords_file,
             blank_penalty=blank_penalty,
             temperature_scale=temperature_scale,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -239,6 +314,9 @@ class OnlineRecognizer(object):
         decoding_method: str = "greedy_search",
         provider: str = "cpu",
         debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
+        device: int = 0,
     ):
         """
         Please refer to
@@ -283,6 +361,14 @@ class OnlineRecognizer(object):
             The only valid value is greedy_search.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+          device:
+            onnxruntime cuda device index.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -296,11 +382,16 @@ class OnlineRecognizer(object):
             decoder=decoder,
         )
 
+        provider_config = ProviderConfig(
+          provider=provider,
+          device=device,
+        )
+
         model_config = OnlineModelConfig(
             paraformer=paraformer_config,
             tokens=tokens,
             num_threads=num_threads,
-            provider=provider,
+            provider_config=provider_config,
             model_type="paraformer",
             debug=debug,
         )
@@ -322,6 +413,8 @@ class OnlineRecognizer(object):
             endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -345,6 +438,9 @@ class OnlineRecognizer(object):
         ctc_max_active: int = 3000,
         provider: str = "cpu",
         debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
+        device: int = 0,
     ):
         """
         Please refer to
@@ -393,6 +489,14 @@ class OnlineRecognizer(object):
             active paths at a time.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+          device:
+            onnxruntime cuda device index.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -402,11 +506,16 @@ class OnlineRecognizer(object):
 
         zipformer2_ctc_config = OnlineZipformer2CtcModelConfig(model=model)
 
+        provider_config = ProviderConfig(
+          provider=provider,
+          device=device,
+        )
+
         model_config = OnlineModelConfig(
             zipformer2_ctc=zipformer2_ctc_config,
             tokens=tokens,
             num_threads=num_threads,
-            provider=provider,
+            provider_config=provider_config,
             debug=debug,
         )
 
@@ -433,6 +542,8 @@ class OnlineRecognizer(object):
             ctc_fst_decoder_config=ctc_fst_decoder_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -454,6 +565,9 @@ class OnlineRecognizer(object):
         decoding_method: str = "greedy_search",
         provider: str = "cpu",
         debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
+        device: int = 0,
     ):
         """
         Please refer to
@@ -497,6 +611,14 @@ class OnlineRecognizer(object):
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
           debug:
             True to show meta data in the model.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+          device:
+            onnxruntime cuda device index.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -508,11 +630,16 @@ class OnlineRecognizer(object):
             model=model,
         )
 
+        provider_config = ProviderConfig(
+          provider=provider,
+          device=device,
+        )
+
         model_config = OnlineModelConfig(
             nemo_ctc=nemo_ctc_config,
             tokens=tokens,
             num_threads=num_threads,
-            provider=provider,
+            provider_config=provider_config,
             debug=debug,
         )
 
@@ -533,6 +660,8 @@ class OnlineRecognizer(object):
             endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
 
         self.recognizer = _Recognizer(recognizer_config)
@@ -556,6 +685,9 @@ class OnlineRecognizer(object):
         decoding_method: str = "greedy_search",
         provider: str = "cpu",
         debug: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
+        device: int = 0,
     ):
         """
         Please refer to
@@ -602,6 +734,14 @@ class OnlineRecognizer(object):
             The only valid value is greedy_search.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+          device:
+            onnxruntime cuda device index.
         """
         self = cls.__new__(cls)
         _assert_file_exists(tokens)
@@ -615,11 +755,16 @@ class OnlineRecognizer(object):
             num_left_chunks=num_left_chunks,
         )
 
+        provider_config = ProviderConfig(
+          provider=provider,
+          device=device,
+        )
+
         model_config = OnlineModelConfig(
             wenet_ctc=wenet_ctc_config,
             tokens=tokens,
             num_threads=num_threads,
-            provider=provider,
+            provider_config=provider_config,
             debug=debug,
         )
 
@@ -640,6 +785,8 @@ class OnlineRecognizer(object):
             endpoint_config=endpoint_config,
             enable_endpoint=enable_endpoint_detection,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
 
         self.recognizer = _Recognizer(recognizer_config)

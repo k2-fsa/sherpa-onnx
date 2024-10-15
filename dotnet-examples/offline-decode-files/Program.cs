@@ -17,65 +17,80 @@ class OfflineDecodeFiles
   {
 
     [Option("sample-rate", Required = false, Default = 16000, HelpText = "Sample rate of the data used to train the model")]
-    public int SampleRate { get; set; }
+    public int SampleRate { get; set; }  = 16000;
 
     [Option("feat-dim", Required = false, Default = 80, HelpText = "Dimension of the features used to train the model")]
-    public int FeatureDim { get; set; }
+    public int FeatureDim { get; set; } = 80;
 
     [Option(Required = false, HelpText = "Path to tokens.txt")]
-    public string Tokens { get; set; }
+    public string Tokens { get; set; } = "";
 
     [Option(Required = false, Default = "", HelpText = "Path to transducer encoder.onnx. Used only for transducer models")]
-    public string Encoder { get; set; }
+    public string Encoder { get; set; } = "";
 
     [Option(Required = false, Default = "", HelpText = "Path to transducer decoder.onnx. Used only for transducer models")]
-    public string Decoder { get; set; }
+    public string Decoder { get; set; } = "";
 
     [Option(Required = false,  Default = "",HelpText = "Path to transducer joiner.onnx. Used only for transducer models")]
-    public string Joiner { get; set; }
+    public string Joiner { get; set; } = "";
+
+    [Option("model-type", Required = false, Default = "", HelpText = "model type")]
+    public string ModelType { get; set; } = "";
 
     [Option("whisper-encoder", Required = false, Default = "", HelpText = "Path to whisper encoder.onnx. Used only for whisper models")]
-    public string WhisperEncoder { get; set; }
+    public string WhisperEncoder { get; set; } = "";
 
     [Option("whisper-decoder", Required = false, Default = "", HelpText = "Path to whisper decoder.onnx. Used only for whisper models")]
-    public string WhisperDecoder { get; set; }
+    public string WhisperDecoder { get; set; } = "";
 
     [Option("whisper-language", Required = false, Default = "", HelpText = "Language of the input file. Can be empty")]
-    public string WhisperLanguage{ get; set; }
+    public string WhisperLanguage{ get; set; } = "";
 
     [Option("whisper-task", Required = false, Default = "transcribe", HelpText = "transcribe or translate")]
-    public string WhisperTask{ get; set; }
+    public string WhisperTask{ get; set; } = "transcribe";
 
     [Option("tdnn-model", Required = false, Default = "", HelpText = "Path to tdnn yesno model")]
-    public string TdnnModel { get; set; }
-
+    public string TdnnModel { get; set; } = "";
 
     [Option(Required = false, HelpText = "Path to model.onnx. Used only for paraformer models")]
-    public string Paraformer { get; set; }
+    public string Paraformer { get; set; } = "";
 
     [Option("nemo-ctc", Required = false, HelpText = "Path to model.onnx. Used only for NeMo CTC models")]
-    public string NeMoCtc { get; set; }
+    public string NeMoCtc { get; set; } = "";
+
+    [Option("telespeech-ctc", Required = false, HelpText = "Path to model.onnx. Used only for TeleSpeech CTC models")]
+    public string TeleSpeechCtc { get; set; } = "";
+
+    [Option("sense-voice-model", Required = false, HelpText = "Path to model.onnx. Used only for SenseVoice CTC models")]
+    public string SenseVoiceModel { get; set; } = "";
+
+    [Option("sense-voice-use-itn", Required = false, HelpText = "1 to use inverse text normalization for sense voice.")]
+    public int SenseVoiceUseItn { get; set; } = 1;
 
     [Option("num-threads", Required = false, Default = 1, HelpText = "Number of threads for computation")]
-    public int NumThreads { get; set; }
+    public int NumThreads { get; set; } = 1;
 
     [Option("decoding-method", Required = false, Default = "greedy_search",
             HelpText = "Valid decoding methods are: greedy_search, modified_beam_search")]
-    public string DecodingMethod { get; set; }
+    public string DecodingMethod { get; set; } = "greedy_search";
+
+    [Option("rule-fsts", Required = false, Default = "",
+            HelpText = "If not empty, path to rule fst for inverse text normalization")]
+    public string RuleFsts { get; set; } = "";
 
     [Option("max-active-paths", Required = false, Default = 4,
         HelpText = @"Used only when --decoding--method is modified_beam_search.
 It specifies number of active paths to keep during the search")]
-    public int MaxActivePaths { get; set; }
+    public int MaxActivePaths { get; set; } = 4;
 
     [Option("hotwords-file", Required = false, Default = "", HelpText = "Path to hotwords.txt")]
-    public string HotwordsFile { get; set; }
+    public string HotwordsFile { get; set; } = "";
 
     [Option("hotwords-score", Required = false, Default = 1.5F, HelpText = "hotwords score")]
-    public float HotwordsScore { get; set; }
+    public float HotwordsScore { get; set; } = 1.5F;
 
     [Option("files", Required = true, HelpText = "Audio files for decoding")]
-    public IEnumerable<string> Files { get; set; }
+    public IEnumerable<string> Files { get; set; } = new string[] {};
   }
 
   static void Main(string[] args)
@@ -109,13 +124,13 @@ to download pre-trained non-streaming zipformer models.
 # Paraformer
 
 dotnet run \
-  --tokens=./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt \
-  --paraformer=./sherpa-onnx-paraformer-zh-2023-03-28/model.onnx \
+  --tokens=./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt \
+  --paraformer=./sherpa-onnx-paraformer-zh-2023-09-14/model.onnx \
   --files ./sherpa-onnx-zipformer-en-2023-04-01/test_wavs/0.wav \
-  ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/0.wav \
-  ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/1.wav \
-  ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/2.wav \
-  ./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/8k.wav
+  ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/0.wav \
+  ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/1.wav \
+  ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/2.wav \
+  ./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/8k.wav
 
 Please refer to
 https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/index.html
@@ -201,6 +216,10 @@ to download pre-trained Tdnn models.
     {
       config.ModelConfig.NeMoCtc.Model = options.NeMoCtc;
     }
+    else if (!String.IsNullOrEmpty(options.TeleSpeechCtc))
+    {
+      config.ModelConfig.TeleSpeechCtc = options.TeleSpeechCtc;
+    }
     else if (!String.IsNullOrEmpty(options.WhisperEncoder))
     {
       config.ModelConfig.Whisper.Encoder = options.WhisperEncoder;
@@ -212,16 +231,23 @@ to download pre-trained Tdnn models.
     {
       config.ModelConfig.Tdnn.Model = options.TdnnModel;
     }
+    else if (!String.IsNullOrEmpty(options.SenseVoiceModel))
+    {
+      config.ModelConfig.SenseVoice.Model = options.SenseVoiceModel;
+      config.ModelConfig.SenseVoice.UseInverseTextNormalization = options.SenseVoiceUseItn;
+    }
     else
     {
       Console.WriteLine("Please provide a model");
       return;
     }
 
+    config.ModelConfig.ModelType = options.ModelType;
     config.DecodingMethod = options.DecodingMethod;
     config.MaxActivePaths = options.MaxActivePaths;
     config.HotwordsFile = options.HotwordsFile;
     config.HotwordsScore = options.HotwordsScore;
+    config.RuleFsts = options.RuleFsts;
 
     config.ModelConfig.Debug = 0;
 

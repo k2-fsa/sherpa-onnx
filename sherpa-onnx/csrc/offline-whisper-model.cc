@@ -22,9 +22,9 @@ class OfflineWhisperModel::Impl {
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
+        debug_(config.debug),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    debug_ = config_.debug;
     {
       auto buf = ReadFile(config.whisper.encoder);
       InitEncoder(buf.data(), buf.size());
@@ -39,9 +39,9 @@ class OfflineWhisperModel::Impl {
   explicit Impl(const SpokenLanguageIdentificationConfig &config)
       : lid_config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
+        debug_(config_.debug),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    debug_ = config_.debug;
     {
       auto buf = ReadFile(config.whisper.encoder);
       InitEncoder(buf.data(), buf.size());
@@ -148,7 +148,6 @@ class OfflineWhisperModel::Impl {
     cross_v = std::move(std::get<4>(decoder_out));
 
     const float *p_logits = std::get<0>(decoder_out).GetTensorData<float>();
-    int32_t vocab_size = VocabSize();
     const auto &all_language_ids = GetAllLanguageIDs();
 
     int32_t lang_id = all_language_ids[0];
@@ -218,6 +217,8 @@ class OfflineWhisperModel::Impl {
 
   int32_t VocabSize() const { return n_vocab_; }
 
+  int32_t FeatureDim() const { return n_mels_; }
+
   int32_t Translate() const { return translate_; }
 
   bool IsMultiLingual() const { return is_multilingual_; }
@@ -243,6 +244,7 @@ class OfflineWhisperModel::Impl {
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
+    SHERPA_ONNX_READ_META_DATA(n_mels_, "n_mels");
     SHERPA_ONNX_READ_META_DATA(n_text_layer_, "n_text_layer");
     SHERPA_ONNX_READ_META_DATA(n_text_ctx_, "n_text_ctx");
     SHERPA_ONNX_READ_META_DATA(n_text_state_, "n_text_state");
@@ -317,18 +319,19 @@ class OfflineWhisperModel::Impl {
   std::unordered_map<int32_t, std::string> id2lang_;
 
   // model meta data
-  int32_t n_text_layer_;
-  int32_t n_text_ctx_;
-  int32_t n_text_state_;
-  int32_t n_vocab_;
-  int32_t sot_;
-  int32_t eot_;
-  int32_t blank_;
-  int32_t translate_;
-  int32_t transcribe_;
-  int32_t no_timestamps_;
-  int32_t no_speech_;
-  int32_t is_multilingual_;
+  int32_t n_mels_ = 80;
+  int32_t n_text_layer_ = 0;
+  int32_t n_text_ctx_ = 0;
+  int32_t n_text_state_ = 0;
+  int32_t n_vocab_ = 0;
+  int32_t sot_ = 0;
+  int32_t eot_ = 0;
+  int32_t blank_ = 0;
+  int32_t translate_ = 0;
+  int32_t transcribe_ = 0;
+  int32_t no_timestamps_ = 0;
+  int32_t no_speech_ = 0;
+  int32_t is_multilingual_ = 0;
   std::vector<int64_t> sot_sequence_;
 };
 
@@ -414,6 +417,8 @@ int32_t OfflineWhisperModel::SOT() const { return impl_->SOT(); }
 int32_t OfflineWhisperModel::TextCtx() const { return impl_->TextCtx(); }
 
 int32_t OfflineWhisperModel::VocabSize() const { return impl_->VocabSize(); }
+
+int32_t OfflineWhisperModel::FeatureDim() const { return impl_->FeatureDim(); }
 
 int32_t OfflineWhisperModel::Translate() const { return impl_->Translate(); }
 

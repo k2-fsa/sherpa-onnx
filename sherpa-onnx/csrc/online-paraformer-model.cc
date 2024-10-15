@@ -41,7 +41,7 @@ class OnlineParaformerModel::Impl {
 #if __ANDROID_API__ >= 9
   Impl(AAssetManager *mgr, const OnlineModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_WARNING),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     {

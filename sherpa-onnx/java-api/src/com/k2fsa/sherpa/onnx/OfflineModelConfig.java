@@ -7,6 +7,8 @@ public class OfflineModelConfig {
     private final OfflineParaformerModelConfig paraformer;
     private final OfflineWhisperModelConfig whisper;
     private final OfflineNemoEncDecCtcModelConfig nemo;
+    private final OfflineSenseVoiceModelConfig senseVoice;
+    private final String teleSpeech;
     private final String tokens;
     private final int numThreads;
     private final boolean debug;
@@ -21,6 +23,8 @@ public class OfflineModelConfig {
         this.paraformer = builder.paraformer;
         this.whisper = builder.whisper;
         this.nemo = builder.nemo;
+        this.senseVoice = builder.senseVoice;
+        this.teleSpeech = builder.teleSpeech;
         this.tokens = builder.tokens;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
@@ -44,6 +48,10 @@ public class OfflineModelConfig {
 
     public OfflineWhisperModelConfig getZipformer2Ctc() {
         return whisper;
+    }
+
+    public OfflineSenseVoiceModelConfig getSenseVoice() {
+        return senseVoice;
     }
 
     public String getTokens() {
@@ -74,11 +82,17 @@ public class OfflineModelConfig {
         return bpeVocab;
     }
 
+    public String getTeleSpeech() {
+        return teleSpeech;
+    }
+
     public static class Builder {
         private OfflineParaformerModelConfig paraformer = OfflineParaformerModelConfig.builder().build();
         private OfflineTransducerModelConfig transducer = OfflineTransducerModelConfig.builder().build();
         private OfflineWhisperModelConfig whisper = OfflineWhisperModelConfig.builder().build();
         private OfflineNemoEncDecCtcModelConfig nemo = OfflineNemoEncDecCtcModelConfig.builder().build();
+        private OfflineSenseVoiceModelConfig senseVoice = OfflineSenseVoiceModelConfig.builder().build();
+        private String teleSpeech = "";
         private String tokens = "";
         private int numThreads = 1;
         private boolean debug = true;
@@ -106,8 +120,18 @@ public class OfflineModelConfig {
             return this;
         }
 
+        public Builder setTeleSpeech(String teleSpeech) {
+            this.teleSpeech = teleSpeech;
+            return this;
+        }
+
         public Builder setWhisper(OfflineWhisperModelConfig whisper) {
             this.whisper = whisper;
+            return this;
+        }
+
+        public Builder setSenseVoice(OfflineSenseVoiceModelConfig senseVoice) {
+            this.senseVoice = senseVoice;
             return this;
         }
 

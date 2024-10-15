@@ -45,6 +45,7 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
   }
 
   r.text = text;
+  r.lang = src.lang;
 
   return r;
 }
@@ -52,7 +53,8 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
 class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerWhisperImpl(const OfflineRecognizerConfig &config)
-      : config_(config),
+      : OfflineRecognizerImpl(config),
+        config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(std::make_unique<OfflineWhisperModel>(config.model_config)) {
     Init();
@@ -61,7 +63,8 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
 #if __ANDROID_API__ >= 9
   OfflineRecognizerWhisperImpl(AAssetManager *mgr,
                                const OfflineRecognizerConfig &config)
-      : config_(config),
+      : OfflineRecognizerImpl(mgr, config),
+        config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
         model_(
             std::make_unique<OfflineWhisperModel>(mgr, config.model_config)) {
@@ -86,7 +89,9 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
   }
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
-    return std::make_unique<OfflineStream>(WhisperTag{});
+    WhisperTag tag;
+    tag.dim = model_->FeatureDim();
+    return std::make_unique<OfflineStream>(tag);
   }
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override {
@@ -96,8 +101,18 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     }
   }
 
+  void SetConfig(const OfflineRecognizerConfig &config) override {
+    config_.model_config.whisper = config.model_config.whisper;
+  }
+
+  OfflineRecognizerConfig GetConfig() const override {
+    return config_;
+  }
+
  private:
   void DecodeStream(OfflineStream *s) const {
+    decoder_->SetConfig(config_.model_config.whisper);
+
     int32_t max_num_frames = 3000;
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -150,6 +165,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
                                       std::move(cross_kv.second));
 
       auto r = Convert(results[0], symbol_table_);
+      r.text = ApplyInverseTextNormalization(std::move(r.text));
       s->SetResult(r);
     } catch (const Ort::Exception &ex) {
       SHERPA_ONNX_LOGE(

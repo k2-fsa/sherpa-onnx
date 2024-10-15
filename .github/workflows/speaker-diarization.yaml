@@ -1,0 +1,98 @@
+name: speaker-diarization
+
+on:
+  push:
+    branches:
+      - speaker-diarization
+  workflow_dispatch:
+
+concurrency:
+  group: speaker-diarization-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: speaker diarization
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-speaker-diarization
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pyannote
+        shell: bash
+        run: |
+          pip install pyannote.audio onnx onnxruntime
+
+      - name: Install sherpa-onnx from source
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip
+          python3 -m pip install wheel twine setuptools
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          cat sherpa-onnx/python/sherpa_onnx/__init__.py
+
+          python3 setup.py bdist_wheel
+          ls -lh dist
+          pip install ./dist/*.whl
+
+      - name: Run tests
+        shell: bash
+        run: |
+          pushd scripts/pyannote/segmentation
+
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__file__)"
+          python3 -c "import sherpa_onnx; print(sherpa_onnx.__version__)"
+          python3 -c "import sherpa_onnx; print(dir(sherpa_onnx))"
+
+          curl -SL -O https://huggingface.co/csukuangfj/pyannote-models/resolve/main/segmentation-3.0/pytorch_model.bin
+
+          test_wavs=(
+            0-four-speakers-zh.wav
+            1-two-speakers-en.wav
+            2-two-speakers-en.wav
+            3-two-speakers-en.wav
+          )
+
+          for w in ${test_wavs[@]}; do
+            curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/$w
+          done
+
+          soxi *.wav
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+          tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+          rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+          ls -lh sherpa-onnx-pyannote-segmentation-3-0
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+
+          for w in ${test_wavs[@]}; do
+            echo "---------test $w (onnx)----------"
+            time ./speaker-diarization-onnx.py \
+              --seg-model ./sherpa-onnx-pyannote-segmentation-3-0/model.onnx \
+              --speaker-embedding-model ./3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx \
+              --wav $w
+
+            echo "---------test $w (torch)----------"
+            time ./speaker-diarization-torch.py  --wav $w
+          done

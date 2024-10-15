@@ -1,6 +1,9 @@
 name: npm
 
 on:
+  push:
+    branches:
+      - npm
   workflow_dispatch:
 
 concurrency:
@@ -27,6 +30,9 @@ jobs:
 
       - name: Install emsdk
         uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.51
+          actions-cache-folder: 'emsdk-cache'
 
       - name: View emsdk version
         shell: bash
@@ -51,8 +57,6 @@ jobs:
 
       - name: Build nodejs package
         shell: bash
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           ./build-wasm-simd-nodejs.sh
           cp -v build-wasm-simd-nodejs/install/bin/wasm/nodejs/*.js ./scripts/nodejs/
@@ -70,6 +74,29 @@ jobs:
           sed -i.bak s/k2-fsa/$owner/g ./package.json
 
           rm package.json.bak
+
+      - name: Collect files
+        shell: bash
+        run: |
+          dst=sherpa-onnx-wasm-nodejs
+          mkdir $dst
+          cp -v scripts/nodejs/* $dst
+          tar cvjf $dst.tar.bz2 $dst
+
+          echo "---"
+          ls -h $dst
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-wasm-nodejs
+          path: ./*.tar.bz2
+
+      - name: Build nodejs package
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd scripts/nodejs
 
           git diff
 

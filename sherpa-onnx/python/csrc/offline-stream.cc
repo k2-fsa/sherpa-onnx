@@ -32,8 +32,16 @@ static void PybindOfflineRecognitionResult(py::module *m) {  // NOLINT
             return py::str(PyUnicode_DecodeUTF8(self.text.c_str(),
                                                 self.text.size(), "ignore"));
           })
+      .def_property_readonly("lang",
+                            [](const PyClass &self) { return self.lang; })
+      .def_property_readonly("emotion",
+                            [](const PyClass &self) { return self.emotion; })
+      .def_property_readonly("event",
+                            [](const PyClass &self) { return self.event; })
       .def_property_readonly("tokens",
                              [](const PyClass &self) { return self.tokens; })
+      .def_property_readonly("words",
+                             [](const PyClass &self) { return self.words; })
       .def_property_readonly(
           "timestamps", [](const PyClass &self) { return self.timestamps; });
 }

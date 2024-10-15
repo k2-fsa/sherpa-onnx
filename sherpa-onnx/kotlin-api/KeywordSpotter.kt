@@ -24,7 +24,7 @@ class KeywordSpotter(
     assetManager: AssetManager? = null,
     val config: KeywordSpotterConfig,
 ) {
-    private val ptr: Long
+    private var ptr: Long
 
     init {
         ptr = if (assetManager != null) {
@@ -35,7 +35,10 @@ class KeywordSpotter(
     }
 
     protected fun finalize() {
-        delete(ptr)
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
 
     fun release() = finalize()

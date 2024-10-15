@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/features.h"
+#include "sherpa-onnx/csrc/transducer-keyword-decoder.h"
 
 namespace sherpa_onnx {
 
@@ -15,7 +16,7 @@ class OnlineStream::Impl {
  public:
   explicit Impl(const FeatureExtractorConfig &config,
                 ContextGraphPtr context_graph)
-      : feat_extractor_(config), context_graph_(context_graph) {}
+      : feat_extractor_(config), context_graph_(std::move(context_graph)) {}
 
   void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
     feat_extractor_.AcceptWaveform(sampling_rate, waveform, n);
@@ -146,7 +147,7 @@ class OnlineStream::Impl {
 
 OnlineStream::OnlineStream(const FeatureExtractorConfig &config /*= {}*/,
                            ContextGraphPtr context_graph /*= nullptr */)
-    : impl_(std::make_unique<Impl>(config, context_graph)) {}
+    : impl_(std::make_unique<Impl>(config, std::move(context_graph))) {}
 
 OnlineStream::~OnlineStream() = default;
 

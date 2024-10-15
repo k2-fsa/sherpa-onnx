@@ -14,8 +14,8 @@ if [ x"$EMSCRIPTEN" == x"" ]; then
     echo "git clone https://github.com/emscripten-core/emsdk.git"
     echo "cd emsdk"
     echo "git pull"
-    echo "./emsdk install latest"
-    echo "./emsdk activate latest"
+    echo "./emsdk install 3.1.53"
+    echo "./emsdk activate 3.1.53"
     echo "source ./emsdk_env.sh"
     exit 1
   else
@@ -48,6 +48,7 @@ cmake \
   -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
   -DSHERPA_ONNX_ENABLE_JNI=OFF \
   -DSHERPA_ONNX_ENABLE_C_API=ON \
+  -DSHERPA_ONNX_ENABLE_TTS=OFF \
   -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
   -DSHERPA_ONNX_ENABLE_GPU=OFF \
   -DSHERPA_ONNX_ENABLE_WASM=ON \

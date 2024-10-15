@@ -40,8 +40,12 @@ class VadModel {
 
   virtual int32_t WindowSize() const = 0;
 
+  virtual int32_t WindowShift() const = 0;
+
   virtual int32_t MinSilenceDurationSamples() const = 0;
   virtual int32_t MinSpeechDurationSamples() const = 0;
+  virtual void SetMinSilenceDuration(float s) = 0;
+  virtual void SetThreshold(float threshold) = 0;
 };
 
 }  // namespace sherpa_onnx

@@ -59,7 +59,7 @@ class SubtitleViewModel: ObservableObject {
             self.modelConfig = getNonStreamingWhisperTinyEn()
         } else if modelType == "paraformer" {
             // for Chinese
-            self.modelConfig = getNonStreamingZhParaformer20230328()
+            self.modelConfig = getNonStreamingZhParaformer20230914()
         } else {
             print("Please specify a supported modelType \(modelType)")
             return

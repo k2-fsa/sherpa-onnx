@@ -29,7 +29,7 @@ public class StreamingDecodeFileCtcHLG {
             .build();
 
     OnlineCtcFstDecoderConfig ctcFstDecoderConfig =
-        OnlineCtcFstDecoderConfig.builder().setGraph("hlg").build();
+        OnlineCtcFstDecoderConfig.builder().setGraph(hlg).build();
 
     OnlineRecognizerConfig config =
         OnlineRecognizerConfig.builder()

@@ -33,7 +33,7 @@ TEST(CppJieBa, Case1) {
   std::vector<std::string> words;
   std::vector<cppjieba::Word> jiebawords;
 
-  std::string s = "他来到了网易杭研大厦";
+  std::string s = "他来到了网易杭研大厦。How are you?";
   std::cout << s << std::endl;
   std::cout << "[demo] Cut With HMM" << std::endl;
   jieba.Cut(s, words, true);

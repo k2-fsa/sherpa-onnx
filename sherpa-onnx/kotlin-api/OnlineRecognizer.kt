@@ -63,13 +63,16 @@ data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
     var modelConfig: OnlineModelConfig,
     var lmConfig: OnlineLMConfig = OnlineLMConfig(),
-    var ctcFstDecoderConfig : OnlineCtcFstDecoderConfig = OnlineCtcFstDecoderConfig(),
+    var ctcFstDecoderConfig: OnlineCtcFstDecoderConfig = OnlineCtcFstDecoderConfig(),
     var endpointConfig: EndpointConfig = EndpointConfig(),
     var enableEndpoint: Boolean = true,
     var decodingMethod: String = "greedy_search",
     var maxActivePaths: Int = 4,
     var hotwordsFile: String = "",
     var hotwordsScore: Float = 1.5f,
+    var ruleFsts: String = "",
+    var ruleFars: String = "",
+    var blankPenalty: Float = 0.0f,
 )
 
 data class OnlineRecognizerResult(
@@ -83,7 +86,7 @@ class OnlineRecognizer(
     assetManager: AssetManager? = null,
     val config: OnlineRecognizerConfig,
 ) {
-    private val ptr: Long
+    private var ptr: Long
 
     init {
         ptr = if (assetManager != null) {
@@ -94,7 +97,10 @@ class OnlineRecognizer(
     }
 
     protected fun finalize() {
-        delete(ptr)
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
 
     fun release() = finalize()
@@ -354,6 +360,19 @@ fun getModelConfig(type: Int): OnlineModelConfig? {
                     model = "$modelDir/model.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        14 -> {
+            val modelDir = "sherpa-onnx-streaming-zipformer-korean-2024-06-16"
+            return OnlineModelConfig(
+                transducer = OnlineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-99-avg-1.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-99-avg-1.onnx",
+                    joiner = "$modelDir/joiner-epoch-99-avg-1.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "zipformer",
             )
         }
     }

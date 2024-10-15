@@ -48,6 +48,7 @@ paraformer-onnxruntime-python-example
 run-sherpa-onnx-offline-paraformer.sh
 run-sherpa-onnx-offline-transducer.sh
 sherpa-onnx-paraformer-zh-2023-03-28
+sherpa-onnx-paraformer-zh-2023-09-14
 run-offline-websocket-server-paraformer.sh
 run-*int8.sh
 a.sh
@@ -104,5 +105,19 @@ sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
 sherpa-onnx-ced-*
 node_modules
 package-lock.json
+pubspec.lock
 sherpa-onnx-nemo-*
 sherpa-onnx-vits-*
+sherpa-onnx-telespeech-ctc-*
+*.fst
+.ccache
+lib*.a
+sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+*.bak
+vits-melo-tts-zh_en
+*.o
+*.ppu
+sherpa-onnx-online-punct-en-2024-08-06
+*.mp4
+*.mp3
+sherpa-onnx-pyannote-segmentation-3-0

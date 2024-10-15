@@ -65,13 +65,16 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
     r.timestamps.push_back(time);
   }
 
+  r.words = std::move(src.words);
+
   return r;
 }
 
 class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
  public:
   explicit OfflineRecognizerCtcImpl(const OfflineRecognizerConfig &config)
-      : config_(config),
+      : OfflineRecognizerImpl(config),
+        config_(config),
         symbol_table_(config_.model_config.tokens),
         model_(OfflineCtcModel::Create(config_.model_config)) {
     Init();
@@ -80,7 +83,8 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
 #if __ANDROID_API__ >= 9
   OfflineRecognizerCtcImpl(AAssetManager *mgr,
                            const OfflineRecognizerConfig &config)
-      : config_(config),
+      : OfflineRecognizerImpl(mgr, config),
+        config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
         model_(OfflineCtcModel::Create(mgr, config_.model_config)) {
     Init();
@@ -88,6 +92,25 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
 #endif
 
   void Init() {
+    if (!config_.model_config.telespeech_ctc.empty()) {
+      config_.feat_config.snip_edges = true;
+      config_.feat_config.num_ceps = 40;
+      config_.feat_config.feature_dim = 40;
+      config_.feat_config.low_freq = 40;
+      config_.feat_config.high_freq = -200;
+      config_.feat_config.use_energy = false;
+      config_.feat_config.normalize_samples = false;
+      config_.feat_config.is_mfcc = true;
+    }
+
+    if (!config_.model_config.nemo_ctc.model.empty()) {
+      config_.feat_config.low_freq = 0;
+      config_.feat_config.high_freq = 0;
+      config_.feat_config.is_librosa = true;
+      config_.feat_config.remove_dc_offset = false;
+      config_.feat_config.window_type = "hann";
+    }
+
     if (!config_.model_config.wenet_ctc.model.empty()) {
       // WeNet CTC models assume input samples are in the range
       // [-32768, 32767], so we set normalize_samples to false
@@ -192,9 +215,12 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     for (int32_t i = 0; i != n; ++i) {
       auto r = Convert(results[i], symbol_table_, frame_shift_ms,
                        model_->SubsamplingFactor());
+      r.text = ApplyInverseTextNormalization(std::move(r.text));
       ss[i]->SetResult(r);
     }
   }
+
+  OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
   // Decode a single stream.
@@ -225,6 +251,7 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
 
     auto r = Convert(results[0], symbol_table_, frame_shift_ms,
                      model_->SubsamplingFactor());
+    r.text = ApplyInverseTextNormalization(std::move(r.text));
     s->SetResult(r);
   }
 

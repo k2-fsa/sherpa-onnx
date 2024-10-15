@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 import re
 from pathlib import Path
 
@@ -26,6 +27,14 @@ def get_package_version():
 
     match = re.search(r"set\(SHERPA_ONNX_VERSION (.*)\)", content)
     latest_version = match.group(1).strip('"')
+
+    cmake_args = os.environ.get("SHERPA_ONNX_CMAKE_ARGS", "")
+    extra_version = ""
+    if "-DSHERPA_ONNX_ENABLE_GPU=ON" in cmake_args:
+        extra_version = "+cuda"
+
+    latest_version += extra_version
+
     return latest_version
 
 

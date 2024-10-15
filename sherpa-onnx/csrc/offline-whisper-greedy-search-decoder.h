@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-whisper-decoder.h"
-#include "sherpa-onnx/csrc/offline-whisper-model-config.h"
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 
 namespace sherpa_onnx {
@@ -21,6 +20,8 @@ class OfflineWhisperGreedySearchDecoder : public OfflineWhisperDecoder {
 
   std::vector<OfflineWhisperDecoderResult> Decode(Ort::Value cross_k,
                                                   Ort::Value cross_v) override;
+
+  void SetConfig(const OfflineWhisperModelConfig &config) override;
 
  private:
   OfflineWhisperModelConfig config_;

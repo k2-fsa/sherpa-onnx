@@ -9,6 +9,7 @@ from _sherpa_onnx import (
     OnlineModelConfig,
     OnlineTransducerModelConfig,
     OnlineStream,
+    ProviderConfig,
 )
 
 from _sherpa_onnx import KeywordSpotter as _KeywordSpotter
@@ -44,6 +45,7 @@ class KeywordSpotter(object):
         bpe_vocab: str = "",
         lexicon: str = "",
         provider: str = "cpu",
+        device: int = 0,
     ):
         """
         Please refer to
@@ -99,6 +101,8 @@ class KeywordSpotter(object):
             when the modeling unit is pinyin or phone.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          device:
+            onnxruntime cuda device index.
         """
         _assert_file_exists(tokens)
         _assert_file_exists(encoder)
@@ -113,6 +117,11 @@ class KeywordSpotter(object):
             joiner=joiner,
         )
 
+        provider_config = ProviderConfig(
+            provider=provider,
+            device=device,
+        )
+
         model_config = OnlineModelConfig(
             transducer=transducer_config,
             tokens=tokens,
@@ -120,7 +129,7 @@ class KeywordSpotter(object):
             modeling_unit=modeling_unit,
             bpe_vocab=bpe_vocab,
             lexicon=lexicon,
-            provider=provider,
+            provider_config=provider_config,
         )
 
         feat_config = FeatureExtractorConfig(

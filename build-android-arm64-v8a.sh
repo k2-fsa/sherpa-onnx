@@ -63,12 +63,25 @@ if [ -z $SHERPA_ONNX_ENABLE_TTS ]; then
   SHERPA_ONNX_ENABLE_TTS=ON
 fi
 
+if [ -z $SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION ]; then
+  SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=ON
+fi
+
 if [ -z $SHERPA_ONNX_ENABLE_BINARY ]; then
   SHERPA_ONNX_ENABLE_BINARY=OFF
 fi
 
+if [ -z $SHERPA_ONNX_ENABLE_C_API ]; then
+  SHERPA_ONNX_ENABLE_C_API=OFF
+fi
+
+if [ -z $SHERPA_ONNX_ENABLE_JNI ]; then
+  SHERPA_ONNX_ENABLE_JNI=ON
+fi
+
 cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" \
     -DSHERPA_ONNX_ENABLE_TTS=$SHERPA_ONNX_ENABLE_TTS \
+    -DSHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION=$SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION \
     -DSHERPA_ONNX_ENABLE_BINARY=$SHERPA_ONNX_ENABLE_BINARY \
     -DBUILD_PIPER_PHONMIZE_EXE=OFF \
     -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
@@ -80,8 +93,8 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
     -DSHERPA_ONNX_ENABLE_CHECK=OFF \
     -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-    -DSHERPA_ONNX_ENABLE_JNI=ON \
-    -DSHERPA_ONNX_ENABLE_C_API=OFF \
+    -DSHERPA_ONNX_ENABLE_JNI=$SHERPA_ONNX_ENABLE_JNI \
+    -DSHERPA_ONNX_ENABLE_C_API=$SHERPA_ONNX_ENABLE_C_API \
     -DCMAKE_INSTALL_PREFIX=./install \
     -DANDROID_ABI="arm64-v8a" \
     -DANDROID_PLATFORM=android-21 ..
@@ -109,18 +122,6 @@ rm -rf install/lib/pkgconfig
 #   adb shell
 #   cd /data/local/tmp
 #   ./sherpa-onnx
-#
-# which shows the following error log:
-#
-#  CANNOT LINK EXECUTABLE "./sherpa-onnx": library "libsherpa-onnx-core.so" not found: needed by main executable
-#
-# Please run:
-#
-#  export LD_LIBRARY_PATH=$PWD:$LD_LIBRARY_PATH
-#
-# and then you can run:
-#
-#  ./sherpa-onnx
 #
 # It should show the help message of sherpa-onnx.
 #

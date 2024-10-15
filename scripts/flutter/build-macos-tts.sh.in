@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+SHERPA_ONNX_DIR=$(cd $SCRIPT_DIR/../.. && pwd)
+log "SCRIPT_DIR: $SCRIPT_DIR"
+log "SHERPA_ONNX_DIR: $SHERPA_ONNX_DIR"
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" $SHERPA_ONNX_DIR/CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+log "SHERPA_ONNX_VERSION: $SHERPA_ONNX_VERSION"
+
+if [ -z $arch ]; then
+  arch=x86_64
+fi
+
+log "arch: $arch"
+
+{% for tts_model in tts_model_list %}
+pushd $SHERPA_ONNX_DIR/flutter-examples/tts/
+
+git checkout .
+
+rm -rf assets
+mkdir assets
+
+pushd assets
+
+model_dir={{ tts_model.model_dir }}
+model_name={{ tts_model.model_name }}
+lang={{ tts_model.lang }}
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$model_dir.tar.bz2
+tar xf $model_dir.tar.bz2
+rm $model_dir.tar.bz2
+
+ls -lh
+ls -lh *
+
+popd # assets
+# Now we are at the project root directory
+
+./generate-asset-list.py
+
+pushd lib
+
+sed -i.bak "s|modelDir = ''|modelDir = \"$model_dir\"|" ./model.dart
+sed -i.bak s/"modelName = ''"/"modelName = \"$model_name\""/ ./model.dart
+
+{% if tts_model.rule_fsts %}
+  rule_fsts={{ tts_model.rule_fsts }}
+  sed -i.bak "s|ruleFsts = ''|ruleFsts = \"$rule_fsts\"|" ./model.dart
+{% endif %}
+
+{% if tts_model.rule_fars %}
+  rule_fars={{ tts_model.rule_fars }}
+  sed -i.bak "s|ruleFars = ''|ruleFars = \"$rule_fars\"|" ./model.dart
+{% endif %}
+
+{% if tts_model.dict_dir %}
+  dict_dir={{ tts_model.dict_dir }}
+  sed -i.bak "s|dictDir = ''|dictDir = \"$dict_dir\"|" ./model.dart
+{% endif %}
+
+{% if tts_model.data_dir %}
+  data_dir={{ tts_model.data_dir }}
+  sed -i.bak "s|dataDir = ''|dataDir = \"$data_dir\"|" ./model.dart
+{% elif not tts_model.is_char %}
+  sed -i.bak "s|lexicon = ''|lexicon = \"lexicon.txt\"|" ./model.dart
+{% endif %}
+
+git status
+
+git diff .
+
+popd #lib
+
+flutter pub get
+
+export FLUTTER_XCODE_ARCHS=$arch
+log "FLUTTER_XCODE_ARCHS: $FLUTTER_XCODE_ARCHS"
+
+flutter build macos
+
+pushd build/macos/Build/Products/Release/
+ls -lh
+
+app=sherpa-onnx-$SHERPA_ONNX_VERSION-osx-$arch-$lang-tts-$model_dir.app
+
+mv tts.app $app
+tar cjf $app.tar.bz2 $app
+ls -lh
+mv $app.tar.bz2 $SHERPA_ONNX_DIR
+rm -rf $app
+
+pushd $SHERPA_ONNX_DIR
+ls -lh *.tar.bz2
+popd
+
+popd
+
+popd
+
+{% endfor %}

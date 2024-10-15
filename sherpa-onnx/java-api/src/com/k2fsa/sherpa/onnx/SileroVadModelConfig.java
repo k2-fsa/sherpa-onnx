@@ -8,6 +8,7 @@ public class SileroVadModelConfig {
     private final float minSilenceDuration;
     private final float minSpeechDuration;
     private final int windowSize;
+    private final float maxSpeechDuration;
 
     private SileroVadModelConfig(Builder builder) {
         this.model = builder.model;
@@ -15,6 +16,7 @@ public class SileroVadModelConfig {
         this.minSilenceDuration = builder.minSilenceDuration;
         this.minSpeechDuration = builder.minSpeechDuration;
         this.windowSize = builder.windowSize;
+        this.maxSpeechDuration = builder.maxSpeechDuration;
     }
 
     public static Builder builder() {
@@ -41,12 +43,17 @@ public class SileroVadModelConfig {
         return windowSize;
     }
 
+    public float getMaxSpeechDuration() {
+        return maxSpeechDuration;
+    }
+
     public static class Builder {
         private String model = "";
         private float threshold = 0.5f;
         private float minSilenceDuration = 0.25f;
         private float minSpeechDuration = 0.5f;
         private int windowSize = 512;
+        private float maxSpeechDuration = 5.0f;
 
         public SileroVadModelConfig build() {
             return new SileroVadModelConfig(this);
@@ -75,6 +82,11 @@ public class SileroVadModelConfig {
 
         public Builder setWindowSize(int windowSize) {
             this.windowSize = windowSize;
+            return this;
+        }
+
+        public Builder setMaxSpeechDuration(float maxSpeechDuration) {
+            this.maxSpeechDuration = maxSpeechDuration;
             return this;
         }
     }

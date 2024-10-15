@@ -2,8 +2,8 @@ name: build-wheels-linux
 
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - wheel
   workflow_dispatch:
 
 env:
@@ -34,7 +34,7 @@ jobs:
         uses: pypa/cibuildwheel@v2.16.5
         env:
           CIBW_BEFORE_ALL: |
-            git clone --depth 1 https://github.com/alsa-project/alsa-lib
+            git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
             cd alsa-lib
             ./gitcompile
             cd ..
@@ -54,7 +54,6 @@ jobs:
           ls -lh ./wheelhouse/
 
       - name: Install patchelf
-        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           sudo apt-get update -q
@@ -63,7 +62,6 @@ jobs:
 
       - name: Patch wheels
         shell: bash
-        if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir ./wheels
           sudo ./scripts/wheel/patch_wheel.py --in-dir ./wheelhouse --out-dir ./wheels
@@ -78,7 +76,6 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface
-        if: matrix.python-version == 'cp38'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -94,13 +91,20 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            d=cpu/$SHERPA_ONNX_VERSION
+
             git clone https://huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
 
-            cp -v ../wheelhouse/*.whl .
+            mkdir -p $d
+
+            cp -v ../wheelhouse/*.whl $d/
 
             git status
             git add .

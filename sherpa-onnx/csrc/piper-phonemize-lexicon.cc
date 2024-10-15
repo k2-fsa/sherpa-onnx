@@ -37,7 +37,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
 
   std::string sym;
   std::u32string s;
-  int32_t id;
+  int32_t id = 0;
   while (std::getline(is, line)) {
     std::istringstream iss(line);
     iss >> sym;
@@ -169,7 +169,7 @@ static std::vector<int64_t> CoquiPhonemesToIds(
   return ans;
 }
 
-void InitEspeak(const std::string &data_dir) {
+static void InitEspeak(const std::string &data_dir) {
   static std::once_flag init_flag;
   std::call_once(init_flag, [data_dir]() {
     int32_t result =
@@ -214,7 +214,7 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
 }
 #endif
 
-std::vector<std::vector<int64_t>> PiperPhonemizeLexicon::ConvertTextToTokenIds(
+std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string &voice /*= ""*/) const {
   piper::eSpeakPhonemeConfig config;
 
@@ -232,19 +232,19 @@ std::vector<std::vector<int64_t>> PiperPhonemizeLexicon::ConvertTextToTokenIds(
     piper::phonemize_eSpeak(text, config, phonemes);
   }
 
-  std::vector<std::vector<int64_t>> ans;
+  std::vector<TokenIDs> ans;
 
   std::vector<int64_t> phoneme_ids;
 
   if (meta_data_.is_piper || meta_data_.is_icefall) {
     for (const auto &p : phonemes) {
       phoneme_ids = PiperPhonemesToIds(token2id_, p);
-      ans.push_back(std::move(phoneme_ids));
+      ans.emplace_back(std::move(phoneme_ids));
     }
   } else if (meta_data_.is_coqui) {
     for (const auto &p : phonemes) {
       phoneme_ids = CoquiPhonemesToIds(token2id_, p, meta_data_);
-      ans.push_back(std::move(phoneme_ids));
+      ans.emplace_back(std::move(phoneme_ids));
     }
 
   } else {

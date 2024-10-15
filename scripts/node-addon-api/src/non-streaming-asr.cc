@@ -96,6 +96,24 @@ static SherpaOnnxOfflineTdnnModelConfig GetOfflineTdnnModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineSenseVoiceModelConfig GetOfflineSenseVoiceModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineSenseVoiceModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("senseVoice") || !obj.Get("senseVoice").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("senseVoice").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(language, language);
+  SHERPA_ONNX_ASSIGN_ATTR_INT32(use_itn, useInverseTextNormalization);
+
+  return c;
+}
+
 static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   SherpaOnnxOfflineModelConfig c;
   memset(&c, 0, sizeof(c));
@@ -111,6 +129,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.nemo_ctc = GetOfflineNeMoCtcModelConfig(o);
   c.whisper = GetOfflineWhisperModelConfig(o);
   c.tdnn = GetOfflineTdnnModelConfig(o);
+  c.sense_voice = GetOfflineSenseVoiceModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -126,6 +145,9 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
   SHERPA_ONNX_ASSIGN_ATTR_STR(model_type, modelType);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(modeling_unit, modelingUnit);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(bpe_vocab, bpeVocab);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(telespeech_ctc, teleSpeechCtc);
 
   return c;
 }
@@ -177,8 +199,12 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_active_paths, maxActivePaths);
   SHERPA_ONNX_ASSIGN_ATTR_STR(hotwords_file, hotwordsFile);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(hotwords_score, hotwordsScore);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(blank_penalty, blankPenalty);
 
-  SherpaOnnxOfflineRecognizer *recognizer = CreateOfflineRecognizer(&c);
+  SherpaOnnxOfflineRecognizer *recognizer =
+      SherpaOnnxCreateOfflineRecognizer(&c);
 
   if (c.model_config.transducer.encoder) {
     delete[] c.model_config.transducer.encoder;
@@ -220,6 +246,14 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
     delete[] c.model_config.tdnn.model;
   }
 
+  if (c.model_config.sense_voice.model) {
+    delete[] c.model_config.sense_voice.model;
+  }
+
+  if (c.model_config.sense_voice.language) {
+    delete[] c.model_config.sense_voice.language;
+  }
+
   if (c.model_config.tokens) {
     delete[] c.model_config.tokens;
   }
@@ -230,6 +264,18 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
 
   if (c.model_config.model_type) {
     delete[] c.model_config.model_type;
+  }
+
+  if (c.model_config.modeling_unit) {
+    delete[] c.model_config.modeling_unit;
+  }
+
+  if (c.model_config.bpe_vocab) {
+    delete[] c.model_config.bpe_vocab;
+  }
+
+  if (c.model_config.telespeech_ctc) {
+    delete[] c.model_config.telespeech_ctc;
   }
 
   if (c.lm_config.model) {
@@ -244,6 +290,14 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
     delete[] c.hotwords_file;
   }
 
+  if (c.rule_fsts) {
+    delete[] c.rule_fsts;
+  }
+
+  if (c.rule_fars) {
+    delete[] c.rule_fars;
+  }
+
   if (!recognizer) {
     Napi::TypeError::New(env, "Please check your config!")
         .ThrowAsJavaScriptException();
@@ -254,7 +308,7 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   return Napi::External<SherpaOnnxOfflineRecognizer>::New(
       env, recognizer,
       [](Napi::Env env, SherpaOnnxOfflineRecognizer *recognizer) {
-        DestroyOfflineRecognizer(recognizer);
+        SherpaOnnxDestroyOfflineRecognizer(recognizer);
       });
 }
 
@@ -282,11 +336,11 @@ static Napi::External<SherpaOnnxOfflineStream> CreateOfflineStreamWrapper(
   SherpaOnnxOfflineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOfflineRecognizer>>().Data();
 
-  SherpaOnnxOfflineStream *stream = CreateOfflineStream(recognizer);
+  SherpaOnnxOfflineStream *stream = SherpaOnnxCreateOfflineStream(recognizer);
 
   return Napi::External<SherpaOnnxOfflineStream>::New(
       env, stream, [](Napi::Env env, SherpaOnnxOfflineStream *stream) {
-        DestroyOfflineStream(stream);
+        SherpaOnnxDestroyOfflineStream(stream);
       });
 }
 
@@ -353,8 +407,8 @@ static void AcceptWaveformOfflineWrapper(const Napi::CallbackInfo &info) {
   Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
   int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
 
-  AcceptWaveformOffline(stream, sample_rate, samples.Data(),
-                        samples.ElementLength());
+  SherpaOnnxAcceptWaveformOffline(stream, sample_rate, samples.Data(),
+                                  samples.ElementLength());
 }
 
 static void DecodeOfflineStreamWrapper(const Napi::CallbackInfo &info) {
@@ -389,7 +443,7 @@ static void DecodeOfflineStreamWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxOfflineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
 
-  DecodeOfflineStream(recognizer, stream);
+  SherpaOnnxDecodeOfflineStream(recognizer, stream);
 }
 
 static Napi::String GetOfflineStreamResultAsJsonWrapper(
@@ -414,10 +468,10 @@ static Napi::String GetOfflineStreamResultAsJsonWrapper(
   SherpaOnnxOfflineStream *stream =
       info[0].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
 
-  const char *json = GetOfflineStreamResultAsJson(stream);
+  const char *json = SherpaOnnxGetOfflineStreamResultAsJson(stream);
   Napi::String s = Napi::String::New(env, json);
 
-  DestroyOfflineStreamResultJson(json);
+  SherpaOnnxDestroyOfflineStreamResultJson(json);
 
   return s;
 }

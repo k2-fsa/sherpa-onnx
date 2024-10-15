@@ -69,6 +69,11 @@ struct KeywordSpotterConfig {
 
   std::string keywords_file;
 
+  /// if keywords_buf is non-empty,
+  /// the keywords will be loaded from the buffer instead of from the
+  /// "keywrods_file"
+  std::string keywords_buf;
+
   KeywordSpotterConfig() = default;
 
   KeywordSpotterConfig(const FeatureExtractorConfig &feat_config,

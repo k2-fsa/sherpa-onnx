@@ -3,12 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
-	flag "github.com/spf13/pflag"
-	"github.com/youpy/go-wav"
 	"log"
 	"os"
 	"strings"
+
+	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
+	flag "github.com/spf13/pflag"
+	"github.com/youpy/go-wav"
 )
 
 func main() {
@@ -35,16 +36,25 @@ func main() {
 
 	flag.StringVar(&config.ModelConfig.Tdnn.Model, "tdnn-model", "", "Path to the tdnn model")
 
+	flag.StringVar(&config.ModelConfig.SenseVoice.Model, "sense-voice-model", "", "Path to the SenseVoice model")
+	flag.StringVar(&config.ModelConfig.SenseVoice.Language, "sense-voice-language", "", "If not empty, specify the Language for the input wave")
+	flag.IntVar(&config.ModelConfig.SenseVoice.UseInverseTextNormalization, "sense-voice-use-itn", 1, " 1 to use inverse text normalization")
+
 	flag.StringVar(&config.ModelConfig.Tokens, "tokens", "", "Path to the tokens file")
 	flag.IntVar(&config.ModelConfig.NumThreads, "num-threads", 1, "Number of threads for computing")
 	flag.IntVar(&config.ModelConfig.Debug, "debug", 0, "Whether to show debug message")
 	flag.StringVar(&config.ModelConfig.ModelType, "model-type", "", "Optional. Used for loading the model in a faster way")
 	flag.StringVar(&config.ModelConfig.Provider, "provider", "cpu", "Provider to use")
+	flag.StringVar(&config.ModelConfig.ModelingUnit, "modeling-unit", "cjkchar", "cjkchar, bpe, cjkchar+bpe, or leave it to empty")
+	flag.StringVar(&config.ModelConfig.BpeVocab, "bpe-vocab", "", "")
+	flag.StringVar(&config.ModelConfig.TeleSpeechCtc, "telespeech-ctc", "", "Used for TeleSpeechCtc model")
 	flag.StringVar(&config.LmConfig.Model, "lm-model", "", "Optional. Path to the LM model")
 	flag.Float32Var(&config.LmConfig.Scale, "lm-scale", 1.0, "Optional. Scale for the LM model")
 
 	flag.StringVar(&config.DecodingMethod, "decoding-method", "greedy_search", "Decoding method. Possible values: greedy_search, modified_beam_search")
 	flag.IntVar(&config.MaxActivePaths, "max-active-paths", 4, "Used only when --decoding-method is modified_beam_search")
+	flag.StringVar(&config.RuleFsts, "rule-fsts", "", "If not empty, path to rule fst for inverse text normalization")
+	flag.StringVar(&config.RuleFars, "rule-fars", "", "If not empty, path to rule fst archives for inverse text normalization")
 
 	flag.Parse()
 
@@ -71,7 +81,16 @@ func main() {
 	log.Println("Decoding done!")
 	result := stream.GetResult()
 
-	log.Println(strings.ToLower(result.Text))
+	log.Println("Text: " + strings.ToLower(result.Text))
+	log.Println("Emotion: " + result.Emotion)
+	log.Println("Lang: " + result.Lang)
+	log.Println("Event: " + result.Event)
+	for _, v := range result.Timestamps {
+		log.Printf("Timestamp: %+v\n", v)
+	}
+	for _, v := range result.Tokens {
+		log.Println("Token: " + v)
+	}
 	log.Printf("Wave duration: %v seconds", float32(len(samples))/float32(sampleRate))
 }
 

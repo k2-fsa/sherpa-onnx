@@ -9,16 +9,23 @@ platform=$(node -p "require('os').platform()")
 
 arch=$(node -p "require('os').arch()")
 
+echo "platform: $platform"
+echo "arch: $arch"
+
+# ia32 for win x86
+
 platform2=$platform
+
 
 if [[ $platform == win32 ]]; then
   platform2=win
 fi
 
+
 SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
-# SHERPA_ONNX_VERSION=1.0.28
+# SHERPA_ONNX_VERSION=1.0.31
 
 if [ -z $owner ]; then
   owner=k2-fsa

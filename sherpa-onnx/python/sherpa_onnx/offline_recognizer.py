@@ -6,9 +6,11 @@ from typing import List, Optional
 from _sherpa_onnx import (
     FeatureExtractorConfig,
     OfflineCtcFstDecoderConfig,
+    OfflineLMConfig,
     OfflineModelConfig,
     OfflineNemoEncDecCtcModelConfig,
     OfflineParaformerModelConfig,
+    OfflineSenseVoiceModelConfig,
 )
 from _sherpa_onnx import OfflineRecognizer as _Recognizer
 from _sherpa_onnx import (
@@ -54,6 +56,10 @@ class OfflineRecognizer(object):
         debug: bool = False,
         provider: str = "cpu",
         model_type: str = "transducer",
+        rule_fsts: str = "",
+        rule_fars: str = "",
+        lm: str = "",
+        lm_scale: float = 0.1,
     ):
         """
         Please refer to
@@ -107,6 +113,12 @@ class OfflineRecognizer(object):
             True to show debug messages.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -135,14 +147,112 @@ class OfflineRecognizer(object):
                 f"--hotwords-file. Currently given: {decoding_method}"
             )
 
+        if lm and decoding_method != "modified_beam_search":
+            raise ValueError(
+                "Please use --decoding-method=modified_beam_search when using "
+                f"--lm. Currently given: {decoding_method}"
+            )
+
+        lm_config = OfflineLMConfig(
+            model=lm,
+            scale=lm_scale,
+            lm_num_threads=num_threads,
+            lm_provider=provider,
+        )
+
         recognizer_config = OfflineRecognizerConfig(
             feat_config=feat_config,
             model_config=model_config,
+            lm_config=lm_config,
             decoding_method=decoding_method,
             max_active_paths=max_active_paths,
             hotwords_file=hotwords_file,
             hotwords_score=hotwords_score,
             blank_penalty=blank_penalty,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_sense_voice(
+        cls,
+        model: str,
+        tokens: str,
+        num_threads: int = 1,
+        sample_rate: int = 16000,
+        feature_dim: int = 80,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+        language: str = "",
+        use_itn: bool = False,
+        rule_fsts: str = "",
+        rule_fars: str = "",
+    ):
+        """
+        Please refer to
+        `<https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models>`_
+        to download pre-trained models.
+
+        Args:
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          model:
+            Path to ``model.onnx``.
+          num_threads:
+            Number of threads for neural network computation.
+          sample_rate:
+            Sample rate of the training data used to train the model.
+          feature_dim:
+            Dimension of the feature used to train the model.
+          decoding_method:
+            Valid values are greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          language:
+            If not empty, then valid values are: auto, zh, en, ja, ko, yue
+          use_itn:
+            True to enable inverse text normalization; False to disable it.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            sense_voice=OfflineSenseVoiceModelConfig(
+                model=model,
+                language=language,
+                use_itn=use_itn,
+            ),
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+        )
+
+        feat_config = FeatureExtractorConfig(
+            sampling_rate=sample_rate,
+            feature_dim=feature_dim,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -159,6 +269,8 @@ class OfflineRecognizer(object):
         decoding_method: str = "greedy_search",
         debug: bool = False,
         provider: str = "cpu",
+        rule_fsts: str = "",
+        rule_fars: str = "",
     ):
         """
         Please refer to
@@ -186,6 +298,12 @@ class OfflineRecognizer(object):
             True to show debug messages.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -206,6 +324,83 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_telespeech_ctc(
+        cls,
+        model: str,
+        tokens: str,
+        num_threads: int = 1,
+        sample_rate: int = 16000,
+        feature_dim: int = 40,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+        rule_fsts: str = "",
+        rule_fars: str = "",
+    ):
+        """
+        Please refer to
+        `<https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models>`_
+        to download pre-trained models.
+
+        Args:
+          model:
+            Path to ``model.onnx``.
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          num_threads:
+            Number of threads for neural network computation.
+          sample_rate:
+            Sample rate of the training data used to train the model. It is
+            ignored and is hard-coded in C++ to 40.
+          feature_dim:
+            Dimension of the feature used to train the model. It is ignored
+            and is hard-coded in C++ to 40.
+          decoding_method:
+            Valid values are greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            telespeech_ctc=model,
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+            model_type="nemo_ctc",
+        )
+
+        feat_config = FeatureExtractorConfig(
+            sampling_rate=sample_rate,
+            feature_dim=feature_dim,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            feat_config=feat_config,
+            model_config=model_config,
+            decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -222,6 +417,8 @@ class OfflineRecognizer(object):
         decoding_method: str = "greedy_search",
         debug: bool = False,
         provider: str = "cpu",
+        rule_fsts: str = "",
+        rule_fars: str = "",
     ):
         """
         Please refer to
@@ -250,6 +447,12 @@ class OfflineRecognizer(object):
             True to show debug messages.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -270,6 +473,8 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -288,6 +493,8 @@ class OfflineRecognizer(object):
         debug: bool = False,
         provider: str = "cpu",
         tail_paddings: int = -1,
+        rule_fsts: str = "",
+        rule_fars: str = "",
     ):
         """
         Please refer to
@@ -324,6 +531,12 @@ class OfflineRecognizer(object):
             True to show debug messages.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -350,6 +563,8 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -366,6 +581,8 @@ class OfflineRecognizer(object):
         decoding_method: str = "greedy_search",
         debug: bool = False,
         provider: str = "cpu",
+        rule_fsts: str = "",
+        rule_fars: str = "",
     ):
         """
         Please refer to
@@ -393,6 +610,12 @@ class OfflineRecognizer(object):
             True to show debug messages.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -413,6 +636,8 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config
@@ -429,6 +654,8 @@ class OfflineRecognizer(object):
         decoding_method: str = "greedy_search",
         debug: bool = False,
         provider: str = "cpu",
+        rule_fsts: str = "",
+        rule_fars: str = "",
     ):
         """
         Please refer to
@@ -457,6 +684,12 @@ class OfflineRecognizer(object):
             True to show debug messages.
           provider:
             onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
         """
         self = cls.__new__(cls)
         model_config = OfflineModelConfig(
@@ -477,6 +710,8 @@ class OfflineRecognizer(object):
             feat_config=feat_config,
             model_config=model_config,
             decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
         )
         self.recognizer = _Recognizer(recognizer_config)
         self.config = recognizer_config

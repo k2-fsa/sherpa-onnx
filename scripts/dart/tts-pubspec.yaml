@@ -1,0 +1,18 @@
+name: tts
+description: A sample command-line application.
+version: 1.0.0
+# repository: https://github.com/my_org/my_repo
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+# Add regular dependencies here.
+dependencies:
+  sherpa_onnx:
+    path: ../../flutter/sherpa_onnx
+
+  path: ^1.9.0
+  args: ^2.5.0
+
+dev_dependencies:
+  lints: ^3.0.0

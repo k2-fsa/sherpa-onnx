@@ -26,12 +26,12 @@ void SpeakerEmbeddingExtractorConfig::Register(ParseOptions *po) {
 
 bool SpeakerEmbeddingExtractorConfig::Validate() const {
   if (model.empty()) {
-    SHERPA_ONNX_LOGE("Please provide --model");
+    SHERPA_ONNX_LOGE("Please provide a speaker embedding extractor model");
     return false;
   }
 
   if (!FileExists(model)) {
-    SHERPA_ONNX_LOGE("--speaker-embedding-model: '%s' does not exist",
+    SHERPA_ONNX_LOGE("speaker embedding extractor model: '%s' does not exist",
                      model.c_str());
     return false;
   }

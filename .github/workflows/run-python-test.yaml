@@ -38,12 +38,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
-            python-version: "3.7"
-          - os: ubuntu-20.04
-            python-version: "3.8"
-          - os: ubuntu-20.04
-            python-version: "3.9"
+          # it fails to install ffmpeg on ubuntu 20.04
+          #
+          # - os: ubuntu-20.04
+          #   python-version: "3.7"
+          # - os: ubuntu-20.04
+          #   python-version: "3.8"
+          # - os: ubuntu-20.04
+          #   python-version: "3.9"
 
           - os: ubuntu-22.04
             python-version: "3.10"
@@ -78,6 +80,11 @@ jobs:
         run: |
           python3 -m pip install --upgrade pip numpy pypinyin sentencepiece>=0.1.96 soundfile
           python3 -m pip install wheel twine setuptools
+
+      - name: Install ffmpeg
+        shell: bash
+        run: |
+          sudo apt-get install ffmpeg
 
       - name: Install ninja
         shell: bash

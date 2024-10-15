@@ -59,6 +59,7 @@ static OnlineRecognizerResult Convert(const OnlineCtcDecoderResult &src,
   }
 
   r.segment = segment;
+  r.words = std::move(src.words);
   r.start_time = frames_since_start * frame_shift_ms / 1000.;
 
   return r;
@@ -67,10 +68,17 @@ static OnlineRecognizerResult Convert(const OnlineCtcDecoderResult &src,
 class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
  public:
   explicit OnlineRecognizerCtcImpl(const OnlineRecognizerConfig &config)
-      : config_(config),
+      : OnlineRecognizerImpl(config),
+        config_(config),
         model_(OnlineCtcModel::Create(config.model_config)),
-        sym_(config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
+    if (!config.model_config.tokens_buf.empty()) {
+      sym_ = SymbolTable(config.model_config.tokens_buf, false);
+    } else {
+      /// assuming tokens_buf and tokens are guaranteed not being both empty
+      sym_ = SymbolTable(config.model_config.tokens, true);
+    }
+
     if (!config.model_config.wenet_ctc.model.empty()) {
       // WeNet CTC models assume input samples are in the range
       // [-32768, 32767], so we set normalize_samples to false
@@ -83,7 +91,8 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
 #if __ANDROID_API__ >= 9
   explicit OnlineRecognizerCtcImpl(AAssetManager *mgr,
                                    const OnlineRecognizerConfig &config)
-      : config_(config),
+      : OnlineRecognizerImpl(mgr, config),
+        config_(config),
         model_(OnlineCtcModel::Create(mgr, config.model_config)),
         sym_(mgr, config.model_config.tokens),
         endpoint_(config_.endpoint_config) {
@@ -181,8 +190,10 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     // TODO(fangjun): Remember to change these constants if needed
     int32_t frame_shift_ms = 10;
     int32_t subsampling_factor = 4;
-    return Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor,
-                   s->GetCurrentSegment(), s->GetNumFramesSinceStart());
+    auto r = Convert(decoder_result, sym_, frame_shift_ms, subsampling_factor,
+                     s->GetCurrentSegment(), s->GetNumFramesSinceStart());
+    r.text = ApplyInverseTextNormalization(r.text);
+    return r;
   }
 
   bool IsEndpoint(OnlineStream *s) const override {

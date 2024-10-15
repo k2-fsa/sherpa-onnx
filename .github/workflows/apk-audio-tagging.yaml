@@ -2,8 +2,8 @@ name: apk-audio-tagging
 
 on:
   push:
-    tags:
-      - '*'
+    branches:
+      - apk
 
   workflow_dispatch:
 

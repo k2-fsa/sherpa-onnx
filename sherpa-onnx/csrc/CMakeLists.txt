@@ -36,9 +36,12 @@ set(sources
   offline-recognizer-impl.cc
   offline-recognizer.cc
   offline-rnn-lm.cc
+  offline-sense-voice-model-config.cc
+  offline-sense-voice-model.cc
   offline-stream.cc
   offline-tdnn-ctc-model.cc
   offline-tdnn-model-config.cc
+  offline-telespeech-ctc-model.cc
   offline-transducer-greedy-search-decoder.cc
   offline-transducer-greedy-search-nemo-decoder.cc
   offline-transducer-model-config.cc
@@ -86,6 +89,7 @@ set(sources
   packed-sequence.cc
   pad-sequence.cc
   parse-options.cc
+  provider-config.cc
   provider.cc
   resample.cc
   session.cc
@@ -134,13 +138,19 @@ list(APPEND sources
   offline-punctuation-impl.cc
   offline-punctuation-model-config.cc
   offline-punctuation.cc
+  online-cnn-bilstm-model.cc
+  online-punctuation-impl.cc
+  online-punctuation-model-config.cc
+  online-punctuation.cc
 )
 
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
     jieba-lexicon.cc
     lexicon.cc
+    melo-tts-lexicon.cc
     offline-tts-character-frontend.cc
+    offline-tts-frontend.cc
     offline-tts-impl.cc
     offline-tts-model-config.cc
     offline-tts-vits-model-config.cc
@@ -150,10 +160,34 @@ if(SHERPA_ONNX_ENABLE_TTS)
   )
 endif()
 
+if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+  list(APPEND sources
+    fast-clustering-config.cc
+    fast-clustering.cc
+    offline-speaker-diarization-impl.cc
+    offline-speaker-diarization-result.cc
+    offline-speaker-diarization.cc
+    offline-speaker-segmentation-model-config.cc
+    offline-speaker-segmentation-pyannote-model-config.cc
+    offline-speaker-segmentation-pyannote-model.cc
+  )
+endif()
+
 if(SHERPA_ONNX_ENABLE_CHECK)
   list(APPEND sources log.cc)
 endif()
-add_library(sherpa-onnx-core ${sources})
+
+# Always static build
+add_library(sherpa-onnx-core STATIC ${sources})
+
+set_target_properties(
+    sherpa-onnx-core
+  PROPERTIES
+    POSITION_INDEPENDENT_CODE ON
+    C_VISIBILITY_PRESET hidden
+    CXX_VISIBILITY_PRESET hidden
+)
+
 if(APPLE)
   target_compile_options(sherpa-onnx-core PRIVATE
     -Wno-deprecated-declarations
@@ -173,7 +207,6 @@ target_link_libraries(sherpa-onnx-core
 
 if(SHERPA_ONNX_ENABLE_GPU)
   target_link_libraries(sherpa-onnx-core
-    onnxruntime_providers_cuda
     onnxruntime_providers_shared
   )
 endif()
@@ -184,15 +217,18 @@ else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
 endif()
 
-target_link_libraries(sherpa-onnx-core -lm)
+if(NOT WIN32)
+  target_link_libraries(sherpa-onnx-core -lm)
+endif()
 
 if(NOT BUILD_SHARED_LIBS AND APPLE)
   target_link_libraries(sherpa-onnx-core "-framework Foundation")
 endif()
 
+target_link_libraries(sherpa-onnx-core fstfar fst)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   target_link_libraries(sherpa-onnx-core piper_phonemize)
-  target_link_libraries(sherpa-onnx-core fstfar fst)
   target_link_libraries(sherpa-onnx-core cppjieba)
 endif()
 
@@ -209,6 +245,7 @@ if(SHERPA_ONNX_ENABLE_CHECK)
 endif()
 
 if(NOT BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL Linux)
+  # This is for linux arm32 and arm64
   target_link_libraries(sherpa-onnx-core -ldl)
 endif()
 
@@ -224,9 +261,14 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-offline-language-identification sherpa-onnx-offline-language-identification.cc)
   add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
   add_executable(sherpa-onnx-offline-punctuation sherpa-onnx-offline-punctuation.cc)
+  add_executable(sherpa-onnx-online-punctuation sherpa-onnx-online-punctuation.cc)
 
   if(SHERPA_ONNX_ENABLE_TTS)
     add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
+  endif()
+
+  if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+    add_executable(sherpa-onnx-offline-speaker-diarization sherpa-onnx-offline-speaker-diarization.cc)
   endif()
 
   set(main_exes
@@ -237,10 +279,17 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-offline-language-identification
     sherpa-onnx-offline-parallel
     sherpa-onnx-offline-punctuation
+    sherpa-onnx-online-punctuation
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND main_exes
       sherpa-onnx-offline-tts
+    )
+  endif()
+
+  if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+    list(APPEND main_exes
+      sherpa-onnx-offline-speaker-diarization
     )
   endif()
 
@@ -260,14 +309,8 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   endif()
 endif()
 
-if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-  install(TARGETS sherpa-onnx-core DESTINATION ..)
-else()
+if(NOT BUILD_SHARED_LIBS)
   install(TARGETS sherpa-onnx-core DESTINATION lib)
-endif()
-
-if(WIN32 AND BUILD_SHARED_LIBS)
-  install(TARGETS sherpa-onnx-core DESTINATION bin)
 endif()
 
 if(SHERPA_ONNX_ENABLE_BINARY)
@@ -306,6 +349,9 @@ if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
       sherpa-onnx-offline-tts-play-alsa
     )
   endif()
+
+  #   # To fix the following error for Windows when building exe
+  #   #  mismatch detected for 'RuntimeLibrary': value 'MT_StaticRelease' doesn't match value 'MD_Dynamic Release'
 
   foreach(exe IN LISTS exes)
     target_link_libraries(${exe} sherpa-onnx-core)
@@ -382,12 +428,6 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
-  if(BUILD_SHARED_LIBS)
-    set(PA_LIB portaudio)
-  else()
-    set(PA_LIB portaudio_static)
-  endif()
-
   set(exes
     sherpa-onnx-microphone
     sherpa-onnx-keyword-spotter-microphone
@@ -404,7 +444,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
   endif()
 
   foreach(exe IN LISTS exes)
-    target_link_libraries(${exe} ${PA_LIB} sherpa-onnx-core)
+    target_link_libraries(${exe} portaudio_static sherpa-onnx-core)
   endforeach()
 
   if(NOT WIN32)
@@ -469,7 +509,7 @@ if(SHERPA_ONNX_ENABLE_WEBSOCKET AND SHERPA_ONNX_ENABLE_BINARY)
     target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib")
     target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../../../sherpa_onnx/lib")
 
-    if(SHERPA_ONNX_ENABLE_PYTHON)
+    if(SHERPA_ONNX_ENABLE_PYTHON AND NOT WIN32)
       target_link_libraries(sherpa-onnx-online-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
       target_link_libraries(sherpa-onnx-online-websocket-client "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
       target_link_libraries(sherpa-onnx-offline-websocket-server "-Wl,-rpath,${SHERPA_ONNX_RPATH_ORIGIN}/../lib/python${PYTHON_VERSION}/site-packages/sherpa_onnx/lib")
@@ -507,6 +547,12 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     )
   endif()
 
+  if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+    list(APPEND sherpa_onnx_test_srcs
+      fast-clustering-test.cc
+    )
+  endif()
+
   list(APPEND sherpa_onnx_test_srcs
     speaker-embedding-manager-test.cc
   )
@@ -533,3 +579,16 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     sherpa_onnx_add_test(${source})
   endforeach()
 endif()
+
+set(srcs_to_check)
+foreach(s IN LISTS sources)
+  list(APPEND srcs_to_check ${CMAKE_CURRENT_LIST_DIR}/${s})
+endforeach()
+
+# For clang-tidy
+add_custom_target(
+  clang-tidy-check
+  clang-tidy -p ${CMAKE_BINARY_DIR}/compile_commands.json --config-file ${CMAKE_SOURCE_DIR}/.clang-tidy ${srcs_to_check}
+  DEPENDS ${sources})
+
+add_custom_target(check DEPENDS clang-tidy-check)

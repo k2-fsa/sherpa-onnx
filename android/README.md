@@ -4,6 +4,8 @@ Please refer to
 https://k2-fsa.github.io/sherpa/onnx/android/index.html
 for usage.
 
+- [SherpaOnnxSpeakerDiarization](./SherpaOnnxSpeakerDiarization) It is for speaker diarization.
+
 - [SherpaOnnx](./SherpaOnnx) It uses a streaming ASR model.
 
 - [SherpaOnnx2Pass](./SherpaOnnx2Pass) It uses a streaming ASR model

@@ -30,14 +30,12 @@ concurrency:
 
 jobs:
   test-go:
-    name: ${{ matrix.os }} ${{matrix.arch }}
+    name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: macos-latest
-            arch: amd64
+        os: [macos-latest, macos-13, ubuntu-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -47,7 +45,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-${{ matrix.arch }}
+          key: ${{ matrix.os }}-go
 
       - uses: actions/setup-go@v5
         with:
@@ -69,12 +67,58 @@ jobs:
       - name: Build sherpa-onnx
         shell: bash
         run: |
+          upload_dir=$PWD/to-upload
+          mkdir -p $upload_dir
+          echo "upload_dir"
+
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
           mkdir build
           cd build
-          cmake -DCMAKE_C_COMPILER_LAUNCHER=ccache -DCMAKE_CXX_COMPILER_LAUNCHER=ccache -DBUILD_SHARED_LIBS=ON -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF ..
-          make -j1
-          cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
+          cmake \
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+
+          if [[ ${{ matrix.os }} == windows-latest ]]; then
+            cmake --build . --target install --config Release -- -m:2
+          else
+            make -j2 install
+          fi
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            cp -v ./lib/*.so $upload_dir
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* $upload_dir
+
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*so* ./lib/
+
+            rm -v ./lib/*.a
+            ls -h ./lib
+          elif [[ ${{ matrix.os }} == windows-latest ]]; then
+            cp -v ./install/lib/sherpa-onnx-c-api.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            cp -v ./install/lib/onnxruntime.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            ls -lh ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-hlg-decoding/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-decode-files/
+
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll $upload_dir
+          else
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib $upload_dir/
+            cp -v lib/*.dylib $upload_dir
+
+            cp -v _deps/onnxruntime-src/lib/libonnxruntime*dylib ./lib/
+            rm ./lib/*.a
+            rm ./lib/libonnxruntime.dylib
+            cd lib
+            ln -s libonnxruntime.1.17.1.dylib libonnxruntime.dylib
+            cd ..
+          fi
 
           cd ../scripts/go/_internal/
           ls -lh lib
@@ -84,6 +128,17 @@ jobs:
 
           go mod tidy
           go build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-libs
+          path: to-upload/
+
+      - name: Test non-streaming speaker diarization
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-speaker-diarization/
+          ./run.sh
 
       - name: Test speaker identification
         shell: bash
@@ -97,7 +152,7 @@ jobs:
           cd scripts/go/_internal/streaming-hlg-decoding/
           ./run.sh
 
-      - name: Test non-streaming TTS (macOS)
+      - name: Test non-streaming TTS
         shell: bash
         run: |
           mkdir tts-waves
@@ -108,8 +163,6 @@ jobs:
           cat go.mod
           go build
           ls -lh
-
-          git lfs install
 
           echo "Test vits-ljs"
           ./run-vits-ljs.sh
@@ -131,10 +184,10 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: tts-waves
+          name: tts-waves-${{ matrix.os }}
           path: tts-waves
 
-      - name: Test non-streaming decoding files (macOS)
+      - name: Test non-streaming decoding files
         shell: bash
         run: |
           cd scripts/go/_internal/non-streaming-decode-files/
@@ -144,7 +197,17 @@ jobs:
           go build
           ls -lh
 
-          git lfs install
+          echo "Test SenseVoice ctc"
+          ./run-sense-voice-small.sh
+          rm -rf sherpa-onnx-sense-*
+
+          echo "Test telespeech ctc"
+          ./run-telespeech-ctc.sh
+          rm -rf sherpa-onnx-telespeech-ctc-*
+
+          echo "Test transducer"
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-zipformer-en-2023-06-26
 
           echo "Test transducer"
           ./run-transducer.sh
@@ -152,7 +215,8 @@ jobs:
 
           echo "Test paraformer"
           ./run-paraformer.sh
-          rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+          ./run-paraformer-itn.sh
+          rm -rf sherpa-onnx-paraformer-zh-2023-09-14
 
           echo "Test NeMo CTC"
           ./run-nemo-ctc.sh
@@ -183,6 +247,9 @@ jobs:
           echo "Test transducer"
           ./run-transducer.sh
           rm -rf sherpa-onnx-streaming-zipformer-en-2023-06-26
+
+          ./run-transducer-itn.sh
+          rm -rf sherpa-onnx-streaming-*
 
           echo "Test paraformer"
           ./run-paraformer.sh

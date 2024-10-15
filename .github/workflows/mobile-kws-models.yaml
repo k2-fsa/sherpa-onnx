@@ -1,0 +1,67 @@
+name: mobile-kws-models
+
+on:
+  push:
+    branches:
+      - asr-mobile
+
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-kws-models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile-kws-models:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj' || github.repository_owner == 'csu-fangjun'
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.index }}/${{ matrix.total }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.8"]
+        total: ["2"]
+        index: ["0", "1"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python3 -m pip install onnxruntime==1.16.3 onnx==1.15.0 jinja2
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/mobile-asr-models
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-kws.py --total $total --index $index
+          chmod +x run2.sh
+          mv run2.sh run.sh
+          ls -lh
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/mobile-asr-models
+          ./run.sh
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./kws/*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: kws-models

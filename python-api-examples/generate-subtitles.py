@@ -12,12 +12,12 @@ Supported file formats are those supported by ffmpeg; for instance,
 Note that you need a non-streaming model for this script.
 
 Please visit
-https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx
+https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 to download silero_vad.onnx
 
 For instance,
 
-wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
 
 (1) For paraformer
 
@@ -58,7 +58,17 @@ wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
   --num-threads=2 \
   /path/to/test.mp4
 
-(4) For WeNet CTC models
+(4) For SenseVoice CTC models
+
+./python-api-examples/generate-subtitles.py  \
+  --silero-vad-model=/path/to/silero_vad.onnx \
+  --sense-voice=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.onnx \
+  --tokens=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt \
+  --num-threads=2 \
+  /path/to/test.mp4
+
+
+(5) For WeNet CTC models
 
 ./python-api-examples/generate-subtitles.py  \
   --silero-vad-model=/path/to/silero_vad.onnx \
@@ -128,6 +138,13 @@ def get_args():
         default="",
         type=str,
         help="Path to the model.onnx from Paraformer",
+    )
+
+    parser.add_argument(
+        "--sense-voice",
+        default="",
+        type=str,
+        help="Path to the model.onnx from SenseVoice",
     )
 
     parser.add_argument(
@@ -242,6 +259,7 @@ def assert_file_exists(filename: str):
 def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     if args.encoder:
         assert len(args.paraformer) == 0, args.paraformer
+        assert len(args.sense_voice) == 0, args.sense_voice
         assert len(args.wenet_ctc) == 0, args.wenet_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
@@ -262,6 +280,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             debug=args.debug,
         )
     elif args.paraformer:
+        assert len(args.sense_voice) == 0, args.sense_voice
         assert len(args.wenet_ctc) == 0, args.wenet_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
@@ -275,6 +294,19 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             sample_rate=args.sample_rate,
             feature_dim=args.feature_dim,
             decoding_method=args.decoding_method,
+            debug=args.debug,
+        )
+    elif args.sense_voice:
+        assert len(args.wenet_ctc) == 0, args.wenet_ctc
+        assert len(args.whisper_encoder) == 0, args.whisper_encoder
+        assert len(args.whisper_decoder) == 0, args.whisper_decoder
+
+        assert_file_exists(args.sense_voice)
+        recognizer = sherpa_onnx.OfflineRecognizer.from_sense_voice(
+            model=args.sense_voice,
+            tokens=args.tokens,
+            num_threads=args.num_threads,
+            use_itn=True,
             debug=args.debug,
         )
     elif args.wenet_ctc:
@@ -374,7 +406,14 @@ def main():
 
     config = sherpa_onnx.VadModelConfig()
     config.silero_vad.model = args.silero_vad_model
-    config.silero_vad.min_silence_duration = 0.25
+    config.silero_vad.threshold = 0.5
+    config.silero_vad.min_silence_duration = 0.25  # seconds
+    config.silero_vad.min_speech_duration = 0.25  # seconds
+
+    # If the current segment is larger than this value, then it increases
+    # the threshold to 0.9 internally. After detecting this segment,
+    # it resets the threshold to its original value.
+    config.silero_vad.max_speech_duration = 5  # seconds
     config.sample_rate = args.sample_rate
 
     window_size = config.silero_vad.window_size
@@ -386,12 +425,17 @@ def main():
 
     print("Started!")
 
+    is_silence = False
     # TODO(fangjun): Support multithreads
     while True:
         # *2 because int16_t has two bytes
         data = process.stdout.read(frames_per_read * 2)
         if not data:
-            break
+            if is_silence:
+                break
+            is_silence = True
+            # The converted audio file does not have a mute data of 1 second or more at the end, which will result in the loss of the last segment data
+            data = np.zeros(1 * args.sample_rate, dtype=np.int16)
 
         samples = np.frombuffer(data, dtype=np.int16)
         samples = samples.astype(np.float32) / 32768
@@ -400,6 +444,9 @@ def main():
         while len(buffer) > window_size:
             vad.accept_waveform(buffer[:window_size])
             buffer = buffer[window_size:]
+
+        if is_silence:
+            vad.flush()
 
         streams = []
         segments = []

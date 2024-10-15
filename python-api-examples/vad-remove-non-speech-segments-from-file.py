@@ -13,12 +13,12 @@ python3 ./vad-remove-non-speech-segments-from-file.py \
         output.wav
 
 Please visit
-https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx
+https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
 to download silero_vad.onnx
 
 For instance,
 
-wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
+wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
 """
 
 import argparse
@@ -90,6 +90,15 @@ def main():
 
     config = sherpa_onnx.VadModelConfig()
     config.silero_vad.model = args.silero_vad_model
+    config.silero_vad.threshold = 0.5
+    config.silero_vad.min_silence_duration = 0.25  # seconds
+    config.silero_vad.min_speech_duration = 0.25  # seconds
+
+    # If the current segment is larger than this value, then it increases
+    # the threshold to 0.9 internally. After detecting this segment,
+    # it resets the threshold to its original value.
+    config.silero_vad.max_speech_duration = 5  # seconds
+
     config.sample_rate = sample_rate
 
     window_size = config.silero_vad.window_size
@@ -104,6 +113,12 @@ def main():
         while not vad.empty():
             speech_samples.extend(vad.front.samples)
             vad.pop()
+
+    vad.flush()
+
+    while not vad.empty():
+        speech_samples.extend(vad.front.samples)
+        vad.pop()
 
     speech_samples = np.array(speech_samples, dtype=np.float32)
 

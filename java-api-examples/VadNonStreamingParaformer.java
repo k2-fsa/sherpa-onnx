@@ -18,6 +18,7 @@ public class VadNonStreamingParaformer {
             .setMinSilenceDuration(0.25f)
             .setMinSpeechDuration(0.5f)
             .setWindowSize(512)
+            .setMaxSpeechDuration(5.0f)
             .build();
 
     VadModelConfig config =
@@ -34,10 +35,10 @@ public class VadNonStreamingParaformer {
 
   public static OfflineRecognizer createOfflineRecognizer() {
     // please refer to
-    // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-03-28-chinese-english
+    // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-09-14-chinese-english
     // to download model files
-    String model = "./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx";
-    String tokens = "./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt";
+    String model = "./sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx";
+    String tokens = "./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt";
 
     OfflineParaformerModelConfig paraformer =
         OfflineParaformerModelConfig.builder().setModel(model).build();
@@ -96,6 +97,25 @@ public class VadNonStreamingParaformer {
           vad.pop();
         }
       }
+    }
+
+    vad.flush();
+    while (!vad.empty()) {
+      SpeechSegment segment = vad.front();
+      float startTime = segment.getStart() / 16000.0f;
+      float duration = segment.getSamples().length / 16000.0f;
+
+      OfflineStream stream = recognizer.createStream();
+      stream.acceptWaveform(segment.getSamples(), 16000);
+      recognizer.decode(stream);
+      String text = recognizer.getResult(stream).getText();
+      stream.release();
+
+      if (!text.isEmpty()) {
+        System.out.printf("%.3f--%.3f: %s\n", startTime, startTime + duration, text);
+      }
+
+      vad.pop();
     }
 
     vad.release();

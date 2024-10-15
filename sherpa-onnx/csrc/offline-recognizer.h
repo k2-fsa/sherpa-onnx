@@ -40,6 +40,12 @@ struct OfflineRecognizerConfig {
 
   float blank_penalty = 0.0;
 
+  // If there are multiple rules, they are applied from left to right.
+  std::string rule_fsts;
+
+  // If there are multiple FST archives, they are applied from left to right.
+  std::string rule_fars;
+
   // only greedy_search is implemented
   // TODO(fangjun): Implement modified_beam_search
 
@@ -50,7 +56,8 @@ struct OfflineRecognizerConfig {
       const OfflineCtcFstDecoderConfig &ctc_fst_decoder_config,
       const std::string &decoding_method, int32_t max_active_paths,
       const std::string &hotwords_file, float hotwords_score,
-      float blank_penalty)
+      float blank_penalty, const std::string &rule_fsts,
+      const std::string &rule_fars)
       : feat_config(feat_config),
         model_config(model_config),
         lm_config(lm_config),
@@ -59,7 +66,9 @@ struct OfflineRecognizerConfig {
         max_active_paths(max_active_paths),
         hotwords_file(hotwords_file),
         hotwords_score(hotwords_score),
-        blank_penalty(blank_penalty) {}
+        blank_penalty(blank_penalty),
+        rule_fsts(rule_fsts),
+        rule_fars(rule_fars) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
@@ -109,6 +118,15 @@ class OfflineRecognizer {
    * @param n  Size of the input array.
    */
   void DecodeStreams(OfflineStream **ss, int32_t n) const;
+
+  /** Onnxruntime Session objects are not affected by this method.
+  * The exact behavior can be defined by a specific recognizer impl.
+  * For instance, for the whisper recognizer, you can retrieve the language and task from
+  * the config and ignore any remaining fields in `config`.
+  */
+  void SetConfig(const OfflineRecognizerConfig &config);
+
+  OfflineRecognizerConfig GetConfig() const;
 
  private:
   std::unique_ptr<OfflineRecognizerImpl> impl_;

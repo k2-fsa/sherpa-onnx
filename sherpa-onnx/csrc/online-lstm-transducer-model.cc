@@ -3,9 +3,8 @@
 // Copyright (c)  2023  Xiaomi Corporation
 #include "sherpa-onnx/csrc/online-lstm-transducer-model.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -29,7 +28,7 @@ namespace sherpa_onnx {
 
 OnlineLstmTransducerModel::OnlineLstmTransducerModel(
     const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_WARNING),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {
@@ -52,7 +51,7 @@ OnlineLstmTransducerModel::OnlineLstmTransducerModel(
 #if __ANDROID_API__ >= 9
 OnlineLstmTransducerModel::OnlineLstmTransducerModel(
     AAssetManager *mgr, const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_WARNING),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {

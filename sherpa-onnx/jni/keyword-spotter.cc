@@ -94,7 +94,7 @@ static KeywordSpotterConfig GetKwsConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(model_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.provider = p;
+  ans.model_config.provider_config.provider = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "modelType", "Ljava/lang/String;");
@@ -133,10 +133,12 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_newFromAsset(
   AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
   if (!mgr) {
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+    return 0;
   }
 #endif
   auto config = sherpa_onnx::GetKwsConfig(env, _config);
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
   auto kws = new sherpa_onnx::KeywordSpotter(
 #if __ANDROID_API__ >= 9
       mgr,

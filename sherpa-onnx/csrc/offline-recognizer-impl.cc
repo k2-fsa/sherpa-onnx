@@ -5,11 +5,23 @@
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 
 #include <string>
+#include <utility>
+#include <vector>
 
+#if __ANDROID_API__ >= 9
+#include <strstream>
+
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#include "fst/extensions/far/far.h"
+#include "kaldifst/csrc/kaldi-fst-io.h"
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-ctc-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-sense-voice-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-nemo-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-whisper-impl.h"
@@ -20,6 +32,28 @@ namespace sherpa_onnx {
 
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     const OfflineRecognizerConfig &config) {
+  if (!config.model_config.sense_voice.model.empty()) {
+    return std::make_unique<OfflineRecognizerSenseVoiceImpl>(config);
+  }
+
+  if (!config.model_config.paraformer.model.empty()) {
+    return std::make_unique<OfflineRecognizerParaformerImpl>(config);
+  }
+
+  if (!config.model_config.nemo_ctc.model.empty() ||
+      !config.model_config.zipformer_ctc.model.empty() ||
+      !config.model_config.tdnn.model.empty() ||
+      !config.model_config.wenet_ctc.model.empty()) {
+    return std::make_unique<OfflineRecognizerCtcImpl>(config);
+  }
+
+  if (!config.model_config.whisper.encoder.empty()) {
+    return std::make_unique<OfflineRecognizerWhisperImpl>(config);
+  }
+
+  // TODO(fangjun): Refactor it. We only need to use model type for the
+  // following models:
+  //  1. transducer and nemo_transducer
   if (!config.model_config.model_type.empty()) {
     const auto &model_type = config.model_config.model_type;
     if (model_type == "transducer") {
@@ -29,7 +63,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     } else if (model_type == "paraformer") {
       return std::make_unique<OfflineRecognizerParaformerImpl>(config);
     } else if (model_type == "nemo_ctc" || model_type == "tdnn" ||
-               model_type == "zipformer2_ctc" || model_type == "wenet_ctc") {
+               model_type == "zipformer2_ctc" || model_type == "wenet_ctc" ||
+               model_type == "telespeech_ctc") {
       return std::make_unique<OfflineRecognizerCtcImpl>(config);
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(config);
@@ -53,6 +88,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     model_filename = config.model_config.paraformer.model;
   } else if (!config.model_config.nemo_ctc.model.empty()) {
     model_filename = config.model_config.nemo_ctc.model;
+  } else if (!config.model_config.telespeech_ctc.empty()) {
+    model_filename = config.model_config.telespeech_ctc;
   } else if (!config.model_config.tdnn.model.empty()) {
     model_filename = config.model_config.tdnn.model;
   } else if (!config.model_config.zipformer_ctc.model.empty()) {
@@ -111,6 +148,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "\n    "
         "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/wenet/run.sh"
         "\n"
+        "(7) CTC models from TeleSpeech"
+        "\n    "
+        "https://github.com/Tele-AI/TeleSpeech-ASR"
+        "\n"
         "\n");
     exit(-1);
   }
@@ -133,7 +174,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (model_type == "EncDecCTCModelBPE" ||
       model_type == "EncDecHybridRNNTCTCBPEModel" || model_type == "tdnn" ||
-      model_type == "zipformer2_ctc" || model_type == "wenet_ctc") {
+      model_type == "zipformer2_ctc" || model_type == "wenet_ctc" ||
+      model_type == "telespeech_ctc") {
     return std::make_unique<OfflineRecognizerCtcImpl>(config);
   }
 
@@ -151,7 +193,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - Whisper models\n"
       " - Tdnn models\n"
       " - Zipformer CTC models\n"
-      " - WeNet CTC models\n",
+      " - WeNet CTC models\n"
+      " - TeleSpeech CTC models\n",
       model_type.c_str());
 
   exit(-1);
@@ -160,6 +203,28 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 #if __ANDROID_API__ >= 9
 std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     AAssetManager *mgr, const OfflineRecognizerConfig &config) {
+  if (!config.model_config.sense_voice.model.empty()) {
+    return std::make_unique<OfflineRecognizerSenseVoiceImpl>(mgr, config);
+  }
+
+  if (!config.model_config.paraformer.model.empty()) {
+    return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
+  }
+
+  if (!config.model_config.nemo_ctc.model.empty() ||
+      !config.model_config.zipformer_ctc.model.empty() ||
+      !config.model_config.tdnn.model.empty() ||
+      !config.model_config.wenet_ctc.model.empty()) {
+    return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
+  }
+
+  if (!config.model_config.whisper.encoder.empty()) {
+    return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
+  }
+
+  // TODO(fangjun): Refactor it. We only need to use model type for the
+  // following models:
+  //  1. transducer and nemo_transducer
   if (!config.model_config.model_type.empty()) {
     const auto &model_type = config.model_config.model_type;
     if (model_type == "transducer") {
@@ -169,7 +234,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     } else if (model_type == "paraformer") {
       return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
     } else if (model_type == "nemo_ctc" || model_type == "tdnn" ||
-               model_type == "zipformer2_ctc" || model_type == "wenet_ctc") {
+               model_type == "zipformer2_ctc" || model_type == "wenet_ctc" ||
+               model_type == "telespeech_ctc") {
       return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
@@ -199,6 +265,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     model_filename = config.model_config.zipformer_ctc.model;
   } else if (!config.model_config.wenet_ctc.model.empty()) {
     model_filename = config.model_config.wenet_ctc.model;
+  } else if (!config.model_config.telespeech_ctc.empty()) {
+    model_filename = config.model_config.telespeech_ctc;
   } else if (!config.model_config.whisper.encoder.empty()) {
     model_filename = config.model_config.whisper.encoder;
   } else {
@@ -251,6 +319,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "\n    "
         "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/wenet/run.sh"
         "\n"
+        "(7) CTC models from TeleSpeech"
+        "\n    "
+        "https://github.com/Tele-AI/TeleSpeech-ASR"
+        "\n"
         "\n");
     exit(-1);
   }
@@ -273,7 +345,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (model_type == "EncDecCTCModelBPE" ||
       model_type == "EncDecHybridRNNTCTCBPEModel" || model_type == "tdnn" ||
-      model_type == "zipformer2_ctc" || model_type == "wenet_ctc") {
+      model_type == "zipformer2_ctc" || model_type == "wenet_ctc" ||
+      model_type == "telespeech_ctc") {
     return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
   }
 
@@ -291,11 +364,120 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - Whisper models\n"
       " - Tdnn models\n"
       " - Zipformer CTC models\n"
-      " - WeNet CTC models\n",
+      " - WeNet CTC models\n"
+      " - TeleSpeech CTC models\n",
       model_type.c_str());
 
   exit(-1);
 }
 #endif
+
+OfflineRecognizerImpl::OfflineRecognizerImpl(
+    const OfflineRecognizerConfig &config)
+    : config_(config) {
+  if (!config.rule_fsts.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(config.rule_fsts, ",", false, &files);
+    itn_list_.reserve(files.size());
+    for (const auto &f : files) {
+      if (config.model_config.debug) {
+        SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
+      }
+      itn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(f));
+    }
+  }
+
+  if (!config.rule_fars.empty()) {
+    if (config.model_config.debug) {
+      SHERPA_ONNX_LOGE("Loading FST archives");
+    }
+    std::vector<std::string> files;
+    SplitStringToVector(config.rule_fars, ",", false, &files);
+
+    itn_list_.reserve(files.size() + itn_list_.size());
+
+    for (const auto &f : files) {
+      if (config.model_config.debug) {
+        SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
+      }
+      std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
+          fst::FarReader<fst::StdArc>::Open(f));
+      for (; !reader->Done(); reader->Next()) {
+        std::unique_ptr<fst::StdConstFst> r(
+            fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
+
+        itn_list_.push_back(
+            std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
+      }
+    }
+
+    if (config.model_config.debug) {
+      SHERPA_ONNX_LOGE("FST archives loaded!");
+    }
+  }
+}
+
+#if __ANDROID_API__ >= 9
+OfflineRecognizerImpl::OfflineRecognizerImpl(
+    AAssetManager *mgr, const OfflineRecognizerConfig &config)
+    : config_(config) {
+  if (!config.rule_fsts.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(config.rule_fsts, ",", false, &files);
+    itn_list_.reserve(files.size());
+    for (const auto &f : files) {
+      if (config.model_config.debug) {
+        SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
+      }
+      auto buf = ReadFile(mgr, f);
+      std::istrstream is(buf.data(), buf.size());
+      itn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(is));
+    }
+  }
+
+  if (!config.rule_fars.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(config.rule_fars, ",", false, &files);
+    itn_list_.reserve(files.size() + itn_list_.size());
+
+    for (const auto &f : files) {
+      if (config.model_config.debug) {
+        SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
+      }
+
+      auto buf = ReadFile(mgr, f);
+
+      std::unique_ptr<std::istream> s(
+          new std::istrstream(buf.data(), buf.size()));
+
+      std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
+          fst::FarReader<fst::StdArc>::Open(std::move(s)));
+
+      for (; !reader->Done(); reader->Next()) {
+        std::unique_ptr<fst::StdConstFst> r(
+            fst::CastOrConvertToConstFst(reader->GetFst()->Copy()));
+
+        itn_list_.push_back(
+            std::make_unique<kaldifst::TextNormalizer>(std::move(r)));
+      }  // for (; !reader->Done(); reader->Next())
+    }    // for (const auto &f : files)
+  }      // if (!config.rule_fars.empty())
+}
+#endif
+
+std::string OfflineRecognizerImpl::ApplyInverseTextNormalization(
+    std::string text) const {
+  if (!itn_list_.empty()) {
+    for (const auto &tn : itn_list_) {
+      text = tn->Normalize(text);
+    }
+  }
+
+  return text;
+}
+
+void OfflineRecognizerImpl::SetConfig(const OfflineRecognizerConfig &config) {
+  config_ = config;
+}
 
 }  // namespace sherpa_onnx

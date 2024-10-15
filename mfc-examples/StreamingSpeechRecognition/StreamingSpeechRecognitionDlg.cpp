@@ -46,7 +46,7 @@ CStreamingSpeechRecognitionDlg::CStreamingSpeechRecognitionDlg(
 
 CStreamingSpeechRecognitionDlg::~CStreamingSpeechRecognitionDlg() {
   if (recognizer_) {
-    DestroyOnlineRecognizer(recognizer_);
+    SherpaOnnxDestroyOnlineRecognizer(recognizer_);
     recognizer_ = nullptr;
   }
 }
@@ -123,7 +123,7 @@ static int32_t RecordCallback(const void *input_buffer,
 
   auto stream = dlg->stream_;
   if (stream) {
-    AcceptWaveform(stream, 16000, reinterpret_cast<const float *>(input_buffer),
+    SherpaOnnxOnlineStreamAcceptWaveform(stream, 16000, reinterpret_cast<const float *>(input_buffer),
                    frames_per_buffer);
   }
 
@@ -146,11 +146,11 @@ void CStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     started_ = true;
 
     if (stream_) {
-      DestroyOnlineStream(stream_);
+      SherpaOnnxDestroyOnlineStream(stream_);
       stream_ = nullptr;
     }
 
-    stream_ = CreateOnlineStream(recognizer_);
+    stream_ = SherpaOnnxCreateOnlineStream(recognizer_);
 
     PaStreamParameters param;
     param.device = Pa_GetDefaultInputDevice();
@@ -356,7 +356,7 @@ void CStreamingSpeechRecognitionDlg::InitParaformer() {
   config.model_config.paraformer.encoder = paraformer_encoder.c_str();
   config.model_config.paraformer.decoder = paraformer_decoder.c_str();
 
-  recognizer_ = CreateOnlineRecognizer(&config);
+  recognizer_ = SherpaOnnxCreateOnlineRecognizer(&config);
 }
 
 void CStreamingSpeechRecognitionDlg::InitRecognizer() {
@@ -422,7 +422,7 @@ void CStreamingSpeechRecognitionDlg::InitRecognizer() {
   config.model_config.transducer.decoder = decoder.c_str();
   config.model_config.transducer.joiner = joiner.c_str();
 
-  recognizer_ = CreateOnlineRecognizer(&config);
+  recognizer_ = SherpaOnnxCreateOnlineRecognizer(&config);
 }
 
 // see
@@ -519,13 +519,13 @@ int CStreamingSpeechRecognitionDlg::RunThread() {
 
   std::string last_text;
   while (started_) {
-    while (IsOnlineStreamReady(recognizer_, stream_)) {
-      DecodeOnlineStream(recognizer_, stream_);
+    while (SherpaOnnxIsOnlineStreamReady(recognizer_, stream_)) {
+      SherpaOnnxDecodeOnlineStream(recognizer_, stream_);
     }
 
-    auto r = GetOnlineStreamResult(recognizer_, stream_);
+    auto r = SherpaOnnxGetOnlineStreamResult(recognizer_, stream_);
     std::string text = r->text;
-    DestroyOnlineRecognizerResult(r);
+    SherpaOnnxDestroyOnlineRecognizerResult(r);
     if (!text.empty() && last_text != text) {
       // CString str;
       // str.Format(_T("%s"), Cat(results, text).c_str());
@@ -535,9 +535,9 @@ int CStreamingSpeechRecognitionDlg::RunThread() {
       my_text_.SetSel(-1);
       last_text = text;
     }
-    int is_endpoint = IsEndpoint(recognizer_, stream_);
+    int is_endpoint = SherpaOnnxOnlineStreamIsEndpoint(recognizer_, stream_);
     if (is_endpoint) {
-      Reset(recognizer_, stream_);
+      SherpaOnnxOnlineStreamReset(recognizer_, stream_);
       if (!text.empty()) {
         results.push_back(std::move(text));
       }

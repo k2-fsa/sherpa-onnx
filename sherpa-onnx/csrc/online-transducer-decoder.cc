@@ -45,13 +45,13 @@ OnlineTransducerDecoderResult &OnlineTransducerDecoderResult::operator=(
 }
 
 OnlineTransducerDecoderResult::OnlineTransducerDecoderResult(
-    OnlineTransducerDecoderResult &&other)
+    OnlineTransducerDecoderResult &&other) noexcept
     : OnlineTransducerDecoderResult() {
   *this = std::move(other);
 }
 
 OnlineTransducerDecoderResult &OnlineTransducerDecoderResult::operator=(
-    OnlineTransducerDecoderResult &&other) {
+    OnlineTransducerDecoderResult &&other) noexcept {
   if (this == &other) {
     return *this;
   }

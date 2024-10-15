@@ -8,6 +8,7 @@ const sid = require('./speaker-identification.js');
 const at = require('./audio-tagg.js');
 const punct = require('./punctuation.js');
 const kws = require('./keyword-spotter.js');
+const sd = require('./non-streaming-speaker-diarization.js');
 
 module.exports = {
   OnlineRecognizer: streaming_asr.OnlineRecognizer,
@@ -24,4 +25,5 @@ module.exports = {
   AudioTagging: at.AudioTagging,
   Punctuation: punct.Punctuation,
   KeywordSpotter: kws.KeywordSpotter,
+  OfflineSpeakerDiarization: sd.OfflineSpeakerDiarization,
 }

@@ -1,0 +1,43 @@
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width" />
+  <title>Next-gen Kaldi WebAssembly with sherpa-onnx for VAD + ASR</title>
+  <style>
+    h1,div {
+      text-align: center;
+    }
+    textarea {
+      width:100%;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>
+    Next-gen Kaldi + WebAssembly<br/>
+    VAD+ASR Demo with <a href="https://github.com/k2-fsa/sherpa-onnx">sherpa-onnx</a><br/>
+    (with Zipformer)
+  </h1>
+
+  <div>
+    <span id="hint">Loading model ... ...</span>
+    <br/>
+    <br/>
+    <button id="startBtn" disabled>Start</button>
+    <button id="stopBtn" disabled>Stop</button>
+    <button id="clearBtn">Clear</button>
+    <br/>
+    <br/>
+    <textarea id="results" rows="10" readonly></textarea>
+  </div>
+
+  <section flex="1" overflow="auto" id="sound-clips">
+  </section>
+
+  <script src="sherpa-onnx-asr.js"></script>
+  <script src="sherpa-onnx-vad.js"></script>
+  <script src="app-vad-asr.js"></script>
+  <script src="sherpa-onnx-wasm-main-vad-asr.js"></script>
+</body>

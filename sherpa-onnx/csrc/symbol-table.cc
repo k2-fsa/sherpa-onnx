@@ -20,9 +20,14 @@
 
 namespace sherpa_onnx {
 
-SymbolTable::SymbolTable(const std::string &filename) {
-  std::ifstream is(filename);
-  Init(is);
+SymbolTable::SymbolTable(const std::string &filename, bool is_file) {
+  if (is_file) {
+    std::ifstream is(filename);
+    Init(is);
+  } else {
+    std::istringstream iss(filename);
+    Init(iss);
+  }
 }
 
 #if __ANDROID_API__ >= 9
@@ -36,7 +41,7 @@ SymbolTable::SymbolTable(AAssetManager *mgr, const std::string &filename) {
 
 void SymbolTable::Init(std::istream &is) {
   std::string sym;
-  int32_t id;
+  int32_t id = 0;
   while (is >> sym >> id) {
 #if 0
     // we disable the test here since for some multi-lingual BPE models

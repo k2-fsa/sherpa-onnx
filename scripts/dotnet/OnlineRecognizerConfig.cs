@@ -2,14 +2,11 @@
 /// Copyright (c)  2023 by manyeyes
 /// Copyright (c)  2024.5 by 东风破
 
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System;
 
 namespace SherpaOnnx
 {
+
     [StructLayout(LayoutKind.Sequential)]
     public struct OnlineRecognizerConfig
     {
@@ -26,6 +23,11 @@ namespace SherpaOnnx
             HotwordsFile = "";
             HotwordsScore = 1.5F;
             CtcFstDecoderConfig = new OnlineCtcFstDecoderConfig();
+            RuleFsts = "";
+            RuleFars = "";
+            BlankPenalty = 0.0F;
+            HotwordsBuf = "";
+            HotwordsBufSize = 0;
         }
         public FeatureConfig FeatConfig;
         public OnlineModelConfig ModelConfig;
@@ -64,5 +66,18 @@ namespace SherpaOnnx
         public float HotwordsScore;
 
         public OnlineCtcFstDecoderConfig CtcFstDecoderConfig;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string RuleFsts;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string RuleFars;
+
+        public float BlankPenalty;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string HotwordsBuf;
+
+        public int HotwordsBufSize;
     }
 }

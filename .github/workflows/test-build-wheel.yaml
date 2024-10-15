@@ -50,9 +50,6 @@ jobs:
           - os: ubuntu-22.04
             python-version: "3.12"
 
-          - os: macos-11
-            python-version: "3.7"
-
           - os: macos-12
             python-version: "3.8"
 
@@ -113,10 +110,20 @@ jobs:
           python3 setup.py bdist_wheel
           ls -lh dist
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.os }}-${{ matrix.python-version }}
+          path: ./dist/*.whl
+
       - name: Display wheel
         shell: bash
         run: |
           ls -lh dist
+          cd dist
+
+          mkdir t
+          cd t
+          unzip ../*.whl
 
       - name: Install wheel
         shell: bash
@@ -132,7 +139,7 @@ jobs:
           export PATH=/c/hostedtoolcache/windows/Python/3.9.13/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.11.9/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.12.3/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.12.7/x64/bin:$PATH
 
           which sherpa-onnx
           sherpa-onnx --help

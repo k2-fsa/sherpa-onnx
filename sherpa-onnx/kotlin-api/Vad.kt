@@ -9,6 +9,7 @@ data class SileroVadModelConfig(
     var minSilenceDuration: Float = 0.25F,
     var minSpeechDuration: Float = 0.25F,
     var windowSize: Int = 512,
+    var maxSpeechDuration: Float = 5.0F,
 )
 
 data class VadModelConfig(
@@ -19,11 +20,13 @@ data class VadModelConfig(
     var debug: Boolean = false,
 )
 
+class SpeechSegment(val start: Int, val samples: FloatArray)
+
 class Vad(
     assetManager: AssetManager? = null,
     var config: VadModelConfig,
 ) {
-    private val ptr: Long
+    private var ptr: Long
 
     init {
         if (assetManager != null) {
@@ -34,23 +37,31 @@ class Vad(
     }
 
     protected fun finalize() {
-        delete(ptr)
+        if (ptr != 0L) {
+            delete(ptr)
+            ptr = 0
+        }
     }
+
+    fun release() = finalize()
 
     fun acceptWaveform(samples: FloatArray) = acceptWaveform(ptr, samples)
 
     fun empty(): Boolean = empty(ptr)
     fun pop() = pop(ptr)
 
-    // return an array containing
-    // [start: Int, samples: FloatArray]
-    fun front() = front(ptr)
+    fun front(): SpeechSegment {
+        val segment = front(ptr)
+        return SpeechSegment(segment[0] as Int, segment[1] as FloatArray)
+    }
 
     fun clear() = clear(ptr)
 
     fun isSpeechDetected(): Boolean = isSpeechDetected(ptr)
 
     fun reset() = reset(ptr)
+
+    fun flush() = flush(ptr)
 
     private external fun delete(ptr: Long)
 
@@ -70,6 +81,7 @@ class Vad(
     private external fun front(ptr: Long): Array<Any>
     private external fun isSpeechDetected(ptr: Long): Boolean
     private external fun reset(ptr: Long)
+    private external fun flush(ptr: Long)
 
     companion object {
         init {
@@ -79,7 +91,7 @@ class Vad(
 }
 
 // Please visit
-// https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx
+// https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
 // to download silero_vad.onnx
 // and put it inside the assets/
 // directory

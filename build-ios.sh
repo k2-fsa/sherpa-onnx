@@ -96,7 +96,6 @@ echo "Building for arm64"
 
 export SHERPA_ONNXRUNTIME_LIB_DIR=$PWD/ios-onnxruntime/onnxruntime.xcframework/ios-arm64
 
-
 cmake \
   -DBUILD_PIPER_PHONMIZE_EXE=OFF \
   -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
@@ -164,7 +163,6 @@ libtool -static -o build/os64/sherpa-onnx.a \
   build/os64/lib/libpiper_phonemize.a \
   build/os64/lib/libespeak-ng.a \
   build/os64/lib/libssentencepiece_core.a
-
 
 rm -rf sherpa-onnx.xcframework
 

@@ -179,6 +179,7 @@ func run() {
     vad.acceptWaveform(samples: [Float](array[offset..<end]))
   }
 
+  vad.flush()
   var index: Int = 0
   while !vad.isEmpty() {
     let s = vad.front()

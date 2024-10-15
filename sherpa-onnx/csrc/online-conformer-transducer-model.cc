@@ -4,9 +4,8 @@
 
 #include "sherpa-onnx/csrc/online-conformer-transducer-model.h"
 
-#include <assert.h>
-
 #include <algorithm>
+#include <cassert>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -31,7 +30,7 @@ namespace sherpa_onnx {
 
 OnlineConformerTransducerModel::OnlineConformerTransducerModel(
     const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_WARNING),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {
@@ -54,7 +53,7 @@ OnlineConformerTransducerModel::OnlineConformerTransducerModel(
 #if __ANDROID_API__ >= 9
 OnlineConformerTransducerModel::OnlineConformerTransducerModel(
     AAssetManager *mgr, const OnlineModelConfig &config)
-    : env_(ORT_LOGGING_LEVEL_WARNING),
+    : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
       allocator_{} {

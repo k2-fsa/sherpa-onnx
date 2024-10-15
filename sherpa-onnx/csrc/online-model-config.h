@@ -11,6 +11,7 @@
 #include "sherpa-onnx/csrc/online-transducer-model-config.h"
 #include "sherpa-onnx/csrc/online-wenet-ctc-model-config.h"
 #include "sherpa-onnx/csrc/online-zipformer2-ctc-model-config.h"
+#include "sherpa-onnx/csrc/provider-config.h"
 
 namespace sherpa_onnx {
 
@@ -20,11 +21,11 @@ struct OnlineModelConfig {
   OnlineWenetCtcModelConfig wenet_ctc;
   OnlineZipformer2CtcModelConfig zipformer2_ctc;
   OnlineNeMoCtcModelConfig nemo_ctc;
+  ProviderConfig provider_config;
   std::string tokens;
   int32_t num_threads = 1;
   int32_t warm_up = 0;
   bool debug = false;
-  std::string provider = "cpu";
 
   // Valid values:
   //  - conformer, conformer transducer from icefall
@@ -52,15 +53,20 @@ struct OnlineModelConfig {
   // Used for models trained with pinyin or phone
   std::string lexicon;
 
+  /// if tokens_buf is non-empty,
+  /// the tokens will be loaded from the buffer instead of from the
+  /// "tokens" file
+  std::string tokens_buf;
+
   OnlineModelConfig() = default;
   OnlineModelConfig(const OnlineTransducerModelConfig &transducer,
                     const OnlineParaformerModelConfig &paraformer,
                     const OnlineWenetCtcModelConfig &wenet_ctc,
                     const OnlineZipformer2CtcModelConfig &zipformer2_ctc,
                     const OnlineNeMoCtcModelConfig &nemo_ctc,
+                    const ProviderConfig &provider_config,
                     const std::string &tokens, int32_t num_threads,
-                    int32_t warm_up, bool debug, const std::string &provider,
-                    const std::string &model_type,
+                    int32_t warm_up, bool debug, const std::string &model_type,
                     const std::string &modeling_unit,
                     const std::string &bpe_vocab, const std::string &lexicon)
       : transducer(transducer),
@@ -68,11 +74,11 @@ struct OnlineModelConfig {
         wenet_ctc(wenet_ctc),
         zipformer2_ctc(zipformer2_ctc),
         nemo_ctc(nemo_ctc),
+        provider_config(provider_config),
         tokens(tokens),
         num_threads(num_threads),
         warm_up(warm_up),
         debug(debug),
-        provider(provider),
         model_type(model_type),
         modeling_unit(modeling_unit),
         bpe_vocab(bpe_vocab),

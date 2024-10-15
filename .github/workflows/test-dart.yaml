@@ -1,0 +1,121 @@
+name: test-dart
+
+on:
+  push:
+    branches:
+      - master
+      - dart
+    paths:
+      - '.github/workflows/test-dart.yaml'
+      - '.github/scripts/test-dart.sh'
+      - 'dart-api-examples/**'
+      - 'flutter/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-dart.yaml'
+      - '.github/scripts/test-dart.sh'
+      - 'dart-api-examples/**'
+      - 'flutter/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-dart-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test_dart:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest] #, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-dart
+
+      - name: Setup Flutter SDK
+        uses: flutter-actions/setup-flutter@v3
+        with:
+          channel: stable
+          version: latest
+
+      - name: Display flutter info
+        shell: bash
+        run: |
+          which flutter
+          which dart
+
+          flutter --version
+          dart --version
+          flutter doctor
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+          mkdir build
+
+          cd build
+
+          cmake \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            ..
+
+          cmake --build . --target install --config Release
+
+      - name: Copy libs
+        shell: bash
+        run: |
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            os=linux
+          elif [[ ${{ matrix.os }} == macos-latest ]]; then
+            os=macos
+          elif [[ ${{ matrix.os }} == windows-latest ]]; then
+            os=windows
+          fi
+
+          if [[ $os == windows ]]; then
+            cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_$os/$os
+          else
+            cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_$os/$os
+          fi
+
+          echo "--------------------"
+
+          ls -lh ./flutter/sherpa_onnx_$os/$os
+
+      - name: Run tests
+        shell: bash
+        run: |
+          cp scripts/dart/vad-pubspec.yaml dart-api-examples/vad/pubspec.yaml
+          cp scripts/dart/non-streaming-asr-pubspec.yaml dart-api-examples/non-streaming-asr/pubspec.yaml
+          cp scripts/dart/streaming-asr-pubspec.yaml dart-api-examples/streaming-asr/pubspec.yaml
+          cp scripts/dart/tts-pubspec.yaml dart-api-examples/tts/pubspec.yaml
+          cp scripts/dart/kws-pubspec.yaml dart-api-examples/keyword-spotter/pubspec.yaml
+          cp scripts/dart/vad-non-streaming-asr-pubspec.yaml dart-api-examples/vad-with-non-streaming-asr/pubspec.yaml
+          cp scripts/dart/audio-tagging-pubspec.yaml dart-api-examples/audio-tagging/pubspec.yaml
+          cp scripts/dart/add-punctuations-pubspec.yaml dart-api-examples/add-punctuations/pubspec.yaml
+          cp scripts/dart/speaker-id-pubspec.yaml dart-api-examples/speaker-identification/pubspec.yaml
+          cp scripts/dart/speaker-diarization-pubspec.yaml dart-api-examples/speaker-diarization/pubspec.yaml
+
+          cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
+
+          .github/scripts/test-dart.sh

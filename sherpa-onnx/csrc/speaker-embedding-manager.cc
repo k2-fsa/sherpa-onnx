@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <unordered_map>
+#include <utility>
 
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/macros.h"
@@ -122,13 +123,47 @@ class SpeakerEmbeddingManager::Impl {
 
     Eigen::VectorXf scores = embedding_matrix_ * v;
 
-    Eigen::VectorXf::Index max_index;
+    Eigen::VectorXf::Index max_index = 0;
     float max_score = scores.maxCoeff(&max_index);
     if (max_score < threshold) {
       return {};
     }
 
     return row2name_.at(max_index);
+  }
+
+  std::vector<SpeakerMatch> GetBestMatches(const float *p, float threshold,
+                                           int32_t n) {
+    std::vector<SpeakerMatch> matches;
+
+    if (embedding_matrix_.rows() == 0) {
+      return matches;
+    }
+
+    Eigen::VectorXf v =
+        Eigen::Map<Eigen::VectorXf>(const_cast<float *>(p), dim_);
+    v.normalize();
+
+    Eigen::VectorXf scores = embedding_matrix_ * v;
+
+    std::vector<std::pair<float, int>> score_indices;
+    for (int i = 0; i < scores.size(); ++i) {
+      if (scores[i] >= threshold) {
+        score_indices.emplace_back(scores[i], i);
+      }
+    }
+
+    std::sort(score_indices.rbegin(), score_indices.rend(),
+              [](const auto &a, const auto &b) { return a.first < b.first; });
+
+    matches.reserve(score_indices.size());
+    for (int i = 0; i < std::min(n, static_cast<int32_t>(score_indices.size()));
+         ++i) {
+      const auto &pair = score_indices[i];
+      matches.push_back({row2name_.at(pair.second), pair.first});
+    }
+
+    return matches;
   }
 
   bool Verify(const std::string &name, const float *p, float threshold) {
@@ -178,11 +213,12 @@ class SpeakerEmbeddingManager::Impl {
 
   std::vector<std::string> GetAllSpeakers() const {
     std::vector<std::string> all_speakers;
+    all_speakers.reserve(name2row_.size());
     for (const auto &p : name2row_) {
       all_speakers.push_back(p.first);
     }
 
-    std::stable_sort(all_speakers.begin(), all_speakers.end());
+    std::sort(all_speakers.begin(), all_speakers.end());
     return all_speakers;
   }
 
@@ -216,6 +252,11 @@ bool SpeakerEmbeddingManager::Remove(const std::string &name) const {
 std::string SpeakerEmbeddingManager::Search(const float *p,
                                             float threshold) const {
   return impl_->Search(p, threshold);
+}
+
+std::vector<SpeakerMatch> SpeakerEmbeddingManager::GetBestMatches(
+    const float *p, float threshold, int32_t n) const {
+  return impl_->GetBestMatches(p, threshold, n);
 }
 
 bool SpeakerEmbeddingManager::Verify(const std::string &name, const float *p,

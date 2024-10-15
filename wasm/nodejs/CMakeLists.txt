@@ -14,41 +14,78 @@ set(exported_functions
   SherpaOnnxOfflineTtsSampleRate
   SherpaOnnxWriteWave
   # streaming asr
-  AcceptWaveform
-  CreateOnlineRecognizer
-  CreateOnlineStream
-  DecodeOnlineStream
-  DestroyOnlineRecognizer
-  DestroyOnlineRecognizerResult
-  DestroyOnlineStream
-  DestroyOnlineStreamResultJson
-  GetOnlineStreamResult
-  GetOnlineStreamResultAsJson
-  InputFinished
-  IsEndpoint
-  IsOnlineStreamReady
-  Reset
+  SherpaOnnxCreateOnlineRecognizer
+  SherpaOnnxCreateOnlineStream
+  SherpaOnnxDecodeOnlineStream
+  SherpaOnnxDestroyOnlineRecognizer
+  SherpaOnnxDestroyOnlineRecognizerResult
+  SherpaOnnxDestroyOnlineStream
+  SherpaOnnxDestroyOnlineStreamResultJson
+  SherpaOnnxGetOnlineStreamResult
+  SherpaOnnxGetOnlineStreamResultAsJson
+  SherpaOnnxIsOnlineStreamReady
+  SherpaOnnxOnlineStreamAcceptWaveform
+  SherpaOnnxOnlineStreamInputFinished
+  SherpaOnnxOnlineStreamIsEndpoint
+  SherpaOnnxOnlineStreamReset
   # non-streaming ASR
-  AcceptWaveformOffline
-  CreateOfflineRecognizer
-  CreateOfflineStream
-  DecodeMultipleOfflineStreams
-  DecodeOfflineStream
-  DestroyOfflineRecognizer
-  DestroyOfflineRecognizerResult
-  DestroyOfflineStream
-  DestroyOfflineStreamResultJson
-  GetOfflineStreamResult
-  GetOfflineStreamResultAsJson
   PrintOfflineRecognizerConfig
+  SherpaOnnxAcceptWaveformOffline
+  SherpaOnnxCreateOfflineRecognizer
+  SherpaOnnxCreateOfflineStream
+  SherpaOnnxDecodeMultipleOfflineStreams
+  SherpaOnnxDecodeOfflineStream
+  SherpaOnnxDestroyOfflineRecognizer
+  SherpaOnnxDestroyOfflineRecognizerResult
+  SherpaOnnxDestroyOfflineStream
+  SherpaOnnxDestroyOfflineStreamResultJson
+  SherpaOnnxGetOfflineStreamResult
+  SherpaOnnxGetOfflineStreamResultAsJson
   # online kws
-  CreateKeywordSpotter
-  DestroyKeywordSpotter
-  CreateKeywordStream
-  DecodeKeywordStream
-  GetKeywordResult
-  DestroyKeywordResult
-  IsKeywordStreamReady
+  SherpaOnnxCreateKeywordSpotter
+  SherpaOnnxCreateKeywordStream
+  SherpaOnnxDecodeKeywordStream
+  SherpaOnnxDestroyKeywordResult
+  SherpaOnnxDestroyKeywordSpotter
+  SherpaOnnxGetKeywordResult
+  SherpaOnnxIsKeywordStreamReady
+  # VAD
+  SherpaOnnxCreateCircularBuffer
+  SherpaOnnxDestroyCircularBuffer
+  SherpaOnnxCircularBufferPush
+  SherpaOnnxCircularBufferGet
+  SherpaOnnxCircularBufferFree
+  SherpaOnnxCircularBufferPop
+  SherpaOnnxCircularBufferSize
+  SherpaOnnxCircularBufferHead
+  SherpaOnnxCircularBufferReset
+  SherpaOnnxCreateVoiceActivityDetector
+  SherpaOnnxDestroyVoiceActivityDetector
+  SherpaOnnxVoiceActivityDetectorAcceptWaveform
+  SherpaOnnxVoiceActivityDetectorEmpty
+  SherpaOnnxVoiceActivityDetectorDetected
+  SherpaOnnxVoiceActivityDetectorPop
+  SherpaOnnxVoiceActivityDetectorClear
+  SherpaOnnxVoiceActivityDetectorFront
+  SherpaOnnxDestroySpeechSegment
+  SherpaOnnxVoiceActivityDetectorReset
+  SherpaOnnxVoiceActivityDetectorFlush
+  # Speaker diarization
+  SherpaOnnxCreateOfflineSpeakerDiarization
+  SherpaOnnxDestroyOfflineSpeakerDiarization
+  SherpaOnnxOfflineSpeakerDiarizationDestroyResult
+  SherpaOnnxOfflineSpeakerDiarizationDestroySegment
+  SherpaOnnxOfflineSpeakerDiarizationGetSampleRate
+  SherpaOnnxOfflineSpeakerDiarizationProcess
+  SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback
+  SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments
+  SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime
+  SherpaOnnxOfflineSpeakerDiarizationSetConfig
+  #
+  SherpaOnnxFileExists
+  SherpaOnnxReadWave
+  SherpaOnnxFreeWave
+  SherpaOnnxWriteWave
 )
 
 
@@ -82,6 +119,9 @@ install(
   ${CMAKE_SOURCE_DIR}/wasm/asr/sherpa-onnx-asr.js
   ${CMAKE_SOURCE_DIR}/wasm/tts/sherpa-onnx-tts.js
   ${CMAKE_SOURCE_DIR}/wasm/kws/sherpa-onnx-kws.js
+  ${CMAKE_SOURCE_DIR}/wasm/vad/sherpa-onnx-vad.js
+  ${CMAKE_SOURCE_DIR}/wasm/speaker-diarization/sherpa-onnx-speaker-diarization.js
+  ${CMAKE_SOURCE_DIR}/wasm/nodejs/sherpa-onnx-wave.js
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-nodejs>/sherpa-onnx-wasm-nodejs.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-nodejs>/sherpa-onnx-wasm-nodejs.wasm"
   DESTINATION

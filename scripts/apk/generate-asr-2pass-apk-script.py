@@ -2,7 +2,6 @@
 
 import argparse
 from dataclasses import dataclass
-from typing import List, Optional
 
 import jinja2
 
@@ -41,6 +40,7 @@ class Model:
 
     # cmd is used to remove extra file from the model directory
     cmd: str = ""
+    rule_fsts: str = ""
 
 
 def get_2nd_models():
@@ -52,13 +52,13 @@ def get_2nd_models():
             short_name="whisper_tiny",
             cmd="""
             pushd $model_name
-            rm -v tiny.en-encoder.onnx
-            rm -v tiny.en-decoder.onnx
+            rm -fv tiny.en-encoder.onnx
+            rm -fv tiny.en-decoder.onnx
             rm -rf test_wavs
-            rm -v *.py
-            rm -v requirements.txt
-            rm -v .gitignore
-            rm -v README.md
+            rm -fv *.py
+            rm -fv requirements.txt
+            rm -fv .gitignore
+            rm -fv README.md
 
             ls -lh
 
@@ -66,16 +66,20 @@ def get_2nd_models():
             """,
         ),
         Model(
-            model_name="sherpa-onnx-paraformer-zh-2023-03-28",
+            model_name="sherpa-onnx-paraformer-zh-2023-09-14",
             idx=0,
             lang="zh",
             short_name="paraformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
 
-            rm -v README.md
+            rm -fv README.md
             rm -rfv test_wavs
-            rm model.onnx
+            rm -fv model.onnx
 
             ls -lh
 
@@ -87,11 +91,15 @@ def get_2nd_models():
             idx=4,
             lang="zh",
             short_name="zipformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
 
             rm -rfv test_wavs
-            rm -v README.md
+            rm -fv README.md
             mv -v data/lang_char/tokens.txt ./
             rm -rfv data/lang_char
 
@@ -99,6 +107,23 @@ def get_2nd_models():
             mv -v exp/decoder-epoch-12-avg-4.onnx ./
             mv -v exp/joiner-epoch-12-avg-4.int8.onnx ./
             rm -rfv exp
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
+            idx=15,
+            lang="zh_en_ko_ja_yue",
+            short_name="sense_voice",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+            rm -fv model.onnx
+            rm -fv *.py
 
             ls -lh
 
@@ -117,17 +142,21 @@ def get_1st_models():
             idx=8,
             lang="bilingual_zh_en",
             short_name="zipformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
-            rm -v decoder-epoch-99-avg-1.int8.onnx
-            rm -v encoder-epoch-99-avg-1.onnx
-            rm -v joiner-epoch-99-avg-1.onnx
+            rm -fv decoder-epoch-99-avg-1.int8.onnx
+            rm -fv encoder-epoch-99-avg-1.onnx
+            rm -fv joiner-epoch-99-avg-1.onnx
 
-            rm -v *.sh
-            rm -v bpe.model
-            rm -v README.md
-            rm -v .gitattributes
-            rm -v *state*
+            rm -fv *.sh
+            rm -fv bpe.model
+            rm -fv README.md
+            rm -fv .gitattributes
+            rm -fv *state*
             rm -rfv test_wavs
 
             ls -lh
@@ -142,12 +171,12 @@ def get_1st_models():
             short_name="zipformer2",
             cmd="""
             pushd $model_name
-            rm -v encoder-epoch-99-avg-1-chunk-16-left-128.onnx
-            rm -v decoder-epoch-99-avg-1-chunk-16-left-128.int8.onnx
-            rm -v joiner-epoch-99-avg-1-chunk-16-left-128.int8.onnx
+            rm -fv encoder-epoch-99-avg-1-chunk-16-left-128.onnx
+            rm -fv decoder-epoch-99-avg-1-chunk-16-left-128.int8.onnx
+            rm -fv joiner-epoch-99-avg-1-chunk-16-left-128.int8.onnx
 
-            rm -v README.md
-            rm -v bpe.model
+            rm -fv README.md
+            rm -fv bpe.model
             rm -rfv test_wavs
 
             ls -lh
@@ -160,16 +189,20 @@ def get_1st_models():
             idx=3,
             lang="zh",
             short_name="zipformer2",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
-            rm -v exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx
-            rm -v exp/decoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx
-            rm -v exp/joiner-epoch-12-avg-4-chunk-16-left-128.int8.onnx
+            rm -fv exp/encoder-epoch-12-avg-4-chunk-16-left-128.onnx
+            rm -fv exp/decoder-epoch-12-avg-4-chunk-16-left-128.int8.onnx
+            rm -fv exp/joiner-epoch-12-avg-4-chunk-16-left-128.int8.onnx
 
-            rm -v data/lang_char/lexicon.txt
-            rm -v data/lang_char/words.txt
+            rm -fv data/lang_char/lexicon.txt
+            rm -fv data/lang_char/words.txt
             rm -rfv test_wavs
-            rm -v README.md
+            rm -fv README.md
 
             ls -lh exp/
             ls -lh data/lang_char
@@ -184,11 +217,11 @@ def get_1st_models():
             short_name="zipformer",
             cmd="""
             pushd $model_name
-            rm -v encoder-epoch-29-avg-9-with-averaged-model.onnx
-            rm -v decoder-epoch-29-avg-9-with-averaged-model.int8.onnx
-            rm -v joiner-epoch-29-avg-9-with-averaged-model.int8.onnx
+            rm -fv encoder-epoch-29-avg-9-with-averaged-model.onnx
+            rm -fv decoder-epoch-29-avg-9-with-averaged-model.int8.onnx
+            rm -fv joiner-epoch-29-avg-9-with-averaged-model.int8.onnx
 
-            rm -v *.sh
+            rm -fv *.sh
             rm -rf test_wavs
             rm README.md
 
@@ -202,13 +235,17 @@ def get_1st_models():
             idx=9,
             lang="zh",
             short_name="small_zipformer",
+            rule_fsts="itn_zh_number.fst",
             cmd="""
+            if [ ! -f itn_zh_number.fst ]; then
+              curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
+            fi
             pushd $model_name
-            rm -v encoder-epoch-99-avg-1.onnx
-            rm -v decoder-epoch-99-avg-1.int8.onnx
-            rm -v joiner-epoch-99-avg-1.onnx
+            rm -fv encoder-epoch-99-avg-1.onnx
+            rm -fv decoder-epoch-99-avg-1.int8.onnx
+            rm -fv joiner-epoch-99-avg-1.onnx
 
-            rm -v *.sh
+            rm -fv *.sh
             rm -rf test_wavs
             rm README.md
 
@@ -224,11 +261,11 @@ def get_1st_models():
             short_name="small_zipformer",
             cmd="""
             pushd $model_name
-            rm -v encoder-epoch-99-avg-1.onnx
-            rm -v decoder-epoch-99-avg-1.int8.onnx
-            rm -v joiner-epoch-99-avg-1.onnx
+            rm -fv encoder-epoch-99-avg-1.onnx
+            rm -fv decoder-epoch-99-avg-1.int8.onnx
+            rm -fv joiner-epoch-99-avg-1.onnx
 
-            rm -v *.sh
+            rm -fv *.sh
             rm -rf test_wavs
             rm README.md
 
@@ -249,15 +286,23 @@ def get_models():
     combinations = [
         (
             "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
-            "sherpa-onnx-paraformer-zh-2023-03-28",
+            "sherpa-onnx-paraformer-zh-2023-09-14",
         ),
         (
             "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
             "icefall-asr-zipformer-wenetspeech-20230615",
         ),
         (
+            "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23",
+            "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
+        ),
+        (
             "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
             "sherpa-onnx-whisper-tiny.en",
+        ),
+        (
+            "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+            "sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
         ),
     ]
     models = []

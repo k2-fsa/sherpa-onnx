@@ -67,8 +67,8 @@ void ContextGraph::Build(const std::vector<std::vector<int32_t>> &token_ids,
 std::tuple<float, const ContextState *, const ContextState *>
 ContextGraph::ForwardOneStep(const ContextState *state, int32_t token,
                              bool strict_mode /*= true*/) const {
-  const ContextState *node;
-  float score;
+  const ContextState *node = nullptr;
+  float score = 0;
   if (1 == state->next.count(token)) {
     node = state->next.at(token).get();
     score = node->token_score;
@@ -84,7 +84,10 @@ ContextGraph::ForwardOneStep(const ContextState *state, int32_t token,
     score = node->node_score - state->node_score;
   }
 
-  SHERPA_ONNX_CHECK(nullptr != node);
+  if (!node) {
+    SHERPA_ONNX_LOGE("Some bad things happened.");
+    exit(-1);
+  }
 
   const ContextState *matched_node =
       node->is_end ? node : (node->output != nullptr ? node->output : nullptr);

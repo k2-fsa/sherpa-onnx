@@ -42,21 +42,31 @@ function(download_simple_sentencepiece)
     FetchContent_Populate(simple-sentencepiece)
   endif()
   message(STATUS "simple-sentencepiece is downloaded to ${simple-sentencepiece_SOURCE_DIR}")
+
+  if(BUILD_SHARED_LIBS)
+    set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
+  endif()
+
   add_subdirectory(${simple-sentencepiece_SOURCE_DIR} ${simple-sentencepiece_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  if(_build_shared_libs_bak)
+    set_target_properties(ssentencepiece_core
+      PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        C_VISIBILITY_PRESET hidden
+        CXX_VISIBILITY_PRESET hidden
+    )
+    set(BUILD_SHARED_LIBS ON)
+  endif()
 
   target_include_directories(ssentencepiece_core
     PUBLIC
       ${simple-sentencepiece_SOURCE_DIR}/
   )
 
-  if(SHERPA_ONNX_ENABLE_PYTHON AND WIN32)
-    install(TARGETS ssentencepiece_core DESTINATION ..)
-  else()
+  if(NOT BUILD_SHARED_LIBS)
     install(TARGETS ssentencepiece_core DESTINATION lib)
-  endif()
-
-  if(WIN32 AND BUILD_SHARED_LIBS)
-    install(TARGETS ssentencepiece_core DESTINATION bin)
   endif()
 endfunction()
 

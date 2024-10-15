@@ -12,18 +12,20 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"
+#include "sherpa-onnx/csrc/offline-telespeech-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-wenet-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-zipformer-ctc-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace {
 
-enum class ModelType {
+enum class ModelType : std::uint8_t {
   kEncDecCTCModelBPE,
   kEncDecHybridRNNTCTCBPEModel,
   kTdnn,
   kZipformerCtc,
   kWenetCtc,
+  kTeleSpeechCtc,
   kUnknown,
 };
 
@@ -33,7 +35,7 @@ namespace sherpa_onnx {
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
-  Ort::Env env(ORT_LOGGING_LEVEL_WARNING);
+  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
   sess_opts.SetInterOpNumThreads(1);
@@ -63,6 +65,9 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
         "If you are using models from WeNet, please refer to\n"
         "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/wenet/"
         "run.sh\n"
+        "If you are using models from TeleSpeech, please refer to\n"
+        "https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/tele-speech/"
+        "add-metadata.py"
         "\n"
         "for how to add metadta to model.onnx\n");
     return ModelType::kUnknown;
@@ -78,6 +83,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kZipformerCtc;
   } else if (model_type.get() == std::string("wenet_ctc")) {
     return ModelType::kWenetCtc;
+  } else if (model_type.get() == std::string("telespeech_ctc")) {
+    return ModelType::kTeleSpeechCtc;
   } else {
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
     return ModelType::kUnknown;
@@ -86,6 +93,7 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
 std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     const OfflineModelConfig &config) {
+  // TODO(fangjun): Refactor it. We don't need to use model_type here
   ModelType model_type = ModelType::kUnknown;
 
   std::string filename;
@@ -97,6 +105,8 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     filename = config.zipformer_ctc.model;
   } else if (!config.wenet_ctc.model.empty()) {
     filename = config.wenet_ctc.model;
+  } else if (!config.telespeech_ctc.empty()) {
+    filename = config.telespeech_ctc;
   } else {
     SHERPA_ONNX_LOGE("Please specify a CTC model");
     exit(-1);
@@ -124,6 +134,9 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     case ModelType::kWenetCtc:
       return std::make_unique<OfflineWenetCtcModel>(config);
       break;
+    case ModelType::kTeleSpeechCtc:
+      return std::make_unique<OfflineTeleSpeechCtcModel>(config);
+      break;
     case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in offline CTC!");
       return nullptr;
@@ -136,6 +149,7 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
 
 std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     AAssetManager *mgr, const OfflineModelConfig &config) {
+  // TODO(fangjun): Refactor it. We don't need to use model_type here
   ModelType model_type = ModelType::kUnknown;
 
   std::string filename;
@@ -147,6 +161,8 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
     filename = config.zipformer_ctc.model;
   } else if (!config.wenet_ctc.model.empty()) {
     filename = config.wenet_ctc.model;
+  } else if (!config.telespeech_ctc.empty()) {
+    filename = config.telespeech_ctc;
   } else {
     SHERPA_ONNX_LOGE("Please specify a CTC model");
     exit(-1);
@@ -174,6 +190,9 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
       break;
     case ModelType::kWenetCtc:
       return std::make_unique<OfflineWenetCtcModel>(mgr, config);
+      break;
+    case ModelType::kTeleSpeechCtc:
+      return std::make_unique<OfflineTeleSpeechCtcModel>(mgr, config);
       break;
     case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in offline CTC!");

@@ -279,6 +279,7 @@ static SherpaOnnxSileroVadModelConfig GetSileroVadConfig(
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_silence_duration, minSilenceDuration);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_speech_duration, minSpeechDuration);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(window_size, windowSize);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(max_speech_duration, maxSpeechDuration);
 
   return c;
 }
@@ -590,6 +591,31 @@ static void VoiceActivityDetectorResetWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxVoiceActivityDetectorReset(vad);
 }
 
+static void VoiceActivityDetectorFlushWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() != 1) {
+    std::ostringstream os;
+    os << "Expect only 1 argument. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be a VAD pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  SherpaOnnxVoiceActivityDetector *vad =
+      info[0].As<Napi::External<SherpaOnnxVoiceActivityDetector>>().Data();
+
+  SherpaOnnxVoiceActivityDetectorFlush(vad);
+}
+
 void InitVad(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "createCircularBuffer"),
               Napi::Function::New(env, CreateCircularBufferWrapper));
@@ -636,4 +662,7 @@ void InitVad(Napi::Env env, Napi::Object exports) {
 
   exports.Set(Napi::String::New(env, "voiceActivityDetectorReset"),
               Napi::Function::New(env, VoiceActivityDetectorResetWrapper));
+
+  exports.Set(Napi::String::New(env, "voiceActivityDetectorFlush"),
+              Napi::Function::New(env, VoiceActivityDetectorFlushWrapper));
 }

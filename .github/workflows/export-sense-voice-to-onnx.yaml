@@ -1,0 +1,116 @@
+name: export-sense-voice-to-onnx
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: export-sense-voice-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-sense-voice-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export sense-voice
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Download test_wavs
+        shell: bash
+        run: |
+          sudo apt-get install -y -qq sox libsox-fmt-mp3
+          curl -SL -O https://huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/example/zh.mp3
+          curl -SL -O https://huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/example/en.mp3
+          curl -SL -O https://huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/example/ja.mp3
+          curl -SL -O https://huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/example/ko.mp3
+          curl -SL -O https://huggingface.co/FunAudioLLM/SenseVoiceSmall/resolve/main/example/yue.mp3
+
+          soxi *.mp3
+
+          sox zh.mp3 -r 16k zh.wav
+          sox en.mp3 -r 16k en.wav
+          sox ja.mp3 -r 16k ja.wav
+          sox ko.mp3 -r 16k ko.wav
+          sox yue.mp3 -r 16k yue.wav
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/sense-voice
+          ./run.sh
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17 huggingface
+            cd huggingface
+            git fetch
+            git pull
+            echo "pwd: $PWD"
+            ls -lh ../scripts/sense-voice
+
+            rm -rf ./*
+
+            cp -v ../scripts/sense-voice/*.onnx .
+            cp -v ../scripts/sense-voice/tokens.txt .
+            cp -v ../scripts/sense-voice/README.md .
+            cp -v ../scripts/sense-voice/export-onnx.py .
+
+            mkdir test_wavs
+            cp -v ../*.wav ./test_wavs/
+
+            curl -SL -O https://raw.githubusercontent.com/FunAudioLLM/SenseVoice/main/LICENSE
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17 main || true
+
+            cd ..
+
+            rm -rf huggingface/.git*
+            dst=sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+
+            mv huggingface $dst
+
+            tar cjvf $dst.tar.bz2 $dst
+            rm -rf $dst
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models

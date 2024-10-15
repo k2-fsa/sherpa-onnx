@@ -19,14 +19,14 @@ static_assert(sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) == 1 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineModelConfig) ==
                   sizeof(SherpaOnnxOnlineTransducerModelConfig) +
                       sizeof(SherpaOnnxOnlineParaformerModelConfig) +
-                      sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 5 * 4,
+                      sizeof(SherpaOnnxOnlineZipformer2CtcModelConfig) + 9 * 4,
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineCtcFstDecoderConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOnlineRecognizerConfig) ==
                   sizeof(SherpaOnnxFeatureConfig) +
                       sizeof(SherpaOnnxOnlineModelConfig) + 8 * 4 +
-                      sizeof(SherpaOnnxOnlineCtcFstDecoderConfig),
+                      sizeof(SherpaOnnxOnlineCtcFstDecoderConfig) + 5 * 4,
               "");
 
 void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
@@ -52,6 +52,11 @@ void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
   fprintf(stdout, "provider: %s\n", model_config->provider);
   fprintf(stdout, "debug: %d\n", model_config->debug);
   fprintf(stdout, "model type: %s\n", model_config->model_type);
+  fprintf(stdout, "modeling unit: %s\n", model_config->modeling_unit);
+  fprintf(stdout, "bpe vocab: %s\n", model_config->bpe_vocab);
+  fprintf(stdout, "tokens_buf: %s\n",
+          model_config->tokens_buf ? model_config->tokens_buf : "");
+  fprintf(stdout, "tokens_buf_size: %d\n", model_config->tokens_buf_size);
 
   fprintf(stdout, "----------feat config----------\n");
   fprintf(stdout, "sample rate: %d\n", feat->sample_rate);
@@ -69,6 +74,9 @@ void MyPrint(SherpaOnnxOnlineRecognizerConfig *config) {
           config->rule3_min_utterance_length);
   fprintf(stdout, "hotwords_file: %s\n", config->hotwords_file);
   fprintf(stdout, "hotwords_score: %.2f\n", config->hotwords_score);
+  fprintf(stdout, "rule_fsts: %s\n", config->rule_fsts);
+  fprintf(stdout, "rule_fars: %s\n", config->rule_fars);
+  fprintf(stdout, "blank_penalty: %f\n", config->blank_penalty);
 
   fprintf(stdout, "----------ctc fst decoder config----------\n");
   fprintf(stdout, "graph: %s\n", config->ctc_fst_decoder_config.graph);

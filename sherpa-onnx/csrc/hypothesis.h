@@ -51,8 +51,13 @@ struct Hypothesis {
   // LM log prob if any.
   double lm_log_prob = 0;
 
-  // the nn lm score for next token given the current ys
+  // the nn lm score for next token given the current ys,
+  // when using shallow fusion
   CopyableOrtValue nn_lm_scores;
+
+  // cur scored tokens by RNN LM, when rescoring
+  int32_t cur_scored_pos = 0;
+
   // the nn lm states
   std::vector<CopyableOrtValue> nn_lm_states;
 

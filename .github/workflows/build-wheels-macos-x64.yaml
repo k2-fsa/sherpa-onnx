@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - wheel
-    tags:
-      - '*'
   workflow_dispatch:
 
 env:
@@ -22,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-11]
+        os: [macos-13]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
 
     steps:
@@ -65,7 +63,6 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface
-        if: matrix.python-version == 'cp38'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -81,13 +78,20 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            d=cpu/$SHERPA_ONNX_VERSION
+
             git clone https://huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
 
-            cp -v ../wheelhouse/*.whl .
+            mkdir -p $d
+
+            cp -v ../wheelhouse/*.whl $d/
 
             git status
             git add .
@@ -99,7 +103,13 @@ jobs:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
-          python3 -m pip install --upgrade pip
-          python3 -m pip install wheel twine setuptools
+          opts='--break-system-packages'
+          v=${{ matrix.python-version }}
+          if [[ $v == cp37 || $v == cp38 || $v == cp39 ]]; then
+            opts=''
+          fi
+
+          python3 -m pip install $opts --upgrade pip
+          python3 -m pip install $opts wheel twine setuptools
 
           twine upload ./wheelhouse/*.whl
