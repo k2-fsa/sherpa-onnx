@@ -52,6 +52,9 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   ans.rule_fars = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(cls, "blankPenalty", "F");
+  ans.blank_penalty = env->GetFloatField(config, fid);
+
   //---------- feat config ----------
   fid = env->GetFieldID(cls, "featConfig",
                         "Lcom/k2fsa/sherpa/onnx/FeatureConfig;");
@@ -201,7 +204,7 @@ static OnlineRecognizerConfig GetConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(model_config_cls, "provider", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(model_config, fid);
   p = env->GetStringUTFChars(s, nullptr);
-  ans.model_config.provider = p;
+  ans.model_config.provider_config.provider = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(model_config_cls, "modelType", "Ljava/lang/String;");
@@ -267,6 +270,7 @@ Java_com_k2fsa_sherpa_onnx_OnlineRecognizer_newFromAsset(JNIEnv *env,
   AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
   if (!mgr) {
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+    return 0;
   }
 #endif
   auto config = sherpa_onnx::GetConfig(env, _config);

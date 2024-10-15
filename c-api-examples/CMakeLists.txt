@@ -9,6 +9,11 @@ if(SHERPA_ONNX_ENABLE_TTS)
   target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)
 endif()
 
+if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+  add_executable(offline-speaker-diarization-c-api offline-speaker-diarization-c-api.c)
+  target_link_libraries(offline-speaker-diarization-c-api sherpa-onnx-c-api)
+endif()
+
 add_executable(spoken-language-identification-c-api spoken-language-identification-c-api.c)
 target_link_libraries(spoken-language-identification-c-api sherpa-onnx-c-api)
 
@@ -23,6 +28,46 @@ target_link_libraries(audio-tagging-c-api sherpa-onnx-c-api)
 
 add_executable(add-punctuation-c-api add-punctuation-c-api.c)
 target_link_libraries(add-punctuation-c-api sherpa-onnx-c-api)
+
+add_executable(whisper-c-api whisper-c-api.c)
+target_link_libraries(whisper-c-api sherpa-onnx-c-api)
+
+add_executable(sense-voice-c-api sense-voice-c-api.c)
+target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
+
+add_executable(zipformer-c-api zipformer-c-api.c)
+target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
+
+add_executable(streaming-zipformer-c-api streaming-zipformer-c-api.c)
+target_link_libraries(streaming-zipformer-c-api sherpa-onnx-c-api)
+
+add_executable(paraformer-c-api paraformer-c-api.c)
+target_link_libraries(paraformer-c-api sherpa-onnx-c-api)
+
+add_executable(streaming-paraformer-c-api streaming-paraformer-c-api.c)
+target_link_libraries(streaming-paraformer-c-api sherpa-onnx-c-api)
+
+add_executable(telespeech-c-api telespeech-c-api.c)
+target_link_libraries(telespeech-c-api sherpa-onnx-c-api)
+
+add_executable(vad-sense-voice-c-api vad-sense-voice-c-api.c)
+target_link_libraries(vad-sense-voice-c-api sherpa-onnx-c-api)
+
+add_executable(streaming-zipformer-buffered-tokens-hotwords-c-api
+               streaming-zipformer-buffered-tokens-hotwords-c-api.c)
+target_link_libraries(streaming-zipformer-buffered-tokens-hotwords-c-api sherpa-onnx-c-api)
+
+add_executable(streaming-paraformer-buffered-tokens-c-api
+               streaming-paraformer-buffered-tokens-c-api.c)
+target_link_libraries(streaming-paraformer-buffered-tokens-c-api sherpa-onnx-c-api)
+
+add_executable(streaming-ctc-buffered-tokens-c-api
+               streaming-ctc-buffered-tokens-c-api.c)
+target_link_libraries(streaming-ctc-buffered-tokens-c-api sherpa-onnx-c-api)
+
+add_executable(keywords-spotter-buffered-tokens-keywords-c-api
+               keywords-spotter-buffered-tokens-keywords-c-api.c)
+target_link_libraries(keywords-spotter-buffered-tokens-keywords-c-api sherpa-onnx-c-api)
 
 if(SHERPA_ONNX_HAS_ALSA)
   add_subdirectory(./asr-microphone-example)

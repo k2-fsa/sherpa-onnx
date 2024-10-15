@@ -162,4 +162,12 @@ void OfflineRecognizer::DecodeStreams(OfflineStream **ss, int32_t n) const {
   impl_->DecodeStreams(ss, n);
 }
 
+void OfflineRecognizer::SetConfig(const OfflineRecognizerConfig &config) {
+    impl_->SetConfig(config);
+}
+
+OfflineRecognizerConfig OfflineRecognizer::GetConfig() const {
+  return impl_->GetConfig();
+}
+
 }  // namespace sherpa_onnx

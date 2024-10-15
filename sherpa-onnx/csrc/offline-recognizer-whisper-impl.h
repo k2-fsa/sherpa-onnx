@@ -45,6 +45,7 @@ static OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
   }
 
   r.text = text;
+  r.lang = src.lang;
 
   return r;
 }
@@ -88,7 +89,9 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
   }
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
-    return std::make_unique<OfflineStream>(WhisperTag{});
+    WhisperTag tag;
+    tag.dim = model_->FeatureDim();
+    return std::make_unique<OfflineStream>(tag);
   }
 
   void DecodeStreams(OfflineStream **ss, int32_t n) const override {
@@ -98,8 +101,18 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     }
   }
 
+  void SetConfig(const OfflineRecognizerConfig &config) override {
+    config_.model_config.whisper = config.model_config.whisper;
+  }
+
+  OfflineRecognizerConfig GetConfig() const override {
+    return config_;
+  }
+
  private:
   void DecodeStream(OfflineStream *s) const {
+    decoder_->SetConfig(config_.model_config.whisper);
+
     int32_t max_num_frames = 3000;
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);

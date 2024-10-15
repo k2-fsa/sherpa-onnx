@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+#
+# It expects that there are 4 directories inside /tmp
+#
+#  macos-x64
+#  macos-arm64
+#  linux-x64
+#  windows-x64
+#
+#  Generated files are saved in /tmp/out/*.tar.bz2
+
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+os_array=(
+linux-x64
+macos-x64
+macos-arm64
+windows-x64
+)
+
+for os in ${os_array[@]}; do
+  if [[ $os == macos-x64 || $os == macos-arm64 ]]; then
+    cp -v silero_vad.onnx /tmp/$os/Contents/Resources/
+  else
+    cp -v silero_vad.onnx /tmp/$os/
+  fi
+done
+
+{% for model in model_list %}
+model_name={{ model.model_name }}
+lang={{ model.lang }}
+short_name={{ model.short_name }}
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${model_name}.tar.bz2
+tar xvf ${model_name}.tar.bz2
+rm ${model_name}.tar.bz2
+
+{{ model.cmd }}
+
+ls -lh $model_name
+
+for os in ${os_array[@]}; do
+  dst=sherpa-onnx-$SHERPA_ONNX_VERSION-generate-subtitles-$os-$short_name-$lang
+  src=/tmp/$os
+
+  cp -a $src $dst
+  d=$dst
+
+  if [[ $os == macos-x64 || $os == macos-arm64 ]]; then
+    mv $dst $dst.app
+
+    dst=$dst.app
+    d=$dst/Contents/Resources
+  fi
+
+  cp -v $model_name/*.onnx $d
+  cp -v $model_name/tokens.txt $d
+
+  d=$dst
+
+  tar cjvf $d.tar.bz2 $d
+
+  ls -lh
+
+  mkdir -p /tmp/out
+  mv $d.tar.bz2 /tmp/out
+  ls -lh /tmp/out
+done
+
+rm -rf $model_name
+{% endfor %}

@@ -141,7 +141,7 @@ AudioTaggingCreateOfflineStreamWrapper(const Napi::CallbackInfo &info) {
   return Napi::External<SherpaOnnxOfflineStream>::New(
       env, const_cast<SherpaOnnxOfflineStream *>(stream),
       [](Napi::Env env, SherpaOnnxOfflineStream *stream) {
-        DestroyOfflineStream(stream);
+        SherpaOnnxDestroyOfflineStream(stream);
       });
 }
 
@@ -199,7 +199,7 @@ static Napi::Object AudioTaggingComputeWrapper(const Napi::CallbackInfo &info) {
   }
 
   Napi::Array ans = Napi::Array::New(env, k);
-  for (int32_t i = 0; i != k; ++i) {
+  for (uint32_t i = 0; i != k; ++i) {
     Napi::Object obj = Napi::Object::New(env);
     obj.Set(Napi::String::New(env, "name"),
             Napi::String::New(env, events[i]->name));

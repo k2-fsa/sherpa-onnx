@@ -4,17 +4,65 @@ set -ex
 
 cd dart-api-examples
 
-pushd non-streaming-asr
+pushd speaker-diarization
+echo '----------speaker diarization----------'
+./run.sh
+popd
 
-echo '----------paraformer itn----------'
-./run-paraformer-itn.sh
+pushd speaker-identification
+echo '----------3d speaker----------'
+./run-3d-speaker.sh
+popd
 
-echo '----------paraformer----------'
+pushd add-punctuations
+echo '----------CT Transformer----------'
+./run-ct-transformer.sh
+popd
+
+pushd audio-tagging
+echo '----------zipformer----------'
+./run-zipformer.sh
+
+echo '----------ced----------'
+./run-ced.sh
+popd
+
+pushd vad-with-non-streaming-asr
+echo '----------TeleSpeech CTC----------'
+./run-telespeech-ctc.sh
+rm -rf sherpa-onnx-*
+
+echo "----zipformer transducer----"
+./run-zipformer-transducer.sh
+rm -rf sherpa-onnx-*
+
+echo "----whisper----"
+./run-whisper.sh
+rm -rf sherpa-onnx-*
+
+echo "----paraformer----"
 ./run-paraformer.sh
 rm -rf sherpa-onnx-*
 
-echo '----------VAD with paraformer----------'
-./run-vad-with-paraformer.sh
+echo "----SenseVoice zh----"
+./run-sense-voice-zh-2.sh
+./run-sense-voice-zh.sh
+rm -rf sherpa-onnx-*
+
+echo "----SenseVoice en----"
+./run-sense-voice-en.sh
+rm -rf sherpa-onnx-*
+
+popd
+
+pushd keyword-spotter
+./run-zh.sh
+popd
+
+pushd non-streaming-asr
+
+echo '----------SenseVoice----------'
+./run-sense-voice.sh
 rm -rf sherpa-onnx-*
 
 echo '----------NeMo transducer----------'
@@ -35,6 +83,17 @@ rm -rf sherpa-onnx-*
 
 echo '----------zipformer transducer----------'
 ./run-zipformer-transducer.sh
+rm -rf sherpa-onnx-*
+
+echo '----------paraformer itn----------'
+./run-paraformer-itn.sh
+
+echo '----------paraformer----------'
+./run-paraformer.sh
+rm -rf sherpa-onnx-*
+
+echo '----------VAD with paraformer----------'
+./run-vad-with-paraformer.sh
 rm -rf sherpa-onnx-*
 
 popd # non-streaming-asr

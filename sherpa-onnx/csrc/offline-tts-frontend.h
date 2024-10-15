@@ -6,9 +6,30 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_FRONTEND_H_
 #include <cstdint>
 #include <string>
+#include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/macros.h"
+
 namespace sherpa_onnx {
+
+struct TokenIDs {
+  TokenIDs() = default;
+
+  /*implicit*/ TokenIDs(std::vector<int64_t> tokens)  // NOLINT
+      : tokens{std::move(tokens)} {}
+
+  TokenIDs(std::vector<int64_t> tokens,  // NOLINT
+           std::vector<int64_t> tones)   // NOLINT
+      : tokens{std::move(tokens)}, tones{std::move(tones)} {}
+
+  std::string ToString() const;
+
+  std::vector<int64_t> tokens;
+
+  // Used only in MeloTTS
+  std::vector<int64_t> tones;
+};
 
 class OfflineTtsFrontend {
  public:
@@ -26,7 +47,7 @@ class OfflineTtsFrontend {
    *         If a frontend does not support splitting the text into sentences,
    *         the resulting vector contains only one subvector.
    */
-  virtual std::vector<std::vector<int64_t>> ConvertTextToTokenIds(
+  virtual std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text, const std::string &voice = "") const = 0;
 };
 

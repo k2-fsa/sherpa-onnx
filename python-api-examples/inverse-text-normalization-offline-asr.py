@@ -9,9 +9,9 @@ Usage:
 
 (1) Download the test model
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 
 (2) Download rule fst
 
@@ -36,8 +36,8 @@ import soundfile as sf
 
 
 def create_recognizer():
-    model = "./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx"
-    tokens = "./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt"
+    model = "./sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx"
+    tokens = "./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt"
     rule_fsts = "./itn_zh_number.fst"
 
     if (

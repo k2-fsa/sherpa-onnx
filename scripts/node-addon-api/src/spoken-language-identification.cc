@@ -124,7 +124,7 @@ SpokenLanguageIdentificationCreateOfflineStreamWrapper(
 
   return Napi::External<SherpaOnnxOfflineStream>::New(
       env, stream, [](Napi::Env env, SherpaOnnxOfflineStream *stream) {
-        DestroyOfflineStream(stream);
+        SherpaOnnxDestroyOfflineStream(stream);
       });
 }
 

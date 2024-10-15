@@ -4,10 +4,10 @@ set -e
 
 function install_3d_speaker() {
   echo "Install 3D-Speaker"
-  git clone https://github.com/alibaba-damo-academy/3D-Speaker.git
+  git clone https://github.com/modelscope/3D-Speaker
   pushd 3D-Speaker
   pip install -q -r ./requirements.txt
-  pip install -q modelscope onnx onnxruntime kaldi-native-fbank
+  pip install -q modelscope==1.14.0 onnx onnxruntime kaldi-native-fbank
   popd
 }
 

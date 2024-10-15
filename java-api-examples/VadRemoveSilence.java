@@ -19,6 +19,7 @@ public class VadRemoveSilence {
             .setMinSilenceDuration(0.25f)
             .setMinSpeechDuration(0.5f)
             .setWindowSize(512)
+            .setMaxSpeechDuration(5.0f)
             .build();
 
     VadModelConfig config =
@@ -57,6 +58,16 @@ public class VadRemoveSilence {
           vad.pop();
         }
       }
+    }
+
+    vad.flush();
+    while (!vad.empty()) {
+
+      // if you want to get the starting time of this segment, you can use
+      /* float startTime = vad.front().getStart() / 16000.0f; */
+
+      segments.add(vad.front().getSamples());
+      vad.pop();
     }
 
     // get total number of samples

@@ -9,18 +9,59 @@ git status
 ls -lh
 ls -lh node_modules
 
-# offline asr
+echo '-----speaker diarization----------'
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
+rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
 
-curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
+
+node ./test-offline-speaker-diarization.js
+rm -rfv *.wav *.onnx sherpa-onnx-pyannote-*
+
+echo '-----vad+whisper----------'
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+rm sherpa-onnx-whisper-tiny.en.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+node ./test-vad-with-non-streaming-asr-whisper.js
+rm Obama.wav
+rm silero_vad.onnx
+rm -rf sherpa-onnx-whisper-tiny.en
+
+echo "----------keyword spotting----------"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz2
+
+node ./test-keyword-spotter-transducer.js
+rm -rf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
+
+# offline asr
+#
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+
+node ./test-offline-sense-voice.js
+rm -rf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 ls -lh
-tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 
 rm -f itn*
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn-zh-number.wav
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/itn_zh_number.fst
 node ./test-offline-paraformer-itn.js
-rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+rm -rf sherpa-onnx-paraformer-zh-2023-09-14
 
 curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-en-conformer-small.tar.bz2
 ls -lh
@@ -29,12 +70,12 @@ rm sherpa-onnx-nemo-ctc-en-conformer-small.tar.bz2
 node ./test-offline-nemo-ctc.js
 rm -rf sherpa-onnx-nemo-ctc-en-conformer-small
 
-curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 ls -lh
-tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 node ./test-offline-paraformer.js
-rm -rf sherpa-onnx-paraformer-zh-2023-03-28
+rm -rf sherpa-onnx-paraformer-zh-2023-09-14
 
 curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
 ls -lh

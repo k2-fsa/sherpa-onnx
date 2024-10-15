@@ -2,10 +2,10 @@
 
 set -ex
 
-if [ ! -d ./sherpa-onnx-paraformer-zh-2023-03-28 ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-  tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-  rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
+if [ ! -d ./sherpa-onnx-paraformer-zh-2023-09-14 ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+  tar xvf sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
+  rm sherpa-onnx-paraformer-zh-2023-09-14.tar.bz2
 fi
 
 if [ ! -f ./itn-zh-number.wav ]; then
@@ -17,8 +17,8 @@ if [ ! -f ./itn_zh_number.fst ]; then
 fi
 
 dotnet run \
-  --tokens=./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt \
-  --paraformer=./sherpa-onnx-paraformer-zh-2023-03-28/model.onnx \
+  --tokens=./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt \
+  --paraformer=./sherpa-onnx-paraformer-zh-2023-09-14/model.onnx \
   --rule-fsts=./itn_zh_number.fst \
   --num-threads=2 \
   --files ./itn-zh-number.wav

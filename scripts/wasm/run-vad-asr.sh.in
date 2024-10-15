@@ -1,0 +1,92 @@
+#!/usr/bin/env bash
+#
+# Build WebAssembly APPs for huggingface spaces and modelscope spaces
+
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+
+{% for model in model_list %}
+model_name={{ model.model_name }}
+short_name={{ model.short_name }}
+hf_name={{ model.hf }}
+ms_name={{ model.ms }}
+
+pushd wasm/vad-asr
+git checkout .
+rm -rf assets
+mkdir assets
+cd assets
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${model_name}.tar.bz2
+tar xvf ${model_name}.tar.bz2
+rm ${model_name}.tar.bz2
+
+{{ model.cmd }}
+
+popd
+
+ls -lh wasm/vad-asr/assets
+
+rm -rf build-wasm-simd-vad-asr/install
+rm -rf build-wasm-simd-vad-asr/wasm
+
+./build-wasm-simd-vad-asr.sh
+
+dst=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-${short_name}
+mv build-wasm-simd-vad-asr/install/bin/wasm/vad-asr $dst
+ls -lh $dst
+tar cjfv $dst.tar.bz2 ./$dst
+ls -lh *.tar.bz2
+
+git config --global user.email "csukuangfj@gmail.com"
+git config --global user.name "Fangjun Kuang"
+
+export GIT_LFS_SKIP_SMUDGE=1
+export GIT_CLONE_PROTECTION_ACTIVE=false
+
+rm -rf ms
+git clone https://www.modelscope.cn/studios/$ms_name.git ms
+
+cd ms
+cp -v ../$dst/* .
+
+git status
+git lfs track "*.data"
+git lfs track "*.wasm"
+ls -lh
+
+git add .
+git commit -m "update model" || true
+git push https://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/$ms_name.git || true
+cd ..
+rm -rf ms
+
+rm -rf huggingface
+
+git clone https://huggingface.co/spaces/$hf_name huggingface
+cd huggingface
+cp -v ../$dst/* .
+
+git status
+git lfs track "*.data"
+git lfs track "*.wasm"
+ls -lh
+
+git add .
+git commit -m "update model" || true
+git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/$hf_name main || true
+cd ..
+rm -rf huggingface
+rm -rf $dst
+
+ls -lh *.tar.bz2
+
+{% endfor %}

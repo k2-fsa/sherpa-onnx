@@ -42,11 +42,11 @@ stream.acceptWaveform({samples: tailPadding, sampleRate: wave.sampleRate});
 
 const detectedKeywords = [];
 while (kws.isReady(stream)) {
+  kws.decode(stream);
   const keyword = kws.getResult(stream).keyword;
   if (keyword != '') {
     detectedKeywords.push(keyword);
   }
-  kws.decode(stream);
 }
 let stop = Date.now();
 

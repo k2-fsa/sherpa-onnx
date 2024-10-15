@@ -17,6 +17,7 @@ namespace sherpa_onnx {
 
 // implemented in ./lexicon.cc
 std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is);
+
 std::vector<int32_t> ConvertTokensToIds(
     const std::unordered_map<std::string, int32_t> &token2id,
     const std::vector<std::string> &tokens);
@@ -53,8 +54,7 @@ class JiebaLexicon::Impl {
     }
   }
 
-  std::vector<std::vector<int64_t>> ConvertTextToTokenIds(
-      const std::string &text) const {
+  std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &text) const {
     // see
     // https://github.com/Plachtaa/VITS-fast-fine-tuning/blob/main/text/mandarin.py#L244
     std::regex punct_re{"：|、|；"};
@@ -87,7 +87,7 @@ class JiebaLexicon::Impl {
       SHERPA_ONNX_LOGE("after jieba processing: %s", os.str().c_str());
     }
 
-    std::vector<std::vector<int64_t>> ans;
+    std::vector<TokenIDs> ans;
     std::vector<int64_t> this_sentence;
 
     int32_t blank = token2id_.at(" ");
@@ -102,13 +102,13 @@ class JiebaLexicon::Impl {
       this_sentence.push_back(blank);
 
       if (w == "。" || w == "！" || w == "？" || w == "，") {
-        ans.push_back(std::move(this_sentence));
+        ans.emplace_back(std::move(this_sentence));
         this_sentence = {};
       }
     }  // for (const auto &w : words)
 
     if (!this_sentence.empty()) {
-      ans.push_back(std::move(this_sentence));
+      ans.emplace_back(std::move(this_sentence));
     }
 
     return ans;
@@ -217,7 +217,7 @@ JiebaLexicon::JiebaLexicon(const std::string &lexicon,
     : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, meta_data,
                                    debug)) {}
 
-std::vector<std::vector<int64_t>> JiebaLexicon::ConvertTextToTokenIds(
+std::vector<TokenIDs> JiebaLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {
   return impl_->ConvertTextToTokenIds(text);
 }

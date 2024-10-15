@@ -31,7 +31,7 @@ jobs:
         run: |
           BRANCH='main'
           pip install git+https://github.com/NVIDIA/NeMo.git@$BRANCH#egg=nemo_toolkit[asr]
-          pip install onnxruntime
+          pip install onnxruntime ipython
           pip install kaldi-native-fbank
           pip install soundfile librosa
 
@@ -43,6 +43,43 @@ jobs:
 
           mv -v sherpa-onnx-nemo* ../../..
 
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            models=(
+              sherpa-onnx-nemo-fast-conformer-ctc-en-24500
+              sherpa-onnx-nemo-fast-conformer-ctc-es-1424
+              sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
+              sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
+              sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000
+            )
+
+            for m in ${models[@]}; do
+              rm -rf huggingface
+              export GIT_LFS_SKIP_SMUDGE=1
+              export GIT_CLONE_PROTECTION_ACTIVE=false
+              git clone https://huggingface.co/csukuangfj/$m huggingface
+              cp -av $m/* huggingface
+              cd huggingface
+              git lfs track "*.onnx"
+              git status
+              git add .
+              git status
+              git commit -m "first commit"
+              git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m main
+              cd ..
+              rm -rf huggingface
+            done
+
       - name: Compress files
         shell: bash
         run: |
@@ -51,6 +88,7 @@ jobs:
             sherpa-onnx-nemo-fast-conformer-ctc-es-1424
             sherpa-onnx-nemo-fast-conformer-ctc-en-de-es-fr-14288
             sherpa-onnx-nemo-fast-conformer-ctc-be-de-en-es-fr-hr-it-pl-ru-uk-20k
+            sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000
           )
           for d in ${dirs[@]}; do
             tar cjvf ${d}.tar.bz2 ./$d
@@ -65,3 +103,5 @@ jobs:
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: asr-models
+
+

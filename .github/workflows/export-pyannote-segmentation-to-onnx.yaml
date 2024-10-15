@@ -1,0 +1,86 @@
+name: export-pyannote-segmentation-to-onnx
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: export-pyannote-segmentation-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-pyannote-segmentation-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export Pyannote segmentation models to ONNX
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install pyannote
+        shell: bash
+        run: |
+          pip install pyannote.audio onnx==1.15.0 onnxruntime==1.16.3
+
+      - name: Run
+        shell: bash
+        run: |
+          d=sherpa-onnx-pyannote-segmentation-3-0
+          src=$PWD/$d
+          mkdir -p $src
+
+          pushd scripts/pyannote/segmentation
+          ./run.sh
+          cp ./*.onnx $src/
+          cp ./README.md $src/
+          cp ./LICENSE $src/
+          cp ./run.sh $src/
+          cp ./*.py $src/
+
+          popd
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: speaker-segmentation-models
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            d=sherpa-onnx-pyannote-segmentation-3-0
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            git clone https://huggingface.co/csukuangfj/$d huggingface
+            cp -v $d/* ./huggingface
+            cd huggingface
+            git lfs track "*.onnx"
+            git status
+            git add .
+            git status
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main

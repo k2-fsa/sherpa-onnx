@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-latest]
+        os: [windows-2019]
         python-version: ["3.8"]
 
     steps:
@@ -54,6 +54,8 @@ jobs:
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF  \
             ..
 
           ls -lh  _deps/onnxruntime-src/lib/
@@ -65,6 +67,7 @@ jobs:
           echo "----------"
 
           cp -v  _deps/onnxruntime-src/lib/*.lib ./install/lib
+          cp -v  _deps/onnxruntime-src/lib/*.dll ./install/lib
 
           echo "----------"
 
@@ -100,6 +103,12 @@ jobs:
         shell: bash
         run: |
           ls -lh ./sherpa-onnx-node
+          tar cjvf ./sherpa-onnx-node.tar.bz2 ./sherpa-onnx-node
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-win-x64
+          path: ./sherpa-onnx-node.tar.bz2
 
       - name: Publish
         shell: bash

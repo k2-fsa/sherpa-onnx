@@ -44,7 +44,7 @@ std::string VecToString<std::string>(const std::vector<std::string> &vec,
   oss << "[";
   std::string sep = "";
   for (const auto &item : vec) {
-    oss << sep << "\"" << item << "\"";
+    oss << sep << std::quoted(item);
     sep = ", ";
   }
   oss << "]";
@@ -54,9 +54,7 @@ std::string VecToString<std::string>(const std::vector<std::string> &vec,
 std::string OnlineRecognizerResult::AsJsonString() const {
   std::ostringstream os;
   os << "{ ";
-  os << "\"text\": "
-     << "\"" << text << "\""
-     << ", ";
+  os << "\"text\": " << std::quoted(text) << ", ";
   os << "\"tokens\": " << VecToString(tokens) << ", ";
   os << "\"timestamps\": " << VecToString(timestamps, 2) << ", ";
   os << "\"ys_probs\": " << VecToString(ys_probs, 6) << ", ";

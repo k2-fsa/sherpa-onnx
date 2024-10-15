@@ -62,34 +62,44 @@ function initSherpaOnnxOnlineTransducerModelConfig(config, Module) {
 
 // The user should free the returned pointers
 function initModelConfig(config, Module) {
+  if (!('tokensBuf' in config)) {
+    config.tokensBuf = '';
+  }
+
+  if (!('tokensBufSize' in config)) {
+    config.tokensBufSize = 0;
+  }
+
   const transducer =
       initSherpaOnnxOnlineTransducerModelConfig(config.transducer, Module);
   const paraformer_len = 2 * 4
   const ctc_len = 1 * 4
 
-  const len = transducer.len + paraformer_len + ctc_len + 7 * 4;
+  const len = transducer.len + paraformer_len + ctc_len + 9 * 4;
   const ptr = Module._malloc(len);
+  Module.HEAPU8.fill(0, ptr, ptr + len);
 
   let offset = 0;
   Module._CopyHeap(transducer.ptr, transducer.len, ptr + offset);
 
   const tokensLen = Module.lengthBytesUTF8(config.tokens) + 1;
-  const providerLen = Module.lengthBytesUTF8(config.provider) + 1;
-  const modelTypeLen = Module.lengthBytesUTF8(config.modelType) + 1;
+  const providerLen = Module.lengthBytesUTF8(config.provider || 'cpu') + 1;
+  const modelTypeLen = Module.lengthBytesUTF8(config.modelType || '') + 1;
   const modelingUnitLen = Module.lengthBytesUTF8(config.modelingUnit || '') + 1;
   const bpeVocabLen = Module.lengthBytesUTF8(config.bpeVocab || '') + 1;
-  const bufferLen =
-      tokensLen + providerLen + modelTypeLen + modelingUnitLen + bpeVocabLen;
+  const tokensBufLen = Module.lengthBytesUTF8(config.tokensBuf || '') + 1;
+  const bufferLen = tokensLen + providerLen + modelTypeLen + modelingUnitLen +
+      bpeVocabLen + tokensBufLen;
   const buffer = Module._malloc(bufferLen);
 
   offset = 0;
   Module.stringToUTF8(config.tokens, buffer, tokensLen);
   offset += tokensLen;
 
-  Module.stringToUTF8(config.provider, buffer + offset, providerLen);
+  Module.stringToUTF8(config.provider || 'cpu', buffer + offset, providerLen);
   offset += providerLen;
 
-  Module.stringToUTF8(config.modelType, buffer + offset, modelTypeLen);
+  Module.stringToUTF8(config.modelType || '', buffer + offset, modelTypeLen);
   offset += modelTypeLen;
 
   Module.stringToUTF8(
@@ -99,11 +109,14 @@ function initModelConfig(config, Module) {
   Module.stringToUTF8(config.bpeVocab || '', buffer + offset, bpeVocabLen);
   offset += bpeVocabLen;
 
+  Module.stringToUTF8(config.tokensBuf || '', buffer + offset, tokensBufLen);
+  offset += tokensBufLen;
+
   offset = transducer.len + paraformer_len + ctc_len;
   Module.setValue(ptr + offset, buffer, 'i8*');  // tokens
   offset += 4;
 
-  Module.setValue(ptr + offset, config.numThreads, 'i32');
+  Module.setValue(ptr + offset, config.numThreads || 1, 'i32');
   offset += 4;
 
   Module.setValue(ptr + offset, buffer + tokensLen, 'i8*');  // provider
@@ -127,6 +140,16 @@ function initModelConfig(config, Module) {
       'i8*');  // bpeVocab
   offset += 4;
 
+  Module.setValue(
+      ptr + offset,
+      buffer + tokensLen + providerLen + modelTypeLen + modelingUnitLen +
+          bpeVocabLen,
+      'i8*');  // tokens_buf
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.tokensBufSize || 0, 'i32');
+  offset += 4;
+
   return {
     buffer: buffer, ptr: ptr, len: len, transducer: transducer
   }
@@ -134,18 +157,33 @@ function initModelConfig(config, Module) {
 
 function initFeatureExtractorConfig(config, Module) {
   let ptr = Module._malloc(4 * 2);
-  Module.setValue(ptr, config.samplingRate, 'i32');
-  Module.setValue(ptr + 4, config.featureDim, 'i32');
+  Module.setValue(ptr, config.samplingRate || 16000, 'i32');
+  Module.setValue(ptr + 4, config.featureDim || 80, 'i32');
   return {
     ptr: ptr, len: 8,
   }
 }
 
 function initKwsConfig(config, Module) {
+  if (!('featConfig' in config)) {
+    config.featConfig = {
+      sampleRate: 16000,
+      featureDim: 80,
+    };
+  }
+
+  if (!('keywordsBuf' in config)) {
+    config.keywordsBuf = '';
+  }
+
+  if (!('keywordsBufSize' in config)) {
+    config.keywordsBufSize = 0;
+  }
+
   let featConfig = initFeatureExtractorConfig(config.featConfig, Module);
 
   let modelConfig = initModelConfig(config.modelConfig, Module);
-  let numBytes = featConfig.len + modelConfig.len + 4 * 5;
+  let numBytes = featConfig.len + modelConfig.len + 4 * 7;
 
   let ptr = Module._malloc(numBytes);
   let offset = 0;
@@ -155,22 +193,33 @@ function initKwsConfig(config, Module) {
   Module._CopyHeap(modelConfig.ptr, modelConfig.len, ptr + offset)
   offset += modelConfig.len;
 
-  Module.setValue(ptr + offset, config.maxActivePaths, 'i32');
+  Module.setValue(ptr + offset, config.maxActivePaths || 4, 'i32');
   offset += 4;
 
-  Module.setValue(ptr + offset, config.numTrailingBlanks, 'i32');
+  Module.setValue(ptr + offset, config.numTrailingBlanks || 1, 'i32');
   offset += 4;
 
-  Module.setValue(ptr + offset, config.keywordsScore, 'float');
+  Module.setValue(ptr + offset, config.keywordsScore || 1.0, 'float');
   offset += 4;
 
-  Module.setValue(ptr + offset, config.keywordsThreshold, 'float');
+  Module.setValue(ptr + offset, config.keywordsThreshold || 0.25, 'float');
   offset += 4;
 
   let keywordsLen = Module.lengthBytesUTF8(config.keywords) + 1;
-  let keywordsBuffer = Module._malloc(keywordsLen);
+  let keywordsBufLen = Module.lengthBytesUTF8(config.keywordsBuf) + 1;
+
+  let keywordsBuffer = Module._malloc(keywordsLen + keywordsBufLen);
   Module.stringToUTF8(config.keywords, keywordsBuffer, keywordsLen);
+  Module.stringToUTF8(
+      config.keywordsBuf, keywordsBuffer + keywordsLen, keywordsBufLen);
+
   Module.setValue(ptr + offset, keywordsBuffer, 'i8*');
+  offset += 4;
+
+  Module.setValue(ptr + offset, keywordsBuffer + keywordsLen, 'i8*');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.keywordsBufLen, 'i32');
   offset += 4;
 
   return {
@@ -189,7 +238,7 @@ class Stream {
 
   free() {
     if (this.handle) {
-      this.Module._DestroyOnlineKwsStream(this.handle);
+      this.Module._SherpaOnnxDestroyOnlineStream(this.handle);
       this.handle = null;
       this.Module._free(this.pointer);
       this.pointer = null;
@@ -210,12 +259,12 @@ class Stream {
     }
 
     this.Module.HEAPF32.set(samples, this.pointer / samples.BYTES_PER_ELEMENT);
-    this.Module._AcceptWaveform(
+    this.Module._SherpaOnnxOnlineStreamAcceptWaveform(
         this.handle, sampleRate, this.pointer, samples.length);
   }
 
   inputFinished() {
-    this.Module._InputFinished(this.handle);
+    this.Module._SherpaOnnxOnlineStreamInputFinished(this.handle);
   }
 };
 
@@ -223,7 +272,7 @@ class Kws {
   constructor(configObj, Module) {
     this.config = configObj;
     let config = initKwsConfig(configObj, Module)
-    let handle = Module._CreateKeywordSpotter(config.ptr);
+    let handle = Module._SherpaOnnxCreateKeywordSpotter(config.ptr);
 
     freeConfig(config, Module);
 
@@ -232,28 +281,30 @@ class Kws {
   }
 
   free() {
-    this.Module._DestroyKeywordSpotter(this.handle);
+    this.Module._SherpaOnnxDestroyKeywordSpotter(this.handle);
     this.handle = 0
   }
 
   createStream() {
-    let handle = this.Module._CreateKeywordStream(this.handle);
+    let handle = this.Module._SherpaOnnxCreateKeywordStream(this.handle);
     return new Stream(handle, this.Module);
   }
 
   isReady(stream) {
-    return this.Module._IsKeywordStreamReady(this.handle, stream.handle) === 1;
+    return this.Module._SherpaOnnxIsKeywordStreamReady(
+               this.handle, stream.handle) == 1;
   }
 
   decode(stream) {
-    return this.Module._DecodeKeywordStream(this.handle, stream.handle);
+    return this.Module._SherpaOnnxDecodeKeywordStream(
+        this.handle, stream.handle);
   }
 
   getResult(stream) {
-    let r = this.Module._GetKeywordResult(this.handle, stream.handle);
+    let r = this.Module._SherpaOnnxGetKeywordResult(this.handle, stream.handle);
     let jsonPtr = this.Module.getValue(r + 24, 'i8*');
     let json = this.Module.UTF8ToString(jsonPtr);
-    this.Module._DestroyKeywordResult(r);
+    this.Module._SherpaOnnxDestroyKeywordResult(r);
     return JSON.parse(json);
   }
 }

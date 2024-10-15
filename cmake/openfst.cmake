@@ -67,7 +67,24 @@ function(download_openfst)
     FetchContent_Populate(openfst)
   endif()
   message(STATUS "openfst is downloaded to ${openfst_SOURCE_DIR}")
+
+  if(_build_shared_libs_bak)
+    set(_build_shared_libs_bak ${BUILD_SHARED_LIBS})
+    set(BUILD_SHARED_LIBS OFF)
+  endif()
+
   add_subdirectory(${openfst_SOURCE_DIR} ${openfst_BINARY_DIR} EXCLUDE_FROM_ALL)
+
+  if(_build_shared_libs_bak)
+    set_target_properties(fst fstfar
+      PROPERTIES
+        POSITION_INDEPENDENT_CODE ON
+        C_VISIBILITY_PRESET hidden
+        CXX_VISIBILITY_PRESET hidden
+    )
+    set(BUILD_SHARED_LIBS ON)
+  endif()
+
   set(openfst_SOURCE_DIR ${openfst_SOURCE_DIR} PARENT_SCOPE)
 
   set_target_properties(fst PROPERTIES OUTPUT_NAME "sherpa-onnx-fst")

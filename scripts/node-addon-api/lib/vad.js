@@ -29,7 +29,7 @@ class CircularBuffer {
   }
 
   reset() {
-    return addon.circularBufferReset(this.handle);
+    addon.circularBufferReset(this.handle);
   }
 }
 
@@ -39,6 +39,9 @@ config = {
   sileroVad: {
     model: "./silero_vad.onnx",
     threshold: 0.5,
+    minSilenceDuration: 0.5,
+    minSpeechDuration: 0.25,
+    maxSpeechDuration: 5,
   }
 }
    */
@@ -65,13 +68,13 @@ config = {
   }
 
   clear() {
-    addon.VoiceActivityDetectorClearWrapper(this.handle);
+    addon.voiceActivityDetectorClear(this.handle);
   }
 
   /*
 {
   samples: a 1-d float32 array,
-  start: a int32
+  start: an int32
 }
    */
   front(enableExternalBuffer = true) {
@@ -79,7 +82,11 @@ config = {
   }
 
   reset() {
-    return addon.VoiceActivityDetectorResetWrapper(this.handle);
+    addon.voiceActivityDetectorReset(this.handle);
+  }
+
+  flush() {
+    addon.voiceActivityDetectorFlush(this.handle);
   }
 }
 

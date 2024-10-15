@@ -1,13 +1,12 @@
-/// Copyright (c)  2024.5 by 东风破
+﻿/// Copyright (c)  2024.5 by 东风破
 
-using System.Linq;
-using System.Collections.Generic;
+using System;
 using System.Runtime.InteropServices;
 using System.Text;
-using System;
 
 namespace SherpaOnnx
 {
+
     public class OfflineRecognizerResult
     {
         public OfflineRecognizerResult(IntPtr handle)
@@ -43,4 +42,6 @@ namespace SherpaOnnx
         private String _text;
         public String Text => _text;
     }
+
+
 }

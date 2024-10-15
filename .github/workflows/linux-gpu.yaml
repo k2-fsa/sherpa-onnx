@@ -72,7 +72,12 @@ jobs:
 
           mkdir build
           cd build
-          cmake -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} -DCMAKE_INSTALL_PREFIX=./install -DBUILD_SHARED_LIBS=ON -DSHERPA_ONNX_ENABLE_GPU=ON ..
+          cmake \
+            -D CMAKE_BUILD_TYPE=${{ matrix.build_type }} \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D BUILD_SHARED_LIBS=ON \
+            -D SHERPA_ONNX_ENABLE_GPU=ON \
+            ..
 
       - name: Build sherpa-onnx for ubuntu
         shell: bash
@@ -85,6 +90,12 @@ jobs:
 
           ls -lh lib
           ls -lh bin
+
+          echo "----"
+          ls -lh install/lib
+
+          echo "----"
+          ls -lh install/bin
 
       - name: Display dependencies of sherpa-onnx for linux
         shell: bash

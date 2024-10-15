@@ -1,10 +1,6 @@
 /// Copyright (c)  2024.5 by 东风破
 
-using System.Linq;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
-using System;
 
 namespace SherpaOnnx
 {
@@ -23,6 +19,7 @@ namespace SherpaOnnx
             HotwordsScore = 1.5F;
             RuleFsts = "";
             RuleFars = "";
+            BlankPenalty = 0.0F;
         }
         public FeatureConfig FeatConfig;
         public OfflineModelConfig ModelConfig;
@@ -43,5 +40,7 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string RuleFars;
+
+        public float BlankPenalty;
     }
 }

@@ -190,9 +190,9 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-nl_BE-nathalie-x_low"),
         TtsModel(model_dir="vits-piper-nl_BE-rdh-medium"),
         TtsModel(model_dir="vits-piper-nl_BE-rdh-x_low"),
-        TtsModel(model_dir="vits-piper-nl_NL-mls-medium"),
-        TtsModel(model_dir="vits-piper-nl_NL-mls_5809-low"),
-        TtsModel(model_dir="vits-piper-nl_NL-mls_7432-low"),
+        #  TtsModel(model_dir="vits-piper-nl_NL-mls-medium"),
+        #  TtsModel(model_dir="vits-piper-nl_NL-mls_5809-low"),
+        #  TtsModel(model_dir="vits-piper-nl_NL-mls_7432-low"),
         TtsModel(model_dir="vits-piper-no_NO-talesyntese-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-darkman-medium"),
         TtsModel(model_dir="vits-piper-pl_PL-gosia-medium"),
@@ -313,6 +313,11 @@ def get_vits_models() -> List[TtsModel]:
             lang="zh",
         ),
         TtsModel(
+            model_dir="vits-melo-tts-zh_en",
+            model_name="model.onnx",
+            lang="zh",
+        ),
+        TtsModel(
             model_dir="vits-zh-hf-fanchen-C",
             model_name="vits-zh-hf-fanchen-C.onnx",
             lang="zh",
@@ -332,19 +337,27 @@ def get_vits_models() -> List[TtsModel]:
             model_name="vits-zh-hf-fanchen-unity.onnx",
             lang="zh",
         ),
+        TtsModel(
+            model_dir="sherpa-onnx-vits-zh-ll",
+            model_name="model.onnx",
+            lang="zh",
+        ),
     ]
 
-    rule_fsts = ["phone.fst", "date.fst", "number.fst", "new_heteronym.fst"]
+    rule_fsts = ["phone.fst", "date.fst", "number.fst"]
     for m in chinese_models:
         s = [f"{m.model_dir}/{r}" for r in rule_fsts]
-        if "vits-zh-hf" in m.model_dir:
+        if (
+            "vits-zh-hf" in m.model_dir
+            or "sherpa-onnx-vits-zh-ll" == m.model_dir
+            or "melo-tts" in m.model_dir
+        ):
             s = s[:-1]
             m.dict_dir = m.model_dir + "/dict"
+        else:
+            m.rule_fars = f"{m.model_dir}/rule.far"
 
         m.rule_fsts = ",".join(s)
-
-        if "vits-zh-hf" not in m.model_dir:
-            m.rule_fars = f"{m.model_dir}/rule.far"
 
     all_models = chinese_models + [
         TtsModel(

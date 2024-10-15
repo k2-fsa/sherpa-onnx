@@ -4,10 +4,12 @@ on:
   push:
     branches:
       - master
+      - dart
     paths:
       - '.github/workflows/test-dart.yaml'
       - '.github/scripts/test-dart.sh'
       - 'dart-api-examples/**'
+      - 'flutter/**'
   pull_request:
     branches:
       - master
@@ -15,6 +17,7 @@ on:
       - '.github/workflows/test-dart.yaml'
       - '.github/scripts/test-dart.sh'
       - 'dart-api-examples/**'
+      - 'flutter/**'
 
   workflow_dispatch:
 
@@ -29,7 +32,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-latest, macos-latest] #, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -68,23 +71,36 @@ jobs:
           cd build
 
           cmake \
-            -D BUILD_SHARED_LIBS=ON \
+            -DBUILD_SHARED_LIBS=ON \
             -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DBUILD_ESPEAK_NG_EXE=OFF \
             -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             -DCMAKE_INSTALL_PREFIX=./install \
             ..
-          make -j install
+
+          cmake --build . --target install --config Release
 
       - name: Copy libs
         shell: bash
         run: |
-          cp -v build/install/lib/lib* ./sherpa-onnx/flutter/linux/
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            os=linux
+          elif [[ ${{ matrix.os }} == macos-latest ]]; then
+            os=macos
+          elif [[ ${{ matrix.os }} == windows-latest ]]; then
+            os=windows
+          fi
+
+          if [[ $os == windows ]]; then
+            cp -fv build/install/lib/*.dll ./flutter/sherpa_onnx_$os/$os
+          else
+            cp -fv build/install/lib/lib* ./flutter/sherpa_onnx_$os/$os
+          fi
 
           echo "--------------------"
 
-          ls -lh ./sherpa-onnx/flutter/linux/
+          ls -lh ./flutter/sherpa_onnx_$os/$os
 
       - name: Run tests
         shell: bash
@@ -93,5 +109,13 @@ jobs:
           cp scripts/dart/non-streaming-asr-pubspec.yaml dart-api-examples/non-streaming-asr/pubspec.yaml
           cp scripts/dart/streaming-asr-pubspec.yaml dart-api-examples/streaming-asr/pubspec.yaml
           cp scripts/dart/tts-pubspec.yaml dart-api-examples/tts/pubspec.yaml
+          cp scripts/dart/kws-pubspec.yaml dart-api-examples/keyword-spotter/pubspec.yaml
+          cp scripts/dart/vad-non-streaming-asr-pubspec.yaml dart-api-examples/vad-with-non-streaming-asr/pubspec.yaml
+          cp scripts/dart/audio-tagging-pubspec.yaml dart-api-examples/audio-tagging/pubspec.yaml
+          cp scripts/dart/add-punctuations-pubspec.yaml dart-api-examples/add-punctuations/pubspec.yaml
+          cp scripts/dart/speaker-id-pubspec.yaml dart-api-examples/speaker-identification/pubspec.yaml
+          cp scripts/dart/speaker-diarization-pubspec.yaml dart-api-examples/speaker-diarization/pubspec.yaml
+
+          cp scripts/dart/sherpa-onnx-pubspec.yaml flutter/sherpa_onnx/pubspec.yaml
 
           .github/scripts/test-dart.sh

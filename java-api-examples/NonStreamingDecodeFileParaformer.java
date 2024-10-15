@@ -7,12 +7,12 @@ import com.k2fsa.sherpa.onnx.*;
 public class NonStreamingDecodeFileParaformer {
   public static void main(String[] args) {
     // please refer to
-    // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-03-28-chinese-english
+    // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/paraformer-models.html#csukuangfj-sherpa-onnx-paraformer-zh-2023-09-14-chinese-english
     // to download model files
-    String model = "./sherpa-onnx-paraformer-zh-2023-03-28/model.int8.onnx";
-    String tokens = "./sherpa-onnx-paraformer-zh-2023-03-28/tokens.txt";
+    String model = "./sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx";
+    String tokens = "./sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt";
 
-    String waveFilename = "./sherpa-onnx-paraformer-zh-2023-03-28/test_wavs/3-sichuan.wav";
+    String waveFilename = "./sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/3-sichuan.wav";
 
     WaveReader reader = new WaveReader(waveFilename);
 

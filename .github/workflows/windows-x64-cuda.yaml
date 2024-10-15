@@ -57,7 +57,13 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A x64 -D CMAKE_BUILD_TYPE=Release -D BUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX=./install -DSHERPA_ONNX_ENABLE_GPU=ON ..
+          cmake \
+          -A x64 \
+          -D CMAKE_BUILD_TYPE=Release \
+          -D BUILD_SHARED_LIBS=ON \
+          -D CMAKE_INSTALL_PREFIX=./install \
+          -D SHERPA_ONNX_ENABLE_GPU=ON \
+          ..
 
       - name: Build sherpa-onnx for windows
         shell: bash

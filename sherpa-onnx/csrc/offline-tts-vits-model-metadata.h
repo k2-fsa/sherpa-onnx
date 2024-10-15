@@ -21,6 +21,7 @@ struct OfflineTtsVitsModelMetaData {
   bool is_piper = false;
   bool is_coqui = false;
   bool is_icefall = false;
+  bool is_melo_tts = false;
 
   // for Chinese TTS models from
   // https://github.com/Plachtaa/VITS-fast-fine-tuning
@@ -32,6 +33,10 @@ struct OfflineTtsVitsModelMetaData {
   int32_t eos_id = 0;
   int32_t use_eos_bos = 0;
   int32_t pad_id = 0;
+
+  // for melo tts
+  int32_t speaker_id = 0;
+  int32_t version = 0;
 
   std::string punctuations;
   std::string language;

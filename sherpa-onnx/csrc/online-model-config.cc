@@ -16,6 +16,7 @@ void OnlineModelConfig::Register(ParseOptions *po) {
   wenet_ctc.Register(po);
   zipformer2_ctc.Register(po);
   nemo_ctc.Register(po);
+  provider_config.Register(po);
 
   po->Register("tokens", &tokens, "Path to tokens.txt");
 
@@ -28,9 +29,6 @@ void OnlineModelConfig::Register(ParseOptions *po) {
 
   po->Register("debug", &debug,
                "true to print model information while loading it.");
-
-  po->Register("provider", &provider,
-               "Specify a provider to use: cpu, cuda, coreml");
 
   po->Register("modeling-unit", &modeling_unit,
                "The modeling unit of the model, commonly used units are bpe, "
@@ -58,8 +56,19 @@ bool OnlineModelConfig::Validate() const {
     return false;
   }
 
-  if (!FileExists(tokens)) {
-    SHERPA_ONNX_LOGE("tokens: '%s' does not exist", tokens.c_str());
+  if (!tokens_buf.empty() && FileExists(tokens)) {
+    SHERPA_ONNX_LOGE(
+        "you can not provide a tokens_buf and a tokens file: '%s', "
+        "at the same time, which is confusing",
+        tokens.c_str());
+    return false;
+  }
+
+  if (tokens_buf.empty() && !FileExists(tokens)) {
+    SHERPA_ONNX_LOGE(
+        "tokens: '%s' does not exist, you should provide "
+        "either a tokens buffer or a tokens file",
+        tokens.c_str());
     return false;
   }
 
@@ -87,6 +96,10 @@ bool OnlineModelConfig::Validate() const {
     return nemo_ctc.Validate();
   }
 
+  if (!provider_config.Validate()) {
+    return false;
+  }
+
   return transducer.Validate();
 }
 
@@ -99,11 +112,11 @@ std::string OnlineModelConfig::ToString() const {
   os << "wenet_ctc=" << wenet_ctc.ToString() << ", ";
   os << "zipformer2_ctc=" << zipformer2_ctc.ToString() << ", ";
   os << "nemo_ctc=" << nemo_ctc.ToString() << ", ";
+  os << "provider_config=" << provider_config.ToString() << ", ";
   os << "tokens=\"" << tokens << "\", ";
   os << "num_threads=" << num_threads << ", ";
   os << "warm_up=" << warm_up << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
-  os << "provider=\"" << provider << "\", ";
   os << "model_type=\"" << model_type << "\", ";
   os << "modeling_unit=\"" << modeling_unit << "\", ";
   os << "bpe_vocab=\"" << bpe_vocab << "\")";

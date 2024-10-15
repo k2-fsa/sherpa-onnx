@@ -1,0 +1,86 @@
+name: test-node-addon-npm-win-x86
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-nodejs-addon-npm-win-x86.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'scripts/node-addon-api/**'
+      - 'scripts/node-addon-api/*.js'
+      - 'nodejs-addon-examples/package.json'
+      - '.github/scripts/test-nodejs-addon-npm.sh'
+
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/test-nodejs-addon-npm-win-x86.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'scripts/node-addon-api/*.js'
+      - 'nodejs-addon-examples/package.json'
+      - '.github/scripts/test-nodejs-addon-npm.sh'
+
+  workflow_dispatch:
+
+concurrency:
+  group: test-node-addon-npm-win-x86-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test-node-addon-npm-win-x86:
+    name: ${{ matrix.os }} node v${{ matrix.node-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest]
+        node-version: ["16", "17", "18", "19", "21", "22"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+          node-version: ${{ matrix.node-version }}
+          architecture: 'x86'
+
+      - name: Display node version
+        shell: bash
+        run: |
+          node --version
+
+      - name: Run tests
+        shell: bash
+        run: |
+          d=nodejs-addon-examples
+          echo "dir: $d"
+          cd $d
+          npm install --verbose
+          git status
+          ls -lh
+          ls -lh node_modules
+
+          export DYLD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-x64:$DYLD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRARY_PATH
+          export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-x64:$DYLD_LIBRARY_PATH
+          export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-darwin-arm64:$DYLD_LIBRARY_PATH
+          export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-x64:$LD_LIBRARY_PATH
+          export LD_LIBRARY_PATH=$PWD/node_modules/sherpa-onnx-linux-arm64:$LD_LIBRARY_PATH
+
+          cd ../
+
+          .github/scripts/test-nodejs-addon-npm.sh

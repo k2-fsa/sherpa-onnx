@@ -9,6 +9,19 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+# 36000 hours of English data
+url=https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/parakeet-tdt_ctc-110m
+name=$(basename $url)
+doc="parakeet-tdt_ctc-110m is an ASR model that transcribes speech with Punctuations and Capitalizations of the English alphabet. It was trained on 36K hours of English speech collected and prepared by NVIDIA NeMo and Suno teams."
+
+log "Process $name at $url"
+./export-onnx-ctc-non-streaming.py --model $name --doc "$doc"
+d=sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000
+mkdir -p $d
+mv -v model.onnx $d/
+mv -v tokens.txt $d/
+ls -lh $d
+
 # 8500 hours of English speech
 url=https://catalog.ngc.nvidia.com/orgs/nvidia/teams/nemo/models/stt_en_fastconformer_hybrid_large_pc
 name=$(basename $url)
@@ -66,12 +79,26 @@ tar xvf spoken-language-identification-test-wavs.tar.bz2
 rm spoken-language-identification-test-wavs.tar.bz2
 data=spoken-language-identification-test-wavs
 
+curl -SL -O https://dldata-public.s3.us-east-2.amazonaws.com/2086-149220-0033.wav
+mv 2086-149220-0033.wav en.wav
+
+d=sherpa-onnx-nemo-parakeet_tdt_ctc_110m-en-36000
+python3 ./test-onnx-ctc-non-streaming.py \
+  --model $d/model.onnx \
+  --tokens $d/tokens.txt \
+  --wav $data/en-english.wav
+mkdir -p $d/test_wavs
+
+cp en.wav $d/test_wavs/0.wav
+cp -v $data/en-english.wav $d/test_wavs/1.wav
+
 d=sherpa-onnx-nemo-fast-conformer-ctc-en-24500
 python3 ./test-onnx-ctc-non-streaming.py \
   --model $d/model.onnx \
   --tokens $d/tokens.txt \
   --wav $data/en-english.wav
 mkdir -p $d/test_wavs
+cp en.wav $d/test_wavs/0.wav
 cp -v $data/en-english.wav $d/test_wavs
 
 d=sherpa-onnx-nemo-fast-conformer-ctc-es-1424

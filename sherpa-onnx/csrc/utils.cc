@@ -62,9 +62,9 @@ static bool EncodeBase(const std::vector<std::string> &lines,
             break;
           default:
             SHERPA_ONNX_LOGE(
-                "Cannot find ID for token %s at line: %s. (Hint: words on "
-                "the same line are separated by spaces)",
-                word.c_str(), line.c_str());
+                "Cannot find ID for token %s at line: %s. (Hint: Check the "
+                "tokens.txt see if %s in it)",
+                word.c_str(), line.c_str(), word.c_str());
             has_oov = true;
             break;
         }

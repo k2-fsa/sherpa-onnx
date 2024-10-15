@@ -107,7 +107,7 @@ public class SpeakerIdentification {
 
     // test verify
     if (!manager.verify("fangjun", computeEmbedding(extractor, testFiles[0]), threshold)) {
-      System.out.printf("testFiles[0] should match fangjun!");
+      System.out.printf("%s should match fangjun!\n", testFiles[0]);
       return;
     }
 

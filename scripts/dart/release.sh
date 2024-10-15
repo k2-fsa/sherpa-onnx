@@ -36,7 +36,7 @@ windows_x64_wheel=$src_dir/$windows_x64_wheel_filename
 function process_linux() {
   mkdir -p t
   cd t
-  curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$linux_wheel_filename
+  curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$linux_wheel_filename
   unzip $linux_wheel_filename
   cp -v sherpa_onnx/lib/*.so* ../linux
   cd ..
@@ -44,17 +44,13 @@ function process_linux() {
 
   pushd linux
 
-  rm -v libpiper_phonemize.so libpiper_phonemize.so.1.2.0
-  rm -v libonnxruntime.so
-  rm -v libcargs.so
-
   popd
 }
 
 function process_windows_x64() {
   mkdir -p t
   cd t
-  curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$windows_x64_wheel_filename
+  curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$windows_x64_wheel_filename
   unzip $windows_x64_wheel_filename
   cp -v sherpa_onnx-${SHERPA_ONNX_VERSION}.data/data/bin/*.dll ../windows
   cd ..
@@ -64,17 +60,11 @@ function process_windows_x64() {
 function process_macos() {
   mkdir -p t
   cd t
-  curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/$macos_wheel_filename
+  curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-wheels/resolve/main/cpu/$SHERPA_ONNX_VERSION/$macos_wheel_filename
   unzip $macos_wheel_filename
   cp -v sherpa_onnx/lib/*.dylib ../macos
   cd ..
   rm -rf t
-
-  pushd macos
-  rm -v libcargs.dylib
-  rm -v libonnxruntime.dylib
-  rm -v libpiper_phonemize.1.2.0.dylib libpiper_phonemize.dylib
-  popd
 }
 
 process_linux

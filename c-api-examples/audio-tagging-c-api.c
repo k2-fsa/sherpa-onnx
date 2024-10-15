@@ -54,8 +54,8 @@ int32_t main() {
   const SherpaOnnxOfflineStream *stream =
       SherpaOnnxAudioTaggingCreateOfflineStream(tagger);
 
-  AcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
-                        wave->num_samples);
+  SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
+                                  wave->num_samples);
 
   int32_t top_k = 5;
   const SherpaOnnxAudioEvent *const *results =
@@ -71,7 +71,7 @@ int32_t main() {
   fprintf(stderr, "--------------------------------------------------\n");
 
   SherpaOnnxAudioTaggingFreeResults(results);
-  DestroyOfflineStream(stream);
+  SherpaOnnxDestroyOfflineStream(stream);
   SherpaOnnxFreeWave(wave);
   SherpaOnnxDestroyAudioTagging(tagger);
 

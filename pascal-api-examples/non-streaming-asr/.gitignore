@@ -1,0 +1,9 @@
+!run-*.sh
+zipformer_transducer
+whisper
+nemo_transducer
+nemo_ctc
+paraformer
+paraformer_itn
+sense_voice
+telespeech_ctc

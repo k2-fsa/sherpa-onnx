@@ -46,6 +46,10 @@ public class Vad {
         reset(this.ptr);
     }
 
+    public void flush() {
+        flush(this.ptr);
+    }
+
     public SpeechSegment front() {
         Object[] arr = front(this.ptr);
         int start = (int) arr[0];
@@ -75,4 +79,6 @@ public class Vad {
     private native boolean isSpeechDetected(long ptr);
 
     private native void reset(long ptr);
+
+    private native void flush(long ptr);
 }

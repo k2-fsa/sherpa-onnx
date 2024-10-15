@@ -40,6 +40,10 @@ static VadModelConfig GetVadModelConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(silero_vad_config_cls, "windowSize", "I");
   ans.silero_vad.window_size = env->GetIntField(silero_vad_config, fid);
 
+  fid = env->GetFieldID(silero_vad_config_cls, "maxSpeechDuration", "F");
+  ans.silero_vad.max_speech_duration =
+      env->GetFloatField(silero_vad_config, fid);
+
   fid = env->GetFieldID(cls, "sampleRate", "I");
   ans.sample_rate = env->GetIntField(config, fid);
 
@@ -67,10 +71,12 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_Vad_newFromAsset(
   AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
   if (!mgr) {
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+    return 0;
   }
 #endif
   auto config = sherpa_onnx::GetVadModelConfig(env, _config);
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
   auto model = new sherpa_onnx::VoiceActivityDetector(
 #if __ANDROID_API__ >= 9
       mgr,
@@ -172,4 +178,12 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(JNIEnv * /*env*/,
                                                             jlong ptr) {
   auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
   model->Reset();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_flush(JNIEnv * /*env*/,
+                                                            jobject /*obj*/,
+                                                            jlong ptr) {
+  auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
+  model->Flush();
 }

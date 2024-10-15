@@ -1,0 +1,364 @@
+name: c-api
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+    paths:
+      - '.github/workflows/c-api.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'c-api-examples/**'
+      - 'ffmpeg-examples/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/c-api.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'c-api-examples/**'
+      - 'ffmpeg-examples/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: c-api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  c_api:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-c-api-shared
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+          make -j2 install
+
+          ls -lh install/lib
+          ls -lh install/include
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./install/lib/libsherpa-onnx-c-api.so
+            echo "---"
+            readelf -d ./install/lib/libsherpa-onnx-c-api.so
+          fi
+
+          if [[ ${{ matrix.os }} == macos-latest ]]; then
+            otool -L ./install/lib/libsherpa-onnx-c-api.dylib
+          fi
+
+      - name: Test ffmpeg
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          brew install ffmpeg
+
+          cd ffmpeg-examples
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+
+          make
+          ls -lh
+          ./run.sh
+          rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+
+      - name: Test vad + sense-voice
+        shell: bash
+        run: |
+          gcc -o vad-sense-voice-c-api ./c-api-examples/vad-sense-voice-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh vad-sense-voice-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./vad-sense-voice-c-api
+            echo "----"
+            readelf -d ./vad-sense-voice-c-api
+          fi
+
+          # Now download models
+          #
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+          tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+          rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+
+          ls -lh sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+          echo "---"
+          ls -lh sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./vad-sense-voice-c-api
+
+          rm -rf sherpa-onnx-sense-voice-*
+          rm -rf *.onnx
+          rm *.wav
+
+      - name: Test sense-voice
+        shell: bash
+        run: |
+          gcc -o sense-voice-c-api ./c-api-examples/sense-voice-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh sense-voice-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./sense-voice-c-api
+            echo "----"
+            readelf -d ./sense-voice-c-api
+          fi
+
+          # Now download models
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+          tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+          rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+
+          ls -lh sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17
+          echo "---"
+          ls -lh sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./sense-voice-c-api
+
+          rm -rf sherpa-onnx-sense-voice-*
+
+      - name: Test whisper
+        shell: bash
+        run: |
+          gcc -o whisper-c-api ./c-api-examples/whisper-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh whisper-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./whisper-c-api
+            echo "----"
+            readelf -d ./whisper-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.tar.bz2
+          tar xvf sherpa-onnx-whisper-tiny.tar.bz2
+          rm sherpa-onnx-whisper-tiny.tar.bz2
+
+          ls -lh sherpa-onnx-whisper-tiny
+          echo "---"
+          ls -lh sherpa-onnx-whisper-tiny/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./whisper-c-api
+
+          rm -rf sherpa-onnx-whisper-*
+
+      - name: Test non-streaming zipformer
+        shell: bash
+        run: |
+          gcc -o zipformer-c-api ./c-api-examples/zipformer-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh zipformer-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./zipformer-c-api
+            echo "----"
+            readelf -d ./zipformer-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-small-en-2023-06-26.tar.bz2
+          tar xvf sherpa-onnx-zipformer-small-en-2023-06-26.tar.bz2
+          rm sherpa-onnx-zipformer-small-en-2023-06-26.tar.bz2
+
+          ls -lh sherpa-onnx-zipformer-small-en-2023-06-26
+          echo "---"
+          ls -lh sherpa-onnx-zipformer-small-en-2023-06-26/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./zipformer-c-api
+
+          rm -rf sherpa-onnx-zipformer-*
+
+      - name: Test streaming zipformer
+        shell: bash
+        run: |
+          gcc -o streaming-zipformer-c-api ./c-api-examples/streaming-zipformer-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh streaming-zipformer-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./streaming-zipformer-c-api
+            echo "----"
+            readelf -d ./streaming-zipformer-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+
+          ls -lh sherpa-onnx-streaming-zipformer-en-20M-2023-02-17
+          echo "---"
+          ls -lh sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./streaming-zipformer-c-api
+
+          rm -rf sherpa-onnx-streaming-zipformer-*
+
+      - name: Test non-streaming paraformer
+        shell: bash
+        run: |
+          gcc -o paraformer-c-api ./c-api-examples/paraformer-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh paraformer-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./paraformer-c-api
+            echo "----"
+            readelf -d ./paraformer-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-small-2024-03-09.tar.bz2
+          tar xvf sherpa-onnx-paraformer-zh-small-2024-03-09.tar.bz2
+          rm sherpa-onnx-paraformer-zh-small-2024-03-09.tar.bz2
+
+          ls -lh sherpa-onnx-paraformer-zh-small-2024-03-09
+          echo "---"
+          ls -lh sherpa-onnx-paraformer-zh-small-2024-03-09/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./paraformer-c-api
+
+          rm -rf sherpa-onnx-paraformer-*
+
+      - name: Test streaming paraformer
+        shell: bash
+        run: |
+          gcc -o streaming-paraformer-c-api ./c-api-examples/streaming-paraformer-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh streaming-paraformer-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./streaming-paraformer-c-api
+            echo "----"
+            readelf -d ./streaming-paraformer-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+          tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+          rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+
+          ls -lh sherpa-onnx-streaming-paraformer-bilingual-zh-en
+          echo "---"
+          ls -lh sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./streaming-paraformer-c-api
+
+          rm -rf sherpa-onnx-streaming-paraformer-*
+
+      - name: Test telespeech
+        shell: bash
+        run: |
+          gcc -o telespeech-c-api ./c-api-examples/telespeech-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh telespeech-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./telespeech-c-api
+            echo "----"
+            readelf -d ./telespeech-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
+          tar xvf sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
+          rm sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
+
+          ls -lh sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04
+          echo "---"
+          ls -lh sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./telespeech-c-api
+
+          rm -rf sherpa-onnx-telespeech-*

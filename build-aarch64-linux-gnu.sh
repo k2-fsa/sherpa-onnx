@@ -23,7 +23,7 @@ cd $dir
 if [ ! -f alsa-lib/src/.libs/libasound.so ]; then
   echo "Start to cross-compile alsa-lib"
   if [ ! -d alsa-lib ]; then
-    git clone --depth 1 https://github.com/alsa-project/alsa-lib
+    git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
   fi
   # If it shows:
   #  ./gitcompile: line 79: libtoolize: command not found
@@ -58,7 +58,7 @@ cmake \
   -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
   -DSHERPA_ONNX_ENABLE_JNI=OFF \
   -DSHERPA_ONNX_ENABLE_C_API=ON \
-  -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+  -DSHERPA_ONNX_ENABLE_WEBSOCKET=ON \
   -DCMAKE_TOOLCHAIN_FILE=../toolchains/aarch64-linux-gnu.toolchain.cmake \
   ..
 

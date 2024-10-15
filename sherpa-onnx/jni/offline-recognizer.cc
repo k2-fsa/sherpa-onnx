@@ -49,6 +49,9 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.rule_fars = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(cls, "blankPenalty", "F");
+  ans.blank_penalty = env->GetFloatField(config, fid);
+
   //---------- feat config ----------
   fid = env->GetFieldID(cls, "featConfig",
                         "Lcom/k2fsa/sherpa/onnx/FeatureConfig;");
@@ -174,6 +177,31 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.whisper.tail_paddings =
       env->GetIntField(whisper_config, fid);
 
+  // sense voice
+  fid = env->GetFieldID(model_config_cls, "senseVoice",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineSenseVoiceModelConfig;");
+  jobject sense_voice_config = env->GetObjectField(model_config, fid);
+  jclass sense_voice_config_cls = env->GetObjectClass(sense_voice_config);
+
+  fid = env->GetFieldID(sense_voice_config_cls, "model", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(sense_voice_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.sense_voice.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid =
+      env->GetFieldID(sense_voice_config_cls, "language", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(sense_voice_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.sense_voice.language = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(sense_voice_config_cls, "useInverseTextNormalization",
+                        "Z");
+  ans.model_config.sense_voice.use_itn =
+      env->GetBooleanField(sense_voice_config, fid);
+
+  // nemo
   fid = env->GetFieldID(
       model_config_cls, "nemo",
       "Lcom/k2fsa/sherpa/onnx/OfflineNemoEncDecCtcModelConfig;");
@@ -208,10 +236,12 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromAsset(JNIEnv *env,
   AAssetManager *mgr = AAssetManager_fromJava(env, asset_manager);
   if (!mgr) {
     SHERPA_ONNX_LOGE("Failed to get asset manager: %p", mgr);
+    return 0;
   }
 #endif
   auto config = sherpa_onnx::GetOfflineConfig(env, _config);
   SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
   auto model = new sherpa_onnx::OfflineRecognizer(
 #if __ANDROID_API__ >= 9
       mgr,
@@ -237,6 +267,16 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_newFromFile(JNIEnv *env,
   auto model = new sherpa_onnx::OfflineRecognizer(config);
 
   return (jlong)model;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_setConfig(
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jobject _config) {
+  auto config = sherpa_onnx::GetOfflineConfig(env, _config);
+  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+
+  auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
+  recognizer->SetConfig(config);
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -281,8 +321,11 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
   // [0]: text, jstring
   // [1]: tokens, array of jstring
   // [2]: timestamps, array of float
+  // [3]: lang, jstring
+  // [4]: emotion, jstring
+  // [5]: event, jstring
   jobjectArray obj_arr = (jobjectArray)env->NewObjectArray(
-      3, env->FindClass("java/lang/Object"), nullptr);
+      6, env->FindClass("java/lang/Object"), nullptr);
 
   jstring text = env->NewStringUTF(result.text.c_str());
   env->SetObjectArrayElement(obj_arr, 0, text);
@@ -304,6 +347,16 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_getResult(JNIEnv *env,
                            result.timestamps.data());
 
   env->SetObjectArrayElement(obj_arr, 2, timestamps_arr);
+
+  // [3]: lang, jstring
+  // [4]: emotion, jstring
+  // [5]: event, jstring
+  env->SetObjectArrayElement(obj_arr, 3,
+                             env->NewStringUTF(result.lang.c_str()));
+  env->SetObjectArrayElement(obj_arr, 4,
+                             env->NewStringUTF(result.emotion.c_str()));
+  env->SetObjectArrayElement(obj_arr, 5,
+                             env->NewStringUTF(result.event.c_str()));
 
   return obj_arr;
 }

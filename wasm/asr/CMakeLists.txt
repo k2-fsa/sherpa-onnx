@@ -9,22 +9,22 @@ endif()
 set(exported_functions
   MyPrint
   # online ASR
-  AcceptWaveform
-  CreateOnlineRecognizer
-  CreateOnlineStream
-  DecodeOnlineStream
-  DestroyOfflineStreamResultJson
-  DestroyOnlineRecognizer
-  DestroyOnlineRecognizerResult
-  DestroyOnlineStream
-  DestroyOnlineStreamResultJson
-  GetOfflineStreamResultAsJson
-  GetOnlineStreamResult
-  GetOnlineStreamResultAsJson
-  InputFinished
-  IsEndpoint
-  IsOnlineStreamReady
-  Reset
+  SherpaOnnxCreateOnlineRecognizer
+  SherpaOnnxCreateOnlineStream
+  SherpaOnnxDecodeOnlineStream
+  SherpaOnnxDestroyOfflineStreamResultJson
+  SherpaOnnxDestroyOnlineRecognizer
+  SherpaOnnxDestroyOnlineRecognizerResult
+  SherpaOnnxDestroyOnlineStream
+  SherpaOnnxDestroyOnlineStreamResultJson
+  SherpaOnnxGetOfflineStreamResultAsJson
+  SherpaOnnxGetOnlineStreamResult
+  SherpaOnnxGetOnlineStreamResultAsJson
+  SherpaOnnxIsOnlineStreamReady
+  SherpaOnnxOnlineStreamAcceptWaveform
+  SherpaOnnxOnlineStreamInputFinished
+  SherpaOnnxOnlineStreamIsEndpoint
+  SherpaOnnxOnlineStreamReset
   #
 )
 set(mangled_exported_functions)

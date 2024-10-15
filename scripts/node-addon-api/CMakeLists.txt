@@ -21,6 +21,7 @@ set(srcs
   src/audio-tagging.cc
   src/keyword-spotting.cc
   src/non-streaming-asr.cc
+  src/non-streaming-speaker-diarization.cc
   src/non-streaming-tts.cc
   src/punctuation.cc
   src/sherpa-onnx-node-addon-api.cc
@@ -67,15 +68,6 @@ target_link_libraries(${PROJECT_NAME} ${CMAKE_JS_LIB})
 
 target_link_libraries(${PROJECT_NAME}
   sherpa-onnx-c-api
-  sherpa-onnx-core
-  kaldi-decoder-core
-  sherpa-onnx-kaldifst-core
-  sherpa-onnx-fstfar
-  sherpa-onnx-fst
-  kaldi-native-fbank-core
-  piper_phonemize
-  espeak-ng
-  ucd
   onnxruntime
   -Wl,-rpath,$ENV{SHERPA_ONNX_INSTALL_DIR}/lib
 )

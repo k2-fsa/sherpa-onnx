@@ -3,6 +3,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 set(srcs
   audio-tagging.cc
   circular-buffer.cc
+  cuda-config.cc
   display.cc
   endpoint.cc
   features.cc
@@ -14,6 +15,7 @@ set(srcs
   offline-paraformer-model-config.cc
   offline-punctuation.cc
   offline-recognizer.cc
+  offline-sense-voice-model-config.cc
   offline-stream.cc
   offline-tdnn-model-config.cc
   offline-transducer-model-config.cc
@@ -25,16 +27,19 @@ set(srcs
   online-model-config.cc
   online-nemo-ctc-model-config.cc
   online-paraformer-model-config.cc
+  online-punctuation.cc
   online-recognizer.cc
   online-stream.cc
   online-transducer-model-config.cc
   online-wenet-ctc-model-config.cc
   online-zipformer2-ctc-model-config.cc
+  provider-config.cc
   sherpa-onnx.cc
   silero-vad-model-config.cc
   speaker-embedding-extractor.cc
   speaker-embedding-manager.cc
   spoken-language-identification.cc
+  tensorrt-config.cc
   vad-model-config.cc
   vad-model.cc
   voice-activity-detector.cc
@@ -51,6 +56,14 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-model-config.cc
     offline-tts-vits-model-config.cc
     offline-tts.cc
+  )
+endif()
+
+if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+  list(APPEND srcs
+    fast-clustering.cc
+    offline-speaker-diarization-result.cc
+    offline-speaker-diarization.cc
   )
 endif()
 

@@ -23,7 +23,7 @@ enum class ModelType : std::uint8_t {
 
 static ModelType GetModelType(char *model_data, size_t model_data_length,
                               bool debug) {
-  Ort::Env env(ORT_LOGGING_LEVEL_WARNING);
+  Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
   Ort::SessionOptions sess_opts;
   sess_opts.SetIntraOpNumThreads(1);
   sess_opts.SetInterOpNumThreads(1);

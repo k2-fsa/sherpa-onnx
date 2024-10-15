@@ -57,7 +57,7 @@ static bool g_started = false;
 static bool g_stopped = false;
 static bool g_killed = false;
 
-static void AudioGeneratedCallback(const float *s, int32_t n) {
+static int32_t AudioGeneratedCallback(const float *s, int32_t n) {
   if (n > 0) {
     Samples samples;
     samples.data = std::vector<float>{s, s + n};
@@ -66,6 +66,10 @@ static void AudioGeneratedCallback(const float *s, int32_t n) {
     g_buffer.samples.push(std::move(samples));
     g_started = true;
   }
+  if (g_killed) {
+    return 0;
+  }
+  return 1;
 }
 
 static int PlayCallback(const void * /*in*/, void *out,
@@ -324,6 +328,7 @@ BEGIN_MESSAGE_MAP(CNonStreamingTextToSpeechDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
         ON_BN_CLICKED(IDOK, &CNonStreamingTextToSpeechDlg::OnBnClickedOk)
+        ON_BN_CLICKED(IDC_STOP, &CNonStreamingTextToSpeechDlg::OnBnClickedStop)
         END_MESSAGE_MAP()
 
 
@@ -492,11 +497,18 @@ void CNonStreamingTextToSpeechDlg::Init() {
   if (tts_) {
     SherpaOnnxDestroyOfflineTts(tts_);
   }
+  if (generate_thread_ && generate_thread_->joinable()) {
+    generate_thread_->join();
+  }
+
+  if (play_thread_ && play_thread_->joinable()) {
+    play_thread_->join();
+  }
  }
 
 
  static std::string ToString(const CString &s) {
-    CT2CA pszConvertedAnsiString( s);
+    CT2CA pszConvertedAnsiString(s);
     return std::string(pszConvertedAnsiString);
  }
 
@@ -510,7 +522,7 @@ void CNonStreamingTextToSpeechDlg::OnBnClickedOk() {
   }
 
   speed_.GetWindowText(s);
-  float speed = static_cast<float>(_ttof(s)); 
+  float speed = static_cast<float>(_ttof(s));
   if (speed < 0) {
     AfxMessageBox(Utf8ToUtf16("Please input a valid speed").c_str(), MB_OK);
     return;
@@ -541,28 +553,40 @@ void CNonStreamingTextToSpeechDlg::OnBnClickedOk() {
   // for simplicity
   play_thread_ = std::make_unique<std::thread>(StartPlayback, SherpaOnnxOfflineTtsSampleRate(tts_));
 
-  generate_btn_.EnableWindow(FALSE);
-
-  const SherpaOnnxGeneratedAudio *audio =
-      SherpaOnnxOfflineTtsGenerateWithCallback(tts_, ss.c_str(), speaker_id, speed, &AudioGeneratedCallback);
-
-  generate_btn_.EnableWindow(TRUE);
+  if (generate_thread_ && generate_thread_->joinable()) {
+    generate_thread_->join();
+  }
 
   output_filename_.GetWindowText(s);
   std::string filename = ToString(s);
 
-  int ok = SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate,
-                    filename.c_str());
+  generate_thread_ = std::make_unique<std::thread>([ss, this,filename, speaker_id, speed]() {
+      std::string text = ss;
 
-  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+      // generate_btn_.EnableWindow(FALSE);
 
-  if (ok) {
-    // AfxMessageBox(Utf8ToUtf16(std::string("Saved to ") + filename + " successfully").c_str(), MB_OK);
-    AppendLineToMultilineEditCtrl(my_hint_, std::string("Saved to ") + filename + " successfully");
-  } else {
-    // AfxMessageBox(Utf8ToUtf16(std::string("Failed to save to ") + filename).c_str(), MB_OK);
-    AppendLineToMultilineEditCtrl(my_hint_, std::string("Failed to saved to ") + filename);
-  }
+	  const SherpaOnnxGeneratedAudio *audio =
+		  SherpaOnnxOfflineTtsGenerateWithCallback(tts_, text.c_str(), speaker_id, speed, &AudioGeneratedCallback);
+      // generate_btn_.EnableWindow(TRUE);
+       g_stopped = true;
+
+	  int ok = SherpaOnnxWriteWave(audio->samples, audio->n, audio->sample_rate,
+						filename.c_str());
+
+	  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
+
+	  if (ok) {
+		// AfxMessageBox(Utf8ToUtf16(std::string("Saved to ") + filename + " successfully").c_str(), MB_OK);
+
+		// AppendLineToMultilineEditCtrl(my_hint_, std::string("Saved to ") + filename + " successfully");
+	  } else {
+		// AfxMessageBox(Utf8ToUtf16(std::string("Failed to save to ") + filename).c_str(), MB_OK);
+
+		// AppendLineToMultilineEditCtrl(my_hint_, std::string("Failed to saved to ") + filename);
+	  }
+  });
 
   //CDialogEx::OnOK();
 }
+
+void CNonStreamingTextToSpeechDlg::OnBnClickedStop() { g_killed = true; }

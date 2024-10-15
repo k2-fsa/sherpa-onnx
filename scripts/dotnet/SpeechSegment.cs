@@ -1,17 +1,13 @@
-/// Copyright (c)  2024  Xiaomi Corporation (authors: Fangjun Kuang)
-
-using System.Linq;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Text;
+﻿/// Copyright (c)  2024  Xiaomi Corporation (authors: Fangjun Kuang)
 using System;
+using System.Runtime.InteropServices;
 
 namespace SherpaOnnx
 {
     public class SpeechSegment
     {
-      public SpeechSegment(IntPtr handle)
-      {
+        public SpeechSegment(IntPtr handle)
+        {
             Impl impl = (Impl)Marshal.PtrToStructure(handle, typeof(Impl));
 
             _start = impl.Start;
@@ -28,20 +24,20 @@ namespace SherpaOnnx
                     }
                 }
             }
-      }
+        }
 
-      public int _start;
-      public int Start => _start;
+        public int _start;
+        public int Start => _start;
 
-      private float[] _samples;
-      public float[] Samples => _samples;
+        private float[] _samples;
+        public float[] Samples => _samples;
 
-      [StructLayout(LayoutKind.Sequential)]
-      struct Impl
-      {
-          public int Start;
-          public IntPtr Samples;
-          public int Count;
-      }
+        [StructLayout(LayoutKind.Sequential)]
+        struct Impl
+        {
+            public int Start;
+            public IntPtr Samples;
+            public int Count;
+        }
     }
 }

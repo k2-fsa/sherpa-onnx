@@ -65,7 +65,10 @@ class OnlineZipformer2TransducerModel : public OnlineTransducerModel {
 
  private:
   Ort::Env env_;
-  Ort::SessionOptions sess_opts_;
+  Ort::SessionOptions encoder_sess_opts_;
+  Ort::SessionOptions decoder_sess_opts_;
+  Ort::SessionOptions joiner_sess_opts_;
+
   Ort::AllocatorWithDefaultOptions allocator_;
 
   std::unique_ptr<Ort::Session> encoder_sess_;

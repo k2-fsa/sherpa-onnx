@@ -26,6 +26,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var speed: EditText
     private lateinit var generate: Button
     private lateinit var play: Button
+    private lateinit var stop: Button
+    private var stopped: Boolean = false
+    private var mediaPlayer: MediaPlayer? = null
 
     // see
     // https://developer.android.com/reference/kotlin/android/media/AudioTrack
@@ -49,9 +52,11 @@ class MainActivity : AppCompatActivity() {
 
         generate = findViewById(R.id.generate)
         play = findViewById(R.id.play)
+        stop = findViewById(R.id.stop)
 
         generate.setOnClickListener { onClickGenerate() }
         play.setOnClickListener { onClickPlay() }
+        stop.setOnClickListener { onClickStop() }
 
         sid.setText("0")
         speed.setText("1.0")
@@ -70,7 +75,7 @@ class MainActivity : AppCompatActivity() {
             AudioFormat.CHANNEL_OUT_MONO,
             AudioFormat.ENCODING_PCM_FLOAT
         )
-        Log.i(TAG, "sampleRate: ${sampleRate}, buffLength: ${bufLength}")
+        Log.i(TAG, "sampleRate: $sampleRate, buffLength: $bufLength")
 
         val attr = AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
             .setUsage(AudioAttributes.USAGE_MEDIA)
@@ -90,8 +95,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     // this function is called from C++
-    private fun callback(samples: FloatArray) {
-        track.write(samples, 0, samples.size, AudioTrack.WRITE_BLOCKING)
+    private fun callback(samples: FloatArray): Int {
+        if (!stopped) {
+            track.write(samples, 0, samples.size, AudioTrack.WRITE_BLOCKING)
+            return 1
+        } else {
+            track.stop()
+            return 0
+        }
     }
 
     private fun onClickGenerate() {
@@ -127,6 +138,8 @@ class MainActivity : AppCompatActivity() {
         track.play()
 
         play.isEnabled = false
+        generate.isEnabled = false
+        stopped = false
         Thread {
             val audio = tts.generateWithCallback(
                 text = textStr,
@@ -140,6 +153,7 @@ class MainActivity : AppCompatActivity() {
             if (ok) {
                 runOnUiThread {
                     play.isEnabled = true
+                    generate.isEnabled = true
                     track.stop()
                 }
             }
@@ -148,11 +162,22 @@ class MainActivity : AppCompatActivity() {
 
     private fun onClickPlay() {
         val filename = application.filesDir.absolutePath + "/generated.wav"
-        val mediaPlayer = MediaPlayer.create(
+        mediaPlayer?.stop()
+        mediaPlayer = MediaPlayer.create(
             applicationContext,
             Uri.fromFile(File(filename))
         )
-        mediaPlayer.start()
+        mediaPlayer?.start()
+    }
+
+    private fun onClickStop() {
+        stopped = true
+        play.isEnabled = true
+        generate.isEnabled = true
+        track.pause()
+        track.flush()
+        mediaPlayer?.stop()
+        mediaPlayer = null
     }
 
     private fun initTts() {

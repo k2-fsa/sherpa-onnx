@@ -33,7 +33,16 @@ if(SHERPA_ONNX_ENABLE_TTS)
   )
 endif()
 
+if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
+  list(APPEND sources
+    offline-speaker-diarization.cc
+  )
+endif()
+
 add_library(sherpa-onnx-jni ${sources})
+
+target_compile_definitions(sherpa-onnx-jni PRIVATE SHERPA_ONNX_BUILD_SHARED_LIBS=1)
+target_compile_definitions(sherpa-onnx-jni PRIVATE SHERPA_ONNX_BUILD_MAIN_LIB=1)
 
 target_link_libraries(sherpa-onnx-jni sherpa-onnx-core)
 install(TARGETS sherpa-onnx-jni DESTINATION lib)

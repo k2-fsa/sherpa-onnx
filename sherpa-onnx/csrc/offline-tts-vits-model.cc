@@ -19,7 +19,7 @@ class OfflineTtsVitsModel::Impl {
  public:
   explicit Impl(const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_WARNING),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(config.vits.model);
@@ -29,7 +29,7 @@ class OfflineTtsVitsModel::Impl {
 #if __ANDROID_API__ >= 9
   Impl(AAssetManager *mgr, const OfflineTtsModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_WARNING),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     auto buf = ReadFile(mgr, config.vits.model);
@@ -43,6 +43,64 @@ class OfflineTtsVitsModel::Impl {
     }
 
     return RunVits(std::move(x), sid, speed);
+  }
+
+  Ort::Value Run(Ort::Value x, Ort::Value tones, int64_t sid, float speed) {
+    // For MeloTTS, we hardcode sid to the one contained in the meta data
+    sid = meta_data_.speaker_id;
+
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::vector<int64_t> x_shape = x.GetTensorTypeAndShapeInfo().GetShape();
+    if (x_shape[0] != 1) {
+      SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
+                       static_cast<int32_t>(x_shape[0]));
+      exit(-1);
+    }
+
+    int64_t len = x_shape[1];
+    int64_t len_shape = 1;
+
+    Ort::Value x_length =
+        Ort::Value::CreateTensor(memory_info, &len, 1, &len_shape, 1);
+
+    int64_t scale_shape = 1;
+    float noise_scale = config_.vits.noise_scale;
+    float length_scale = config_.vits.length_scale;
+    float noise_scale_w = config_.vits.noise_scale_w;
+
+    if (speed != 1 && speed > 0) {
+      length_scale = 1. / speed;
+    }
+
+    Ort::Value noise_scale_tensor =
+        Ort::Value::CreateTensor(memory_info, &noise_scale, 1, &scale_shape, 1);
+
+    Ort::Value length_scale_tensor = Ort::Value::CreateTensor(
+        memory_info, &length_scale, 1, &scale_shape, 1);
+
+    Ort::Value noise_scale_w_tensor = Ort::Value::CreateTensor(
+        memory_info, &noise_scale_w, 1, &scale_shape, 1);
+
+    Ort::Value sid_tensor =
+        Ort::Value::CreateTensor(memory_info, &sid, 1, &scale_shape, 1);
+
+    std::vector<Ort::Value> inputs;
+    inputs.reserve(7);
+    inputs.push_back(std::move(x));
+    inputs.push_back(std::move(x_length));
+    inputs.push_back(std::move(tones));
+    inputs.push_back(std::move(sid_tensor));
+    inputs.push_back(std::move(noise_scale_tensor));
+    inputs.push_back(std::move(length_scale_tensor));
+    inputs.push_back(std::move(noise_scale_w_tensor));
+
+    auto out =
+        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                   output_names_ptr_.data(), output_names_ptr_.size());
+
+    return std::move(out[0]);
   }
 
   const OfflineTtsVitsModelMetaData &GetMetaData() const { return meta_data_; }
@@ -83,6 +141,10 @@ class OfflineTtsVitsModel::Impl {
     SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.add_blank, "add_blank",
                                             0);
+
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.speaker_id, "speaker_id",
+                                            0);
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 0);
     SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
     SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.punctuations,
                                                 "punctuation", "");
@@ -114,6 +176,22 @@ class OfflineTtsVitsModel::Impl {
 
     if (comment.find("icefall") != std::string::npos) {
       meta_data_.is_icefall = true;
+    }
+
+    if (comment.find("melo") != std::string::npos) {
+      meta_data_.is_melo_tts = true;
+      int32_t expected_version = 2;
+      if (meta_data_.version < expected_version) {
+        SHERPA_ONNX_LOGE(
+            "Please download the latest MeloTTS model and retry. Current "
+            "version: %d. Expected version: %d",
+            meta_data_.version, expected_version);
+        exit(-1);
+      }
+
+      // NOTE(fangjun):
+      // version 0 is the first version
+      // version 2: add jieba=1 to the metadata
     }
   }
 
@@ -267,6 +345,12 @@ OfflineTtsVitsModel::~OfflineTtsVitsModel() = default;
 Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, int64_t sid /*=0*/,
                                     float speed /*= 1.0*/) {
   return impl_->Run(std::move(x), sid, speed);
+}
+
+Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, Ort::Value tones,
+                                    int64_t sid /*= 0*/,
+                                    float speed /*= 1.0*/) {
+  return impl_->Run(std::move(x), std::move(tones), sid, speed);
 }
 
 const OfflineTtsVitsModelMetaData &OfflineTtsVitsModel::GetMetaData() const {

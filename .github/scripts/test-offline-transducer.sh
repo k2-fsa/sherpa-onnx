@@ -16,6 +16,90 @@ echo "PATH: $PATH"
 which $EXE
 
 log "------------------------------------------------------------------------"
+log "Run zipformer transducer models (Russian)                              "
+log "------------------------------------------------------------------------"
+for type in small-zipformer zipformer; do
+  url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-$type-ru-2024-09-18.tar.bz2
+  name=$(basename $url)
+  curl -SL -O $url
+  tar xvf $name
+  rm $name
+  repo=$(basename -s .tar.bz2 $name)
+  ls -lh $repo
+
+  log "test $repo"
+  test_wavs=(
+  0.wav
+  1.wav
+  )
+
+  for w in ${test_wavs[@]}; do
+    time $EXE \
+      --tokens=$repo/tokens.txt \
+      --encoder=$repo/encoder.onnx \
+      --decoder=$repo/decoder.onnx \
+      --joiner=$repo/joiner.onnx \
+      --debug=1 \
+      $repo/test_wavs/$w
+  done
+
+  for w in ${test_wavs[@]}; do
+    time $EXE \
+      --tokens=$repo/tokens.txt \
+      --encoder=$repo/encoder.int8.onnx \
+      --decoder=$repo/decoder.onnx \
+      --joiner=$repo/joiner.int8.onnx \
+      --debug=1 \
+      $repo/test_wavs/$w
+  done
+  rm -rf $repo
+done
+
+log "------------------------------------------------------------------------"
+log "Run zipformer transducer models (Japanese from ReazonSpeech)                              "
+log "------------------------------------------------------------------------"
+url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-ja-reazonspeech-2024-08-01.tar.bz2
+
+name=$(basename $url)
+curl -SL -O $url
+tar xvf $name
+rm $name
+repo=$(basename -s .tar.bz2 $name)
+ls -lh $repo
+
+cat $repo/test_wavs/*.txt
+
+log "test $repo"
+test_wavs=(
+1.wav
+2.wav
+3.wav
+4.wav
+5.wav
+)
+
+for w in ${test_wavs[@]}; do
+  time $EXE \
+    --tokens=$repo/tokens.txt \
+    --encoder=$repo/encoder-epoch-99-avg-1.onnx \
+    --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+    --joiner=$repo/joiner-epoch-99-avg-1.onnx \
+    --debug=1 \
+    $repo/test_wavs/$w
+done
+
+for w in ${test_wavs[@]}; do
+  time $EXE \
+    --tokens=$repo/tokens.txt \
+    --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
+    --decoder=$repo/decoder-epoch-99-avg-1.onnx \
+    --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
+    --debug=1 \
+    $repo/test_wavs/$w
+done
+rm -rf $repo
+
+log "------------------------------------------------------------------------"
 log "Run Nemo fast conformer hybrid transducer ctc models (transducer branch)"
 log "------------------------------------------------------------------------"
 
@@ -139,7 +223,7 @@ time $EXE \
 time $EXE \
   --tokens=$repo/tokens.txt \
   --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
-  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
   --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
   --num-threads=2 \
   $repo/test_wavs/0.wav \
@@ -172,7 +256,7 @@ time $EXE \
 time $EXE \
   --tokens=$repo/tokens.txt \
   --encoder=$repo/encoder-epoch-99-avg-1.int8.onnx \
-  --decoder=$repo/decoder-epoch-99-avg-1.int8.onnx \
+  --decoder=$repo/decoder-epoch-99-avg-1.onnx \
   --joiner=$repo/joiner-epoch-99-avg-1.int8.onnx \
   --num-threads=2 \
   $repo/test_wavs/0.wav \
@@ -184,35 +268,13 @@ rm -rf $repo
 log "------------------------------------------------------------"
 log "Run Paraformer (Chinese)"
 log "------------------------------------------------------------"
-
-repo_url=https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-curl -SL -O $repo_url
-tar xvf sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-rm sherpa-onnx-paraformer-zh-2023-03-28.tar.bz2
-repo=sherpa-onnx-paraformer-zh-2023-03-28
-log "Start testing ${repo_url}"
-
-time $EXE \
-  --tokens=$repo/tokens.txt \
-  --paraformer=$repo/model.onnx \
-  --num-threads=2 \
-  --decoding-method=greedy_search \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav \
-  $repo/test_wavs/8k.wav
-
-time $EXE \
-  --tokens=$repo/tokens.txt \
-  --paraformer=$repo/model.int8.onnx \
-  --num-threads=2 \
-  --decoding-method=greedy_search \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav \
-  $repo/test_wavs/2.wav \
-  $repo/test_wavs/8k.wav
-
-rm -rf $repo
+# For onnxruntime 1.18.0, sherpa-onnx-paraformer-zh-2023-03-28 throws the following error
+# libc++abi: terminating with uncaught exception of type Ort::Exception: Node (Loop_5471)
+# Op (Loop) [TypeInferenceError] Graph attribute inferencing failed: Node (Concat_5490)
+# Op (Concat) [ShapeInferenceError] All inputs to Concat must have same rank. Input 1 has rank 2 != 1
+#
+# See https://github.com/microsoft/onnxruntime/issues/8115
+# We need to re-export this model using a recent version of onnxruntime and onnx
 
 log "------------------------------------------------------------"
 log "Run Paraformer (Chinese) with timestamps"

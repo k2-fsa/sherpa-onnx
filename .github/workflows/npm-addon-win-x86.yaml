@@ -1,0 +1,176 @@
+name: npm-addon-win-x86
+
+on:
+  push:
+    branches:
+      - node-addon
+  workflow_dispatch:
+
+concurrency:
+  group: npm-addon-win-x86-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2019]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+          architecture: 'x86'
+          node-version: 16
+
+      - name: Display node version
+        shell: bash
+        run: |
+          node --version
+
+      - name: Show node-addon
+        shell: bash
+        run: |
+          cd scripts/node-addon-api/
+
+          npm i || true
+          cat node_modules/node-addon-api/package.json
+          cd node_modules/
+          tar cjf node-addon-api.tar.bz2 ./node-addon-api
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: node-addon-api
+          path: ./scripts/node-addon-api/node_modules/node-addon-api.tar.bz2
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          mkdir build
+          cd build
+          cmake \
+            -A Win32 \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -DBUILD_SHARED_LIBS=ON \
+            -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
+            -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
+            -DBUILD_ESPEAK_NG_EXE=OFF \
+            -DSHERPA_ONNX_BUILD_C_API_EXAMPLES=OFF  \
+            ..
+
+          ls -lh  _deps/onnxruntime-src/lib/
+
+          cmake --build . --config Release --target install -- -m:6
+
+          ls -lh install/lib
+
+          echo "----------"
+
+          cp -v  _deps/onnxruntime-src/lib/*.lib ./install/lib
+          cp -v  _deps/onnxruntime-src/lib/*.dll ./install/lib
+
+          echo "----------"
+
+          ls -lh install/lib
+
+      - name: Build sherpa-onnx node-addon
+        shell: bash
+        run: |
+          d=$PWD
+          export SHERPA_ONNX_INSTALL_DIR=$d/build/install
+
+          cd scripts/node-addon-api/
+
+          npm i
+
+          npm config set cmake_js_A "Win32"
+          ./node_modules/.bin/cmake-js compile -A Win32 --log-level verbose
+
+      - name: Prepare for publish
+        shell: bash
+        run: |
+          owner=${{ github.repository_owner }}
+          export owner
+
+          echo "---"
+          ls -lh build/install/lib/
+          echo "---"
+          ls -lh build/install/lib/
+          echo "---"
+
+          .github/scripts/node-addon/run.sh
+
+      - name: Display files to be published
+        shell: bash
+        run: |
+          ls -lh ./sherpa-onnx-node
+          tar cjvf ./sherpa-onnx-node.tar.bz2 ./sherpa-onnx-node
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-win-ia32
+          path: ./sherpa-onnx-node.tar.bz2
+
+  upload:
+    needs: [build]
+    name: upload
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.8"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Display node version
+        shell: bash
+        run: |
+          node --version
+
+      - name: Retrieve artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sherpa-onnx-win-ia32
+          path: /tmp/files/
+
+      - name: Unzip
+        shell: bash
+        run: |
+          cd /tmp/files
+          tar xvf sherpa-onnx-node.tar.bz2
+
+      - name: Publish
+        shell: bash
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN2 }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN2 }}
+          token: ${{ secrets.NPM_TOKEN2 }}
+        run: |
+          cd /tmp/files/sherpa-onnx-node
+          npm publish --access public

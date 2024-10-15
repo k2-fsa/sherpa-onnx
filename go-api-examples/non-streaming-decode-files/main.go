@@ -3,12 +3,13 @@ package main
 import (
 	"bytes"
 	"encoding/binary"
-	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
-	flag "github.com/spf13/pflag"
-	"github.com/youpy/go-wav"
 	"log"
 	"os"
 	"strings"
+
+	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
+	flag "github.com/spf13/pflag"
+	"github.com/youpy/go-wav"
 )
 
 func main() {
@@ -34,6 +35,10 @@ func main() {
 	flag.IntVar(&config.ModelConfig.Whisper.TailPaddings, "whisper-tail-paddings", -1, "tail paddings for whisper")
 
 	flag.StringVar(&config.ModelConfig.Tdnn.Model, "tdnn-model", "", "Path to the tdnn model")
+
+	flag.StringVar(&config.ModelConfig.SenseVoice.Model, "sense-voice-model", "", "Path to the SenseVoice model")
+	flag.StringVar(&config.ModelConfig.SenseVoice.Language, "sense-voice-language", "", "If not empty, specify the Language for the input wave")
+	flag.IntVar(&config.ModelConfig.SenseVoice.UseInverseTextNormalization, "sense-voice-use-itn", 1, " 1 to use inverse text normalization")
 
 	flag.StringVar(&config.ModelConfig.Tokens, "tokens", "", "Path to the tokens file")
 	flag.IntVar(&config.ModelConfig.NumThreads, "num-threads", 1, "Number of threads for computing")
@@ -76,7 +81,16 @@ func main() {
 	log.Println("Decoding done!")
 	result := stream.GetResult()
 
-	log.Println(strings.ToLower(result.Text))
+	log.Println("Text: " + strings.ToLower(result.Text))
+	log.Println("Emotion: " + result.Emotion)
+	log.Println("Lang: " + result.Lang)
+	log.Println("Event: " + result.Event)
+	for _, v := range result.Timestamps {
+		log.Printf("Timestamp: %+v\n", v)
+	}
+	for _, v := range result.Tokens {
+		log.Println("Token: " + v)
+	}
 	log.Printf("Wave duration: %v seconds", float32(len(samples))/float32(sampleRate))
 }
 

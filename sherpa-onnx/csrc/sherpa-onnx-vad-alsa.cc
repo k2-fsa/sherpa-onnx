@@ -30,10 +30,10 @@ This program shows how to use VAD in sherpa-onnx.
     device_name
 
 Please download silero_vad.onnx from
-https://github.com/snakers4/silero-vad/blob/master/files/silero_vad.onnx
+https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
 
 For instance, use
-wget https://github.com/snakers4/silero-vad/raw/master/files/silero_vad.onnx
+wget https://github.com/snakers4/silero-vad/raw/master/src/silero_vad/data/silero_vad.onnx
 
 The device name specifies which microphone to use in case there are several
 on your system. You can use

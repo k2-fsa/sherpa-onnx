@@ -36,14 +36,14 @@ class Lexicon : public OfflineTtsFrontend {
           const std::string &language, bool debug = false);
 #endif
 
-  std::vector<std::vector<int64_t>> ConvertTextToTokenIds(
+  std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text, const std::string &voice = "") const override;
 
  private:
-  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsNotChinese(
+  std::vector<TokenIDs> ConvertTextToTokenIdsNotChinese(
       const std::string &text) const;
 
-  std::vector<std::vector<int64_t>> ConvertTextToTokenIdsChinese(
+  std::vector<TokenIDs> ConvertTextToTokenIdsChinese(
       const std::string &text) const;
 
   void InitLanguage(const std::string &lang);

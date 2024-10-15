@@ -5,10 +5,8 @@ const sherpa_onnx = require('sherpa-onnx');
 function createOfflineTts() {
   let offlineTtsVitsModelConfig = {
     model: './vits-piper-en_US-amy-low/en_US-amy-low.onnx',
-    lexicon: '',
     tokens: './vits-piper-en_US-amy-low/tokens.txt',
     dataDir: './vits-piper-en_US-amy-low/espeak-ng-data',
-    dictDir: '',
     noiseScale: 0.667,
     noiseScaleW: 0.8,
     lengthScale: 1.0,
@@ -22,8 +20,6 @@ function createOfflineTts() {
 
   let offlineTtsConfig = {
     offlineTtsModelConfig: offlineTtsModelConfig,
-    ruleFsts: '',
-    ruleFars: '',
     maxNumSentences: 1,
   };
 

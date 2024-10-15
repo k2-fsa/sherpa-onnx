@@ -1,13 +1,10 @@
 /// Copyright (c)  2024.5 by 东风破
 
-using System.Linq;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Text;
-using System;
 
 namespace SherpaOnnx
 {
+
     [StructLayout(LayoutKind.Sequential)]
     public struct OfflineModelConfig
     {
@@ -26,6 +23,7 @@ namespace SherpaOnnx
             ModelingUnit = "cjkchar";
             BpeVocab = "";
             TeleSpeechCtc = "";
+            SenseVoice = new OfflineSenseVoiceModelConfig();
         }
         public OfflineTransducerModelConfig Transducer;
         public OfflineParaformerModelConfig Paraformer;
@@ -54,5 +52,7 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string TeleSpeechCtc;
+
+        public OfflineSenseVoiceModelConfig SenseVoice;
     }
 }

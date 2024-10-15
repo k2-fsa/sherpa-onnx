@@ -7,32 +7,18 @@ const wav = require('wav');
 const sherpa_onnx = require('sherpa-onnx');
 
 function createOnlineRecognizer() {
-  let onlineTransducerModelConfig = {
-    encoder: '',
-    decoder: '',
-    joiner: '',
-  };
-
-  let onlineParaformerModelConfig = {
-    encoder: '',
-    decoder: '',
-  };
-
   let onlineZipformer2CtcModelConfig = {
     model:
         './sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/ctc-epoch-20-avg-1-chunk-16-left-128.onnx',
   };
 
   let onlineModelConfig = {
-    transducer: onlineTransducerModelConfig,
-    paraformer: onlineParaformerModelConfig,
     zipformer2Ctc: onlineZipformer2CtcModelConfig,
     tokens:
         './sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/tokens.txt',
     numThreads: 1,
     provider: 'cpu',
     debug: 1,
-    modelType: '',
   };
 
   let featureConfig = {
@@ -49,12 +35,6 @@ function createOnlineRecognizer() {
     rule1MinTrailingSilence: 2.4,
     rule2MinTrailingSilence: 1.2,
     rule3MinUtteranceLength: 20,
-    hotwordsFile: '',
-    hotwordsScore: 1.5,
-    ctcFstDecoderConfig: {
-      graph: '',
-      maxActive: 3000,
-    }
   };
 
   return sherpa_onnx.createOnlineRecognizer(recognizerConfig);

@@ -50,7 +50,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ${{ matrix.os }}-release-shared
+          key: ${{ matrix.os }}-dotnet-release-shared
 
       - name: Build sherpa-onnx
         shell: bash
@@ -67,10 +67,15 @@ jobs:
             -DCMAKE_BUILD_TYPE=Release \
             -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
             -DBUILD_ESPEAK_NG_EXE=OFF \
-            -DSHERPA_ONNX_ENABLE_BINARY=ON \
+            -DSHERPA_ONNX_ENABLE_BINARY=OFF \
             ..
 
           cmake --build . --target install --config Release
+
+          rm -rf install/share
+          rm -rf install/lib/pkg*
+
+          ls -lh ./install/lib
 
       - uses: actions/upload-artifact@v4
         with:
@@ -105,7 +110,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: ubuntu-latest
-          path: /tmp/linux
+          path: /tmp/linux-x64
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
@@ -119,36 +124,37 @@ jobs:
       - name: Display files
         shell: bash
         run: |
-          echo "----------/tmp/----------"
-          ls -lh /tmp/
+          echo "----------/tmp----------"
+          ls -lh /tmp
 
-          echo "----------/tmp/linux----------"
-          ls -lh /tmp/linux
+          echo "----------/tmp/linux-x64----------"
+          ls -lh /tmp/linux-x64
+          df -h
 
       - name: Build
         shell: bash
         run: |
           cd scripts/dotnet
           ./run.sh
+          df -h
+
+          ls -lh /tmp/packages
 
       - name: Copy files
         shell: bash
         run: |
-          cp -v scripts/dotnet/examples/offline-tts.csproj dotnet-examples/offline-tts/
-          cp -v scripts/dotnet/examples/offline-decode-files.csproj dotnet-examples/offline-decode-files/
-          cp -v scripts/dotnet/examples/online-decode-files.csproj dotnet-examples/online-decode-files/
-          cp -v scripts/dotnet/examples/speech-recognition-from-microphone.csproj dotnet-examples/speech-recognition-from-microphone/
-          cp -v scripts/dotnet/examples/spoken-language-identification.csproj dotnet-examples/spoken-language-identification/
-          cp -v scripts/dotnet/examples/streaming-hlg-decoding.csproj dotnet-examples/streaming-hlg-decoding
-          cp -v scripts/dotnet/examples/speaker-identification.csproj dotnet-examples/speaker-identification
-          cp -v scripts/dotnet/examples/offline-punctuation.csproj dotnet-examples/offline-punctuation
-          cp -v scripts/dotnet/examples/vad-non-streaming-asr-paraformer.csproj dotnet-examples/vad-non-streaming-asr-paraformer
+          cp -v scripts/dotnet/examples/Common.csproj dotnet-examples/Common/
 
           ls -lh /tmp
+
+          df -h
 
       - name: Run tests
         shell: bash
         run: |
+          dotnet nuget locals all --clear
+          df -h
+
           .github/scripts/test-dot-net.sh
 
       - uses: actions/upload-artifact@v4

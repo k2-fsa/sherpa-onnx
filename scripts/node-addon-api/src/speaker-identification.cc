@@ -130,7 +130,7 @@ SpeakerEmbeddingExtractorCreateStreamWrapper(const Napi::CallbackInfo &info) {
   return Napi::External<SherpaOnnxOnlineStream>::New(
       env, const_cast<SherpaOnnxOnlineStream *>(stream),
       [](Napi::Env env, SherpaOnnxOnlineStream *stream) {
-        DestroyOnlineStream(stream);
+        SherpaOnnxDestroyOnlineStream(stream);
       });
 }
 
@@ -749,7 +749,7 @@ static Napi::Array SpeakerEmbeddingManagerGetAllSpeakersWrapper(
       SherpaOnnxSpeakerEmbeddingManagerGetAllSpeakers(manager);
 
   Napi::Array ans = Napi::Array::New(env, num_speakers);
-  for (int32_t i = 0; i != num_speakers; ++i) {
+  for (uint32_t i = 0; i != num_speakers; ++i) {
     ans[i] = Napi::String::New(env, all_speaker_names[i]);
   }
   SherpaOnnxSpeakerEmbeddingManagerFreeAllSpeakers(all_speaker_names);

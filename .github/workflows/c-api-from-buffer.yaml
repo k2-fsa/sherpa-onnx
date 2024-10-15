@@ -1,0 +1,218 @@
+name: c-api-from-memory
+
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+    paths:
+      - '.github/workflows/c-api-from-buffer.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'c-api-examples/**'
+      - 'ffmpeg-examples/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/c-api-from-buffer.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'c-api-examples/**'
+      - 'ffmpeg-examples/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: c-api-from-buffer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  c_api_from_buffer:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-c-api-shared
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+          make -j2 install
+
+          ls -lh install/lib
+          ls -lh install/include
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./install/lib/libsherpa-onnx-c-api.so
+            echo "---"
+            readelf -d ./install/lib/libsherpa-onnx-c-api.so
+          fi
+
+          if [[ ${{ matrix.os }} == macos-latest ]]; then
+            otool -L ./install/lib/libsherpa-onnx-c-api.dylib
+          fi
+
+      - name: Test streaming zipformer with tokens and hotwords loaded from buffers
+        shell: bash
+        run: |
+          gcc -o streaming-zipformer-buffered-tokens-hotwords-c-api ./c-api-examples/streaming-zipformer-buffered-tokens-hotwords-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh streaming-zipformer-buffered-tokens-hotwords-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./streaming-zipformer-buffered-tokens-hotwords-c-api
+            echo "----"
+            readelf -d ./streaming-zipformer-buffered-tokens-hotwords-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-en-20M-2023-02-17.tar.bz2
+          curl -SL -O https://huggingface.co/desh2608/icefall-asr-librispeech-pruned-transducer-stateless7-streaming-small/blob/main/data/lang_bpe_500/bpe.model
+          cp bpe.model sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/
+          rm bpe.model
+
+          printf "▁A ▁T ▁P :1.5\n▁A ▁B ▁C :3.0" > hotwords.txt
+          mv hotwords.txt ./sherpa-onnx-streaming-zipformer-en-20M-2023-02-17
+
+          ls -lh sherpa-onnx-streaming-zipformer-en-20M-2023-02-17
+          echo "---"
+          ls -lh sherpa-onnx-streaming-zipformer-en-20M-2023-02-17/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./streaming-zipformer-buffered-tokens-hotwords-c-api
+
+          rm -rf sherpa-onnx-streaming-zipformer-*
+
+      - name: Test streaming paraformer with tokens loaded from buffers
+        shell: bash
+        run: |
+          gcc -o streaming-paraformer-buffered-tokens-c-api ./c-api-examples/streaming-paraformer-buffered-tokens-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh streaming-paraformer-buffered-tokens-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./streaming-paraformer-buffered-tokens-c-api
+            echo "----"
+            readelf -d ./streaming-paraformer-buffered-tokens-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+          tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+          rm sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
+
+          ls -lh sherpa-onnx-streaming-paraformer-bilingual-zh-en
+          echo "---"
+          ls -lh sherpa-onnx-streaming-paraformer-bilingual-zh-en/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./streaming-paraformer-buffered-tokens-c-api
+
+          rm -rf sherpa-onnx-streaming-paraformer-*
+
+      - name: Test streaming ctc with tokens loaded from buffers
+        shell: bash
+        run: |
+          gcc -o streaming-ctc-buffered-tokens-c-api ./c-api-examples/streaming-ctc-buffered-tokens-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh streaming-ctc-buffered-tokens-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./streaming-ctc-buffered-tokens-c-api
+            echo "----"
+            readelf -d ./streaming-ctc-buffered-tokens-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13.tar.bz2
+
+          ls -lh sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13
+          echo "---"
+          ls -lh sherpa-onnx-streaming-zipformer-ctc-multi-zh-hans-2023-12-13/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./streaming-ctc-buffered-tokens-c-api
+
+          rm -rf sherpa-onnx-streaming-ctc-*
+
+      - name: Test keywords spotting with tokens and keywords loaded from buffers
+        shell: bash
+        run: |
+          gcc -o keywords-spotter-buffered-tokens-keywords-c-api ./c-api-examples/keywords-spotter-buffered-tokens-keywords-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh keywords-spotter-buffered-tokens-keywords-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./keywords-spotter-buffered-tokens-keywords-c-api
+            echo "----"
+            readelf -d ./keywords-spotter-buffered-tokens-keywords-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+          tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+          rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+
+          ls -lh sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile
+          echo "---"
+          ls -lh sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./keywords-spotter-buffered-tokens-keywords-c-api
+
+          rm -rf sherpa-onnx-kws-zipformer-*

@@ -36,7 +36,7 @@ class OnlineWenetCtcModel::Impl {
 #if __ANDROID_API__ >= 9
   Impl(AAssetManager *mgr, const OnlineModelConfig &config)
       : config_(config),
-        env_(ORT_LOGGING_LEVEL_WARNING),
+        env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     {
@@ -97,7 +97,9 @@ class OnlineWenetCtcModel::Impl {
            right_context_ + 1;
   }
 
-  int32_t ChunkShift() const { return required_cache_size_; }
+  int32_t ChunkShift() const {
+    return config_.wenet_ctc.chunk_size * subsampling_factor_;
+  }
 
   OrtAllocator *Allocator() const { return allocator_; }
 

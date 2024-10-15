@@ -1,0 +1,67 @@
+name: mobile-asr-models
+
+on:
+  push:
+    branches:
+      - asr-mobile
+
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-asr-models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile-asr-models:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj' || github.repository_owner == 'csu-fangjun'
+    runs-on: ${{ matrix.os }}
+    name: ${{ matrix.index }}/${{ matrix.total }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.8"]
+        total: ["11"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python3 -m pip install onnxruntime==1.16.3 onnx==1.15.0 jinja2
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/mobile-asr-models
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-asr.py --total $total --index $index
+          chmod +x run2.sh
+          mv run2.sh run.sh
+          ls -lh
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/mobile-asr-models
+          ./run.sh
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models

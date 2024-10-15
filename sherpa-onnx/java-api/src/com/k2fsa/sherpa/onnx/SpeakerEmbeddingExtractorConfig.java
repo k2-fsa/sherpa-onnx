@@ -50,5 +50,4 @@ public class SpeakerEmbeddingExtractorConfig {
             return this;
         }
     }
-
 }

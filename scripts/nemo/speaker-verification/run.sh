@@ -7,14 +7,17 @@ function install_nemo() {
   curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
   python3 get-pip.py
 
-  pip install torch==2.1.0+cpu torchaudio==2.1.0+cpu   -f https://download.pytorch.org/whl/torch_stable.html
+  pip install torch==2.1.0 torchaudio==2.1.0 -f https://download.pytorch.org/whl/torch_stable.html
 
-  pip install wget text-unidecode matplotlib>=3.3.2 onnx onnxruntime pybind11 Cython einops kaldi-native-fbank soundfile
+  pip install -qq wget text-unidecode matplotlib>=3.3.2 onnx onnxruntime pybind11 Cython einops kaldi-native-fbank soundfile
+  pip install -qq ipython
 
-  sudo apt-get install -q -y sox libsndfile1 ffmpeg python3-pip
+  # sudo apt-get install -q -y sox libsndfile1 ffmpeg python3-pip ipython
 
   BRANCH='main'
   python3 -m pip install git+https://github.com/NVIDIA/NeMo.git@$BRANCH#egg=nemo_toolkit[asr]
+
+  pip install numpy==1.26.4
 }
 
 install_nemo

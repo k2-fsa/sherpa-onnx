@@ -6,6 +6,8 @@
 
 #include <algorithm>
 #include <fstream>
+#include <functional>
+#include <numeric>
 #include <sstream>
 #include <string>
 
@@ -153,17 +155,60 @@ Ort::Value View(Ort::Value *v) {
   }
 }
 
-void Print1D(Ort::Value *v) {
+float ComputeSum(const Ort::Value *v, int32_t n /*= -1*/) {
   std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
-  const float *d = v->GetTensorData<float>();
-  for (int32_t i = 0; i != static_cast<int32_t>(shape[0]); ++i) {
-    fprintf(stderr, "%.3f ", d[i]);
+  auto size = static_cast<int32_t>(
+      std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<>()));
+  if (n != -1 && n < size && n > 0) {
+    size = n;
   }
-  fprintf(stderr, "\n");
+
+  const float *p = v->GetTensorData<float>();
+
+  return std::accumulate(p, p + size, 1.0f);
+}
+
+float ComputeMean(const Ort::Value *v, int32_t n /*= -1*/) {
+  std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
+  auto size = static_cast<int32_t>(
+      std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<>()));
+
+  if (n != -1 && n < size && n > 0) {
+    size = n;
+  }
+
+  auto sum = ComputeSum(v, n);
+  return sum / size;
+}
+
+void PrintShape(const Ort::Value *v) {
+  std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
+  std::ostringstream os;
+  for (auto i : shape) {
+    os << i << ", ";
+  }
+  os << "\n";
+  fprintf(stderr, "%s", os.str().c_str());
 }
 
 template <typename T /*= float*/>
-void Print2D(Ort::Value *v) {
+void Print1D(const Ort::Value *v) {
+  std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
+  const T *d = v->GetTensorData<T>();
+  std::ostringstream os;
+  for (int32_t i = 0; i != static_cast<int32_t>(shape[0]); ++i) {
+    os << d[i] << " ";
+  }
+  os << "\n";
+  fprintf(stderr, "%s\n", os.str().c_str());
+}
+
+template void Print1D<int64_t>(const Ort::Value *v);
+template void Print1D<int32_t>(const Ort::Value *v);
+template void Print1D<float>(const Ort::Value *v);
+
+template <typename T /*= float*/>
+void Print2D(const Ort::Value *v) {
   std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
   const T *d = v->GetTensorData<T>();
 
@@ -177,10 +222,10 @@ void Print2D(Ort::Value *v) {
   fprintf(stderr, "%s\n", os.str().c_str());
 }
 
-template void Print2D<int64_t>(Ort::Value *v);
-template void Print2D<float>(Ort::Value *v);
+template void Print2D<int64_t>(const Ort::Value *v);
+template void Print2D<float>(const Ort::Value *v);
 
-void Print3D(Ort::Value *v) {
+void Print3D(const Ort::Value *v) {
   std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
   const float *d = v->GetTensorData<float>();
 
@@ -196,7 +241,7 @@ void Print3D(Ort::Value *v) {
   fprintf(stderr, "\n");
 }
 
-void Print4D(Ort::Value *v) {
+void Print4D(const Ort::Value *v) {
   std::vector<int64_t> shape = v->GetTensorTypeAndShapeInfo().GetShape();
   const float *d = v->GetTensorData<float>();
 

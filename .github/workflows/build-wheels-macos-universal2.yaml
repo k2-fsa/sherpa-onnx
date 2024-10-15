@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - wheel
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
 
 env:
@@ -50,7 +48,6 @@ jobs:
           path: ./wheelhouse/*.whl
 
       - name: Publish to huggingface
-        if: matrix.python-version == 'cp39'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -66,13 +63,20 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            d=cpu/$SHERPA_ONNX_VERSION
+
             git clone https://huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
 
-            cp -v ../wheelhouse/*.whl .
+            mkdir -p $d
+
+            cp -v ../wheelhouse/*.whl $d/
 
             git status
             git add .

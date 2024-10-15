@@ -95,7 +95,10 @@ function(download_onnxruntime)
       include(onnxruntime-win-arm64)
     else()
       # for 64-bit windows (x64)
-      if(BUILD_SHARED_LIBS)
+      if(SHERPA_ONNX_ENABLE_DIRECTML)
+        message(STATUS "Use DirectML")
+        include(onnxruntime-win-x64-directml)
+      elseif(BUILD_SHARED_LIBS)
         message(STATUS "Use dynamic onnxruntime libraries")
         if(SHERPA_ONNX_ENABLE_GPU)
           include(onnxruntime-win-x64-gpu)
@@ -136,8 +139,8 @@ if(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE)
   else()
     find_path(location_onnxruntime_header_dir onnxruntime_cxx_api.h
       PATHS
-        /usr/include
-        /usr/local/include
+        /usr/include/onnxruntime
+        /usr/local/include/onnxruntime
     )
   endif()
 

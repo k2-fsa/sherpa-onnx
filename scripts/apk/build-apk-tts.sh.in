@@ -76,6 +76,10 @@ sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./MainActivity.kt
 git diff
 popd
 
+if [[ $model_dir == vits-melo-tts-zh_en ]]; then
+  lang=zh_en
+fi
+
 for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   log "------------------------------------------------------------"
   log "build tts apk for $arch"

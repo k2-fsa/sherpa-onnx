@@ -25,6 +25,46 @@ fun testTts() {
   println("Saved to test-en.wav")
 }
 
-fun callback(samples: FloatArray): Unit {
+/*
+1. Unzip test_tts.jar
+2.
+javap ./com/k2fsa/sherpa/onnx/Test_ttsKt\$testTts\$audio\$1.class
+
+3. It prints:
+Compiled from "test_tts.kt"
+final class com.k2fsa.sherpa.onnx.Test_ttsKt$testTts$audio$1 extends kotlin.jvm.internal.FunctionReferenceImpl implements kotlin.jvm.functions.Function1<float[], java.lang.Integer> {
+  public static final com.k2fsa.sherpa.onnx.Test_ttsKt$testTts$audio$1 INSTANCE;
+  com.k2fsa.sherpa.onnx.Test_ttsKt$testTts$audio$1();
+  public final java.lang.Integer invoke(float[]);
+  public java.lang.Object invoke(java.lang.Object);
+  static {};
+}
+
+4.
+javap -s ./com/k2fsa/sherpa/onnx/Test_ttsKt\$testTts\$audio\$1.class
+
+5. It prints
+Compiled from "test_tts.kt"
+final class com.k2fsa.sherpa.onnx.Test_ttsKt$testTts$audio$1 extends kotlin.jvm.internal.FunctionReferenceImpl implements kotlin.jvm.functions.Function1<float[], java.lang.Integer> {
+  public static final com.k2fsa.sherpa.onnx.Test_ttsKt$testTts$audio$1 INSTANCE;
+    descriptor: Lcom/k2fsa/sherpa/onnx/Test_ttsKt$testTts$audio$1;
+  com.k2fsa.sherpa.onnx.Test_ttsKt$testTts$audio$1();
+    descriptor: ()V
+
+  public final java.lang.Integer invoke(float[]);
+    descriptor: ([F)Ljava/lang/Integer;
+
+  public java.lang.Object invoke(java.lang.Object);
+    descriptor: (Ljava/lang/Object;)Ljava/lang/Object;
+
+  static {};
+    descriptor: ()V
+}
+*/
+fun callback(samples: FloatArray): Int {
   println("callback got called with ${samples.size} samples");
+
+  // 1 means to continue
+  // 0 means to stop
+  return 1
 }
