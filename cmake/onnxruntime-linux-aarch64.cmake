@@ -53,11 +53,7 @@ if(NOT onnxruntime_POPULATED)
 endif()
 message(STATUS "onnxruntime is downloaded to ${onnxruntime_SOURCE_DIR}")
 
-find_library(location_onnxruntime onnxruntime
-  PATHS
-  "${onnxruntime_SOURCE_DIR}/lib"
-  NO_CMAKE_SYSTEM_PATH
-)
+set(location_onnxruntime "${onnxruntime_SOURCE_DIR}/lib/libonnxruntime.so")
 
 message(STATUS "location_onnxruntime: ${location_onnxruntime}")
 
