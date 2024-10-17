@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Copyright    2024  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+export SHERPA_ONNX_IS_REVAI=1
+
 set -ex
 function install_pyannote() {
   pip install pyannote.audio onnx onnxruntime
@@ -25,6 +27,8 @@ echo "----------onnx model.onnx----------"
 
 echo "----------onnx model.int8.onnx----------"
 ./vad-onnx.py --model ./model.int8.onnx --wav ./lei-jun-test.wav
+
+curl -SL -O https://huggingface.co/Revai/reverb-diarization-v1/resolve/main/LICENSE
 
 cat >README.md << EOF
 # Introduction
