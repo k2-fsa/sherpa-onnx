@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 #include <tuple>
 #include <unordered_map>
