@@ -5,11 +5,11 @@
 #include "sherpa-onnx/csrc/offline-whisper-model.h"
 
 #include <algorithm>
+#include <cmath>
 #include <string>
 #include <tuple>
 #include <unordered_map>
 #include <utility>
-#include <cmath>
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
