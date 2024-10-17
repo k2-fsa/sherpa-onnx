@@ -17,8 +17,9 @@ val segmentationModel = "segmentation.onnx"
 
 // please download it from
 // https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+// and rename it to embedding.onnx
 // and move it to the assets folder
-val embeddingModel = "3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx"
+val embeddingModel = "embedding.onnx"
 
 // in the end, your assets folder should look like below
 /*
@@ -26,7 +27,7 @@ val embeddingModel = "3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
 /Users/fangjun/open-source/sherpa-onnx/android/SherpaOnnxSpeakerDiarization/app/src/main/assets
 (py38) fangjuns-MacBook-Pro:assets fangjun$ ls -lh
 total 89048
--rw-r--r--  1 fangjun  staff    38M Oct 12 20:28 3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+-rw-r--r--  1 fangjun  staff    38M Oct 12 20:28 embedding.onnx
 -rw-r--r--  1 fangjun  staff   5.7M Oct 12 20:28 segmentation.onnx
  */
 
