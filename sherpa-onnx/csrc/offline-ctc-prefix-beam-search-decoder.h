@@ -16,8 +16,10 @@ class OfflineCtcPrefixBeamSearchDecoder : public OfflineCtcDecoder {
   OfflineCtcPrefixBeamSearchDecoder(int32_t max_active_paths, int32_t blank_id)
       : max_active_paths_(max_active_paths), blank_id_(blank_id) {}
 
-  std::vector<OfflineCtcDecoderResult> Decode(
-      Ort::Value log_probs, Ort::Value log_probs_length) override;
+  std::vector<OfflineCtcDecoderResult> Decode(Ort::Value log_probs,
+                                              Ort::Value log_probs_length,
+                                              OfflineStream **ss = nullptr,
+                                              int32_t n = 0) override;
 
  private:
   int32_t max_active_paths_;

@@ -80,6 +80,9 @@ struct Hypothesis {
              const ContextState *context_state = nullptr)
       : ys(ys), log_prob(log_prob), context_state(context_state) {}
 
+  explicit Hypothesis(const ContextState *context_state)
+      : context_state(context_state) {}
+
   double TotalLogProb(bool use_ctc = false) const {
     return LogProb(use_ctc) + lm_log_prob;
   }

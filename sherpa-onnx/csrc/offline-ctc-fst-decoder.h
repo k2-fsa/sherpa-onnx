@@ -19,8 +19,10 @@ class OfflineCtcFstDecoder : public OfflineCtcDecoder {
  public:
   explicit OfflineCtcFstDecoder(const OfflineCtcFstDecoderConfig &config);
 
-  std::vector<OfflineCtcDecoderResult> Decode(
-      Ort::Value log_probs, Ort::Value log_probs_length) override;
+  std::vector<OfflineCtcDecoderResult> Decode(Ort::Value log_probs,
+                                              Ort::Value log_probs_length,
+                                              OfflineStream **ss = nullptr,
+                                              int32_t n = 0) override;
 
  private:
   OfflineCtcFstDecoderConfig config_;

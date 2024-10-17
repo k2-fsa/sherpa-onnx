@@ -68,7 +68,8 @@ bool OfflineRecognizerConfig::Validate() const {
     }
   }
 
-  if (!hotwords_file.empty() && decoding_method != "modified_beam_search") {
+  if (!hotwords_file.empty() && (decoding_method != "modified_beam_search" &&
+                                 decoding_method != "prefix_beam_search")) {
     SHERPA_ONNX_LOGE(
         "Please use --decoding-method=modified_beam_search if you"
         " provide --hotwords-file. Given --decoding-method='%s'",
@@ -157,7 +158,7 @@ void OfflineRecognizer::DecodeStreams(OfflineStream **ss, int32_t n) const {
 }
 
 void OfflineRecognizer::SetConfig(const OfflineRecognizerConfig &config) {
-    impl_->SetConfig(config);
+  impl_->SetConfig(config);
 }
 
 OfflineRecognizerConfig OfflineRecognizer::GetConfig() const {
