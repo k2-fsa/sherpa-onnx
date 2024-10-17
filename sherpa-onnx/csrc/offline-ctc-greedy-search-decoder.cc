@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h
+// sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
