@@ -37,18 +37,20 @@ pushd ./android/SherpaOnnxSpeakerDiarization/app/src/main/assets/
 
 ls -lh
 
-model_name={{ model.model_name }}
-short_name={{ model.short_name }}
+segmentation_model_name={{ model.segmentation.model_name }}
+segmentation_short_name={{ model.segmentation.short_name }}
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/$model_name.tar.bz2
-tar xvf $model_name.tar.bz2
-rm $model_name.tar.bz2
-mv $model_name/model.onnx segmentation.onnx
-rm -rf $model_name
+embedding_model_name={{ model.embedding.model_name }}
+embedding_short_name={{ model.embedding.short_name }}
 
-if [ ! -f 3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
-fi
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/$segmentation_model_name.tar.bz2
+tar xvf $segmentation_model_name.tar.bz2
+rm $segmentation_model_name.tar.bz2
+mv $segmentation_model_name/model.onnx segmentation.onnx
+rm -rf $segmentation_model_name
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/$embedding_model_name.onnx
+mv $embedding_model_name.onnx embedding.onnx
 
 echo "pwd: $PWD"
 ls -lh
@@ -74,12 +76,12 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   ./gradlew build
   popd
 
-  mv android/SherpaOnnxSpeakerDiarization/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-speaker-diarization-$short_name-3dspeaker.apk
+  mv android/SherpaOnnxSpeakerDiarization/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-speaker-diarization-$segmentation_short_name-$embedding_short_name.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxSpeakerDiarization/app/src/main/jniLibs/$arch/*.so
 done
 
-rm -rf ./android/SherpaOnnxSpeakerDiarization/app/src/main/assets/segmentation.onnx
+rm -rf ./android/SherpaOnnxSpeakerDiarization/app/src/main/assets/*.onnx
 
 {% endfor %}
 
