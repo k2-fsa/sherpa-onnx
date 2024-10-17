@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - apk
-      - android-demo-speaker-diarization-2
 
   workflow_dispatch:
 
@@ -75,6 +74,11 @@ jobs:
         shell: bash
         run: |
           cd scripts/apk
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          python3 ./generate-speaker-diarization-apk-script.py --total $total --index $index
 
           chmod +x build-apk-speaker-diarization.sh
           mv -v ./build-apk-speaker-diarization.sh ../..

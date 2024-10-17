@@ -1,9 +1,6 @@
 name: export-revai-segmentation-to-onnx
 
 on:
-  push:
-    branches:
-      - revai-segmentation
   workflow_dispatch:
 
 concurrency:
