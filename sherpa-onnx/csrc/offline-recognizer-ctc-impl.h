@@ -21,6 +21,7 @@
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-model.h"
+#include "sherpa-onnx/csrc/offline-ctc-prefix-beam-search-decoder.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/pad-sequence.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
@@ -125,7 +126,8 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
       // asset_manager
       decoder_ = std::make_unique<OfflineCtcFstDecoder>(
           config_.ctc_fst_decoder_config);
-    } else if (config_.decoding_method == "greedy_search") {
+    } else if (config_.decoding_method == "greedy_search" ||
+               config_.decoding_method == "prefix_beam_search") {
       if (!symbol_table_.Contains("<blk>") &&
           !symbol_table_.Contains("<eps>") &&
           !symbol_table_.Contains("<blank>")) {
@@ -146,10 +148,17 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
         blank_id = symbol_table_["<blank>"];
       }
 
-      decoder_ = std::make_unique<OfflineCtcGreedySearchDecoder>(blank_id);
+      if (config_.decoding_method == "greedy_search") {
+        decoder_ = std::make_unique<OfflineCtcGreedySearchDecoder>(blank_id);
+      } else {
+        decoder_ = std::make_unique<OfflineCtcPrefixBeamSearchDecoder>(
+            config_.max_active_paths, blank_id);
+      }
     } else {
-      SHERPA_ONNX_LOGE("Only greedy_search is supported at present. Given %s",
-                       config_.decoding_method.c_str());
+      SHERPA_ONNX_LOGE(
+          "Only greedy_search and prefix_beam_search are supported at present. "
+          "Given %s",
+          config_.decoding_method.c_str());
       exit(-1);
     }
   }
