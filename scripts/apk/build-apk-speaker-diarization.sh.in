@@ -31,15 +31,24 @@ log "====================x86===================="
 
 mkdir -p apks
 
+{% for model in model_list %}
+
 pushd ./android/SherpaOnnxSpeakerDiarization/app/src/main/assets/
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
-tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
-rm sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
-mv sherpa-onnx-pyannote-segmentation-3-0/model.onnx segmentation.onnx
-rm -rf sherpa-onnx-pyannote-segmentation-3-0
+ls -lh
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+model_name={{ model.model_name }}
+short_name={{ model.short_name }}
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/$model_name.tar.bz2
+tar xvf $model_name.tar.bz2
+rm $model_name.tar.bz2
+mv $model_name/model.onnx segmentation.onnx
+rm -rf $model_name
+
+if [ ! -f 3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-recongition-models/3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+fi
 
 echo "pwd: $PWD"
 ls -lh
@@ -65,9 +74,13 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
   ./gradlew build
   popd
 
-  mv android/SherpaOnnxSpeakerDiarization/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-speaker-diarization-pyannote_audio-3dspeaker.apk
+  mv android/SherpaOnnxSpeakerDiarization/app/build/outputs/apk/debug/app-debug.apk ./apks/sherpa-onnx-${SHERPA_ONNX_VERSION}-$arch-speaker-diarization-$short_name-3dspeaker.apk
   ls -lh apks
   rm -v ./android/SherpaOnnxSpeakerDiarization/app/src/main/jniLibs/$arch/*.so
 done
+
+rm -rf ./android/SherpaOnnxSpeakerDiarization/app/src/main/assets/segmentation.onnx
+
+{% endfor %}
 
 ls -lh apks

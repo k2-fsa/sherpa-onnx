@@ -216,6 +216,8 @@ def main():
 
     is_active = classification[0] > onset
     start = None
+    if is_active:
+        start = 0
 
     scale = m.receptive_field_shift / m.sample_rate
     scale_offset = m.receptive_field_size / m.sample_rate * 0.5

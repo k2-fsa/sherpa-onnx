@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
+# Copyright      2024  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+import os
 from typing import Any, Dict
 
 import onnx
@@ -35,6 +37,8 @@ def add_meta_data(filename: str, meta_data: Dict[str, Any]):
 def main():
     # You can download ./pytorch_model.bin from
     # https://hf-mirror.com/csukuangfj/pyannote-models/tree/main/segmentation-3.0
+    # or from
+    # https://huggingface.co/Revai/reverb-diarization-v1/tree/main
     pt_filename = "./pytorch_model.bin"
     model = Model.from_pretrained(pt_filename)
     model.eval()
@@ -94,6 +98,22 @@ def main():
     receptive_field_size = int(model.receptive_field.duration * 16000)
     receptive_field_shift = int(model.receptive_field.step * 16000)
 
+    is_revai = os.getenv("SHERPA_ONNX_IS_REVAI", "")
+    if is_revai == "":
+        url_1 = "https://huggingface.co/pyannote/segmentation-3.0"
+        url_2 = "https://huggingface.co/csukuangfj/pyannote-models/tree/main/segmentation-3.0"
+        license_url = (
+            "https://huggingface.co/pyannote/segmentation-3.0/blob/main/LICENSE"
+        )
+        model_author = "pyannote-audio"
+    else:
+        url_1 = "https://huggingface.co/Revai/reverb-diarization-v1"
+        url_2 = "https://huggingface.co/csukuangfj/sherpa-onnx-reverb-diarization-v1"
+        license_url = (
+            "https://huggingface.co/Revai/reverb-diarization-v1/blob/main/LICENSE"
+        )
+        model_author = "Revai"
+
     meta_data = {
         "num_speakers": len(model.specifications.classes),
         "powerset_max_classes": model.specifications.powerset_max_classes,
@@ -104,11 +124,11 @@ def main():
         "receptive_field_shift": receptive_field_shift,
         "model_type": "pyannote-segmentation-3.0",
         "version": "1",
-        "model_author": "pyannote",
+        "model_author": model_author,
         "maintainer": "k2-fsa",
-        "url_1": "https://huggingface.co/pyannote/segmentation-3.0",
-        "url_2": "https://huggingface.co/csukuangfj/pyannote-models/tree/main/segmentation-3.0",
-        "license": "https://huggingface.co/pyannote/segmentation-3.0/blob/main/LICENSE",
+        "url_1": url_1,
+        "url_2": url_2,
+        "license": license_url,
     }
     add_meta_data(filename=filename, meta_data=meta_data)
 

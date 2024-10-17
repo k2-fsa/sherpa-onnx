@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Copyright      2024  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 
 python3 -m onnxruntime.quantization.preprocess --input model.onnx --output tmp.preprocessed.onnx
