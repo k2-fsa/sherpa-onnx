@@ -1,5 +1,5 @@
 /**
- * Copyright (c)  2023  Xiaomi Corporation
+ * Copyright (c)  2023-2024  Xiaomi Corporation
  * Copyright (c)  2023  Pingfeng Luo
  *
  */
@@ -48,6 +48,12 @@ struct Hypothesis {
   // It contains only acoustic scores
   double log_prob = 0;
 
+  // The total score of ys which ends with blank token in log space
+  double log_prob_b = 0;
+
+  // The total score of ys which ends with non blank token in log space
+  double log_prob_nb = -std::numeric_limits<float>::infinity();
+
   // LM log prob if any.
   double lm_log_prob = 0;
 
@@ -74,7 +80,21 @@ struct Hypothesis {
              const ContextState *context_state = nullptr)
       : ys(ys), log_prob(log_prob), context_state(context_state) {}
 
-  double TotalLogProb() const { return log_prob + lm_log_prob; }
+  explicit Hypothesis(const ContextState *context_state)
+      : context_state(context_state) {}
+
+  double TotalLogProb(bool use_ctc = false) const {
+    return LogProb(use_ctc) + lm_log_prob;
+  }
+
+  // The acoustic log probability
+  double LogProb(bool use_ctc = false) const {
+    if (use_ctc) {
+      return LogAdd<double>()(log_prob_b, log_prob_nb);
+    } else {
+      return log_prob;
+    }
+  }
 
   // If two Hypotheses have the same `Key`, then they contain
   // the same token sequence.
@@ -112,19 +132,22 @@ class Hypotheses {
 
   // Add hyp to this object. If it already exists, its log_prob
   // is updated with the given hyp using log-sum-exp.
-  void Add(Hypothesis hyp);
+  void Add(Hypothesis hyp, bool use_ctc = false);
 
   // Get the hyp that has the largest log_prob.
   // If length_norm is true, hyp's log_prob is divided by
   // len(hyp.ys) before comparison.
-  Hypothesis GetMostProbable(bool length_norm) const;
+  Hypothesis GetMostProbable(bool length_norm, bool use_ctc = false) const;
 
   // Get the k hyps that have the largest log_prob.
   // If length_norm is true, hyp's log_prob is divided by
   // len(hyp.ys) before comparison.
-  std::vector<Hypothesis> GetTopK(int32_t k, bool length_norm) const;
+  std::vector<Hypothesis> GetTopK(int32_t k, bool length_norm,
+                                  bool use_ctc = false) const;
 
   int32_t Size() const { return hyps_dict_.size(); }
+
+  std::vector<Hypothesis> ToList() const { return Vec(); }
 
   std::string ToString() const {
     std::ostringstream os;
