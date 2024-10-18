@@ -160,12 +160,14 @@ public class OfflineModelConfig {
             return this;
         }
 
-        public void setModelingUnit(String modelingUnit) {
+        public Builder setModelingUnit(String modelingUnit) {
             this.modelingUnit = modelingUnit;
+            return this;
         }
 
-        public void setBpeVocab(String bpeVocab) {
+        public Builder setBpeVocab(String bpeVocab) {
             this.bpeVocab = bpeVocab;
+            return this;
         }
     }
 }
