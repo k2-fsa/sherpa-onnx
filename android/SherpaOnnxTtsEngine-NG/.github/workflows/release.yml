@@ -1,0 +1,58 @@
+name: Build Release
+
+on:
+  push:
+    branches:
+      - "master"
+    paths:
+      - "CHANGELOG.md"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      outputs_dir: "${{ github.workspace }}/app/build/outputs"
+      ver_name: ""
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Setup Gradle
+        uses: gradle/gradle-build-action@v3
+
+      - name: Build
+        run: |
+          chmod +x *.sh
+          ./install-solib.sh
+          
+          chmod +x gradlew  
+          ./gradlew assembleRelease --build-cache --parallel --daemon --warning-mode all
+
+      - name: Init environment variable
+        run: |
+          echo "ver_name=$(grep -m 1 'versionName' ${{ env.outputs_dir }}/apk/release/output-metadata.json | cut -d\" -f4)" >> $GITHUB_ENV
+
+      - name: Upload Mappings to Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mappings_${{ env.ver_name }}
+          path: ${{ env.outputs_dir }}/mapping/*/*.txt
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ env.ver_name }}
+          tag_name: ${{ env.ver_name }}
+          body_path: ${{ github.workspace }}/CHANGELOG.md
+          draft: false
+          prerelease: false
+          files: ${{env.outputs_dir}}/apk/release/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}    
