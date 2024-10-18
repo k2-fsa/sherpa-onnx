@@ -11,6 +11,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "silero-vad-model.h"
 
 namespace sherpa_onnx {
 
@@ -32,9 +33,13 @@ class SileroVadModel::Impl {
     }
 
     min_silence_samples_ =
-        sample_rate_ * config_.silero_vad.min_silence_duration;
+        (int32_t)(sample_rate_ * config_.silero_vad.min_silence_duration);
 
-    min_speech_samples_ = sample_rate_ * config_.silero_vad.min_speech_duration;
+    min_speech_samples_ =
+        (int32_t)(sample_rate_ * config_.silero_vad.min_speech_duration);
+
+    max_speech_samples_ =
+        (int32_t)(sample_rate_ * config_.silero_vad.max_speech_duration);
   }
 
 #if __ANDROID_API__ >= 9
@@ -54,9 +59,13 @@ class SileroVadModel::Impl {
     }
 
     min_silence_samples_ =
-        sample_rate_ * config_.silero_vad.min_silence_duration;
+        (int32_t)(sample_rate_ * config_.silero_vad.min_silence_duration);
 
-    min_speech_samples_ = sample_rate_ * config_.silero_vad.min_speech_duration;
+    min_speech_samples_ =
+        (int32_t)(sample_rate_ * config_.silero_vad.min_speech_duration);
+
+    max_speech_samples_ =
+        (int32_t)(sample_rate_ * config_.silero_vad.max_speech_duration);
   }
 #endif
 
@@ -155,12 +164,32 @@ class SileroVadModel::Impl {
 
   int32_t MinSpeechDurationSamples() const { return min_speech_samples_; }
 
+  int32_t MaxSpeechDurationSamples() const { return max_speech_samples_; }
+
+  float Threshold() { return config_.silero_vad.threshold; }
+
   void SetMinSilenceDuration(float s) {
-    min_silence_samples_ = sample_rate_ * s;
+    min_silence_samples_ = (int32_t)(sample_rate_ * s);
+  }
+
+  void SetMinSpeechDuration(float s) {
+    min_speech_samples_ = (int32_t)(sample_rate_ * s);
+  }
+
+  void SetMaxSpeechDuration(float s) {
+    max_speech_samples_ = (int32_t)(sample_rate_ * s);
   }
 
   void SetThreshold(float threshold) {
     config_.silero_vad.threshold = threshold;
+  }
+
+  float Run(const float *samples, int32_t n) {
+    if (is_v5_) {
+      return RunV5(samples, n);
+    } else {
+      return RunV4(samples, n);
+    }
   }
 
  private:
@@ -335,14 +364,6 @@ class SileroVadModel::Impl {
     }
   }
 
-  float Run(const float *samples, int32_t n) {
-    if (is_v5_) {
-      return RunV5(samples, n);
-    } else {
-      return RunV4(samples, n);
-    }
-  }
-
   float RunV5(const float *samples, int32_t n) {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -418,6 +439,7 @@ class SileroVadModel::Impl {
   int64_t sample_rate_;
   int32_t min_silence_samples_;
   int32_t min_speech_samples_;
+  int32_t max_speech_samples_;
 
   bool triggered_ = false;
   int32_t current_sample_ = 0;
@@ -457,12 +479,30 @@ int32_t SileroVadModel::MinSpeechDurationSamples() const {
   return impl_->MinSpeechDurationSamples();
 }
 
+int32_t SileroVadModel::MaxSpeechDurationSamples() {
+  return impl_->MaxSpeechDurationSamples();
+}
+
+float SileroVadModel::Threshold() { return impl_->Threshold(); }
+
 void SileroVadModel::SetMinSilenceDuration(float s) {
   impl_->SetMinSilenceDuration(s);
 }
 
+void SileroVadModel::SetMinSpeechDuration(float s) {
+  impl_->SetMinSpeechDuration(s);
+}
+
 void SileroVadModel::SetThreshold(float threshold) {
   impl_->SetThreshold(threshold);
+}
+
+void SileroVadModel::SetMaxSpeechDuration(float s) {
+  impl_->SetMaxSpeechDuration(s);
+}
+
+float SileroVadModel::Run(const float *samples, int32_t n) {
+  return impl_->Run(samples, n);
 }
 
 }  // namespace sherpa_onnx
