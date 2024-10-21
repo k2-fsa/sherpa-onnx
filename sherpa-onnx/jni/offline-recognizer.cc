@@ -300,11 +300,17 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream(JNIEnv * /*env*/,
 
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decode(
-    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong streamPtr) {
-  auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
-  auto stream = reinterpret_cast<sherpa_onnx::OfflineStream *>(streamPtr);
-
-  recognizer->DecodeStream(stream);
+    JNIEnv *env, jobject /*obj*/, jlong ptr, jlong streamPtr) {
+  try {
+    auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
+    auto stream = reinterpret_cast<sherpa_onnx::OfflineStream *>(streamPtr);
+    recognizer->DecodeStream(stream);
+  } catch (const std::exception& e) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+      env->ThrowNew(exClass, e.what());
+    }
+  }
 }
 
 SHERPA_ONNX_EXTERN_C
