@@ -34,6 +34,9 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(cls, "hotwordsScore", "F");
   ans.hotwords_score = env->GetFloatField(config, fid);
 
+  fid = env->GetFieldID(cls, "tokenizeHotwords", "Z");
+  ans.tokenize_hotwords = env->GetFloatField(config, fid);
+
   fid = env->GetFieldID(cls, "ruleFsts", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(config, fid);
   p = env->GetStringUTFChars(s, nullptr);
