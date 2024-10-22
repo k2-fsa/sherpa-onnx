@@ -290,7 +290,7 @@ int main(int argc, char **argv) {
   }
 
   SherpaOnnxOnlineRecognizerConfig config;
-	memset(&config, 0, sizeof(config));
+  memset(&config, 0, sizeof(config));
   config.model_config.tokens = argv[1];
   config.model_config.transducer.encoder = argv[2];
   config.model_config.transducer.decoder = argv[3];
@@ -318,7 +318,7 @@ int main(int argc, char **argv) {
   config.rule2_min_trailing_silence = 1.2;
   config.rule3_min_utterance_length = 300;
 
-  SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&config);
   SherpaOnnxOnlineStream *stream = SherpaOnnxCreateOnlineStream(recognizer);
   const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);

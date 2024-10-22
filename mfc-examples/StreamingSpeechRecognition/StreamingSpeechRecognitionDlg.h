@@ -45,7 +45,7 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
  private:
   Microphone mic_;
 
-  SherpaOnnxOnlineRecognizer *recognizer_ = nullptr;
+  const SherpaOnnxOnlineRecognizer *recognizer_ = nullptr;
 
   PaStream *pa_stream_ = nullptr;
   RecognizerThread *thread_ = nullptr;
@@ -54,7 +54,7 @@ class CStreamingSpeechRecognitionDlg : public CDialogEx {
 
  public:
   bool started_ = false;
-  SherpaOnnxOnlineStream *stream_ = nullptr;
+  const SherpaOnnxOnlineStream *stream_ = nullptr;
 
  public:
   int RunThread();

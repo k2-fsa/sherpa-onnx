@@ -5,6 +5,7 @@
 #include "sherpa-onnx/c-api/c-api.h"
 
 #include <algorithm>
+#include <cstring>
 #include <memory>
 #include <string>
 #include <utility>
@@ -51,7 +52,7 @@ struct SherpaOnnxDisplay {
 
 #define SHERPA_ONNX_OR(x, y) (x ? x : y)
 
-SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
+const SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
     const SherpaOnnxOnlineRecognizerConfig *config) {
   sherpa_onnx::OnlineRecognizerConfig recognizer_config;
 

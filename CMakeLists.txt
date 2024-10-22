@@ -399,6 +399,7 @@ add_subdirectory(sherpa-onnx)
 if(SHERPA_ONNX_ENABLE_C_API AND SHERPA_ONNX_ENABLE_BINARY AND SHERPA_ONNX_BUILD_C_API_EXAMPLES)
   set(SHERPA_ONNX_PKG_WITH_CARGS "-lcargs")
   add_subdirectory(c-api-examples)
+  add_subdirectory(cxx-api-examples)
 endif()
 
 if(SHERPA_ONNX_ENABLE_WASM)

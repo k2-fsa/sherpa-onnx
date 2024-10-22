@@ -76,6 +76,14 @@ jobs:
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
 
+      - name: Test C++ API
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export CXX_STREAMING_ZIPFORMER_EXE=streaming-zipformer-cxx-api
+
+          .github/scripts/test-cxx-api.sh
+
       - name: Test online punctuation
         shell: bash
         run: |
@@ -107,7 +115,6 @@ jobs:
           export EXE=sherpa-onnx
 
           .github/scripts/test-online-ctc.sh
-
 
 
       - name: Test C API
