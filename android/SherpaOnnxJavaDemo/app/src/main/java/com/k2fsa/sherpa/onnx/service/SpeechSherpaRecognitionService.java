@@ -43,7 +43,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 
-
 public class SpeechSherpaRecognitionService extends Service {
 
     private AppViewModel appViewModel;
@@ -59,6 +58,7 @@ public class SpeechSherpaRecognitionService extends Service {
     private int idx = 0;
     private String lastText = "";
     private ExecutorService executor;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -74,7 +74,7 @@ public class SpeechSherpaRecognitionService extends Service {
                 audioFormat,
                 numBytes * 2 // a sample has two bytes as we are using 16-bit PCM
         );
-         executor = Executors.newSingleThreadExecutor();
+        executor = Executors.newSingleThreadExecutor();
         executor.execute(this::initializeSherpa);
     }
 
@@ -82,7 +82,7 @@ public class SpeechSherpaRecognitionService extends Service {
     private void initializeSherpa() {
         Log.d("Current Directory", System.getProperty("user.dir"));
         String modelDir = "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23";
-        initializeSherpaDir(modelDir,modelDir);
+        initializeSherpaDir(modelDir, modelDir);
         OnlineTransducerModelConfig onlineTransducerModelConfig = OnlineTransducerModelConfig.builder()
                 .setEncoder(modelDir + "/encoder-epoch-99-avg-1.int8.onnx")
                 .setDecoder(modelDir + "/decoder-epoch-99-avg-1.onnx")
@@ -91,17 +91,15 @@ public class SpeechSherpaRecognitionService extends Service {
 
         OnlineModelConfig onlineModelConfig = OnlineModelConfig.builder()
                 .setTransducer(onlineTransducerModelConfig)
-                .setTokens(modelDir+"/tokens.txt")
+                .setTokens(modelDir + "/tokens.txt")
                 .setModelType("zipformer")
                 .build();
-        // 初始化 OnlineRecognizer
         OnlineRecognizerConfig config = OnlineRecognizerConfig.builder()
                 .setOnlineModelConfig(onlineModelConfig)
                 .build();
-        recognizer = new OnlineRecognizer(getAssets(),config);
+        recognizer = new OnlineRecognizer(getAssets(), config);
 
         audioRecord.startRecording();
-        // 开始录音和识别
         startRecognition();
     }
 
@@ -131,8 +129,6 @@ public class SpeechSherpaRecognitionService extends Service {
 
                 boolean isEndpoint = recognizer.isEndpoint(stream);
                 String text = recognizer.getResult(stream).getText();
-
-                // For streaming parformer, manually add paddings for right context to recognize last word
                 if (isEndpoint) {
                     float[] tailPaddings = new float[(int) (0.8 * sampleRateInHz)];
                     stream.acceptWaveform(tailPaddings, sampleRateInHz);
@@ -145,7 +141,7 @@ public class SpeechSherpaRecognitionService extends Service {
                 String textToDisplay = lastText;
 
                 if (!TextUtils.isEmpty(text)) {
-                    textToDisplay = TextUtils.isEmpty(text)? idx + ": " + text : lastText + "\n" + idx + ": " + text;
+                    textToDisplay = TextUtils.isEmpty(text) ? idx + ": " + text : lastText + "\n" + idx + ": " + text;
                 }
 
                 if (isEndpoint) {
@@ -168,7 +164,7 @@ public class SpeechSherpaRecognitionService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
 
-        return START_STICKY; // 让服务一直运行
+        return START_STICKY;
     }
 
     @Override
@@ -185,9 +181,9 @@ public class SpeechSherpaRecognitionService extends Service {
         return null;
     }
 
-    // 启动前台服务并设置通知
+
     private void startForegroundService() {
-        String channelId = createNotificationChannel(); // 需要为 Android 8.0+ 创建通知渠道
+        String channelId = createNotificationChannel();
 
         Notification notification = new NotificationCompat.Builder(this, channelId)
                 .setContentTitle("Foreground Service")
@@ -195,7 +191,7 @@ public class SpeechSherpaRecognitionService extends Service {
                 .setSmallIcon(R.drawable.ic_bg_mic_24)
                 .build();
 
-        startForeground(1, notification); // 调用 startForeground
+        startForeground(1, notification);
     }
 
     // 创建通知渠道 (针对 Android 8.0 及以上版本)
@@ -210,32 +206,28 @@ public class SpeechSherpaRecognitionService extends Service {
             }
             return channelId;
         } else {
-            return ""; // 对于低于 Android 8.0 的设备，不需要创建渠道
+            return "";
         }
     }
 
     private void initializeSherpaDir(String assetDir, String internalDir) {
         AssetManager assetManager = getAssets();
-        File outDir = new File(getFilesDir(), internalDir); // 内部存储的目标文件夹
+        File outDir = new File(getFilesDir(), internalDir);
 
         if (!outDir.exists()) {
-            outDir.mkdirs(); // 如果目标文件夹不存在，则创建它
+            outDir.mkdirs();
         }
 
         try {
-            // 获取 assetDir 下的所有文件和子目录
             String[] assets = assetManager.list(assetDir);
             if (assets != null) {
                 for (String asset : assets) {
                     String assetPath = assetDir.isEmpty() ? asset : assetDir + "/" + asset;
                     File outFile = new File(outDir, asset);
-
-                    // 如果是文件夹，递归复制
                     if (Objects.requireNonNull(assetManager.list(assetPath)).length > 0) {
-                        outFile.mkdirs(); // 创建子目录
+                        outFile.mkdirs();
                         initializeSherpaDir(assetPath, internalDir + "/" + asset); // 递归复制子目录
                     } else {
-                        // 复制文件
                         InputStream in = assetManager.open(assetPath);
                         OutputStream out = new FileOutputStream(outFile);
 

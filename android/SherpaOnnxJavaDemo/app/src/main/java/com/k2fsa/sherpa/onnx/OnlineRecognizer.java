@@ -15,8 +15,9 @@ public class OnlineRecognizer {
     public OnlineRecognizer(OnlineRecognizerConfig config) {
         ptr = newFromFile(config);
     }
+
     public OnlineRecognizer(AssetManager assetManager, OnlineRecognizerConfig config) {
-        ptr = newFromAsset(assetManager,config);
+        ptr = newFromAsset(assetManager, config);
     }
 
     public void decode(OnlineStream s) {
@@ -66,7 +67,8 @@ public class OnlineRecognizer {
     private native void delete(long ptr);
 
     private native long newFromFile(OnlineRecognizerConfig config);
-    private native long newFromAsset(AssetManager assetManager,OnlineRecognizerConfig config);
+
+    private native long newFromAsset(AssetManager assetManager, OnlineRecognizerConfig config);
 
     private native long createStream(long ptr, String hotwords);
 

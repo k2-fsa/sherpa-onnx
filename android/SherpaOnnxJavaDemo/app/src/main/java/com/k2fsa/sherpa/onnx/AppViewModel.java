@@ -11,7 +11,7 @@ public class AppViewModel extends ViewModel {
         return speechRecognitionResult;
     }
 
-    public  void setSpeechRecognitionResult(String result) {
+    public void setSpeechRecognitionResult(String result) {
         speechRecognitionResult.postValue(result);
     }
 

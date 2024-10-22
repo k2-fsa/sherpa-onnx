@@ -4,11 +4,6 @@
     package="com.k2fsa.sherpa.onnx">
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
     <application
         android:name=".Application"

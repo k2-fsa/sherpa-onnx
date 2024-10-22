@@ -28,19 +28,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-
-    private void startSpeechService(){
-        // 启动语音识别服务
+    private void startSpeechService() {
         Intent serviceIntent = new Intent(this, SpeechSherpaRecognitionService.class);
-        ContextCompat.startForegroundService(this, serviceIntent); // 启动前台服务（如果需要）
+        ContextCompat.startForegroundService(this, serviceIntent);
         appViewModel = new ViewModelProvider(Application.getInstance()).get(AppViewModel.class);
-        // 观察语音识别结果
         appViewModel.getSpeechRecognitionResult().observe(this, this::handleSpeechRecognitionResult);
     }
 
     private void handleSpeechRecognitionResult(String result) {
         tvText.setText(result);
     }
+
     private void requestMicrophonePermission() {
         String[] perms = {Manifest.permission.RECORD_AUDIO};
         if (EasyPermissions.hasPermissions(this, perms)) {
