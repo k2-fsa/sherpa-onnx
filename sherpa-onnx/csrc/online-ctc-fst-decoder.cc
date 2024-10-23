@@ -13,13 +13,11 @@
 #include "fst/fstlib.h"
 #include "kaldi-decoder/csrc/decodable-ctc.h"
 #include "kaldifst/csrc/fstext-utils.h"
+#include "sherpa-onnx/csrc/fst-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 
 namespace sherpa_onnx {
-
-// defined in ./offline-ctc-fst-decoder.cc
-fst::Fst<fst::StdArc> *ReadGraph(const std::string &filename);
 
 OnlineCtcFstDecoder::OnlineCtcFstDecoder(
     const OnlineCtcFstDecoderConfig &config, int32_t blank_id)
