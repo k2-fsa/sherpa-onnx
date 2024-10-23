@@ -37,6 +37,8 @@ class SileroVadModel : public VadModel {
    */
   bool IsSpeech(const float *samples, int32_t n) override;
 
+  float Run(const float *samples, int32_t n);
+
   // For silero vad V4, it is WindowShift().
   // For silero vad V5, it is WindowShift()+64 for 16kHz and
   //                          WindowShift()+32 for 8kHz
@@ -47,9 +49,13 @@ class SileroVadModel : public VadModel {
 
   int32_t MinSilenceDurationSamples() const override;
   int32_t MinSpeechDurationSamples() const override;
+  int32_t MaxSpeechDurationSamples();
+  float Threshold();
 
   void SetMinSilenceDuration(float s) override;
-  void SetThreshold(float threshold) override;
+  void SetMinSpeechDuration(float s);
+  void SetMaxSpeechDuration(float s);  
+  void SetThreshold(float threshold) override;  
 
  private:
   class Impl;
