@@ -35,12 +35,11 @@ struct SHERPA_ONNX_API OnlineModelConfig {
   std::string tokens;
   int32_t num_threads = 1;
   std::string provider = "cpu";
-  bool debug = 0;
+  bool debug = false;
   std::string model_type;
   std::string modeling_unit = "cjkchar";
   std::string bpe_vocab;
   std::string tokens_buf;
-  int32_t tokens_buf_size = 0;
 };
 
 struct SHERPA_ONNX_API FeatureConfig {
@@ -61,8 +60,6 @@ struct SHERPA_ONNX_API OnlineRecognizerConfig {
 
   int32_t max_active_paths = 4;
 
-  /// 0 to disable endpoint detection.
-  /// A non-zero value to enable endpoint detection.
   bool enable_endpoint = false;
 
   float rule1_min_trailing_silence = 2.4;
@@ -81,15 +78,12 @@ struct SHERPA_ONNX_API OnlineRecognizerConfig {
   float blank_penalty = 0;
 
   std::string hotwords_buf;
-  int32_t hotwords_buf_size = 0;
 };
 
 struct SHERPA_ONNX_API OnlineRecognizerResult {
   std::string text;
   std::vector<std::string> tokens;
-
   std::vector<float> timestamps;
-
   std::string json;
 };
 
@@ -111,7 +105,7 @@ class SHERPA_ONNX_API MoveOnly {
 
   MoveOnly &operator=(const MoveOnly &) = delete;
 
-  MoveOnly(MoveOnly &&other) : p_(other.p_) { other.p_ = nullptr; }
+  MoveOnly(MoveOnly &&other) : p_(other.Release()) {}
 
   MoveOnly &operator=(MoveOnly &&other) {
     if (&other == this) {

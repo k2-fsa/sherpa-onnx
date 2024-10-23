@@ -205,7 +205,7 @@ jobs:
             git config --global user.name "Fangjun Kuang"
 
             rm -rf huggingface
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
             mkdir -p arm32

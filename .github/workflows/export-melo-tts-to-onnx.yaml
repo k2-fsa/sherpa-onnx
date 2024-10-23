@@ -56,7 +56,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/csukuangfj/vits-melo-tts-zh_en huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/vits-melo-tts-zh_en huggingface
             cd huggingface
             git fetch
             git pull

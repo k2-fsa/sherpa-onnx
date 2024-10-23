@@ -1,4 +1,4 @@
-// cxx-api-examples/streaming-zipformer-cxx-api.c
+// cxx-api-examples/streaming-zipformer-cxx-api.cc
 // Copyright (c)  2024  Xiaomi Corporation
 
 //
