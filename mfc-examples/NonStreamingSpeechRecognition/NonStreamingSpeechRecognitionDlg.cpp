@@ -256,7 +256,7 @@ void CNonStreamingSpeechRecognitionDlg::OnBnClickedOk() {
     }
     pa_stream_ = nullptr;
 
-    SherpaOnnxOfflineStream *stream = SherpaOnnxCreateOfflineStream(recognizer_);
+    const SherpaOnnxOfflineStream *stream = SherpaOnnxCreateOfflineStream(recognizer_);
 
     SherpaOnnxAcceptWaveformOffline(stream, config_.feat_config.sample_rate,
                           samples_.data(), static_cast<int32_t>(samples_.size()));

@@ -320,7 +320,8 @@ int main(int argc, char **argv) {
 
   const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&config);
-  SherpaOnnxOnlineStream *stream = SherpaOnnxCreateOnlineStream(recognizer);
+  const SherpaOnnxOnlineStream *stream =
+      SherpaOnnxCreateOnlineStream(recognizer);
   const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;
 

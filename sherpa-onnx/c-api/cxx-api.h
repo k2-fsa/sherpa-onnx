@@ -13,6 +13,9 @@
 
 namespace sherpa_onnx::cxx {
 
+// ============================================================================
+// Streaming ASR
+// ============================================================================
 struct SHERPA_ONNX_API OnlineTransducerModelConfig {
   std::string encoder;
   std::string decoder;
@@ -148,6 +151,8 @@ class SHERPA_ONNX_API OnlineStream
   void AcceptWaveform(int32_t sample_rate, const float *samples,
                       int32_t n) const;
 
+  void InputFinished() const;
+
   void Destroy(const SherpaOnnxOnlineStream *p) const;
 };
 
@@ -170,10 +175,134 @@ class SHERPA_ONNX_API OnlineRecognizer
 
   OnlineRecognizerResult GetResult(const OnlineStream *s) const;
 
+  void Reset(const OnlineStream *s) const;
+
+  bool IsEndpoint(const OnlineStream *s) const;
+
  private:
   explicit OnlineRecognizer(const SherpaOnnxOnlineRecognizer *p);
+};
+
+// ============================================================================
+// Non-streaming ASR
+// ============================================================================
+struct SHERPA_ONNX_API OfflineTransducerModelConfig {
+  std::string encoder;
+  std::string decoder;
+  std::string joiner;
+};
+
+struct SHERPA_ONNX_API OfflineParaformerModelConfig {
+  std::string model;
+};
+
+struct SHERPA_ONNX_API OfflineNemoEncDecCtcModelConfig {
+  std::string model;
+};
+
+struct SHERPA_ONNX_API OfflineWhisperModelConfig {
+  std::string encoder;
+  std::string decoder;
+  std::string language;
+  std::string task = "transcribe";
+  int32_t tail_paddings = -1;
+};
+
+struct SHERPA_ONNX_API OfflineTdnnModelConfig {
+  std::string model;
+};
+
+struct SHERPA_ONNX_API SherpaOnnxOfflineLMConfig {
+  std::string model;
+  float scale = 1.0;
+};
+
+struct SHERPA_ONNX_API OfflineSenseVoiceModelConfig {
+  std::string model;
+  std::string language;
+  bool use_itn = false;
+};
+
+struct SHERPA_ONNX_API OfflineModelConfig {
+  OfflineTransducerModelConfig transducer;
+  OfflineParaformerModelConfig paraformer;
+  OfflineNemoEncDecCtcModelConfig nemo_ctc;
+  OfflineWhisperModelConfig whisper;
+  OfflineTdnnModelConfig tdnn;
+
+  std::string tokens;
+  int32_t num_threads = 1;
+  bool debug = false;
+  std::string provider = "cpu";
+  std::string model_type;
+  std::string modeling_unit = "cjkchar";
+  std::string bpe_vocab;
+  std::string telespeech_ctc;
+  OfflineSenseVoiceModelConfig sense_voice;
+};
+
+struct SHERPA_ONNX_API OfflineLMConfig {
+  std::string model;
+  float scale = 1.0;
+};
+
+struct SHERPA_ONNX_API OfflineRecognizerConfig {
+  FeatureConfig feat_config;
+  OfflineModelConfig model_config;
+  OfflineLMConfig lm_config;
+
+  std::string decoding_method = "greedy_search";
+  int32_t max_active_paths = 4;
+
+  std::string hotwords_file;
+
+  float hotwords_score = 1.5;
+  std::string rule_fsts;
+  std::string rule_fars;
+  float blank_penalty = 0;
+};
+
+struct SHERPA_ONNX_API OfflineRecognizerResult {
+  std::string text;
+  std::vector<float> timestamps;
+  std::vector<std::string> tokens;
+  std::string json;
+  std::string lang;
+  std::string emotion;
+  std::string event;
+};
+
+class SHERPA_ONNX_API OfflineStream
+    : public MoveOnly<OfflineStream, SherpaOnnxOfflineStream> {
+ public:
+  explicit OfflineStream(const SherpaOnnxOfflineStream *p);
+
+  void AcceptWaveform(int32_t sample_rate, const float *samples,
+                      int32_t n) const;
+
+  void Destroy(const SherpaOnnxOfflineStream *p) const;
+};
+
+class SHERPA_ONNX_API OfflineRecognizer
+    : public MoveOnly<OfflineRecognizer, SherpaOnnxOfflineRecognizer> {
+ public:
+  static OfflineRecognizer Create(const OfflineRecognizerConfig &config);
+
+  void Destroy(const SherpaOnnxOfflineRecognizer *p) const;
+
+  OfflineStream CreateStream() const;
+
+  void Decode(const OfflineStream *s) const;
+
+  void Decode(const OfflineStream *ss, int32_t n) const;
+
+  OfflineRecognizerResult GetResult(const OfflineStream *s) const;
+
+ private:
+  explicit OfflineRecognizer(const SherpaOnnxOfflineRecognizer *p);
 };
 
 }  // namespace sherpa_onnx::cxx
 
 #endif  // SHERPA_ONNX_C_API_CXX_API_H_
+        //

@@ -30,9 +30,13 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
   if (!config.model_config.transducer.encoder.empty()) {
     Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 
+    Ort::SessionOptions sess_opts;
+    sess_opts.SetIntraOpNumThreads(1);
+    sess_opts.SetInterOpNumThreads(1);
+
     auto decoder_model = ReadFile(config.model_config.transducer.decoder);
-    auto sess = std::make_unique<Ort::Session>(
-        env, decoder_model.data(), decoder_model.size(), Ort::SessionOptions{});
+    auto sess = std::make_unique<Ort::Session>(env, decoder_model.data(),
+                                               decoder_model.size(), sess_opts);
 
     size_t node_count = sess->GetOutputCount();
 
@@ -63,9 +67,13 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
   if (!config.model_config.transducer.encoder.empty()) {
     Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 
+    Ort::SessionOptions sess_opts;
+    sess_opts.SetIntraOpNumThreads(1);
+    sess_opts.SetInterOpNumThreads(1);
+
     auto decoder_model = ReadFile(mgr, config.model_config.transducer.decoder);
-    auto sess = std::make_unique<Ort::Session>(
-        env, decoder_model.data(), decoder_model.size(), Ort::SessionOptions{});
+    auto sess = std::make_unique<Ort::Session>(env, decoder_model.data(),
+                                               decoder_model.size(), sess_opts);
 
     size_t node_count = sess->GetOutputCount();
 

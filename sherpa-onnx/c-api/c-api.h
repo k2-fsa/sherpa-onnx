@@ -220,7 +220,7 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOnlineRecognizer(
 /// @param recognizer  A pointer returned by SherpaOnnxCreateOnlineRecognizer()
 /// @return Return a pointer to an OnlineStream. The user has to invoke
 ///         SherpaOnnxDestroyOnlineStream() to free it to avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOnlineStream *SherpaOnnxCreateOnlineStream(
+SHERPA_ONNX_API const SherpaOnnxOnlineStream *SherpaOnnxCreateOnlineStream(
     const SherpaOnnxOnlineRecognizer *recognizer);
 
 /// Create an online stream for accepting wave samples with the specified hot
@@ -229,7 +229,7 @@ SHERPA_ONNX_API SherpaOnnxOnlineStream *SherpaOnnxCreateOnlineStream(
 /// @param recognizer  A pointer returned by SherpaOnnxCreateOnlineRecognizer()
 /// @return Return a pointer to an OnlineStream. The user has to invoke
 ///         SherpaOnnxDestroyOnlineStream() to free it to avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOnlineStream *
+SHERPA_ONNX_API const SherpaOnnxOnlineStream *
 SherpaOnnxCreateOnlineStreamWithHotwords(
     const SherpaOnnxOnlineRecognizer *recognizer, const char *hotwords);
 
@@ -453,7 +453,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineStream SherpaOnnxOfflineStream;
 /// @return Return a pointer to the recognizer. The user has to invoke
 //          SherpaOnnxDestroyOfflineRecognizer() to free it to avoid memory
 //          leak.
-SHERPA_ONNX_API SherpaOnnxOfflineRecognizer *SherpaOnnxCreateOfflineRecognizer(
+SHERPA_ONNX_API const SherpaOnnxOfflineRecognizer *
+SherpaOnnxCreateOfflineRecognizer(
     const SherpaOnnxOfflineRecognizerConfig *config);
 
 /// @param config  Config for the recognizer.
@@ -465,14 +466,14 @@ SHERPA_ONNX_API void SherpaOnnxOfflineRecognizerSetConfig(
 ///
 /// @param p A pointer returned by SherpaOnnxCreateOfflineRecognizer()
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineRecognizer(
-    SherpaOnnxOfflineRecognizer *recognizer);
+    const SherpaOnnxOfflineRecognizer *recognizer);
 
 /// Create an offline stream for accepting wave samples.
 ///
 /// @param recognizer  A pointer returned by SherpaOnnxCreateOfflineRecognizer()
 /// @return Return a pointer to an OfflineStream. The user has to invoke
 ///         SherpaOnnxDestroyOfflineStream() to free it to avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStream(
+SHERPA_ONNX_API const SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStream(
     const SherpaOnnxOfflineRecognizer *recognizer);
 
 /// Destroy an offline stream.
@@ -518,8 +519,8 @@ SHERPA_ONNX_API void SherpaOnnxDecodeOfflineStream(
 ///                by SherpaOnnxCreateOfflineStream().
 /// @param n Number of entries in the given streams.
 SHERPA_ONNX_API void SherpaOnnxDecodeMultipleOfflineStreams(
-    SherpaOnnxOfflineRecognizer *recognizer, SherpaOnnxOfflineStream **streams,
-    int32_t n);
+    const SherpaOnnxOfflineRecognizer *recognizer,
+    const SherpaOnnxOfflineStream **streams, int32_t n);
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineRecognizerResult {
   const char *text;
