@@ -199,6 +199,7 @@ if(ANDROID_NDK)
 endif()
 
 target_link_libraries(sherpa-onnx-core
+  cppinyin_core
   kaldi-native-fbank-core
   kaldi-decoder-core
   ssentencepiece_core
