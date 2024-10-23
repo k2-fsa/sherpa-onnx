@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - cxx-api-asr-non-streaming
     paths:
       - '.github/workflows/cxx-api.yaml'
       - 'CMakeLists.txt'
@@ -81,6 +82,74 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
             otool -L ./install/lib/libsherpa-onnx-cxx-api.dylib
           fi
+
+      - name: Test whisper
+        shell: bash
+        run: |
+          g++ -std=c++17 -o whisper-cxx-api ./cxx-api-examples/whisper-cxx-api.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh whisper-cxx-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./whisper-cxx-api
+            echo "----"
+            readelf -d ./whisper-cxx-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+          tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+          rm sherpa-onnx-whisper-tiny.en.tar.bz2
+
+          ls -lh sherpa-onnx-whisper-tiny.en
+          echo "---"
+          ls -lh sherpa-onnx-whisper-tiny.en/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./whisper-cxx-api
+
+          rm -rf sherpa-onnx-whisper-*
+          rm ./whisper-cxx-api
+
+      - name: Test SenseVoice
+        shell: bash
+        run: |
+          g++ -std=c++17 -o sense-voice-cxx-api ./cxx-api-examples/sense-voice-cxx-api.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh sense-voice-cxx-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./sense-voice-cxx-api
+            echo "----"
+            readelf -d ./sense-voice-cxx-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+          tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+          rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+
+          ls -lh sherpa-onnx-sense-voice-*
+          echo "---"
+          ls -lh sherpa-onnx-sense-voice-*/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./sense-voice-cxx-api
+
+          rm -rf sherpa-onnx-sense-voice-*
+          rm ./sense-voice-cxx-api
 
       - name: Test streaming zipformer
         shell: bash

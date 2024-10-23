@@ -98,6 +98,8 @@ jobs:
         run: |
           export PATH=$PWD/build/bin/Release:$PATH
           export CXX_STREAMING_ZIPFORMER_EXE=streaming-zipformer-cxx-api.exe
+          export CXX_WHISPER_EXE=whisper-cxx-api.exe
+          export CXX_SENSE_VOICE_EXE=sense-voice-cxx-api.exe
 
           .github/scripts/test-cxx-api.sh
 

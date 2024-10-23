@@ -203,7 +203,7 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(blank_penalty, blankPenalty);
 
-  SherpaOnnxOfflineRecognizer *recognizer =
+  const SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&c);
 
   if (c.model_config.transducer.encoder) {
@@ -306,7 +306,7 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   }
 
   return Napi::External<SherpaOnnxOfflineRecognizer>::New(
-      env, recognizer,
+      env, const_cast<SherpaOnnxOfflineRecognizer *>(recognizer),
       [](Napi::Env env, SherpaOnnxOfflineRecognizer *recognizer) {
         SherpaOnnxDestroyOfflineRecognizer(recognizer);
       });
@@ -336,10 +336,12 @@ static Napi::External<SherpaOnnxOfflineStream> CreateOfflineStreamWrapper(
   SherpaOnnxOfflineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOfflineRecognizer>>().Data();
 
-  SherpaOnnxOfflineStream *stream = SherpaOnnxCreateOfflineStream(recognizer);
+  const SherpaOnnxOfflineStream *stream =
+      SherpaOnnxCreateOfflineStream(recognizer);
 
   return Napi::External<SherpaOnnxOfflineStream>::New(
-      env, stream, [](Napi::Env env, SherpaOnnxOfflineStream *stream) {
+      env, const_cast<SherpaOnnxOfflineStream>(stream),
+      [](Napi::Env env, SherpaOnnxOfflineStream *stream) {
         SherpaOnnxDestroyOfflineStream(stream);
       });
 }

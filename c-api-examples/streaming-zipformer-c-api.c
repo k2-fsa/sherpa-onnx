@@ -72,7 +72,8 @@ int32_t main() {
     return -1;
   }
 
-  SherpaOnnxOnlineStream *stream = SherpaOnnxCreateOnlineStream(recognizer);
+  const SherpaOnnxOnlineStream *stream =
+      SherpaOnnxCreateOnlineStream(recognizer);
 
   const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;

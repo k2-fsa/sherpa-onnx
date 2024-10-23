@@ -127,6 +127,8 @@ jobs:
           du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
           export CXX_STREAMING_ZIPFORMER_EXE=streaming-zipformer-cxx-api
+          export CXX_WHISPER_EXE=whisper-cxx-api
+          export CXX_SENSE_VOICE_EXE=sense-voice-cxx-api
 
           .github/scripts/test-cxx-api.sh
           du -h -d1 .

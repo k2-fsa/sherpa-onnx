@@ -66,6 +66,8 @@ int32_t main() {
   OnlineStream stream = recongizer.CreateStream();
   stream.AcceptWaveform(wave.sample_rate, wave.samples.data(),
                         wave.samples.size());
+  stream.InputFinished();
+
   while (recongizer.IsReady(&stream)) {
     recongizer.Decode(&stream);
   }

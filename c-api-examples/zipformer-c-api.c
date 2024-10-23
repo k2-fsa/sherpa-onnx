@@ -60,7 +60,7 @@ int32_t main() {
   recognizer_config.decoding_method = "greedy_search";
   recognizer_config.model_config = offline_model_config;
 
-  SherpaOnnxOfflineRecognizer *recognizer =
+  const SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&recognizer_config);
 
   if (recognizer == NULL) {
@@ -69,7 +69,8 @@ int32_t main() {
     return -1;
   }
 
-  SherpaOnnxOfflineStream *stream = SherpaOnnxCreateOfflineStream(recognizer);
+  const SherpaOnnxOfflineStream *stream =
+      SherpaOnnxCreateOfflineStream(recognizer);
 
   SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate, wave->samples,
                                   wave->num_samples);
