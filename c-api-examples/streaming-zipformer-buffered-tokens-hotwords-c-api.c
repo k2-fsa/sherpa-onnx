@@ -116,7 +116,7 @@ int32_t main() {
   recognizer_config.hotwords_buf = hotwords_buf;
   recognizer_config.hotwords_buf_size = hotwords_buf_size;
 
-  SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);
 
   free((void *)tokens_buf);

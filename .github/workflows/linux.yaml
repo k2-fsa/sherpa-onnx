@@ -19,6 +19,8 @@ on:
       - '.github/scripts/test-offline-punctuation.sh'
       - '.github/scripts/test-online-punctuation.sh'
       - '.github/scripts/test-speaker-diarization.sh'
+      - '.github/scripts/test-c-api.sh'
+      - '.github/scripts/test-cxx-api.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -40,6 +42,8 @@ on:
       - '.github/scripts/test-offline-punctuation.sh'
       - '.github/scripts/test-online-punctuation.sh'
       - '.github/scripts/test-speaker-diarization.sh'
+      - '.github/scripts/test-c-api.sh'
+      - '.github/scripts/test-cxx-api.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -144,6 +148,16 @@ jobs:
         with:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: install/*
+
+      - name: Test C++ API
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export CXX_STREAMING_ZIPFORMER_EXE=streaming-zipformer-cxx-api
+
+          .github/scripts/test-cxx-api.sh
+          du -h -d1 .
 
       - name: Test offline speaker diarization
         shell: bash

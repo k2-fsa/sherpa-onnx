@@ -205,7 +205,8 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlineStream SherpaOnnxOnlineStream;
 /// @param config  Config for the recognizer.
 /// @return Return a pointer to the recognizer. The user has to invoke
 //          SherpaOnnxDestroyOnlineRecognizer() to free it to avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
+SHERPA_ONNX_API const SherpaOnnxOnlineRecognizer *
+SherpaOnnxCreateOnlineRecognizer(
     const SherpaOnnxOnlineRecognizerConfig *config);
 
 /// Free a pointer returned by SherpaOnnxCreateOnlineRecognizer()

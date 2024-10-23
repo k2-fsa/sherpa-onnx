@@ -18,6 +18,8 @@ on:
       - '.github/scripts/test-offline-punctuation.sh'
       - '.github/scripts/test-online-punctuation.sh'
       - '.github/scripts/test-speaker-diarization.sh'
+      - '.github/scripts/test-c-api.sh'
+      - '.github/scripts/test-cxx-api.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -36,6 +38,8 @@ on:
       - '.github/scripts/test-offline-punctuation.sh'
       - '.github/scripts/test-online-punctuation.sh'
       - '.github/scripts/test-speaker-diarization.sh'
+      - '.github/scripts/test-c-api.sh'
+      - '.github/scripts/test-cxx-api.sh'
       - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
@@ -89,10 +93,17 @@ jobs:
           name: release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}
           path: build/install/*
 
+      - name: Test C++ API
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export CXX_STREAMING_ZIPFORMER_EXE=streaming-zipformer-cxx-api.exe
+
+          .github/scripts/test-cxx-api.sh
+
       - name: Test offline speaker diarization
         shell: bash
         run: |
-          du -h -d1 .
           export PATH=$PWD/build/bin/Release:$PATH
           export EXE=sherpa-onnx-offline-speaker-diarization.exe
 

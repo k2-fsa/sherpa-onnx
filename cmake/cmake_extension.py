@@ -80,6 +80,7 @@ def get_binaries():
         binaries += [
             "onnxruntime.dll",
             "sherpa-onnx-c-api.dll",
+            "sherpa-onnx-cxx-api.dll",
         ]
 
     return binaries

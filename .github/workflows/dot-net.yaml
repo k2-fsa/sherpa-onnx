@@ -90,7 +90,7 @@ jobs:
             export GIT_CLONE_PROTECTION_ACTIVE=false
             export GIT_LFS_SKIP_SMUDGE=1
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
             git fetch

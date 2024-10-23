@@ -73,7 +73,7 @@ jobs:
 
             d=cpu/$SHERPA_ONNX_VERSION
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull

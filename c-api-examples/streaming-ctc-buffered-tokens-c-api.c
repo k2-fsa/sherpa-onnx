@@ -95,7 +95,7 @@ int32_t main() {
   recognizer_config.decoding_method = "greedy_search";
   recognizer_config.model_config = online_model_config;
 
-  SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);
 
   free((void *)tokens_buf);

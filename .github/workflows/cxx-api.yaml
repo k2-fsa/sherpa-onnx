@@ -1,0 +1,117 @@
+name: cxx-api
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/cxx-api.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'cxx-api-examples/**'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/cxx-api.yaml'
+      - 'CMakeLists.txt'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'cxx-api-examples/**'
+
+  workflow_dispatch:
+
+concurrency:
+  group: cxx-api-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  cxx_api:
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-cxx-api-shared
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          mkdir build
+          cd build
+
+          cmake \
+            -D CMAKE_BUILD_TYPE=Release \
+            -D BUILD_SHARED_LIBS=ON \
+            -D CMAKE_INSTALL_PREFIX=./install \
+            -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+            ..
+
+          make -j2 install
+
+          ls -lh install/lib
+          ls -lh install/include
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./install/lib/libsherpa-onnx-c-api.so
+            ldd ./install/lib/libsherpa-onnx-cxx-api.so
+            echo "---"
+            readelf -d ./install/lib/libsherpa-onnx-c-api.so
+            readelf -d ./install/lib/libsherpa-onnx-cxx-api.so
+          fi
+
+          if [[ ${{ matrix.os }} == macos-latest ]]; then
+            otool -L ./install/lib/libsherpa-onnx-c-api.dylib
+            otool -L ./install/lib/libsherpa-onnx-cxx-api.dylib
+          fi
+
+      - name: Test streaming zipformer
+        shell: bash
+        run: |
+          g++ -std=c++17 -o streaming-zipformer-cxx-api ./cxx-api-examples/streaming-zipformer-cxx-api.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh streaming-zipformer-cxx-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./streaming-zipformer-cxx-api
+            echo "----"
+            readelf -d ./streaming-zipformer-cxx-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+          rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+
+          ls -lh sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20
+          echo "---"
+          ls -lh sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./streaming-zipformer-cxx-api
+
+          rm -rf sherpa-onnx-streaming-zipformer-*
+          rm ./streaming-zipformer-cxx-api

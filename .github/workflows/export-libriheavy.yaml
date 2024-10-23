@@ -56,7 +56,7 @@ jobs:
               src=sherpa-onnx-zipformer-en-libriheavy-20230926-$m
               echo "Process $src"
 
-              git clone https://huggingface.co/csukuangfj/$src huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$src huggingface
               cd huggingface
               git fetch
               git pull
@@ -100,7 +100,7 @@ jobs:
               src=sherpa-onnx-zipformer-en-libriheavy-20230830-$m-punct-case
               echo "Process $src"
 
-              git clone https://huggingface.co/csukuangfj/$src huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$src huggingface
               cd huggingface
               git fetch
               git pull
