@@ -13,7 +13,7 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-x86_64-1.17.1.tgz")
-set(onnxruntime_URL2 "https://hub.nuaa.cf/microsoft/onnxruntime/releases/download/v1.17.1/onnxruntime-osx-x86_64-1.17.1.tgz")
+set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-osx-x86_64-1.17.1.tgz")
 set(onnxruntime_HASH "SHA256=86c6b6896434084ff5086eebc4e9ea90be1ed4d46743f92864f46ee43e7b5059")
 
 # If you don't have access to the Internet,

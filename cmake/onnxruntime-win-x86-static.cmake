@@ -20,7 +20,7 @@ if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
 endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-win-x86-static_lib-1.17.1.tar.bz2")
-set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-win-x86-static_lib-1.17.1.tar.bz2")
+set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-static_lib-1.17.1.tar.bz2")
 set(onnxruntime_HASH "SHA256=52375d3fabc7b437c955a664bfeb9cb7a6391f5219c4b7d3b87ff690416d4b9e")
 
 # If you don't have access to the Internet,
