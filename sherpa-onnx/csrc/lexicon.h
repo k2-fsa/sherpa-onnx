@@ -67,12 +67,6 @@ class Lexicon : public OfflineTtsFrontend {
   bool debug_ = false;
 };
 
-std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is);
-
-std::vector<int32_t> ConvertTokensToIds(
-    const std::unordered_map<std::string, int32_t> &token2id,
-    const std::vector<std::string> &tokens);
-
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_LEXICON_H_

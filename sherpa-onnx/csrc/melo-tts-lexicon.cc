@@ -10,8 +10,8 @@
 
 #include "cppjieba/Jieba.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
-#include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
