@@ -462,6 +462,8 @@ class OfflineSpeakerDiarizationPyannoteImpl
     int32_t sample_rate = meta_data.sample_rate;
     Matrix2D ans(sample_indexes.size(), embedding_extractor_.Dim());
 
+    auto IsNaNWrapper = [](float f) -> bool { return std::isnan(f); };
+
     int32_t k = 0;
     int32_t cur_row_index = 0;
     for (const auto &v : sample_indexes) {
@@ -485,11 +487,7 @@ class OfflineSpeakerDiarizationPyannoteImpl
 
       std::vector<float> embedding = embedding_extractor_.Compute(stream.get());
 
-      float sum =
-          Eigen::Map<Eigen::RowVectorXf>(embedding.data(), embedding.size())
-              .sum();
-
-      if (!isnan(sum)) {
+      if (std::none_of(embedding.begin(), embedding.end(), IsNaNWrapper)) {
         // a valid embedding
         std::copy(embedding.begin(), embedding.end(), &ans(cur_row_index, 0));
         cur_row_index += 1;
