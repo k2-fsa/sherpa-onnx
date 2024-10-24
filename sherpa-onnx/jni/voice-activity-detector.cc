@@ -126,6 +126,11 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_acceptWaveform(
     if (exClass != nullptr) {
       env->ThrowNew(exClass, e.what());
     }
+  } catch (...) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+      env->ThrowNew(exClass, "Native exception: caught unknown exception");
+    }
   }
 }
 
@@ -190,6 +195,11 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(JNIEnv *env,
     jclass exClass = env->FindClass("java/lang/RuntimeException");
     if (exClass != nullptr) {
       env->ThrowNew(exClass, e.what());
+    }
+  } catch (...) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+      env->ThrowNew(exClass, "Native exception: caught unknown exception");
     }
   }
 }

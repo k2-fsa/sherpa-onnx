@@ -310,6 +310,11 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decode(
     if (exClass != nullptr) {
       env->ThrowNew(exClass, e.what());
     }
+  } catch (...) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+      env->ThrowNew(exClass, "Native exception: caught unknown exception");
+    }
   }
 }
 
