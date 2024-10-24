@@ -1,10 +1,6 @@
 name: export-nemo-giga-am-to-onnx
 
 on:
-  push:
-    branches:
-      - nemo-giga-am-ctc
-
   workflow_dispatch:
 
 concurrency:
