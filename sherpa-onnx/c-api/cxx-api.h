@@ -118,6 +118,8 @@ class SHERPA_ONNX_API MoveOnly {
     Destroy();
 
     p_ = other.Release();
+
+    return *this;
   }
 
   const T *Get() const { return p_; }

@@ -312,10 +312,12 @@ static Napi::External<SherpaOnnxOnlineStream> CreateOnlineStreamWrapper(
   SherpaOnnxOnlineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
 
-  SherpaOnnxOnlineStream *stream = SherpaOnnxCreateOnlineStream(recognizer);
+  const SherpaOnnxOnlineStream *stream =
+      SherpaOnnxCreateOnlineStream(recognizer);
 
   return Napi::External<SherpaOnnxOnlineStream>::New(
-      env, stream, [](Napi::Env env, SherpaOnnxOnlineStream *stream) {
+      env, const_cast<SherpaOnnxOnlineStream *>(stream),
+      [](Napi::Env env, SherpaOnnxOnlineStream *stream) {
         SherpaOnnxDestroyOnlineStream(stream);
       });
 }

@@ -340,7 +340,7 @@ static Napi::External<SherpaOnnxOfflineStream> CreateOfflineStreamWrapper(
       SherpaOnnxCreateOfflineStream(recognizer);
 
   return Napi::External<SherpaOnnxOfflineStream>::New(
-      env, const_cast<SherpaOnnxOfflineStream>(stream),
+      env, const_cast<SherpaOnnxOfflineStream *>(stream),
       [](Napi::Env env, SherpaOnnxOfflineStream *stream) {
         SherpaOnnxDestroyOfflineStream(stream);
       });
