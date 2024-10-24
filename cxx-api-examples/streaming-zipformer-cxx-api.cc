@@ -20,7 +20,7 @@
 #include "sherpa-onnx/c-api/cxx-api.h"
 
 int32_t main() {
-  using namespace sherpa_onnx::cxx;
+  using namespace sherpa_onnx::cxx;  // NOLINT
   OnlineRecognizerConfig config;
 
   // please see

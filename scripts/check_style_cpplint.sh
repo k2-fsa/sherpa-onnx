@@ -71,6 +71,9 @@ function is_source_code_file() {
 }
 
 function check_style() {
+  if [[ $1 == mfc-example* ]]; then
+    return
+  fi
   python3 $cpplint_src $1 || abort $1
 }
 
@@ -99,7 +102,7 @@ function do_check() {
       ;;
     2)
       echo "Check all files"
-      files=$(find $sherpa_onnx_dir/sherpa-onnx/csrc $sherpa_onnx_dir/sherpa-onnx/python $sherpa_onnx_dir/scripts/node-addon-api/src $sherpa_onnx_dir/sherpa-onnx/jni $sherpa_onnx_dir/sherpa-onnx/c-api -name "*.h" -o -name "*.cc")
+      files=$(find $sherpa_onnx_dir/cxx-api-examples $sherpa_onnx_dir/c-api-examples $sherpa_onnx_dir/sherpa-onnx/csrc $sherpa_onnx_dir/sherpa-onnx/python $sherpa_onnx_dir/scripts/node-addon-api/src $sherpa_onnx_dir/sherpa-onnx/jni $sherpa_onnx_dir/sherpa-onnx/c-api -name "*.h" -o -name "*.cc")
       ;;
     *)
       echo "Check last commit"
