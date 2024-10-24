@@ -41,13 +41,13 @@
     auto value =                                                        \
         meta_data.LookupCustomMetadataMapAllocated(src_key, allocator); \
     if (!value) {                                                       \
-      SHERPA_ONNX_LOGE("%s does not exist in the metadata", src_key);   \
+      SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key); \
       exit(-1);                                                         \
     }                                                                   \
                                                                         \
     dst = atoi(value.get());                                            \
     if (dst < 0) {                                                      \
-      SHERPA_ONNX_LOGE("Invalid value %d for %s", dst, src_key);        \
+      SHERPA_ONNX_LOGE("Invalid value %d for '%s'", dst, src_key);      \
       exit(-1);                                                         \
     }                                                                   \
   } while (0)
@@ -61,80 +61,80 @@
     } else {                                                                 \
       dst = atoi(value.get());                                               \
       if (dst < 0) {                                                         \
-        SHERPA_ONNX_LOGE("Invalid value %d for %s", dst, src_key);           \
+        SHERPA_ONNX_LOGE("Invalid value %d for '%s'", dst, src_key);         \
         exit(-1);                                                            \
       }                                                                      \
     }                                                                        \
   } while (0)
 
 // read a vector of integers
-#define SHERPA_ONNX_READ_META_DATA_VEC(dst, src_key)                     \
-  do {                                                                   \
-    auto value =                                                         \
-        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator);  \
-    if (!value) {                                                        \
-      SHERPA_ONNX_LOGE("%s does not exist in the metadata", src_key);    \
-      exit(-1);                                                          \
-    }                                                                    \
-                                                                         \
-    bool ret = SplitStringToIntegers(value.get(), ",", true, &dst);      \
-    if (!ret) {                                                          \
-      SHERPA_ONNX_LOGE("Invalid value %s for %s", value.get(), src_key); \
-      exit(-1);                                                          \
-    }                                                                    \
+#define SHERPA_ONNX_READ_META_DATA_VEC(dst, src_key)                         \
+  do {                                                                       \
+    auto value =                                                             \
+        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator);      \
+    if (!value) {                                                            \
+      SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key);      \
+      exit(-1);                                                              \
+    }                                                                        \
+                                                                             \
+    bool ret = SplitStringToIntegers(value.get(), ",", true, &dst);          \
+    if (!ret) {                                                              \
+      SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'", value.get(), src_key); \
+      exit(-1);                                                              \
+    }                                                                        \
   } while (0)
 
 // read a vector of floats
-#define SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(dst, src_key)               \
-  do {                                                                   \
-    auto value =                                                         \
-        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator);  \
-    if (!value) {                                                        \
-      SHERPA_ONNX_LOGE("%s does not exist in the metadata", src_key);    \
-      exit(-1);                                                          \
-    }                                                                    \
-                                                                         \
-    bool ret = SplitStringToFloats(value.get(), ",", true, &dst);        \
-    if (!ret) {                                                          \
-      SHERPA_ONNX_LOGE("Invalid value %s for %s", value.get(), src_key); \
-      exit(-1);                                                          \
-    }                                                                    \
+#define SHERPA_ONNX_READ_META_DATA_VEC_FLOAT(dst, src_key)                   \
+  do {                                                                       \
+    auto value =                                                             \
+        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator);      \
+    if (!value) {                                                            \
+      SHERPA_ONNX_LOGE("%s does not exist in the metadata", src_key);        \
+      exit(-1);                                                              \
+    }                                                                        \
+                                                                             \
+    bool ret = SplitStringToFloats(value.get(), ",", true, &dst);            \
+    if (!ret) {                                                              \
+      SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'", value.get(), src_key); \
+      exit(-1);                                                              \
+    }                                                                        \
   } while (0)
 
 // read a vector of strings
-#define SHERPA_ONNX_READ_META_DATA_VEC_STRING(dst, src_key)                   \
-  do {                                                                        \
-    auto value =                                                              \
-        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator);       \
-    if (!value) {                                                             \
-      SHERPA_ONNX_LOGE("%s does not exist in the metadata", src_key);         \
-      exit(-1);                                                               \
-    }                                                                         \
-    SplitStringToVector(value.get(), ",", false, &dst);                       \
-                                                                              \
-    if (dst.empty()) {                                                        \
-      SHERPA_ONNX_LOGE("Invalid value %s for %s. Empty vector!", value.get(), \
-                       src_key);                                              \
-      exit(-1);                                                               \
-    }                                                                         \
+#define SHERPA_ONNX_READ_META_DATA_VEC_STRING(dst, src_key)             \
+  do {                                                                  \
+    auto value =                                                        \
+        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator); \
+    if (!value) {                                                       \
+      SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key); \
+      exit(-1);                                                         \
+    }                                                                   \
+    SplitStringToVector(value.get(), ",", false, &dst);                 \
+                                                                        \
+    if (dst.empty()) {                                                  \
+      SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'. Empty vector!",    \
+                       value.get(), src_key);                           \
+      exit(-1);                                                         \
+    }                                                                   \
   } while (0)
 
 // read a vector of strings separated by sep
-#define SHERPA_ONNX_READ_META_DATA_VEC_STRING_SEP(dst, src_key, sep)          \
-  do {                                                                        \
-    auto value =                                                              \
-        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator);       \
-    if (!value) {                                                             \
-      SHERPA_ONNX_LOGE("%s does not exist in the metadata", src_key);         \
-      exit(-1);                                                               \
-    }                                                                         \
-    SplitStringToVector(value.get(), sep, false, &dst);                       \
-                                                                              \
-    if (dst.empty()) {                                                        \
-      SHERPA_ONNX_LOGE("Invalid value %s for %s. Empty vector!", value.get(), \
-                       src_key);                                              \
-      exit(-1);                                                               \
-    }                                                                         \
+#define SHERPA_ONNX_READ_META_DATA_VEC_STRING_SEP(dst, src_key, sep)    \
+  do {                                                                  \
+    auto value =                                                        \
+        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator); \
+    if (!value) {                                                       \
+      SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key); \
+      exit(-1);                                                         \
+    }                                                                   \
+    SplitStringToVector(value.get(), sep, false, &dst);                 \
+                                                                        \
+    if (dst.empty()) {                                                  \
+      SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'. Empty vector!",    \
+                       value.get(), src_key);                           \
+      exit(-1);                                                         \
+    }                                                                   \
   } while (0)
 
 // Read a string
@@ -143,15 +143,27 @@
     auto value =                                                        \
         meta_data.LookupCustomMetadataMapAllocated(src_key, allocator); \
     if (!value) {                                                       \
-      SHERPA_ONNX_LOGE("%s does not exist in the metadata", src_key);   \
+      SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key); \
       exit(-1);                                                         \
     }                                                                   \
                                                                         \
     dst = value.get();                                                  \
     if (dst.empty()) {                                                  \
-      SHERPA_ONNX_LOGE("Invalid value for %s\n", src_key);              \
+      SHERPA_ONNX_LOGE("Invalid value for '%s'\n", src_key);            \
       exit(-1);                                                         \
     }                                                                   \
+  } while (0)
+
+#define SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(dst, src_key)        \
+  do {                                                                  \
+    auto value =                                                        \
+        meta_data.LookupCustomMetadataMapAllocated(src_key, allocator); \
+    if (!value) {                                                       \
+      SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key); \
+      exit(-1);                                                         \
+    }                                                                   \
+                                                                        \
+    dst = value.get();                                                  \
   } while (0)
 
 #define SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(dst, src_key,       \
@@ -164,7 +176,7 @@
     } else {                                                            \
       dst = value.get();                                                \
       if (dst.empty()) {                                                \
-        SHERPA_ONNX_LOGE("Invalid value for %s\n", src_key);            \
+        SHERPA_ONNX_LOGE("Invalid value for '%s'\n", src_key);          \
         exit(-1);                                                       \
       }                                                                 \
     }                                                                   \

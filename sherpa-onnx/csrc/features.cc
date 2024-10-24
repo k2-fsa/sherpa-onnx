@@ -193,6 +193,7 @@ class FeatureExtractor::Impl {
     opts_.frame_opts.frame_shift_ms = config_.frame_shift_ms;
     opts_.frame_opts.frame_length_ms = config_.frame_length_ms;
     opts_.frame_opts.remove_dc_offset = config_.remove_dc_offset;
+    opts_.frame_opts.preemph_coeff = config_.preemph_coeff;
     opts_.frame_opts.window_type = config_.window_type;
 
     opts_.mel_opts.num_bins = config_.feature_dim;
@@ -211,6 +212,7 @@ class FeatureExtractor::Impl {
     mfcc_opts_.frame_opts.frame_shift_ms = config_.frame_shift_ms;
     mfcc_opts_.frame_opts.frame_length_ms = config_.frame_length_ms;
     mfcc_opts_.frame_opts.remove_dc_offset = config_.remove_dc_offset;
+    mfcc_opts_.frame_opts.preemph_coeff = config_.preemph_coeff;
     mfcc_opts_.frame_opts.window_type = config_.window_type;
 
     mfcc_opts_.mel_opts.num_bins = config_.feature_dim;

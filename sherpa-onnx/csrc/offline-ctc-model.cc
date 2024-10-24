@@ -21,6 +21,7 @@ namespace {
 
 enum class ModelType : std::uint8_t {
   kEncDecCTCModelBPE,
+  kEncDecCTCModel,
   kEncDecHybridRNNTCTCBPEModel,
   kTdnn,
   kZipformerCtc,
@@ -75,6 +76,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
   if (model_type.get() == std::string("EncDecCTCModelBPE")) {
     return ModelType::kEncDecCTCModelBPE;
+  } else if (model_type.get() == std::string("EncDecCTCModel")) {
+    return ModelType::kEncDecCTCModel;
   } else if (model_type.get() == std::string("EncDecHybridRNNTCTCBPEModel")) {
     return ModelType::kEncDecHybridRNNTCTCBPEModel;
   } else if (model_type.get() == std::string("tdnn")) {
@@ -121,22 +124,18 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   switch (model_type) {
     case ModelType::kEncDecCTCModelBPE:
       return std::make_unique<OfflineNemoEncDecCtcModel>(config);
-      break;
+    case ModelType::kEncDecCTCModel:
+      return std::make_unique<OfflineNemoEncDecCtcModel>(config);
     case ModelType::kEncDecHybridRNNTCTCBPEModel:
       return std::make_unique<OfflineNemoEncDecHybridRNNTCTCBPEModel>(config);
-      break;
     case ModelType::kTdnn:
       return std::make_unique<OfflineTdnnCtcModel>(config);
-      break;
     case ModelType::kZipformerCtc:
       return std::make_unique<OfflineZipformerCtcModel>(config);
-      break;
     case ModelType::kWenetCtc:
       return std::make_unique<OfflineWenetCtcModel>(config);
-      break;
     case ModelType::kTeleSpeechCtc:
       return std::make_unique<OfflineTeleSpeechCtcModel>(config);
-      break;
     case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in offline CTC!");
       return nullptr;
@@ -177,23 +176,19 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   switch (model_type) {
     case ModelType::kEncDecCTCModelBPE:
       return std::make_unique<OfflineNemoEncDecCtcModel>(mgr, config);
-      break;
+    case ModelType::kEncDecCTCModel:
+      return std::make_unique<OfflineNemoEncDecCtcModel>(mgr, config);
     case ModelType::kEncDecHybridRNNTCTCBPEModel:
       return std::make_unique<OfflineNemoEncDecHybridRNNTCTCBPEModel>(mgr,
                                                                       config);
-      break;
     case ModelType::kTdnn:
       return std::make_unique<OfflineTdnnCtcModel>(mgr, config);
-      break;
     case ModelType::kZipformerCtc:
       return std::make_unique<OfflineZipformerCtcModel>(mgr, config);
-      break;
     case ModelType::kWenetCtc:
       return std::make_unique<OfflineWenetCtcModel>(mgr, config);
-      break;
     case ModelType::kTeleSpeechCtc:
       return std::make_unique<OfflineTeleSpeechCtcModel>(mgr, config);
-      break;
     case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in offline CTC!");
       return nullptr;

@@ -16,6 +16,7 @@
 #endif
 
 #include "sherpa-onnx/csrc/base64-decode.h"
+#include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
@@ -40,23 +41,10 @@ SymbolTable::SymbolTable(AAssetManager *mgr, const std::string &filename) {
 #endif
 
 void SymbolTable::Init(std::istream &is) {
-  std::string sym;
-  int32_t id = 0;
-  while (is >> sym >> id) {
-#if 0
-    // we disable the test here since for some multi-lingual BPE models
-    // from NeMo, the same symbol can appear multiple times with different IDs.
-    if (sym != " ") {
-      assert(sym2id_.count(sym) == 0);
-    }
-#endif
-
-    assert(id2sym_.count(id) == 0);
-
-    sym2id_.insert({sym, id});
-    id2sym_.insert({id, sym});
+  sym2id_ = ReadTokens(is);
+  for (const auto &p : sym2id_) {
+    id2sym_.insert({p.second, p.first});
   }
-  assert(is.eof());
 }
 
 std::string SymbolTable::ToString() const {

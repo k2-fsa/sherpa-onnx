@@ -72,6 +72,8 @@ class OfflineNemoEncDecCtcModel::Impl {
 
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
 
+  bool IsGigaAM() const { return is_giga_am_; }
+
  private:
   void Init(void *model_data, size_t model_data_length) {
     sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
@@ -92,7 +94,9 @@ class OfflineNemoEncDecCtcModel::Impl {
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(vocab_size_, "vocab_size");
     SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
-    SHERPA_ONNX_READ_META_DATA_STR(normalize_type_, "normalize_type");
+    SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(normalize_type_,
+                                               "normalize_type");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(is_giga_am_, "is_giga_am", 0);
   }
 
  private:
@@ -112,6 +116,10 @@ class OfflineNemoEncDecCtcModel::Impl {
   int32_t vocab_size_ = 0;
   int32_t subsampling_factor_ = 0;
   std::string normalize_type_;
+
+  // it is 1 for models from
+  // https://github.com/salute-developers/GigaAM
+  int32_t is_giga_am_ = 0;
 };
 
 OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(
@@ -145,5 +153,7 @@ OrtAllocator *OfflineNemoEncDecCtcModel::Allocator() const {
 std::string OfflineNemoEncDecCtcModel::FeatureNormalizationMethod() const {
   return impl_->FeatureNormalizationMethod();
 }
+
+bool OfflineNemoEncDecCtcModel::IsGigaAM() const { return impl_->IsGigaAM(); }
 
 }  // namespace sherpa_onnx

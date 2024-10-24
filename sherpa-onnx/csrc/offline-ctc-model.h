@@ -66,6 +66,10 @@ class OfflineCtcModel {
 
   // Return true if the model supports batch size > 1
   virtual bool SupportBatchProcessing() const { return true; }
+
+  // return true for models from https://github.com/salute-developers/GigaAM
+  // return false otherwise
+  virtual bool IsGigaAM() const { return false; }
 };
 
 }  // namespace sherpa_onnx
