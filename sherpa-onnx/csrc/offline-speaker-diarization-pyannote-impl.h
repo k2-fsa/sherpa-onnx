@@ -503,6 +503,11 @@ class OfflineSpeakerDiarizationPyannoteImpl
       }
     }
 
+    if (k != cur_row_index) {
+      auto seq = Eigen::seqN(0, cur_row_index);
+      ans = ans(seq, Eigen::all);
+    }
+
     return ans;
   }
 
