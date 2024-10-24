@@ -16,22 +16,22 @@ namespace sherpa_onnx::cxx {
 // ============================================================================
 // Streaming ASR
 // ============================================================================
-struct SHERPA_ONNX_API OnlineTransducerModelConfig {
+struct OnlineTransducerModelConfig {
   std::string encoder;
   std::string decoder;
   std::string joiner;
 };
 
-struct SHERPA_ONNX_API OnlineParaformerModelConfig {
+struct OnlineParaformerModelConfig {
   std::string encoder;
   std::string decoder;
 };
 
-struct SHERPA_ONNX_API OnlineZipformer2CtcModelConfig {
+struct OnlineZipformer2CtcModelConfig {
   std::string model;
 };
 
-struct SHERPA_ONNX_API OnlineModelConfig {
+struct OnlineModelConfig {
   OnlineTransducerModelConfig transducer;
   OnlineParaformerModelConfig paraformer;
   OnlineZipformer2CtcModelConfig zipformer2_ctc;
@@ -45,17 +45,17 @@ struct SHERPA_ONNX_API OnlineModelConfig {
   std::string tokens_buf;
 };
 
-struct SHERPA_ONNX_API FeatureConfig {
+struct FeatureConfig {
   int32_t sample_rate = 16000;
   int32_t feature_dim = 80;
 };
 
-struct SHERPA_ONNX_API OnlineCtcFstDecoderConfig {
+struct OnlineCtcFstDecoderConfig {
   std::string graph;
   int32_t max_active = 3000;
 };
 
-struct SHERPA_ONNX_API OnlineRecognizerConfig {
+struct OnlineRecognizerConfig {
   FeatureConfig feat_config;
   OnlineModelConfig model_config;
 
@@ -83,14 +83,14 @@ struct SHERPA_ONNX_API OnlineRecognizerConfig {
   std::string hotwords_buf;
 };
 
-struct SHERPA_ONNX_API OnlineRecognizerResult {
+struct OnlineRecognizerResult {
   std::string text;
   std::vector<std::string> tokens;
   std::vector<float> timestamps;
   std::string json;
 };
 
-struct SHERPA_ONNX_API Wave {
+struct Wave {
   std::vector<float> samples;
   int32_t sample_rate;
 };
@@ -118,6 +118,8 @@ class SHERPA_ONNX_API MoveOnly {
     Destroy();
 
     p_ = other.Release();
+
+    return *this;
   }
 
   const T *Get() const { return p_; }

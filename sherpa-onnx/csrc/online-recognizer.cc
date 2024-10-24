@@ -19,6 +19,8 @@
 
 namespace sherpa_onnx {
 
+namespace {
+
 /// Helper for `OnlineRecognizerResult::AsJsonString()`
 template <typename T>
 std::string VecToString(const std::vector<T> &vec, int32_t precision = 6) {
@@ -50,6 +52,8 @@ std::string VecToString<std::string>(const std::vector<std::string> &vec,
   oss << "]";
   return oss.str();
 }
+
+}  // namespace
 
 std::string OnlineRecognizerResult::AsJsonString() const {
   std::ostringstream os;

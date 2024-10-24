@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-speaker-diarization-result.h"
 
 #include <algorithm>
+#include <array>
 #include <sstream>
 #include <string>
 #include <unordered_set>
@@ -48,11 +49,13 @@ OfflineSpeakerDiarizationSegment::Merge(
 }
 
 std::string OfflineSpeakerDiarizationSegment::ToString() const {
-  char s[128];
-  snprintf(s, sizeof(s), "%.3f -- %.3f speaker_%02d", start_, end_, speaker_);
+  std::array<char, 128> s{};
+
+  snprintf(s.data(), s.size(), "%.3f -- %.3f speaker_%02d", start_, end_,
+           speaker_);
 
   std::ostringstream os;
-  os << s;
+  os << s.data();
 
   if (!text_.empty()) {
     os << " " << text_;

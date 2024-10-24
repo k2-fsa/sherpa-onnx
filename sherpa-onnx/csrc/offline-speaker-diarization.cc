@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 
 #include <string>
+#include <utility>
 
 #include "sherpa-onnx/csrc/offline-speaker-diarization-impl.h"
 
@@ -94,7 +95,7 @@ OfflineSpeakerDiarizationResult OfflineSpeakerDiarization::Process(
     const float *audio, int32_t n,
     OfflineSpeakerDiarizationProgressCallback callback /*= nullptr*/,
     void *callback_arg /*= nullptr*/) const {
-  return impl_->Process(audio, n, callback, callback_arg);
+  return impl_->Process(audio, n, std::move(callback), callback_arg);
 }
 
 }  // namespace sherpa_onnx

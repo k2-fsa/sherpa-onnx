@@ -15,7 +15,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-x64-static_lib-1.17.1-glibc2_17.zip")
-set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-x64-static_lib-1.17.1-glibc2_17.zip")
+set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-x64-static_lib-1.17.1-glibc2_17.zip")
 set(onnxruntime_HASH "SHA256=b646beeb983de843a267096d4457d832f93089f5e7264fd54b48cff207cb2068")
 
 # If you don't have access to the Internet,

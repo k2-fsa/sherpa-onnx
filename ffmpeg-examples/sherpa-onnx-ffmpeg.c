@@ -214,8 +214,8 @@ end:
 }
 
 static void sherpa_decode_frame(const AVFrame *frame,
-                                SherpaOnnxOnlineRecognizer *recognizer,
-                                SherpaOnnxOnlineStream *stream,
+                                const SherpaOnnxOnlineRecognizer *recognizer,
+                                const SherpaOnnxOnlineStream *stream,
                                 const SherpaOnnxDisplay *display,
                                 int32_t *segment_id) {
 #define N 3200  // 100s. Sample rate is fixed to 16 kHz

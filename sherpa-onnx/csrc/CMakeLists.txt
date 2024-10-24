@@ -18,6 +18,7 @@ set(sources
   endpoint.cc
   features.cc
   file-utils.cc
+  fst-utils.cc
   hypothesis.cc
   keyword-spotter-impl.cc
   keyword-spotter.cc

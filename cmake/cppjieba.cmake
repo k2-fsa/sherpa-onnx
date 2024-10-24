@@ -2,7 +2,7 @@ function(download_cppjieba)
   include(FetchContent)
 
   set(cppjieba_URL  "https://github.com/csukuangfj/cppjieba/archive/refs/tags/sherpa-onnx-2024-04-19.tar.gz")
-  set(cppjieba_URL2 "https://hub.nuaa.cf/csukuangfj/cppjieba/archive/refs/tags/sherpa-onnx-2024-04-19.tar.gz")
+  set(cppjieba_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/cppjieba-sherpa-onnx-2024-04-19.tar.gz")
   set(cppjieba_HASH "SHA256=03e5264687f0efaef05487a07d49c3f4c0f743347bfbf825df4b30cc75ac5288")
 
   # If you don't have access to the Internet,
