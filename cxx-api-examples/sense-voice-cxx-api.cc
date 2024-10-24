@@ -19,7 +19,7 @@
 #include "sherpa-onnx/c-api/cxx-api.h"
 
 int32_t main() {
-  using namespace sherpa_onnx::cxx;
+  using namespace sherpa_onnx::cxx;  // NOLINT
   OfflineRecognizerConfig config;
 
   config.model_config.sense_voice.model =

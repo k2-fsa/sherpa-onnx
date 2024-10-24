@@ -122,7 +122,7 @@ class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
     auto variance = EX2 - EX.array().pow(2);
     auto stddev = variance.array().sqrt();
 
-    m = (m.rowwise() - EX).array().rowwise() / stddev.array();
+    m = (m.rowwise() - EX).array().rowwise() / (stddev.array() + 1e-5);
   }
 
  private:
