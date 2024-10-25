@@ -104,11 +104,20 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     }
 
     if (!config_.model_config.nemo_ctc.model.empty()) {
-      config_.feat_config.low_freq = 0;
-      config_.feat_config.high_freq = 0;
-      config_.feat_config.is_librosa = true;
-      config_.feat_config.remove_dc_offset = false;
-      config_.feat_config.window_type = "hann";
+      if (model_->IsGigaAM()) {
+        config_.feat_config.low_freq = 0;
+        config_.feat_config.high_freq = 8000;
+        config_.feat_config.remove_dc_offset = false;
+        config_.feat_config.preemph_coeff = 0;
+        config_.feat_config.window_type = "hann";
+        config_.feat_config.feature_dim = 64;
+      } else {
+        config_.feat_config.low_freq = 0;
+        config_.feat_config.high_freq = 0;
+        config_.feat_config.is_librosa = true;
+        config_.feat_config.remove_dc_offset = false;
+        config_.feat_config.window_type = "hann";
+      }
     }
 
     if (!config_.model_config.wenet_ctc.model.empty()) {

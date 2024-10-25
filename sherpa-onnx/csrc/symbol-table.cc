@@ -7,6 +7,8 @@
 #include <cassert>
 #include <fstream>
 #include <sstream>
+#include <string>
+#include <utility>
 
 #if __ANDROID_API__ >= 9
 #include <strstream>
@@ -16,9 +18,53 @@
 #endif
 
 #include "sherpa-onnx/csrc/base64-decode.h"
+#include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
+
+std::unordered_map<std::string, int32_t> ReadTokens(
+    std::istream &is,
+    std::unordered_map<int32_t, std::string> *id2token /*= nullptr*/) {
+  std::unordered_map<std::string, int32_t> token2id;
+
+  std::string line;
+
+  std::string sym;
+  int32_t id = -1;
+  while (std::getline(is, line)) {
+    std::istringstream iss(line);
+    iss >> sym;
+    if (iss.eof()) {
+      id = atoi(sym.c_str());
+      sym = " ";
+    } else {
+      iss >> id;
+    }
+
+    // eat the trailing \r\n on windows
+    iss >> std::ws;
+    if (!iss.eof()) {
+      SHERPA_ONNX_LOGE("Error: %s", line.c_str());
+      exit(-1);
+    }
+
+#if 0
+    if (token2id.count(sym)) {
+      SHERPA_ONNX_LOGE("Duplicated token %s. Line %s. Existing ID: %d",
+                       sym.c_str(), line.c_str(), token2id.at(sym));
+      exit(-1);
+    }
+#endif
+    if (id2token) {
+      id2token->insert({id, sym});
+    }
+
+    token2id.insert({std::move(sym), id});
+  }
+
+  return token2id;
+}
 
 SymbolTable::SymbolTable(const std::string &filename, bool is_file) {
   if (is_file) {
@@ -39,25 +85,7 @@ SymbolTable::SymbolTable(AAssetManager *mgr, const std::string &filename) {
 }
 #endif
 
-void SymbolTable::Init(std::istream &is) {
-  std::string sym;
-  int32_t id = 0;
-  while (is >> sym >> id) {
-#if 0
-    // we disable the test here since for some multi-lingual BPE models
-    // from NeMo, the same symbol can appear multiple times with different IDs.
-    if (sym != " ") {
-      assert(sym2id_.count(sym) == 0);
-    }
-#endif
-
-    assert(id2sym_.count(id) == 0);
-
-    sym2id_.insert({sym, id});
-    id2sym_.insert({id, sym});
-  }
-  assert(is.eof());
-}
+void SymbolTable::Init(std::istream &is) { sym2id_ = ReadTokens(is, &id2sym_); }
 
 std::string SymbolTable::ToString() const {
   std::ostringstream os;

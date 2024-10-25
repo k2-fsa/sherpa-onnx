@@ -21,6 +21,7 @@
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
@@ -72,45 +73,6 @@ static std::vector<std::string> ProcessHeteronyms(
   }
 
   return ans;
-}
-
-// Note: We don't use SymbolTable here since tokens may contain a blank
-// in the first column
-std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is) {
-  std::unordered_map<std::string, int32_t> token2id;
-
-  std::string line;
-
-  std::string sym;
-  int32_t id = -1;
-  while (std::getline(is, line)) {
-    std::istringstream iss(line);
-    iss >> sym;
-    if (iss.eof()) {
-      id = atoi(sym.c_str());
-      sym = " ";
-    } else {
-      iss >> id;
-    }
-
-    // eat the trailing \r\n on windows
-    iss >> std::ws;
-    if (!iss.eof()) {
-      SHERPA_ONNX_LOGE("Error: %s", line.c_str());
-      exit(-1);
-    }
-
-#if 0
-    if (token2id.count(sym)) {
-      SHERPA_ONNX_LOGE("Duplicated token %s. Line %s. Existing ID: %d",
-                       sym.c_str(), line.c_str(), token2id.at(sym));
-      exit(-1);
-    }
-#endif
-    token2id.insert({std::move(sym), id});
-  }
-
-  return token2id;
 }
 
 std::vector<int32_t> ConvertTokensToIds(

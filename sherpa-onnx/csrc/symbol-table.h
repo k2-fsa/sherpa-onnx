@@ -5,8 +5,10 @@
 #ifndef SHERPA_ONNX_CSRC_SYMBOL_TABLE_H_
 #define SHERPA_ONNX_CSRC_SYMBOL_TABLE_H_
 
+#include <istream>
 #include <string>
 #include <unordered_map>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -14,6 +16,16 @@
 #endif
 
 namespace sherpa_onnx {
+
+// The same token can be mapped to different integer IDs, so
+// we need an id2token argument here.
+std::unordered_map<std::string, int32_t> ReadTokens(
+    std::istream &is,
+    std::unordered_map<int32_t, std::string> *id2token = nullptr);
+
+std::vector<int32_t> ConvertTokensToIds(
+    const std::unordered_map<std::string, int32_t> &token2id,
+    const std::vector<std::string> &tokens);
 
 /// It manages mapping between symbols and integer IDs.
 class SymbolTable {
