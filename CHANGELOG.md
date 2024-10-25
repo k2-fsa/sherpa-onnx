@@ -1,3 +1,17 @@
+## 1.10.29
+
+* Add Go API for offline punctuation models (#1434)
+* Support https://huggingface.co/Revai/reverb-diarization-v1 (#1437)
+* Add more models for speaker diarization (#1440)
+* Add Java API example for hotwords. (#1442)
+* Add java android demo (#1454)
+* Add C++ API for streaming ASR. (#1455)
+* Add C++ API for non-streaming ASR (#1456)
+* Handle NaN embeddings in speaker diarization. (#1461)
+* Add speaker identification with VAD and non-streaming ASR using ALSA (#1463)
+* Support GigaAM CTC models for Russian ASR (#1464)
+* Add GigaAM NeMo transducer model for Russian ASR (#1467)
+
 ## 1.10.28
 
 * Fix swift example for generating subtitles. (#1362)
