@@ -29,7 +29,7 @@ function download_files() {
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/ctc/ctc_model_config.yaml
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/example.wav
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/long_example.wav
-  curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM%20License_NC.pdf
+  curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/GigaAM%20License_NC.pdf
 }
 
 install_nemo

@@ -31,7 +31,7 @@ function download_files() {
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/rnnt/rnnt_model_config.yaml
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/example.wav
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/long_example.wav
-  curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM%20License_NC.pdf
+  curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/GigaAM%20License_NC.pdf
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/rnnt/tokenizer_all_sets.tar
   tar -xf tokenizer_all_sets.tar && rm tokenizer_all_sets.tar
   ls -lh
