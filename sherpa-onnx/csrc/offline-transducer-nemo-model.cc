@@ -183,7 +183,8 @@ class OfflineTransducerNeMoModel::Impl {
     vocab_size_ += 1;
 
     SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
-    SHERPA_ONNX_READ_META_DATA_STR(normalize_type_, "normalize_type");
+    SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(normalize_type_,
+                                               "normalize_type");
     SHERPA_ONNX_READ_META_DATA(pred_rnn_layers_, "pred_rnn_layers");
     SHERPA_ONNX_READ_META_DATA(pred_hidden_, "pred_hidden");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(is_giga_am_, "is_giga_am", 0);
