@@ -394,6 +394,16 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 modelType = "transducer",
             )
         }
+
+        19 -> {
+            val modelDir = "sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24"
+            return OfflineModelConfig(
+                nemo = OfflineNemoEncDecCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
     }
     return null
 }
