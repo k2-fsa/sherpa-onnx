@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 # Copyright      2024  Xiaomi Corp.        (authors: Fangjun Kuang)
 
+from typing import Dict
+
+import onnx
 import torch
 import torchaudio
 from nemo.collections.asr.models import EncDecRNNTBPEModel
@@ -10,6 +13,28 @@ from nemo.collections.asr.modules.audio_preprocessing import (
 from nemo.collections.asr.parts.preprocessing.features import (
     FilterbankFeaturesTA as NeMoFilterbankFeaturesTA,
 )
+from onnxruntime.quantization import QuantType, quantize_dynamic
+
+
+def add_meta_data(filename: str, meta_data: Dict[str, str]):
+    """Add meta data to an ONNX model. It is changed in-place.
+
+    Args:
+      filename:
+        Filename of the ONNX model to be changed.
+      meta_data:
+        Key-value pairs.
+    """
+    model = onnx.load(filename)
+    while len(model.metadata_props):
+        model.metadata_props.pop()
+
+    for key, value in meta_data.items():
+        meta = model.metadata_props.add()
+        meta.key = key
+        meta.value = str(value)
+
+    onnx.save(model, filename)
 
 
 class FilterbankFeaturesTA(NeMoFilterbankFeaturesTA):
@@ -81,12 +106,11 @@ def main():
         "language": "Russian",
         "is_giga_am": 1,
     }
-    add_meta_data(filename, meta_data)
+    add_meta_data("encoder.onnx", meta_data)
 
-    filename_int8 = "encoder.int8.onnx"
     quantize_dynamic(
         model_input="encoder.onnx",
-        model_output=filename_int8,
+        model_output="encoder.int8.onnx",
         weight_type=QuantType.QUInt8,
     )
 

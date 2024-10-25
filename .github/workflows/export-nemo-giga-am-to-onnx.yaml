@@ -41,7 +41,7 @@ jobs:
           mkdir $d/test_wavs
           rm scripts/nemo/GigaAM/model.onnx
           mv -v scripts/nemo/GigaAM/*.int8.onnx $d/
-          mv -v scripts/nemo/GigaAM/*.md $d/
+          cp -v scripts/nemo/GigaAM/*.md $d/
           mv -v scripts/nemo/GigaAM/*.pdf $d/
           mv -v scripts/nemo/GigaAM/tokens.txt $d/
           mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
@@ -69,7 +69,7 @@ jobs:
           mv -v scripts/nemo/GigaAM/decoder.onnx $d/
           mv -v scripts/nemo/GigaAM/joiner.onnx $d/
 
-          mv -v scripts/nemo/GigaAM/*.md $d/
+          cp -v scripts/nemo/GigaAM/*.md $d/
           mv -v scripts/nemo/GigaAM/*.pdf $d/
           mv -v scripts/nemo/GigaAM/tokens.txt $d/
           mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
