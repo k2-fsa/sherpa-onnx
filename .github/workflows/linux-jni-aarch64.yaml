@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - jni
-      - linux-aarch64-jni
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
@@ -91,6 +90,7 @@ jobs:
                 -D CMAKE_BUILD_TYPE=Release \
                 -D BUILD_SHARED_LIBS=ON \
                 -D CMAKE_INSTALL_PREFIX=./install \
+                -D SHERPA_ONNX_ENABLE_BINARY=OFF \
                 -D SHERPA_ONNX_ENABLE_JNI=ON \
                 ..
 
@@ -98,7 +98,6 @@ jobs:
               make install
 
               ls -lh lib
-              ls -lh bin
               rm -rf ./install/lib/pkgconfig
               rm -rf ./install/lib/share
               rm -rf ./install/lib/cargs.h
@@ -110,26 +109,6 @@ jobs:
               ls -lh install/lib
 
               echo "----"
-              ls -lh install/bin
-
-      - name: Display dependencies of sherpa-onnx for linux
-        if: matrix.java-version == '21'
-        shell: bash
-        run: |
-          du -h -d1 .
-          sudo chown -R $USER ./build
-          ls -lh build/bin
-          ls -lh build/_deps/onnxruntime-src/lib/
-
-          echo "strip"
-          strip build/bin/*
-          echo "after strip"
-          ls -lh build/bin
-
-          file build/bin/sherpa-onnx
-          file build/bin/sherpa-onnx
-          ls -lh build/bin/sherpa-onnx
-          readelf -d build/bin/sherpa-onnx
 
       - uses: actions/upload-artifact@v4
         if: matrix.java-version == '21'
@@ -147,7 +126,6 @@ jobs:
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-jni
           mkdir $dst
 
-          cp -a build/install/bin $dst/
           cp -a build/install/lib $dst/
           cp -a build/install/include $dst/
 
