@@ -238,11 +238,12 @@ static Napi::Array OfflineSpeakerDiarizationProcessWrapper(
 
   for (int32_t i = 0; i != num_segments; ++i) {
     Napi::Object obj = Napi::Object::New(env);
+
     obj.Set(Napi::String::New(env, "start"), segments[i].start);
     obj.Set(Napi::String::New(env, "end"), segments[i].end);
     obj.Set(Napi::String::New(env, "speaker"), segments[i].speaker);
 
-    ans[i] = obj;
+    ans.Set(i, obj);
   }
 
   SherpaOnnxOfflineSpeakerDiarizationDestroySegment(segments);
