@@ -93,6 +93,8 @@ class OfflineTransducerNeMoModel {
   // for details
   std::string FeatureNormalizationMethod() const;
 
+  bool IsGigaAM() const;
+
  private:
   class Impl;
   std::unique_ptr<Impl> impl_;

@@ -153,6 +153,8 @@ class OfflineTransducerNeMoModel::Impl {
 
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
 
+  bool IsGigaAM() const { return is_giga_am_; }
+
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
     encoder_sess_ = std::make_unique<Ort::Session>(
@@ -181,9 +183,11 @@ class OfflineTransducerNeMoModel::Impl {
     vocab_size_ += 1;
 
     SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
-    SHERPA_ONNX_READ_META_DATA_STR(normalize_type_, "normalize_type");
+    SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(normalize_type_,
+                                               "normalize_type");
     SHERPA_ONNX_READ_META_DATA(pred_rnn_layers_, "pred_rnn_layers");
     SHERPA_ONNX_READ_META_DATA(pred_hidden_, "pred_hidden");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(is_giga_am_, "is_giga_am", 0);
 
     if (normalize_type_ == "NA") {
       normalize_type_ = "";
@@ -245,6 +249,7 @@ class OfflineTransducerNeMoModel::Impl {
   std::string normalize_type_;
   int32_t pred_rnn_layers_ = -1;
   int32_t pred_hidden_ = -1;
+  int32_t is_giga_am_ = 0;
 };
 
 OfflineTransducerNeMoModel::OfflineTransducerNeMoModel(
@@ -297,5 +302,7 @@ OrtAllocator *OfflineTransducerNeMoModel::Allocator() const {
 std::string OfflineTransducerNeMoModel::FeatureNormalizationMethod() const {
   return impl_->FeatureNormalizationMethod();
 }
+
+bool OfflineTransducerNeMoModel::IsGigaAM() const { return impl_->IsGigaAM(); }
 
 }  // namespace sherpa_onnx

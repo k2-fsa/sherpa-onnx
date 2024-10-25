@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 # Copyright      2024  Xiaomi Corp.        (authors: Fangjun Kuang)
+
 from typing import Dict
 
 import onnx
 import torch
 import torchaudio
-from nemo.collections.asr.models import EncDecCTCModel
+from nemo.collections.asr.models import EncDecRNNTBPEModel
 from nemo.collections.asr.modules.audio_preprocessing import (
     AudioToMelSpectrogramPreprocessor as NeMoAudioToMelSpectrogramPreprocessor,
 )
@@ -13,6 +14,27 @@ from nemo.collections.asr.parts.preprocessing.features import (
     FilterbankFeaturesTA as NeMoFilterbankFeaturesTA,
 )
 from onnxruntime.quantization import QuantType, quantize_dynamic
+
+
+def add_meta_data(filename: str, meta_data: Dict[str, str]):
+    """Add meta data to an ONNX model. It is changed in-place.
+
+    Args:
+      filename:
+        Filename of the ONNX model to be changed.
+      meta_data:
+        Key-value pairs.
+    """
+    model = onnx.load(filename)
+    while len(model.metadata_props):
+        model.metadata_props.pop()
+
+    for key, value in meta_data.items():
+        meta = model.metadata_props.add()
+        meta.key = key
+        meta.value = str(value)
+
+    onnx.save(model, filename)
 
 
 class FilterbankFeaturesTA(NeMoFilterbankFeaturesTA):
@@ -54,59 +76,41 @@ class AudioToMelSpectrogramPreprocessor(NeMoAudioToMelSpectrogramPreprocessor):
         )
 
 
-def add_meta_data(filename: str, meta_data: Dict[str, str]):
-    """Add meta data to an ONNX model. It is changed in-place.
-
-    Args:
-      filename:
-        Filename of the ONNX model to be changed.
-      meta_data:
-        Key-value pairs.
-    """
-    model = onnx.load(filename)
-    while len(model.metadata_props):
-        model.metadata_props.pop()
-
-    for key, value in meta_data.items():
-        meta = model.metadata_props.add()
-        meta.key = key
-        meta.value = str(value)
-
-    onnx.save(model, filename)
-
-
 @torch.no_grad()
 def main():
-    model = EncDecCTCModel.from_config_file("./ctc_model_config.yaml")
-    ckpt = torch.load("./ctc_model_weights.ckpt", map_location="cpu")
+    model = EncDecRNNTBPEModel.from_config_file("./rnnt_model_config.yaml")
+    ckpt = torch.load("./rnnt_model_weights.ckpt", map_location="cpu")
     model.load_state_dict(ckpt, strict=False)
     model.eval()
 
-    with open("tokens.txt", "w", encoding="utf-8") as f:
-        for i, t in enumerate(model.cfg.labels):
-            f.write(f"{t} {i}\n")
+    with open("./tokens.txt", "w", encoding="utf-8") as f:
+        for i, s in enumerate(model.joint.vocabulary):
+            f.write(f"{s} {i}\n")
         f.write(f"<blk> {i+1}\n")
+        print("Saved to tokens.txt")
 
-    filename = "model.onnx"
-    model.export(filename)
+    model.encoder.export("encoder.onnx")
+    model.decoder.export("decoder.onnx")
+    model.joint.export("joiner.onnx")
 
     meta_data = {
-        "vocab_size": len(model.cfg.labels) + 1,
+        "vocab_size": model.decoder.vocab_size,  # not including the blank
+        "pred_rnn_layers": model.decoder.pred_rnn_layers,
+        "pred_hidden": model.decoder.pred_hidden,
         "normalize_type": "",
         "subsampling_factor": 4,
-        "model_type": "EncDecCTCModel",
+        "model_type": "EncDecRNNTBPEModel",
         "version": "1",
         "model_author": "https://github.com/salute-developers/GigaAM",
         "license": "https://github.com/salute-developers/GigaAM/blob/main/GigaAM%20License_NC.pdf",
         "language": "Russian",
         "is_giga_am": 1,
     }
-    add_meta_data(filename, meta_data)
+    add_meta_data("encoder.onnx", meta_data)
 
-    filename_int8 = "model.int8.onnx"
     quantize_dynamic(
-        model_input=filename,
-        model_output=filename_int8,
+        model_input="encoder.onnx",
+        model_output="encoder.int8.onnx",
         weight_type=QuantType.QUInt8,
     )
 

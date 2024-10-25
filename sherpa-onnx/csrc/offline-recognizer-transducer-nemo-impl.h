@@ -139,23 +139,29 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
     }
   }
 
-  OfflineRecognizerConfig GetConfig() const override {
-    return config_;
-  }
+  OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
   void PostInit() {
     config_.feat_config.nemo_normalize_type =
         model_->FeatureNormalizationMethod();
 
-    config_.feat_config.low_freq = 0;
-    // config_.feat_config.high_freq = 8000;
-    config_.feat_config.is_librosa = true;
-    config_.feat_config.remove_dc_offset = false;
-    // config_.feat_config.window_type = "hann";
     config_.feat_config.dither = 0;
-    config_.feat_config.nemo_normalize_type =
-        model_->FeatureNormalizationMethod();
+
+    if (model_->IsGigaAM()) {
+      config_.feat_config.low_freq = 0;
+      config_.feat_config.high_freq = 8000;
+      config_.feat_config.remove_dc_offset = false;
+      config_.feat_config.preemph_coeff = 0;
+      config_.feat_config.window_type = "hann";
+      config_.feat_config.feature_dim = 64;
+    } else {
+      config_.feat_config.low_freq = 0;
+      // config_.feat_config.high_freq = 8000;
+      config_.feat_config.is_librosa = true;
+      config_.feat_config.remove_dc_offset = false;
+      // config_.feat_config.window_type = "hann";
+    }
 
     int32_t vocab_size = model_->VocabSize();
 

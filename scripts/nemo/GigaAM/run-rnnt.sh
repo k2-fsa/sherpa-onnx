@@ -21,20 +21,30 @@ function install_nemo() {
 }
 
 function download_files() {
-  # curl -SL -O https://n-ws-q0bez.s3pd12.sbercloud.ru/b-ws-q0bez-jpv/GigaAM/ctc_model_weights.ckpt
-  # curl -SL -O https://n-ws-q0bez.s3pd12.sbercloud.ru/b-ws-q0bez-jpv/GigaAM/ctc_model_config.yaml
+  # curl -SL -O https://n-ws-q0bez.s3pd12.sbercloud.ru/b-ws-q0bez-jpv/GigaAM/rnnt_model_weights.ckpt
+  # curl -SL -O https://n-ws-q0bez.s3pd12.sbercloud.ru/b-ws-q0bez-jpv/GigaAM/rnnt_model_config.yaml
   # curl -SL -O https://n-ws-q0bez.s3pd12.sbercloud.ru/b-ws-q0bez-jpv/GigaAM/example.wav
   # curl -SL -O https://n-ws-q0bez.s3pd12.sbercloud.ru/b-ws-q0bez-jpv/GigaAM/long_example.wav
-  curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/ctc/ctc_model_weights.ckpt
-  curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/ctc/ctc_model_config.yaml
+  # curl -SL -O https://n-ws-q0bez.s3pd12.sbercloud.ru/b-ws-q0bez-jpv/GigaAM/tokenizer_all_sets.tar
+
+  curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/rnnt/rnnt_model_weights.ckpt
+  curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/rnnt/rnnt_model_config.yaml
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/example.wav
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/long_example.wav
   curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/GigaAM%20License_NC.pdf
+  curl -SL -O https://huggingface.co/csukuangfj/tmp-files/resolve/main/GigaAM/rnnt/tokenizer_all_sets.tar
+  tar -xf tokenizer_all_sets.tar && rm tokenizer_all_sets.tar
+  ls -lh
+  echo "---"
+  ls -lh tokenizer_all_sets
+  echo "---"
 }
 
 install_nemo
 download_files
 
-python3 ./export-onnx-ctc.py
+python3 ./export-onnx-rnnt.py
 ls -lh
-python3 ./test-onnx-ctc.py
+python3 ./test-onnx-rnnt.py
+rm -v encoder.onnx
+ls -lh

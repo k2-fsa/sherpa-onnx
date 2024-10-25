@@ -38,12 +38,40 @@ jobs:
           mkdir $d/test_wavs
           rm scripts/nemo/GigaAM/model.onnx
           mv -v scripts/nemo/GigaAM/*.int8.onnx $d/
-          mv -v scripts/nemo/GigaAM/*.md $d/
+          cp -v scripts/nemo/GigaAM/*.md $d/
           mv -v scripts/nemo/GigaAM/*.pdf $d/
           mv -v scripts/nemo/GigaAM/tokens.txt $d/
           mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
           mv -v scripts/nemo/GigaAM/run-ctc.sh $d/
           mv -v scripts/nemo/GigaAM/*-ctc.py $d/
+
+          ls -lh scripts/nemo/GigaAM/
+
+          ls -lh $d
+
+          tar cjvf ${d}.tar.bz2 $d
+
+      - name: Run Transducer
+        shell: bash
+        run: |
+          pushd scripts/nemo/GigaAM
+          ./run-rnnt.sh
+          popd
+
+          d=sherpa-onnx-nemo-transducer-giga-am-russian-2024-10-24
+          mkdir $d
+          mkdir $d/test_wavs
+
+          mv -v scripts/nemo/GigaAM/encoder.int8.onnx $d/
+          mv -v scripts/nemo/GigaAM/decoder.onnx $d/
+          mv -v scripts/nemo/GigaAM/joiner.onnx $d/
+
+          cp -v scripts/nemo/GigaAM/*.md $d/
+          mv -v scripts/nemo/GigaAM/*.pdf $d/
+          mv -v scripts/nemo/GigaAM/tokens.txt $d/
+          mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
+          mv -v scripts/nemo/GigaAM/run-rnnt.sh $d/
+          mv -v scripts/nemo/GigaAM/*-rnnt.py $d/
 
           ls -lh scripts/nemo/GigaAM/
 
@@ -61,7 +89,7 @@ jobs:
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
           tag: asr-models
 
-      - name: Publish to huggingface (CTC)
+      - name: Publish to huggingface (Transducer)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -73,7 +101,7 @@ jobs:
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
-            d=sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24
+            d=sherpa-onnx-nemo-transducer-giga-am-russian-2024-10-24/
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
             git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface

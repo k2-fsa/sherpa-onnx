@@ -166,7 +166,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerParaformerImpl>(config);
   }
 
-  if (model_type == "EncDecHybridRNNTCTCBPEModel" &&
+  if ((model_type == "EncDecHybridRNNTCTCBPEModel" ||
+       model_type == "EncDecRNNTBPEModel") &&
       !config.model_config.transducer.decoder_filename.empty() &&
       !config.model_config.transducer.joiner_filename.empty()) {
     return std::make_unique<OfflineRecognizerTransducerNeMoImpl>(config);
@@ -191,6 +192,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - EncDecCTCModelBPE models from NeMo\n"
       " - EncDecCTCModel models from NeMo\n"
       " - EncDecHybridRNNTCTCBPEModel models from NeMo\n"
+      " - EncDecRNNTBPEModel models from NeMO"
       " - Whisper models\n"
       " - Tdnn models\n"
       " - Zipformer CTC models\n"
@@ -338,7 +340,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerParaformerImpl>(mgr, config);
   }
 
-  if (model_type == "EncDecHybridRNNTCTCBPEModel" &&
+  if ((model_type == "EncDecHybridRNNTCTCBPEModel" ||
+       model_type == "EncDecRNNTBPEModel") &&
       !config.model_config.transducer.decoder_filename.empty() &&
       !config.model_config.transducer.joiner_filename.empty()) {
     return std::make_unique<OfflineRecognizerTransducerNeMoImpl>(mgr, config);
@@ -363,6 +366,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       " - EncDecCTCModelBPE models from NeMo\n"
       " - EncDecCTCModel models from NeMo\n"
       " - EncDecHybridRNNTCTCBPEModel models from NeMo\n"
+      " - EncDecRNNTBPEModel models from NeMo\n"
       " - Whisper models\n"
       " - Tdnn models\n"
       " - Zipformer CTC models\n"
