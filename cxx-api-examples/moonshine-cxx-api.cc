@@ -1,4 +1,4 @@
-// cxx-api-examples/whisper-cxx-api.cc
+// cxx-api-examples/moonshine-cxx-api.cc
 // Copyright (c)  2024  Xiaomi Corporation
 
 //
