@@ -29,6 +29,7 @@ set(sources
   offline-lm-config.cc
   offline-lm.cc
   offline-model-config.cc
+  offline-moonshine-greedy-search-decoder.cc
   offline-moonshine-model-config.cc
   offline-moonshine-model.cc
   offline-nemo-enc-dec-ctc-model-config.cc

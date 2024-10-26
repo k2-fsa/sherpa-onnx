@@ -19,6 +19,8 @@
 
 namespace sherpa_onnx {
 
+// please see
+// https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/moonshine/test.py
 class OfflineMoonshineModel {
  public:
   explicit OfflineMoonshineModel(const OfflineModelConfig &config);
@@ -44,7 +46,7 @@ class OfflineMoonshineModel {
    * @param features_len A int32 tensor of shape (batch_size,)
    * @returns A float32 tensor of shape (batch_size, T, dim).
    */
-  Ort::Value ForwardEncoder(Ort::Value features) const;
+  Ort::Value ForwardEncoder(Ort::Value features, Ort::Value features_len) const;
 
   /** Run the uncached decoder.
    *

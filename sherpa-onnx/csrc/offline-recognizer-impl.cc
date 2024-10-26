@@ -20,6 +20,7 @@
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-ctc-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-sense-voice-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-transducer-impl.h"
@@ -51,6 +52,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerWhisperImpl>(config);
   }
 
+  if (!config.model_config.moonshine.preprocessor.empty()) {
+    return std::make_unique<OfflineRecognizerMoonshineImpl>(config);
+  }
+
   // TODO(fangjun): Refactor it. We only need to use model type for the
   // following models:
   //  1. transducer and nemo_transducer
@@ -67,7 +72,11 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
                model_type == "telespeech_ctc") {
       return std::make_unique<OfflineRecognizerCtcImpl>(config);
     } else if (model_type == "whisper") {
+      // unreachable
       return std::make_unique<OfflineRecognizerWhisperImpl>(config);
+    } else if (model_type == "moonshine") {
+      // unreachable
+      return std::make_unique<OfflineRecognizerMoonshineImpl>(config);
     } else {
       SHERPA_ONNX_LOGE(
           "Invalid model_type: %s. Trying to load the model to get its type",
@@ -225,6 +234,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
     return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
   }
 
+  if (!config.model_config.moonshine.preprocessor.empty()) {
+    return std::make_unique<OfflineRecognizerMoonshineImpl>(mgr, config);
+  }
+
   // TODO(fangjun): Refactor it. We only need to use model type for the
   // following models:
   //  1. transducer and nemo_transducer
@@ -242,6 +255,8 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
       return std::make_unique<OfflineRecognizerCtcImpl>(mgr, config);
     } else if (model_type == "whisper") {
       return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
+    } else if (model_type == "moonshine") {
+      return std::make_unique<OfflineRecognizerMoonshineImpl>(mgr, config);
     } else {
       SHERPA_ONNX_LOGE(
           "Invalid model_type: %s. Trying to load the model to get its type",

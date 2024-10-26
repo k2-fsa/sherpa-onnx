@@ -80,10 +80,13 @@ class OfflineMoonshineModel::Impl {
     return std::move(features[0]);
   }
 
-  Ort::Value ForwardEncoder(Ort::Value features) {
+  Ort::Value ForwardEncoder(Ort::Value features, Ort::Value features_len) {
+    std::array<Ort::Value, 2> encoder_inputs{std::move(features),
+                                             std::move(features_len)};
     auto encoder_out = encoder_sess_->Run(
-        {}, encoder_input_names_ptr_.data(), &features, 1,
-        encoder_output_names_ptr_.data(), encoder_output_names_ptr_.size());
+        {}, encoder_input_names_ptr_.data(), encoder_inputs.data(),
+        encoder_inputs.size(), encoder_output_names_ptr_.data(),
+        encoder_output_names_ptr_.size());
 
     return std::move(encoder_out[0]);
   }
@@ -92,8 +95,8 @@ class OfflineMoonshineModel::Impl {
       Ort::Value tokens, Ort::Value seq_len, Ort::Value encoder_out) {
     std::array<Ort::Value, 3> uncached_decoder_input = {
         std::move(tokens),
-        std::move(seq_len),
         std::move(encoder_out),
+        std::move(seq_len),
     };
 
     auto uncached_decoder_out = uncached_decoder_sess_->Run(
@@ -124,8 +127,8 @@ class OfflineMoonshineModel::Impl {
     std::vector<Ort::Value> cached_decoder_input;
     cached_decoder_input.reserve(3 + states.size());
     cached_decoder_input.push_back(std::move(tokens));
-    cached_decoder_input.push_back(std::move(seq_len));
     cached_decoder_input.push_back(std::move(encoder_out));
+    cached_decoder_input.push_back(std::move(seq_len));
 
     for (auto &s : states) {
       cached_decoder_input.push_back(std::move(s));
@@ -251,8 +254,9 @@ Ort::Value OfflineMoonshineModel::ForwardPreprocessor(Ort::Value audio) const {
   return impl_->ForwardPreprocessor(std::move(audio));
 }
 
-Ort::Value OfflineMoonshineModel::ForwardEncoder(Ort::Value features) const {
-  return impl_->ForwardEncoder(std::move(features));
+Ort::Value OfflineMoonshineModel::ForwardEncoder(
+    Ort::Value features, Ort::Value features_len) const {
+  return impl_->ForwardEncoder(std::move(features), std::move(features_len));
 }
 
 std::pair<Ort::Value, std::vector<Ort::Value>>
