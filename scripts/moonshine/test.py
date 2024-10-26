@@ -6,7 +6,6 @@ import librosa
 import numpy as np
 import onnxruntime as ort
 import soundfile as sf
-import tokenizers
 
 
 def display(sess, name):
@@ -122,7 +121,7 @@ class OnnxModel:
         Args:
           token: The current token
           token_len: Number of predicted tokens so far
-          encoder_out: A tensor fo shape
+          encoder_out: A tensor fo shape (batch_size, T, dim)
         Returns:
           A a tuple:
             - a tensor of shape (batch_size, 1, dim)
@@ -157,7 +156,7 @@ class OnnxModel:
         Args:
           token: The current token
           token_len: Number of predicted tokens so far
-          encoder_out: A tensor fo shape
+          encoder_out: A tensor of shape (batch_size, T, dim)
           states: previous states
         Returns:
           A a tuple:
@@ -192,15 +191,23 @@ class OnnxModel:
 
 
 def main():
-    tokenizer = tokenizers.Tokenizer.from_file("./tokenizer.json")
+    wave = "./1.wav"
+    id2token = dict()
+    token2id = dict()
+    with open("./tokens.txt", encoding="utf-8") as f:
+        for k, line in enumerate(f):
+            t, idx = line.split("\t")
+            id2token[int(idx)] = t
+            token2id[t] = int(idx)
+
     model = OnnxModel(
         preprocess="./preprocess.onnx",
-        encode="./encode.onnx",
-        uncached_decode="./uncached_decode.onnx",
-        cached_decode="./cached_decode.onnx",
+        encode="./encode.int8.onnx",
+        uncached_decode="./uncached_decode.int8.onnx",
+        cached_decode="./cached_decode.int8.onnx",
     )
 
-    audio, sample_rate = sf.read("./beckett.wav", dtype="float32", always_2d=True)
+    audio, sample_rate = sf.read(wave, dtype="float32", always_2d=True)
     audio = audio[:, 0]  # only use the first channel
     if sample_rate != 16000:
         audio = librosa.resample(
@@ -217,8 +224,8 @@ def main():
     features = model.run_preprocess(audio)  # (1, 413, 288)
     print("features", features.shape)
 
-    sos = tokenizer.token_to_id("<s>")
-    eos = tokenizer.token_to_id("</s>")
+    sos = token2id["<s>"]
+    eos = token2id["</s>"]
 
     tokens = [sos]
 
@@ -250,7 +257,7 @@ def main():
         )
 
     tokens = tokens[1:]  # remove sos
-    words = [tokenizer.id_to_token(i) for i in tokens]
+    words = [id2token[i] for i in tokens]
     underline = "▁"
     #  underline = b"\xe2\x96\x81".decode()
     text = "".join(words).replace(underline, " ").strip()
