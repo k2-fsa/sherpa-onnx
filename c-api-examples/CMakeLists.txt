@@ -35,6 +35,9 @@ target_link_libraries(whisper-c-api sherpa-onnx-c-api)
 add_executable(sense-voice-c-api sense-voice-c-api.c)
 target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
 
+add_executable(moonshine-c-api moonshine-c-api.c)
+target_link_libraries(moonshine-c-api sherpa-onnx-c-api)
+
 add_executable(zipformer-c-api zipformer-c-api.c)
 target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
 

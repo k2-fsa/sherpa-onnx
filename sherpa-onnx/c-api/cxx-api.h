@@ -225,6 +225,13 @@ struct SHERPA_ONNX_API OfflineSenseVoiceModelConfig {
   bool use_itn = false;
 };
 
+struct SHERPA_ONNX_API OfflineMoonshineModelConfig {
+  std::string preprocessor;
+  std::string encoder;
+  std::string uncached_decoder;
+  std::string cached_decoder;
+};
+
 struct SHERPA_ONNX_API OfflineModelConfig {
   OfflineTransducerModelConfig transducer;
   OfflineParaformerModelConfig paraformer;
@@ -241,6 +248,7 @@ struct SHERPA_ONNX_API OfflineModelConfig {
   std::string bpe_vocab;
   std::string telespeech_ctc;
   OfflineSenseVoiceModelConfig sense_voice;
+  OfflineMoonshineModelConfig moonshine;
 };
 
 struct SHERPA_ONNX_API OfflineLMConfig {

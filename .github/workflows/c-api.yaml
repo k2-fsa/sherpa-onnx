@@ -81,6 +81,39 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
 
+      - name: Test Moonshine
+        shell: bash
+        run: |
+          gcc -o moonshine-c-api ./c-api-examples/moonshine-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh moonshine-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+            ldd ./moonshine-c-api
+            echo "----"
+            readelf -d ./moonshine-c-api
+          fi
+
+          # Now download models
+          #
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          ls -lh sherpa-onnx-moonshine-tiny-en-int8
+          echo "---"
+          ls -lh sherpa-onnx-moonshine-tiny-en-int8/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./moonshine-c-api
+
+          rm -rf sherpa-onnx-*
+
       - name: Test ffmpeg
         if: matrix.os == 'macos-latest'
         shell: bash
