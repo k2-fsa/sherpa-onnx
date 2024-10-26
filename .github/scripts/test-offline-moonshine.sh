@@ -40,7 +40,7 @@ for name in ${names[@]}; do
     --moonshine-encoder=$repo/encode.int8.onnx \
     --moonshine-uncached-decoder=$repo/uncached_decode.int8.onnx \
     --moonshine-cached-decoder=$repo/cached_decode.int8.onnx \
-    --tokens=$repo/tokens.txt
+    --tokens=$repo/tokens.txt \
     --num-threads=2 \
     $repo/test_wavs/0.wav \
     $repo/test_wavs/1.wav \
