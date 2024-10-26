@@ -33,6 +33,13 @@ data class OfflineWhisperModelConfig(
     var tailPaddings: Int = 1000, // Padding added at the end of the samples
 )
 
+data class OfflineMoonshineModelConfig(
+    var preprocessor: String = "",
+    var encoder: String = "",
+    var uncachedDecoder: String = "",
+    var cachedDecoder: String = "",
+)
+
 data class OfflineSenseVoiceModelConfig(
     var model: String = "",
     var language: String = "",
@@ -43,6 +50,7 @@ data class OfflineModelConfig(
     var transducer: OfflineTransducerModelConfig = OfflineTransducerModelConfig(),
     var paraformer: OfflineParaformerModelConfig = OfflineParaformerModelConfig(),
     var whisper: OfflineWhisperModelConfig = OfflineWhisperModelConfig(),
+    var moonshine: OfflineMoonshineModelConfig = OfflineMoonshineModelConfig(),
     var nemo: OfflineNemoEncDecCtcModelConfig = OfflineNemoEncDecCtcModelConfig(),
     var senseVoice: OfflineSenseVoiceModelConfig = OfflineSenseVoiceModelConfig(),
     var teleSpeech: String = "",
@@ -415,6 +423,19 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "nemo_transducer",
+            )
+        }
+
+        21 -> {
+            val modelDir = "sherpa-onnx-moonshine-tiny-en-int8"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    preprocessor = "$modelDir/preprocess.onnx",
+                    encoder = "$modelDir/encode.int8.onnx",
+                    uncachedDecoder = "$modelDir/uncached_decode.int8.onnx",
+                    cachedDecoder = "$modelDir/cached_decode.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
             )
         }
     }

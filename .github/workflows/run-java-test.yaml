@@ -107,6 +107,31 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run java test (Non-Streaming ASR)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+
+          ./run-non-streaming-decode-file-moonshine.sh
+          rm -rf sherpa-onnx-moonshine-*
+
+          ./run-non-streaming-decode-file-sense-voice.sh
+          rm -rf sherpa-onnx-sense-voice-*
+
+          ./run-inverse-text-normalization-paraformer.sh
+
+          ./run-non-streaming-decode-file-paraformer.sh
+          rm -rf sherpa-onnx-paraformer-zh-*
+
+          ./run-non-streaming-decode-file-transducer.sh
+          rm -rf sherpa-onnx-zipformer-*
+
+          ./run-non-streaming-decode-file-whisper.sh
+          rm -rf sherpa-onnx-whisper-*
+
+          ./run-non-streaming-decode-file-nemo.sh
+          rm -rf sherpa-onnx-nemo-*
+
       - name:  Run java test (speaker diarization)
         shell: bash
         run: |
@@ -205,28 +230,6 @@ jobs:
 
           ./run-streaming-decode-file-transducer.sh
           rm -rf sherpa-onnx-streaming-*
-
-      - name:  Run java test (Non-Streaming ASR)
-        shell: bash
-        run: |
-          cd ./java-api-examples
-
-          ./run-non-streaming-decode-file-sense-voice.sh
-          rm -rf sherpa-onnx-sense-voice-*
-
-          ./run-inverse-text-normalization-paraformer.sh
-
-          ./run-non-streaming-decode-file-paraformer.sh
-          rm -rf sherpa-onnx-paraformer-zh-*
-
-          ./run-non-streaming-decode-file-transducer.sh
-          rm -rf sherpa-onnx-zipformer-*
-
-          ./run-non-streaming-decode-file-whisper.sh
-          rm -rf sherpa-onnx-whisper-*
-
-          ./run-non-streaming-decode-file-nemo.sh
-          rm -rf sherpa-onnx-nemo-*
 
       - name:  Run java test (Non-Streaming TTS)
         shell: bash

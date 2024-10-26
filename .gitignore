@@ -121,3 +121,5 @@ sherpa-onnx-online-punct-en-2024-08-06
 *.mp4
 *.mp3
 sherpa-onnx-pyannote-segmentation-3-0
+sherpa-onnx-moonshine-tiny-en-int8
+sherpa-onnx-moonshine-base-en-int8

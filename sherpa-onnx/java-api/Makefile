@@ -26,6 +26,7 @@ java_files += OnlineRecognizer.java
 java_files += OfflineTransducerModelConfig.java
 java_files += OfflineParaformerModelConfig.java
 java_files += OfflineWhisperModelConfig.java
+java_files += OfflineMoonshineModelConfig.java
 java_files += OfflineNemoEncDecCtcModelConfig.java
 java_files += OfflineSenseVoiceModelConfig.java
 java_files += OfflineModelConfig.java
