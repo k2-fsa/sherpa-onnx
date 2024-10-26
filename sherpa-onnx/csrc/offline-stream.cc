@@ -169,7 +169,7 @@ class OfflineStream::Impl {
       resampler->Resample(waveform, n, true, &samples);
 
       if (is_moonshine_) {
-        samples_.insert(samples_.end(), samples_.begin(), samples.end());
+        samples_.insert(samples_.end(), samples.begin(), samples.end());
       } else if (fbank_) {
         fbank_->AcceptWaveform(config_.sampling_rate, samples.data(),
                                samples.size());
