@@ -23,7 +23,6 @@ class OfflineWhisperModel::Impl {
   explicit Impl(const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        debug_(config.debug),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     {
@@ -40,7 +39,6 @@ class OfflineWhisperModel::Impl {
   explicit Impl(const SpokenLanguageIdentificationConfig &config)
       : lid_config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
-        debug_(config_.debug),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
     {
@@ -60,7 +58,6 @@ class OfflineWhisperModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    debug_ = config_.debug;
     {
       auto buf = ReadFile(mgr, config.whisper.encoder);
       InitEncoder(buf.data(), buf.size());
@@ -77,7 +74,6 @@ class OfflineWhisperModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    debug_ = config_.debug;
     {
       auto buf = ReadFile(mgr, config.whisper.encoder);
       InitEncoder(buf.data(), buf.size());
@@ -164,7 +160,7 @@ class OfflineWhisperModel::Impl {
       }
     }
 
-    if (debug_) {
+    if (config_.debug) {
       SHERPA_ONNX_LOGE("Detected language: %s",
                        GetID2Lang().at(lang_id).c_str());
     }
@@ -237,7 +233,7 @@ class OfflineWhisperModel::Impl {
 
     // get meta data
     Ort::ModelMetadata meta_data = encoder_sess_->GetModelMetadata();
-    if (debug_) {
+    if (config_.debug) {
       std::ostringstream os;
       os << "---encoder---\n";
       PrintModelMetadata(os, meta_data);
@@ -294,7 +290,6 @@ class OfflineWhisperModel::Impl {
  private:
   OfflineModelConfig config_;
   SpokenLanguageIdentificationConfig lid_config_;
-  bool debug_ = false;
   Ort::Env env_;
   Ort::SessionOptions sess_opts_;
   Ort::AllocatorWithDefaultOptions allocator_;
