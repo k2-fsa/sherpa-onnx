@@ -174,6 +174,39 @@ static OfflineRecognizerConfig GetOfflineConfig(JNIEnv *env, jobject config) {
   ans.model_config.whisper.tail_paddings =
       env->GetIntField(whisper_config, fid);
 
+  // moonshine
+  fid = env->GetFieldID(model_config_cls, "moonshine",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineMoonshineModelConfig;");
+  jobject moonshine_config = env->GetObjectField(model_config, fid);
+  jclass moonshine_config_cls = env->GetObjectClass(moonshine_config);
+
+  fid = env->GetFieldID(moonshine_config_cls, "preprocessor",
+                        "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(moonshine_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.moonshine.preprocessor = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(moonshine_config_cls, "encoder", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(moonshine_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.moonshine.encoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(moonshine_config_cls, "uncachedDecoder",
+                        "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(moonshine_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.moonshine.uncached_decoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(moonshine_config_cls, "cachedDecoder",
+                        "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(moonshine_config, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model_config.moonshine.cached_decoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
   // sense voice
   fid = env->GetFieldID(model_config_cls, "senseVoice",
                         "Lcom/k2fsa/sherpa/onnx/OfflineSenseVoiceModelConfig;");
