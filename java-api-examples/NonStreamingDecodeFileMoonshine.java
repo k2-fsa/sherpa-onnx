@@ -1,6 +1,7 @@
 // Copyright 2024 Xiaomi Corporation
 
-// This file shows how to use an offline whisper, i.e., non-streaming whisper,
+// This file shows how to use an offline Moonshine,
+// i.e., non-streaming Moonshine model,
 // to decode files.
 import com.k2fsa.sherpa.onnx.*;
 

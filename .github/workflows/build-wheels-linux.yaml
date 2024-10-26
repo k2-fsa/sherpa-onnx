@@ -28,12 +28,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: show sources
-        shell: bash
-        run: |
-          git log | head -n 10
-          cat sherpa-onnx/python/sherpa_onnx/offline_recognizer.py
-
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
       - name: Build wheels
