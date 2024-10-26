@@ -121,6 +121,15 @@ jobs:
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
 
+      - name: Test offline Moonshine
+        if: matrix.build_type != 'Debug'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-moonshine.sh
+
       - name: Test C++ API
         shell: bash
         run: |
@@ -242,8 +251,6 @@ jobs:
           export EXE=sherpa-onnx-offline
 
           .github/scripts/test-offline-whisper.sh
-
-
 
       - name: Test online transducer
         shell: bash

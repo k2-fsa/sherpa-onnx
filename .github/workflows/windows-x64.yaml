@@ -93,6 +93,14 @@ jobs:
           name: release-windows-x64-${{ matrix.shared_lib }}-${{ matrix.with_tts }}
           path: build/install/*
 
+      - name: Test offline Moonshine for windows x64
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin/Release:$PATH
+          export EXE=sherpa-onnx-offline.exe
+
+          .github/scripts/test-offline-moonshine.sh
+
       - name: Test C++ API
         shell: bash
         run: |
