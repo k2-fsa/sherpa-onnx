@@ -1,0 +1,176 @@
+name: linux-jni-aarch64
+
+on:
+  push:
+    branches:
+      - jni
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  workflow_dispatch:
+
+concurrency:
+  group: linux-jni-aarch64-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux-jni-aarch64:
+    name: linux jni aarch64
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        # java-version: ['8', '11', '16', '17', '21']
+        java-version: ['21']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: ${{ matrix.java-version }}
+
+      - name: Set up QEMU
+        if: steps.cache-build-result.outputs.cache-hit != 'true'
+        uses: docker/setup-qemu-action@v2
+        with:
+          platforms: all
+
+      - name: Display PWD
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+          du -h -d1 .
+
+      - name: Build sherpa-onnx
+        if: matrix.java-version == '21'
+        uses: addnab/docker-run-action@v3
+        with:
+            image: quay.io/pypa/manylinux2014_aarch64
+            options: |
+              --volume ${{ github.workspace }}/:/home/runner/work/sherpa-onnx/sherpa-onnx
+            shell: bash
+            run: |
+              uname -a
+              gcc --version
+              cmake --version
+              cat /etc/*release
+              id
+              pwd
+
+              yum install -y java-11-openjdk-devel
+              java -version
+              which java
+              ls -lh $(which java)
+              ls -lrt /etc/alternatives/java
+
+              export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-11.0.23.0.9-2.el7_9.aarch64
+              echo "JAVA_HOME: $JAVA_HOME"
+              find $JAVA_HOME -name jni.h
+
+              cd /home/runner/work/sherpa-onnx/sherpa-onnx
+
+              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+              pushd alsa-lib
+              ./gitcompile
+              popd
+
+              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+
+              mkdir build
+              cd build
+
+              cmake \
+                -D SHERPA_ONNX_ENABLE_TTS=ON \
+                -D CMAKE_BUILD_TYPE=Release \
+                -D BUILD_SHARED_LIBS=ON \
+                -D CMAKE_INSTALL_PREFIX=./install \
+                -D SHERPA_ONNX_ENABLE_BINARY=OFF \
+                -D SHERPA_ONNX_ENABLE_JNI=ON \
+                ..
+
+              make -j2
+              make install
+
+              ls -lh lib
+              rm -rf ./install/lib/pkgconfig
+              rm -rf ./install/lib/share
+              rm -rf ./install/lib/cargs.h
+              rm -rf ./install/include/cargs.h
+              rm -rf ./install/lib/libcargs.so
+              rm -rf ./install/lib/libsherpa-onnx-c-api.so
+
+              echo "----"
+              ls -lh install/lib
+
+              echo "----"
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.java-version == '21'
+        with:
+          name: release-jni-linux-${{ matrix.java-version }}
+          path: build/install/*
+
+      - name: Copy files
+        if: matrix.java-version == '21'
+        shell: bash
+        run: |
+          du -h -d1 .
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-jni
+          mkdir $dst
+
+          cp -a build/install/lib $dst/
+          cp -a build/install/include $dst/
+
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+          du -h -d1 .
+
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && matrix.java-version == '21'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            mkdir -p jni
+
+            cp -v ../sherpa-onnx-*.tar.bz2 ./jni
+            cp -v ../*.jar ./jni
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+
+            git commit -m "add more files"
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
+      - name: Release pre-compiled binaries and libs for linux aarch64
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.java-version == '21'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*.tar.bz2
+
