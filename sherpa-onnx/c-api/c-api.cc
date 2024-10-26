@@ -450,6 +450,18 @@ sherpa_onnx::OfflineRecognizerConfig convertConfig(
   recognizer_config.model_config.sense_voice.use_itn =
       config->model_config.sense_voice.use_itn;
 
+  recognizer_config.model_config.moonshine.preprocessor =
+      SHERPA_ONNX_OR(config->model_config.moonshine.preprocessor, "");
+
+  recognizer_config.model_config.moonshine.encoder =
+      SHERPA_ONNX_OR(config->model_config.moonshine.encoder, "");
+
+  recognizer_config.model_config.moonshine.uncached_decoder =
+      SHERPA_ONNX_OR(config->model_config.moonshine.uncached_decoder, "");
+
+  recognizer_config.model_config.moonshine.cached_decoder =
+      SHERPA_ONNX_OR(config->model_config.moonshine.cached_decoder, "");
+
   recognizer_config.lm_config.model =
       SHERPA_ONNX_OR(config->lm_config.model, "");
   recognizer_config.lm_config.scale =

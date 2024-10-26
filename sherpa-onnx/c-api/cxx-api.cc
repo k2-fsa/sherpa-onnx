@@ -227,6 +227,15 @@ OfflineRecognizer OfflineRecognizer::Create(
       config.model_config.sense_voice.language.c_str();
   c.model_config.sense_voice.use_itn = config.model_config.sense_voice.use_itn;
 
+  c.model_config.moonshine.preprocessor =
+      config.model_config.moonshine.preprocessor.c_str();
+  c.model_config.moonshine.encoder =
+      config.model_config.moonshine.encoder.c_str();
+  c.model_config.moonshine.uncached_decoder =
+      config.model_config.moonshine.uncached_decoder.c_str();
+  c.model_config.moonshine.cached_decoder =
+      config.model_config.moonshine.cached_decoder.c_str();
+
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;
 

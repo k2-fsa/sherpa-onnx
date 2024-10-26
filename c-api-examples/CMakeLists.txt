@@ -35,6 +35,9 @@ target_link_libraries(whisper-c-api sherpa-onnx-c-api)
 add_executable(sense-voice-c-api sense-voice-c-api.c)
 target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
 
+add_executable(moonshine-c-api moonshine-c-api.c)
+target_link_libraries(moonshine-c-api sherpa-onnx-c-api)
+
 add_executable(zipformer-c-api zipformer-c-api.c)
 target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
 
@@ -52,6 +55,12 @@ target_link_libraries(telespeech-c-api sherpa-onnx-c-api)
 
 add_executable(vad-sense-voice-c-api vad-sense-voice-c-api.c)
 target_link_libraries(vad-sense-voice-c-api sherpa-onnx-c-api)
+
+add_executable(vad-whisper-c-api vad-whisper-c-api.c)
+target_link_libraries(vad-whisper-c-api sherpa-onnx-c-api)
+
+add_executable(vad-moonshine-c-api vad-moonshine-c-api.c)
+target_link_libraries(vad-moonshine-c-api sherpa-onnx-c-api)
 
 add_executable(streaming-zipformer-buffered-tokens-hotwords-c-api
                streaming-zipformer-buffered-tokens-hotwords-c-api.c)

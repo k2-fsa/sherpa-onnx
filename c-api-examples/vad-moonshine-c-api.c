@@ -1,17 +1,17 @@
-// c-api-examples/vad-sense-voice-c-api.c
+// c-api-examples/vad-moonshine-c-api.c
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
 //
-// This file demonstrates how to use VAD + SenseVoice with sherpa-onnx's C API.
+// This file demonstrates how to use VAD + Moonshine with sherpa-onnx's C API.
 // clang-format off
 //
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
 //
-// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-// tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
-// rm sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
+// wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+// tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+// rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
 //
 // clang-format on
 
@@ -22,15 +22,17 @@
 #include "sherpa-onnx/c-api/c-api.h"
 
 int32_t main() {
-  const char *wav_filename = "./lei-jun-test.wav";
+  const char *wav_filename = "./Obama.wav";
   const char *vad_filename = "./silero_vad.onnx";
-  const char *model_filename =
-      "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx";
-  const char *tokens_filename =
-      "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt";
-  const char *language = "auto";
-  const char *provider = "cpu";
-  int32_t use_inverse_text_normalization = 1;
+
+  const char *preprocessor =
+      "./sherpa-onnx-moonshine-tiny-en-int8/preprocess.onnx";
+  const char *encoder = "./sherpa-onnx-moonshine-tiny-en-int8/encode.int8.onnx";
+  const char *uncached_decoder =
+      "./sherpa-onnx-moonshine-tiny-en-int8/uncached_decode.int8.onnx";
+  const char *cached_decoder =
+      "./sherpa-onnx-moonshine-tiny-en-int8/cached_decode.int8.onnx";
+  const char *tokens = "./sherpa-onnx-moonshine-tiny-en-int8/tokens.txt";
 
   const SherpaOnnxWave *wave = SherpaOnnxReadWave(wav_filename);
   if (wave == NULL) {
@@ -45,20 +47,17 @@ int32_t main() {
     return -1;
   }
 
-  SherpaOnnxOfflineSenseVoiceModelConfig sense_voice_config;
-  memset(&sense_voice_config, 0, sizeof(sense_voice_config));
-  sense_voice_config.model = model_filename;
-  sense_voice_config.language = language;
-  sense_voice_config.use_itn = use_inverse_text_normalization;
-
   // Offline model config
   SherpaOnnxOfflineModelConfig offline_model_config;
   memset(&offline_model_config, 0, sizeof(offline_model_config));
   offline_model_config.debug = 0;
   offline_model_config.num_threads = 1;
-  offline_model_config.provider = provider;
-  offline_model_config.tokens = tokens_filename;
-  offline_model_config.sense_voice = sense_voice_config;
+  offline_model_config.provider = "cpu";
+  offline_model_config.tokens = tokens;
+  offline_model_config.moonshine.preprocessor = preprocessor;
+  offline_model_config.moonshine.encoder = encoder;
+  offline_model_config.moonshine.uncached_decoder = uncached_decoder;
+  offline_model_config.moonshine.cached_decoder = cached_decoder;
 
   // Recognizer config
   SherpaOnnxOfflineRecognizerConfig recognizer_config;
@@ -81,7 +80,7 @@ int32_t main() {
   vadConfig.silero_vad.threshold = 0.5;
   vadConfig.silero_vad.min_silence_duration = 0.5;
   vadConfig.silero_vad.min_speech_duration = 0.5;
-  vadConfig.silero_vad.max_speech_duration = 5;
+  vadConfig.silero_vad.max_speech_duration = 10;
   vadConfig.silero_vad.window_size = 512;
   vadConfig.sample_rate = 16000;
   vadConfig.num_threads = 1;

@@ -81,6 +81,80 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
 
+      - name: Test vad + Whisper tiny.en
+        shell: bash
+        run: |
+          gcc -o vad-whisper-c-api ./c-api-examples/vad-whisper-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          # Now download models
+          #
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+          tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+          rm sherpa-onnx-whisper-tiny.en.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./vad-whisper-c-api
+
+          rm -rf sherpa-onnx-*
+          rm -rf *.onnx
+          rm *.wav
+
+      - name: Test vad + Moonshine
+        shell: bash
+        run: |
+          gcc -o vad-moonshine-c-api ./c-api-examples/vad-moonshine-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          # Now download models
+          #
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./vad-moonshine-c-api
+
+          rm -rf sherpa-onnx-*
+          rm -rf *.onnx
+          rm *.wav
+
+      - name: Test Moonshine
+        shell: bash
+        run: |
+          gcc -o moonshine-c-api ./c-api-examples/moonshine-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./moonshine-c-api
+
+          rm -rf sherpa-onnx-*
+
       - name: Test ffmpeg
         if: matrix.os == 'macos-latest'
         shell: bash
