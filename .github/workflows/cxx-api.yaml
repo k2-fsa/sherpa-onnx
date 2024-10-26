@@ -83,6 +83,28 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-cxx-api.dylib
           fi
 
+      - name: Test Moonshine tiny
+        shell: bash
+        run: |
+          g++ -std=c++17 -o moonshine-cxx-api ./cxx-api-examples/moonshine-cxx-api.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./moonshine-cxx-api
+
+          rm -rf sherpa-onnx-*
+          rm ./moonshine-cxx-api
+
       - name: Test whisper
         shell: bash
         run: |

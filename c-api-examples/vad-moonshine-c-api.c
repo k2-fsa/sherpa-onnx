@@ -1,4 +1,4 @@
-// c-api-examples/vad-sense-voice-c-api.c
+// c-api-examples/vad-moonshine-c-api.c
 //
 // Copyright (c)  2024  Xiaomi Corporation
 
