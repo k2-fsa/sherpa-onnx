@@ -109,6 +109,8 @@ const std::string SymbolTable::operator[](int32_t id) const {
 
   // for byte-level BPE
   // id 0 is blank, id 1 is sos/eos, id 2 is unk
+  //
+  // Note: For moonshine models, 0 is <unk>, 1, is <s>, 2 is</s>
   if (id >= 3 && id <= 258 && sym.size() == 6 && sym[0] == '<' &&
       sym[1] == '0' && sym[2] == 'x' && sym[5] == '>') {
     std::ostringstream os;
