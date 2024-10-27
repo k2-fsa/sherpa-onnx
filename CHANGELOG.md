@@ -1,3 +1,19 @@
+## 1.10.30
+
+* Fix building node-addon for Windows x86. (#1469)
+* Begin to support https://github.com/usefulsensors/moonshine (#1470)
+* Publish pre-built JNI libs for Linux aarch64 (#1472)
+* Add C++ runtime and Python APIs for Moonshine models (#1473)
+* Add Kotlin and Java API for Moonshine models (#1474)
+* Add C and C++ API for Moonshine models (#1476)
+* Add Swift API for Moonshine models. (#1477)
+* Add Go API examples for adding punctuations to text. (#1478)
+* Add Go API for Moonshine models (#1479)
+* Add JavaScript API for Moonshine models (#1480)
+* Add Dart API for Moonshine models. (#1481)
+* Add Pascal API for Moonshine models (#1482)
+* Add C# API for Moonshine models. (#1483)
+
 ## 1.10.29
 
 * Add Go API for offline punctuation models (#1434)
