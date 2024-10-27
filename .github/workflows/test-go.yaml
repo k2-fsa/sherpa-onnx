@@ -134,6 +134,53 @@ jobs:
           name: ${{ matrix.os }}-libs
           path: to-upload/
 
+      - name: Test non-streaming decoding files
+        shell: bash
+        run: |
+          cd scripts/go/_internal/non-streaming-decode-files/
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          echo "Test Moonshine"
+          ./run-moonshine.sh
+          rm -rf sherpa-onnx-*
+
+          echo "Test SenseVoice ctc"
+          ./run-sense-voice-small.sh
+          rm -rf sherpa-onnx-sense-*
+
+          echo "Test telespeech ctc"
+          ./run-telespeech-ctc.sh
+          rm -rf sherpa-onnx-telespeech-ctc-*
+
+          echo "Test transducer"
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-zipformer-en-2023-06-26
+
+          echo "Test transducer"
+          ./run-transducer.sh
+          rm -rf sherpa-onnx-zipformer-en-2023-06-26
+
+          echo "Test paraformer"
+          ./run-paraformer.sh
+          ./run-paraformer-itn.sh
+          rm -rf sherpa-onnx-paraformer-zh-2023-09-14
+
+          echo "Test NeMo CTC"
+          ./run-nemo-ctc.sh
+          rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
+
+          echo "Test Whisper tiny.en"
+          ./run-whisper.sh
+          rm -rf sherpa-onnx-whisper-tiny.en
+
+          echo "Test Tdnn yesno"
+          ./run-tdnn-yesno.sh
+          rm -rf sherpa-onnx-tdnn-yesno
+
       - name: Test adding punctuation
         shell: bash
         run: |
@@ -192,49 +239,6 @@ jobs:
         with:
           name: tts-waves-${{ matrix.os }}
           path: tts-waves
-
-      - name: Test non-streaming decoding files
-        shell: bash
-        run: |
-          cd scripts/go/_internal/non-streaming-decode-files/
-          ls -lh
-          go mod tidy
-          cat go.mod
-          go build
-          ls -lh
-
-          echo "Test SenseVoice ctc"
-          ./run-sense-voice-small.sh
-          rm -rf sherpa-onnx-sense-*
-
-          echo "Test telespeech ctc"
-          ./run-telespeech-ctc.sh
-          rm -rf sherpa-onnx-telespeech-ctc-*
-
-          echo "Test transducer"
-          ./run-transducer.sh
-          rm -rf sherpa-onnx-zipformer-en-2023-06-26
-
-          echo "Test transducer"
-          ./run-transducer.sh
-          rm -rf sherpa-onnx-zipformer-en-2023-06-26
-
-          echo "Test paraformer"
-          ./run-paraformer.sh
-          ./run-paraformer-itn.sh
-          rm -rf sherpa-onnx-paraformer-zh-2023-09-14
-
-          echo "Test NeMo CTC"
-          ./run-nemo-ctc.sh
-          rm -rf sherpa-onnx-nemo-ctc-en-conformer-medium
-
-          echo "Test Whisper tiny.en"
-          ./run-whisper.sh
-          rm -rf sherpa-onnx-whisper-tiny.en
-
-          echo "Test Tdnn yesno"
-          ./run-tdnn-yesno.sh
-          rm -rf sherpa-onnx-tdnn-yesno
 
       - name: Test streaming decoding files
         shell: bash

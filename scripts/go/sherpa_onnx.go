@@ -382,6 +382,13 @@ type OfflineWhisperModelConfig struct {
 	TailPaddings int
 }
 
+type OfflineMoonshineModelConfig struct {
+	Preprocessor    string
+	Encoder         string
+	UncachedDecoder string
+	CachedDecoder   string
+}
+
 type OfflineTdnnModelConfig struct {
 	Model string
 }
@@ -405,6 +412,7 @@ type OfflineModelConfig struct {
 	Whisper    OfflineWhisperModelConfig
 	Tdnn       OfflineTdnnModelConfig
 	SenseVoice OfflineSenseVoiceModelConfig
+	Moonshine  OfflineMoonshineModelConfig
 	Tokens     string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -514,6 +522,18 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 	defer C.free(unsafe.Pointer(c.model_config.sense_voice.language))
 
 	c.model_config.sense_voice.use_itn = C.int(config.ModelConfig.SenseVoice.UseInverseTextNormalization)
+
+	c.model_config.moonshine.preprocessor = C.CString(config.ModelConfig.Moonshine.Preprocessor)
+	defer C.free(unsafe.Pointer(c.model_config.moonshine.preprocessor))
+
+	c.model_config.moonshine.encoder = C.CString(config.ModelConfig.Moonshine.Encoder)
+	defer C.free(unsafe.Pointer(c.model_config.moonshine.encoder))
+
+	c.model_config.moonshine.uncached_decoder = C.CString(config.ModelConfig.Moonshine.UncachedDecoder)
+	defer C.free(unsafe.Pointer(c.model_config.moonshine.uncached_decoder))
+
+	c.model_config.moonshine.cached_decoder = C.CString(config.ModelConfig.Moonshine.CachedDecoder)
+	defer C.free(unsafe.Pointer(c.model_config.moonshine.cached_decoder))
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))
