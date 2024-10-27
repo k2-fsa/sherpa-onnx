@@ -68,6 +68,24 @@ class OfflineWhisperModelConfig {
   final int tailPaddings;
 }
 
+class OfflineMoonshineModelConfig {
+  const OfflineMoonshineModelConfig(
+      {this.preprocessor = '',
+      this.encoder = '',
+      this.uncachedDecoder = '',
+      this.cachedDecoder = ''});
+
+  @override
+  String toString() {
+    return 'OfflineMoonshineModelConfig(preprocessor: $preprocessor, encoder: $encoder, uncachedDecoder: $uncachedDecoder, cachedDecoder: $cachedDecoder)';
+  }
+
+  final String preprocessor;
+  final String encoder;
+  final String uncachedDecoder;
+  final String cachedDecoder;
+}
+
 class OfflineTdnnModelConfig {
   const OfflineTdnnModelConfig({this.model = ''});
 
@@ -116,6 +134,7 @@ class OfflineModelConfig {
     this.whisper = const OfflineWhisperModelConfig(),
     this.tdnn = const OfflineTdnnModelConfig(),
     this.senseVoice = const OfflineSenseVoiceModelConfig(),
+    this.moonshine = const OfflineMoonshineModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -128,7 +147,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   final OfflineTransducerModelConfig transducer;
@@ -137,6 +156,7 @@ class OfflineModelConfig {
   final OfflineWhisperModelConfig whisper;
   final OfflineTdnnModelConfig tdnn;
   final OfflineSenseVoiceModelConfig senseVoice;
+  final OfflineMoonshineModelConfig moonshine;
 
   final String tokens;
   final int numThreads;
@@ -257,6 +277,15 @@ class OfflineRecognizer {
     c.ref.model.senseVoice.useInverseTextNormalization =
         config.model.senseVoice.useInverseTextNormalization ? 1 : 0;
 
+    c.ref.model.moonshine.preprocessor =
+        config.model.moonshine.preprocessor.toNativeUtf8();
+    c.ref.model.moonshine.encoder =
+        config.model.moonshine.encoder.toNativeUtf8();
+    c.ref.model.moonshine.uncachedDecoder =
+        config.model.moonshine.uncachedDecoder.toNativeUtf8();
+    c.ref.model.moonshine.cachedDecoder =
+        config.model.moonshine.cachedDecoder.toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -294,6 +323,10 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.moonshine.cachedDecoder);
+    calloc.free(c.ref.model.moonshine.uncachedDecoder);
+    calloc.free(c.ref.model.moonshine.encoder);
+    calloc.free(c.ref.model.moonshine.preprocessor);
     calloc.free(c.ref.model.senseVoice.language);
     calloc.free(c.ref.model.senseVoice.model);
     calloc.free(c.ref.model.tdnn.model);

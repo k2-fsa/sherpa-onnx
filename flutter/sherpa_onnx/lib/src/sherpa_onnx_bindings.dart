@@ -194,6 +194,13 @@ final class SherpaOnnxOfflineWhisperModelConfig extends Struct {
   external int tailPaddings;
 }
 
+final class SherpaOnnxOfflineMoonshineModelConfig extends Struct {
+  external Pointer<Utf8> preprocessor;
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> uncachedDecoder;
+  external Pointer<Utf8> cachedDecoder;
+}
+
 final class SherpaOnnxOfflineTdnnModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
@@ -236,6 +243,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external Pointer<Utf8> telespeechCtc;
 
   external SherpaOnnxOfflineSenseVoiceModelConfig senseVoice;
+  external SherpaOnnxOfflineMoonshineModelConfig moonshine;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
