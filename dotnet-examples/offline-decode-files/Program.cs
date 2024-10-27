@@ -292,10 +292,21 @@ to download pre-trained Tdnn models.
     // display results
     for (int i = 0; i != files.Length; ++i)
     {
-      var text = streams[i].Result.Text;
+      var r = streams[i].Result;
       Console.WriteLine("--------------------");
       Console.WriteLine(files[i]);
-      Console.WriteLine(text);
+      Console.WriteLine("Text: {0}", r.Text);
+      Console.WriteLine("Tokens: [{0}]", string.Join(", ", r.Tokens));
+      if (r.Timestamps != null && r.Timestamps.Length > 0) {
+        Console.Write("Timestamps: [");
+        var sep = "";
+        for (int k = 0; k != r.Timestamps.Length; ++k)
+        {
+          Console.Write("{0}{1}", sep, r.Timestamps[k].ToString("0.00"));
+          sep = ", ";
+        }
+        Console.WriteLine("]");
+      }
     }
     Console.WriteLine("--------------------");
   }
