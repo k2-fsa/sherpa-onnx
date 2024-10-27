@@ -17,7 +17,7 @@ class OfflineDecodeFiles
   {
 
     [Option("sample-rate", Required = false, Default = 16000, HelpText = "Sample rate of the data used to train the model")]
-    public int SampleRate { get; set; }  = 16000;
+    public int SampleRate { get; set; } = 16000;
 
     [Option("feat-dim", Required = false, Default = 80, HelpText = "Dimension of the features used to train the model")]
     public int FeatureDim { get; set; } = 80;
@@ -31,7 +31,7 @@ class OfflineDecodeFiles
     [Option(Required = false, Default = "", HelpText = "Path to transducer decoder.onnx. Used only for transducer models")]
     public string Decoder { get; set; } = "";
 
-    [Option(Required = false,  Default = "",HelpText = "Path to transducer joiner.onnx. Used only for transducer models")]
+    [Option(Required = false, Default = "", HelpText = "Path to transducer joiner.onnx. Used only for transducer models")]
     public string Joiner { get; set; } = "";
 
     [Option("model-type", Required = false, Default = "", HelpText = "model type")]
@@ -44,10 +44,22 @@ class OfflineDecodeFiles
     public string WhisperDecoder { get; set; } = "";
 
     [Option("whisper-language", Required = false, Default = "", HelpText = "Language of the input file. Can be empty")]
-    public string WhisperLanguage{ get; set; } = "";
+    public string WhisperLanguage { get; set; } = "";
 
     [Option("whisper-task", Required = false, Default = "transcribe", HelpText = "transcribe or translate")]
-    public string WhisperTask{ get; set; } = "transcribe";
+    public string WhisperTask { get; set; } = "transcribe";
+
+    [Option("moonshine-preprocessor", Required = false, Default = "", HelpText = "Path to preprocess.onnx. Used only for Moonshine models")]
+    public string MoonshinePreprocessor { get; set; } = "";
+
+    [Option("moonshine-encoder", Required = false, Default = "", HelpText = "Path to encode.onnx. Used only for Moonshine models")]
+    public string MoonshineEncoder { get; set; } = "";
+
+    [Option("moonshine-uncached-decoder", Required = false, Default = "", HelpText = "Path to uncached_decode.onnx. Used only for Moonshine models")]
+    public string MoonshineUncachedDecoder { get; set; } = "";
+
+    [Option("moonshine-cached-decoder", Required = false, Default = "", HelpText = "Path to cached_decode.onnx. Used only for Moonshine models")]
+    public string MoonshineCachedDecoder { get; set; } = "";
 
     [Option("tdnn-model", Required = false, Default = "", HelpText = "Path to tdnn yesno model")]
     public string TdnnModel { get; set; } = "";
@@ -90,7 +102,7 @@ It specifies number of active paths to keep during the search")]
     public float HotwordsScore { get; set; } = 1.5F;
 
     [Option("files", Required = true, HelpText = "Audio files for decoding")]
-    public IEnumerable<string> Files { get; set; } = new string[] {};
+    public IEnumerable<string> Files { get; set; } = new string[] { };
   }
 
   static void Main(string[] args)
@@ -236,6 +248,13 @@ to download pre-trained Tdnn models.
       config.ModelConfig.SenseVoice.Model = options.SenseVoiceModel;
       config.ModelConfig.SenseVoice.UseInverseTextNormalization = options.SenseVoiceUseItn;
     }
+    else if (!String.IsNullOrEmpty(options.MoonshinePreprocessor))
+    {
+      config.ModelConfig.Moonshine.Preprocessor = options.MoonshinePreprocessor;
+      config.ModelConfig.Moonshine.Encoder = options.MoonshineEncoder;
+      config.ModelConfig.Moonshine.UncachedDecoder = options.MoonshineUncachedDecoder;
+      config.ModelConfig.Moonshine.CachedDecoder = options.MoonshineCachedDecoder;
+    }
     else
     {
       Console.WriteLine("Please provide a model");
@@ -273,10 +292,21 @@ to download pre-trained Tdnn models.
     // display results
     for (int i = 0; i != files.Length; ++i)
     {
-      var text = streams[i].Result.Text;
+      var r = streams[i].Result;
       Console.WriteLine("--------------------");
       Console.WriteLine(files[i]);
-      Console.WriteLine(text);
+      Console.WriteLine("Text: {0}", r.Text);
+      Console.WriteLine("Tokens: [{0}]", string.Join(", ", r.Tokens));
+      if (r.Timestamps != null && r.Timestamps.Length > 0) {
+        Console.Write("Timestamps: [");
+        var sep = "";
+        for (int k = 0; k != r.Timestamps.Length; ++k)
+        {
+          Console.Write("{0}{1}", sep, r.Timestamps[k].ToString("0.00"));
+          sep = ", ";
+        }
+        Console.WriteLine("]");
+      }
     }
     Console.WriteLine("--------------------");
   }

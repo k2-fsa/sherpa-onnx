@@ -9,6 +9,9 @@ rm -fv *.wav
 rm -rfv sherpa-onnx-pyannote-*
 
 cd ../offline-decode-files
+./run-moonshine.sh
+rm -rf sherpa-onnx-*
+
 ./run-sense-voice-ctc.sh
 rm -rf sherpa-onnx-*
 
