@@ -41,4 +41,11 @@
     }                                                             \
   } while (0)
 
+#define SHERPA_ONNX_DELETE_C_STR(p) \
+  do {                              \
+    if (p) {                        \
+      delete[] p;                   \
+    }                               \
+  } while (0)
+
 #endif  // SCRIPTS_NODE_ADDON_API_SRC_MACROS_H_

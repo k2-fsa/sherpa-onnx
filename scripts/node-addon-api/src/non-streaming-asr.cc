@@ -80,6 +80,25 @@ static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineMoonshineModelConfig GetOfflineMoonshineModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineMoonshineModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("moonshine") || !obj.Get("moonshine").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("moonshine").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(preprocessor, preprocessor);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(uncached_decoder, uncachedDecoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(cached_decoder, cachedDecoder);
+
+  return c;
+}
+
 static SherpaOnnxOfflineTdnnModelConfig GetOfflineTdnnModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineTdnnModelConfig c;
@@ -130,6 +149,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.whisper = GetOfflineWhisperModelConfig(o);
   c.tdnn = GetOfflineTdnnModelConfig(o);
   c.sense_voice = GetOfflineSenseVoiceModelConfig(o);
+  c.moonshine = GetOfflineMoonshineModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -206,97 +226,42 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   const SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&c);
 
-  if (c.model_config.transducer.encoder) {
-    delete[] c.model_config.transducer.encoder;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.joiner);
 
-  if (c.model_config.transducer.decoder) {
-    delete[] c.model_config.transducer.decoder;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.paraformer.model);
 
-  if (c.model_config.transducer.joiner) {
-    delete[] c.model_config.transducer.joiner;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.nemo_ctc.model);
 
-  if (c.model_config.paraformer.model) {
-    delete[] c.model_config.paraformer.model;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.whisper.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.whisper.decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.whisper.language);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.whisper.task);
 
-  if (c.model_config.nemo_ctc.model) {
-    delete[] c.model_config.nemo_ctc.model;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.tdnn.model);
 
-  if (c.model_config.whisper.encoder) {
-    delete[] c.model_config.whisper.encoder;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.sense_voice.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.sense_voice.language);
 
-  if (c.model_config.whisper.decoder) {
-    delete[] c.model_config.whisper.decoder;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.preprocessor);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.uncached_decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.cached_decoder);
 
-  if (c.model_config.whisper.language) {
-    delete[] c.model_config.whisper.language;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.model_type);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.modeling_unit);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.bpe_vocab);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.telespeech_ctc);
 
-  if (c.model_config.whisper.task) {
-    delete[] c.model_config.whisper.task;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.lm_config.model);
 
-  if (c.model_config.tdnn.model) {
-    delete[] c.model_config.tdnn.model;
-  }
-
-  if (c.model_config.sense_voice.model) {
-    delete[] c.model_config.sense_voice.model;
-  }
-
-  if (c.model_config.sense_voice.language) {
-    delete[] c.model_config.sense_voice.language;
-  }
-
-  if (c.model_config.tokens) {
-    delete[] c.model_config.tokens;
-  }
-
-  if (c.model_config.provider) {
-    delete[] c.model_config.provider;
-  }
-
-  if (c.model_config.model_type) {
-    delete[] c.model_config.model_type;
-  }
-
-  if (c.model_config.modeling_unit) {
-    delete[] c.model_config.modeling_unit;
-  }
-
-  if (c.model_config.bpe_vocab) {
-    delete[] c.model_config.bpe_vocab;
-  }
-
-  if (c.model_config.telespeech_ctc) {
-    delete[] c.model_config.telespeech_ctc;
-  }
-
-  if (c.lm_config.model) {
-    delete[] c.lm_config.model;
-  }
-
-  if (c.decoding_method) {
-    delete[] c.decoding_method;
-  }
-
-  if (c.hotwords_file) {
-    delete[] c.hotwords_file;
-  }
-
-  if (c.rule_fsts) {
-    delete[] c.rule_fsts;
-  }
-
-  if (c.rule_fars) {
-    delete[] c.rule_fars;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.decoding_method);
+  SHERPA_ONNX_DELETE_C_STR(c.hotwords_file);
+  SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);
+  SHERPA_ONNX_DELETE_C_STR(c.rule_fars);
 
   if (!recognizer) {
     Napi::TypeError::New(env, "Please check your config!")
