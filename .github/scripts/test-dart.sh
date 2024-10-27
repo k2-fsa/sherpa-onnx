@@ -36,6 +36,10 @@ echo "----zipformer transducer----"
 ./run-zipformer-transducer.sh
 rm -rf sherpa-onnx-*
 
+echo "----moonshine----"
+./run-moonshine.sh
+rm -rf sherpa-onnx-*
+
 echo "----whisper----"
 ./run-whisper.sh
 rm -rf sherpa-onnx-*
@@ -75,6 +79,10 @@ rm -rf sherpa-onnx-*
 
 echo '----------TeleSpeech CTC----------'
 ./run-telespeech-ctc.sh
+rm -rf sherpa-onnx-*
+
+echo '----------moonshine----------'
+./run-moonshine.sh
 rm -rf sherpa-onnx-*
 
 echo '----------whisper----------'
