@@ -1322,10 +1322,10 @@ func (sd *OfflineSpeakerDiarization) Process(samples []float32) []OfflineSpeaker
 // For punctuation
 // ============================================================
 type OfflinePunctuationModelConfig struct {
-	Ct_transformer string
-	Num_threads    C.int
-	Debug          C.int // true to print debug information of the model
-	Provider       string
+	CtTransformer string
+	NumThreads    C.int
+	Debug         C.int // true to print debug information of the model
+	Provider      string
 }
 
 type OfflinePunctuationConfig struct {
@@ -1338,10 +1338,10 @@ type OfflinePunctuation struct {
 
 func NewOfflinePunctuation(config *OfflinePunctuationConfig) *OfflinePunctuation {
 	cfg := C.struct_SherpaOnnxOfflinePunctuationConfig{}
-	cfg.model.ct_transformer = C.CString(config.Model.Ct_transformer)
+	cfg.model.ct_transformer = C.CString(config.Model.CtTransformer)
 	defer C.free(unsafe.Pointer(cfg.model.ct_transformer))
 
-	cfg.model.num_threads = config.Model.Num_threads
+	cfg.model.num_threads = config.Model.NumThreads
 	cfg.model.debug = config.Model.Debug
 	cfg.model.provider = C.CString(config.Model.Provider)
 	defer C.free(unsafe.Pointer(cfg.model.provider))

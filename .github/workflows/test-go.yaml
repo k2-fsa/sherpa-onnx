@@ -134,6 +134,12 @@ jobs:
           name: ${{ matrix.os }}-libs
           path: to-upload/
 
+      - name: Test adding punctuation
+        shell: bash
+        run: |
+          cd scripts/go/_internal/add-punctuation/
+          ./run.sh
+
       - name: Test non-streaming speaker diarization
         shell: bash
         run: |
