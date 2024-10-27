@@ -68,6 +68,13 @@ jobs:
         run: |
           gcc --version
 
+      - name: Test adding punctuation
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd go-api-examples/add-punctuation/
+          ./run.sh
+
       - name: Test non-streaming speaker diarization
         if: matrix.os != 'windows-latest'
         shell: bash
