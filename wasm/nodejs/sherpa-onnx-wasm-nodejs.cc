@@ -15,6 +15,7 @@ static_assert(sizeof(SherpaOnnxOfflineParaformerModelConfig) == 4, "");
 
 static_assert(sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineWhisperModelConfig) == 5 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineMoonshineModelConfig) == 4 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTdnnModelConfig) == 4, "");
 static_assert(sizeof(SherpaOnnxOfflineSenseVoiceModelConfig) == 3 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineLMConfig) == 2 * 4, "");
@@ -25,7 +26,8 @@ static_assert(sizeof(SherpaOnnxOfflineModelConfig) ==
                       sizeof(SherpaOnnxOfflineNemoEncDecCtcModelConfig) +
                       sizeof(SherpaOnnxOfflineWhisperModelConfig) +
                       sizeof(SherpaOnnxOfflineTdnnModelConfig) + 8 * 4 +
-                      sizeof(SherpaOnnxOfflineSenseVoiceModelConfig),
+                      sizeof(SherpaOnnxOfflineSenseVoiceModelConfig) +
+                      sizeof(SherpaOnnxOfflineMoonshineModelConfig),
               "");
 static_assert(sizeof(SherpaOnnxFeatureConfig) == 2 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineRecognizerConfig) ==
@@ -66,6 +68,7 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   auto whisper = &model_config->whisper;
   auto tdnn = &model_config->tdnn;
   auto sense_voice = &model_config->sense_voice;
+  auto moonshine = &model_config->moonshine;
 
   fprintf(stdout, "----------offline transducer model config----------\n");
   fprintf(stdout, "encoder: %s\n", transducer->encoder);
@@ -92,6 +95,12 @@ void PrintOfflineRecognizerConfig(SherpaOnnxOfflineRecognizerConfig *config) {
   fprintf(stdout, "model: %s\n", sense_voice->model);
   fprintf(stdout, "language: %s\n", sense_voice->language);
   fprintf(stdout, "use_itn: %d\n", sense_voice->use_itn);
+
+  fprintf(stdout, "----------offline moonshine model config----------\n");
+  fprintf(stdout, "preprocessor: %s\n", moonshine->preprocessor);
+  fprintf(stdout, "encoder: %s\n", moonshine->encoder);
+  fprintf(stdout, "uncached_decoder: %s\n", moonshine->uncached_decoder);
+  fprintf(stdout, "cached_decoder: %s\n", moonshine->cached_decoder);
 
   fprintf(stdout, "tokens: %s\n", model_config->tokens);
   fprintf(stdout, "num_threads: %d\n", model_config->num_threads);

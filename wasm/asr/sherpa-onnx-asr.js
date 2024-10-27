@@ -35,6 +35,10 @@ function freeConfig(config, Module) {
     freeConfig(config.whisper, Module)
   }
 
+  if ('moonshine' in config) {
+    freeConfig(config.moonshine, Module)
+  }
+
   if ('tdnn' in config) {
     freeConfig(config.tdnn, Module)
   }
@@ -563,7 +567,7 @@ function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   const n = encoderLen + decoderLen + languageLen + taskLen;
   const buffer = Module._malloc(n);
 
-  const len = 5 * 4;  // 4 pointers
+  const len = 5 * 4;  // 4 pointers + 1 int32
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -592,6 +596,55 @@ function initSherpaOnnxOfflineWhisperModelConfig(config, Module) {
   offset += taskLen;
 
   Module.setValue(ptr + 16, config.tailPaddings || 2000, 'i32');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
+function initSherpaOnnxOfflineMoonshineModelConfig(config, Module) {
+  const preprocessorLen = Module.lengthBytesUTF8(config.preprocessor || '') + 1;
+  const encoderLen = Module.lengthBytesUTF8(config.encoder || '') + 1;
+  const uncachedDecoderLen =
+      Module.lengthBytesUTF8(config.uncachedDecoder || '') + 1;
+  const cachedDecoderLen =
+      Module.lengthBytesUTF8(config.cachedDecoder || '') + 1;
+
+  const n =
+      preprocessorLen + encoderLen + uncachedDecoderLen + cachedDecoderLen;
+  const buffer = Module._malloc(n);
+
+  const len = 4 * 4;  // 4 pointers
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(
+      config.preprocessor || '', buffer + offset, preprocessorLen);
+  offset += preprocessorLen;
+
+  Module.stringToUTF8(config.encoder || '', buffer + offset, encoderLen);
+  offset += encoderLen;
+
+  Module.stringToUTF8(
+      config.uncachedDecoder || '', buffer + offset, uncachedDecoderLen);
+  offset += uncachedDecoderLen;
+
+  Module.stringToUTF8(
+      config.cachedDecoder || '', buffer + offset, cachedDecoderLen);
+  offset += cachedDecoderLen;
+
+  offset = 0;
+  Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += preprocessorLen;
+
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += encoderLen;
+
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
+  offset += uncachedDecoderLen;
+
+  Module.setValue(ptr + 12, buffer + offset, 'i8*');
+  offset += cachedDecoderLen;
 
   return {
     buffer: buffer, ptr: ptr, len: len,
@@ -693,6 +746,15 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
     };
   }
 
+  if (!('moonshine' in config)) {
+    config.moonshine = {
+      preprocessor: '',
+      encoder: '',
+      uncachedDecoder: '',
+      cachedDecoder: '',
+    };
+  }
+
   if (!('tdnn' in config)) {
     config.tdnn = {
       model: '',
@@ -724,8 +786,11 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   const senseVoice =
       initSherpaOnnxOfflineSenseVoiceModelConfig(config.senseVoice, Module);
 
+  const moonshine =
+      initSherpaOnnxOfflineMoonshineModelConfig(config.moonshine, Module);
+
   const len = transducer.len + paraformer.len + nemoCtc.len + whisper.len +
-      tdnn.len + 8 * 4 + senseVoice.len;
+      tdnn.len + 8 * 4 + senseVoice.len + moonshine.len;
 
   const ptr = Module._malloc(len);
 
@@ -744,7 +809,6 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
 
   Module._CopyHeap(tdnn.ptr, tdnn.len, ptr + offset);
   offset += tdnn.len;
-
 
   const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
   const providerLen = Module.lengthBytesUTF8(config.provider || 'cpu') + 1;
@@ -817,11 +881,14 @@ function initSherpaOnnxOfflineModelConfig(config, Module) {
   offset += 4;
 
   Module._CopyHeap(senseVoice.ptr, senseVoice.len, ptr + offset);
+  offset += senseVoice.len;
+
+  Module._CopyHeap(moonshine.ptr, moonshine.len, ptr + offset);
 
   return {
     buffer: buffer, ptr: ptr, len: len, transducer: transducer,
         paraformer: paraformer, nemoCtc: nemoCtc, whisper: whisper, tdnn: tdnn,
-        senseVoice: senseVoice,
+        senseVoice: senseVoice, moonshine: moonshine,
   }
 }
 

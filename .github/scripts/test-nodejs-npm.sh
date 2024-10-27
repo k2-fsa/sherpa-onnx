@@ -21,6 +21,23 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segm
 node ./test-offline-speaker-diarization.js
 rm -rfv *.wav *.onnx sherpa-onnx-pyannote-*
 
+echo '-----vad+moonshine----------'
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+rm sherpa-onnx-whisper-tiny.en.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+node ./test-vad-with-non-streaming-asr-whisper.js
+rm Obama.wav
+rm silero_vad.onnx
+rm -rf sherpa-onnx-moonshine-*
+
 echo '-----vad+whisper----------'
 
 curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
@@ -89,6 +106,13 @@ tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
 rm sherpa-onnx-whisper-tiny.en.tar.bz2
 node ./test-offline-whisper.js
 rm -rf sherpa-onnx-whisper-tiny.en
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+node ./test-offline-moonshine.js
+rm -rf sherpa-onnx-moonshine-*
 
 # online asr
 curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
