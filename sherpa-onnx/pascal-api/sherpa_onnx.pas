@@ -250,6 +250,14 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineWhisperModelConfig);
   end;
 
+  TSherpaOnnxOfflineMoonshineModelConfig = record
+    Preprocessor: AnsiString;
+    Encoder: AnsiString;
+    UncachedDecoder: AnsiString;
+    CachedDecoder: AnsiString;
+    function ToString: AnsiString;
+  end;
+
   TSherpaOnnxOfflineTdnnModelConfig = record
     Model: AnsiString;
     function ToString: AnsiString;
@@ -285,6 +293,7 @@ type
     BpeVocab: AnsiString;
     TeleSpeechCtc: AnsiString;
     SenseVoice: TSherpaOnnxOfflineSenseVoiceModelConfig;
+    Moonshine: TSherpaOnnxOfflineMoonshineModelConfig;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineModelConfig);
     function ToString: AnsiString;
   end;
@@ -617,6 +626,12 @@ type
     Task: PAnsiChar;
     TailPaddings: cint32;
   end;
+  SherpaOnnxOfflineMoonshineModelConfig = record
+    Preprocessor: PAnsiChar;
+    Encoder: PAnsiChar;
+    UncachedDecoder: PAnsiChar;
+    CachedDecoder: PAnsiChar;
+  end;
   SherpaOnnxOfflineTdnnModelConfig = record
     Model: PAnsiChar;
   end;
@@ -644,6 +659,7 @@ type
     BpeVocab: PAnsiChar;
     TeleSpeechCtc: PAnsiChar;
     SenseVoice:  SherpaOnnxOfflineSenseVoiceModelConfig;
+    Moonshine: SherpaOnnxOfflineMoonshineModelConfig;
   end;
 
   SherpaOnnxOfflineRecognizerConfig = record
@@ -1312,6 +1328,16 @@ begin
     [Self.Encoder, Self.Decoder, Self.Language, Self.Task, Self.TailPaddings]);
 end;
 
+function TSherpaOnnxOfflineMoonshineModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineMoonshineModelConfig(' +
+    'Preprocessor := %s, ' +
+    'Encoder := %s, ' +
+    'UncachedDecoder := %s, ' +
+    'CachedDecoder := %s)',
+    [Self.Preprocessor, Self.Encoder, Self.UncachedDecoder, Self.CachedDecoder]);
+end;
+
 function TSherpaOnnxOfflineTdnnModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineTdnnModelConfig(Model := %s)',
@@ -1353,13 +1379,14 @@ begin
     'ModelingUnit := %s, ' +
     'BpeVocab := %s, ' +
     'TeleSpeechCtc := %s, ' +
-    'SenseVoice := %s' +
+    'SenseVoice := %s, ' +
+    'Moonshine := %s' +
     ')',
     [Self.Transducer.ToString, Self.Paraformer.ToString,
      Self.NeMoCtc.ToString, Self.Whisper.ToString, Self.Tdnn.ToString,
      Self.Tokens, Self.NumThreads, Self.Debug.ToString, Self.Provider,
      Self.ModelType, Self.ModelingUnit, Self.BpeVocab,
-     Self.TeleSpeechCtc, Self.SenseVoice.ToString
+     Self.TeleSpeechCtc, Self.SenseVoice.ToString, Self.Moonshine.ToString
      ]);
 end;
 
@@ -1407,7 +1434,6 @@ begin
 
   C.ModelConfig.Tdnn.Model := PAnsiChar(Config.ModelConfig.Tdnn.Model);
 
-
   C.ModelConfig.Tokens := PAnsiChar(Config.ModelConfig.Tokens);
   C.ModelConfig.NumThreads := Config.ModelConfig.NumThreads;
   C.ModelConfig.Debug := Ord(Config.ModelConfig.Debug);
@@ -1420,6 +1446,11 @@ begin
   C.ModelConfig.SenseVoice.Model := PAnsiChar(Config.ModelConfig.SenseVoice.Model);
   C.ModelConfig.SenseVoice.Language := PAnsiChar(Config.ModelConfig.SenseVoice.Language);
   C.ModelConfig.SenseVoice.UseItn := Ord(Config.ModelConfig.SenseVoice.UseItn);
+
+  C.ModelConfig.Moonshine.Preprocessor := PAnsiChar(Config.ModelConfig.Moonshine.Preprocessor);
+  C.ModelConfig.Moonshine.Encoder := PAnsiChar(Config.ModelConfig.Moonshine.Encoder);
+  C.ModelConfig.Moonshine.UncachedDecoder := PAnsiChar(Config.ModelConfig.Moonshine.UncachedDecoder);
+  C.ModelConfig.Moonshine.CachedDecoder := PAnsiChar(Config.ModelConfig.Moonshine.CachedDecoder);
 
   C.LMConfig.Model := PAnsiChar(Config.LMConfig.Model);
   C.LMConfig.Scale := Config.LMConfig.Scale;
