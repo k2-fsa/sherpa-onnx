@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-13]
-        python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312"]
+        python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
 
     steps:
       - uses: actions/checkout@v4
@@ -42,7 +42,7 @@ jobs:
 
       - name: Build wheels
         if: matrix.python-version != 'cp37'
-        uses: pypa/cibuildwheel@v2.15.0
+        uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='x86_64'"

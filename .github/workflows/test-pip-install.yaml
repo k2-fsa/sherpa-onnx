@@ -42,6 +42,8 @@ jobs:
             python-version: "3.11"
           - os: ubuntu-22.04
             python-version: "3.12"
+          - os: ubuntu-22.04
+            python-version: "3.13"
 
           - os: macos-12
             python-version: "3.8"
@@ -55,6 +57,8 @@ jobs:
 
           - os: macos-14
             python-version: "3.12"
+          - os: macos-14
+            python-version: "3.13"
 
           - os: windows-2019
             python-version: "3.7"
@@ -69,6 +73,8 @@ jobs:
             python-version: "3.11"
           - os: windows-2022
             python-version: "3.12"
+          - os: windows-2022
+            python-version: "3.13"
 
     steps:
       - uses: actions/checkout@v4
@@ -105,6 +111,7 @@ jobs:
           export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.11.9/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.12.7/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.13.0/x64/bin:$PATH
 
           sherpa-onnx --help
           sherpa-onnx-keyword-spotter --help
