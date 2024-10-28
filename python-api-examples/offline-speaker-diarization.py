@@ -102,9 +102,9 @@ def main():
             f"Expected samples rate: {sd.sample_rate}, given: {sample_rate}"
         )
 
-    show_porgress = True
+    show_progress = True
 
-    if show_porgress:
+    if show_progress:
         result = sd.process(audio, callback=progress_callback).sort_by_start_time()
     else:
         result = sd.process(audio).sort_by_start_time()
