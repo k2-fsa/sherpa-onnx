@@ -71,7 +71,7 @@ function(download_onnxruntime)
   elseif(WIN32)
     message(STATUS "CMAKE_VS_PLATFORM_NAME: ${CMAKE_VS_PLATFORM_NAME}")
 
-    if(CMAKE_VS_PLATFORM_NAME STREQUAL Win32 OR CMAKE_VS_PLATFORM_NAME STREQUAL win32)
+    if(CMAKE_VS_PLATFORM_NAME STREQUAL Win32 OR CMAKE_VS_PLATFORM_NAME STREQUAL x64)
       if(BUILD_SHARED_LIBS)
         include(onnxruntime-win-x86)
       else()
