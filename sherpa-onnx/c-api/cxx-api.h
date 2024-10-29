@@ -315,4 +315,3 @@ class SHERPA_ONNX_API OfflineRecognizer
 }  // namespace sherpa_onnx::cxx
 
 #endif  // SHERPA_ONNX_C_API_CXX_API_H_
-        //
