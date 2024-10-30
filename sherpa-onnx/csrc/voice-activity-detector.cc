@@ -277,7 +277,7 @@ class VoiceActivityDetector::Impl {
   void Flush() {
     int32_t buffer_size = buffer_.Size();
 
-    if (buffer_size > 0) {
+    if (buffer_size >= window_size) {
       std::vector<float> s = buffer_.Get(buffer_.Head(), buffer_size);
       SpeechSegment segment;
       segment.start = current_sample;
