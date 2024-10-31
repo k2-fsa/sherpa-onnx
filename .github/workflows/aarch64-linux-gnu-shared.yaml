@@ -34,11 +34,12 @@ concurrency:
 jobs:
   aarch64_linux_gnu_shared:
     runs-on: ${{ matrix.os }}
-    name: aarch64 shared lib test
+    name: aarch64 shared GPU ${{ matrix.gpu }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        gpu: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -127,6 +128,7 @@ jobs:
           cmake --version
 
           export BUILD_SHARED_LIBS=ON
+          export SHERPA_ONNX_ENABLE_GPU=${{ matrix.gpu }}
 
           ./build-aarch64-linux-gnu.sh
 
