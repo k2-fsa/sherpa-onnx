@@ -387,6 +387,21 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-en-int8",
+            idx=22,
+            lang="en",
+            short_name="moonshine_base_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 

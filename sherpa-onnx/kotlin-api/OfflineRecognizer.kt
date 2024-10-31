@@ -438,6 +438,19 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 tokens = "$modelDir/tokens.txt",
             )
         }
+
+        22 -> {
+            val modelDir = "sherpa-onnx-moonshine-base-en-int8"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    preprocessor = "$modelDir/preprocess.onnx",
+                    encoder = "$modelDir/encode.int8.onnx",
+                    uncachedDecoder = "$modelDir/uncached_decode.int8.onnx",
+                    cachedDecoder = "$modelDir/cached_decode.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
     }
     return null
 }
