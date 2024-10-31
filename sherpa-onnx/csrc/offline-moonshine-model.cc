@@ -155,7 +155,7 @@ class OfflineMoonshineModel::Impl {
     return {std::move(cached_decoder_out[0]), std::move(next_states)};
   }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
  private:
   void InitPreprocessor(void *model_data, size_t model_data_length) {

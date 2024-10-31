@@ -42,8 +42,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
   Ort::AllocatorWithDefaultOptions allocator;
   auto model_type =
-      meta_data.LookupCustomMetadataMapAllocated("model_type", allocator);
-  if (!model_type) {
+      LookupCustomModelMetaData(meta_data, "model_type", allocator);
+  if (model_type.empty()) {
     SHERPA_ONNX_LOGE(
         "No model_type in the metadata!\n"
         "Please make sure you have added metadata to the model.\n\n"
@@ -54,11 +54,10 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kUnknown;
   }
 
-  auto model_type_str = std::string(model_type.get());
-  if (model_type_str.find("whisper") == 0) {
+  if (model_type.find("whisper") == 0) {
     return ModelType::kWhisper;
   } else {
-    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
+    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
     return ModelType::kUnknown;
   }
 }

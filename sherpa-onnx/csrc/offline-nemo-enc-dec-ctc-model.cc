@@ -68,7 +68,7 @@ class OfflineNemoEncDecCtcModel::Impl {
 
   int32_t SubsamplingFactor() const { return subsampling_factor_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
 

@@ -54,8 +54,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
   Ort::AllocatorWithDefaultOptions allocator;
   auto model_type =
-      meta_data.LookupCustomMetadataMapAllocated("model_type", allocator);
-  if (!model_type) {
+      LookupCustomModelMetaData(meta_data, "model_type", allocator);
+  if (model_type.empty()) {
     SHERPA_ONNX_LOGE(
         "No model_type in the metadata!\n"
         "Please make sure you are using the latest export-onnx.py from icefall "
@@ -63,16 +63,16 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kUnknown;
   }
 
-  if (model_type.get() == std::string("conformer")) {
+  if (model_type == "conformer") {
     return ModelType::kConformer;
-  } else if (model_type.get() == std::string("lstm")) {
+  } else if (model_type == "lstm") {
     return ModelType::kLstm;
-  } else if (model_type.get() == std::string("zipformer")) {
+  } else if (model_type == "zipformer") {
     return ModelType::kZipformer;
-  } else if (model_type.get() == std::string("zipformer2")) {
+  } else if (model_type == "zipformer2") {
     return ModelType::kZipformer2;
   } else {
-    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
+    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
     return ModelType::kUnknown;
   }
 }

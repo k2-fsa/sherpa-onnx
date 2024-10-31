@@ -188,7 +188,7 @@ class OfflineWhisperModel::Impl {
     return {std::move(n_layer_self_k_cache), std::move(n_layer_self_v_cache)};
   }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   const std::vector<int64_t> &GetInitialTokens() const { return sot_sequence_; }
 

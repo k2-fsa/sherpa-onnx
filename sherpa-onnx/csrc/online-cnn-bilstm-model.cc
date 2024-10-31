@@ -47,7 +47,7 @@ class OnlineCNNBiLSTMModel::Impl {
     return {std::move(ans[0]), std::move(ans[1])};
   }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   const OnlineCNNBiLSTMModelMetaData &GetModelMetadata() const {
     return meta_data_;

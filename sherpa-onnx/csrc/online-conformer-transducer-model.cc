@@ -163,8 +163,11 @@ std::vector<Ort::Value> OnlineConformerTransducerModel::StackStates(
     conv_vec[i] = &states[i][1];
   }
 
-  Ort::Value attn = Cat(allocator_, attn_vec, 2);
-  Ort::Value conv = Cat(allocator_, conv_vec, 2);
+  auto allocator =
+      const_cast<OnlineConformerTransducerModel *>(this)->allocator_;
+
+  Ort::Value attn = Cat(allocator, attn_vec, 2);
+  Ort::Value conv = Cat(allocator, conv_vec, 2);
 
   std::vector<Ort::Value> ans;
   ans.reserve(2);
@@ -183,8 +186,11 @@ OnlineConformerTransducerModel::UnStackStates(
 
   std::vector<std::vector<Ort::Value>> ans(batch_size);
 
-  std::vector<Ort::Value> attn_vec = Unbind(allocator_, &states[0], 2);
-  std::vector<Ort::Value> conv_vec = Unbind(allocator_, &states[1], 2);
+  auto allocator =
+      const_cast<OnlineConformerTransducerModel *>(this)->allocator_;
+
+  std::vector<Ort::Value> attn_vec = Unbind(allocator, &states[0], 2);
+  std::vector<Ort::Value> conv_vec = Unbind(allocator, &states[1], 2);
 
   assert(attn_vec.size() == batch_size);
   assert(conv_vec.size() == batch_size);

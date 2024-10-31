@@ -197,7 +197,7 @@ class OnlineTransducerNeMoModel::Impl {
 
   int32_t VocabSize() const { return vocab_size_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
 
@@ -224,6 +224,8 @@ class OnlineTransducerNeMoModel::Impl {
 
     std::vector<Ort::Value> ans;
 
+    auto allocator = const_cast<Impl *>(this)->allocator_;
+
     // stack cache_last_channel
     std::vector<const Ort::Value *> buf(batch_size);
 
@@ -239,9 +241,9 @@ class OnlineTransducerNeMoModel::Impl {
 
       Ort::Value c{nullptr};
       if (i == 2) {
-        c = Cat<int64_t>(allocator_, buf, 0);
+        c = Cat<int64_t>(allocator, buf, 0);
       } else {
-        c = Cat(allocator_, buf, 0);
+        c = Cat(allocator, buf, 0);
       }
 
       ans.push_back(std::move(c));
@@ -251,7 +253,7 @@ class OnlineTransducerNeMoModel::Impl {
   }
 
   std::vector<std::vector<Ort::Value>> UnStackStates(
-      std::vector<Ort::Value> states) const {
+      std::vector<Ort::Value> states) {
     assert(states.size() == 3);
 
     std::vector<std::vector<Ort::Value>> ans;

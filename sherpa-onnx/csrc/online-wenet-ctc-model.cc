@@ -101,7 +101,7 @@ class OnlineWenetCtcModel::Impl {
     return config_.wenet_ctc.chunk_size * subsampling_factor_;
   }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   // Return a vector containing 3 tensors
   // - attn_cache

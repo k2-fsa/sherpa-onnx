@@ -47,7 +47,7 @@ class OfflineZipformerAudioTaggingModel::Impl {
 
   int32_t NumEventClasses() const { return num_event_classes_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
  private:
   void Init(void *model_data, size_t model_data_length) {
