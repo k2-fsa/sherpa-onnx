@@ -46,7 +46,7 @@ int32_t main(int argc, char *argv[]) {
     }
   }
 
-  bool use_gpu = (arc == 3);
+  bool use_gpu = (argc == 3);
 
   using namespace sherpa_onnx::cxx;  // NOLINT
   OnlineRecognizerConfig config;
