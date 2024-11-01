@@ -7,9 +7,27 @@
 //
 // clang-format off
 //
+// cd /path/sherpa-onnx/
+// mkdir build
+// cd build
+// cmake ..
+// make
+//
 // wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 // tar xvf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
 // rm sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20.tar.bz2
+//
+// #  1. Test on CPU, run once
+//
+// ./bin/streaming-zipformer-rtf-cxx-api
+//
+// #  2. Test on CPU, run 10 times
+//
+// ./bin/streaming-zipformer-rtf-cxx-api 10
+//
+// #  3. Test on GPU, run 10 times
+//
+// ./bin/streaming-zipformer-rtf-cxx-api 10 cuda
 //
 // clang-format on
 
@@ -27,6 +45,8 @@ int32_t main(int argc, char *argv[]) {
       num_runs = 1;
     }
   }
+
+  bool use_gpu = (arc == 3);
 
   using namespace sherpa_onnx::cxx;  // NOLINT
   OnlineRecognizerConfig config;
@@ -50,6 +70,7 @@ int32_t main(int argc, char *argv[]) {
       "./sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt";
 
   config.model_config.num_threads = 1;
+  config.model_config.provider = use_gpu ? "cuda" : "cpu";
 
   std::cout << "Loading model\n";
   OnlineRecognizer recongizer = OnlineRecognizer::Create(config);
