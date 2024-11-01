@@ -47,7 +47,7 @@ class OfflineWenetCtcModel::Impl {
 
   int32_t SubsamplingFactor() const { return subsampling_factor_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
  private:
   void Init(void *model_data, size_t model_data_length) {

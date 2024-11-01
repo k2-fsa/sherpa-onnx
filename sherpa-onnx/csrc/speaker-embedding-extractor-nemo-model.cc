@@ -53,7 +53,7 @@ class SpeakerEmbeddingExtractorNeMoModel::Impl {
     return std::move(outputs[0]);
   }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   const SpeakerEmbeddingExtractorNeMoModelMetaData &GetMetaData() const {
     return meta_data_;

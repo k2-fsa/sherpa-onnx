@@ -123,7 +123,7 @@ class OfflineTransducerNeMoModel::Impl {
     return std::move(logit[0]);
   }
 
-  std::vector<Ort::Value> GetDecoderInitStates(int32_t batch_size) const {
+  std::vector<Ort::Value> GetDecoderInitStates(int32_t batch_size) {
     std::array<int64_t, 3> s0_shape{pred_rnn_layers_, batch_size, pred_hidden_};
     Ort::Value s0 = Ort::Value::CreateTensor<float>(allocator_, s0_shape.data(),
                                                     s0_shape.size());
@@ -149,7 +149,7 @@ class OfflineTransducerNeMoModel::Impl {
   int32_t SubsamplingFactor() const { return subsampling_factor_; }
   int32_t VocabSize() const { return vocab_size_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
 

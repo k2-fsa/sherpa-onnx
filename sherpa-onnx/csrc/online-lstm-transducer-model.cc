@@ -158,9 +158,10 @@ std::vector<Ort::Value> OnlineLstmTransducerModel::StackStates(
     h_buf[i] = &states[i][0];
     c_buf[i] = &states[i][1];
   }
+  auto allocator = const_cast<OnlineLstmTransducerModel *>(this)->allocator_;
 
-  Ort::Value h = Cat(allocator_, h_buf, 1);
-  Ort::Value c = Cat(allocator_, c_buf, 1);
+  Ort::Value h = Cat(allocator, h_buf, 1);
+  Ort::Value c = Cat(allocator, c_buf, 1);
 
   std::vector<Ort::Value> ans;
   ans.reserve(2);
@@ -177,8 +178,10 @@ std::vector<std::vector<Ort::Value>> OnlineLstmTransducerModel::UnStackStates(
 
   std::vector<std::vector<Ort::Value>> ans(batch_size);
 
-  std::vector<Ort::Value> h_vec = Unbind(allocator_, &states[0], 1);
-  std::vector<Ort::Value> c_vec = Unbind(allocator_, &states[1], 1);
+  auto allocator = const_cast<OnlineLstmTransducerModel *>(this)->allocator_;
+
+  std::vector<Ort::Value> h_vec = Unbind(allocator, &states[0], 1);
+  std::vector<Ort::Value> c_vec = Unbind(allocator, &states[1], 1);
 
   assert(h_vec.size() == batch_size);
   assert(c_vec.size() == batch_size);

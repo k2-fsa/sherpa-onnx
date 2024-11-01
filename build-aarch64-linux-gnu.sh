@@ -44,6 +44,21 @@ if [[ x"$BUILD_SHARED_LIBS" == x"" ]]; then
   BUILD_SHARED_LIBS=OFF
 fi
 
+if [[ x"$SHERPA_ONNX_ENABLE_GPU" == x"" ]]; then
+  # By default, use CPU
+  SHERPA_ONNX_ENABLE_GPU=OFF
+
+  # If you use GPU, then please make sure you have NVIDIA GPUs on your board.
+  # It uses onnxruntime 1.11.0.
+  #
+  # Tested on Jetson Nano B01
+fi
+
+if [[ x"$SHERPA_ONNX_ENABLE_GPU" == x"ON" ]]; then
+  # Build shared libs if building GPU is enabled.
+  BUILD_SHARED_LIBS=ON
+fi
+
 cmake \
   -DBUILD_PIPER_PHONMIZE_EXE=OFF \
   -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
@@ -51,6 +66,7 @@ cmake \
   -DBUILD_ESPEAK_NG_TESTS=OFF \
   -DCMAKE_INSTALL_PREFIX=./install \
   -DCMAKE_BUILD_TYPE=Release \
+  -DSHERPA_ONNX_ENABLE_GPU=$SHERPA_ONNX_ENABLE_GPU \
   -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
   -DSHERPA_ONNX_ENABLE_TESTS=OFF \
   -DSHERPA_ONNX_ENABLE_PYTHON=OFF \

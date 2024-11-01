@@ -70,7 +70,7 @@ class OnlineZipformer2CtcModel::Impl {
 
   int32_t ChunkShift() const { return decode_chunk_len_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   // Return a vector containing 3 tensors
   // - attn_cache
@@ -86,7 +86,7 @@ class OnlineZipformer2CtcModel::Impl {
   }
 
   std::vector<Ort::Value> StackStates(
-      std::vector<std::vector<Ort::Value>> states) const {
+      std::vector<std::vector<Ort::Value>> states) {
     int32_t batch_size = static_cast<int32_t>(states.size());
 
     std::vector<const Ort::Value *> buf(batch_size);
@@ -159,7 +159,7 @@ class OnlineZipformer2CtcModel::Impl {
   }
 
   std::vector<std::vector<Ort::Value>> UnStackStates(
-      std::vector<Ort::Value> states) const {
+      std::vector<Ort::Value> states) {
     int32_t m = std::accumulate(num_encoder_layers_.begin(),
                                 num_encoder_layers_.end(), 0);
     assert(states.size() == m * 6 + 2);

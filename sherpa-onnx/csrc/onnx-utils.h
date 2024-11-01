@@ -59,6 +59,9 @@ void GetOutputNames(Ort::Session *sess, std::vector<std::string> *output_names,
 Ort::Value GetEncoderOutFrame(OrtAllocator *allocator, Ort::Value *encoder_out,
                               int32_t t);
 
+std::string LookupCustomModelMetaData(const Ort::ModelMetadata &meta_data,
+                                      const char *key, OrtAllocator *allocator);
+
 void PrintModelMetadata(std::ostream &os,
                         const Ort::ModelMetadata &meta_data);  // NOLINT
 

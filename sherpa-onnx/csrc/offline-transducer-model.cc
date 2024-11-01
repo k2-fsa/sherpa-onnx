@@ -95,11 +95,11 @@ class OfflineTransducerModel::Impl {
   int32_t VocabSize() const { return vocab_size_; }
   int32_t ContextSize() const { return context_size_; }
   int32_t SubsamplingFactor() const { return 4; }
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   Ort::Value BuildDecoderInput(
       const std::vector<OfflineTransducerDecoderResult> &results,
-      int32_t end_index) const {
+      int32_t end_index) {
     assert(end_index <= results.size());
 
     int32_t batch_size = end_index;
@@ -122,7 +122,7 @@ class OfflineTransducerModel::Impl {
   }
 
   Ort::Value BuildDecoderInput(const std::vector<Hypothesis> &results,
-                               int32_t end_index) const {
+                               int32_t end_index) {
     assert(end_index <= results.size());
 
     int32_t batch_size = end_index;

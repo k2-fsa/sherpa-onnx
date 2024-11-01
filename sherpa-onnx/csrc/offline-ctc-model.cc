@@ -53,8 +53,8 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
 
   Ort::AllocatorWithDefaultOptions allocator;
   auto model_type =
-      meta_data.LookupCustomMetadataMapAllocated("model_type", allocator);
-  if (!model_type) {
+      LookupCustomModelMetaData(meta_data, "model_type", allocator);
+  if (model_type.empty()) {
     SHERPA_ONNX_LOGE(
         "No model_type in the metadata!\n"
         "If you are using models from NeMo, please refer to\n"
@@ -74,22 +74,22 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kUnknown;
   }
 
-  if (model_type.get() == std::string("EncDecCTCModelBPE")) {
+  if (model_type == "EncDecCTCModelBPE") {
     return ModelType::kEncDecCTCModelBPE;
-  } else if (model_type.get() == std::string("EncDecCTCModel")) {
+  } else if (model_type == "EncDecCTCModel") {
     return ModelType::kEncDecCTCModel;
-  } else if (model_type.get() == std::string("EncDecHybridRNNTCTCBPEModel")) {
+  } else if (model_type == "EncDecHybridRNNTCTCBPEModel") {
     return ModelType::kEncDecHybridRNNTCTCBPEModel;
-  } else if (model_type.get() == std::string("tdnn")) {
+  } else if (model_type == "tdnn") {
     return ModelType::kTdnn;
-  } else if (model_type.get() == std::string("zipformer2_ctc")) {
+  } else if (model_type == "zipformer2_ctc") {
     return ModelType::kZipformerCtc;
-  } else if (model_type.get() == std::string("wenet_ctc")) {
+  } else if (model_type == "wenet_ctc") {
     return ModelType::kWenetCtc;
-  } else if (model_type.get() == std::string("telespeech_ctc")) {
+  } else if (model_type == "telespeech_ctc") {
     return ModelType::kTeleSpeechCtc;
   } else {
-    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
+    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
     return ModelType::kUnknown;
   }
 }

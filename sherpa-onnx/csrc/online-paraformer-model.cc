@@ -105,7 +105,7 @@ class OnlineParaformerModel::Impl {
 
   const std::vector<float> &InverseStdDev() const { return inv_stddev_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {

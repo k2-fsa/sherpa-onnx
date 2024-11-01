@@ -102,7 +102,7 @@ class OnlineNeMoCtcModel::Impl {
 
   int32_t ChunkShift() const { return chunk_shift_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   // Return a vector containing 3 tensors
   // - cache_last_channel
@@ -119,7 +119,7 @@ class OnlineNeMoCtcModel::Impl {
   }
 
   std::vector<Ort::Value> StackStates(
-      std::vector<std::vector<Ort::Value>> states) const {
+      std::vector<std::vector<Ort::Value>> states) {
     int32_t batch_size = static_cast<int32_t>(states.size());
     if (batch_size == 1) {
       return std::move(states[0]);
@@ -157,6 +157,8 @@ class OnlineNeMoCtcModel::Impl {
       std::vector<Ort::Value> states) const {
     assert(states.size() == 3);
 
+    auto allocator = const_cast<Impl *>(this)->allocator_;
+
     std::vector<std::vector<Ort::Value>> ans;
 
     auto shape = states[0].GetTensorTypeAndShapeInfo().GetShape();
@@ -171,9 +173,9 @@ class OnlineNeMoCtcModel::Impl {
     for (int32_t i = 0; i != 3; ++i) {
       std::vector<Ort::Value> v;
       if (i == 2) {
-        v = Unbind<int64_t>(allocator_, &states[i], 0);
+        v = Unbind<int64_t>(allocator, &states[i], 0);
       } else {
-        v = Unbind(allocator_, &states[i], 0);
+        v = Unbind(allocator, &states[i], 0);
       }
 
       assert(v.size() == batch_size);

@@ -34,11 +34,12 @@ concurrency:
 jobs:
   aarch64_linux_gnu_shared:
     runs-on: ${{ matrix.os }}
-    name: aarch64 shared lib test
+    name: aarch64 shared GPU ${{ matrix.gpu }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        gpu: [ON, OFF]
 
     steps:
       - uses: actions/checkout@v4
@@ -79,21 +80,39 @@ jobs:
           make -j2
           make install
 
-      - name: cache-toolchain
-        id: cache-toolchain
+      - name: cache-toolchain (CPU)
+        if: matrix.gpu == 'OFF'
+        id: cache-toolchain-cpu
         uses: actions/cache@v4
         with:
           path: toolchain
           key: gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
 
-      - name: Download toolchain
-        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+      - name: cache-toolchain (GPU)
+        if: matrix.gpu == 'ON'
+        id: cache-toolchain-gpu
+        uses: actions/cache@v4
+        with:
+          path: toolchain
+          key: gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
+
+      - name: Download toolchain (CPU, gcc 7.5)
+        if: steps.cache-toolchain-cpu.outputs.cache-hit != 'true' && matrix.gpu == 'OFF'
         shell: bash
         run: |
           wget -qq https://huggingface.co/csukuangfj/sherpa-ncnn-toolchains/resolve/main/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
 
           mkdir $GITHUB_WORKSPACE/toolchain
           tar xf ./gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
+
+      - name: Download toolchain (GPU, gcc 10.3)
+        if: steps.cache-toolchain-gpu.outputs.cache-hit != 'true' && matrix.gpu == 'ON'
+        shell: bash
+        run: |
+          wget -qq https://huggingface.co/csukuangfj/sherpa-ncnn-toolchains/resolve/main/gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz
+
+          mkdir $GITHUB_WORKSPACE/toolchain
+          tar xf ./gcc-arm-10.3-2021.07-x86_64-aarch64-none-linux-gnu.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
 
       - name: Set environment variable
         if: steps.cache-build-result.outputs.cache-hit != 'true'
@@ -103,19 +122,31 @@ jobs:
           echo "$GITHUB_WORKSPACE/bin"  >> "$GITHUB_PATH"
           ls -lh "$GITHUB_WORKSPACE/toolchain/bin"
 
-          echo "CC=aarch64-linux-gnu-gcc" >> "$GITHUB_ENV"
-          echo "CXX=aarch64-linux-gnu-g++" >> "$GITHUB_ENV"
+          if [[ ${{ matrix.gpu }} == OFF ]]; then
+            echo "CC=aarch64-linux-gnu-gcc" >> "$GITHUB_ENV"
+            echo "CXX=aarch64-linux-gnu-g++" >> "$GITHUB_ENV"
+          else
+            echo "CC=aarch64-none-linux-gnu-gcc" >> "$GITHUB_ENV"
+            echo "CXX=aarch64-none-linux-gnu-g++" >> "$GITHUB_ENV"
+          fi
 
       - name: Display toolchain info
         shell: bash
         run: |
-          aarch64-linux-gnu-gcc --version
+          if [[ ${{ matrix.gpu }} == OFF ]]; then
+            which aarch64-linux-gnu-gcc
+            aarch64-linux-gnu-gcc --version
+          else
+            which aarch64-none-linux-gnu-gcc
+            aarch64-none-linux-gnu-gcc --version
+          fi
 
       - name: Display qemu-aarch64 -h
         shell: bash
         run: |
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
           export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-linux-gnu/libc
+          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-none-linux-gnu/libc
           qemu-aarch64 -h
 
       - name: build aarch64-linux-gnu
@@ -127,6 +158,7 @@ jobs:
           cmake --version
 
           export BUILD_SHARED_LIBS=ON
+          export SHERPA_ONNX_ENABLE_GPU=${{ matrix.gpu }}
 
           ./build-aarch64-linux-gnu.sh
 
@@ -140,7 +172,11 @@ jobs:
         run: |
           export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
           export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-linux-gnu/libc
+          if [[ ${{ matrix.gpu }} == OFF ]]; then
+            export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-linux-gnu/libc
+          else
+            export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-none-linux-gnu/libc
+          fi
 
           ls -lh ./build-aarch64-linux-gnu/bin
 
@@ -151,11 +187,20 @@ jobs:
       - name: Copy files
         shell: bash
         run: |
-          aarch64-linux-gnu-strip --version
+          if [[ ${{ matrix.gpu }} == OFF ]]; then
+            aarch64-linux-gnu-strip --version
+          else
+            aarch64-none-linux-gnu-strip --version
+          fi
 
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-shared
+          if [[ ${{ matrix.gpu }} == OFF ]]; then
+            dst=${dst}-cpu
+          else
+            dst=${dst}-gpu
+          fi
           mkdir $dst
 
           cp -a build-aarch64-linux-gnu/install/bin $dst/
@@ -166,7 +211,11 @@ jobs:
 
           ls -lh $dst/bin/
           echo "strip"
-          aarch64-linux-gnu-strip $dst/bin/*
+          if [[ ${{ matrix.gpu }} == OFF ]]; then
+            aarch64-linux-gnu-strip $dst/bin/*
+          else
+            aarch64-none-linux-gnu-strip $dst/bin/*
+          fi
 
           tree $dst
 
@@ -174,8 +223,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-linux-aarch64-shared
-          path: sherpa-onnx-*linux-aarch64-shared.tar.bz2
+          name: sherpa-onnx-linux-aarch64-shared-gpu-${{ matrix.gpu }}
+          path: sherpa-onnx-*linux-aarch64-shared*.tar.bz2
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -198,7 +247,7 @@ jobs:
             cd huggingface
             mkdir -p aarch64
 
-            cp -v ../sherpa-onnx-*-shared.tar.bz2 ./aarch64
+            cp -v ../sherpa-onnx-*-shared*.tar.bz2 ./aarch64
 
             git status
             git lfs track "*.bz2"

@@ -185,6 +185,9 @@ std::vector<Ort::Value> OnlineZipformer2TransducerModel::StackStates(
 
   std::vector<const Ort::Value *> buf(batch_size);
 
+  auto allocator =
+      const_cast<OnlineZipformer2TransducerModel *>(this)->allocator_;
+
   std::vector<Ort::Value> ans;
   int32_t num_states = static_cast<int32_t>(states[0].size());
   ans.reserve(num_states);
@@ -194,42 +197,42 @@ std::vector<Ort::Value> OnlineZipformer2TransducerModel::StackStates(
       for (int32_t n = 0; n != batch_size; ++n) {
         buf[n] = &states[n][6 * i];
       }
-      auto v = Cat(allocator_, buf, 1);
+      auto v = Cat(allocator, buf, 1);
       ans.push_back(std::move(v));
     }
     {
       for (int32_t n = 0; n != batch_size; ++n) {
         buf[n] = &states[n][6 * i + 1];
       }
-      auto v = Cat(allocator_, buf, 1);
+      auto v = Cat(allocator, buf, 1);
       ans.push_back(std::move(v));
     }
     {
       for (int32_t n = 0; n != batch_size; ++n) {
         buf[n] = &states[n][6 * i + 2];
       }
-      auto v = Cat(allocator_, buf, 1);
+      auto v = Cat(allocator, buf, 1);
       ans.push_back(std::move(v));
     }
     {
       for (int32_t n = 0; n != batch_size; ++n) {
         buf[n] = &states[n][6 * i + 3];
       }
-      auto v = Cat(allocator_, buf, 1);
+      auto v = Cat(allocator, buf, 1);
       ans.push_back(std::move(v));
     }
     {
       for (int32_t n = 0; n != batch_size; ++n) {
         buf[n] = &states[n][6 * i + 4];
       }
-      auto v = Cat(allocator_, buf, 0);
+      auto v = Cat(allocator, buf, 0);
       ans.push_back(std::move(v));
     }
     {
       for (int32_t n = 0; n != batch_size; ++n) {
         buf[n] = &states[n][6 * i + 5];
       }
-      auto v = Cat(allocator_, buf, 0);
+      auto v = Cat(allocator, buf, 0);
       ans.push_back(std::move(v));
     }
   }
@@ -238,7 +241,7 @@ std::vector<Ort::Value> OnlineZipformer2TransducerModel::StackStates(
     for (int32_t n = 0; n != batch_size; ++n) {
       buf[n] = &states[n][num_states - 2];
     }
-    auto v = Cat(allocator_, buf, 0);
+    auto v = Cat(allocator, buf, 0);
     ans.push_back(std::move(v));
   }
 
@@ -246,7 +249,7 @@ std::vector<Ort::Value> OnlineZipformer2TransducerModel::StackStates(
     for (int32_t n = 0; n != batch_size; ++n) {
       buf[n] = &states[n][num_states - 1];
     }
-    auto v = Cat<int64_t>(allocator_, buf, 0);
+    auto v = Cat<int64_t>(allocator, buf, 0);
     ans.push_back(std::move(v));
   }
   return ans;
@@ -261,12 +264,15 @@ OnlineZipformer2TransducerModel::UnStackStates(
 
   int32_t batch_size = states[0].GetTensorTypeAndShapeInfo().GetShape()[1];
 
+  auto allocator =
+      const_cast<OnlineZipformer2TransducerModel *>(this)->allocator_;
+
   std::vector<std::vector<Ort::Value>> ans;
   ans.resize(batch_size);
 
   for (int32_t i = 0; i != m; ++i) {
     {
-      auto v = Unbind(allocator_, &states[i * 6], 1);
+      auto v = Unbind(allocator, &states[i * 6], 1);
       assert(static_cast<int32_t>(v.size()) == batch_size);
 
       for (int32_t n = 0; n != batch_size; ++n) {
@@ -274,7 +280,7 @@ OnlineZipformer2TransducerModel::UnStackStates(
       }
     }
     {
-      auto v = Unbind(allocator_, &states[i * 6 + 1], 1);
+      auto v = Unbind(allocator, &states[i * 6 + 1], 1);
       assert(static_cast<int32_t>(v.size()) == batch_size);
 
       for (int32_t n = 0; n != batch_size; ++n) {
@@ -282,7 +288,7 @@ OnlineZipformer2TransducerModel::UnStackStates(
       }
     }
     {
-      auto v = Unbind(allocator_, &states[i * 6 + 2], 1);
+      auto v = Unbind(allocator, &states[i * 6 + 2], 1);
       assert(static_cast<int32_t>(v.size()) == batch_size);
 
       for (int32_t n = 0; n != batch_size; ++n) {
@@ -290,7 +296,7 @@ OnlineZipformer2TransducerModel::UnStackStates(
       }
     }
     {
-      auto v = Unbind(allocator_, &states[i * 6 + 3], 1);
+      auto v = Unbind(allocator, &states[i * 6 + 3], 1);
       assert(static_cast<int32_t>(v.size()) == batch_size);
 
       for (int32_t n = 0; n != batch_size; ++n) {
@@ -298,7 +304,7 @@ OnlineZipformer2TransducerModel::UnStackStates(
       }
     }
     {
-      auto v = Unbind(allocator_, &states[i * 6 + 4], 0);
+      auto v = Unbind(allocator, &states[i * 6 + 4], 0);
       assert(static_cast<int32_t>(v.size()) == batch_size);
 
       for (int32_t n = 0; n != batch_size; ++n) {
@@ -306,7 +312,7 @@ OnlineZipformer2TransducerModel::UnStackStates(
       }
     }
     {
-      auto v = Unbind(allocator_, &states[i * 6 + 5], 0);
+      auto v = Unbind(allocator, &states[i * 6 + 5], 0);
       assert(static_cast<int32_t>(v.size()) == batch_size);
 
       for (int32_t n = 0; n != batch_size; ++n) {
@@ -316,7 +322,7 @@ OnlineZipformer2TransducerModel::UnStackStates(
   }
 
   {
-    auto v = Unbind(allocator_, &states[m * 6], 0);
+    auto v = Unbind(allocator, &states[m * 6], 0);
     assert(static_cast<int32_t>(v.size()) == batch_size);
 
     for (int32_t n = 0; n != batch_size; ++n) {
@@ -324,7 +330,7 @@ OnlineZipformer2TransducerModel::UnStackStates(
     }
   }
   {
-    auto v = Unbind<int64_t>(allocator_, &states[m * 6 + 1], 0);
+    auto v = Unbind<int64_t>(allocator, &states[m * 6 + 1], 0);
     assert(static_cast<int32_t>(v.size()) == batch_size);
 
     for (int32_t n = 0; n != batch_size; ++n) {

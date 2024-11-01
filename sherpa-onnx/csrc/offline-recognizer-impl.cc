@@ -121,9 +121,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
 
-  auto model_type_ptr =
-      meta_data.LookupCustomMetadataMapAllocated("model_type", allocator);
-  if (!model_type_ptr) {
+  auto model_type =
+      LookupCustomModelMetaData(meta_data, "model_type", allocator);
+  if (!model_type.empty()) {
     SHERPA_ONNX_LOGE(
         "No model_type in the metadata!\n\n"
         "Please refer to the following URLs to add metadata"
@@ -164,7 +164,6 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "\n");
     exit(-1);
   }
-  std::string model_type(model_type_ptr.get());
 
   if (model_type == "conformer" || model_type == "zipformer" ||
       model_type == "zipformer2") {
@@ -301,9 +300,9 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
 
-  auto model_type_ptr =
-      meta_data.LookupCustomMetadataMapAllocated("model_type", allocator);
-  if (!model_type_ptr) {
+  auto model_type =
+      LookupCustomModelMetaData(meta_data, "model_type", allocator);
+  if (model_type.empty()) {
     SHERPA_ONNX_LOGE(
         "No model_type in the metadata!\n\n"
         "Please refer to the following URLs to add metadata"
@@ -344,7 +343,6 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
         "\n");
     exit(-1);
   }
-  std::string model_type(model_type_ptr.get());
 
   if (model_type == "conformer" || model_type == "zipformer" ||
       model_type == "zipformer2") {

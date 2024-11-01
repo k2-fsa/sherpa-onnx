@@ -60,6 +60,7 @@ Ort::SessionOptions GetSessionOptionsImpl(
     case Provider::kCPU:
       break;  // nothing to do for the CPU provider
     case Provider::kXnnpack: {
+#if ORT_API_VERSION >= 17
       if (std::find(available_providers.begin(), available_providers.end(),
                     "XnnpackExecutionProvider") != available_providers.end()) {
         sess_opts.AppendExecutionProvider("XNNPACK");
@@ -67,6 +68,11 @@ Ort::SessionOptions GetSessionOptionsImpl(
         SHERPA_ONNX_LOGE("Available providers: %s. Fallback to cpu!",
                          os.str().c_str());
       }
+#else
+      SHERPA_ONNX_LOGE(
+          "Does not support xnnpack for onnxruntime: %d. Fallback to cpu!",
+          static_cast<int32_t>(ORT_API_VERSION));
+#endif
       break;
     }
     case Provider::kTRT: {
