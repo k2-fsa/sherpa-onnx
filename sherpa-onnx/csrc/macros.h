@@ -7,6 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <utility>
+
 #if __ANDROID_API__ >= 8
 #include "android/log.h"
 #define SHERPA_ONNX_LOGE(...)                                            \

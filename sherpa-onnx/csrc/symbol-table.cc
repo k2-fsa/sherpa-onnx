@@ -29,20 +29,19 @@ namespace {
 const char *ws = " \t\n\r\f\v";
 
 // trim from end of string (right)
-inline std::string &TrimRight(std::string &s, const char *t = ws) {
-  s.erase(s.find_last_not_of(t) + 1);
-  return s;
+inline void TrimRight(std::string *s, const char *t = ws) {
+  s->erase(s->find_last_not_of(t) + 1);
 }
 
 // trim from beginning of string (left)
-inline std::string &TrimLeft(std::string &s, const char *t = ws) {
-  s.erase(0, s.find_first_not_of(t));
-  return s;
+inline void TrimLeft(std::string *s, const char *t = ws) {
+  s->erase(0, s->find_first_not_of(t));
 }
 
 // trim from both ends of string (right then left)
-inline std::string &Trim(std::string &s, const char *t = ws) {
-  return TrimLeft(TrimRight(s, t), t);
+inline void Trim(std::string *s, const char *t = ws) {
+  TrimRight(s, t);
+  TrimLeft(s, t);
 }
 }  // namespace
 
@@ -56,7 +55,7 @@ std::unordered_map<std::string, int32_t> ReadTokens(
   std::string sym;
   int32_t id = -1;
   while (std::getline(is, line)) {
-    Trim(line);
+    Trim(&line);
     std::istringstream iss(line);
     iss >> sym;
     if (iss.eof()) {

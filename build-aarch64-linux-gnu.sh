@@ -47,6 +47,11 @@ fi
 if [[ x"$SHERPA_ONNX_ENABLE_GPU" == x"" ]]; then
   # By default, use CPU
   SHERPA_ONNX_ENABLE_GPU=OFF
+
+  # If you use GPU, then please make sure you have NVIDIA GPUs on your board.
+  # It uses onnxruntime 1.11.0.
+  #
+  # Tested on Jetson Nano B01
 fi
 
 if [[ x"$SHERPA_ONNX_ENABLE_GPU" == x"ON" ]]; then
