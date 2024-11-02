@@ -1,5 +1,5 @@
 export function post(action, post, cb) {
-	var host = process.env.NODE_ENV === 'development' ? "https://ai.szrai.com/" : "/"
+	
 	//var host = process.env.NODE_ENV === 'development' ? "http://127.0.0.1:8000/" : "/"
 	var url = host+action;
 	if (!post) post = {};
