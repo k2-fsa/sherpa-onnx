@@ -25,7 +25,7 @@ static std::string GetInputName(Ort::Session *sess, size_t index,
                                 OrtAllocator *allocator) {
 // Note(fangjun): We only tested 1.17.1 and 1.11.0
 // For other versions, we may need to change it
-#if ORT_API_VERSION >= 17
+#if ORT_API_VERSION >= 12
   auto v = sess->GetInputNameAllocated(index, allocator);
   return v.get();
 #else
@@ -40,7 +40,7 @@ static std::string GetOutputName(Ort::Session *sess, size_t index,
                                  OrtAllocator *allocator) {
 // Note(fangjun): We only tested 1.17.1 and 1.11.0
 // For other versions, we may need to change it
-#if ORT_API_VERSION >= 17
+#if ORT_API_VERSION >= 12
   auto v = sess->GetOutputNameAllocated(index, allocator);
   return v.get();
 #else
@@ -106,7 +106,7 @@ Ort::Value GetEncoderOutFrame(OrtAllocator *allocator, Ort::Value *encoder_out,
 
 void PrintModelMetadata(std::ostream &os, const Ort::ModelMetadata &meta_data) {
   Ort::AllocatorWithDefaultOptions allocator;
-#if ORT_API_VERSION >= 17
+#if ORT_API_VERSION >= 12
   std::vector<Ort::AllocatedStringPtr> v =
       meta_data.GetCustomMetadataMapKeysAllocated(allocator);
   for (const auto &key : v) {
@@ -406,7 +406,7 @@ std::string LookupCustomModelMetaData(const Ort::ModelMetadata &meta_data,
                                       OrtAllocator *allocator) {
 // Note(fangjun): We only tested 1.17.1 and 1.11.0
 // For other versions, we may need to change it
-#if ORT_API_VERSION >= 17
+#if ORT_API_VERSION >= 12
   auto v = meta_data.LookupCustomMetadataMapAllocated(key, allocator);
   return v.get();
 #else
