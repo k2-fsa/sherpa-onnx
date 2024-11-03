@@ -60,7 +60,7 @@ Ort::SessionOptions GetSessionOptionsImpl(
     case Provider::kCPU:
       break;  // nothing to do for the CPU provider
     case Provider::kXnnpack: {
-#if ORT_API_VERSION >= 17
+#if ORT_API_VERSION >= 12
       if (std::find(available_providers.begin(), available_providers.end(),
                     "XnnpackExecutionProvider") != available_providers.end()) {
         sess_opts.AppendExecutionProvider("XNNPACK");
