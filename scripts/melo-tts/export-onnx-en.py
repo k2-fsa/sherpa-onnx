@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-# This script export ZH_EN TTS model, which supports both Chinese and English.
-# This model has only 1 speaker.
+# This model exports the English-only TTS model.
+# It has 5 speakers.
+# {'EN-US': 0, 'EN-BR': 1, 'EN_INDIA': 2, 'EN-AU': 3, 'EN-Default': 4}
 
 from typing import Any, Dict
 
@@ -11,68 +12,6 @@ from melo.text import language_id_map, language_tone_start_map
 from melo.text.chinese import pinyin_to_symbol_map
 from melo.text.english import eng_dict, refine_syllables
 from pypinyin import Style, lazy_pinyin, phrases_dict, pinyin_dict
-
-for k, v in pinyin_to_symbol_map.items():
-    if isinstance(v, list):
-        break
-    pinyin_to_symbol_map[k] = v.split()
-
-
-def get_initial_final_tone(word: str):
-    initials = lazy_pinyin(word, neutral_tone_with_five=True, style=Style.INITIALS)
-    finals = lazy_pinyin(word, neutral_tone_with_five=True, style=Style.FINALS_TONE3)
-
-    ans_phone = []
-    ans_tone = []
-
-    for c, v in zip(initials, finals):
-        raw_pinyin = c + v
-        v_without_tone = v[:-1]
-        try:
-            tone = v[-1]
-        except:
-            print("skip", word, initials, finals)
-            return [], []
-
-        pinyin = c + v_without_tone
-        assert tone in "12345"
-
-        if c:
-            v_rep_map = {
-                "uei": "ui",
-                "iou": "iu",
-                "uen": "un",
-            }
-            if v_without_tone in v_rep_map.keys():
-                pinyin = c + v_rep_map[v_without_tone]
-        else:
-            pinyin_rep_map = {
-                "ing": "ying",
-                "i": "yi",
-                "in": "yin",
-                "u": "wu",
-            }
-            if pinyin in pinyin_rep_map.keys():
-                pinyin = pinyin_rep_map[pinyin]
-            else:
-                single_rep_map = {
-                    "v": "yu",
-                    "e": "e",
-                    "i": "y",
-                    "u": "w",
-                }
-                if pinyin[0] in single_rep_map.keys():
-                    pinyin = single_rep_map[pinyin[0]] + pinyin[1:]
-                    #  print(word, initials, finals, pinyin)
-
-        if pinyin not in pinyin_to_symbol_map:
-            print("skip", pinyin, word, c, v, raw_pinyin)
-            continue
-        phone = pinyin_to_symbol_map[pinyin]
-        ans_phone += phone
-        ans_tone += [tone] * len(phone)
-
-    return ans_phone, ans_tone
 
 
 def generate_tokens(symbol_list):
@@ -124,8 +63,6 @@ def add_new_english_words(lexicon):
 
 
 def generate_lexicon():
-    word_dict = pinyin_dict.pinyin_dict
-    phrases = phrases_dict.phrases_dict
     add_new_english_words(eng_dict)
     with open("lexicon.txt", "w", encoding="utf-8") as f:
         for word in eng_dict:
@@ -137,26 +74,6 @@ def generate_lexicon():
             tones = " ".join(tones)
 
             f.write(f"{word.lower()} {phones} {tones}\n")
-
-        for key in word_dict:
-            if not (0x4E00 <= key <= 0x9FA5):
-                continue
-            w = chr(key)
-            phone, tone = get_initial_final_tone(w)
-            if not phone:
-                continue
-            phone = " ".join(phone)
-            tone = " ".join(tone)
-            f.write(f"{w} {phone} {tone}\n")
-
-        for w in phrases:
-            phone, tone = get_initial_final_tone(w)
-            if not phone:
-                continue
-            assert len(phone) == len(tone), (len(phone), len(tone), phone, tone)
-            phone = " ".join(phone)
-            tone = " ".join(tone)
-            f.write(f"{w} {phone} {tone}\n")
 
 
 def add_meta_data(filename: str, meta_data: Dict[str, Any]):
@@ -225,14 +142,14 @@ class ModelWrapper(torch.nn.Module):
 def main():
     generate_lexicon()
 
-    language = "ZH"
+    language = "EN"
     model = TTS(language=language, device="cpu")
 
     generate_tokens(model.hps["symbols"])
 
     torch_model = ModelWrapper(model)
 
-    opset_version = 18
+    opset_version = 13
     x = torch.randint(low=0, high=10, size=(60,), dtype=torch.int64)
     print(x.shape)
     x_lengths = torch.tensor([x.size(0)], dtype=torch.int64)
@@ -283,14 +200,14 @@ def main():
         "model_type": "melo-vits",
         "comment": "melo",
         "version": 2,
-        "language": "Chinese + English",
+        "language": "English",
         "add_blank": int(model.hps.data.add_blank),
-        "n_speakers": 1,
-        "jieba": 1,
+        "n_speakers": len(model.hps.data.spk2id),  # 5
+        "jieba": 0,
         "sample_rate": model.hps.data.sampling_rate,
         "bert_dim": 1024,
         "ja_bert_dim": 768,
-        "speaker_id": list(model.hps.data.spk2id.values())[0],
+        "speaker_id": 0,
         "lang_id": language_id_map[model.language],
         "tone_start": language_tone_start_map[model.language],
         "url": "https://github.com/myshell-ai/MeloTTS",

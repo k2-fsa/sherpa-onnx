@@ -152,10 +152,6 @@
 #define SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(dst, src_key)           \
   do {                                                                     \
     auto value = LookupCustomModelMetaData(meta_data, src_key, allocator); \
-    if (value.empty()) {                                                   \
-      SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key);    \
-      exit(-1);                                                            \
-    }                                                                      \
                                                                            \
     dst = std::move(value);                                                \
   } while (0)

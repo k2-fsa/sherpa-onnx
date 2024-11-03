@@ -408,10 +408,10 @@ std::string LookupCustomModelMetaData(const Ort::ModelMetadata &meta_data,
 // For other versions, we may need to change it
 #if ORT_API_VERSION >= 12
   auto v = meta_data.LookupCustomMetadataMapAllocated(key, allocator);
-  return v.get();
+  return v ? v.get() : "";
 #else
   auto v = meta_data.LookupCustomMetadataMap(key, allocator);
-  std::string ans = v;
+  std::string ans = v ? v : "";
   allocator->Free(allocator, v);
   return ans;
 #endif
