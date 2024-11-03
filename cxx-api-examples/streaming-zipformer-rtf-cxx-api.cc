@@ -39,7 +39,7 @@
 
 int32_t main(int argc, char *argv[]) {
   int32_t num_runs = 1;
-  if (argc == 2) {
+  if (argc >= 2) {
     num_runs = atoi(argv[1]);
     if (num_runs < 0) {
       num_runs = 1;

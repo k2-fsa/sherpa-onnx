@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - wheel
-      - wheel-linux-aarch64-gpu
   workflow_dispatch:
 
 env:
