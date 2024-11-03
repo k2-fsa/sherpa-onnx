@@ -38,4 +38,24 @@ tail tokens.txt
 
 ./test.py
 
+mkdir zh_en
+mv -v *.onnx zh_en/
+mv -v lexicon.txt zh_en
+mv -v tokens.txt zh_en
+cp -v README.md zh_en
+
+ls -lh
+echo "---"
+ls -lh zh_en
+
+./export-onnx-en.py
+
+mkdir en
+mv -v *.onnx en/
+mv -v lexicon.txt en
+mv -v tokens.txt en
+cp -v README.md en
+
+ls -lh en
+
 ls -lh
