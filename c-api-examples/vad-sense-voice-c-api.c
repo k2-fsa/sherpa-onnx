@@ -99,11 +99,16 @@ int32_t main() {
 
   int32_t window_size = vadConfig.silero_vad.window_size;
   int32_t i = 0;
+  int32_t excess_size = wave->num_samples % window_size;
+  int32_t total_size = wave->num_samples + excess_size;
 
-  while (i + window_size < wave->num_samples) {
-    SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, wave->samples + i,
-                                                  window_size);
-    i += window_size;
+  while (i < total_size) {
+    if (i < total_size) {
+      SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, wave->samples + i,
+                                                    window_size);
+    } else {
+      SherpaOnnxVoiceActivityDetectorFlush(vad);
+    }
 
     while (!SherpaOnnxVoiceActivityDetectorEmpty(vad)) {
       const SherpaOnnxSpeechSegment *segment =
@@ -132,36 +137,7 @@ int32_t main() {
       SherpaOnnxDestroySpeechSegment(segment);
       SherpaOnnxVoiceActivityDetectorPop(vad);
     }
-  }
-
-  SherpaOnnxVoiceActivityDetectorFlush(vad);
-
-  while (!SherpaOnnxVoiceActivityDetectorEmpty(vad)) {
-    const SherpaOnnxSpeechSegment *segment =
-        SherpaOnnxVoiceActivityDetectorFront(vad);
-
-    const SherpaOnnxOfflineStream *stream =
-        SherpaOnnxCreateOfflineStream(recognizer);
-
-    SherpaOnnxAcceptWaveformOffline(stream, wave->sample_rate, segment->samples,
-                                    segment->n);
-
-    SherpaOnnxDecodeOfflineStream(recognizer, stream);
-
-    const SherpaOnnxOfflineRecognizerResult *result =
-        SherpaOnnxGetOfflineStreamResult(stream);
-
-    float start = segment->start / 16000.0f;
-    float duration = segment->n / 16000.0f;
-    float stop = start + duration;
-
-    fprintf(stderr, "%.3f -- %.3f: %s\n", start, stop, result->text);
-
-    SherpaOnnxDestroyOfflineRecognizerResult(result);
-    SherpaOnnxDestroyOfflineStream(stream);
-
-    SherpaOnnxDestroySpeechSegment(segment);
-    SherpaOnnxVoiceActivityDetectorPop(vad);
+    i += window_size;
   }
 
   SherpaOnnxDestroyOfflineRecognizer(recognizer);
