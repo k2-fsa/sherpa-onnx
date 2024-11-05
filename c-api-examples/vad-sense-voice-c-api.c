@@ -99,15 +99,15 @@ int32_t main() {
 
   int32_t window_size = vadConfig.silero_vad.window_size;
   int32_t i = 0;
-  int32_t excess_size = wave->num_samples % window_size;
-  int32_t total_size = wave->num_samples + excess_size;
+  int is_loop = 1;
 
-  while (i <= total_size) {
-    if (i < total_size) {
+  while (is_loop) {
+    if (i + window_size < wave->num_samples) {
       SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, wave->samples + i,
                                                     window_size);
     } else {
       SherpaOnnxVoiceActivityDetectorFlush(vad);
+      is_loop = 0;
     }
 
     while (!SherpaOnnxVoiceActivityDetectorEmpty(vad)) {
