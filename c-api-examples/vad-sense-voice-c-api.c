@@ -102,7 +102,7 @@ int32_t main() {
   int32_t excess_size = wave->num_samples % window_size;
   int32_t total_size = wave->num_samples + excess_size;
 
-  while (i < total_size) {
+  while (i <= total_size) {
     if (i < total_size) {
       SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, wave->samples + i,
                                                     window_size);
