@@ -123,7 +123,7 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   auto model_type =
       LookupCustomModelMetaData(meta_data, "model_type", allocator);
-  if (!model_type.empty()) {
+  if (model_type.empty()) {
     SHERPA_ONNX_LOGE(
         "No model_type in the metadata!\n\n"
         "Please refer to the following URLs to add metadata"

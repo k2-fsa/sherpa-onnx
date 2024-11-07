@@ -40,7 +40,7 @@ jobs:
           name: test.wav
           path: scripts/melo-tts/test.wav
 
-      - name: Publish to huggingface
+      - name: Publish to huggingface (Chinese + English)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -61,14 +61,14 @@ jobs:
             git fetch
             git pull
             echo "pwd: $PWD"
-            ls -lh ../scripts/melo-tts
+            ls -lh ../scripts/melo-tts/zh_en
 
             rm -rf ./
 
-            cp -v ../scripts/melo-tts/*.onnx .
-            cp -v ../scripts/melo-tts/lexicon.txt .
-            cp -v ../scripts/melo-tts/tokens.txt .
-            cp -v ../scripts/melo-tts/README.md .
+            cp -v ../scripts/melo-tts/zh_en/*.onnx .
+            cp -v ../scripts/melo-tts/zh_en/lexicon.txt .
+            cp -v ../scripts/melo-tts/zh_en/tokens.txt .
+            cp -v ../scripts/melo-tts/zh_en/README.md .
 
             curl -SL -O https://raw.githubusercontent.com/myshell-ai/MeloTTS/main/LICENSE
 
@@ -96,6 +96,60 @@ jobs:
 
             rm -rf huggingface/.git*
             dst=vits-melo-tts-zh_en
+
+            mv huggingface $dst
+
+            tar cjvf $dst.tar.bz2 $dst
+            rm -rf $dst
+
+      - name: Publish to huggingface (English)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/vits-melo-tts-en huggingface
+            cd huggingface
+            git fetch
+            git pull
+            echo "pwd: $PWD"
+            ls -lh ../scripts/melo-tts/en
+
+            rm -rf ./
+
+            cp -v ../scripts/melo-tts/en/*.onnx .
+            cp -v ../scripts/melo-tts/en/lexicon.txt .
+            cp -v ../scripts/melo-tts/en/tokens.txt .
+            cp -v ../scripts/melo-tts/en/README.md .
+
+            curl -SL -O https://raw.githubusercontent.com/myshell-ai/MeloTTS/main/LICENSE
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git diff
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/vits-melo-tts-en main || true
+
+            cd ..
+
+            rm -rf huggingface/.git*
+            dst=vits-melo-tts-en
 
             mv huggingface $dst
 

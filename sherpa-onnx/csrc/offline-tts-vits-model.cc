@@ -46,8 +46,10 @@ class OfflineTtsVitsModel::Impl {
   }
 
   Ort::Value Run(Ort::Value x, Ort::Value tones, int64_t sid, float speed) {
-    // For MeloTTS, we hardcode sid to the one contained in the meta data
-    sid = meta_data_.speaker_id;
+    if (meta_data_.num_speakers == 1) {
+      // For MeloTTS, we hardcode sid to the one contained in the meta data
+      sid = meta_data_.speaker_id;
+    }
 
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);

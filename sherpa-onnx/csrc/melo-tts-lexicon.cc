@@ -48,6 +48,20 @@ class MeloTtsLexicon::Impl {
     }
   }
 
+  Impl(const std::string &lexicon, const std::string &tokens,
+       const OfflineTtsVitsModelMetaData &meta_data, bool debug)
+      : meta_data_(meta_data), debug_(debug) {
+    {
+      std::ifstream is(tokens);
+      InitTokens(is);
+    }
+
+    {
+      std::ifstream is(lexicon);
+      InitLexicon(is);
+    }
+  }
+
   std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
     std::string text = ToLowerCase(_text);
     // see
@@ -65,21 +79,39 @@ class MeloTtsLexicon::Impl {
     s = std::regex_replace(s, punct_re4, "!");
 
     std::vector<std::string> words;
-    bool is_hmm = true;
-    jieba_->Cut(text, words, is_hmm);
+    if (jieba_) {
+      bool is_hmm = true;
+      jieba_->Cut(text, words, is_hmm);
 
-    if (debug_) {
-      SHERPA_ONNX_LOGE("input text: %s", text.c_str());
-      SHERPA_ONNX_LOGE("after replacing punctuations: %s", s.c_str());
+      if (debug_) {
+        SHERPA_ONNX_LOGE("input text: %s", text.c_str());
+        SHERPA_ONNX_LOGE("after replacing punctuations: %s", s.c_str());
 
-      std::ostringstream os;
-      std::string sep = "";
-      for (const auto &w : words) {
-        os << sep << w;
-        sep = "_";
+        std::ostringstream os;
+        std::string sep = "";
+        for (const auto &w : words) {
+          os << sep << w;
+          sep = "_";
+        }
+
+        SHERPA_ONNX_LOGE("after jieba processing: %s", os.str().c_str());
       }
+    } else {
+      words = SplitUtf8(text);
 
-      SHERPA_ONNX_LOGE("after jieba processing: %s", os.str().c_str());
+      if (debug_) {
+        fprintf(stderr, "Input text in string (lowercase): %s\n", text.c_str());
+        fprintf(stderr, "Input text in bytes (lowercase):");
+        for (uint8_t c : text) {
+          fprintf(stderr, " %02x", c);
+        }
+        fprintf(stderr, "\n");
+        fprintf(stderr, "After splitting to words:");
+        for (const auto &w : words) {
+          fprintf(stderr, " %s", w.c_str());
+        }
+        fprintf(stderr, "\n");
+      }
     }
 
     std::vector<TokenIDs> ans;
@@ -241,6 +273,7 @@ class MeloTtsLexicon::Impl {
           {std::move(word), TokenIDs{std::move(ids64), std::move(tone_list)}});
     }
 
+    // For Chinese+English MeloTTS
     word2ids_["呣"] = word2ids_["母"];
     word2ids_["嗯"] = word2ids_["恩"];
   }
@@ -267,6 +300,12 @@ MeloTtsLexicon::MeloTtsLexicon(const std::string &lexicon,
                                bool debug)
     : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, meta_data,
                                    debug)) {}
+
+MeloTtsLexicon::MeloTtsLexicon(const std::string &lexicon,
+                               const std::string &tokens,
+                               const OfflineTtsVitsModelMetaData &meta_data,
+                               bool debug)
+    : impl_(std::make_unique<Impl>(lexicon, tokens, meta_data, debug)) {}
 
 std::vector<TokenIDs> MeloTtsLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {
