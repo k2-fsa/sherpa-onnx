@@ -25,7 +25,7 @@
 		data() {
 			return {
 				recorderManager: null,
-				url: '你的服务器地址',	//你的服务器地址 怎么编译请看这个文档 https://www.bilibili.com/read/cv22438156/
+				url: '你的服务器地址 ',	//你的服务器地址 怎么编译请看这个文档 https://www.bilibili.com/read/cv22438156/
 				word: '',
 			}
 		},
