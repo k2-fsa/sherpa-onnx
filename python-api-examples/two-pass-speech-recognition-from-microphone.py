@@ -427,7 +427,6 @@ def main():
                     )
                     print("\r{}:{}".format(segment_id, result), flush=True)
                     segment_id += 1
-                else:
                     sample_buffers = []
 
                 first_recognizer.reset(stream)
