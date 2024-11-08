@@ -43,6 +43,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Build iOS shared
+        if: matrix.with_tts == 'ON'
+        shell: bash
+        run: |
+          export CMAKE_VERBOSE_MAKEFILE=ON
+          ./build-ios-shared.sh
+
       - name: Build iOS
         if: matrix.with_tts == 'ON'
         shell: bash
