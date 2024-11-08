@@ -214,7 +214,7 @@ if(SHERPA_ONNX_ENABLE_GPU)
   )
 endif()
 
-if(BUILD_SHARED_LIBS)
+if(BUILD_SHARED_LIBS AND NOT DEFINED onnxruntime_lib_files)
   target_link_libraries(sherpa-onnx-core onnxruntime)
 else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
