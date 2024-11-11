@@ -77,9 +77,7 @@ class _TtsScreenState extends State<TtsScreen> {
                   onTapOutside: (PointerDownEvent event) {
                     FocusManager.instance.primaryFocus?.unfocus();
                   },
-                  inputFormatters: <TextInputFormatter>[
-                    FilteringTextInputFormatter.digitsOnly
-                  ]),
+                  inputFormatters: <TextInputFormatter>[FilteringTextInputFormatter.digitsOnly]),
               Slider(
                 // decoration: InputDecoration(
                 //   labelText: "speech speed",
@@ -108,125 +106,117 @@ class _TtsScreenState extends State<TtsScreen> {
                 },
               ),
               const SizedBox(height: 5),
-              Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    OutlinedButton(
-                      child: Text("Generate"),
-                      onPressed: () async {
-                        await _init();
-                        await _player?.stop();
+              Row(mainAxisAlignment: MainAxisAlignment.center, children: <Widget>[
+                OutlinedButton(
+                  child: Text("Generate"),
+                  onPressed: () async {
+                    await _init();
+                    await _player?.stop();
 
-                        setState(() {
-                          _maxSpeakerID = _tts?.numSpeakers ?? 0;
-                          if (_maxSpeakerID > 0) {
-                            _maxSpeakerID -= 1;
-                          }
-                        });
+                    setState(() {
+                      _maxSpeakerID = _tts?.numSpeakers ?? 0;
+                      if (_maxSpeakerID > 0) {
+                        _maxSpeakerID -= 1;
+                      }
+                    });
 
-                        if (_tts == null) {
-                          _controller_hint.value = TextEditingValue(
-                            text: 'Failed to initialize tts',
-                          );
-                          return;
-                        }
+                    if (_tts == null) {
+                      _controller_hint.value = TextEditingValue(
+                        text: 'Failed to initialize tts',
+                      );
+                      return;
+                    }
 
-                        _controller_hint.value = TextEditingValue(
-                          text: '',
-                        );
+                    _controller_hint.value = TextEditingValue(
+                      text: '',
+                    );
 
-                        final text = _controller_text_input.text.trim();
-                        if (text == '') {
-                          _controller_hint.value = TextEditingValue(
-                            text: 'Please first input your text to generate',
-                          );
-                          return;
-                        }
+                    final text = _controller_text_input.text.trim();
+                    if (text == '') {
+                      _controller_hint.value = TextEditingValue(
+                        text: 'Please first input your text to generate',
+                      );
+                      return;
+                    }
 
-                        final sid =
-                            int.tryParse(_controller_sid.text.trim()) ?? 0;
+                    final sid = int.tryParse(_controller_sid.text.trim()) ?? 0;
 
-                        final stopwatch = Stopwatch();
-                        stopwatch.start();
-                        final audio =
-                            _tts!.generate(text: text, sid: sid, speed: _speed);
-                        final suffix =
-                            '-sid-$sid-speed-${_speed.toStringAsPrecision(2)}';
-                        final filename = await generateWaveFilename(suffix);
+                    final stopwatch = Stopwatch();
+                    stopwatch.start();
+                    final audio = _tts!.generate(text: text, sid: sid, speed: _speed);
+                    final suffix = '-sid-$sid-speed-${_speed.toStringAsPrecision(2)}';
+                    final filename = await generateWaveFilename(suffix);
 
-                        final ok = sherpa_onnx.writeWave(
-                          filename: filename,
-                          samples: audio.samples,
-                          sampleRate: audio.sampleRate,
-                        );
+                    final ok = sherpa_onnx.writeWave(
+                      filename: filename,
+                      samples: audio.samples,
+                      sampleRate: audio.sampleRate,
+                    );
 
-                        if (ok) {
-                          stopwatch.stop();
-                          double elapsed =
-                              stopwatch.elapsed.inMilliseconds.toDouble();
+                    if (ok) {
+                      stopwatch.stop();
+                      double elapsed = stopwatch.elapsed.inMilliseconds.toDouble();
 
-                          double waveDuration =
-                              audio.samples.length.toDouble() /
-                                  audio.sampleRate.toDouble();
+                      double waveDuration = audio.samples.length.toDouble() / audio.sampleRate.toDouble();
 
-                          _controller_hint.value = TextEditingValue(
-                            text: 'Saved to\n$filename\n'
-                                'Elapsed: ${(elapsed / 1000).toStringAsPrecision(4)} s\n'
-                                'Wave duration: ${waveDuration.toStringAsPrecision(4)} s\n'
-                                'RTF: ${(elapsed / 1000).toStringAsPrecision(4)}/${waveDuration.toStringAsPrecision(4)} '
-                                '= ${(elapsed / 1000 / waveDuration).toStringAsPrecision(3)} ',
-                          );
-                          _lastFilename = filename;
+                      _controller_hint.value = TextEditingValue(
+                        text: 'Saved to\n$filename\n'
+                            'Elapsed: ${(elapsed / 1000).toStringAsPrecision(4)} s\n'
+                            'Wave duration: ${waveDuration.toStringAsPrecision(4)} s\n'
+                            'RTF: ${(elapsed / 1000).toStringAsPrecision(4)}/${waveDuration.toStringAsPrecision(4)} '
+                            '= ${(elapsed / 1000 / waveDuration).toStringAsPrecision(3)} ',
+                      );
+                      _lastFilename = filename;
 
-                          await _player?.play(DeviceFileSource(_lastFilename));
-                        } else {
-                          _controller_hint.value = TextEditingValue(
-                            text: 'Failed to save generated audio',
-                          );
-                        }
-                      },
-                    ),
-                    const SizedBox(width: 5),
-                    OutlinedButton(
-                      child: Text("Clear"),
-                      onPressed: () {
-                        _controller_text_input.value = TextEditingValue(
-                          text: '',
-                        );
+                      await _player?.play(DeviceFileSource(_lastFilename));
+                    } else {
+                      _controller_hint.value = TextEditingValue(
+                        text: 'Failed to save generated audio',
+                      );
+                    }
+                  },
+                ),
+                const SizedBox(width: 5),
+                OutlinedButton(
+                  child: Text("Clear"),
+                  onPressed: () {
+                    _controller_text_input.value = TextEditingValue(
+                      text: '',
+                    );
 
-                        _controller_hint.value = TextEditingValue(
-                          text: '',
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 5),
-                    OutlinedButton(
-                      child: Text("Play"),
-                      onPressed: () async {
-                        if (_lastFilename == '') {
-                          _controller_hint.value = TextEditingValue(
-                            text: 'No generated wave file found',
-                          );
-                          return;
-                        }
-                        await _player?.stop();
-                        await _player?.play(DeviceFileSource(_lastFilename));
-                        _controller_hint.value = TextEditingValue(
-                          text: 'Playing\n$_lastFilename',
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 5),
-                    OutlinedButton(
-                      child: Text("Stop"),
-                      onPressed: () async {
-                        await _player?.stop();
-                        _controller_hint.value = TextEditingValue(
-                          text: '',
-                        );
-                      },
-                    ),
-                  ]),
+                    _controller_hint.value = TextEditingValue(
+                      text: '',
+                    );
+                  },
+                ),
+                const SizedBox(width: 5),
+                OutlinedButton(
+                  child: Text("Play"),
+                  onPressed: () async {
+                    if (_lastFilename == '') {
+                      _controller_hint.value = TextEditingValue(
+                        text: 'No generated wave file found',
+                      );
+                      return;
+                    }
+                    await _player?.stop();
+                    await _player?.play(DeviceFileSource(_lastFilename));
+                    _controller_hint.value = TextEditingValue(
+                      text: 'Playing\n$_lastFilename',
+                    );
+                  },
+                ),
+                const SizedBox(width: 5),
+                OutlinedButton(
+                  child: Text("Stop"),
+                  onPressed: () async {
+                    await _player?.stop();
+                    _controller_hint.value = TextEditingValue(
+                      text: '',
+                    );
+                  },
+                ),
+              ]),
               const SizedBox(height: 5),
               TextField(
                 decoration: InputDecoration(
