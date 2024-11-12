@@ -21,6 +21,8 @@ fi
 
 if [ ! -z CMAKE_VERBOSE_MAKEFILE ]; then
   CMAKE_VERBOSE_MAKEFILE=ON
+else
+  CMAKE_VERBOSE_MAKEFILE=OFF
 fi
 
 if [ ! -f $onnxruntime_dir/onnxruntime.xcframework/ios-arm64/onnxruntime.a ]; then
