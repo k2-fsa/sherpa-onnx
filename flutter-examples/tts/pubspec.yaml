@@ -24,6 +24,12 @@ dependencies:
   url_launcher: 6.2.6
   url_launcher_linux: 3.1.0
   audioplayers: ^5.0.0
+  media_kit: 
+  media_kit_libs_video: 
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/vits-melo-tts-zh_en/
+    - assets/vits-melo-tts-zh_en/dict/
