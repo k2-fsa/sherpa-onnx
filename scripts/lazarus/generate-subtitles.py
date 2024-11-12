@@ -51,6 +51,20 @@ def get_models():
             """,
         ),
         Model(
+            model_name="sherpa-onnx-moonshine-tiny-en-int8",
+            lang="en",
+            short_name="moonshine_tiny",
+            cmd="""
+            pushd $model_name
+            mv -v preprocess.onnx moonshine-preprocessor.onnx
+            mv -v encode.int8.onnx moonshine-encoder.onnx
+            mv -v uncached_decode.int8.onnx moonshine-uncached-decoder.onnx
+            mv -v cached_decode.int8.onnx moonshine-cached-decoder.onnx
+
+            popd
+            """,
+        ),
+        Model(
             model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
             lang="zh_en_ko_ja_yue",
             short_name="sense_voice",
