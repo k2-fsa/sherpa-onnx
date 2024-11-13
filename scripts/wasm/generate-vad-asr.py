@@ -52,6 +52,24 @@ def get_models():
             """,
         ),
         Model(
+            model_name="sherpa-onnx-moonshine-tiny-en-int8",
+            hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-en-moonshine-tiny",
+            ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-en-moonshine-tiny",
+            short_name="vad-asr-en-moonshine_tiny",
+            cmd="""
+            pushd $model_name
+            mv -v preprocess.onnx ../moonshine-preprocessor.onnx
+            mv -v encode.int8.onnx ../moonshine-encoder.onnx
+            mv -v uncached_decode.int8.onnx ../moonshine-uncached-decoder.onnx
+            mv -v cached_decode.int8.onnx ../moonshine-cached-decoder.onnx
+            mv -v tokens.txt ../
+            popd
+            rm -rf $model_name
+            sed -i.bak 's/Zipformer/Moonshine tiny supporting English 英文/g' ../index.html
+            git diff
+            """,
+        ),
+        Model(
             model_name="sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17",
             hf="k2-fsa/web-assembly-vad-asr-sherpa-onnx-zh-en-ja-ko-cantonese-sense-voice",
             ms="csukuangfj/web-assembly-vad-asr-sherpa-onnx-zh-en-jp-ko-cantonese-sense-voice",

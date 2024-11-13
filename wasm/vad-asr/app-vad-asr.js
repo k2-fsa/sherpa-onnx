@@ -111,6 +111,13 @@ function initOfflineRecognizer() {
     };
   } else if (fileExists('telespeech.onnx')) {
     config.modelConfig.telespeechCtc = './telespeech.onnx';
+  } else if (fileExists('moonshine-preprocessor.onnx')) {
+    config.modelConfig.moonshine = {
+      preprocessor: './moonshine-preprocessor.onnx',
+      encoder: './moonshine-encoder.onnx',
+      uncachedDecoder: './moonshine-uncached-decoder.onnx',
+      cachedDecoder: './moonshine-cached-decoder.onnx'
+    };
   } else {
     console.log('Please specify a model.');
     alert('Please specify a model.');
