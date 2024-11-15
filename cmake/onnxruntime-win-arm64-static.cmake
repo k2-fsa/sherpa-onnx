@@ -16,7 +16,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 if(NOT CMAKE_BUILD_TYPE STREQUAL Release)
-  message(FATAL_ERROR "This file is for building a release version on Windows x64")
+  message(FATAL_ERROR "This file is for building a release version on Windows arm64")
 endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-win-arm64-static_lib-1.17.1.tar.bz2")
