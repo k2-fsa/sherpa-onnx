@@ -34,7 +34,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest]
-        shared_lib: [ON]
+        shared_lib: [ON, OFF]
         with_tts: [ON, OFF]
 
     steps:
