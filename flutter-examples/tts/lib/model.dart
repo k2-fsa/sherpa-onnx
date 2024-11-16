@@ -79,16 +79,17 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   // Example 7
   // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-melo-tts-zh_en.tar.bz2
-  modelDir = 'vits-melo-tts-zh_en';
-  modelName = 'model.onnx';
-  lexicon = 'lexicon.txt';
-  dictDir = 'vits-melo-tts-zh_en/dict';
+  // modelDir = 'vits-melo-tts-zh_en';
+  // modelName = 'model.onnx';
+  // lexicon = 'lexicon.txt';
+  // dictDir = 'vits-melo-tts-zh_en/dict';
 
   // ============================================================
   // Please don't change the remaining part of this function
   // ============================================================
   if (modelName == '') {
-    throw Exception('You are supposed to select a model by changing the code before you run the app');
+    throw Exception(
+        'You are supposed to select a model by changing the code before you run the app');
   }
 
   final Directory directory = await getApplicationDocumentsDirectory();

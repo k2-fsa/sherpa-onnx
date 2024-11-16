@@ -481,11 +481,8 @@ jobs:
       - name: Copy pre-built libs
         shell: bash
         run: |
-          echo "----ios-arm64----"
-          cp -v build-ios-shared/ios-arm64/libsherpa-onnx-c-api.dylib flutter/sherpa_onnx_ios/ios/
-          cp -v build-ios-shared/ios-onnxruntime/onnxruntime.xcframework/ios-arm64/onnxruntime.a flutter/sherpa_onnx_ios/ios/libonnxruntime.a
-
-          ls -lh flutter/sherpa_onnx_ios/ios/libonnxruntime.a
+          echo "----ios arm64 and arm64_x64_simulator----"
+          cp -av build-ios-shared/sherpa_onnx.xcframework flutter/sherpa_onnx_ios/ios/
 
           mv -v flutter/sherpa_onnx_ios /tmp/to_be_published
 
