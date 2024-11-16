@@ -152,6 +152,8 @@ if(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE)
   if(DEFINED ENV{SHERPA_ONNXRUNTIME_LIB_DIR})
     if(APPLE)
       set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.dylib)
+    elseif(WIN32)
+      set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/onnxruntime.lib)
     else()
       set(location_onnxruntime_lib $ENV{SHERPA_ONNXRUNTIME_LIB_DIR}/libonnxruntime.so)
     endif()
@@ -198,6 +200,7 @@ if(location_onnxruntime_header_dir AND location_onnxruntime_lib)
     add_library(onnxruntime SHARED IMPORTED)
     set_target_properties(onnxruntime PROPERTIES
       IMPORTED_LOCATION ${location_onnxruntime_lib}
+      IMPORTED_IMPLIB ${location_onnxruntime_lib}
       INTERFACE_INCLUDE_DIRECTORIES "${location_onnxruntime_header_dir}"
     )
     if(SHERPA_ONNX_ENABLE_GPU AND location_onnxruntime_cuda_lib)
