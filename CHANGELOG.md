@@ -1,3 +1,19 @@
+## 1.10.31
+
+* Publish pre-built wheels for Python 3.13 (#1485)
+* Publish pre-built macos xcframework (#1490)
+* Fix reading tokens.txt on Windows. (#1497)
+* Add two-pass ASR Android APKs for Moonshine models. (#1499)
+* Support building GPU-capable sherpa-onnx on Linux aarch64. (#1500)
+* Publish pre-built wheels with CUDA support for Linux aarch64. (#1507)
+* Export the English TTS model from MeloTTS (#1509)
+* Add Lazarus example for Moonshine models. (#1532)
+* Add isolate_tts demo (#1529)
+* Add WebAssembly example for VAD + Moonshine models. (#1535)
+* Add Android APK for streaming Paraformer ASR (#1538)
+* Support static build for windows arm64. (#1539)
+* Use xcframework for Flutter iOS plugin to support iOS simulators.
+
 ## 1.10.30
 
 * Fix building node-addon for Windows x86. (#1469)

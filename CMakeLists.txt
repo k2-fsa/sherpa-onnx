@@ -8,10 +8,9 @@ set(CMAKE_POLICY_DEFAULT_CMP0069 NEW)
 project(sherpa-onnx)
 
 # Remember to update
-# ./nodejs-addon-examples
-# ./dart-api-examples/
 # ./CHANGELOG.md
-set(SHERPA_ONNX_VERSION "1.10.30")
+# ./new-release.sh
+set(SHERPA_ONNX_VERSION "1.10.31")
 
 # Disable warning about
 #
