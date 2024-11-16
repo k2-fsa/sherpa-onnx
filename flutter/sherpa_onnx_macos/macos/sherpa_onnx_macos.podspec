@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'sherpa_onnx_macos'
-  s.version          = '1.10.30'
+  s.version          = '1.10.31'
   s.summary          = 'sherpa-onnx Flutter FFI plugin project.'
   s.description      = <<-DESC
 sherpa-onnx Flutter FFI plugin project.

@@ -7,7 +7,7 @@
 # https://groups.google.com/g/dart-ffi/c/nUATMBy7r0c
 Pod::Spec.new do |s|
   s.name             = 'sherpa_onnx_ios'
-  s.version          = '1.10.30'
+  s.version          = '1.10.31'
   s.summary          = 'A new Flutter FFI plugin project.'
   s.description      = <<-DESC
 A new Flutter FFI plugin project.
@@ -23,7 +23,8 @@ A new Flutter FFI plugin project.
   s.source           = { :path => '.' }
   s.dependency 'Flutter'
   s.platform = :ios, '12.0'
-  s.ios.vendored_libraries = '*.dylib', '*.a'
+  s.preserve_paths = 'sherpa_onnx.xcframework/**/*'
+  s.vendored_frameworks = 'sherpa_onnx.xcframework'
 
   # Flutter.framework does not contain a i386 slice.
   s.pod_target_xcconfig = {

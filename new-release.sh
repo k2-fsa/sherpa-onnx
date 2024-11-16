@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-find flutter -name *.yaml -type f -exec sed -i.bak 's/1\.10\.29/1\.10\.30/g' {} \;
-find dart-api-examples -name *.yaml -type f -exec sed -i.bak 's/1\.10\.29/1\.10\.30/g' {} \;
-find flutter-examples -name *.yaml -type f -exec sed -i.bak 's/1\.10\.29/1\.10\.30/g' {} \;
-find flutter -name *.podspec -type f -exec sed -i.bak 's/1\.10\.29/1\.10\.30/g' {} \;
-find nodejs-addon-examples -name package.json -type f -exec sed -i.bak 's/1\.10\.29/1\.10\.30/g' {} \;
+sed -i.bak 's/1\.10\.30/1\.10\.31/g' ./build-ios-shared.sh
+find flutter -name *.yaml -type f -exec sed -i.bak 's/1\.10\.30/1\.10\.31/g' {} \;
+find dart-api-examples -name *.yaml -type f -exec sed -i.bak 's/1\.10\.30/1\.10\.31/g' {} \;
+find flutter-examples -name *.yaml -type f -exec sed -i.bak 's/1\.10\.30/1\.10\.31/g' {} \;
+find flutter -name *.podspec -type f -exec sed -i.bak 's/1\.10\.30/1\.10\.31/g' {} \;
+find nodejs-addon-examples -name package.json -type f -exec sed -i.bak 's/1\.10\.30/1\.10\.31/g' {} \;
