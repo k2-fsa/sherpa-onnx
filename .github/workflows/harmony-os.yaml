@@ -1,0 +1,159 @@
+name: harmony-os
+
+on:
+  push:
+    branches:
+      - master
+      - ohos
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: harmony-os-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  harmony_os:
+    name: Harmony OS ${{ matrix.arch }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        arch: [arm64-v8a, armeabi-v7a, x86_64]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ohos-${{ matrix.arch }}
+
+      - name: cache-toolchain
+        id: cache-toolchain-ohos
+        uses: actions/cache@v4
+        with:
+          path: command-line-tools
+          key: commandline-tools-linux-x64-5.0.5.200.zip
+
+      - name: Download toolchain
+        if: steps.cache-toolchain-ohos.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl -SL -O https://huggingface.co/csukuangfj/harmonyos-commandline-tools/resolve/main/commandline-tools-linux-x64-5.0.5.200.zip
+          unzip commandline-tools-linux-x64-5.0.5.200.zip
+          rm commandline-tools-linux-x64-5.0.5.200.zip
+
+      - name: Set environment variable
+        shell: bash
+        run: |
+          echo "$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/build-tools/cmake/bin"  >> "$GITHUB_PATH"
+          which cmake
+
+          cmake --version
+
+          ls -lh $GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/build/cmake/ohos.toolchain.cmake
+
+          echo "===="
+          cat $GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/build/cmake/ohos.toolchain.cmake
+          echo "===="
+
+          # echo "$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/llvm/bin"  >> "$GITHUB_PATH"
+
+          ls -lh $GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/llvm/bin/
+          echo "--"
+          ls -lh $GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/llvm/bin/*unknown*
+
+          cat $GITHUB_PATH
+
+          # /home/runner/work/onnxruntime-libs/onnxruntime-libs/command-line-tools/sdk/default/openharmony/native/llvm/bin/aarch64-unknown-linux-ohos-clang -v || true
+          export PATH=$PWD/command-line-tools/sdk/default/openharmony/native/llvm/bin:$PATH
+          echo "path: $PATH"
+
+          which aarch64-unknown-linux-ohos-clang++ || true
+          which aarch64-unknown-linux-ohos-clang || true
+
+          aarch64-unknown-linux-ohos-clang++ --version || true
+          aarch64-unknown-linux-ohos-clang --version || true
+
+          which armv7-unknown-linux-ohos-clang++
+          which armv7-unknown-linux-ohos-clang
+
+          armv7-unknown-linux-ohos-clang++ --version
+          armv7-unknown-linux-ohos-clang --version
+
+          which x86_64-unknown-linux-ohos-clang++
+          which x86_64-unknown-linux-ohos-clang
+
+          x86_64-unknown-linux-ohos-clang++ --version
+          x86_64-unknown-linux-ohos-clang --version
+
+      - name: Build ${{ matrix.arch }}
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          arch=${{ matrix.arch }}
+
+          echo "arch: $arch"
+
+          export OHOS_SDK_NATIVE_DIR="$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native"
+
+          if [[ $arch == arm64-v8a ]]; then
+            ./build-ohos-arm64-v8a.sh
+          elif [[ $arch == armeabi-v7a ]]; then
+            ./build-ohos-armeabi-v7a.sh
+          elif [[ $arch == x86_64 ]]; then
+            ./build-ohos-x86-64.sh
+          else
+            echo "Unknown arch $arch"
+          fi
+
+      - name: Collect result for ${{ matrix.arch }}
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+
+          arch=${{ matrix.arch }}
+          d=sherpa-onnx-$SHERPA_ONNX_VERSION-ohos-$arch
+          if [[ $arch == x86_64 ]]; then
+            cd ./build-ohos-x86-64
+          else
+            cd ./build-ohos-$arch
+          fi
+
+          mv install $d
+          tar cjfv $d.tar.bz2 $d
+
+          ls -lh $d/lib
+
+
+          file $d/lib/*
+
+          readelf -d $d/lib/libsherpa-onnx-c-api.so
+
+          mv $d.tar.bz2 ../
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-ohos-${{ matrix.arch }}
+          path: ./*.tar.bz2
+
+      - name: Release jar
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./*.tar.bz2
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.10.23
