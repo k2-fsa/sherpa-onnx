@@ -9,17 +9,64 @@
 #include <utility>
 
 #include "sherpa-onnx/csrc/circular-buffer.h"
-#include "sherpa-onnx/csrc/vad-model.h"
+#include "sherpa-onnx/csrc/silero-vad-model.h"
 
+// #define __DEBUG_SPEECH_PROB___
 namespace sherpa_onnx {
+
+class timestamp_t {
+ public:
+  int start;
+  int end;
+
+  // default + parameterized constructor
+  timestamp_t(int start = -1, int end = -1) : start(start), end(end) {};
+
+  // assignment operator modifies object, therefore non-const
+  timestamp_t &operator=(const timestamp_t &a) {
+    start = a.start;
+    end = a.end;
+    return *this;
+  };
+
+  // equality comparison. doesn't modify object. therefore const.
+  bool operator==(const timestamp_t &a) const {
+    return (start == a.start && end == a.end);
+  };
+};
 
 class VoiceActivityDetector::Impl {
  public:
   explicit Impl(const VadModelConfig &config, float buffer_size_in_seconds = 60)
-      : model_(VadModel::Create(config)),
+      : model_(std::make_unique<SileroVadModel>(config)),
         config_(config),
-        buffer_(buffer_size_in_seconds * config.sample_rate) {
-    Init();
+        buffer_((int32_t)(buffer_size_in_seconds * config.sample_rate)) {
+    sample_rate = config.sample_rate;
+    int32_t sr_per_ms = sample_rate / 1000;
+    int32_t speech_pad_ms = 32;
+
+    window_size = model_->WindowSize();
+    window_shift = model_->WindowShift();
+    threshold = model_->Threshold();
+
+    min_speech_samples = model_->MinSpeechDurationSamples();
+
+    speech_pad_samples = sr_per_ms * speech_pad_ms;
+
+    max_speech_samples = model_->MaxSpeechDurationSamples() - window_shift -
+                         2 * speech_pad_samples;
+
+    min_silence_samples = model_->MinSilenceDurationSamples();
+
+    min_silence_samples_at_max_speech = sr_per_ms * 98;
+
+#ifdef __DEBUG_SPEECH_PROB___
+    printf(
+        "{window_size: %d, min_speech_samples:%d, max_speech_samples:%d, "
+        "min_silence_samples:%d,  min_silence_samples_at_max_speech:%d}\n",
+        window_size, min_speech_samples, max_speech_samples,
+        min_silence_samples, min_silence_samples_at_max_speech);
+#endif  //__DEBUG_SPEECH_PROB___
   }
 
 #if __ANDROID_API__ >= 9
@@ -27,27 +74,12 @@ class VoiceActivityDetector::Impl {
        float buffer_size_in_seconds = 60)
       : model_(VadModel::Create(mgr, config)),
         config_(config),
-        buffer_(buffer_size_in_seconds * config.sample_rate) {
-    Init();
-  }
+        buffer_(buffer_size_in_seconds * config.sample_rate) {}
 #endif
 
   void AcceptWaveform(const float *samples, int32_t n) {
-    if (buffer_.Size() > max_utterance_length_) {
-      model_->SetMinSilenceDuration(new_min_silence_duration_s_);
-      model_->SetThreshold(new_threshold_);
-    } else {
-      model_->SetMinSilenceDuration(config_.silero_vad.min_silence_duration);
-      model_->SetThreshold(config_.silero_vad.threshold);
-    }
-
-    int32_t window_size = model_->WindowSize();
-    int32_t window_shift = model_->WindowShift();
-
-    // note n is usually window_size and there is no need to use
-    // an extra buffer here
+    buffer_.Push(samples, n);
     last_.insert(last_.end(), samples, samples + n);
-
     if (last_.size() < window_size) {
       return;
     }
@@ -56,52 +88,167 @@ class VoiceActivityDetector::Impl {
     int32_t k =
         (static_cast<int32_t>(last_.size()) - window_size) / window_shift + 1;
     const float *p = last_.data();
-    bool is_speech = false;
 
     for (int32_t i = 0; i < k; ++i, p += window_shift) {
-      buffer_.Push(p, window_shift);
-      // NOTE(fangjun): Please don't use a very large n.
-      bool this_window_is_speech = model_->IsSpeech(p, window_size);
-      is_speech = is_speech || this_window_is_speech;
-    }
+      float speech_prob = model_->Run(p, window_size);
+      current_sample += window_shift;
+      // Voice fragmentation
+      if ((speech_prob >= threshold)) {
+#ifdef __DEBUG_SPEECH_PROB___
+        float speech =
+            current_sample - window_shift;  // minus window_shift to get precise
+                                            // start time point.
+        printf("{ start: %.3f s (%.3f) %08d}\n", 1.0 * speech / sample_rate,
+               speech_prob, current_sample - window_shift);
+#endif  //__DEBUG_SPEECH_PROB___
+        // Temporary end point reset
+        if (temp_end != 0) {
+          temp_end = 0;
+          // The next estimated start point is less than the last end point,
+          // reset
+          if (next_start < prev_end) next_start = current_sample - window_shift;
+        }
+        // First voice segmentation, record start point
+        if (triggered == false) {
+          triggered = true;
+          current_speech.start = current_sample - window_shift;
+        }
+        continue;
+      }
 
+      if (
+          // If the number of samples is greater than the maximum number of
+          // voice fragments, forced fragmentation
+          (triggered == true) &&
+          ((current_sample - current_speech.start) > max_speech_samples)) {
+        if (prev_end > 0) {
+          current_speech.end = prev_end;
+#ifdef __DEBUG_SPEECH_PROB___
+          printf("{>max_prev speech start: %d, end:%d}\n", current_speech.start,
+                 current_speech.end);
+#endif  //__DEBUG_SPEECH_PROB___
+          std::vector<float> s = buffer_.Get(
+              current_speech.start, current_speech.end - current_speech.start);
+          SpeechSegment segment;
+          segment.start = current_speech.start;
+          segment.samples = std::move(s);
+          segments_.push(std::move(segment));
+          current_speech = timestamp_t();
+          // previously reached silence(< neg_thres) and is still not speech(<
+          // thres)
+          if (next_start < prev_end)
+            triggered = false;
+          else {
+            current_speech.start = next_start;
+          }
+          prev_end = 0;
+          next_start = 0;
+          temp_end = 0;
+        } else {
+          current_speech.end = current_sample;
+#ifdef __DEBUG_SPEECH_PROB___
+          printf("{>max speech start: %d, end:%d}\n", current_speech.start,
+                 current_speech.end);
+#endif  //__DEBUG_SPEECH_PROB___
+          std::vector<float> s = buffer_.Get(
+              current_speech.start, current_speech.end - current_speech.start);
+          SpeechSegment segment;
+          segment.start = current_speech.start;
+          segment.samples = std::move(s);
+          segments_.push(std::move(segment));
+          current_speech = timestamp_t();
+          prev_end = 0;
+          next_start = 0;
+          temp_end = 0;
+          triggered = false;
+        }
+        continue;
+      }
+      // Chaos, stay the same
+      if ((speech_prob >= (threshold - 0.15)) && (speech_prob < threshold)) {
+        if (triggered) {
+#ifdef __DEBUG_SPEECH_PROB___
+          float speech =
+              current_sample - window_shift;  // minus window_shift to get
+                                              // precise start time point.
+          printf("{ speaking: %.3f s (%.3f) %08d}\n",
+                 1.0 * speech / sample_rate, speech_prob,
+                 current_sample - window_shift);
+#endif  //__DEBUG_SPEECH_PROB___
+        } else {
+#ifdef __DEBUG_SPEECH_PROB___
+          float speech =
+              current_sample - window_shift;  // minus window_shift to get
+                                              // precise start time point.
+          printf("{ silence: %.3f s (%.3f) %08d}\n", 1.0 * speech / sample_rate,
+                 speech_prob, current_sample - window_shift);
+#endif  //__DEBUG_SPEECH_PROB___
+        }
+        continue;
+      }
+
+      // 4) End
+      if ((speech_prob < (threshold - 0.15))) {
+#ifdef __DEBUG_SPEECH_PROB___
+        float speech = current_sample - window_shift -
+                       speech_pad_samples;  // minus window_shift to get precise
+                                            // start time point.
+        if (speech < 0.0f) {
+          speech = 0.0f;
+        }
+        printf("{ end: %.3f s (%.3f) %08d}\n", 1.0 * speech / sample_rate,
+               speech_prob, current_sample - window_shift);
+#endif  //__DEBUG_SPEECH_PROB___
+        if (triggered == true) {
+          //(The first silent segment after voice segmentation, recording
+          // possible end point)
+          if (temp_end == 0) {
+            temp_end = current_sample;
+          }
+          // （If it is greater than the maximum value of accumulated silence,
+          // the possible end point is recorded and used for forced segmentation
+          // of large audio clips.）
+          if (current_sample - temp_end > min_silence_samples_at_max_speech)
+            prev_end = temp_end;
+          // a. silence < min_slience_samples, continue speaking
+          if ((current_sample - temp_end) < min_silence_samples) {
+          }
+          // b. silence >= min_slience_samples, end speaking
+          else {
+            current_speech.end = temp_end;
+            if (current_speech.end - current_speech.start >
+                min_speech_samples) {
+#ifdef __DEBUG_SPEECH_PROB___
+              printf("{>min speech start: %d, end:%d}\n", current_speech.start,
+                     current_speech.end);
+#endif  //__DEBUG_SPEECH_PROB___
+              std::vector<float> s =
+                  buffer_.Get(current_speech.start,
+                              current_speech.end - current_speech.start);
+              SpeechSegment segment;
+              segment.start = current_speech.start;
+              segment.samples = std::move(s);
+              segments_.push(std::move(segment));
+              current_speech = timestamp_t();
+              prev_end = 0;
+              next_start = 0;
+              temp_end = 0;
+              triggered = false;
+            }
+          }
+        } else {
+          // may first windows see end state.
+        }
+        continue;
+      }
+    }
     last_ = std::vector<float>(
         p, static_cast<const float *>(last_.data()) + last_.size());
 
-    if (is_speech) {
-      if (start_ == -1) {
-        // beginning of speech
-        start_ = std::max(buffer_.Tail() - 2 * model_->WindowSize() -
-                              model_->MinSpeechDurationSamples(),
-                          buffer_.Head());
-      }
+    if (current_speech.start > 0) {
+      buffer_.Pop(current_speech.start - buffer_.Head());
     } else {
-      // non-speech
-      if (start_ != -1 && buffer_.Size()) {
-        // end of speech, save the speech segment
-        int32_t end = buffer_.Tail() - model_->MinSilenceDurationSamples();
-
-        std::vector<float> s = buffer_.Get(start_, end - start_);
-        SpeechSegment segment;
-
-        segment.start = start_;
-        segment.samples = std::move(s);
-
-        segments_.push(std::move(segment));
-
-        buffer_.Pop(end - buffer_.Head());
-      }
-
-      if (start_ == -1) {
-        int32_t end = buffer_.Tail() - 2 * model_->WindowSize() -
-                      model_->MinSpeechDurationSamples();
-        int32_t n = std::max(0, end - buffer_.Head());
-        if (n > 0) {
-          buffer_.Pop(n);
-        }
-      }
-
-      start_ = -1;
+      buffer_.Pop(current_sample - buffer_.Head());
     }
   }
 
@@ -115,62 +262,60 @@ class VoiceActivityDetector::Impl {
 
   void Reset() {
     std::queue<SpeechSegment>().swap(segments_);
-
     model_->Reset();
     buffer_.Reset();
-
-    start_ = -1;
+    // Reset related variables 
+    current_sample = 0;
+    current_speech = timestamp_t();
+    prev_end = 0;
+    next_start = 0;
+    temp_end = 0;
+    triggered = false;
+    last_.clear();
   }
 
   void Flush() {
-    if (start_ == -1 || buffer_.Size() == 0) {
-      return;
+    int32_t buffer_size = buffer_.Size();
+
+    if (buffer_size >= window_size) {
+      std::vector<float> s = buffer_.Get(buffer_.Head(), buffer_size);
+      SpeechSegment segment;
+      segment.start = current_sample;
+      segment.samples = std::move(s);
+      segments_.push(std::move(segment));
+      buffer_.Pop(buffer_size);
     }
-
-    int32_t end = buffer_.Tail();
-    if (end <= start_) {
-      return;
-    }
-
-    std::vector<float> s = buffer_.Get(start_, end - start_);
-
-    SpeechSegment segment;
-
-    segment.start = start_;
-    segment.samples = std::move(s);
-
-    segments_.push(std::move(segment));
-
-    buffer_.Pop(end - buffer_.Head());
-    start_ = -1;
   }
 
-  bool IsSpeechDetected() const { return start_ != -1; }
+  bool IsSpeechDetected() const { return !segments_.empty(); }
 
   const VadModelConfig &GetConfig() const { return config_; }
 
  private:
-  void Init() {
-    // TODO(fangjun): Currently, we support only one vad model.
-    // If a new vad model is added, we need to change the place
-    // where max_speech_duration is placed.
-    max_utterance_length_ =
-        config_.sample_rate * config_.silero_vad.max_speech_duration;
-  }
-
- private:
   std::queue<SpeechSegment> segments_;
+  timestamp_t current_speech;
 
-  std::unique_ptr<VadModel> model_;
+  std::unique_ptr<SileroVadModel> model_;
   VadModelConfig config_;
   CircularBuffer buffer_;
   std::vector<float> last_;
+  int32_t window_size;
+  int32_t window_shift;
+  int32_t sample_rate;
+  float threshold;
+  int32_t min_silence_samples;                // sr_per_ms * #ms
+  int32_t min_silence_samples_at_max_speech;  // sr_per_ms * #98
+  int32_t min_speech_samples;                 // sr_per_ms * #ms
+  int32_t max_speech_samples;
+  int32_t speech_pad_samples;  // usually a
 
-  int max_utterance_length_ = -1;  // in samples
-  float new_min_silence_duration_s_ = 0.1;
-  float new_threshold_ = 0.90;
-
-  int32_t start_ = -1;
+  // model states
+  bool triggered = false;
+  unsigned int temp_end = 0;
+  unsigned int current_sample = 0;
+  // MAX 4294967295 samples / 8sample per ms / 1000 / 60 = 8947 minutes
+  int32_t prev_end = 0;
+  int32_t next_start = 0;
 };
 
 VoiceActivityDetector::VoiceActivityDetector(
