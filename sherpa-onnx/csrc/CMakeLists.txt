@@ -207,6 +207,12 @@ target_link_libraries(sherpa-onnx-core
   kaldi-decoder-core
   ssentencepiece_core
 )
+if(DEFINED OHOS AND ${OHOS} STREQUAL OHOS)
+  target_link_libraries(sherpa-onnx-core
+    hilog_ndk.z
+    rawfile.z
+  )
+endif()
 
 if(SHERPA_ONNX_ENABLE_GPU)
   target_link_libraries(sherpa-onnx-core

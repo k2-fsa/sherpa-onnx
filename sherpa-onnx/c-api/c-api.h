@@ -841,6 +841,21 @@ SHERPA_ONNX_API SherpaOnnxVoiceActivityDetector *
 SherpaOnnxCreateVoiceActivityDetector(const SherpaOnnxVadModelConfig *config,
                                       float buffer_size_in_seconds);
 
+#ifdef __OHOS__
+
+// Return an instance of VoiceActivityDetector.
+// The user has to use SherpaOnnxDestroyVoiceActivityDetector() to free
+// the returned pointer to avoid memory leak.
+//
+// It is for HarmonyOS
+typedef struct NativeResourceManager NativeResourceManager;
+
+SHERPA_ONNX_API SherpaOnnxVoiceActivityDetector *
+SherpaOnnxCreateVoiceActivityDetectorOHOS(
+    const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds,
+    NativeResourceManager *mgr);
+#endif
+
 SHERPA_ONNX_API void SherpaOnnxDestroyVoiceActivityDetector(
     SherpaOnnxVoiceActivityDetector *p);
 

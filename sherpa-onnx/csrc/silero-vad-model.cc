@@ -37,8 +37,9 @@ class SileroVadModel::Impl {
     min_speech_samples_ = sample_rate_ * config_.silero_vad.min_speech_duration;
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const VadModelConfig &config)
+#if __ANDROID_API__ >= 9 || defined(__OHOS__)
+  template <typename Manager>
+  Impl(Manager *mgr, const VadModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -434,6 +435,12 @@ SileroVadModel::SileroVadModel(const VadModelConfig &config)
 
 #if __ANDROID_API__ >= 9
 SileroVadModel::SileroVadModel(AAssetManager *mgr, const VadModelConfig &config)
+    : impl_(std::make_unique<Impl>(mgr, config)) {}
+#endif
+
+#if __OHOS__
+SileroVadModel::SileroVadModel(NativeResourceManager *mgr,
+                               const VadModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
 #endif
 

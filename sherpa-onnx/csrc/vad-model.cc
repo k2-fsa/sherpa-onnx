@@ -21,4 +21,12 @@ std::unique_ptr<VadModel> VadModel::Create(AAssetManager *mgr,
 }
 #endif
 
+#if __OHOS__
+std::unique_ptr<VadModel> VadModel::Create(NativeResourceManager *mgr,
+                                           const VadModelConfig &config) {
+  // TODO(fangjun): Support other VAD models.
+  return std::make_unique<SileroVadModel>(mgr, config);
+}
+#endif
+
 }  // namespace sherpa_onnx

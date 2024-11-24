@@ -131,7 +131,6 @@ cmake \
 make -j2
 make install/strip
 cp -fv $onnxruntime_dir/lib/libonnxruntime.so install/lib
-cp -fv $OHOS_SDK_NATIVE_DIR/llvm/lib/aarch64-linux-ohos/libc++_shared.so install/lib
 
 rm -rf install/share
 rm -rf install/lib/pkgconfig
