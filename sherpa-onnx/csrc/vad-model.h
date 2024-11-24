@@ -11,6 +11,10 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/vad-model-config.h"
 
 namespace sherpa_onnx {
@@ -23,6 +27,11 @@ class VadModel {
 
 #if __ANDROID_API__ >= 9
   static std::unique_ptr<VadModel> Create(AAssetManager *mgr,
+                                          const VadModelConfig &config);
+#endif
+
+#if __OHOS__
+  static std::unique_ptr<VadModel> Create(NativeResourceManager *mgr,
                                           const VadModelConfig &config);
 #endif
 

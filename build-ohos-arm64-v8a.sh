@@ -19,7 +19,6 @@ cd $dir
 # rm commandline-tools-linux-x64-5.0.5.200.zip
 if [ -z $OHOS_SDK_NATIVE_DIR ]; then
   OHOS_SDK_NATIVE_DIR=/star-fj/fangjun/software/huawei/command-line-tools/sdk/default/openharmony/native/
-  export PATH=$OHOS_SDK_NATIVE_DIR/build-tools/cmake/bin:$PATH
   # You can find the following content inside OHOS_SDK_NATIVE_DIR
   # ls -lh /star-fj/fangjun/software/huawei/command-line-tools/sdk/default/openharmony/native/
   # total 524K
@@ -35,32 +34,39 @@ if [ -z $OHOS_SDK_NATIVE_DIR ]; then
   # drwxr-xr-x  3 kuangfangjun root    0 Nov  6 22:36 sysroot
 fi
 
-# If you don't want to install commandline tools, you can install the SDK
-# using DevEco Studio. The following uses API version 10 as an example and
-# it has installed the SDK to
-# /Users/fangjun/software/huawei/OpenHarmony/Sdk/10/native
-#
-# Remember to select ``native`` when you install the SDK
 if [ ! -d $OHOS_SDK_NATIVE_DIR ]; then
-  OHOS_SDK_NATIVE_DIR=/Users/fangjun/software/huawei/OpenHarmony/Sdk/10/native
-  # export PATH=$OHOS_SDK_NATIVE_DIR/build-tools/cmake/bin:$PATH
-  # ls -lh /Users/fangjun/software/huawei/OpenHarmony/Sdk/10/native/
-  # total 1560
-  # -rw-r--r--   1 fangjun  staff   764K Jan  1  2001 NOTICE.txt
-  # drwxr-xr-x   3 fangjun  staff    96B Nov 19 22:42 build
-  # drwxr-xr-x   3 fangjun  staff    96B Nov 19 22:42 build-tools
-  # drwxr-xr-x  10 fangjun  staff   320B Nov 19 22:42 llvm
-  # -rw-r--r--   1 fangjun  staff   4.0K Jan  1  2001 nativeapi_syscap_config.json
-  # -rw-r--r--   1 fangjun  staff   1.9K Jan  1  2001 ndk_system_capability.json
-  # -rw-r--r--   1 fangjun  staff   169B Jan  1  2001 oh-uni-package.json
-  # drwxr-xr-x   3 fangjun  staff    96B Nov 19 22:42 sysroot
+  OHOS_SDK_NATIVE_DIR=/Users/fangjun/software/command-line-tools/sdk/default/openharmony/native
+  # (py38) fangjuns-MacBook-Pro:software fangjun$ ls -lh command-line-tools/sdk/default/openharmony/native/
+  # total 752
+  # -rw-r--r--   1 fangjun  staff   341K Jan  1  2001 NOTICE.txt
+  # drwxr-xr-x   3 fangjun  staff    96B Nov  6 21:17 build
+  # drwxr-xr-x   3 fangjun  staff    96B Nov  6 21:18 build-tools
+  # -rw-r--r--   1 fangjun  staff   371B Jan  1  2001 compatible_config.json
+  # drwxr-xr-x  10 fangjun  staff   320B Nov  6 21:18 llvm
+  # -rw-r--r--   1 fangjun  staff    16K Jan  1  2001 nativeapi_syscap_config.json
+  # -rw-r--r--   1 fangjun  staff   5.9K Jan  1  2001 ndk_system_capability.json
+  # -rw-r--r--   1 fangjun  staff   167B Jan  1  2001 oh-uni-package.json
+  # drwxr-xr-x   3 fangjun  staff    96B Nov  6 21:17 sysroot
 fi
 
 if [ ! -d $OHOS_SDK_NATIVE_DIR ]; then
   echo "Please first download Command Line Tools for HarmonyOS"
+  echo "See https://developer.huawei.com/consumer/cn/download/"
+  echo "or"
+  echo "https://hf-mirror.com/csukuangfj/harmonyos-commandline-tools/tree/main"
   exit 1
 fi
 
+if [ ! -f $OHOS_SDK_NATIVE_DIR/llvm/bin/aarch64-unknown-linux-ohos-clang ]; then
+  echo "$OHOS_SDK_NATIVE_DIR/llvm/bin/aarch64-unknown-linux-ohos-clang does not exist"
+  echo "Please first download Command Line Tools for HarmonyOS"
+  echo "See https://developer.huawei.com/consumer/cn/download/"
+  echo "or"
+  echo "https://hf-mirror.com/csukuangfj/harmonyos-commandline-tools/tree/main"
+  exit 1
+fi
+
+export PATH=$OHOS_SDK_NATIVE_DIR/build-tools/cmake/bin:$PATH
 export PATH=$OHOS_SDK_NATIVE_DIR/llvm/bin:$PATH
 
 OHOS_TOOLCHAIN_FILE=$OHOS_SDK_NATIVE_DIR/build/cmake/ohos.toolchain.cmake
@@ -70,7 +76,6 @@ if [ ! -f $OHOS_TOOLCHAIN_FILE ]; then
   echo "Please first download Command Line Tools for HarmonyOS"
   exit 1
 fi
-
 
 sleep 1
 onnxruntime_version=1.16.3
@@ -126,7 +131,6 @@ cmake \
 make -j2
 make install/strip
 cp -fv $onnxruntime_dir/lib/libonnxruntime.so install/lib
-cp -fv $OHOS_SDK_NATIVE_DIR/llvm/lib/aarch64-linux-ohos/libc++_shared.so install/lib
 
 rm -rf install/share
 rm -rf install/lib/pkgconfig

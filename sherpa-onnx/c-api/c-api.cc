@@ -11,6 +11,10 @@
 #include <utility>
 #include <vector>
 
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/audio-tagging.h"
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/display.h"
@@ -917,8 +921,8 @@ struct SherpaOnnxVoiceActivityDetector {
   std::unique_ptr<sherpa_onnx::VoiceActivityDetector> impl;
 };
 
-SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
-    const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds) {
+sherpa_onnx::VadModelConfig GetVadModelConfig(
+    const SherpaOnnxVadModelConfig *config) {
   sherpa_onnx::VadModelConfig vad_config;
 
   vad_config.silero_vad.model = SHERPA_ONNX_OR(config->silero_vad.model, "");
@@ -947,8 +951,19 @@ SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
   vad_config.debug = SHERPA_ONNX_OR(config->debug, false);
 
   if (vad_config.debug) {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s", vad_config.ToString().c_str());
+#else
     SHERPA_ONNX_LOGE("%s", vad_config.ToString().c_str());
+#endif
   }
+
+  return vad_config;
+}
+
+SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
+    const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds) {
+  auto vad_config = GetVadModelConfig(config);
 
   if (!vad_config.Validate()) {
     SHERPA_ONNX_LOGE("Errors in config");
@@ -961,6 +976,25 @@ SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
 
   return p;
 }
+
+#ifdef __OHOS__
+SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetectorOHOS(
+    const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds,
+    NativeResourceManager *mgr) {
+  if (mgr == nullptr) {
+    return SherpaOnnxCreateVoiceActivityDetector(config,
+                                                 buffer_size_in_seconds);
+  }
+
+  auto vad_config = GetVadModelConfig(config);
+
+  SherpaOnnxVoiceActivityDetector *p = new SherpaOnnxVoiceActivityDetector;
+  p->impl = std::make_unique<sherpa_onnx::VoiceActivityDetector>(
+      mgr, vad_config, buffer_size_in_seconds);
+
+  return p;
+}
+#endif
 
 void SherpaOnnxDestroyVoiceActivityDetector(
     SherpaOnnxVoiceActivityDetector *p) {

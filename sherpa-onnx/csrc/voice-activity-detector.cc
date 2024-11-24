@@ -22,8 +22,9 @@ class VoiceActivityDetector::Impl {
     Init();
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const VadModelConfig &config,
+#if __ANDROID_API__ >= 9 || defined(__OHOS__)
+  template <typename Manager>
+  Impl(Manager *mgr, const VadModelConfig &config,
        float buffer_size_in_seconds = 60)
       : model_(VadModel::Create(mgr, config)),
         config_(config),
@@ -180,6 +181,13 @@ VoiceActivityDetector::VoiceActivityDetector(
 #if __ANDROID_API__ >= 9
 VoiceActivityDetector::VoiceActivityDetector(
     AAssetManager *mgr, const VadModelConfig &config,
+    float buffer_size_in_seconds /*= 60*/)
+    : impl_(std::make_unique<Impl>(mgr, config, buffer_size_in_seconds)) {}
+#endif
+
+#if __OHOS__
+VoiceActivityDetector::VoiceActivityDetector(
+    NativeResourceManager *mgr, const VadModelConfig &config,
     float buffer_size_in_seconds /*= 60*/)
     : impl_(std::make_unique<Impl>(mgr, config, buffer_size_in_seconds)) {}
 #endif

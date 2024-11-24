@@ -7,9 +7,13 @@
 #include <algorithm>
 #include <fstream>
 #include <functional>
+#include <memory>
 #include <numeric>
 #include <sstream>
 #include <string>
+#include <vector>
+
+#include "sherpa-onnx/csrc/macros.h"
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -321,6 +325,38 @@ std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
 
   std::vector<char> buffer(p, p + asset_length);
   AAsset_close(asset);
+
+  return buffer;
+}
+#endif
+
+#if __OHOS__
+std::vector<char> ReadFile(NativeResourceManager *mgr,
+                           const std::string &filename) {
+  std::unique_ptr<RawFile, decltype(&OH_ResourceManager_CloseRawFile)> fp(
+      OH_ResourceManager_OpenRawFile(mgr, filename.c_str()),
+      OH_ResourceManager_CloseRawFile);
+
+  if (!fp) {
+    std::ostringstream os;
+    os << "Read file '" << filename << "' failed.";
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    return {};
+  }
+
+  auto len = static_cast<int32_t>(OH_ResourceManager_GetRawFileSize(fp.get()));
+
+  std::vector<char> buffer(len);
+
+  int32_t n = OH_ResourceManager_ReadRawFile(fp.get(), buffer.data(), len);
+
+  if (n != len) {
+    std::ostringstream os;
+    os << "Read file '" << filename << "' failed. Number of bytes read: " << n
+       << ". Expected bytes to read: " << len;
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    return {};
+  }
 
   return buffer;
 }
