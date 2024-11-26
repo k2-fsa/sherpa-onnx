@@ -120,8 +120,8 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     config_.feat_config.normalize_samples = false;
   }
 
-#if __ANDROID_API__ >= 9
-  explicit OnlineRecognizerParaformerImpl(AAssetManager *mgr,
+  template <typename Manager>
+  explicit OnlineRecognizerParaformerImpl(Manager *mgr,
                                           const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
@@ -138,7 +138,7 @@ class OnlineRecognizerParaformerImpl : public OnlineRecognizerImpl {
     // [-32768, 32767], so we set normalize_samples to false
     config_.feat_config.normalize_samples = false;
   }
-#endif
+
   OnlineRecognizerParaformerImpl(const OnlineRecognizerParaformerImpl &) =
       delete;
 

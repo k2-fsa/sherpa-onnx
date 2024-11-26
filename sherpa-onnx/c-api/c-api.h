@@ -1529,6 +1529,13 @@ typedef struct NativeResourceManager NativeResourceManager;
 
 /// @param config  Config for the recognizer.
 /// @return Return a pointer to the recognizer. The user has to invoke
+//          SherpaOnnxDestroyOnlineRecognizer() to free it to avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxOnlineRecognizer *
+SherpaOnnxCreateOnlineRecognizerOHOS(
+    const SherpaOnnxOnlineRecognizerConfig *config, NativeResourceManager *mgr);
+
+/// @param config  Config for the recognizer.
+/// @return Return a pointer to the recognizer. The user has to invoke
 //          SherpaOnnxDestroyOfflineRecognizer() to free it to avoid memory
 //          leak.
 SHERPA_ONNX_API const SherpaOnnxOfflineRecognizer *

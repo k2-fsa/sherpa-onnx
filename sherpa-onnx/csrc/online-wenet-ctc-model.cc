@@ -13,6 +13,10 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -33,8 +37,8 @@ class OnlineWenetCtcModel::Impl {
     }
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OnlineModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OnlineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -44,7 +48,6 @@ class OnlineWenetCtcModel::Impl {
       Init(buf.data(), buf.size());
     }
   }
-#endif
 
   std::vector<Ort::Value> Forward(Ort::Value x,
                                   std::vector<Ort::Value> states) {
@@ -139,7 +142,11 @@ class OnlineWenetCtcModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
       PrintModelMetadata(os, meta_data);
-      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -212,11 +219,10 @@ class OnlineWenetCtcModel::Impl {
 OnlineWenetCtcModel::OnlineWenetCtcModel(const OnlineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
-OnlineWenetCtcModel::OnlineWenetCtcModel(AAssetManager *mgr,
+template <typename Manager>
+OnlineWenetCtcModel::OnlineWenetCtcModel(Manager *mgr,
                                          const OnlineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OnlineWenetCtcModel::~OnlineWenetCtcModel() = default;
 
@@ -257,5 +263,15 @@ std::vector<std::vector<Ort::Value>> OnlineWenetCtcModel::UnStackStates(
   ans[0] = std::move(states);
   return ans;
 }
+
+#if __ANDROID_API__ >= 9
+template OnlineWenetCtcModel::OnlineWenetCtcModel(
+    AAssetManager *mgr, const OnlineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OnlineWenetCtcModel::OnlineWenetCtcModel(
+    NativeResourceManager *mgr, const OnlineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

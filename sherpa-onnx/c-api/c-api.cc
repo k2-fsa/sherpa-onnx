@@ -56,7 +56,7 @@ struct SherpaOnnxDisplay {
 
 #define SHERPA_ONNX_OR(x, y) (x ? x : y)
 
-const SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
+static sherpa_onnx::OnlineRecognizerConfig GetOnlineRecognizerConfig(
     const SherpaOnnxOnlineRecognizerConfig *config) {
   sherpa_onnx::OnlineRecognizerConfig recognizer_config;
 
@@ -151,8 +151,20 @@ const SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
   recognizer_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
 
   if (config->model_config.debug) {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s\n", recognizer_config.ToString().c_str());
+#else
     SHERPA_ONNX_LOGE("%s\n", recognizer_config.ToString().c_str());
+#endif
   }
+
+  return recognizer_config;
+}
+
+const SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizer(
+    const SherpaOnnxOnlineRecognizerConfig *config) {
+  sherpa_onnx::OnlineRecognizerConfig recognizer_config =
+      GetOnlineRecognizerConfig(config);
 
   if (!recognizer_config.Validate()) {
     SHERPA_ONNX_LOGE("Errors in config!");
@@ -1875,6 +1887,20 @@ SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
 }
 
 #ifdef __OHOS__
+
+const SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizerOHOS(
+    const SherpaOnnxOnlineRecognizerConfig *config,
+    NativeResourceManager *mgr) {
+  sherpa_onnx::OnlineRecognizerConfig recognizer_config =
+      GetOnlineRecognizerConfig(config);
+
+  SherpaOnnxOnlineRecognizer *recognizer = new SherpaOnnxOnlineRecognizer;
+
+  recognizer->impl =
+      std::make_unique<sherpa_onnx::OnlineRecognizer>(mgr, recognizer_config);
+
+  return recognizer;
+}
 
 const SherpaOnnxOfflineRecognizer *SherpaOnnxCreateOfflineRecognizerOHOS(
     const SherpaOnnxOfflineRecognizerConfig *config,
