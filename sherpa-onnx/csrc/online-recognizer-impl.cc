@@ -4,13 +4,16 @@
 
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 
+#include <strstream>
 #include <utility>
 
 #if __ANDROID_API__ >= 9
-#include <strstream>
-
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
 #endif
 
 #include "fst/extensions/far/far.h"
@@ -61,9 +64,9 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
   exit(-1);
 }
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
-    AAssetManager *mgr, const OnlineRecognizerConfig &config) {
+    Manager *mgr, const OnlineRecognizerConfig &config) {
   if (!config.model_config.transducer.encoder.empty()) {
     Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 
@@ -97,7 +100,6 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
   SHERPA_ONNX_LOGE("Please specify a model");
   exit(-1);
 }
-#endif
 
 OnlineRecognizerImpl::OnlineRecognizerImpl(const OnlineRecognizerConfig &config)
     : config_(config) {
@@ -143,8 +145,8 @@ OnlineRecognizerImpl::OnlineRecognizerImpl(const OnlineRecognizerConfig &config)
   }
 }
 
-#if __ANDROID_API__ >= 9
-OnlineRecognizerImpl::OnlineRecognizerImpl(AAssetManager *mgr,
+template <typename Manager>
+OnlineRecognizerImpl::OnlineRecognizerImpl(Manager *mgr,
                                            const OnlineRecognizerConfig &config)
     : config_(config) {
   if (!config.rule_fsts.empty()) {
@@ -189,7 +191,6 @@ OnlineRecognizerImpl::OnlineRecognizerImpl(AAssetManager *mgr,
     }    // for (const auto &f : files)
   }      // if (!config.rule_fars.empty())
 }
-#endif
 
 std::string OnlineRecognizerImpl::ApplyInverseTextNormalization(
     std::string text) const {
@@ -201,5 +202,21 @@ std::string OnlineRecognizerImpl::ApplyInverseTextNormalization(
 
   return text;
 }
+
+#if __ANDROID_API__ >= 9
+template OnlineRecognizerImpl::OnlineRecognizerImpl(
+    AAssetManager *mgr, const OnlineRecognizerConfig &config);
+
+template std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
+    AAssetManager *mgr, const OnlineRecognizerConfig &config);
+#endif
+
+#if __OHOS__
+template OnlineRecognizerImpl::OnlineRecognizerImpl(
+    NativeResourceManager *mgr, const OnlineRecognizerConfig &config);
+
+template std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
+    NativeResourceManager *mgr, const OnlineRecognizerConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

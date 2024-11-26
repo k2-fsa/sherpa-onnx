@@ -9,11 +9,6 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
@@ -28,13 +23,12 @@ class OnlineRecognizerImpl {
   static std::unique_ptr<OnlineRecognizerImpl> Create(
       const OnlineRecognizerConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OnlineRecognizerImpl(AAssetManager *mgr,
-                       const OnlineRecognizerConfig &config);
+  template <typename Manager>
+  OnlineRecognizerImpl(Manager *mgr, const OnlineRecognizerConfig &config);
 
+  template <typename Manager>
   static std::unique_ptr<OnlineRecognizerImpl> Create(
-      AAssetManager *mgr, const OnlineRecognizerConfig &config);
-#endif
+      Manager *mgr, const OnlineRecognizerConfig &config);
 
   virtual ~OnlineRecognizerImpl() = default;
 

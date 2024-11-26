@@ -88,8 +88,8 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     InitDecoder();
   }
 
-#if __ANDROID_API__ >= 9
-  explicit OnlineRecognizerCtcImpl(AAssetManager *mgr,
+  template <typename Manager>
+  explicit OnlineRecognizerCtcImpl(Manager *mgr,
                                    const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
@@ -104,7 +104,6 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
 
     InitDecoder();
   }
-#endif
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);

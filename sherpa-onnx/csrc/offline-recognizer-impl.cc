@@ -5,17 +5,17 @@
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 
 #include <string>
+#include <strstream>
 #include <utility>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
-#include <strstream>
 
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
-#elif __OHOS__
-#include <strstream>
+#endif
 
+#if __OHOS__
 #include "rawfile/raw_file_manager.h"
 #endif
 

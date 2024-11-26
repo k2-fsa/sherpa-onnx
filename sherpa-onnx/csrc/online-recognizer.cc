@@ -13,6 +13,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/text-utils.h"
@@ -197,11 +206,10 @@ std::string OnlineRecognizerConfig::ToString() const {
 OnlineRecognizer::OnlineRecognizer(const OnlineRecognizerConfig &config)
     : impl_(OnlineRecognizerImpl::Create(config)) {}
 
-#if __ANDROID_API__ >= 9
-OnlineRecognizer::OnlineRecognizer(AAssetManager *mgr,
+template <typename Manager>
+OnlineRecognizer::OnlineRecognizer(Manager *mgr,
                                    const OnlineRecognizerConfig &config)
     : impl_(OnlineRecognizerImpl::Create(mgr, config)) {}
-#endif
 
 OnlineRecognizer::~OnlineRecognizer() = default;
 
@@ -237,5 +245,15 @@ bool OnlineRecognizer::IsEndpoint(OnlineStream *s) const {
 }
 
 void OnlineRecognizer::Reset(OnlineStream *s) const { impl_->Reset(s); }
+
+#if __ANDROID_API__ >= 9
+template OnlineRecognizer::OnlineRecognizer(
+    AAssetManager *mgr, const OnlineRecognizerConfig &config);
+#endif
+
+#if __OHOS__
+template OnlineRecognizer::OnlineRecognizer(
+    NativeResourceManager *mgr, const OnlineRecognizerConfig &config);
+#endif
 
 }  // namespace sherpa_onnx
