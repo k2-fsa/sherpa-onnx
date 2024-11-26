@@ -242,7 +242,7 @@ for d in ios-arm64_x86_64-simulator ios-arm64; do
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.10.31</string>
+	<string>1.10.32</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>iPhoneOS</string>
@@ -258,7 +258,7 @@ for d in ios-arm64_x86_64-simulator ios-arm64; do
 		<string>arm64</string>
 	</array>
 	<key>MinimumOSVersion</key>
-	<string>12.0</string>
+	<string>13.0</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.k2fsa.sherpa.onnx</string>
 	<key>UIDeviceFamily</key>
@@ -274,6 +274,13 @@ for d in ios-arm64_x86_64-simulator ios-arm64; do
 	<string>15A507</string>
 	<key>DTPlatformBuild</key>
 	<string>21A326</string>
+	<key>SupportedArchitectures</key>
+	<array>
+		<string>arm64</string>
+		<string>x86_64</string>
+	</array>
+	<key>SupportedPlatform</key>
+	<string>ios</string>
 </dict>
 </plist>
 EOF

@@ -7,7 +7,7 @@
 # https://groups.google.com/g/dart-ffi/c/nUATMBy7r0c
 Pod::Spec.new do |s|
   s.name             = 'sherpa_onnx_ios'
-  s.version          = '1.10.31'
+  s.version          = '1.10.32'
   s.summary          = 'A new Flutter FFI plugin project.'
   s.description      = <<-DESC
 A new Flutter FFI plugin project.
@@ -22,7 +22,7 @@ A new Flutter FFI plugin project.
   # `../src/*` so that the C sources can be shared among all target platforms.
   s.source           = { :path => '.' }
   s.dependency 'Flutter'
-  s.platform = :ios, '12.0'
+  s.platform = :ios, '13.0'
   s.preserve_paths = 'sherpa_onnx.xcframework/**/*'
   s.vendored_frameworks = 'sherpa_onnx.xcframework'
 

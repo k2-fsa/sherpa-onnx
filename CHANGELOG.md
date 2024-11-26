@@ -1,3 +1,9 @@
+## 1.10.32
+
+* Support cross-compiling for HarmonyOS (#1553)
+* HarmonyOS support for VAD. (#1561)
+* Fix publishing flutter iOS app to appstore.
+
 ## 1.10.31
 
 * Publish pre-built wheels for Python 3.13 (#1485)
