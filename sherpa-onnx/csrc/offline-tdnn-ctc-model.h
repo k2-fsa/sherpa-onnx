@@ -7,11 +7,6 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-model-config.h"
@@ -27,9 +22,8 @@ class OfflineTdnnCtcModel : public OfflineCtcModel {
  public:
   explicit OfflineTdnnCtcModel(const OfflineModelConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OfflineTdnnCtcModel(AAssetManager *mgr, const OfflineModelConfig &config);
-#endif
+  template <typename Manager>
+  OfflineTdnnCtcModel(Manager *mgr, const OfflineModelConfig &config);
 
   ~OfflineTdnnCtcModel() override;
 

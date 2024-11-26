@@ -11,6 +11,15 @@
 #include <unordered_map>
 #include <utility>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -52,8 +61,8 @@ class OfflineWhisperModel::Impl {
     }
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -69,7 +78,8 @@ class OfflineWhisperModel::Impl {
     }
   }
 
-  Impl(AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const SpokenLanguageIdentificationConfig &config)
       : lid_config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -84,7 +94,6 @@ class OfflineWhisperModel::Impl {
       InitDecoder(buf.data(), buf.size());
     }
   }
-#endif
 
   std::pair<Ort::Value, Ort::Value> ForwardEncoder(Ort::Value features) {
     auto encoder_out = encoder_sess_->Run(
@@ -237,7 +246,11 @@ class OfflineWhisperModel::Impl {
       std::ostringstream os;
       os << "---encoder---\n";
       PrintModelMetadata(os, meta_data);
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -338,16 +351,15 @@ OfflineWhisperModel::OfflineWhisperModel(
     const SpokenLanguageIdentificationConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
-OfflineWhisperModel::OfflineWhisperModel(AAssetManager *mgr,
+template <typename Manager>
+OfflineWhisperModel::OfflineWhisperModel(Manager *mgr,
                                          const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
 
+template <typename Manager>
 OfflineWhisperModel::OfflineWhisperModel(
-    AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config)
+    Manager *mgr, const SpokenLanguageIdentificationConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-
-#endif
 
 OfflineWhisperModel::~OfflineWhisperModel() = default;
 
@@ -452,5 +464,22 @@ void OfflineWhisperModel::NormalizeFeatures(float *features, int32_t num_frames,
     features[i] = f;
   }
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineWhisperModel::OfflineWhisperModel(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+
+template OfflineWhisperModel::OfflineWhisperModel(
+    AAssetManager *mgr, const SpokenLanguageIdentificationConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineWhisperModel::OfflineWhisperModel(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
+
+template OfflineWhisperModel::OfflineWhisperModel(
+    NativeResourceManager *mgr,
+    const SpokenLanguageIdentificationConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

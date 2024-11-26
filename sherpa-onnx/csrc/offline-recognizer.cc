@@ -6,11 +6,21 @@
 
 #include <memory>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-lm-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/text-utils.h"
+
 namespace sherpa_onnx {
 
 void OfflineRecognizerConfig::Register(ParseOptions *po) {
@@ -132,11 +142,10 @@ std::string OfflineRecognizerConfig::ToString() const {
   return os.str();
 }
 
-#if __ANDROID_API__ >= 9
-OfflineRecognizer::OfflineRecognizer(AAssetManager *mgr,
+template <typename Manager>
+OfflineRecognizer::OfflineRecognizer(Manager *mgr,
                                      const OfflineRecognizerConfig &config)
     : impl_(OfflineRecognizerImpl::Create(mgr, config)) {}
-#endif
 
 OfflineRecognizer::OfflineRecognizer(const OfflineRecognizerConfig &config)
     : impl_(OfflineRecognizerImpl::Create(config)) {}
@@ -157,11 +166,21 @@ void OfflineRecognizer::DecodeStreams(OfflineStream **ss, int32_t n) const {
 }
 
 void OfflineRecognizer::SetConfig(const OfflineRecognizerConfig &config) {
-    impl_->SetConfig(config);
+  impl_->SetConfig(config);
 }
 
 OfflineRecognizerConfig OfflineRecognizer::GetConfig() const {
   return impl_->GetConfig();
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineRecognizer::OfflineRecognizer(
+    AAssetManager *mgr, const OfflineRecognizerConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineRecognizer::OfflineRecognizer(
+    NativeResourceManager *mgr, const OfflineRecognizerConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

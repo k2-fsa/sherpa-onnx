@@ -14,11 +14,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/context-graph.h"
 #include "sherpa-onnx/csrc/log.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -109,9 +104,9 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     }
   }
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   explicit OfflineRecognizerTransducerImpl(
-      AAssetManager *mgr, const OfflineRecognizerConfig &config)
+      Manager *mgr, const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
@@ -148,7 +143,6 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
       exit(-1);
     }
   }
-#endif
 
   std::unique_ptr<OfflineStream> CreateStream(
       const std::string &hotwords) const override {
@@ -246,10 +240,7 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     }
   }
 
-  OfflineRecognizerConfig GetConfig() const override {
-    return config_;
-  }
-
+  OfflineRecognizerConfig GetConfig() const override { return config_; }
 
   void InitHotwords() {
     // each line in hotwords_file contains space-separated words
@@ -271,8 +262,8 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
         hotwords_, config_.hotwords_score, boost_scores_);
   }
 
-#if __ANDROID_API__ >= 9
-  void InitHotwords(AAssetManager *mgr) {
+  template <typename Manager>
+  void InitHotwords(Manager *mgr) {
     // each line in hotwords_file contains space-separated words
 
     auto buf = ReadFile(mgr, config_.hotwords_file);
@@ -294,7 +285,6 @@ class OfflineRecognizerTransducerImpl : public OfflineRecognizerImpl {
     hotwords_graph_ = std::make_shared<ContextGraph>(
         hotwords_, config_.hotwords_score, boost_scores_);
   }
-#endif
 
  private:
   OfflineRecognizerConfig config_;

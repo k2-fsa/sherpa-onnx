@@ -8,6 +8,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -43,8 +52,8 @@ class OfflineMoonshineModel::Impl {
     }
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -69,7 +78,6 @@ class OfflineMoonshineModel::Impl {
       InitCachedDecoder(buf.data(), buf.size());
     }
   }
-#endif
 
   Ort::Value ForwardPreprocessor(Ort::Value audio) {
     auto features = preprocessor_sess_->Run(
@@ -242,11 +250,10 @@ class OfflineMoonshineModel::Impl {
 OfflineMoonshineModel::OfflineMoonshineModel(const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
-OfflineMoonshineModel::OfflineMoonshineModel(AAssetManager *mgr,
+template <typename Manager>
+OfflineMoonshineModel::OfflineMoonshineModel(Manager *mgr,
                                              const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OfflineMoonshineModel::~OfflineMoonshineModel() = default;
 
@@ -278,5 +285,15 @@ OfflineMoonshineModel::ForwardCachedDecoder(
 OrtAllocator *OfflineMoonshineModel::Allocator() const {
   return impl_->Allocator();
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineMoonshineModel::OfflineMoonshineModel(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineMoonshineModel::OfflineMoonshineModel(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

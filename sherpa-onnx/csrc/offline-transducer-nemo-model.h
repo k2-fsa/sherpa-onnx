@@ -9,11 +9,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-model-config.h"
 
@@ -26,10 +21,8 @@ class OfflineTransducerNeMoModel {
  public:
   explicit OfflineTransducerNeMoModel(const OfflineModelConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OfflineTransducerNeMoModel(AAssetManager *mgr,
-                             const OfflineModelConfig &config);
-#endif
+  template <typename Manager>
+  OfflineTransducerNeMoModel(Manager *mgr, const OfflineModelConfig &config);
 
   ~OfflineTransducerNeMoModel();
 

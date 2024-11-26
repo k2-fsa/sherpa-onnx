@@ -14,11 +14,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -57,9 +52,9 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
     PostInit();
   }
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   explicit OfflineRecognizerTransducerNeMoImpl(
-      AAssetManager *mgr, const OfflineRecognizerConfig &config)
+      Manager *mgr, const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
@@ -76,7 +71,6 @@ class OfflineRecognizerTransducerNeMoImpl : public OfflineRecognizerImpl {
 
     PostInit();
   }
-#endif
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
     return std::make_unique<OfflineStream>(config_.feat_config);

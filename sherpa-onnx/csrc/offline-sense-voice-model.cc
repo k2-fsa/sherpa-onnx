@@ -8,6 +8,15 @@
 #include <string>
 #include <utility>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -26,8 +35,8 @@ class OfflineSenseVoiceModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -35,7 +44,6 @@ class OfflineSenseVoiceModel::Impl {
     auto buf = ReadFile(mgr, config_.sense_voice.model);
     Init(buf.data(), buf.size());
   }
-#endif
 
   Ort::Value Forward(Ort::Value features, Ort::Value features_length,
                      Ort::Value language, Ort::Value text_norm) {
@@ -72,7 +80,11 @@ class OfflineSenseVoiceModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
       PrintModelMetadata(os, meta_data);
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -129,11 +141,10 @@ class OfflineSenseVoiceModel::Impl {
 OfflineSenseVoiceModel::OfflineSenseVoiceModel(const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
-OfflineSenseVoiceModel::OfflineSenseVoiceModel(AAssetManager *mgr,
+template <typename Manager>
+OfflineSenseVoiceModel::OfflineSenseVoiceModel(Manager *mgr,
                                                const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OfflineSenseVoiceModel::~OfflineSenseVoiceModel() = default;
 
@@ -153,5 +164,15 @@ const OfflineSenseVoiceModelMetaData &OfflineSenseVoiceModel::GetModelMetadata()
 OrtAllocator *OfflineSenseVoiceModel::Allocator() const {
   return impl_->Allocator();
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineSenseVoiceModel::OfflineSenseVoiceModel(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineSenseVoiceModel::OfflineSenseVoiceModel(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

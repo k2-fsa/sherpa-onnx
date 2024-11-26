@@ -214,11 +214,6 @@ struct SHERPA_ONNX_API OfflineTdnnModelConfig {
   std::string model;
 };
 
-struct SHERPA_ONNX_API SherpaOnnxOfflineLMConfig {
-  std::string model;
-  float scale = 1.0;
-};
-
 struct SHERPA_ONNX_API OfflineSenseVoiceModelConfig {
   std::string model;
   std::string language;

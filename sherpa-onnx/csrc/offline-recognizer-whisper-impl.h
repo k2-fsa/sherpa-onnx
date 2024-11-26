@@ -12,11 +12,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-recognizer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -60,8 +55,8 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     Init();
   }
 
-#if __ANDROID_API__ >= 9
-  OfflineRecognizerWhisperImpl(AAssetManager *mgr,
+  template <typename Manager>
+  OfflineRecognizerWhisperImpl(Manager *mgr,
                                const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
@@ -70,8 +65,6 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
             std::make_unique<OfflineWhisperModel>(mgr, config.model_config)) {
     Init();
   }
-
-#endif
 
   void Init() {
     // tokens.txt from whisper is base64 encoded, so we need to decode it
@@ -105,9 +98,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
     config_.model_config.whisper = config.model_config.whisper;
   }
 
-  OfflineRecognizerConfig GetConfig() const override {
-    return config_;
-  }
+  OfflineRecognizerConfig GetConfig() const override { return config_; }
 
  private:
   void DecodeStream(OfflineStream *s) const {

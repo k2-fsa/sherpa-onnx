@@ -12,11 +12,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-moonshine-decoder.h"
 #include "sherpa-onnx/csrc/offline-moonshine-greedy-search-decoder.h"
@@ -59,8 +54,8 @@ class OfflineRecognizerMoonshineImpl : public OfflineRecognizerImpl {
     Init();
   }
 
-#if __ANDROID_API__ >= 9
-  OfflineRecognizerMoonshineImpl(AAssetManager *mgr,
+  template <typename Manager>
+  OfflineRecognizerMoonshineImpl(Manager *mgr,
                                  const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
@@ -69,8 +64,6 @@ class OfflineRecognizerMoonshineImpl : public OfflineRecognizerImpl {
             std::make_unique<OfflineMoonshineModel>(mgr, config.model_config)) {
     Init();
   }
-
-#endif
 
   void Init() {
     if (config_.decoding_method == "greedy_search") {

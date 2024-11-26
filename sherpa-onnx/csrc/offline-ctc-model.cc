@@ -9,6 +9,15 @@
 #include <sstream>
 #include <string>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"
@@ -48,7 +57,11 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
   if (debug) {
     std::ostringstream os;
     PrintModelMetadata(os, meta_data);
-    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
   }
 
   Ort::AllocatorWithDefaultOptions allocator;
@@ -144,10 +157,9 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   return nullptr;
 }
 
-#if __ANDROID_API__ >= 9
-
+template <typename Manager>
 std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
-    AAssetManager *mgr, const OfflineModelConfig &config) {
+    Manager *mgr, const OfflineModelConfig &config) {
   // TODO(fangjun): Refactor it. We don't need to use model_type here
   ModelType model_type = ModelType::kUnknown;
 
@@ -196,6 +208,15 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
 
   return nullptr;
 }
+
+#if __ANDROID_API__ >= 9
+template std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
+#if __OHOS__
+template std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
 #endif
 
 }  // namespace sherpa_onnx

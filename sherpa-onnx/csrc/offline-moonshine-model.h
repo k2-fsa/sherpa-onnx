@@ -9,11 +9,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-model-config.h"
 
@@ -25,9 +20,8 @@ class OfflineMoonshineModel {
  public:
   explicit OfflineMoonshineModel(const OfflineModelConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OfflineMoonshineModel(AAssetManager *mgr, const OfflineModelConfig &config);
-#endif
+  template <typename Manager>
+  OfflineMoonshineModel(Manager *mgr, const OfflineModelConfig &config);
 
   ~OfflineMoonshineModel();
 
