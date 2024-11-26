@@ -10,11 +10,6 @@
 #include <unordered_map>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 namespace sherpa_onnx {
 
 // The same token can be mapped to different integer IDs, so
@@ -39,9 +34,8 @@ class SymbolTable {
   /// Fields are separated by space(s).
   explicit SymbolTable(const std::string &filename, bool is_file = true);
 
-#if __ANDROID_API__ >= 9
-  SymbolTable(AAssetManager *mgr, const std::string &filename);
-#endif
+  template <typename Manager>
+  SymbolTable(Manager *mgr, const std::string &filename);
 
   /// Return a string representation of this symbol table
   std::string ToString() const;

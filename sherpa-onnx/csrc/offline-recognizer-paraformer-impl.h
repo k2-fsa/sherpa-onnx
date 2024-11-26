@@ -11,11 +11,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-paraformer-decoder.h"
 #include "sherpa-onnx/csrc/offline-paraformer-greedy-search-decoder.h"
@@ -105,8 +100,8 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
     InitFeatConfig();
   }
 
-#if __ANDROID_API__ >= 9
-  OfflineRecognizerParaformerImpl(AAssetManager *mgr,
+  template <typename Manager>
+  OfflineRecognizerParaformerImpl(Manager *mgr,
                                   const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
@@ -124,7 +119,6 @@ class OfflineRecognizerParaformerImpl : public OfflineRecognizerImpl {
 
     InitFeatConfig();
   }
-#endif
 
   std::unique_ptr<OfflineStream> CreateStream() const override {
     return std::make_unique<OfflineStream>(config_.feat_config);

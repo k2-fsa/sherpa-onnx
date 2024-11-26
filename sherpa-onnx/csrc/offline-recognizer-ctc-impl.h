@@ -12,11 +12,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/offline-ctc-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder.h"
 #include "sherpa-onnx/csrc/offline-ctc-greedy-search-decoder.h"
@@ -80,16 +75,14 @@ class OfflineRecognizerCtcImpl : public OfflineRecognizerImpl {
     Init();
   }
 
-#if __ANDROID_API__ >= 9
-  OfflineRecognizerCtcImpl(AAssetManager *mgr,
-                           const OfflineRecognizerConfig &config)
+  template <typename Manager>
+  OfflineRecognizerCtcImpl(Manager *mgr, const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(mgr, config),
         config_(config),
         symbol_table_(mgr, config_.model_config.tokens),
         model_(OfflineCtcModel::Create(mgr, config_.model_config)) {
     Init();
   }
-#endif
 
   void Init() {
     if (!config_.model_config.telespeech_ctc.empty()) {

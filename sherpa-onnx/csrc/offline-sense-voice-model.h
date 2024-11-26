@@ -7,11 +7,6 @@
 #include <memory>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/offline-sense-voice-model-meta-data.h"
@@ -22,9 +17,8 @@ class OfflineSenseVoiceModel {
  public:
   explicit OfflineSenseVoiceModel(const OfflineModelConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OfflineSenseVoiceModel(AAssetManager *mgr, const OfflineModelConfig &config);
-#endif
+  template <typename Manager>
+  OfflineSenseVoiceModel(Manager *mgr, const OfflineModelConfig &config);
 
   ~OfflineSenseVoiceModel();
 

@@ -9,11 +9,6 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "kaldifst/csrc/text-normalizer.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
@@ -28,13 +23,12 @@ class OfflineRecognizerImpl {
   static std::unique_ptr<OfflineRecognizerImpl> Create(
       const OfflineRecognizerConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OfflineRecognizerImpl(AAssetManager *mgr,
-                        const OfflineRecognizerConfig &config);
+  template <typename Manager>
+  OfflineRecognizerImpl(Manager *mgr, const OfflineRecognizerConfig &config);
 
+  template <typename Manager>
   static std::unique_ptr<OfflineRecognizerImpl> Create(
-      AAssetManager *mgr, const OfflineRecognizerConfig &config);
-#endif
+      Manager *mgr, const OfflineRecognizerConfig &config);
 
   virtual ~OfflineRecognizerImpl() = default;
 

@@ -8,6 +8,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -37,7 +46,6 @@ class SileroVadModel::Impl {
     min_speech_samples_ = sample_rate_ * config_.silero_vad.min_speech_duration;
   }
 
-#if __ANDROID_API__ >= 9 || defined(__OHOS__)
   template <typename Manager>
   Impl(Manager *mgr, const VadModelConfig &config)
       : config_(config),
@@ -59,7 +67,6 @@ class SileroVadModel::Impl {
 
     min_speech_samples_ = sample_rate_ * config_.silero_vad.min_speech_duration;
   }
-#endif
 
   void Reset() {
     if (is_v5_) {
@@ -433,16 +440,9 @@ class SileroVadModel::Impl {
 SileroVadModel::SileroVadModel(const VadModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
-SileroVadModel::SileroVadModel(AAssetManager *mgr, const VadModelConfig &config)
+template <typename Manager>
+SileroVadModel::SileroVadModel(Manager *mgr, const VadModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
-
-#if __OHOS__
-SileroVadModel::SileroVadModel(NativeResourceManager *mgr,
-                               const VadModelConfig &config)
-    : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 SileroVadModel::~SileroVadModel() = default;
 
@@ -471,5 +471,15 @@ void SileroVadModel::SetMinSilenceDuration(float s) {
 void SileroVadModel::SetThreshold(float threshold) {
   impl_->SetThreshold(threshold);
 }
+
+#if __ANDROID_API__ >= 9
+template SileroVadModel::SileroVadModel(AAssetManager *mgr,
+                                        const VadModelConfig &config);
+#endif
+
+#if __OHOS__
+template SileroVadModel::SileroVadModel(NativeResourceManager *mgr,
+                                        const VadModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

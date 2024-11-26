@@ -4,6 +4,15 @@
 
 #include "sherpa-onnx/csrc/offline-telespeech-ctc-model.h"
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -23,8 +32,8 @@ class OfflineTeleSpeechCtcModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -32,7 +41,6 @@ class OfflineTeleSpeechCtcModel::Impl {
     auto buf = ReadFile(mgr, config_.telespeech_ctc);
     Init(buf.data(), buf.size());
   }
-#endif
 
   std::vector<Ort::Value> Forward(Ort::Value features,
                                   Ort::Value /*features_length*/) {
@@ -85,7 +93,11 @@ class OfflineTeleSpeechCtcModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
       PrintModelMetadata(os, meta_data);
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
     }
 
     {
@@ -117,11 +129,10 @@ OfflineTeleSpeechCtcModel::OfflineTeleSpeechCtcModel(
     const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OfflineTeleSpeechCtcModel::OfflineTeleSpeechCtcModel(
-    AAssetManager *mgr, const OfflineModelConfig &config)
+    Manager *mgr, const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OfflineTeleSpeechCtcModel::~OfflineTeleSpeechCtcModel() = default;
 
@@ -140,5 +151,15 @@ int32_t OfflineTeleSpeechCtcModel::SubsamplingFactor() const {
 OrtAllocator *OfflineTeleSpeechCtcModel::Allocator() const {
   return impl_->Allocator();
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineTeleSpeechCtcModel::OfflineTeleSpeechCtcModel(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineTeleSpeechCtcModel::OfflineTeleSpeechCtcModel(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

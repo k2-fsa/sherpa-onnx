@@ -352,27 +352,7 @@ struct SherpaOnnxOfflineStream {
       : impl(std::move(p)) {}
 };
 
-static sherpa_onnx::OfflineRecognizerConfig convertConfig(
-    const SherpaOnnxOfflineRecognizerConfig *config);
-
-const SherpaOnnxOfflineRecognizer *SherpaOnnxCreateOfflineRecognizer(
-    const SherpaOnnxOfflineRecognizerConfig *config) {
-  sherpa_onnx::OfflineRecognizerConfig recognizer_config =
-      convertConfig(config);
-
-  if (!recognizer_config.Validate()) {
-    SHERPA_ONNX_LOGE("Errors in config");
-    return nullptr;
-  }
-
-  SherpaOnnxOfflineRecognizer *recognizer = new SherpaOnnxOfflineRecognizer;
-
-  recognizer->impl =
-      std::make_unique<sherpa_onnx::OfflineRecognizer>(recognizer_config);
-
-  return recognizer;
-}
-sherpa_onnx::OfflineRecognizerConfig convertConfig(
+static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
     const SherpaOnnxOfflineRecognizerConfig *config) {
   sherpa_onnx::OfflineRecognizerConfig recognizer_config;
 
@@ -491,17 +471,39 @@ sherpa_onnx::OfflineRecognizerConfig convertConfig(
   recognizer_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
 
   if (config->model_config.debug) {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s", recognizer_config.ToString().c_str());
+#else
     SHERPA_ONNX_LOGE("%s", recognizer_config.ToString().c_str());
+#endif
   }
 
   return recognizer_config;
+}
+
+const SherpaOnnxOfflineRecognizer *SherpaOnnxCreateOfflineRecognizer(
+    const SherpaOnnxOfflineRecognizerConfig *config) {
+  sherpa_onnx::OfflineRecognizerConfig recognizer_config =
+      GetOfflineRecognizerConfig(config);
+
+  if (!recognizer_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config");
+    return nullptr;
+  }
+
+  SherpaOnnxOfflineRecognizer *recognizer = new SherpaOnnxOfflineRecognizer;
+
+  recognizer->impl =
+      std::make_unique<sherpa_onnx::OfflineRecognizer>(recognizer_config);
+
+  return recognizer;
 }
 
 void SherpaOnnxOfflineRecognizerSetConfig(
     const SherpaOnnxOfflineRecognizer *recognizer,
     const SherpaOnnxOfflineRecognizerConfig *config) {
   sherpa_onnx::OfflineRecognizerConfig recognizer_config =
-      convertConfig(config);
+      GetOfflineRecognizerConfig(config);
   recognizer->impl->SetConfig(recognizer_config);
 }
 
@@ -976,25 +978,6 @@ SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
 
   return p;
 }
-
-#ifdef __OHOS__
-SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetectorOHOS(
-    const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds,
-    NativeResourceManager *mgr) {
-  if (mgr == nullptr) {
-    return SherpaOnnxCreateVoiceActivityDetector(config,
-                                                 buffer_size_in_seconds);
-  }
-
-  auto vad_config = GetVadModelConfig(config);
-
-  SherpaOnnxVoiceActivityDetector *p = new SherpaOnnxVoiceActivityDetector;
-  p->impl = std::make_unique<sherpa_onnx::VoiceActivityDetector>(
-      mgr, vad_config, buffer_size_in_seconds);
-
-  return p;
-}
-#endif
 
 void SherpaOnnxDestroyVoiceActivityDetector(
     SherpaOnnxVoiceActivityDetector *p) {
@@ -1890,5 +1873,43 @@ SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
 
   return ans;
 }
+
+#ifdef __OHOS__
+
+const SherpaOnnxOfflineRecognizer *SherpaOnnxCreateOfflineRecognizerOHOS(
+    const SherpaOnnxOfflineRecognizerConfig *config,
+    NativeResourceManager *mgr) {
+  if (mgr == nullptr) {
+    return SherpaOnnxCreateOfflineRecognizer(config);
+  }
+
+  sherpa_onnx::OfflineRecognizerConfig recognizer_config =
+      GetOfflineRecognizerConfig(config);
+
+  SherpaOnnxOfflineRecognizer *recognizer = new SherpaOnnxOfflineRecognizer;
+
+  recognizer->impl =
+      std::make_unique<sherpa_onnx::OfflineRecognizer>(mgr, recognizer_config);
+
+  return recognizer;
+}
+
+SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetectorOHOS(
+    const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds,
+    NativeResourceManager *mgr) {
+  if (mgr == nullptr) {
+    return SherpaOnnxCreateVoiceActivityDetector(config,
+                                                 buffer_size_in_seconds);
+  }
+
+  auto vad_config = GetVadModelConfig(config);
+
+  SherpaOnnxVoiceActivityDetector *p = new SherpaOnnxVoiceActivityDetector;
+  p->impl = std::make_unique<sherpa_onnx::VoiceActivityDetector>(
+      mgr, vad_config, buffer_size_in_seconds);
+
+  return p;
+}
+#endif
 
 #endif

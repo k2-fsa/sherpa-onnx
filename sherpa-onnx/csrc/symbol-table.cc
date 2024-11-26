@@ -15,6 +15,10 @@
 
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
+#elif __OHOS__
+#include <strstream>
+
+#include "rawfile/raw_file_manager.h"
 #endif
 
 #include "sherpa-onnx/csrc/base64-decode.h"
@@ -99,14 +103,13 @@ SymbolTable::SymbolTable(const std::string &filename, bool is_file) {
   }
 }
 
-#if __ANDROID_API__ >= 9
-SymbolTable::SymbolTable(AAssetManager *mgr, const std::string &filename) {
+template <typename Manager>
+SymbolTable::SymbolTable(Manager *mgr, const std::string &filename) {
   auto buf = ReadFile(mgr, filename);
 
   std::istrstream is(buf.data(), buf.size());
   Init(is);
 }
-#endif
 
 void SymbolTable::Init(std::istream &is) { sym2id_ = ReadTokens(is, &id2sym_); }
 
@@ -168,5 +171,15 @@ void SymbolTable::ApplyBase64Decode() {
     sym2id_[p.second] = p.first;
   }
 }
+
+#if __ANDROID_API__ >= 9
+template SymbolTable::SymbolTable(AAssetManager *mgr,
+                                  const std::string &filename);
+#endif
+
+#if __OHOS__
+template SymbolTable::SymbolTable(NativeResourceManager *mgr,
+                                  const std::string &filename);
+#endif
 
 }  // namespace sherpa_onnx

@@ -8,6 +8,15 @@
 #include <string>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-transducer-decoder.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -38,8 +47,8 @@ class OfflineTransducerModel::Impl {
     }
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -59,7 +68,6 @@ class OfflineTransducerModel::Impl {
       InitJoiner(buf.data(), buf.size());
     }
   }
-#endif
 
   std::pair<Ort::Value, Ort::Value> RunEncoder(Ort::Value features,
                                                Ort::Value features_length) {
@@ -161,7 +169,11 @@ class OfflineTransducerModel::Impl {
       std::ostringstream os;
       os << "---encoder---\n";
       PrintModelMetadata(os, meta_data);
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
     }
   }
 
@@ -244,11 +256,10 @@ class OfflineTransducerModel::Impl {
 OfflineTransducerModel::OfflineTransducerModel(const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
-OfflineTransducerModel::OfflineTransducerModel(AAssetManager *mgr,
+template <typename Manager>
+OfflineTransducerModel::OfflineTransducerModel(Manager *mgr,
                                                const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OfflineTransducerModel::~OfflineTransducerModel() = default;
 
@@ -290,5 +301,15 @@ Ort::Value OfflineTransducerModel::BuildDecoderInput(
     const std::vector<Hypothesis> &results, int32_t end_index) const {
   return impl_->BuildDecoderInput(results, end_index);
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineTransducerModel::OfflineTransducerModel(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineTransducerModel::OfflineTransducerModel(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx
