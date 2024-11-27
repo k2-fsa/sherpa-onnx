@@ -206,7 +206,7 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
 
 #if __ANDROID_API__ >= 9
 template std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
-    Manager *mgr, const OnlineModelConfig &config);
+    AAssetManager *mgr, const OnlineModelConfig &config);
 #endif
 
 #if __OHOS__
