@@ -15,7 +15,7 @@ import {
   voiceActivityDetectorIsEmpty,
   voiceActivityDetectorPop,
   voiceActivityDetectorReset,
-} from "libsherpa_onnx.so";
+} from 'libsherpa_onnx.so';
 
 export class SileroVadConfig {
   public model: string;
@@ -90,8 +90,8 @@ export interface SpeechSegment {
 }
 
 export class Vad {
-  private handle: object;
   public config: VadConfig;
+  private handle: object;
 
   constructor(config: VadConfig, bufferSizeInSeconds?: number, mgr?: object) {
     this.handle =

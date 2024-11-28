@@ -1,5 +1,7 @@
 import {
-  acceptWaveformOnline, createOnlineRecognizer, createOnlineStream,
+  acceptWaveformOnline,
+  createOnlineRecognizer,
+  createOnlineStream,
   decodeOnlineStream,
   getOnlineStreamResultAsJson,
   inputFinished,
@@ -12,6 +14,7 @@ import { FeatureConfig, Samples } from './NonStreamingAsr';
 
 export class OnlineStream {
   public handle: object;
+
   constructor(handle: object) {
     this.handle = handle;
   }
@@ -32,16 +35,16 @@ export class OnlineTransducerModelConfig {
   public encoder: string = '';
   public decoder: string = '';
   public joiner: string = '';
-};
+}
 
 export class OnlineParaformerModelConfig {
   public encoder: string = '';
   public decoder: string = '';
-};
+}
 
 export class OnlineZipformer2CtcModelConfig {
   public model: string = '';
-};
+}
 
 export class OnlineModelConfig {
   public transducer: OnlineTransducerModelConfig = new OnlineTransducerModelConfig();
@@ -54,38 +57,29 @@ export class OnlineModelConfig {
   public modelType: string = '';
   public modelingUnit: string = "cjkchar";
   public bpeVocab: string = '';
-};
+}
 
 export class OnlineCtcFstDecoderConfig {
   public graph: string = '';
   public maxActive: number = 3000;
-};
+}
 
 export class OnlineRecognizerConfig {
   public featConfig: FeatureConfig = new FeatureConfig();
   public modelConfig: OnlineModelConfig = new OnlineModelConfig();
-
   public decodingMethod: string = "greedy_search";
-
   public maxActivePaths: number = 4;
-
   public enableEndpoint: boolean = false;
-
   public rule1MinTrailingSilence: number = 2.4;
-
   public rule2MinTrailingSilence: number = 1.2;
-
   public rule3MinUtteranceLength: number = 20;
-
   public hotwordsFile: string = '';
-
   public hotwordsScore: number = 1.5;
-
   public ctcFstDecoderConfig: OnlineCtcFstDecoderConfig = new OnlineCtcFstDecoderConfig();
   public ruleFsts: string = '';
   public ruleFars: string = '';
   public blankPenalty: number = 0;
-};
+}
 
 interface OnlineRecognizerResultJson {
   text: string;
@@ -98,11 +92,12 @@ export class OnlineRecognizerResult {
   public tokens: string[] = [];
   public timestamps: number[] = [];
   public json: string = '';
-};
+}
 
 export class OnlineRecognizer {
   public handle: object;
   public config: OnlineRecognizerConfig
+
   constructor(config: OnlineRecognizerConfig, mgr?: object) {
     this.handle = createOnlineRecognizer(config, mgr);
     this.config = config
@@ -144,4 +139,3 @@ export class OnlineRecognizer {
     return r;
   }
 }
-

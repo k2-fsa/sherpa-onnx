@@ -1,4 +1,4 @@
-export { MainPage } from './src/main/ets/components/MainPage';
+export { readWave, readWaveFromBinary } from "libsherpa_onnx.so";
 
 export {
   CircularBuffer,
@@ -26,3 +26,15 @@ export {
   OfflineRecognizerResult,
   OfflineRecognizer,
 } from './src/main/ets/components/NonStreamingAsr';
+
+export {
+  OnlineStream,
+  OnlineTransducerModelConfig,
+  OnlineParaformerModelConfig,
+  OnlineZipformer2CtcModelConfig,
+  OnlineModelConfig,
+  OnlineCtcFstDecoderConfig,
+  OnlineRecognizerConfig,
+  OnlineRecognizerResult,
+  OnlineRecognizer,
+} from './src/main/ets/components/StreamingAsr';

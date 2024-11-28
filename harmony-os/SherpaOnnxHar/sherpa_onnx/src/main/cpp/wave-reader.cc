@@ -126,7 +126,6 @@ static Napi::Object ReadWaveFromBinaryWrapper(const Napi::CallbackInfo &info) {
     }
   }
 
-
   if (enable_external_buffer) {
     Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
         env, const_cast<float *>(wave->samples),
@@ -162,8 +161,6 @@ static Napi::Object ReadWaveFromBinaryWrapper(const Napi::CallbackInfo &info) {
     return obj;
   }
 }
-
-
 
 void InitWaveReader(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "readWave"),

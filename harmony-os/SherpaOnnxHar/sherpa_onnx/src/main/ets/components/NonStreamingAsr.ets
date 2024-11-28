@@ -4,7 +4,7 @@ import {
   createOfflineStream,
   decodeOfflineStream,
   getOfflineStreamResultAsJson,
-} from "libsherpa_onnx.so";
+} from 'libsherpa_onnx.so';
 
 export interface Samples {
   samples: Float32Array;
@@ -28,7 +28,6 @@ export class OfflineStream {
 
 export class FeatureConfig {
   public sampleRate: number = 16000;
-  ;
   public featureDim: number = 80;
 }
 
@@ -57,14 +56,12 @@ export class OfflineWhisperModelConfig {
 export class OfflineTdnnModelConfig {
   public model: string = '';
 }
-;
 
 export class OfflineSenseVoiceModelConfig {
   public model: string = '';
   public language: string = '';
   public useItn: boolean = false;
 }
-;
 
 export class OfflineMoonshineModelConfig {
   public preprocessor: string = '';
@@ -72,7 +69,6 @@ export class OfflineMoonshineModelConfig {
   public uncachedDecoder: string = '';
   public cachedDecoder: string = '';
 }
-;
 
 export class OfflineModelConfig {
   public transducer: OfflineTransducerModelConfig = new OfflineTransducerModelConfig();
@@ -91,13 +87,11 @@ export class OfflineModelConfig {
   public senseVoice: OfflineSenseVoiceModelConfig = new OfflineSenseVoiceModelConfig();
   public moonshine: OfflineMoonshineModelConfig = new OfflineMoonshineModelConfig();
 }
-;
 
 export class OfflineLMConfig {
   public model: string = '';
   public scale: number = 1.0;
 }
-;
 
 export class OfflineRecognizerConfig {
   public featConfig: FeatureConfig = new FeatureConfig();
@@ -111,7 +105,6 @@ export class OfflineRecognizerConfig {
   public ruleFars: string = '';
   public blankPenalty: number = 0;
 }
-;
 
 export class OfflineRecognizerResult {
   public text: string = '';
@@ -122,8 +115,6 @@ export class OfflineRecognizerResult {
   public emotion: string = '';
   public event: string = '';
 }
-;
-
 
 interface OfflineRecognizerResultJson {
   text: string;
