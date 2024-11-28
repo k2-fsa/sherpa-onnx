@@ -1,0 +1,11 @@
+{
+  "name": "sherpa_onnx",
+  "version": "1.0.0",
+  "description": "Please describe the basic information.",
+  "main": "Index.ets",
+  "author": "",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "libsherpa_onnx.so": "file:./src/main/cpp/types/libsherpa_onnx"
+  }
+}

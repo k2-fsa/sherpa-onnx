@@ -35,6 +35,10 @@
           ]
         }
       ]
+    },
+    {
+      "name": "sherpa_onnx",
+      "srcPath": "./sherpa_onnx",
     }
   ]
 }
