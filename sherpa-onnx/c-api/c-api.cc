@@ -8,6 +8,7 @@
 #include <cstring>
 #include <memory>
 #include <string>
+#include <strstream>
 #include <utility>
 #include <vector>
 
@@ -1187,6 +1188,28 @@ const SherpaOnnxWave *SherpaOnnxReadWave(const char *filename) {
   bool is_ok = false;
   std::vector<float> samples =
       sherpa_onnx::ReadWave(filename, &sample_rate, &is_ok);
+  if (!is_ok) {
+    return nullptr;
+  }
+
+  float *c_samples = new float[samples.size()];
+  std::copy(samples.begin(), samples.end(), c_samples);
+
+  SherpaOnnxWave *wave = new SherpaOnnxWave;
+  wave->samples = c_samples;
+  wave->sample_rate = sample_rate;
+  wave->num_samples = samples.size();
+  return wave;
+}
+
+const SherpaOnnxWave *SherpaOnnxReadWaveFromBinaryData(const char *data,
+                                                       int32_t n) {
+  int32_t sample_rate = -1;
+  bool is_ok = false;
+
+  std::istrstream is(data, n);
+
+  std::vector<float> samples = sherpa_onnx::ReadWave(is, &sample_rate, &is_ok);
   if (!is_ok) {
     return nullptr;
   }

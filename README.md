@@ -18,14 +18,13 @@
 
 ### Supported platforms
 
-|Architecture| Android | iOS     | Windows    | macOS | linux |
-|------------|---------|---------|------------|-------|-------|
-|   x64      |  ✔️      |         |   ✔️        | ✔️     |  ✔️    |
-|   x86      |  ✔️      |         |   ✔️        |       |       |
-|   arm64    |  ✔️      | ✔️       |   ✔️        | ✔️     |  ✔️    |
-|   arm32    |  ✔️      |         |            |       |  ✔️    |
-|   riscv64  |         |         |            |       |  ✔️    |
-
+|Architecture| Android | iOS     | Windows    | macOS | linux | HarmonyOS |
+|------------|---------|---------|------------|-------|-------|-----------|
+|   x64      |  ✔️      |         |   ✔️        | ✔️     |  ✔️    |   ✔️       |
+|   x86      |  ✔️      |         |   ✔️        |       |       |           |
+|   arm64    |  ✔️      | ✔️       |   ✔️        | ✔️     |  ✔️    |   ✔️       |
+|   arm32    |  ✔️      |         |            |       |  ✔️    |   ✔️       |
+|   riscv64  |         |         |            |       |  ✔️    |           |
 
 ### Supported programming languages
 
@@ -65,6 +64,7 @@ on the following platforms and operating systems:
   - Linux, macOS, Windows, openKylin
   - Android, WearOS
   - iOS
+  - HarmonyOS
   - NodeJS
   - WebAssembly
   - [Raspberry Pi][Raspberry Pi]

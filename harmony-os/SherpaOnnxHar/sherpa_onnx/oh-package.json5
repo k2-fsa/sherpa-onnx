@@ -1,0 +1,25 @@
+{
+  "name": "sherpa_onnx",
+  "version": "1.0.0",
+  "description": "Speech-to-text, text-to-speech, and speaker diarization using Next-gen Kaldi without internet connection",
+  "main": "Index.ets",
+  "author": "The next-gen Kaldi team",
+  "license": "Apache-2.0",
+  "homepage": "https://github.com/k2-fsa/sherpa-onnx",
+  "repository": "https://github.com/k2-fsa/sherpa-onnx/tree/master/harmonyos-SherpaOnnxHar",
+  "dependencies": {
+    "libsherpa_onnx.so": "file:./src/main/cpp/types/libsherpa_onnx"
+  },
+  "keywords": [
+    "tts",
+    "asr",
+    "locally",
+    "diarization",
+    "privacy",
+    "open-source",
+    "speaker",
+  ],
+  "bugs": {
+    "url": "https://github.com/k2-fsa/sherpa-onnx/issues"
+  },
+}

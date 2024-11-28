@@ -134,3 +134,9 @@ cp -fv $onnxruntime_dir/lib/libonnxruntime.so install/lib
 
 rm -rf install/share
 rm -rf install/lib/pkgconfig
+
+d=../harmony-os/SherpaOnnxHar/sherpa_onnx/src/main/cpp/libs/x86_64
+if [ -d $d ]; then
+  cp -v install/lib/libsherpa-onnx-c-api.so $d/
+  cp -v install/lib/libonnxruntime.so $d/
+fi
