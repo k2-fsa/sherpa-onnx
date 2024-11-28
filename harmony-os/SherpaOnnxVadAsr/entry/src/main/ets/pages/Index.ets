@@ -1,4 +1,8 @@
 import { LengthUnit } from '@kit.ArkUI';
+import worker, { MessageEvents } from '@ohos.worker';
+import { BusinessError } from '@kit.BasicServicesKit';
+import { picker } from '@kit.CoreFileKit';
+
 
 @Entry
 @Component
@@ -7,8 +11,53 @@ struct Index {
   private controller: TabsController = new TabsController();
   @State resultFromFile: string = '';
   @State progressForFile: number = 0;
-  @State selectFileBtnEnabled: boolean = true;
+  @State selectFileBtnEnabled: boolean = false;
   @State message: string = 'To be implemented';
+  @State lang: string = 'English';
+
+  private workerInstance?: worker.ThreadWorker
+  private readonly scriptURL: string = 'entry/ets/workers/NonStreamingAsrWithVadWorker.ets'
+
+  aboutToAppear(): void {
+    this.workerInstance = new worker.ThreadWorker(this.scriptURL, {
+      name: 'NonStreaming ASR worker'
+    });
+
+    this.workerInstance.onmessage = (e: MessageEvents) => {
+      const msgType = e.data['msgType'] as string;
+      console.log(`received data ${msgType}`);
+
+      if (msgType == 'init-non-streaming-asr-done') {
+        this.selectFileBtnEnabled = true;
+      }
+
+      if (msgType == 'non-streaming-asr-vad-decode-done') {
+        this.resultFromFile = e.data['text'] as string + '\n';
+      }
+
+      if (msgType == 'non-streaming-asr-vad-decode-partial') {
+        if (this.resultFromFile == '') {
+          this.resultFromFile = e.data['text'] as string;
+        } else {
+          this.resultFromFile += '\n\n' + e.data['text'] as string;
+        }
+      }
+
+      if (msgType == 'non-streaming-asr-vad-decode-error') {
+        this.resultFromFile = e.data['text'] as string;
+      }
+
+      if (msgType == 'non-streaming-asr-vad-decode-progress') {
+        this.progressForFile = e.data['progress'] as number;
+
+        this.selectFileBtnEnabled = this.progressForFile >= 100;
+      }
+    }
+
+    const context = getContext();
+    this.workerInstance.postMessage({ msgType: 'init-vad', context });
+    this.workerInstance.postMessage({ msgType: 'init-non-streaming-asr', context });
+  }
 
   @Builder
   TabBuilder(title: string, targetIndex: number, selectedImg: Resource, normalImg: Resource) {
@@ -44,8 +93,37 @@ struct Index {
               .width(296)
               .height(60)
               .onClick(() => {
+                this.resultFromFile = '';
+                this.progressForFile = 0;
+
+                const documentSelectOptions = new picker.DocumentSelectOptions();
+                documentSelectOptions.maxSelectNumber = 1;
+                documentSelectOptions.fileSuffixFilters = ['.wav'];
+                const documentViewPicker = new picker.DocumentViewPicker();
+                documentViewPicker.select(documentSelectOptions).then((result: Array<string>) => {
+                  console.log(`Result: ${result}`);
+
+                  if (!result[0]) {
+                    this.resultFromFile = 'Please select a file to decode';
+                    this.selectFileBtnEnabled = true;
+                    return;
+                  }
+
+                  if (this.workerInstance) {
+                    this.workerInstance.postMessage({
+                      msgType: 'non-streaming-asr-vad-decode',
+                      filename: result[0],
+                    });
+                  } else {
+                    console.log(`this worker instance is undefined ${this.workerInstance}`);
+                  }
+                }).catch((err: BusinessError) => {
+                  console.error(`Failed to select file, code is ${err.code}, message is ${err.message}`);
+                })
 
               })
+
+            Text(`Supported languages: ${this.lang}`)
 
             if (this.progressForFile > 0) {
               Row() {
@@ -84,7 +162,7 @@ struct Index {
             Text("See also https://github.com/k2-fsa/sherpa-onnx");
             Divider();
             Text("and https://k2-fsa.github.io/sherpa/social-groups.html");
-          }
+          }.justifyContent(FlexAlign.Start)
         }.tabBar(this.TabBuilder('Help', 2, $r('app.media.info_circle'),
           $r('app.media.info_circle_default')))
 
