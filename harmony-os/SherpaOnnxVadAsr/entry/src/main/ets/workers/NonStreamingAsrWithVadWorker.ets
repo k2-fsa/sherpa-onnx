@@ -2,13 +2,14 @@ import { ErrorEvent, MessageEvents, ThreadWorkerGlobalScope, worker } from '@kit
 import {
   OfflineRecognizer,
   OfflineRecognizerConfig,
+  readWaveFromBinary,
   SileroVadConfig,
   Vad,
   VadConfig,
-  readWaveFromBinary,
 } from 'sherpa_onnx';
 import { Context } from '@kit.AbilityKit';
 import { fileIo } from '@kit.CoreFileKit';
+import { getOfflineModelConfig } from '../pages/NonStreamingAsrModels';
 
 const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
 
@@ -37,9 +38,28 @@ function initVad(context: Context): Vad {
 function initNonStreamingAsr(context: Context): OfflineRecognizer {
   let mgr = context.resourceManager;
   const config = new OfflineRecognizerConfig();
-  config.modelConfig.whisper.encoder = "sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx";
-  config.modelConfig.whisper.decoder = "sherpa-onnx-whisper-tiny.en/tiny.en-decoder.int8.onnx";
-  config.modelConfig.tokens = "sherpa-onnx-whisper-tiny.en/tiny.en-tokens.txt";
+
+  // Note that you can switch to a new model by changing type
+  //
+  // If you use type = 2, which means you will use
+  // sherpa-onnx-whisper-tiny.en
+  // we assume you have the following folder structure in you resources/rawfile
+  /*
+  (py38) fangjuns-MacBook-Pro:main fangjun$ pwd
+  /Users/fangjun/open-source/sherpa-onnx/harmony-os/SherpaOnnxVadAsr/entry/src/main
+  (py38) fangjuns-MacBook-Pro:main fangjun$ tree resources/rawfile/
+  resources/rawfile/
+  ├── sherpa-onnx-whisper-tiny.en
+  │   ├── README.md
+  │   ├── tiny.en-decoder.int8.onnx
+  │   ├── tiny.en-encoder.int8.onnx
+  │   └── tiny.en-tokens.txt
+  └── silero_vad.onnx
+
+  1 directory, 5 files
+   */
+  const type = 2;
+  config.modelConfig = getOfflineModelConfig(type);
   config.modelConfig.debug = true;
   return new OfflineRecognizer(config, mgr)
 }
@@ -92,7 +112,7 @@ function decode(filename: string): string {
       resultList.push(text);
       console.log(`partial result ${text}`);
 
-      workerPort.postMessage({ 'msgType': 'non-streaming-asr-vad-decode-partial', text});
+      workerPort.postMessage({ 'msgType': 'non-streaming-asr-vad-decode-partial', text });
 
       vad.pop();
     }

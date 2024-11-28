@@ -8,13 +8,12 @@ import { picker } from '@kit.CoreFileKit';
 @Component
 struct Index {
   @State currentIndex: number = 0;
-  private controller: TabsController = new TabsController();
   @State resultFromFile: string = '';
   @State progressForFile: number = 0;
   @State selectFileBtnEnabled: boolean = false;
   @State message: string = 'To be implemented';
   @State lang: string = 'English';
-
+  private controller: TabsController = new TabsController();
   private workerInstance?: worker.ThreadWorker
   private readonly scriptURL: string = 'entry/ets/workers/NonStreamingAsrWithVadWorker.ets'
 
