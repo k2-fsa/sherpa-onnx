@@ -64,6 +64,7 @@ on the following platforms and operating systems:
   - Linux, macOS, Windows, openKylin
   - Android, WearOS
   - iOS
+  - HarmonyOS
   - NodeJS
   - WebAssembly
   - [Raspberry Pi][Raspberry Pi]

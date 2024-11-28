@@ -23,7 +23,7 @@ include(FetchContent)
 FetchContent_Declare(node_addon_api
     GIT_REPOSITORY "https://github.com/nodejs/node-addon-api.git"
     GIT_TAG c679f6f4c9dc6bf9fc0d99cbe5982bd24a5e2c7b
-    PATCH_COMMAND git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/my-patch.diff"
+    PATCH_COMMAND git checkout . && git apply --ignore-whitespace "${CMAKE_CURRENT_LIST_DIR}/my-patch.diff"
 )
 FetchContent_MakeAvailable(node_addon_api)
 FetchContent_GetProperties(node_addon_api)
