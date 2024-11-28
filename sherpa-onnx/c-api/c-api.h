@@ -1001,6 +1001,14 @@ SHERPA_ONNX_API typedef struct SherpaOnnxWave {
 // SherpaOnnxFreeWave() to free the returned pointer to avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxWave *SherpaOnnxReadWave(const char *filename);
 
+// Similar to SherpaOnnxReadWave(), it has read the content of `filename`
+// into the array `data`.
+//
+// If the returned pointer is not NULL, the user has to invoke
+// SherpaOnnxFreeWave() to free the returned pointer to avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxWave *SherpaOnnxReadWaveFromBinaryData(
+    const char *data, int32_t n);
+
 SHERPA_ONNX_API void SherpaOnnxFreeWave(const SherpaOnnxWave *wave);
 
 // ============================================================

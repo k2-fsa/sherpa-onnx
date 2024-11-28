@@ -191,6 +191,17 @@ static SherpaOnnxOfflineLMConfig GetOfflineLMConfig(Napi::Object obj) {
 static Napi::External<SherpaOnnxOfflineRecognizer>
 CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+#if __OHOS__
+  // the last argument is the NativeResourceManager
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+#else
   if (info.Length() != 1) {
     std::ostringstream os;
     os << "Expect only 1 argument. Given: " << info.Length();
@@ -199,6 +210,7 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
 
     return {};
   }
+#endif
 
   if (!info[0].IsObject()) {
     Napi::TypeError::New(env, "Expect an object as the argument")
@@ -223,8 +235,15 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(blank_penalty, blankPenalty);
 
+#if __OHOS__
+  std::unique_ptr<NativeResourceManager, decltype(&OH_ResourceManager_ReleaseNativeResourceManager)> mgr (OH_ResourceManager_InitNativeResourceManager(env, info[1]), &OH_ResourceManager_ReleaseNativeResourceManager);
+
+  const SherpaOnnxOfflineRecognizer *recognizer =
+      SherpaOnnxCreateOfflineRecognizerOHOS(&c, mgr.get());
+#else
   const SherpaOnnxOfflineRecognizer *recognizer =
       SherpaOnnxCreateOfflineRecognizer(&c);
+#endif
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.encoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.decoder);
@@ -374,8 +393,15 @@ static void AcceptWaveformOfflineWrapper(const Napi::CallbackInfo &info) {
   Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
   int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
 
+#if __OHOS__
+  // Note(fangjun): For unknown reasons on HarmonyOS, we need to divide it by
+  // sizeof(float) here
+  SherpaOnnxAcceptWaveformOffline(stream, sample_rate, samples.Data(),
+                                  samples.ElementLength() / sizeof(float));
+#else
   SherpaOnnxAcceptWaveformOffline(stream, sample_rate, samples.Data(),
                                   samples.ElementLength());
+#endif
 }
 
 static void DecodeOfflineStreamWrapper(const Napi::CallbackInfo &info) {

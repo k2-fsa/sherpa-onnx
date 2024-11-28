@@ -67,7 +67,14 @@ static void CircularBufferPushWrapper(const Napi::CallbackInfo &info) {
   }
 
   Napi::Float32Array data = info[1].As<Napi::Float32Array>();
+
+#if __OHOS__
+  // Note(fangjun): Normally, we don't need to divied it by sizeof(float).
+  // However, data.ElementLength() here returns number of bytes, not number of elements.
+  SherpaOnnxCircularBufferPush(buf, data.Data(), data.ElementLength() / sizeof(float));
+#else
   SherpaOnnxCircularBufferPush(buf, data.Data(), data.ElementLength());
+#endif
 }
 
 // see https://github.com/nodejs/node-addon-api/blob/main/doc/typed_array.md
@@ -287,6 +294,17 @@ static SherpaOnnxSileroVadModelConfig GetSileroVadConfig(
 static Napi::External<SherpaOnnxVoiceActivityDetector>
 CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+#if __OHOS__
+  // the last argument is a NativeResourceManager
+  if (info.Length() != 3) {
+    std::ostringstream os;
+    os << "Expect only 3 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+#else
   if (info.Length() != 2) {
     std::ostringstream os;
     os << "Expect only 2 arguments. Given: " << info.Length();
@@ -295,6 +313,7 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
 
     return {};
   }
+#endif
 
   if (!info[0].IsObject()) {
     Napi::TypeError::New(env,
@@ -333,8 +352,15 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
 
   float buffer_size_in_seconds = info[1].As<Napi::Number>().FloatValue();
 
+#if __OHOS__
+  std::unique_ptr<NativeResourceManager, decltype(&OH_ResourceManager_ReleaseNativeResourceManager)> mgr(OH_ResourceManager_InitNativeResourceManager(env, info[2]), &OH_ResourceManager_ReleaseNativeResourceManager);
+
+  SherpaOnnxVoiceActivityDetector *vad =
+      SherpaOnnxCreateVoiceActivityDetectorOHOS(&c, buffer_size_in_seconds, mgr.get());
+#else
   SherpaOnnxVoiceActivityDetector *vad =
       SherpaOnnxCreateVoiceActivityDetector(&c, buffer_size_in_seconds);
+#endif
 
   if (c.silero_vad.model) {
     delete[] c.silero_vad.model;
@@ -383,8 +409,14 @@ static void VoiceActivityDetectorAcceptWaveformWrapper(
 
   Napi::Float32Array samples = info[1].As<Napi::Float32Array>();
 
+#if __OHOS__
+  // Note(fangjun): For unknown reasons, we need to use `/sizeof(float)` here for Huawei
+  SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, samples.Data(),
+                                                samples.ElementLength() / sizeof(float));
+#else
   SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, samples.Data(),
                                                 samples.ElementLength());
+#endif
 }
 
 static Napi::Boolean VoiceActivityDetectorEmptyWrapper(
