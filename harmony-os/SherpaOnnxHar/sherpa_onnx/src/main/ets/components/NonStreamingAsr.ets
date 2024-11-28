@@ -135,7 +135,7 @@ export class OfflineRecognizer {
   }
 
   createStream(): OfflineStream {
-    const handle = createOfflineStream(this.handle);
+    const handle: object = createOfflineStream(this.handle);
     return new OfflineStream(handle);
   }
 
@@ -144,7 +144,7 @@ export class OfflineRecognizer {
   }
 
   getResult(stream: OfflineStream): OfflineRecognizerResult {
-    const jsonStr = getOfflineStreamResultAsJson(stream.handle);
+    const jsonStr: string = getOfflineStreamResultAsJson(stream.handle);
 
     let o = JSON.parse(jsonStr) as OfflineRecognizerResultJson;
 

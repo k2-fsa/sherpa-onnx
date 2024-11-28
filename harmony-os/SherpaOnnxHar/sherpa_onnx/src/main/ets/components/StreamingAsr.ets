@@ -104,7 +104,7 @@ export class OnlineRecognizer {
   }
 
   createStream(): OnlineStream {
-    const handle = createOnlineStream(this.handle);
+    const handle: object = createOnlineStream(this.handle);
     return new OnlineStream(handle);
   }
 
@@ -125,7 +125,7 @@ export class OnlineRecognizer {
   }
 
   getResult(stream: OnlineStream): OnlineRecognizerResult {
-    const jsonStr =
+    const jsonStr: string =
       getOnlineStreamResultAsJson(this.handle, stream.handle);
 
     let o = JSON.parse(jsonStr) as OnlineRecognizerResultJson;

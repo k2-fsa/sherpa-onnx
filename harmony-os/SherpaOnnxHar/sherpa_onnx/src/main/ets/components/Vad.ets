@@ -62,13 +62,13 @@ export class CircularBuffer {
   }
 
   // return a float32 array
-  get(startIndex: number, n: number, enableExternalBuffer: boolean = true) {
+  get(startIndex: number, n: number, enableExternalBuffer: boolean = true): Float32Array {
     return circularBufferGet(
       this.handle, startIndex, n, enableExternalBuffer);
   }
 
   pop(n: number) {
-    return circularBufferPop(this.handle, n);
+    circularBufferPop(this.handle, n);
   }
 
   size(): number {
