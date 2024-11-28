@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - ohos-har
+      # - ohos-har
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
@@ -31,7 +31,7 @@ jobs:
       - name: ccache
         uses: hendrikmuhs/ccache-action@v1.2
         with:
-          key: ohos-${{ matrix.arch }}
+          key: har-linux
 
       - name: cache-toolchain
         id: cache-toolchain-ohos
@@ -105,6 +105,7 @@ jobs:
           ./build-ohos-x86-64.sh
 
       - name: Build Har
+        if: false
         shell: bash
         run: |
           export PATH="$GITHUB_WORKSPACE/command-line-tools/bin:$PATH"
@@ -122,6 +123,7 @@ jobs:
           ls -lh *.har
 
       - name: Collect result
+        if: false
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -130,12 +132,14 @@ jobs:
           mv sherpa_onnx.har sherpa_onnx-$SHERPA_ONNX_VERSION.har
 
       - uses: actions/upload-artifact@v4
+        if: false
         with:
           name: sherpa-onnx-har
           path: ./sherpa_onnx*.har
 
       - name: Release jar
         # if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: false
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -147,6 +151,7 @@ jobs:
 
       - name: Publish to huggingface
         # if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: false
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
