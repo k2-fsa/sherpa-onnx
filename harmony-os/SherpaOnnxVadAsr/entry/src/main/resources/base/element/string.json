@@ -2,15 +2,15 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "module description"
+      "value": "VAD+ASR with Next-gen Kaldi"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "description"
+      "value": "VAD+ASR"
     },
     {
       "name": "EntryAbility_label",
-      "value": "label"
+      "value": "VAD_ASR"
     }
   ]
 }
