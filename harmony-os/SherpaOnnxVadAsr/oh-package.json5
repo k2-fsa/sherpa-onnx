@@ -1,0 +1,14 @@
+{
+  "modelVersion": "5.0.0",
+  "description": "Please describe the basic information.",
+  "dependencies": {
+
+    // You can download sherpa_onnx-v1.10.32.har
+    // from
+    // https://huggingface.co/csukuangfj/sherpa-onnx-harmony-os/tree/main/har
+    "sherpa_onnx": "file:./entry/sherpa_onnx-v1.10.32.har"
+  },
+  "devDependencies": {
+    "@ohos/hypium": "1.0.19"
+  }
+}
