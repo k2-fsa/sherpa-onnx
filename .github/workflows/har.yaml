@@ -92,6 +92,12 @@ jobs:
           x86_64-unknown-linux-ohos-clang++ --version
           x86_64-unknown-linux-ohos-clang --version
 
+      - name: Install tree
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q tree
+
       - name: Build libraries
         shell: bash
         run: |
@@ -113,6 +119,9 @@ jobs:
 
           pushd harmony-os/SherpaOnnxHar
 
+          cp -fv ../../LICENSE ./sherpa_onnx
+          cp -fv ../../CHANGELOG.md ./sherpa_onnx
+
           hvigorw --mode module -p product=default -p module=sherpa_onnx@default assembleHar --analyze=normal --parallel --incremental --no-daemon
           ls -lh ./sherpa_onnx/build/default/outputs/default/sherpa_onnx.har
           cp -v ./sherpa_onnx/build/default/outputs/default/sherpa_onnx.har ../../
@@ -120,6 +129,30 @@ jobs:
           popd
 
           ls -lh *.har
+
+      - name: View Har
+        shell: bash
+        run: |
+          file sherpa_onnx.har
+          tar xvf sherpa_onnx.har
+
+          cd package
+          ls -lh
+
+          ls -lh libs
+          echo "---libs/x86_64---"
+          ls -lh libs/x86_64
+
+          echo "---libs/arm64-v8a---"
+          ls -lh libs/arm64-v8a
+
+          echo "---src/main/ets/components---"
+          ls -lh src/main/ets/components/
+
+          echo "---src/main/cpp/types/libsherpa_onnx/---"
+          ls -lh src/main/cpp/types/libsherpa_onnx/
+
+          tree .
 
       - name: Collect result
         shell: bash

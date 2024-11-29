@@ -16,3 +16,22 @@ hvigorw --mode module -p product=default -p module=sherpa_onnx@default assembleH
 
 ls -lh ./sherpa_onnx/build/default/outputs/default/sherpa_onnx.har
 ```
+
+Pre-built `har` packages can be found at
+<https://huggingface.co/csukuangfj/sherpa-onnx-harmony-os/tree/main/har>
+
+You can also download it using
+```
+wget https://ohpm.openharmony.cn/ohpm/sherpa_onnx/-/sherpa_onnx-1.10.32.har
+
+# Please replace the version 1.10.32 if needed.
+```
+
+You can also use
+```
+ohpm install sherpa_onnx
+```
+to install it.
+
+See also
+<https://ohpm.openharmony.cn/#/cn/detail/sherpa_onnx>
