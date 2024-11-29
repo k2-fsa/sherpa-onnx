@@ -1,0 +1,173 @@
+name: hap-vad-asr
+
+on:
+  push:
+    branches:
+      - hap
+      - hap-ci
+
+  workflow_dispatch:
+
+concurrency:
+  group: hap-vad-asr-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  hap_vad_asr:
+    if: github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa'
+    runs-on: ${{ matrix.os }}
+    name: Haps for vad asr ${{ matrix.index }}/${{ matrix.total }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        total: ["10"]
+        index: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # https://github.com/actions/setup-java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '17' # it requires jdk 17 to sigh the hap
+
+      - name: Show java version
+        shell: bash
+        run: |
+          which java
+          java --version
+
+      - name: cache-toolchain
+        id: cache-toolchain-ohos
+        uses: actions/cache@v4
+        with:
+          path: command-line-tools
+          key: commandline-tools-linux-x64-5.0.5.200.zip
+
+      - name: Download toolchain
+        if: steps.cache-toolchain-ohos.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl -SL -O https://huggingface.co/csukuangfj/harmonyos-commandline-tools/resolve/main/commandline-tools-linux-x64-5.0.5.200.zip
+          unzip commandline-tools-linux-x64-5.0.5.200.zip
+          rm commandline-tools-linux-x64-5.0.5.200.zip
+
+      - name: Set environment variable
+        shell: bash
+        run: |
+          echo "$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/build-tools/cmake/bin"  >> "$GITHUB_PATH"
+          which cmake
+
+          cmake --version
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip jinja2
+
+      - name: Generate build script
+        shell: bash
+        run: |
+          cd scripts/hap
+
+          total=${{ matrix.total }}
+          index=${{ matrix.index }}
+
+          ./generate-vad-asr-hap-script.py --total $total --index $index
+          ls -lh
+
+          chmod +x build-hap-vad-asr.sh
+          mv -v ./build-hap-vad-asr.sh ../..
+
+      - name: Generate secrets
+        shell: bash
+        run: |
+          echo "${{ secrets.HAP_SHERPA_ONNX_CER }}" > /tmp/sherpa_onnx.cer
+          shasum -a 256 /tmp/sherpa_onnx.cer
+          ls -lh /tmp/sherpa_onnx.cer
+
+          # macos
+          # base64 -i sherpa_onnx_profileRelease.p7b -o sherpa_onnx_profileRelease.p7b.base64
+          #
+          # linux
+          # base64 -w 0 sherpa_onnx_profileRelease.p7b > sherpa_onnx_profileRelease.p7b.base64
+          #
+          # cat sherpa_onnx_profileRelease.p7b.base64 | base64 --decode > sherpa_onnx_profileRelease.p7b
+          #
+          echo "${{ secrets.HAP_SHERPA_ONNX_PROFILE }}"   | base64 --decode > /tmp/sherpa_onnx_profileRelease.p7b
+          echo "${{ secrets.HAP_SHERPA_ONNX_KEY_STORE }}" > ./sherpa_onnx_ohos_key.p12.base64
+          echo "${{ secrets.HAP_SHERPA_ONNX_KEY_STORE }}" | base64 --decode > /tmp/sherpa_onnx_ohos_key.p12
+
+          ls -l /tmp/sherpa_onnx_profileRelease.p7b
+          ls -l /tmp/sherpa_onnx_ohos_key.p12
+
+          ls -lh ./sherpa_onnx_ohos_key.p12.base64
+          shasum -a 256 ./sherpa_onnx_ohos_key.p12.base64
+          wc ./sherpa_onnx_ohos_key.p12.base64
+          rm ./sherpa_onnx_ohos_key.p12.base64
+
+          shasum -a 256 /tmp/sherpa_onnx_profileRelease.p7b
+          shasum -a 256 /tmp/sherpa_onnx_ohos_key.p12
+
+      - name: build HAP
+        env:
+          HAP_KEY_ALIAS: ${{ secrets.HAP_KEY_ALIAS }}
+          HAP_KEY_PWD: ${{ secrets.HAP_KEY_PWD }}
+          HAP_KEY_STORE_PWD: ${{ secrets.HAP_KEY_STORE_PWD }}
+        shell: bash
+        run: |
+          export COMMANDLINE_TOOLS_DIR=$GITHUB_WORKSPACE/command-line-tools
+          ./build-hap-vad-asr.sh
+
+          # remove secrets
+          rm /tmp/sherpa_onnx.cer
+          rm /tmp/sherpa_onnx_profileRelease.p7b
+          rm /tmp/sherpa_onnx_ohos_key.p12
+
+      - name: Display HAPs
+        shell: bash
+        run: |
+          ls -lh ./haps/
+          du -h -d1 .
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-harmony-os huggingface
+            cd huggingface
+            du -h -d1 .
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            d=hap/vad-asr/$SHERPA_ONNX_VERSION
+            mkdir -p $d
+            cp -v ../haps/*.hap $d/
+            git status
+            git lfs track "*.hap"
+            git add .
+            git commit -m "add more HAPs"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-harmony-os main

@@ -4,7 +4,7 @@
 import { OfflineModelConfig } from 'sherpa_onnx';
 
 export function getOfflineModelConfig(type: number): OfflineModelConfig {
-  const c = new OfflineModelConfig();
+  const c: OfflineModelConfig = new OfflineModelConfig();
   switch (type) {
     case 0: {
       const modelDir = 'sherpa-onnx-paraformer-zh-2023-09-14'
