@@ -5,6 +5,9 @@
   "main": "",
   "author": "",
   "license": "",
-  "dependencies": {}
+  "dependencies": {
+    // please see https://ohpm.openharmony.cn/#/cn/detail/sherpa_onnx
+    "sherpa_onnx": "1.10.32",
+  }
 }
 

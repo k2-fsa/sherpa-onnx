@@ -2,8 +2,11 @@ import { ErrorEvent, MessageEvents, ThreadWorkerGlobalScope, worker } from '@kit
 import {
   OfflineRecognizer,
   OfflineRecognizerConfig,
+  OfflineStream,
+  OnlineRecognizerResult,
   readWaveFromBinary,
   SileroVadConfig,
+  SpeechSegment,
   Vad,
   VadConfig,
 } from 'sherpa_onnx';
@@ -18,7 +21,7 @@ let vad: Vad; // vad for decoding files
 
 function initVad(context: Context): Vad {
   let mgr = context.resourceManager;
-  const config = new VadConfig(
+  const config: VadConfig = new VadConfig(
     new SileroVadConfig(
       'silero_vad.onnx',
       0.5,
@@ -37,7 +40,7 @@ function initVad(context: Context): Vad {
 
 function initNonStreamingAsr(context: Context): OfflineRecognizer {
   let mgr = context.resourceManager;
-  const config = new OfflineRecognizerConfig();
+  const config: OfflineRecognizerConfig = new OfflineRecognizerConfig();
 
   // Note that you can switch to a new model by changing type
   //
@@ -61,7 +64,13 @@ function initNonStreamingAsr(context: Context): OfflineRecognizer {
   const type = 2;
   config.modelConfig = getOfflineModelConfig(type);
   config.modelConfig.debug = true;
-  return new OfflineRecognizer(config, mgr)
+  config.ruleFsts = '';
+  return new OfflineRecognizer(config, mgr);
+}
+
+interface Wave {
+  samples: Float32Array;
+  sampleRate: number;
 }
 
 function decode(filename: string): string {
@@ -71,44 +80,44 @@ function decode(filename: string): string {
   const stat = fileIo.statSync(fp.fd);
   const arrayBuffer = new ArrayBuffer(stat.size);
   fileIo.readSync(fp.fd, arrayBuffer);
-  const data = new Uint8Array(arrayBuffer);
+  const data: Uint8Array = new Uint8Array(arrayBuffer);
 
-  const wave = readWaveFromBinary(data);
+  const wave: Wave = readWaveFromBinary(data);
 
   console.log(`sample rate ${wave.sampleRate}`);
   console.log(`samples length ${wave.samples.length}`);
   const resultList: string[] = [];
 
-  const windowSize = vad.config.sileroVad.windowSize;
+  const windowSize: number = vad.config.sileroVad.windowSize;
   for (let i = 0; i < wave.samples.length; i += windowSize) {
-    const thisWindow = wave.samples.subarray(i, i + windowSize)
+    const thisWindow: Float32Array = wave.samples.subarray(i, i + windowSize)
     vad.acceptWaveform(thisWindow);
     if (i + windowSize >= wave.samples.length) {
       vad.flush();
     }
     while (!vad.isEmpty()) {
-      const segment = vad.front();
-      const _startTime = (segment.start / wave.sampleRate);
-      const _endTime = _startTime + segment.samples.length / wave.sampleRate;
+      const segment: SpeechSegment = vad.front();
+      const _startTime: number = (segment.start / wave.sampleRate);
+      const _endTime: number = _startTime + segment.samples.length / wave.sampleRate;
 
       if (_endTime - _startTime < 0.2) {
         vad.pop();
         continue;
       }
 
-      const startTime = _startTime.toFixed(2);
-      const endTime = _endTime.toFixed(2);
+      const startTime: string = _startTime.toFixed(2);
+      const endTime: string = _endTime.toFixed(2);
 
-      const progress = (segment.start + segment.samples.length) / wave.samples.length * 100;
+      const progress: number = (segment.start + segment.samples.length) / wave.samples.length * 100;
 
       workerPort.postMessage({ 'msgType': 'non-streaming-asr-vad-decode-progress', progress });
 
-      const stream = recognizer.createStream();
+      const stream: OfflineStream = recognizer.createStream();
       stream.acceptWaveform({ samples: segment.samples, sampleRate: wave.sampleRate });
       recognizer.decode(stream);
-      const result = recognizer.getResult(stream);
+      const result: OnlineRecognizerResult = recognizer.getResult(stream);
 
-      const text = `${startTime} -- ${endTime} ${result.text}`
+      const text: string = `${startTime} -- ${endTime} ${result.text}`
       resultList.push(text);
       console.log(`partial result ${text}`);
 
