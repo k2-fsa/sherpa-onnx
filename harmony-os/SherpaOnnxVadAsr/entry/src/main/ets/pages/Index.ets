@@ -3,47 +3,127 @@ import worker, { MessageEvents } from '@ohos.worker';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { picker } from '@kit.CoreFileKit';
 
+import { Permissions } from '@kit.AbilityKit';
+import { allAllowed, requestPermissions } from './Permission';
+import { audio } from '@kit.AudioKit';
+
 
 @Entry
 @Component
 struct Index {
   @State currentIndex: number = 0;
-  @State resultFromFile: string = '';
+  @State resultForFile: string = '';
   @State progressForFile: number = 0;
   @State selectFileBtnEnabled: boolean = false;
-  @State message: string = 'To be implemented';
   @State lang: string = 'English';
+  @State resultForMic: string = '';
+  @State micStarted: boolean = false;
+  @State message: string = 'Start recording';
+  @State micInitDone: boolean = false;
   private controller: TabsController = new TabsController();
   private workerInstance?: worker.ThreadWorker
   private readonly scriptURL: string = 'entry/ets/workers/NonStreamingAsrWithVadWorker.ets'
+  private mic?: audio.AudioCapturer;
+  private sampleList: Float32Array[] = []
 
-  aboutToAppear(): void {
+  flatten(samples: Float32Array[]): Float32Array {
+    let n = 0;
+    for (let i = 0; i < samples.length; ++i) {
+      n += samples[i].length;
+    }
+
+    const ans: Float32Array = new Float32Array(n);
+    let offset: number = 0;
+    for (let i = 0; i < samples.length; ++i) {
+      ans.set(samples[i], offset);
+      offset += samples[i].length;
+    }
+
+    return ans;
+  }
+
+  async initMic() {
+    const permissions: Permissions[] = ["ohos.permission.MICROPHONE"];
+    let allowed: boolean = await allAllowed(permissions);
+    if (!allowed) {
+      requestPermissions(permissions);
+      console.log("request to access the microphone");
+
+      allowed = await allAllowed(permissions);
+      if (!allowed) {
+        console.error('failed to get microphone permission');
+        this.resultForMic = "Failed to get microphone permission. Please retry";
+        return;
+      }
+    } else {
+      console.log("allowed to access microphone");
+    }
+
+    const audioStreamInfo: audio.AudioStreamInfo = {
+      samplingRate: audio.AudioSamplingRate.SAMPLE_RATE_16000,
+      channels: audio.AudioChannel.CHANNEL_1,
+      sampleFormat: audio.AudioSampleFormat.SAMPLE_FORMAT_S16LE,
+      encodingType: audio.AudioEncodingType.ENCODING_TYPE_RAW,
+    };
+
+    const audioCapturerInfo: audio.AudioCapturerInfo = {
+      source: audio.SourceType.SOURCE_TYPE_MIC,
+      capturerFlags: 0
+    };
+
+    const audioCapturerOptions: audio.AudioCapturerOptions = {
+      streamInfo: audioStreamInfo,
+      capturerInfo: audioCapturerInfo
+
+    };
+    audio.createAudioCapturer(audioCapturerOptions, (err, data) => {
+      if (err) {
+        console.error(`error code is ${err.code}, error message is ${err.message}`);
+        this.resultForMic = 'Failed to init microphone';
+      } else {
+        console.info(`init mic successfully`);
+        this.mic = data;
+        this.mic.on('readData', this.micCallback);
+
+        if (this.workerInstance) {
+          this.workerInstance.postMessage({ msgType: 'init-vad-mic', context: getContext() });
+        }
+      }
+    });
+  }
+
+  async aboutToAppear() {
     this.workerInstance = new worker.ThreadWorker(this.scriptURL, {
       name: 'NonStreaming ASR worker'
     });
 
     this.workerInstance.onmessage = (e: MessageEvents) => {
       const msgType = e.data['msgType'] as string;
-      console.log(`received data ${msgType}`);
+      console.log(`received msg from worker: ${msgType}`);
+
+      if (msgType == 'init-vad-mic-done') {
+        this.micInitDone = true;
+      }
 
       if (msgType == 'init-non-streaming-asr-done') {
         this.selectFileBtnEnabled = true;
+        this.resultForFile = `Initializing done.\n\nPlease select a wave file of 16kHz in language ${this.lang}`;
       }
 
       if (msgType == 'non-streaming-asr-vad-decode-done') {
-        this.resultFromFile = e.data['text'] as string + '\n';
+        this.resultForFile = e.data['text'] as string + '\n';
       }
 
       if (msgType == 'non-streaming-asr-vad-decode-partial') {
-        if (this.resultFromFile == '') {
-          this.resultFromFile = e.data['text'] as string;
+        if (this.resultForFile == '') {
+          this.resultForFile = e.data['text'] as string;
         } else {
-          this.resultFromFile += '\n\n' + e.data['text'] as string;
+          this.resultForFile += '\n\n' + e.data['text'] as string;
         }
       }
 
       if (msgType == 'non-streaming-asr-vad-decode-error') {
-        this.resultFromFile = e.data['text'] as string;
+        this.resultForFile = e.data['text'] as string;
       }
 
       if (msgType == 'non-streaming-asr-vad-decode-progress') {
@@ -51,11 +131,26 @@ struct Index {
 
         this.selectFileBtnEnabled = this.progressForFile >= 100;
       }
+
+      if (msgType == 'non-streaming-asr-vad-mic-partial') {
+        if (this.resultForMic == '') {
+          this.resultForMic = e.data['text'] as string;
+        } else {
+          this.resultForMic += '\n\n' + e.data['text'] as string;
+        }
+      }
+
+      if (msgType == 'non-streaming-asr-vad-mic-error') {
+        this.resultForMic = e.data['text'] as string;
+      }
     }
 
     const context = getContext();
+    this.resultForFile = 'Initializing models';
     this.workerInstance.postMessage({ msgType: 'init-vad', context });
     this.workerInstance.postMessage({ msgType: 'init-non-streaming-asr', context });
+
+    await this.initMic();
   }
 
   @Builder
@@ -86,13 +181,13 @@ struct Index {
               .lineHeight(41)
               .fontWeight(500)
 
-            Button('Select .wav file ')
+            Button('Select .wav file (16kHz) ')
               .enabled(this.selectFileBtnEnabled)
               .fontSize(13)
               .width(296)
               .height(60)
               .onClick(() => {
-                this.resultFromFile = '';
+                this.resultForFile = '';
                 this.progressForFile = 0;
 
                 const documentSelectOptions = new picker.DocumentSelectOptions();
@@ -103,7 +198,7 @@ struct Index {
                   console.log(`Result: ${result}`);
 
                   if (!result[0]) {
-                    this.resultFromFile = 'Please select a file to decode';
+                    this.resultForFile = 'Please select a file to decode';
                     this.selectFileBtnEnabled = true;
                     return;
                   }
@@ -135,7 +230,7 @@ struct Index {
               }.width('100%').justifyContent(FlexAlign.Center)
             }
 
-            TextArea({ text: this.resultFromFile }).width('100%').lineSpacing({ value: 10, unit: LengthUnit.VP });
+            TextArea({ text: this.resultForFile }).width('100%').lineSpacing({ value: 10, unit: LengthUnit.VP });
 
           }
           .alignItems(HorizontalAlign.Center)
@@ -144,10 +239,50 @@ struct Index {
 
         TabContent() {
           Column() {
-            Text(this.message)
-              .fontSize(50)
-              .fontWeight(FontWeight.Bold);
+            Button(this.message)
+              .enabled(this.micInitDone)
+              .onClick(() => {
+                console.log('clicked mic button');
+                this.resultForMic = '';
+                if (this.mic) {
+                  if (this.micStarted) {
+                    this.mic.stop();
+                    this.message = "Start recording";
+                    this.micStarted = false;
+                    console.log('mic stopped');
+
+                    const samples = this.flatten(this.sampleList);
+                    let s = 0;
+                    for (let i = 0; i < samples.length; ++i) {
+                      s += samples[i];
+                    }
+                    console.log(`samples ${samples.length}, sum: ${s}`);
+
+                    if (this.workerInstance) {
+                      console.log('decode mic');
+                      this.workerInstance.postMessage({
+                        msgType: 'non-streaming-asr-vad-mic',
+                        samples,
+                      });
+                    } else {
+                      console.log(`this worker instance is undefined ${this.workerInstance}`);
+                    }
+                  } else {
+                    this.sampleList = [];
+                    this.mic.start();
+                    this.message = "Stop recording";
+                    this.micStarted = true;
+                    console.log('mic started');
+                  }
+                }
+              });
+
+            Text(`Supported languages: ${this.lang}`)
+
+            TextArea({ text: this.resultForMic }).width('100%').lineSpacing({ value: 10, unit: LengthUnit.VP });
           }
+          .alignItems(HorizontalAlign.Center)
+          .justifyContent(FlexAlign.Start)
         }
         .tabBar(this.TabBuilder('From mic', 1, $r('app.media.ic_public_input_voice'),
           $r('app.media.ic_public_input_voice_default')))
@@ -169,5 +304,15 @@ struct Index {
     }
     .width('100%')
     .justifyContent(FlexAlign.Start)
+  }
+
+  private micCallback = (buffer: ArrayBuffer) => {
+    const view: Int16Array = new Int16Array(buffer);
+
+    const samplesFloat: Float32Array = new Float32Array(view.length);
+    for (let i = 0; i < view.length; ++i) {
+      samplesFloat[i] = view[i] / 32768.0;
+    }
+    this.sampleList.push(samplesFloat);
   }
 }

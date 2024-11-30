@@ -11,6 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "VAD_ASR"
+    },
+    {
+      "name": "mic_reason",
+      "value": "access the microhone for speech recognition"
     }
   ]
 }

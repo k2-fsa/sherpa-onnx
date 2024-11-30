@@ -90,7 +90,7 @@ hvigorw assembleHap --mode module -p product=default -p buildMode=release --no-d
 
 ls -lh ./entry/build/default/outputs/default/entry-default-unsigned.hap
 
-in_file=./entry/build/default/outputs/default/entry-default-unsigned.hap
+in_file=$PWD/entry/build/default/outputs/default/entry-default-unsigned.hap
 out_file=$PWD/entry/build/default/outputs/default/entry-default-signed.hap
 
 java -jar $jar sign-app -keyAlias "$HAP_KEY_ALIAS" -signAlg "SHA256withECDSA" -mode "localSign" \
@@ -100,11 +100,12 @@ java -jar $jar sign-app -keyAlias "$HAP_KEY_ALIAS" -signAlg "SHA256withECDSA" -m
 
 ls -l $in_file $out_file
 ls -lh $in_file $out_file
-rm $in_file
 rm -rf ./entry/src/main/resources/rawfile/$model_name
 popd
 
-mv $out_file ./haps/sherpa-onnx-${SHERPA_ONNX_VERSION}-vad_asr-$lang-$short_name.hap
+# Use unsigned hap
+mv $in_file ./haps/sherpa-onnx-${SHERPA_ONNX_VERSION}-vad_asr-$lang-$short_name.hap
+# mv $out_file ./haps/sherpa-onnx-${SHERPA_ONNX_VERSION}-vad_asr-$lang-$short_name.hap
 
 ls -lh haps
 
