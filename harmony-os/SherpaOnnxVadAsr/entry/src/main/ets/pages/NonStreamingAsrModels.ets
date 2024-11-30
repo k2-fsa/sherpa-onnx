@@ -229,9 +229,11 @@ export function getOfflineModelConfig(type: number): OfflineModelConfig {
 
       break;
     }
+    default: {
+      console.log(`Please specify a supported type. Given type ${type}`);
+    }
   }
 
-  console.log(`Please specify a supported type. Given type ${type}`);
 
   return c;
 }

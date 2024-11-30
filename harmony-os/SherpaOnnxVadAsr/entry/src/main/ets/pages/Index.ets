@@ -3,6 +3,12 @@ import worker, { MessageEvents } from '@ohos.worker';
 import { BusinessError } from '@kit.BasicServicesKit';
 import { picker } from '@kit.CoreFileKit';
 
+import { abilityAccessCtrl, bundleManager, common, Permissions } from '@kit.AbilityKit';
+import {allAllowed, requestPermissions} from './Permission'
+import { audio } from '@kit.AudioKit';
+
+
+
 
 @Entry
 @Component
@@ -17,7 +23,61 @@ struct Index {
   private workerInstance?: worker.ThreadWorker
   private readonly scriptURL: string = 'entry/ets/workers/NonStreamingAsrWithVadWorker.ets'
 
-  aboutToAppear(): void {
+  private mic?: audio.AudioCapturer;
+  @State micStarted: boolean = false;
+
+  private micCallback =  (buffer: ArrayBuffer) => {
+    const view : Int16Array= new Int16Array(buffer);
+    const minValue = Math.min(...view);
+    const maxValue = Math.max(...view);
+    console.log(`micCallback: ${view.length} samples, ${minValue}, ${maxValue}`);
+  }
+
+  async initMic() {
+    const permissions:  Permissions[] = ["ohos.permission.MICROPHONE"];
+    let allowed: boolean = await allAllowed(permissions);
+    if (!allowed) {
+      requestPermissions(permissions);
+      console.log("request to access the microphone");
+
+      allowed = await allAllowed(permissions);
+      if (!allowed) {
+        console.error('failed to get microphone permission');
+        return;
+      }
+    } else {
+      console.log("allowed to access microphone");
+    }
+
+    const audioStreamInfo: audio.AudioStreamInfo = {
+      samplingRate: audio.AudioSamplingRate.SAMPLE_RATE_48000,
+      channels: audio.AudioChannel.CHANNEL_1,
+      sampleFormat: audio.AudioSampleFormat.SAMPLE_FORMAT_S16LE,
+      encodingType: audio.AudioEncodingType.ENCODING_TYPE_RAW,
+    };
+
+    const audioCapturerInfo: audio.AudioCapturerInfo = {
+      source: audio.SourceType.SOURCE_TYPE_MIC,
+      capturerFlags: 0
+    };
+
+    const audioCapturerOptions: audio.AudioCapturerOptions = {
+      streamInfo: audioStreamInfo,
+      capturerInfo: audioCapturerInfo
+
+    };
+    audio.createAudioCapturer(audioCapturerOptions, (err, data)=>{
+      if (err) {
+        console.error(`error code is ${err.code}, error message is ${err.message}`);
+      } else {
+        console.info(`init mic successfully`);
+        this.mic = data;
+        this.mic.on('readData', this.micCallback);
+      }
+    });
+  }
+
+  async aboutToAppear() {
     this.workerInstance = new worker.ThreadWorker(this.scriptURL, {
       name: 'NonStreaming ASR worker'
     });
@@ -56,6 +116,8 @@ struct Index {
     const context = getContext();
     this.workerInstance.postMessage({ msgType: 'init-vad', context });
     this.workerInstance.postMessage({ msgType: 'init-non-streaming-asr', context });
+
+    await this.initMic();
   }
 
   @Builder
@@ -146,7 +208,21 @@ struct Index {
           Column() {
             Text(this.message)
               .fontSize(50)
-              .fontWeight(FontWeight.Bold);
+              .fontWeight(FontWeight.Bold)
+              .onClick(()=>{
+                console.log('clicked');
+                if (this.mic) {
+                  if (this.micStarted) {
+                    this.mic.stop();
+                    this.micStarted = false;
+                    console.log('mic stopped');
+                  } else {
+                    this.mic.start();
+                    this.micStarted = true;
+                    console.log('mic started');
+                  }
+                }
+              });
           }
         }
         .tabBar(this.TabBuilder('From mic', 1, $r('app.media.ic_public_input_voice'),
