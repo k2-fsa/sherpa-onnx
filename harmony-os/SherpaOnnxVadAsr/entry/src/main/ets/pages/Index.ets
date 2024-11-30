@@ -15,7 +15,7 @@ struct Index {
   @State resultForFile: string = '';
   @State progressForFile: number = 0;
   @State selectFileBtnEnabled: boolean = false;
-  @State lang: string = 'English';
+  @State lang: string = '中英粤日韩';
   @State resultForMic: string = '';
   @State micStarted: boolean = false;
   @State message: string = 'Start recording';
@@ -52,6 +52,7 @@ struct Index {
       allowed = await allAllowed(permissions);
       if (!allowed) {
         console.error('failed to get microphone permission');
+        this.resultForMic = "Failed to get microphone permission. Please retry";
         return;
       }
     } else {
@@ -78,6 +79,7 @@ struct Index {
     audio.createAudioCapturer(audioCapturerOptions, (err, data) => {
       if (err) {
         console.error(`error code is ${err.code}, error message is ${err.message}`);
+        this.resultForMic = 'Failed to init microphone';
       } else {
         console.info(`init mic successfully`);
         this.mic = data;
