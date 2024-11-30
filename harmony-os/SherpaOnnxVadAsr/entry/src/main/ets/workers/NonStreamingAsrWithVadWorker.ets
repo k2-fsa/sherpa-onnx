@@ -18,6 +18,7 @@ const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
 
 let recognizer: OfflineRecognizer;
 let vad: Vad; // vad for decoding files
+let vadMic: Vad; // vad for mic
 
 function initVad(context: Context): Vad {
   let mgr = context.resourceManager;
@@ -73,7 +74,7 @@ interface Wave {
   sampleRate: number;
 }
 
-function decode(filename: string): string {
+function decodeFile(filename: string): string {
   vad.reset();
 
   const fp = fileIo.openSync(filename);
@@ -130,6 +131,47 @@ function decode(filename: string): string {
   return resultList.join('\n\n');
 }
 
+function decodeMic(samples: Float32Array) {
+  const resultList: string[] = [];
+
+  const windowSize: number = vad.config.sileroVad.windowSize;
+  for (let i = 0; i < samples.length; i += windowSize) {
+    const thisWindow: Float32Array = samples.subarray(i, i + windowSize)
+    vad.acceptWaveform(thisWindow);
+    if (i + windowSize >= samples.length) {
+      vad.flush();
+    }
+    while (!vad.isEmpty()) {
+      const segment: SpeechSegment = vad.front();
+      const _startTime: number = (segment.start / 16000);
+      const _endTime: number = _startTime + segment.samples.length / 16000;
+
+      if (_endTime - _startTime < 0.2) {
+        vad.pop();
+        continue;
+      }
+
+      const startTime: string = _startTime.toFixed(2);
+      const endTime: string = _endTime.toFixed(2);
+
+      const stream: OfflineStream = recognizer.createStream();
+      stream.acceptWaveform({ samples: segment.samples, sampleRate: 16000 });
+      recognizer.decode(stream);
+      const result: OnlineRecognizerResult = recognizer.getResult(stream);
+
+      const text: string = `${startTime} -- ${endTime} ${result.text}`
+      resultList.push(text);
+      console.log(`partial result ${text}`);
+
+      workerPort.postMessage({ 'msgType': 'non-streaming-asr-vad-mic-partial', text });
+
+      vad.pop();
+    }
+  }
+
+  return resultList.join('\n\n');
+}
+
 /**
  * Defines the event handler to be called when the worker thread receives a message sent by the host thread.
  * The event handler is executed in the worker thread.
@@ -146,6 +188,13 @@ workerPort.onmessage = (e: MessageEvents) => {
     workerPort.postMessage({ 'msgType': 'init-vad-done' });
   }
 
+  if (msgType == 'init-vad-mic' && !vadMic) {
+    const context = e.data['context'] as Context;
+    vadMic = initVad(context);
+    console.log('init vad mic done');
+    workerPort.postMessage({ 'msgType': 'init-vad-mic-done' });
+  }
+
   if (msgType == 'init-non-streaming-asr' && !recognizer) {
     const context = e.data['context'] as Context;
     recognizer = initNonStreamingAsr(context);
@@ -157,13 +206,24 @@ workerPort.onmessage = (e: MessageEvents) => {
     const filename = e.data['filename'] as string;
     console.log(`decoding ${filename}`);
     try {
-      const text = decode(filename);
+      const text = decodeFile(filename);
       workerPort.postMessage({ msgType: 'non-streaming-asr-vad-decode-done', text });
     } catch (e) {
       workerPort.postMessage({ msgType: 'non-streaming-asr-vad-decode-error', text: `Failed to decode ${filename}` });
     }
 
     workerPort.postMessage({ 'msgType': 'non-streaming-asr-vad-decode-progress', progress: 100 });
+  }
+
+  if (msgType == 'non-streaming-asr-vad-mic') {
+    const samples: Float32Array = e.data['samples'] as Float32Array;
+    vadMic.reset();
+    try {
+      const text = decodeMic(samples);
+      workerPort.postMessage({ msgType: 'non-streaming-asr-vad-mic-done', text });
+    } catch (e) {
+      workerPort.postMessage({ msgType: 'non-streaming-asr-vad-mic-error', text: `Failed to decode` });
+    }
   }
 }
 

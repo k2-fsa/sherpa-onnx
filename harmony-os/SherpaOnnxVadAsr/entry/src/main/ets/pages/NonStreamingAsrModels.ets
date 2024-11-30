@@ -234,6 +234,5 @@ export function getOfflineModelConfig(type: number): OfflineModelConfig {
     }
   }
 
-
   return c;
 }
