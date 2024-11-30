@@ -15,7 +15,7 @@ struct Index {
   @State resultForFile: string = '';
   @State progressForFile: number = 0;
   @State selectFileBtnEnabled: boolean = false;
-  @State lang: string = '中英粤日韩';
+  @State lang: string = 'English';
   @State resultForMic: string = '';
   @State micStarted: boolean = false;
   @State message: string = 'Start recording';
@@ -107,6 +107,7 @@ struct Index {
 
       if (msgType == 'init-non-streaming-asr-done') {
         this.selectFileBtnEnabled = true;
+        this.resultForFile = `Initializing done.\n\nPlease select a wave file of 16kHz in language ${this.lang}`;
       }
 
       if (msgType == 'non-streaming-asr-vad-decode-done') {
@@ -145,6 +146,7 @@ struct Index {
     }
 
     const context = getContext();
+    this.resultForFile = 'Initializing models';
     this.workerInstance.postMessage({ msgType: 'init-vad', context });
     this.workerInstance.postMessage({ msgType: 'init-non-streaming-asr', context });
 
@@ -179,7 +181,7 @@ struct Index {
               .lineHeight(41)
               .fontWeight(500)
 
-            Button('Select .wav file ')
+            Button('Select .wav file (16kHz) ')
               .enabled(this.selectFileBtnEnabled)
               .fontSize(13)
               .width(296)

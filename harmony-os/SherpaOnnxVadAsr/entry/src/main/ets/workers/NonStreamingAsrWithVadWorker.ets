@@ -13,6 +13,7 @@ import {
 import { Context } from '@kit.AbilityKit';
 import { fileIo } from '@kit.CoreFileKit';
 import { getOfflineModelConfig } from '../pages/NonStreamingAsrModels';
+import { BusinessError } from '@kit.BasicServicesKit';
 
 const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
 
@@ -84,6 +85,9 @@ function decodeFile(filename: string): string {
   const data: Uint8Array = new Uint8Array(arrayBuffer);
 
   const wave: Wave = readWaveFromBinary(data);
+  if (wave.sampleRate != 16000) {
+    return `the sample rate in ${filename} is not 16000Hz. Given: ${wave.sampleRate}Hz.\nPlease select a wav file of 16kHz.`;
+  }
 
   console.log(`sample rate ${wave.sampleRate}`);
   console.log(`samples length ${wave.samples.length}`);
