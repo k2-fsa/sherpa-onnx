@@ -46,8 +46,14 @@ struct Index {
     const permissions: Permissions[] = ["ohos.permission.MICROPHONE"];
     let allowed: boolean = await allAllowed(permissions);
     if (!allowed) {
-      requestPermissions(permissions);
       console.log("request to access the microphone");
+      const status: boolean = await requestPermissions(permissions);
+
+      if (!status) {
+        console.error('access to microphone is denied')
+        this.resultForMic = "Failed to get microphone permission. Please retry";
+        return;
+      }
 
       allowed = await allAllowed(permissions);
       if (!allowed) {
