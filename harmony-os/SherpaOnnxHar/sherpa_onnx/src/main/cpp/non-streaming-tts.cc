@@ -63,6 +63,17 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
 static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+#if __OHOS__
+  // the last argument is the NativeResourceManager
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+#else
   if (info.Length() != 1) {
     std::ostringstream os;
     os << "Expect only 1 argument. Given: " << info.Length();
@@ -71,6 +82,7 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
 
     return {};
   }
+#endif
 
   if (!info[0].IsObject()) {
     Napi::TypeError::New(env, "Expect an object as the argument")
@@ -90,7 +102,15 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_num_sentences, maxNumSentences);
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
 
+#if __OHOS__
+  std::unique_ptr<NativeResourceManager,
+                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+          &OH_ResourceManager_ReleaseNativeResourceManager);
+  SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTtsOHOS(&c, mgr.get());
+#else
   SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&c);
+#endif
 
   if (c.model.vits.model) {
     delete[] c.model.vits.model;

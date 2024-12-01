@@ -56,7 +56,7 @@ jobs:
           key: ${{ matrix.os }}
 
       # See https://github.com/gcarreno/setup-lazarus
-      - uses: gcarreno/setup-lazarus@v3
+      - uses: gcarreno/setup-lazarus@v3.3.1
         with:
           lazarus-version: "stable"
           with-cache: true

@@ -70,8 +70,10 @@ static void CircularBufferPushWrapper(const Napi::CallbackInfo &info) {
 
 #if __OHOS__
   // Note(fangjun): Normally, we don't need to divied it by sizeof(float).
-  // However, data.ElementLength() here returns number of bytes, not number of elements.
-  SherpaOnnxCircularBufferPush(buf, data.Data(), data.ElementLength() / sizeof(float));
+  // However, data.ElementLength() here returns number of bytes, not number of
+  // elements.
+  SherpaOnnxCircularBufferPush(buf, data.Data(),
+                               data.ElementLength() / sizeof(float));
 #else
   SherpaOnnxCircularBufferPush(buf, data.Data(), data.ElementLength());
 #endif
@@ -353,10 +355,14 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
   float buffer_size_in_seconds = info[1].As<Napi::Number>().FloatValue();
 
 #if __OHOS__
-  std::unique_ptr<NativeResourceManager, decltype(&OH_ResourceManager_ReleaseNativeResourceManager)> mgr(OH_ResourceManager_InitNativeResourceManager(env, info[2]), &OH_ResourceManager_ReleaseNativeResourceManager);
+  std::unique_ptr<NativeResourceManager,
+                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[2]),
+          &OH_ResourceManager_ReleaseNativeResourceManager);
 
   SherpaOnnxVoiceActivityDetector *vad =
-      SherpaOnnxCreateVoiceActivityDetectorOHOS(&c, buffer_size_in_seconds, mgr.get());
+      SherpaOnnxCreateVoiceActivityDetectorOHOS(&c, buffer_size_in_seconds,
+                                                mgr.get());
 #else
   SherpaOnnxVoiceActivityDetector *vad =
       SherpaOnnxCreateVoiceActivityDetector(&c, buffer_size_in_seconds);
@@ -410,9 +416,10 @@ static void VoiceActivityDetectorAcceptWaveformWrapper(
   Napi::Float32Array samples = info[1].As<Napi::Float32Array>();
 
 #if __OHOS__
-  // Note(fangjun): For unknown reasons, we need to use `/sizeof(float)` here for Huawei
-  SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, samples.Data(),
-                                                samples.ElementLength() / sizeof(float));
+  // Note(fangjun): For unknown reasons, we need to use `/sizeof(float)` here
+  // for Huawei
+  SherpaOnnxVoiceActivityDetectorAcceptWaveform(
+      vad, samples.Data(), samples.ElementLength() / sizeof(float));
 #else
   SherpaOnnxVoiceActivityDetectorAcceptWaveform(vad, samples.Data(),
                                                 samples.ElementLength());

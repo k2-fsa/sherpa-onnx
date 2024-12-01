@@ -33,3 +33,8 @@ export const decodeOnlineStream: (handle: object, streamHandle: object) => void;
 export const isEndpoint: (handle: object, streamHandle: object) => boolean;
 export const reset: (handle: object, streamHandle: object) => void;
 export const getOnlineStreamResultAsJson: (handle: object, streamHandle: object) => string;
+
+export const createOfflineTts: (config: object, mgr?: object) => object;
+export const getOfflineTtsNumSpeakers: (handle: object) => number;
+export const getOfflineTtsSampleRate: (handle: object) => number;
+export const offlineTtsGenerate: (handle: object, input: object) => object;

@@ -9,11 +9,6 @@
 #include <unordered_map>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-model-metadata.h"
 
@@ -24,11 +19,10 @@ class PiperPhonemizeLexicon : public OfflineTtsFrontend {
   PiperPhonemizeLexicon(const std::string &tokens, const std::string &data_dir,
                         const OfflineTtsVitsModelMetaData &meta_data);
 
-#if __ANDROID_API__ >= 9
-  PiperPhonemizeLexicon(AAssetManager *mgr, const std::string &tokens,
+  template <typename Manager>
+  PiperPhonemizeLexicon(Manager *mgr, const std::string &tokens,
                         const std::string &data_dir,
                         const OfflineTtsVitsModelMetaData &meta_data);
-#endif
 
   std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text, const std::string &voice = "") const override;

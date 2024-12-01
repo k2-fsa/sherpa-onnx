@@ -38,3 +38,12 @@ export {
   OnlineRecognizerResult,
   OnlineRecognizer,
 } from './src/main/ets/components/StreamingAsr';
+
+export {
+  OfflineTtsVitsModelConfig,
+  OfflineTtsModelConfig,
+  OfflineTtsConfig,
+  OfflineTts,
+  TtsOutput,
+  TtsInput,
+} from './src/main/ets/components/NonStreamingTts';

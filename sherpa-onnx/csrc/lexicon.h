@@ -13,11 +13,6 @@
 #include <unordered_set>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
 
 namespace sherpa_onnx {
@@ -31,11 +26,10 @@ class Lexicon : public OfflineTtsFrontend {
           const std::string &punctuations, const std::string &language,
           bool debug = false);
 
-#if __ANDROID_API__ >= 9
-  Lexicon(AAssetManager *mgr, const std::string &lexicon,
-          const std::string &tokens, const std::string &punctuations,
-          const std::string &language, bool debug = false);
-#endif
+  template <typename Manager>
+  Lexicon(Manager *mgr, const std::string &lexicon, const std::string &tokens,
+          const std::string &punctuations, const std::string &language,
+          bool debug = false);
 
   std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text, const std::string &voice = "") const override;

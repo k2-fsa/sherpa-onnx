@@ -79,7 +79,7 @@ export class OfflineModelConfig {
   public tokens: string = '';
   public numThreads: number = 1;
   public debug: boolean = false;
-  public provider: string = "cpu";
+  public provider: string = 'cpu';
   public modelType: string = '';
   public modelingUnit: string = "cjkchar";
   public bpeVocab: string = '';

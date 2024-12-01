@@ -11,14 +11,17 @@
 #include <mutex>  // NOLINT
 #include <sstream>
 #include <string>
+#include <strstream>
 #include <utility>
 #include <vector>
 
 #if __ANDROID_API__ >= 9
-#include <strstream>
-
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
 #endif
 
 #include "espeak-ng/speak_lib.h"
@@ -196,9 +199,9 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
   InitEspeak(data_dir);
 }
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 PiperPhonemizeLexicon::PiperPhonemizeLexicon(
-    AAssetManager *mgr, const std::string &tokens, const std::string &data_dir,
+    Manager *mgr, const std::string &tokens, const std::string &data_dir,
     const OfflineTtsVitsModelMetaData &meta_data)
     : meta_data_(meta_data) {
   {
@@ -212,7 +215,6 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
   // data_dir.
   InitEspeak(data_dir);
 }
-#endif
 
 std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string &voice /*= ""*/) const {
@@ -254,5 +256,17 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIds(
 
   return ans;
 }
+
+#if __ANDROID_API__ >= 9
+template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
+    AAssetManager *mgr, const std::string &tokens, const std::string &data_dir,
+    const OfflineTtsVitsModelMetaData &meta_data);
+#endif
+
+#if __OHOS__
+template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
+    NativeResourceManager *mgr, const std::string &tokens,
+    const std::string &data_dir, const OfflineTtsVitsModelMetaData &meta_data);
+#endif
 
 }  // namespace sherpa_onnx
