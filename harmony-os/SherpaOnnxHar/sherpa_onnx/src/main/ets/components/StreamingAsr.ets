@@ -52,7 +52,7 @@ export class OnlineModelConfig {
   public zipformer2_ctc: OnlineZipformer2CtcModelConfig = new OnlineZipformer2CtcModelConfig();
   public tokens: string = '';
   public numThreads: number = 1;
-  public provider: string = "cpu";
+  public provider: string = 'cpu';
   public debug: boolean = false;
   public modelType: string = '';
   public modelingUnit: string = "cjkchar";
@@ -67,7 +67,7 @@ export class OnlineCtcFstDecoderConfig {
 export class OnlineRecognizerConfig {
   public featConfig: FeatureConfig = new FeatureConfig();
   public modelConfig: OnlineModelConfig = new OnlineModelConfig();
-  public decodingMethod: string = "greedy_search";
+  public decodingMethod: string = 'greedy_search';
   public maxActivePaths: number = 4;
   public enableEndpoint: boolean = false;
   public rule1MinTrailingSilence: number = 2.4;
