@@ -211,7 +211,10 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   c.ctc_fst_decoder_config = GetCtcFstDecoderConfig(o);
 
 #if __OHOS__
-  std::unique_ptr<NativeResourceManager, decltype(&OH_ResourceManager_ReleaseNativeResourceManager)> mgr (OH_ResourceManager_InitNativeResourceManager(env, info[1]), &OH_ResourceManager_ReleaseNativeResourceManager);
+  std::unique_ptr<NativeResourceManager,
+                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+          &OH_ResourceManager_ReleaseNativeResourceManager);
 
   const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizerOHOS(&c, mgr.get());

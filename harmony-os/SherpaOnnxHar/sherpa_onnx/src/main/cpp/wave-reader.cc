@@ -102,10 +102,11 @@ static Napi::Object ReadWaveFromBinaryWrapper(const Napi::CallbackInfo &info) {
 
     return {};
   }
-    
+
   Napi::Uint8Array data = info[0].As<Napi::Uint8Array>();
   int32_t n = data.ElementLength();
-  const SherpaOnnxWave *wave = SherpaOnnxReadWaveFromBinaryData(reinterpret_cast<const char*>(data.Data()), n);
+  const SherpaOnnxWave *wave = SherpaOnnxReadWaveFromBinaryData(
+      reinterpret_cast<const char *>(data.Data()), n);
   if (!wave) {
     std::ostringstream os;
     os << "Failed to read wave";
@@ -113,7 +114,7 @@ static Napi::Object ReadWaveFromBinaryWrapper(const Napi::CallbackInfo &info) {
 
     return {};
   }
-    
+
   bool enable_external_buffer = true;
   if (info.Length() == 2) {
     if (info[1].IsBoolean()) {
@@ -165,7 +166,7 @@ static Napi::Object ReadWaveFromBinaryWrapper(const Napi::CallbackInfo &info) {
 void InitWaveReader(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "readWave"),
               Napi::Function::New(env, ReadWaveWrapper));
-    
+
   exports.Set(Napi::String::New(env, "readWaveFromBinary"),
-              Napi::Function::New(env, ReadWaveFromBinaryWrapper));  
+              Napi::Function::New(env, ReadWaveFromBinaryWrapper));
 }

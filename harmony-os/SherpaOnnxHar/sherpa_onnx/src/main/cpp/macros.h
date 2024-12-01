@@ -8,8 +8,8 @@
 #include <string>
 
 #if __OHOS__
-#include "rawfile/raw_file_manager.h"
 #include "hilog/log.h"
+#include "rawfile/raw_file_manager.h"
 
 #undef LOG_DOMAIN
 #undef LOG_TAG
