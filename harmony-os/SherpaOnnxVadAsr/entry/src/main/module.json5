@@ -54,9 +54,9 @@
         "reason": "$string:mic_reason",
         "usedScene": {
           "abilities": [
-            "FormAbility",
+            "EntryAbility",
           ],
-          "when": "always",
+          "when": "inuse",
         }
       }
     ]
