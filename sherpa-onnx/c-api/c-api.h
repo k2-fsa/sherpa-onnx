@@ -1558,6 +1558,9 @@ SHERPA_ONNX_API SherpaOnnxVoiceActivityDetector *
 SherpaOnnxCreateVoiceActivityDetectorOHOS(
     const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds,
     NativeResourceManager *mgr);
+
+SHERPA_ONNX_API SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
+    const SherpaOnnxOfflineTtsConfig *config, NativeResourceManager *mgr);
 #endif
 
 #if defined(__GNUC__)

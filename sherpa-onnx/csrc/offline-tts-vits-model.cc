@@ -9,6 +9,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -26,8 +35,8 @@ class OfflineTtsVitsModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineTtsModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineTtsModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -35,7 +44,6 @@ class OfflineTtsVitsModel::Impl {
     auto buf = ReadFile(mgr, config.vits.model);
     Init(buf.data(), buf.size());
   }
-#endif
 
   Ort::Value Run(Ort::Value x, int64_t sid, float speed) {
     if (meta_data_.is_piper || meta_data_.is_coqui) {
@@ -336,11 +344,10 @@ class OfflineTtsVitsModel::Impl {
 OfflineTtsVitsModel::OfflineTtsVitsModel(const OfflineTtsModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
-OfflineTtsVitsModel::OfflineTtsVitsModel(AAssetManager *mgr,
+template <typename Manager>
+OfflineTtsVitsModel::OfflineTtsVitsModel(Manager *mgr,
                                          const OfflineTtsModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OfflineTtsVitsModel::~OfflineTtsVitsModel() = default;
 
@@ -358,5 +365,15 @@ Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, Ort::Value tones,
 const OfflineTtsVitsModelMetaData &OfflineTtsVitsModel::GetMetaData() const {
   return impl_->GetMetaData();
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineTtsVitsModel::OfflineTtsVitsModel(
+    AAssetManager *mgr, const OfflineTtsModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineTtsVitsModel::OfflineTtsVitsModel(
+    NativeResourceManager *mgr, const OfflineTtsModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

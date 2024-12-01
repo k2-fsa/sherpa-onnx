@@ -485,9 +485,9 @@ static sherpa_onnx::OfflineRecognizerConfig GetOfflineRecognizerConfig(
 
   if (config->model_config.debug) {
 #if __OHOS__
-    SHERPA_ONNX_LOGE("%{public}s", recognizer_config.ToString().c_str());
+    SHERPA_ONNX_LOGE("%{public}s\n", recognizer_config.ToString().c_str());
 #else
-    SHERPA_ONNX_LOGE("%s", recognizer_config.ToString().c_str());
+    SHERPA_ONNX_LOGE("%s\n", recognizer_config.ToString().c_str());
 #endif
   }
 
@@ -967,9 +967,9 @@ sherpa_onnx::VadModelConfig GetVadModelConfig(
 
   if (vad_config.debug) {
 #if __OHOS__
-    SHERPA_ONNX_LOGE("%{public}s", vad_config.ToString().c_str());
+    SHERPA_ONNX_LOGE("%{public}s\n", vad_config.ToString().c_str());
 #else
-    SHERPA_ONNX_LOGE("%s", vad_config.ToString().c_str());
+    SHERPA_ONNX_LOGE("%s\n", vad_config.ToString().c_str());
 #endif
   }
 
@@ -1053,7 +1053,7 @@ struct SherpaOnnxOfflineTts {
   std::unique_ptr<sherpa_onnx::OfflineTts> impl;
 };
 
-SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
+static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
     const SherpaOnnxOfflineTtsConfig *config) {
   sherpa_onnx::OfflineTtsConfig tts_config;
 
@@ -1084,8 +1084,19 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
   tts_config.max_num_sentences = SHERPA_ONNX_OR(config->max_num_sentences, 2);
 
   if (tts_config.model.debug) {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s\n", tts_config.ToString().c_str());
+#else
     SHERPA_ONNX_LOGE("%s\n", tts_config.ToString().c_str());
+#endif
   }
+
+  return tts_config;
+}
+
+SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
+    const SherpaOnnxOfflineTtsConfig *config) {
+  auto tts_config = GetOfflineTtsConfig(config);
 
   if (!tts_config.Validate()) {
     SHERPA_ONNX_LOGE("Errors in config");
@@ -1908,6 +1919,7 @@ SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
 
   return ans;
 }
+#endif
 
 #ifdef __OHOS__
 
@@ -1959,6 +1971,23 @@ SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetectorOHOS(
 
   return p;
 }
-#endif
 
-#endif
+#if SHERPA_ONNX_ENABLE_TTS == 1
+SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
+    const SherpaOnnxOfflineTtsConfig *config, NativeResourceManager *mgr) {
+  if (!mgr) {
+    return SherpaOnnxCreateOfflineTts(config);
+  }
+
+  auto tts_config = GetOfflineTtsConfig(config);
+
+  SherpaOnnxOfflineTts *tts = new SherpaOnnxOfflineTts;
+
+  tts->impl = std::make_unique<sherpa_onnx::OfflineTts>(mgr, tts_config);
+
+  return tts;
+}
+
+#endif  // #if SHERPA_ONNX_ENABLE_TTS == 1
+
+#endif  // #ifdef __OHOS__

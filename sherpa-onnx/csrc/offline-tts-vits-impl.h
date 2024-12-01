@@ -6,15 +6,9 @@
 
 #include <memory>
 #include <string>
+#include <strstream>
 #include <utility>
 #include <vector>
-
-#if __ANDROID_API__ >= 9
-#include <strstream>
-
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
 
 #include "fst/extensions/far/far.h"
 #include "kaldifst/csrc/kaldi-fst-io.h"
@@ -82,8 +76,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     }
   }
 
-#if __ANDROID_API__ >= 9
-  OfflineTtsVitsImpl(AAssetManager *mgr, const OfflineTtsConfig &config)
+  template <typename Manager>
+  OfflineTtsVitsImpl(Manager *mgr, const OfflineTtsConfig &config)
       : config_(config),
         model_(std::make_unique<OfflineTtsVitsModel>(mgr, config.model)) {
     InitFrontend(mgr);
@@ -130,7 +124,6 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       }    // for (const auto &f : files)
     }      // if (!config.rule_fars.empty())
   }
-#endif
 
   int32_t SampleRate() const override {
     return model_->GetMetaData().sample_rate;
@@ -297,8 +290,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   }
 
  private:
-#if __ANDROID_API__ >= 9
-  void InitFrontend(AAssetManager *mgr) {
+  template <typename Manager>
+  void InitFrontend(Manager *mgr) {
     const auto &meta_data = model_->GetMetaData();
 
     if (meta_data.frontend == "characters") {
@@ -323,7 +316,6 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
           meta_data.punctuations, meta_data.language, config_.model.debug);
     }
   }
-#endif
 
   void InitFrontend() {
     const auto &meta_data = model_->GetMetaData();

@@ -7,17 +7,19 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <memory>
 #include <sstream>
+#include <strstream>
 #include <utility>
 
 #if __ANDROID_API__ >= 9
-#include <strstream>
-
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
 #endif
 
-#include <memory>
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -110,8 +112,8 @@ Lexicon::Lexicon(const std::string &lexicon, const std::string &tokens,
   InitPunctuations(punctuations);
 }
 
-#if __ANDROID_API__ >= 9
-Lexicon::Lexicon(AAssetManager *mgr, const std::string &lexicon,
+template <typename Manager>
+Lexicon::Lexicon(Manager *mgr, const std::string &lexicon,
                  const std::string &tokens, const std::string &punctuations,
                  const std::string &language, bool debug /*= false*/
                  )
@@ -132,7 +134,6 @@ Lexicon::Lexicon(AAssetManager *mgr, const std::string &lexicon,
 
   InitPunctuations(punctuations);
 }
-#endif
 
 std::vector<TokenIDs> Lexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*voice*/ /*= ""*/) const {
@@ -370,5 +371,19 @@ void Lexicon::InitPunctuations(const std::string &punctuations) {
     punctuations_.insert(std::move(s));
   }
 }
+
+#if __ANDROID_API__ >= 9
+template Lexicon::Lexicon(AAssetManager *mgr, const std::string &lexicon,
+                          const std::string &tokens,
+                          const std::string &punctuations,
+                          const std::string &language, bool debug = false);
+#endif
+
+#if __OHOS__
+template Lexicon::Lexicon(NativeResourceManager *mgr,
+                          const std::string &lexicon, const std::string &tokens,
+                          const std::string &punctuations,
+                          const std::string &language, bool debug = false);
+#endif
 
 }  // namespace sherpa_onnx
