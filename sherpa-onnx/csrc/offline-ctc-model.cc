@@ -136,7 +136,6 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
 
   switch (model_type) {
     case ModelType::kEncDecCTCModelBPE:
-      return std::make_unique<OfflineNemoEncDecCtcModel>(config);
     case ModelType::kEncDecCTCModel:
       return std::make_unique<OfflineNemoEncDecCtcModel>(config);
     case ModelType::kEncDecHybridRNNTCTCBPEModel:
@@ -187,7 +186,6 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
 
   switch (model_type) {
     case ModelType::kEncDecCTCModelBPE:
-      return std::make_unique<OfflineNemoEncDecCtcModel>(mgr, config);
     case ModelType::kEncDecCTCModel:
       return std::make_unique<OfflineNemoEncDecCtcModel>(mgr, config);
     case ModelType::kEncDecHybridRNNTCTCBPEModel:
