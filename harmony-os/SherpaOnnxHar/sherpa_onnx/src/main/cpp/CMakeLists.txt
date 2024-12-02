@@ -46,6 +46,7 @@ add_library(sherpa_onnx SHARED
   speaker-identification.cc
   spoken-language-identification.cc
   streaming-asr.cc
+  utils.cc
   vad.cc
   wave-reader.cc
   wave-writer.cc

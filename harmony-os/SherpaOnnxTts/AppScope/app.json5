@@ -1,7 +1,7 @@
 {
   "app": {
     "bundleName": "com.k2fsa.sherpa.onnx.tts",
-    "vendor": "example",
+    "vendor": "next-gen Kaldi",
     "versionCode": 1000000,
     "versionName": "1.0.0",
     "icon": "$media:app_icon",
