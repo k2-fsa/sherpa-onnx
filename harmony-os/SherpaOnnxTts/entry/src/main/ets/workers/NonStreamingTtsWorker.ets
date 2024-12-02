@@ -8,6 +8,7 @@ import { buffer } from '@kit.ArkTS';
 const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
 
 let tts: OfflineTts;
+let cancelled = false;
 
 function mkdir(context: Context, parts: string[]) {
   const path = parts.join('/');
@@ -192,6 +193,13 @@ function initTts(context: Context): OfflineTts {
   return new OfflineTts(config, context.resourceManager);
 }
 
+function callback(samples: Float32Array): number {
+  console.log(`here called: ${samples} samples`);
+  // 0 means to stop generating in C++
+  // 1 means to continue generating in C++
+  return cancelled? 0 : 1;
+}
+
 /**
  * Defines the event handler to be called when the worker thread receives a message sent by the host thread.
  * The event handler is executed in the worker thread.
@@ -214,15 +222,11 @@ workerPort.onmessage = (e: MessageEvents) => {
     input.text = text;
     input.sid = 0;
     input.speed = 1.0;
+    input.callback = callback;
     const ttsOutput: TtsOutput = tts.generate(input);
     console.log(`sampleRate: ${ttsOutput.sampleRate}`);
     console.log(`num samples: ${ttsOutput.samples.length}`);
 
-    let sum = 0;
-    for (const s of ttsOutput.samples) {
-      sum += s;
-    }
-    console.log(`sum is ${sum}`);
     workerPort.postMessage({
       'msgType': 'tts-generate-done',
       samples: Float32Array.from(ttsOutput.samples),

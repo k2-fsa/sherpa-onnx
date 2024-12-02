@@ -9,6 +9,12 @@
 #include "napi.h"    // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 
+/*
+notes:
+
+(1) ThreadSafeFunction https://github.com/nodejs/node-addon-api/blob/main/doc/threadsafe_function.md
+*/
+
 static SherpaOnnxOfflineTtsVitsModelConfig GetOfflineTtsVitsModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineTtsVitsModelConfig c;
@@ -218,7 +224,7 @@ static Napi::Object OfflineTtsGenerateWrapper(const Napi::CallbackInfo &info) {
 
   if (info.Length() != 2) {
     std::ostringstream os;
-    os << "Expect only 1 argument. Given: " << info.Length();
+    os << "Expect only 2 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -297,9 +303,34 @@ static Napi::Object OfflineTtsGenerateWrapper(const Napi::CallbackInfo &info) {
   std::string text = _text.Utf8Value();
   int32_t sid = obj.Get("sid").As<Napi::Number>().Int32Value();
   float speed = obj.Get("speed").As<Napi::Number>().FloatValue();
+    
+  const SherpaOnnxGeneratedAudio *audio;
+  if (obj.Has("callback") && obj.Get("callback").IsFunction()) {
+    Napi::Function cb = obj.Get("callback").As<Napi::Function>();
+        struct MyCallbackArg {
+            Napi::Env* penv;
+            Napi::Function* pcb;
+        };
+        
+    MyCallbackArg arg = {&env, &cb};
+        
+    auto callback = [](const float* samples, int32_t n, void*arg)->int {
+            auto parg = reinterpret_cast<MyCallbackArg*>(arg);
+            
+    Napi::Float32Array float32Array =
+        Napi::Float32Array::New(*parg->penv, n);
 
-  const SherpaOnnxGeneratedAudio *audio =
-      SherpaOnnxOfflineTtsGenerate(tts, text.c_str(), sid, speed);
+    std::copy(samples, samples + n, float32Array.Data());
+                
+        parg->pcb->Call({float32Array});
+        return 1;
+    };
+    audio = SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(tts, text.c_str(), sid, speed, callback, &arg);
+  } else {
+    audio = SherpaOnnxOfflineTtsGenerate(tts, text.c_str(), sid, speed);
+  }
+
+      
 
   if (enable_external_buffer) {
     Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(

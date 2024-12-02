@@ -16,14 +16,14 @@ export class OfflineTtsVitsModelConfig {
   public lengthScale: number = 1.0;
 }
 
-export class OfflineTtsModelConfig{
+export class OfflineTtsModelConfig {
   public vits: OfflineTtsVitsModelConfig = new OfflineTtsVitsModelConfig();
   public numThreads: number = 1;
   public debug: boolean = false;
   public provider: string = 'cpu';
 }
 
-export class OfflineTtsConfig{
+export class OfflineTtsConfig {
   public model: OfflineTtsModelConfig = new OfflineTtsModelConfig();
   public ruleFsts: string = '';
   public ruleFars: string = '';
@@ -39,13 +39,15 @@ export class TtsInput {
   public text: string = '';
   public sid: number = 0;
   public speed: number = 1.0;
+  public callback?: (samples: Float32Array) => number;
 }
 
 export class OfflineTts {
-  private handle: object;
   public config: OfflineTtsConfig;
   public numSpeakers: number;
   public sampleRate: number;
+  private handle: object;
+
   constructor(config: OfflineTtsConfig, mgr?: object) {
     this.handle = createOfflineTts(config, mgr);
     this.config = config;
