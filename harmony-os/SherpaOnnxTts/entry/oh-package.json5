@@ -7,7 +7,7 @@
   "license": "",
   "dependencies": {
     // "sherpa_onnx": "1.10.32",
-    "sherpa_onnx": "file:./sherpa_onnx.har"
+    "sherpa_onnx": "file:./sherpa_onnx_4.har"
   }
 }
 

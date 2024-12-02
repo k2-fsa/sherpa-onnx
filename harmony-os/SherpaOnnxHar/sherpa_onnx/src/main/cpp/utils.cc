@@ -5,37 +5,36 @@
 #include <string>
 #include <vector>
 
+#include "macros.h"
 #include "napi.h"  // NOLINT
-#include "rawfile/raw_file_manager.h"
 
-static std::vector<std::string> GetFilenames(NativeResourceManager* mgr, const std::string& d, bool is_top = true) {
-                // OH_LOG_INFO(LOG_APP, "getting %{public}s", d.c_str());
- std::unique_ptr< RawDir, decltype(&OH_ResourceManager_CloseRawDir)> raw_dir (OH_ResourceManager_OpenRawDir(mgr, d.c_str()), &OH_ResourceManager_CloseRawDir);
- int count = OH_ResourceManager_GetRawFileCount(raw_dir.get());
- std::vector<std::string> ans;
- ans.reserve(count);
-    for (int32_t i = 0; i < count; ++i) {
-        std::string filename = OH_ResourceManager_GetRawFileName(raw_dir.get(), i);
-        // OH_LOG_INFO(LOG_APP, "f: %{public}s %{public}s",d.c_str(), filename.c_str());
-        bool is_dir = OH_ResourceManager_IsRawDir(mgr, d.empty() ?  filename.c_str(): (d+ "/" + filename).c_str());	
-        if (is_dir) {
-                //OH_LOG_INFO(LOG_APP, "  - is dir");
-            
-            auto files = GetFilenames(mgr, d.empty() ? filename : d + "/" + filename, false);
-            for (const auto& f: files) {
-                ans.push_back(filename + "/" + f);
-            }
-        } else {
-            ans.push_back(std::move(filename));
-        }
+static std::vector<std::string> GetFilenames(NativeResourceManager *mgr,
+                                             const std::string &d) {
+  std::unique_ptr<RawDir, decltype(&OH_ResourceManager_CloseRawDir)> raw_dir(
+      OH_ResourceManager_OpenRawDir(mgr, d.c_str()),
+      &OH_ResourceManager_CloseRawDir);
+  int count = OH_ResourceManager_GetRawFileCount(raw_dir.get());
+  std::vector<std::string> ans;
+  ans.reserve(count);
+  for (int32_t i = 0; i < count; ++i) {
+    std::string filename = OH_ResourceManager_GetRawFileName(raw_dir.get(), i);
+    bool is_dir = OH_ResourceManager_IsRawDir(
+        mgr, d.empty() ? filename.c_str() : (d + "/" + filename).c_str());
+    if (is_dir) {
+      auto files = GetFilenames(mgr, d.empty() ? filename : d + "/" + filename);
+      for (auto &f : files) {
+        ans.push_back(std::move(f));
+      }
+    } else {
+      if (d.empty()) {
+        ans.push_back(std::move(filename));
+      } else {
+        ans.push_back(d + "/" + filename);
+      }
     }
-    
-    if (is_top && !d.empty()) {
-        for (auto& f: ans) {
-            f = d + "/" + f;
-        }
-    }
-    return ans;
+  }
+
+  return ans;
 }
 
 static Napi::Array ListRawFileDir(const Napi::CallbackInfo &info) {

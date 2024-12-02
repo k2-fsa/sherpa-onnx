@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <iomanip>
 #include <memory>
 #include <sstream>
 #include <strstream>
@@ -159,17 +160,26 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsChinese(
   words = ProcessHeteronyms(words);
 
   if (debug_) {
-    fprintf(stderr, "Input text in string: %s\n", text.c_str());
-    fprintf(stderr, "Input text in bytes:");
+    std::ostringstream os;
+
+    os << "Input text in string: " << text << "\n";
+    os << "Input text in bytes:";
     for (uint8_t c : text) {
-      fprintf(stderr, " %02x", c);
+      os << " 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex
+         << c;
     }
-    fprintf(stderr, "\n");
-    fprintf(stderr, "After splitting to words:");
+    os << "\n";
+    os << "After splitting to words:";
     for (const auto &w : words) {
-      fprintf(stderr, " %s", w.c_str());
+      os << " " << w;
     }
-    fprintf(stderr, "\n");
+    os << "\n";
+
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
   }
 
   std::vector<TokenIDs> ans;
@@ -259,17 +269,26 @@ std::vector<TokenIDs> Lexicon::ConvertTextToTokenIdsNotChinese(
   std::vector<std::string> words = SplitUtf8(text);
 
   if (debug_) {
-    fprintf(stderr, "Input text (lowercase) in string: %s\n", text.c_str());
-    fprintf(stderr, "Input text in bytes:");
+    std::ostringstream os;
+
+    os << "Input text (lowercase) in string: " << text << "\n";
+    os << "Input text in bytes:";
     for (uint8_t c : text) {
-      fprintf(stderr, " %02x", c);
+      os << " 0x" << std::setfill('0') << std::setw(2) << std::right << std::hex
+         << c;
     }
-    fprintf(stderr, "\n");
-    fprintf(stderr, "After splitting to words:");
+    os << "\n";
+    os << "After splitting to words:";
     for (const auto &w : words) {
-      fprintf(stderr, " %s", w.c_str());
+      os << " " << w;
     }
-    fprintf(stderr, "\n");
+    os << "\n";
+
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
   }
 
   int32_t blank = token2id_.at(" ");

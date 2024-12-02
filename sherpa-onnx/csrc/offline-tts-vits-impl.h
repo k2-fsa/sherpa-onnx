@@ -40,7 +40,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       tn_list_.reserve(files.size());
       for (const auto &f : files) {
         if (config.model.debug) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("rule fst: %{public}s", f.c_str());
+#else
           SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
+#endif
         }
         tn_list_.push_back(std::make_unique<kaldifst::TextNormalizer>(f));
       }
@@ -57,7 +61,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
       for (const auto &f : files) {
         if (config.model.debug) {
+#if __OHOS__
           SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
+#else
+          SHERPA_ONNX_LOGE("rule far: %{public}s", f.c_str());
+#endif
         }
         std::unique_ptr<fst::FarReader<fst::StdArc>> reader(
             fst::FarReader<fst::StdArc>::Open(f));
@@ -88,7 +96,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       tn_list_.reserve(files.size());
       for (const auto &f : files) {
         if (config.model.debug) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("rule fst: %{public}s", f.c_str());
+#else
           SHERPA_ONNX_LOGE("rule fst: %s", f.c_str());
+#endif
         }
         auto buf = ReadFile(mgr, f);
         std::istrstream is(buf.data(), buf.size());
@@ -103,7 +115,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
       for (const auto &f : files) {
         if (config.model.debug) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("rule far: %{public}s", f.c_str());
+#else
           SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
+#endif
         }
 
         auto buf = ReadFile(mgr, f);
@@ -156,7 +172,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
     std::string text = _text;
     if (config_.model.debug) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Raw text: %{public}s", text.c_str());
+#else
       SHERPA_ONNX_LOGE("Raw text: %s", text.c_str());
+#endif
     }
 
     if (!tn_list_.empty()) {
@@ -226,10 +246,17 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     int32_t num_batches = x_size / batch_size;
 
     if (config_.model.debug) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE(
+          "Text is too long. Split it into %{public}d batches. batch size: "
+          "%{public}d. Number of sentences: %{public}d",
+          num_batches, batch_size, x_size);
+#else
       SHERPA_ONNX_LOGE(
           "Text is too long. Split it into %d batches. batch size: %d. Number "
           "of sentences: %d",
           num_batches, batch_size, x_size);
+#endif
     }
 
     GeneratedAudio ans;

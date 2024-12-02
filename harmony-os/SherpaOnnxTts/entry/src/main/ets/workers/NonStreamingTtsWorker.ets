@@ -2,7 +2,7 @@ import worker, { ThreadWorkerGlobalScope, MessageEvents, ErrorEvent } from '@oho
 
 import { fileIo as fs } from '@kit.CoreFileKit';
 
-import {OfflineTtsConfig, OfflineTts, listRawfileDir} from 'sherpa_onnx';
+import {OfflineTtsConfig, OfflineTts, listRawfileDir, TtsInput, TtsOutput} from 'sherpa_onnx';
 import { buffer } from '@kit.ArkTS';
 
 const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
@@ -25,14 +25,12 @@ function mkdir(context: Context, parts: string[]) {
     }
 
     fs.mkdirSync(d);
-    console.log(`created dir: ${d}`);
   }
 }
 
 function copyRawFileDirToSandbox(context: Context, srcDir: string) {
   let mgr = context.resourceManager;
   const allFiles: string[] = listRawfileDir(mgr, srcDir);
-  console.log(allFiles.join('\n'));
   for (const src of allFiles) {
     const parts: string[] = src.split('/');
     if (parts.length != 1) {
@@ -44,7 +42,6 @@ function copyRawFileDirToSandbox(context: Context, srcDir: string) {
 }
 
 function copyRawFileToSandbox(context: Context, src: string, dst: string) {
-  console.log(`copying ${src} to ${dst}`);
   // see https://blog.csdn.net/weixin_44640245/article/details/142634846
   // https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/rawfile-guidelines-V5
   let uint8Array: Uint8Array = context.resourceManager.getRawFileContentSync(src);
@@ -208,6 +205,28 @@ workerPort.onmessage = (e: MessageEvents) => {
     const context = e.data['context'] as Context;
     workerPort.postMessage({ 'msgType': 'init-tts-done' });
     tts = initTts(context);
+  }
+
+  if (msgType == 'tts-generate') {
+    const text = e.data['text'] as string;
+    console.log(`recevied text ${text}`);
+    const input: TtsInput = new TtsInput();
+    input.text = text;
+    input.sid = 0;
+    input.speed = 1.0;
+    const ttsOutput: TtsOutput = tts.generate(input);
+    console.log(`sampleRate: ${ttsOutput.sampleRate}`);
+    console.log(`num samples: ${ttsOutput.samples.length}`);
+
+    let sum = 0;
+    for (const s of ttsOutput.samples) {
+      sum += s;
+    }
+    console.log(`sum is ${sum}`);
+    workerPort.postMessage({
+      'msgType': 'tts-generate-done',
+      samples: Float32Array.from(ttsOutput.samples),
+      sampleRate: ttsOutput.sampleRate });
   }
 }
 
