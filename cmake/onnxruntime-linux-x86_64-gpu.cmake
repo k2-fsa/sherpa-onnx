@@ -21,7 +21,7 @@ endif()
 
 set(onnxruntime_URL  "https://github.com/microsoft/onnxruntime/releases/download/v1.16.3/onnxruntime-linux-x64-gpu-1.16.3.tgz")
 set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-x64-gpu-1.16.3.tgz")
-set(onnxruntime_HASH "SHA256=1261de176e8d9d4d2019f8fa8c732c6d11494f3c6e73168ab6d2cc0903f22551")
+set(onnxruntime_HASH "SHA256=bbdc33367c056029b3ac0c042cbca2236b8f59a3a53b4daf23432ef1d8bf52de")
 
 # If you don't have access to the Internet,
 # please download onnxruntime to one of the following locations.
