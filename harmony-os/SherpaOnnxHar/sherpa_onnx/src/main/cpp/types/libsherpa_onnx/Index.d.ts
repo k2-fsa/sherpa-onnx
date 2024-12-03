@@ -39,4 +39,11 @@ export const getOnlineStreamResultAsJson: (handle: object, streamHandle: object)
 export const createOfflineTts: (config: object, mgr?: object) => object;
 export const getOfflineTtsNumSpeakers: (handle: object) => number;
 export const getOfflineTtsSampleRate: (handle: object) => number;
-export const offlineTtsGenerate: (handle: object, input: object) => object;
+
+export type TtsOutput = {
+  samples: Float32Array;
+  sampleRate: number;
+};
+
+export const offlineTtsGenerate: (handle: object, input: object) => TtsOutput;
+export const offlineTtsGenerateAsync: (handle: object, input: object) => Promise<TtsOutput>;

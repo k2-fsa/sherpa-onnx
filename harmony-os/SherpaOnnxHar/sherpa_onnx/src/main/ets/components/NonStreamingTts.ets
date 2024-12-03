@@ -3,6 +3,7 @@ import {
   getOfflineTtsNumSpeakers,
   getOfflineTtsSampleRate,
   offlineTtsGenerate,
+  offlineTtsGenerateAsync,
 } from "libsherpa_onnx.so";
 
 export class OfflineTtsVitsModelConfig {
@@ -64,5 +65,9 @@ export class OfflineTts {
    */
   generate(input: TtsInput): TtsOutput {
     return offlineTtsGenerate(this.handle, input) as TtsOutput;
+  }
+
+  generateAsync(input: TtsInput): Promise<TtsOutput> {
+    return offlineTtsGenerateAsync(this.handle, input);
   }
 }

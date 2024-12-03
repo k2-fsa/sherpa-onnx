@@ -223,14 +223,18 @@ workerPort.onmessage = (e: MessageEvents) => {
     input.sid = 0;
     input.speed = 1.0;
     input.callback = callback;
-    const ttsOutput: TtsOutput = tts.generate(input);
-    console.log(`sampleRate: ${ttsOutput.sampleRate}`);
-    console.log(`num samples: ${ttsOutput.samples.length}`);
+    // const ttsOutput: TtsOutput = tts.generateAsync(input);
+    tts.generateAsync(input).then((ttsOutput: TtsOutput) => {
+      console.log(`sampleRate: ${ttsOutput.sampleRate}`);
+      console.log(`num samples: ${ttsOutput.samples.length}`);
 
-    workerPort.postMessage({
-      'msgType': 'tts-generate-done',
-      samples: Float32Array.from(ttsOutput.samples),
-      sampleRate: ttsOutput.sampleRate });
+      workerPort.postMessage({
+        'msgType': 'tts-generate-done',
+        samples: Float32Array.from(ttsOutput.samples),
+        sampleRate: ttsOutput.sampleRate });
+
+    });
+
   }
 }
 
