@@ -641,7 +641,11 @@ class NonStreamingServer:
         path: str,
         request_headers: websockets.Headers,
     ) -> Optional[Tuple[http.HTTPStatus, websockets.Headers, bytes]]:
-        if "sec-websocket-key" not in request_headers:
+        if "sec-websocket-key" not in (
+            request_headers.headers  # For new request_headers
+            if hasattr(request_headers, "headers")
+            else request_headers  # For old request_headers
+        ):
             # This is a normal HTTP request
             if path == "/":
                 path = "/index.html"
