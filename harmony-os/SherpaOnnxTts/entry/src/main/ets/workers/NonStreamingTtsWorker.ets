@@ -193,8 +193,18 @@ function initTts(context: Context): OfflineTts {
   return new OfflineTts(config, context.resourceManager);
 }
 
-function callback(samples: Float32Array): number {
-  console.log(`here called: ${samples} samples`);
+interface TtsCallbackData {
+  samples: Float32Array;
+  progress: number;
+}
+
+function callback(data: TtsCallbackData): number {
+  workerPort.postMessage({
+    'msgType': 'tts-generate-partial',
+    samples: Float32Array.from(data.samples),
+    progress: data.progress,
+  });
+
   // 0 means to stop generating in C++
   // 1 means to continue generating in C++
   return cancelled? 0 : 1;
@@ -211,8 +221,15 @@ workerPort.onmessage = (e: MessageEvents) => {
   console.log(`msg-type: ${msgType}`);
   if (msgType == 'init-tts' && !tts) {
     const context = e.data['context'] as Context;
-    workerPort.postMessage({ 'msgType': 'init-tts-done' });
     tts = initTts(context);
+    workerPort.postMessage({ 'msgType': 'init-tts-done',
+      sampleRate: tts.sampleRate,
+      numSpeakers: tts.numSpeakers,
+    });
+  }
+
+  if (msgType == 'tts-generate-cancel') {
+    cancelled = true;
   }
 
   if (msgType == 'tts-generate') {
@@ -223,15 +240,15 @@ workerPort.onmessage = (e: MessageEvents) => {
     input.sid = 0;
     input.speed = 1.0;
     input.callback = callback;
-    // const ttsOutput: TtsOutput = tts.generateAsync(input);
+
+    cancelled = false;
     tts.generateAsync(input).then((ttsOutput: TtsOutput) => {
       console.log(`sampleRate: ${ttsOutput.sampleRate}`);
-      console.log(`num samples: ${ttsOutput.samples.length}`);
 
       workerPort.postMessage({
         'msgType': 'tts-generate-done',
         samples: Float32Array.from(ttsOutput.samples),
-        sampleRate: ttsOutput.sampleRate });
+      });
 
     });
 

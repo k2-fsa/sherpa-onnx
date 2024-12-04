@@ -57,7 +57,6 @@ export class CircularBuffer {
 
   // samples is a float32 array
   push(samples: Float32Array) {
-    console.log(`here samples: ${samples}`);
     circularBufferPush(this.handle, samples);
   }
 

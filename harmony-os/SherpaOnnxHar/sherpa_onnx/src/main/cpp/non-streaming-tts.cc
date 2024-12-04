@@ -9,6 +9,7 @@
 #include "napi.h"   // NOLINT
 #include "sherpa-onnx/c-api/c-api.h"
 
+
 static SherpaOnnxOfflineTtsVitsModelConfig GetOfflineTtsVitsModelConfig(Napi::Object obj) {
     SherpaOnnxOfflineTtsVitsModelConfig c;
     memset(&c, 0, sizeof(c));
@@ -273,29 +274,7 @@ static Napi::Object OfflineTtsGenerateWrapper(const Napi::CallbackInfo &info) {
     float speed = obj.Get("speed").As<Napi::Number>().FloatValue();
 
     const SherpaOnnxGeneratedAudio *audio;
-    if (obj.Has("callback") && obj.Get("callback").IsFunction()) {
-        Napi::Function cb = obj.Get("callback").As<Napi::Function>();
-        struct MyCallbackArg {
-            Napi::Env *penv;
-            Napi::Function *pcb;
-        };
-
-        MyCallbackArg arg = {&env, &cb};
-
-        auto callback = [](const float *samples, int32_t n, void *arg) -> int {
-            auto parg = reinterpret_cast<MyCallbackArg *>(arg);
-
-            Napi::Float32Array float32Array = Napi::Float32Array::New(*parg->penv, n);
-
-            std::copy(samples, samples + n, float32Array.Data());
-
-            parg->pcb->Call({float32Array});
-            return 1;
-        };
-        audio = SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(tts, text.c_str(), sid, speed, callback, &arg);
-    } else {
-        audio = SherpaOnnxOfflineTtsGenerate(tts, text.c_str(), sid, speed);
-    }
+    audio = SherpaOnnxOfflineTtsGenerate(tts, text.c_str(), sid, speed);
 
     if (enable_external_buffer) {
         Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
@@ -326,61 +305,129 @@ static Napi::Object OfflineTtsGenerateWrapper(const Napi::CallbackInfo &info) {
     }
 }
 
+struct TtsCallbackData {
+    std::vector<float> samples;
+    float progress;
+    bool processed = false;
+    bool cancelled = false;
+};
+
+// see
+// https://github.com/nodejs/node-addon-examples/blob/main/src/6-threadsafe-function/typed_threadsafe_function/node-addon-api/clock.cc
+void InvokeJsCallback(Napi::Env env, Napi::Function callback, Napi::Reference<Napi::Value>* context,
+                           TtsCallbackData *data) {
+    if (env != nullptr) {
+        if (callback != nullptr) {
+            Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(env, sizeof(float) * data->samples.size());
+
+            Napi::Float32Array float32Array = Napi::Float32Array::New(env, data->samples.size(), arrayBuffer, 0);
+
+            std::copy(data->samples.begin(), data->samples.end(), float32Array.Data());
+
+            Napi::Object arg = Napi::Object::New(env);
+            arg.Set(Napi::String::New(env, "samples"), float32Array);
+            arg.Set(Napi::String::New(env, "progress"), data->progress);
+
+            auto v = callback.Call(context->Value(), {arg});
+            data->processed = true;
+            if (v.IsNumber() && v.As<Napi::Number>().Int32Value()) {
+                data->cancelled = false;
+            } else {
+                data->cancelled = true;
+            }
+        }
+    }
+}
+
+using TSFN = Napi::TypedThreadSafeFunction<Napi::Reference<Napi::Value>, TtsCallbackData, InvokeJsCallback>;
+
 class TtsGenerateWorker : public Napi::AsyncWorker {
 public:
-    TtsGenerateWorker(const Napi::Env &env, SherpaOnnxOfflineTts *tts, const std::string &text, float speed,
+    TtsGenerateWorker(const Napi::Env &env, TSFN tsfn, SherpaOnnxOfflineTts *tts, const std::string &text, float speed,
                       int32_t sid, bool use_external_buffer)
-        : Napi::AsyncWorker{env, "TtsGenerateWorker"}, deferred_(env), tts_(tts), text_(text), speed_(speed),
-          sid_(sid), use_external_buffer_(use_external_buffer) {}
+        :tsfn_(tsfn), Napi::AsyncWorker{env, "TtsGenerateWorker"}, deferred_(env), tts_(tts), text_(text), speed_(speed), sid_(sid),
+          use_external_buffer_(use_external_buffer) {}
 
     Napi::Promise Promise() { return deferred_.Promise(); }
+    
+    ~TtsGenerateWorker() {
+        OH_LOG_INFO(LOG_APP, "destroyed");
+        int i = 0;
+        for (auto d: data_list_) {
+            OH_LOG_INFO(LOG_APP, " %{public}d", i);
+            i++;
+            delete d;
+        }
+    }
 
 protected:
     void Execute() override {
-        audio_ = SherpaOnnxOfflineTtsGenerate(tts_, text_.c_str(), sid_, speed_);
-
+        auto callback = [] (const float* samples, int32_t n, float progress, void* arg)-> int32_t {
+            TtsGenerateWorker* _this = reinterpret_cast<TtsGenerateWorker*>(arg);
+            
+            for (auto d: _this->data_list_) {
+                if (d->cancelled) {
+                    OH_LOG_INFO(LOG_APP, "TtsGenerate is cancelled");
+                    return 0;
+                }
+            }
+            
+            auto data = new TtsCallbackData;
+            data->samples = std::vector<float>{samples, samples + n};
+            data->progress = progress;
+            _this->data_list_.push_back(data);
+            
+            _this->tsfn_.NonBlockingCall(data);
+            
+            return 1;
+        };
+        audio_ = SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(tts_, text_.c_str(), sid_, speed_, callback, this);
+        
+        tsfn_.Release();
     }
 
-     void OnOK() override {
-        
-        Napi::Env env = deferred_.Env(); 
+    void OnOK() override {
+        Napi::Env env = deferred_.Env();
         Napi::Object ans = Napi::Object::New(env);
-    if (use_external_buffer_) {
-        Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
-            env, const_cast<float *>(audio_->samples), sizeof(float) * audio_->n,
-            [](Napi::Env /*env*/, void * /*data*/, const SherpaOnnxGeneratedAudio *hint) {
-                SherpaOnnxDestroyOfflineTtsGeneratedAudio(hint);
-            },
-            audio_);
-        Napi::Float32Array float32Array = Napi::Float32Array::New(env, audio_->n, arrayBuffer, 0);
+        if (use_external_buffer_) {
+            Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(
+                env, const_cast<float *>(audio_->samples), sizeof(float) * audio_->n,
+                [](Napi::Env /*env*/, void * /*data*/, const SherpaOnnxGeneratedAudio *hint) {
+                    SherpaOnnxDestroyOfflineTtsGeneratedAudio(hint);
+                },
+                audio_);
+            Napi::Float32Array float32Array = Napi::Float32Array::New(env, audio_->n, arrayBuffer, 0);
 
-        ans.Set(Napi::String::New(env, "samples"), float32Array);
-        ans.Set(Napi::String::New(env, "sampleRate"), audio_->sample_rate);
-    } else {
-        // don't use external buffer
-        Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(env, sizeof(float) * audio_->n);
+            ans.Set(Napi::String::New(env, "samples"), float32Array);
+            ans.Set(Napi::String::New(env, "sampleRate"), audio_->sample_rate);
+        } else {
+            // don't use external buffer
+            Napi::ArrayBuffer arrayBuffer = Napi::ArrayBuffer::New(env, sizeof(float) * audio_->n);
 
-        Napi::Float32Array float32Array = Napi::Float32Array::New(env, audio_->n, arrayBuffer, 0);
+            Napi::Float32Array float32Array = Napi::Float32Array::New(env, audio_->n, arrayBuffer, 0);
 
-        std::copy(audio_->samples, audio_->samples + audio_->n, float32Array.Data());
+            std::copy(audio_->samples, audio_->samples + audio_->n, float32Array.Data());
 
-        ans.Set(Napi::String::New(env, "samples"), float32Array);
-        ans.Set(Napi::String::New(env, "sampleRate"), audio_->sample_rate);
-        SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio_);
-    }
-        
+            ans.Set(Napi::String::New(env, "samples"), float32Array);
+            ans.Set(Napi::String::New(env, "sampleRate"), audio_->sample_rate);
+            SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio_);
+        }
+
         deferred_.Resolve(ans);
     }
 
 private:
+    TSFN tsfn_;
     Napi::Promise::Deferred deferred_;
     SherpaOnnxOfflineTts *tts_;
     std::string text_;
     float speed_;
     int32_t sid_;
     bool use_external_buffer_;
-    
+
     const SherpaOnnxGeneratedAudio *audio_;
+    
+    std::vector<TtsCallbackData*> data_list_;
 };
 
 static Napi::Object OfflineTtsGenerateAsyncWrapper(const Napi::CallbackInfo &info) {
@@ -456,9 +503,29 @@ static Napi::Object OfflineTtsGenerateAsyncWrapper(const Napi::CallbackInfo &inf
     std::string text = _text.Utf8Value();
     int32_t sid = obj.Get("sid").As<Napi::Number>().Int32Value();
     float speed = obj.Get("speed").As<Napi::Number>().FloatValue();
+    
+    Napi::Function cb;
+    if (obj.Has("callback") && obj.Get("callback").IsFunction()) {
+        cb = obj.Get("callback").As<Napi::Function>();
+    }
+    
+    auto context = new Napi::Reference<Napi::Value>(Napi::Persistent(info.This()));
+    
+    TSFN tsfn = TSFN::New(
+      env,
+      cb,  // JavaScript function called asynchronously
+      "TtsGenerateFunc",         // Name
+      0,                       // Unlimited queue
+      1,                       // Only one thread will use this initially
+      context,
+      [](Napi::Env,
+         void*,
+         Napi::Reference<Napi::Value>* ctx) {
+        delete ctx;
+      });
 
     const SherpaOnnxGeneratedAudio *audio;
-     TtsGenerateWorker* worker = new TtsGenerateWorker(env, tts, text, speed, sid, enable_external_buffer);
+    TtsGenerateWorker *worker = new TtsGenerateWorker(env, tsfn, tts, text, speed, sid, enable_external_buffer);
     worker->Queue();
     return worker->Promise();
 }

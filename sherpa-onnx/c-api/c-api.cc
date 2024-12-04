@@ -1169,6 +1169,17 @@ SherpaOnnxOfflineTtsGenerateWithProgressCallback(
   return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);
 }
 
+const SherpaOnnxGeneratedAudio *
+SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
+    SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg) {
+  auto wrapper = [callback, arg](const float *samples, int32_t n,
+                                 float progress) {
+    return callback(samples, n, progress, arg);
+  };
+  return SherpaOnnxOfflineTtsGenerateInternal(tts, text, sid, speed, wrapper);
+}
+
 const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
     SherpaOnnxGeneratedAudioCallbackWithArg callback, void *arg) {

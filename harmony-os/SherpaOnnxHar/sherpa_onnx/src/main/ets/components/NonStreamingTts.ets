@@ -36,11 +36,16 @@ export class TtsOutput {
   public sampleRate: number = 0;
 }
 
+interface TtsCallbackData {
+  samples: Float32Array;
+  progress: number;
+}
+
 export class TtsInput {
   public text: string = '';
   public sid: number = 0;
   public speed: number = 1.0;
-  public callback?: (samples: Float32Array) => number;
+  public callback?: (data: TtsCallbackData) => number;
 }
 
 export class OfflineTts {

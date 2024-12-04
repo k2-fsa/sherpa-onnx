@@ -16,8 +16,7 @@ function savePcmToWav(filename: string, samples: Int16Array, sampleRate: number)
   //                   F F I R
   view.setUint32(0, 0x46464952, true); // chunkID
   view.setUint32(4, 36 + samples.length * 2, true); // chunkSize //                   E V A W
-  view.setUint32(8, 0x45564157, true); // format //
-  //                      t m f
+  view.setUint32(8, 0x45564157, true); // format // //                      t m f
   view.setUint32(12, 0x20746d66, true); // subchunk1ID
   view.setUint32(16, 16, true); // subchunk1Size, 16 for PCM
   view.setUint32(20, 1, true); // audioFormat, 1 for PCM
@@ -59,10 +58,13 @@ struct Index {
   @State btnStopEnabled: boolean = false;
   @State btnSaveCaption: string = 'Save';
   @State btnSaveEnabled: boolean = false;
+  private cancelled: boolean = false;
+  @State isGenerating: boolean = false;
   @State initTtsDone: boolean = false;
   @State ttsGeneratedDone: boolean = true;
-  @State sampleRate: number = 0;
+  @State numSpeakers: number = 1;
   @State initAudioDone: boolean = false;
+  private sampleRate: number = 0;
   private startTime: number = 0;
   private stopTime: number = 0;
   private inputText: string = '';
@@ -78,8 +80,7 @@ struct Index {
     if (this.audioRenderer) {
       console.log(`Audio renderer has already been created. Skip creating`);
       return;
-    } // see
-    // https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/using-audiorenderer-for-playback-V5
+    } // see // https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/using-audiorenderer-for-playback-V5
     const audioStreamInfo: audio.AudioStreamInfo = {
       samplingRate: this.sampleRate,
       channels: audio.AudioChannel.CHANNEL_1, // 通道
@@ -122,39 +123,23 @@ struct Index {
 
       if (msgType == 'init-tts-done') {
         console.log('init tts done');
+        this.sampleRate = e.data['sampleRate'] as number;
+        this.numSpeakers = e.data['numSpeakers'] as number;
+
         this.initTtsDone = true;
       }
 
-      if (msgType == 'tts-generate-done') {
-        const samples: Float32Array = e.data['samples'] as Float32Array;
-        const sampleRate = e.data['sampleRate'] as number;
-
-        systemTime.getRealTime((err, data) => {
-          if (err) {
-            console.log(`Failed to get stop time`)
-          } else {
-            this.stopTime = data;
-
-            const audioDuration = samples.length / sampleRate;
-            const elapsedSeconds = (this.stopTime - this.startTime) / 1000;
-            const RTF = elapsedSeconds / audioDuration;
-            this.info = `Audio duration: ${audioDuration} s
-Elapsed: ${elapsedSeconds} s
-RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3)}
-`
-          }
-        });
-
-        this.finalSamples = samples;
-        this.ttsGeneratedDone = true;
-        this.btnSaveEnabled = true;
-
-        if (this.sampleRate == 0) {
-          console.log(`sample rate is ${sampleRate}`);
-          this.sampleRate = sampleRate;
+      if (msgType == 'tts-generate-partial') {
+        if (this.cancelled) {
+          return;
         }
+
+        const samples: Float32Array = e.data['samples'] as Float32Array;
+        const progress: number = e.data['progress'] as number;
+        console.log(`progress: ${progress}`);
+
         this.sampleBuffer.push(samples);
-        this.ttsGeneratedDone = true;
+
         if (!this.initAudioDone) {
           this.initAudioRenderer();
         }
@@ -162,6 +147,34 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
         if (this.audioRenderer && this.audioRenderer?.state != audio.AudioState.STATE_RUNNING) {
           this.audioRenderer.start();
         }
+      }
+
+      if (msgType == 'tts-generate-done') {
+        this.isGenerating = false;
+        const samples: Float32Array = e.data['samples'] as Float32Array;
+
+        systemTime.getRealTime((err, data) => {
+
+          if (err) {
+            console.log(`Failed to get stop time`)
+          } else {
+            this.stopTime = data;
+
+            const audioDuration = samples.length / this.sampleRate;
+            const elapsedSeconds = (this.stopTime - this.startTime) / 1000;
+            const RTF = elapsedSeconds / audioDuration;
+            this.info = `Audio duration: ${audioDuration} s
+Elapsed: ${elapsedSeconds} s
+RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3)}
+`;
+          }
+        });
+
+        this.finalSamples = samples;
+        this.ttsGeneratedDone = true;
+        this.btnSaveEnabled = true;
+
+        this.ttsGeneratedDone = true;
       }
     }
 
@@ -171,15 +184,14 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
   build() {
     Row() {
       Column({ space: 10 }) {
-        Text(this.title).fontSize(20).fontWeight(FontWeight.Bold).onClick(() => {
-
-        })
+        Text(this.title).fontSize(20).fontWeight(FontWeight.Bold);
 
         Row({ space: 10 }) {
           Button(this.btnStartCaption).enabled(this.btnStartEnabled).onClick(async () => {
             console.log(`input text is ${this.inputText}`);
 
             if (this.workerInstance && this.initTtsDone) {
+              this.cancelled = false;
               this.finalSamples = null;
               this.sampleBuffer.reset();
               this.ttsGeneratedDone = false;
@@ -191,8 +203,9 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
               this.ttsGeneratedDone = false;
               this.startTime = await systemTime.getRealTime();
               this.workerInstance.postMessage({ msgType: 'tts-generate', text: this.inputText });
+              this.isGenerating = true;
+              this.info = '';
             }
-
           });
 
           Button(this.btnStopCaption).enabled(this.btnStopEnabled).onClick(() => {
@@ -200,6 +213,13 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
             this.btnStartEnabled = true;
             this.btnStopEnabled = false;
             this.sampleBuffer.reset();
+            this.cancelled = true;
+            this.isGenerating = false;
+
+            if (this.workerInstance && this.initTtsDone) {
+              this.workerInstance.postMessage({ msgType: 'tts-generate-cancel'});
+            }
+            this.audioRenderer?.stop();
           })
 
           Button(this.btnSaveCaption).enabled(this.btnSaveEnabled).onClick(() => {
@@ -234,6 +254,7 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
         TextArea({ placeholder: 'Input text for TTS and click the start button' })
           .width('100%')
           .height('100%')
+          .focusable(this.isGenerating == false)
           .onChange((text) => {
             this.inputText = text;
             if (text.trim() == '') {
@@ -241,10 +262,6 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
               return;
             }
             this.btnStartEnabled = true;
-            this.info = `Audio duration: 3s;
-Elapsed: 2 s
-RTF: 2/3=0.66`
-
           })
       }.width('100%')
     }.height('100%')
@@ -253,7 +270,7 @@ RTF: 2/3=0.66`
   private audioPlayCallback = (buffer: ArrayBuffer) => {
     const numSamples = buffer.byteLength / 2;
     if (this.sampleBuffer.size() >= numSamples) {
-      const samples = this.sampleBuffer.get(this.sampleBuffer.head(), numSamples);
+      const samples: Float32Array = this.sampleBuffer.get(this.sampleBuffer.head(), numSamples);
 
       const int16Samples = new Int16Array(buffer);
       for (let i = 0; i < numSamples; ++i) {

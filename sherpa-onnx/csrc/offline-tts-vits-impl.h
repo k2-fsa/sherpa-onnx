@@ -282,7 +282,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
                          audio.samples.end());
       if (callback) {
         should_continue = callback(audio.samples.data(), audio.samples.size(),
-                                   b * 1.0 / num_batches);
+                                   (b + 1) * 1.0 / num_batches);
         // Caution(fangjun): audio is freed when the callback returns, so users
         // should copy the data if they want to access the data after
         // the callback returns to avoid segmentation fault.
