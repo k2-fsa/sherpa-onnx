@@ -2,19 +2,19 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "VAD+ASR with Next-gen Kaldi"
+      "value": "On-device VAD+ASR with Next-gen Kaldi"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "VAD+ASR"
+      "value": "On-device VAD+ASR with Next-gen Kaldi"
     },
     {
       "name": "EntryAbility_label",
-      "value": "VAD_ASR"
+      "value": "On-device speech recognition"
     },
     {
       "name": "mic_reason",
-      "value": "access the microhone for speech recognition"
+      "value": "access the microhone for on-device speech recognition with Next-gen Kaldi"
     }
   ]
 }

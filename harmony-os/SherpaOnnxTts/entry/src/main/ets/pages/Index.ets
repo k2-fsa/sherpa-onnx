@@ -50,6 +50,7 @@ function toInt16Samples(samples: Float32Array): Int16Array {
 @Entry
 @Component
 struct Index {
+  @State currentIndex: number = 0;
   @State title: string = 'Next-gen Kaldi: Text-to-speech';
   @State info: string = '';
   @State btnStartCaption: string = 'Start';
@@ -61,12 +62,13 @@ struct Index {
   @State progress: number = 0;
   @State sid: string = '0';
   @State speechSpeed: string = '1.0';
-  private cancelled: boolean = false;
   @State isGenerating: boolean = false;
   @State initTtsDone: boolean = false;
   @State ttsGeneratedDone: boolean = true;
   @State numSpeakers: number = 1;
   @State initAudioDone: boolean = false;
+  private controller: TabsController = new TabsController();
+  private cancelled: boolean = false;
   private sampleRate: number = 0;
   private startTime: number = 0;
   private stopTime: number = 0;
@@ -188,10 +190,8 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
 
         this.ttsGeneratedDone = true;
 
-        console.log(`buffer size ${this.sampleBuffer.size()}`);
-
-        if (this.audioRenderer && this.audioRenderer?.state != audio.AudioState.STATE_RUNNING && this.sampleBuffer.size()==0) {
-          console.log(`here buffer size ${this.sampleBuffer.size()}`);
+        if (this.audioRenderer && this.audioRenderer?.state != audio.AudioState.STATE_RUNNING &&
+          this.sampleBuffer.size() == 0) {
           this.sampleBuffer.push(samples);
           this.progress = 1;
           this.audioRenderer.start();
@@ -209,148 +209,179 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
     this.workerInstance.postMessage({ msgType: 'init-tts', context: getContext() });
   }
 
+  @Builder
+  TabBuilder(title: string, targetIndex: number, selectedImg: Resource, normalImg: Resource) {
+    Column() {
+      Image(this.currentIndex == targetIndex ? selectedImg : normalImg).size({ width: 25, height: 25 })
+      Text(title).fontColor(this.currentIndex == targetIndex ? '#28bff1' : '#8a8a8a')
+    }.width('100%').height(50).justifyContent(FlexAlign.Center).onClick(() => {
+      this.currentIndex = targetIndex;
+      this.controller.changeIndex(this.currentIndex);
+    })
+  }
+
   build() {
-    Row() {
-      Column({ space: 10 }) {
-        Text(this.title).fontSize(20).fontWeight(FontWeight.Bold);
-        if (this.numSpeakers > 1) {
-          Row({ space: 10 }) {
-            Text(`Speaker ID (0-${this.numSpeakers-1})`)
-              .width('60%')
+    Column() {
+      Tabs({ barPosition: BarPosition.End, controller: this.controller }) {
+        TabContent() {
+          Column({ space: 10 }) {
+            Text(this.title).fontSize(20).fontWeight(FontWeight.Bold);
+            if (this.numSpeakers > 1) {
+              Row({ space: 10 }) {
+                Text(`Speaker ID (0-${this.numSpeakers - 1})`).width('60%')
 
-            TextInput({ text: this.sid })
-              .onChange((text) => {
-                this.sid = text.trim();
-              })
-              .width('20%')
-          }.justifyContent(FlexAlign.Center)
-        }
-
-        Row() {
-          Text('Speech speed')
-            .width('60%');
-
-          TextInput({ text: this.speechSpeed })
-            .onChange((text) => {
-              this.speechSpeed = text.trim();
-            })
-            .width('20%')
-        }
-
-        Row({ space: 10 }) {
-          Button(this.btnStartCaption).enabled(this.btnStartEnabled).onClick(async () => {
-            let sid = parseInt(this.sid);
-            if (sid.toString() != this.sid) {
-              this.info = 'Please input a valid speaker ID';
-              return;
+                TextInput({ text: this.sid }).onChange((text) => {
+                  this.sid = text.trim();
+                }).width('20%')
+              }.justifyContent(FlexAlign.Center)
             }
 
-            let speed = parseFloat(this.speechSpeed);
-            if (isNaN(speed)) {
-              this.info = 'Please enter a valid speech speed';
-              return;
+            Row() {
+              Text('Speech speed').width('60%');
+
+              TextInput({ text: this.speechSpeed }).onChange((text) => {
+                this.speechSpeed = text.trim();
+              }).width('20%')
             }
 
-            if (speed <= 0) {
-              this.info = 'Please enter a positive speech speed';
-              return;
-            }
+            Row({ space: 10 }) {
+              Button(this.btnStartCaption).enabled(this.btnStartEnabled).onClick(async () => {
+                let sid = parseInt(this.sid);
+                if (sid.toString() != this.sid) {
+                  this.info = 'Please input a valid speaker ID';
+                  return;
+                }
 
-            if (this.workerInstance && this.initTtsDone) {
-              this.info = 'Generating...';
-              this.cancelled = false;
-              this.finalSamples = null;
-              this.sampleBuffer.reset();
-              this.ttsGeneratedDone = false;
-              this.progress = 0;
+                let speed = parseFloat(this.speechSpeed);
+                if (isNaN(speed)) {
+                  this.info = 'Please enter a valid speech speed';
+                  return;
+                }
 
-              this.btnStartEnabled = false;
-              this.btnStopEnabled = true;
-              this.btnSaveEnabled = false;
-              console.log(`sending ${this.inputText}`)
-              this.ttsGeneratedDone = false;
-              this.startTime = await systemTime.getRealTime();
-              this.workerInstance?.postMessage({
-                msgType: 'tts-generate',
-                text: this.inputText,
-                sid: sid,
-                speed: speed,
+                if (speed <= 0) {
+                  this.info = 'Please enter a positive speech speed';
+                  return;
+                }
+
+                if (this.workerInstance && this.initTtsDone) {
+                  this.info = 'Generating...';
+                  this.cancelled = false;
+                  this.finalSamples = null;
+                  this.sampleBuffer.reset();
+                  this.ttsGeneratedDone = false;
+                  this.progress = 0;
+
+                  this.btnStartEnabled = false;
+                  this.btnStopEnabled = true;
+                  this.btnSaveEnabled = false;
+                  console.log(`sending ${this.inputText}`)
+                  this.ttsGeneratedDone = false;
+                  this.startTime = await systemTime.getRealTime();
+                  this.workerInstance?.postMessage({
+                    msgType: 'tts-generate',
+                    text: this.inputText,
+                    sid: sid,
+                    speed: speed,
+                  });
+                  this.isGenerating = true;
+                  this.info = '';
+                } else {
+                  this.info = 'Failed to initialize tts model';
+                  this.btnStartEnabled = false;
+                }
               });
-              this.isGenerating = true;
-              this.info = '';
-            } else {
-              this.info = 'Failed to initialize tts model';
-              this.btnStartEnabled = false;
+
+              Button(this.btnStopCaption).enabled(this.btnStopEnabled).onClick(() => {
+                this.ttsGeneratedDone = true;
+                this.btnStartEnabled = true;
+                this.btnStopEnabled = false;
+                this.sampleBuffer.reset();
+                this.cancelled = true;
+                this.isGenerating = false;
+
+                if (this.workerInstance && this.initTtsDone) {
+                  this.workerInstance.postMessage({ msgType: 'tts-generate-cancel' });
+                }
+                this.audioRenderer?.stop();
+              })
+
+              Button(this.btnSaveCaption).enabled(this.btnSaveEnabled).onClick(() => {
+                if (!this.finalSamples || this.finalSamples.length == 0) {
+
+                  this.btnSaveEnabled = false;
+                  return;
+                }
+
+                let uri: string = '';
+
+                const audioOptions = new picker.AudioSaveOptions(); // audioOptions.newFileNames = ['o.wav'];
+
+                const audioViewPicker = new picker.AudioViewPicker();
+
+                audioViewPicker.save(audioOptions).then((audioSelectResult: Array<string>) => {
+                  uri = audioSelectResult[0];
+                  if (this.finalSamples) {
+                    savePcmToWav(uri, toInt16Samples(this.finalSamples), this.sampleRate);
+                    console.log(`Saved to ${uri}`);
+                    this.info += `\nSaved to ${uri}`;
+                  }
+                });
+              });
             }
-          });
 
-          Button(this.btnStopCaption).enabled(this.btnStopEnabled).onClick(() => {
-            this.ttsGeneratedDone = true;
-            this.btnStartEnabled = true;
-            this.btnStopEnabled = false;
-            this.sampleBuffer.reset();
-            this.cancelled = true;
-            this.isGenerating = false;
-
-            if (this.workerInstance && this.initTtsDone) {
-              this.workerInstance.postMessage({ msgType: 'tts-generate-cancel'});
+            if (this.info != '') {
+              TextArea({ text: this.info }).focusable(false);
             }
-            this.audioRenderer?.stop();
-          })
+            if (this.progress > 0) {
+              Row() {
+                Progress({ value: 0, total: 100, type: ProgressType.Capsule })
+                  .width('80%')
+                  .height(20)
+                  .value(this.progress * 100);
 
-          Button(this.btnSaveCaption).enabled(this.btnSaveEnabled).onClick(() => {
-            if (!this.finalSamples || this.finalSamples.length == 0) {
-
-              this.btnSaveEnabled = false;
-              return;
+                Text(`${(this.progress * 100).toFixed(2)}%`).width('15%')
+              }.width('100%').justifyContent(FlexAlign.Center)
             }
 
-            let uri: string = '';
+            TextArea({ placeholder: 'Input text for TTS and click the start button' })
+              .width('100%')
+              .height('100%')
+              .focusable(this.isGenerating == false && this.initTtsDone)
+              .onChange((text) => {
+                this.inputText = text;
+                if (text.trim() == '') {
+                  this.btnStartEnabled = false;
+                  return;
+                }
+                this.btnStartEnabled = true;
+              })
+          }.width('100%')
 
-            const audioOptions = new picker.AudioSaveOptions(); // audioOptions.newFileNames = ['o.wav'];
+          // see https://composeicons.com/
+        }.tabBar(this.TabBuilder('TTS', 0, $r('app.media.home'), $r('app.media.home')))
 
-            const audioViewPicker = new picker.AudioViewPicker();
+        TabContent() {
+          Column({space: 10}) {
+            Text(this.title).fontSize(20).fontWeight(FontWeight.Bold);
+            TextArea({text: `
+Everyting is open-sourced.
 
-            audioViewPicker.save(audioOptions).then((audioSelectResult: Array<string>) => {
-              uri = audioSelectResult[0];
-              if (this.finalSamples) {
-                savePcmToWav(uri, toInt16Samples(this.finalSamples), this.sampleRate);
-                console.log(`Saved to ${uri}}`);
-                this.info += `\nSaved to ${uri}`;
-              }
-            });
+It runs locally, without accessing the network
 
-          })
-        }
+See also https://github.com/k2-fsa/sherpa-onnx
 
-        if (this.info != '') {
-          TextArea({ text: this.info }).focusable(false);
-        }
-        if (this.progress > 0) {
-          Row() {
-            Progress({ value: 0, total: 100, type: ProgressType.Capsule })
-              .width('80%')
-              .height(20)
-              .value(this.progress * 100);
+新一代 Kaldi QQ 和微信交流群: 请看
 
-            Text(`${(this.progress * 100).toFixed(2)}%`).width('15%')
-          }.width('100%').justifyContent(FlexAlign.Center)
-        }
+https://k2-fsa.github.io/sherpa/social-groups.html
 
-        TextArea({ placeholder: 'Input text for TTS and click the start button' })
-          .width('100%')
-          .height('100%')
-          .focusable(this.isGenerating == false && this.initTtsDone)
-          .onChange((text) => {
-            this.inputText = text;
-            if (text.trim() == '') {
-              this.btnStartEnabled = false;
-              return;
-            }
-            this.btnStartEnabled = true;
-          })
-      }.width('100%')
-    }.height('100%')
+微信公众号: 新一代 Kaldi
+            `}).width('100%')
+              .height('100%')
+              .focusable(false)
+          }.justifyContent(FlexAlign.Start)
+        }.tabBar(this.TabBuilder('Help', 1, $r('app.media.info'), $r('app.media.info')))
+      }.scrollable(false)
+    }
   }
 
   private audioPlayCallback = (buffer: ArrayBuffer) => {

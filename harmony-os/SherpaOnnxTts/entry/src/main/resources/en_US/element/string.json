@@ -2,15 +2,15 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "module description"
+      "value": "On-device text-to-speech with Next-gen Kaldi"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "description"
+      "value": "On-device text-to-speech with Next-gen Kaldi"
     },
     {
       "name": "EntryAbility_label",
-      "value": "label"
+      "value": "TTS"
     }
   ]
 }

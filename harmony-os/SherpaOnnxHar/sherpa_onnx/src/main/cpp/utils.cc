@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "macros.h"
+#include "macros.h"  // NOLINT
 #include "napi.h"  // NOLINT
 
 static std::vector<std::string> GetFilenames(NativeResourceManager *mgr,
