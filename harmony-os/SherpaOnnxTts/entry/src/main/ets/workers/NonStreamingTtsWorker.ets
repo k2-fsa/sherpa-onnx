@@ -94,16 +94,16 @@ function initTts(context: Context): OfflineTts {
   // Example 2:
   // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-  modelDir = 'vits-piper-en_US-amy-low';
-  modelName = 'en_US-amy-low.onnx';
-  dataDir = 'espeak-ng-data';
+  // modelDir = 'vits-piper-en_US-amy-low';
+  // modelName = 'en_US-amy-low.onnx';
+  // dataDir = 'espeak-ng-data';
 
   // Example 3:
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
   // modelDir = 'vits-icefall-zh-aishell3';
   // modelName = 'model.onnx';
-  // ruleFsts = 'vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/number.fst,vits-icefall-zh-aishell3/new_heteronym.fst';
-  // ruleFars = 'vits-icefall-zh-aishell3/rule.far';
+  // ruleFsts = 'phone.fst,date.fst,number.fst,new_heteronym.fst';
+  // ruleFars = 'rule.far';
   // lexicon = 'lexicon.txt';
 
   // Example 4:
@@ -111,7 +111,7 @@ function initTts(context: Context): OfflineTts {
   // modelDir = 'vits-zh-hf-fanchen-C';
   // modelName = 'vits-zh-hf-fanchen-C.onnx';
   // lexicon = 'lexicon.txt';
-  // dictDir = 'vits-zh-hf-fanchen-C/dict';
+  // dictDir = 'dict';
 
   // Example 5:
   // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-coqui-de-css10.tar.bz2
@@ -131,7 +131,8 @@ function initTts(context: Context): OfflineTts {
   // modelDir = 'vits-melo-tts-zh_en';
   // modelName = 'model.onnx';
   // lexicon = 'lexicon.txt';
-  // dictDir = 'vits-melo-tts-zh_en/dict';
+  // dictDir = 'dict';
+  // ruleFsts = `date.fst,phone.fst,number.fst`;
 
   // ============================================================
   // Please don't change the remaining part of this function
@@ -242,15 +243,24 @@ workerPort.onmessage = (e: MessageEvents) => {
     input.callback = callback;
 
     cancelled = false;
-    tts.generateAsync(input).then((ttsOutput: TtsOutput) => {
-      console.log(`sampleRate: ${ttsOutput.sampleRate}`);
+    if (true) {
+      tts.generateAsync(input).then((ttsOutput: TtsOutput) => {
+        console.log(`sampleRate: ${ttsOutput.sampleRate}`);
 
+        workerPort.postMessage({
+          'msgType': 'tts-generate-done',
+          samples: Float32Array.from(ttsOutput.samples),
+        });
+
+      });
+    } else {
+      const ttsOutput: TtsOutput = tts.generate(input);
       workerPort.postMessage({
         'msgType': 'tts-generate-done',
         samples: Float32Array.from(ttsOutput.samples),
       });
+    }
 
-    });
 
   }
 }

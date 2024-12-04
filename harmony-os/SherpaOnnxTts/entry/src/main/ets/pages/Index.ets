@@ -84,6 +84,7 @@ struct Index {
       console.log(`Audio renderer has already been created. Skip creating`);
       return;
     } // see // https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/using-audiorenderer-for-playback-V5
+    console.log('Initializing audio renderer');
     const audioStreamInfo: audio.AudioStreamInfo = {
       samplingRate: this.sampleRate,
       channels: audio.AudioChannel.CHANNEL_1, // 通道
@@ -112,11 +113,15 @@ struct Index {
         } else {
           console.log(`returned audio renderer is ${renderer}`);
         }
+      } else {
+        console.log(`Failed to initialize audio renderer. error message: ${err.message}, error code: ${err.code}`);
       }
     });
   }
 
   async aboutToAppear() {
+    this.initAudioRenderer();
+
     this.workerInstance = new worker.ThreadWorker(this.scriptURL, {
       name: 'NonStreaming TTS worker'
     });
@@ -182,6 +187,21 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
         this.btnSaveEnabled = true;
 
         this.ttsGeneratedDone = true;
+
+        console.log(`buffer size ${this.sampleBuffer.size()}`);
+
+        if (this.audioRenderer && this.audioRenderer?.state != audio.AudioState.STATE_RUNNING && this.sampleBuffer.size()==0) {
+          console.log(`here buffer size ${this.sampleBuffer.size()}`);
+          this.sampleBuffer.push(samples);
+          this.progress = 1;
+          this.audioRenderer.start();
+        }
+
+        if (!this.initAudioDone) {
+          this.btnStartEnabled = true;
+          this.btnStopEnabled = false;
+          this.info += '\nAudio renderer is not initialized. Disable playing audio.';
+        }
       }
     }
 
@@ -320,7 +340,7 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
         TextArea({ placeholder: 'Input text for TTS and click the start button' })
           .width('100%')
           .height('100%')
-          .focusable(this.isGenerating == false)
+          .focusable(this.isGenerating == false && this.initTtsDone)
           .onChange((text) => {
             this.inputText = text;
             if (text.trim() == '') {

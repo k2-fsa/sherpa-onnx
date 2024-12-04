@@ -183,7 +183,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       for (const auto &tn : tn_list_) {
         text = tn->Normalize(text);
         if (config_.model.debug) {
+#if __OHOS__
+          SHERPA_ONNX_LOGE("After normalizing: %{public}s", text.c_str());
+#else
           SHERPA_ONNX_LOGE("After normalizing: %s", text.c_str());
+#endif
         }
       }
     }
@@ -324,6 +328,16 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     if (meta_data.frontend == "characters") {
       frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
           mgr, config_.model.vits.tokens, meta_data);
+    } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty() &&
+               meta_data.is_melo_tts) {
+      frontend_ = std::make_unique<MeloTtsLexicon>(
+          mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
+          config_.model.vits.dict_dir, model_->GetMetaData(),
+          config_.model.debug);
+    } else if (meta_data.is_melo_tts && meta_data.language == "English") {
+      frontend_ = std::make_unique<MeloTtsLexicon>(
+          mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
+          model_->GetMetaData(), config_.model.debug);
     } else if ((meta_data.is_piper || meta_data.is_coqui ||
                 meta_data.is_icefall) &&
                !config_.model.vits.data_dir.empty()) {
