@@ -27,6 +27,10 @@ void InitKeywordSpotting(Napi::Env env, Napi::Object exports);
 
 void InitNonStreamingSpeakerDiarization(Napi::Env env, Napi::Object exports);
 
+#if __OHOS__
+void InitUtils(Napi::Env env, Napi::Object exports);
+#endif
+
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitStreamingAsr(env, exports);
   InitNonStreamingAsr(env, exports);
@@ -41,7 +45,15 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitKeywordSpotting(env, exports);
   InitNonStreamingSpeakerDiarization(env, exports);
 
+#if __OHOS__
+  InitUtils(env, exports);
+#endif
+
   return exports;
 }
 
+#if __OHOS__
+NODE_API_MODULE(sherpa_onnx, Init)
+#else
 NODE_API_MODULE(addon, Init)
+#endif

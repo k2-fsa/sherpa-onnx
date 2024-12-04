@@ -1,4 +1,8 @@
-export { readWave, readWaveFromBinary } from "libsherpa_onnx.so";
+export {
+  listRawfileDir,
+  readWave,
+  readWaveFromBinary,
+} from "libsherpa_onnx.so";
 
 export {
   CircularBuffer,

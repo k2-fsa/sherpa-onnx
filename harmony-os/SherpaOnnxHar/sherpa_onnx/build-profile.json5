@@ -4,7 +4,7 @@
     "externalNativeOptions": {
       "path": "./src/main/cpp/CMakeLists.txt",
       "arguments": "",
-      "cppFlags": "",
+      "cppFlags": "-std=c++17",
       "abiFilters": [
         "arm64-v8a",
         "x86_64",

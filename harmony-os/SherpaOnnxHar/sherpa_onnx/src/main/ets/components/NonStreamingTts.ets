@@ -3,6 +3,7 @@ import {
   getOfflineTtsNumSpeakers,
   getOfflineTtsSampleRate,
   offlineTtsGenerate,
+  offlineTtsGenerateAsync,
 } from "libsherpa_onnx.so";
 
 export class OfflineTtsVitsModelConfig {
@@ -16,14 +17,14 @@ export class OfflineTtsVitsModelConfig {
   public lengthScale: number = 1.0;
 }
 
-export class OfflineTtsModelConfig{
+export class OfflineTtsModelConfig {
   public vits: OfflineTtsVitsModelConfig = new OfflineTtsVitsModelConfig();
   public numThreads: number = 1;
   public debug: boolean = false;
   public provider: string = 'cpu';
 }
 
-export class OfflineTtsConfig{
+export class OfflineTtsConfig {
   public model: OfflineTtsModelConfig = new OfflineTtsModelConfig();
   public ruleFsts: string = '';
   public ruleFars: string = '';
@@ -35,17 +36,24 @@ export class TtsOutput {
   public sampleRate: number = 0;
 }
 
+interface TtsCallbackData {
+  samples: Float32Array;
+  progress: number;
+}
+
 export class TtsInput {
   public text: string = '';
   public sid: number = 0;
   public speed: number = 1.0;
+  public callback?: (data: TtsCallbackData) => number;
 }
 
 export class OfflineTts {
-  private handle: object;
   public config: OfflineTtsConfig;
   public numSpeakers: number;
   public sampleRate: number;
+  private handle: object;
+
   constructor(config: OfflineTtsConfig, mgr?: object) {
     this.handle = createOfflineTts(config, mgr);
     this.config = config;
@@ -62,5 +70,9 @@ export class OfflineTts {
    */
   generate(input: TtsInput): TtsOutput {
     return offlineTtsGenerate(this.handle, input) as TtsOutput;
+  }
+
+  generateAsync(input: TtsInput): Promise<TtsOutput> {
+    return offlineTtsGenerateAsync(this.handle, input);
   }
 }

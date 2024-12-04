@@ -930,6 +930,9 @@ typedef int32_t (*SherpaOnnxGeneratedAudioCallbackWithArg)(const float *samples,
 typedef int32_t (*SherpaOnnxGeneratedAudioProgressCallback)(
     const float *samples, int32_t n, float p);
 
+typedef int32_t (*SherpaOnnxGeneratedAudioProgressCallbackWithArg)(
+    const float *samples, int32_t n, float p, void *arg);
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTts SherpaOnnxOfflineTts;
 
 // Create an instance of offline TTS. The user has to use DestroyOfflineTts()
@@ -964,10 +967,18 @@ SherpaOnnxOfflineTtsGenerateWithCallback(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
     SherpaOnnxGeneratedAudioCallback callback);
 
+SHERPA_ONNX_API
 const SherpaOnnxGeneratedAudio *
 SherpaOnnxOfflineTtsGenerateWithProgressCallback(
     const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
+
     SherpaOnnxGeneratedAudioProgressCallback callback);
+
+SHERPA_ONNX_API
+const SherpaOnnxGeneratedAudio *
+SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
+    SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg);
 
 // Same as SherpaOnnxGeneratedAudioCallback but you can pass an additional
 // `void* arg` to the callback.

@@ -1,3 +1,5 @@
+export const listRawfileDir: (mgr: object, dir: string) => Array<string>;
+
 export const readWave: (filename: string, enableExternalBuffer: boolean = true) => {samples: Float32Array, sampleRate: number};
 export const readWaveFromBinary: (data: Uint8Array, enableExternalBuffer: boolean = true) => {samples: Float32Array, sampleRate: number};
 export const createCircularBuffer: (capacity: number) => object;
@@ -37,4 +39,11 @@ export const getOnlineStreamResultAsJson: (handle: object, streamHandle: object)
 export const createOfflineTts: (config: object, mgr?: object) => object;
 export const getOfflineTtsNumSpeakers: (handle: object) => number;
 export const getOfflineTtsSampleRate: (handle: object) => number;
-export const offlineTtsGenerate: (handle: object, input: object) => object;
+
+export type TtsOutput = {
+  samples: Float32Array;
+  sampleRate: number;
+};
+
+export const offlineTtsGenerate: (handle: object, input: object) => TtsOutput;
+export const offlineTtsGenerateAsync: (handle: object, input: object) => Promise<TtsOutput>;

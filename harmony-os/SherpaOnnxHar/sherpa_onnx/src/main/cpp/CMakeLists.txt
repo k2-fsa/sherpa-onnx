@@ -2,6 +2,10 @@
 cmake_minimum_required(VERSION 3.13.0)
 project(myNpmLib)
 
+if (NOT CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 17 CACHE STRING "The C++ version to use")
+endif()
+
 # Disable warning about
 #
 # "The DOWNLOAD_EXTRACT_TIMESTAMP option was not given and policy CMP0135 is
@@ -46,6 +50,7 @@ add_library(sherpa_onnx SHARED
   speaker-identification.cc
   spoken-language-identification.cc
   streaming-asr.cc
+  utils.cc
   vad.cc
   wave-reader.cc
   wave-writer.cc
