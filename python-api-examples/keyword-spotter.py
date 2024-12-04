@@ -81,14 +81,38 @@ def get_args():
     )
 
     parser.add_argument(
+        "--modeling-unit",
+        type=str,
+        help="""The modeling unit of the model, valid values are bpe (for English model)
+        and ppinyin (For Chinese model).
+        """,
+    )
+
+    parser.add_argument(
+        "--bpe-vocab",
+        type=str,
+        help="""A simple format of bpe model, you can get it from the sentencepiece
+        generated folder. Used to tokenize the keywords into token ids. Used only
+        when modeling unit is bpe.
+        """,
+    )
+
+    parser.add_argument(
+        "--lexicon",
+        type=str,
+        help="""The lexicon used to tokenize the keywords into token ids. Used
+        only when modeling unit is ppinyin.
+        """,
+    )
+
+    parser.add_argument(
         "--keywords-file",
         type=str,
         help="""
-        The file containing keywords, one words/phrases per line, and for each
-        phrase the bpe/cjkchar/pinyin are separated by a space. For example:
+        The file containing keywords, one words/phrases per line. For example:
 
-        ▁HE LL O ▁WORLD
-        x iǎo ài t óng x ué 
+        HELLO WORLD
+        小爱同学
         """,
     )
 
@@ -183,6 +207,9 @@ def main():
         keywords_score=args.keywords_score,
         keywords_threshold=args.keywords_threshold,
         num_trailing_blanks=args.num_trailing_blanks,
+        modeling_unit=args.modeling_unit,
+        bpe_vocab=args.bpe_vocab,
+        lexicon=args.lexicon,
         provider=args.provider,
     )
 
