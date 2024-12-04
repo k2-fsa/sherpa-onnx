@@ -58,6 +58,7 @@ struct Index {
   @State btnStopEnabled: boolean = false;
   @State btnSaveCaption: string = 'Save';
   @State btnSaveEnabled: boolean = false;
+  @State progress: number = 0;
   private cancelled: boolean = false;
   @State isGenerating: boolean = false;
   @State initTtsDone: boolean = false;
@@ -122,7 +123,7 @@ struct Index {
       console.log(`received msg from worker: ${msgType}`);
 
       if (msgType == 'init-tts-done') {
-        console.log('init tts done');
+        this.info = 'Model initialized!\nPlease enter text and press start.';
         this.sampleRate = e.data['sampleRate'] as number;
         this.numSpeakers = e.data['numSpeakers'] as number;
 
@@ -136,7 +137,7 @@ struct Index {
 
         const samples: Float32Array = e.data['samples'] as Float32Array;
         const progress: number = e.data['progress'] as number;
-        console.log(`progress: ${progress}`);
+        this.progress = progress;
 
         this.sampleBuffer.push(samples);
 
@@ -163,10 +164,14 @@ struct Index {
             const audioDuration = samples.length / this.sampleRate;
             const elapsedSeconds = (this.stopTime - this.startTime) / 1000;
             const RTF = elapsedSeconds / audioDuration;
+
             this.info = `Audio duration: ${audioDuration} s
 Elapsed: ${elapsedSeconds} s
 RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3)}
 `;
+            if (this.cancelled) {
+              this.info += '\nCancelled.';
+            }
           }
         });
 
@@ -178,6 +183,7 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
       }
     }
 
+    this.info = 'Initializing TTS model ...';
     this.workerInstance.postMessage({ msgType: 'init-tts', context: getContext() });
   }
 
@@ -188,13 +194,13 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
 
         Row({ space: 10 }) {
           Button(this.btnStartCaption).enabled(this.btnStartEnabled).onClick(async () => {
-            console.log(`input text is ${this.inputText}`);
-
             if (this.workerInstance && this.initTtsDone) {
+              this.info = 'Generating...';
               this.cancelled = false;
               this.finalSamples = null;
               this.sampleBuffer.reset();
               this.ttsGeneratedDone = false;
+              this.progress = 0;
 
               this.btnStartEnabled = false;
               this.btnStopEnabled = true;
@@ -205,6 +211,9 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
               this.workerInstance.postMessage({ msgType: 'tts-generate', text: this.inputText });
               this.isGenerating = true;
               this.info = '';
+            } else {
+              this.info = 'Failed to initialize tts model';
+              this.btnStartEnabled = false;
             }
           });
 
@@ -248,7 +257,17 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
         }
 
         if (this.info != '') {
-          TextArea({ text: this.info });
+          TextArea({ text: this.info }).focusable(false);
+        }
+        if (this.progress > 0) {
+          Row() {
+            Progress({ value: 0, total: 100, type: ProgressType.Capsule })
+              .width('80%')
+              .height(20)
+              .value(this.progress * 100);
+
+            Text(`${(this.progress * 100).toFixed(2)}%`).width('15%')
+          }.width('100%').justifyContent(FlexAlign.Center)
         }
 
         TextArea({ placeholder: 'Input text for TTS and click the start button' })
