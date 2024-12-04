@@ -22,9 +22,9 @@ Pre-built `har` packages can be found at
 
 You can also download it using
 ```
-wget https://ohpm.openharmony.cn/ohpm/sherpa_onnx/-/sherpa_onnx-1.10.32.har
+wget https://ohpm.openharmony.cn/ohpm/sherpa_onnx/-/sherpa_onnx-1.10.33.har
 
-# Please replace the version 1.10.32 if needed.
+# Please replace the version 1.10.33 if needed.
 ```
 
 You can also use

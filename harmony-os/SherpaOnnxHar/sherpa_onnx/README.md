@@ -23,7 +23,7 @@ or update your `oh-package.json5` to include the following:
 
 ```
   "dependencies": {
-    "sherpa_onnx": "1.10.32",
+    "sherpa_onnx": "1.10.33",
   },
 ```
 
@@ -33,7 +33,8 @@ Note that we recommend always using the latest version.
 
 | Demo | URL | Description|
 |------|-----|------------|
-|SherpaOnnxVadAsr|[Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/harmony-os/SherpaOnnxVadAsr)|It shows how to use VAD with a non-streaming ASR model for speech recognition|
+|SherpaOnnxVadAsr|[Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/harmony-os/SherpaOnnxVadAsr)|It shows how to use VAD with a non-streaming ASR model for on-device speech recognition without accessing the network |
+|SherpaOnnxTts|[Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/harmony-os/SherpaOnnxTts)|It shows how to use Next-gen Kaldi for on-device text-to-speech (TTS, i.e., speech synthesis)|
 
 # Documentation
 
