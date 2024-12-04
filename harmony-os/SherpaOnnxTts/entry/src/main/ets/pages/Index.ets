@@ -59,6 +59,8 @@ struct Index {
   @State btnSaveCaption: string = 'Save';
   @State btnSaveEnabled: boolean = false;
   @State progress: number = 0;
+  @State sid: string = '0';
+  @State speechSpeed: string = '1.0';
   private cancelled: boolean = false;
   @State isGenerating: boolean = false;
   @State initTtsDone: boolean = false;
@@ -191,9 +193,49 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
     Row() {
       Column({ space: 10 }) {
         Text(this.title).fontSize(20).fontWeight(FontWeight.Bold);
+        if (this.numSpeakers > 1) {
+          Row({ space: 10 }) {
+            Text(`Speaker ID (0-${this.numSpeakers-1})`)
+              .width('60%')
+
+            TextInput({ text: this.sid })
+              .onChange((text) => {
+                this.sid = text.trim();
+              })
+              .width('20%')
+          }.justifyContent(FlexAlign.Center)
+        }
+
+        Row() {
+          Text('Speech speed')
+            .width('60%');
+
+          TextInput({ text: this.speechSpeed })
+            .onChange((text) => {
+              this.speechSpeed = text.trim();
+            })
+            .width('20%')
+        }
 
         Row({ space: 10 }) {
           Button(this.btnStartCaption).enabled(this.btnStartEnabled).onClick(async () => {
+            let sid = parseInt(this.sid);
+            if (sid.toString() != this.sid) {
+              this.info = 'Please input a valid speaker ID';
+              return;
+            }
+
+            let speed = parseFloat(this.speechSpeed);
+            if (isNaN(speed)) {
+              this.info = 'Please enter a valid speech speed';
+              return;
+            }
+
+            if (speed <= 0) {
+              this.info = 'Please enter a positive speech speed';
+              return;
+            }
+
             if (this.workerInstance && this.initTtsDone) {
               this.info = 'Generating...';
               this.cancelled = false;
@@ -208,7 +250,12 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
               console.log(`sending ${this.inputText}`)
               this.ttsGeneratedDone = false;
               this.startTime = await systemTime.getRealTime();
-              this.workerInstance.postMessage({ msgType: 'tts-generate', text: this.inputText });
+              this.workerInstance?.postMessage({
+                msgType: 'tts-generate',
+                text: this.inputText,
+                sid: sid,
+                speed: speed,
+              });
               this.isGenerating = true;
               this.info = '';
             } else {

@@ -237,8 +237,8 @@ workerPort.onmessage = (e: MessageEvents) => {
     console.log(`recevied text ${text}`);
     const input: TtsInput = new TtsInput();
     input.text = text;
-    input.sid = 0;
-    input.speed = 1.0;
+    input.sid = e.data['sid'] as number;
+    input.speed = e.data['speed'] as number;
     input.callback = callback;
 
     cancelled = false;
