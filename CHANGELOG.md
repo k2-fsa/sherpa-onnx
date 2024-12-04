@@ -1,8 +1,23 @@
+## 1.10.33
+
+* Add non-streaming ASR support for HarmonyOS. (#1564)
+* Add streaming ASR support for HarmonyOS. (#1565)
+* Fix building for Android (#1568)
+* Publish `sherpa_onnx.har` for HarmonyOS (#1572)
+* Add VAD+ASR demo for HarmonyOS (#1573)
+* Fix publishing har packages for HarmonyOS (#1576)
+* Add CI to build HAPs for HarmonyOS (#1578)
+* Add microphone demo about VAD+ASR for HarmonyOS (#1581)
+* Fix getting microphone permission for HarmonyOS VAD+ASR example (#1582)
+* Add HarmonyOS support for text-to-speech. (#1584)
+* Fix: support both old and new websockets request headers format (#1588)
+* Add on-device tex-to-speech (TTS) demo for HarmonyOS (#1590)
+
 ## 1.10.32
 
 * Support cross-compiling for HarmonyOS (#1553)
 * HarmonyOS support for VAD. (#1561)
-* Fix publishing flutter iOS app to appstore.
+* Fix publishing flutter iOS app to appstore (#1563).
 
 ## 1.10.31
 
