@@ -56,7 +56,7 @@ def get_args():
     parser.add_argument(
         "--server-addr",
         type=str,
-        default="localhost",
+        default="10.12.15.173",
         help="Address of the server",
     )
 
