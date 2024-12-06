@@ -406,7 +406,9 @@ class TtsGenerateWorker : public Napi::AsyncWorker {
 
       for (auto d : _this->data_list_) {
         if (d->cancelled) {
+#if __OHOS__
           OH_LOG_INFO(LOG_APP, "TtsGenerate is cancelled");
+#endif
           return 0;
         }
       }
