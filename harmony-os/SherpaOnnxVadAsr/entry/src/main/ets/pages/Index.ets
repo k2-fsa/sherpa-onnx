@@ -229,7 +229,7 @@ struct Index {
               .lineSpacing({ value: 10, unit: LengthUnit.VP })
               .height('100%');
           }.alignItems(HorizontalAlign.Center).justifyContent(FlexAlign.Start)
-        }.tabBar(this.TabBuilder('From file', 0, $r('app.media.icon_doc'), $r('app.media.icon_doc_default')))
+        }.tabBar(this.TabBuilder('From file', 0, $r('app.media.icon_doc'), $r('app.media.icon_doc')))
 
         TabContent() {
           Column({ space: 10 }) {
@@ -278,8 +278,8 @@ struct Index {
               .height('100%');
           }.alignItems(HorizontalAlign.Center).justifyContent(FlexAlign.Start)
         }
-        .tabBar(this.TabBuilder('From mic', 1, $r('app.media.ic_public_input_voice'),
-          $r('app.media.ic_public_input_voice_default')))
+        .tabBar(this.TabBuilder('From mic', 1, $r('app.media.icon_mic'),
+          $r('app.media.icon_mic')))
 
         TabContent() {
           Column({ space: 10 }) {
@@ -300,7 +300,7 @@ https://k2-fsa.github.io/sherpa/social-groups.html
             `
             }).width('100%').height('100%').focusable(false)
           }.justifyContent(FlexAlign.Start)
-        }.tabBar(this.TabBuilder('Help', 2, $r('app.media.info_circle'), $r('app.media.info_circle_default')))
+        }.tabBar(this.TabBuilder('Help', 2, $r('app.media.info'), $r('app.media.info')))
 
       }.scrollable(false)
     }.width('100%').justifyContent(FlexAlign.Start)
