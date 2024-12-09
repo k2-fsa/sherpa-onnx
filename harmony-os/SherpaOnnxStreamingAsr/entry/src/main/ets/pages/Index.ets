@@ -73,6 +73,7 @@ struct Index {
   private readonly scriptURL: string = 'entry/ets/workers/StreamingAsrWorker.ets'
   private startTime: number = 0;
   private stopTime: number = 0;
+  private sampleRate: number = 48000;
 
   private sampleList: Float32Array[] = []
 
@@ -121,7 +122,7 @@ struct Index {
     }
 
     const audioStreamInfo: audio.AudioStreamInfo = {
-      samplingRate: audio.AudioSamplingRate.SAMPLE_RATE_16000,
+      samplingRate: this.sampleRate,
       channels: audio.AudioChannel.CHANNEL_1,
       sampleFormat: audio.AudioSampleFormat.SAMPLE_FORMAT_S16LE,
       encodingType: audio.AudioEncodingType.ENCODING_TYPE_RAW,
@@ -335,7 +336,7 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
 
                 audioViewPicker.save(audioOptions).then((audioSelectResult: Array<string>) => {
                   uri = audioSelectResult[0];
-                  savePcmToWav(uri, toInt16Samples(samples), 16000);
+                  savePcmToWav(uri, toInt16Samples(samples), this.sampleRate);
                   console.log(`Saved to ${uri}`);
                   this.micInfo += `\nSaved to ${uri}`;
                 });
@@ -391,13 +392,21 @@ https://k2-fsa.github.io/sherpa/social-groups.html
       samplesFloat[i] = view[i] / 32768.0;
     }
 
+    console.log(`n: ${buffer.byteLength}, s: ${samplesFloat.length}`);
+    let a = 0;
+    for (let s of this.sampleList) {
+      a += s.length;
+    }
+    console.log(`a: ${a}, ${this.sampleList.length}`);
+
     this.sampleList.push(samplesFloat);
 
     if (this.workerInstance) {
       this.workerInstance.postMessage({
         msgType: 'streaming-asr-decode-mic-samples',
         samples: samplesFloat,
-        sampleRate: 16000 });
+        sampleRate: this.sampleRate,
+      })
     }
   }
 }
