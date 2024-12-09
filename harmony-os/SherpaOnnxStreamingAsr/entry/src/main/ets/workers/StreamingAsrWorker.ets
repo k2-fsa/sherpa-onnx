@@ -9,6 +9,8 @@ const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
  * @param e message data
  */
 workerPort.onmessage = (e: MessageEvents) => {
+  const msgType = e.data['msgType'] as string;
+  console.log(`from the main thread, msg-type: ${msgType}`);
 }
 
 /**

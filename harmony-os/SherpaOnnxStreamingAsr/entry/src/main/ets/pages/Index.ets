@@ -1,4 +1,6 @@
 import { LengthUnit } from '@kit.ArkUI';
+import worker, { MessageEvents } from '@ohos.worker';
+
 
 @Entry
 @Component
@@ -11,6 +13,23 @@ struct Index {
   @State resultForMic: string = ''
   @State micBtnCaption: string = 'Start';
   private controller: TabsController = new TabsController();
+
+  private workerInstance?: worker.ThreadWorker
+  private readonly scriptURL: string = 'entry/ets/workers/StreamingAsrWorker.ets'
+
+  aboutToAppear() {
+    this.workerInstance = new worker.ThreadWorker(this.scriptURL, {
+      name: 'Streaming ASR worker'
+    });
+
+    this.workerInstance.onmessage = (e: MessageEvents) => {
+      const msgType = e.data['msgType'] as string;
+      console.log(`received msg from worker: ${msgType}`);
+    };
+
+    const context = getContext();
+    this.workerInstance.postMessage({ msgType: 'init-streaming-asr', context });
+  }
 
   @Builder
   TabBuilder(title: string, targetIndex: number, selectedImg: Resource, normalImg: Resource) {
