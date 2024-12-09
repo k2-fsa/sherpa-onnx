@@ -100,8 +100,8 @@ function getModelConfig(type: number): OnlineModelConfig {
     case 8: {
       const modelDir = 'sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20';
       modelConfig.transducer.encoder = `${modelDir}/encoder-epoch-99-avg-1.int8.onnx`;
-      modelConfig.transducer.decoder = `${modelDir}/encoder-epoch-99-avg-1.onnx`;
-      modelConfig.transducer.joiner = `${modelDir}/encoder-epoch-99-avg-1.int8.onnx`;
+      modelConfig.transducer.decoder = `${modelDir}/decoder-epoch-99-avg-1.onnx`;
+      modelConfig.transducer.joiner = `${modelDir}/joiner-epoch-99-avg-1.int8.onnx`;
       modelConfig.tokens = `${modelDir}/tokens.txt`;
       modelConfig.modelType = 'zipformer';
       break;
@@ -110,8 +110,8 @@ function getModelConfig(type: number): OnlineModelConfig {
     case 9: {
       const modelDir = 'sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23'
       modelConfig.transducer.encoder = `${modelDir}/encoder-epoch-99-avg-1.int8.onnx`;
-      modelConfig.transducer.decoder = `${modelDir}/encoder-epoch-99-avg-1.onnx`;
-      modelConfig.transducer.joiner = `${modelDir}/encoder-epoch-99-avg-1.int8.onnx`;
+      modelConfig.transducer.decoder = `${modelDir}/decoder-epoch-99-avg-1.onnx`;
+      modelConfig.transducer.joiner = `${modelDir}/joiner-epoch-99-avg-1.int8.onnx`;
       modelConfig.tokens = `${modelDir}/tokens.txt`;
       modelConfig.modelType = 'zipformer';
       break;
@@ -120,8 +120,8 @@ function getModelConfig(type: number): OnlineModelConfig {
     case 10: {
       const modelDir = 'sherpa-onnx-streaming-zipformer-en-20M-2023-02-17';
       modelConfig.transducer.encoder = `${modelDir}/encoder-epoch-99-avg-1.int8.onnx`;
-      modelConfig.transducer.decoder = `${modelDir}/encoder-epoch-99-avg-1.onnx`;
-      modelConfig.transducer.joiner = `${modelDir}/encoder-epoch-99-avg-1.int8.onnx`;
+      modelConfig.transducer.decoder = `${modelDir}/decoder-epoch-99-avg-1.onnx`;
+      modelConfig.transducer.joiner = `${modelDir}/joiner-epoch-99-avg-1.int8.onnx`;
       modelConfig.tokens = `${modelDir}/tokens.txt`;
       modelConfig.modelType = 'zipformer';
       break;
@@ -130,8 +130,8 @@ function getModelConfig(type: number): OnlineModelConfig {
     case 14: {
       const modelDir = 'sherpa-onnx-streaming-zipformer-korean-2024-06-16';
       modelConfig.transducer.encoder = `${modelDir}/encoder-epoch-99-avg-1.int8.onnx`;
-      modelConfig.transducer.decoder = `${modelDir}/encoder-epoch-99-avg-1.onnx`;
-      modelConfig.transducer.joiner = `${modelDir}/encoder-epoch-99-avg-1.int8.onnx`;
+      modelConfig.transducer.decoder = `${modelDir}/decoder-epoch-99-avg-1.onnx`;
+      modelConfig.transducer.joiner = `${modelDir}/joiner-epoch-99-avg-1.int8.onnx`;
       modelConfig.tokens = `${modelDir}/tokens.txt`;
       modelConfig.modelType = 'zipformer';
       break;
