@@ -20,6 +20,7 @@ function initStreamingAsr(context: Context): OnlineRecognizer {
     'sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx';
   config.modelConfig.tokens = 'sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt';
   config.modelConfig.debug = true;
+  config.modelConfig.numThreads = 2;
 
   config.enableEndpoint = true;
 

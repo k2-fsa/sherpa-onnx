@@ -59,6 +59,7 @@ struct Index {
   @State lang: string = 'English';
   @State resultForFile: string = ''
   @State resultForMic: string = ''
+  private resultListForMic: string[] = [];
   @State selectFileBtnEnabled: boolean = false;
   @State micBtnCaption: string = 'Start';
   @State micStarted: boolean = false;
@@ -185,6 +186,28 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
           }
         });
       }
+
+      if (msgType == 'streaming-asr-decode-mic-result') {
+        const text = e.data['text'] as string;
+        if (text.trim() == '') {
+          return;
+        }
+
+        const isEndpoint = e.data['isEndpoint'] as boolean;
+
+        let s = '';
+        let i = 0;
+        for (; i < this.resultListForMic.length; ++i) {
+          s += `${i}: ${this.resultListForMic[i]}\n`
+        }
+
+        s += `${i}: ${text}`;
+        this.resultForMic = s;
+
+        if (isEndpoint) {
+          this.resultListForMic.push(text);
+        }
+      }
     };
 
     const context = getContext();
@@ -296,6 +319,8 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
                     this.micStarted = true;
                     this.micSaveBtnEnabled = false;
                     this.micBtnCaption = 'Stop';
+                    this.resultForMic = '';
+                    this.resultListForMic = [];
 
                     if (this.workerInstance) {
                       this.workerInstance.postMessage({
@@ -391,13 +416,6 @@ https://k2-fsa.github.io/sherpa/social-groups.html
     for (let i = 0; i < view.length; ++i) {
       samplesFloat[i] = view[i] / 32768.0;
     }
-
-    console.log(`n: ${buffer.byteLength}, s: ${samplesFloat.length}`);
-    let a = 0;
-    for (let s of this.sampleList) {
-      a += s.length;
-    }
-    console.log(`a: ${a}, ${this.sampleList.length}`);
 
     this.sampleList.push(samplesFloat);
 
