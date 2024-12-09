@@ -8,6 +8,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -28,8 +37,8 @@ class SpeakerEmbeddingExtractorNeMoModel::Impl {
     }
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const SpeakerEmbeddingExtractorConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -39,7 +48,6 @@ class SpeakerEmbeddingExtractorNeMoModel::Impl {
       Init(buf.data(), buf.size());
     }
   }
-#endif
 
   Ort::Value Compute(Ort::Value x, Ort::Value x_lens) const {
     std::array<Ort::Value, 2> inputs = {std::move(x), std::move(x_lens)};
@@ -73,7 +81,11 @@ class SpeakerEmbeddingExtractorNeMoModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
       PrintModelMetadata(os, meta_data);
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -93,7 +105,12 @@ class SpeakerEmbeddingExtractorNeMoModel::Impl {
     std::string framework;
     SHERPA_ONNX_READ_META_DATA_STR(framework, "framework");
     if (framework != "nemo") {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Expect a NeMo model, given: %{public}s",
+                       framework.c_str());
+#else
       SHERPA_ONNX_LOGE("Expect a NeMo model, given: %s", framework.c_str());
+#endif
       exit(-1);
     }
   }
@@ -119,11 +136,10 @@ SpeakerEmbeddingExtractorNeMoModel::SpeakerEmbeddingExtractorNeMoModel(
     const SpeakerEmbeddingExtractorConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 SpeakerEmbeddingExtractorNeMoModel::SpeakerEmbeddingExtractorNeMoModel(
-    AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config)
+    Manager *mgr, const SpeakerEmbeddingExtractorConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 SpeakerEmbeddingExtractorNeMoModel::~SpeakerEmbeddingExtractorNeMoModel() =
     default;
@@ -141,5 +157,15 @@ Ort::Value SpeakerEmbeddingExtractorNeMoModel::Compute(
 OrtAllocator *SpeakerEmbeddingExtractorNeMoModel::Allocator() const {
   return impl_->Allocator();
 }
+
+#if __ANDROID_API__ >= 9
+template SpeakerEmbeddingExtractorNeMoModel::SpeakerEmbeddingExtractorNeMoModel(
+    AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config);
+#endif
+
+#if __OHOS__
+template SpeakerEmbeddingExtractorNeMoModel::SpeakerEmbeddingExtractorNeMoModel(
+    NativeResourceManager *mgr, const SpeakerEmbeddingExtractorConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

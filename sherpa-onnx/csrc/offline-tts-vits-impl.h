@@ -62,9 +62,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       for (const auto &f : files) {
         if (config.model.debug) {
 #if __OHOS__
-          SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
-#else
           SHERPA_ONNX_LOGE("rule far: %{public}s", f.c_str());
+#else
+          SHERPA_ONNX_LOGE("rule far: %s", f.c_str());
 #endif
         }
         std::unique_ptr<fst::FarReader<fst::StdArc>> reader(

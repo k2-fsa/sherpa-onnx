@@ -9,11 +9,6 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/online-stream.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -45,10 +40,9 @@ class SpeakerEmbeddingExtractor {
   explicit SpeakerEmbeddingExtractor(
       const SpeakerEmbeddingExtractorConfig &config);
 
-#if __ANDROID_API__ >= 9
-  SpeakerEmbeddingExtractor(AAssetManager *mgr,
+  template <typename Manager>
+  SpeakerEmbeddingExtractor(Manager *mgr,
                             const SpeakerEmbeddingExtractorConfig &config);
-#endif
 
   ~SpeakerEmbeddingExtractor();
 

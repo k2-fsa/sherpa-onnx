@@ -6,6 +6,15 @@
 
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
@@ -55,11 +64,10 @@ SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
     const SpeakerEmbeddingExtractorConfig &config)
     : impl_(SpeakerEmbeddingExtractorImpl::Create(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
-    AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config)
+    Manager *mgr, const SpeakerEmbeddingExtractorConfig &config)
     : impl_(SpeakerEmbeddingExtractorImpl::Create(mgr, config)) {}
-#endif
 
 SpeakerEmbeddingExtractor::~SpeakerEmbeddingExtractor() = default;
 
@@ -76,5 +84,15 @@ bool SpeakerEmbeddingExtractor::IsReady(OnlineStream *s) const {
 std::vector<float> SpeakerEmbeddingExtractor::Compute(OnlineStream *s) const {
   return impl_->Compute(s);
 }
+
+#if __ANDROID_API__ >= 9
+template SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
+    AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config);
+#endif
+
+#if __OHOS__
+template SpeakerEmbeddingExtractor::SpeakerEmbeddingExtractor(
+    NativeResourceManager *mgr, const SpeakerEmbeddingExtractorConfig &config);
+#endif
 
 }  // namespace sherpa_onnx
