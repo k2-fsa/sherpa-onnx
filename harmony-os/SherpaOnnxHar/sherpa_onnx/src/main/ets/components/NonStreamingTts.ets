@@ -4,7 +4,7 @@ import {
   getOfflineTtsSampleRate,
   offlineTtsGenerate,
   offlineTtsGenerateAsync,
-} from "libsherpa_onnx.so";
+} from 'libsherpa_onnx.so';
 
 export class OfflineTtsVitsModelConfig {
   public model: string = '';

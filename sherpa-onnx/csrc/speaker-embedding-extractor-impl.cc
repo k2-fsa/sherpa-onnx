@@ -3,6 +3,15 @@
 // Copyright (c)  2024  Xiaomi Corporation
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-impl.h"
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-general-impl.h"
@@ -35,7 +44,11 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
   if (debug) {
     std::ostringstream os;
     PrintModelMetadata(os, meta_data);
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
     SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
   }
 
   Ort::AllocatorWithDefaultOptions allocator;
@@ -59,7 +72,11 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
   } else if (model_type == "nemo") {
     return ModelType::kNeMo;
   } else {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("Unsupported model_type: %{public}s", model_type.c_str());
+#else
     SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
+#endif
     return ModelType::kUnknown;
   }
 }
@@ -91,10 +108,10 @@ SpeakerEmbeddingExtractorImpl::Create(
   return nullptr;
 }
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 std::unique_ptr<SpeakerEmbeddingExtractorImpl>
 SpeakerEmbeddingExtractorImpl::Create(
-    AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config) {
+    Manager *mgr, const SpeakerEmbeddingExtractorConfig &config) {
   ModelType model_type = ModelType::kUnknown;
 
   {
@@ -120,6 +137,17 @@ SpeakerEmbeddingExtractorImpl::Create(
   // unreachable code
   return nullptr;
 }
+
+#if __ANDROID_API__ >= 9
+template std::unique_ptr<SpeakerEmbeddingExtractorImpl>
+SpeakerEmbeddingExtractorImpl::Create(
+    AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config);
+#endif
+
+#if __OHOS__
+template std::unique_ptr<SpeakerEmbeddingExtractorImpl>
+SpeakerEmbeddingExtractorImpl::Create(
+    NativeResourceManager *mgr, const SpeakerEmbeddingExtractorConfig &config);
 #endif
 
 }  // namespace sherpa_onnx

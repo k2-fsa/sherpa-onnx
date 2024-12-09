@@ -1328,8 +1328,8 @@ struct SherpaOnnxSpeakerEmbeddingExtractor {
   std::unique_ptr<sherpa_onnx::SpeakerEmbeddingExtractor> impl;
 };
 
-const SherpaOnnxSpeakerEmbeddingExtractor *
-SherpaOnnxCreateSpeakerEmbeddingExtractor(
+static sherpa_onnx::SpeakerEmbeddingExtractorConfig
+GetSpeakerEmbeddingExtractorConfig(
     const SherpaOnnxSpeakerEmbeddingExtractorConfig *config) {
   sherpa_onnx::SpeakerEmbeddingExtractorConfig c;
   c.model = SHERPA_ONNX_OR(config->model, "");
@@ -1342,8 +1342,20 @@ SherpaOnnxCreateSpeakerEmbeddingExtractor(
   }
 
   if (config->debug) {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s\n", c.ToString().c_str());
+#else
     SHERPA_ONNX_LOGE("%s\n", c.ToString().c_str());
+#endif
   }
+
+  return c;
+}
+
+const SherpaOnnxSpeakerEmbeddingExtractor *
+SherpaOnnxCreateSpeakerEmbeddingExtractor(
+    const SherpaOnnxSpeakerEmbeddingExtractorConfig *config) {
+  auto c = GetSpeakerEmbeddingExtractorConfig(config);
 
   if (!c.Validate()) {
     SHERPA_ONNX_LOGE("Errors in config!");
@@ -1979,6 +1991,23 @@ SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetectorOHOS(
   SherpaOnnxVoiceActivityDetector *p = new SherpaOnnxVoiceActivityDetector;
   p->impl = std::make_unique<sherpa_onnx::VoiceActivityDetector>(
       mgr, vad_config, buffer_size_in_seconds);
+
+  return p;
+}
+
+const SherpaOnnxSpeakerEmbeddingExtractor *
+SherpaOnnxCreateSpeakerEmbeddingExtractorOHOS(
+    const SherpaOnnxSpeakerEmbeddingExtractorConfig *config,
+    NativeResourceManager *mgr) {
+  if (!mgr) {
+    return SherpaOnnxCreateSpeakerEmbeddingExtractor(config);
+  }
+
+  auto c = GetSpeakerEmbeddingExtractorConfig(config);
+
+  auto p = new SherpaOnnxSpeakerEmbeddingExtractor;
+
+  p->impl = std::make_unique<sherpa_onnx::SpeakerEmbeddingExtractor>(mgr, c);
 
   return p;
 }
