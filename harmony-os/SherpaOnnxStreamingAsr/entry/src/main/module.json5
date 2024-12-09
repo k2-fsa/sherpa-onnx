@@ -47,6 +47,18 @@
           }
         ],
       }
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "reason": "$string:mic_reason",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility",
+          ],
+          "when": "inuse",
+        }
+      }
     ]
   }
 }

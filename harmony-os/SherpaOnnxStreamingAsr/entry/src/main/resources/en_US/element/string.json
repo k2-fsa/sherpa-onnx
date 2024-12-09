@@ -11,6 +11,10 @@
     {
       "name": "EntryAbility_label",
       "value": "Real-time ASR"
+    },
+    {
+      "name": "mic_reason",
+      "value": "access the microhone for on-device real-time speech recognition with Next-gen Kaldi"
     }
   ]
 }

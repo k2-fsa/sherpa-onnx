@@ -1,5 +1,5 @@
 import worker, { ThreadWorkerGlobalScope, MessageEvents, ErrorEvent } from '@ohos.worker';
-import { OnlineRecognizer, OnlineRecognizerConfig, readWaveFromBinary, Samples } from 'sherpa_onnx';
+import { OnlineRecognizer, OnlineRecognizerConfig, OnlineStream, readWaveFromBinary, Samples } from 'sherpa_onnx';
 import { fileIo } from '@kit.CoreFileKit';
 import { audio } from '@kit.AudioKit';
 
@@ -7,6 +7,7 @@ const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
 
 
 let recognizer: OnlineRecognizer;
+let micStream: OnlineStream;
 
 
 function initStreamingAsr(context: Context): OnlineRecognizer {
@@ -19,6 +20,8 @@ function initStreamingAsr(context: Context): OnlineRecognizer {
     'sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/joiner-epoch-99-avg-1.int8.onnx';
   config.modelConfig.tokens = 'sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt';
   config.modelConfig.debug = true;
+
+  config.enableEndpoint = true;
 
   return new OnlineRecognizer(config, context.resourceManager);
 }
@@ -61,7 +64,10 @@ function decodeFile(filename: string): DecodeFileResult {
  */
 workerPort.onmessage = (e: MessageEvents) => {
   const msgType = e.data['msgType'] as string;
-  console.log(`from the main thread, msg-type: ${msgType}`);
+
+  if (msgType != 'streaming-asr-decode-mic-samples') {
+    console.log(`from the main thread, msg-type: ${msgType}`);
+  }
 
   if (msgType == 'init-streaming-asr' && !recognizer) {
     console.log('initializing streaming ASR...');
@@ -81,6 +87,43 @@ workerPort.onmessage = (e: MessageEvents) => {
       duration: result.duration
     });
   }
+
+  if (msgType == 'streaming-asr-decode-mic-start') {
+    micStream = recognizer.createStream();
+  }
+
+  if (msgType == 'streaming-asr-decode-mic-stop') {
+    // nothing to do
+  }
+
+  if (msgType == 'streaming-asr-decode-mic-samples') {
+    const samples = e.data['samples'] as Float32Array;
+    const sampleRate = e.data['sampleRate'] as number;
+
+    micStream.acceptWaveform({samples, sampleRate});
+    while (recognizer.isReady(micStream)) {
+      recognizer.decode(micStream);
+
+      let isEndpoint = false;
+      let text = recognizer.getResult(micStream).text;
+
+      if (recognizer.isEndpoint(micStream)) {
+        isEndpoint = true;
+        recognizer.reset(micStream);
+      }
+
+      console.log(`text: ${text}, isEndpoint: ${isEndpoint}`);
+
+      if (text.trim() != '') {
+        workerPort.postMessage({
+          'msgType': 'streaming-asr-decode-mic-result',
+          text: text,
+          isEndpoint: isEndpoint,
+        });
+      }
+    }
+  }
+
 }
 
 /**
