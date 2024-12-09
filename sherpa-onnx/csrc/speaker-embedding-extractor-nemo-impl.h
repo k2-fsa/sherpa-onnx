@@ -78,10 +78,11 @@ class SpeakerEmbeddingExtractorNeMoImpl : public SpeakerEmbeddingExtractorImpl {
         NormalizePerFeature(features.data(), num_frames, feat_dim);
       } else {
 #if __OHOS__
-        SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %s",
+        SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %{public}s",
                          meta_data.feature_normalize_type.c_str());
 #else
-        SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %{public}s",
+
+        SHERPA_ONNX_LOGE("Unsupported feature_normalize_type: %s",
                          meta_data.feature_normalize_type.c_str());
 #endif
         exit(-1);

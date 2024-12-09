@@ -51,3 +51,9 @@ export {
   TtsOutput,
   TtsInput,
 } from './src/main/ets/components/NonStreamingTts';
+
+export {
+  SpeakerEmbeddingExtractorConfig,
+  SpeakerEmbeddingExtractor,
+  SpeakerEmbeddingManager,
+} from './src/main/ets/components/SpeakerIdentification';

@@ -11,6 +11,17 @@
 static Napi::External<SherpaOnnxSpeakerEmbeddingExtractor>
 CreateSpeakerEmbeddingExtractorWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+
+#if __OHOS__
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+#else
   if (info.Length() != 1) {
     std::ostringstream os;
     os << "Expect only 1 argument. Given: " << info.Length();
@@ -19,6 +30,7 @@ CreateSpeakerEmbeddingExtractorWrapper(const Napi::CallbackInfo &info) {
 
     return {};
   }
+#endif
 
   if (!info[0].IsObject()) {
     Napi::TypeError::New(env, "You should pass an object as the only argument.")
@@ -46,8 +58,18 @@ CreateSpeakerEmbeddingExtractorWrapper(const Napi::CallbackInfo &info) {
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(provider, provider);
 
+#if __OHOS__
+  std::unique_ptr<NativeResourceManager,
+                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+          &OH_ResourceManager_ReleaseNativeResourceManager);
+
+  const SherpaOnnxSpeakerEmbeddingExtractor *extractor =
+      SherpaOnnxCreateSpeakerEmbeddingExtractorOHOS(&c, mgr.get());
+#else
   const SherpaOnnxSpeakerEmbeddingExtractor *extractor =
       SherpaOnnxCreateSpeakerEmbeddingExtractor(&c);
+#endif
 
   if (c.model) {
     delete[] c.model;

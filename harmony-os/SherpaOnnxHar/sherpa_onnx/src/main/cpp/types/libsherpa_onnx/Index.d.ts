@@ -47,3 +47,18 @@ export type TtsOutput = {
 
 export const offlineTtsGenerate: (handle: object, input: object) => TtsOutput;
 export const offlineTtsGenerateAsync: (handle: object, input: object) => Promise<TtsOutput>;
+
+export const createSpeakerEmbeddingExtractor: (config: object, mgr?: object) => object;
+export const speakerEmbeddingExtractorDim: (handle: object) => number;
+export const speakerEmbeddingExtractorCreateStream: (handle: object) => object;
+export const speakerEmbeddingExtractorIsReady: (handle: object, stream: object) => boolean;
+export const speakerEmbeddingExtractorComputeEmbedding: (handle: object, stream: object, enableExternalBuffer: boolean) => Float32Array;
+export const createSpeakerEmbeddingManager: (dim: number) => object;
+export const speakerEmbeddingManagerAdd: (handle: object, speaker: {name: string, v: Float32Array}) => boolean;
+export const speakerEmbeddingManagerAddListFlattened: (handle: object, speaker: {name: string, vv: Float32Array, n: number}) => boolean;
+export const speakerEmbeddingManagerRemove: (handle: object, name: string) => boolean;
+export const speakerEmbeddingManagerSearch: (handle: object, obj: {v: Float32Array, threshold: number}) => string;
+export const speakerEmbeddingManagerVerify: (handle: object, obj: {name: string, v: Float32Array, threshold: number}) => boolean;
+export const speakerEmbeddingManagerContains: (handle: object, name: string) => boolean;
+export const speakerEmbeddingManagerNumSpeakers: (handle: object) => number;
+export const speakerEmbeddingManagerGetAllSpeakers: (handle: object) => Array<string>;
