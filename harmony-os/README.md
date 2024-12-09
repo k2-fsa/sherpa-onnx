@@ -10,5 +10,8 @@
   VAD + Non-streaming ASR for speech recognition.
   Please see the doc at <https://k2-fsa.github.io/sherpa/onnx/harmony-os/vad-asr.html>
 
+- [./SherpaOnnxStreamingAsr](./SherpaOnnxStreamingAsr) It shows how to use
+  streaming ASR models for real-time on-device speech recognition.
+
 - [./SherpaOnnxTts](./SherpaOnnxTts) It shows how to run on-device text-to-speech.
   Please see the doc at <https://k2-fsa.github.io/sherpa/onnx/harmony-os/tts.html>

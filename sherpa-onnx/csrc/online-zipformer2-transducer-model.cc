@@ -126,7 +126,11 @@ void OnlineZipformer2TransducerModel::InitEncoder(void *model_data,
       for (auto i : v) {
         os << i << " ";
       }
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
     };
     print(encoder_dims_, "encoder_dims");
     print(query_head_dims_, "query_head_dims");
@@ -135,8 +139,14 @@ void OnlineZipformer2TransducerModel::InitEncoder(void *model_data,
     print(num_encoder_layers_, "num_encoder_layers");
     print(cnn_module_kernels_, "cnn_module_kernels");
     print(left_context_len_, "left_context_len");
+
+#if __OHOS__
+    SHERPA_ONNX_LOGE("T: %{public}d", T_);
+    SHERPA_ONNX_LOGE("decode_chunk_len_: %{public}d", decode_chunk_len_);
+#else
     SHERPA_ONNX_LOGE("T: %d", T_);
     SHERPA_ONNX_LOGE("decode_chunk_len_: %d", decode_chunk_len_);
+#endif
   }
 }
 
