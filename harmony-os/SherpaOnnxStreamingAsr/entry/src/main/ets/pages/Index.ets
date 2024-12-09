@@ -59,7 +59,6 @@ struct Index {
   @State lang: string = 'English';
   @State resultForFile: string = ''
   @State resultForMic: string = ''
-  private resultListForMic: string[] = [];
   @State selectFileBtnEnabled: boolean = false;
   @State micBtnCaption: string = 'Start';
   @State micStarted: boolean = false;
@@ -69,16 +68,15 @@ struct Index {
   @State micSaveBtnEnabled: boolean = false;
   @State info: string = '';
   @State micInfo: string = '';
+  @State micInitDone: boolean = false;
+  private resultListForMic: string[] = [];
   private controller: TabsController = new TabsController();
   private workerInstance?: worker.ThreadWorker
   private readonly scriptURL: string = 'entry/ets/workers/StreamingAsrWorker.ets'
   private startTime: number = 0;
   private stopTime: number = 0;
   private sampleRate: number = 48000;
-
   private sampleList: Float32Array[] = []
-
-  @State micInitDone: boolean = false;
   private mic?: audio.AudioCapturer;
 
   flatten(samples: Float32Array[]): Float32Array {
@@ -301,7 +299,7 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
               .fontSize(13)
               .width(296)
               .height(60)
-              .onClick(()=>{
+              .onClick(() => {
                 this.micInfo = '';
                 if (this.mic) {
                   if (this.micStarted) {
@@ -338,7 +336,7 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
               .fontSize(13)
               .width(296)
               .height(60)
-              .onClick(()=>{
+              .onClick(() => {
                 if (this.sampleList.length == 0) {
                   this.micSaveBtnEnabled = false;
                   return;
@@ -372,7 +370,7 @@ RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3
             Text(`Supported languages: ${this.lang}`)
 
             if (this.micInfo != '') {
-              TextArea({text: this.micInfo})
+              TextArea({ text: this.micInfo })
                 .focusable(false);
             }
 
