@@ -62,8 +62,7 @@ export class CircularBuffer {
 
   // return a float32 array
   get(startIndex: number, n: number, enableExternalBuffer: boolean = true): Float32Array {
-    return circularBufferGet(
-      this.handle, startIndex, n, enableExternalBuffer);
+    return circularBufferGet(this.handle, startIndex, n, enableExternalBuffer);
   }
 
   pop(n: number) {
@@ -93,8 +92,7 @@ export class Vad {
   private handle: object;
 
   constructor(config: VadConfig, bufferSizeInSeconds?: number, mgr?: object) {
-    this.handle =
-      createVoiceActivityDetector(config, bufferSizeInSeconds, mgr);
+    this.handle = createVoiceActivityDetector(config, bufferSizeInSeconds, mgr);
     this.config = config;
   }
 

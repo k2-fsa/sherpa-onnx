@@ -8,6 +8,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 
@@ -24,8 +33,8 @@ class OfflineSpeakerSegmentationPyannoteModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineSpeakerSegmentationModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineSpeakerSegmentationModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -33,7 +42,6 @@ class OfflineSpeakerSegmentationPyannoteModel::Impl {
     auto buf = ReadFile(mgr, config_.pyannote.model);
     Init(buf.data(), buf.size());
   }
-#endif
 
   const OfflineSpeakerSegmentationPyannoteModelMetaData &GetModelMetaData()
       const {
@@ -61,7 +69,11 @@ class OfflineSpeakerSegmentationPyannoteModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
       PrintModelMetadata(os, meta_data);
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -103,12 +115,11 @@ OfflineSpeakerSegmentationPyannoteModel::
         const OfflineSpeakerSegmentationModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OfflineSpeakerSegmentationPyannoteModel::
     OfflineSpeakerSegmentationPyannoteModel(
-        AAssetManager *mgr, const OfflineSpeakerSegmentationModelConfig &config)
+        Manager *mgr, const OfflineSpeakerSegmentationModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OfflineSpeakerSegmentationPyannoteModel::
     ~OfflineSpeakerSegmentationPyannoteModel() = default;
@@ -122,5 +133,19 @@ Ort::Value OfflineSpeakerSegmentationPyannoteModel::Forward(
     Ort::Value x) const {
   return impl_->Forward(std::move(x));
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineSpeakerSegmentationPyannoteModel::
+    OfflineSpeakerSegmentationPyannoteModel(
+        AAssetManager *mgr,
+        const OfflineSpeakerSegmentationModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineSpeakerSegmentationPyannoteModel::
+    OfflineSpeakerSegmentationPyannoteModel(
+        NativeResourceManager *mgr,
+        const OfflineSpeakerSegmentationModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

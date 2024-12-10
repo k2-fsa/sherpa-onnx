@@ -7,6 +7,15 @@
 #include <string>
 #include <utility>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/offline-speaker-diarization-impl.h"
 
 namespace sherpa_onnx {
@@ -74,11 +83,10 @@ OfflineSpeakerDiarization::OfflineSpeakerDiarization(
     const OfflineSpeakerDiarizationConfig &config)
     : impl_(OfflineSpeakerDiarizationImpl::Create(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OfflineSpeakerDiarization::OfflineSpeakerDiarization(
-    AAssetManager *mgr, const OfflineSpeakerDiarizationConfig &config)
+    Manager *mgr, const OfflineSpeakerDiarizationConfig &config)
     : impl_(OfflineSpeakerDiarizationImpl::Create(mgr, config)) {}
-#endif
 
 OfflineSpeakerDiarization::~OfflineSpeakerDiarization() = default;
 
@@ -97,5 +105,15 @@ OfflineSpeakerDiarizationResult OfflineSpeakerDiarization::Process(
     void *callback_arg /*= nullptr*/) const {
   return impl_->Process(audio, n, std::move(callback), callback_arg);
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineSpeakerDiarization::OfflineSpeakerDiarization(
+    AAssetManager *mgr, const OfflineSpeakerDiarizationConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineSpeakerDiarization::OfflineSpeakerDiarization(
+    NativeResourceManager *mgr, const OfflineSpeakerDiarizationConfig &config);
+#endif
 
 }  // namespace sherpa_onnx
