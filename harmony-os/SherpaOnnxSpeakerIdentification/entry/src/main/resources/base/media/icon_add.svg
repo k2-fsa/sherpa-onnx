@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="24" height="24" viewBox="0 0 24 24" version="1.1">
+    <!-- Generator: Sketch 63.1 (92452) - https://sketch.com -->
+    <title>Public/ic_public_list_add_light</title>
+    <desc>Created with Sketch.</desc>
+    <g id="_Public/ic_public_list_add_light" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M12,1 C18.0751322,1 23,5.92486775 23,12 C23,18.0751322 18.0751322,23 12,23 C5.92486775,23 1,18.0751322 1,12 C1,5.92486775 5.92486775,1 12,1 Z" id="_椭圆形" fill="#0A59F7"/>
+        <path d="M12.75,17.25 C12.75,17.6642136 12.4142136,18 12,18 C11.5857864,18 11.25,17.6642136 11.25,17.25 L11.25,12.749 L6.75,12.75 C6.33578644,12.75 6,12.4142136 6,12 C6,11.5857864 6.33578644,11.25 6.75,11.25 L11.25,11.249 L11.25,6.75 C11.25,6.33578644 11.5857864,6 12,6 C12.4142136,6 12.75,6.33578644 12.75,6.75 L12.75,17.25 Z M13.75,11.25 L17.25,11.25 C17.6642136,11.25 18,11.5857864 18,12 C18,12.4142136 17.6642136,12.75 17.25,12.75 L13.75,12.75 L13.75,11.25 Z" id="_形状" fill="#FFFFFF"/>
+    </g>
+</svg>
