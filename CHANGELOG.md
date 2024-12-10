@@ -1,3 +1,13 @@
+## 1.10.34
+
+* Fix building node-addon package (#1598)
+* Update doc links for HarmonyOS (#1601)
+* Add on-device real-time ASR demo for HarmonyOS (#1606)
+* Add speaker identification APIs for HarmonyOS (#1607)
+* Add speaker identification demo for HarmonyOS (#1608)
+* Add speaker diarization API for HarmonyOS. (#1609)
+* Add speaker diarization demo for HarmonyOS (#1610)
+
 ## 1.10.33
 
 * Add non-streaming ASR support for HarmonyOS. (#1564)
