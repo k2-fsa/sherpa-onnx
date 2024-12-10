@@ -13,5 +13,8 @@
 - [./SherpaOnnxStreamingAsr](./SherpaOnnxStreamingAsr) It shows how to use
   streaming ASR models for real-time on-device speech recognition.
 
+- [./SherpaOnnxSpeakerIdentification](./SherpaOnnxSpeakerIdentification) It shows how to use
+  speaker embedding models for on-device speaker identification.
+
 - [./SherpaOnnxTts](./SherpaOnnxTts) It shows how to run on-device text-to-speech.
   Please see the doc at <https://k2-fsa.github.io/sherpa/onnx/harmony-os/tts.html>
