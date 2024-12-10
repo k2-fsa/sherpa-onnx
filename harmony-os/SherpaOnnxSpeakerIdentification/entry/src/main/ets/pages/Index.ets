@@ -16,12 +16,23 @@ struct Index {
   private workerInstance?: worker.ThreadWorker
   private readonly scriptURL: string = 'entry/ets/workers/SpeakerIdentificationWorker.ets'
 
-  @State allSpeakerNames: string[] = ['fangjun', 'leijun', 'liudehua'];
+  @State allSpeakerNames: string[] = [];
 
   aboutToAppear() {
     this.workerInstance = new worker.ThreadWorker(this.scriptURL, {
       name: 'Speaker identification worker'
     });
+
+    this.workerInstance.onmessage = (e: MessageEvents) => {
+      const msgType = e.data['msgType'] as string;
+      console.log(`received msg from worker: ${msgType}`);
+
+      if (msgType == 'manager-all-speaker-names') {
+        this.allSpeakerNames = e.data['allSpeakers'] as string[];
+      }
+    };
+
+    this.workerInstance.postMessage({ msgType: 'init-extractor', context: getContext()});
   }
 
   @Builder
@@ -62,16 +73,25 @@ struct Index {
                         .borderRadius(10)
                         .flexShrink(1)
 
-                      Button() {
-                        Text('Delete').fontSize(16)
-                      }.width('30%').height(40)
+                      Button('Delete')
+                      .width('30%')
+                        .height(40)
                       .onClick(() => {
-                        console.log(`Clicked. index is ${index}`);
                         if (index != undefined) {
-                          this.allSpeakerNames.splice(index, 1)
-                          console.info(JSON.stringify(this.allSpeakerNames));
+                          const name = this.allSpeakerNames[index];
+                          console.log(`Deleting speaker ${name}}`);
+                          if (this.workerInstance) {
+                            this.workerInstance.postMessage({
+                              msgType: 'manager-delete-speaker',
+                              name: name
+                            });
+                          }
                         }
                       }).stateEffect(true)
+
+                      Text('')
+                        .width('15%')
+                        .height(80)
                     }
                   }
                 }, (item: string) => item)

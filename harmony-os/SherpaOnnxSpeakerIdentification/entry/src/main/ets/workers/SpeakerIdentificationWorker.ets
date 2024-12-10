@@ -1,6 +1,11 @@
 import worker, { ThreadWorkerGlobalScope, MessageEvents, ErrorEvent } from '@ohos.worker';
-import { readWaveFromBinary, Samples, SpeakerEmbeddingExtractor, SpeakerEmbeddingExtractorConfig,
-  SpeakerEmbeddingManager } from 'sherpa_onnx';
+import {
+  readWaveFromBinary,
+  Samples,
+  SpeakerEmbeddingExtractor,
+  SpeakerEmbeddingExtractorConfig,
+  SpeakerEmbeddingManager
+} from 'sherpa_onnx';
 import { fileIo } from '@kit.CoreFileKit';
 
 const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
@@ -47,12 +52,44 @@ workerPort.onmessage = (e: MessageEvents) => {
     const filename1 = 'sr-data/enroll/fangjun-sr-1.wav';
     const samples1 = readWaveFromRawfile(filename1, context);
     console.log(`sample rate: ${samples1.sampleRate}`);
-    const ok = manager.add({name: 'fangjun', v: extractEmbedding(samples1) });
+    let ok = manager.add({ name: 'fangjun0', v: extractEmbedding(samples1) });
+    ok = manager.add({ name: 'fangjun1', v: extractEmbedding(samples1) });
+    /*
+    ok = manager.add({ name: 'fangjun2', v: extractEmbedding(samples1) });
+    ok = manager.add({ name: 'fangjun3', v: extractEmbedding(samples1) });
+    ok = manager.add({ name: 'fangjun4', v: extractEmbedding(samples1) });
+    ok = manager.add({ name: 'fangjun5', v: extractEmbedding(samples1) });
+    ok = manager.add({ name: 'fangjun6', v: extractEmbedding(samples1) });
+    ok = manager.add({ name: 'fangjun7', v: extractEmbedding(samples1) });
+    ok = manager.add({ name: 'fangjun8', v: extractEmbedding(samples1) });
+    ok = manager.add({ name: 'fangjun9', v: extractEmbedding(samples1) });
+    ok = manager.add({ name: 'fangjun10', v: extractEmbedding(samples1) });
+    */
+
     if (ok) {
       console.log(`Added fangjun`);
       let n = manager.getNumSpeakers();
       console.log(`number of speakers: ${n}`);
       console.log(`speaker names: ${manager.getAllSpeakerNames().join('\n')}`);
+    }
+
+    workerPort.postMessage({
+      msgType: 'manager-all-speaker-names', allSpeakers: manager.getAllSpeakerNames(),
+    });
+  }
+
+  if (msgType == 'manager-delete-speaker') {
+    const name = e.data['name'] as string;
+    const ok = manager.remove(name);
+    if (ok) {
+      console.log(`Removed ${name}.`);
+
+      console.log(`Number of speakers: ${manager.getNumSpeakers()}`);
+      console.log(`Number of speakers2: ${manager.getAllSpeakerNames().length}`);
+      console.log(JSON.stringify(manager.getAllSpeakerNames()));
+      workerPort.postMessage({
+        msgType: 'manager-all-speaker-names', allSpeakers: manager.getAllSpeakerNames(),
+      });
     }
   }
 }
