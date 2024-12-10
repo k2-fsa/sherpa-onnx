@@ -2,6 +2,7 @@ import {
   createOfflineSpeakerDiarization,
   getOfflineSpeakerDiarizationSampleRate,
   offlineSpeakerDiarizationProcess,
+  offlineSpeakerDiarizationProcessAsync,
   offlineSpeakerDiarizationSetConfig,
 } from 'libsherpa_onnx.so';
 
@@ -32,9 +33,12 @@ export class OfflineSpeakerDiarizationConfig {
 }
 
 export class OfflineSpeakerDiarizationSegment {
-  public start: number = 0; // in seconds
-  public end: number = 0; // in seconds
-  public speaker: number = 0; // ID of the speaker; count from 0
+  // in seconds
+  public start: number = 0;
+  // in seconds
+  public end: number = 0;
+  // ID of the speaker; count from 0
+  public speaker: number = 0;
 }
 
 export class OfflineSpeakerDiarization {
@@ -65,6 +69,12 @@ export class OfflineSpeakerDiarization {
    */
   process(samples: Float32Array): OfflineSpeakerDiarizationSegment[] {
     return offlineSpeakerDiarizationProcess(this.handle, samples) as OfflineSpeakerDiarizationSegment[];
+  }
+
+  processAsync(samples: Float32Array, callback: (numProcessedChunks: number,
+    numTotalChunks: number) => void): Promise<OfflineSpeakerDiarizationSegment[]> {
+    return offlineSpeakerDiarizationProcessAsync(this.handle, samples,
+      callback) as Promise<OfflineSpeakerDiarizationSegment[]>;
   }
 
   setConfig(config: OfflineSpeakerDiarizationConfig) {

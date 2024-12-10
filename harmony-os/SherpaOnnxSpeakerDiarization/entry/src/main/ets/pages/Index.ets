@@ -1,6 +1,6 @@
-import { LengthUnit } from '@kit.ArkUI';
+import { LengthUnit, promptAction } from '@kit.ArkUI';
 import worker, { MessageEvents } from '@ohos.worker';
-import { systemTime, BusinessError } from '@kit.BasicServicesKit';
+import { BusinessError, pasteboard } from '@kit.BasicServicesKit';
 import { picker } from '@kit.CoreFileKit';
 
 
@@ -10,19 +10,15 @@ struct Index {
   @State title: string = 'Next-gen Kaldi: Speaker Diarization';
   @State titleFontSize: number = 15;
   @State currentIndex: number = 0;
-  private controller: TabsController = new TabsController();
-
-  private workerInstance?: worker.ThreadWorker
-  private readonly scriptURL: string = 'entry/ets/workers/SpeakerDiarizationWorker.ets'
-
   @State resultForFile: string = '';
   @State resultForMic: string = '';
-
-  @State micBtnCaption: string = 'Start recording';
-  @State micSaveBtnCaption: string = 'Save audio';
-
-  @State micBtnEnabled: boolean = false;
+  @State progressForFile: number = 0;
   @State selectFileBtnEnabled: boolean = false;
+  @State copyBtnForFileEnabled: boolean = false;
+  private controller: TabsController = new TabsController();
+  private workerInstance?: worker.ThreadWorker
+  private readonly scriptURL: string = 'entry/ets/workers/SpeakerDiarizationWorker.ets'
+  private numSpeakers: string = '-1';
 
   @Builder
   TabBuilder(title: string, targetIndex: number, selectedImg: Resource, normalImg: Resource) {
@@ -42,7 +38,10 @@ struct Index {
 
     this.workerInstance.onmessage = (e: MessageEvents) => {
       const msgType = e.data['msgType'] as string;
-      console.log(`received msg from worker: ${msgType}`);
+
+      if (msgType != 'speaker-diarization-file-progress') {
+        console.log(`received msg from worker: ${msgType}`);
+      }
 
       if (msgType == 'init-speaker-diarization-done') {
         console.log('Speaker diarization initialized successfully');
@@ -51,7 +50,10 @@ struct Index {
         this.resultForMic = 'Initialization finished.\nPlease click the button Start recording.';
 
         this.selectFileBtnEnabled = true;
-        this.micBtnEnabled = true;
+      }
+
+      if (msgType == 'speaker-diarization-file-progress') {
+        this.progressForFile = e.data['progress'] as number;
       }
 
       if (msgType == 'speaker-diarization-file-done') {
@@ -59,6 +61,7 @@ struct Index {
         this.resultForFile = result;
 
         this.selectFileBtnEnabled = true;
+        this.copyBtnForFileEnabled = true;
       }
     };
 
@@ -73,12 +76,35 @@ struct Index {
     Column() {
       Tabs({ barPosition: BarPosition.End, controller: this.controller }) {
         TabContent() {
-          Column({space: 10}) {
+          Column({ space: 10 }) {
             Text(this.title).fontSize(this.titleFontSize).fontWeight(FontWeight.Bold);
-            Button('Select .wav file (16kHz) ')
-              .enabled(this.selectFileBtnEnabled)
-              .onClick(()=>{
+            Row({ space: 10 }) {
+              Text(`Number of speakers`).width('60%')
+
+              TextInput({ text: this.numSpeakers }).onChange((text) => {
+                this.numSpeakers = text.trim();
+              }).width('20%')
+            }.justifyContent(FlexAlign.Center)
+
+            Row({ space: 10 }) {
+              Button('Select .wav file (16kHz) ').enabled(this.selectFileBtnEnabled).onClick(() => {
                 this.resultForFile = '';
+                this.progressForFile = 0;
+                this.copyBtnForFileEnabled = false;
+
+                let numSpeakers = parseInt(this.numSpeakers);
+                if (numSpeakers.toString() != this.numSpeakers) {
+                  this.resultForFile =
+                    'Please input a valid value for the number of speakers in the .wav file you are going to select';
+                  return;
+                }
+
+                if (numSpeakers < 1) {
+                  this.resultForFile =
+                    'Please input a positive value for the number of speakers in the .wav file you are going to select';
+                  return;
+                }
+
                 this.selectFileBtnEnabled = false;
 
                 const documentSelectOptions = new picker.DocumentSelectOptions();
@@ -97,7 +123,7 @@ struct Index {
 
                   if (this.workerInstance) {
                     this.workerInstance.postMessage({
-                      msgType: 'speaker-diarization-file', filename: result[0],
+                      msgType: 'speaker-diarization-file', filename: result[0], numSpeakers,
                     });
                     this.resultForFile = `Decoding ${result[0]} ... ...`;
                   } else {
@@ -108,6 +134,32 @@ struct Index {
                   this.selectFileBtnEnabled = true;
                 })
               })
+              Button('Copy results')
+                .enabled(this.copyBtnForFileEnabled)
+                .onClick(() => { // See https://developer.huawei.com/consumer/cn/doc/harmonyos-faqs/faqs-arkui-308-V5
+                  const pasteboardData = pasteboard.createData(pasteboard.MIMETYPE_TEXT_PLAIN, this.resultForFile);
+                  const systemPasteboard = pasteboard.getSystemPasteboard();
+                  systemPasteboard.setData(pasteboardData);
+                  systemPasteboard.getData().then((data) => {
+                    if (data) {
+                      promptAction.showToast({ message: 'Result copied.' });
+                    } else {
+                      promptAction.showToast({ message: 'Failed to copy' });
+                    }
+                  })
+                })
+            }
+
+            if (this.progressForFile > 0) {
+              Row() {
+                Progress({ value: 0, total: 100, type: ProgressType.Capsule })
+                  .width('80%')
+                  .height(20)
+                  .value(this.progressForFile);
+
+                Text(`${this.progressForFile.toFixed(2)}%`).width('15%')
+              }.width('100%').justifyContent(FlexAlign.Center)
+            }
 
             TextArea({ text: this.resultForFile })
               .lineSpacing({ value: 10, unit: LengthUnit.VP })
@@ -117,22 +169,7 @@ struct Index {
         }.tabBar(this.TabBuilder('From file', 0, $r('app.media.icon_doc'), $r('app.media.icon_doc')))
 
         TabContent() {
-          Column({space: 10}) {
-            Text(this.title).fontSize(this.titleFontSize).fontWeight(FontWeight.Bold);
-            Row() {
-              Button(this.micBtnCaption)
-
-              Button(this.micSaveBtnCaption)
-            }
-            TextArea({ text: this.resultForMic })
-              .lineSpacing({ value: 10, unit: LengthUnit.VP })
-              .width('100%')
-              .height('100%')
-          }
-        }.tabBar(this.TabBuilder('From mic', 1, $r('app.media.icon_mic'), $r('app.media.icon_mic')))
-
-        TabContent() {
-          Column({space: 10}) {
+          Column({ space: 10 }) {
             Text(this.title).fontSize(this.titleFontSize).fontWeight(FontWeight.Bold);
             TextArea({
               text: `
@@ -150,7 +187,7 @@ https://k2-fsa.github.io/sherpa/social-groups.html
             `
             }).width('100%').height('100%').focusable(false)
           }.justifyContent(FlexAlign.Start)
-        }.tabBar(this.TabBuilder('Help', 2, $r('app.media.info'), $r('app.media.info')))
+        }.tabBar(this.TabBuilder('Help', 1, $r('app.media.info'), $r('app.media.info')))
       }.scrollable(false)
     }
   }

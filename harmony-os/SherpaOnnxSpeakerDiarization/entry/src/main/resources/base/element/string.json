@@ -11,10 +11,6 @@
     {
       "name": "EntryAbility_label",
       "value": "Speaker diarization"
-    },
-    {
-      "name": "mic_reason",
-      "value": "access the microphone for on-device speaker diarizatiaon with Next-gen Kaldi"
     }
   ]
 }

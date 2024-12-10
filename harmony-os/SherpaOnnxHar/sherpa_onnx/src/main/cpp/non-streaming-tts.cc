@@ -344,9 +344,9 @@ struct TtsCallbackData {
 
 // see
 // https://github.com/nodejs/node-addon-examples/blob/main/src/6-threadsafe-function/typed_threadsafe_function/node-addon-api/clock.cc
-void InvokeJsCallback(Napi::Env env, Napi::Function callback,
-                      Napi::Reference<Napi::Value> *context,
-                      TtsCallbackData *data) {
+static void InvokeJsCallback(Napi::Env env, Napi::Function callback,
+                             Napi::Reference<Napi::Value> *context,
+                             TtsCallbackData *data) {
   if (env != nullptr) {
     if (callback != nullptr) {
       Napi::ArrayBuffer arrayBuffer =
@@ -580,7 +580,6 @@ static Napi::Object OfflineTtsGenerateAsyncWrapper(
       context,
       [](Napi::Env, void *, Napi::Reference<Napi::Value> *ctx) { delete ctx; });
 
-  const SherpaOnnxGeneratedAudio *audio;
   TtsGenerateWorker *worker = new TtsGenerateWorker(
       env, tsfn, tts, text, speed, sid, enable_external_buffer);
   worker->Queue();

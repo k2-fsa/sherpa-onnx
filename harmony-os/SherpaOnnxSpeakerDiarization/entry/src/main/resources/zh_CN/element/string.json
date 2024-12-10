@@ -11,10 +11,6 @@
     {
       "name": "EntryAbility_label",
       "value": "说话人日志"
-    },
-    {
-      "name": "mic_reason",
-      "value": "使用新一代Kaldi, 访问麦克风进行本地说话人日志 (不需要联网)"
     }
   ]
 }
