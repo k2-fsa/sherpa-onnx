@@ -6,7 +6,7 @@
   "author": "",
   "license": "",
   "dependencies": {
-    "sherpa_onnx": "file:./sherpa_onnx.har",
+    "sherpa_onnx": "file:./sherpa_onnx_2.har",
   }
 }
 

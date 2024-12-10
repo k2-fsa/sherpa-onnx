@@ -2,15 +2,19 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "module description"
+      "value": "On-device speaker identification with Next-gen Kaldi"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "description"
+      "value": "On-device speaker identification with Next-gen Kaldi"
     },
     {
       "name": "EntryAbility_label",
-      "value": "label"
+      "value": "Speaker identification"
+    },
+    {
+      "name": "mic_reason",
+      "value": "access the microphone for on-device speaker identification with Next-gen Kaldi"
     }
   ]
 }

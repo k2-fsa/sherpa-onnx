@@ -14,7 +14,7 @@
     },
     {
       "name": "mic_reason",
-      "value": "access the microhone for on-device real-time speech recognition with Next-gen Kaldi"
+      "value": "access the microphone for on-device real-time speech recognition with Next-gen Kaldi"
     }
   ]
 }
