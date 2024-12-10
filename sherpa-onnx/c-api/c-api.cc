@@ -2053,11 +2053,6 @@ SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(
 
   auto sd_config = GetOfflineSpeakerDiarizationConfig(config);
 
-  if (!sd_config.Validate()) {
-    SHERPA_ONNX_LOGE("Errors in config");
-    return nullptr;
-  }
-
   SherpaOnnxOfflineSpeakerDiarization *sd =
       new SherpaOnnxOfflineSpeakerDiarization;
 

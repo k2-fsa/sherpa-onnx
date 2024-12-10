@@ -65,5 +65,6 @@ export const speakerEmbeddingManagerGetAllSpeakers: (handle: object) => Array<st
 
 export const createOfflineSpeakerDiarization: (config: object, mgr?: object) => object;
 export const getOfflineSpeakerDiarizationSampleRate: (handle: object) => number;
-export const offlineSpeakerDiarizationProcess: (handle: object, samples: Float32Array) => object;
+export const offlineSpeakerDiarizationProcess: (handle: object, input: object) => object;
+export const offlineSpeakerDiarizationProcessAsync: (handle: object, input: object, callback: object) => object;
 export const offlineSpeakerDiarizationSetConfig: (handle: object, config: object) => void;
