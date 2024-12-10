@@ -23,7 +23,7 @@ or update your `oh-package.json5` to include the following:
 
 ```
   "dependencies": {
-    "sherpa_onnx": "1.10.33",
+    "sherpa_onnx": "1.10.34",
   },
 ```
 
@@ -33,8 +33,11 @@ Note that we recommend always using the latest version.
 
 | Demo | URL | Description|
 |------|-----|------------|
+|SherpaOnnxStreamingAsr|[Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/harmony-os/SherpaOnnxStreamingAsr)|On-device real-time/streaming speech recognition with Next-gen Kaldi|
 |SherpaOnnxVadAsr|[Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/harmony-os/SherpaOnnxVadAsr)|It shows how to use VAD with a non-streaming ASR model for on-device speech recognition without accessing the network |
 |SherpaOnnxTts|[Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/harmony-os/SherpaOnnxTts)|It shows how to use Next-gen Kaldi for on-device text-to-speech (TTS, i.e., speech synthesis)|
+|SherpaOnnxSpeakerDiarization|[Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/harmony-os/SherpaOnnxSpeakerDiarization)|On-device speaker diarization with Next-gen Kaldi|
+|SherpaOnnxSpeakerIdentification|[Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/harmony-os/SherpaOnnxSpeakerIdentification)|On-device speaker identification with Next-gen Kaldi|
 
 # Documentation
 
