@@ -1577,6 +1577,11 @@ SHERPA_ONNX_API const SherpaOnnxSpeakerEmbeddingExtractor *
 SherpaOnnxCreateSpeakerEmbeddingExtractorOHOS(
     const SherpaOnnxSpeakerEmbeddingExtractorConfig *config,
     NativeResourceManager *mgr);
+
+SHERPA_ONNX_API const SherpaOnnxOfflineSpeakerDiarization *
+SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(
+    const SherpaOnnxOfflineSpeakerDiarizationConfig *config,
+    NativeResourceManager *mgr);
 #endif
 
 #if defined(__GNUC__)

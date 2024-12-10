@@ -27,7 +27,7 @@ class OfflineSpeakerDiarization {
   }
 
   setConfig(config) {
-    addon.offlineSpeakerDiarizationSetConfig(config);
+    addon.offlineSpeakerDiarizationSetConfig(this.handle, config);
     this.config.clustering = config.clustering;
   }
 }

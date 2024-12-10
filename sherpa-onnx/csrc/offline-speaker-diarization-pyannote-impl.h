@@ -11,11 +11,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "Eigen/Dense"
 #include "sherpa-onnx/csrc/fast-clustering.h"
 #include "sherpa-onnx/csrc/math.h"
@@ -71,16 +66,15 @@ class OfflineSpeakerDiarizationPyannoteImpl
     Init();
   }
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   OfflineSpeakerDiarizationPyannoteImpl(
-      AAssetManager *mgr, const OfflineSpeakerDiarizationConfig &config)
+      Manager *mgr, const OfflineSpeakerDiarizationConfig &config)
       : config_(config),
         segmentation_model_(mgr, config_.segmentation),
         embedding_extractor_(mgr, config_.embedding),
         clustering_(std::make_unique<FastClustering>(config_.clustering)) {
     Init();
   }
-#endif
 
   int32_t SampleRate() const override {
     const auto &meta_data = segmentation_model_.GetModelMetaData();
@@ -213,8 +207,13 @@ class OfflineSpeakerDiarizationPyannoteImpl
           }
         }
       } else {
+#if __OHOS__
+        SHERPA_ONNX_LOGE(
+            "powerset_max_classes = %{public}d is currently not supported!", i);
+#else
         SHERPA_ONNX_LOGE(
             "powerset_max_classes = %d is currently not supported!", i);
+#endif
         SHERPA_ONNX_EXIT(-1);
       }
     }
@@ -229,10 +228,17 @@ class OfflineSpeakerDiarizationPyannoteImpl
     int32_t window_shift = meta_data.window_shift;
 
     if (n <= 0) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE(
+          "number of audio samples is %{public}d (<= 0). Please provide a "
+          "positive number",
+          n);
+#else
       SHERPA_ONNX_LOGE(
           "number of audio samples is %d (<= 0). Please provide a positive "
           "number",
           n);
+#endif
       return {};
     }
 

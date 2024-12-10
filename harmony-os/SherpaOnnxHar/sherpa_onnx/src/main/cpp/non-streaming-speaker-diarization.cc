@@ -101,6 +101,17 @@ static SherpaOnnxFastClusteringConfig GetFastClusteringConfig(
 static Napi::External<SherpaOnnxOfflineSpeakerDiarization>
 CreateOfflineSpeakerDiarizationWrapper(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+
+#if __OHOS__
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+#else
   if (info.Length() != 1) {
     std::ostringstream os;
     os << "Expect only 1 argument. Given: " << info.Length();
@@ -109,6 +120,7 @@ CreateOfflineSpeakerDiarizationWrapper(const Napi::CallbackInfo &info) {
 
     return {};
   }
+#endif
 
   if (!info[0].IsObject()) {
     Napi::TypeError::New(env, "Expect an object as the argument")
@@ -129,8 +141,18 @@ CreateOfflineSpeakerDiarizationWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_duration_on, minDurationOn);
   SHERPA_ONNX_ASSIGN_ATTR_FLOAT(min_duration_off, minDurationOff);
 
+#if __OHOS__
+  std::unique_ptr<NativeResourceManager,
+                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+          &OH_ResourceManager_ReleaseNativeResourceManager);
+
+  const SherpaOnnxOfflineSpeakerDiarization *sd =
+      SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(&c, mgr.get());
+#else
   const SherpaOnnxOfflineSpeakerDiarization *sd =
       SherpaOnnxCreateOfflineSpeakerDiarization(&c);
+#endif
 
   if (c.segmentation.pyannote.model) {
     delete[] c.segmentation.pyannote.model;
@@ -224,9 +246,17 @@ static Napi::Array OfflineSpeakerDiarizationProcessWrapper(
 
   Napi::Float32Array samples = info[1].As<Napi::Float32Array>();
 
+#if __OHOS__
+  // Note(fangjun): For unknown reasons on HarmonyOS, we need to divide it by
+  // sizeof(float) here
+  const SherpaOnnxOfflineSpeakerDiarizationResult *r =
+      SherpaOnnxOfflineSpeakerDiarizationProcess(
+          sd, samples.Data(), samples.ElementLength() / sizeof(float));
+#else
   const SherpaOnnxOfflineSpeakerDiarizationResult *r =
       SherpaOnnxOfflineSpeakerDiarizationProcess(sd, samples.Data(),
                                                  samples.ElementLength());
+#endif
 
   int32_t num_segments =
       SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(r);

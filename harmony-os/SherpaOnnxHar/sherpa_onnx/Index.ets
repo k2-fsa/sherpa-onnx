@@ -1,11 +1,6 @@
-export {
-  listRawfileDir,
-  readWave,
-  readWaveFromBinary,
-} from "libsherpa_onnx.so";
+export { listRawfileDir, readWave, readWaveFromBinary, } from "libsherpa_onnx.so";
 
-export {
-  CircularBuffer,
+export { CircularBuffer,
   SileroVadConfig,
   SpeechSegment,
   Vad,
@@ -13,8 +8,7 @@ export {
 } from './src/main/ets/components/Vad';
 
 
-export {
-  Samples,
+export { Samples,
   OfflineStream,
   FeatureConfig,
   OfflineTransducerModelConfig,
@@ -31,8 +25,7 @@ export {
   OfflineRecognizer,
 } from './src/main/ets/components/NonStreamingAsr';
 
-export {
-  OnlineStream,
+export { OnlineStream,
   OnlineTransducerModelConfig,
   OnlineParaformerModelConfig,
   OnlineZipformer2CtcModelConfig,
@@ -43,8 +36,7 @@ export {
   OnlineRecognizer,
 } from './src/main/ets/components/StreamingAsr';
 
-export {
-  OfflineTtsVitsModelConfig,
+export { OfflineTtsVitsModelConfig,
   OfflineTtsModelConfig,
   OfflineTtsConfig,
   OfflineTts,
@@ -52,8 +44,15 @@ export {
   TtsInput,
 } from './src/main/ets/components/NonStreamingTts';
 
-export {
-  SpeakerEmbeddingExtractorConfig,
+export { SpeakerEmbeddingExtractorConfig,
   SpeakerEmbeddingExtractor,
   SpeakerEmbeddingManager,
 } from './src/main/ets/components/SpeakerIdentification';
+
+export { OfflineSpeakerSegmentationPyannoteModelConfig,
+  OfflineSpeakerSegmentationModelConfig,
+  OfflineSpeakerDiarizationConfig,
+  OfflineSpeakerDiarizationSegment,
+  OfflineSpeakerDiarization,
+  FastClusteringConfig,
+} from './src/main/ets/components/NonStreamingSpeakerDiarization';
