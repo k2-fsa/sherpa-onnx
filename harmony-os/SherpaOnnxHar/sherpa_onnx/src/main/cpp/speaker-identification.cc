@@ -764,7 +764,7 @@ static Napi::Array SpeakerEmbeddingManagerGetAllSpeakersWrapper(
 
   int32_t num_speakers = SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(manager);
   if (num_speakers == 0) {
-    return {};
+    return Napi::Array::New(env, num_speakers);
   }
 
   const char *const *all_speaker_names =
