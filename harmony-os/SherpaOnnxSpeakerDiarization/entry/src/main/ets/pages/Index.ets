@@ -1,4 +1,8 @@
 import { LengthUnit } from '@kit.ArkUI';
+import worker, { MessageEvents } from '@ohos.worker';
+import { systemTime, BusinessError } from '@kit.BasicServicesKit';
+import { picker } from '@kit.CoreFileKit';
+
 
 @Entry
 @Component
@@ -8,11 +12,17 @@ struct Index {
   @State currentIndex: number = 0;
   private controller: TabsController = new TabsController();
 
+  private workerInstance?: worker.ThreadWorker
+  private readonly scriptURL: string = 'entry/ets/workers/SpeakerDiarizationWorker.ets'
+
   @State resultForFile: string = '';
   @State resultForMic: string = '';
 
   @State micBtnCaption: string = 'Start recording';
-  @State micSaveBtnCaption: string = 'Save';
+  @State micSaveBtnCaption: string = 'Save audio';
+
+  @State micBtnEnabled: boolean = false;
+  @State selectFileBtnEnabled: boolean = false;
 
   @Builder
   TabBuilder(title: string, targetIndex: number, selectedImg: Resource, normalImg: Resource) {
@@ -25,6 +35,40 @@ struct Index {
     })
   }
 
+  aboutToAppear(): void {
+    this.workerInstance = new worker.ThreadWorker(this.scriptURL, {
+      name: 'Streaming ASR worker'
+    });
+
+    this.workerInstance.onmessage = (e: MessageEvents) => {
+      const msgType = e.data['msgType'] as string;
+      console.log(`received msg from worker: ${msgType}`);
+
+      if (msgType == 'init-speaker-diarization-done') {
+        console.log('Speaker diarization initialized successfully');
+
+        this.resultForFile = 'Initialization finished.\nPlease select a .wav file.';
+        this.resultForMic = 'Initialization finished.\nPlease click the button Start recording.';
+
+        this.selectFileBtnEnabled = true;
+        this.micBtnEnabled = true;
+      }
+
+      if (msgType == 'speaker-diarization-file-done') {
+        const result = e.data['result'] as string;
+        this.resultForFile = result;
+
+        this.selectFileBtnEnabled = true;
+      }
+    };
+
+    const context = getContext();
+    this.workerInstance.postMessage({ msgType: 'init-speaker-diarization', context });
+    console.log('initializing');
+    this.resultForFile = 'Initializing models. Please wait';
+    this.resultForMic = this.resultForFile;
+  }
+
   build() {
     Column() {
       Tabs({ barPosition: BarPosition.End, controller: this.controller }) {
@@ -32,6 +76,38 @@ struct Index {
           Column({space: 10}) {
             Text(this.title).fontSize(this.titleFontSize).fontWeight(FontWeight.Bold);
             Button('Select .wav file (16kHz) ')
+              .enabled(this.selectFileBtnEnabled)
+              .onClick(()=>{
+                this.resultForFile = '';
+                this.selectFileBtnEnabled = false;
+
+                const documentSelectOptions = new picker.DocumentSelectOptions();
+                documentSelectOptions.maxSelectNumber = 1;
+                documentSelectOptions.fileSuffixFilters = ['.wav'];
+                const documentViewPicker = new picker.DocumentViewPicker();
+
+                documentViewPicker.select(documentSelectOptions).then((result: Array<string>) => {
+                  console.log(`select file result: ${result}`);
+
+                  if (!result[0]) {
+                    this.resultForFile = 'Please select a file to decode';
+                    this.selectFileBtnEnabled = true;
+                    return;
+                  }
+
+                  if (this.workerInstance) {
+                    this.workerInstance.postMessage({
+                      msgType: 'speaker-diarization-file', filename: result[0],
+                    });
+                    this.resultForFile = `Decoding ${result[0]} ... ...`;
+                  } else {
+                    console.log(`this worker instance is undefined ${this.workerInstance}`);
+                  }
+                }).catch((err: BusinessError) => {
+                  console.error(`Failed to select file, code is ${err.code}, message is ${err.message}`);
+                  this.selectFileBtnEnabled = true;
+                })
+              })
 
             TextArea({ text: this.resultForFile })
               .lineSpacing({ value: 10, unit: LengthUnit.VP })

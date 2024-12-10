@@ -32,8 +32,9 @@ export class OfflineSpeakerDiarizationConfig {
 }
 
 export class OfflineSpeakerDiarizationSegment {
-  public start: number = 0; // in secondspublic end: number = 0; // in secondspublic speaker: number =
-    0; // ID of the speaker; count from 0
+  public start: number = 0; // in seconds
+  public end: number = 0; // in seconds
+  public speaker: number = 0; // ID of the speaker; count from 0
 }
 
 export class OfflineSpeakerDiarization {
@@ -62,8 +63,8 @@ export class OfflineSpeakerDiarization {
    *    "speaker": an_integer,
    *  }
    */
-  process(samples: Float32Array): OfflineSpeakerDiarizationSegment {
-    return offlineSpeakerDiarizationProcess(this.handle, samples) as OfflineSpeakerDiarizationSegment;
+  process(samples: Float32Array): OfflineSpeakerDiarizationSegment[] {
+    return offlineSpeakerDiarizationProcess(this.handle, samples) as OfflineSpeakerDiarizationSegment[];
   }
 
   setConfig(config: OfflineSpeakerDiarizationConfig) {

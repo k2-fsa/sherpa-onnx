@@ -2,15 +2,19 @@
   "string": [
     {
       "name": "module_desc",
-      "value": "模块描述"
+      "value": "新一代Kaldi: 本地说话人日志"
     },
     {
       "name": "EntryAbility_desc",
-      "value": "description"
+      "value": "新一代Kaldi: 本地说话人日志"
     },
     {
       "name": "EntryAbility_label",
-      "value": "label"
+      "value": "说话人日志"
+    },
+    {
+      "name": "mic_reason",
+      "value": "使用新一代Kaldi, 访问麦克风进行本地说话人日志 (不需要联网)"
     }
   ]
 }
