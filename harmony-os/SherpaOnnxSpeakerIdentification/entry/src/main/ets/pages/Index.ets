@@ -72,7 +72,7 @@ struct Index {
 
   @State currentIndex: number = 0;
 
-  @State message: string = 'Hello World';
+  private threshold: string = '0.5';
 
   private workerInstance?: worker.ThreadWorker
   private readonly scriptURL: string = 'entry/ets/workers/SpeakerIdentificationWorker.ets'
@@ -83,15 +83,21 @@ struct Index {
   @State btnSaveAudioEnabled: boolean = false;
   @State btnAddEnabled: boolean = false;
 
-  private sampleRate: number = 16000;
-  private sampleList: Float32Array[] = []
+  private sampleRate: number = 48000;
+  private sampleListForAdding: Float32Array[] = []
+  private sampleListForTesting: Float32Array[] = []
   private mic?: audio.AudioCapturer;
 
   @State infoHome: string = '';
   @State infoAdd: string = '';
 
-  @State micBtnCaption: string = 'Start recording';
-  @State micStarted: boolean = false;
+  @State micBtnCaptionForAdding: string = 'Start recording';
+  @State micStartedForAdding: boolean = false;
+  @State micBtnEnabledForAdding: boolean = true;
+
+  @State micBtnCaptionForTesting: string = 'Start recording';
+  @State micStartedForTesting: boolean = false;
+  @State micBtnEnabledForTesting: boolean = true;
 
   async initMic() {
     const permissions: Permissions[] = ["ohos.permission.MICROPHONE"];
@@ -158,6 +164,23 @@ struct Index {
       if (msgType == 'manager-all-speaker-names') {
         this.allSpeakerNames = e.data['allSpeakers'] as string[];
       }
+
+      if (msgType == 'manager-add-speaker-done') {
+        const ok: boolean = e.data['ok'] as boolean;
+        const status: string = e.data['status'] as string;
+        this.infoAdd += '\n' + status;
+
+        if (ok) {
+          this.sampleListForAdding = [];
+          this.btnSaveAudioEnabled = false;
+          this.btnAddEnabled = false;
+        }
+      }
+
+      if (msgType == 'manager-search-speaker-done') {
+        const name = e.data['name'] as string;
+        this.infoHome = name;
+      }
     };
 
     this.workerInstance.postMessage({ msgType: 'init-extractor', context: getContext()});
@@ -181,7 +204,97 @@ struct Index {
       Tabs({ barPosition: BarPosition.End, controller: this.controller }) {
         TabContent() {
           Column({ space: 10 }) {
-            Button('Home')
+            Text(this.title).fontSize(this.titleFontSize).fontWeight(FontWeight.Bold);
+            Row() {
+              Text('Similary threshold').width('60%');
+
+              TextInput({ text: this.threshold }).onChange((text) => {
+                this.threshold = text.trim();
+              }).width('20%')
+            }
+            Row() {
+              Button(this.micBtnCaptionForTesting)
+                .enabled(this.micBtnEnabledForTesting)
+                .onClick(()=>{
+                  if (this.allSpeakerNames.length == 0) {
+                    this.infoHome = 'There are no speakers registered. Please add them first';
+                    return;
+                  }
+
+                  let threshold = parseFloat(this.threshold);
+                  if (isNaN(threshold)) {
+                    this.infoHome = 'Please enter a valid threshold';
+                    return;
+                  }
+
+                  if (threshold <= 0) {
+                    this.infoHome = 'Please enter a positive threshold';
+                    return;
+                  }
+                  console.log(`threshold: ${threshold}`);
+
+                  if (this.micStartedForTesting) {
+                    this.micStartedForTesting = false;
+                    this.micBtnCaptionForTesting = 'Start';
+                    this.micBtnEnabledForAdding = true;
+                    this.mic?.stop();
+
+                    const samples = flatten(this.sampleListForTesting);
+                    const duration = samples.length / this.sampleRate;
+                    if (duration < 0.5) {
+                      this.infoHome = `Please speak for a longer time! Current duration: ${duration}`;
+                      return;
+                    }
+                    if (this.workerInstance) {
+                      this.workerInstance.postMessage({
+                        msgType: 'manager-search-speaker',
+                        samples: samples,
+                        sampleRate: this.sampleRate,
+                        threshold,
+                      });
+                    }
+                  } else {
+                    this.sampleListForTesting = [];
+                    this.micStartedForTesting = true;
+                    this.micBtnCaptionForTesting = 'Stop';
+                    this.micBtnEnabledForAdding = false;
+                    this.mic?.start();
+                    this.infoHome = `Use threshold: ${threshold}`;
+                    this.infoHome += '\nPlease speak and then click Stop';
+                  }
+                })
+
+              Button('Save audio')
+                .enabled(!this.micStartedForTesting)
+                .onClick(()=>{
+                  if (this.sampleListForTesting.length == 0) {
+                    this.infoHome = 'No audio samples recorded';
+                    return;
+                  }
+                  const samples = flatten(this.sampleListForTesting);
+
+                  if (samples.length == 0) {
+                    this.infoHome = 'Empty samples';
+                    return;
+                  }
+
+                  let uri: string = '';
+
+                  const audioOptions = new picker.AudioSaveOptions(); // audioOptions.newFileNames = ['o.wav'];
+
+                  const audioViewPicker = new picker.AudioViewPicker();
+
+                  audioViewPicker.save(audioOptions).then((audioSelectResult: Array<string>) => {
+                    uri = audioSelectResult[0];
+                    savePcmToWav(uri, toInt16Samples(samples), this.sampleRate);
+                    console.log(`Saved to ${uri}`);
+                    this.infoHome+= `\nSaved to ${uri}`;
+                  });
+                })
+            }
+            TextArea({text: this.infoHome})
+              .height('100%')
+              .focusable(false)
           }
         }.tabBar(this.TabBuilder('Home', 0, $r('app.media.icon_home'), $r('app.media.icon_home')))
 
@@ -244,22 +357,25 @@ struct Index {
             }.width('100%')
 
             Row({space: 10}) {
-              Button(this.micBtnCaption)
+              Button(this.micBtnCaptionForAdding)
+                .enabled(this.micBtnEnabledForAdding)
                 .onClick(()=> {
                   if (this.mic) {
-                    if (this.micStarted) {
-                      this.micStarted = false;
-                      this.micBtnCaption = 'Start recording';
+                    if (this.micStartedForAdding) {
+                      this.micStartedForAdding = false;
+                      this.micBtnEnabledForTesting = true;
+                      this.micBtnCaptionForAdding = 'Start recording';
                       this.mic.stop();
                       this.infoAdd = '';
-                      if (this.sampleList.length > 0) {
+                      if (this.sampleListForAdding.length > 0) {
                         this.btnAddEnabled = true;
                         this.btnSaveAudioEnabled = true;
                       }
                     } else {
-                      this.micStarted = true;
-                      this.micBtnCaption = 'Stop recording';
-                      this.sampleList = [];
+                      this.micStartedForAdding = true;
+                      this.micBtnEnabledForTesting = false;
+                      this.micBtnCaptionForAdding = 'Stop recording';
+                      this.sampleListForAdding = [];
                       this.mic.start();
                       this.infoAdd = '';
 
@@ -267,30 +383,41 @@ struct Index {
                       this.btnSaveAudioEnabled = false;
                     }
                   }
-
                 })
 
               Button('Add')
                 .enabled(this.btnAddEnabled)
                 .onClick(()=>{
                   if (this.inputSpeakerName.trim() == '') {
-                    this.infoAdd += 'Please input a speaker name first';
+                    this.infoAdd += '\nPlease input a speaker name first';
                     return;
                   }
 
-                  const samples = flatten(this.sampleList);
-                  console.log(`number of samples: ${samples.length}, ${samples.length / this.sampleRate}`);
+                  const samples = flatten(this.sampleListForAdding);
+                  const duration = samples.length / this.sampleRate;
+                  if (duration < 0.5) {
+                    this.infoAdd = `Please speak for a longer time. Current duration: ${duration}`;
+                    return;
+                  }
+                  if (this.workerInstance) {
+                    this.workerInstance.postMessage({
+                      msgType: 'manager-add-speaker',
+                      name: this.inputSpeakerName,
+                      samples: samples,
+                      sampleRate: this.sampleRate,
+                    })
+                  }
                 })
 
               Button('Save audio')
                 .enabled(this.btnSaveAudioEnabled)
                 .onClick(()=>{
-                  if (this.sampleList.length == 0) {
+                  if (this.sampleListForAdding.length == 0) {
                     this.btnSaveAudioEnabled = false;
                     return;
                   }
 
-                  const samples = flatten(this.sampleList);
+                  const samples = flatten(this.sampleListForAdding);
 
                   if (samples.length == 0) {
                     this.btnSaveAudioEnabled = false;
@@ -352,6 +479,12 @@ https://k2-fsa.github.io/sherpa/social-groups.html
       samplesFloat[i] = view[i] / 32768.0;
     }
 
-    this.sampleList.push(samplesFloat);
+    if (this.micStartedForAdding) {
+      this.sampleListForAdding.push(samplesFloat);
+    }
+
+    if (this.micStartedForTesting) {
+      this.sampleListForTesting.push(samplesFloat);
+    }
   }
 }
