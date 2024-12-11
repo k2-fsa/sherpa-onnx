@@ -1784,8 +1784,8 @@ struct SherpaOnnxOfflineSpeakerDiarizationResult {
   sherpa_onnx::OfflineSpeakerDiarizationResult impl;
 };
 
-const SherpaOnnxOfflineSpeakerDiarization *
-SherpaOnnxCreateOfflineSpeakerDiarization(
+static sherpa_onnx::OfflineSpeakerDiarizationConfig
+GetOfflineSpeakerDiarizationConfig(
     const SherpaOnnxOfflineSpeakerDiarizationConfig *config) {
   sherpa_onnx::OfflineSpeakerDiarizationConfig sd_config;
 
@@ -1820,6 +1820,22 @@ SherpaOnnxCreateOfflineSpeakerDiarization(
 
   sd_config.min_duration_off = SHERPA_ONNX_OR(config->min_duration_off, 0.5);
 
+  if (sd_config.segmentation.debug || sd_config.embedding.debug) {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s\n", sd_config.ToString().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s\n", sd_config.ToString().c_str());
+#endif
+  }
+
+  return sd_config;
+}
+
+const SherpaOnnxOfflineSpeakerDiarization *
+SherpaOnnxCreateOfflineSpeakerDiarization(
+    const SherpaOnnxOfflineSpeakerDiarizationConfig *config) {
+  auto sd_config = GetOfflineSpeakerDiarizationConfig(config);
+
   if (!sd_config.Validate()) {
     SHERPA_ONNX_LOGE("Errors in config");
     return nullptr;
@@ -1830,10 +1846,6 @@ SherpaOnnxCreateOfflineSpeakerDiarization(
 
   sd->impl =
       std::make_unique<sherpa_onnx::OfflineSpeakerDiarization>(sd_config);
-
-  if (sd_config.segmentation.debug || sd_config.embedding.debug) {
-    SHERPA_ONNX_LOGE("%s\n", sd_config.ToString().c_str());
-  }
 
   return sd;
 }
@@ -2029,5 +2041,27 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
 }
 
 #endif  // #if SHERPA_ONNX_ENABLE_TTS == 1
+        //
+#if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
+const SherpaOnnxOfflineSpeakerDiarization *
+SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(
+    const SherpaOnnxOfflineSpeakerDiarizationConfig *config,
+    NativeResourceManager *mgr) {
+  if (!mgr) {
+    return SherpaOnnxCreateOfflineSpeakerDiarization(config);
+  }
+
+  auto sd_config = GetOfflineSpeakerDiarizationConfig(config);
+
+  SherpaOnnxOfflineSpeakerDiarization *sd =
+      new SherpaOnnxOfflineSpeakerDiarization;
+
+  sd->impl =
+      std::make_unique<sherpa_onnx::OfflineSpeakerDiarization>(mgr, sd_config);
+
+  return sd;
+}
+
+#endif  // #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
 
 #endif  // #ifdef __OHOS__

@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "On-device speaker diarization with Next-gen Kaldi"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "On-device speaker diarization with Next-gen Kaldi"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "Speaker diarization"
+    }
+  ]
+}

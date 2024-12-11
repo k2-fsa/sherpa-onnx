@@ -8,11 +8,6 @@
 #include <functional>
 #include <memory>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/offline-speaker-diarization.h"
 namespace sherpa_onnx {
 
@@ -21,10 +16,9 @@ class OfflineSpeakerDiarizationImpl {
   static std::unique_ptr<OfflineSpeakerDiarizationImpl> Create(
       const OfflineSpeakerDiarizationConfig &config);
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   static std::unique_ptr<OfflineSpeakerDiarizationImpl> Create(
-      AAssetManager *mgr, const OfflineSpeakerDiarizationConfig &config);
-#endif
+      Manager *mgr, const OfflineSpeakerDiarizationConfig &config);
 
   virtual ~OfflineSpeakerDiarizationImpl() = default;
 

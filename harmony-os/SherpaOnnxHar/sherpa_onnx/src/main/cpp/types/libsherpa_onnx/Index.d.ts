@@ -62,3 +62,9 @@ export const speakerEmbeddingManagerVerify: (handle: object, obj: {name: string,
 export const speakerEmbeddingManagerContains: (handle: object, name: string) => boolean;
 export const speakerEmbeddingManagerNumSpeakers: (handle: object) => number;
 export const speakerEmbeddingManagerGetAllSpeakers: (handle: object) => Array<string>;
+
+export const createOfflineSpeakerDiarization: (config: object, mgr?: object) => object;
+export const getOfflineSpeakerDiarizationSampleRate: (handle: object) => number;
+export const offlineSpeakerDiarizationProcess: (handle: object, input: object) => object;
+export const offlineSpeakerDiarizationProcessAsync: (handle: object, input: object, callback: object) => object;
+export const offlineSpeakerDiarizationSetConfig: (handle: object, config: object) => void;

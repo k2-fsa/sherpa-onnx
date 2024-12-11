@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "新一代Kaldi: 本地说话人日志"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "新一代Kaldi: 本地说话人日志"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "说话人日志"
+    }
+  ]
+}

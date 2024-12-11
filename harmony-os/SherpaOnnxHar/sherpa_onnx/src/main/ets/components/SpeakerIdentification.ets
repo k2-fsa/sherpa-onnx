@@ -35,8 +35,7 @@ export class SpeakerEmbeddingExtractor {
   }
 
   createStream(): OnlineStream {
-    return new OnlineStream(
-      speakerEmbeddingExtractorCreateStream(this.handle));
+    return new OnlineStream(speakerEmbeddingExtractorCreateStream(this.handle));
   }
 
   isReady(stream: OnlineStream): boolean {
@@ -44,8 +43,7 @@ export class SpeakerEmbeddingExtractor {
   }
 
   compute(stream: OnlineStream, enableExternalBuffer: boolean = true): Float32Array {
-    return speakerEmbeddingExtractorComputeEmbedding(
-      this.handle, stream.handle, enableExternalBuffer);
+    return speakerEmbeddingExtractorComputeEmbedding(this.handle, stream.handle, enableExternalBuffer);
   }
 }
 
@@ -106,9 +104,7 @@ export class SpeakerEmbeddingManager {
 
   addMulti(speaker: SpeakerNameWithEmbeddingList): boolean {
     const c: SpeakerNameWithEmbeddingN = {
-      name: speaker.name,
-      vv: flatten(speaker.v),
-      n: speaker.v.length,
+      name: speaker.name, vv: flatten(speaker.v), n: speaker.v.length,
     };
     return speakerEmbeddingManagerAddListFlattened(this.handle, c);
   }

@@ -9,11 +9,6 @@
 #include <memory>
 #include <string>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/fast-clustering-config.h"
 #include "sherpa-onnx/csrc/offline-speaker-diarization-result.h"
 #include "sherpa-onnx/csrc/offline-speaker-segmentation-model-config.h"
@@ -62,10 +57,9 @@ class OfflineSpeakerDiarization {
   explicit OfflineSpeakerDiarization(
       const OfflineSpeakerDiarizationConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OfflineSpeakerDiarization(AAssetManager *mgr,
+  template <typename Manager>
+  OfflineSpeakerDiarization(Manager *mgr,
                             const OfflineSpeakerDiarizationConfig &config);
-#endif
 
   ~OfflineSpeakerDiarization();
 

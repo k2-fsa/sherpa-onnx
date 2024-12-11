@@ -67,10 +67,15 @@ static Napi::Boolean WriteWaveWrapper(const Napi::CallbackInfo &info) {
 
   Napi::Float32Array samples = obj.Get("samples").As<Napi::Float32Array>();
   int32_t sample_rate = obj.Get("sampleRate").As<Napi::Number>().Int32Value();
-
+#if __OHOS__
+  int32_t ok = SherpaOnnxWriteWave(
+      samples.Data(), samples.ElementLength() / sizeof(float), sample_rate,
+      info[0].As<Napi::String>().Utf8Value().c_str());
+#else
   int32_t ok =
       SherpaOnnxWriteWave(samples.Data(), samples.ElementLength(), sample_rate,
                           info[0].As<Napi::String>().Utf8Value().c_str());
+#endif
 
   return Napi::Boolean::New(env, ok);
 }

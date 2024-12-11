@@ -122,7 +122,6 @@ workerPort.onmessage = (e: MessageEvents) => {
       name
     });
   }
-
 }
 
 /**
