@@ -1,12 +1,12 @@
-import worker, { ThreadWorkerGlobalScope, MessageEvents, ErrorEvent } from '@ohos.worker';
+import worker, { ErrorEvent, MessageEvents, ThreadWorkerGlobalScope } from '@ohos.worker';
 import {
+  OnlineStream,
   readWaveFromBinary,
   Samples,
   SpeakerEmbeddingExtractor,
   SpeakerEmbeddingExtractorConfig,
   SpeakerEmbeddingManager
 } from 'sherpa_onnx';
-import { fileIo } from '@kit.CoreFileKit';
 
 const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
 
@@ -19,7 +19,19 @@ function readWaveFromRawfile(filename: string, context: Context): Samples {
 }
 
 function initExtractor(context: Context): SpeakerEmbeddingExtractor {
-  const config = new SpeakerEmbeddingExtractorConfig();
+  const config: SpeakerEmbeddingExtractorConfig = new SpeakerEmbeddingExtractorConfig();
+
+  // Please put the model file inside the directory
+  // harmony-os/SherpaOnnxSpeakerIdentification/entry/src/main/resources/rawfile
+/*
+(py38) fangjuns-MacBook-Pro:rawfile fangjun$ pwd
+/Users/fangjun/open-source/sherpa-onnx/harmony-os/SherpaOnnxSpeakerIdentification/entry/src/main/resources/rawfile
+(py38) fangjuns-MacBook-Pro:rawfile fangjun$ ls -lh
+total 77336
+-rw-r--r--  1 fangjun  staff    38M Dec  9 19:34 3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx
+ */
+  // You can find more models at
+  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/speaker-recongition-models
   config.model = '3dspeaker_speech_eres2net_base_sv_zh-cn_3dspeaker_16k.onnx';
   config.numThreads = 2;
   config.debug = true;
@@ -28,7 +40,7 @@ function initExtractor(context: Context): SpeakerEmbeddingExtractor {
 }
 
 function extractEmbedding(samples: Samples): Float32Array {
-  const stream = extractor.createStream();
+  const stream: OnlineStream = extractor.createStream();
   stream.acceptWaveform(samples);
   return extractor.compute(stream);
 }
@@ -49,30 +61,6 @@ workerPort.onmessage = (e: MessageEvents) => {
     extractor = initExtractor(context);
     manager = new SpeakerEmbeddingManager(extractor.dim);
 
-    const filename1 = 'sr-data/enroll/fangjun-sr-1.wav';
-    const samples1 = readWaveFromRawfile(filename1, context);
-    console.log(`sample rate: ${samples1.sampleRate}`);
-    let ok = manager.add({ name: 'fangjun0', v: extractEmbedding(samples1) });
-    ok = manager.add({ name: 'fangjun1', v: extractEmbedding(samples1) });
-    /*
-    ok = manager.add({ name: 'fangjun2', v: extractEmbedding(samples1) });
-    ok = manager.add({ name: 'fangjun3', v: extractEmbedding(samples1) });
-    ok = manager.add({ name: 'fangjun4', v: extractEmbedding(samples1) });
-    ok = manager.add({ name: 'fangjun5', v: extractEmbedding(samples1) });
-    ok = manager.add({ name: 'fangjun6', v: extractEmbedding(samples1) });
-    ok = manager.add({ name: 'fangjun7', v: extractEmbedding(samples1) });
-    ok = manager.add({ name: 'fangjun8', v: extractEmbedding(samples1) });
-    ok = manager.add({ name: 'fangjun9', v: extractEmbedding(samples1) });
-    ok = manager.add({ name: 'fangjun10', v: extractEmbedding(samples1) });
-    */
-
-    if (ok) {
-      console.log(`Added fangjun`);
-      let n = manager.getNumSpeakers();
-      console.log(`number of speakers: ${n}`);
-      console.log(`speaker names: ${manager.getAllSpeakerNames().join('\n')}`);
-    }
-
     workerPort.postMessage({
       msgType: 'manager-all-speaker-names', allSpeakers: manager.getAllSpeakerNames(),
     });
@@ -80,7 +68,7 @@ workerPort.onmessage = (e: MessageEvents) => {
 
   if (msgType == 'manager-delete-speaker') {
     const name = e.data['name'] as string;
-    const ok = manager.remove(name);
+    const ok: boolean = manager.remove(name);
     if (ok) {
       console.log(`Removed ${name}.`);
 
@@ -91,6 +79,48 @@ workerPort.onmessage = (e: MessageEvents) => {
         msgType: 'manager-all-speaker-names', allSpeakers: manager.getAllSpeakerNames(),
       });
     }
+  }
+
+  if (msgType == 'manager-add-speaker') {
+    const name = e.data['name'] as string;
+    const samples = e.data['samples'] as Float32Array;
+    const sampleRate = e.data['sampleRate'] as number;
+
+    const v = extractEmbedding({ samples, sampleRate });
+    const ok: boolean = manager.add({ name, v });
+    if (ok) {
+      workerPort.postMessage({
+        msgType: 'manager-add-speaker-done',
+        status: `Added ${name}`,
+        ok,
+      });
+      workerPort.postMessage({
+        msgType: 'manager-all-speaker-names', allSpeakers: manager.getAllSpeakerNames(),
+      }
+      );
+    } else {
+      workerPort.postMessage({
+        msgType: 'manager-add-speaker-done',
+        status: `Failed to add ${name}. Possibly due to exsiting speaker name. Please recheck`,
+        ok,
+      });
+    }
+  }
+
+  if (msgType == 'manager-search-speaker') {
+    const threshold = e.data['threshold'] as number;
+    const samples = e.data['samples'] as Float32Array;
+    const sampleRate = e.data['sampleRate'] as number;
+
+    const v = extractEmbedding({ samples, sampleRate });
+    let name: string = manager.search({ threshold, v });
+    if (name == '' || name == undefined) {
+      name = "===<Unknown>===";
+    }
+    workerPort.postMessage({
+      msgType: 'manager-search-speaker-done',
+      name
+    });
   }
 }
 
