@@ -1,3 +1,9 @@
+## 1.10.35
+
+* Add missing changes about speaker identfication demo for HarmonyOS (#1612)
+* Provide sherpa-onnx.aar for Android (#1615)
+* Use aar in Android Java demo. (#1616)
+
 ## 1.10.34
 
 * Fix building node-addon package (#1598)
