@@ -206,3 +206,78 @@ jobs:
         shell: bash
         run: |
           ls -lh android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/*
+
+      - name: Build aar
+        shell: bash
+        run: |
+          cd android/SherpaOnnxAar
+
+          ./gradlew :sherpa_onnx:assembleRelease
+
+      - name: Display aar
+        shell: bash
+        run: |
+          cd android/SherpaOnnxAar
+
+          ls -lh ./sherpa_onnx/build/outputs/aar/sherpa_onnx-release.aar
+          cp ./sherpa_onnx/build/outputs/aar/sherpa_onnx-release.aar ../../
+
+
+      - name: Rename aar
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+
+          mv sherpa_onnx-release.aar sherpa-onnx-${SHERPA_ONNX_VERSION}.aar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-android-aar
+          path: ./*.aar
+
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            du -h -d1 .
+            ls -lh
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            dst=android/aar
+            mkdir -p $dst
+
+            cp -v ../*.aar $dst
+
+            git status
+            git lfs track "*.aar"
+
+            git add .
+
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}.aar"
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
+      - name: Release android aar
+        # if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-android.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.10.34
