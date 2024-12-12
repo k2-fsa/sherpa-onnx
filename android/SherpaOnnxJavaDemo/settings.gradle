@@ -14,4 +14,3 @@ dependencyResolutionManagement {
 }
 rootProject.name = "SherpaOnnxJavaDemo"
 include ':app'
-include ':sherpa'
