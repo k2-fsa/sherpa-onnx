@@ -200,7 +200,9 @@ jobs:
       - name: Copy libs
         shell: bash
         run: |
-          cp -a /tmp/jniLibs/ android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/
+          for arch in arm64-v8a armeabi-v7a x86 x86_64; do
+            cp -v /tmp/jniLibs/$arch android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/$arch
+          done
 
       - name: Check libs
         shell: bash
