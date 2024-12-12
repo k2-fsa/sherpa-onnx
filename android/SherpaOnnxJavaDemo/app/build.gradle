@@ -35,5 +35,8 @@ dependencies {
     implementation 'com.google.android.material:material:1.3.0'
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation 'pub.devrel:easypermissions:3.0.0'
+    implementation 'androidx.core:core-ktx:1.7.0'
+    // implementation files('/Users/fangjun/open-source/sherpa-onnx/android/SherpaOnnxAar/sherpa_onnx/build/outputs/aar/sherpa_onnx-release.aar')
     implementation 'com.github.k2-fsa:sherpa-onnx:master-SNAPSHOT'
+
 }

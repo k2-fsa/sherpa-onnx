@@ -58,14 +58,14 @@ data class OfflineModelConfig(
     var debug: Boolean = false,
     var provider: String = "cpu",
     var modelType: String = "",
-    var tokens: String,
+    var tokens: String = "",
     var modelingUnit: String = "",
     var bpeVocab: String = "",
 )
 
 data class OfflineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
-    var modelConfig: OfflineModelConfig,
+    var modelConfig: OfflineModelConfig = OfflineModelConfig(),
     // var lmConfig: OfflineLMConfig(), // TODO(fangjun): enable it
     var decodingMethod: String = "greedy_search",
     var maxActivePaths: Int = 4,

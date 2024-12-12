@@ -4,9 +4,9 @@ package com.k2fsa.sherpa.onnx
 import android.content.res.AssetManager
 
 data class OfflineTtsVitsModelConfig(
-    var model: String,
+    var model: String = "",
     var lexicon: String = "",
-    var tokens: String,
+    var tokens: String = "",
     var dataDir: String = "",
     var dictDir: String = "",
     var noiseScale: Float = 0.667f,
@@ -15,14 +15,14 @@ data class OfflineTtsVitsModelConfig(
 )
 
 data class OfflineTtsModelConfig(
-    var vits: OfflineTtsVitsModelConfig,
+    var vits: OfflineTtsVitsModelConfig = OfflineTtsVitsModelConfig(),
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
 )
 
 data class OfflineTtsConfig(
-    var model: OfflineTtsModelConfig,
+    var model: OfflineTtsModelConfig = OfflineTtsModelConfig(),
     var ruleFsts: String = "",
     var ruleFars: String = "",
     var maxNumSentences: Int = 1,

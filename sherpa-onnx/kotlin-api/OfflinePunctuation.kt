@@ -3,7 +3,7 @@ package com.k2fsa.sherpa.onnx
 import android.content.res.AssetManager
 
 data class OfflinePunctuationModelConfig(
-    var ctTransformer: String,
+    var ctTransformer: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",

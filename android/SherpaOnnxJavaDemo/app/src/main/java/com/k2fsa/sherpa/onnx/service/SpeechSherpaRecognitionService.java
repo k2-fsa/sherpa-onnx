@@ -1,6 +1,7 @@
 package com.k2fsa.sherpa.onnx.service;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -67,6 +68,16 @@ public class SpeechSherpaRecognitionService extends Service {
         appViewModel = Application.getInstance().getViewModel();
         int numBytes = AudioRecord.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
 
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
         audioRecord = new AudioRecord(
                 audioSource,
                 sampleRateInHz,
@@ -81,22 +92,21 @@ public class SpeechSherpaRecognitionService extends Service {
 
     private void initializeSherpa() {
         Log.d("Current Directory", System.getProperty("user.dir"));
-        String modelDir = "sherpa-onnx-streaming-zipformer-zh-14M-2023-02-23";
+        String modelDir = "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20";
         initializeSherpaDir(modelDir, modelDir);
-        OnlineTransducerModelConfig onlineTransducerModelConfig = OnlineTransducerModelConfig.builder()
-                .setEncoder(modelDir + "/encoder-epoch-99-avg-1.int8.onnx")
-                .setDecoder(modelDir + "/decoder-epoch-99-avg-1.onnx")
-                .setJoiner(modelDir + "/joiner-epoch-99-avg-1.int8.onnx")
-                .build();
+        OnlineTransducerModelConfig onlineTransducerModelConfig = new OnlineTransducerModelConfig();
+        onlineTransducerModelConfig.setEncoder(modelDir + "/encoder-epoch-99-avg-1.int8.onnx");
+        onlineTransducerModelConfig.setDecoder(modelDir + "/decoder-epoch-99-avg-1.onnx");
+        onlineTransducerModelConfig.setJoiner(modelDir + "/joiner-epoch-99-avg-1.int8.onnx");
 
-        OnlineModelConfig onlineModelConfig = OnlineModelConfig.builder()
-                .setTransducer(onlineTransducerModelConfig)
-                .setTokens(modelDir + "/tokens.txt")
-                .setModelType("zipformer")
-                .build();
-        OnlineRecognizerConfig config = OnlineRecognizerConfig.builder()
-                .setOnlineModelConfig(onlineModelConfig)
-                .build();
+        OnlineModelConfig onlineModelConfig = new OnlineModelConfig();
+        onlineModelConfig.setTransducer(onlineTransducerModelConfig);
+        onlineModelConfig.setTokens(modelDir + "/tokens.txt");
+        onlineModelConfig.setModelType("zipformer");
+        onlineModelConfig.setDebug(true);
+
+        OnlineRecognizerConfig config = new OnlineRecognizerConfig();
+        config.setModelConfig(onlineModelConfig);
         recognizer = new OnlineRecognizer(getAssets(), config);
 
         audioRecord.startRecording();
@@ -110,7 +120,7 @@ public class SpeechSherpaRecognitionService extends Service {
     }
 
     private void processSamples() {
-        OnlineStream stream = recognizer.createStream();
+        OnlineStream stream = recognizer.createStream("");
         double interval = 0.1;
         int bufferSize = (int) (interval * sampleRateInHz);
         short[] buffer = new short[bufferSize];
@@ -182,6 +192,7 @@ public class SpeechSherpaRecognitionService extends Service {
     }
 
 
+    @SuppressLint("ForegroundServiceType")
     private void startForegroundService() {
         String channelId = createNotificationChannel();
 
