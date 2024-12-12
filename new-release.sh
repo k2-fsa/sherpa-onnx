@@ -4,6 +4,8 @@ set -ex
 
 sed -i.bak 's/1\.10\.33/1\.10\.34/g' ./build-ios-shared.sh
 sed -i.bak 's/1\.10\.33/1\.10\.34/g' ./pom.xml
+sed -i.bak 's/1\.10\.33/1\.10\.34/g' ./jitpack.yml
+sed -i.bak 's/1\.10\.33/1\.10\.34/g' ./android/SherpaOnnxAar/README.md
 
 find flutter -name *.yaml -type f -exec sed -i.bak 's/1\.10\.33/1\.10\.34/g' {} \;
 find dart-api-examples -name *.yaml -type f -exec sed -i.bak 's/1\.10\.33/1\.10\.34/g' {} \;
