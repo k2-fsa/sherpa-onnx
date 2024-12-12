@@ -15,8 +15,8 @@ data class AudioTaggingModelConfig(
 )
 
 data class AudioTaggingConfig(
-    var model: AudioTaggingModelConfig,
-    var labels: String,
+    var model: AudioTaggingModelConfig = AudioTaggingModelConfig(),
+    var labels: String = "",
     var topK: Int = 5,
 )
 

@@ -5,7 +5,7 @@ import android.content.res.AssetManager
 
 data class KeywordSpotterConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
-    var modelConfig: OnlineModelConfig,
+    var modelConfig: OnlineModelConfig = OnlineModelConfig(),
     var maxActivePaths: Int = 4,
     var keywordsFile: String = "keywords.txt",
     var keywordsScore: Float = 1.5f,
