@@ -25,9 +25,6 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
-    sourceSets.main{
-        jniLibs.srcDirs = ['jniLibs']
-    }
 }
 
 dependencies {
@@ -38,5 +35,4 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.7.0'
     // implementation files('/Users/fangjun/open-source/sherpa-onnx/android/SherpaOnnxAar/sherpa_onnx/build/outputs/aar/sherpa_onnx-release.aar')
     implementation 'com.github.k2-fsa:sherpa-onnx:master-SNAPSHOT'
-
 }
