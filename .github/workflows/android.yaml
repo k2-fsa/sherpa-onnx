@@ -191,3 +191,18 @@ jobs:
         shell: bash
         run: |
           ls -lh /tmp/jniLibs
+
+          # drwxr-xr-x 2 runner docker 4.0K Dec 12 06:56 arm64-v8a
+          # drwxr-xr-x 2 runner docker 4.0K Dec 12 06:56 armeabi-v7a
+          # drwxr-xr-x 2 runner docker 4.0K Dec 12 06:56 x86
+          # drwxr-xr-x 2 runner docker 4.0K Dec 12 06:56 x86_64
+          #
+      - name: Copy libs
+        shell: bash
+        run: |
+          cp -a /tmp/jniLibs/ android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/
+
+      - name: Check libs
+        shell: bash
+        run: |
+          ls -lh android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/*
