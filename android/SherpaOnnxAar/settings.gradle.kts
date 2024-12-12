@@ -20,5 +20,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "SherpaOnnxAar"
-include(":app")
 include(":sherpa_onnx")
