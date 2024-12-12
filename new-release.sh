@@ -7,6 +7,8 @@ sed -i.bak 's/1\.10\.34/1\.10\.35/g' ./pom.xml
 sed -i.bak 's/1\.10\.34/1\.10\.35/g' ./jitpack.yml
 sed -i.bak 's/1\.10\.34/1\.10\.35/g' ./android/SherpaOnnxAar/README.md
 
+find android -name build.gradle -type f -exec sed -i.bak 's/sherpa-onnx:v1\.10\.34/sherpa-onnx:v1\.10\.35/g' {} \;
+
 find flutter -name *.yaml -type f -exec sed -i.bak 's/1\.10\.34/1\.10\.35/g' {} \;
 find dart-api-examples -name *.yaml -type f -exec sed -i.bak 's/1\.10\.34/1\.10\.35/g' {} \;
 find flutter-examples -name *.yaml -type f -exec sed -i.bak 's/1\.10\.34/1\.10\.35/g' {} \;
