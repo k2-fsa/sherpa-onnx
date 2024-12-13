@@ -39,7 +39,7 @@ if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   )
 endif()
 
-add_library(sherpa-onnx-jni ${sources})
+add_library(sherpa-onnx-jni SHARED ${sources})
 
 target_compile_definitions(sherpa-onnx-jni PRIVATE SHERPA_ONNX_BUILD_SHARED_LIBS=1)
 target_compile_definitions(sherpa-onnx-jni PRIVATE SHERPA_ONNX_BUILD_MAIN_LIB=1)
