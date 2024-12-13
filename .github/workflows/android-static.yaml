@@ -111,8 +111,8 @@ jobs:
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
           ./build-android-x86.sh
           mkdir -p ./jniLibs/x86
-          cp -v ./build-android-x86-static/install/lib/*.so ./jniLibs/x86
-          rm -rf ./build-android-x86-static
+          cp -v ./build-android-x86/install/lib/*.so ./jniLibs/x86
+          rm -rf ./build-android-x86
 
       - name: Copy files
         shell: bash

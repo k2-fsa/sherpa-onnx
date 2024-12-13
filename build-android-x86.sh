@@ -1,26 +1,13 @@
 #!/usr/bin/env bash
 set -ex
 
-# If BUILD_SHARED_LIBS is ON, we use libonnxruntime.so
-# If BUILD_SHARED_LIBS is OFF, we use libonnxruntime.a
-#
-# In any case, we will have libsherpa-onnx-jni.so
-#
-# If BUILD_SHARED_LIBS is OFF, then libonnxruntime.a is linked into libsherpa-onnx-jni.so
-# and you only need to copy libsherpa-onnx-jni.so to your Android projects.
-#
-# If BUILD_SHARED_LIBS is ON, then you need to copy both libsherpa-onnx-jni.so
-# and libonnxruntime.so to your Android projects
-#
-if [ -z $BUILD_SHARED_LIBS ]; then
-  BUILD_SHARED_LIBS=ON
+if [ x$BUILD_SHARED_LIBS == xOFF ]; then
+  echo "BUILD_SHARED_LIBS=OFF is ignored for Android x86."
+  echo "Always link with libonnxruntime.so"
+  sleep 2
 fi
 
-if [ $BUILD_SHARED_LIBS == ON ]; then
-  dir=$PWD/build-android-x86
-else
-  dir=$PWD/build-android-x86-static
-fi
+dir=$PWD/build-android-x86
 
 mkdir -p $dir
 cd $dir
@@ -40,9 +27,6 @@ cd $dir
 
 if [ -z $ANDROID_NDK ]; then
   ANDROID_NDK=/star-fj/fangjun/software/android-sdk/ndk/22.1.7171670
-  if [ $BUILD_SHARED_LIBS == OFF ]; then
-    ANDROID_NDK=/star-fj/fangjun/software/android-sdk/ndk/27.0.11718014
-  fi
   # or use
   # ANDROID_NDK=/star-fj/fangjun/software/android-ndk
   #
@@ -54,10 +38,6 @@ if [ -z $ANDROID_NDK ]; then
     # Tools -> SDK manager -> Android SDK
     # and set "Android SDK location" to /Users/fangjun/software/my-android
     ANDROID_NDK=/Users/fangjun/software/my-android/ndk/22.1.7171670
-
-    if [ $BUILD_SHARED_LIBS == OFF ]; then
-      ANDROID_NDK=/Users/fangjun/software/my-android/ndk/27.0.11718014
-    fi
   fi
 fi
 
@@ -71,29 +51,17 @@ sleep 1
 
 onnxruntime_version=1.17.1
 
-if [ $BUILD_SHARED_LIBS == ON ]; then
-  if [ ! -f $onnxruntime_version/jni/x86/libonnxruntime.so ]; then
-    mkdir -p $onnxruntime_version
-    pushd $onnxruntime_version
-    wget -c -q https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-android-${onnxruntime_version}.zip
-    unzip onnxruntime-android-${onnxruntime_version}.zip
-    rm onnxruntime-android-${onnxruntime_version}.zip
-    popd
-  fi
-
-  export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/$onnxruntime_version/jni/x86/
-  export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$dir/$onnxruntime_version/headers/
-else
-  if [ ! -f ${onnxruntime_version}-static/lib/libonnxruntime.a ]; then
-    wget -c -q https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-android-x86-static_lib-${onnxruntime_version}.zip
-    unzip onnxruntime-android-x86-static_lib-${onnxruntime_version}.zip
-    rm onnxruntime-android-x86-static_lib-${onnxruntime_version}.zip
-    mv onnxruntime-android-x86-static_lib-${onnxruntime_version} ${onnxruntime_version}-static
-  fi
-
-  export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/$onnxruntime_version-static/lib/
-  export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$dir/$onnxruntime_version-static/include/
+if [ ! -f $onnxruntime_version/jni/x86/libonnxruntime.so ]; then
+  mkdir -p $onnxruntime_version
+  pushd $onnxruntime_version
+  wget -c -q https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-android-${onnxruntime_version}.zip
+  unzip onnxruntime-android-${onnxruntime_version}.zip
+  rm onnxruntime-android-${onnxruntime_version}.zip
+  popd
 fi
+
+export SHERPA_ONNXRUNTIME_LIB_DIR=$dir/$onnxruntime_version/jni/x86/
+export SHERPA_ONNXRUNTIME_INCLUDE_DIR=$dir/$onnxruntime_version/headers/
 
 echo "SHERPA_ONNXRUNTIME_LIB_DIR: $SHERPA_ONNXRUNTIME_LIB_DIR"
 echo "SHERPA_ONNXRUNTIME_INCLUDE_DIR $SHERPA_ONNXRUNTIME_INCLUDE_DIR"
@@ -127,13 +95,12 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DBUILD_ESPEAK_NG_EXE=OFF \
     -DBUILD_ESPEAK_NG_TESTS=OFF \
     -DCMAKE_BUILD_TYPE=Release \
-    -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
+    -DBUILD_SHARED_LIBS=ON \
     -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
     -DSHERPA_ONNX_ENABLE_CHECK=OFF \
     -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
     -DSHERPA_ONNX_ENABLE_JNI=$SHERPA_ONNX_ENABLE_JNI \
-    -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
     -DCMAKE_INSTALL_PREFIX=./install \
     -DANDROID_ABI="x86" \
     -DSHERPA_ONNX_ENABLE_C_API=$SHERPA_ONNX_ENABLE_C_API \
@@ -143,7 +110,5 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
 # make VERBOSE=1 -j4
 make -j4
 make install/strip
-cp -fv $onnxruntime_version/jni/x86/libonnxruntime.so install/lib 2>/dev/null || true
-rm -rf install/share
+cp -fv $onnxruntime_version/jni/x86/libonnxruntime.so install/lib
 rm -rf install/lib/pkgconfig
-rm -rf install/lib/lib*.a
