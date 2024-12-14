@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -ex
 
+if [ x$BUILD_SHARED_LIBS == xOFF ]; then
+  echo "BUILD_SHARED_LIBS=OFF is ignored for Android x86."
+  echo "Always link with libonnxruntime.so"
+  sleep 2
+fi
+
 dir=$PWD/build-android-x86
 
 mkdir -p $dir
