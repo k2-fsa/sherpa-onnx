@@ -14,7 +14,7 @@ function createOfflineTts() {
       numThreads: 1,
       provider: 'cpu',
     },
-    maxNumStences: 1,
+    maxNumSentences: 1,
   };
   return new sherpa_onnx.OfflineTts(config);
 }
