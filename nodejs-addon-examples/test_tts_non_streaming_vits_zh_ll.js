@@ -16,7 +16,7 @@ function createOfflineTts() {
       numThreads: 1,
       provider: 'cpu',
     },
-    maxNumStences: 1,
+    maxNumSentences: 1,
     ruleFsts:
         './sherpa-onnx-vits-zh-ll/date.fst,./sherpa-onnx-vits-zh-ll/phone.fst,./sherpa-onnx-vits-zh-ll/number.fst',
   };
