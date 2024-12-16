@@ -267,6 +267,13 @@ for 新一代 Kaldi **微信交流群** and **QQ 交流群**.
 
 ## Projects using sherpa-onnx
 
+### [Open-LLM-VTuber](https://github.com/t41372/Open-LLM-VTuber)
+
+Talk to any LLM with hands-free voice interaction, voice interruption, and Live2D taking
+face running locally across platforms
+
+See also <https://github.com/t41372/Open-LLM-VTuber/pull/50>
+
 ### [voiceapi](https://github.com/ruzhila/voiceapi)
 
 <details>
