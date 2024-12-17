@@ -27,7 +27,7 @@ class OfflineTtsMatchaModel {
     return Ort::Value{nullptr};
   }
 
-  const OfflineTtsMatchaModelMetaData &GetMetaData() const { return {}; }
+  const OfflineTtsMatchaModelMetaData &GetMetaData() const;
 
  private:
   class Impl;

@@ -45,6 +45,10 @@ class OfflineTtsMatchaModel::Impl {
     Init(buf.data(), buf.size());
   }
 
+  const OfflineTtsMatchaModelMetaData &GetMetaData() const {
+    return meta_data_;
+  }
+
  private:
   void Init(void *model_data, size_t model_data_length) {
     sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
@@ -117,6 +121,11 @@ OfflineTtsMatchaModel::OfflineTtsMatchaModel(
     : impl_(std::make_unique<Impl>(mgr, config)) {}
 
 OfflineTtsMatchaModel::~OfflineTtsMatchaModel() = default;
+
+const OfflineTtsMatchaModelMetaData &OfflineTtsMatchaModel::GetMetaData()
+    const {
+  return impl_->GetMetaData();
+}
 
 #if __ANDROID_API__ >= 9
 template OfflineTtsMatchaModel::OfflineTtsMatchaModel(
