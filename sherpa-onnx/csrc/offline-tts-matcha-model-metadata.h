@@ -17,6 +17,7 @@ struct OfflineTtsMatchaModelMetaData {
   int32_t sample_rate = 0;
   int32_t add_blank = 0;
   int32_t num_speakers = 0;
+  int32_t version = 1;
 };
 
 }  // namespace sherpa_onnx

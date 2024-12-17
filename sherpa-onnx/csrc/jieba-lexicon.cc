@@ -19,9 +19,8 @@ namespace sherpa_onnx {
 class JiebaLexicon::Impl {
  public:
   Impl(const std::string &lexicon, const std::string &tokens,
-       const std::string &dict_dir,
-       const OfflineTtsVitsModelMetaData &meta_data, bool debug)
-      : meta_data_(meta_data), debug_(debug) {
+       const std::string &dict_dir, bool debug)
+      : debug_(debug) {
     std::string dict = dict_dir + "/jieba.dict.utf8";
     std::string hmm = dict_dir + "/hmm_model.utf8";
     std::string user_dict = dict_dir + "/user.dict.utf8";
@@ -195,8 +194,6 @@ class JiebaLexicon::Impl {
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
 
-  OfflineTtsVitsModelMetaData meta_data_;
-
   std::unique_ptr<cppjieba::Jieba> jieba_;
   bool debug_ = false;
 };
@@ -205,11 +202,8 @@ JiebaLexicon::~JiebaLexicon() = default;
 
 JiebaLexicon::JiebaLexicon(const std::string &lexicon,
                            const std::string &tokens,
-                           const std::string &dict_dir,
-                           const OfflineTtsVitsModelMetaData &meta_data,
-                           bool debug)
-    : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, meta_data,
-                                   debug)) {}
+                           const std::string &dict_dir, bool debug)
+    : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, debug)) {}
 
 std::vector<TokenIDs> JiebaLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {

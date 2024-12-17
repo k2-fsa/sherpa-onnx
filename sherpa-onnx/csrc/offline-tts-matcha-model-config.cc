@@ -107,7 +107,20 @@ bool OfflineTtsMatchaModelConfig::Validate() const {
         return false;
       }
     }
+
+    // we require that --matcha-lexicon is not empty
+    if (lexicon.empty()) {
+      SHERPA_ONNX_LOGE("Please provide --matcha-lexicon");
+      return false;
+    }
+
+    if (!FileExists(lexicon)) {
+      SHERPA_ONNX_LOGE("--matcha-lexicon: '%s' does not exist",
+                       lexicon.c_str());
+      return false;
+    }
   }
+
   return true;
 }
 

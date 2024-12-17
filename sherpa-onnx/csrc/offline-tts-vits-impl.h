@@ -403,8 +403,7 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty()) {
       frontend_ = std::make_unique<JiebaLexicon>(
           config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, model_->GetMetaData(),
-          config_.model.debug);
+          config_.model.vits.dict_dir, config_.model.debug);
     } else if ((meta_data.is_piper || meta_data.is_coqui ||
                 meta_data.is_icefall) &&
                !config_.model.vits.data_dir.empty()) {
@@ -422,17 +421,6 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
           config_.model.vits.lexicon, config_.model.vits.tokens,
           meta_data.punctuations, meta_data.language, config_.model.debug);
     }
-  }
-
-  std::vector<int64_t> AddBlank(const std::vector<int64_t> &x) const {
-    // we assume the blank ID is 0
-    std::vector<int64_t> buffer(x.size() * 2 + 1);
-    int32_t i = 1;
-    for (auto k : x) {
-      buffer[i] = k;
-      i += 2;
-    }
-    return buffer;
   }
 
   GeneratedAudio Process(const std::vector<std::vector<int64_t>> &tokens,

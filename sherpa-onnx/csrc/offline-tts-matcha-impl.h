@@ -155,6 +155,9 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     const auto &meta_data = model_->GetMetaData();
     int32_t num_speakers = meta_data.num_speakers;
 
+    SHERPA_ONNX_LOGE("here");
+    return {};
+
     if (num_speakers == 0 && sid != 0) {
 #if __OHOS__
       SHERPA_ONNX_LOGE(
@@ -232,7 +235,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     }
 
     // TODO(fangjun): add blank inside the frontend, not here
-    if (meta_data.add_blank && config_.model.vits.data_dir.empty()) {
+    if (meta_data.add_blank && config_.model.matcha.data_dir.empty()) {
       for (auto &k : x) {
         k = AddBlank(k);
       }
@@ -335,21 +338,12 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
 
  private:
   template <typename Manager>
-  void InitFrontend(Manager *mgr) {
-    const auto &meta_data = model_->GetMetaData();
-  }
+  void InitFrontend(Manager *mgr) {}
 
-  void InitFrontend() { const auto &meta_data = model_->GetMetaData(); }
-
-  std::vector<int64_t> AddBlank(const std::vector<int64_t> &x) const {
-    // we assume the blank ID is 0
-    std::vector<int64_t> buffer(x.size() * 2 + 1);
-    int32_t i = 1;
-    for (auto k : x) {
-      buffer[i] = k;
-      i += 2;
-    }
-    return buffer;
+  void InitFrontend() {
+    frontend_ = std::make_unique<JiebaLexicon>(
+        config_.model.matcha.lexicon, config_.model.matcha.tokens,
+        config_.model.matcha.dict_dir, config_.model.debug);
   }
 
   GeneratedAudio Process(const std::vector<std::vector<int64_t>> &tokens,

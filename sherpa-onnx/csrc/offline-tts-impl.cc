@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 
 #include <memory>
+#include <vector>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -19,6 +20,18 @@
 #include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
 
 namespace sherpa_onnx {
+
+std::vector<int64_t> OfflineTtsImpl::AddBlank(
+    const std::vector<int64_t> &x) const {
+  // we assume the blank ID is 0
+  std::vector<int64_t> buffer(x.size() * 2 + 1);
+  int32_t i = 1;
+  for (auto k : x) {
+    buffer[i] = k;
+    i += 2;
+  }
+  return buffer;
+}
 
 std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     const OfflineTtsConfig &config) {
