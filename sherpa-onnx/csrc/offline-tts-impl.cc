@@ -15,21 +15,27 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "sherpa-onnx/csrc/offline-tts-matcha-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
 
 namespace sherpa_onnx {
 
 std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     const OfflineTtsConfig &config) {
-  // TODO(fangjun): Support other types
-  return std::make_unique<OfflineTtsVitsImpl>(config);
+  if (!config.model.vits.model.empty()) {
+    return std::make_unique<OfflineTtsVitsImpl>(config);
+  }
+  return std::make_unique<OfflineTtsMatchaImpl>(config);
 }
 
 template <typename Manager>
 std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     Manager *mgr, const OfflineTtsConfig &config) {
-  // TODO(fangjun): Support other types
-  return std::make_unique<OfflineTtsVitsImpl>(mgr, config);
+  if (!config.model.vits.model.empty()) {
+    return std::make_unique<OfflineTtsVitsImpl>(mgr, config);
+  }
+
+  return std::make_unique<OfflineTtsMatchaImpl>(mgr, config);
 }
 
 #if __ANDROID_API__ >= 9
