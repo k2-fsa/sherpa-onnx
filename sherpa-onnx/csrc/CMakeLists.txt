@@ -150,6 +150,7 @@ list(APPEND sources
 
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
+    hifigan-vocoder.cc
     jieba-lexicon.cc
     lexicon.cc
     melo-tts-lexicon.cc

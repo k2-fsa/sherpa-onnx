@@ -180,7 +180,7 @@ const OfflineTtsMatchaModelMetaData &OfflineTtsMatchaModel::GetMetaData()
 }
 
 Ort::Value OfflineTtsMatchaModel::Run(Ort::Value x, int64_t sid /*= 0*/,
-                                      float speed /*= 1.0*/) {
+                                      float speed /*= 1.0*/) const {
   return impl_->Run(std::move(x), sid, speed);
 }
 

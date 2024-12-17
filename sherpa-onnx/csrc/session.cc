@@ -273,4 +273,9 @@ Ort::SessionOptions GetSessionOptions(const OnlineLMConfig &config) {
   return GetSessionOptionsImpl(config.lm_num_threads, config.lm_provider);
 }
 
+Ort::SessionOptions GetSessionOptions(int32_t num_threads,
+                                      const std::string &provider_str) {
+  return GetSessionOptionsImpl(num_threads, provider_str);
+}
+
 }  // namespace sherpa_onnx

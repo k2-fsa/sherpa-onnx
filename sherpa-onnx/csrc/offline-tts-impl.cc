@@ -21,10 +21,10 @@
 
 namespace sherpa_onnx {
 
-std::vector<int64_t> OfflineTtsImpl::AddBlank(
-    const std::vector<int64_t> &x) const {
+std::vector<int64_t> OfflineTtsImpl::AddBlank(const std::vector<int64_t> &x,
+                                              int32_t blank_id /*= 0*/) const {
   // we assume the blank ID is 0
-  std::vector<int64_t> buffer(x.size() * 2 + 1);
+  std::vector<int64_t> buffer(x.size() * 2 + 1, blank_id);
   int32_t i = 1;
   for (auto k : x) {
     buffer[i] = k;

@@ -362,7 +362,7 @@ Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, int64_t sid /*=0*/,
 
 Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, Ort::Value tones,
                                     int64_t sid /*= 0*/,
-                                    float speed /*= 1.0*/) {
+                                    float speed /*= 1.0*/) const {
   return impl_->Run(std::move(x), std::move(tones), sid, speed);
 }
 

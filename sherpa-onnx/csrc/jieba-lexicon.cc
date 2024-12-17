@@ -92,7 +92,7 @@ class JiebaLexicon::Impl {
       }
 
       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
-      this_sentence.push_back(blank);
+      // this_sentence.push_back(blank);
 
       if (w == "。" || w == "！" || w == "？" || w == "，") {
         ans.emplace_back(std::move(this_sentence));

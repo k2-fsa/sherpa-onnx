@@ -13,6 +13,7 @@
 #include "fst/extensions/far/far.h"
 #include "kaldifst/csrc/kaldi-fst-io.h"
 #include "kaldifst/csrc/text-normalizer.h"
+#include "sherpa-onnx/csrc/hifigan-vocoder.h"
 #include "sherpa-onnx/csrc/jieba-lexicon.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -31,7 +32,10 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
  public:
   explicit OfflineTtsMatchaImpl(const OfflineTtsConfig &config)
       : config_(config),
-        model_(std::make_unique<OfflineTtsMatchaModel>(config.model)) {
+        model_(std::make_unique<OfflineTtsMatchaModel>(config.model)),
+        vocoder_(std::make_unique<HifiganVocoder>(
+            config.model.num_threads, config.model.provider,
+            config.model.matcha.vocoder)) {
     InitFrontend();
 
     if (!config.rule_fsts.empty()) {
@@ -87,7 +91,10 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
   template <typename Manager>
   OfflineTtsMatchaImpl(Manager *mgr, const OfflineTtsConfig &config)
       : config_(config),
-        model_(std::make_unique<OfflineTtsMatchaModel>(mgr, config.model)) {
+        model_(std::make_unique<OfflineTtsMatchaModel>(mgr, config.model)),
+        vocoder_(std::make_unique<HifiganVocoder>(
+            mgr, config.model.num_threads, config.model.provider,
+            config.model.matcha.vocoder)) {
     InitFrontend(mgr);
 
     if (!config.rule_fsts.empty()) {
@@ -228,10 +235,54 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
       x.push_back(std::move(i.tokens));
     }
 
+    if (config_.model.debug) {
+      std::ostringstream os;
+      os << "\n";
+      for (const auto &k : x) {
+        for (int32_t i : k) {
+          os << i << " ";
+        }
+        os << "\n";
+      }
+      os << "\n";
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    }
+
     if (meta_data.add_blank) {
       for (auto &k : x) {
         k = AddBlank(k);
       }
+
+      if (config_.model.debug) {
+        std::ostringstream os;
+        os << "\n";
+        for (const auto &k : x) {
+          for (int32_t i : k) {
+            os << i << " ";
+          }
+          os << "\n";
+        }
+        os << "\n";
+        SHERPA_ONNX_LOGE("%s", os.str().c_str());
+      }
+
+      for (auto &k : x) {
+        // TODO(fangjun): Fix it!
+        k = AddBlank(k, 62);
+      }
+    }
+
+    if (config_.model.debug) {
+      std::ostringstream os;
+      os << "\n";
+      for (const auto &k : x) {
+        for (int32_t i : k) {
+          os << i << " ";
+        }
+        os << "\n";
+      }
+      os << "\n";
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
     }
 
     int32_t x_size = static_cast<int32_t>(x.size());
@@ -345,13 +396,10 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
         memory_info, x.data(), x.size(), x_shape.data(), x_shape.size());
 
     Ort::Value mel = model_->Run(std::move(x_tensor), sid, speed);
+    Ort::Value audio = vocoder_->Run(std::move(mel));
 
-    std::vector<int64_t> mel_shape = mel.GetTensorTypeAndShapeInfo().GetShape();
-    SHERPA_ONNX_LOGE("mel shape size: %d", (int)mel_shape.size());
-    for (int32_t i : mel_shape) {
-      SHERPA_ONNX_LOGE(" %d", i);
-    }
-    return {};
+    std::vector<int64_t> audio_shape =
+        audio.GetTensorTypeAndShapeInfo().GetShape();
 
     int64_t total = 1;
     // The output shape may be (1, 1, total) or (1, total) or (total,)
@@ -359,7 +407,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
       total *= i;
     }
 
-    const float *p = mel.GetTensorData<float>();
+    const float *p = audio.GetTensorData<float>();
 
     GeneratedAudio ans;
     ans.sample_rate = model_->GetMetaData().sample_rate;
@@ -370,6 +418,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
  private:
   OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsMatchaModel> model_;
+  std::unique_ptr<HifiganVocoder> vocoder_;
   std::vector<std::unique_ptr<kaldifst::TextNormalizer>> tn_list_;
   std::unique_ptr<OfflineTtsFrontend> frontend_;
 };
