@@ -49,6 +49,58 @@ class OfflineTtsMatchaModel::Impl {
     return meta_data_;
   }
 
+  Ort::Value Run(Ort::Value x, int64_t sid, float speed) {
+    auto memory_info =
+        Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
+
+    std::vector<int64_t> x_shape = x.GetTensorTypeAndShapeInfo().GetShape();
+    if (x_shape[0] != 1) {
+      SHERPA_ONNX_LOGE("Support only batch_size == 1. Given: %d",
+                       static_cast<int32_t>(x_shape[0]));
+      exit(-1);
+    }
+
+    int64_t len = x_shape[1];
+    int64_t len_shape = 1;
+
+    Ort::Value x_length =
+        Ort::Value::CreateTensor(memory_info, &len, 1, &len_shape, 1);
+
+    int64_t scale_shape = 1;
+    float noise_scale = config_.matcha.noise_scale;
+    float length_scale = config_.matcha.length_scale;
+
+    if (speed != 1 && speed > 0) {
+      length_scale = 1. / speed;
+    }
+
+    Ort::Value noise_scale_tensor =
+        Ort::Value::CreateTensor(memory_info, &noise_scale, 1, &scale_shape, 1);
+
+    Ort::Value length_scale_tensor = Ort::Value::CreateTensor(
+        memory_info, &length_scale, 1, &scale_shape, 1);
+
+    Ort::Value sid_tensor =
+        Ort::Value::CreateTensor(memory_info, &sid, 1, &scale_shape, 1);
+
+    std::vector<Ort::Value> inputs;
+    inputs.reserve(5);
+    inputs.push_back(std::move(x));
+    inputs.push_back(std::move(x_length));
+    inputs.push_back(std::move(noise_scale_tensor));
+    inputs.push_back(std::move(length_scale_tensor));
+
+    if (input_names_.size() == 5 && input_names_.back() == "sid") {
+      inputs.push_back(std::move(sid_tensor));
+    }
+
+    auto out =
+        sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
+                   output_names_ptr_.data(), output_names_ptr_.size());
+
+    return std::move(out[0]);
+  }
+
  private:
   void Init(void *model_data, size_t model_data_length) {
     sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
@@ -88,7 +140,7 @@ class OfflineTtsMatchaModel::Impl {
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.add_blank, "add_blank",
-                                            0);
+                                            1);
 
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
     SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
@@ -125,6 +177,11 @@ OfflineTtsMatchaModel::~OfflineTtsMatchaModel() = default;
 const OfflineTtsMatchaModelMetaData &OfflineTtsMatchaModel::GetMetaData()
     const {
   return impl_->GetMetaData();
+}
+
+Ort::Value OfflineTtsMatchaModel::Run(Ort::Value x, int64_t sid /*= 0*/,
+                                      float speed /*= 1.0*/) {
+  return impl_->Run(std::move(x), sid, speed);
 }
 
 #if __ANDROID_API__ >= 9

@@ -155,9 +155,6 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     const auto &meta_data = model_->GetMetaData();
     int32_t num_speakers = meta_data.num_speakers;
 
-    SHERPA_ONNX_LOGE("here");
-    return {};
-
     if (num_speakers == 0 && sid != 0) {
 #if __OHOS__
       SHERPA_ONNX_LOGE(
@@ -214,12 +211,16 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
 
     if (token_ids.empty() ||
         (token_ids.size() == 1 && token_ids[0].tokens.empty())) {
-      SHERPA_ONNX_LOGE("Failed to convert %s to token IDs", text.c_str());
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Failed to convert '%{public}s' to token IDs",
+                       text.c_str());
+#else
+      SHERPA_ONNX_LOGE("Failed to convert '%s' to token IDs", text.c_str());
+#endif
       return {};
     }
 
     std::vector<std::vector<int64_t>> x;
-    std::vector<std::vector<int64_t>> tones;
 
     x.reserve(token_ids.size());
 
@@ -227,20 +228,8 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
       x.push_back(std::move(i.tokens));
     }
 
-    if (!token_ids[0].tones.empty()) {
-      tones.reserve(token_ids.size());
-      for (auto &i : token_ids) {
-        tones.push_back(std::move(i.tones));
-      }
-    }
-
-    // TODO(fangjun): add blank inside the frontend, not here
-    if (meta_data.add_blank && config_.model.matcha.data_dir.empty()) {
+    if (meta_data.add_blank) {
       for (auto &k : x) {
-        k = AddBlank(k);
-      }
-
-      for (auto &k : tones) {
         k = AddBlank(k);
       }
     }
@@ -248,7 +237,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     int32_t x_size = static_cast<int32_t>(x.size());
 
     if (config_.max_num_sentences <= 0 || x_size <= config_.max_num_sentences) {
-      auto ans = Process(x, tones, sid, speed);
+      auto ans = Process(x, sid, speed);
       if (callback) {
         callback(ans.samples.data(), ans.samples.size(), 1.0);
       }
@@ -258,11 +247,9 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     // the input text is too long, we process sentences within it in batches
     // to avoid OOM. Batch size is config_.max_num_sentences
     std::vector<std::vector<int64_t>> batch_x;
-    std::vector<std::vector<int64_t>> batch_tones;
 
     int32_t batch_size = config_.max_num_sentences;
     batch_x.reserve(config_.max_num_sentences);
-    batch_tones.reserve(config_.max_num_sentences);
     int32_t num_batches = x_size / batch_size;
 
     if (config_.model.debug) {
@@ -287,16 +274,11 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
 
     for (int32_t b = 0; b != num_batches && should_continue; ++b) {
       batch_x.clear();
-      batch_tones.clear();
       for (int32_t i = 0; i != batch_size; ++i, ++k) {
         batch_x.push_back(std::move(x[k]));
-
-        if (!tones.empty()) {
-          batch_tones.push_back(std::move(tones[k]));
-        }
       }
 
-      auto audio = Process(batch_x, batch_tones, sid, speed);
+      auto audio = Process(batch_x, sid, speed);
       ans.sample_rate = audio.sample_rate;
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
@@ -310,18 +292,14 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     }
 
     batch_x.clear();
-    batch_tones.clear();
     while (k < static_cast<int32_t>(x.size()) && should_continue) {
       batch_x.push_back(std::move(x[k]));
-      if (!tones.empty()) {
-        batch_tones.push_back(std::move(tones[k]));
-      }
 
       ++k;
     }
 
     if (!batch_x.empty()) {
-      auto audio = Process(batch_x, batch_tones, sid, speed);
+      auto audio = Process(batch_x, sid, speed);
       ans.sample_rate = audio.sample_rate;
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
@@ -347,7 +325,6 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
   }
 
   GeneratedAudio Process(const std::vector<std::vector<int64_t>> &tokens,
-                         const std::vector<std::vector<int64_t>> &tones,
                          int32_t sid, float speed) const {
     int32_t num_tokens = 0;
     for (const auto &k : tokens) {
@@ -360,14 +337,6 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
       x.insert(x.end(), k.begin(), k.end());
     }
 
-    std::vector<int64_t> tone_list;
-    if (!tones.empty()) {
-      tone_list.reserve(num_tokens);
-      for (const auto &k : tones) {
-        tone_list.insert(tone_list.end(), k.begin(), k.end());
-      }
-    }
-
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -375,17 +344,14 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     Ort::Value x_tensor = Ort::Value::CreateTensor(
         memory_info, x.data(), x.size(), x_shape.data(), x_shape.size());
 
-    Ort::Value tones_tensor{nullptr};
-    if (!tones.empty()) {
-      tones_tensor = Ort::Value::CreateTensor(memory_info, tone_list.data(),
-                                              tone_list.size(), x_shape.data(),
-                                              x_shape.size());
+    Ort::Value mel = model_->Run(std::move(x_tensor), sid, speed);
+
+    std::vector<int64_t> mel_shape = mel.GetTensorTypeAndShapeInfo().GetShape();
+    SHERPA_ONNX_LOGE("mel shape size: %d", (int)mel_shape.size());
+    for (int32_t i : mel_shape) {
+      SHERPA_ONNX_LOGE(" %d", i);
     }
-
-    Ort::Value audio = model_->Run(std::move(x_tensor), sid, speed);
-
-    std::vector<int64_t> audio_shape =
-        audio.GetTensorTypeAndShapeInfo().GetShape();
+    return {};
 
     int64_t total = 1;
     // The output shape may be (1, 1, total) or (1, total) or (total,)
@@ -393,7 +359,7 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
       total *= i;
     }
 
-    const float *p = audio.GetTensorData<float>();
+    const float *p = mel.GetTensorData<float>();
 
     GeneratedAudio ans;
     ans.sample_rate = model_->GetMetaData().sample_rate;

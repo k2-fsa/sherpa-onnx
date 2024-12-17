@@ -23,9 +23,9 @@ class OfflineTtsMatchaModel {
   template <typename Manager>
   OfflineTtsMatchaModel(Manager *mgr, const OfflineTtsModelConfig &config);
 
-  Ort::Value Run(Ort::Value x, int64_t sid = 0, float speed = 1.0) {
-    return Ort::Value{nullptr};
-  }
+  // Return a float32 tensor containing the mel
+  // of shape (batch_size, mel_dim, num_frames)
+  Ort::Value Run(Ort::Value x, int64_t sid = 0, float speed = 1.0);
 
   const OfflineTtsMatchaModelMetaData &GetMetaData() const;
 
