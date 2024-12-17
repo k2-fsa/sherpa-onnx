@@ -26,6 +26,9 @@ Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config);
 Ort::SessionOptions GetSessionOptions(const OnlineModelConfig &config,
                                       const std::string &model_type);
 
+Ort::SessionOptions GetSessionOptions(int32_t num_threads,
+                                      const std::string &provider_str);
+
 template <typename T>
 Ort::SessionOptions GetSessionOptions(const T &config) {
   return GetSessionOptionsImpl(config.num_threads, config.provider);

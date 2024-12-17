@@ -11,7 +11,6 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
-#include "sherpa-onnx/csrc/offline-tts-vits-model-metadata.h"
 
 namespace sherpa_onnx {
 
@@ -19,8 +18,7 @@ class JiebaLexicon : public OfflineTtsFrontend {
  public:
   ~JiebaLexicon() override;
   JiebaLexicon(const std::string &lexicon, const std::string &tokens,
-               const std::string &dict_dir,
-               const OfflineTtsVitsModelMetaData &meta_data, bool debug);
+               const std::string &dict_dir, bool debug);
 
   std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text,

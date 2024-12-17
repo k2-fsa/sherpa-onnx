@@ -10,6 +10,7 @@ namespace sherpa_onnx {
 
 void OfflineTtsModelConfig::Register(ParseOptions *po) {
   vits.Register(po);
+  matcha.Register(po);
 
   po->Register("num-threads", &num_threads,
                "Number of threads to run the neural network");
@@ -27,7 +28,11 @@ bool OfflineTtsModelConfig::Validate() const {
     return false;
   }
 
-  return vits.Validate();
+  if (!vits.model.empty()) {
+    return vits.Validate();
+  }
+
+  return matcha.Validate();
 }
 
 std::string OfflineTtsModelConfig::ToString() const {
@@ -35,6 +40,7 @@ std::string OfflineTtsModelConfig::ToString() const {
 
   os << "OfflineTtsModelConfig(";
   os << "vits=" << vits.ToString() << ", ";
+  os << "matcha=" << matcha.ToString() << ", ";
   os << "num_threads=" << num_threads << ", ";
   os << "debug=" << (debug ? "True" : "False") << ", ";
   os << "provider=\"" << provider << "\")";
