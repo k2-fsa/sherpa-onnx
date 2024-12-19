@@ -167,7 +167,6 @@ jobs:
 
           export BUILD_SHARED_LIBS=ON
           export SHERPA_ONNX_ENABLE_GPU=${{ matrix.gpu }}
-          export SHERPA_ONNX_ENABLE_GPU=${{ matrix.gpu }}
           export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=${{ matrix.onnxruntime_version }}
 
           ./build-aarch64-linux-gnu.sh
