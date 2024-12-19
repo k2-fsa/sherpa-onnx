@@ -29,7 +29,7 @@ If you use Jetson Orin NX, then please pass
 to cmake (You need to make sure CUDA 11.4 is available on your board).
 ")
 
-set(_v ${SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION})
+set(v ${SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION})
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v$v/onnxruntime-linux-aarch64-gpu-$v.tar.bz2")
 set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-gpu-$v.tar.bz2")
