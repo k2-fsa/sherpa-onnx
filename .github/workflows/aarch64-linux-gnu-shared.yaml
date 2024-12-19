@@ -34,7 +34,7 @@ concurrency:
 jobs:
   aarch64_linux_gnu_shared:
     runs-on: ${{ matrix.os }}
-    name: aarch64 shared GPU ${{ matrix.gpu }}
+    name: aarch64 shared GPU ${{ matrix.gpu }} ${{ matrix.onnxruntime_version }}
     strategy:
       fail-fast: false
       matrix:
