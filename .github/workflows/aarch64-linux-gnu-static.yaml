@@ -61,7 +61,7 @@ jobs:
         if: steps.cache-qemu.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update
-          sudo apt-get install autoconf automake autotools-dev ninja-build
+          sudo apt-get install autoconf automake autotools-dev ninja-build libglib2.0-dev.
 
       - name: checkout-qemu
         if: steps.cache-qemu.outputs.cache-hit != 'true'
