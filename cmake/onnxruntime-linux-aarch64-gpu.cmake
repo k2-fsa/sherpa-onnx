@@ -31,8 +31,8 @@ to cmake (You need to make sure CUDA 11.4 is available on your board).
 
 set(v ${SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION})
 
-set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v$v/onnxruntime-linux-aarch64-gpu-$v.tar.bz2")
-set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-gpu-$v.tar.bz2")
+set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${v}/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2")
+set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2")
 
 if(_v STREQUAL "1.11.0")
   set(onnxruntime_HASH "SHA256=36eded935551e23aead09d4173bdf0bd1e7b01fdec15d77f97d6e34029aa60d7")
@@ -44,11 +44,11 @@ endif()
 # please download onnxruntime to one of the following locations.
 # You can add more if you want.
 set(possible_file_locations
-  $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-gpu-$v.tar.bz2
-  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-aarch64-gpu-$v.tar.bz2
-  ${CMAKE_BINARY_DIR}/onnxruntime-linux-aarch64-gpu-$v.tar.bz2
-  /tmp/onnxruntime-linux-aarch64-gpu-$v.tar.bz2
-  /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-gpu-$v.tar.bz2
+  $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2
+  /tmp/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2
+  /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2
 )
 
 foreach(f IN LISTS possible_file_locations)
