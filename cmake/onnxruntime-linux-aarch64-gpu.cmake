@@ -34,7 +34,7 @@ set(v ${SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION})
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${v}/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2")
 set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2")
 
-if(_v STREQUAL "1.11.0")
+if(v STREQUAL "1.11.0")
   set(onnxruntime_HASH "SHA256=36eded935551e23aead09d4173bdf0bd1e7b01fdec15d77f97d6e34029aa60d7")
 else()
   set(onnxruntime_HASH "SHA256=6e671150318fb3634f09be8999236b3de6178e949cd91dc6c2c8a056c081cfdb")
