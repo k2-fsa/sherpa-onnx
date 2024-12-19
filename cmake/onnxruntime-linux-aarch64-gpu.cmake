@@ -37,7 +37,7 @@ set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/
 if(v STREQUAL "1.11.0")
   set(onnxruntime_HASH "SHA256=36eded935551e23aead09d4173bdf0bd1e7b01fdec15d77f97d6e34029aa60d7")
 else()
-  set(onnxruntime_HASH "SHA256=6e671150318fb3634f09be8999236b3de6178e949cd91dc6c2c8a056c081cfdb")
+  set(onnxruntime_HASH "SHA256=4c09d5acf2c2682b4eab1dc2f1ad98fc1fde5f5f1960063e337983ba59379a4b")
 endif()
 
 # If you don't have access to the Internet,
