@@ -56,12 +56,17 @@ class SymbolTable {
 
   int32_t NumSymbols() const { return id2sym_.size(); }
 
+  std::string DecodeByteBpe(const std::string &text) const;
+
+  bool IsByteBpe() const { return is_bbpe_; }
+
  private:
   void Init(std::istream &is);
 
  private:
   std::unordered_map<std::string, int32_t> sym2id_;
   std::unordered_map<int32_t, std::string> id2sym_;
+  bool is_bbpe_ = false;
 };
 
 std::ostream &operator<<(std::ostream &os, const SymbolTable &symbol_table);
