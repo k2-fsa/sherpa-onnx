@@ -6,6 +6,7 @@
 
 #include "sherpa-onnx/csrc/bbpe.h"
 
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 

@@ -4,6 +4,7 @@
 
 #ifndef SHERPA_ONNX_CSRC_BBPE_H_
 #define SHERPA_ONNX_CSRC_BBPE_H_
+#include <cstdint>
 #include <string>
 #include <unordered_map>
 

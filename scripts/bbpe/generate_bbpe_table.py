@@ -36,6 +36,7 @@ def main():
     s += "\n"
     s += '#include "sherpa-onnx/csrc/bbpe.h"\n'
     s += "\n"
+    s += "#include <cstdint>\n"
     s += "#include <string>\n"
     s += "#include <unordered_map>\n"
     s += "\n"
