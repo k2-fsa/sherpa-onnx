@@ -62,6 +62,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
 
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          export SHERPA_ONNX_ENABLE_C_API=ON
           ./build-android-arm64-v8a.sh
           mkdir -p jniLibs/arm64-v8a/
           cp -v ./build-android-arm64-v8a/install/lib/*.so ./jniLibs/arm64-v8a/
@@ -74,6 +75,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
 
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          export SHERPA_ONNX_ENABLE_C_API=ON
           ./build-android-armv7-eabi.sh
           mkdir -p ./jniLibs/armeabi-v7a/
           cp -v ./build-android-armv7-eabi/install/lib/*.so ./jniLibs/armeabi-v7a/
@@ -86,6 +88,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
 
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          export SHERPA_ONNX_ENABLE_C_API=ON
           ./build-android-x86-64.sh
           mkdir -p ./jniLibs/x86_64
           cp -v ./build-android-x86-64/install/lib/*.so ./jniLibs/x86_64
@@ -98,6 +101,7 @@ jobs:
           export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
 
           export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          export SHERPA_ONNX_ENABLE_C_API=ON
           ./build-android-x86.sh
           mkdir -p ./jniLibs/x86
           cp -v ./build-android-x86/install/lib/*.so ./jniLibs/x86
