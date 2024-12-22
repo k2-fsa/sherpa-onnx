@@ -59,7 +59,7 @@ jobs:
       - uses: gcarreno/setup-lazarus@v3.3.1
         with:
           lazarus-version: "stable"
-          with-cache: true
+          with-cache: false
 
       - name: Lazarus info
         shell: bash
