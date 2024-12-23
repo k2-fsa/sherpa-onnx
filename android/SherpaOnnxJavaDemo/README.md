@@ -19,10 +19,10 @@ mv sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/tokens.txt ./
 
 rm -rf sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/*
 
-mv encoder-epoch-99-avg-1.int8.onnx ./
-mv decoder-epoch-99-avg-1.onnx ./
-mv joiner-epoch-99-avg-1.int8.onnx ./
-mv tokens.txt ./
+mv encoder-epoch-99-avg-1.int8.onnx sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/
+mv decoder-epoch-99-avg-1.onnx sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/
+mv joiner-epoch-99-avg-1.int8.onnx sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/
+mv tokens.txt sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20/
 ```
 
 You should have the following directory structure:
