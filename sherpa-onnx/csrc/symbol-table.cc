@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/symbol-table.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cctype>
 #include <fstream>
