@@ -73,9 +73,15 @@ OfflineMoonshineGreedySearchDecoder::Decode(Ort::Value encoder_out) {
     seq_len_tensor =
         Ort::Value::CreateTensor(memory_info, &seq_len, 1, &seq_len_shape, 1);
 
+    // To fix the false alarm of clang-tidy
+    // error: 'states' used after it was moved
+    // [bugprone-use-after-move,-warnings-as-errors]
+    // we use a tmp_states here
+    std::vector<Ort::Value> tmp_states{std::move(states)};
+
     std::tie(logits, states) = model_->ForwardCachedDecoder(
         std::move(token_tensor), std::move(seq_len_tensor), View(&encoder_out),
-        std::move(states));
+        std::move(tmp_states));
   }
 
   OfflineMoonshineDecoderResult ans;
