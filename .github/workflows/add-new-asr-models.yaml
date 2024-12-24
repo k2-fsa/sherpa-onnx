@@ -1,13 +1,13 @@
 name: add-new-asr-models
 
 on:
-  push:
-    branches:
-      - new-asr-models
+  # push:
+  #   branches:
+  #     - new-asr-models
   workflow_dispatch:
 
 concurrency:
-  group: export-3dspeaker-to-onnx-${{ github.ref }}
+  group: add-new-asr-models-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
