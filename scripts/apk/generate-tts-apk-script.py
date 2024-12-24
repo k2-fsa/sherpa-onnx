@@ -183,6 +183,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-kk_KZ-iseke-x_low"),
         TtsModel(model_dir="vits-piper-kk_KZ-issai-high"),
         TtsModel(model_dir="vits-piper-kk_KZ-raya-x_low"),
+        TtsModel(model_dir="vits-piper-lv_LV-aivars-medium"),
         TtsModel(model_dir="vits-piper-lb_LU-marylux-medium"),
         TtsModel(model_dir="vits-piper-ne_NP-google-medium"),
         TtsModel(model_dir="vits-piper-ne_NP-google-x_low"),
