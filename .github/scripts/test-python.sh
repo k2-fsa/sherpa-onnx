@@ -23,9 +23,9 @@ repo=sherpa-onnx-zipformer-zh-en-2023-11-22
   --num-threads=2 \
   --decoding-method=greedy_search \
   --debug=true \
-  $repo/0.wav \
-  $repo/2.wav \
-  $repo/1.wav
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/2.wav
 
 rm -rf sherpa-onnx-zipformer-zh-en-2023-11-22
 
