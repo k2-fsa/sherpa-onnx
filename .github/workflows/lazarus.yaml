@@ -79,14 +79,14 @@ jobs:
           uname -a
 
       - name: Install patchelf for ubuntu
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash
         run: |
           sudo apt-get update -q
           sudo apt-get install -q -y patchelf
 
       - name: Show Patchelf version (ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash
         run: |
           patchelf --version
@@ -104,7 +104,7 @@ jobs:
           cd build
           os=${{ matrix.os }}
 
-          if [[ $os == 'windows-latest' || $os == 'ubuntu-20.04' ]]; then
+          if [[ $os == 'windows-latest' || $os == 'ubuntu-22.04' ]]; then
             BUILD_SHARED_LIBS=ON
           else
             BUILD_SHARED_LIBS=OFF
@@ -139,7 +139,7 @@ jobs:
             lazbuild --verbose --build-mode=Release --widgetset=cocoa ./generate_subtitles.lpi
           elif [[ $os == macos-latest ]]; then
             lazbuild --verbose --build-mode=Release --widgetset=cocoa --cpu=aarch64 ./generate_subtitles.lpi
-          elif [[ $os == 'ubuntu-20.04' ]]; then
+          elif [[ $os == 'ubuntu-22.04' ]]; then
             lazbuild --verbose --build-mode=Release-Linux ./generate_subtitles.lpi
           else
             lazbuild --verbose --build-mode=Release ./generate_subtitles.lpi
@@ -152,7 +152,7 @@ jobs:
           ls -lh
 
       - name: Collect generating subtitles (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -223,7 +223,7 @@ jobs:
           ls -lh /tmp/macos-*
 
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         with:
           name: linux-x64
           path: /tmp/linux-x64
