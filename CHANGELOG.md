@@ -1,3 +1,19 @@
+## 1.10.36
+
+* Update AAR version in Android Java demo (#1618)
+* Support linking onnxruntime statically for Android (#1619)
+* Update readme to include Open-LLM-VTuber (#1622)
+* Rename maxNumStences to maxNumSentences (#1625)
+* Support using onnxruntime 1.16.0 with CUDA 11.4 on Jetson Orin NX (Linux arm64 GPU). (#1630)
+* Update readme to include jetson orin nx and nano b01 (#1631)
+* feat: add checksum action (#1632)
+* Support decoding with byte-level BPE (bbpe) models. (#1633)
+* feat: enable c api for android ci (#1635)
+* Update README.md (#1640)
+* SherpaOnnxVadAsr: Offload runSecondPass to background thread for improved real-time audio processing (#1638)
+* Fix GitHub actions. (#1642)
+
+
 ## 1.10.35
 
 * Add missing changes about speaker identfication demo for HarmonyOS (#1612)
