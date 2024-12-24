@@ -62,7 +62,7 @@ jobs:
         run: |
           sudo apt-get update
           # sudo apt-get install autoconf automake autotools-dev ninja-build libglib2.0-dev.
-          sudo apt-get install build-essential zlib1g-dev pkg-config libglib2.0-dev binutils-dev libboost-all-dev autoconf libtool libssl-dev libpixman-1-dev
+          sudo apt-get install build-essential zlib1g-dev pkg-config libglib2.0-dev binutils-dev libboost-all-dev autoconf libtool libssl-dev libpixman-1-dev ninja-build
 
       - name: checkout-qemu
         if: steps.cache-qemu.outputs.cache-hit != 'true'
