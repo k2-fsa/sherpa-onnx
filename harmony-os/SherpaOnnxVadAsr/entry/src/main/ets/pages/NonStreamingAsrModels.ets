@@ -229,6 +229,18 @@ export function getOfflineModelConfig(type: number): OfflineModelConfig {
 
       break;
     }
+
+    case 23: {
+      const modelDir = "sherpa-onnx-zipformer-zh-en-2023-11-22";
+      c.transducer.encoder = `${modelDir}/encoder-epoch-34-avg-19.int8.onnx`;
+      c.transducer.decoder = `${modelDir}/decoder-epoch-34-avg-19.onnx`;
+      c.transducer.joiner = `${modelDir}/joiner-epoch-34-avg-19.int8.onnx`;
+      c.tokens = `${modelDir}/tokens.txt`;
+      c.modelType = "transducer";
+
+      break;
+    }
+
     default: {
       console.log(`Please specify a supported type. Given type ${type}`);
     }

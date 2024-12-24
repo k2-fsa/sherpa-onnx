@@ -1,0 +1,61 @@
+name: add-new-asr-models
+
+on:
+  # push:
+  #   branches:
+  #     - new-asr-models
+  workflow_dispatch:
+
+concurrency:
+  group: add-new-asr-models-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  add-new-asr-models:
+    runs-on: ${{ matrix.os }}
+    name: New asr models
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download icefall-asr-zipformer-multi-zh-en-2023-11-22
+        shell: bash
+        run: |
+          d=sherpa-onnx-zipformer-zh-en-2023-11-22
+          mkdir $d
+          pushd $d
+
+          wget -q https://huggingface.co/zrjin/icefall-asr-zipformer-multi-zh-en-2023-11-22/resolve/main/data/lang_bbpe_2000/tokens.txt
+          wget -q https://huggingface.co/zrjin/icefall-asr-zipformer-multi-zh-en-2023-11-22/resolve/main/data/lang_bbpe_2000/bbpe.model
+          wget -q https://huggingface.co/zrjin/icefall-asr-zipformer-multi-zh-en-2023-11-22/resolve/main/exp/decoder-epoch-34-avg-19.onnx
+          wget -q https://huggingface.co/zrjin/icefall-asr-zipformer-multi-zh-en-2023-11-22/resolve/main/exp/encoder-epoch-34-avg-19.int8.onnx
+          wget -q https://huggingface.co/zrjin/icefall-asr-zipformer-multi-zh-en-2023-11-22/resolve/main/exp/encoder-epoch-34-avg-19.onnx
+          wget -q https://huggingface.co/zrjin/icefall-asr-zipformer-multi-zh-en-2023-11-22/resolve/main/exp/joiner-epoch-34-avg-19.int8.onnx
+          wget -q https://huggingface.co/zrjin/icefall-asr-zipformer-multi-zh-en-2023-11-22/resolve/main/exp/joiner-epoch-34-avg-19.onnx
+
+          mkdir test_wavs
+          cd test_wavs
+          wget -O 0.wav -q https://huggingface.co/zrjin/icefall-asr-zipformer-multi-zh-en-2023-11-22/resolve/main/test_wavs/_1634_210_2577_1_1525157964032_3712259_29.wav
+          wget -O 1.wav -q https://huggingface.co/zrjin/icefall-asr-zipformer-multi-zh-en-2023-11-22/resolve/main/test_wavs/_1634_210_2577_1_1525157964032_3712259_55.wav
+
+          wget -O 2.wav -q https://huggingface.co/zrjin/icefall-asr-zipformer-multi-zh-en-2023-11-22/resolve/main/test_wavs/_1634_210_2577_1_1525157964032_3712259_75.wav
+          popd
+          tar cvjf $d.tar.bz2 $d
+          ls -lh $d
+          rm -rf $d
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
