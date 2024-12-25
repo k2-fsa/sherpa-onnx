@@ -545,6 +545,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     pad-sequence-test.cc
     slice-test.cc
     stack-test.cc
+    text-utils-test.cc
     text2token-test.cc
     transpose-test.cc
     unbind-test.cc

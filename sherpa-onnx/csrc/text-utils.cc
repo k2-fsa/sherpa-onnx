@@ -396,4 +396,110 @@ void ToLowerCase(std::string *in_out) {
                  [](unsigned char c) { return std::tolower(c); });
 }
 
+static inline bool InRange(uint8_t x, uint8_t low, uint8_t high) {
+  return low <= x && x <= high;
+}
+
+/*
+Please see
+https://stackoverflow.com/questions/6555015/check-for-invalid-utf8
+
+
+Table 3-7. Well-Formed UTF-8 Byte Sequences
+
+Code Points        First Byte Second Byte Third Byte Fourth Byte
+U+0000..U+007F     00..7F
+U+0080..U+07FF     C2..DF     80..BF
+U+0800..U+0FFF     E0         A0..BF      80..BF
+U+1000..U+CFFF     E1..EC     80..BF      80..BF
+U+D000..U+D7FF     ED         80..9F      80..BF
+U+E000..U+FFFF     EE..EF     80..BF      80..BF
+U+10000..U+3FFFF   F0         90..BF      80..BF     80..BF
+U+40000..U+FFFFF   F1..F3     80..BF      80..BF     80..BF
+U+100000..U+10FFFF F4         80..8F      80..BF     80..BF
+ */
+std::string RemoveInvalidUtf8Sequences(const std::string &text,
+                                       bool show_debug_msg /*= false*/) {
+  int32_t n = static_cast<int32_t>(text.size());
+
+  std::string ans;
+  ans.reserve(n);
+
+  int32_t i = 0;
+  const uint8_t *p = reinterpret_cast<const uint8_t *>(text.data());
+  while (i < n) {
+    if (p[i] <= 0x7f) {
+      ans.append(text, i, 1);
+      i += 1;
+      continue;
+    }
+
+    if (InRange(p[i], 0xc2, 0xdf) && i + 1 < n &&
+        InRange(p[i + 1], 0x80, 0xbf)) {
+      ans.append(text, i, 2);
+      i += 2;
+      continue;
+    }
+
+    if (p[i] == 0xe0 && i + 2 < n && InRange(p[i + 1], 0xa0, 0xbf) &&
+        InRange(p[i + 2], 0x80, 0xbf)) {
+      ans.append(text, i, 3);
+      i += 3;
+      continue;
+    }
+
+    if (InRange(p[i], 0xe1, 0xec) && i + 2 < n &&
+        InRange(p[i + 1], 0x80, 0xbf) && InRange(p[i + 2], 0x80, 0xbf)) {
+      ans.append(text, i, 3);
+      i += 3;
+      continue;
+    }
+
+    if (p[i] == 0xed && i + 2 < n && InRange(p[i + 1], 0x80, 0x9f) &&
+        InRange(p[i + 2], 0x80, 0xbf)) {
+      ans.append(text, i, 3);
+      i += 3;
+      continue;
+    }
+
+    if (InRange(p[i], 0xee, 0xef) && i + 2 < n &&
+        InRange(p[i + 1], 0x80, 0xbf) && InRange(p[i + 2], 0x80, 0xbf)) {
+      ans.append(text, i, 3);
+      i += 3;
+      continue;
+    }
+
+    if (p[i] == 0xf0 && i + 3 < n && InRange(p[i + 1], 0x90, 0xbf) &&
+        InRange(p[i + 2], 0x80, 0xbf) && InRange(p[i + 3], 0x80, 0xbf)) {
+      ans.append(text, i, 4);
+      i += 4;
+      continue;
+    }
+
+    if (InRange(p[i], 0xf1, 0xf3) && i + 3 < n &&
+        InRange(p[i + 1], 0x80, 0xbf) && InRange(p[i + 2], 0x80, 0xbf) &&
+        InRange(p[i + 3], 0x80, 0xbf)) {
+      ans.append(text, i, 4);
+      i += 4;
+      continue;
+    }
+
+    if (p[i] == 0xf4 && i + 3 < n && InRange(p[i + 1], 0x80, 0x8f) &&
+        InRange(p[i + 2], 0x80, 0xbf) && InRange(p[i + 3], 0x80, 0xbf)) {
+      ans.append(text, i, 4);
+      i += 4;
+      continue;
+    }
+
+    if (show_debug_msg) {
+      SHERPA_ONNX_LOGE("Ignore invalid utf8 sequence at pos: %d, value: %02x",
+                       i, p[i]);
+    }
+
+    i += 1;
+  }
+
+  return ans;
+}
+
 }  // namespace sherpa_onnx
