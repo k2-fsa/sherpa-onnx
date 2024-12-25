@@ -124,6 +124,9 @@ std::vector<std::string> SplitUtf8(const std::string &text);
 std::string ToLowerCase(const std::string &s);
 void ToLowerCase(std::string *in_out);
 
+std::string RemoveInvalidUtf8Sequences(const std::string &text,
+                                       bool show_debug_msg = false);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_
