@@ -269,11 +269,12 @@ jobs:
           .github/scripts/test-online-transducer.sh
 
       - name: Copy files
+        if: matrix.build_type == 'Release'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          if [[ ${{ matrix.with_tts }} ]]; then
+          if [[ ${{ matrix.with_tts }} == ON ]]; then
             dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}
           else
             dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}-no-tts
@@ -290,7 +291,7 @@ jobs:
           tar cjvf ${dst}.tar.bz2 $dst
 
       - name: Release pre-compiled binaries and libs for macOS
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: matrix.build_type == 'Release' && (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
