@@ -12,6 +12,7 @@ endif()
 
 set(sources
   base64-decode.cc
+  bbpe.cc
   cat.cc
   circular-buffer.cc
   context-graph.cc
@@ -78,11 +79,11 @@ set(sources
   online-stream.cc
   online-transducer-decoder.cc
   online-transducer-greedy-search-decoder.cc
+  online-transducer-greedy-search-nemo-decoder.cc
   online-transducer-model-config.cc
   online-transducer-model.cc
   online-transducer-modified-beam-search-decoder.cc
   online-transducer-nemo-model.cc
-  online-transducer-greedy-search-nemo-decoder.cc
   online-wenet-ctc-model-config.cc
   online-wenet-ctc-model.cc
   online-zipformer-transducer-model.cc
@@ -547,6 +548,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     pad-sequence-test.cc
     slice-test.cc
     stack-test.cc
+    text-utils-test.cc
     text2token-test.cc
     transpose-test.cc
     unbind-test.cc

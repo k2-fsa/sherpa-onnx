@@ -41,7 +41,7 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
     text.append(sym);
 
     if (sym.size() == 1 && (sym[0] < 0x20 || sym[0] > 0x7e)) {
-      // for byte bpe models
+      // for bpe models with byte_fallback
       // (but don't rewrite printable characters 0x20..0x7e,
       //  which collide with standard BPE units)
       std::ostringstream os;
@@ -52,6 +52,11 @@ static OfflineRecognitionResult Convert(const OfflineCtcDecoderResult &src,
 
     r.tokens.push_back(std::move(sym));
   }
+
+  if (sym_table.IsByteBpe()) {
+    text = sym_table.DecodeByteBpe(text);
+  }
+
   r.text = std::move(text);
 
   float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;

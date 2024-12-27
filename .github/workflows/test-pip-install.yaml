@@ -110,8 +110,8 @@ jobs:
           export PATH=/c/hostedtoolcache/windows/Python/3.9.13/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.10.11/x64/bin:$PATH
           export PATH=/c/hostedtoolcache/windows/Python/3.11.9/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.12.7/x64/bin:$PATH
-          export PATH=/c/hostedtoolcache/windows/Python/3.13.0/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.12.8/x64/bin:$PATH
+          export PATH=/c/hostedtoolcache/windows/Python/3.13.1/x64/bin:$PATH
 
           sherpa-onnx --help
           sherpa-onnx-keyword-spotter --help

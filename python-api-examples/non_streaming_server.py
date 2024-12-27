@@ -116,6 +116,16 @@ python3 ./python-api-examples/non_streaming_server.py \
   --sense-voice=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/model.int8.onnx \
   --tokens=./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt
 
+(9) Use a Non-streaming telespeech ctc model
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
+tar xvf sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
+rm sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04.tar.bz2
+
+python3 ./python-api-examples/non_streaming_server.py \
+  --telespeech-ctc=./sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/model.int8.onnx \
+  --tokens=./sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04/tokens.txt
+
 ----
 
 To use a certificate so that you can use https, please use
@@ -250,6 +260,15 @@ def add_nemo_ctc_model_args(parser: argparse.ArgumentParser):
     )
 
 
+def add_telespeech_ctc_model_args(parser: argparse.ArgumentParser):
+    parser.add_argument(
+        "--telespeech-ctc",
+        default="",
+        type=str,
+        help="Path to the model.onnx from TeleSpeech CTC",
+    )
+
+
 def add_wenet_ctc_model_args(parser: argparse.ArgumentParser):
     parser.add_argument(
         "--wenet-ctc",
@@ -353,6 +372,7 @@ def add_model_args(parser: argparse.ArgumentParser):
     add_sense_voice_model_args(parser)
     add_nemo_ctc_model_args(parser)
     add_wenet_ctc_model_args(parser)
+    add_telespeech_ctc_model_args(parser)
     add_tdnn_ctc_model_args(parser)
     add_whisper_model_args(parser)
     add_moonshine_model_args(parser)
@@ -922,6 +942,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.sense_voice) == 0, args.sense_voice
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
         assert len(args.wenet_ctc) == 0, args.wenet_ctc
+        assert len(args.telespeech_ctc) == 0, args.telespeech_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.tdnn_model) == 0, args.tdnn_model
@@ -955,6 +976,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         assert len(args.sense_voice) == 0, args.sense_voice
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
         assert len(args.wenet_ctc) == 0, args.wenet_ctc
+        assert len(args.telespeech_ctc) == 0, args.telespeech_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.tdnn_model) == 0, args.tdnn_model
@@ -979,6 +1001,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
     elif args.sense_voice:
         assert len(args.nemo_ctc) == 0, args.nemo_ctc
         assert len(args.wenet_ctc) == 0, args.wenet_ctc
+        assert len(args.telespeech_ctc) == 0, args.telespeech_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.tdnn_model) == 0, args.tdnn_model
@@ -998,6 +1021,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
         )
     elif args.nemo_ctc:
         assert len(args.wenet_ctc) == 0, args.wenet_ctc
+        assert len(args.telespeech_ctc) == 0, args.telespeech_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.tdnn_model) == 0, args.tdnn_model
@@ -1020,6 +1044,7 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             provider=args.provider,
         )
     elif args.wenet_ctc:
+        assert len(args.telespeech_ctc) == 0, args.telespeech_ctc
         assert len(args.whisper_encoder) == 0, args.whisper_encoder
         assert len(args.whisper_decoder) == 0, args.whisper_decoder
         assert len(args.tdnn_model) == 0, args.tdnn_model
@@ -1034,6 +1059,28 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
 
         recognizer = sherpa_onnx.OfflineRecognizer.from_wenet_ctc(
             model=args.wenet_ctc,
+            tokens=args.tokens,
+            num_threads=args.num_threads,
+            sample_rate=args.sample_rate,
+            feature_dim=args.feat_dim,
+            decoding_method=args.decoding_method,
+            provider=args.provider,
+        )
+    elif args.telespeech_ctc:
+        assert len(args.whisper_encoder) == 0, args.whisper_encoder
+        assert len(args.whisper_decoder) == 0, args.whisper_decoder
+        assert len(args.tdnn_model) == 0, args.tdnn_model
+        assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
+        assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
+        assert (
+            len(args.moonshine_uncached_decoder) == 0
+        ), args.moonshine_uncached_decoder
+        assert len(args.moonshine_cached_decoder) == 0, args.moonshine_cached_decoder
+
+        assert_file_exists(args.telespeech_ctc)
+
+        recognizer = sherpa_onnx.OfflineRecognizer.from_telespeech_ctc(
+            model=args.telespeech_ctc,
             tokens=args.tokens,
             num_threads=args.num_threads,
             sample_rate=args.sample_rate,

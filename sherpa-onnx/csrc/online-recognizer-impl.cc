@@ -194,6 +194,8 @@ OnlineRecognizerImpl::OnlineRecognizerImpl(Manager *mgr,
 
 std::string OnlineRecognizerImpl::ApplyInverseTextNormalization(
     std::string text) const {
+  text = RemoveInvalidUtf8Sequences(text);
+
   if (!itn_list_.empty()) {
     for (const auto &tn : itn_list_) {
       text = tn->Normalize(text);

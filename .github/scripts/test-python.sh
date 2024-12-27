@@ -8,6 +8,27 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test offline zipformer (byte-level bpe, Chinese+English)"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-zh-en-2023-11-22.tar.bz2
+tar xvf sherpa-onnx-zipformer-zh-en-2023-11-22.tar.bz2
+rm sherpa-onnx-zipformer-zh-en-2023-11-22.tar.bz2
+
+repo=sherpa-onnx-zipformer-zh-en-2023-11-22
+
+./python-api-examples/offline-decode-files.py  \
+  --tokens=$repo/tokens.txt \
+  --encoder=$repo/encoder-epoch-34-avg-19.int8.onnx \
+  --decoder=$repo/decoder-epoch-34-avg-19.onnx \
+  --joiner=$repo/joiner-epoch-34-avg-19.int8.onnx \
+  --num-threads=2 \
+  --decoding-method=greedy_search \
+  --debug=true \
+  $repo/test_wavs/0.wav \
+  $repo/test_wavs/1.wav \
+  $repo/test_wavs/2.wav
+
+rm -rf sherpa-onnx-zipformer-zh-en-2023-11-22
+
 log "test offline Moonshine"
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
