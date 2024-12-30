@@ -1369,6 +1369,39 @@ SHERPA_ONNX_API const char *SherpaOfflinePunctuationAddPunct(
 
 SHERPA_ONNX_API void SherpaOfflinePunctuationFreeText(const char *text);
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlinePunctuationModelConfig {
+  const char *cnn_bilstm;
+  const char *bpe_vocab;
+  int32_t num_threads;
+  int32_t debug;
+  const char *provider;
+} SherpaOnnxOnlinePunctuationModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlinePunctuationConfig {
+  SherpaOnnxOnlinePunctuationModelConfig model;
+} SherpaOnnxOnlinePunctuationConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlinePunctuation SherpaOnnxOnlinePunctuation;
+
+// Create an online punctuation processor. The user has to invoke
+// SherpaOnnxDestroyOnlinePunctuation() to free the returned pointer
+// to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxOnlinePunctuation *SherpaOnnxCreateOnlinePunctuation(
+    const SherpaOnnxOnlinePunctuationConfig *config);
+
+// Free a pointer returned by SherpaOnnxCreateOnlinePunctuation()
+SHERPA_ONNX_API void SherpaOnnxDestroyOnlinePunctuation(
+    const SherpaOnnxOnlinePunctuation *punctuation);
+
+// Add punctuations to the input text. The user has to invoke
+// SherpaOnnxOnlinePunctuationFreeText() to free the returned pointer
+// to avoid memory leak
+SHERPA_ONNX_API const char *SherpaOnnxOnlinePunctuationAddPunct(
+    const SherpaOnnxOnlinePunctuation *punctuation, const char *text);
+
+// Free a pointer returned by SherpaOnnxOnlinePunctuationAddPunct()
+SHERPA_ONNX_API void SherpaOnnxOnlinePunctuationFreeText(const char *text);
+
 // for resampling
 SHERPA_ONNX_API typedef struct SherpaOnnxLinearResampler
     SherpaOnnxLinearResampler;
