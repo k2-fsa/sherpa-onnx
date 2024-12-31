@@ -139,11 +139,12 @@ class OfflineTtsMatchaModel::Impl {
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
-    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.add_blank, "add_blank",
-                                            1);
-
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
     SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
+    SHERPA_ONNX_READ_META_DATA(meta_data_.jieba, "jieba");
+    SHERPA_ONNX_READ_META_DATA(meta_data_.espeak, "has_espeak");
+    SHERPA_ONNX_READ_META_DATA(meta_data_.use_eos_bos, "use_eos_bos");
+    SHERPA_ONNX_READ_META_DATA(meta_data_.pad_id, "pad_id");
   }
 
  private:

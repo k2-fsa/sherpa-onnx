@@ -83,7 +83,6 @@ class JiebaLexicon::Impl {
     std::vector<TokenIDs> ans;
     std::vector<int64_t> this_sentence;
 
-    int32_t blank = token2id_.at(" ");
     for (const auto &w : words) {
       auto ids = ConvertWordToIds(w);
       if (ids.empty()) {
@@ -92,7 +91,6 @@ class JiebaLexicon::Impl {
       }
 
       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
-      // this_sentence.push_back(blank);
 
       if (w == "。" || w == "！" || w == "？" || w == "，") {
         ans.emplace_back(std::move(this_sentence));
@@ -134,7 +132,9 @@ class JiebaLexicon::Impl {
     token2id_ = ReadTokens(is);
 
     std::vector<std::pair<std::string, std::string>> puncts = {
-        {",", "，"}, {".", "。"}, {"!", "！"}, {"?", "？"}};
+        {",", "，"}, {".", "。"}, {"!", "！"}, {"?", "？"}, {":", "："},
+        {"\"", "“"}, {"\"", "”"}, {"'", "‘"},  {"'", "’"},
+    };
 
     for (const auto &p : puncts) {
       if (token2id_.count(p.first) && !token2id_.count(p.second)) {

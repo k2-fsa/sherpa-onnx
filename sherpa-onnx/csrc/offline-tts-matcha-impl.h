@@ -248,28 +248,8 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
       SHERPA_ONNX_LOGE("%s", os.str().c_str());
     }
 
-    if (meta_data.add_blank) {
-      for (auto &k : x) {
-        k = AddBlank(k);
-      }
-
-      if (config_.model.debug) {
-        std::ostringstream os;
-        os << "\n";
-        for (const auto &k : x) {
-          for (int32_t i : k) {
-            os << i << " ";
-          }
-          os << "\n";
-        }
-        os << "\n";
-        SHERPA_ONNX_LOGE("%s", os.str().c_str());
-      }
-
-      for (auto &k : x) {
-        // TODO(fangjun): Fix it!
-        k = AddBlank(k, 62);
-      }
+    for (auto &k : x) {
+      k = AddBlank(k, meta_data.pad_id);
     }
 
     if (config_.model.debug) {
