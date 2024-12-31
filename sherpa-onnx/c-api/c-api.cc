@@ -1727,11 +1727,11 @@ const SherpaOnnxOnlinePunctuation *SherpaOnnxCreateOnlinePunctuation(
   auto p = new SherpaOnnxOnlinePunctuation;
   try {
     sherpa_onnx::OnlinePunctuationConfig punctuation_config;
-    punctuation_config.model.cnn_bilstm = config->model.cnn_bilstm;
-    punctuation_config.model.bpe_vocab = config->model.bpe_vocab;
-    punctuation_config.model.num_threads = config->model.num_threads;
+    punctuation_config.model.cnn_bilstm = SHERPA_ONNX_OR(config->model.cnn_bilstm, "");
+    punctuation_config.model.bpe_vocab = SHERPA_ONNX_OR(config->model.bpe_vocab, "");
+    punctuation_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
     punctuation_config.model.debug = config->model.debug;
-    punctuation_config.model.provider = config->model.provider;
+    punctuation_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
 
     p->impl =
         std::make_unique<sherpa_onnx::OnlinePunctuation>(punctuation_config);
