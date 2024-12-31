@@ -1,3 +1,14 @@
+## 1.10.37
+
+* Add new tts models for Latvia and Persian+English (#1644)
+* Add a byte-level BPE Chinese+English non-streaming zipformer model (#1645)
+* Support removing invalid utf-8 sequences. (#1648)
+* Add TeleSpeech CTC to non_streaming_server.py (#1649)
+* Fix building macOS libs (#1656)
+* Add Go API for Keyword spotting (#1662)
+* Add Swift online punctuation (#1661)
+* Add C++ runtime for Matcha-TTS (#1627)
+
 ## 1.10.36
 
 * Update AAR version in Android Java demo (#1618)
