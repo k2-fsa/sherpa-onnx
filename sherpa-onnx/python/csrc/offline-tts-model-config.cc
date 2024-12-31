@@ -23,8 +23,10 @@ void PybindOfflineTtsModelConfig(py::module *m) {
       .def(py::init<const OfflineTtsVitsModelConfig &,
                     const OfflineTtsMatchaModelConfig &, int32_t, bool,
                     const std::string &>(),
-           py::arg("vits"), py::arg("matcha"), py::arg("num_threads") = 1,
-           py::arg("debug") = false, py::arg("provider") = "cpu")
+           py::arg("vits") = OfflineTtsVitsModelConfig{},
+           py::arg("matcha") = OfflineTtsMatchaModelConfig{},
+           py::arg("num_threads") = 1, py::arg("debug") = false,
+           py::arg("provider") = "cpu")
       .def_readwrite("vits", &PyClass::vits)
       .def_readwrite("matcha", &PyClass::matcha)
       .def_readwrite("num_threads", &PyClass::num_threads)
