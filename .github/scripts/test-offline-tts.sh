@@ -27,7 +27,7 @@ rm matcha-icefall-zh-baker.tar.bz2
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
 
-./build/bin/sherpa-onnx-offline-tts \
+$EXE \
   --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
   --matcha-vocoder=./hifigan_v2.onnx \
   --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
@@ -38,7 +38,7 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-mode
   --output-filename=./tts/matcha-baker-zh-1.wav \
   '小米的使命是，始终坚持做"感动人心、价格厚道"的好产品，让全球每个人都能享受科技带来的美好生活'
 
-./build/bin/sherpa-onnx-offline-tts \
+$EXE \
   --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
   --matcha-vocoder=./hifigan_v2.onnx \
   --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
