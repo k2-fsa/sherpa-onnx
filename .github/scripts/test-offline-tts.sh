@@ -19,6 +19,40 @@ which $EXE
 mkdir ./tts
 
 log "------------------------------------------------------------"
+log "matcha-icefall-zh-baker"
+log "------------------------------------------------------------"
+curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+tar xvf matcha-icefall-zh-baker.tar.bz2
+rm matcha-icefall-zh-baker.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+./build/bin/sherpa-onnx-offline-tts \
+  --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
+  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
+  --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
+  --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
+  --num-threads=2 \
+  --debug=1 \
+  --output-filename=./tts/matcha-baker-zh-1.wav \
+  '小米的使命是，始终坚持做"感动人心、价格厚道"的好产品，让全球每个人都能享受科技带来的美好生活'
+
+./build/bin/sherpa-onnx-offline-tts \
+  --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
+  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
+  --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
+  --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
+  --num-threads=2 \
+  --debug=1 \
+  --output-filename=./tts/matcha-baker-zh-2.wav \
+  "当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔。"
+
+rm hifigan_v2.onnx
+rm -rf matcha-icefall-zh-baker
+
+log "------------------------------------------------------------"
 log "vits-piper-en_US-amy-low"
 log "------------------------------------------------------------"
 curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2

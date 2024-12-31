@@ -121,6 +121,15 @@ jobs:
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
 
+      - name: Test offline TTS
+        if: matrix.with_tts == 'ON'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-tts
+
+          .github/scripts/test-offline-tts.sh
+
       - name: Test offline Moonshine
         if: matrix.build_type != 'Debug'
         shell: bash
@@ -225,15 +234,6 @@ jobs:
           export EXE=sherpa-onnx-keyword-spotter
 
           .github/scripts/test-kws.sh
-
-      - name: Test offline TTS
-        if: matrix.with_tts == 'ON'
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline-tts
-
-          .github/scripts/test-offline-tts.sh
 
       - name: Test online paraformer
         shell: bash
