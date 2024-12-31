@@ -54,6 +54,8 @@ class SpeechSegment {
 }
 
 class CircularBuffer {
+  CircularBuffer.fromPtr({required this.ptr});
+
   CircularBuffer._({required this.ptr});
 
   /// The user has to invoke CircularBuffer.free() on the returned instance
@@ -115,6 +117,8 @@ class CircularBuffer {
 }
 
 class VoiceActivityDetector {
+  VoiceActivityDetector.fromPtr({required this.ptr, required this.config});
+
   VoiceActivityDetector._({required this.ptr, required this.config});
 
   // The user has to invoke VoiceActivityDetector.free() to avoid memory leak.
