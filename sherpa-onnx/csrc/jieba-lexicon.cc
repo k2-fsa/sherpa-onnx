@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <regex>  // NOLINT
+#include <unordered_set>
 #include <utility>
 
 #include "cppjieba/Jieba.hpp"
@@ -15,6 +16,14 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
+
+static bool IsPunct(const std::string &s) {
+  static const std::unordered_set<std::string> puncts = {
+      ",",  ".",  "!",  "?", ":", "\"", "'", "，",
+      "。", "！", "？", "“", "”", "‘",  "’",
+  };
+  return puncts.count(s);
+}
 
 class JiebaLexicon::Impl {
  public:
@@ -67,8 +76,13 @@ class JiebaLexicon::Impl {
     jieba_->Cut(text, words, is_hmm);
 
     if (debug_) {
-      SHERPA_ONNX_LOGE("input text: %s", text.c_str());
-      SHERPA_ONNX_LOGE("after replacing punctuations: %s", s.c_str());
+#if __OHOS__
+      SHERPA_ONNX_LOGE("input text:\n%{public}s", text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations:\n%{public}s", s.c_str());
+#else
+      SHERPA_ONNX_LOGE("input text:\n%s", text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations:\n%s", s.c_str());
+#endif
 
       std::ostringstream os;
       std::string sep = "";
@@ -77,7 +91,52 @@ class JiebaLexicon::Impl {
         sep = "_";
       }
 
-      SHERPA_ONNX_LOGE("after jieba processing: %s", os.str().c_str());
+#if __OHOS__
+      SHERPA_ONNX_LOGE("after jieba processing:\n%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("after jieba processing:\n%s", os.str().c_str());
+#endif
+    }
+
+    // remove spaces after punctuations
+    std::vector<std::string> words2 = std::move(words);
+    words.reserve(words2.size());
+
+    for (int32_t i = 0; i < words2.size(); ++i) {
+      if (i == 0) {
+        words.push_back(std::move(words2[i]));
+      } else if (words2[i] == " ") {
+        if (words.back() == " " || IsPunct(words.back())) {
+          continue;
+        } else {
+          words.push_back(std::move(words2[i]));
+        }
+      } else if (IsPunct(words2[i])) {
+        if (words.back() == " " || IsPunct(words.back())) {
+          continue;
+        } else {
+          words.push_back(std::move(words2[i]));
+        }
+      } else {
+        words.push_back(std::move(words2[i]));
+      }
+    }
+
+    if (debug_) {
+      std::ostringstream os;
+      std::string sep = "";
+      for (const auto &w : words) {
+        os << sep << w;
+        sep = "_";
+      }
+
+#if __OHOS__
+      SHERPA_ONNX_LOGE("after removing spaces after punctuations:\n%{public}s",
+                       os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("after removing spaces after punctuations:\n%s",
+                       os.str().c_str());
+#endif
     }
 
     std::vector<TokenIDs> ans;
@@ -86,7 +145,11 @@ class JiebaLexicon::Impl {
     for (const auto &w : words) {
       auto ids = ConvertWordToIds(w);
       if (ids.empty()) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE("Ignore OOV '%{public}s'", w.c_str());
+#else
         SHERPA_ONNX_LOGE("Ignore OOV '%s'", w.c_str());
+#endif
         continue;
       }
 
@@ -173,8 +236,15 @@ class JiebaLexicon::Impl {
       ToLowerCase(&word);
 
       if (word2ids_.count(word)) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE(
+            "Duplicated word: %{public}s at line %{public}d:%{public}s. Ignore "
+            "it.",
+            word.c_str(), line_num, line.c_str());
+#else
         SHERPA_ONNX_LOGE("Duplicated word: %s at line %d:%s. Ignore it.",
                          word.c_str(), line_num, line.c_str());
+#endif
         continue;
       }
 
