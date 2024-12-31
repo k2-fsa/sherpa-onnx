@@ -151,12 +151,15 @@ list(APPEND sources
 
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
+    hifigan-vocoder.cc
     jieba-lexicon.cc
     lexicon.cc
     melo-tts-lexicon.cc
     offline-tts-character-frontend.cc
     offline-tts-frontend.cc
     offline-tts-impl.cc
+    offline-tts-matcha-model-config.cc
+    offline-tts-matcha-model.cc
     offline-tts-model-config.cc
     offline-tts-vits-model-config.cc
     offline-tts-vits-model.cc

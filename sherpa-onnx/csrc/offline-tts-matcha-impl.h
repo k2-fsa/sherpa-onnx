@@ -1,8 +1,8 @@
-// sherpa-onnx/csrc/offline-tts-vits-impl.h
+// sherpa-onnx/csrc/offline-tts-matcha-impl.h
 //
-// Copyright (c)  2023  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_VITS_IMPL_H_
-#define SHERPA_ONNX_CSRC_OFFLINE_TTS_VITS_IMPL_H_
+// Copyright (c)  2024  Xiaomi Corporation
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_IMPL_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_IMPL_H_
 
 #include <memory>
 #include <string>
@@ -13,6 +13,7 @@
 #include "fst/extensions/far/far.h"
 #include "kaldifst/csrc/kaldi-fst-io.h"
 #include "kaldifst/csrc/text-normalizer.h"
+#include "sherpa-onnx/csrc/hifigan-vocoder.h"
 #include "sherpa-onnx/csrc/jieba-lexicon.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -20,18 +21,21 @@
 #include "sherpa-onnx/csrc/offline-tts-character-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
-#include "sherpa-onnx/csrc/offline-tts-vits-model.h"
+#include "sherpa-onnx/csrc/offline-tts-matcha-model.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/piper-phonemize-lexicon.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
-class OfflineTtsVitsImpl : public OfflineTtsImpl {
+class OfflineTtsMatchaImpl : public OfflineTtsImpl {
  public:
-  explicit OfflineTtsVitsImpl(const OfflineTtsConfig &config)
+  explicit OfflineTtsMatchaImpl(const OfflineTtsConfig &config)
       : config_(config),
-        model_(std::make_unique<OfflineTtsVitsModel>(config.model)) {
+        model_(std::make_unique<OfflineTtsMatchaModel>(config.model)),
+        vocoder_(std::make_unique<HifiganVocoder>(
+            config.model.num_threads, config.model.provider,
+            config.model.matcha.vocoder)) {
     InitFrontend();
 
     if (!config.rule_fsts.empty()) {
@@ -85,9 +89,12 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
   }
 
   template <typename Manager>
-  OfflineTtsVitsImpl(Manager *mgr, const OfflineTtsConfig &config)
+  OfflineTtsMatchaImpl(Manager *mgr, const OfflineTtsConfig &config)
       : config_(config),
-        model_(std::make_unique<OfflineTtsVitsModel>(mgr, config.model)) {
+        model_(std::make_unique<OfflineTtsMatchaModel>(mgr, config.model)),
+        vocoder_(std::make_unique<HifiganVocoder>(
+            mgr, config.model.num_threads, config.model.provider,
+            config.model.matcha.vocoder)) {
     InitFrontend(mgr);
 
     if (!config.rule_fsts.empty()) {
@@ -207,16 +214,20 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     }
 
     std::vector<TokenIDs> token_ids =
-        frontend_->ConvertTextToTokenIds(text, meta_data.voice);
+        frontend_->ConvertTextToTokenIds(text, "en-US");
 
     if (token_ids.empty() ||
         (token_ids.size() == 1 && token_ids[0].tokens.empty())) {
-      SHERPA_ONNX_LOGE("Failed to convert %s to token IDs", text.c_str());
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Failed to convert '%{public}s' to token IDs",
+                       text.c_str());
+#else
+      SHERPA_ONNX_LOGE("Failed to convert '%s' to token IDs", text.c_str());
+#endif
       return {};
     }
 
     std::vector<std::vector<int64_t>> x;
-    std::vector<std::vector<int64_t>> tones;
 
     x.reserve(token_ids.size());
 
@@ -224,29 +235,14 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       x.push_back(std::move(i.tokens));
     }
 
-    if (!token_ids[0].tones.empty()) {
-      tones.reserve(token_ids.size());
-      for (auto &i : token_ids) {
-        tones.push_back(std::move(i.tones));
-      }
-    }
-
-    // TODO(fangjun): add blank inside the frontend, not here
-    if (meta_data.add_blank && config_.model.vits.data_dir.empty() &&
-        meta_data.frontend != "characters") {
-      for (auto &k : x) {
-        k = AddBlank(k);
-      }
-
-      for (auto &k : tones) {
-        k = AddBlank(k);
-      }
+    for (auto &k : x) {
+      k = AddBlank(k, meta_data.pad_id);
     }
 
     int32_t x_size = static_cast<int32_t>(x.size());
 
     if (config_.max_num_sentences <= 0 || x_size <= config_.max_num_sentences) {
-      auto ans = Process(x, tones, sid, speed);
+      auto ans = Process(x, sid, speed);
       if (callback) {
         callback(ans.samples.data(), ans.samples.size(), 1.0);
       }
@@ -256,11 +252,9 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     // the input text is too long, we process sentences within it in batches
     // to avoid OOM. Batch size is config_.max_num_sentences
     std::vector<std::vector<int64_t>> batch_x;
-    std::vector<std::vector<int64_t>> batch_tones;
 
     int32_t batch_size = config_.max_num_sentences;
     batch_x.reserve(config_.max_num_sentences);
-    batch_tones.reserve(config_.max_num_sentences);
     int32_t num_batches = x_size / batch_size;
 
     if (config_.model.debug) {
@@ -285,16 +279,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
     for (int32_t b = 0; b != num_batches && should_continue; ++b) {
       batch_x.clear();
-      batch_tones.clear();
       for (int32_t i = 0; i != batch_size; ++i, ++k) {
         batch_x.push_back(std::move(x[k]));
-
-        if (!tones.empty()) {
-          batch_tones.push_back(std::move(tones[k]));
-        }
       }
 
-      auto audio = Process(batch_x, batch_tones, sid, speed);
+      auto audio = Process(batch_x, sid, speed);
       ans.sample_rate = audio.sample_rate;
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
@@ -308,18 +297,14 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     }
 
     batch_x.clear();
-    batch_tones.clear();
     while (k < static_cast<int32_t>(x.size()) && should_continue) {
       batch_x.push_back(std::move(x[k]));
-      if (!tones.empty()) {
-        batch_tones.push_back(std::move(tones[k]));
-      }
 
       ++k;
     }
 
     if (!batch_x.empty()) {
-      auto audio = Process(batch_x, batch_tones, sid, speed);
+      auto audio = Process(batch_x, sid, speed);
       ans.sample_rate = audio.sample_rate;
       ans.samples.insert(ans.samples.end(), audio.samples.begin(),
                          audio.samples.end());
@@ -336,95 +321,15 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
  private:
   template <typename Manager>
-  void InitFrontend(Manager *mgr) {
-    const auto &meta_data = model_->GetMetaData();
-
-    if (meta_data.frontend == "characters") {
-      frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
-          mgr, config_.model.vits.tokens, meta_data);
-    } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty() &&
-               meta_data.is_melo_tts) {
-      frontend_ = std::make_unique<MeloTtsLexicon>(
-          mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, model_->GetMetaData(),
-          config_.model.debug);
-    } else if (meta_data.is_melo_tts && meta_data.language == "English") {
-      frontend_ = std::make_unique<MeloTtsLexicon>(
-          mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
-          model_->GetMetaData(), config_.model.debug);
-    } else if ((meta_data.is_piper || meta_data.is_coqui ||
-                meta_data.is_icefall) &&
-               !config_.model.vits.data_dir.empty()) {
-      frontend_ = std::make_unique<PiperPhonemizeLexicon>(
-          mgr, config_.model.vits.tokens, config_.model.vits.data_dir,
-          meta_data);
-    } else {
-      if (config_.model.vits.lexicon.empty()) {
-        SHERPA_ONNX_LOGE(
-            "Not a model using characters as modeling unit. Please provide "
-            "--vits-lexicon if you leave --vits-data-dir empty");
-        exit(-1);
-      }
-
-      frontend_ = std::make_unique<Lexicon>(
-          mgr, config_.model.vits.lexicon, config_.model.vits.tokens,
-          meta_data.punctuations, meta_data.language, config_.model.debug);
-    }
-  }
+  void InitFrontend(Manager *mgr) {}
 
   void InitFrontend() {
-    const auto &meta_data = model_->GetMetaData();
-
-    if (meta_data.jieba && config_.model.vits.dict_dir.empty()) {
-      SHERPA_ONNX_LOGE(
-          "Please provide --vits-dict-dir for Chinese TTS models using jieba");
-      exit(-1);
-    }
-
-    if (!meta_data.jieba && !config_.model.vits.dict_dir.empty()) {
-      SHERPA_ONNX_LOGE(
-          "Current model is not using jieba but you provided --vits-dict-dir");
-      exit(-1);
-    }
-
-    if (meta_data.frontend == "characters") {
-      frontend_ = std::make_unique<OfflineTtsCharacterFrontend>(
-          config_.model.vits.tokens, meta_data);
-    } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty() &&
-               meta_data.is_melo_tts) {
-      frontend_ = std::make_unique<MeloTtsLexicon>(
-          config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, model_->GetMetaData(),
-          config_.model.debug);
-    } else if (meta_data.is_melo_tts && meta_data.language == "English") {
-      frontend_ = std::make_unique<MeloTtsLexicon>(
-          config_.model.vits.lexicon, config_.model.vits.tokens,
-          model_->GetMetaData(), config_.model.debug);
-    } else if (meta_data.jieba && !config_.model.vits.dict_dir.empty()) {
-      frontend_ = std::make_unique<JiebaLexicon>(
-          config_.model.vits.lexicon, config_.model.vits.tokens,
-          config_.model.vits.dict_dir, config_.model.debug);
-    } else if ((meta_data.is_piper || meta_data.is_coqui ||
-                meta_data.is_icefall) &&
-               !config_.model.vits.data_dir.empty()) {
-      frontend_ = std::make_unique<PiperPhonemizeLexicon>(
-          config_.model.vits.tokens, config_.model.vits.data_dir,
-          model_->GetMetaData());
-    } else {
-      if (config_.model.vits.lexicon.empty()) {
-        SHERPA_ONNX_LOGE(
-            "Not a model using characters as modeling unit. Please provide "
-            "--vits-lexicon if you leave --vits-data-dir empty");
-        exit(-1);
-      }
-      frontend_ = std::make_unique<Lexicon>(
-          config_.model.vits.lexicon, config_.model.vits.tokens,
-          meta_data.punctuations, meta_data.language, config_.model.debug);
-    }
+    frontend_ = std::make_unique<JiebaLexicon>(
+        config_.model.matcha.lexicon, config_.model.matcha.tokens,
+        config_.model.matcha.dict_dir, config_.model.debug);
   }
 
   GeneratedAudio Process(const std::vector<std::vector<int64_t>> &tokens,
-                         const std::vector<std::vector<int64_t>> &tones,
                          int32_t sid, float speed) const {
     int32_t num_tokens = 0;
     for (const auto &k : tokens) {
@@ -437,14 +342,6 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
       x.insert(x.end(), k.begin(), k.end());
     }
 
-    std::vector<int64_t> tone_list;
-    if (!tones.empty()) {
-      tone_list.reserve(num_tokens);
-      for (const auto &k : tones) {
-        tone_list.insert(tone_list.end(), k.begin(), k.end());
-      }
-    }
-
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -452,20 +349,8 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
     Ort::Value x_tensor = Ort::Value::CreateTensor(
         memory_info, x.data(), x.size(), x_shape.data(), x_shape.size());
 
-    Ort::Value tones_tensor{nullptr};
-    if (!tones.empty()) {
-      tones_tensor = Ort::Value::CreateTensor(memory_info, tone_list.data(),
-                                              tone_list.size(), x_shape.data(),
-                                              x_shape.size());
-    }
-
-    Ort::Value audio{nullptr};
-    if (tones.empty()) {
-      audio = model_->Run(std::move(x_tensor), sid, speed);
-    } else {
-      audio =
-          model_->Run(std::move(x_tensor), std::move(tones_tensor), sid, speed);
-    }
+    Ort::Value mel = model_->Run(std::move(x_tensor), sid, speed);
+    Ort::Value audio = vocoder_->Run(std::move(mel));
 
     std::vector<int64_t> audio_shape =
         audio.GetTensorTypeAndShapeInfo().GetShape();
@@ -486,10 +371,11 @@ class OfflineTtsVitsImpl : public OfflineTtsImpl {
 
  private:
   OfflineTtsConfig config_;
-  std::unique_ptr<OfflineTtsVitsModel> model_;
+  std::unique_ptr<OfflineTtsMatchaModel> model_;
+  std::unique_ptr<HifiganVocoder> vocoder_;
   std::vector<std::unique_ptr<kaldifst::TextNormalizer>> tn_list_;
   std::unique_ptr<OfflineTtsFrontend> frontend_;
 };
 
 }  // namespace sherpa_onnx
-#endif  // SHERPA_ONNX_CSRC_OFFLINE_TTS_VITS_IMPL_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_IMPL_H_

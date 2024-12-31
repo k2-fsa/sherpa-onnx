@@ -174,7 +174,7 @@ class OfflineTtsVitsModel::Impl {
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.bos_id, "bos_id", 0);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.eos_id, "eos_id", 0);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.use_eos_bos,
-                                            "use_eos_bos", 0);
+                                            "use_eos_bos", 1);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.pad_id, "pad_id", 0);
 
     std::string comment;
@@ -362,7 +362,7 @@ Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, int64_t sid /*=0*/,
 
 Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, Ort::Value tones,
                                     int64_t sid /*= 0*/,
-                                    float speed /*= 1.0*/) {
+                                    float speed /*= 1.0*/) const {
   return impl_->Run(std::move(x), std::move(tones), sid, speed);
 }
 

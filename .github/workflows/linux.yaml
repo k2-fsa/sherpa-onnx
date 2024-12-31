@@ -149,6 +149,23 @@ jobs:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: install/*
 
+      - name: Test offline TTS
+        if: matrix.with_tts == 'ON'
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-tts
+
+          .github/scripts/test-offline-tts.sh
+          du -h -d1 .
+
+      - uses: actions/upload-artifact@v4
+        if: matrix.with_tts == 'ON'
+        with:
+          name: tts-generated-test-files-${{ matrix.build_type }}-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
+          path: tts
+
       - name: Test offline Moonshine
         if: matrix.build_type != 'Debug'
         shell: bash
@@ -309,16 +326,7 @@ jobs:
           .github/scripts/test-offline-whisper.sh
           du -h -d1 .
 
-      - name: Test offline TTS
-        if: matrix.with_tts == 'ON'
-        shell: bash
-        run: |
-          du -h -d1 .
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline-tts
 
-          .github/scripts/test-offline-tts.sh
-          du -h -d1 .
 
       - name: Test online paraformer
         shell: bash
@@ -367,8 +375,4 @@ jobs:
           overwrite: true
           file: sherpa-onnx-*.tar.bz2
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: tts-generated-test-files-${{ matrix.build_type }}-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
-          path: tts
 
