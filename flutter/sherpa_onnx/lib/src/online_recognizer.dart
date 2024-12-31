@@ -162,6 +162,8 @@ class OnlineRecognizerResult {
 }
 
 class OnlineRecognizer {
+  OnlineRecognizer.fromPtr({required this.ptr, required this.config});
+
   OnlineRecognizer._({required this.ptr, required this.config});
 
   /// The user is responsible to call the OnlineRecognizer.free()

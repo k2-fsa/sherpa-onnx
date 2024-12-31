@@ -94,6 +94,9 @@ class OfflineSpeakerDiarizationConfig {
 }
 
 class OfflineSpeakerDiarization {
+  OfflineSpeakerDiarization.fromPtr(
+      {required this.ptr, required this.config, required this.sampleRate});
+
   OfflineSpeakerDiarization._(
       {required this.ptr, required this.config, required this.sampleRate});
 

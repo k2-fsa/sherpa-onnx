@@ -227,6 +227,8 @@ class OfflineRecognizerResult {
 }
 
 class OfflineRecognizer {
+  OfflineRecognizer.fromPtr({required this.ptr, required this.config});
+
   OfflineRecognizer._({required this.ptr, required this.config});
 
   void free() {

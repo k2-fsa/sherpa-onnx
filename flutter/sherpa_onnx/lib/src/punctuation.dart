@@ -36,6 +36,8 @@ class OfflinePunctuationConfig {
 }
 
 class OfflinePunctuation {
+  OfflinePunctuation.fromPtr({required this.ptr, required this.config});
+
   OfflinePunctuation._({required this.ptr, required this.config});
 
   // The user has to invoke OfflinePunctuation.free() to avoid memory leak.

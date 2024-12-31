@@ -53,6 +53,8 @@ class KeywordResult {
 }
 
 class KeywordSpotter {
+  KeywordSpotter.fromPtr({required this.ptr, required this.config});
+
   KeywordSpotter._({required this.ptr, required this.config});
 
   /// The user is responsible to call the OnlineRecognizer.free()
