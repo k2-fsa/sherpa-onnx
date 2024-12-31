@@ -134,6 +134,15 @@ jobs:
           name: ${{ matrix.os }}-libs
           path: to-upload/
 
+      - name: Test Keyword spotting
+        shell: bash
+        run: |
+          cd scripts/go/_internal/keyword-spotting-from-file/
+
+          ./run.sh
+
+          ls -lh
+
       - name: Test non-streaming decoding files
         shell: bash
         run: |
