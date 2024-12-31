@@ -269,6 +269,26 @@ mkdir ./tts
 
 log "vits-ljs test"
 
+curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+tar xvf matcha-icefall-zh-baker.tar.bz2
+rm matcha-icefall-zh-baker.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+python3 ./python-api-examples/offline-tts.py \
+ --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
+ --matcha-vocoder=./hifigan_v2.onnx \
+ --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
+ --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
+ --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
+ --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
+ --output-filename=./tts/test-matcha.wav \
+ "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。"
+
+rm -rf matcha-icefall-zh-baker
+rm hifigan_v2.onnx
+
+
 curl -LS -O https://huggingface.co/csukuangfj/vits-ljs/resolve/main/vits-ljs.onnx
 curl -LS -O https://huggingface.co/csukuangfj/vits-ljs/resolve/main/lexicon.txt
 curl -LS -O https://huggingface.co/csukuangfj/vits-ljs/resolve/main/tokens.txt

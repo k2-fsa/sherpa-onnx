@@ -11,7 +11,7 @@ while the model is still generating.
 
 Usage:
 
-Example (1/3)
+Example (1/4)
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 tar xf vits-piper-en_US-amy-low.tar.bz2
@@ -23,7 +23,7 @@ python3 ./python-api-examples/offline-tts-play.py \
  --output-filename=./generated.wav \
  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
 
-Example (2/3)
+Example (2/4)
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
 tar xvf vits-zh-aishell3.tar.bz2
@@ -37,7 +37,7 @@ python3 ./python-api-examples/offline-tts-play.py \
  --output-filename=./liubei-21.wav \
  "勿以恶小而为之，勿以善小而不为。惟贤惟德，能服于人。122334"
 
-Example (3/3)
+Example (3/4)
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2
 tar xvf sherpa-onnx-vits-zh-ll.tar.bz2
@@ -52,6 +52,24 @@ python3 ./python-api-examples/offline-tts-play.py \
  --sid=2 \
  --output-filename=./test-2.wav \
  "当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔。2024年5月11号，拨打110或者18920240511。123456块钱。"
+
+Example (4/4)
+
+curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+tar xvf matcha-icefall-zh-baker.tar.bz2
+rm matcha-icefall-zh-baker.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+python3 ./python-api-examples/offline-tts-play.py \
+ --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
+ --matcha-vocoder=./hifigan_v2.onnx \
+ --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
+ --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
+ --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
+ --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
+ --output-filename=./test-matcha.wav \
+ "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。"
 
 
 You can find more models at
@@ -84,14 +102,11 @@ except ImportError:
     sys.exit(-1)
 
 
-def get_args():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
-
+def add_vits_args(parser):
     parser.add_argument(
         "--vits-model",
         type=str,
+        default="",
         help="Path to vits model.onnx",
     )
 
@@ -123,6 +138,60 @@ def get_args():
         default="",
         help="Path to the dict directory for models using jieba",
     )
+
+
+def add_matcha_args(parser):
+    parser.add_argument(
+        "--matcha-acoustic-model",
+        type=str,
+        default="",
+        help="Path to model.onnx for matcha",
+    )
+
+    parser.add_argument(
+        "--matcha-vocoder",
+        type=str,
+        default="",
+        help="Path to vocoder for matcha",
+    )
+
+    parser.add_argument(
+        "--matcha-lexicon",
+        type=str,
+        default="",
+        help="Path to lexicon.txt for matcha",
+    )
+
+    parser.add_argument(
+        "--matcha-tokens",
+        type=str,
+        default="",
+        help="Path to tokens.txt for matcha",
+    )
+
+    parser.add_argument(
+        "--matcha-data-dir",
+        type=str,
+        default="",
+        help="""Path to the dict directory of espeak-ng. If it is specified,
+        --matcha-lexicon and --matcha-tokens are ignored""",
+    )
+
+    parser.add_argument(
+        "--matcha-dict-dir",
+        type=str,
+        default="",
+        help="Path to the dict directory for models using jieba",
+    )
+
+
+def get_args():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+
+    add_vits_args(parser)
+    add_matcha_args(parser)
 
     parser.add_argument(
         "--tts-rule-fsts",
@@ -312,6 +381,14 @@ def main():
                 data_dir=args.vits_data_dir,
                 dict_dir=args.vits_dict_dir,
                 tokens=args.vits_tokens,
+            ),
+            matcha=sherpa_onnx.OfflineTtsMatchaModelConfig(
+                acoustic_model=args.matcha_acoustic_model,
+                vocoder=args.matcha_vocoder,
+                lexicon=args.matcha_lexicon,
+                tokens=args.matcha_tokens,
+                data_dir=args.matcha_data_dir,
+                dict_dir=args.matcha_dict_dir,
             ),
             provider=args.provider,
             debug=args.debug,
