@@ -155,7 +155,7 @@ class JiebaLexicon::Impl {
 
       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
 
-      if (w == "。" || w == "！" || w == "？" || w == "，") {
+      if (IsPunct(w)) {
         ans.emplace_back(std::move(this_sentence));
         this_sentence = {};
       }

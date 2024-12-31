@@ -1381,12 +1381,14 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOnlinePunctuationConfig {
   SherpaOnnxOnlinePunctuationModelConfig model;
 } SherpaOnnxOnlinePunctuationConfig;
 
-SHERPA_ONNX_API typedef struct SherpaOnnxOnlinePunctuation SherpaOnnxOnlinePunctuation;
+SHERPA_ONNX_API typedef struct SherpaOnnxOnlinePunctuation
+    SherpaOnnxOnlinePunctuation;
 
 // Create an online punctuation processor. The user has to invoke
 // SherpaOnnxDestroyOnlinePunctuation() to free the returned pointer
 // to avoid memory leak
-SHERPA_ONNX_API const SherpaOnnxOnlinePunctuation *SherpaOnnxCreateOnlinePunctuation(
+SHERPA_ONNX_API const SherpaOnnxOnlinePunctuation *
+SherpaOnnxCreateOnlinePunctuation(
     const SherpaOnnxOnlinePunctuationConfig *config);
 
 // Free a pointer returned by SherpaOnnxCreateOnlinePunctuation()

@@ -20,6 +20,7 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   jobject model = env->GetObjectField(config, fid);
   jclass model_config_cls = env->GetObjectClass(model);
 
+  // vits
   fid = env->GetFieldID(model_config_cls, "vits",
                         "Lcom/k2fsa/sherpa/onnx/OfflineTtsVitsModelConfig;");
   jobject vits = env->GetObjectField(model, fid);
@@ -63,6 +64,54 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
 
   fid = env->GetFieldID(vits_cls, "lengthScale", "F");
   ans.model.vits.length_scale = env->GetFloatField(vits, fid);
+
+  // matcha
+  fid = env->GetFieldID(model_config_cls, "matcha",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineTtsMatchaModelConfig;");
+  jobject matcha = env->GetObjectField(model, fid);
+  jclass matcha_cls = env->GetObjectClass(matcha);
+
+  fid = env->GetFieldID(matcha_cls, "acousticModel", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.acoustic_model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "vocoder", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.vocoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "lexicon", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.lexicon = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "tokens", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.tokens = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "dataDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.data_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "dictDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.dict_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "noiseScale", "F");
+  ans.model.matcha.noise_scale = env->GetFloatField(matcha, fid);
+
+  fid = env->GetFieldID(matcha_cls, "lengthScale", "F");
+  ans.model.matcha.length_scale = env->GetFloatField(matcha, fid);
 
   fid = env->GetFieldID(model_config_cls, "numThreads", "I");
   ans.model.num_threads = env->GetIntField(model, fid);
