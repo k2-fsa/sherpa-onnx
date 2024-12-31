@@ -133,7 +133,7 @@ class JiebaLexicon::Impl {
 
     std::vector<std::pair<std::string, std::string>> puncts = {
         {",", "，"}, {".", "。"}, {"!", "！"}, {"?", "？"}, {":", "："},
-        {"\"", "“"}, {"\"", "”"}, {"'", "‘"},  {"'", "’"},
+        {"\"", "“"}, {"\"", "”"}, {"'", "‘"},  {"'", "’"},  {";", "；"},
     };
 
     for (const auto &p : puncts) {
@@ -148,6 +148,10 @@ class JiebaLexicon::Impl {
 
     if (!token2id_.count("、") && token2id_.count("，")) {
       token2id_["、"] = token2id_["，"];
+    }
+
+    if (!token2id_.count(";") && token2id_.count(",")) {
+      token2id_[";"] = token2id_[","];
     }
   }
 
