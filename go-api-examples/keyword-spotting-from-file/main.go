@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	sherpa "github.com/k2-fsa/sherpa-onnx-go/sherpa_onnx"
 	"log"
 )
@@ -20,10 +19,10 @@ func main() {
 	config.ModelConfig.Tokens = "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/tokens.txt"
 	config.KeywordsFile = "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/test_wavs/test_keywords.txt"
 	config.ModelConfig.NumThreads = 1
-	config.ModelConfig.Debug = true
+	config.ModelConfig.Debug = 1
 
 	spotter := sherpa.NewKeywordSpotter(&config)
-	defer sherpa.DeleteKeywordSpotter(vad)
+	defer sherpa.DeleteKeywordSpotter(spotter)
 
 	wave_filename := "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/test_wavs/3.wav"
 
@@ -38,13 +37,43 @@ func main() {
 	stream := sherpa.NewKeywordStream(spotter)
 	defer sherpa.DeleteOnlineStream(stream)
 
-	stream.AcceptWaveform(Wave.SampleRate, Wave.Samples)
+	stream.AcceptWaveform(wave.SampleRate, wave.Samples)
 
 	for spotter.IsReady(stream) {
 		spotter.Decode(stream)
 		result := spotter.GetResult(stream)
-		if result.Text != "" {
-			log.Printf("Deletected %v\n", result.Text)
+		if result.Keyword != "" {
+			log.Printf("Detected %v\n", result.Keyword)
+		}
+	}
+
+	log.Println("----------Use pre-defined keywords + add a new keyword----------")
+
+	stream2 := sherpa.NewKeywordStreamWithKeywords(spotter, "y ǎn y uán @演员")
+	defer sherpa.DeleteOnlineStream(stream2)
+
+	stream2.AcceptWaveform(wave.SampleRate, wave.Samples)
+
+	for spotter.IsReady(stream2) {
+		spotter.Decode(stream2)
+		result := spotter.GetResult(stream2)
+		if result.Keyword != "" {
+			log.Printf("Detected %v\n", result.Keyword)
+		}
+	}
+
+	log.Println("----------Use pre-defined keywords + add 2 new keywords----------")
+
+	stream3 := sherpa.NewKeywordStreamWithKeywords(spotter, "y ǎn y uán @演员/zh ī m íng @知名")
+	defer sherpa.DeleteOnlineStream(stream3)
+
+	stream3.AcceptWaveform(wave.SampleRate, wave.Samples)
+
+	for spotter.IsReady(stream3) {
+		spotter.Decode(stream3)
+		result := spotter.GetResult(stream3)
+		if result.Keyword != "" {
+			log.Printf("Detected %v\n", result.Keyword)
 		}
 	}
 }

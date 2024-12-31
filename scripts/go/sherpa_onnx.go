@@ -1481,7 +1481,7 @@ func NewKeywordSpotter(config *KeywordSpotterConfig) *KeywordSpotter {
 	return spotter
 }
 
-// The user is responsible to invoke [DeleteKeywordStream]() to free
+// The user is responsible to invoke [DeleteOnlineStream]() to free
 // the returned stream to avoid memory leak
 func NewKeywordStream(spotter *KeywordSpotter) *OnlineStream {
 	stream := &OnlineStream{}
@@ -1489,7 +1489,7 @@ func NewKeywordStream(spotter *KeywordSpotter) *OnlineStream {
 	return stream
 }
 
-// The user is responsible to invoke [DeleteKeywordStream]() to free
+// The user is responsible to invoke [DeleteOnlineStream]() to free
 // the returned stream to avoid memory leak
 func NewKeywordStreamWithKeywords(spotter *KeywordSpotter, keywords string) *OnlineStream {
 	stream := &OnlineStream{}

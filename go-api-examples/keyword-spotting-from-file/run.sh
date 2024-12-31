@@ -10,4 +10,4 @@ fi
 
 go mod tidy
 go build
-./vad
+./keyword-spotting-from-file
