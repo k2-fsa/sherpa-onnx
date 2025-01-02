@@ -235,6 +235,13 @@ jobs:
         shell: bash
         run: |
           cd ./java-api-examples
+
+          ./run-non-streaming-tts-matcha-zh.sh
+          ./run-non-streaming-tts-matcha-en.sh
+
+          rm -rf matcha-icefall-*
+          rm hifigan_v2.onnx
+
           ./run-non-streaming-tts-piper-en.sh
           rm -rf vits-piper-*
 

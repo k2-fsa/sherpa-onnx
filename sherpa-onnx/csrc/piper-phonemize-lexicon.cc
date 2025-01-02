@@ -369,6 +369,11 @@ template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
 template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     NativeResourceManager *mgr, const std::string &tokens,
     const std::string &data_dir,
+    const OfflineTtsVitsModelMetaData &vits_meta_data);
+
+template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
+    NativeResourceManager *mgr, const std::string &tokens,
+    const std::string &data_dir,
     const OfflineTtsMatchaModelMetaData &matcha_meta_data);
 #endif
 
