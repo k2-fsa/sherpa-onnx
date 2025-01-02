@@ -1,25 +1,25 @@
-// Copyright 2024 Xiaomi Corporation
+// Copyright 2025 Xiaomi Corporation
 
 package com.k2fsa.sherpa.onnx;
 
-public class OfflineTtsVitsModelConfig {
-    private final String model;
+public class OfflineTtsMatchaModelConfig {
+    private final String acousticModel;
+    private final String vocoder;
     private final String lexicon;
     private final String tokens;
     private final String dataDir;
     private final String dictDir;
     private final float noiseScale;
-    private final float noiseScaleW;
     private final float lengthScale;
 
-    private OfflineTtsVitsModelConfig(Builder builder) {
-        this.model = builder.model;
+    private OfflineTtsMatchaModelConfig(Builder builder) {
+        this.acousticModel = builder.acousticModel;
+        this.vocoder = builder.vocoder;
         this.lexicon = builder.lexicon;
         this.tokens = builder.tokens;
         this.dataDir = builder.dataDir;
         this.dictDir = builder.dictDir;
         this.noiseScale = builder.noiseScale;
-        this.noiseScaleW = builder.noiseScaleW;
         this.lengthScale = builder.lengthScale;
     }
 
@@ -27,8 +27,12 @@ public class OfflineTtsVitsModelConfig {
         return new Builder();
     }
 
-    public String getModel() {
-        return model;
+    public String getAcousticModel() {
+        return acousticModel;
+    }
+
+    public String getVocoder() {
+        return vocoder;
     }
 
     public String getLexicon() {
@@ -55,26 +59,27 @@ public class OfflineTtsVitsModelConfig {
         return noiseScale;
     }
 
-    public float getNoiseScaleW() {
-        return noiseScaleW;
-    }
-
     public static class Builder {
-        private String model = "";
+        private String acousticModel = "";
+        private String vocoder = "";
         private String lexicon = "";
         private String tokens = "";
         private String dataDir = "";
         private String dictDir = "";
-        private float noiseScale = 0.667f;
-        private float noiseScaleW = 0.8f;
+        private float noiseScale = 1.0f;
         private float lengthScale = 1.0f;
 
-        public OfflineTtsVitsModelConfig build() {
-            return new OfflineTtsVitsModelConfig(this);
+        public OfflineTtsMatchaModelConfig build() {
+            return new OfflineTtsMatchaModelConfig(this);
         }
 
-        public Builder setModel(String model) {
-            this.model = model;
+        public Builder setAcousticModel(String acousticModel) {
+            this.acousticModel = acousticModel;
+            return this;
+        }
+
+        public Builder setVocoder(String vocoder) {
+            this.vocoder = vocoder;
             return this;
         }
 
@@ -100,11 +105,6 @@ public class OfflineTtsVitsModelConfig {
 
         public Builder setNoiseScale(float noiseScale) {
             this.noiseScale = noiseScale;
-            return this;
-        }
-
-        public Builder setNoiseScaleW(float noiseScaleW) {
-            this.noiseScaleW = noiseScaleW;
             return this;
         }
 
