@@ -49,19 +49,21 @@
   } while (0)
 #endif
 
+#define SHERPA_ONNX_EXIT(code) exit(code)
+
 // Read an integer
 #define SHERPA_ONNX_READ_META_DATA(dst, src_key)                           \
   do {                                                                     \
     auto value = LookupCustomModelMetaData(meta_data, src_key, allocator); \
     if (value.empty()) {                                                   \
       SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key);    \
-      exit(-1);                                                            \
+      SHERPA_ONNX_EXIT(-1);                                                \
     }                                                                      \
                                                                            \
     dst = atoi(value.c_str());                                             \
     if (dst < 0) {                                                         \
       SHERPA_ONNX_LOGE("Invalid value %d for '%s'", dst, src_key);         \
-      exit(-1);                                                            \
+      SHERPA_ONNX_EXIT(-1);                                                \
     }                                                                      \
   } while (0)
 
@@ -74,7 +76,7 @@
       dst = atoi(value.c_str());                                             \
       if (dst < 0) {                                                         \
         SHERPA_ONNX_LOGE("Invalid value %d for '%s'", dst, src_key);         \
-        exit(-1);                                                            \
+        SHERPA_ONNX_EXIT(-1);                                                \
       }                                                                      \
     }                                                                        \
   } while (0)
@@ -85,13 +87,13 @@
     auto value = LookupCustomModelMetaData(meta_data, src_key, allocator);     \
     if (value.empty()) {                                                       \
       SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key);        \
-      exit(-1);                                                                \
+      SHERPA_ONNX_EXIT(-1);                                                    \
     }                                                                          \
                                                                                \
     bool ret = SplitStringToIntegers(value.c_str(), ",", true, &dst);          \
     if (!ret) {                                                                \
       SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'", value.c_str(), src_key); \
-      exit(-1);                                                                \
+      SHERPA_ONNX_EXIT(-1);                                                    \
     }                                                                          \
   } while (0)
 
@@ -101,13 +103,13 @@
     auto value = LookupCustomModelMetaData(meta_data, src_key, allocator);     \
     if (value.empty()) {                                                       \
       SHERPA_ONNX_LOGE("%s does not exist in the metadata", src_key);          \
-      exit(-1);                                                                \
+      SHERPA_ONNX_EXIT(-1);                                                    \
     }                                                                          \
                                                                                \
     bool ret = SplitStringToFloats(value.c_str(), ",", true, &dst);            \
     if (!ret) {                                                                \
       SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'", value.c_str(), src_key); \
-      exit(-1);                                                                \
+      SHERPA_ONNX_EXIT(-1);                                                    \
     }                                                                          \
   } while (0)
 
@@ -117,14 +119,14 @@
     auto value = LookupCustomModelMetaData(meta_data, src_key, allocator); \
     if (value.empty()) {                                                   \
       SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key);    \
-      exit(-1);                                                            \
+      SHERPA_ONNX_EXIT(-1);                                                \
     }                                                                      \
     SplitStringToVector(value.c_str(), ",", false, &dst);                  \
                                                                            \
     if (dst.empty()) {                                                     \
       SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'. Empty vector!",       \
                        value.c_str(), src_key);                            \
-      exit(-1);                                                            \
+      SHERPA_ONNX_EXIT(-1);                                                \
     }                                                                      \
   } while (0)
 
@@ -134,14 +136,14 @@
     auto value = LookupCustomModelMetaData(meta_data, src_key, allocator); \
     if (value.empty()) {                                                   \
       SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key);    \
-      exit(-1);                                                            \
+      SHERPA_ONNX_EXIT(-1);                                                \
     }                                                                      \
     SplitStringToVector(value.c_str(), sep, false, &dst);                  \
                                                                            \
     if (dst.empty()) {                                                     \
       SHERPA_ONNX_LOGE("Invalid value '%s' for '%s'. Empty vector!",       \
                        value.c_str(), src_key);                            \
-      exit(-1);                                                            \
+      SHERPA_ONNX_EXIT(-1);                                                \
     }                                                                      \
   } while (0)
 
@@ -151,13 +153,13 @@
     auto value = LookupCustomModelMetaData(meta_data, src_key, allocator); \
     if (value.empty()) {                                                   \
       SHERPA_ONNX_LOGE("'%s' does not exist in the metadata", src_key);    \
-      exit(-1);                                                            \
+      SHERPA_ONNX_EXIT(-1);                                                \
     }                                                                      \
                                                                            \
     dst = std::move(value);                                                \
     if (dst.empty()) {                                                     \
       SHERPA_ONNX_LOGE("Invalid value for '%s'\n", src_key);               \
-      exit(-1);                                                            \
+      SHERPA_ONNX_EXIT(-1);                                                \
     }                                                                      \
   } while (0)
 
@@ -178,11 +180,9 @@
       dst = std::move(value);                                              \
       if (dst.empty()) {                                                   \
         SHERPA_ONNX_LOGE("Invalid value for '%s'\n", src_key);             \
-        exit(-1);                                                          \
+        SHERPA_ONNX_EXIT(-1);                                              \
       }                                                                    \
     }                                                                      \
   } while (0)
-
-#define SHERPA_ONNX_EXIT(code) exit(code)
 
 #endif  // SHERPA_ONNX_CSRC_MACROS_H_

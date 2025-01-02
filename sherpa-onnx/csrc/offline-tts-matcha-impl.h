@@ -321,12 +321,45 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
 
  private:
   template <typename Manager>
-  void InitFrontend(Manager *mgr) {}
+  void InitFrontend(Manager *mgr) {
+    // for piper phonemizer
+    // we require that you copy espeak_ng_data
+    // from assets to disk
+    //
+    // for jieba
+    // we require that you copy tokens.txt, lexicon.txt and dict
+    // from assets to disk
+    const auto &meta_data = model_->GetMetaData();
+
+    if (meta_data.jieba && !meta_data.has_espeak) {
+      frontend_ = std::make_unique<JiebaLexicon>(
+          config_.model.matcha.lexicon, config_.model.matcha.tokens,
+          config_.model.matcha.dict_dir, config_.model.debug);
+    } else if (meta_data.has_espeak && !meta_data.jieba) {
+      frontend_ = std::make_unique<PiperPhonemizeLexicon>(
+          mgr, config_.model.matcha.tokens, config_.model.matcha.data_dir,
+          meta_data);
+    } else {
+      SHERPA_ONNX_LOGE("jieba + espeaker-ng is not supported yet");
+      SHERPA_ONNX_EXIT(-1);
+    }
+  }
 
   void InitFrontend() {
-    frontend_ = std::make_unique<JiebaLexicon>(
-        config_.model.matcha.lexicon, config_.model.matcha.tokens,
-        config_.model.matcha.dict_dir, config_.model.debug);
+    const auto &meta_data = model_->GetMetaData();
+
+    if (meta_data.jieba && !meta_data.has_espeak) {
+      frontend_ = std::make_unique<JiebaLexicon>(
+          config_.model.matcha.lexicon, config_.model.matcha.tokens,
+          config_.model.matcha.dict_dir, config_.model.debug);
+    } else if (meta_data.has_espeak && !meta_data.jieba) {
+      frontend_ = std::make_unique<PiperPhonemizeLexicon>(
+          config_.model.matcha.tokens, config_.model.matcha.data_dir,
+          meta_data);
+    } else {
+      SHERPA_ONNX_LOGE("jieba + espeaker-ng is not supported yet");
+      SHERPA_ONNX_EXIT(-1);
+    }
   }
 
   GeneratedAudio Process(const std::vector<std::vector<int64_t>> &tokens,
