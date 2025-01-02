@@ -267,7 +267,27 @@ log "Offline TTS test"
 # test waves are saved in ./tts
 mkdir ./tts
 
-log "vits-ljs test"
+log "matcha-ljspeech-en test"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+python3 ./python-api-examples/offline-tts.py \
+  --matcha-acoustic-model=./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
+  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-tokens=./matcha-icefall-en_US-ljspeech/tokens.txt \
+  --matcha-data-dir=./matcha-icefall-en_US-ljspeech/espeak-ng-data \
+  --output-filename=./tts/test-matcha-ljspeech-en.wav \
+  --num-threads=2 \
+ "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
+
+rm hifigan_v2.onnx
+rm -rf matcha-icefall-en_US-ljspeech
+
+log "matcha-baker-zh test"
 
 curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
 tar xvf matcha-icefall-zh-baker.tar.bz2
@@ -282,12 +302,13 @@ python3 ./python-api-examples/offline-tts.py \
  --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
  --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
  --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
- --output-filename=./tts/test-matcha.wav \
+ --output-filename=./tts/test-matcha-baker-zh.wav \
  "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。"
 
 rm -rf matcha-icefall-zh-baker
 rm hifigan_v2.onnx
 
+log "vits-ljs test"
 
 curl -LS -O https://huggingface.co/csukuangfj/vits-ljs/resolve/main/vits-ljs.onnx
 curl -LS -O https://huggingface.co/csukuangfj/vits-ljs/resolve/main/lexicon.txt

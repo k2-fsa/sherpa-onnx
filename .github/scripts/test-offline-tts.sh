@@ -19,6 +19,28 @@ which $EXE
 mkdir ./tts
 
 log "------------------------------------------------------------"
+log "matcha-icefall-en_US-ljspeech"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+$EXE \
+  --matcha-acoustic-model=./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
+  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-tokens=./matcha-icefall-en_US-ljspeech/tokens.txt \
+  --matcha-data-dir=./matcha-icefall-en_US-ljspeech/espeak-ng-data \
+  --num-threads=2 \
+  --output-filename=./tts/matcha-ljspeech-1.wav \
+  --debug=1 \
+ "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
+
+rm hifigan_v2.onnx
+rm -rf matcha-icefall-en_US-ljspeech
+
+log "------------------------------------------------------------"
 log "matcha-icefall-zh-baker"
 log "------------------------------------------------------------"
 curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2

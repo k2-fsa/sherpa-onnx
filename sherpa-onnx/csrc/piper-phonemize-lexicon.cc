@@ -32,6 +32,18 @@
 
 namespace sherpa_onnx {
 
+static void CallPhonemizeEspeak(
+    const std::string &text,
+    piper::eSpeakPhonemeConfig &config,  // NOLINT
+    std::vector<std::vector<piper::Phoneme>> *phonemes) {
+  static std::mutex espeak_mutex;
+
+  std::lock_guard<std::mutex> lock(espeak_mutex);
+
+  // keep multi threads from calling into piper::phonemize_eSpeak
+  piper::phonemize_eSpeak(text, config, *phonemes);
+}
+
 static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
   std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
   std::unordered_map<char32_t, int32_t> token2id;
@@ -87,7 +99,7 @@ static std::unordered_map<char32_t, int32_t> ReadTokens(std::istream &is) {
 
 // see the function "phonemes_to_ids" from
 // https://github.com/rhasspy/piper/blob/master/notebooks/piper_inference_(ONNX).ipynb
-static std::vector<int64_t> PiperPhonemesToIds(
+static std::vector<int64_t> PiperPhonemesToIdsVits(
     const std::unordered_map<char32_t, int32_t> &token2id,
     const std::vector<piper::Phoneme> &phonemes) {
   // see
@@ -114,17 +126,46 @@ static std::vector<int64_t> PiperPhonemesToIds(
   return ans;
 }
 
+static std::vector<int64_t> PiperPhonemesToIdsMatcha(
+    const std::unordered_map<char32_t, int32_t> &token2id,
+    const std::vector<piper::Phoneme> &phonemes, bool use_eos_bos) {
+  std::vector<int64_t> ans;
+  ans.reserve(phonemes.size());
+
+  int32_t bos = token2id.at(U'^');
+  int32_t eos = token2id.at(U'$');
+
+  if (use_eos_bos) {
+    ans.push_back(bos);
+  }
+
+  for (auto p : phonemes) {
+    if (token2id.count(p)) {
+      ans.push_back(token2id.at(p));
+    } else {
+      SHERPA_ONNX_LOGE("Skip unknown phonemes. Unicode codepoint: \\U+%04x.",
+                       static_cast<uint32_t>(p));
+    }
+  }
+
+  if (use_eos_bos) {
+    ans.push_back(eos);
+  }
+
+  return ans;
+}
+
 static std::vector<int64_t> CoquiPhonemesToIds(
     const std::unordered_map<char32_t, int32_t> &token2id,
     const std::vector<piper::Phoneme> &phonemes,
-    const OfflineTtsVitsModelMetaData &meta_data) {
+    const OfflineTtsVitsModelMetaData &vits_meta_data) {
   // see
   // https://github.com/coqui-ai/TTS/blob/dev/TTS/tts/utils/text/tokenizer.py#L87
-  int32_t use_eos_bos = meta_data.use_eos_bos;
-  int32_t bos_id = meta_data.bos_id;
-  int32_t eos_id = meta_data.eos_id;
-  int32_t blank_id = meta_data.blank_id;
-  int32_t add_blank = meta_data.add_blank;
+  int32_t use_eos_bos = vits_meta_data.use_eos_bos;
+  int32_t bos_id = vits_meta_data.bos_id;
+  int32_t eos_id = vits_meta_data.eos_id;
+  int32_t blank_id = vits_meta_data.blank_id;
+  int32_t add_blank = vits_meta_data.add_blank;
   int32_t comma_id = token2id.at(',');
 
   std::vector<int64_t> ans;
@@ -189,8 +230,8 @@ static void InitEspeak(const std::string &data_dir) {
 
 PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     const std::string &tokens, const std::string &data_dir,
-    const OfflineTtsVitsModelMetaData &meta_data)
-    : meta_data_(meta_data) {
+    const OfflineTtsVitsModelMetaData &vits_meta_data)
+    : vits_meta_data_(vits_meta_data) {
   {
     std::ifstream is(tokens);
     token2id_ = ReadTokens(is);
@@ -202,8 +243,37 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
 template <typename Manager>
 PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     Manager *mgr, const std::string &tokens, const std::string &data_dir,
-    const OfflineTtsVitsModelMetaData &meta_data)
-    : meta_data_(meta_data) {
+    const OfflineTtsVitsModelMetaData &vits_meta_data)
+    : vits_meta_data_(vits_meta_data) {
+  {
+    auto buf = ReadFile(mgr, tokens);
+    std::istrstream is(buf.data(), buf.size());
+    token2id_ = ReadTokens(is);
+  }
+
+  // We should copy the directory of espeak-ng-data from the asset to
+  // some internal or external storage and then pass the directory to
+  // data_dir.
+  InitEspeak(data_dir);
+}
+
+PiperPhonemizeLexicon::PiperPhonemizeLexicon(
+    const std::string &tokens, const std::string &data_dir,
+    const OfflineTtsMatchaModelMetaData &matcha_meta_data)
+    : matcha_meta_data_(matcha_meta_data), is_matcha_(true) {
+  {
+    std::ifstream is(tokens);
+    token2id_ = ReadTokens(is);
+  }
+
+  InitEspeak(data_dir);
+}
+
+template <typename Manager>
+PiperPhonemizeLexicon::PiperPhonemizeLexicon(
+    Manager *mgr, const std::string &tokens, const std::string &data_dir,
+    const OfflineTtsMatchaModelMetaData &matcha_meta_data)
+    : matcha_meta_data_(matcha_meta_data), is_matcha_(true) {
   {
     auto buf = ReadFile(mgr, tokens);
     std::istrstream is(buf.data(), buf.size());
@@ -218,6 +288,15 @@ PiperPhonemizeLexicon::PiperPhonemizeLexicon(
 
 std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string &voice /*= ""*/) const {
+  if (is_matcha_) {
+    return ConvertTextToTokenIdsMatcha(text, voice);
+  } else {
+    return ConvertTextToTokenIdsVits(text, voice);
+  }
+}
+
+std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsMatcha(
+    const std::string &text, const std::string &voice /*= ""*/) const {
   piper::eSpeakPhonemeConfig config;
 
   // ./bin/espeak-ng-bin --path  ./install/share/espeak-ng-data/ --voices
@@ -226,26 +305,45 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIds(
 
   std::vector<std::vector<piper::Phoneme>> phonemes;
 
-  static std::mutex espeak_mutex;
-  {
-    std::lock_guard<std::mutex> lock(espeak_mutex);
-
-    // keep multi threads from calling into piper::phonemize_eSpeak
-    piper::phonemize_eSpeak(text, config, phonemes);
-  }
+  CallPhonemizeEspeak(text, config, &phonemes);
 
   std::vector<TokenIDs> ans;
 
   std::vector<int64_t> phoneme_ids;
 
-  if (meta_data_.is_piper || meta_data_.is_icefall) {
+  for (const auto &p : phonemes) {
+    phoneme_ids =
+        PiperPhonemesToIdsMatcha(token2id_, p, matcha_meta_data_.use_eos_bos);
+    ans.emplace_back(std::move(phoneme_ids));
+  }
+
+  return ans;
+}
+
+std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsVits(
+    const std::string &text, const std::string &voice /*= ""*/) const {
+  piper::eSpeakPhonemeConfig config;
+
+  // ./bin/espeak-ng-bin --path  ./install/share/espeak-ng-data/ --voices
+  // to list available voices
+  config.voice = voice;  // e.g., voice is en-us
+
+  std::vector<std::vector<piper::Phoneme>> phonemes;
+
+  CallPhonemizeEspeak(text, config, &phonemes);
+
+  std::vector<TokenIDs> ans;
+
+  std::vector<int64_t> phoneme_ids;
+
+  if (vits_meta_data_.is_piper || vits_meta_data_.is_icefall) {
     for (const auto &p : phonemes) {
-      phoneme_ids = PiperPhonemesToIds(token2id_, p);
+      phoneme_ids = PiperPhonemesToIdsVits(token2id_, p);
       ans.emplace_back(std::move(phoneme_ids));
     }
-  } else if (meta_data_.is_coqui) {
+  } else if (vits_meta_data_.is_coqui) {
     for (const auto &p : phonemes) {
-      phoneme_ids = CoquiPhonemesToIds(token2id_, p, meta_data_);
+      phoneme_ids = CoquiPhonemesToIds(token2id_, p, vits_meta_data_);
       ans.emplace_back(std::move(phoneme_ids));
     }
 
@@ -260,13 +358,18 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIds(
 #if __ANDROID_API__ >= 9
 template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     AAssetManager *mgr, const std::string &tokens, const std::string &data_dir,
-    const OfflineTtsVitsModelMetaData &meta_data);
+    const OfflineTtsVitsModelMetaData &vits_meta_data);
+
+template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
+    AAssetManager *mgr, const std::string &tokens, const std::string &data_dir,
+    const OfflineTtsMatchaModelMetaData &matcha_meta_data);
 #endif
 
 #if __OHOS__
 template PiperPhonemizeLexicon::PiperPhonemizeLexicon(
     NativeResourceManager *mgr, const std::string &tokens,
-    const std::string &data_dir, const OfflineTtsVitsModelMetaData &meta_data);
+    const std::string &data_dir,
+    const OfflineTtsMatchaModelMetaData &matcha_meta_data);
 #endif
 
 }  // namespace sherpa_onnx
