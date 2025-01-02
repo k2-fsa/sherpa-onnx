@@ -275,14 +275,6 @@ rm matcha-icefall-en_US-ljspeech.tar.bz2
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
 
-log "matcha-baker-zh test"
-
-curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
-tar xvf matcha-icefall-zh-baker.tar.bz2
-rm matcha-icefall-zh-baker.tar.bz2
-
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
-
 python3 ./python-api-examples/offline-tts.py \
   --matcha-acoustic-model=./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
   --matcha-vocoder=./hifigan_v2.onnx \
@@ -294,6 +286,14 @@ python3 ./python-api-examples/offline-tts.py \
 
 rm hifigan_v2.onnx
 rm -rf matcha-icefall-en_US-ljspeech
+
+log "matcha-baker-zh test"
+
+curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+tar xvf matcha-icefall-zh-baker.tar.bz2
+rm matcha-icefall-zh-baker.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
 
 python3 ./python-api-examples/offline-tts.py \
  --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
@@ -307,7 +307,6 @@ python3 ./python-api-examples/offline-tts.py \
 
 rm -rf matcha-icefall-zh-baker
 rm hifigan_v2.onnx
-
 
 log "vits-ljs test"
 
