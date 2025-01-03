@@ -81,6 +81,51 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
 
+      - name: Test Matcha TTS (zh)
+        shell: bash
+        run: |
+          gcc -o matcha-tts-zh-c-api ./c-api-examples/matcha-tts-zh-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+          tar xvf matcha-icefall-zh-baker.tar.bz2
+          rm matcha-icefall-zh-baker.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./matcha-tts-zh-c-api
+
+      - name: Test Matcha TTS (en)
+        shell: bash
+        run: |
+          gcc -o matcha-tts-en-c-api ./c-api-examples/matcha-tts-en-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+          tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+          rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./matcha-tts-en-c-api
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matcha-tts-${{ matrix.os }}
+          path: ./generated-matcha-*.wav
+
       - name: Test vad + Whisper tiny.en
         shell: bash
         run: |

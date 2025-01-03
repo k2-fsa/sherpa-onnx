@@ -894,15 +894,28 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsVitsModelConfig {
 
   float noise_scale;
   float noise_scale_w;
-  float length_scale;  // < 1, faster in speed; > 1, slower in speed
+  float length_scale;  // < 1, faster in speech speed; > 1, slower in speed
   const char *dict_dir;
 } SherpaOnnxOfflineTtsVitsModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsMatchaModelConfig {
+  const char *acoustic_model;
+  const char *vocoder;
+  const char *lexicon;
+  const char *tokens;
+  const char *data_dir;
+
+  float noise_scale;
+  float length_scale;  // < 1, faster in speech speed; > 1, slower in speed
+  const char *dict_dir;
+} SherpaOnnxOfflineTtsMatchaModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {
   SherpaOnnxOfflineTtsVitsModelConfig vits;
   int32_t num_threads;
   int32_t debug;
   const char *provider;
+  SherpaOnnxOfflineTtsMatchaModelConfig matcha;
 } SherpaOnnxOfflineTtsModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsConfig {

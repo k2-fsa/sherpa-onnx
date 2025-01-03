@@ -30,7 +30,7 @@ struct OfflineTtsConfig {
   // Maximum number of sentences that we process at a time.
   // This is to avoid OOM for very long input text.
   // If you set it to -1, then we process all sentences in a single batch.
-  int32_t max_num_sentences = 2;
+  int32_t max_num_sentences = 1;
 
   OfflineTtsConfig() = default;
   OfflineTtsConfig(const OfflineTtsModelConfig &model,

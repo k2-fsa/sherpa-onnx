@@ -1058,6 +1058,7 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
     const SherpaOnnxOfflineTtsConfig *config) {
   sherpa_onnx::OfflineTtsConfig tts_config;
 
+  // vits
   tts_config.model.vits.model = SHERPA_ONNX_OR(config->model.vits.model, "");
   tts_config.model.vits.lexicon =
       SHERPA_ONNX_OR(config->model.vits.lexicon, "");
@@ -1073,6 +1074,24 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
   tts_config.model.vits.dict_dir =
       SHERPA_ONNX_OR(config->model.vits.dict_dir, "");
 
+  // matcha
+  tts_config.model.matcha.acoustic_model =
+      SHERPA_ONNX_OR(config->model.matcha.acoustic_model, "");
+  tts_config.model.matcha.vocoder =
+      SHERPA_ONNX_OR(config->model.matcha.vocoder, "");
+  tts_config.model.matcha.lexicon =
+      SHERPA_ONNX_OR(config->model.matcha.lexicon, "");
+  tts_config.model.matcha.tokens =
+      SHERPA_ONNX_OR(config->model.matcha.tokens, "");
+  tts_config.model.matcha.data_dir =
+      SHERPA_ONNX_OR(config->model.matcha.data_dir, "");
+  tts_config.model.matcha.noise_scale =
+      SHERPA_ONNX_OR(config->model.matcha.noise_scale, 0.667);
+  tts_config.model.matcha.length_scale =
+      SHERPA_ONNX_OR(config->model.matcha.length_scale, 1.0);
+  tts_config.model.matcha.dict_dir =
+      SHERPA_ONNX_OR(config->model.matcha.dict_dir, "");
+
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
   tts_config.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
@@ -1082,7 +1101,7 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
 
   tts_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
   tts_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
-  tts_config.max_num_sentences = SHERPA_ONNX_OR(config->max_num_sentences, 2);
+  tts_config.max_num_sentences = SHERPA_ONNX_OR(config->max_num_sentences, 1);
 
   if (tts_config.model.debug) {
 #if __OHOS__
