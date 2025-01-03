@@ -7,6 +7,12 @@ target_link_libraries(decode-file-c-api sherpa-onnx-c-api cargs)
 if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(offline-tts-c-api offline-tts-c-api.c)
   target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)
+
+  add_executable(matcha-tts-zh-c-api matcha-tts-zh-c-api.c)
+  target_link_libraries(matcha-tts-zh-c-api sherpa-onnx-c-api cargs)
+
+  add_executable(matcha-tts-en-c-api matcha-tts-en-c-api.c)
+  target_link_libraries(matcha-tts-en-c-api sherpa-onnx-c-api cargs)
 endif()
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
