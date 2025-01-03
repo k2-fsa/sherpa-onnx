@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Speech-to-text, text-to-speech, and speaker diarization using Next-gen Kaldi without internet connection",
   "dependencies": {
-    "cmake-js": "^7.0.0",
+    "cmake-js": "^7.3.0",
     "node-addon-api": "^8.3.0",
     "perf_hooks": "*"
   },
