@@ -133,6 +133,8 @@ The following tables list the examples in this folder.
 
 |File| Description|
 |---|---|
+|[./test_tts_non_streaming_matcha_icefall_en.js](./test_tts_non_streaming_matcha_icefall_en.js)| Text-to-speech with a [MatchaTTS English Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker)|
+|[./test_tts_non_streaming_matcha_icefall_zhjs](./test_tts_non_streaming_matcha_icefall_zh.js)| Text-to-speech with a [MatchaTTS Chinese Model](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker)|
 |[./test_tts_non_streaming_vits_piper_en.js](./test_tts_non_streaming_vits_piper_en.js)| Text-to-speech with a [piper](https://github.com/rhasspy/piper) English model|
 |[./test_tts_non_streaming_vits_coqui_de.js](./test_tts_non_streaming_vits_coqui_de.js)| Text-to-speech with a [coqui](https://github.com/coqui-ai/TTS) German model|
 |[./test_tts_non_streaming_vits_zh_ll.js](./test_tts_non_streaming_vits_zh_ll.js)| Text-to-speech with a Chinese model using [cppjieba](https://github.com/yanyiwu/cppjieba)|
@@ -343,6 +345,28 @@ node ./test_asr_non_streaming_sense_voice.js
 # To run VAD + non-streaming ASR with Paraformer using a microphone
 npm install naudiodon2
 node ./test_vad_asr_non_streaming_sense_voice_microphone.js
+```
+
+### Text-to-speech with MatchaTTS models (English TTS)
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+node ./test_tts_non_streaming_matcha_icefall_en.js
+```
+
+### Text-to-speech with MatchaTTS models (Chinese TTS)
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+tar xvf matcha-icefall-zh-baker.tar.bz2
+rm matcha-icefall-zh-baker.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+node ./test_tts_non_streaming_matcha_icefall_zh.js
 ```
 
 ### Text-to-speech with piper VITS models (TTS)

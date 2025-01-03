@@ -31,6 +31,28 @@ static SherpaOnnxOfflineTtsVitsModelConfig GetOfflineTtsVitsModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineTtsMatchaModelConfig GetOfflineTtsMatchaModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineTtsMatchaModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("matcha") || !obj.Get("matcha").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("matcha").As<Napi::Object>();
+  SHERPA_ONNX_ASSIGN_ATTR_STR(acoustic_model, acousticModel);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(vocoder, vocoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(lexicon, lexicon);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(noise_scale, noiseScale);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(dict_dir, dictDir);
+
+  return c;
+}
+
 static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineTtsModelConfig c;
@@ -43,6 +65,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
   Napi::Object o = obj.Get("model").As<Napi::Object>();
 
   c.vits = GetOfflineTtsVitsModelConfig(o);
+  c.matcha = GetOfflineTtsMatchaModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
@@ -107,9 +130,10 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
                   decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
       mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
           &OH_ResourceManager_ReleaseNativeResourceManager);
-  SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTtsOHOS(&c, mgr.get());
+  const SherpaOnnxOfflineTts *tts =
+      SherpaOnnxCreateOfflineTtsOHOS(&c, mgr.get());
 #else
-  SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&c);
+  const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&c);
 #endif
 
   if (c.model.vits.model) {
@@ -132,6 +156,30 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
     delete[] c.model.vits.dict_dir;
   }
 
+  if (c.model.matcha.acoustic_model) {
+    delete[] c.model.matcha.acoustic_model;
+  }
+
+  if (c.model.matcha.vocoder) {
+    delete[] c.model.matcha.vocoder;
+  }
+
+  if (c.model.matcha.lexicon) {
+    delete[] c.model.matcha.lexicon;
+  }
+
+  if (c.model.matcha.tokens) {
+    delete[] c.model.matcha.tokens;
+  }
+
+  if (c.model.matcha.data_dir) {
+    delete[] c.model.matcha.data_dir;
+  }
+
+  if (c.model.matcha.dict_dir) {
+    delete[] c.model.matcha.dict_dir;
+  }
+
   if (c.model.provider) {
     delete[] c.model.provider;
   }
@@ -152,7 +200,8 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
   }
 
   return Napi::External<SherpaOnnxOfflineTts>::New(
-      env, tts, [](Napi::Env env, SherpaOnnxOfflineTts *tts) {
+      env, const_cast<SherpaOnnxOfflineTts *>(tts),
+      [](Napi::Env env, SherpaOnnxOfflineTts *tts) {
         SherpaOnnxDestroyOfflineTts(tts);
       });
 }
