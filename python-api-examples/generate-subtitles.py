@@ -516,28 +516,22 @@ def main():
 
     is_eof = False
     # TODO(fangjun): Support multithreads
-    while True:
+    while not is_eof:
         # *2 because int16_t has two bytes
         data = process.stdout.read(frames_per_read * 2)
         if not data:
-            if is_eof:
-                break
-            is_eof = True
-            # pad 1 second at the end of the file for the VAD
-            data = np.zeros(1 * args.sample_rate, dtype=np.int16)
-
-        samples = np.frombuffer(data, dtype=np.int16)
-        samples = samples.astype(np.float32) / 32768
-
-        num_processed_samples += samples.shape[0]
-
-        buffer = np.concatenate([buffer, samples])
-        while len(buffer) > window_size:
-            vad.accept_waveform(buffer[:window_size])
-            buffer = buffer[window_size:]
-
-        if is_eof:
             vad.flush()
+            is_eof = True
+        else:
+            samples = np.frombuffer(data, dtype=np.int16)
+            samples = samples.astype(np.float32) / 32768
+
+            num_processed_samples += samples.shape[0]
+
+            buffer = np.concatenate([buffer, samples])
+            while len(buffer) > window_size:
+                vad.accept_waveform(buffer[:window_size])
+                buffer = buffer[window_size:]
 
         streams = []
         segments = []
