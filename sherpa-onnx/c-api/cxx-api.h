@@ -97,6 +97,10 @@ struct Wave {
 
 SHERPA_ONNX_API Wave ReadWave(const std::string &filename);
 
+// Return true on success;
+// Return false on failure
+SHERPA_ONNX_API bool WriteWave(const std::string &filename, const Wave &wave);
+
 template <typename Derived, typename T>
 class SHERPA_ONNX_API MoveOnly {
  public:
@@ -305,6 +309,91 @@ class SHERPA_ONNX_API OfflineRecognizer
 
  private:
   explicit OfflineRecognizer(const SherpaOnnxOfflineRecognizer *p);
+};
+
+// ============================================================================
+// Non-streaming TTS
+// ============================================================================
+struct OfflineTtsVitsModelConfig {
+  std::string model;
+  std::string lexicon;
+  std::string tokens;
+  std::string data_dir;
+  std::string dict_dir;
+
+  float noise_scale = 0.667;
+  float noise_scale_w = 0.8;
+  float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
+};
+
+struct OfflineTtsMatchaModelConfig {
+  std::string acoustic_model;
+  std::string vocoder;
+  std::string lexicon;
+  std::string tokens;
+  std::string data_dir;
+  std::string dict_dir;
+
+  float noise_scale = 0.667;
+  float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
+};
+
+struct OfflineTtsModelConfig {
+  OfflineTtsVitsModelConfig vits;
+  OfflineTtsMatchaModelConfig matcha;
+  int32_t num_threads = 1;
+  bool debug = false;
+  std::string provider = "cpu";
+};
+
+struct OfflineTtsConfig {
+  OfflineTtsModelConfig model;
+  std::string rule_fsts;
+  std::string rule_fars;
+  int32_t max_num_sentences = 1;
+};
+
+struct GeneratedAudio {
+  std::vector<float> samples;  // in the range [-1, 1]
+  int32_t sample_rate;
+};
+
+// Return 1 to continue generating
+// Return 0 to stop generating
+using OfflineTtsCallback = int32_t (*)(const float *samples,
+                                       int32_t num_samples, float progress,
+                                       void *arg);
+
+class SHERPA_ONNX_API OfflineTts
+    : public MoveOnly<OfflineTts, SherpaOnnxOfflineTts> {
+ public:
+  static OfflineTts Create(const OfflineTtsConfig &config);
+
+  void Destroy(const SherpaOnnxOfflineTts *p) const;
+
+  // Return the sample rate of the generated audio
+  int32_t SampleRate() const;
+
+  // Number of supported speakers.
+  // If it supports only a single speaker, then it return 0 or 1.
+  int32_t NumSpeakers() const;
+
+  // @param text A string containing words separated by spaces
+  // @param sid Speaker ID. Used only for multi-speaker models, e.g., models
+  //            trained using the VCTK dataset. It is not used for
+  //            single-speaker models, e.g., models trained using the ljspeech
+  //            dataset.
+  // @param speed The speed for the generated speech. E.g., 2 means 2x faster.
+  // @param callback If not NULL, it is called whenever config.max_num_sentences
+  //                 sentences have been processed. The callback is called in
+  //                 the current thread.
+  GeneratedAudio Generate(const std::string &text, int32_t sid = 0,
+                          float speed = 1.0,
+                          OfflineTtsCallback callback = nullptr,
+                          void *arg = nullptr) const;
+
+ private:
+  explicit OfflineTts(const SherpaOnnxOfflineTts *p);
 };
 
 }  // namespace sherpa_onnx::cxx

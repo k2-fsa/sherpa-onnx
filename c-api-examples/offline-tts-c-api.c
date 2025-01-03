@@ -229,7 +229,7 @@ int32_t main(int32_t argc, char *argv[]) {
     ShowUsage();
   }
 
-  SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
+  const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&config);
 
   const SherpaOnnxGeneratedAudio *audio =
       SherpaOnnxOfflineTtsGenerate(tts, text, sid, 1.0);
