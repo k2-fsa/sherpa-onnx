@@ -17,8 +17,20 @@ export class OfflineTtsVitsModelConfig {
   public lengthScale: number = 1.0;
 }
 
+export class OfflineTtsMatchaModelConfig {
+  public acousticModel: string = '';
+  public vocoder: string = '';
+  public lexicon: string = '';
+  public tokens: string = '';
+  public dataDir: string = '';
+  public dictDir: String = '';
+  public noiseScale: number = 0.667;
+  public lengthScale: number = 1.0;
+}
+
 export class OfflineTtsModelConfig {
   public vits: OfflineTtsVitsModelConfig = new OfflineTtsVitsModelConfig();
+  public matcha: OfflineTtsMatchaModelConfig = new OfflineTtsMatchaModelConfig();
   public numThreads: number = 1;
   public debug: boolean = false;
   public provider: string = 'cpu';

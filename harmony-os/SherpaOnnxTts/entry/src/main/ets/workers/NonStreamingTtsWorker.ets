@@ -73,7 +73,16 @@ function initTts(context: Context): OfflineTts {
   // for details
 
   let modelDir = '';
+
+  // for VITS begin
   let modelName = '';
+  // for VITS end
+
+  // for Matcha begin
+  let acousticModelName = '';
+  let vocoder = '';
+  // for Matcha end
+
   let ruleFsts = '';
   let ruleFars = '';
   let lexicon = '';
@@ -134,15 +143,47 @@ function initTts(context: Context): OfflineTts {
   // dictDir = 'dict';
   // ruleFsts = `date.fst,phone.fst,number.fst`;
 
+  // Example 8
+  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker
+  // modelDir = 'matcha-icefall-zh-baker'
+  // acousticModelName = 'model-steps-3.onnx'
+  // vocoder = 'hifigan_v2.onnx'
+  // lexicon = 'lexicon.txt'
+  // dictDir = 'dict';
+  // ruleFsts = `date.fst,phone.fst,number.fst`;
+
+  // Example 9
+  // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
+  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker
+  // modelDir = 'matcha-icefall-en_US-ljspeech'
+  // acousticModelName = 'model-steps-3.onnx'
+  // vocoder = 'hifigan_v2.onnx'
+  // dataDir = 'espeak-ng-data';
+
   // ============================================================
   // Please don't change the remaining part of this function
   // ============================================================
 
-  if (modelName == '') {
+  if (modelName == '' && acousticModelName == '' && vocoder == '') {
     throw new Error('You are supposed to select a model by changing the code before you run the app');
   }
 
-  modelName = modelDir + '/' + modelName;
+  if (modelName != '' && acousticModelName != '') {
+    throw new Error('Please select either VITS or Matcha, not both');
+  }
+
+  if (acousticModelName != '' && vocoder == '') {
+    throw new Error('Please provider vocoder for matcha tts models');
+  }
+
+  if (modelName != '') {
+    modelName = modelDir + '/' + modelName;
+  }
+
+  if (acousticModelName != '') {
+    acousticModelName = modelDir + '/' + acousticModelName;
+  }
 
   if (ruleFsts != '') {
     let fsts = ruleFsts.split(',')
@@ -186,6 +227,14 @@ function initTts(context: Context): OfflineTts {
   config.model.vits.tokens = tokens;
   config.model.vits.dataDir = dataDir;
   config.model.vits.dictDir = dictDir;
+
+  config.model.matcha.acousticModel = acousticModelName;
+  config.model.matcha.vocoder = vocoder;
+  config.model.matcha.lexicon = lexicon;
+  config.model.matcha.tokens = tokens;
+  config.model.matcha.dataDir = dataDir;
+  config.model.matcha.dictDir = dictDir;
+
   config.model.numThreads = 2;
   config.model.debug = true;
   config.ruleFsts = ruleFsts;

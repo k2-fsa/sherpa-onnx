@@ -1618,7 +1618,7 @@ SherpaOnnxCreateVoiceActivityDetectorOHOS(
     const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds,
     NativeResourceManager *mgr);
 
-SHERPA_ONNX_API SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
+SHERPA_ONNX_API const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
     const SherpaOnnxOfflineTtsConfig *config, NativeResourceManager *mgr);
 
 SHERPA_ONNX_API const SherpaOnnxSpeakerEmbeddingExtractor *

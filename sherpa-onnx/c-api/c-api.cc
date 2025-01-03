@@ -2098,7 +2098,7 @@ SherpaOnnxCreateSpeakerEmbeddingExtractorOHOS(
 }
 
 #if SHERPA_ONNX_ENABLE_TTS == 1
-SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
+const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
     const SherpaOnnxOfflineTtsConfig *config, NativeResourceManager *mgr) {
   if (!mgr) {
     return SherpaOnnxCreateOfflineTts(config);

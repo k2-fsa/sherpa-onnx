@@ -6,12 +6,23 @@
 
 #include <fstream>
 #include <regex>  // NOLINT
+#include <strstream>
 #include <unordered_set>
 #include <utility>
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
 
 #include "cppjieba/Jieba.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
@@ -52,6 +63,39 @@ class JiebaLexicon::Impl {
 
     {
       std::ifstream is(lexicon);
+      InitLexicon(is);
+    }
+  }
+
+  template <typename Manager>
+  Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
+       const std::string &dict_dir, bool debug)
+      : debug_(debug) {
+    std::string dict = dict_dir + "/jieba.dict.utf8";
+    std::string hmm = dict_dir + "/hmm_model.utf8";
+    std::string user_dict = dict_dir + "/user.dict.utf8";
+    std::string idf = dict_dir + "/idf.utf8";
+    std::string stop_word = dict_dir + "/stop_words.utf8";
+
+    AssertFileExists(dict);
+    AssertFileExists(hmm);
+    AssertFileExists(user_dict);
+    AssertFileExists(idf);
+    AssertFileExists(stop_word);
+
+    jieba_ =
+        std::make_unique<cppjieba::Jieba>(dict, hmm, user_dict, idf, stop_word);
+
+    {
+      auto buf = ReadFile(mgr, tokens);
+      std::istrstream is(buf.data(), buf.size());
+
+      InitTokens(is);
+    }
+
+    {
+      auto buf = ReadFile(mgr, lexicon);
+      std::istrstream is(buf.data(), buf.size());
       InitLexicon(is);
     }
   }
@@ -279,9 +323,29 @@ JiebaLexicon::JiebaLexicon(const std::string &lexicon,
                            const std::string &dict_dir, bool debug)
     : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, debug)) {}
 
+template <typename Manager>
+JiebaLexicon::JiebaLexicon(Manager *mgr, const std::string &lexicon,
+                           const std::string &tokens,
+                           const std::string &dict_dir, bool debug)
+    : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, dict_dir, debug)) {}
+
 std::vector<TokenIDs> JiebaLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {
   return impl_->ConvertTextToTokenIds(text);
 }
+
+#if __ANDROID_API__ >= 9
+template JiebaLexicon::JiebaLexicon(AAssetManager *mgr,
+                                    const std::string &lexicon,
+                                    const std::string &tokens,
+                                    const std::string &dict_dir, bool debug);
+#endif
+
+#if __OHOS__
+template JiebaLexicon::JiebaLexicon(NativeResourceManager *mgr,
+                                    const std::string &lexicon,
+                                    const std::string &tokens,
+                                    const std::string &dict_dir, bool debug);
+#endif
 
 }  // namespace sherpa_onnx

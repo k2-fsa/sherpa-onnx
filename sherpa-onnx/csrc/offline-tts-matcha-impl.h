@@ -327,13 +327,12 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     // from assets to disk
     //
     // for jieba
-    // we require that you copy tokens.txt, lexicon.txt and dict
-    // from assets to disk
+    // we require that you copy dict from assets to disk
     const auto &meta_data = model_->GetMetaData();
 
     if (meta_data.jieba && !meta_data.has_espeak) {
       frontend_ = std::make_unique<JiebaLexicon>(
-          config_.model.matcha.lexicon, config_.model.matcha.tokens,
+          mgr, config_.model.matcha.lexicon, config_.model.matcha.tokens,
           config_.model.matcha.dict_dir, config_.model.debug);
     } else if (meta_data.has_espeak && !meta_data.jieba) {
       frontend_ = std::make_unique<PiperPhonemizeLexicon>(
