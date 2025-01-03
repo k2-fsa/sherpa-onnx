@@ -90,11 +90,14 @@ jobs:
             -l sherpa-onnx-c-api \
             -l onnxruntime
 
-          wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
           tar xvf matcha-icefall-zh-baker.tar.bz2
           rm matcha-icefall-zh-baker.tar.bz2
 
-          wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
           ./matcha-tts-zh-c-api
 
@@ -107,11 +110,14 @@ jobs:
             -l sherpa-onnx-c-api \
             -l onnxruntime
 
-          wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
           tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
           rm matcha-icefall-en_US-ljspeech.tar.bz2
 
-          wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
           ./matcha-tts-en-c-api
 
