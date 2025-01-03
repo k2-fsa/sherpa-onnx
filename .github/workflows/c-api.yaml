@@ -101,6 +101,10 @@ jobs:
 
           ./matcha-tts-zh-c-api
 
+          rm ./matcha-tts-zh-c-api
+          rm -rf matcha-icefall-*
+          rm hifigan_v2.onnx
+
       - name: Test Matcha TTS (en)
         shell: bash
         run: |
@@ -120,6 +124,10 @@ jobs:
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
 
           ./matcha-tts-en-c-api
+
+          rm ./matcha-tts-en-c-api
+          rm -rf matcha-icefall-*
+          rm hifigan_v2.onnx
 
       - uses: actions/upload-artifact@v4
         with:

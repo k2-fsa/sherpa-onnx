@@ -1114,7 +1114,7 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
   return tts_config;
 }
 
-SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
+const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
     const SherpaOnnxOfflineTtsConfig *config) {
   auto tts_config = GetOfflineTtsConfig(config);
 
@@ -1130,7 +1130,9 @@ SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
   return tts;
 }
 
-void SherpaOnnxDestroyOfflineTts(SherpaOnnxOfflineTts *tts) { delete tts; }
+void SherpaOnnxDestroyOfflineTts(const SherpaOnnxOfflineTts *tts) {
+  delete tts;
+}
 
 int32_t SherpaOnnxOfflineTtsSampleRate(const SherpaOnnxOfflineTts *tts) {
   return tts->impl->SampleRate();

@@ -24,6 +24,11 @@ Wave ReadWave(const std::string &filename) {
   return ans;
 }
 
+bool WriteWave(const std::string &filename, const Wave &wave) {
+  return SherpaOnnxWriteWave(wave.samples.data(), wave.samples.size(),
+                             wave.sample_rate, filename.c_str());
+}
+
 OnlineStream::OnlineStream(const SherpaOnnxOnlineStream *p)
     : MoveOnly<OnlineStream, SherpaOnnxOnlineStream>(p) {}
 
@@ -308,6 +313,75 @@ OfflineRecognizerResult OfflineRecognizer::GetResult(
 
   SherpaOnnxDestroyOfflineRecognizerResult(r);
 
+  return ans;
+}
+
+OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
+  struct SherpaOnnxOfflineTtsConfig c;
+  memset(&c, 0, sizeof(c));
+
+  c.model.vits.model = config.model.vits.model.c_str();
+  c.model.vits.lexicon = config.model.vits.lexicon.c_str();
+  c.model.vits.tokens = config.model.vits.tokens.c_str();
+  c.model.vits.data_dir = config.model.vits.data_dir.c_str();
+  c.model.vits.noise_scale = config.model.vits.noise_scale;
+  c.model.vits.noise_scale_w = config.model.vits.noise_scale_w;
+  c.model.vits.length_scale = config.model.vits.length_scale;
+  c.model.vits.dict_dir = config.model.vits.dict_dir.c_str();
+
+  c.model.matcha.acoustic_model = config.model.matcha.acoustic_model.c_str();
+  c.model.matcha.vocoder = config.model.matcha.vocoder.c_str();
+  c.model.matcha.lexicon = config.model.matcha.lexicon.c_str();
+  c.model.matcha.tokens = config.model.matcha.tokens.c_str();
+  c.model.matcha.data_dir = config.model.matcha.data_dir.c_str();
+  c.model.matcha.noise_scale = config.model.matcha.noise_scale;
+  c.model.matcha.length_scale = config.model.matcha.length_scale;
+  c.model.matcha.dict_dir = config.model.matcha.dict_dir.c_str();
+
+  c.model.num_threads = config.model.num_threads;
+  c.model.debug = config.model.debug;
+  c.model.provider = config.model.provider.c_str();
+
+  c.rule_fsts = config.rule_fsts.c_str();
+  c.max_num_sentences = config.max_num_sentences;
+  c.rule_fars = config.rule_fars.c_str();
+
+  auto p = SherpaOnnxCreateOfflineTts(&c);
+  return OfflineTts(p);
+}
+
+OfflineTts::OfflineTts(const SherpaOnnxOfflineTts *p)
+    : MoveOnly<OfflineTts, SherpaOnnxOfflineTts>(p) {}
+
+void OfflineTts::Destroy(const SherpaOnnxOfflineTts *p) const {
+  SherpaOnnxDestroyOfflineTts(p);
+}
+
+int32_t OfflineTts::SampleRate() const {
+  return SherpaOnnxOfflineTtsSampleRate(p_);
+}
+
+int32_t OfflineTts::NumSpeakers() const {
+  return SherpaOnnxOfflineTtsNumSpeakers(p_);
+}
+
+GeneratedAudio OfflineTts::Generate(const std::string &text,
+                                    int32_t sid /*= 0*/, float speed /*= 1.0*/,
+                                    OfflineTtsCallback callback /*= nullptr*/,
+                                    void *arg /*= nullptr*/) const {
+  const SherpaOnnxGeneratedAudio *audio;
+  if (!callback) {
+    audio = SherpaOnnxOfflineTtsGenerate(p_, text.c_str(), sid, speed);
+  } else {
+    audio = SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+        p_, text.c_str(), sid, speed, callback, arg);
+  }
+
+  GeneratedAudio ans;
+  ans.samples = std::vector<float>{audio->samples, audio->samples + audio->n};
+  ans.sample_rate = audio->sample_rate;
+
+  SherpaOnnxDestroyOfflineTtsGeneratedAudio(audio);
   return ans;
 }
 

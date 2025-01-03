@@ -14,3 +14,11 @@ target_link_libraries(moonshine-cxx-api sherpa-onnx-cxx-api)
 
 add_executable(sense-voice-cxx-api ./sense-voice-cxx-api.cc)
 target_link_libraries(sense-voice-cxx-api sherpa-onnx-cxx-api)
+
+if(SHERPA_ONNX_ENABLE_TTS)
+  add_executable(matcha-tts-zh-cxx-api ./matcha-tts-zh-cxx-api.cc)
+  target_link_libraries(matcha-tts-zh-cxx-api sherpa-onnx-cxx-api)
+
+  add_executable(matcha-tts-en-cxx-api ./matcha-tts-en-cxx-api.cc)
+  target_link_libraries(matcha-tts-en-cxx-api sherpa-onnx-cxx-api)
+endif()
