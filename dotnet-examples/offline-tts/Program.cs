@@ -38,7 +38,7 @@ class OfflineTtsDemo
     [Option("lexicon", Required = false, Default = "", HelpText = "Path to lexicon.txt")]
     public string Lexicon { get; set; } = string.Empty;
 
-    [Option("tokens", Required = false, Default = "", HelpText = "Path to tokens.txt")]
+    [Option("tokens", Required = true, Default = "", HelpText = "Path to tokens.txt")]
     public string Tokens { get; set; } = string.Empty;
 
     [Option("tts-max-num-sentences", Required = false, Default = 1, HelpText = "Maximum number of sentences that we process at a time.")]
@@ -47,13 +47,13 @@ class OfflineTtsDemo
     [Option(Required = false, Default = 0, HelpText = "1 to show debug messages.")]
     public int Debug { get; set; } = 0;
 
-    [Option("vits-model", Required = true, HelpText = "Path to VITS model")]
+    [Option("vits-model", Required = false, HelpText = "Path to VITS model")]
     public string Model { get; set; } = string.Empty;
 
-    [Option("matcha-acoustic-model", Required = true, HelpText = "Path to the acoustic model of Matcha")]
+    [Option("matcha-acoustic-model", Required = false, HelpText = "Path to the acoustic model of Matcha")]
     public string AcousticModel { get; set; } = "";
 
-    [Option("matcha-vocoder", Required = true, HelpText = "Path to the vocoder model of Matcha")]
+    [Option("matcha-vocoder", Required = false, HelpText = "Path to the vocoder model of Matcha")]
     public string Vocoder { get; set; } = "";
 
     [Option("sid", Required = false, Default = 0, HelpText = "Speaker ID")]
