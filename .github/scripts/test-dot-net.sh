@@ -4,10 +4,15 @@ cd dotnet-examples/
 
 cd ./offline-tts
 ./run-matcha-zh.sh
+ls -lh *.wav
 ./run-matcha-en.sh
+ls -lh *.wav
 ./run-aishell3.sh
+ls -lh *.wav
 ./run-piper.sh
+ls -lh *.wav
 ./run-hf-fanchen.sh
+ls -lh *.wav
 ls -lh
 
 pushd ../..

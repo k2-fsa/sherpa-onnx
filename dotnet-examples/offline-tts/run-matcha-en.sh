@@ -8,7 +8,7 @@ set -ex
 # to download more models
 if [ ! -f ./matcha-icefall-en_US-ljspeech/model-steps-3.onnx ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
-  tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+  tar xf matcha-icefall-en_US-ljspeech.tar.bz2
   rm matcha-icefall-en_US-ljspeech.tar.bz2
 fi
 
