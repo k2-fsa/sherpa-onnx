@@ -92,26 +92,6 @@ jobs:
         python-version: ["3.8"]
 
     steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Setup Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Python dependencies
-        shell: bash
-        run: |
-          python3 -m pip install --upgrade pip Jinja2
-
-      - name: Retrieve artifact from ubuntu-latest
-        uses: actions/download-artifact@v4
-        with:
-          name: ubuntu-latest
-          path: /tmp/linux-x64
-
       - name: Check space
         shell: bash
         run: |
@@ -155,6 +135,26 @@ jobs:
         shell: bash
         run: |
           df -h
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          python3 -m pip install --upgrade pip Jinja2
+
+      - name: Retrieve artifact from ubuntu-latest
+        uses: actions/download-artifact@v4
+        with:
+          name: ubuntu-latest
+          path: /tmp/linux-x64
 
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
