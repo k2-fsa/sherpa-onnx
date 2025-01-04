@@ -13,12 +13,9 @@
 // dotnet run
 
 using SherpaOnnx;
-using System.Collections.Generic;
-using System;
 
 class StreamingHlgDecodingDemo
 {
-
   static void Main(string[] args)
   {
     var config = new OnlineRecognizerConfig();
@@ -32,15 +29,15 @@ class StreamingHlgDecodingDemo
     config.ModelConfig.Debug = 0;
     config.CtcFstDecoderConfig.Graph = "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/HLG.fst";
 
-    OnlineRecognizer recognizer = new OnlineRecognizer(config);
+    var recognizer = new OnlineRecognizer(config);
 
     var filename = "./sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18/test_wavs/8k.wav";
 
-    WaveReader waveReader = new WaveReader(filename);
-    OnlineStream s = recognizer.CreateStream();
+    var waveReader = new WaveReader(filename);
+    var s = recognizer.CreateStream();
     s.AcceptWaveform(waveReader.SampleRate, waveReader.Samples);
 
-    float[] tailPadding = new float[(int)(waveReader.SampleRate * 0.3)];
+    var tailPadding = new float[(int)(waveReader.SampleRate * 0.3)];
     s.AcceptWaveform(waveReader.SampleRate, tailPadding);
     s.InputFinished();
 
@@ -49,7 +46,7 @@ class StreamingHlgDecodingDemo
       recognizer.Decode(s);
     }
 
-    OnlineRecognizerResult r = recognizer.GetResult(s);
+    var r = recognizer.GetResult(s);
     var text = r.Text;
     var tokens = r.Tokens;
     Console.WriteLine("--------------------");
@@ -57,10 +54,8 @@ class StreamingHlgDecodingDemo
     Console.WriteLine("text: {0}", text);
     Console.WriteLine("tokens: [{0}]", string.Join(", ", tokens));
     Console.Write("timestamps: [");
-    r.Timestamps.ToList().ForEach(i => Console.Write(String.Format("{0:0.00}", i) + ", "));
+    r.Timestamps.ToList().ForEach(i => Console.Write(string.Format("{0:0.00}", i) + ", "));
     Console.WriteLine("]");
     Console.WriteLine("--------------------");
   }
 }
-
-

@@ -10,15 +10,12 @@
 // Note that you need a speaker to run this file since it will play
 // the generated audio as it is generating.
 
-using CommandLine.Text;
 using CommandLine;
+using CommandLine.Text;
 using PortAudioSharp;
 using SherpaOnnx;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Threading;
-using System;
 
 class OfflineTtsPlayDemo
 {
@@ -26,13 +23,13 @@ class OfflineTtsPlayDemo
   {
 
     [Option("tts-rule-fsts", Required = false, Default = "", HelpText = "path to rule.fst")]
-    public string RuleFsts { get; set; }
+    public string? RuleFsts { get; set; }
 
     [Option("vits-dict-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for jieba.")]
-    public string DictDir { get; set; }
+    public string? DictDir { get; set; }
 
     [Option("vits-data-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for espeak-ng.")]
-    public string DataDir { get; set; }
+    public string? DataDir { get; set; }
 
     [Option("vits-length-scale", Required = false, Default = 1, HelpText = "speech speed. Larger->Slower; Smaller->faster")]
     public float LengthScale { get; set; }
@@ -44,10 +41,10 @@ class OfflineTtsPlayDemo
     public float NoiseScaleW { get; set; }
 
     [Option("vits-lexicon", Required = false, Default = "", HelpText = "Path to lexicon.txt")]
-    public string Lexicon { get; set; }
+    public string? Lexicon { get; set; }
 
     [Option("vits-tokens", Required = false, Default = "", HelpText = "Path to tokens.txt")]
-    public string Tokens { get; set; }
+    public string? Tokens { get; set; }
 
     [Option("tts-max-num-sentences", Required = false, Default = 1, HelpText = "Maximum number of sentences that we process at a time.")]
     public int MaxNumSentences { get; set; }
@@ -56,16 +53,16 @@ class OfflineTtsPlayDemo
     public int Debug { get; set; }
 
     [Option("vits-model", Required = true, HelpText = "Path to VITS model")]
-    public string Model { get; set; }
+    public string? Model { get; set; }
 
     [Option("sid", Required = false, Default = 0, HelpText = "Speaker ID")]
     public int SpeakerId { get; set; }
 
     [Option("text", Required = true, HelpText = "Text to synthesize")]
-    public string Text { get; set; }
+    public string? Text { get; set; }
 
     [Option("output-filename", Required = true, Default = "./generated.wav", HelpText = "Path to save the generated audio")]
-    public string OutputFilename { get; set; }
+    public string? OutputFilename { get; set; }
   }
 
   static void Main(string[] args)
@@ -124,10 +121,9 @@ to download more models.
     Console.WriteLine(helpText);
   }
 
-
   private static void Run(Options options)
   {
-    OfflineTtsConfig config = new OfflineTtsConfig();
+    var config = new OfflineTtsConfig();
     config.Model.Vits.Model = options.Model;
     config.Model.Vits.Lexicon = options.Lexicon;
     config.Model.Vits.Tokens = options.Tokens;
@@ -142,10 +138,9 @@ to download more models.
     config.RuleFsts = options.RuleFsts;
     config.MaxNumSentences = options.MaxNumSentences;
 
-    OfflineTts tts = new OfflineTts(config);
-    float speed = 1.0f / options.LengthScale;
-    int sid = options.SpeakerId;
-
+    var tts = new OfflineTts(config);
+    var speed = 1.0f / options.LengthScale;
+    var sid = options.SpeakerId;
 
     Console.WriteLine(PortAudio.VersionInfo.versionText);
     PortAudio.Initialize();
@@ -166,11 +161,11 @@ to download more models.
       Environment.Exit(1);
     }
 
-    DeviceInfo info = PortAudio.GetDeviceInfo(deviceIndex);
+    var info = PortAudio.GetDeviceInfo(deviceIndex);
     Console.WriteLine();
     Console.WriteLine($"Use output default device {deviceIndex} ({info.name})");
 
-    StreamParameters param = new StreamParameters();
+    var param = new StreamParameters();
     param.device = deviceIndex;
     param.channelCount = 1;
     param.sampleFormat = SampleFormat.Float32;
@@ -178,7 +173,7 @@ to download more models.
     param.hostApiSpecificStreamInfo = IntPtr.Zero;
 
     // https://learn.microsoft.com/en-us/dotnet/standard/collections/thread-safe/blockingcollection-overview
-    BlockingCollection<float[]> dataItems = new BlockingCollection<float[]>();
+    var dataItems = new BlockingCollection<float[]>();
 
     var MyCallback = (IntPtr samples, int n) =>
     {
@@ -193,9 +188,9 @@ to download more models.
       return 1;
     };
 
-    bool playFinished = false;
+    var playFinished = false;
 
-    float[] lastSampleArray = null;
+    float[]? lastSampleArray = null;
     int lastIndex = 0; // not played
 
     PortAudioSharp.Stream.Callback playCallback = (IntPtr input, IntPtr output,
@@ -270,10 +265,10 @@ to download more models.
 
     stream.Start();
 
-    OfflineTtsCallback callback = new OfflineTtsCallback(MyCallback);
+    var callback = new OfflineTtsCallback(MyCallback);
 
-    OfflineTtsGeneratedAudio audio = tts.GenerateWithCallback(options.Text, speed, sid, callback);
-    bool ok = audio.SaveToWaveFile(options.OutputFilename);
+    var audio = tts.GenerateWithCallback(options.Text, speed, sid, callback);
+    var ok = audio.SaveToWaveFile(options.OutputFilename);
 
     if (ok)
     {

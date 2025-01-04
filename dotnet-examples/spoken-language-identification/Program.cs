@@ -15,12 +15,9 @@
 // dotnet run
 
 using SherpaOnnx;
-using System.Collections.Generic;
-using System;
 
 class SpokenLanguageIdentificationDemo
 {
-
   static void Main(string[] args)
   {
     var config = new SpokenLanguageIdentificationConfig();
@@ -30,7 +27,7 @@ class SpokenLanguageIdentificationDemo
     var slid = new SpokenLanguageIdentification(config);
     var filename = "./sherpa-onnx-whisper-tiny/test_wavs/0.wav";
 
-    WaveReader waveReader = new WaveReader(filename);
+    var waveReader = new WaveReader(filename);
 
     var s = slid.CreateStream();
     s.AcceptWaveform(waveReader.SampleRate, waveReader.Samples);
