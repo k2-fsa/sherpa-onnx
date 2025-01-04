@@ -2,7 +2,7 @@
 
 cd dotnet-examples/
 
-cd ../offline-tts
+cd ./offline-tts
 ./run-matcha-zh.sh
 ./run-matcha-en.sh
 ./run-aishell3.sh
