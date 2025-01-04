@@ -47,7 +47,10 @@ jobs:
         with:
           fetch-depth: 0
 
-
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-dotnet-release-shared
 
       - name: Build sherpa-onnx
         shell: bash
@@ -113,11 +116,6 @@ jobs:
         shell: bash
         run: |
           df -h
-
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ matrix.os }}-dotnet-release-shared
 
       - name: Free space
         shell: bash
