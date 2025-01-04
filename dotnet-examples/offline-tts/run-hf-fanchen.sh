@@ -8,8 +8,8 @@ fi
 
 dotnet run \
   --vits-model=./vits-zh-hf-fanchen-C/vits-zh-hf-fanchen-C.onnx \
-  --vits-tokens=./vits-zh-hf-fanchen-C/tokens.txt \
-  --vits-lexicon=./vits-zh-hf-fanchen-C/lexicon.txt \
+  --tokens=./vits-zh-hf-fanchen-C/tokens.txt \
+  --lexicon=./vits-zh-hf-fanchen-C/lexicon.txt \
   --tts-rule-fsts=./vits-zh-hf-fanchen-C/phone.fst,./vits-zh-hf-fanchen-C/date.fst,./vits-zh-hf-fanchen-C/number.fst \
   --vits-dict-dir=./vits-zh-hf-fanchen-C/dict \
   --sid=100 \

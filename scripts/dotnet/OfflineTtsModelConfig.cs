@@ -11,12 +11,14 @@ namespace SherpaOnnx
         public OfflineTtsModelConfig()
         {
             Vits = new OfflineTtsVitsModelConfig();
+            Matcha = new OfflineTtsMatchaModelConfig();
             NumThreads = 1;
             Debug = 0;
             Provider = "cpu";
         }
 
         public OfflineTtsVitsModelConfig Vits;
+        public OfflineTtsMatchaModelConfig Matcha;
         public int NumThreads;
         public int Debug;
         [MarshalAs(UnmanagedType.LPStr)]

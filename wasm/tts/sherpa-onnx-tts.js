@@ -8,6 +8,10 @@ function freeConfig(config, Module) {
     freeConfig(config.config, Module)
   }
 
+  if ('config2' in config) {
+    freeConfig(config.config2, Module)
+  }
+
   Module._free(config.ptr);
 }
 
@@ -66,11 +70,76 @@ function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
   }
 }
 
+function initSherpaOnnxOfflineTtsMatchaModelConfig(config, Module) {
+  const acousticModelLen = Module.lengthBytesUTF8(config.acousticModel) + 1;
+  const vocoderLen = Module.lengthBytesUTF8(config.vocoder) + 1;
+  const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
+  const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
+  const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
+  const dictDirLen = Module.lengthBytesUTF8(config.dictDir || '') + 1;
+
+  const n = acousticModelLen + vocoderLen + lexiconLen + tokensLen +
+      dataDirLen + dictDirLen;
+
+  const buffer = Module._malloc(n);
+
+  const len = 8 * 4;
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(
+      config.acousticModel || '', buffer + offset, acousticModelLen);
+  offset += acousticModelLen;
+
+  Module.stringToUTF8(config.vocoder || '', buffer + offset, vocoderLen);
+  offset += vocoderLen;
+
+  Module.stringToUTF8(config.lexicon || '', buffer + offset, lexiconLen);
+  offset += lexiconLen;
+
+  Module.stringToUTF8(config.tokens || '', buffer + offset, tokensLen);
+  offset += tokensLen;
+
+  Module.stringToUTF8(config.dataDir || '', buffer + offset, dataDirLen);
+  offset += dataDirLen;
+
+  Module.stringToUTF8(config.dictDir || '', buffer + offset, dictDirLen);
+  offset += dictDirLen;
+
+  offset = 0;
+  Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += acousticModelLen;
+
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += vocoderLen;
+
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
+  offset += lexiconLen;
+
+  Module.setValue(ptr + 12, buffer + offset, 'i8*');
+  offset += tokensLen;
+
+  Module.setValue(ptr + 16, buffer + offset, 'i8*');
+  offset += dataDirLen;
+
+  Module.setValue(ptr + 20, config.noiseScale || 0.667, 'float');
+  Module.setValue(ptr + 24, config.lengthScale || 1.0, 'float');
+  Module.setValue(ptr + 28, buffer + offset, 'i8*');
+  offset += dictDirLen;
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
 function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   const vitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig(
       config.offlineTtsVitsModelConfig, Module);
 
-  const len = vitsModelConfig.len + 3 * 4;
+  const matchaModelConfig = initSherpaOnnxOfflineTtsMatchaModelConfig(
+      config.offlineTtsMatchaModelConfig, Module);
+
+  const len = vitsModelConfig.len + matchaModelConfig.len + 3 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -87,9 +156,14 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   const buffer = Module._malloc(providerLen);
   Module.stringToUTF8(config.provider, buffer, providerLen);
   Module.setValue(ptr + offset, buffer, 'i8*');
+  offset += 4;
+
+  Module._CopyHeap(matchaModelConfig.ptr, matchaModelConfig.len, ptr + offset);
+  offset += matchaModelConfig.len;
 
   return {
     buffer: buffer, ptr: ptr, len: len, config: vitsModelConfig,
+        config2: matchaModelConfig
   }
 }
 
@@ -195,12 +269,26 @@ function createOfflineTts(Module, myConfig) {
     noiseScaleW: 0.8,
     lengthScale: 1.0,
   };
+
+  const offlineTtsMatchaModelConfig = {
+    acousticModel: '',
+    vocoder: '',
+    lexicon: '',
+    tokens: '',
+    dataDir: '',
+    dictDir: '',
+    noiseScale: 0.667,
+    lengthScale: 1.0,
+  };
+
   const offlineTtsModelConfig = {
     offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
+    offlineTtsMatchaModelConfig: offlineTtsMatchaModelConfig,
     numThreads: 1,
     debug: 1,
     provider: 'cpu',
   };
+
   let offlineTtsConfig = {
     offlineTtsModelConfig: offlineTtsModelConfig,
     ruleFsts: '',

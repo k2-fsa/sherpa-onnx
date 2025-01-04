@@ -77,6 +77,8 @@ cd ../spoken-language-identification
 rm -rf sherpa-onnx-*
 
 cd ../offline-tts
+./run-matcha-zh.sh
+./run-matcha-en.sh
 ./run-aishell3.sh
 ./run-piper.sh
 ./run-hf-fanchen.sh

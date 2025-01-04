@@ -8,8 +8,8 @@ fi
 
 dotnet run \
   --vits-model=./vits-icefall-zh-aishell3/model.onnx \
-  --vits-tokens=./vits-icefall-zh-aishell3/tokens.txt \
-  --vits-lexicon=./vits-icefall-zh-aishell3/lexicon.txt \
+  --tokens=./vits-icefall-zh-aishell3/tokens.txt \
+  --lexicon=./vits-icefall-zh-aishell3/lexicon.txt \
   --tts-rule-fsts=./vits-icefall-zh-aishell3/phone.fst,./vits-icefall-zh-aishell3/date.fst,./vits-icefall-zh-aishell3/number.fst \
   --tts-rule-fars=./vits-icefall-zh-aishell3/rule.far \
   --sid=66 \

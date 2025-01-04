@@ -14,8 +14,10 @@
 extern "C" {
 
 static_assert(sizeof(SherpaOnnxOfflineTtsVitsModelConfig) == 8 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
-                  sizeof(SherpaOnnxOfflineTtsVitsModelConfig) + 3 * 4,
+                  sizeof(SherpaOnnxOfflineTtsVitsModelConfig) +
+                      sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) + 3 * 4,
               "");
 static_assert(sizeof(SherpaOnnxOfflineTtsConfig) ==
                   sizeof(SherpaOnnxOfflineTtsModelConfig) + 3 * 4,
@@ -24,6 +26,7 @@ static_assert(sizeof(SherpaOnnxOfflineTtsConfig) ==
 void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   auto tts_model_config = &tts_config->model;
   auto vits_model_config = &tts_model_config->vits;
+  auto matcha_model_config = &tts_model_config->matcha;
   fprintf(stdout, "----------vits model config----------\n");
   fprintf(stdout, "model: %s\n", vits_model_config->model);
   fprintf(stdout, "lexicon: %s\n", vits_model_config->lexicon);
@@ -33,6 +36,16 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "noise scale w: %.3f\n", vits_model_config->noise_scale_w);
   fprintf(stdout, "length scale: %.3f\n", vits_model_config->length_scale);
   fprintf(stdout, "dict_dir: %s\n", vits_model_config->dict_dir);
+
+  fprintf(stdout, "----------matcha model config----------\n");
+  fprintf(stdout, "acoustic_model: %s\n", matcha_model_config->acoustic_model);
+  fprintf(stdout, "vocoder: %s\n", matcha_model_config->vocoder);
+  fprintf(stdout, "lexicon: %s\n", matcha_model_config->lexicon);
+  fprintf(stdout, "tokens: %s\n", matcha_model_config->tokens);
+  fprintf(stdout, "data_dir: %s\n", matcha_model_config->data_dir);
+  fprintf(stdout, "noise scale: %.3f\n", matcha_model_config->noise_scale);
+  fprintf(stdout, "length scale: %.3f\n", matcha_model_config->length_scale);
+  fprintf(stdout, "dict_dir: %s\n", matcha_model_config->dict_dir);
 
   fprintf(stdout, "----------tts model config----------\n");
   fprintf(stdout, "num threads: %d\n", tts_model_config->num_threads);
