@@ -13,8 +13,6 @@
 // dotnet run
 
 using SherpaOnnx;
-using System.Collections.Generic;
-using System;
 
 class KeywordSpotterDemo
 {
@@ -38,11 +36,11 @@ class KeywordSpotterDemo
 
     var filename = "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/test_wavs/3.wav";
 
-    WaveReader waveReader = new WaveReader(filename);
+    var waveReader = new WaveReader(filename);
 
     Console.WriteLine("----------Use pre-defined keywords----------");
 
-    OnlineStream s = kws.CreateStream();
+    var s = kws.CreateStream();
     s.AcceptWaveform(waveReader.SampleRate, waveReader.Samples);
 
     float[] tailPadding = new float[(int)(waveReader.SampleRate * 0.3)];
@@ -53,7 +51,7 @@ class KeywordSpotterDemo
     {
       kws.Decode(s);
       var result = kws.GetResult(s);
-      if (result.Keyword != "")
+      if (result.Keyword != string.Empty)
       {
         Console.WriteLine("Detected: {0}", result.Keyword);
       }
@@ -70,7 +68,7 @@ class KeywordSpotterDemo
     {
       kws.Decode(s);
       var result = kws.GetResult(s);
-      if (result.Keyword != "")
+      if (result.Keyword != string.Empty)
       {
         Console.WriteLine("Detected: {0}", result.Keyword);
       }
@@ -89,7 +87,7 @@ class KeywordSpotterDemo
     {
       kws.Decode(s);
       var result = kws.GetResult(s);
-      if (result.Keyword != "")
+      if (result.Keyword != string.Empty)
       {
         Console.WriteLine("Detected: {0}", result.Keyword);
       }

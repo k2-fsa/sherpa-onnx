@@ -12,8 +12,6 @@
 // dotnet run
 
 using SherpaOnnx;
-using System.Collections.Generic;
-using System;
 
 class OfflinePunctuationDemo
 {
@@ -25,14 +23,14 @@ class OfflinePunctuationDemo
     config.Model.NumThreads = 1;
     var punct = new OfflinePunctuation(config);
 
-    string[] textList = new string[] {
+    var textList = new string[] {
         "这是一个测试你好吗How are you我很好thank you are you ok谢谢你",
         "我们都是木头人不会说话不会动",
         "The African blogosphere is rapidly expanding bringing more voices online in the form of commentaries opinions analyses rants and poetry",
     };
 
     Console.WriteLine("---------");
-    foreach (string text in textList)
+    foreach (var text in textList)
     {
       string textWithPunct = punct.AddPunct(text);
       Console.WriteLine("Input text: {0}", text);

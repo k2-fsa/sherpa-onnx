@@ -12,12 +12,9 @@
 //
 // dotnet run
 
-using SherpaOnnx;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System;
-
 using PortAudioSharp;
+using SherpaOnnx;
+using System.Runtime.InteropServices;
 
 class KeywordSpotterDemo
 {
@@ -41,11 +38,11 @@ class KeywordSpotterDemo
 
     var filename = "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/test_wavs/3.wav";
 
-    WaveReader waveReader = new WaveReader(filename);
+    var waveReader = new WaveReader(filename);
 
     Console.WriteLine("----------Use pre-defined keywords----------");
 
-    OnlineStream s = kws.CreateStream();
+    var s = kws.CreateStream();
 
     Console.WriteLine(PortAudio.VersionInfo.versionText);
     PortAudio.Initialize();
@@ -54,7 +51,7 @@ class KeywordSpotterDemo
     for (int i = 0; i != PortAudio.DeviceCount; ++i)
     {
       Console.WriteLine($" Device {i}");
-      DeviceInfo deviceInfo = PortAudio.GetDeviceInfo(i);
+      var deviceInfo = PortAudio.GetDeviceInfo(i);
       Console.WriteLine($"   Name: {deviceInfo.name}");
       Console.WriteLine($"   Max input channels: {deviceInfo.maxInputChannels}");
       Console.WriteLine($"   Default sample rate: {deviceInfo.defaultSampleRate}");
@@ -66,12 +63,12 @@ class KeywordSpotterDemo
       Environment.Exit(1);
     }
 
-    DeviceInfo info = PortAudio.GetDeviceInfo(deviceIndex);
+    var info = PortAudio.GetDeviceInfo(deviceIndex);
 
     Console.WriteLine();
     Console.WriteLine($"Use default device {deviceIndex} ({info.name})");
 
-    StreamParameters param = new StreamParameters();
+    var param = new StreamParameters();
     param.device = deviceIndex;
     param.channelCount = 1;
     param.sampleFormat = SampleFormat.Float32;
@@ -79,21 +76,21 @@ class KeywordSpotterDemo
     param.hostApiSpecificStreamInfo = IntPtr.Zero;
 
     PortAudioSharp.Stream.Callback callback = (IntPtr input, IntPtr output,
-        UInt32 frameCount,
+        uint frameCount,
         ref StreamCallbackTimeInfo timeInfo,
         StreamCallbackFlags statusFlags,
         IntPtr userData
         ) =>
     {
-      float[] samples = new float[frameCount];
-      Marshal.Copy(input, samples, 0, (Int32)frameCount);
+      var samples = new float[frameCount];
+      Marshal.Copy(input, samples, 0, (int)frameCount);
 
       s.AcceptWaveform(config.FeatConfig.SampleRate, samples);
 
       return StreamCallbackResult.Continue;
     };
 
-    PortAudioSharp.Stream stream = new PortAudioSharp.Stream(inParams: param, outParams: null, sampleRate: config.FeatConfig.SampleRate,
+    var stream = new PortAudioSharp.Stream(inParams: param, outParams: null, sampleRate: config.FeatConfig.SampleRate,
         framesPerBuffer: 0,
         streamFlags: StreamFlags.ClipOff,
         callback: callback,
@@ -113,15 +110,13 @@ class KeywordSpotterDemo
       }
 
       var result = kws.GetResult(s);
-      if (result.Keyword != "")
+      if (result.Keyword != string.Empty)
       {
         Console.WriteLine("Detected: {0}", result.Keyword);
       }
 
       Thread.Sleep(200); // ms
     }
-
-    PortAudio.Terminate();
   }
 }
 

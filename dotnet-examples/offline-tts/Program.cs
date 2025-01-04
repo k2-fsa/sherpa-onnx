@@ -6,28 +6,25 @@
 // and
 // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 // to download pre-trained models
-using CommandLine.Text;
 using CommandLine;
+using CommandLine.Text;
 using SherpaOnnx;
-using System.Collections.Generic;
-using System;
 
 class OfflineTtsDemo
 {
   class Options
   {
-
     [Option("tts-rule-fsts", Required = false, Default = "", HelpText = "path to rule.fst")]
-    public string RuleFsts { get; set; } = "";
+    public string RuleFsts { get; set; } = string.Empty;
 
     [Option("tts-rule-fars", Required = false, Default = "", HelpText = "path to rule.far")]
-    public string RuleFars { get; set; } = "";
+    public string RuleFars { get; set; } = string.Empty;
 
     [Option("vits-dict-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for jieba.")]
-    public string DictDir { get; set; } = "";
+    public string DictDir { get; set; } = string.Empty;
 
     [Option("vits-data-dir", Required = false, Default = "", HelpText = "Path to the directory containing dict for espeak-ng.")]
-    public string DataDir { get; set; } = "";
+    public string DataDir { get; set; } = string.Empty;
 
     [Option("vits-length-scale", Required = false, Default = 1, HelpText = "speech speed. Larger->Slower; Smaller->faster")]
     public float LengthScale { get; set; } = 1;
@@ -39,10 +36,10 @@ class OfflineTtsDemo
     public float NoiseScaleW { get; set; } = 0.8F;
 
     [Option("vits-lexicon", Required = false, Default = "", HelpText = "Path to lexicon.txt")]
-    public string Lexicon { get; set; } = "";
+    public string Lexicon { get; set; } = string.Empty;
 
     [Option("vits-tokens", Required = false, Default = "", HelpText = "Path to tokens.txt")]
-    public string Tokens { get; set; } = "";
+    public string Tokens { get; set; } = string.Empty;
 
     [Option("tts-max-num-sentences", Required = false, Default = 1, HelpText = "Maximum number of sentences that we process at a time.")]
     public int MaxNumSentences { get; set; } = 1;
@@ -51,13 +48,13 @@ class OfflineTtsDemo
     public int Debug { get; set; } = 0;
 
     [Option("vits-model", Required = true, HelpText = "Path to VITS model")]
-    public string Model { get; set; } = "";
+    public string Model { get; set; } = string.Empty;
 
     [Option("sid", Required = false, Default = 0, HelpText = "Speaker ID")]
     public int SpeakerId { get; set; } = 0;
 
     [Option("text", Required = true, HelpText = "Text to synthesize")]
-    public string Text { get; set; } = "";
+    public string Text { get; set; } = string.Empty;
 
     [Option("output-filename", Required = true, Default = "./generated.wav", HelpText = "Path to save the generated audio")]
     public string OutputFilename { get; set; } = "./generated.wav";
@@ -65,7 +62,7 @@ class OfflineTtsDemo
 
   static void Main(string[] args)
   {
-    var parser = new CommandLine.Parser(with => with.HelpWriter = null);
+    var parser = new Parser(with => with.HelpWriter = null);
     var parserResult = parser.ParseArguments<Options>(args);
 
     parserResult
@@ -75,7 +72,7 @@ class OfflineTtsDemo
 
   private static void DisplayHelp<T>(ParserResult<T> result, IEnumerable<Error> errs)
   {
-    string usage = @"
+    var usage = @"
 # vits-aishell3
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
@@ -122,7 +119,7 @@ to download more models.
 
   private static void Run(Options options)
   {
-    OfflineTtsConfig config = new OfflineTtsConfig();
+    var config = new OfflineTtsConfig();
     config.Model.Vits.Model = options.Model;
     config.Model.Vits.Lexicon = options.Lexicon;
     config.Model.Vits.Tokens = options.Tokens;
@@ -138,11 +135,11 @@ to download more models.
     config.RuleFars = options.RuleFars;
     config.MaxNumSentences = options.MaxNumSentences;
 
-    OfflineTts tts = new OfflineTts(config);
-    float speed = 1.0f / options.LengthScale;
-    int sid = options.SpeakerId;
-    OfflineTtsGeneratedAudio audio = tts.Generate(options.Text, speed, sid);
-    bool ok = audio.SaveToWaveFile(options.OutputFilename);
+    var tts = new OfflineTts(config);
+    var speed = 1.0f / options.LengthScale;
+    var sid = options.SpeakerId;
+    var audio = tts.Generate(options.Text, speed, sid);
+    var ok = audio.SaveToWaveFile(options.OutputFilename);
 
     if (ok)
     {
