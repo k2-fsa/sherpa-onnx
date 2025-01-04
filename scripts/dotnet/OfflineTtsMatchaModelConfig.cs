@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 namespace SherpaOnnx
 {
     [StructLayout(LayoutKind.Sequential)]
-    public struct OfflineTtsVitsModelConfig
+    public struct OfflineTtsMatchaModelConfig
     {
-        public OfflineTtsVitsModelConfig()
+        public OfflineTtsMatchaModelConfig()
         {
             AcousticModel = "";
             Vocoder = "";
