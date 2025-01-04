@@ -170,6 +170,16 @@ to download more models.
     config.Model.Vits.NoiseScale = options.NoiseScale;
     config.Model.Vits.NoiseScaleW = options.NoiseScaleW;
     config.Model.Vits.LengthScale = options.LengthScale;
+
+    config.Model.Matcha.AcousticModel = options.AcousticModel;
+    config.Model.Matcha.Vocoder = options.Vocoder;
+    config.Model.Matcha.Lexicon = options.Lexicon;
+    config.Model.Matcha.Tokens = options.Tokens;
+    config.Model.Matcha.DataDir = options.DataDir;
+    config.Model.Matcha.DictDir = options.DictDir;
+    config.Model.Matcha.NoiseScale = options.NoiseScale;
+    config.Model.Matcha.LengthScale = options.LengthScale;
+
     config.Model.NumThreads = 1;
     config.Model.Debug = options.Debug;
     config.Model.Provider = "cpu";
