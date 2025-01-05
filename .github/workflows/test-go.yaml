@@ -226,6 +226,15 @@ jobs:
           go build
           ls -lh
 
+          echo "Test matcha zh"
+          ./run-matcha-zh.sh
+          rm -rf matcha-icefall-*
+
+          echo "Test matcha en"
+          ./run-matcha-en.sh
+          rm -rf matcha-icefall-*
+          ls -lh *.wav
+
           echo "Test vits-ljs"
           ./run-vits-ljs.sh
           rm -rf vits-ljs
