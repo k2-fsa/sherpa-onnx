@@ -11,6 +11,7 @@ namespace SherpaOnnx
         public OfflineTtsModelConfig()
         {
             Vits = new OfflineTtsVitsModelConfig();
+            Matcha = new OfflineTtsMatchaModelConfig();
             NumThreads = 1;
             Debug = 0;
             Provider = "cpu";
@@ -21,5 +22,7 @@ namespace SherpaOnnx
         public int Debug;
         [MarshalAs(UnmanagedType.LPStr)]
         public string Provider;
+
+        public OfflineTtsMatchaModelConfig Matcha;
     }
 }

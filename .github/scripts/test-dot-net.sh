@@ -2,7 +2,27 @@
 
 cd dotnet-examples/
 
-cd ./offline-speaker-diarization
+cd ./offline-tts
+./run-matcha-zh.sh
+ls -lh *.wav
+./run-matcha-en.sh
+ls -lh *.wav
+./run-aishell3.sh
+ls -lh *.wav
+./run-piper.sh
+ls -lh *.wav
+./run-hf-fanchen.sh
+ls -lh *.wav
+ls -lh
+
+pushd ../..
+
+mkdir tts
+
+cp dotnet-examples/offline-tts/*.wav ./tts
+popd
+
+cd ../offline-speaker-diarization
 ./run.sh
 rm -rfv *.onnx
 rm -fv *.wav
@@ -76,14 +96,4 @@ cd ../spoken-language-identification
 ./run.sh
 rm -rf sherpa-onnx-*
 
-cd ../offline-tts
-./run-aishell3.sh
-./run-piper.sh
-./run-hf-fanchen.sh
-ls -lh
 
-cd ../..
-
-mkdir tts
-
-cp dotnet-examples/offline-tts/*.wav ./tts

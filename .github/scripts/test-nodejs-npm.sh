@@ -9,6 +9,48 @@ git status
 ls -lh
 ls -lh node_modules
 
+# offline tts
+#
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+tar xvf matcha-icefall-zh-baker.tar.bz2
+rm matcha-icefall-zh-baker.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+node ./test-offline-tts-matcha-zh.js
+
+rm -rf matcha-icefall-zh-baker
+rm hifigan_v2.onnx
+
+echo "---"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+node ./test-offline-tts-matcha-en.js
+
+rm -rf matcha-icefall-en_US-ljspeech
+rm hifigan_v2.onnx
+
+echo "---"
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+tar xf vits-piper-en_US-amy-low.tar.bz2
+node ./test-offline-tts-vits-en.js
+rm -rf vits-piper-en_US-amy-low*
+
+echo "---"
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+tar xvf vits-icefall-zh-aishell3.tar.bz2
+node ./test-offline-tts-vits-zh.js
+rm -rf vits-icefall-zh-aishell3*
+
+ls -lh *.wav
+
 echo '-----speaker diarization----------'
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
 tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
@@ -147,15 +189,3 @@ tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 node ./test-online-zipformer2-ctc-hlg.js
 rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18
-
-# offline tts
-
-curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-tar xf vits-piper-en_US-amy-low.tar.bz2
-node ./test-offline-tts-en.js
-rm -rf vits-piper-en_US-amy-low*
-
-curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
-tar xvf vits-icefall-zh-aishell3.tar.bz2
-node ./test-offline-tts-zh.js
-rm -rf vits-icefall-zh-aishell3*
