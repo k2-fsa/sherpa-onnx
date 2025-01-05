@@ -173,22 +173,55 @@ class OfflineTts(
 // to download models
 fun getOfflineTtsConfig(
     modelDir: String,
-    modelName: String,
+    modelName: String, // for VITS
+    acousticModelName: String, // for Matcha
+    vocoder: String, // for Matcha
     lexicon: String,
     dataDir: String,
     dictDir: String,
     ruleFsts: String,
     ruleFars: String
 ): OfflineTtsConfig {
+    if (modelName.isEmpty() && acousticModelName.isEmpty()) {
+        throw IllegalArgumentException("Please specify a TTS model")
+    }
+
+    if (modelName.isNotEmpty() && acousticModelName.isNotEmpty()) {
+        throw IllegalArgumentException("Please specify either a VITS or a Matcha model, but not both")
+    }
+
+    if (acousticModelName.isNotEmpty() && vocoder.isEmpty()) {
+        throw IllegalArgumentException("Please provide vocoder for Matcha TTS")
+    }
+    val vits = if (modelName.isNotEmpty()) {
+        OfflineTtsVitsModelConfig(
+            model = "$modelDir/$modelName",
+            lexicon = "$modelDir/$lexicon",
+            tokens = "$modelDir/tokens.txt",
+            dataDir = dataDir,
+            dictDir = dictDir,
+        )
+    } else {
+        OfflineTtsVitsModelConfig()
+    }
+
+    val matcha = if (acousticModelName.isNotEmpty()) {
+        OfflineTtsMatchaModelConfig(
+            acousticModel = "$modelDir/$acousticModelName",
+            vocoder = vocoder,
+            lexicon = "$modelDir/$lexicon",
+            tokens = "$modelDir/tokens.txt",
+            dictDir = dictDir,
+            dataDir = dataDir,
+        )
+    } else {
+        OfflineTtsMatchaModelConfig()
+    }
+
     return OfflineTtsConfig(
         model = OfflineTtsModelConfig(
-            vits = OfflineTtsVitsModelConfig(
-                model = "$modelDir/$modelName",
-                lexicon = "$modelDir/$lexicon",
-                tokens = "$modelDir/tokens.txt",
-                dataDir = dataDir,
-                dictDir = dictDir,
-            ),
+            vits = vits,
+            matcha = matcha,
             numThreads = 2,
             debug = true,
             provider = "cpu",
