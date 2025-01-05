@@ -350,7 +350,7 @@ node ./test_vad_asr_non_streaming_sense_voice_microphone.js
 ### Text-to-speech with MatchaTTS models (English TTS)
 ```bash
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
-tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+tar xf matcha-icefall-en_US-ljspeech.tar.bz2
 rm matcha-icefall-en_US-ljspeech.tar.bz2
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
