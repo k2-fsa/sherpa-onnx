@@ -18,10 +18,11 @@ namespace SherpaOnnx
         }
 
         public OfflineTtsVitsModelConfig Vits;
-        public OfflineTtsMatchaModelConfig Matcha;
         public int NumThreads;
         public int Debug;
         [MarshalAs(UnmanagedType.LPStr)]
         public string Provider;
+
+        public OfflineTtsMatchaModelConfig Matcha;
     }
 }
