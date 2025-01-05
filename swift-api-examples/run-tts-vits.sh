@@ -21,16 +21,16 @@ if [ ! -e ./tts ]; then
     -lc++ \
     -I ../build-swift-macos/install/include \
     -import-objc-header ./SherpaOnnx-Bridging-Header.h \
-    ./tts.swift  ./SherpaOnnx.swift \
+    ./tts-vits.swift  ./SherpaOnnx.swift \
     -L ../build-swift-macos/install/lib/ \
     -l sherpa-onnx \
     -l onnxruntime \
-    -o tts
+    -o tts-vits
 
-  strip tts
+  strip tts-vits
 else
-  echo "./tts exists - skip building"
+  echo "./tts-vits exists - skip building"
 fi
 
 export DYLD_LIBRARY_PATH=$PWD/../build-swift-macos/install/lib:$DYLD_LIBRARY_PATH
-./tts
+./tts-vits

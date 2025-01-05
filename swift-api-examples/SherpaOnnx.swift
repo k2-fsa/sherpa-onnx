@@ -719,9 +719,9 @@ class SherpaOnnxVoiceActivityDetectorWrapper {
 
 // offline tts
 func sherpaOnnxOfflineTtsVitsModelConfig(
-  model: String,
-  lexicon: String,
-  tokens: String,
+  model: String = "",
+  lexicon: String = "",
+  tokens: String = "",
   dataDir: String = "",
   noiseScale: Float = 0.667,
   noiseScaleW: Float = 0.8,
@@ -739,8 +739,30 @@ func sherpaOnnxOfflineTtsVitsModelConfig(
     dict_dir: toCPointer(dictDir))
 }
 
+func sherpaOnnxOfflineTtsMatchaModelConfig(
+  acousticModel: String = "",
+  vocoder: String = "",
+  lexicon: String = "",
+  tokens: String = "",
+  dataDir: String = "",
+  noiseScale: Float = 0.667,
+  lengthScale: Float = 1.0,
+  dictDir: String = ""
+) -> SherpaOnnxOfflineTtsMatchaModelConfig {
+  return SherpaOnnxOfflineTtsMatchaModelConfig(
+    acoustic_model: toCPointer(acousticModel),
+    vocoder: toCPointer(vocoder),
+    lexicon: toCPointer(lexicon),
+    tokens: toCPointer(tokens),
+    data_dir: toCPointer(dataDir),
+    noise_scale: noiseScale,
+    length_scale: lengthScale,
+    dict_dir: toCPointer(dictDir))
+}
+
 func sherpaOnnxOfflineTtsModelConfig(
-  vits: SherpaOnnxOfflineTtsVitsModelConfig,
+  vits: SherpaOnnxOfflineTtsVitsModelConfig = sherpaOnnxOfflineTtsVitsModelConfig(),
+  matcha: SherpaOnnxOfflineTtsMatchaModelConfig = sherpaOnnxOfflineTtsMatchaModelConfig(),
   numThreads: Int = 1,
   debug: Int = 0,
   provider: String = "cpu"
@@ -749,7 +771,8 @@ func sherpaOnnxOfflineTtsModelConfig(
     vits: vits,
     num_threads: Int32(numThreads),
     debug: Int32(debug),
-    provider: toCPointer(provider)
+    provider: toCPointer(provider),
+    matcha: matcha
   )
 }
 

@@ -2,27 +2,9 @@
 
 set -ex
 
-if [[ ! -f ../build/lib/libsherpa-onnx-jni.dylib  && ! -f ../build/lib/libsherpa-onnx-jni.so ]]; then
-  mkdir -p ../build
-  pushd ../build
-  cmake \
-    -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
-    -DSHERPA_ONNX_ENABLE_TESTS=OFF \
-    -DSHERPA_ONNX_ENABLE_CHECK=OFF \
-    -DBUILD_SHARED_LIBS=ON \
-    -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
-    -DSHERPA_ONNX_ENABLE_JNI=ON \
-    ..
-
-  make -j4
-  ls -lh lib
-  popd
-fi
-
-if [ ! -f ../sherpa-onnx/java-api/build/sherpa-onnx.jar ]; then
-  pushd ../sherpa-onnx/java-api
-  make
-  popd
+if [ ! -d ../build-swift-macos ]; then
+  echo "Please run ../build-swift-macos.sh first!"
+  exit 1
 fi
 
 # please visit
@@ -39,7 +21,22 @@ if [ ! -f ./hifigan_v2.onnx ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
 fi
 
-java \
-  -Djava.library.path=$PWD/../build/lib \
-  -cp ../sherpa-onnx/java-api/build/sherpa-onnx.jar \
-  NonStreamingTtsMatchaEn.java
+if [ ! -e ./tts ]; then
+  # Note: We use -lc++ to link against libc++ instead of libstdc++
+  swiftc \
+    -lc++ \
+    -I ../build-swift-macos/install/include \
+    -import-objc-header ./SherpaOnnx-Bridging-Header.h \
+    ./tts-matcha-en.swift  ./SherpaOnnx.swift \
+    -L ../build-swift-macos/install/lib/ \
+    -l sherpa-onnx \
+    -l onnxruntime \
+    -o tts-matcha-en
+
+  strip tts-matcha-en
+else
+  echo "./tts-matcha-en exists - skip building"
+fi
+
+export DYLD_LIBRARY_PATH=$PWD/../build-swift-macos/install/lib:$DYLD_LIBRARY_PATH
+./tts-matcha-en
