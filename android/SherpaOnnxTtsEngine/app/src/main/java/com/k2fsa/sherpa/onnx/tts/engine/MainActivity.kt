@@ -57,7 +57,7 @@ class MainActivity : ComponentActivity() {
                     color = MaterialTheme.colorScheme.background
                 ) {
                     Scaffold(topBar = {
-                        TopAppBar(title = { Text("Next-gen Kaldi: TTS") })
+                        TopAppBar(title = { Text("Next-gen Kaldi: TTS Engine") })
                     }) {
                         Box(modifier = Modifier.padding(it)) {
                             Column(modifier = Modifier.padding(16.dp)) {
@@ -65,8 +65,8 @@ class MainActivity : ComponentActivity() {
                                     Text("Speed " + String.format("%.1f", TtsEngine.speed))
                                     Slider(
                                         value = TtsEngine.speedState.value,
-                                        onValueChange = { 
-                                            TtsEngine.speed = it 
+                                        onValueChange = {
+                                            TtsEngine.speed = it
                                             preferenceHelper.setSpeed(it)
                                         },
                                         valueRange = 0.2F..3.0F,
@@ -138,7 +138,9 @@ class MainActivity : ComponentActivity() {
                                                 val filename =
                                                     application.filesDir.absolutePath + "/generated.wav"
                                                 val ok =
-                                                    audio.samples.isNotEmpty() && audio.save(filename)
+                                                    audio.samples.isNotEmpty() && audio.save(
+                                                        filename
+                                                    )
 
                                                 if (ok) {
                                                     stopMediaPlayer()

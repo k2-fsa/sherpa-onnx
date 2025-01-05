@@ -30,7 +30,9 @@ def get_args():
 @dataclass
 class TtsModel:
     model_dir: str
-    model_name: str = ""
+    model_name: str = ""  # for vits
+    acoustic_model_name: str = ""  # for matcha
+    vocoder: str = ""  # for matcha
     lang: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
     rule_fars: Optional[List[str]] = None
@@ -378,6 +380,35 @@ def get_vits_models() -> List[TtsModel]:
     return all_models
 
 
+def get_matcha_models() -> List[TtsModel]:
+    chinese_models = [
+        TtsModel(
+            model_dir="matcha-icefall-zh-baker",
+            acoustic_model_name="model-steps-3.onnx",
+            lang="zh",
+        )
+    ]
+    rule_fsts = ["phone.fst", "date.fst", "number.fst"]
+    for m in chinese_models:
+        s = [f"{m.model_dir}/{r}" for r in rule_fsts]
+        m.rule_fsts = ",".join(s)
+        m.dict_dir = m.model_dir + "/dict"
+        m.vocoder = "hifigan_v2.onnx"
+
+    english_models = [
+        TtsModel(
+            model_dir="matcha-icefall-en_US-ljspeech",
+            acoustic_model_name="model-steps-3.onnx",
+            lang="en",
+        )
+    ]
+    for m in english_models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.vocoder = "hifigan_v2.onnx"
+
+    return chinese_models + english_models
+
+
 def main():
     args = get_args()
     index = args.index
@@ -389,7 +420,10 @@ def main():
     all_model_list += get_piper_models()
     all_model_list += get_mimic3_models()
     all_model_list += get_coqui_models()
+    all_model_list += get_matcha_models()
+
     convert_lang_to_iso_639_3(all_model_list)
+    print(all_model_list)
 
     num_models = len(all_model_list)
 
