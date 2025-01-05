@@ -133,6 +133,33 @@ function initSherpaOnnxOfflineTtsMatchaModelConfig(config, Module) {
 }
 
 function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
+  if (!('offlineTtsVitsModelConfig' in config)) {
+    config.offlineTtsVitsModelConfig = {
+      model: '',
+      lexicon: '',
+      tokens: '',
+      noiseScale: 0.667,
+      noiseScaleW: 0.8,
+      lengthScale: 1.0,
+      dataDir: '',
+      dictDir: '',
+    };
+  }
+
+  if (!('offlineTtsMatchaModelConfig' in config)) {
+    config.offlineTtsMatchaModelConfig = {
+      acousticModel: '',
+      vocoder: '',
+      lexicon: '',
+      tokens: '',
+      noiseScale: 0.667,
+      lengthScale: 1.0,
+      dataDir: '',
+      dictDir: '',
+    };
+  }
+
+
   const vitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig(
       config.offlineTtsVitsModelConfig, Module);
 
