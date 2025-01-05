@@ -46,6 +46,10 @@ wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$mod
 tar xf $model_dir.tar.bz2
 rm $model_dir.tar.bz2
 
+{% if tts_model.vocoder %}
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/$vocoder
+{% endif %}
+
 popd
 # Now we are at the project root directory
 
@@ -122,6 +126,7 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
 done
 
 rm -rf ./android/SherpaOnnxTtsEngine/app/src/main/assets/$model_dir
+rm -fv ./android/SherpaOnnxTtsEngine/app/src/main/assets/*.onnx
 {% endfor %}
 
 git checkout .

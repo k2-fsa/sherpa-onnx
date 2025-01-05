@@ -420,8 +420,7 @@ def main():
     all_model_list += get_piper_models()
     all_model_list += get_mimic3_models()
     all_model_list += get_coqui_models()
-
-    all_model_list = get_matcha_models()
+    all_model_list += get_matcha_models()
 
     convert_lang_to_iso_639_3(all_model_list)
     print(all_model_list)
