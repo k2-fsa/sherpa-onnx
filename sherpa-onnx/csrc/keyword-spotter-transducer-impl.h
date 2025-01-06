@@ -195,8 +195,24 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     return s->GetNumProcessedFrames() + model_->ChunkSize() <
            s->NumFramesReady();
   }
+  void Reset(OnlineStream *s) const override { InitOnlineStream(s); }
 
   void DecodeStreams(OnlineStream **ss, int32_t n) const override {
+    for (int32_t i = 0; i < n; ++i) {
+      auto s = ss[i];
+      auto r = s->GetKeywordResult(true);
+      int32_t num_trailing_blanks = r.num_trailing_blanks;
+      // assume subsampling_factor is 4
+      // assume frameshift is 0.01 second
+      float trailing_slience = num_trailing_blanks * 4 * 0.01;
+
+      // it resets automatically after detecting 1.5 seconds of silence
+      float threshold = 1.5;
+      if (trailing_slience > threshold) {
+        Reset(s);
+      }
+    }
+
     int32_t chunk_size = model_->ChunkSize();
     int32_t chunk_shift = model_->ChunkShift();
 

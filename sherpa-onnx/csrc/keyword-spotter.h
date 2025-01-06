@@ -129,6 +129,9 @@ class KeywordSpotter {
    */
   bool IsReady(OnlineStream *s) const;
 
+  // Remember to call it after detecting a keyword
+  void Reset(OnlineStream *s) const;
+
   /** Decode a single stream. */
   void DecodeStream(OnlineStream *s) const {
     OnlineStream *ss[1] = {s};
