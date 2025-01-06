@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/pascal.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'pascal-api-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -17,7 +16,6 @@ on:
       - master
     paths:
       - '.github/workflows/pascal.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'pascal-api-examples/**'
       - 'sherpa-onnx/csrc/*'

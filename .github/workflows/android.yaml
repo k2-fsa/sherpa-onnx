@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/android.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
@@ -18,7 +17,6 @@ on:
       - master
     paths:
       - '.github/workflows/android.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'

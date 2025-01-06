@@ -1,3 +1,25 @@
+## 1.10.38
+
+* Fix initializing TTS in Python. (#1664)
+* Remove spaces after punctuations for TTS (#1666)
+* Add constructor fromPtr() for all flutter class with factory ctor. (#1667)
+* Add Kotlin API for Matcha-TTS models. (#1668)
+* Support Matcha-TTS models using espeak-ng (#1672)
+* Add Java API for Matcha-TTS models. (#1673)
+* Avoid adding tail padding for VAD in generate-subtitles.py (#1674)
+* Add C API for MatchaTTS models (#1675)
+* Add CXX API for MatchaTTS models (#1676)
+* Add JavaScript API (node-addon-api) for MatchaTTS models. (#1677)
+* Add HarmonyOS examples for MatchaTTS. (#1678)
+* Upgraded to .NET 8 and made code style a little more internally consistent. (#1680)
+* Update workflows to use .NET 8.0 also. (#1681)
+* Add C# and JavaScript (wasm) API for MatchaTTS models (#1682)
+* Add Android demo for MatchaTTS models. (#1683)
+* Add Swift API for MatchaTTS models. (#1684)
+* Add Go API for MatchaTTS models (#1685)
+* Add Pascal API for MatchaTTS models. (#1686)
+* Add Dart API for MatchaTTS models (#1687)
+
 ## 1.10.37
 
 * Add new tts models for Latvia and Persian+English (#1644)

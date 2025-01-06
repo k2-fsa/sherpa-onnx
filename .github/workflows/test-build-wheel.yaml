@@ -7,7 +7,6 @@ on:
     paths:
       - 'setup.py'
       - '.github/workflows/test-build-wheel.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/python/**'
@@ -17,7 +16,6 @@ on:
     paths:
       - 'setup.py'
       - '.github/workflows/test-build-wheel.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/python/**'

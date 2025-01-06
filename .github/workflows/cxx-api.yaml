@@ -7,7 +7,6 @@ on:
       - cxx-api-asr-non-streaming
     paths:
       - '.github/workflows/cxx-api.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -17,7 +16,6 @@ on:
       - master
     paths:
       - '.github/workflows/cxx-api.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'

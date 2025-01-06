@@ -7,7 +7,6 @@ on:
       - lazarus
     paths:
       - '.github/workflows/lazarus.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'lazarus-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -19,7 +18,6 @@ on:
       - master
     paths:
       - '.github/workflows/lazarus.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'lazarus-examples/**'
       - 'sherpa-onnx/csrc/*'

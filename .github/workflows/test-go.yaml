@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-go.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'go-api-examples/**'
@@ -16,7 +15,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-go.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'go-api-examples/**'

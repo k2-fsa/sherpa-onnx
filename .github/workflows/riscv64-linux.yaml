@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/riscv64-linux.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -19,7 +18,6 @@ on:
       - master
     paths:
       - '.github/workflows/riscv64-linux.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'toolchains/riscv64-linux-gnu.toolchain.cmake'

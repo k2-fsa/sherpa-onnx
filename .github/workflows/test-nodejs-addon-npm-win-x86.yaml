@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-nodejs-addon-npm-win-x86.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -20,7 +19,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-nodejs-addon-npm-win-x86.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
