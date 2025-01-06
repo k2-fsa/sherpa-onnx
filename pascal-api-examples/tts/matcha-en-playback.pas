@@ -1,5 +1,5 @@
-{ Copyright (c)  2024  Xiaomi Corporation }
-program piper_playback;
+{ Copyright (c)  2025  Xiaomi Corporation }
+program matcha_en_playback;
 {
 This file shows how to use the text to speech API of sherpa-onnx
 with Piper models.
@@ -114,9 +114,10 @@ function GetOfflineTts: TSherpaOnnxOfflineTts;
 var
   Config: TSherpaOnnxOfflineTtsConfig;
 begin
-  Config.Model.Vits.Model := './vits-piper-en_US-libritts_r-medium/en_US-libritts_r-medium.onnx';
-  Config.Model.Vits.Tokens := './vits-piper-en_US-libritts_r-medium/tokens.txt';
-  Config.Model.Vits.DataDir := './vits-piper-en_US-libritts_r-medium/espeak-ng-data';
+  Config.Model.Matcha.AcousticModel := './matcha-icefall-en_US-ljspeech/model-steps-3.onnx';
+  Config.Model.Matcha.Vocoder := './hifigan_v2.onnx';
+  Config.Model.Matcha.Tokens := './matcha-icefall-en_US-ljspeech/tokens.txt';
+  Config.Model.Matcha.DataDir := './matcha-icefall-en_US-ljspeech/espeak-ng-data';
   Config.Model.NumThreads := 1;
   Config.Model.Debug := False;
   Config.MaxNumSentences := 1;
@@ -204,13 +205,13 @@ begin
 
   WriteLn('There are ', Tts.GetNumSpeakers, ' speakers');
 
-  Text := 'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
+  Text := 'Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone.';
 
   Audio :=  Tts.Generate(Text, SpeakerId, Speed,
     PSherpaOnnxGeneratedAudioCallbackWithArg(@GenerateCallback), nil);
   FinishedGeneration := True;
-  SherpaOnnxWriteWave('./libritts_r-generated.wav', Audio.Samples, Audio.SampleRate);
-  WriteLn('Saved to ./libritts_r-generated.wav');
+  SherpaOnnxWriteWave('./matcha-zh-playback.wav', Audio.Samples, Audio.SampleRate);
+  WriteLn('Saved to ./matcha-zh-playback.wav');
 
   while not FinishedPlaying do
     Pa_Sleep(100);  {sleep for 0.1 second }

@@ -152,6 +152,19 @@ jobs:
 
           ./run-piper.sh
           rm -rf vits-piper-*
+          rm piper
+          ls -lh
+          echo "---"
+
+          ./run-matcha-zh.sh
+          rm -rf matcha-icefall-*
+          rm matcha-zh
+          ls -lh
+          echo "---"
+
+          ./run-matcha-en.sh
+          rm -rf matcha-icefall-*
+          rm matcha-en
           ls -lh
           echo "---"
 
