@@ -62,11 +62,26 @@ type
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsVitsModelConfig);
   end;
 
+  TSherpaOnnxOfflineTtsMatchaModelConfig = record
+    AcousticModel: AnsiString;
+    Vocoder: AnsiString;
+    Lexicon: AnsiString;
+    Tokens: AnsiString;
+    DataDir: AnsiString;
+    NoiseScale: Single;
+    LengthScale: Single;
+    DictDir: AnsiString;
+
+    function ToString: AnsiString;
+    class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsMatchaModelConfig);
+  end;
+
   TSherpaOnnxOfflineTtsModelConfig = record
     Vits: TSherpaOnnxOfflineTtsVitsModelConfig;
     NumThreads: Integer;
     Debug: Boolean;
     Provider: AnsiString;
+    Matcha: TSherpaOnnxOfflineTtsMatchaModelConfig;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsModelConfig);
@@ -713,11 +728,23 @@ type
     DictDir: PAnsiChar;
   end;
 
+  SherpaOnnxOfflineTtsMatchaModelConfig = record
+    AcousticModel: PAnsiChar;
+    Vocoder: PAnsiChar;
+    Lexicon: PAnsiChar;
+    Tokens: PAnsiChar;
+    DataDir: PAnsiChar;
+    NoiseScale: cfloat;
+    LengthScale: cfloat;
+    DictDir: PAnsiChar;
+  end;
+
   SherpaOnnxOfflineTtsModelConfig = record
     Vits: SherpaOnnxOfflineTtsVitsModelConfig;
     NumThreads: cint32;
     Debug: cint32;
     Provider: PAnsiChar;
+    Matcha: SherpaOnnxOfflineTtsMatchaModelConfig;
   end;
 
   SherpaOnnxOfflineTtsConfig = record
@@ -1853,15 +1880,40 @@ begin
   Dest.LengthScale := 1.0;
 end;
 
+function TSherpaOnnxOfflineTtsMatchaModelConfig.ToString: AnsiString;
+begin
+  Result := Format('TSherpaOnnxOfflineTtsMatchaModelConfig(' +
+    'AcousticModel := %s, ' +
+    'Vocoder := %s, ' +
+    'Lexicon := %s, ' +
+    'Tokens := %s, ' +
+    'DataDir := %s, ' +
+    'NoiseScale := %.2f, ' +
+    'LengthScale := %.2f, ' +
+    'DictDir := %s' +
+    ')',
+    [Self.AcousticModel, Self.Vocoder, Self.Lexicon, Self.Tokens,
+     Self.DataDir, Self.NoiseScale, Self.LengthScale, Self.DictDir
+    ]);
+end;
+
+class operator TSherpaOnnxOfflineTtsMatchaModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsMatchaModelConfig);
+begin
+  Dest.NoiseScale := 0.667;
+  Dest.LengthScale := 1.0;
+end;
+
 function TSherpaOnnxOfflineTtsModelConfig.ToString: AnsiString;
 begin
   Result := Format('TSherpaOnnxOfflineTtsModelConfig(' +
     'Vits := %s, ' +
     'NumThreads := %d, ' +
     'Debug := %s, ' +
-    'Provider := %s' +
+    'Provider := %s, ' +
+    'Matcha := %s' +
     ')',
-    [Self.Vits.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider
+    [Self.Vits.ToString, Self.NumThreads, Self.Debug.ToString, Self.Provider,
+     Self.Matcha.ToString
     ]);
 end;
 
@@ -1904,6 +1956,15 @@ begin
   C.Model.Vits.NoiseScaleW := Config.Model.Vits.NoiseScaleW;
   C.Model.Vits.LengthScale := Config.Model.Vits.LengthScale;
   C.Model.Vits.DictDir := PAnsiChar(Config.Model.Vits.DictDir);
+
+  C.Model.Matcha.AcousticModel := PAnsiChar(Config.Model.Matcha.AcousticModel);
+  C.Model.Matcha.Vocoder := PAnsiChar(Config.Model.Matcha.Vocoder);
+  C.Model.Matcha.Lexicon := PAnsiChar(Config.Model.Matcha.Lexicon);
+  C.Model.Matcha.Tokens := PAnsiChar(Config.Model.Matcha.Tokens);
+  C.Model.Matcha.DataDir := PAnsiChar(Config.Model.Matcha.DataDir);
+  C.Model.Matcha.NoiseScale := Config.Model.Matcha.NoiseScale;
+  C.Model.Matcha.LengthScale := Config.Model.Matcha.LengthScale;
+  C.Model.Matcha.DictDir := PAnsiChar(Config.Model.Matcha.DictDir);
 
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Provider := PAnsiChar(Config.Model.Provider);

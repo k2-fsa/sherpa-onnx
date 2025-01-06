@@ -1,5 +1,5 @@
-{ Copyright (c)  2024  Xiaomi Corporation }
-program piper_playback;
+{ Copyright (c)  2025  Xiaomi Corporation }
+program matcha_zh_playback;
 {
 This file shows how to use the text to speech API of sherpa-onnx
 with Piper models.
@@ -114,11 +114,14 @@ function GetOfflineTts: TSherpaOnnxOfflineTts;
 var
   Config: TSherpaOnnxOfflineTtsConfig;
 begin
-  Config.Model.Vits.Model := './vits-piper-en_US-libritts_r-medium/en_US-libritts_r-medium.onnx';
-  Config.Model.Vits.Tokens := './vits-piper-en_US-libritts_r-medium/tokens.txt';
-  Config.Model.Vits.DataDir := './vits-piper-en_US-libritts_r-medium/espeak-ng-data';
+  Config.Model.Matcha.AcousticModel := './matcha-icefall-zh-baker/model-steps-3.onnx';
+  Config.Model.Matcha.Vocoder := './hifigan_v2.onnx';
+  Config.Model.Matcha.Lexicon := './matcha-icefall-zh-baker/lexicon.txt';
+  Config.Model.Matcha.Tokens := './matcha-icefall-zh-baker/tokens.txt';
+  Config.Model.Matcha.DictDir := './matcha-icefall-zh-baker/dict';
   Config.Model.NumThreads := 1;
   Config.Model.Debug := False;
+  Config.RuleFsts := './matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst';
   Config.MaxNumSentences := 1;
 
   Result := TSherpaOnnxOfflineTts.Create(Config);
@@ -204,13 +207,13 @@ begin
 
   WriteLn('There are ', Tts.GetNumSpeakers, ' speakers');
 
-  Text := 'Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar.';
+  Text := '某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。';
 
   Audio :=  Tts.Generate(Text, SpeakerId, Speed,
     PSherpaOnnxGeneratedAudioCallbackWithArg(@GenerateCallback), nil);
   FinishedGeneration := True;
-  SherpaOnnxWriteWave('./libritts_r-generated.wav', Audio.Samples, Audio.SampleRate);
-  WriteLn('Saved to ./libritts_r-generated.wav');
+  SherpaOnnxWriteWave('./matcha-zh-playback.wav', Audio.Samples, Audio.SampleRate);
+  WriteLn('Saved to ./matcha-zh-playback.wav');
 
   while not FinishedPlaying do
     Pa_Sleep(100);  {sleep for 0.1 second }
