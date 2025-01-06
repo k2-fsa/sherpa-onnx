@@ -9,7 +9,6 @@ on:
     paths:
       - './build-swift-macos.sh'
       - '.github/workflows/swift.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'swift-api-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -22,7 +21,6 @@ on:
     paths:
       - './build-swift-macos.sh'
       - '.github/workflows/swift.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'swift-api-examples/**'
       - 'sherpa-onnx/csrc/*'

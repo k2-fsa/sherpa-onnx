@@ -5,7 +5,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-piper-phonemize.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
   pull_request:
@@ -13,7 +12,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-piper-phonemize.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
 

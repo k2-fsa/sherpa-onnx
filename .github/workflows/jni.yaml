@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/jni.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'kotlin-api-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -16,7 +15,6 @@ on:
       - master
     paths:
       - '.github/workflows/jni.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'kotlin-api-examples/**'
       - 'sherpa-onnx/csrc/*'

@@ -20,7 +20,6 @@ on:
       - '.github/scripts/test-speaker-diarization.sh'
       - '.github/scripts/test-c-api.sh'
       - '.github/scripts/test-cxx-api.sh'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
   pull_request:
@@ -40,7 +39,6 @@ on:
       - '.github/scripts/test-speaker-diarization.sh'
       - '.github/scripts/test-c-api.sh'
       - '.github/scripts/test-cxx-api.sh'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
 

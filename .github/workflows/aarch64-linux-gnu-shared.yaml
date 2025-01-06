@@ -9,7 +9,6 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
       - '.github/workflows/aarch64-linux-gnu-shared.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -19,7 +18,6 @@ on:
       - master
     paths:
       - '.github/workflows/aarch64-linux-gnu-shared.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'

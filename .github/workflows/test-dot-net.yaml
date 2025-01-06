@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-dot-net.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'dotnet-examples/**'
@@ -17,7 +16,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-dot-net.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'dotnet-examples/**'

@@ -10,7 +10,6 @@ on:
     paths:
       - '.github/workflows/pkg-config.yaml'
       - '.github/scripts/test-offline-tts.sh'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -21,7 +20,6 @@ on:
     paths:
       - '.github/workflows/pkg-config.yaml'
       - '.github/scripts/test-offline-tts.sh'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'

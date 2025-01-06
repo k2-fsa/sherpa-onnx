@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-python-offline-websocket-server.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/python/**'
@@ -15,7 +14,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-python-offline-websocket-server.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/python/**'

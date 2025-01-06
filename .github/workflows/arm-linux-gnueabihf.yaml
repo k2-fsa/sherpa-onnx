@@ -7,7 +7,6 @@ on:
       - master
     paths:
       - '.github/workflows/arm-linux-gnueabihf.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -19,7 +18,6 @@ on:
       - master
     paths:
       - '.github/workflows/arm-linux-gnueabihf.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'

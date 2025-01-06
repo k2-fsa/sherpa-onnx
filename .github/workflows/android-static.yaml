@@ -9,7 +9,6 @@ on:
       - android-link-onnxruntime-statically
     paths:
       - '.github/workflows/android-static.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'
@@ -21,7 +20,6 @@ on:
       - master
     paths:
       - '.github/workflows/android-static.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/jni/*'

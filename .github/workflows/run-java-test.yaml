@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/run-java-test.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'java-api-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -17,7 +16,6 @@ on:
       - master
     paths:
       - '.github/workflows/run-java-test.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'java-api-examples/**'
       - 'sherpa-onnx/csrc/*'
