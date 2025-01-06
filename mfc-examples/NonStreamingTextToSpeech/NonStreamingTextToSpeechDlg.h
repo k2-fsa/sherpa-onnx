@@ -53,7 +53,7 @@ public:
 	CButton generate_btn_;
 	afx_msg void OnBnClickedOk();
 
-	SherpaOnnxOfflineTts *tts_ = nullptr;
+	const SherpaOnnxOfflineTts *tts_ = nullptr;
 	CEdit my_text_;
 	CEdit output_filename_;
 
