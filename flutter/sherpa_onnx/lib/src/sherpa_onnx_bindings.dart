@@ -131,6 +131,22 @@ final class SherpaOnnxOfflineTtsVitsModelConfig extends Struct {
   external Pointer<Utf8> dictDir;
 }
 
+final class SherpaOnnxOfflineTtsMatchaModelConfig extends Struct {
+  external Pointer<Utf8> acousticModel;
+  external Pointer<Utf8> vocoder;
+  external Pointer<Utf8> lexicon;
+  external Pointer<Utf8> tokens;
+  external Pointer<Utf8> dataDir;
+
+  @Float()
+  external double noiseScale;
+
+  @Float()
+  external double lengthScale;
+
+  external Pointer<Utf8> dictDir;
+}
+
 final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external SherpaOnnxOfflineTtsVitsModelConfig vits;
   @Int32()
@@ -140,6 +156,7 @@ final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external int debug;
 
   external Pointer<Utf8> provider;
+  external SherpaOnnxOfflineTtsMatchaModelConfig matcha;
 }
 
 final class SherpaOnnxOfflineTtsConfig extends Struct {

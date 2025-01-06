@@ -8,9 +8,9 @@ import './sherpa_onnx_bindings.dart';
 
 class OfflineTtsVitsModelConfig {
   const OfflineTtsVitsModelConfig({
-    required this.model,
+    this.model = '',
     this.lexicon = '',
-    required this.tokens,
+    this.tokens = '',
     this.dataDir = '',
     this.noiseScale = 0.667,
     this.noiseScaleW = 0.8,
@@ -33,9 +33,37 @@ class OfflineTtsVitsModelConfig {
   final String dictDir;
 }
 
+class OfflineTtsMatchaModelConfig {
+  const OfflineTtsMatchaModelConfig({
+    this.acousticModel = '',
+    this.vocoder = '',
+    this.lexicon = '',
+    this.tokens = '',
+    this.dataDir = '',
+    this.noiseScale = 0.667,
+    this.lengthScale = 1.0,
+    this.dictDir = '',
+  });
+
+  @override
+  String toString() {
+    return 'OfflineTtsMatchaModelConfig(acousticModel: $acousticModel, vocoder: $vocoder, lexicon: $lexicon, tokens: $tokens, dataDir: $dataDir, noiseScale: $noiseScale, lengthScale: $lengthScale, dictDir: $dictDir)';
+  }
+
+  final String acousticModel;
+  final String vocoder;
+  final String lexicon;
+  final String tokens;
+  final String dataDir;
+  final double noiseScale;
+  final double lengthScale;
+  final String dictDir;
+}
+
 class OfflineTtsModelConfig {
   const OfflineTtsModelConfig({
-    required this.vits,
+    this.vits = const OfflineTtsVitsModelConfig(),
+    this.matcha = const OfflineTtsMatchaModelConfig(),
     this.numThreads = 1,
     this.debug = true,
     this.provider = 'cpu',
@@ -43,10 +71,11 @@ class OfflineTtsModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsModelConfig(vits: $vits, numThreads: $numThreads, debug: $debug, provider: $provider)';
+    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
 
   final OfflineTtsVitsModelConfig vits;
+  final OfflineTtsMatchaModelConfig matcha;
   final int numThreads;
   final bool debug;
   final String provider;
@@ -99,6 +128,16 @@ class OfflineTts {
     c.ref.model.vits.lengthScale = config.model.vits.lengthScale;
     c.ref.model.vits.dictDir = config.model.vits.dictDir.toNativeUtf8();
 
+    c.ref.model.matcha.acousticModel =
+        config.model.matcha.acousticModel.toNativeUtf8();
+    c.ref.model.matcha.vocoder = config.model.matcha.vocoder.toNativeUtf8();
+    c.ref.model.matcha.lexicon = config.model.matcha.lexicon.toNativeUtf8();
+    c.ref.model.matcha.tokens = config.model.matcha.tokens.toNativeUtf8();
+    c.ref.model.matcha.dataDir = config.model.matcha.dataDir.toNativeUtf8();
+    c.ref.model.matcha.noiseScale = config.model.matcha.noiseScale;
+    c.ref.model.matcha.lengthScale = config.model.matcha.lengthScale;
+    c.ref.model.matcha.dictDir = config.model.matcha.dictDir.toNativeUtf8();
+
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
@@ -112,6 +151,12 @@ class OfflineTts {
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.model.provider);
+    calloc.free(c.ref.model.matcha.dictDir);
+    calloc.free(c.ref.model.matcha.dataDir);
+    calloc.free(c.ref.model.matcha.tokens);
+    calloc.free(c.ref.model.matcha.lexicon);
+    calloc.free(c.ref.model.matcha.vocoder);
+    calloc.free(c.ref.model.matcha.acousticModel);
     calloc.free(c.ref.model.vits.dictDir);
     calloc.free(c.ref.model.vits.dataDir);
     calloc.free(c.ref.model.vits.tokens);

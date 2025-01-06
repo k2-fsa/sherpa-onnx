@@ -7,6 +7,7 @@ on:
 
 jobs:
   checksum:
+    if: github.repository_owner == 'k2-fsa'
     runs-on: macos-latest
     strategy:
       matrix:
