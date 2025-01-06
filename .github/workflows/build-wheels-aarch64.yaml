@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-20.04]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
         manylinux: [manylinux2014] #, manylinux_2_28]
 
