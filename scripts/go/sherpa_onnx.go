@@ -671,8 +671,20 @@ type OfflineTtsVitsModelConfig struct {
 	DictDir     string  // Path to dict directory for jieba (used only in Chinese tts)
 }
 
+type OfflineTtsMatchaModelConfig struct {
+	AcousticModel string  // Path to the acoustic model for MatchaTTS
+	Vocoder       string  // Path to the vocoder model for MatchaTTS
+	Lexicon       string  // Path to lexicon.txt
+	Tokens        string  // Path to tokens.txt
+	DataDir       string  // Path to espeak-ng-data directory
+	NoiseScale    float32 // noise scale for vits models. Please use 0.667 in general
+	LengthScale   float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
+	DictDir       string  // Path to dict directory for jieba (used only in Chinese tts)
+}
+
 type OfflineTtsModelConfig struct {
-	Vits OfflineTtsVitsModelConfig
+	Vits   OfflineTtsVitsModelConfig
+	Matcha OfflineTtsMatchaModelConfig
 
 	// Number of threads to use for neural network computation
 	NumThreads int
@@ -722,6 +734,7 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 
 	c.max_num_sentences = C.int(config.MaxNumSentences)
 
+	// vits
 	c.model.vits.model = C.CString(config.Model.Vits.Model)
 	defer C.free(unsafe.Pointer(c.model.vits.model))
 
@@ -740,6 +753,28 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 
 	c.model.vits.dict_dir = C.CString(config.Model.Vits.DictDir)
 	defer C.free(unsafe.Pointer(c.model.vits.dict_dir))
+
+	// matcha
+	c.model.matcha.acoustic_model = C.CString(config.Model.Matcha.AcousticModel)
+	defer C.free(unsafe.Pointer(c.model.matcha.acoustic_model))
+
+	c.model.matcha.vocoder = C.CString(config.Model.Matcha.Vocoder)
+	defer C.free(unsafe.Pointer(c.model.matcha.vocoder))
+
+	c.model.matcha.lexicon = C.CString(config.Model.Matcha.Lexicon)
+	defer C.free(unsafe.Pointer(c.model.matcha.lexicon))
+
+	c.model.matcha.tokens = C.CString(config.Model.Matcha.Tokens)
+	defer C.free(unsafe.Pointer(c.model.matcha.tokens))
+
+	c.model.matcha.data_dir = C.CString(config.Model.Matcha.DataDir)
+	defer C.free(unsafe.Pointer(c.model.matcha.data_dir))
+
+	c.model.matcha.noise_scale = C.float(config.Model.Matcha.NoiseScale)
+	c.model.matcha.length_scale = C.float(config.Model.Matcha.LengthScale)
+
+	c.model.matcha.dict_dir = C.CString(config.Model.Matcha.DictDir)
+	defer C.free(unsafe.Pointer(c.model.matcha.dict_dir))
 
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)
