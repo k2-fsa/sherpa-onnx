@@ -355,6 +355,7 @@ jobs:
 
             git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-bin huggingface
             cd huggingface
+            git remote set-url origin https://csukuangfj:$HF_TOKEN@huggingface.co/sherpa-onnx-bin
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main
