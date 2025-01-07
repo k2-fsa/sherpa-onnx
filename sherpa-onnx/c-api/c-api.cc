@@ -1220,6 +1220,69 @@ void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
     delete p;
   }
 }
+#else
+const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTts(
+    const SherpaOnnxOfflineTtsConfig *config) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+void SherpaOnnxDestroyOfflineTts(const SherpaOnnxOfflineTts *tts) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+}
+
+int32_t SherpaOnnxOfflineTtsSampleRate(const SherpaOnnxOfflineTts *tts) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+  return 0;
+}
+
+int32_t SherpaOnnxOfflineTtsNumSpeakers(const SherpaOnnxOfflineTts *tts) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+  return 0;
+}
+
+const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerate(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid,
+    float speed) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallback(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
+    SherpaOnnxGeneratedAudioCallback callback) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxGeneratedAudio *
+SherpaOnnxOfflineTtsGenerateWithProgressCallback(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
+    SherpaOnnxGeneratedAudioProgressCallback callback) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxGeneratedAudio *
+SherpaOnnxOfflineTtsGenerateWithProgressCallbackWithArg(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
+    SherpaOnnxGeneratedAudioProgressCallbackWithArg callback, void *arg) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxGeneratedAudio *SherpaOnnxOfflineTtsGenerateWithCallbackWithArg(
+    const SherpaOnnxOfflineTts *tts, const char *text, int32_t sid, float speed,
+    SherpaOnnxGeneratedAudioCallbackWithArg callback, void *arg) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+void SherpaOnnxDestroyOfflineTtsGeneratedAudio(
+    const SherpaOnnxGeneratedAudio *p) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+}
+
 #endif  // SHERPA_ONNX_ENABLE_TTS == 1
 
 int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
@@ -2027,6 +2090,99 @@ SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
 
   return ans;
 }
+#else
+
+const SherpaOnnxOfflineSpeakerDiarization *
+SherpaOnnxCreateOfflineSpeakerDiarization(
+    const SherpaOnnxOfflineSpeakerDiarizationConfig *config) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+void SherpaOnnxDestroyOfflineSpeakerDiarization(
+    const SherpaOnnxOfflineSpeakerDiarization *sd) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+}
+
+int32_t SherpaOnnxOfflineSpeakerDiarizationGetSampleRate(
+    const SherpaOnnxOfflineSpeakerDiarization *sd) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return 0;
+}
+
+void SherpaOnnxOfflineSpeakerDiarizationSetConfig(
+    const SherpaOnnxOfflineSpeakerDiarization *sd,
+    const SherpaOnnxOfflineSpeakerDiarizationConfig *config) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+}
+
+int32_t SherpaOnnxOfflineSpeakerDiarizationResultGetNumSpeakers(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return 0;
+}
+
+int32_t SherpaOnnxOfflineSpeakerDiarizationResultGetNumSegments(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return 0;
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationSegment *
+SherpaOnnxOfflineSpeakerDiarizationResultSortByStartTime(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+void SherpaOnnxOfflineSpeakerDiarizationDestroySegment(
+    const SherpaOnnxOfflineSpeakerDiarizationSegment *s) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcess(
+    const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
+    int32_t n) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessWithCallback(
+    const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
+    int32_t n, SherpaOnnxOfflineSpeakerDiarizationProgressCallback callback,
+    void *arg) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+const SherpaOnnxOfflineSpeakerDiarizationResult *
+SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
+    const SherpaOnnxOfflineSpeakerDiarization *sd, const float *samples,
+    int32_t n,
+    SherpaOnnxOfflineSpeakerDiarizationProgressCallbackNoArg callback) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
+
+void SherpaOnnxOfflineSpeakerDiarizationDestroyResult(
+    const SherpaOnnxOfflineSpeakerDiarizationResult *r) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+}
+
 #endif
 
 #ifdef __OHOS__
@@ -2112,7 +2268,12 @@ const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
 
   return tts;
 }
-
+#else
+const SherpaOnnxOfflineTts *SherpaOnnxCreateOfflineTtsOHOS(
+    const SherpaOnnxOfflineTtsConfig *config, NativeResourceManager *mgr) {
+  SHERPA_ONNX_LOGE("TTS is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
+}
 #endif  // #if SHERPA_ONNX_ENABLE_TTS == 1
         //
 #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
@@ -2133,6 +2294,16 @@ SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(
       std::make_unique<sherpa_onnx::OfflineSpeakerDiarization>(mgr, sd_config);
 
   return sd;
+}
+#else
+
+const SherpaOnnxOfflineSpeakerDiarization *
+SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(
+    const SherpaOnnxOfflineSpeakerDiarizationConfig *config,
+    NativeResourceManager *mgr) {
+  SHERPA_ONNX_LOGE(
+      "Speaker diarization is not enabled. Please rebuild sherpa-onnx");
+  return nullptr;
 }
 
 #endif  // #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
