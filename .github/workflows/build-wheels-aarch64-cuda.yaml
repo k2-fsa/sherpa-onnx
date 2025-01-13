@@ -20,7 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu-20.04]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
         manylinux: [manylinux2014] #, manylinux_2_28]
 
@@ -60,7 +60,6 @@ jobs:
           ls -lh ./wheelhouse/
 
       - name: Install patchelf
-        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           sudo apt-get update -q
@@ -69,7 +68,6 @@ jobs:
 
       - name: Patch wheels
         shell: bash
-        if: matrix.os == 'ubuntu-latest'
         run: |
           mkdir ./wheels
           sudo ./scripts/wheel/patch_wheel.py --in-dir ./wheelhouse --out-dir ./wheels

@@ -1,4 +1,4 @@
-# sherpa_onnx_linux
+# sherpa_onnx_ios
 
 This is a sub project of [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx).
 
