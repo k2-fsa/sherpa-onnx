@@ -16,7 +16,10 @@ namespace SherpaOnnx
         {
             Impl impl = (Impl)Marshal.PtrToStructure(Handle, typeof(Impl));
             byte[] utf8Filename = Encoding.UTF8.GetBytes(filename);
-            int status = SherpaOnnxWriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, utf8Filename);
+            byte[] utf8FilenameWithNull = new byte[utf8Filename.Length + 1]; // +1 for null terminator
+            Array.Copy(utf8Filename, utf8FilenameWithNull, utf8Filename.Length);
+            utf8FilenameWithNull[utf8Filename.Length] = 0; // Null terminator
+            int status = SherpaOnnxWriteWave(impl.Samples, impl.NumSamples, impl.SampleRate, utf8FilenameWithNull);
             return status == 1;
         }
 
