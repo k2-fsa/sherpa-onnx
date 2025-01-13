@@ -20,7 +20,7 @@ void OfflineWhisperModelConfig::Register(ParseOptions *po) {
 
   po->Register(
       "whisper-language", &language,
-      "The spoke language in the input audio file. Example values: "
+      "The spoken language in the input audio file. Example values: "
       "en, de, fr, zh, jp. If it is not given for a multilingual model, we will"
       " infer the language from the input audio file. "
       "Please refer to "
