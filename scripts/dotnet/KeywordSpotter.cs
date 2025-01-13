@@ -26,7 +26,10 @@ namespace SherpaOnnx
         public OnlineStream CreateStream(string keywords)
         {
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(keywords);
-            IntPtr p = SherpaOnnxCreateKeywordStreamWithKeywords(_handle.Handle, utf8Bytes);
+            byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1]; // +1 for null terminator
+            Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
+            utf8BytesWithNull[utf8Bytes.Length] = 0; // Null terminator
+            IntPtr p = SherpaOnnxCreateKeywordStreamWithKeywords(_handle.Handle, utf8BytesWithNull);
             return new OnlineStream(p);
         }
 
