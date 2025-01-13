@@ -1,3 +1,10 @@
+## 1.10.39
+
+* Fix building without TTS (#1691)
+* Add README for android libs. (#1693)
+* Fix: export-onnx.py(expected all tensors to be on the same device) (#1699)
+* Fix passing strings from C# to C. (#1701)
+
 ## 1.10.38
 
 * Fix initializing TTS in Python. (#1664)
