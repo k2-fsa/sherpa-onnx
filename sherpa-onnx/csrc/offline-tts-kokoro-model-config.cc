@@ -13,6 +13,8 @@ namespace sherpa_onnx {
 
 void OfflineTtsKokoroModelConfig::Register(ParseOptions *po) {
   po->Register("kokoro-model", &model, "Path to Kokoro model");
+  po->Register("kokoro-voices", &voices,
+               "Path to voices.bin for Kokoro models");
   po->Register("kokoro-tokens", &tokens,
                "Path to tokens.txt for Kokoro models");
   po->Register("kokoro-data-dir", &data_dir,

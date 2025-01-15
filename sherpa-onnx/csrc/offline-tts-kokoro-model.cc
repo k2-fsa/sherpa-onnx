@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts-kokoro-model.h"
 
 #include <algorithm>
+#include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -21,6 +22,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -31,8 +33,10 @@ class OfflineTtsKokoroModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(config.kokoro.model);
-    Init(buf.data(), buf.size());
+    auto model_buf = ReadFile(config.kokoro.model);
+    auto voices_buf = ReadFile(config.kokoro.voices);
+    Init(model_buf.data(), model_buf.size(), voices_buf.data(),
+         voices_buf.size());
   }
 
   template <typename Manager>
@@ -41,8 +45,10 @@ class OfflineTtsKokoroModel::Impl {
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
         allocator_{} {
-    auto buf = ReadFile(mgr, config.kokoro.model);
-    Init(buf.data(), buf.size());
+    auto model_buf = ReadFile(mgr, config.kokoro.model);
+    auto voices_buf = ReadFile(mgr, config.kokoro.voices);
+    Init(model_buf.data(), model_buf.size(), voices_buf.data(),
+         voices_buf.size());
   }
 
   const OfflineTtsKokoroModelMetaData &GetMetaData() const {
@@ -103,14 +109,14 @@ class OfflineTtsKokoroModel::Impl {
   }
 
  private:
-  void Init(void *model_data, size_t model_data_length) {
+  void Init(void *model_data, size_t model_data_length, const char *voices_data,
+            size_t voices_data_length) {
     sess_ = std::make_unique<Ort::Session>(env_, model_data, model_data_length,
                                            sess_opts_);
 
     GetInputNames(sess_.get(), &input_names_, &input_names_ptr_);
 
     GetOutputNames(sess_.get(), &output_names_, &output_names_ptr_);
-#if 0
     // get meta data
     Ort::ModelMetadata meta_data = sess_->GetModelMetadata();
     if (config_.debug) {
@@ -142,11 +148,72 @@ class OfflineTtsKokoroModel::Impl {
     SHERPA_ONNX_READ_META_DATA(meta_data_.sample_rate, "sample_rate");
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
     SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
-    SHERPA_ONNX_READ_META_DATA(meta_data_.jieba, "jieba");
     SHERPA_ONNX_READ_META_DATA(meta_data_.has_espeak, "has_espeak");
-    SHERPA_ONNX_READ_META_DATA(meta_data_.use_eos_bos, "use_eos_bos");
-    SHERPA_ONNX_READ_META_DATA(meta_data_.pad_id, "pad_id");
+
+    if (config_.debug) {
+      std::vector<std::string> speaker_names;
+      SHERPA_ONNX_READ_META_DATA_VEC_STRING(speaker_names, "speaker_names");
+      std::ostringstream os;
+      os << "\n";
+      for (int32_t i = 0; i != speaker_names.size(); ++i) {
+        os << i << "->" << speaker_names[i] << ", ";
+      }
+      os << "\n";
+
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
 #endif
+    }
+
+    SHERPA_ONNX_READ_META_DATA_VEC(style_dim_, "style_dim");
+    if (style_dim_.size() != 3) {
+      SHERPA_ONNX_LOGE("style_dim should be 3-d, given: %d",
+                       static_cast<int32_t>(style_dim_.size()));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (style_dim_[1] != 1) {
+      SHERPA_ONNX_LOGE("style_dim[0] should be 1, given: %d", style_dim_[1]);
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    int32_t actual_num_floats = voices_data_length / sizeof(float);
+    int32_t expected_num_floats =
+        style_dim_[0] * style_dim_[2] * meta_data_.num_speakers;
+
+    if (actual_num_floats != expected_num_floats) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE(
+          "Corrupted --kokoro-voices '%{public}s'. Expected #floats: "
+          "%{public}d, actual: %{public}d",
+          config_.kokoro.voices.c_str(), expected_num_floats,
+          actual_num_floats);
+#else
+      SHERPA_ONNX_LOGE(
+          "Corrupted --kokoro-voices '%s'. Expected #floats: %d, actual: %d",
+          config_.kokoro.voices.c_str(), expected_num_floats,
+          actual_num_floats);
+#endif
+
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    styles_ = std::vector<float>(
+        reinterpret_cast<const float *>(voices_data),
+        reinterpret_cast<const float *>(voices_data) + expected_num_floats);
+    SHERPA_ONNX_LOGE("%d, %d, %d, %d\n", (int)styles_.size(),
+                     meta_data_.num_speakers, style_dim_[0], style_dim_[2]);
+    for (int32_t i = 0; i < 10; ++i) {
+      std::cout << styles_[i] << " ";
+    }
+    std::cout << "\n";
+
+    for (int32_t i = actual_num_floats - 10; i < actual_num_floats; ++i) {
+      std::cout << styles_[i] << " ";
+    }
+    std::cout << "\n";
   }
 
  private:
@@ -164,6 +231,10 @@ class OfflineTtsKokoroModel::Impl {
   std::vector<const char *> output_names_ptr_;
 
   OfflineTtsKokoroModelMetaData meta_data_;
+  std::vector<int32_t> style_dim_;
+
+  // (num_speakers, style_dim_[0], style_dim_[2])
+  std::vector<float> styles_;
 };
 
 OfflineTtsKokoroModel::OfflineTtsKokoroModel(
