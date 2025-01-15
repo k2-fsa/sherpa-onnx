@@ -30,6 +30,11 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install -q onnx onnxruntime librosa soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
+
       - name: Run
         shell: bash
         run: |
