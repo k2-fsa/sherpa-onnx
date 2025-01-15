@@ -1,0 +1,122 @@
+name: export-kokoro-to-onnx
+
+on:
+  push:
+    branches:
+      - export-kokoro
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-kokoro-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-kokoro-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export kokoro
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install -q "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 librosa soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
+
+      - name: Run
+        shell: bash
+        run: |
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+          tar xf espeak-ng-data.tar.bz2
+          rm espeak-ng-data.tar.bz2
+          cd scripts/kokoro
+          ./run.sh
+
+      - name: Collect results
+        shell: bash
+        run: |
+          src=scripts/kokoro
+
+          d=kokoro-en-v0_19
+          mkdir $d
+          cp -a LICENSE $d/LICENSE
+          cp -a espeak-ng-data $d/
+          cp -v $src/kokoro-v0_19_hf.onnx $d/model.onnx
+          cp -v $src/voices.bin $d/
+          cp -v $src/tokens.txt $d/
+          cp -v $src/README-new.md $d/README.md
+          ls -lh $d/
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+
+          ls -h $.tar.bz2
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-en-v0_19 huggingface
+            cd huggingface
+            rm -rf ./*
+            git fetch
+            git pull
+
+            git lfs track "cmn_dict"
+            git lfs track "ru_dict"
+            git lfs track "*.wav"
+
+            cp -a ../espeak-ng-data ./
+            mkdir -p test_wavs
+
+            cp -v ../scripts/kokoro/kokoro-v0_19_hf.onnx ./model.onnx
+
+            cp -v ../scripts/kokoro/kokoro-v0_19_hf-*.wav ./test_wavs/
+
+            cp -v ../scripts/kokoro/tokens.txt .
+            cp -v ../scripts/kokoro/voices.bin .
+            cp -v ../scripts/kokoro/README-new.md ./README.md
+            cp -v ../LICENSE ./
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-en-v0_19 main || true
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
