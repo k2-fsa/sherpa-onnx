@@ -14,7 +14,7 @@ concurrency:
 jobs:
   export-kokoro-to-onnx:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: export kokor
+    name: export kokoro
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -33,7 +33,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          pip install -q onnx onnxruntime librosa soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
+          pip install -q "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 librosa soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
 
       - name: Run
         shell: bash
@@ -48,22 +48,20 @@ jobs:
         shell: bash
         run: |
           src=scripts/kokoro
-          models=(
-          kokoro-v0_19_hf
-          kokoro-v0_19
-          kokoro-quant
-          kokoro-quant-convinteger
-          )
-          for m in ${models[@]}; do
-            d=$m
-            mkdir $d
-            cp -a espeak-ng-data $d/
-            cp -v $src/$m.onnx $d/model.onnx
-            cp -v $src/voices.bin $d/
-            cp -v $src/tokens.txt $d/
-            tar cjfv $d.tar.bz2 $d
-            rm -rf $d
-          done
+
+          d=kokoro-en-v0_19
+          mkdir $d
+          cp -a LICENSE $d/LICENSE
+          cp -a espeak-ng-data $d/
+          cp -v $src/kokoro-v0_19_hf.onnx $d/model.onnx
+          cp -v $src/voices.bin $d/
+          cp -v $src/tokens.txt $d/
+          cp -v $src/README-new.md $d/README.md
+          ls -lh $d/
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+
+          ls -h $.tar.bz2
 
       - name: Publish to huggingface
         env:
@@ -81,8 +79,9 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-kokoro huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-en-v0_19 huggingface
             cd huggingface
+            rm -rf ./*
             git fetch
             git pull
 
@@ -93,21 +92,14 @@ jobs:
             cp -a ../espeak-ng-data ./
             mkdir -p test_wavs
 
-            cp -v ../scripts/kokoro/*.onnx .
+            cp -v ../scripts/kokoro/kokoro-v0_19_hf.onnx ./model.onnx
 
-            models=(
-            kokoro-v0_19_hf
-            kokoro-v0_19
-            kokoro-quant
-            kokoro-quant-convinteger
-            )
-            for m in ${models[@]}; do
-              mkdir -p ./test_wavs/$m/
-              cp -v ../scripts/kokoro/$m-*.wav ./test_wavs/$m
-            done
+            cp -v ../scripts/kokoro/kokoro-v0_19_hf-*.wav ./test_wavs/
 
             cp -v ../scripts/kokoro/tokens.txt .
             cp -v ../scripts/kokoro/voices.bin .
+            cp -v ../scripts/kokoro/README-new.md ./README.md
+            cp -v ../LICENSE ./
 
             git lfs track "*.onnx"
             git add .
@@ -117,7 +109,7 @@ jobs:
             git status
 
             git commit -m "add models"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-kokoro main || true
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-en-v0_19 main || true
 
       - name: Release
         uses: svenstaro/upload-release-action@v2

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# This script export ZH_EN TTS model, which supports both Chinese and English.
+# This script exports ZH_EN TTS model, which supports both Chinese and English.
 # This model has only 1 speaker.
 
 from typing import Any, Dict

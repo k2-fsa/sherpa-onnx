@@ -3,9 +3,11 @@
 
 
 import argparse
-import onnx
-import numpy as np
 import json
+from pathlib import Path
+
+import numpy as np
+import onnx
 
 
 def get_args():
@@ -52,14 +54,20 @@ def main():
     model = onnx.load(args.model)
     voices = load_voices(args.voices)
 
-    generate_tokens()
+    if Path("./tokens.txt").is_file():
+        print("./tokens.txt exist, skip generating it")
+    else:
+        generate_tokens()
 
     keys = list(voices.keys())
     print(",".join(keys))
 
-    with open("voices.bin", "wb") as f:
-        for k in keys:
-            f.write(voices[k].tobytes())
+    if Path("./voices.bin").is_file():
+        print("./voices.bin exists, skip generating it")
+    else:
+        with open("voices.bin", "wb") as f:
+            for k in keys:
+                f.write(voices[k].tobytes())
 
     meta_data = {
         "model_type": "kokoro",

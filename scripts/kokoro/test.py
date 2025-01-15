@@ -117,6 +117,7 @@ class OnnxModel:
         self.token2id = load_tokens(tokens)
 
         meta = self.model.get_modelmeta().custom_metadata_map
+        print(meta)
         dim = list(map(int, meta["style_dim"].split(",")))
         speaker_names = meta["speaker_names"].split(",")
 
@@ -193,7 +194,7 @@ def main():
     )
 
     for i, voice in enumerate(m.voices.keys(), 1):
-        print(f"Testing {i}/{len(m.voices)} - {voice}")
+        print(f"Testing {i}/{len(m.voices)} - {voice}/{args.model}")
 
         start = time.time()
         audio = m(text, voice=voice)
