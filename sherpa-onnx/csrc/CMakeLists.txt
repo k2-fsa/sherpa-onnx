@@ -159,6 +159,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-frontend.cc
     offline-tts-impl.cc
     offline-tts-kokoro-model-config.cc
+    offline-tts-kokoro-model.cc
     offline-tts-matcha-model-config.cc
     offline-tts-matcha-model.cc
     offline-tts-model-config.cc

@@ -1,9 +1,9 @@
-// sherpa-onnx/csrc/offline-tts-matcha-model-metadata.h
+// sherpa-onnx/csrc/offline-tts-matcha-model-meta-data.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
-#ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_MODEL_METADATA_H_
-#define SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_MODEL_METADATA_H_
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_MODEL_META_DATA_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_MODEL_META_DATA_H_
 
 #include <cstdint>
 #include <string>
@@ -25,4 +25,4 @@ struct OfflineTtsMatchaModelMetaData {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_MODEL_METADATA_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_TTS_MATCHA_MODEL_META_DATA_H_

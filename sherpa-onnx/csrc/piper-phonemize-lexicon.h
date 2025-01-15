@@ -10,8 +10,8 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
-#include "sherpa-onnx/csrc/offline-tts-matcha-model-metadata.h"
-#include "sherpa-onnx/csrc/offline-tts-vits-model-metadata.h"
+#include "sherpa-onnx/csrc/offline-tts-matcha-model-meta-data.h"
+#include "sherpa-onnx/csrc/offline-tts-vits-model-meta-data.h"
 
 namespace sherpa_onnx {
 
