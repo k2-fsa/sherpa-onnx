@@ -19,6 +19,31 @@ which $EXE
 mkdir ./tts
 
 log "------------------------------------------------------------"
+log "kokoro-en-v0_19"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+tar xf kokoro-en-v0_19.tar.bz2
+rm kokoro-en-v0_19.tar.bz2
+
+# mapping of sid to voice name
+# 0->af, 1->af_bella, 2->af_nicole, 3->af_sarah, 4->af_sky, 5->am_adam
+# 6->am_michael, 7->bf_emma, 8->bf_isabella, 9->bm_george, 10->bm_lewis
+
+for sid in $(seq 0 10); do
+  $EXE \
+    --debug=1 \
+    --kokoro-model=./kokoro-en-v0_19/model.onnx \
+    --kokoro-voices=./kokoro-en-v0_19/voices.bin \
+    --kokoro-tokens=./kokoro-en-v0_19/tokens.txt \
+    --kokoro-data-dir=./kokoro-en-v0_19/espeak-ng-data \
+    --num-threads=2 \
+    --sid=$sid \
+    --output-filename="./tts/kokor-$sid.wav" \
+    "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be  a statesman, a businessman, an official, or a scholar."
+done
+rm -rf kokoro-en-v0_19
+
+log "------------------------------------------------------------"
 log "matcha-icefall-en_US-ljspeech"
 log "------------------------------------------------------------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
