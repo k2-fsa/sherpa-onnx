@@ -224,6 +224,11 @@ jobs:
           go build
           ls -lh
 
+          echo "Test kokoro en"
+          ./run-kokoro-en.sh
+          rm -rf kokoro-en-*
+          ls -lh
+
           echo "Test matcha zh"
           ./run-matcha-zh.sh
           rm -rf matcha-icefall-*
