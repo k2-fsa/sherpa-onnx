@@ -910,12 +910,22 @@ SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsMatchaModelConfig {
   const char *dict_dir;
 } SherpaOnnxOfflineTtsMatchaModelConfig;
 
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsKokoroModelConfig {
+  const char *model;
+  const char *voices;
+  const char *tokens;
+  const char *data_dir;
+
+  float length_scale;  // < 1, faster in speech speed; > 1, slower in speed
+} SherpaOnnxOfflineTtsKokoroModelConfig;
+
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsModelConfig {
   SherpaOnnxOfflineTtsVitsModelConfig vits;
   int32_t num_threads;
   int32_t debug;
   const char *provider;
   SherpaOnnxOfflineTtsMatchaModelConfig matcha;
+  SherpaOnnxOfflineTtsKokoroModelConfig kokoro;
 } SherpaOnnxOfflineTtsModelConfig;
 
 SHERPA_ONNX_API typedef struct SherpaOnnxOfflineTtsConfig {
