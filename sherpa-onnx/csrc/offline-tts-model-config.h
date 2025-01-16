@@ -7,6 +7,7 @@
 
 #include <string>
 
+#include "sherpa-onnx/csrc/offline-tts-kokoro-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-matcha-model-config.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
@@ -16,6 +17,7 @@ namespace sherpa_onnx {
 struct OfflineTtsModelConfig {
   OfflineTtsVitsModelConfig vits;
   OfflineTtsMatchaModelConfig matcha;
+  OfflineTtsKokoroModelConfig kokoro;
 
   int32_t num_threads = 1;
   bool debug = false;
@@ -25,10 +27,12 @@ struct OfflineTtsModelConfig {
 
   OfflineTtsModelConfig(const OfflineTtsVitsModelConfig &vits,
                         const OfflineTtsMatchaModelConfig &matcha,
+                        const OfflineTtsKokoroModelConfig &kokoro,
                         int32_t num_threads, bool debug,
                         const std::string &provider)
       : vits(vits),
         matcha(matcha),
+        kokoro(kokoro),
         num_threads(num_threads),
         debug(debug),
         provider(provider) {}

@@ -9,7 +9,7 @@
 #include <string>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
-#include "sherpa-onnx/csrc/offline-tts-matcha-model-metadata.h"
+#include "sherpa-onnx/csrc/offline-tts-matcha-model-meta-data.h"
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
 
 namespace sherpa_onnx {

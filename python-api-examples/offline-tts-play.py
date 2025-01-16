@@ -11,7 +11,7 @@ while the model is still generating.
 
 Usage:
 
-Example (1/5)
+Example (1/6)
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 tar xf vits-piper-en_US-amy-low.tar.bz2
@@ -23,7 +23,7 @@ python3 ./python-api-examples/offline-tts-play.py \
  --output-filename=./generated.wav \
  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
 
-Example (2/5)
+Example (2/6)
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-zh-aishell3.tar.bz2
 tar xvf vits-zh-aishell3.tar.bz2
@@ -37,7 +37,7 @@ python3 ./python-api-examples/offline-tts-play.py \
  --output-filename=./liubei-21.wav \
  "勿以恶小而为之，勿以善小而不为。惟贤惟德，能服于人。122334"
 
-Example (3/5)
+Example (3/6)
 
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2
 tar xvf sherpa-onnx-vits-zh-ll.tar.bz2
@@ -53,7 +53,7 @@ python3 ./python-api-examples/offline-tts-play.py \
  --output-filename=./test-2.wav \
  "当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔。2024年5月11号，拨打110或者18920240511。123456块钱。"
 
-Example (4/5)
+Example (4/6)
 
 curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
 tar xvf matcha-icefall-zh-baker.tar.bz2
@@ -71,7 +71,7 @@ python3 ./python-api-examples/offline-tts-play.py \
  --output-filename=./test-matcha.wav \
  "某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。"
 
-Example (5/5)
+Example (5/6)
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
 tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
@@ -88,6 +88,22 @@ python3 ./python-api-examples/offline-tts-play.py \
   --num-threads=2 \
  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
 
+Example (6/6)
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+tar xf kokoro-en-v0_19.tar.bz2
+rm kokoro-en-v0_19.tar.bz2
+
+python3 ./python-api-examples/offline-tts.py \
+  --debug=1 \
+  --kokoro-model=./kokoro-en-v0_19/model.onnx \
+  --kokoro-voices=./kokoro-en-v0_19/voices.bin \
+  --kokoro-tokens=./kokoro-en-v0_19/tokens.txt \
+  --kokoro-data-dir=./kokoro-en-v0_19/espeak-ng-data \
+  --num-threads=2 \
+  --sid=10 \
+  --output-filename="./kokoro-10.wav" \
+  "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be  a statesman, a businessman, an official, or a scholar."
 
 You can find more models at
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
@@ -202,6 +218,36 @@ def add_matcha_args(parser):
     )
 
 
+def add_kokoro_args(parser):
+    parser.add_argument(
+        "--kokoro-model",
+        type=str,
+        default="",
+        help="Path to model.onnx for kokoro",
+    )
+
+    parser.add_argument(
+        "--kokoro-voices",
+        type=str,
+        default="",
+        help="Path to voices.bin for kokoro",
+    )
+
+    parser.add_argument(
+        "--kokoro-tokens",
+        type=str,
+        default="",
+        help="Path to tokens.txt for kokoro",
+    )
+
+    parser.add_argument(
+        "--kokoro-data-dir",
+        type=str,
+        default="",
+        help="Path to the dict directory of espeak-ng.",
+    )
+
+
 def get_args():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
@@ -209,6 +255,7 @@ def get_args():
 
     add_vits_args(parser)
     add_matcha_args(parser)
+    add_kokoro_args(parser)
 
     parser.add_argument(
         "--tts-rule-fsts",
@@ -406,6 +453,12 @@ def main():
                 tokens=args.matcha_tokens,
                 data_dir=args.matcha_data_dir,
                 dict_dir=args.matcha_dict_dir,
+            ),
+            kokoro=sherpa_onnx.OfflineTtsKokoroModelConfig(
+                model=args.kokoro_model,
+                voices=args.kokoro_voices,
+                tokens=args.kokoro_tokens,
+                data_dir=args.kokoro_data_dir,
             ),
             provider=args.provider,
             debug=args.debug,
