@@ -338,6 +338,12 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.matcha.length_scale = config.model.matcha.length_scale;
   c.model.matcha.dict_dir = config.model.matcha.dict_dir.c_str();
 
+  c.model.kokoro.model = config.model.kokoro.model.c_str();
+  c.model.kokoro.voices = config.model.kokoro.voices.c_str();
+  c.model.kokoro.tokens = config.model.kokoro.tokens.c_str();
+  c.model.kokoro.data_dir = config.model.kokoro.data_dir.c_str();
+  c.model.kokoro.length_scale = config.model.kokoro.length_scale;
+
   c.model.num_threads = config.model.num_threads;
   c.model.debug = config.model.debug;
   c.model.provider = config.model.provider.c_str();
