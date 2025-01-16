@@ -4,6 +4,7 @@ cd dotnet-examples/
 
 cd ./kokoro-tts
 ./run-kokoro-en.sh
+ls -lh
 
 cd ../offline-tts
 ./run-matcha-zh.sh
