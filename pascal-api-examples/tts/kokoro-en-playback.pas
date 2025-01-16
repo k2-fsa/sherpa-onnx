@@ -1,8 +1,8 @@
 { Copyright (c)  2025  Xiaomi Corporation }
-program matcha_zh_playback;
+program kokoro_en_playback;
 {
 This file shows how to use the text to speech API of sherpa-onnx
-with MatchaTTS models.
+with Kokoro models.
 
 It generates speech from text and saves it to a wave file.
 
@@ -30,7 +30,7 @@ var
 
   Text: AnsiString;
   Speed: Single = 1.0;  {Use a larger value to speak faster}
-  SpeakerId: Integer = 0;
+  SpeakerId: Integer = 7;
   Buffer: TSherpaOnnxCircularBuffer;
   FinishedGeneration: Boolean = False;
   FinishedPlaying: Boolean = False;
@@ -114,14 +114,12 @@ function GetOfflineTts: TSherpaOnnxOfflineTts;
 var
   Config: TSherpaOnnxOfflineTtsConfig;
 begin
-  Config.Model.Matcha.AcousticModel := './matcha-icefall-zh-baker/model-steps-3.onnx';
-  Config.Model.Matcha.Vocoder := './hifigan_v2.onnx';
-  Config.Model.Matcha.Lexicon := './matcha-icefall-zh-baker/lexicon.txt';
-  Config.Model.Matcha.Tokens := './matcha-icefall-zh-baker/tokens.txt';
-  Config.Model.Matcha.DictDir := './matcha-icefall-zh-baker/dict';
-  Config.Model.NumThreads := 1;
+  Config.Model.Kokoro.Model := './kokoro-en-v0_19/model.onnx';
+  Config.Model.Kokoro.Voices := './kokoro-en-v0_19/voices.bin';
+  Config.Model.Kokoro.Tokens := './kokoro-en-v0_19/tokens.txt';
+  Config.Model.Kokoro.DataDir := './kokoro-en-v0_19/espeak-ng-data';
+  Config.Model.NumThreads := 2;
   Config.Model.Debug := False;
-  Config.RuleFsts := './matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst';
   Config.MaxNumSentences := 1;
 
   Result := TSherpaOnnxOfflineTts.Create(Config);
@@ -207,13 +205,13 @@ begin
 
   WriteLn('There are ', Tts.GetNumSpeakers, ' speakers');
 
-  Text := '某某银行的副行长和一些行政领导表示，他们去过长江和长白山; 经济不断增长。2024年12月31号，拨打110或者18920240511。123456块钱。';
+  Text := 'Friends fell out often because life was changing so fast. The easiest thing in the world was to lose touch with someone.';
 
   Audio :=  Tts.Generate(Text, SpeakerId, Speed,
     PSherpaOnnxGeneratedAudioCallbackWithArg(@GenerateCallback), nil);
   FinishedGeneration := True;
-  SherpaOnnxWriteWave('./matcha-zh-playback.wav', Audio.Samples, Audio.SampleRate);
-  WriteLn('Saved to ./matcha-zh-playback.wav');
+  SherpaOnnxWriteWave('./kokoro-en-playback-7.wav', Audio.Samples, Audio.SampleRate);
+  WriteLn('Saved to ./kokoro-en-playback-7.wav');
 
   while not FinishedPlaying do
     Pa_Sleep(100);  {sleep for 0.1 second }
