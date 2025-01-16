@@ -15,7 +15,7 @@ if [ ! -d ./vits-piper-en_US-amy-low ]; then
   rm vits-piper-en_US-amy-low.tar.bz2
 fi
 
-if [ ! -e ./tts ]; then
+if [ ! -e ./tts-vits ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \

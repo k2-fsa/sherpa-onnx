@@ -21,7 +21,7 @@ if [ ! -f ./hifigan_v2.onnx ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
 fi
 
-if [ ! -e ./tts ]; then
+if [ ! -e ./tts-matcha-en ]; then
   # Note: We use -lc++ to link against libc++ instead of libstdc++
   swiftc \
     -lc++ \
