@@ -60,10 +60,32 @@ class OfflineTtsMatchaModelConfig {
   final String dictDir;
 }
 
+class OfflineTtsKokoroModelConfig {
+  const OfflineTtsKokoroModelConfig({
+    this.model = '',
+    this.voices = '',
+    this.tokens = '',
+    this.dataDir = '',
+    this.lengthScale = 1.0,
+  });
+
+  @override
+  String toString() {
+    return 'OfflineTtsKokoroModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale)';
+  }
+
+  final String model;
+  final String voices;
+  final String tokens;
+  final String dataDir;
+  final double lengthScale;
+}
+
 class OfflineTtsModelConfig {
   const OfflineTtsModelConfig({
     this.vits = const OfflineTtsVitsModelConfig(),
     this.matcha = const OfflineTtsMatchaModelConfig(),
+    this.kokoro = const OfflineTtsKokoroModelConfig(),
     this.numThreads = 1,
     this.debug = true,
     this.provider = 'cpu',
@@ -71,11 +93,12 @@ class OfflineTtsModelConfig {
 
   @override
   String toString() {
-    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, numThreads: $numThreads, debug: $debug, provider: $provider)';
+    return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
 
   final OfflineTtsVitsModelConfig vits;
   final OfflineTtsMatchaModelConfig matcha;
+  final OfflineTtsKokoroModelConfig kokoro;
   final int numThreads;
   final bool debug;
   final String provider;
@@ -138,6 +161,12 @@ class OfflineTts {
     c.ref.model.matcha.lengthScale = config.model.matcha.lengthScale;
     c.ref.model.matcha.dictDir = config.model.matcha.dictDir.toNativeUtf8();
 
+    c.ref.model.kokoro.model = config.model.kokoro.model.toNativeUtf8();
+    c.ref.model.kokoro.voices = config.model.kokoro.voices.toNativeUtf8();
+    c.ref.model.kokoro.tokens = config.model.kokoro.tokens.toNativeUtf8();
+    c.ref.model.kokoro.dataDir = config.model.kokoro.dataDir.toNativeUtf8();
+    c.ref.model.kokoro.lengthScale = config.model.kokoro.lengthScale;
+
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
     c.ref.model.provider = config.model.provider.toNativeUtf8();
@@ -151,12 +180,19 @@ class OfflineTts {
     calloc.free(c.ref.ruleFars);
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.model.provider);
+
+    calloc.free(c.ref.model.kokoro.dataDir);
+    calloc.free(c.ref.model.kokoro.tokens);
+    calloc.free(c.ref.model.kokoro.voices);
+    calloc.free(c.ref.model.kokoro.model);
+
     calloc.free(c.ref.model.matcha.dictDir);
     calloc.free(c.ref.model.matcha.dataDir);
     calloc.free(c.ref.model.matcha.tokens);
     calloc.free(c.ref.model.matcha.lexicon);
     calloc.free(c.ref.model.matcha.vocoder);
     calloc.free(c.ref.model.matcha.acousticModel);
+
     calloc.free(c.ref.model.vits.dictDir);
     calloc.free(c.ref.model.vits.dataDir);
     calloc.free(c.ref.model.vits.tokens);
