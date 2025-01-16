@@ -29,7 +29,6 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
   explicit OfflineTtsKokoroImpl(const OfflineTtsConfig &config)
       : config_(config),
         model_(std::make_unique<OfflineTtsKokoroModel>(config.model)) {
-    exit(0);
     InitFrontend();
 
     if (!config.rule_fsts.empty()) {
@@ -150,7 +149,6 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
   GeneratedAudio Generate(
       const std::string &_text, int64_t sid = 0, float speed = 1.0,
       GeneratedAudioCallback callback = nullptr) const override {
-#if 0
     const auto &meta_data = model_->GetMetaData();
     int32_t num_speakers = meta_data.num_speakers;
 
@@ -206,7 +204,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
     }
 
     std::vector<TokenIDs> token_ids =
-        frontend_->ConvertTextToTokenIds(text, "en-US");
+        frontend_->ConvertTextToTokenIds(text, "en-us");
 
     if (token_ids.empty() ||
         (token_ids.size() == 1 && token_ids[0].tokens.empty())) {
@@ -227,37 +225,38 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
       x.push_back(std::move(i.tokens));
     }
 
-    for (auto &k : x) {
-      k = AddBlank(k, meta_data.pad_id);
-    }
-
     int32_t x_size = static_cast<int32_t>(x.size());
 
-    if (config_.max_num_sentences <= 0 || x_size <= config_.max_num_sentences) {
-      auto ans = Process(x, sid, speed);
-      if (callback) {
-        callback(ans.samples.data(), ans.samples.size(), 1.0);
-      }
-      return ans;
+    if (config_.max_num_sentences != 1) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE(
+          "max_num_sentences (%{public}d) != 1 is ignored for Kokoro TTS "
+          "models",
+          config_.max_num_sentences);
+#else
+      SHERPA_ONNX_LOGE(
+          "max_num_sentences (%d) != 1 is ignored for Kokoro TTS models",
+          config_.max_num_sentences);
+#endif
     }
 
     // the input text is too long, we process sentences within it in batches
     // to avoid OOM. Batch size is config_.max_num_sentences
     std::vector<std::vector<int64_t>> batch_x;
 
-    int32_t batch_size = config_.max_num_sentences;
+    int32_t batch_size = 1;
     batch_x.reserve(config_.max_num_sentences);
     int32_t num_batches = x_size / batch_size;
 
     if (config_.model.debug) {
 #if __OHOS__
       SHERPA_ONNX_LOGE(
-          "Text is too long. Split it into %{public}d batches. batch size: "
+          "Split it into %{public}d batches. batch size: "
           "%{public}d. Number of sentences: %{public}d",
           num_batches, batch_size, x_size);
 #else
       SHERPA_ONNX_LOGE(
-          "Text is too long. Split it into %d batches. batch size: %d. Number "
+          "Split it into %d batches. batch size: %d. Number "
           "of sentences: %d",
           num_batches, batch_size, x_size);
 #endif
@@ -309,7 +308,6 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
     }
 
     return ans;
-#endif
   }
 
  private:
@@ -330,7 +328,6 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
 
   GeneratedAudio Process(const std::vector<std::vector<int64_t>> &tokens,
                          int32_t sid, float speed) const {
-#if 0
     int32_t num_tokens = 0;
     for (const auto &k : tokens) {
       num_tokens += k.size();
@@ -349,8 +346,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
     Ort::Value x_tensor = Ort::Value::CreateTensor(
         memory_info, x.data(), x.size(), x_shape.data(), x_shape.size());
 
-    Ort::Value mel = model_->Run(std::move(x_tensor), sid, speed);
-    Ort::Value audio = vocoder_->Run(std::move(mel));
+    Ort::Value audio = model_->Run(std::move(x_tensor), sid, speed);
 
     std::vector<int64_t> audio_shape =
         audio.GetTensorTypeAndShapeInfo().GetShape();
@@ -367,7 +363,6 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
     ans.sample_rate = model_->GetMetaData().sample_rate;
     ans.samples = std::vector<float>(p, p + total);
     return ans;
-#endif
   }
 
  private:

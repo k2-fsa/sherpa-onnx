@@ -17,6 +17,7 @@ struct OfflineTtsKokoroModelMetaData {
   int32_t num_speakers = 0;
   int32_t version = 1;
   int32_t has_espeak = 1;
+  int32_t max_token_len = 0;
 };
 
 }  // namespace sherpa_onnx

@@ -5,7 +5,6 @@
 #include "sherpa-onnx/csrc/offline-tts-kokoro-model.h"
 
 #include <algorithm>
-#include <iostream>
 #include <string>
 #include <utility>
 #include <vector>
@@ -55,8 +54,7 @@ class OfflineTtsKokoroModel::Impl {
     return meta_data_;
   }
 
-  Ort::Value Run(Ort::Value x, int64_t sid, float speed) {
-#if 0
+  Ort::Value Run(Ort::Value x, int32_t sid, float speed) {
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -67,45 +65,36 @@ class OfflineTtsKokoroModel::Impl {
       exit(-1);
     }
 
-    int64_t len = x_shape[1];
-    int64_t len_shape = 1;
-
-    Ort::Value x_length =
-        Ort::Value::CreateTensor(memory_info, &len, 1, &len_shape, 1);
-
-    int64_t scale_shape = 1;
-    float length_scale = config_.kokoro.length_scale;
-
-    if (speed != 1 && speed > 0) {
-      length_scale = 1. / speed;
+    // there is a 0 at the front and end of x
+    int32_t len = static_cast<int32_t>(x_shape[1]) - 2;
+    int32_t num_speakers = meta_data_.num_speakers;
+    int32_t dim0 = style_dim_[0];
+    int32_t dim1 = style_dim_[2];
+    if (len >= dim0) {
+      SHERPA_ONNX_LOGE("Bad things happened! %d vs %d", len, dim0);
+      SHERPA_ONNX_EXIT(-1);
     }
 
-    Ort::Value noise_scale_tensor =
-        Ort::Value::CreateTensor(memory_info, &noise_scale, 1, &scale_shape, 1);
+    /*const*/ float *p = styles_.data() + sid * dim0 * dim1 + len * dim1;
 
-    Ort::Value length_scale_tensor = Ort::Value::CreateTensor(
-        memory_info, &length_scale, 1, &scale_shape, 1);
+    std::array<int64_t, 2> style_embedding_shape = {1, dim1};
+    Ort::Value style_embedding = Ort::Value::CreateTensor(
+        memory_info, p, dim1, style_embedding_shape.data(),
+        style_embedding_shape.size());
 
-    Ort::Value sid_tensor =
-        Ort::Value::CreateTensor(memory_info, &sid, 1, &scale_shape, 1);
+    int64_t speed_shape = 1;
 
-    std::vector<Ort::Value> inputs;
-    inputs.reserve(5);
-    inputs.push_back(std::move(x));
-    inputs.push_back(std::move(x_length));
-    inputs.push_back(std::move(noise_scale_tensor));
-    inputs.push_back(std::move(length_scale_tensor));
+    Ort::Value speed_tensor =
+        Ort::Value::CreateTensor(memory_info, &speed, 1, &speed_shape, 1);
 
-    if (input_names_.size() == 5 && input_names_.back() == "sid") {
-      inputs.push_back(std::move(sid_tensor));
-    }
+    std::array<Ort::Value, 3> inputs = {
+        std::move(x), std::move(style_embedding), std::move(speed_tensor)};
 
     auto out =
         sess_->Run({}, input_names_ptr_.data(), inputs.data(), inputs.size(),
                    output_names_ptr_.data(), output_names_ptr_.size());
 
     return std::move(out[0]);
-#endif
   }
 
  private:
@@ -203,17 +192,8 @@ class OfflineTtsKokoroModel::Impl {
     styles_ = std::vector<float>(
         reinterpret_cast<const float *>(voices_data),
         reinterpret_cast<const float *>(voices_data) + expected_num_floats);
-    SHERPA_ONNX_LOGE("%d, %d, %d, %d\n", (int)styles_.size(),
-                     meta_data_.num_speakers, style_dim_[0], style_dim_[2]);
-    for (int32_t i = 0; i < 10; ++i) {
-      std::cout << styles_[i] << " ";
-    }
-    std::cout << "\n";
 
-    for (int32_t i = actual_num_floats - 10; i < actual_num_floats; ++i) {
-      std::cout << styles_[i] << " ";
-    }
-    std::cout << "\n";
+    meta_data_.max_token_len = style_dim_[0];
   }
 
  private:

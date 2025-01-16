@@ -155,24 +155,33 @@ static std::vector<int64_t> PiperPhonemesToIdsMatcha(
   return ans;
 }
 
-static std::vector<int64_t> PiperPhonemesToIdsKokoro(
+static std::vector<std::vector<int64_t>> PiperPhonemesToIdsKokoro(
     const std::unordered_map<char32_t, int32_t> &token2id,
-    const std::vector<piper::Phoneme> &phonemes) {
-  std::vector<int64_t> ans;
-  ans.reserve(phonemes.size());
-  ans.push_back(0);
+    const std::vector<piper::Phoneme> &phonemes, int32_t max_len) {
+  std::vector<std::vector<int64_t>> ans;
+
+  std::vector<int64_t> current;
+  current.reserve(phonemes.size());
 
   for (auto p : phonemes) {
     if (token2id.count(p)) {
-      ans.push_back(token2id.at(p));
+      if (current.size() > max_len - 1) {
+        current.push_back(0);
+        ans.push_back(std::move(current));
+
+        current.reserve(phonemes.size());
+        current.push_back(0);
+      }
+
+      current.push_back(token2id.at(p));
     } else {
       SHERPA_ONNX_LOGE("Skip unknown phonemes. Unicode codepoint: \\U+%04x.",
                        static_cast<uint32_t>(p));
     }
   }
 
-  ans.push_back(0);
-
+  current.push_back(0);
+  ans.push_back(std::move(current));
   return ans;
 }
 
@@ -386,11 +395,13 @@ std::vector<TokenIDs> PiperPhonemizeLexicon::ConvertTextToTokenIdsKokoro(
 
   std::vector<TokenIDs> ans;
 
-  std::vector<int64_t> phoneme_ids;
-
   for (const auto &p : phonemes) {
-    phoneme_ids = PiperPhonemesToIdsKokoro(token2id_, p);
-    ans.emplace_back(std::move(phoneme_ids));
+    auto phoneme_ids =
+        PiperPhonemesToIdsKokoro(token2id_, p, kokoro_meta_data_.max_token_len);
+
+    for (auto &ids : phoneme_ids) {
+      ans.emplace_back(std::move(ids));
+    }
   }
 
   return ans;
