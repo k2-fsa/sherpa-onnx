@@ -682,9 +682,18 @@ type OfflineTtsMatchaModelConfig struct {
 	DictDir       string  // Path to dict directory for jieba (used only in Chinese tts)
 }
 
+type OfflineTtsKokoroModelConfig struct {
+	Model       string  // Path to the model for kokoro
+	Voices      string  // Path to the voices.bin for kokoro
+	Tokens      string  // Path to tokens.txt
+	DataDir     string  // Path to espeak-ng-data directory
+	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
+}
+
 type OfflineTtsModelConfig struct {
 	Vits   OfflineTtsVitsModelConfig
 	Matcha OfflineTtsMatchaModelConfig
+	Kokoro OfflineTtsKokoroModelConfig
 
 	// Number of threads to use for neural network computation
 	NumThreads int
@@ -775,6 +784,21 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 
 	c.model.matcha.dict_dir = C.CString(config.Model.Matcha.DictDir)
 	defer C.free(unsafe.Pointer(c.model.matcha.dict_dir))
+
+	// kokoro
+	c.model.kokoro.model = C.CString(config.Model.Kokoro.Model)
+	defer C.free(unsafe.Pointer(c.model.kokoro.model))
+
+	c.model.kokoro.voices = C.CString(config.Model.Kokoro.Voices)
+	defer C.free(unsafe.Pointer(c.model.kokoro.voices))
+
+	c.model.kokoro.tokens = C.CString(config.Model.Kokoro.Tokens)
+	defer C.free(unsafe.Pointer(c.model.kokoro.tokens))
+
+	c.model.kokoro.data_dir = C.CString(config.Model.Kokoro.DataDir)
+	defer C.free(unsafe.Pointer(c.model.kokoro.data_dir))
+
+	c.model.kokoro.length_scale = C.float(config.Model.Kokoro.LengthScale)
 
 	c.model.num_threads = C.int(config.Model.NumThreads)
 	c.model.debug = C.int(config.Model.Debug)
