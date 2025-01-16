@@ -38,7 +38,7 @@ for sid in $(seq 0 10); do
     --kokoro-data-dir=./kokoro-en-v0_19/espeak-ng-data \
     --num-threads=2 \
     --sid=$sid \
-    --output-filename="./tts/kokor-$sid.wav" \
+    --output-filename="./tts/kokoro-$sid.wav" \
     "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be  a statesman, a businessman, an official, or a scholar."
 done
 rm -rf kokoro-en-v0_19
