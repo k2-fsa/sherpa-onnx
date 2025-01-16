@@ -53,6 +53,25 @@ static SherpaOnnxOfflineTtsMatchaModelConfig GetOfflineTtsMatchaModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineTtsKokoroModelConfig GetOfflineTtsKokoroModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineTtsKokoroModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("kokoro") || !obj.Get("kokoro").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("kokoro").As<Napi::Object>();
+  SHERPA_ONNX_ASSIGN_ATTR_STR(model, model);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(voices, voices);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(data_dir, dataDir);
+  SHERPA_ONNX_ASSIGN_ATTR_FLOAT(length_scale, lengthScale);
+
+  return c;
+}
+
 static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineTtsModelConfig c;
@@ -66,6 +85,7 @@ static SherpaOnnxOfflineTtsModelConfig GetOfflineTtsModelConfig(
 
   c.vits = GetOfflineTtsVitsModelConfig(o);
   c.matcha = GetOfflineTtsMatchaModelConfig(o);
+  c.kokoro = GetOfflineTtsKokoroModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
 
@@ -178,6 +198,22 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
 
   if (c.model.matcha.dict_dir) {
     delete[] c.model.matcha.dict_dir;
+  }
+
+  if (c.model.kokoro.model) {
+    delete[] c.model.kokoro.model;
+  }
+
+  if (c.model.kokoro.voices) {
+    delete[] c.model.kokoro.voices;
+  }
+
+  if (c.model.kokoro.tokens) {
+    delete[] c.model.kokoro.tokens;
+  }
+
+  if (c.model.kokoro.data_dir) {
+    delete[] c.model.kokoro.data_dir;
   }
 
   if (c.model.provider) {
