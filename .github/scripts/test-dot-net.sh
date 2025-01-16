@@ -2,7 +2,10 @@
 
 cd dotnet-examples/
 
-cd ./offline-tts
+cd ./kokoro-tts
+./run-kokoro-en.sh
+
+cd ../offline-tts
 ./run-matcha-zh.sh
 ls -lh *.wav
 ./run-matcha-en.sh
@@ -19,7 +22,8 @@ pushd ../..
 
 mkdir tts
 
-cp dotnet-examples/offline-tts/*.wav ./tts
+cp -v dotnet-examples/kokoro-tts/*.wav ./tts
+cp -v dotnet-examples/offline-tts/*.wav ./tts
 popd
 
 cd ../offline-speaker-diarization
