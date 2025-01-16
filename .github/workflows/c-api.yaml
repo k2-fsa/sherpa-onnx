@@ -99,7 +99,11 @@ jobs:
 
           rm ./kokoro-tts-en-c-api
           rm -rf kokoro-en-*
-          rm hifigan_v2.onnx
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kokoro-tts-${{ matrix.os }}
+          path: ./generated-kokoro-*.wav
 
       - name: Test Matcha TTS (zh)
         shell: bash

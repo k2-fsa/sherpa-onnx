@@ -21,4 +21,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
 
   add_executable(matcha-tts-en-cxx-api ./matcha-tts-en-cxx-api.cc)
   target_link_libraries(matcha-tts-en-cxx-api sherpa-onnx-cxx-api)
+
+  add_executable(kokoro-tts-en-cxx-api ./kokoro-tts-en-cxx-api.cc)
+  target_link_libraries(kokoro-tts-en-cxx-api sherpa-onnx-cxx-api)
 endif()
