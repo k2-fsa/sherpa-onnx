@@ -736,7 +736,8 @@ func sherpaOnnxOfflineTtsVitsModelConfig(
     noise_scale: noiseScale,
     noise_scale_w: noiseScaleW,
     length_scale: lengthScale,
-    dict_dir: toCPointer(dictDir))
+    dict_dir: toCPointer(dictDir)
+  )
 }
 
 func sherpaOnnxOfflineTtsMatchaModelConfig(
@@ -757,12 +758,30 @@ func sherpaOnnxOfflineTtsMatchaModelConfig(
     data_dir: toCPointer(dataDir),
     noise_scale: noiseScale,
     length_scale: lengthScale,
-    dict_dir: toCPointer(dictDir))
+    dict_dir: toCPointer(dictDir)
+  )
+}
+
+func sherpaOnnxOfflineTtsKokoroModelConfig(
+  model: String = "",
+  voices: String = "",
+  tokens: String = "",
+  dataDir: String = "",
+  lengthScale: Float = 1.0
+) -> SherpaOnnxOfflineTtsKokoroModelConfig {
+  return SherpaOnnxOfflineTtsKokoroModelConfig(
+    model: toCPointer(model),
+    voices: toCPointer(voices),
+    tokens: toCPointer(tokens),
+    data_dir: toCPointer(dataDir),
+    length_scale: lengthScale
+  )
 }
 
 func sherpaOnnxOfflineTtsModelConfig(
   vits: SherpaOnnxOfflineTtsVitsModelConfig = sherpaOnnxOfflineTtsVitsModelConfig(),
   matcha: SherpaOnnxOfflineTtsMatchaModelConfig = sherpaOnnxOfflineTtsMatchaModelConfig(),
+  kokoro: SherpaOnnxOfflineTtsKokoroModelConfig = sherpaOnnxOfflineTtsKokoroModelConfig(),
   numThreads: Int = 1,
   debug: Int = 0,
   provider: String = "cpu"
@@ -772,7 +791,8 @@ func sherpaOnnxOfflineTtsModelConfig(
     num_threads: Int32(numThreads),
     debug: Int32(debug),
     provider: toCPointer(provider),
-    matcha: matcha
+    matcha: matcha,
+    kokoro: kokoro
   )
 }
 
@@ -780,7 +800,7 @@ func sherpaOnnxOfflineTtsConfig(
   model: SherpaOnnxOfflineTtsModelConfig,
   ruleFsts: String = "",
   ruleFars: String = "",
-  maxNumSentences: Int = 2
+  maxNumSentences: Int = 1
 ) -> SherpaOnnxOfflineTtsConfig {
   return SherpaOnnxOfflineTtsConfig(
     model: model,
