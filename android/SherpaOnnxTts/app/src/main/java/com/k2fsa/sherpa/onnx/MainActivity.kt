@@ -185,6 +185,7 @@ class MainActivity : AppCompatActivity() {
         var modelName: String?
         var acousticModelName: String?
         var vocoder: String?
+        var voices: String?
         var ruleFsts: String?
         var ruleFars: String?
         var lexicon: String?
@@ -204,6 +205,10 @@ class MainActivity : AppCompatActivity() {
         acousticModelName = null
         vocoder = null
         // Matcha -- end
+
+        // For Kokoro -- begin
+        voices = null
+        // For Kokoro -- end
 
 
         modelDir = null
@@ -269,6 +274,13 @@ class MainActivity : AppCompatActivity() {
         // vocoder = "hifigan_v2.onnx"
         // dataDir = "matcha-icefall-en_US-ljspeech/espeak-ng-data"
 
+        // Example 9
+        // kokoro-en-v0_19
+        // modelDir = "kokoro-en-v0_19"
+        // modelName = "model.onnx"
+        // voices = "voices.bin"
+        // dataDir = "kokoro-en-v0_19/espeak-ng-data"
+
         if (dataDir != null) {
             val newDir = copyDataDir(dataDir!!)
             dataDir = "$newDir/$dataDir"
@@ -285,6 +297,7 @@ class MainActivity : AppCompatActivity() {
             modelName = modelName ?: "",
             acousticModelName = acousticModelName ?: "",
             vocoder = vocoder ?: "",
+            voices = voices ?: "",
             lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
             dictDir = dictDir ?: "",
