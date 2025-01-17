@@ -255,6 +255,11 @@ std::string CacheMechanism::GetLeastRepeatedFile() {
   int32_t min_count = std::numeric_limits<int32_t>::max();
 
   for (const auto &entry : repeat_counts_) {
+    if (entry.second == 1) {
+      least_repeated_file = entry.first;
+      return least_repeated_file;
+    }
+
     if (entry.second < min_count) {
       min_count = entry.second;
       least_repeated_file = entry.first;
