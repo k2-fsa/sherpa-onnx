@@ -42,8 +42,16 @@ struct OnlineModelConfig {
   //  - cjkchar
   //  - bpe
   //  - cjkchar+bpe
+  //  - fpinyin
+  //  - ppinyin
   std::string modeling_unit = "cjkchar";
+  // For encoding words into tokens
+  // Used only for models trained with bpe
   std::string bpe_vocab;
+
+  // For encoding words into tokens
+  // Used for models trained with pinyin or phone
+  std::string lexicon;
 
   /// if tokens_buf is non-empty,
   /// the tokens will be loaded from the buffer instead of from the
@@ -60,7 +68,7 @@ struct OnlineModelConfig {
                     const std::string &tokens, int32_t num_threads,
                     int32_t warm_up, bool debug, const std::string &model_type,
                     const std::string &modeling_unit,
-                    const std::string &bpe_vocab)
+                    const std::string &bpe_vocab, const std::string &lexicon)
       : transducer(transducer),
         paraformer(paraformer),
         wenet_ctc(wenet_ctc),
@@ -73,7 +81,8 @@ struct OnlineModelConfig {
         debug(debug),
         model_type(model_type),
         modeling_unit(modeling_unit),
-        bpe_vocab(bpe_vocab) {}
+        bpe_vocab(bpe_vocab),
+        lexicon(lexicon) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

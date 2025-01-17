@@ -6,6 +6,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <regex>  // NOLINT
 #include <sstream>
 #include <string>
 #include <utility>
@@ -58,6 +59,7 @@ static bool EncodeBase(const std::vector<std::string> &lines,
             break;
           case '@':  // the original keyword string
             phrase = word.substr(1);
+            phrase = std::regex_replace(phrase, std::regex("_"), " ");
             has_phrases = true;
             break;
           default:
@@ -187,16 +189,104 @@ bool EncodeHotwords(std::istream &is, const std::string &modeling_unit,
                     nullptr);
 }
 
-bool EncodeKeywords(std::istream &is, const SymbolTable &symbol_table,
+bool EncodeKeywords(std::istream &is, const std::string &modeling_unit,
+                    const SymbolTable &symbol_table,
+                    const ssentencepiece::Ssentencepiece *bpe_encoder,
+                    const cppinyin::PinyinEncoder *pinyin_encoder,
                     std::vector<std::vector<int32_t>> *keywords_id,
                     std::vector<std::string> *keywords,
                     std::vector<float> *boost_scores,
                     std::vector<float> *threshold) {
   std::vector<std::string> lines;
   std::string line;
+  std::string word;
+
   while (std::getline(is, line)) {
-    lines.push_back(line);
+    std::string score;
+    std::string phrase;
+    std::string threshold;
+    std::string custom_phrase;
+
+    std::ostringstream oss;
+    std::istringstream iss(line);
+    while (iss >> word) {
+      switch (word[0]) {
+        case ':':  // boosting score for current keyword
+          score = word;
+          break;
+        case '#':  // triggering threshold for current keyword
+          threshold = word;
+          break;
+        case '@':  // the customize phrase for current keyword
+          custom_phrase = word;
+          break;
+        default:
+          if (!score.empty() || !threshold.empty() || !custom_phrase.empty()) {
+            SHERPA_ONNX_LOGE(
+                "Boosting score, threshold and customize phrase should be put "
+                "after the words/phrase, given %s.",
+                line.c_str());
+            return false;
+          }
+          oss << " " << word;
+          break;
+      }
+    }
+
+    phrase = oss.str();
+    if (phrase.empty()) {
+      continue;
+    } else {
+      phrase = phrase.substr(1);
+    }
+
+    std::istringstream piss(phrase);
+    oss.clear();
+    oss.str("");
+    std::ostringstream poss;
+    while (piss >> word) {
+      poss << "_" << word;
+      if (modeling_unit == "bpe") {
+        std::vector<std::string> bpes;
+        bpe_encoder->Encode(word, &bpes);
+        for (const auto &bpe : bpes) {
+          oss << " " << bpe;
+        }
+      } else {
+        if (modeling_unit != "ppinyin") {
+          SHERPA_ONNX_LOGE(
+              "modeling_unit should be one of bpe, ppinyin, "
+              "given "
+              "%s",
+              modeling_unit.c_str());
+          exit(-1);
+        }
+        std::vector<std::string> pinyins;
+        pinyin_encoder->Encode(word, &pinyins, true /* tone */,
+                               true /* partial */);
+        for (const auto &pinyin : pinyins) {
+          oss << " " << pinyin;
+        }
+      }
+    }
+    std::string encoded_phrase = oss.str().substr(1);
+    oss.clear();
+    oss.str("");
+    oss << encoded_phrase;
+    if (!score.empty()) {
+      oss << " " << score;
+    }
+    if (!threshold.empty()) {
+      oss << " " << threshold;
+    }
+    if (!custom_phrase.empty()) {
+      oss << " " << custom_phrase;
+    } else {
+      oss << " @" << poss.str().substr(1);
+    }
+    lines.push_back(oss.str());
   }
+
   return EncodeBase(lines, symbol_table, keywords_id, keywords, boost_scores,
                     threshold);
 }
