@@ -142,6 +142,24 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(cls, "maxNumSentences", "I");
   ans.max_num_sentences = env->GetIntField(config, fid);
 
+  // Get data directory from config
+  jfieldID model_fid = env->GetFieldID(cls, "model", "Lcom/k2fsa/sherpa/onnx/OfflineTtsModelConfig;");
+  jobject model_config = env->GetObjectField(config, model_fid);
+  jclass model_cls = env->GetObjectClass(model_config);
+  
+  jfieldID vits_fid = env->GetFieldID(model_cls, "vits", "Lcom/k2fsa/sherpa/onnx/OfflineTtsVitsModelConfig;");
+  jobject vits_config = env->GetObjectField(model_config, vits_fid);
+  
+  fid = env->GetFieldID(vits_cls, "dataDir", "Ljava/lang/String;");
+  jstring data_dir = (jstring)env->GetObjectField(vits_config, fid);
+  const char *p_data_dir = env->GetStringUTFChars(data_dir, nullptr);
+  
+  // Convert data directory to cache directory
+  std::string cache_dir = std::string(p_data_dir) + "/../cache";
+  ans.cache_dir = cache_dir;
+  
+  env->ReleaseStringUTFChars(data_dir, p_data_dir);
+
   return ans;
 }
 
@@ -191,6 +209,18 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_delete(
 }
 
 SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_setCacheSizeImpl(
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jint cacheSize) {
+  reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->SetCacheSize(static_cast<int32_t>(cacheSize));
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jint JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_getCacheSizeImpl(
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
+  return reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->CacheSize();
+}
+
+SHERPA_ONNX_EXTERN_C
 JNIEXPORT jint JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_getSampleRate(
     JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   return reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->SampleRate();
@@ -200,6 +230,23 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT jint JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_getNumSpeakers(
     JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
   return reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->NumSpeakers();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_getTotalUsedCacheSizeImpl(
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
+  return reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->GetTotalUsedCacheSize();
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL
+Java_com_k2fsa_sherpa_onnx_OfflineTts_clearCacheImpl(
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr) {
+  auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
+  if (tts) {
+    tts->ClearCache();
+    SHERPA_ONNX_LOGE("Cache cleared from JNI.");
+  }
 }
 
 SHERPA_ONNX_EXTERN_C

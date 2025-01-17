@@ -142,6 +142,22 @@ class OfflineTts(
     private external fun getSampleRate(ptr: Long): Int
     private external fun getNumSpeakers(ptr: Long): Int
 
+    fun getCacheSizeInMB(): Int {
+        return (getCacheSizeImpl(ptr) / (1024 * 1024)).toInt() // Convert bytes to MB
+    }
+    private external fun getCacheSizeImpl(ptr: Long): Long
+
+    fun setCacheSizeInMB(cacheSize: Int) {
+        setCacheSizeImpl(ptr, cacheSize * (1024 * 1024))
+    }
+    private external fun setCacheSizeImpl(ptr: Long, cacheSize: Int)
+
+    fun getTotalUsedCacheSizeInMB(): Int {
+        return (getTotalUsedCacheSizeImpl(ptr) / (1024 * 1024)).toInt() // Convert bytes to MB
+    }
+
+    private external fun getTotalUsedCacheSizeImpl(ptr: Long): Long
+
     // The returned array has two entries:
     //  - the first entry is an 1-D float array containing audio samples.
     //    Each sample is normalized to the range [-1, 1]
@@ -160,6 +176,12 @@ class OfflineTts(
         speed: Float = 1.0f,
         callback: (samples: FloatArray) -> Int
     ): Array<Any>
+
+    fun clearCache() {
+        clearCacheImpl(ptr)
+    }
+
+    private external fun clearCacheImpl(ptr: Long)
 
     companion object {
         init {

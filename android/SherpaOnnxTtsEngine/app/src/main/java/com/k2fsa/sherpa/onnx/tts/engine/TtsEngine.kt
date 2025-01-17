@@ -25,12 +25,19 @@ object TtsEngine {
 
 
     val speedState: MutableState<Float> = mutableFloatStateOf(1.0F)
+    val cacheSizeState: MutableState<Int> = mutableIntStateOf(0)
     val speakerIdState: MutableState<Int> = mutableIntStateOf(0)
 
     var speed: Float
         get() = speedState.value
         set(value) {
             speedState.value = value
+        }
+
+    var cacheSize: Int
+        get() = cacheSizeState.value
+        set(value) {
+            cacheSizeState.value = value
         }
 
     var speakerId: Int
@@ -176,8 +183,11 @@ object TtsEngine {
 
         speed = PreferenceHelper(context).getSpeed()
         speakerId = PreferenceHelper(context).getSid()
+        cacheSize = PreferenceHelper(context).getCacheSizeInMB()
 
         tts = OfflineTts(assetManager = assets, config = config)
+
+        tts?.setCacheSizeInMB(cacheSize)
     }
 
 

@@ -167,6 +167,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-vits-model.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
+    offline-tts-cache-mechanism.cc
   )
 endif()
 

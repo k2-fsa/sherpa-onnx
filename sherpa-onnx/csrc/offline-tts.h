@@ -12,6 +12,7 @@
 
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
+#include "sherpa-onnx/csrc/offline-tts-cache-mechanism.h"
 
 namespace sherpa_onnx {
 
@@ -31,6 +32,9 @@ struct OfflineTtsConfig {
   // This is to avoid OOM for very long input text.
   // If you set it to -1, then we process all sentences in a single batch.
   int32_t max_num_sentences = 1;
+
+  // Path to cache_directory
+  std::string cache_dir;
 
   OfflineTtsConfig() = default;
   OfflineTtsConfig(const OfflineTtsModelConfig &model,
@@ -87,12 +91,26 @@ class OfflineTts {
   // Return the sample rate of the generated audio
   int32_t SampleRate() const;
 
+  // Return the maximum number of cached audio files size
+  int32_t CacheSize() const;
+
+  // Set the maximum number of cached audio files size
+  void SetCacheSize(const int32_t cache_size);
+
+  // Remove all cache data
+  void ClearCache();
+
+  // To get total used cache size(for wav files) in bytes
+  int64_t GetTotalUsedCacheSize();
+  
   // Number of supported speakers.
   // If it supports only a single speaker, then it return 0 or 1.
   int32_t NumSpeakers() const;
 
  private:
+  OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsImpl> impl_;
+  std::unique_ptr<CacheMechanism> cache_mechanism_;
 };
 
 }  // namespace sherpa_onnx

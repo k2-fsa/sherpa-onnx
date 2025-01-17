@@ -28,6 +28,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +38,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.k2fsa.sherpa.onnx.tts.engine.ui.theme.SherpaOnnxTtsEngineTheme
 import java.io.File
+import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
 
 const val TAG = "sherpa-onnx-tts-engine"
 
@@ -49,6 +52,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         TtsEngine.createTts(this)
         val preferenceHelper = PreferenceHelper(this)
+
+        TtsEngine.cacheSize = preferenceHelper.getCacheSizeInMB()
+
         setContent {
             SherpaOnnxTtsEngineTheme {
                 // A surface container using the 'background' color from the theme
@@ -61,6 +67,17 @@ class MainActivity : ComponentActivity() {
                     }) {
                         Box(modifier = Modifier.padding(it)) {
                             Column(modifier = Modifier.padding(16.dp)) {
+                                // Track used cache size in a mutable state
+                                var usedCacheSizeMB by remember { mutableStateOf(0) }
+
+                                // LaunchedEffect to periodically update the used cache size
+                                LaunchedEffect(Unit) {
+                                    while (true) {
+                                        usedCacheSizeMB = TtsEngine.tts?.getTotalUsedCacheSizeInMB() ?: 0
+                                        delay(5000) // Update every 5 seconds
+                                    }
+                                }
+
                                 Column {
                                     Text("Speed " + String.format("%.1f", TtsEngine.speed))
                                     Slider(
@@ -70,6 +87,20 @@ class MainActivity : ComponentActivity() {
                                             preferenceHelper.setSpeed(it)
                                         },
                                         valueRange = 0.2F..3.0F,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+
+                                    Text("Cache Size: ${TtsEngine.cacheSize}MB (${usedCacheSizeMB}MB used)")
+                                    Slider(
+                                        value = TtsEngine.cacheSizeState.value.toFloat(),
+                                        onValueChange = { newValue ->
+                                            // Round the value to the nearest multiple of 10
+                                            val roundedValue = (newValue / 5).roundToInt() * 5
+                                            TtsEngine.cacheSize = roundedValue
+                                            preferenceHelper.setCacheSizeInMB(roundedValue)
+                                            TtsEngine.tts?.setCacheSizeInMB(roundedValue)
+                                        },
+                                        valueRange = 0f..100f,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
@@ -166,6 +197,21 @@ class MainActivity : ComponentActivity() {
                                         }) {
                                         Text("Reset")
                                     }
+
+                                    Button(
+                                        modifier = Modifier.padding(20.dp),
+                                        onClick = {
+                                            TtsEngine.tts?.clearCache() // Call the clearCache method
+                                            usedCacheSizeMB = 0 // Reset used cache size
+                                            Toast.makeText(
+                                                applicationContext,
+                                                "Cache cleared!",
+                                                Toast.LENGTH_SHORT
+                                            ).show()
+                                        }
+                                    ) {
+                                        Text("Clear")
+                                    }
                                 }
                             }
                         }
@@ -173,6 +219,13 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Update used cache size when the app is resumed
+        val usedCacheSizeMB = TtsEngine.tts?.getTotalUsedCacheSizeInMB() ?: 0
+        Log.i(TAG, "App resumed. Used cache size: ${usedCacheSizeMB}MB")
     }
 
     override fun onDestroy() {
