@@ -42,6 +42,22 @@ node ./test-offline-speaker-diarization.js
 
 In the following, we demonstrate how to run text-to-speech.
 
+## ./test-offline-tts-kokoro-en.js
+
+[./test-offline-tts-kokoro-en.js](./test-offline-tts-kokoro-en.js) shows how to use
+[kokoro-en-v0_19](https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2)
+for text-to-speech.
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+tar xf kokoro-en-v0_19.tar.bz2
+rm kokoro-en-v0_19.tar.bz2
+
+node ./test-offline-tts-kokoro-en.js
+```
+
 ## ./test-offline-tts-matcha-zh.js
 
 [./test-offline-tts-matcha-zh.js](./test-offline-tts-matcha-zh.js) shows how to use
