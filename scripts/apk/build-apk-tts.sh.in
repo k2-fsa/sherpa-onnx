@@ -39,6 +39,7 @@ model_dir={{ tts_model.model_dir }}
 model_name={{ tts_model.model_name }}
 acoustic_model_name={{ tts_model.acoustic_model_name }}
 vocoder={{ tts_model.vocoder }}
+voices={{ tts_model.voices }}
 lang={{ tts_model.lang }}
 
 wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$model_dir.tar.bz2
@@ -69,6 +70,9 @@ sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
   sed -i.bak s/"vocoder = null"/"vocoder = \"$vocoder\""/ ./MainActivity.kt
 {% endif %}
 
+{% if tts_model.voices %}
+  sed -i.bak s/"voices = null"/"voices = \"$voices\""/ ./MainActivity.kt
+{% endif %}
 
 {% if tts_model.rule_fsts %}
   rule_fsts={{ tts_model.rule_fsts }}

@@ -113,6 +113,39 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(matcha_cls, "lengthScale", "F");
   ans.model.matcha.length_scale = env->GetFloatField(matcha, fid);
 
+  // kokoro
+  fid = env->GetFieldID(model_config_cls, "kokoro",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineTtsKokoroModelConfig;");
+  jobject kokoro = env->GetObjectField(model, fid);
+  jclass kokoro_cls = env->GetObjectClass(kokoro);
+
+  fid = env->GetFieldID(kokoro_cls, "model", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "voices", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.voices = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "tokens", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.tokens = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "dataDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.data_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "lengthScale", "F");
+  ans.model.kokoro.length_scale = env->GetFloatField(kokoro, fid);
+
   fid = env->GetFieldID(model_config_cls, "numThreads", "I");
   ans.model.num_threads = env->GetIntField(model, fid);
 
@@ -320,8 +353,8 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
     return env->CallIntMethod(should_continue, int_value_mid);
   };
 
-  auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
-      p_text, sid, speed, callback_wrapper);
+  auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
+  auto audio = tts->Generate(p_text, sid, speed, callback_wrapper);
 
   jfloatArray samples_arr = env->NewFloatArray(audio.samples.size());
   env->SetFloatArrayRegion(samples_arr, 0, audio.samples.size(),

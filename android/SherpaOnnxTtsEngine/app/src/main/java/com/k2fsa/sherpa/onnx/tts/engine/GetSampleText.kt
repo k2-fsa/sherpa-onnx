@@ -47,7 +47,7 @@ fun getSampleText(lang: String): String {
         }
 
         "eng" -> {
-            text = "This is a text-to-speech engine using next generation Kaldi"
+            text = "How are you doing today? This is a text-to-speech engine using next generation Kaldi"
         }
 
         "est" -> {
