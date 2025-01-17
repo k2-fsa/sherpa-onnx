@@ -5,6 +5,7 @@ package com.k2fsa.sherpa.onnx;
 public class OfflineTtsModelConfig {
     private final OfflineTtsVitsModelConfig vits;
     private final OfflineTtsMatchaModelConfig matcha;
+    private final OfflineTtsKokoroModelConfig kokoro;
     private final int numThreads;
     private final boolean debug;
     private final String provider;
@@ -12,6 +13,7 @@ public class OfflineTtsModelConfig {
     private OfflineTtsModelConfig(Builder builder) {
         this.vits = builder.vits;
         this.matcha = builder.matcha;
+        this.kokoro = builder.kokoro;
         this.numThreads = builder.numThreads;
         this.debug = builder.debug;
         this.provider = builder.provider;
@@ -29,9 +31,14 @@ public class OfflineTtsModelConfig {
         return matcha;
     }
 
+    public OfflineTtsKokoroModelConfig getKokoro() {
+        return kokoro;
+    }
+
     public static class Builder {
         private OfflineTtsVitsModelConfig vits = OfflineTtsVitsModelConfig.builder().build();
         private OfflineTtsMatchaModelConfig matcha = OfflineTtsMatchaModelConfig.builder().build();
+        private OfflineTtsKokoroModelConfig kokoro = OfflineTtsKokoroModelConfig.builder().build();
         private int numThreads = 1;
         private boolean debug = true;
         private String provider = "cpu";
@@ -47,6 +54,11 @@ public class OfflineTtsModelConfig {
 
         public Builder setMatcha(OfflineTtsMatchaModelConfig matcha) {
             this.matcha = matcha;
+            return this;
+        }
+
+        public Builder setKokoro(OfflineTtsKokoroModelConfig kokoro) {
+            this.kokoro = kokoro;
             return this;
         }
 

@@ -41,8 +41,9 @@ object TtsEngine {
 
     private var modelDir: String? = null
     private var modelName: String? = null
-    private var acousticModelName: String? = null
-    private var vocoder: String? = null
+    private var acousticModelName: String? = null // for matcha tts
+    private var vocoder: String? = null // for matcha tts
+    private var voices: String? = null // for kokoro
     private var ruleFsts: String? = null
     private var ruleFars: String? = null
     private var lexicon: String? = null
@@ -63,6 +64,10 @@ object TtsEngine {
         acousticModelName = null
         vocoder = null
         // For Matcha -- end
+
+        // For Kokoro -- begin
+        voices = null
+        // For Kokoro -- end
 
         modelDir = null
         ruleFsts = null
@@ -139,6 +144,14 @@ object TtsEngine {
         // vocoder = "hifigan_v2.onnx"
         // dataDir = "matcha-icefall-en_US-ljspeech/espeak-ng-data"
         // lang = "eng"
+
+        // Example 9
+        // kokoro-en-v0_19
+        // modelDir = "kokoro-en-v0_19"
+        // modelName = "model.onnx"
+        // voices = "voices.bin"
+        // dataDir = "kokoro-en-v0_19/espeak-ng-data"
+        // lang = "eng"
     }
 
     fun createTts(context: Context) {
@@ -167,6 +180,7 @@ object TtsEngine {
             modelName = modelName ?: "",
             acousticModelName = acousticModelName ?: "",
             vocoder = vocoder ?: "",
+            voices = voices ?: "",
             lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
             dictDir = dictDir ?: "",
