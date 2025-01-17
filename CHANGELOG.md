@@ -1,3 +1,23 @@
+## 1.10.40
+
+* Fix building wheels (#1703)
+* Export kokoro to sherpa-onnx (#1713)
+* Add C++ and Python API for Kokoro TTS models. (#1715)
+* Add C API for Kokoro TTS models (#1717)
+* Fix style issues (#1718)
+* Add C# API for Kokoro TTS models (#1720)
+* Add Swift API for Kokoro TTS models (#1721)
+* Add Go API for Kokoro TTS models (#1722)
+* Add Dart API for Kokoro TTS models (#1723)
+* Add Pascal API for Kokoro TTS models (#1724)
+* Add JavaScript API (node-addon) for Kokoro TTS models (#1725)
+* Add JavaScript (WebAssembly) API for Kokoro TTS models. (#1726)
+* Add Koltin and Java API for Kokoro TTS models (#1728)
+* Update README.md for KWS to not use git lfs. (#1729)
+
+
+
+
 ## 1.10.39
 
 * Fix building without TTS (#1691)
