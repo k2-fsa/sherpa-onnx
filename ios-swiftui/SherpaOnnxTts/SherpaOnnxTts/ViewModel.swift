@@ -127,8 +127,43 @@ func getTtsFor_zh_en_melo_tts() -> SherpaOnnxOfflineTtsWrapper {
   return SherpaOnnxOfflineTtsWrapper(config: &config)
 }
 
+func getTtsFor_matcha_icefall_zh_baker() -> SherpaOnnxOfflineTtsWrapper {
+  // please see https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker
+
+  let acousticModel = getResource("model-steps-3", "onnx")
+  let vocoder = getResource("hifigan_v2", "onnx")
+
+  let tokens = getResource("tokens", "txt")
+  let lexicon = getResource("lexicon", "txt")
+
+  let dictDir = resourceURL(to: "dict")
+
+  let numFst = getResource("number", "fst")
+  let dateFst = getResource("date", "fst")
+  let phoneFst = getResource("phone", "fst")
+  let ruleFsts = "\(dateFst),\(phoneFst),\(numFst)"
+
+  let matcha = sherpaOnnxOfflineTtsMatchaModelConfig(
+    acousticModel: acousticModel,
+    vocoder: vocoder,
+    lexicon: lexicon,
+    tokens: tokens,
+    dictDir: dictDir
+  )
+
+  let modelConfig = sherpaOnnxOfflineTtsModelConfig(matcha: matcha)
+  var config = sherpaOnnxOfflineTtsConfig(
+    model: modelConfig,
+    ruleFsts: ruleFsts
+  )
+
+  return SherpaOnnxOfflineTtsWrapper(config: &config)
+}
+
 func createOfflineTts() -> SherpaOnnxOfflineTtsWrapper {
   // Please enable only one of them
+
+  // return getTtsFor_matcha_icefall_zh_baker()
 
   return getTtsFor_en_US_amy_low()
 
