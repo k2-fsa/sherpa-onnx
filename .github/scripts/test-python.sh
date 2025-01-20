@@ -574,29 +574,6 @@ echo "sherpa_onnx version: $sherpa_onnx_version"
 pwd
 ls -lh
 
-repo=sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01
-log "Start testing ${repo}"
-
-pushd $dir
-curl -LS -O https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
-tar xf sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
-rm sherpa-onnx-kws-zipformer-gigaspeech-3.3M-2024-01-01.tar.bz
-popd
-
-repo=$dir/$repo
-ls -lh $repo
-
-python3 ./python-api-examples/keyword-spotter.py \
-  --tokens=$repo/tokens.txt \
-  --encoder=$repo/encoder-epoch-12-avg-2-chunk-16-left-64.onnx \
-  --decoder=$repo/decoder-epoch-12-avg-2-chunk-16-left-64.onnx \
-  --joiner=$repo/joiner-epoch-12-avg-2-chunk-16-left-64.onnx \
-  --keywords-file=$repo/test_wavs/test_keywords.txt \
-  $repo/test_wavs/0.wav \
-  $repo/test_wavs/1.wav
-
-rm -rf $repo
-
 if [[ x$OS != x'windows-latest' ]]; then
   echo "OS: $OS"
 
@@ -612,15 +589,7 @@ if [[ x$OS != x'windows-latest' ]]; then
   repo=$dir/$repo
   ls -lh $repo
 
-  python3 ./python-api-examples/keyword-spotter.py \
-    --tokens=$repo/tokens.txt \
-    --encoder=$repo/encoder-epoch-12-avg-2-chunk-16-left-64.onnx \
-    --decoder=$repo/decoder-epoch-12-avg-2-chunk-16-left-64.onnx \
-    --joiner=$repo/joiner-epoch-12-avg-2-chunk-16-left-64.onnx \
-    --keywords-file=$repo/test_wavs/test_keywords.txt \
-    $repo/test_wavs/3.wav \
-    $repo/test_wavs/4.wav \
-    $repo/test_wavs/5.wav
+  python3 ./python-api-examples/keyword-spotter.py
 
   python3 sherpa-onnx/python/tests/test_keyword_spotter.py --verbose
 
