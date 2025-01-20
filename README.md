@@ -297,6 +297,10 @@ It uses the JavaScript API of sherpa-onnx along with [Electron](https://electron
 
 Video demo in Chinese: [爆了！炫神教你开打字挂！真正影响胜率的英雄联盟工具！英雄联盟的最后一块拼图！和游戏中的每个人无障碍沟通！](https://www.bilibili.com/video/BV142tje9E74)
 
+### [Sherpa-ONNX 语音识别服务器](https://github.com/hfyydd/sherpa-onnx-server)
+
+A server based on nodejs providing Restful API for speech recognition.
+
 
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
