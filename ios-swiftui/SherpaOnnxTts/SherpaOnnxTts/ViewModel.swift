@@ -160,12 +160,34 @@ func getTtsFor_matcha_icefall_zh_baker() -> SherpaOnnxOfflineTtsWrapper {
   return SherpaOnnxOfflineTtsWrapper(config: &config)
 }
 
+func getTtsFor_kokoro_en_v0_19() -> SherpaOnnxOfflineTtsWrapper {
+  // please see https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html#kokoro-en-v0-19-english-11-speakers
+
+  let model = getResource("model", "onnx")
+  let voices = getResource("voices", "bin")
+
+  // tokens.txt
+  let tokens = getResource("tokens", "txt")
+
+  // in this case, we don't need lexicon.txt
+  let dataDir = resourceURL(to: "espeak-ng-data")
+
+  let kokoro = sherpaOnnxOfflineTtsKokoroModelConfig(
+    model: model, voices: voices, tokens: tokens, dataDir: dataDir)
+  let modelConfig = sherpaOnnxOfflineTtsModelConfig(kokoro: kokoro)
+  var config = sherpaOnnxOfflineTtsConfig(model: modelConfig)
+
+  return SherpaOnnxOfflineTtsWrapper(config: &config)
+}
+
 func createOfflineTts() -> SherpaOnnxOfflineTtsWrapper {
   // Please enable only one of them
 
+  return getTtsFor_kokoro_en_v0_19()
+
   // return getTtsFor_matcha_icefall_zh_baker()
 
-  return getTtsFor_en_US_amy_low()
+  // return getTtsFor_en_US_amy_low()
 
   // return getTtsForVCTK()
 
