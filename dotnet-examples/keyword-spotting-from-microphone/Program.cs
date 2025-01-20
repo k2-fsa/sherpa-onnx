@@ -112,6 +112,7 @@ class KeywordSpotterDemo
       var result = kws.GetResult(s);
       if (result.Keyword != string.Empty)
       {
+        kws.Reset(s);
         Console.WriteLine("Detected: {0}", result.Keyword);
       }
 
