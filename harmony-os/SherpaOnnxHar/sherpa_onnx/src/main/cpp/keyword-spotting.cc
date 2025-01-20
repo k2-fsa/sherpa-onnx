@@ -46,7 +46,7 @@ static Napi::External<SherpaOnnxKeywordSpotter> CreateKeywordSpotterWrapper(
   SHERPA_ONNX_ASSIGN_ATTR_STR(keywords_buf, keywordsBuf);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(keywords_buf_size, keywordsBufSize);
 
-  SherpaOnnxKeywordSpotter *kws = SherpaOnnxCreateKeywordSpotter(&c);
+  const SherpaOnnxKeywordSpotter *kws = SherpaOnnxCreateKeywordSpotter(&c);
 
   if (c.model_config.transducer.encoder) {
     delete[] c.model_config.transducer.encoder;
@@ -100,7 +100,8 @@ static Napi::External<SherpaOnnxKeywordSpotter> CreateKeywordSpotterWrapper(
   }
 
   return Napi::External<SherpaOnnxKeywordSpotter>::New(
-      env, kws, [](Napi::Env env, SherpaOnnxKeywordSpotter *kws) {
+      env, const_cast<SherpaOnnxKeywordSpotter *>(kws),
+      [](Napi::Env env, SherpaOnnxKeywordSpotter *kws) {
         SherpaOnnxDestroyKeywordSpotter(kws);
       });
 }
@@ -125,13 +126,14 @@ static Napi::External<SherpaOnnxOnlineStream> CreateKeywordStreamWrapper(
     return {};
   }
 
-  SherpaOnnxKeywordSpotter *kws =
+  const SherpaOnnxKeywordSpotter *kws =
       info[0].As<Napi::External<SherpaOnnxKeywordSpotter>>().Data();
 
-  SherpaOnnxOnlineStream *stream = SherpaOnnxCreateKeywordStream(kws);
+  const SherpaOnnxOnlineStream *stream = SherpaOnnxCreateKeywordStream(kws);
 
   return Napi::External<SherpaOnnxOnlineStream>::New(
-      env, stream, [](Napi::Env env, SherpaOnnxOnlineStream *stream) {
+      env, const_cast<SherpaOnnxOnlineStream *>(stream),
+      [](Napi::Env env, SherpaOnnxOnlineStream *stream) {
         SherpaOnnxDestroyOnlineStream(stream);
       });
 }
@@ -162,10 +164,10 @@ static Napi::Boolean IsKeywordStreamReadyWrapper(
     return {};
   }
 
-  SherpaOnnxKeywordSpotter *kws =
+  const SherpaOnnxKeywordSpotter *kws =
       info[0].As<Napi::External<SherpaOnnxKeywordSpotter>>().Data();
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   int32_t is_ready = SherpaOnnxIsKeywordStreamReady(kws, stream);
@@ -198,10 +200,10 @@ static void DecodeKeywordStreamWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxKeywordSpotter *kws =
+  const SherpaOnnxKeywordSpotter *kws =
       info[0].As<Napi::External<SherpaOnnxKeywordSpotter>>().Data();
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   SherpaOnnxDecodeKeywordStream(kws, stream);
@@ -233,10 +235,10 @@ static Napi::String GetKeywordResultAsJsonWrapper(
     return {};
   }
 
-  SherpaOnnxKeywordSpotter *kws =
+  const SherpaOnnxKeywordSpotter *kws =
       info[0].As<Napi::External<SherpaOnnxKeywordSpotter>>().Data();
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   const char *json = SherpaOnnxGetKeywordResultAsJson(kws, stream);
