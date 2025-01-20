@@ -67,6 +67,7 @@ void PybindKeywordSpotter(py::module *m) {
           py::arg("keywords"), py::call_guard<py::gil_scoped_release>())
       .def("is_ready", &PyClass::IsReady,
            py::call_guard<py::gil_scoped_release>())
+      .def("reset", &PyClass::Reset, py::call_guard<py::gil_scoped_release>())
       .def("decode_stream", &PyClass::DecodeStream,
            py::call_guard<py::gil_scoped_release>())
       .def(

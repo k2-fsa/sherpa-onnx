@@ -46,6 +46,11 @@ namespace SherpaOnnx
             Decode(_handle.Handle, stream.Handle);
         }
 
+        public void Reset(OnlineStream stream)
+        {
+            Reset(_handle.Handle, stream.Handle);
+        }
+
         // The caller should ensure all passed streams are ready for decoding.
         public void Decode(IEnumerable<OnlineStream> streams)
         {
@@ -109,6 +114,9 @@ namespace SherpaOnnx
 
         [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxDecodeKeywordStream")]
         private static extern void Decode(IntPtr handle, IntPtr stream);
+
+        [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxResetKeywordStream")]
+        private static extern void Reset(IntPtr handle, IntPtr stream);
 
         [DllImport(Dll.Filename, EntryPoint = "SherpaOnnxDecodeMultipleKeywordStreams")]
         private static extern void Decode(IntPtr handle, IntPtr[] streams, int n);

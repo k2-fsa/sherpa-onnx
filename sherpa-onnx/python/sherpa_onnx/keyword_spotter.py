@@ -104,8 +104,8 @@ class KeywordSpotter(object):
         )
 
         provider_config = ProviderConfig(
-          provider=provider,
-          device = device,
+            provider=provider,
+            device=device,
         )
 
         model_config = OnlineModelConfig(
@@ -130,6 +130,9 @@ class KeywordSpotter(object):
             keywords_file=keywords_file,
         )
         self.keyword_spotter = _KeywordSpotter(keywords_spotter_config)
+
+    def reset_stream(self, s: OnlineStream):
+        self.keyword_spotter.reset(s)
 
     def create_stream(self, keywords: Optional[str] = None):
         if keywords is None:

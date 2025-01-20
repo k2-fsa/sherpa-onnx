@@ -667,6 +667,12 @@ typedef DecodeKeywordStreamNative = Void Function(
 typedef DecodeKeywordStream = void Function(
     Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
 
+typedef ResetKeywordStreamNative = Void Function(
+    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef ResetKeywordStream = void Function(
+    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+
 typedef GetKeywordResultAsJsonNative = Pointer<Utf8> Function(
     Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
 
@@ -1157,6 +1163,7 @@ class SherpaOnnxBindings {
   static CreateKeywordStreamWithKeywords? createKeywordStreamWithKeywords;
   static IsKeywordStreamReady? isKeywordStreamReady;
   static DecodeKeywordStream? decodeKeywordStream;
+  static ResetKeywordStream? resetKeywordStream;
   static GetKeywordResultAsJson? getKeywordResultAsJson;
   static FreeKeywordResultJson? freeKeywordResultJson;
 
@@ -1457,6 +1464,11 @@ class SherpaOnnxBindings {
     decodeKeywordStream ??= dynamicLibrary
         .lookup<NativeFunction<DecodeKeywordStreamNative>>(
             'SherpaOnnxDecodeKeywordStream')
+        .asFunction();
+
+    resetKeywordStream ??= dynamicLibrary
+        .lookup<NativeFunction<ResetKeywordStreamNative>>(
+            'SherpaOnnxResetKeywordStream')
         .asFunction();
 
     getKeywordResultAsJson ??= dynamicLibrary

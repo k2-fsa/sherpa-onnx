@@ -157,6 +157,8 @@ bool KeywordSpotter::IsReady(OnlineStream *s) const {
   return impl_->IsReady(s);
 }
 
+void KeywordSpotter::Reset(OnlineStream *s) const { impl_->Reset(s); }
+
 void KeywordSpotter::DecodeStreams(OnlineStream **ss, int32_t n) const {
   impl_->DecodeStreams(ss, n);
 }

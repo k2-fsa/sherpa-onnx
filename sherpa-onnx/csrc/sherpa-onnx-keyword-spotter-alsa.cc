@@ -106,13 +106,15 @@ as the device_name.
 
     while (spotter.IsReady(stream.get())) {
       spotter.DecodeStream(stream.get());
-    }
 
-    const auto r = spotter.GetResult(stream.get());
-    if (!r.keyword.empty()) {
-      display.Print(keyword_index, r.AsJsonString());
-      fflush(stderr);
-      keyword_index++;
+      const auto r = spotter.GetResult(stream.get());
+      if (!r.keyword.empty()) {
+        display.Print(keyword_index, r.AsJsonString());
+        fflush(stderr);
+        keyword_index++;
+
+        spotter.Reset(stream.get());
+      }
     }
   }
 

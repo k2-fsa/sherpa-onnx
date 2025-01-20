@@ -406,6 +406,53 @@ class SHERPA_ONNX_API OfflineTts
   explicit OfflineTts(const SherpaOnnxOfflineTts *p);
 };
 
+// ============================================================
+// For Keyword Spotter
+// ============================================================
+
+struct KeywordResult {
+  std::string keyword;
+  std::vector<std::string> tokens;
+  std::vector<float> timestamps;
+  float start_time;
+  std::string json;
+};
+
+struct KeywordSpotterConfig {
+  FeatureConfig feat_config;
+  OnlineModelConfig model_config;
+  int32_t max_active_paths = 4;
+  int32_t num_trailing_blanks = 1;
+  float keywords_score = 1.0f;
+  float keywords_threshold = 0.25f;
+  std::string keywords_file;
+};
+
+class SHERPA_ONNX_API KeywordSpotter
+    : public MoveOnly<KeywordSpotter, SherpaOnnxKeywordSpotter> {
+ public:
+  static KeywordSpotter Create(const KeywordSpotterConfig &config);
+
+  void Destroy(const SherpaOnnxKeywordSpotter *p) const;
+
+  OnlineStream CreateStream() const;
+
+  OnlineStream CreateStream(const std::string &keywords) const;
+
+  bool IsReady(const OnlineStream *s) const;
+
+  void Decode(const OnlineStream *s) const;
+
+  void Decode(const OnlineStream *ss, int32_t n) const;
+
+  void Reset(const OnlineStream *s) const;
+
+  KeywordResult GetResult(const OnlineStream *s) const;
+
+ private:
+  explicit KeywordSpotter(const SherpaOnnxKeywordSpotter *p);
+};
+
 }  // namespace sherpa_onnx::cxx
 
 #endif  // SHERPA_ONNX_C_API_CXX_API_H_

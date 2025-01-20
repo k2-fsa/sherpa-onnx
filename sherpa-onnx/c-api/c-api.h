@@ -600,7 +600,7 @@ SHERPA_ONNX_API const char *SherpaOnnxGetOfflineStreamResultAsJson(
 SHERPA_ONNX_API void SherpaOnnxDestroyOfflineStreamResultJson(const char *s);
 
 // ============================================================
-// For Keyword Spot
+// For Keyword Spotter
 // ============================================================
 SHERPA_ONNX_API typedef struct SherpaOnnxKeywordResult {
   /// The triggered keyword.
@@ -660,21 +660,21 @@ SHERPA_ONNX_API typedef struct SherpaOnnxKeywordSpotter
 /// @param config  Config for the keyword spotter.
 /// @return Return a pointer to the spotter. The user has to invoke
 ///         SherpaOnnxDestroyKeywordSpotter() to free it to avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
+SHERPA_ONNX_API const SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
     const SherpaOnnxKeywordSpotterConfig *config);
 
 /// Free a pointer returned by SherpaOnnxCreateKeywordSpotter()
 ///
 /// @param p A pointer returned by SherpaOnnxCreateKeywordSpotter()
 SHERPA_ONNX_API void SherpaOnnxDestroyKeywordSpotter(
-    SherpaOnnxKeywordSpotter *spotter);
+    const SherpaOnnxKeywordSpotter *spotter);
 
 /// Create an online stream for accepting wave samples.
 ///
 /// @param spotter A pointer returned by SherpaOnnxCreateKeywordSpotter()
 /// @return Return a pointer to an OnlineStream. The user has to invoke
 ///         SherpaOnnxDestroyOnlineStream() to free it to avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStream(
+SHERPA_ONNX_API const SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStream(
     const SherpaOnnxKeywordSpotter *spotter);
 
 /// Create an online stream for accepting wave samples with the specified hot
@@ -684,7 +684,7 @@ SHERPA_ONNX_API SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStream(
 /// @param keywords A pointer points to the keywords that you set
 /// @return Return a pointer to an OnlineStream. The user has to invoke
 ///         SherpaOnnxDestroyOnlineStream() to free it to avoid memory leak.
-SHERPA_ONNX_API SherpaOnnxOnlineStream *
+SHERPA_ONNX_API const SherpaOnnxOnlineStream *
 SherpaOnnxCreateKeywordStreamWithKeywords(
     const SherpaOnnxKeywordSpotter *spotter, const char *keywords);
 
@@ -693,15 +693,22 @@ SherpaOnnxCreateKeywordStreamWithKeywords(
 ///
 /// @param spotter A pointer returned by SherpaOnnxCreateKeywordSpotter
 /// @param stream  A pointer returned by SherpaOnnxCreateKeywordStream
-SHERPA_ONNX_API int32_t SherpaOnnxIsKeywordStreamReady(
-    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream *stream);
+SHERPA_ONNX_API int32_t
+SherpaOnnxIsKeywordStreamReady(const SherpaOnnxKeywordSpotter *spotter,
+                               const SherpaOnnxOnlineStream *stream);
 
 /// Call this function to run the neural network model and decoding.
 //
 /// Precondition for this function: SherpaOnnxIsKeywordStreamReady() MUST
 /// return 1.
 SHERPA_ONNX_API void SherpaOnnxDecodeKeywordStream(
-    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream *stream);
+    const SherpaOnnxKeywordSpotter *spotter,
+    const SherpaOnnxOnlineStream *stream);
+
+/// Please call it right after a keyword is detected
+SHERPA_ONNX_API void SherpaOnnxResetKeywordStream(
+    const SherpaOnnxKeywordSpotter *spotter,
+    const SherpaOnnxOnlineStream *stream);
 
 /// This function is similar to SherpaOnnxDecodeKeywordStream(). It decodes
 /// multiple OnlineStream in parallel.
@@ -714,8 +721,8 @@ SHERPA_ONNX_API void SherpaOnnxDecodeKeywordStream(
 ///                 SherpaOnnxCreateKeywordStream()
 /// @param n  Number of elements in the given streams array.
 SHERPA_ONNX_API void SherpaOnnxDecodeMultipleKeywordStreams(
-    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream **streams,
-    int32_t n);
+    const SherpaOnnxKeywordSpotter *spotter,
+    const SherpaOnnxOnlineStream **streams, int32_t n);
 
 /// Get the decoding results so far for an OnlineStream.
 ///
@@ -725,7 +732,8 @@ SHERPA_ONNX_API void SherpaOnnxDecodeMultipleKeywordStreams(
 ///         SherpaOnnxDestroyKeywordResult() to free the returned pointer to
 ///         avoid memory leak.
 SHERPA_ONNX_API const SherpaOnnxKeywordResult *SherpaOnnxGetKeywordResult(
-    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream *stream);
+    const SherpaOnnxKeywordSpotter *spotter,
+    const SherpaOnnxOnlineStream *stream);
 
 /// Destroy the pointer returned by SherpaOnnxGetKeywordResult().
 ///
@@ -736,7 +744,8 @@ SHERPA_ONNX_API void SherpaOnnxDestroyKeywordResult(
 // the user has to call SherpaOnnxFreeKeywordResultJson() to free the returned
 // pointer to avoid memory leak
 SHERPA_ONNX_API const char *SherpaOnnxGetKeywordResultAsJson(
-    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream *stream);
+    const SherpaOnnxKeywordSpotter *spotter,
+    const SherpaOnnxOnlineStream *stream);
 
 SHERPA_ONNX_API void SherpaOnnxFreeKeywordResultJson(const char *s);
 

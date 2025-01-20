@@ -391,4 +391,112 @@ GeneratedAudio OfflineTts::Generate(const std::string &text,
   return ans;
 }
 
+KeywordSpotter KeywordSpotter::Create(const KeywordSpotterConfig &config) {
+  struct SherpaOnnxKeywordSpotterConfig c;
+  memset(&c, 0, sizeof(c));
+
+  c.feat_config.sample_rate = config.feat_config.sample_rate;
+
+  c.model_config.transducer.encoder =
+      config.model_config.transducer.encoder.c_str();
+  c.model_config.transducer.decoder =
+      config.model_config.transducer.decoder.c_str();
+  c.model_config.transducer.joiner =
+      config.model_config.transducer.joiner.c_str();
+  c.feat_config.feature_dim = config.feat_config.feature_dim;
+
+  c.model_config.paraformer.encoder =
+      config.model_config.paraformer.encoder.c_str();
+  c.model_config.paraformer.decoder =
+      config.model_config.paraformer.decoder.c_str();
+
+  c.model_config.zipformer2_ctc.model =
+      config.model_config.zipformer2_ctc.model.c_str();
+
+  c.model_config.tokens = config.model_config.tokens.c_str();
+  c.model_config.num_threads = config.model_config.num_threads;
+  c.model_config.provider = config.model_config.provider.c_str();
+  c.model_config.debug = config.model_config.debug;
+  c.model_config.model_type = config.model_config.model_type.c_str();
+  c.model_config.modeling_unit = config.model_config.modeling_unit.c_str();
+  c.model_config.bpe_vocab = config.model_config.bpe_vocab.c_str();
+  c.model_config.tokens_buf = config.model_config.tokens_buf.c_str();
+  c.model_config.tokens_buf_size = config.model_config.tokens_buf.size();
+
+  c.max_active_paths = config.max_active_paths;
+  c.num_trailing_blanks = config.num_trailing_blanks;
+  c.keywords_score = config.keywords_score;
+  c.keywords_threshold = config.keywords_threshold;
+  c.keywords_file = config.keywords_file.c_str();
+
+  auto p = SherpaOnnxCreateKeywordSpotter(&c);
+  return KeywordSpotter(p);
+}
+
+KeywordSpotter::KeywordSpotter(const SherpaOnnxKeywordSpotter *p)
+    : MoveOnly<KeywordSpotter, SherpaOnnxKeywordSpotter>(p) {}
+
+void KeywordSpotter::Destroy(const SherpaOnnxKeywordSpotter *p) const {
+  SherpaOnnxDestroyKeywordSpotter(p);
+}
+
+OnlineStream KeywordSpotter::CreateStream() const {
+  auto s = SherpaOnnxCreateKeywordStream(p_);
+  return OnlineStream{s};
+}
+
+OnlineStream KeywordSpotter::CreateStream(const std::string &keywords) const {
+  auto s = SherpaOnnxCreateKeywordStreamWithKeywords(p_, keywords.c_str());
+  return OnlineStream{s};
+}
+
+bool KeywordSpotter::IsReady(const OnlineStream *s) const {
+  return SherpaOnnxIsKeywordStreamReady(p_, s->Get());
+}
+
+void KeywordSpotter::Decode(const OnlineStream *s) const {
+  return SherpaOnnxDecodeKeywordStream(p_, s->Get());
+}
+
+void KeywordSpotter::Decode(const OnlineStream *ss, int32_t n) const {
+  if (n <= 0) {
+    return;
+  }
+
+  std::vector<const SherpaOnnxOnlineStream *> streams(n);
+  for (int32_t i = 0; i != n; ++n) {
+    streams[i] = ss[i].Get();
+  }
+
+  SherpaOnnxDecodeMultipleKeywordStreams(p_, streams.data(), n);
+}
+
+KeywordResult KeywordSpotter::GetResult(const OnlineStream *s) const {
+  auto r = SherpaOnnxGetKeywordResult(p_, s->Get());
+
+  KeywordResult ans;
+  ans.keyword = r->keyword;
+
+  ans.tokens.resize(r->count);
+  for (int32_t i = 0; i < r->count; ++i) {
+    ans.tokens[i] = r->tokens_arr[i];
+  }
+
+  if (r->timestamps) {
+    ans.timestamps.resize(r->count);
+    std::copy(r->timestamps, r->timestamps + r->count, ans.timestamps.data());
+  }
+
+  ans.start_time = r->start_time;
+  ans.json = r->json;
+
+  SherpaOnnxDestroyKeywordResult(r);
+
+  return ans;
+}
+
+void KeywordSpotter::Reset(const OnlineStream *s) const {
+  SherpaOnnxResetKeywordStream(p_, s->Get());
+}
+
 }  // namespace sherpa_onnx::cxx

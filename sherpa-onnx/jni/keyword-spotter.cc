@@ -162,6 +162,15 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_decode(
 }
 
 SHERPA_ONNX_EXTERN_C
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_reset(
+    JNIEnv * /*env*/, jobject /*obj*/, jlong ptr, jlong stream_ptr) {
+  auto kws = reinterpret_cast<sherpa_onnx::KeywordSpotter *>(ptr);
+  auto stream = reinterpret_cast<sherpa_onnx::OnlineStream *>(stream_ptr);
+
+  kws->Reset(stream);
+}
+
+SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_KeywordSpotter_createStream(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring keywords) {
   auto kws = reinterpret_cast<sherpa_onnx::KeywordSpotter *>(ptr);

@@ -1584,6 +1584,11 @@ func (spotter *KeywordSpotter) Decode(s *OnlineStream) {
 	C.SherpaOnnxDecodeKeywordStream(spotter.impl, s.impl)
 }
 
+// You MUST call it right after detecting a keyword
+func (spotter *KeywordSpotter) Reset(s *OnlineStream) {
+	C.SherpaOnnxResetKeywordStream(spotter.impl, s.impl)
+}
+
 // Get the current result of stream since the last invoke of Reset()
 func (spotter *KeywordSpotter) GetResult(s *OnlineStream) *KeywordSpotterResult {
 	p := C.SherpaOnnxGetKeywordResult(spotter.impl, s.impl)

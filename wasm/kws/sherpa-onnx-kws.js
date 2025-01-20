@@ -296,8 +296,11 @@ class Kws {
   }
 
   decode(stream) {
-    return this.Module._SherpaOnnxDecodeKeywordStream(
-        this.handle, stream.handle);
+    this.Module._SherpaOnnxDecodeKeywordStream(this.handle, stream.handle);
+  }
+
+  reset(stream) {
+    this.Module._SherpaOnnxResetKeywordStream(this.handle, stream.handle);
   }
 
   getResult(stream) {

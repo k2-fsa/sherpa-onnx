@@ -1076,6 +1076,10 @@ class SherpaOnnxKeywordSpotterWrapper {
     SherpaOnnxDecodeKeywordStream(spotter, stream)
   }
 
+  func reset() {
+    SherpaOnnxResetKeywordStream(spotter, stream)
+  }
+
   func getResult() -> SherpaOnnxKeywordResultWrapper {
     let result: UnsafePointer<SherpaOnnxKeywordResult>? = SherpaOnnxGetKeywordResult(
       spotter, stream)
