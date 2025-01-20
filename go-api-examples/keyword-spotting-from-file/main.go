@@ -43,6 +43,8 @@ func main() {
 		spotter.Decode(stream)
 		result := spotter.GetResult(stream)
 		if result.Keyword != "" {
+			// You have to reset the stream right after detecting a keyword
+			spotter.Reset(stream)
 			log.Printf("Detected %v\n", result.Keyword)
 		}
 	}
