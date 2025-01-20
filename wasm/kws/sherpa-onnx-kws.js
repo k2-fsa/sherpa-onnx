@@ -300,6 +300,11 @@ class Kws {
         this.handle, stream.handle);
   }
 
+  reset(stream) {
+    return this.Module._SherpaOnnxResetKeywordStream(
+        this.handle, stream.handle);
+  }
+
   getResult(stream) {
     let r = this.Module._SherpaOnnxGetKeywordResult(this.handle, stream.handle);
     let jsonPtr = this.Module.getValue(r + 24, 'i8*');

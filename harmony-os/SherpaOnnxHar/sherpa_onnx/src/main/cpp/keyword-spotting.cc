@@ -209,6 +209,40 @@ static void DecodeKeywordStreamWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxDecodeKeywordStream(kws, stream);
 }
 
+static void ResetKeywordStreamWrapper(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 0 should be a keyword spotter pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env, "Argument 1 should be an online stream pointer.")
+        .ThrowAsJavaScriptException();
+
+    return;
+  }
+
+  const SherpaOnnxKeywordSpotter *kws =
+      info[0].As<Napi::External<SherpaOnnxKeywordSpotter>>().Data();
+
+  const SherpaOnnxOnlineStream *stream =
+      info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
+
+  SherpaOnnxResetKeywordStream(kws, stream);
+}
+
 static Napi::String GetKeywordResultAsJsonWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
@@ -262,6 +296,9 @@ void InitKeywordSpotting(Napi::Env env, Napi::Object exports) {
 
   exports.Set(Napi::String::New(env, "decodeKeywordStream"),
               Napi::Function::New(env, DecodeKeywordStreamWrapper));
+
+  exports.Set(Napi::String::New(env, "resetKeywordStream"),
+              Napi::Function::New(env, ResetKeywordStreamWrapper));
 
   exports.Set(Napi::String::New(env, "getKeywordResultAsJson"),
               Napi::Function::New(env, GetKeywordResultAsJsonWrapper));
