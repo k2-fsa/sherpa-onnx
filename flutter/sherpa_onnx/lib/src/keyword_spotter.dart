@@ -168,6 +168,10 @@ class KeywordSpotter {
     SherpaOnnxBindings.decodeKeywordStream?.call(ptr, stream.ptr);
   }
 
+  void reset(OnlineStream stream) {
+    SherpaOnnxBindings.resetKeywordStream?.call(ptr, stream.ptr);
+  }
+
   Pointer<SherpaOnnxKeywordSpotter> ptr;
   KeywordSpotterConfig config;
 }
