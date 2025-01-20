@@ -11,6 +11,10 @@ ls -lh
 ls -lh
 rm -rf vits-piper-*
 
+./run-tts-kokoro-en.sh
+ls -lh
+rm -rf kokoro-en-*
+
 ./run-tts-matcha-zh.sh
 ls -lh
 rm -rf matcha-icefall-*

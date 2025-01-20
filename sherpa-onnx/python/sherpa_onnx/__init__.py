@@ -20,6 +20,7 @@ from _sherpa_onnx import (
     OfflineStream,
     OfflineTts,
     OfflineTtsConfig,
+    OfflineTtsKokoroModelConfig,
     OfflineTtsMatchaModelConfig,
     OfflineTtsModelConfig,
     OfflineTtsVitsModelConfig,

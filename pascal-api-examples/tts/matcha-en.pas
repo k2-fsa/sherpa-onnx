@@ -7,7 +7,7 @@ with MatchaTTS models.
 It generates speech from text and saves it to a wave file.
 
 If you want to play it while it is generating, please see
-./matcha-zh-playback.pas
+./matcha-en-playback.pas
 }
 
 {$mode objfpc}

@@ -33,6 +33,7 @@ class TtsModel:
     model_name: str = ""  # for vits
     acoustic_model_name: str = ""  # for matcha
     vocoder: str = ""  # for matcha
+    voices: str = ""  # for kokoro
     lang: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
     rule_fars: Optional[List[str]] = None
@@ -409,6 +410,21 @@ def get_matcha_models() -> List[TtsModel]:
     return chinese_models + english_models
 
 
+def get_kokoro_models() -> List[TtsModel]:
+    english_models = [
+        TtsModel(
+            model_dir="kokoro-en-v0_19",
+            model_name="model.onnx",
+            lang="en",
+        )
+    ]
+    for m in english_models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.voices = "voices.bin"
+
+    return english_models
+
+
 def main():
     args = get_args()
     index = args.index
@@ -421,6 +437,7 @@ def main():
     all_model_list += get_mimic3_models()
     all_model_list += get_coqui_models()
     all_model_list += get_matcha_models()
+    all_model_list += get_kokoro_models()
 
     convert_lang_to_iso_639_3(all_model_list)
     print(all_model_list)

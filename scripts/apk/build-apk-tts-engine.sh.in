@@ -39,6 +39,7 @@ model_dir={{ tts_model.model_dir }}
 model_name={{ tts_model.model_name }}
 acoustic_model_name={{ tts_model.acoustic_model_name }}
 vocoder={{ tts_model.vocoder }}
+voices={{ tts_model.voices }}
 lang={{ tts_model.lang }}
 lang_iso_639_3={{ tts_model.lang_iso_639_3 }}
 
@@ -68,6 +69,10 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
 
 {% if tts_model.vocoder %}
   sed -i.bak s/"vocoder = null"/"vocoder = \"$vocoder\""/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.voices %}
+  sed -i.bak s/"voices = null"/"voices = \"$voices\""/ ./TtsEngine.kt
 {% endif %}
 
 {% if tts_model.rule_fsts %}

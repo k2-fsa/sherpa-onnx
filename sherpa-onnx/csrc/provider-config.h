@@ -7,9 +7,9 @@
 
 #include <string>
 
-#include "sherpa-onnx/csrc/parse-options.h"
-#include "sherpa-onnx/csrc/macros.h"
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/parse-options.h"
 
 namespace sherpa_onnx {
 
@@ -40,25 +40,23 @@ struct TensorrtConfig {
 
   TensorrtConfig() = default;
   TensorrtConfig(int64_t trt_max_workspace_size,
-                int32_t trt_max_partition_iterations,
-                int32_t trt_min_subgraph_size,
-                bool trt_fp16_enable,
-                bool trt_detailed_build_log,
-                bool trt_engine_cache_enable,
-                bool trt_timing_cache_enable,
-                const std::string &trt_engine_cache_path,
-                const std::string &trt_timing_cache_path,
-                bool trt_dump_subgraphs)
+                 int32_t trt_max_partition_iterations,
+                 int32_t trt_min_subgraph_size, bool trt_fp16_enable,
+                 bool trt_detailed_build_log, bool trt_engine_cache_enable,
+                 bool trt_timing_cache_enable,
+                 const std::string &trt_engine_cache_path,
+                 const std::string &trt_timing_cache_path,
+                 bool trt_dump_subgraphs)
       : trt_max_workspace_size(trt_max_workspace_size),
-      trt_max_partition_iterations(trt_max_partition_iterations),
-      trt_min_subgraph_size(trt_min_subgraph_size),
-      trt_fp16_enable(trt_fp16_enable),
-      trt_detailed_build_log(trt_detailed_build_log),
-      trt_engine_cache_enable(trt_engine_cache_enable),
-      trt_timing_cache_enable(trt_timing_cache_enable),
-      trt_engine_cache_path(trt_engine_cache_path),
-      trt_timing_cache_path(trt_timing_cache_path),
-      trt_dump_subgraphs(trt_dump_subgraphs) {}
+        trt_max_partition_iterations(trt_max_partition_iterations),
+        trt_min_subgraph_size(trt_min_subgraph_size),
+        trt_fp16_enable(trt_fp16_enable),
+        trt_detailed_build_log(trt_detailed_build_log),
+        trt_engine_cache_enable(trt_engine_cache_enable),
+        trt_timing_cache_enable(trt_timing_cache_enable),
+        trt_engine_cache_path(trt_engine_cache_path),
+        trt_timing_cache_path(trt_timing_cache_path),
+        trt_dump_subgraphs(trt_dump_subgraphs) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
@@ -74,15 +72,15 @@ struct ProviderConfig {
   // device only used for cuda and trt
 
   ProviderConfig() = default;
-  ProviderConfig(const std::string &provider,
-                int32_t device)
+  ProviderConfig(const std::string &provider, int32_t device)
       : provider(provider), device(device) {}
   ProviderConfig(const TensorrtConfig &trt_config,
-                const CudaConfig &cuda_config,
-                const std::string &provider,
-                int32_t device)
-      : trt_config(trt_config), cuda_config(cuda_config),
-      provider(provider), device(device) {}
+                 const CudaConfig &cuda_config, const std::string &provider,
+                 int32_t device)
+      : trt_config(trt_config),
+        cuda_config(cuda_config),
+        provider(provider),
+        device(device) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

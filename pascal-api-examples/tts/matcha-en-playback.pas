@@ -2,7 +2,7 @@
 program matcha_en_playback;
 {
 This file shows how to use the text to speech API of sherpa-onnx
-with Piper models.
+with MatchaTTS models.
 
 It generates speech from text and saves it to a wave file.
 
@@ -210,8 +210,8 @@ begin
   Audio :=  Tts.Generate(Text, SpeakerId, Speed,
     PSherpaOnnxGeneratedAudioCallbackWithArg(@GenerateCallback), nil);
   FinishedGeneration := True;
-  SherpaOnnxWriteWave('./matcha-zh-playback.wav', Audio.Samples, Audio.SampleRate);
-  WriteLn('Saved to ./matcha-zh-playback.wav');
+  SherpaOnnxWriteWave('./matcha-en-playback.wav', Audio.Samples, Audio.SampleRate);
+  WriteLn('Saved to ./matcha-en-playback.wav');
 
   while not FinishedPlaying do
     Pa_Sleep(100);  {sleep for 0.1 second }

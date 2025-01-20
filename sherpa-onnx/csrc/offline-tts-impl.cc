@@ -16,6 +16,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "sherpa-onnx/csrc/offline-tts-kokoro-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-matcha-impl.h"
 #include "sherpa-onnx/csrc/offline-tts-vits-impl.h"
 
@@ -37,8 +38,11 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     const OfflineTtsConfig &config) {
   if (!config.model.vits.model.empty()) {
     return std::make_unique<OfflineTtsVitsImpl>(config);
+  } else if (!config.model.matcha.acoustic_model.empty()) {
+    return std::make_unique<OfflineTtsMatchaImpl>(config);
   }
-  return std::make_unique<OfflineTtsMatchaImpl>(config);
+
+  return std::make_unique<OfflineTtsKokoroImpl>(config);
 }
 
 template <typename Manager>
@@ -46,9 +50,11 @@ std::unique_ptr<OfflineTtsImpl> OfflineTtsImpl::Create(
     Manager *mgr, const OfflineTtsConfig &config) {
   if (!config.model.vits.model.empty()) {
     return std::make_unique<OfflineTtsVitsImpl>(mgr, config);
+  } else if (!config.model.matcha.acoustic_model.empty()) {
+    return std::make_unique<OfflineTtsMatchaImpl>(mgr, config);
   }
 
-  return std::make_unique<OfflineTtsMatchaImpl>(mgr, config);
+  return std::make_unique<OfflineTtsKokoroImpl>(mgr, config);
 }
 
 #if __ANDROID_API__ >= 9

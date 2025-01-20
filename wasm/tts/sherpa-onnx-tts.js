@@ -8,8 +8,12 @@ function freeConfig(config, Module) {
     freeConfig(config.config, Module)
   }
 
-  if ('config2' in config) {
-    freeConfig(config.config2, Module)
+  if ('matcha' in config) {
+    freeConfig(config.matcha, Module)
+  }
+
+  if ('kokoro' in config) {
+    freeConfig(config.kokoro, Module)
   }
 
   Module._free(config.ptr);
@@ -132,6 +136,52 @@ function initSherpaOnnxOfflineTtsMatchaModelConfig(config, Module) {
   }
 }
 
+function initSherpaOnnxOfflineTtsKokoroModelConfig(config, Module) {
+  const modelLen = Module.lengthBytesUTF8(config.model) + 1;
+  const voicesLen = Module.lengthBytesUTF8(config.voices) + 1;
+  const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
+  const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
+
+  const n = modelLen + voicesLen + tokensLen + dataDirLen;
+
+  const buffer = Module._malloc(n);
+
+  const len = 5 * 4;
+  const ptr = Module._malloc(len);
+
+  let offset = 0;
+  Module.stringToUTF8(config.model || '', buffer + offset, modelLen);
+  offset += modelLen;
+
+  Module.stringToUTF8(config.voices || '', buffer + offset, voicesLen);
+  offset += voicesLen;
+
+  Module.stringToUTF8(config.tokens || '', buffer + offset, tokensLen);
+  offset += tokensLen;
+
+  Module.stringToUTF8(config.dataDir || '', buffer + offset, dataDirLen);
+  offset += dataDirLen;
+
+  offset = 0;
+  Module.setValue(ptr, buffer + offset, 'i8*');
+  offset += modelLen;
+
+  Module.setValue(ptr + 4, buffer + offset, 'i8*');
+  offset += voicesLen;
+
+  Module.setValue(ptr + 8, buffer + offset, 'i8*');
+  offset += tokensLen;
+
+  Module.setValue(ptr + 12, buffer + offset, 'i8*');
+  offset += dataDirLen;
+
+  Module.setValue(ptr + 16, config.lengthScale || 1.0, 'float');
+
+  return {
+    buffer: buffer, ptr: ptr, len: len,
+  }
+}
+
 function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   if (!('offlineTtsVitsModelConfig' in config)) {
     config.offlineTtsVitsModelConfig = {
@@ -159,6 +209,16 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
     };
   }
 
+  if (!('offlineTtsKokoroModelConfig' in config)) {
+    config.offlineTtsKokoroModelConfig = {
+      model: '',
+      voices: '',
+      tokens: '',
+      lengthScale: 1.0,
+      dataDir: '',
+    };
+  }
+
 
   const vitsModelConfig = initSherpaOnnxOfflineTtsVitsModelConfig(
       config.offlineTtsVitsModelConfig, Module);
@@ -166,7 +226,12 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   const matchaModelConfig = initSherpaOnnxOfflineTtsMatchaModelConfig(
       config.offlineTtsMatchaModelConfig, Module);
 
-  const len = vitsModelConfig.len + matchaModelConfig.len + 3 * 4;
+  const kokoroModelConfig = initSherpaOnnxOfflineTtsKokoroModelConfig(
+      config.offlineTtsKokoroModelConfig, Module);
+
+  const len = vitsModelConfig.len + matchaModelConfig.len +
+      kokoroModelConfig.len + 3 * 4;
+
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -188,9 +253,12 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
   Module._CopyHeap(matchaModelConfig.ptr, matchaModelConfig.len, ptr + offset);
   offset += matchaModelConfig.len;
 
+  Module._CopyHeap(kokoroModelConfig.ptr, kokoroModelConfig.len, ptr + offset);
+  offset += kokoroModelConfig.len;
+
   return {
     buffer: buffer, ptr: ptr, len: len, config: vitsModelConfig,
-        config2: matchaModelConfig
+        matcha: matchaModelConfig, kokoro: kokoroModelConfig,
   }
 }
 
@@ -308,9 +376,18 @@ function createOfflineTts(Module, myConfig) {
     lengthScale: 1.0,
   };
 
+  const offlineTtsKokoroModelConfig = {
+    model: '',
+    voices: '',
+    tokens: '',
+    dataDir: '',
+    lengthScale: 1.0,
+  };
+
   const offlineTtsModelConfig = {
     offlineTtsVitsModelConfig: offlineTtsVitsModelConfig,
     offlineTtsMatchaModelConfig: offlineTtsMatchaModelConfig,
+    offlineTtsKokoroModelConfig: offlineTtsKokoroModelConfig,
     numThreads: 1,
     debug: 1,
     provider: 'cpu',

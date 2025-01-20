@@ -13,6 +13,9 @@ if(SHERPA_ONNX_ENABLE_TTS)
 
   add_executable(matcha-tts-en-c-api matcha-tts-en-c-api.c)
   target_link_libraries(matcha-tts-en-c-api sherpa-onnx-c-api)
+
+  add_executable(kokoro-tts-en-c-api kokoro-tts-en-c-api.c)
+  target_link_libraries(kokoro-tts-en-c-api sherpa-onnx-c-api)
 endif()
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)

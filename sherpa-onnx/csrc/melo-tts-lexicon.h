@@ -11,7 +11,7 @@
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
-#include "sherpa-onnx/csrc/offline-tts-vits-model-metadata.h"
+#include "sherpa-onnx/csrc/offline-tts-vits-model-meta-data.h"
 
 namespace sherpa_onnx {
 

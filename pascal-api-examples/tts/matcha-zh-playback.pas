@@ -2,7 +2,7 @@
 program matcha_zh_playback;
 {
 This file shows how to use the text to speech API of sherpa-onnx
-with Piper models.
+with MatchaTTS models.
 
 It generates speech from text and saves it to a wave file.
 
