@@ -1,3 +1,14 @@
+## 1.10.41
+
+* Fix UI for Android TTS Engine. (#1735)
+* Add iOS TTS example for MatchaTTS (#1736)
+* Add iOS example for Kokoro TTS (#1737)
+* Fix dither binding in Pybind11 to ensure independence from high_freq in FeatureExtractorConfig (#1739)
+* Fix keyword spotting. (#1689)
+* Update readme to include https://github.com/hfyydd/sherpa-onnx-server (#1741)
+* Reduce vad-moonshine-c-api example code. (#1742)
+* Support Kokoro TTS for HarmonyOS. (#1743)
+
 ## 1.10.40
 
 * Fix building wheels (#1703)
