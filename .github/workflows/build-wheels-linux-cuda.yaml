@@ -34,7 +34,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          pip install -U pip wheel setuptools twine
+          pip install -U pip wheel setuptools twine==5.0.0
 
       - name: Build alsa-lib
         shell: bash
