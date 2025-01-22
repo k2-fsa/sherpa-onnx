@@ -66,6 +66,7 @@ struct Index {
   @State initTtsDone: boolean = false;
   @State ttsGeneratedDone: boolean = true;
   @State numSpeakers: number = 1;
+  @State numThreads: number = 1;
   @State initAudioDone: boolean = false;
   private controller: TabsController = new TabsController();
   private cancelled: boolean = false;
@@ -135,6 +136,7 @@ struct Index {
         this.info = 'Model initialized!\nPlease enter text and press start.';
         this.sampleRate = e.data['sampleRate'] as number;
         this.numSpeakers = e.data['numSpeakers'] as number;
+        this.numThreads = e.data['numThreads'] as number;
 
         this.initTtsDone = true;
       }
@@ -177,6 +179,7 @@ struct Index {
             this.info = `Audio duration: ${audioDuration} s
 Elapsed: ${elapsedSeconds} s
 RTF = ${elapsedSeconds.toFixed(2)}/${audioDuration.toFixed(2)} = ${RTF.toFixed(3)}
+Number of threads: ${this.numThreads}
 `;
             if (this.cancelled) {
               this.info += '\nCancelled.';

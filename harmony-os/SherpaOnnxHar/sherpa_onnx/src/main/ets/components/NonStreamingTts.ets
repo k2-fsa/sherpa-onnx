@@ -28,9 +28,18 @@ export class OfflineTtsMatchaModelConfig {
   public lengthScale: number = 1.0;
 }
 
+export class OfflineTtsKokoroModelConfig {
+  public model: string = '';
+  public voices: string = '';
+  public tokens: string = '';
+  public dataDir: string = '';
+  public lengthScale: number = 1.0;
+}
+
 export class OfflineTtsModelConfig {
   public vits: OfflineTtsVitsModelConfig = new OfflineTtsVitsModelConfig();
   public matcha: OfflineTtsMatchaModelConfig = new OfflineTtsMatchaModelConfig();
+  public kokoro: OfflineTtsKokoroModelConfig = new OfflineTtsKokoroModelConfig();
   public numThreads: number = 1;
   public debug: boolean = false;
   public provider: string = 'cpu';
