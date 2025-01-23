@@ -102,7 +102,7 @@ class OfflineTts {
 
   // To get total used cache size(for wav files) in bytes
   int32_t GetTotalUsedCacheSize();
-  
+
   // Number of supported speakers.
   // If it supports only a single speaker, then it return 0 or 1.
   int32_t NumSpeakers() const;

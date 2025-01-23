@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/offline-tts-cache-mechanism.h
 //
-// @mah92 From Iranian people to the comunity with love
+// Copyright (c)  2025  @mah92 From Iranian people to the community with love
 
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_CACHE_MECHANISM_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_CACHE_MECHANISM_H_
@@ -8,8 +8,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
-#include <mutex>
-#include <chrono>
+#include <mutex>  // NOLINT
 
 namespace sherpa_onnx {
 
@@ -19,10 +18,15 @@ class CacheMechanism {
   ~CacheMechanism();
 
   // Add a new wav file to the cache
-  void AddWavFile(const std::string &text_hash, const std::vector<float> &samples, int32_t sample_rate);
+  void AddWavFile(
+    const std::string &text_hash,
+    const std::vector<float> &samples,
+    const int32_t sample_rate);
 
   // Get the cached wav file if it exists
-  std::vector<float> GetWavFile(const std::string &text_hash, int32_t &sample_rate);
+  std::vector<float> GetWavFile(
+    const std::string &text_hash,
+    int32_t *sample_rate);
 
   // Get the current cache size in bytes
   int32_t GetCacheSize() const;
@@ -30,7 +34,7 @@ class CacheMechanism {
   // Set the cache size in bytes
   void SetCacheSize(int32_t cache_size);
 
-  // Remove all the wav files in the cache 
+  // Remove all the wav files in the cache
   void ClearCache();
 
   // To get total used cache size(for wav files) in bytes
@@ -73,8 +77,8 @@ class CacheMechanism {
   // Mutex for thread safety (recursive to avoid deadlocks)
   mutable std::recursive_mutex mutex_;
 
-  // Time of last save
-  std::chrono::steady_clock::time_point last_save_time_;
+  // Time of last save (in seconds since epoch)
+  int64_t last_save_time_;
 
   // if cache mechanism is inited successfully
   bool cache_mechanism_inited_;

@@ -86,11 +86,15 @@ std::string OfflineTtsConfig::ToString() const {
 }
 
 OfflineTts::OfflineTts(const OfflineTtsConfig &config)
-    : config_(config), impl_(OfflineTtsImpl::Create(config)), cache_mechanism_(nullptr) {}
+    : config_(config),
+     impl_(OfflineTtsImpl::Create(config)),
+     cache_mechanism_(nullptr) {}
 
 template <typename Manager>
 OfflineTts::OfflineTts(Manager *mgr, const OfflineTtsConfig &config)
-    : config_(config), impl_(OfflineTtsImpl::Create(mgr, config)), cache_mechanism_(nullptr) {}
+    : config_(config),
+     impl_(OfflineTtsImpl::Create(mgr, config)),
+     cache_mechanism_(nullptr) {}
 
 OfflineTts::~OfflineTts() = default;
 
@@ -105,14 +109,16 @@ GeneratedAudio OfflineTts::Generate(
   // Check if the cache mechanism is active and if the audio is already cached
   if (cache_mechanism_) {
     int32_t sample_rate;
-    std::vector<float> samples = cache_mechanism_->GetWavFile(text_hash, sample_rate);
+    std::vector<float> samples
+      = cache_mechanism_->GetWavFile(text_hash, &sample_rate);
 
     if (!samples.empty()) {
       SHERPA_ONNX_LOGE("Returning cached audio for hash:%s", text_hash.c_str());
 
       // If a callback is provided, call it with the cached audio
       if (callback) {
-        int32_t result = callback(samples.data(), samples.size(), 1.0f /* progress */);
+        int32_t result
+          = callback(samples.data(), samples.size(), 1.0f /* progress */);
         if (result == 0) {
           // If the callback returns 0, stop further processing
           SHERPA_ONNX_LOGE("Callback requested to stop processing.");
@@ -127,7 +133,6 @@ GeneratedAudio OfflineTts::Generate(
 
   // Generate the audio if not cached
   GeneratedAudio audio = impl_->Generate(text, sid, speed, std::move(callback));
-  // SHERPA_ONNX_LOGE("Generated audio: sample rate: %d, sample count: %d", audio.sample_rate, audio.samples.size());
 
   // Cache the generated audio if the cache mechanism is active
   if (cache_mechanism_) {
@@ -148,7 +153,8 @@ void OfflineTts::SetCacheSize(const int32_t cache_size) {
   if (cache_size > 0) {
     if (!cache_mechanism_) {
       // Initialize the cache mechanism if it hasn't been initialized yet
-      cache_mechanism_ = std::make_unique<CacheMechanism>(config_.cache_dir, cache_size);
+      cache_mechanism_
+        = std::make_unique<CacheMechanism>(config_.cache_dir, cache_size);
     } else {
       // Update the cache size if the cache mechanism is already initialized
       cache_mechanism_->SetCacheSize(cache_size);
