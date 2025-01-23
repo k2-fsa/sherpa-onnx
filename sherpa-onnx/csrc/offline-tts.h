@@ -10,9 +10,9 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/offline-tts-cache-mechanism.h"
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
-#include "sherpa-onnx/csrc/offline-tts-cache-mechanism.h"
 
 namespace sherpa_onnx {
 
@@ -101,7 +101,7 @@ class OfflineTts {
   void ClearCache();
 
   // To get total used cache size(for wav files) in bytes
-  int64_t GetTotalUsedCacheSize();
+  int32_t GetTotalUsedCacheSize();
   
   // Number of supported speakers.
   // If it supports only a single speaker, then it return 0 or 1.

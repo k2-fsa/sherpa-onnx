@@ -19,10 +19,16 @@ namespace sherpa_onnx {
 
 CacheMechanism::CacheMechanism(const std::string &cache_dir, int32_t cache_size)
     : cache_dir_(cache_dir), cache_size_bytes_(cache_size), used_cache_size_bytes_(0) {
+
   // Create the cache directory if it doesn't exist
   if (!std::filesystem::exists(cache_dir_)) {
-    std::filesystem::create_directory(cache_dir_);
-    // SHERPA_ONNX_LOGE("Created cache directory: %s", cache_dir_.c_str());
+    bool dir_created = std::filesystem::create_directory(cache_dir_);
+    if (!dir_created) {
+      SHERPA_ONNX_LOGE("Unable to create cache directory: %s", cache_dir_.c_str());
+      SHERPA_ONNX_LOGE("Cache mechanism disabled!");
+      cache_mechanism_inited_ = false;
+      return;
+    }
   }
 
   // Load the repeat counts
@@ -33,15 +39,22 @@ CacheMechanism::CacheMechanism(const std::string &cache_dir, int32_t cache_size)
 
   // Initialize the last save time
   last_save_time_ = std::chrono::steady_clock::now();
+
+  // Indicate that initialization has been successful
+  cache_mechanism_inited_ = true;
 }
 
 CacheMechanism::~CacheMechanism() {
+  if(cache_mechanism_inited_ == false) return;
+
   // Save the repeat counts on destruction
   SaveRepeatCounts();
 }
 
 void CacheMechanism::AddWavFile(const std::string &text_hash, const std::vector<float> &samples, int32_t sample_rate) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  if(cache_mechanism_inited_ == false) return;
 
   std::string file_path = cache_dir_ + "/" + text_hash + ".wav";
 
@@ -59,26 +72,10 @@ void CacheMechanism::AddWavFile(const std::string &text_hash, const std::vector<
       std::ifstream file(file_path, std::ios::binary | std::ios::ate);
       if (file.is_open()) {
         used_cache_size_bytes_ += file.tellg();
-        file.close();
       }
-      // SHERPA_ONNX_LOGE("Added new wav file to cache: %s, samples:%d", file_path.c_str(), samples.size());
     } else {
       SHERPA_ONNX_LOGE("Failed to write wav file: %s", file_path.c_str());
     }
-  }
-
-  // Ensure the text_hash exists in the map before incrementing the count
-  if (repeat_counts_.find(text_hash) == repeat_counts_.end()) {
-    repeat_counts_[text_hash] = 0; // Initialize if it doesn't exist
-    cache_vector_.push_back(text_hash); // Add the text_hash to the cache vector
-  }
-  repeat_counts_[text_hash]++; // Increment the repeat count
-
-  // Save the repeat counts every 10 minutes
-  auto now = std::chrono::steady_clock::now();
-  if (std::chrono::duration_cast<std::chrono::seconds>(now - last_save_time_).count() >= 10 * 60) {
-    SaveRepeatCounts();
-    last_save_time_ = now;
   }
 }
 
@@ -86,36 +83,48 @@ std::vector<float> CacheMechanism::GetWavFile(const std::string &text_hash, int3
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   std::vector<float> samples;
+
+  if(cache_mechanism_inited_ == false) return samples;
+
   std::string file_path = cache_dir_ + "/" + text_hash + ".wav";
 
   if (std::filesystem::exists(file_path)) {
     bool is_ok = false;
     samples = ReadWave(file_path, &sample_rate, &is_ok);
 
-    if (is_ok) {
-      // SHERPA_ONNX_LOGE("Retrieved cached audio for text hash: %s, sample count: %d, freq:%dHz", text_hash.c_str(), samples.size(), sample_rate);
-    } else {
+    if (is_ok == false) {
       SHERPA_ONNX_LOGE("Failed to read cached file: %s", file_path.c_str());
     }
-  } else {
-    // SHERPA_ONNX_LOGE("Cached audio not found for text hash: %s", text_hash.c_str());
   }
 
   // Ensure the text_hash exists in the map before incrementing the count
   if (repeat_counts_.find(text_hash) == repeat_counts_.end()) {
-    repeat_counts_[text_hash] = 0; // Initialize if it doesn't exist
+    repeat_counts_[text_hash] = 1; // Initialize if it doesn't exist
+  } else {
+    repeat_counts_[text_hash]++; // Increment the repeat count
   }
-  repeat_counts_[text_hash]++; // Increment the repeat count
+
+  // Save the repeat counts every 10 minutes
+  auto now = std::chrono::steady_clock::now();
+  if (std::chrono::duration_cast<std::chrono::seconds>(now - last_save_time_).count() >= 10 * 60) {
+    SaveRepeatCounts();
+    last_save_time_ = now;
+  }
 
   return samples;
 }
 
 int32_t CacheMechanism::GetCacheSize() const {
+  if(cache_mechanism_inited_ == false) return 0;
+
   return cache_size_bytes_;
 }
 
 void CacheMechanism::SetCacheSize(int32_t cache_size) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  if(cache_mechanism_inited_ == false) return;
+
   cache_size_bytes_ = cache_size;
 
   EnsureCacheLimit();
@@ -124,33 +133,41 @@ void CacheMechanism::SetCacheSize(int32_t cache_size) {
 void CacheMechanism::ClearCache() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
+  if(cache_mechanism_inited_ == false) return;
+
   // Remove all WAV files in the cache directory
   for (const auto &entry : std::filesystem::directory_iterator(cache_dir_)) {
     if (entry.path().extension() == ".wav") {
       std::filesystem::remove(entry.path());
-      // SHERPA_ONNX_LOGE("Removed wav file: %s", entry.path().c_str());
     }
   }
-
-  // SHERPA_ONNX_LOGE("Removed all wav files!");
 
   // Reset the total cache size to 0
   used_cache_size_bytes_ = 0;
 
-  // SHERPA_ONNX_LOGE("Cache cleared successfully.");
+  // Clear the repeat counts and cache vector
+  repeat_counts_.clear();
+  cache_vector_.clear();
+
+  // Remove repeat counts also in the repeat_counts.txt
+  SaveRepeatCounts();
 }
 
-int64_t CacheMechanism::GetTotalUsedCacheSize() {
+int32_t CacheMechanism::GetTotalUsedCacheSize() const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
+
+  if(cache_mechanism_inited_ == false) return 0;
+
   return used_cache_size_bytes_;
 }
+
+// Private functions ///////////////////////////////////////////////////
 
 void CacheMechanism::LoadRepeatCounts() {
   std::string repeat_count_file = cache_dir_ + "/repeat_counts.txt";
 
   // Check if the file exists
   if (!std::filesystem::exists(repeat_count_file)) {
-    // SHERPA_ONNX_LOGE("Repeat count file does not exist. Starting with an empty cache.");
     return;  // Skip loading if the file doesn't exist
   }
 
@@ -169,7 +186,6 @@ void CacheMechanism::LoadRepeatCounts() {
       std::string text_hash = line.substr(0, pos);
       int32_t count = std::stoi(line.substr(pos + 1));
       repeat_counts_[text_hash] = count;
-      // SHERPA_ONNX_LOGE("Loaded repeat count for text hash: %s, count: %d", text_hash.c_str(), count);
     }
   }
 }
@@ -205,7 +221,6 @@ void CacheMechanism::RemoveWavFile(const std::string &text_hash) {
       file.close();
     }
     std::filesystem::remove(file_path);
-    // SHERPA_ONNX_LOGE("Removed wav file: %s", file_path.c_str());
   }
 
   // Remove the entry from the repeat counts and cache vector
@@ -222,15 +237,13 @@ void CacheMechanism::UpdateCacheVector() {
     if (entry.path().extension() == ".wav") {
       std::string text_hash = entry.path().stem().string();
       if (repeat_counts_.find(text_hash) == repeat_counts_.end()) {
-        // Remove the file if it's not in the repeat count file
+        // Remove the file if it's not in the repeat count file (orphaned file)
         std::filesystem::remove(entry.path());
-        // SHERPA_ONNX_LOGE("Removed orphaned wav file: %s", entry.path().c_str());
       } else {
         // Add the size of the WAV file to the total cache size
         std::ifstream file(entry.path(), std::ios::binary | std::ios::ate);
         if (file.is_open()) {
           used_cache_size_bytes_ += file.tellg();
-          file.close();
         }
         cache_vector_.push_back(text_hash);
       }
@@ -240,12 +253,11 @@ void CacheMechanism::UpdateCacheVector() {
 
 void CacheMechanism::EnsureCacheLimit() {
   if(used_cache_size_bytes_ > cache_size_bytes_) {
-    auto target_cache_size = std::max((int)(cache_size_bytes_*0.95), 0); //Remove more to prevent deleting every step
+    auto target_cache_size = std::max(static_cast<int> (cache_size_bytes_*0.95), 0); //Remove more to prevent deleting every step
     while (used_cache_size_bytes_> 0 && used_cache_size_bytes_ > target_cache_size) {
         // Cache is full, remove the least repeated file
         std::string least_repeated_file = GetLeastRepeatedFile();
         RemoveWavFile(least_repeated_file);
-        // SHERPA_ONNX_LOGE("Cache full, removed least repeated file: %s", least_repeated_file.c_str());
     }
   }
 }
@@ -255,7 +267,7 @@ std::string CacheMechanism::GetLeastRepeatedFile() {
   int32_t min_count = std::numeric_limits<int32_t>::max();
 
   for (const auto &entry : repeat_counts_) {
-    if (entry.second == 1) {
+    if (entry.second <= 1) {
       least_repeated_file = entry.first;
       return least_repeated_file;
     }

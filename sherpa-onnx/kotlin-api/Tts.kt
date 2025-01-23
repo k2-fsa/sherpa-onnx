@@ -154,7 +154,7 @@ class OfflineTts(
     fun getCacheSizeInMB(): Int {
         return (getCacheSizeImpl(ptr) / (1024 * 1024)).toInt() // Convert bytes to MB
     }
-    private external fun getCacheSizeImpl(ptr: Long): Long
+    private external fun getCacheSizeImpl(ptr: Long): Int
 
     fun setCacheSizeInMB(cacheSize: Int) {
         setCacheSizeImpl(ptr, cacheSize * (1024 * 1024))
@@ -165,7 +165,7 @@ class OfflineTts(
         return (getTotalUsedCacheSizeImpl(ptr) / (1024 * 1024)).toInt() // Convert bytes to MB
     }
 
-    private external fun getTotalUsedCacheSizeImpl(ptr: Long): Long
+    private external fun getTotalUsedCacheSizeImpl(ptr: Long): Int
 
     // The returned array has two entries:
     //  - the first entry is an 1-D float array containing audio samples.

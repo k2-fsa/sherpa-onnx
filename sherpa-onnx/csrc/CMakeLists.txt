@@ -155,6 +155,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
     jieba-lexicon.cc
     lexicon.cc
     melo-tts-lexicon.cc
+    offline-tts-cache-mechanism.cc
     offline-tts-character-frontend.cc
     offline-tts-frontend.cc
     offline-tts-impl.cc
@@ -167,7 +168,6 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-vits-model.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
-    offline-tts-cache-mechanism.cc
   )
 endif()
 

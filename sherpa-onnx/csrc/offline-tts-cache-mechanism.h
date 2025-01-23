@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/offline-tts-cache-mechanism.cc
+// sherpa-onnx/csrc/offline-tts-cache-mechanism.h
 //
 // @mah92 From Iranian people to the comunity with love
 
@@ -34,7 +34,7 @@ class CacheMechanism {
   void ClearCache();
 
   // To get total used cache size(for wav files) in bytes
-  int64_t GetTotalUsedCacheSize();
+  int32_t GetTotalUsedCacheSize() const;
 
  private:
   // Load the repeat count file
@@ -58,11 +58,11 @@ class CacheMechanism {
   // Data directory where the cache folder is located
   std::string cache_dir_;
 
-  // Maximum number of files in the cache
+  // Maximum number of bytes in the cache
   int32_t cache_size_bytes_;
 
   // Total used cache size for wav files in bytes
-  int64_t used_cache_size_bytes_;
+  int32_t used_cache_size_bytes_;
 
   // Map of text hash to repeat count
   std::unordered_map<std::string, int32_t> repeat_counts_;
@@ -75,6 +75,9 @@ class CacheMechanism {
 
   // Time of last save
   std::chrono::steady_clock::time_point last_save_time_;
+
+  // if cache mechanism is inited successfully
+  bool cache_mechanism_inited_;
 };
 
 }  // namespace sherpa_onnx

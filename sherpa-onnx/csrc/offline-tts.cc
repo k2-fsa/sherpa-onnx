@@ -165,7 +165,7 @@ void OfflineTts::ClearCache() {
   }
 }
 
-int64_t OfflineTts::GetTotalUsedCacheSize() {
+int32_t OfflineTts::GetTotalUsedCacheSize() {
   if (cache_mechanism_) {
     return cache_mechanism_->GetTotalUsedCacheSize();
   }
