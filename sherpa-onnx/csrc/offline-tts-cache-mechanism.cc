@@ -41,7 +41,7 @@ static int64_t GetCurrentTimeInSeconds() {
 #endif
 }
 
-CacheMechanism::CacheMechanism(const std::string &cache_dir,
+OfflineTtsCacheMechanism::OfflineTtsCacheMechanism(const std::string &cache_dir,
     int32_t cache_size)
     : cache_dir_(cache_dir),
       cache_size_bytes_(cache_size),
@@ -72,14 +72,14 @@ CacheMechanism::CacheMechanism(const std::string &cache_dir,
   cache_mechanism_inited_ = true;
 }
 
-CacheMechanism::~CacheMechanism() {
+OfflineTtsCacheMechanism::~OfflineTtsCacheMechanism() {
   if (cache_mechanism_inited_ == false) return;
 
   // Save the repeat counts on destruction
   SaveRepeatCounts();
 }
 
-void CacheMechanism::AddWavFile(
+void OfflineTtsCacheMechanism::AddWavFile(
   const std::string &text_hash,
   const std::vector<float> &samples,
   const int32_t sample_rate) {
@@ -111,7 +111,7 @@ void CacheMechanism::AddWavFile(
   }
 }
 
-std::vector<float> CacheMechanism::GetWavFile(
+std::vector<float> OfflineTtsCacheMechanism::GetWavFile(
   const std::string &text_hash,
   int32_t *sample_rate) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
@@ -148,13 +148,13 @@ std::vector<float> CacheMechanism::GetWavFile(
   return samples;
 }
 
-int32_t CacheMechanism::GetCacheSize() const {
+int32_t OfflineTtsCacheMechanism::GetCacheSize() const {
   if (cache_mechanism_inited_ == false) return 0;
 
   return cache_size_bytes_;
 }
 
-void CacheMechanism::SetCacheSize(int32_t cache_size) {
+void OfflineTtsCacheMechanism::SetCacheSize(int32_t cache_size) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   if (cache_mechanism_inited_ == false) return;
@@ -164,7 +164,7 @@ void CacheMechanism::SetCacheSize(int32_t cache_size) {
   EnsureCacheLimit();
 }
 
-void CacheMechanism::ClearCache() {
+void OfflineTtsCacheMechanism::ClearCache() {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   if (cache_mechanism_inited_ == false) return;
@@ -187,7 +187,7 @@ void CacheMechanism::ClearCache() {
   SaveRepeatCounts();
 }
 
-int32_t CacheMechanism::GetTotalUsedCacheSize() const {
+int32_t OfflineTtsCacheMechanism::GetTotalUsedCacheSize() const {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   if (cache_mechanism_inited_ == false) return 0;
@@ -197,7 +197,7 @@ int32_t CacheMechanism::GetTotalUsedCacheSize() const {
 
 // Private functions ///////////////////////////////////////////////////
 
-void CacheMechanism::LoadRepeatCounts() {
+void OfflineTtsCacheMechanism::LoadRepeatCounts() {
   std::string repeat_count_file = cache_dir_ + "/repeat_counts.txt";
 
   // Check if the file exists
@@ -225,7 +225,7 @@ void CacheMechanism::LoadRepeatCounts() {
   }
 }
 
-void CacheMechanism::SaveRepeatCounts() {
+void OfflineTtsCacheMechanism::SaveRepeatCounts() {
   std::string repeat_count_file = cache_dir_ + "/repeat_counts.txt";
 
   // Open the file for writing
@@ -248,7 +248,7 @@ void CacheMechanism::SaveRepeatCounts() {
   }
 }
 
-void CacheMechanism::RemoveWavFile(const std::string &text_hash) {
+void OfflineTtsCacheMechanism::RemoveWavFile(const std::string &text_hash) {
   std::string file_path = cache_dir_ + "/" + text_hash + ".wav";
   if (std::filesystem::exists(file_path)) {
     // Subtract the size of the removed WAV file from the total cache size
@@ -269,7 +269,7 @@ void CacheMechanism::RemoveWavFile(const std::string &text_hash) {
   }
 }
 
-void CacheMechanism::UpdateCacheVector() {
+void OfflineTtsCacheMechanism::UpdateCacheVector() {
   used_cache_size_bytes_ = 0;  // Reset total cache size before recalculating
 
   for (const auto &entry : std::filesystem::directory_iterator(cache_dir_)) {
@@ -290,7 +290,7 @@ void CacheMechanism::UpdateCacheVector() {
   }
 }
 
-void CacheMechanism::EnsureCacheLimit() {
+void OfflineTtsCacheMechanism::EnsureCacheLimit() {
   if (used_cache_size_bytes_ > cache_size_bytes_) {
     auto target_cache_size
       = std::max(static_cast<int> (cache_size_bytes_*0.95), 0);
@@ -303,7 +303,7 @@ void CacheMechanism::EnsureCacheLimit() {
   }
 }
 
-std::string CacheMechanism::GetLeastRepeatedFile() {
+std::string OfflineTtsCacheMechanism::GetLeastRepeatedFile() {
   std::string least_repeated_file;
   int32_t min_count = std::numeric_limits<int32_t>::max();
 

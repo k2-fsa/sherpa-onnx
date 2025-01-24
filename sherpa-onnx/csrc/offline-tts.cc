@@ -153,8 +153,8 @@ void OfflineTts::SetCacheSize(const int32_t cache_size) {
   if (cache_size > 0) {
     if (!cache_mechanism_) {
       // Initialize the cache mechanism if it hasn't been initialized yet
-      cache_mechanism_
-        = std::make_unique<CacheMechanism>(config_.cache_dir, cache_size);
+      cache_mechanism_ = std::make_unique<OfflineTtsCacheMechanism>(
+        config_.cache_dir, cache_size);
     } else {
       // Update the cache size if the cache mechanism is already initialized
       cache_mechanism_->SetCacheSize(cache_size);

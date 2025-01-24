@@ -12,10 +12,10 @@
 
 namespace sherpa_onnx {
 
-class CacheMechanism {
+class OfflineTtsCacheMechanism {
  public:
-  CacheMechanism(const std::string &cache_dir, int32_t cache_size);
-  ~CacheMechanism();
+  OfflineTtsCacheMechanism(const std::string &cache_dir, int32_t cache_size);
+  ~OfflineTtsCacheMechanism();
 
   // Add a new wav file to the cache
   void AddWavFile(

@@ -110,7 +110,7 @@ class OfflineTts {
  private:
   OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsImpl> impl_;
-  std::unique_ptr<CacheMechanism> cache_mechanism_;
+  std::unique_ptr<OfflineTtsCacheMechanism> cache_mechanism_;
 };
 
 }  // namespace sherpa_onnx
