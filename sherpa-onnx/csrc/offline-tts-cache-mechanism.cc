@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts-cache-mechanism.h"
 
 #include <algorithm>
+#include <chrono>  // NOLINT
 #include <fstream>
 #include <filesystem>
 #include <iostream>
@@ -24,22 +25,6 @@
 #endif
 
 namespace sherpa_onnx {
-
-// Helper function to get the current time in seconds
-static int64_t GetCurrentTimeInSeconds() {
-#if defined(_WIN32)
-  // Windows implementation
-  FILETIME ft;
-  GetSystemTimeAsFileTime(&ft);
-  uint64_t time = ((uint64_t)ft.dwHighDateTime << 32) | ft.dwLowDateTime;
-  return static_cast<int64_t>(time / 10000000ULL - 11644473600ULL);
-#else
-  // Unix implementation
-  struct timeval tv;
-  gettimeofday(&tv, nullptr);
-  return static_cast<int64_t>(tv.tv_sec);
-#endif
-}
 
 OfflineTtsCacheMechanism::OfflineTtsCacheMechanism(const std::string &cache_dir,
     int32_t cache_size)
@@ -66,7 +51,7 @@ OfflineTtsCacheMechanism::OfflineTtsCacheMechanism(const std::string &cache_dir,
   UpdateCacheVector();
 
   // Initialize the last save time
-  last_save_time_ = GetCurrentTimeInSeconds();
+  last_save_time_ = std::chrono::steady_clock::now();
 
   // Indicate that initialization has been successful
   cache_mechanism_inited_ = true;
@@ -139,8 +124,9 @@ std::vector<float> OfflineTtsCacheMechanism::GetWavFile(
   }
 
   // Save the repeat counts every 10 minutes
-  int64_t now = GetCurrentTimeInSeconds();
-  if (now - last_save_time_ >= 10 * 60) {
+  auto now = std::chrono::steady_clock::now();
+  if (std::chrono::duration_cast<std::chrono::seconds>(
+    now - last_save_time_).count() >= 10 * 60) {
     SaveRepeatCounts();
     last_save_time_ = now;
   }

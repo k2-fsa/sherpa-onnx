@@ -77,8 +77,8 @@ class OfflineTtsCacheMechanism {
   // Mutex for thread safety (recursive to avoid deadlocks)
   mutable std::recursive_mutex mutex_;
 
-  // Time of last save (in seconds since epoch)
-  int64_t last_save_time_;
+  // Time of last save
+  std::chrono::steady_clock::time_point last_save_time_;
 
   // if cache mechanism is inited successfully
   bool cache_mechanism_inited_;
