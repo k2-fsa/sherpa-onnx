@@ -112,6 +112,8 @@ class MainActivity : ComponentActivity() {
                                         onValueChange = {
                                             TtsEngine.speed = it
                                             preferenceHelper.setSpeed(it)
+                                            TtsEngine.tts?.clearCache() // Call the clearCache method
+                                            usedCacheSizeMB = 0 // Reset used cache size
                                         },
                                         valueRange = 0.2F..3.0F,
                                         modifier = Modifier.fillMaxWidth()
@@ -293,21 +295,6 @@ class MainActivity : ComponentActivity() {
                                 if (rtfText.isNotEmpty()) {
                                     Row {
                                         Text(rtfText)
-                                    }
-
-                                    Button(
-                                        modifier = Modifier.padding(20.dp),
-                                        onClick = {
-                                            TtsEngine.tts?.clearCache() // Call the clearCache method
-                                            usedCacheSizeMB = 0 // Reset used cache size
-                                            Toast.makeText(
-                                                applicationContext,
-                                                "Cache cleared!",
-                                                Toast.LENGTH_SHORT
-                                            ).show()
-                                        }
-                                    ) {
-                                        Text("Clear")
                                     }
                                 }
                             }
