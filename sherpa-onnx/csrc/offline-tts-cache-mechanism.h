@@ -10,6 +10,8 @@
 #include <unordered_map>
 #include <mutex>  // NOLINT
 
+#include "sherpa-onnx/csrc/offline-tts-cache-mechanism-config.h"
+
 namespace sherpa_onnx {
 
 class OfflineTtsCacheMechanism {

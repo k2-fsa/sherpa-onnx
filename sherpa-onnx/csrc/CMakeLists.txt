@@ -155,6 +155,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
     jieba-lexicon.cc
     lexicon.cc
     melo-tts-lexicon.cc
+    offline-tts-cache-mechanism-config.cc
     offline-tts-cache-mechanism.cc
     offline-tts-character-frontend.cc
     offline-tts-frontend.cc

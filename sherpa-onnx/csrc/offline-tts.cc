@@ -18,9 +18,9 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-tts-cache-mechanism.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/text-utils.h"
-#include "sherpa-onnx/csrc/offline-tts-cache-mechanism.h"
 
 namespace sherpa_onnx {
 
