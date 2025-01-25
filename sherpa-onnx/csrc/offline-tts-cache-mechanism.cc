@@ -119,13 +119,13 @@ std::vector<float> OfflineTtsCacheMechanism::GetWavFile(
     repeat_counts_[text_hash]++;  // Increment the repeat count
   }
 
-  // Save the repeat counts every 10 minutes
-  //auto now = std::chrono::steady_clock::now();
-  //if (std::chrono::duration_cast<std::chrono::seconds>(
-    //now - last_save_time_).count() >= 10 * 60) {
+  // Save the repeat counts every minute
+  auto now = std::chrono::steady_clock::now();
+  if (std::chrono::duration_cast<std::chrono::seconds>(
+    now - last_save_time_).count() >= 1 * 60) {
     SaveRepeatCounts();
-    //last_save_time_ = now;
-  //}
+    last_save_time_ = now;
+  }
 
   return samples;
 }
@@ -206,7 +206,7 @@ void OfflineTtsCacheMechanism::LoadRepeatCounts() {
   // Read each entry
   for (size_t i = 0; i < num_entries; ++i) {
     std::size_t text_hash;
-    int32_t count;
+    std::size_t count;
     ifs.read(reinterpret_cast<char*>(&text_hash), sizeof(text_hash));
     ifs.read(reinterpret_cast<char*>(&count), sizeof(count));
     repeat_counts_[text_hash] = count;
@@ -214,6 +214,9 @@ void OfflineTtsCacheMechanism::LoadRepeatCounts() {
 }
 
 void OfflineTtsCacheMechanism::SaveRepeatCounts() {
+  // Start timing
+  auto start_time = std::chrono::steady_clock::now();
+
   std::string repeat_count_file = cache_dir_ + "/repeat_counts.bin";
 
   // Open the file for writing in binary mode
@@ -233,6 +236,13 @@ void OfflineTtsCacheMechanism::SaveRepeatCounts() {
     ofs.write(reinterpret_cast<const char*>(&entry.first), sizeof(entry.first));
     ofs.write(reinterpret_cast<const char*>(&entry.second), sizeof(entry.second));
   }
+
+  // End timing
+  auto end_time = std::chrono::steady_clock::now();
+  auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+
+  // Print the time taken
+  SHERPA_ONNX_LOGE("SaveRepeatCounts took %lld milliseconds", elapsed_time);
 }
 
 void OfflineTtsCacheMechanism::RemoveWavFile(const std::size_t &text_hash) {
@@ -294,7 +304,7 @@ void OfflineTtsCacheMechanism::EnsureCacheLimit() {
 
 std::size_t OfflineTtsCacheMechanism::GetLeastRepeatedFile() {
   std::size_t least_repeated_file = 0;
-  int32_t min_count = std::numeric_limits<int32_t>::max();
+  std::size_t min_count = std::numeric_limits<std::size_t>::max();
 
   for (const auto &entry : repeat_counts_) {
     if (entry.second <= 1) {

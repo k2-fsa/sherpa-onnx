@@ -72,7 +72,7 @@ class OfflineTtsCacheMechanism {
   int32_t used_cache_size_bytes_;
 
   // Map of text hash to repeat count
-  std::unordered_map<std::size_t, int32_t> repeat_counts_;
+  std::unordered_map<std::size_t, std::size_t> repeat_counts_;
 
   // Vector of cached file names
   std::vector<std::size_t> cache_vector_;
