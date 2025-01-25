@@ -86,15 +86,24 @@ std::string OfflineTtsConfig::ToString() const {
 }
 
 OfflineTts::OfflineTts(const OfflineTtsConfig &config)
-    : config_(config),
-     impl_(OfflineTtsImpl::Create(config)),
-     cache_mechanism_(nullptr) {}
+    : impl_(OfflineTtsImpl::Create(config)) {}
+
+OfflineTts::OfflineTts(const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config)
+    : impl_(OfflineTtsImpl::Create(config)) {
+     cache_mechanism_ = std::make_unique<OfflineTtsCacheMechanism>(cache_config);
+}
 
 template <typename Manager>
 OfflineTts::OfflineTts(Manager *mgr, const OfflineTtsConfig &config)
-    : config_(config),
-     impl_(OfflineTtsImpl::Create(mgr, config)),
-     cache_mechanism_(nullptr) {}
+    : impl_(OfflineTtsImpl::Create(mgr, config)) {}
+
+template <typename Manager>
+OfflineTts::OfflineTts(Manager *mgr, const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config)
+    : impl_(OfflineTtsImpl::Create(mgr, config)) {
+     cache_mechanism_ = std::make_unique<OfflineTtsCacheMechanism>(cache_config);
+}
 
 OfflineTts::~OfflineTts() = default;
 
@@ -145,49 +154,22 @@ GeneratedAudio OfflineTts::Generate(
 
 int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }
 
-int32_t OfflineTts::CacheSize() const {
-  return cache_mechanism_ ? cache_mechanism_->GetCacheSize() : 0;
-}
-
-void OfflineTts::SetCacheSize(const int32_t cache_size) {
-  if (cache_size > 0) {
-    if (!cache_mechanism_) {
-      // Initialize the cache mechanism if it hasn't been initialized yet
-      cache_mechanism_ = std::make_unique<OfflineTtsCacheMechanism>(
-        config_.cache_dir, cache_size);
-    } else {
-      // Update the cache size if the cache mechanism is already initialized
-      cache_mechanism_->SetCacheSize(cache_size);
-    }
-  } else if (cache_mechanism_) {
-    // If cache size is set to 0 or negative, destroy the cache mechanism
-    cache_mechanism_.reset();
-  }
-}
-
-void OfflineTts::ClearCache() {
-  if (cache_mechanism_) {
-    cache_mechanism_->ClearCache();
-  }
-}
-
-int32_t OfflineTts::GetTotalUsedCacheSize() {
-  if (cache_mechanism_) {
-    return cache_mechanism_->GetTotalUsedCacheSize();
-  }
-  return -1;
-}
-
 int32_t OfflineTts::NumSpeakers() const { return impl_->NumSpeakers(); }
 
 #if __ANDROID_API__ >= 9
 template OfflineTts::OfflineTts(AAssetManager *mgr,
                                 const OfflineTtsConfig &config);
+template OfflineTts::OfflineTts(AAssetManager *mgr,
+                        const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config);
 #endif
 
 #if __OHOS__
 template OfflineTts::OfflineTts(NativeResourceManager *mgr,
                                 const OfflineTtsConfig &config);
+template OfflineTts::OfflineTts(NativeResourceManager *mgr,
+                        const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config);
 #endif
 
 }  // namespace sherpa_onnx

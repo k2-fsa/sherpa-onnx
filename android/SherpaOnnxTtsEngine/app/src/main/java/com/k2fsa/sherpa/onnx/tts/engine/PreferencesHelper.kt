@@ -31,13 +31,13 @@ class PreferenceHelper(context: Context) {
         return sharedPreferences.getInt(SID_KEY, 0)
     }
 
-    fun setCacheSizeInMB(value: Int) {
+    fun setCacheSize(value: Int) {
         val editor = sharedPreferences.edit()
         editor.putInt(CACHE_SIZE_KEY, value)
         editor.apply()
     }
 
-    fun getCacheSizeInMB(): Int {
-        return sharedPreferences.getInt(CACHE_SIZE_KEY, 20) // Default cache size is 20MB
+    fun getTtsMechanismCacheSize(): Int {
+        return sharedPreferences.getInt(CACHE_SIZE_KEY, 20*(1024*1024)) // Default cache size is 20MB
     }
 }

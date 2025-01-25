@@ -18,6 +18,7 @@ namespace sherpa_onnx {
 
 struct OfflineTtsConfig {
   OfflineTtsModelConfig model;
+  
   // If not empty, it contains a list of rule FST filenames.
   // Filenames are separated by a comma.
   // Example value: rule1.fst,rule2,fst,rule3.fst
@@ -32,9 +33,6 @@ struct OfflineTtsConfig {
   // This is to avoid OOM for very long input text.
   // If you set it to -1, then we process all sentences in a single batch.
   int32_t max_num_sentences = 1;
-
-  // Path to cache_directory
-  std::string cache_dir;
 
   OfflineTtsConfig() = default;
   OfflineTtsConfig(const OfflineTtsModelConfig &model,
@@ -67,9 +65,15 @@ class OfflineTts {
  public:
   ~OfflineTts();
   explicit OfflineTts(const OfflineTtsConfig &config);
+  explicit OfflineTts(const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config);
 
   template <typename Manager>
   OfflineTts(Manager *mgr, const OfflineTtsConfig &config);
+
+  template <typename Manager>
+  OfflineTts(Manager *mgr, const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config);
 
   // @param text A string containing words separated by spaces
   // @param sid Speaker ID. Used only for multi-speaker models, e.g., models
@@ -91,26 +95,14 @@ class OfflineTts {
   // Return the sample rate of the generated audio
   int32_t SampleRate() const;
 
-  // Return the maximum number of cached audio files size
-  int32_t CacheSize() const;
-
-  // Set the maximum number of cached audio files size
-  void SetCacheSize(const int32_t cache_size);
-
-  // Remove all cache data
-  void ClearCache();
-
-  // To get total used cache size(for wav files) in bytes
-  int32_t GetTotalUsedCacheSize();
-
   // Number of supported speakers.
   // If it supports only a single speaker, then it return 0 or 1.
   int32_t NumSpeakers() const;
 
+  std::unique_ptr<OfflineTtsCacheMechanism> cache_mechanism_; // not owned here
+
  private:
-  OfflineTtsConfig config_;
   std::unique_ptr<OfflineTtsImpl> impl_;
-  std::unique_ptr<OfflineTtsCacheMechanism> cache_mechanism_;
 };
 
 }  // namespace sherpa_onnx

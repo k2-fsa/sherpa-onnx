@@ -49,6 +49,11 @@ data class OfflineTtsConfig(
     var maxNumSentences: Int = 1,
 )
 
+data class OfflineTtsCacheMechanismConfig(
+    var cacheDir: String = "",
+    var cacheSize: Int = -1,  // Unlimited
+)
+
 class GeneratedAudio(
     val samples: FloatArray,
     val sampleRate: Int,
@@ -66,14 +71,15 @@ class GeneratedAudio(
 class OfflineTts(
     assetManager: AssetManager? = null,
     var config: OfflineTtsConfig,
+    var cacheConfig: OfflineTtsCacheMechanismConfig,
 ) {
     private var ptr: Long
 
     init {
         ptr = if (assetManager != null) {
-            newFromAsset(assetManager, config)
+            newFromAsset(assetManager, config, cacheConfig)
         } else {
-            newFromFile(config)
+            newFromFile(config, cacheConfig)
         }
     }
 
@@ -115,9 +121,9 @@ class OfflineTts(
     fun allocate(assetManager: AssetManager? = null) {
         if (ptr == 0L) {
             ptr = if (assetManager != null) {
-                newFromAsset(assetManager, config)
+                newFromAsset(assetManager, config, cacheConfig)
             } else {
-                newFromFile(config)
+                newFromFile(config, cacheConfig)
             }
         }
     }
@@ -141,28 +147,30 @@ class OfflineTts(
     private external fun newFromAsset(
         assetManager: AssetManager,
         config: OfflineTtsConfig,
+        cacheConfig: OfflineTtsCacheMechanismConfig,
     ): Long
 
     private external fun newFromFile(
         config: OfflineTtsConfig,
+        cacheConfig: OfflineTtsCacheMechanismConfig,
     ): Long
 
     private external fun delete(ptr: Long)
     private external fun getSampleRate(ptr: Long): Int
     private external fun getNumSpeakers(ptr: Long): Int
 
-    fun getCacheSizeInMB(): Int {
-        return (getCacheSizeImpl(ptr) / (1024 * 1024)).toInt() // Convert bytes to MB
+    fun getTtsMechanismCacheSize(): Int {
+        return (getCacheSizeImpl(ptr)).toInt()
     }
     private external fun getCacheSizeImpl(ptr: Long): Int
 
-    fun setCacheSizeInMB(cacheSize: Int) {
-        setCacheSizeImpl(ptr, cacheSize * (1024 * 1024))
+    fun setCacheSize(cacheSize: Int) {
+        setCacheSizeImpl(ptr, cacheSize)
     }
     private external fun setCacheSizeImpl(ptr: Long, cacheSize: Int)
 
-    fun getTotalUsedCacheSizeInMB(): Int {
-        return (getTotalUsedCacheSizeImpl(ptr) / (1024 * 1024)).toInt() // Convert bytes to MB
+    fun getTotalUsedCacheSize(): Int {
+        return (getTotalUsedCacheSizeImpl(ptr)).toInt()
     }
 
     private external fun getTotalUsedCacheSizeImpl(ptr: Long): Int
@@ -292,5 +300,16 @@ fun getOfflineTtsConfig(
         ),
         ruleFsts = ruleFsts,
         ruleFars = ruleFars,
+    )
+}
+
+fun getOfflineTtsCacheMechanismConfig(
+    dataDir: String,
+    cacheSize: Int
+): OfflineTtsCacheMechanismConfig {
+
+    return OfflineTtsCacheMechanismConfig(
+        cacheDir = "$dataDir/../cache",
+        cacheSize = cacheSize,
     )
 }

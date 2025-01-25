@@ -80,7 +80,7 @@ class MainActivity : ComponentActivity() {
 
         val preferenceHelper = PreferenceHelper(this)
 
-        TtsEngine.cacheSize = preferenceHelper.getCacheSizeInMB()
+        TtsEngine.cacheSize = preferenceHelper.getTtsMechanismCacheSize()
 
         setContent {
             SherpaOnnxTtsEngineTheme {
@@ -95,12 +95,12 @@ class MainActivity : ComponentActivity() {
                         Box(modifier = Modifier.padding(it)) {
                             Column(modifier = Modifier.padding(16.dp)) {
                                 // Track used cache size in a mutable state
-                                var usedCacheSizeMB by remember { mutableStateOf(0) }
+                                var usedCacheSize by remember { mutableStateOf(0) }
 
                                 // LaunchedEffect to periodically update the used cache size
                                 LaunchedEffect(Unit) {
                                     while (true) {
-                                        usedCacheSizeMB = TtsEngine.tts?.getTotalUsedCacheSizeInMB() ?: 0
+                                        usedCacheSize = TtsEngine.tts?.getTotalUsedCacheSize() ?: 0
                                         delay(5000) // Update every 5 seconds
                                     }
                                 }
@@ -113,23 +113,23 @@ class MainActivity : ComponentActivity() {
                                             TtsEngine.speed = it
                                             preferenceHelper.setSpeed(it)
                                             TtsEngine.tts?.clearCache() // Call the clearCache method
-                                            usedCacheSizeMB = 0 // Reset used cache size
+                                            usedCacheSize = 0 // Reset used cache size
                                         },
                                         valueRange = 0.2F..3.0F,
                                         modifier = Modifier.fillMaxWidth()
                                     )
 
-                                    Text("Cache Size: ${TtsEngine.cacheSize}MB (${usedCacheSizeMB}MB used)")
+                                    Text("Cache Size: ${TtsEngine.cacheSize / (1024 * 1024)}MB (${usedCacheSize / (1024 * 1024)}MB used)")
                                     Slider(
                                         value = TtsEngine.cacheSizeState.value.toFloat(),
                                         onValueChange = { newValue ->
-                                            // Round the value to the nearest multiple of 10
-                                            val roundedValue = (newValue / 5).roundToInt() * 5
+                                            // Round the value to the nearest multiple of 5MB
+                                            val roundedValue = (newValue / (5 * 1024 * 1024)).roundToInt() * (5 * 1024 * 1024)
                                             TtsEngine.cacheSize = roundedValue
-                                            preferenceHelper.setCacheSizeInMB(roundedValue)
-                                            TtsEngine.tts?.setCacheSizeInMB(roundedValue)
+                                            preferenceHelper.setCacheSize(roundedValue)
+                                            TtsEngine.tts?.setCacheSize(roundedValue)
                                         },
-                                        valueRange = 0f..100f,
+                                        valueRange = 0f..209715200f,  // 200MB
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
@@ -308,8 +308,8 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         // Update used cache size when the app is resumed
-        val usedCacheSizeMB = TtsEngine.tts?.getTotalUsedCacheSizeInMB() ?: 0
-        Log.i(TAG, "App resumed. Used cache size: ${usedCacheSizeMB}MB")
+        val usedCacheSize = (TtsEngine.tts?.getTotalUsedCacheSize() ?: 0)
+        Log.i(TAG, "App resumed. Used cache size: ${usedCacheSize}B")
     }
 
     override fun onDestroy() {

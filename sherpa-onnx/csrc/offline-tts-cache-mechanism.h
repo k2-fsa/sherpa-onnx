@@ -16,7 +16,8 @@ namespace sherpa_onnx {
 
 class OfflineTtsCacheMechanism {
  public:
-  OfflineTtsCacheMechanism(const std::string &cache_dir, int32_t cache_size);
+
+  explicit OfflineTtsCacheMechanism(const OfflineTtsCacheMechanismConfig &config);
   ~OfflineTtsCacheMechanism();
 
   // Add a new wav file to the cache

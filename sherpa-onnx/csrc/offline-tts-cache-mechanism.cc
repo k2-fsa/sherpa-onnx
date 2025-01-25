@@ -16,22 +16,14 @@
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
 
-// Platform-specific time functions
-#if defined(_WIN32)
-#include <windows.h>
-#else
-#include <sys/time.h>
-#include <unistd.h>
-#endif
-
 namespace sherpa_onnx {
 
-OfflineTtsCacheMechanism::OfflineTtsCacheMechanism(const std::string &cache_dir,
-    int32_t cache_size)
-    : cache_dir_(cache_dir),
-      cache_size_bytes_(cache_size),
-      used_cache_size_bytes_(0) {
-
+OfflineTtsCacheMechanism::OfflineTtsCacheMechanism(
+  const OfflineTtsCacheMechanismConfig &config)
+  : cache_dir_(config.cache_dir),
+      cache_size_bytes_(config.cache_size),
+      used_cache_size_bytes_(0)
+{
   // Create the cache directory if it doesn't exist
   if (!std::filesystem::exists(cache_dir_)) {
     bool dir_created = std::filesystem::create_directory(cache_dir_);
@@ -43,6 +35,9 @@ OfflineTtsCacheMechanism::OfflineTtsCacheMechanism(const std::string &cache_dir,
       return;
     }
   }
+
+  if(cache_size_bytes_ == -1) 
+    cache_size_bytes_ = INT32_MAX;  // Unlimited cache size
 
   // Load the repeat counts
   LoadRepeatCounts();
@@ -147,7 +142,11 @@ void OfflineTtsCacheMechanism::SetCacheSize(int32_t cache_size) {
 
   cache_size_bytes_ = cache_size;
 
-  EnsureCacheLimit();
+  if(cache_size == 0) {
+    ClearCache();
+  } else {
+    EnsureCacheLimit();
+  }
 }
 
 void OfflineTtsCacheMechanism::ClearCache() {
