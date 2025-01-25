@@ -82,21 +82,10 @@ static Napi::External<SherpaOnnxAudioTagging> CreateAudioTaggingWrapper(
 
   const SherpaOnnxAudioTagging *at = SherpaOnnxCreateAudioTagging(&c);
 
-  if (c.model.zipformer.model) {
-    delete[] c.model.zipformer.model;
-  }
-
-  if (c.model.ced) {
-    delete[] c.model.ced;
-  }
-
-  if (c.model.provider) {
-    delete[] c.model.provider;
-  }
-
-  if (c.labels) {
-    delete[] c.labels;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model.zipformer.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model.ced);
+  SHERPA_ONNX_DELETE_C_STR(c.model.provider);
+  SHERPA_ONNX_DELETE_C_STR(c.labels);
 
   if (!at) {
     Napi::TypeError::New(env, "Please check your config!")

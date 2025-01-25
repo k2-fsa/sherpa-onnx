@@ -70,14 +70,8 @@ CreateSpeakerEmbeddingExtractorWrapper(const Napi::CallbackInfo &info) {
   const SherpaOnnxSpeakerEmbeddingExtractor *extractor =
       SherpaOnnxCreateSpeakerEmbeddingExtractor(&c);
 #endif
-
-  if (c.model) {
-    delete[] c.model;
-  }
-
-  if (c.provider) {
-    delete[] c.provider;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model);
+  SHERPA_ONNX_DELETE_C_STR(c.provider);
 
   if (!extractor) {
     Napi::TypeError::New(env, "Please check your config!")

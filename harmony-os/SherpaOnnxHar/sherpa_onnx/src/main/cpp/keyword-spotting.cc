@@ -47,50 +47,20 @@ static Napi::External<SherpaOnnxKeywordSpotter> CreateKeywordSpotterWrapper(
   SHERPA_ONNX_ASSIGN_ATTR_INT32(keywords_buf_size, keywordsBufSize);
 
   const SherpaOnnxKeywordSpotter *kws = SherpaOnnxCreateKeywordSpotter(&c);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.joiner);
 
-  if (c.model_config.transducer.encoder) {
-    delete[] c.model_config.transducer.encoder;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.paraformer.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.paraformer.decoder);
 
-  if (c.model_config.transducer.decoder) {
-    delete[] c.model_config.transducer.decoder;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.zipformer2_ctc.model);
 
-  if (c.model_config.transducer.joiner) {
-    delete[] c.model_config.transducer.joiner;
-  }
-
-  if (c.model_config.paraformer.encoder) {
-    delete[] c.model_config.paraformer.encoder;
-  }
-
-  if (c.model_config.paraformer.decoder) {
-    delete[] c.model_config.paraformer.decoder;
-  }
-
-  if (c.model_config.zipformer2_ctc.model) {
-    delete[] c.model_config.zipformer2_ctc.model;
-  }
-
-  if (c.model_config.tokens) {
-    delete[] c.model_config.tokens;
-  }
-
-  if (c.model_config.provider) {
-    delete[] c.model_config.provider;
-  }
-
-  if (c.model_config.model_type) {
-    delete[] c.model_config.model_type;
-  }
-
-  if (c.keywords_file) {
-    delete[] c.keywords_file;
-  }
-
-  if (c.keywords_buf) {
-    delete[] c.keywords_buf;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.model_type);
+  SHERPA_ONNX_DELETE_C_STR(c.keywords_file);
+  SHERPA_ONNX_DELETE_C_STR(c.keywords_buf);
 
   if (!kws) {
     Napi::TypeError::New(env, "Please check your config!")
