@@ -155,78 +155,28 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
 #else
   const SherpaOnnxOfflineTts *tts = SherpaOnnxCreateOfflineTts(&c);
 #endif
+  SHERPA_ONNX_DELETE_C_STR(c.model.vits.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model.vits.lexicon);
+  SHERPA_ONNX_DELETE_C_STR(c.model.vits.tokens);
+  SHERPA_ONNX_DELETE_C_STR(c.model.vits.data_dir);
+  SHERPA_ONNX_DELETE_C_STR(c.model.vits.dict_dir);
 
-  if (c.model.vits.model) {
-    delete[] c.model.vits.model;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.acoustic_model);
+  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.vocoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.lexicon);
+  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.tokens);
+  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.data_dir);
+  SHERPA_ONNX_DELETE_C_STR(c.model.matcha.dict_dir);
 
-  if (c.model.vits.lexicon) {
-    delete[] c.model.vits.lexicon;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.voices);
+  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.tokens);
+  SHERPA_ONNX_DELETE_C_STR(c.model.kokoro.data_dir);
 
-  if (c.model.vits.tokens) {
-    delete[] c.model.vits.tokens;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model.provider);
 
-  if (c.model.vits.data_dir) {
-    delete[] c.model.vits.data_dir;
-  }
-
-  if (c.model.vits.dict_dir) {
-    delete[] c.model.vits.dict_dir;
-  }
-
-  if (c.model.matcha.acoustic_model) {
-    delete[] c.model.matcha.acoustic_model;
-  }
-
-  if (c.model.matcha.vocoder) {
-    delete[] c.model.matcha.vocoder;
-  }
-
-  if (c.model.matcha.lexicon) {
-    delete[] c.model.matcha.lexicon;
-  }
-
-  if (c.model.matcha.tokens) {
-    delete[] c.model.matcha.tokens;
-  }
-
-  if (c.model.matcha.data_dir) {
-    delete[] c.model.matcha.data_dir;
-  }
-
-  if (c.model.matcha.dict_dir) {
-    delete[] c.model.matcha.dict_dir;
-  }
-
-  if (c.model.kokoro.model) {
-    delete[] c.model.kokoro.model;
-  }
-
-  if (c.model.kokoro.voices) {
-    delete[] c.model.kokoro.voices;
-  }
-
-  if (c.model.kokoro.tokens) {
-    delete[] c.model.kokoro.tokens;
-  }
-
-  if (c.model.kokoro.data_dir) {
-    delete[] c.model.kokoro.data_dir;
-  }
-
-  if (c.model.provider) {
-    delete[] c.model.provider;
-  }
-
-  if (c.rule_fsts) {
-    delete[] c.rule_fsts;
-  }
-
-  if (c.rule_fars) {
-    delete[] c.rule_fars;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);
+  SHERPA_ONNX_DELETE_C_STR(c.rule_fars);
 
   if (!tts) {
     Napi::TypeError::New(env, "Please check your config!")

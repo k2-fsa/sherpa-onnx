@@ -154,21 +154,10 @@ CreateOfflineSpeakerDiarizationWrapper(const Napi::CallbackInfo &info) {
       SherpaOnnxCreateOfflineSpeakerDiarization(&c);
 #endif
 
-  if (c.segmentation.pyannote.model) {
-    delete[] c.segmentation.pyannote.model;
-  }
-
-  if (c.segmentation.provider) {
-    delete[] c.segmentation.provider;
-  }
-
-  if (c.embedding.model) {
-    delete[] c.embedding.model;
-  }
-
-  if (c.embedding.provider) {
-    delete[] c.embedding.provider;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.segmentation.pyannote.model);
+  SHERPA_ONNX_DELETE_C_STR(c.segmentation.provider);
+  SHERPA_ONNX_DELETE_C_STR(c.embedding.model);
+  SHERPA_ONNX_DELETE_C_STR(c.embedding.provider);
 
   if (!sd) {
     Napi::TypeError::New(env, "Please check your config!")

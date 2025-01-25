@@ -66,17 +66,9 @@ CreateSpokenLanguageIdentificationWrapper(const Napi::CallbackInfo &info) {
   const SherpaOnnxSpokenLanguageIdentification *slid =
       SherpaOnnxCreateSpokenLanguageIdentification(&c);
 
-  if (c.whisper.encoder) {
-    delete[] c.whisper.encoder;
-  }
-
-  if (c.whisper.decoder) {
-    delete[] c.whisper.decoder;
-  }
-
-  if (c.provider) {
-    delete[] c.provider;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.whisper.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.whisper.decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.provider);
 
   if (!slid) {
     Napi::TypeError::New(env, "Please check your config!")

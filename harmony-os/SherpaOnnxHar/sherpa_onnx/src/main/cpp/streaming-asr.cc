@@ -222,78 +222,26 @@ static Napi::External<SherpaOnnxOnlineRecognizer> CreateOnlineRecognizerWrapper(
   const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&c);
 #endif
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.decoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.joiner);
 
-  if (c.model_config.transducer.encoder) {
-    delete[] c.model_config.transducer.encoder;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.paraformer.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.paraformer.decoder);
 
-  if (c.model_config.transducer.decoder) {
-    delete[] c.model_config.transducer.decoder;
-  }
-
-  if (c.model_config.transducer.joiner) {
-    delete[] c.model_config.transducer.joiner;
-  }
-
-  if (c.model_config.paraformer.encoder) {
-    delete[] c.model_config.paraformer.encoder;
-  }
-
-  if (c.model_config.paraformer.decoder) {
-    delete[] c.model_config.paraformer.decoder;
-  }
-
-  if (c.model_config.zipformer2_ctc.model) {
-    delete[] c.model_config.zipformer2_ctc.model;
-  }
-
-  if (c.model_config.tokens) {
-    delete[] c.model_config.tokens;
-  }
-
-  if (c.model_config.provider) {
-    delete[] c.model_config.provider;
-  }
-
-  if (c.model_config.model_type) {
-    delete[] c.model_config.model_type;
-  }
-
-  if (c.model_config.modeling_unit) {
-    delete[] c.model_config.modeling_unit;
-  }
-
-  if (c.model_config.bpe_vocab) {
-    delete[] c.model_config.bpe_vocab;
-  }
-
-  if (c.model_config.tokens_buf) {
-    delete[] c.model_config.tokens_buf;
-  }
-
-  if (c.decoding_method) {
-    delete[] c.decoding_method;
-  }
-
-  if (c.hotwords_file) {
-    delete[] c.hotwords_file;
-  }
-
-  if (c.rule_fsts) {
-    delete[] c.rule_fsts;
-  }
-
-  if (c.rule_fars) {
-    delete[] c.rule_fars;
-  }
-
-  if (c.hotwords_buf) {
-    delete[] c.hotwords_buf;
-  }
-
-  if (c.ctc_fst_decoder_config.graph) {
-    delete[] c.ctc_fst_decoder_config.graph;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.zipformer2_ctc.model);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.model_type);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.modeling_unit);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.bpe_vocab);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens_buf);
+  SHERPA_ONNX_DELETE_C_STR(c.decoding_method);
+  SHERPA_ONNX_DELETE_C_STR(c.hotwords_file);
+  SHERPA_ONNX_DELETE_C_STR(c.rule_fsts);
+  SHERPA_ONNX_DELETE_C_STR(c.rule_fars);
+  SHERPA_ONNX_DELETE_C_STR(c.hotwords_buf);
+  SHERPA_ONNX_DELETE_C_STR(c.ctc_fst_decoder_config.graph);
 
   if (!recognizer) {
     Napi::TypeError::New(env, "Please check your config!")
