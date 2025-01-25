@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <iostream>
 #include <limits>
+#include <cstddef>  // for std::size_t
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -60,14 +61,14 @@ OfflineTtsCacheMechanism::~OfflineTtsCacheMechanism() {
 }
 
 void OfflineTtsCacheMechanism::AddWavFile(
-  const std::string &text_hash,
+  const std::size_t &text_hash,
   const std::vector<float> &samples,
   const int32_t sample_rate) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
   if (cache_mechanism_inited_ == false) return;
 
-  std::string file_path = cache_dir_ + "/" + text_hash + ".wav";
+  std::string file_path = cache_dir_ + "/" + std::to_string(text_hash) + ".wav";
 
   // Check if the file physically exists in the cache directory
   bool file_exists = std::filesystem::exists(file_path);
@@ -92,7 +93,7 @@ void OfflineTtsCacheMechanism::AddWavFile(
 }
 
 std::vector<float> OfflineTtsCacheMechanism::GetWavFile(
-  const std::string &text_hash,
+  const std::size_t &text_hash,
   int32_t *sample_rate) {
   std::lock_guard<std::recursive_mutex> lock(mutex_);
 
@@ -100,7 +101,7 @@ std::vector<float> OfflineTtsCacheMechanism::GetWavFile(
 
   if (cache_mechanism_inited_ == false) return samples;
 
-  std::string file_path = cache_dir_ + "/" + text_hash + ".wav";
+  std::string file_path = cache_dir_ + "/" + std::to_string(text_hash) + ".wav";
 
   if (std::filesystem::exists(file_path)) {
     bool is_ok = false;
@@ -119,12 +120,12 @@ std::vector<float> OfflineTtsCacheMechanism::GetWavFile(
   }
 
   // Save the repeat counts every 10 minutes
-  auto now = std::chrono::steady_clock::now();
-  if (std::chrono::duration_cast<std::chrono::seconds>(
-    now - last_save_time_).count() >= 10 * 60) {
+  //auto now = std::chrono::steady_clock::now();
+  //if (std::chrono::duration_cast<std::chrono::seconds>(
+    //now - last_save_time_).count() >= 10 * 60) {
     SaveRepeatCounts();
-    last_save_time_ = now;
-  }
+    //last_save_time_ = now;
+  //}
 
   return samples;
 }
@@ -168,7 +169,7 @@ void OfflineTtsCacheMechanism::ClearCache() {
   repeat_counts_.clear();
   cache_vector_.clear();
 
-  // Remove repeat counts also in the repeat_counts.txt
+  // Remove repeat counts also in the repeat_counts file
   SaveRepeatCounts();
 }
 
@@ -183,58 +184,60 @@ int32_t OfflineTtsCacheMechanism::GetTotalUsedCacheSize() const {
 // Private functions ///////////////////////////////////////////////////
 
 void OfflineTtsCacheMechanism::LoadRepeatCounts() {
-  std::string repeat_count_file = cache_dir_ + "/repeat_counts.txt";
+  std::string repeat_count_file = cache_dir_ + "/repeat_counts.bin";
 
   // Check if the file exists
   if (!std::filesystem::exists(repeat_count_file)) {
     return;  // Skip loading if the file doesn't exist
   }
 
-  // Open the file for reading
-  std::ifstream ifs(repeat_count_file);
+  // Open the file for reading in binary mode
+  std::ifstream ifs(repeat_count_file, std::ios::binary);
   if (!ifs.is_open()) {
     SHERPA_ONNX_LOGE("Failed to open repeat count file: %s",
       repeat_count_file.c_str());
     return;  // Skip loading if the file cannot be opened
   }
 
-  // Read the file line by line
-  std::string line;
-  while (std::getline(ifs, line)) {
-    size_t pos = line.find(' ');
-    if (pos != std::string::npos) {
-      std::string text_hash = line.substr(0, pos);
-      int32_t count = std::stoi(line.substr(pos + 1));
-      repeat_counts_[text_hash] = count;
-    }
+  // Read the number of entries
+  size_t num_entries;
+  ifs.read(reinterpret_cast<char*>(&num_entries), sizeof(num_entries));
+
+  // Read each entry
+  for (size_t i = 0; i < num_entries; ++i) {
+    std::size_t text_hash;
+    int32_t count;
+    ifs.read(reinterpret_cast<char*>(&text_hash), sizeof(text_hash));
+    ifs.read(reinterpret_cast<char*>(&count), sizeof(count));
+    repeat_counts_[text_hash] = count;
   }
 }
 
 void OfflineTtsCacheMechanism::SaveRepeatCounts() {
-  std::string repeat_count_file = cache_dir_ + "/repeat_counts.txt";
+  std::string repeat_count_file = cache_dir_ + "/repeat_counts.bin";
 
-  // Open the file for writing
-  std::ofstream ofs(repeat_count_file);
+  // Open the file for writing in binary mode
+  std::ofstream ofs(repeat_count_file, std::ios::binary);
   if (!ofs.is_open()) {
     SHERPA_ONNX_LOGE("Failed to open repeat count file for writing: %s",
       repeat_count_file.c_str());
     return;  // Skip saving if the file cannot be opened
   }
 
-  // Write the repeat counts to the file
+  // Write the number of entries
+  size_t num_entries = repeat_counts_.size();
+  ofs.write(reinterpret_cast<const char*>(&num_entries), sizeof(num_entries));
+
+  // Write each entry
   for (const auto &entry : repeat_counts_) {
-    ofs << entry.first << " " << entry.second;
-    if (!ofs) {
-      SHERPA_ONNX_LOGE("Failed to write repeat count for text hash: %s",
-        entry.first.c_str());
-      return;  // Stop writing if an error occurs
-    }
-    ofs << std::endl;
+    ofs.write(reinterpret_cast<const char*>(&entry.first), sizeof(entry.first));
+    ofs.write(reinterpret_cast<const char*>(&entry.second), sizeof(entry.second));
   }
 }
 
-void OfflineTtsCacheMechanism::RemoveWavFile(const std::string &text_hash) {
-  std::string file_path = cache_dir_ + "/" + text_hash + ".wav";
+void OfflineTtsCacheMechanism::RemoveWavFile(const std::size_t &text_hash) {
+  std::string file_path = cache_dir_ + "/" 
+                            + std::to_string(text_hash) + ".wav";
   if (std::filesystem::exists(file_path)) {
     // Subtract the size of the removed WAV file from the total cache size
     std::ifstream file(file_path, std::ios::binary | std::ios::ate);
@@ -259,7 +262,8 @@ void OfflineTtsCacheMechanism::UpdateCacheVector() {
 
   for (const auto &entry : std::filesystem::directory_iterator(cache_dir_)) {
     if (entry.path().extension() == ".wav") {
-      std::string text_hash = entry.path().stem().string();
+      std::string text_hash_str = entry.path().stem().string();
+      std::size_t text_hash = std::stoull(text_hash_str);
       if (repeat_counts_.find(text_hash) == repeat_counts_.end()) {
         // Remove the file if it's not in the repeat count file (orphaned file)
         std::filesystem::remove(entry.path());
@@ -282,14 +286,14 @@ void OfflineTtsCacheMechanism::EnsureCacheLimit() {
     while (used_cache_size_bytes_> 0
       && used_cache_size_bytes_ > target_cache_size) {
         // Cache is full, remove the least repeated file
-        std::string least_repeated_file = GetLeastRepeatedFile();
+        std::size_t least_repeated_file = GetLeastRepeatedFile();
         RemoveWavFile(least_repeated_file);
     }
   }
 }
 
-std::string OfflineTtsCacheMechanism::GetLeastRepeatedFile() {
-  std::string least_repeated_file;
+std::size_t OfflineTtsCacheMechanism::GetLeastRepeatedFile() {
+  std::size_t least_repeated_file = 0;
   int32_t min_count = std::numeric_limits<int32_t>::max();
 
   for (const auto &entry : repeat_counts_) {

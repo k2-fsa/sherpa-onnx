@@ -9,6 +9,7 @@
 #include <vector>
 #include <unordered_map>
 #include <mutex>  // NOLINT
+#include <cstddef>  // for std::size_t
 
 #include "sherpa-onnx/csrc/offline-tts-cache-mechanism-config.h"
 
@@ -16,19 +17,18 @@ namespace sherpa_onnx {
 
 class OfflineTtsCacheMechanism {
  public:
-
   explicit OfflineTtsCacheMechanism(const OfflineTtsCacheMechanismConfig &config);
   ~OfflineTtsCacheMechanism();
 
   // Add a new wav file to the cache
   void AddWavFile(
-    const std::string &text_hash,
+    const std::size_t &text_hash,
     const std::vector<float> &samples,
     const int32_t sample_rate);
 
   // Get the cached wav file if it exists
   std::vector<float> GetWavFile(
-    const std::string &text_hash,
+    const std::size_t &text_hash,
     int32_t *sample_rate);
 
   // Get the current cache size in bytes
@@ -51,7 +51,7 @@ class OfflineTtsCacheMechanism {
   void SaveRepeatCounts();
 
   // Remove a wav file from the cache
-  void RemoveWavFile(const std::string &text_hash);
+  void RemoveWavFile(const std::size_t &text_hash);
 
   // Update the cache vector with the actual files in the cache folder
   void UpdateCacheVector();
@@ -60,7 +60,7 @@ class OfflineTtsCacheMechanism {
   void EnsureCacheLimit();
 
   // Get the least repeated file in the cache
-  std::string GetLeastRepeatedFile();
+  std::size_t GetLeastRepeatedFile();
 
   // Data directory where the cache folder is located
   std::string cache_dir_;
@@ -72,10 +72,10 @@ class OfflineTtsCacheMechanism {
   int32_t used_cache_size_bytes_;
 
   // Map of text hash to repeat count
-  std::unordered_map<std::string, int32_t> repeat_counts_;
+  std::unordered_map<std::size_t, int32_t> repeat_counts_;
 
   // Vector of cached file names
-  std::vector<std::string> cache_vector_;
+  std::vector<std::size_t> cache_vector_;
 
   // Mutex for thread safety (recursive to avoid deadlocks)
   mutable std::recursive_mutex mutex_;

@@ -196,24 +196,6 @@ static OfflineTtsCacheMechanismConfig GetOfflineTtsCacheConfig(JNIEnv *env, jobj
   return ans;
 }
 
-  // Get data directory from config
-  jfieldID model_fid = env->GetFieldID(cls, "model", "Lcom/k2fsa/sherpa/onnx/OfflineTtsModelConfig;");
-  jobject model_config = env->GetObjectField(config, model_fid);
-  jclass model_cls = env->GetObjectClass(model_config);
-  
-  jfieldID vits_fid = env->GetFieldID(model_cls, "vits", "Lcom/k2fsa/sherpa/onnx/OfflineTtsVitsModelConfig;");
-  jobject vits_config = env->GetObjectField(model_config, vits_fid);
-  
-  fid = env->GetFieldID(vits_cls, "dataDir", "Ljava/lang/String;");
-  jstring data_dir = (jstring)env->GetObjectField(vits_config, fid);
-  const char *p_data_dir = env->GetStringUTFChars(data_dir, nullptr);
-  
-  // Convert data directory to cache directory
-  std::string cache_dir = std::string(p_data_dir) + "/../cache";
-  ans.cache_dir = cache_dir;
-  
-  env->ReleaseStringUTFChars(data_dir, p_data_dir);
-
 }  // namespace sherpa_onnx
 
 SHERPA_ONNX_EXTERN_C

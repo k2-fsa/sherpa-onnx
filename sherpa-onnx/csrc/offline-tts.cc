@@ -112,8 +112,7 @@ GeneratedAudio OfflineTts::Generate(
     GeneratedAudioCallback callback /*= nullptr*/) const {
   // Generate a hash for the text
   std::hash<std::string> hasher;
-  std::string text_hash = std::to_string(hasher(text));
-  // SHERPA_ONNX_LOGE("Generated text hash: %s", text_hash.c_str());
+  std::size_t text_hash = hasher(text);
 
   // Check if the cache mechanism is active and if the audio is already cached
   if (cache_mechanism_) {
@@ -122,7 +121,7 @@ GeneratedAudio OfflineTts::Generate(
       = cache_mechanism_->GetWavFile(text_hash, &sample_rate);
 
     if (!samples.empty()) {
-      SHERPA_ONNX_LOGE("Returning cached audio for hash:%s", text_hash.c_str());
+      SHERPA_ONNX_LOGE("Returning cached audio for hash: %zu", text_hash);
 
       // If a callback is provided, call it with the cached audio
       if (callback) {
@@ -146,7 +145,6 @@ GeneratedAudio OfflineTts::Generate(
   // Cache the generated audio if the cache mechanism is active
   if (cache_mechanism_) {
     cache_mechanism_->AddWavFile(text_hash, audio.samples, audio.sample_rate);
-    // SHERPA_ONNX_LOGE("Cached audio for text hash: %s", text_hash.c_str());
   }
 
   return audio;
