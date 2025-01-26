@@ -1645,6 +1645,10 @@ SherpaOnnxCreateSpeakerEmbeddingExtractorOHOS(
     const SherpaOnnxSpeakerEmbeddingExtractorConfig *config,
     NativeResourceManager *mgr);
 
+SHERPA_ONNX_API const SherpaOnnxKeywordSpotter *
+SherpaOnnxCreateKeywordSpotterOHOS(const SherpaOnnxKeywordSpotterConfig *config,
+                                   NativeResourceManager *mgr);
+
 SHERPA_ONNX_API const SherpaOnnxOfflineSpeakerDiarization *
 SherpaOnnxCreateOfflineSpeakerDiarizationOHOS(
     const SherpaOnnxOfflineSpeakerDiarizationConfig *config,

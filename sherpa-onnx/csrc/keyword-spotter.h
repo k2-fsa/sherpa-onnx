@@ -9,11 +9,6 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/online-model-config.h"
 #include "sherpa-onnx/csrc/online-stream.h"
@@ -101,9 +96,8 @@ class KeywordSpotter {
  public:
   explicit KeywordSpotter(const KeywordSpotterConfig &config);
 
-#if __ANDROID_API__ >= 9
-  KeywordSpotter(AAssetManager *mgr, const KeywordSpotterConfig &config);
-#endif
+  template <typename Manager>
+  KeywordSpotter(Manager *mgr, const KeywordSpotterConfig &config);
 
   ~KeywordSpotter();
 

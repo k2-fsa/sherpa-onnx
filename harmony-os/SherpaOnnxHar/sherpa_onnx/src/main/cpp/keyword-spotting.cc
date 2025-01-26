@@ -16,6 +16,16 @@ SherpaOnnxOnlineModelConfig GetOnlineModelConfig(Napi::Object obj);
 static Napi::External<SherpaOnnxKeywordSpotter> CreateKeywordSpotterWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
+#if __OHOS__
+  if (info.Length() != 2) {
+    std::ostringstream os;
+    os << "Expect only 2 arguments. Given: " << info.Length();
+
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+
+    return {};
+  }
+#else
   if (info.Length() != 1) {
     std::ostringstream os;
     os << "Expect only 1 argument. Given: " << info.Length();
@@ -24,7 +34,7 @@ static Napi::External<SherpaOnnxKeywordSpotter> CreateKeywordSpotterWrapper(
 
     return {};
   }
-
+#endif
   if (!info[0].IsObject()) {
     Napi::TypeError::New(env, "Expect an object as the argument")
         .ThrowAsJavaScriptException();
@@ -46,7 +56,18 @@ static Napi::External<SherpaOnnxKeywordSpotter> CreateKeywordSpotterWrapper(
   SHERPA_ONNX_ASSIGN_ATTR_STR(keywords_buf, keywordsBuf);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(keywords_buf_size, keywordsBufSize);
 
+#if __OHOS__
+  std::unique_ptr<NativeResourceManager,
+                  decltype(&OH_ResourceManager_ReleaseNativeResourceManager)>
+      mgr(OH_ResourceManager_InitNativeResourceManager(env, info[1]),
+          &OH_ResourceManager_ReleaseNativeResourceManager);
+
+  const SherpaOnnxKeywordSpotter *kws =
+      SherpaOnnxCreateKeywordSpotterOHOS(&c, mgr.get());
+#else
   const SherpaOnnxKeywordSpotter *kws = SherpaOnnxCreateKeywordSpotter(&c);
+#endif
+
   SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.encoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.decoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.transducer.joiner);
@@ -79,9 +100,9 @@ static Napi::External<SherpaOnnxKeywordSpotter> CreateKeywordSpotterWrapper(
 static Napi::External<SherpaOnnxOnlineStream> CreateKeywordStreamWrapper(
     const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
-  if (info.Length() != 1) {
+  if (info.Length() != 1 && info.Length() != 2) {
     std::ostringstream os;
-    os << "Expect only 1 argument. Given: " << info.Length();
+    os << "Expect only 1 or 2 arguments. Given: " << info.Length();
 
     Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
 
@@ -96,10 +117,24 @@ static Napi::External<SherpaOnnxOnlineStream> CreateKeywordStreamWrapper(
     return {};
   }
 
+  if (info.Length() == 2 && !info[1].IsString()) {
+    std::ostringstream os;
+    os << "Argument 2 should be a string.";
+    Napi::TypeError::New(env, os.str()).ThrowAsJavaScriptException();
+    return {};
+  }
+
   const SherpaOnnxKeywordSpotter *kws =
       info[0].As<Napi::External<SherpaOnnxKeywordSpotter>>().Data();
 
-  const SherpaOnnxOnlineStream *stream = SherpaOnnxCreateKeywordStream(kws);
+  const SherpaOnnxOnlineStream *stream;
+  if (info.Length() == 1) {
+    stream = SherpaOnnxCreateKeywordStream(kws);
+  } else {
+    Napi::String js_keywords = info[1].As<Napi::String>();
+    std::string keywords = js_keywords.Utf8Value();
+    stream = SherpaOnnxCreateKeywordStreamWithKeywords(kws, keywords.c_str());
+  }
 
   return Napi::External<SherpaOnnxOnlineStream>::New(
       env, const_cast<SherpaOnnxOnlineStream *>(stream),

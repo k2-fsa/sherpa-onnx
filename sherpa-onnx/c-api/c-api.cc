@@ -678,7 +678,7 @@ struct SherpaOnnxKeywordSpotter {
   std::unique_ptr<sherpa_onnx::KeywordSpotter> impl;
 };
 
-const SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
+static sherpa_onnx::KeywordSpotterConfig GetKeywordSpotterConfig(
     const SherpaOnnxKeywordSpotterConfig *config) {
   sherpa_onnx::KeywordSpotterConfig spotter_config;
 
@@ -739,10 +739,20 @@ const SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
         std::string(config->keywords_buf, config->keywords_buf_size);
   }
 
-  if (config->model_config.debug) {
+  if (spotter_config.model_config.debug) {
+#if OHOS
+    SHERPA_ONNX_LOGE("%{public}s\n", spotter_config.ToString().c_str());
+#else
     SHERPA_ONNX_LOGE("%s\n", spotter_config.ToString().c_str());
+#endif
   }
 
+  return spotter_config;
+}
+
+const SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
+    const SherpaOnnxKeywordSpotterConfig *config) {
+  auto spotter_config = GetKeywordSpotterConfig(config);
   if (!spotter_config.Validate()) {
     SHERPA_ONNX_LOGE("Errors in config!");
     return nullptr;
@@ -2270,6 +2280,22 @@ SherpaOnnxCreateSpeakerEmbeddingExtractorOHOS(
   p->impl = std::make_unique<sherpa_onnx::SpeakerEmbeddingExtractor>(mgr, c);
 
   return p;
+}
+
+const SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotterOHOS(
+    const SherpaOnnxKeywordSpotterConfig *config, NativeResourceManager *mgr) {
+  if (!mgr) {
+    return SherpaOnnxCreateKeywordSpotter(config);
+  }
+
+  auto spotter_config = GetKeywordSpotterConfig(config);
+
+  SherpaOnnxKeywordSpotter *spotter = new SherpaOnnxKeywordSpotter;
+
+  spotter->impl =
+      std::make_unique<sherpa_onnx::KeywordSpotter>(mgr, spotter_config);
+
+  return spotter;
 }
 
 #if SHERPA_ONNX_ENABLE_TTS == 1
