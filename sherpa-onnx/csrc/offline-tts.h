@@ -10,6 +10,7 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/offline-tts-cache-mechanism.h"
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -17,6 +18,7 @@ namespace sherpa_onnx {
 
 struct OfflineTtsConfig {
   OfflineTtsModelConfig model;
+  
   // If not empty, it contains a list of rule FST filenames.
   // Filenames are separated by a comma.
   // Example value: rule1.fst,rule2,fst,rule3.fst
@@ -63,9 +65,15 @@ class OfflineTts {
  public:
   ~OfflineTts();
   explicit OfflineTts(const OfflineTtsConfig &config);
+  explicit OfflineTts(const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config);
 
   template <typename Manager>
   OfflineTts(Manager *mgr, const OfflineTtsConfig &config);
+
+  template <typename Manager>
+  OfflineTts(Manager *mgr, const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config);
 
   // @param text A string containing words separated by spaces
   // @param sid Speaker ID. Used only for multi-speaker models, e.g., models
@@ -90,6 +98,8 @@ class OfflineTts {
   // Number of supported speakers.
   // If it supports only a single speaker, then it return 0 or 1.
   int32_t NumSpeakers() const;
+
+  std::unique_ptr<OfflineTtsCacheMechanism> cache_mechanism_; // not owned here
 
  private:
   std::unique_ptr<OfflineTtsImpl> impl_;

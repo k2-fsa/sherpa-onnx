@@ -18,6 +18,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-tts-cache-mechanism.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
@@ -87,16 +88,66 @@ std::string OfflineTtsConfig::ToString() const {
 OfflineTts::OfflineTts(const OfflineTtsConfig &config)
     : impl_(OfflineTtsImpl::Create(config)) {}
 
+OfflineTts::OfflineTts(const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config)
+    : impl_(OfflineTtsImpl::Create(config)) {
+     cache_mechanism_ = std::make_unique<OfflineTtsCacheMechanism>(cache_config);
+}
+
 template <typename Manager>
 OfflineTts::OfflineTts(Manager *mgr, const OfflineTtsConfig &config)
     : impl_(OfflineTtsImpl::Create(mgr, config)) {}
+
+template <typename Manager>
+OfflineTts::OfflineTts(Manager *mgr, const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config)
+    : impl_(OfflineTtsImpl::Create(mgr, config)) {
+     cache_mechanism_ = std::make_unique<OfflineTtsCacheMechanism>(cache_config);
+}
 
 OfflineTts::~OfflineTts() = default;
 
 GeneratedAudio OfflineTts::Generate(
     const std::string &text, int64_t sid /*=0*/, float speed /*= 1.0*/,
     GeneratedAudioCallback callback /*= nullptr*/) const {
-  return impl_->Generate(text, sid, speed, std::move(callback));
+  // Generate a hash for the text
+  std::hash<std::string> hasher;
+  std::size_t text_hash = hasher(text);
+
+  // Check if the cache mechanism is active and if the audio is already cached
+  if (cache_mechanism_) {
+    int32_t sample_rate;
+    std::vector<float> samples
+      = cache_mechanism_->GetWavFile(text_hash, &sample_rate);
+
+    if (!samples.empty()) {
+      SHERPA_ONNX_LOGE("Returning cached audio for hash: %zu", text_hash);
+
+      // If a callback is provided, call it with the cached audio
+      if (callback) {
+        int32_t result
+          = callback(samples.data(), samples.size(), 1.0f /* progress */);
+        if (result == 0) {
+          // If the callback returns 0, stop further processing
+          SHERPA_ONNX_LOGE("Callback requested to stop processing.");
+          return {samples, sample_rate};
+        }
+      }
+
+      // Return the cached audio
+      return {samples, sample_rate};
+    }
+  }
+
+  // Generate the audio if not cached
+  GeneratedAudio audio = impl_->Generate(text, sid, speed, std::move(callback));
+
+  // Cache the generated audio if the cache mechanism is active
+  if (cache_mechanism_) {
+    cache_mechanism_->AddWavFile(text_hash, audio.samples, audio.sample_rate);
+  }
+
+  return audio;
 }
 
 int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }
@@ -106,11 +157,17 @@ int32_t OfflineTts::NumSpeakers() const { return impl_->NumSpeakers(); }
 #if __ANDROID_API__ >= 9
 template OfflineTts::OfflineTts(AAssetManager *mgr,
                                 const OfflineTtsConfig &config);
+template OfflineTts::OfflineTts(AAssetManager *mgr,
+                        const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config);
 #endif
 
 #if __OHOS__
 template OfflineTts::OfflineTts(NativeResourceManager *mgr,
                                 const OfflineTtsConfig &config);
+template OfflineTts::OfflineTts(NativeResourceManager *mgr,
+                        const OfflineTtsConfig &config,
+                        const OfflineTtsCacheMechanismConfig &cache_config);
 #endif
 
 }  // namespace sherpa_onnx
