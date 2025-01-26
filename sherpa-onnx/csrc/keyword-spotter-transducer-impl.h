@@ -9,15 +9,9 @@
 #include <memory>
 #include <regex>  // NOLINT
 #include <string>
+#include <strstream>
 #include <utility>
 #include <vector>
-
-#if __ANDROID_API__ >= 9
-#include <strstream>
-
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/keyword-spotter-impl.h"
@@ -91,9 +85,8 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
         unk_id_);
   }
 
-#if __ANDROID_API__ >= 9
-  KeywordSpotterTransducerImpl(AAssetManager *mgr,
-                               const KeywordSpotterConfig &config)
+  template <typename Manager>
+  KeywordSpotterTransducerImpl(Manager *mgr, const KeywordSpotterConfig &config)
       : config_(config),
         model_(OnlineTransducerModel::Create(mgr, config.model_config)),
         sym_(mgr, config.model_config.tokens) {
@@ -109,7 +102,6 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
         model_.get(), config_.max_active_paths, config_.num_trailing_blanks,
         unk_id_);
   }
-#endif
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream =
@@ -130,7 +122,11 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
 
     if (!EncodeKeywords(is, sym_, &current_ids, &current_kws, &current_scores,
                         &current_thresholds)) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Encode keywords %{public}s failed.", keywords.c_str());
+#else
       SHERPA_ONNX_LOGE("Encode keywords %s failed.", keywords.c_str());
+#endif
       return nullptr;
     }
 
@@ -306,16 +302,21 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     // each line in keywords_file contains space-separated words
     std::ifstream is(config_.keywords_file);
     if (!is) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Open keywords file failed: %{public}s",
+                       config_.keywords_file.c_str());
+#else
       SHERPA_ONNX_LOGE("Open keywords file failed: %s",
                        config_.keywords_file.c_str());
+#endif
       exit(-1);
     }
     InitKeywords(is);
 #endif
   }
 
-#if __ANDROID_API__ >= 9
-  void InitKeywords(AAssetManager *mgr) {
+  template <typename Manager>
+  void InitKeywords(Manager *mgr) {
     // each line in keywords_file contains space-separated words
 
     auto buf = ReadFile(mgr, config_.keywords_file);
@@ -323,13 +324,17 @@ class KeywordSpotterTransducerImpl : public KeywordSpotterImpl {
     std::istrstream is(buf.data(), buf.size());
 
     if (!is) {
+#if __OHOS__
+      SHERPA_ONNX_LOGE("Open keywords file failed: %{public}s",
+                       config_.keywords_file.c_str());
+#else
       SHERPA_ONNX_LOGE("Open keywords file failed: %s",
                        config_.keywords_file.c_str());
+#endif
       exit(-1);
     }
     InitKeywords(is);
   }
-#endif
 
   void InitKeywordsFromBufStr() {
     // keywords_buf's content is supposed to be same as the keywords_file's
