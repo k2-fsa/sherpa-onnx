@@ -53,3 +53,8 @@ export { OfflineSpeakerSegmentationPyannoteModelConfig,
   OfflineSpeakerDiarization,
   FastClusteringConfig,
 } from './src/main/ets/components/NonStreamingSpeakerDiarization';
+
+export { KeywordSpotterConfig,
+  KeywordSpotterResult,
+  KeywordSpotter,
+} from './src/main/ets/components/KeywordSpotting';
