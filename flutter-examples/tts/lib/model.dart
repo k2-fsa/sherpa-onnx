@@ -24,13 +24,14 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
 
   String modelDir = '';
   String modelName = '';
+  String voices = ''; // for Kokoro only
   String ruleFsts = '';
   String ruleFars = '';
   String lexicon = '';
   String dataDir = '';
   String dictDir = '';
 
-  // You can select an example below and change it according to match your
+  // You can select an example below and change it accordingly to match your
   // selected tts model
 
   // ============================================================
@@ -84,6 +85,13 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   // lexicon = 'lexicon.txt';
   // dictDir = 'vits-melo-tts-zh_en/dict';
 
+  // Example 8
+  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html#kokoro-en-v0-19-english-11-speakers
+  // modelDir = 'kokoro-en-v0_19';
+  // modelName = 'model.onnx';
+  // voices = 'voices.bin';
+  // dataDir = 'kokoro-en-v0_19/espeak-ng-data';
+
   // ============================================================
   // Please don't change the remaining part of this function
   // ============================================================
@@ -126,17 +134,36 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   }
 
   final tokens = p.join(directory.path, modelDir, 'tokens.txt');
+  if (voices != '') {
+    voices = p.join(directory.path, modelDir, voices);
+  }
 
-  final vits = sherpa_onnx.OfflineTtsVitsModelConfig(
-    model: modelName,
-    lexicon: lexicon,
-    tokens: tokens,
-    dataDir: dataDir,
-    dictDir: dictDir,
-  );
+  late final sherpa_onnx.OfflineTtsVitsModelConfig vits;
+  late final sherpa_onnx.OfflineTtsKokoroModelConfig kokoro;
+
+  if (voices != '') {
+    vits = sherpa_onnx.OfflineTtsVitsModelConfig();
+    kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig(
+      model: modelName,
+      voices: voices,
+      tokens: tokens,
+      dataDir: dataDir,
+    );
+  } else {
+    vits = sherpa_onnx.OfflineTtsVitsModelConfig(
+      model: modelName,
+      lexicon: lexicon,
+      tokens: tokens,
+      dataDir: dataDir,
+      dictDir: dictDir,
+    );
+
+    kokoro = sherpa_onnx.OfflineTtsKokoroModelConfig();
+  }
 
   final modelConfig = sherpa_onnx.OfflineTtsModelConfig(
     vits: vits,
+    kokoro: kokoro,
     numThreads: 2,
     debug: true,
     provider: 'cpu',
