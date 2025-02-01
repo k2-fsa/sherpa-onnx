@@ -2,7 +2,11 @@
 # Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 
+import time
+from typing import Dict
+
 import numpy as np
+import torch
 
 try:
     from piper_phonemize import phonemize_espeak
@@ -38,8 +42,110 @@ NodeArg(name='audio', type='tensor(float)', shape=['audio_length'])
 """
 
 
+def load_tokens(filename: str) -> Dict[str, int]:
+    ans = dict()
+    with open(filename, encoding="utf-8") as f:
+        for line in f:
+            fields = line.strip().split()
+            if len(fields) == 2:
+                token, idx = fields
+                ans[token] = int(idx)
+            else:
+                assert len(fields) == 1, (len(fields), line)
+                ans[" "] = int(fields[0])
+    return ans
+
+
+class OnnxModel:
+    def __init__(self, model_filename: str, tokens: str):
+        session_opts = ort.SessionOptions()
+        session_opts.inter_op_num_threads = 1
+        session_opts.intra_op_num_threads = 1
+
+        self.session_opts = session_opts
+        self.model = ort.InferenceSession(
+            model_filename,
+            sess_options=self.session_opts,
+            providers=["CPUExecutionProvider"],
+        )
+        self.token2id = load_tokens(tokens)
+        self.voices = torch.load("./af_bella.pt", weights_only=True).numpy()
+        # self.voices: (510, 1, 256)
+        print(self.voices.shape)
+
+        self.sample_rate = 24000
+
+        self.max_len = self.voices.shape[0]
+
+    def __call__(self, text: str):
+        tokens = phonemize_espeak(text, "en-us")
+        # tokens is List[List[str]]
+        # Each sentence is a List[str]
+        # len(tokens) == number of sentences
+
+        tokens = sum(tokens, [])  # flatten
+        tokens = "".join(tokens)
+
+        tokens = tokens.replace("kəkˈoːɹoʊ", "kˈoʊkəɹoʊ").replace(
+            "kəkˈɔːɹəʊ", "kˈəʊkəɹəʊ"
+        )
+
+        tokens = list(tokens)
+
+        token_ids = [self.token2id[i] for i in tokens]
+        token_ids = token_ids[: self.max_len]
+
+        style = self.voices[len(token_ids)]
+
+        token_ids = [0, *token_ids, 0]
+        token_ids = np.array([token_ids], dtype=np.int64)
+
+        speed = np.array([1.0], dtype=np.float32)
+
+        audio = self.model.run(
+            [
+                self.model.get_outputs()[0].name,
+            ],
+            {
+                self.model.get_inputs()[0].name: token_ids,
+                self.model.get_inputs()[1].name: style,
+                self.model.get_inputs()[2].name: speed,
+            },
+        )[0]
+        return audio
+
+
 def main():
-    show("./kokoro.onnx")
+    # show("./kokoro.onnx")
+    m = OnnxModel(
+        model_filename="./kokoro.onnx",
+        tokens="./tokens.txt",
+    )
+    text = (
+        "Today as always, men fall into two groups: slaves and free men."
+        + " Whoever does not have two-thirds of his day for himself, "
+        + "is a slave, whatever he may be: a statesman, a businessman, "
+        + "an official, or a scholar."
+    )
+    start = time.time()
+    audio = m(text)
+    end = time.time()
+
+    elapsed_seconds = end - start
+    audio_duration = len(audio) / m.sample_rate
+    real_time_factor = elapsed_seconds / audio_duration
+
+    filename = "test.wav"
+    sf.write(
+        filename,
+        audio,
+        samplerate=m.sample_rate,
+        subtype="PCM_16",
+    )
+    print(f" Saved to {filename}")
+    print(f" Elapsed seconds: {elapsed_seconds:.3f}")
+    print(f" Audio duration in seconds: {audio_duration:.3f}")
+    print(f" RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
 
 
 if __name__ == "__main__":
