@@ -5,8 +5,8 @@
 //  Created by knight on 2023/4/5.
 //
 
-import Foundation
 import AVFoundation
+import Foundation
 
 enum Status {
     case stop
@@ -22,6 +22,7 @@ class SherpaOnnxViewModel: ObservableObject {
 
     var audioEngine: AVAudioEngine? = nil
     var recognizer: SherpaOnnxRecognizer! = nil
+    private var audioSession: AVAudioSession!
 
     var lastSentence: String = ""
     let maxSentence: Int = 20
@@ -36,11 +37,16 @@ class SherpaOnnxViewModel: ObservableObject {
 
         let start = max(sentences.count - maxSentence, 0)
         if lastSentence.isEmpty {
-            return sentences.enumerated().map { (index, s) in "\(index): \(s.lowercased())" }[start...]
-                .joined(separator: "\n")
+            return sentences.enumerated().map { (index, s) in
+                "\(index): \(s.lowercased())"
+            }[start...]
+            .joined(separator: "\n")
         } else {
-            return sentences.enumerated().map { (index, s) in "\(index): \(s.lowercased())" }[start...]
-                .joined(separator: "\n") + "\n\(sentences.count): \(lastSentence.lowercased())"
+            return sentences.enumerated().map { (index, s) in
+                "\(index): \(s.lowercased())"
+            }[start...]
+            .joined(separator: "\n")
+                + "\n\(sentences.count): \(lastSentence.lowercased())"
         }
     }
 
@@ -48,8 +54,20 @@ class SherpaOnnxViewModel: ObservableObject {
         self.subtitles = self.results
     }
 
+    func setupAudioSession() {
+        audioSession = AVAudioSession.sharedInstance()
+        do {
+            try audioSession.setCategory(
+                .playAndRecord, mode: .default, options: [.defaultToSpeaker])
+            try audioSession.setActive(true)
+        } catch {
+            print("Failed to set up audio session: \(error)")
+        }
+    }
+
     init() {
         initRecognizer()
+        setupAudioSession()
         initRecorder()
     }
 
@@ -116,8 +134,8 @@ class SherpaOnnxViewModel: ObservableObject {
                 pcmFormat: outputFormat,
                 frameCapacity:
                     AVAudioFrameCount(outputFormat.sampleRate)
-                * buffer.frameLength
-                / AVAudioFrameCount(buffer.format.sampleRate))!
+                    * buffer.frameLength
+                    / AVAudioFrameCount(buffer.format.sampleRate))!
 
             var error: NSError?
             let _ = converter.convert(
@@ -129,7 +147,7 @@ class SherpaOnnxViewModel: ObservableObject {
             let array = convertedBuffer.array()
             if !array.isEmpty {
                 self.recognizer.acceptWaveform(samples: array)
-                while (self.recognizer.isReady()){
+                while self.recognizer.isReady() {
                     self.recognizer.decode()
                 }
                 let isEndpoint = self.recognizer.isEndpoint()
@@ -141,7 +159,7 @@ class SherpaOnnxViewModel: ObservableObject {
                     print(text)
                 }
 
-                if isEndpoint{
+                if isEndpoint {
                     if !text.isEmpty {
                         let tmp = self.lastSentence
                         self.lastSentence = ""
@@ -170,7 +188,8 @@ class SherpaOnnxViewModel: ObservableObject {
         do {
             try self.audioEngine?.start()
         } catch let error as NSError {
-            print("Got an error starting audioEngine: \(error.domain), \(error)")
+            print(
+                "Got an error starting audioEngine: \(error.domain), \(error)")
         }
         print("started")
     }
