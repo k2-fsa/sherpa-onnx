@@ -22,6 +22,7 @@ class SherpaOnnxViewModel: ObservableObject {
 
     var audioEngine: AVAudioEngine? = nil
     var recognizer: SherpaOnnxRecognizer! = nil
+    private var audioSession: AVAudioSession!
 
     var lastSentence: String = ""
     let maxSentence: Int = 20
@@ -48,8 +49,19 @@ class SherpaOnnxViewModel: ObservableObject {
         self.subtitles = self.results
     }
 
+    func setupAudioSession(){
+        audioSession = AVAudioSession.sharedInstance()
+        do{
+            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker])
+            try audioSession.setActive(true)
+        }catch{
+            print("Failed to set up audio session: \(error)")
+        }
+    }
+
     init() {
         initRecognizer()
+        setupAudioSession()
         initRecorder()
     }
 
