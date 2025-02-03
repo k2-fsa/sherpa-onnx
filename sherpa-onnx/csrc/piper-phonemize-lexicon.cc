@@ -163,6 +163,8 @@ static std::vector<std::vector<int64_t>> PiperPhonemesToIdsKokoro(
   std::vector<int64_t> current;
   current.reserve(phonemes.size());
 
+  current.push_back(0);
+
   for (auto p : phonemes) {
     if (token2id.count(p)) {
       if (current.size() > max_len - 1) {
