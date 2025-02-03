@@ -16,8 +16,8 @@ https://huggingface.co/hexgrad/Kokoro-82M/discussions/14
 EOF
 
 files=(
-kokoro-v0_19_hf.onnx
-# kokoro-v0_19.onnx
+# kokoro-v0_19_hf.onnx
+kokoro-v0_19.onnx
 # kokoro-quant.onnx
 # kokoro-quant-convinteger.onnx
 voices.json
@@ -30,14 +30,14 @@ for f in ${files[@]}; do
 done
 
 models=(
-# kokoro-v0_19
+kokoro-v0_19
 # kokoro-quant
 # kokoro-quant-convinteger
-kokoro-v0_19_hf
+# kokoro-v0_19_hf
 )
 
 for m in ${models[@]}; do
-  ./add-meta-data.py --model $m.onnx --voices ./voices.json
+  ./add_meta_data.py --model $m.onnx --voices ./voices.json
 done
 
 ls -l
