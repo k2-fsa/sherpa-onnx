@@ -2,11 +2,15 @@
 # Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 
+import re
 import time
 from typing import Dict
 
 import numpy as np
+import onnxruntime as ort
+import soundfile as sf
 import torch
+from misaki import zh
 
 try:
     from piper_phonemize import phonemize_espeak
@@ -16,8 +20,8 @@ except Exception as ex:
         "pip install piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html"
     )
 
-import onnxruntime as ort
-import soundfile as sf
+
+name = "bm_fable"
 
 
 def show(filename):
@@ -70,6 +74,7 @@ class OnnxModel:
         )
         self.token2id = load_tokens(tokens)
         self.voices = torch.load("./af_bella.pt", weights_only=True).numpy()
+        self.voices = torch.load(f"./{name}.pt", weights_only=True).numpy()
         # self.voices: (510, 1, 256)
         print(self.voices.shape)
 
@@ -78,19 +83,30 @@ class OnnxModel:
         self.max_len = self.voices.shape[0]
 
     def __call__(self, text: str):
-        tokens = phonemize_espeak(text, "en-us")
-        # tokens is List[List[str]]
-        # Each sentence is a List[str]
-        # len(tokens) == number of sentences
+        punctuations = ';:,.!?-…()"“” '
+        text = text.lower()
+        g2p = zh.ZHG2P()
 
-        tokens = sum(tokens, [])  # flatten
-        tokens = "".join(tokens)
+        tokens = ""
 
-        tokens = tokens.replace("kəkˈoːɹoʊ", "kˈoʊkəɹoʊ").replace(
-            "kəkˈɔːɹəʊ", "kˈəʊkəɹəʊ"
-        )
+        for t in re.findall("[\u4E00-\u9FFF]+|[\u0000-\u007f]+", text):
+            if ord(t[0]) < 0x7F:
+                while t and t[0] in punctuations:
+                    tokens += t[0]
+                    t = t[1:]
+                if not t:
+                    continue
 
-        tokens = list(tokens)
+                phones = phonemize_espeak(t, "en-us")
+                # phones is List[List[str]]
+                # Each sentence is a List[str]
+                # len(phones) == number of sentences in t
+
+                phones = sum(phones, [])  # flatten
+                tokens += "".join(phones)
+            else:
+                # Chinese
+                tokens += g2p(t)
 
         token_ids = [self.token2id[i] for i in tokens]
         token_ids = token_ids[: self.max_len]
@@ -121,12 +137,10 @@ def main():
         model_filename="./kokoro.onnx",
         tokens="./tokens.txt",
     )
-    text = (
-        "Today as always, men fall into two groups: slaves and free men."
-        + " Whoever does not have two-thirds of his day for himself, "
-        + "is a slave, whatever he may be: a statesman, a businessman, "
-        + "an official, or a scholar."
-    )
+    text = "来听一听, 这个是什么口音? How are you doing? Are you ok? Thank you! 你觉得中英文说得如何呢?"
+
+    text = text.lower()
+
     start = time.time()
     audio = m(text)
     end = time.time()
@@ -135,7 +149,7 @@ def main():
     audio_duration = len(audio) / m.sample_rate
     real_time_factor = elapsed_seconds / audio_duration
 
-    filename = "test.wav"
+    filename = f"kokoro_v1.0_{name}_zh_en.wav"
     sf.write(
         filename,
         audio,
