@@ -129,3 +129,6 @@ matcha-icefall-zh-baker
 matcha-icefall-en_US-ljspeech
 kokoro-en-v0_19
 *.pt
+lexicon.txt
+us_gold.json
+us_silver.json
