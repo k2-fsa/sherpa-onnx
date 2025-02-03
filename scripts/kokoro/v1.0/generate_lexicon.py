@@ -2,6 +2,8 @@
 # Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 import json
+from pypinyin import phrases_dict, pinyin_dict
+from misaki import zh
 
 
 def generate_english_lexicon():
@@ -45,14 +47,32 @@ def generate_english_lexicon():
 
 
 def generate_chinese_lexicon():
-    pass
+    word_dict = pinyin_dict.pinyin_dict
+    phrases = phrases_dict.phrases_dict
+
+    g2p = zh.ZHG2P()
+    lexicon = []
+
+    for key in word_dict:
+        if not (0x4E00 <= key <= 0x9FFF):
+            continue
+        w = chr(key)
+        tokens: str = g2p(w)
+        lexicon.append((w, tokens))
+
+    for key in phrases:
+        tokens: str = g2p(key)
+        lexicon.append((key, tokens))
+    return lexicon
 
 
 def main():
     english = generate_english_lexicon()
     chinese = generate_chinese_lexicon()
+
+    all_lang = english + chinese
     with open("lexicon.txt", "w", encoding="utf-8") as f:
-        for word, phones in english:
+        for word, phones in all_lang:
             tokens = " ".join(list(phones))
             f.write(f"{word} {tokens}\n")
 
