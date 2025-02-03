@@ -4,8 +4,9 @@
 
 import re
 import time
-from typing import Dict
+from typing import Dict, List
 
+import jieba
 import numpy as np
 import onnxruntime as ort
 import soundfile as sf
@@ -60,8 +61,17 @@ def load_tokens(filename: str) -> Dict[str, int]:
     return ans
 
 
+def load_lexicon(filename: str) -> Dict[str, List[str]]:
+    ans = dict()
+    with open(filename, encoding="utf-8") as f:
+        for line in f:
+            w, tokens = line.strip().split(" ", maxsplit=1)
+            ans[w] = "".join(tokens.split())
+    return ans
+
+
 class OnnxModel:
-    def __init__(self, model_filename: str, tokens: str):
+    def __init__(self, model_filename: str, tokens: str, lexicon: str):
         session_opts = ort.SessionOptions()
         session_opts.inter_op_num_threads = 1
         session_opts.intra_op_num_threads = 1
@@ -73,6 +83,7 @@ class OnnxModel:
             providers=["CPUExecutionProvider"],
         )
         self.token2id = load_tokens(tokens)
+        self.word2tokens = load_lexicon(lexicon)
         self.voices = torch.load("./af_bella.pt", weights_only=True).numpy()
         self.voices = torch.load(f"./{name}.pt", weights_only=True).numpy()
         # self.voices: (510, 1, 256)
@@ -83,7 +94,7 @@ class OnnxModel:
         self.max_len = self.voices.shape[0]
 
     def __call__(self, text: str):
-        punctuations = ';:,.!?-…()"“” '
+        punctuations = ';:,.!?-…()"“”'
         text = text.lower()
         g2p = zh.ZHG2P()
 
@@ -91,22 +102,37 @@ class OnnxModel:
 
         for t in re.findall("[\u4E00-\u9FFF]+|[\u0000-\u007f]+", text):
             if ord(t[0]) < 0x7F:
-                while t and t[0] in punctuations:
-                    tokens += t[0]
-                    t = t[1:]
-                if not t:
-                    continue
+                for w in t.split():
+                    while w:
+                        if w[0] in punctuations:
+                            tokens += w[0] + " "
+                            w = w[1:]
+                            continue
 
-                phones = phonemize_espeak(t, "en-us")
-                # phones is List[List[str]]
-                # Each sentence is a List[str]
-                # len(phones) == number of sentences in t
+                        if w[-1] in punctuations:
+                            if w[:-1] in self.word2tokens:
+                                tokens += self.word2tokens[w[:-1]]
+                                tokens += w[-1]
+                        else:
+                            if w in self.word2tokens:
+                                tokens += self.word2tokens[w]
+                            else:
+                                print(f"Use espeak-ng for word {w}")
+                                tokens += "".join(phonemize_espeak(w, "en-us")[0])
 
-                phones = sum(phones, [])  # flatten
-                tokens += "".join(phones)
+                        tokens += " "
+                        break
             else:
                 # Chinese
-                tokens += g2p(t)
+                for w in jieba.cut(t):
+                    if w in self.word2tokens:
+                        tokens += self.word2tokens[w]
+                    else:
+                        for i in w:
+                            if i in self.word2tokens:
+                                tokens += self.word2tokens[i]
+                            else:
+                                print(f"skip {i}")
 
         token_ids = [self.token2id[i] for i in tokens]
         token_ids = token_ids[: self.max_len]
@@ -132,10 +158,10 @@ class OnnxModel:
 
 
 def main():
-    # show("./kokoro.onnx")
     m = OnnxModel(
         model_filename="./kokoro.onnx",
         tokens="./tokens.txt",
+        lexicon="./lexicon.txt",
     )
     text = "来听一听, 这个是什么口音? How are you doing? Are you ok? Thank you! 你觉得中英文说得如何呢?"
 
