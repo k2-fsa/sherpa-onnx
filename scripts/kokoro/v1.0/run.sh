@@ -5,12 +5,12 @@ set -ex
 
 if [ ! -f kokoro.onnx ]; then
   # see https://github.com/taylorchu/kokoro-onnx/releases
-  wget https://github.com/taylorchu/kokoro-onnx/releases/download/v0.2.0/kokoro.onnx
+  curl -SL -O https://github.com/taylorchu/kokoro-onnx/releases/download/v0.2.0/kokoro.onnx
 fi
 
 if [ ! -f config.json ]; then
   # see https://huggingface.co/hexgrad/Kokoro-82M/blob/main/config.json
-  wget https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/config.json
+  curl -SL -O https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/config.json
 fi
 
 # see https://huggingface.co/spaces/hexgrad/Kokoro-TTS/blob/main/app.py#L83
@@ -79,24 +79,26 @@ zm_yunyang
 
 for v in ${voices[@]}; do
   if [ ! -f $v.pt ]; then
-    wget https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/$v.pt
+    curl -SL -O https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/$v.pt
   fi
 done
 
+python3 ./add_meta_data.py
+
 if [ ! -f us_gold.json ]; then
-  wget https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/us_gold.json
+  curl -SL -O https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/us_gold.json
 fi
 
 if [ ! -f us_silver.json ]; then
-  wget https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/us_silver.json
+  curl -SL -O https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/us_silver.json
 fi
 
 if [ ! -f gb_gold.json ]; then
-  wget https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/gb_gold.json
+  curl -SL -O https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/gb_gold.json
 fi
 
 if [ ! -f gb_silver.json ]; then
-  wget https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/gb_silver.json
+  curl -SL -O https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/gb_silver.json
 fi
 
 if [ ! -f ./tokens.txt ]; then
@@ -112,3 +114,4 @@ if [ ! -f ./voices.bin ]; then
 fi
 
 ./test.py
+ls -lh
