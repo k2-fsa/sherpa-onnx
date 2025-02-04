@@ -91,6 +91,14 @@ if [ ! -f us_silver.json ]; then
   wget https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/us_silver.json
 fi
 
+if [ ! -f gb_gold.json ]; then
+  wget https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/gb_gold.json
+fi
+
+if [ ! -f gb_silver.json ]; then
+  wget https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/gb_silver.json
+fi
+
 if [ ! -f ./tokens.txt ]; then
   ./generate_tokens.py
 fi

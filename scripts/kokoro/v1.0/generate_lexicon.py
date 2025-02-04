@@ -4,9 +4,11 @@
 import json
 from pypinyin import phrases_dict, pinyin_dict
 from misaki import zh
+from typing import List, Tuple
 
 
-def generate_english_lexicon():
+def generate_english_lexicon(kind: str):
+    assert kind in ("us", "gb"), kind
     # If you want to add new words, please add them to
     # the user_defined dict.
     user_defined = {
@@ -18,18 +20,18 @@ def generate_english_lexicon():
     for k, v in user_defined.items():
         user_defined_lower[k.lower()] = v
 
-    with open("./us_gold.json", encoding="utf-8") as f:
-        us_gold = json.load(f)
+    with open(f"./{kind}_gold.json", encoding="utf-8") as f:
+        gold = json.load(f)
 
-    with open("./us_silver.json", encoding="utf-8") as f:
-        us_silver = json.load(f)
+    with open(f"./{kind}_silver.json", encoding="utf-8") as f:
+        silver = json.load(f)
 
     # words in us_gold has a higher priority than those in s_silver, so
     # we put us_gold after us_silver below
-    us = {**us_silver, **us_gold}
+    english = {**silver, **gold}
 
     lexicon = dict()
-    for k, v in us.items():
+    for k, v in english.items():
         k_lower = k.lower()
 
         if k_lower in user_defined_lower:
@@ -66,15 +68,21 @@ def generate_chinese_lexicon():
     return lexicon
 
 
-def main():
-    english = generate_english_lexicon()
-    chinese = generate_chinese_lexicon()
-
-    all_lang = english + chinese
-    with open("lexicon.txt", "w", encoding="utf-8") as f:
-        for word, phones in all_lang:
+def save(filename: str, lexicon: List[Tuple[str, str]]):
+    with open(filename, "w", encoding="utf-8") as f:
+        for word, phones in lexicon:
             tokens = " ".join(list(phones))
             f.write(f"{word} {tokens}\n")
+
+
+def main():
+    us = generate_english_lexicon("us")
+    gb = generate_english_lexicon("gb")
+    zh = generate_chinese_lexicon()
+
+    save("lexicon-us-en.txt", us)
+    save("lexicon-gb-en.txt", gb)
+    save("lexicon-zh.txt", zh)
 
 
 if __name__ == "__main__":

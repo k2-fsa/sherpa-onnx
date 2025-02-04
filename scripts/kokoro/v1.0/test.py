@@ -74,10 +74,12 @@ def load_tokens(filename: str) -> Dict[str, int]:
 
 def load_lexicon(filename: str) -> Dict[str, List[str]]:
     ans = dict()
-    with open(filename, encoding="utf-8") as f:
-        for line in f:
-            w, tokens = line.strip().split(" ", maxsplit=1)
-            ans[w] = "".join(tokens.split())
+    for lexicon in filename.split(","):
+        print(lexicon)
+        with open(lexicon, encoding="utf-8") as f:
+            for line in f:
+                w, tokens = line.strip().split(" ", maxsplit=1)
+                ans[w] = "".join(tokens.split())
     return ans
 
 
@@ -177,14 +179,14 @@ def main():
     m = OnnxModel(
         model_filename="./kokoro.onnx",
         tokens="./tokens.txt",
-        lexicon="./lexicon.txt",
+        lexicon="./lexicon-gb-en.txt,./lexicon-zh.txt",
         voices_bin="./voices.bin",
     )
     text = "来听一听, 这个是什么口音? How are you doing? Are you ok? Thank you! 你觉得中英文说得如何呢?"
 
     text = text.lower()
 
-    voice = "hm_psi"
+    voice = "bf_alice"
     start = time.time()
     audio = m(text, voice=voice)
     end = time.time()
