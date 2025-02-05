@@ -15,7 +15,7 @@ from generate_voices_bin import speaker2id
 
 def main():
     model = onnx.load("./kokoro.onnx")
-    style = torch.load("./af_alloy.pt", weights_only=True, map_location="cpu")
+    style = torch.load("./voices/af_alloy.pt", weights_only=True, map_location="cpu")
 
     id2speaker_str = ""
     speaker2id_str = ""

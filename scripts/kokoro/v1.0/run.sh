@@ -77,13 +77,18 @@ zm_yunxia
 zm_yunyang
 )
 
+mkdir -p voices
+
 for v in ${voices[@]}; do
-  if [ ! -f $v.pt ]; then
-    curl -SL -O https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/$v.pt
+  if [ ! -f voices/$v.pt ]; then
+    curl -SL --output voices/$v.pt https://huggingface.co/hexgrad/Kokoro-82M/resolve/main/voices/$v.pt
   fi
 done
 
-python3 ./add_meta_data.py
+if [ ! -f ./.add-meta-data.done ]; then
+  python3 ./add_meta_data.py
+  touch ./.add-meta-data.done
+fi
 
 if [ ! -f us_gold.json ]; then
   curl -SL -O https://raw.githubusercontent.com/hexgrad/misaki/refs/heads/main/misaki/data/us_gold.json
