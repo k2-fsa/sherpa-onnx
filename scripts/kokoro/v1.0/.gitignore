@@ -1,0 +1,5 @@
+config.json
+*.json
+*.txt
+.add-meta-data.done
+voices
