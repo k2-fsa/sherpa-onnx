@@ -8,6 +8,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -17,6 +18,11 @@ void OfflineTtsKokoroModelConfig::Register(ParseOptions *po) {
                "Path to voices.bin for Kokoro models");
   po->Register("kokoro-tokens", &tokens,
                "Path to tokens.txt for Kokoro models");
+  po->Register(
+      "kokoro-lexicon", &lexicon,
+      "Path to lexicon.txt for Kokoro models. Used only for kokoro >= v1.0"
+      "You can pass multiple files, separated by ','. Example: "
+      "./lexicon-us-en.txt,./lexicon-zh.txt");
   po->Register("kokoro-data-dir", &data_dir,
                "Path to the directory containing dict for espeak-ng.");
   po->Register("kokoro-length-scale", &length_scale,
@@ -42,6 +48,19 @@ bool OfflineTtsKokoroModelConfig::Validate() const {
   if (!FileExists(tokens)) {
     SHERPA_ONNX_LOGE("--kokoro-tokens: '%s' does not exist", tokens.c_str());
     return false;
+  }
+
+  if (!lexicon.empty()) {
+    std::vector<std::string> files;
+    SplitStringToVector(lexicon, ",", false, &files);
+    for (const auto &f : files) {
+      if (!FileExists(f)) {
+        SHERPA_ONNX_LOGE(
+            "lexicon '%s' does not exist. Please re-check --kokoro-lexicon",
+            f.c_str());
+        return false;
+      }
+    }
   }
 
   if (data_dir.empty()) {
@@ -87,6 +106,7 @@ std::string OfflineTtsKokoroModelConfig::ToString() const {
   os << "model=\"" << model << "\", ";
   os << "voices=\"" << voices << "\", ";
   os << "tokens=\"" << tokens << "\", ";
+  os << "lexicon=\"" << lexicon << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
   os << "length_scale=" << length_scale << ")";
 
