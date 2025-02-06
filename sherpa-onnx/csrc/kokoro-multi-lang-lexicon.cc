@@ -98,8 +98,10 @@ class KokoroMultiLangLexicon::Impl {
         if (debug_) {
           SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
         }
-        auto ids = ConvertEnglishToTokenIDs(ms);
-        ans.emplace_back(ids);
+        auto ids_vec = ConvertEnglishToTokenIDs(ms);
+        for (const auto &ids : ids_vec) {
+          ans.emplace_back(ids);
+        }
       } else {
         if (debug_) {
           SHERPA_ONNX_LOGE("Chinese: %s", ms.c_str());
@@ -125,14 +127,8 @@ class KokoroMultiLangLexicon::Impl {
   std::vector<int32_t> ConvertChineseToTokenIDs(const std::string &text) const {
     return {};
   }
-  std::vector<int32_t> ConvertEnglishToTokenIDs(const std::string &text) const {
-    std::vector<int32_t> ans;
-
-    if (IsPunctuation(text)) {
-      ans.push_back(token2id_.at(text));
-      return ans;
-    }
-
+  std::vector<std::vector<int32_t>> ConvertEnglishToTokenIDs(
+      const std::string &text) const {
     std::vector<std::string> words = SplitUtf8(text);
     if (debug_) {
       std::ostringstream os;
@@ -145,20 +141,73 @@ class KokoroMultiLangLexicon::Impl {
       SHERPA_ONNX_LOGE("%s", os.str().c_str());
     }
 
+    std::vector<std::vector<int32_t>> ans;
+    int32_t max_len = meta_data_.max_token_len;
+    std::vector<int32_t> this_sentence;
+
+    int32_t space_id = token2id_.at(" ");
+
+    this_sentence.push_back(0);
+
     for (const auto &word : words) {
       if (IsPunctuation(word)) {
-        SHERPA_ONNX_LOGE("Found punctuation: '%s'", word.c_str());
-        ans.push_back(token2id_.at(word));
+        this_sentence.push_back(token2id_.at(word));
+
+        if (this_sentence.size() > max_len - 1) {
+          // this sentence is too long, split it
+          this_sentence.push_back(0);
+          ans.push_back(std::move(this_sentence));
+
+          this_sentence.push_back(0);
+          continue;
+        }
+
+        if (word == "." || word == "!" || word == "?" || word == ";") {
+          // Note: You can add more punctuations here to split the text
+          // into sentences. We just use four here: .!?;
+          this_sentence.push_back(0);
+          ans.push_back(std::move(this_sentence));
+
+          this_sentence.push_back(0);
+        }
       } else if (word2ids_.count(word)) {
         const auto &ids = word2ids_.at(word);
-        ans.insert(ans.end(), ids.begin(), ids.end());
+        if (this_sentence.size() + ids.size() + 3 > max_len - 1) {
+          this_sentence.push_back(0);
+          ans.push_back(std::move(this_sentence));
+
+          this_sentence.push_back(0);
+        }
+
+        this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
+        this_sentence.push_back(space_id);
       } else {
         SHERPA_ONNX_LOGE("Skip OOV: '%s'", word.c_str());
       }
     }
 
+    if (this_sentence.size() > 1) {
+      this_sentence.push_back(0);
+      ans.push_back(std::move(this_sentence));
+    }
+
+    if (debug_) {
+      for (const auto &v : ans) {
+        std::ostringstream os;
+        os << "\n";
+        std::string sep;
+        for (auto i : v) {
+          os << sep << i;
+          sep = " ";
+        }
+        os << "\n";
+        std::cout << os.str() << "\n";
+      }
+    }
+
     return ans;
   }
+
   void InitTokens(const std::string &tokens) {
     std::ifstream is(tokens);
     InitTokens(is);
