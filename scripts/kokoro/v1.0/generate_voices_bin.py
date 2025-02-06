@@ -71,7 +71,7 @@ def main():
     with open("voices.bin", "wb") as f:
         for _, speaker in id2speaker.items():
             m = torch.load(
-                f"{speaker}.pt",
+                f"voices/{speaker}.pt",
                 weights_only=True,
                 map_location="cpu",
             ).numpy()

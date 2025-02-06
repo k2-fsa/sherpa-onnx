@@ -153,6 +153,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
     hifigan-vocoder.cc
     jieba-lexicon.cc
+    kokoro-multi-lang-lexicon.cc
     lexicon.cc
     melo-tts-lexicon.cc
     offline-tts-character-frontend.cc

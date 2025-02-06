@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - export-kokoro
-      - kokoro-1.0-2
 
   workflow_dispatch:
 
@@ -76,6 +75,14 @@ jobs:
         if: matrix.version == '1.0'
         shell: bash
         run: |
+          curl -SL -O https://github.com/csukuangfj/cppjieba/releases/download/sherpa-onnx-2024-04-19/dict.tar.bz2
+          tar xvf dict.tar.bz2
+          rm dict.tar.bz2
+
+          curl -SL -o date-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
+          curl -SL -o number-zh.fst  https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
+          curl -SL -o phone-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
+
           src=scripts/kokoro/v1.0
 
           d=kokoro-multi-lang-v1_0
@@ -87,7 +94,12 @@ jobs:
           cp -v $src/tokens.txt $d/
           cp -v $src/lexicon*.txt $d/
           cp -v $src/README.md $d/README.md
+          cp -av dict $d/
+          cp -v ./*.fst $d/
           ls -lh $d/
+          echo "---"
+          ls -lh $d/dict
+
           tar cjfv $d.tar.bz2 $d
           rm -rf $d
 
@@ -180,6 +192,8 @@ jobs:
             cp -v ../scripts/kokoro/v1.0/lexicon*.txt .
             cp -v ../scripts/kokoro/v1.0/README.md ./README.md
             cp -v ../LICENSE ./
+            cp -av ../dict ./
+            cp -v ../*.fst $d/
 
             git lfs track "*.onnx"
             git add .
