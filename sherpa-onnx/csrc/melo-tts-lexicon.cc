@@ -8,6 +8,7 @@
 #include <regex>  // NOLINT
 #include <sstream>
 #include <strstream>
+#include <unordered_map>
 #include <utility>
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"

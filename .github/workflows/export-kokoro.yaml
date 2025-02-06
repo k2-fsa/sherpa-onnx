@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - export-kokoro
-      - cpp-kokoro
 
   workflow_dispatch:
 
@@ -80,6 +79,10 @@ jobs:
           tar xvf dict.tar.bz2
           rm dict.tar.bz2
 
+          curl -SL -o date-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
+          curl -SL -o number-zh.fst  https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
+          curl -SL -o phone-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
+
           src=scripts/kokoro/v1.0
 
           d=kokoro-multi-lang-v1_0
@@ -92,6 +95,7 @@ jobs:
           cp -v $src/lexicon*.txt $d/
           cp -v $src/README.md $d/README.md
           cp -av dict $d/
+          cp -v ./*.fst $d/
           ls -lh $d/
           echo "---"
           ls -lh $d/dict
@@ -189,6 +193,7 @@ jobs:
             cp -v ../scripts/kokoro/v1.0/README.md ./README.md
             cp -v ../LICENSE ./
             cp -av ../dict ./
+            cp -v ../*.fst $d/
 
             git lfs track "*.onnx"
             git add .
