@@ -315,6 +315,27 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
   template <typename Manager>
   void InitFrontend(Manager *mgr) {
     const auto &meta_data = model_->GetMetaData();
+
+    if (meta_data.version >= 2) {
+      // this is a multi-lingual model, we require that you pass lexicon
+      // and dict_dir
+      if (config_.model.kokoro.lexicon.empty() ||
+          config_.model.kokoro.dict_dir.empty()) {
+        SHERPA_ONNX_LOGE("Current model version: '%d'", meta_data.version);
+        SHERPA_ONNX_LOGE(
+            "You are using a multi-lingual Kokoro model (e.g., Kokoro >= "
+            "v1.0). please pass --kokoro-lexicon and --kokoro-dict-dir");
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      frontend_ = std::make_unique<KokoroMultiLangLexicon>(
+          mgr, config_.model.kokoro.tokens, config_.model.kokoro.lexicon,
+          config_.model.kokoro.dict_dir, config_.model.kokoro.data_dir,
+          meta_data, config_.model.debug);
+
+      return;
+    }
+
     frontend_ = std::make_unique<PiperPhonemizeLexicon>(
         mgr, config_.model.kokoro.tokens, config_.model.kokoro.data_dir,
         meta_data);

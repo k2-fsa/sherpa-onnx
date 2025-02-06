@@ -9,6 +9,7 @@
 #include <locale>
 #include <regex>
 #include <sstream>
+#include <strstream>
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -21,6 +22,7 @@
 
 #include "cppjieba/Jieba.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
@@ -49,10 +51,25 @@ class KokoroMultiLangLexicon::Impl {
     InitTokens(tokens);
 
     InitLexicon(lexicon);
+
     InitJieba(dict_dir);
 
     InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
-    SHERPA_ONNX_LOGE("initialized!");
+  }
+
+  template <typename Manager>
+  Impl(Manager *mgr, const std::string &tokens, const std::string &lexicon,
+       const std::string &dict_dir, const std::string &data_dir,
+       const OfflineTtsKokoroModelMetaData &meta_data, bool debug)
+      : meta_data_(meta_data), debug_(debug) {
+    InitTokens(mgr, tokens);
+
+    InitLexicon(mgr, lexicon);
+
+    // we assume you have copied dict_dir and data_dir from assets to some path
+    InitJieba(dict_dir);
+
+    InitEspeak(data_dir);  // See ./piper-phonemize-lexicon.cc
   }
 
   std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &_text) const {
@@ -94,18 +111,47 @@ class KokoroMultiLangLexicon::Impl {
       std::wstring match_str = match.str();
       auto ms = ToString(match_str);
       uint8_t c = reinterpret_cast<const uint8_t *>(ms.data())[0];
+
+      std::vector<std::vector<int32_t>> ids_vec;
+
       if (c < 0x80) {
         if (debug_) {
           SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
         }
-        auto ids_vec = ConvertEnglishToTokenIDs(ms);
-        for (const auto &ids : ids_vec) {
-          ans.emplace_back(ids);
-        }
+        ids_vec = ConvertEnglishToTokenIDs(ms);
       } else {
         if (debug_) {
           SHERPA_ONNX_LOGE("Chinese: %s", ms.c_str());
         }
+        ids_vec = ConvertChineseToTokenIDs(ms);
+      }
+
+      for (const auto &ids : ids_vec) {
+        if (ids.size() > 4) {
+          ans.emplace_back(ids);
+        } else {
+          if (ans.empty()) {
+            ans.emplace_back(ids);
+          } else {
+            ans.back().tokens.back() = ids[1];
+            ans.back().tokens.insert(ans.back().tokens.end(), ids.begin() + 2,
+                                     ids.end());
+          }
+        }
+      }
+    }
+
+    if (debug_) {
+      for (const auto &v : ans) {
+        std::ostringstream os;
+        os << "\n";
+        std::string sep;
+        for (auto i : v.tokens) {
+          os << sep << i;
+          sep = " ";
+        }
+        os << "\n";
+        SHERPA_ONNX_LOGE("%s", os.str().c_str());
       }
     }
 
@@ -124,9 +170,83 @@ class KokoroMultiLangLexicon::Impl {
     return false;
   }
 
-  std::vector<int32_t> ConvertChineseToTokenIDs(const std::string &text) const {
-    return {};
+  std::vector<int32_t> ConvertWordToIds(const std::string &w) const {
+    std::vector<int32_t> ans;
+    if (word2ids_.count(w)) {
+      ans = word2ids_.at(w);
+      return ans;
+    }
+
+    std::vector<std::string> words = SplitUtf8(w);
+    for (const auto &word : words) {
+      if (word2ids_.count(word)) {
+        auto ids = ConvertWordToIds(word);
+        ans.insert(ans.end(), ids.begin(), ids.end());
+      } else {
+        SHERPA_ONNX_LOGE("Skip OOV: '%s'", word.c_str());
+      }
+    }
+
+    return ans;
   }
+
+  std::vector<std::vector<int32_t>> ConvertChineseToTokenIDs(
+      const std::string &text) const {
+    bool is_hmm = true;
+
+    std::vector<std::string> words;
+    jieba_->Cut(text, words, is_hmm);
+    if (debug_) {
+      std::ostringstream os;
+      os << "After jieba processing:\n";
+
+      std::string sep;
+      for (const auto &w : words) {
+        os << sep << w;
+        sep = "_";
+      }
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    }
+
+    std::vector<std::vector<int32_t>> ans;
+    std::vector<int32_t> this_sentence;
+    int32_t max_len = meta_data_.max_token_len;
+
+    this_sentence.push_back(0);
+    for (const auto &w : words) {
+      auto ids = ConvertWordToIds(w);
+      if (this_sentence.size() + ids.size() > max_len - 2) {
+        this_sentence.push_back(0);
+        ans.push_back(std::move(this_sentence));
+
+        this_sentence.push_back(0);
+      }
+
+      this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
+    }
+
+    if (this_sentence.size() > 1) {
+      this_sentence.push_back(0);
+      ans.push_back(std::move(this_sentence));
+    }
+
+    if (debug_) {
+      for (const auto &v : ans) {
+        std::ostringstream os;
+        os << "\n";
+        std::string sep;
+        for (auto i : v) {
+          os << sep << i;
+          sep = " ";
+        }
+        os << "\n";
+        SHERPA_ONNX_LOGE("%s", os.str().c_str());
+      }
+    }
+
+    return ans;
+  }
+
   std::vector<std::vector<int32_t>> ConvertEnglishToTokenIDs(
       const std::string &text) const {
     std::vector<std::string> words = SplitUtf8(text);
@@ -153,7 +273,7 @@ class KokoroMultiLangLexicon::Impl {
       if (IsPunctuation(word)) {
         this_sentence.push_back(token2id_.at(word));
 
-        if (this_sentence.size() > max_len - 1) {
+        if (this_sentence.size() > max_len - 2) {
           // this sentence is too long, split it
           this_sentence.push_back(0);
           ans.push_back(std::move(this_sentence));
@@ -172,7 +292,7 @@ class KokoroMultiLangLexicon::Impl {
         }
       } else if (word2ids_.count(word)) {
         const auto &ids = word2ids_.at(word);
-        if (this_sentence.size() + ids.size() + 3 > max_len - 1) {
+        if (this_sentence.size() + ids.size() + 3 > max_len - 2) {
           this_sentence.push_back(0);
           ans.push_back(std::move(this_sentence));
 
@@ -201,7 +321,7 @@ class KokoroMultiLangLexicon::Impl {
           sep = " ";
         }
         os << "\n";
-        std::cout << os.str() << "\n";
+        SHERPA_ONNX_LOGE("%s", os.str().c_str());
       }
     }
 
@@ -210,6 +330,14 @@ class KokoroMultiLangLexicon::Impl {
 
   void InitTokens(const std::string &tokens) {
     std::ifstream is(tokens);
+    InitTokens(is);
+  }
+
+  template <typename Manager>
+  void InitTokens(Manager *mgr, const std::string &tokens) {
+    auto buf = ReadFile(mgr, tokens);
+
+    std::istrstream is(buf.data(), buf.size());
     InitTokens(is);
   }
 
@@ -222,6 +350,18 @@ class KokoroMultiLangLexicon::Impl {
     SplitStringToVector(lexicon, ",", false, &files);
     for (const auto &f : files) {
       std::ifstream is(f);
+      InitLexicon(is);
+    }
+  }
+
+  template <typename Manager>
+  void InitLexicon(Manager *mgr, const std::string &lexicon) {
+    std::vector<std::string> files;
+    SplitStringToVector(lexicon, ",", false, &files);
+    for (const auto &f : files) {
+      auto buf = ReadFile(mgr, f);
+
+      std::istrstream is(buf.data(), buf.size());
       InitLexicon(is);
     }
   }

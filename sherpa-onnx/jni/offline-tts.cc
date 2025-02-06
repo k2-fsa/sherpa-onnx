@@ -241,7 +241,6 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(JNIEnv *env, jobject /*obj*/,
                                                    jlong ptr, jstring text,
                                                    jint sid, jfloat speed) {
   const char *p_text = env->GetStringUTFChars(text, nullptr);
-  SHERPA_ONNX_LOGE("string is: %s", p_text);
 
   auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
       p_text, sid, speed);
@@ -267,7 +266,6 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jint sid,
     jfloat speed, jobject callback) {
   const char *p_text = env->GetStringUTFChars(text, nullptr);
-  SHERPA_ONNX_LOGE("string is: %s", p_text);
 
   std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
       [env, callback](const float *samples, int32_t n,
