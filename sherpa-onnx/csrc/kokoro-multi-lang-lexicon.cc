@@ -21,12 +21,19 @@
 #endif
 
 #include "cppjieba/Jieba.hpp"
+#include "espeak-ng/speak_lib.h"
+#include "phoneme_ids.hpp"
+#include "phonemize.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
+
+void CallPhonemizeEspeak(const std::string &text,
+                         piper::eSpeakPhonemeConfig &config,  // NOLINT
+                         std::vector<std::vector<piper::Phoneme>> *phonemes);
 
 static std::wstring ToWideString(const std::string &s) {
   // see
@@ -302,7 +309,42 @@ class KokoroMultiLangLexicon::Impl {
         this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
         this_sentence.push_back(space_id);
       } else {
-        SHERPA_ONNX_LOGE("Skip OOV: '%s'", word.c_str());
+        SHERPA_ONNX_LOGE("Use espeak-ng to handle the OOV: '%s'", word.c_str());
+
+        piper::eSpeakPhonemeConfig config;
+
+        config.voice = "en-us";
+
+        std::vector<std::vector<piper::Phoneme>> phonemes;
+
+        CallPhonemizeEspeak(word, config, &phonemes);
+        // Note phonemes[i] contains a vector of unicode codepoints;
+        // we need to convert them to utf8
+
+        std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> conv;
+
+        std::vector<int32_t> ids;
+        for (const auto &v : phonemes) {
+          for (const auto p : v) {
+            auto token = conv.to_bytes(p);
+            if (token2id_.count(token)) {
+              ids.push_back(token2id_.at(token));
+            } else {
+              SHERPA_ONNX_LOGE("Skip OOV token '%s' from '%s'", token.c_str(),
+                               word.c_str());
+            }
+          }
+        }
+
+        if (this_sentence.size() + ids.size() + 3 > max_len - 2) {
+          this_sentence.push_back(0);
+          ans.push_back(std::move(this_sentence));
+
+          this_sentence.push_back(0);
+        }
+
+        this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
+        this_sentence.push_back(space_id);
       }
     }
 

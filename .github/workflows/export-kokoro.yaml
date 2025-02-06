@@ -76,6 +76,10 @@ jobs:
         if: matrix.version == '1.0'
         shell: bash
         run: |
+          curl -SL -O https://github.com/csukuangfj/cppjieba/releases/download/sherpa-onnx-2024-04-19/dict.tar.bz2
+          tar xvf dict.tar.bz2
+          rm dict.tar.bz2
+
           src=scripts/kokoro/v1.0
 
           d=kokoro-multi-lang-v1_0
@@ -87,14 +91,10 @@ jobs:
           cp -v $src/tokens.txt $d/
           cp -v $src/lexicon*.txt $d/
           cp -v $src/README.md $d/README.md
-
-          pushd $d
-          curl -SL -O https://github.com/csukuangfj/cppjieba/releases/download/sherpa-onnx-2024-04-19/dict.tar.bz2
-          tar xvf dict.tar.bz2
-          rm dict.tar.bz2
-          popd
-
+          cp -av dict $d/
           ls -lh $d/
+          echo "---"
+          ls -lh $d/dict
 
           tar cjfv $d.tar.bz2 $d
           rm -rf $d
@@ -188,6 +188,7 @@ jobs:
             cp -v ../scripts/kokoro/v1.0/lexicon*.txt .
             cp -v ../scripts/kokoro/v1.0/README.md ./README.md
             cp -v ../LICENSE ./
+            cp -av ../dict ./
 
             git lfs track "*.onnx"
             git add .
