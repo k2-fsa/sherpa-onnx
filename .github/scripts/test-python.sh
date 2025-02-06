@@ -601,13 +601,10 @@ if [[ x$OS != x'windows-latest' ]]; then
   repo=sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01
   log "Start testing ${repo}"
 
-  pushd $dir
   curl -LS -O https://github.com/pkufool/keyword-spotting-models/releases/download/v0.1/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
   tar xf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
   rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01.tar.bz
-  popd
 
-  repo=$dir/$repo
   ls -lh $repo
 
   python3 ./python-api-examples/keyword-spotter.py
