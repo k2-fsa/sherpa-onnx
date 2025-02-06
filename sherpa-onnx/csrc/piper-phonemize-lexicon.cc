@@ -245,7 +245,7 @@ static std::vector<int64_t> CoquiPhonemesToIds(
   return ans;
 }
 
-static void InitEspeak(const std::string &data_dir) {
+void InitEspeak(const std::string &data_dir) {
   static std::once_flag init_flag;
   std::call_once(init_flag, [data_dir]() {
     int32_t result =

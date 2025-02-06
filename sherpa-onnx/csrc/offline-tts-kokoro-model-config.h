@@ -22,6 +22,8 @@ struct OfflineTtsKokoroModelConfig {
 
   std::string data_dir;
 
+  std::string dict_dir;
+
   // speed = 1 / length_scale
   float length_scale = 1.0;
 
@@ -31,12 +33,14 @@ struct OfflineTtsKokoroModelConfig {
                               const std::string &voices,
                               const std::string &tokens,
                               const std::string &lexicon,
-                              const std::string &data_dir, float length_scale)
+                              const std::string &data_dir,
+                              const std::string &dict_dir, float length_scale)
       : model(model),
         voices(voices),
         tokens(tokens),
         lexicon(lexicon),
         data_dir(data_dir),
+        dict_dir(dict_dir),
         length_scale(length_scale) {}
 
   void Register(ParseOptions *po);

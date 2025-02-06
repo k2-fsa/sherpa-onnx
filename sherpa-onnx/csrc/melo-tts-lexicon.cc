@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <regex>  // NOLINT
+#include <sstream>
 #include <strstream>
 #include <utility>
 #if __ANDROID_API__ >= 9

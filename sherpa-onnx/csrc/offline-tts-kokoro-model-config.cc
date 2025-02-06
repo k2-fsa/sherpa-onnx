@@ -20,11 +20,14 @@ void OfflineTtsKokoroModelConfig::Register(ParseOptions *po) {
                "Path to tokens.txt for Kokoro models");
   po->Register(
       "kokoro-lexicon", &lexicon,
-      "Path to lexicon.txt for Kokoro models. Used only for kokoro >= v1.0"
+      "Path to lexicon.txt for Kokoro models. Used only for Kokoro >= v1.0"
       "You can pass multiple files, separated by ','. Example: "
       "./lexicon-us-en.txt,./lexicon-zh.txt");
   po->Register("kokoro-data-dir", &data_dir,
                "Path to the directory containing dict for espeak-ng.");
+  po->Register("kokoro-dict-dir", &dict_dir,
+               "Path to the directory containing dict for jieba. "
+               "Used only for Kokoro >= v1.0");
   po->Register("kokoro-length-scale", &length_scale,
                "Speech speed. Larger->Slower; Smaller->faster.");
 }
@@ -96,6 +99,21 @@ bool OfflineTtsKokoroModelConfig::Validate() const {
     return false;
   }
 
+  if (!dict_dir.empty()) {
+    std::vector<std::string> required_files = {
+        "jieba.dict.utf8", "hmm_model.utf8",  "user.dict.utf8",
+        "idf.utf8",        "stop_words.utf8",
+    };
+
+    for (const auto &f : required_files) {
+      if (!FileExists(dict_dir + "/" + f)) {
+        SHERPA_ONNX_LOGE("'%s/%s' does not exist. Please check kokoro-dict-dir",
+                         dict_dir.c_str(), f.c_str());
+        return false;
+      }
+    }
+  }
+
   return true;
 }
 
@@ -108,6 +126,7 @@ std::string OfflineTtsKokoroModelConfig::ToString() const {
   os << "tokens=\"" << tokens << "\", ";
   os << "lexicon=\"" << lexicon << "\", ";
   os << "data_dir=\"" << data_dir << "\", ";
+  os << "dict_dir=\"" << dict_dir << "\", ";
   os << "length_scale=" << length_scale << ")";
 
   return os.str();

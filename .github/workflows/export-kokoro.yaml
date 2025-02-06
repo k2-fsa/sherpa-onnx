@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - export-kokoro
-      - kokoro-1.0-2
+      - cpp-kokoro
 
   workflow_dispatch:
 
@@ -87,7 +87,15 @@ jobs:
           cp -v $src/tokens.txt $d/
           cp -v $src/lexicon*.txt $d/
           cp -v $src/README.md $d/README.md
+
+          pushd $d
+          curl -SL -O https://github.com/csukuangfj/cppjieba/releases/download/sherpa-onnx-2024-04-19/dict.tar.bz2
+          tar xvf dict.tar.bz2
+          rm dict.tar.bz2
+          popd
+
           ls -lh $d/
+
           tar cjfv $d.tar.bz2 $d
           rm -rf $d
 
