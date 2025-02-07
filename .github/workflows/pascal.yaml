@@ -154,6 +154,12 @@ jobs:
           ls -lh
           echo "---"
 
+          ./run-kokoro-zh-en.sh
+          rm -rf kokoro-multi-*
+          rm kokoro-zh-en
+          ls -lh
+          echo "---"
+
           ./run-kokoro-en.sh
           rm -rf kokoro-en-*
           rm kokoro-en
