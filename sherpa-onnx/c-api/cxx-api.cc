@@ -343,6 +343,8 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
   c.model.kokoro.tokens = config.model.kokoro.tokens.c_str();
   c.model.kokoro.data_dir = config.model.kokoro.data_dir.c_str();
   c.model.kokoro.length_scale = config.model.kokoro.length_scale;
+  c.model.kokoro.dict_dir = config.model.kokoro.dict_dir.c_str();
+  c.model.kokoro.lexicon = config.model.kokoro.lexicon.c_str();
 
   c.model.num_threads = config.model.num_threads;
   c.model.debug = config.model.debug;

@@ -343,6 +343,8 @@ struct OfflineTtsKokoroModelConfig {
   std::string voices;
   std::string tokens;
   std::string data_dir;
+  std::string dict_dir;
+  std::string lexicon;
 
   float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
 };
