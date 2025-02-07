@@ -687,6 +687,8 @@ type OfflineTtsKokoroModelConfig struct {
 	Voices      string  // Path to the voices.bin for kokoro
 	Tokens      string  // Path to tokens.txt
 	DataDir     string  // Path to espeak-ng-data directory
+	DictDir     string  // Path to dict directory
+	Lexicon     string  // Path to lexicon files
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
 }
 
@@ -797,6 +799,12 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 
 	c.model.kokoro.data_dir = C.CString(config.Model.Kokoro.DataDir)
 	defer C.free(unsafe.Pointer(c.model.kokoro.data_dir))
+
+	c.model.kokoro.dict_dir = C.CString(config.Model.Kokoro.DictDir)
+	defer C.free(unsafe.Pointer(c.model.kokoro.dict_dir))
+
+	c.model.kokoro.lexicon = C.CString(config.Model.Kokoro.Lexicon)
+	defer C.free(unsafe.Pointer(c.model.kokoro.lexicon))
 
 	c.model.kokoro.length_scale = C.float(config.Model.Kokoro.LengthScale)
 
