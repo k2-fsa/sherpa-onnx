@@ -27,7 +27,7 @@ def main():
 
     meta_data = {
         "model_type": "kokoro",
-        "language": "English",
+        "language": "multi-lang, e.g., English, Chinese",
         "has_espeak": 1,
         "sample_rate": 24000,
         "version": 2,
