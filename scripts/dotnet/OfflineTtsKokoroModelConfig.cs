@@ -15,6 +15,9 @@ namespace SherpaOnnx
             DataDir = "";
 
             LengthScale = 1.0F;
+
+            DictDir = "";
+            Lexicon = "";
         }
         [MarshalAs(UnmanagedType.LPStr)]
         public string Model;
@@ -29,5 +32,11 @@ namespace SherpaOnnx
         public string DataDir;
 
         public float LengthScale;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string DictDir;
+
+        [MarshalAs(UnmanagedType.LPStr)]
+        public string Lexicon;
     }
 }
