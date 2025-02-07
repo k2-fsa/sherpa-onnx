@@ -96,7 +96,27 @@ OfflineTts::~OfflineTts() = default;
 GeneratedAudio OfflineTts::Generate(
     const std::string &text, int64_t sid /*=0*/, float speed /*= 1.0*/,
     GeneratedAudioCallback callback /*= nullptr*/) const {
+#if !defined(_WIN32)
   return impl_->Generate(text, sid, speed, std::move(callback));
+#else
+  if (IsUtf8(text)) {
+    return impl_->Generate(text, sid, speed, std::move(callback));
+  } else if (IsGB2312(text)) {
+    auto utf8_text = Gb2312ToUtf8(text);
+    static bool printed = false;
+    if (!printed) {
+      SHERPA_ONNX_LOGE(
+          "Detected GB2312 encoded string! Converting it to UTF8.");
+      printed = true;
+    }
+    return impl_->Generate(text, sid, speed, std::move(callback));
+  } else {
+    SHERPA_ONNX_LOGE(
+        "Non UTF8 encoded string is received. You would not get expected "
+        "results!");
+    return impl_->Generate(text, sid, speed, std::move(callback));
+  }
+#endif
 }
 
 int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }

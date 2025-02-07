@@ -16,6 +16,10 @@
 #include <utility>
 #include <vector>
 
+#if defined(_WIN32)
+#include <Windows.h>
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 
 // This file is copied/modified from
@@ -501,5 +505,119 @@ std::string RemoveInvalidUtf8Sequences(const std::string &text,
 
   return ans;
 }
+
+bool IsUtf8(const std::string &text) {
+  int32_t n = static_cast<int32_t>(text.size());
+  int32_t i = 0;
+  const uint8_t *p = reinterpret_cast<const uint8_t *>(text.data());
+  while (i < n) {
+    if (p[i] <= 0x7f) {
+      i += 1;
+      continue;
+    }
+
+    if (InRange(p[i], 0xc2, 0xdf) && i + 1 < n &&
+        InRange(p[i + 1], 0x80, 0xbf)) {
+      i += 2;
+      continue;
+    }
+
+    if (p[i] == 0xe0 && i + 2 < n && InRange(p[i + 1], 0xa0, 0xbf) &&
+        InRange(p[i + 2], 0x80, 0xbf)) {
+      i += 3;
+      continue;
+    }
+
+    if (InRange(p[i], 0xe1, 0xec) && i + 2 < n &&
+        InRange(p[i + 1], 0x80, 0xbf) && InRange(p[i + 2], 0x80, 0xbf)) {
+      i += 3;
+      continue;
+    }
+
+    if (p[i] == 0xed && i + 2 < n && InRange(p[i + 1], 0x80, 0x9f) &&
+        InRange(p[i + 2], 0x80, 0xbf)) {
+      i += 3;
+      continue;
+    }
+
+    if (InRange(p[i], 0xee, 0xef) && i + 2 < n &&
+        InRange(p[i + 1], 0x80, 0xbf) && InRange(p[i + 2], 0x80, 0xbf)) {
+      i += 3;
+      continue;
+    }
+
+    if (p[i] == 0xf0 && i + 3 < n && InRange(p[i + 1], 0x90, 0xbf) &&
+        InRange(p[i + 2], 0x80, 0xbf) && InRange(p[i + 3], 0x80, 0xbf)) {
+      i += 4;
+      continue;
+    }
+
+    if (InRange(p[i], 0xf1, 0xf3) && i + 3 < n &&
+        InRange(p[i + 1], 0x80, 0xbf) && InRange(p[i + 2], 0x80, 0xbf) &&
+        InRange(p[i + 3], 0x80, 0xbf)) {
+      i += 4;
+      continue;
+    }
+
+    if (p[i] == 0xf4 && i + 3 < n && InRange(p[i + 1], 0x80, 0x8f) &&
+        InRange(p[i + 2], 0x80, 0xbf) && InRange(p[i + 3], 0x80, 0xbf)) {
+      i += 4;
+      continue;
+    }
+
+    return false
+  }
+
+  return true;
+}
+
+bool IsGB2312(const std::string &text) {
+  int32_t n = static_cast<int32_t>(text.size());
+  int32_t i = 0;
+  const uint8_t *p = reinterpret_cast<const uint8_t *>(text.data());
+  while (i < n) {
+    if (p[i] <= 0x7f) {
+      i += 1;
+      continue;
+    }
+
+    if (InRange(p[i], 0xa1, 0xf7) && i + 1 < n &&
+        InRange(p[i + 1], 0xa1, 0xfe)) {
+      i += 2;
+      continue;
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+#if defined(_WIN32)
+std::string Gb2312ToUtf8(const std::string &text) {
+  // https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-multibytetowidechar
+  int32_t num_wchars =
+      MultiByteToWideChar(CP_GB2312, 0, text.c_str(), -1, nullptr, 0);
+  if (num_wchars == 0) {
+    return {};
+  }
+
+  std::wstring wstr(num_wchars) MultiByteToWideChar(CP_GB2312, 0, text.c_str(),
+                                                    -1, wstr.data(), num_chars);
+
+  // https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-widechartomultibyte
+  int32_t num_chars = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr,
+                                          0, nullptr, nullptr);
+  if (num_chars == 0) {
+    return {};
+  }
+
+  std::string ans(num_chars);
+  WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, ans.data(), num_chars,
+                      nullptr, nullptr);
+
+  return ans;
+}
+#endif
 
 }  // namespace sherpa_onnx
