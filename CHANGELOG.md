@@ -1,3 +1,31 @@
+## 1.10.42
+
+* Fix publishing wheels (#1746)
+* Update README to include https://github.com/xinhecuican/QSmartAssistant (#1755)
+* Add Kokoro TTS to MFC examples (#1760)
+* Refactor node-addon C++ code. (#1768)
+* Add keyword spotter C API for HarmonyOS (#1769)
+* Add ArkTS API for Keyword spotting. (#1775)
+* Add Flutter example for Kokoro TTS (#1776)
+* Initialize the audio session for iOS ASR example (#1786)
+* Fix: Prepend 0 to tokenization to prevent word skipping for Kokoro. (#1787)
+* Export Kokoro 1.0 to sherpa-onnx (#1788)
+* Add C++ and Python API for Kokoro 1.0 multilingual TTS model (#1795)
+* Add Java and Koltin API for Kokoro TTS 1.0 (#1798)
+* Add Android demo for Kokoro TTS 1.0 (#1799)
+* Add C API for Kokoro TTS 1.0 (#1801)
+* Add CXX API for Kokoro TTS 1.0 (#1802)
+* Add Swift API for Kokoro TTS 1.0 (#1803)
+* Add Go API for Kokoro TTS 1.0 (#1804)
+* Add C# API for Kokoro TTS 1.0 (#1805)
+* Add Dart API for Kokoro TTS 1.0 (#1806)
+* Add Pascal API for Kokoro TTS 1.0 (#1807)
+* Add JavaScript API (node-addon) for Kokoro TTS 1.0 (#1808)
+* Add JavaScript API (WebAssembly) for Kokoro TTS 1.0 (#1809)
+* Add Flutter example for Kokoro TTS 1.0 (#1810)
+* Add iOS demo for Kokoro TTS 1.0 (#1812)
+* Add HarmonyOS demo for Kokoro TTS 1.0 (#1813)
+
 ## 1.10.41
 
 * Fix UI for Android TTS Engine. (#1735)
