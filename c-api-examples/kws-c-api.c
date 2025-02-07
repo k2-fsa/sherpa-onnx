@@ -26,7 +26,7 @@ int32_t main() {
   memset(&config, 0, sizeof(config));
   config.model_config.transducer.encoder =
       "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
-      "encoder-epoch-12-avg-2-chunk-16-left-64.onnx";
+      "encoder-epoch-12-avg-2-chunk-16-left-64.int8.onnx";
 
   config.model_config.transducer.decoder =
       "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
@@ -34,7 +34,7 @@ int32_t main() {
 
   config.model_config.transducer.joiner =
       "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
-      "joiner-epoch-12-avg-2-chunk-16-left-64.onnx";
+      "joiner-epoch-12-avg-2-chunk-16-left-64.int8.onnx";
 
   config.model_config.tokens =
       "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
@@ -58,7 +58,8 @@ int32_t main() {
           "--Test pre-defined keywords from test_wavs/test_keywords.txt--\n");
 
   const char *wav_filename =
-      "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01/test_wavs/3.wav";
+      "./sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile/"
+      "test_wavs/3.wav";
 
   float tail_paddings[8000] = {0};  // 0.5 seconds
 
