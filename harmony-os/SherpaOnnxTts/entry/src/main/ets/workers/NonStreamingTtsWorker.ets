@@ -179,6 +179,16 @@ function initTts(context: Context): OfflineTts {
   // voices = 'voices.bin'
   // dataDir = 'espeak-ng-data';
 
+  // Example 11
+  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
+  // modelDir = 'kokoro-multi-lang-v1_0';
+  // modelName = 'model.onnx';
+  // voices = 'voices.bin'
+  // dataDir = 'espeak-ng-data';
+  // dictDir = 'dict';
+  // lexicon = 'lexicon-us-en.txt,lexicon-zh.txt';
+  // ruleFsts = `date-zh.fst,phone-zh.fst,number-zh.fst`;
+
   // ============================================================
   // Please don't change the remaining part of this function
   // ============================================================
@@ -225,7 +235,14 @@ function initTts(context: Context): OfflineTts {
     ruleFars = tmp.join(',');
   }
 
-  if (lexicon != '') {
+  if (lexicon.includes(",")) {
+    let v = lexicon.split(',')
+    let tmp: string[] = [];
+    for (const f of v) {
+      tmp.push(modelDir + '/' + f);
+    }
+    lexicon = tmp.join(',');
+  } else if (lexicon != '') {
     lexicon = modelDir + '/' + lexicon;
   }
 
@@ -250,26 +267,33 @@ function initTts(context: Context): OfflineTts {
     config.model.vits.model = modelName;
   }
 
-  config.model.vits.lexicon = lexicon;
-  config.model.vits.tokens = tokens;
-  config.model.vits.dataDir = dataDir;
-  config.model.vits.dictDir = dictDir;
+  if (voices == '') {
+    config.model.vits.lexicon = lexicon;
+    config.model.vits.tokens = tokens;
+    config.model.vits.dataDir = dataDir;
+    config.model.vits.dictDir = dictDir;
 
-  config.model.matcha.acousticModel = acousticModelName;
-  config.model.matcha.vocoder = vocoder;
-  config.model.matcha.lexicon = lexicon;
-  config.model.matcha.tokens = tokens;
-  config.model.matcha.dataDir = dataDir;
-  config.model.matcha.dictDir = dictDir;
+    config.model.matcha.acousticModel = acousticModelName;
+    config.model.matcha.vocoder = vocoder;
+    config.model.matcha.lexicon = lexicon;
+    config.model.matcha.tokens = tokens;
+    config.model.matcha.dataDir = dataDir;
+    config.model.matcha.dictDir = dictDir;
+  }
 
   if (voices != '') {
     config.model.kokoro.model = modelName;
   } else {
     config.model.kokoro.model = '';
   }
-  config.model.kokoro.voices = voices;
-  config.model.kokoro.tokens = tokens;
-  config.model.kokoro.dataDir = dataDir;
+
+  if (voices != '') {
+    config.model.kokoro.voices = voices;
+    config.model.kokoro.tokens = tokens;
+    config.model.kokoro.dataDir = dataDir;
+    config.model.kokoro.dictDir = dictDir;
+    config.model.kokoro.lexicon = lexicon;
+  }
 
   config.model.numThreads = 2;
   config.model.debug = true;
