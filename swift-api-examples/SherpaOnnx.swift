@@ -767,14 +767,18 @@ func sherpaOnnxOfflineTtsKokoroModelConfig(
   voices: String = "",
   tokens: String = "",
   dataDir: String = "",
-  lengthScale: Float = 1.0
+  lengthScale: Float = 1.0,
+  dictDir: String = "",
+  lexicon: String = ""
 ) -> SherpaOnnxOfflineTtsKokoroModelConfig {
   return SherpaOnnxOfflineTtsKokoroModelConfig(
     model: toCPointer(model),
     voices: toCPointer(voices),
     tokens: toCPointer(tokens),
     data_dir: toCPointer(dataDir),
-    length_scale: lengthScale
+    length_scale: lengthScale,
+    dict_dir: toCPointer(dictDir),
+    lexicon: toCPointer(lexicon)
   )
 }
 
