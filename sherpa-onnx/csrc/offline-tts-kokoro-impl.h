@@ -4,6 +4,8 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_KOKORO_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_KOKORO_IMPL_H_
 
+#include <iomanip>
+#include <ios>
 #include <memory>
 #include <string>
 #include <strstream>
@@ -188,6 +190,20 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
       SHERPA_ONNX_LOGE("Raw text: %{public}s", text.c_str());
 #else
       SHERPA_ONNX_LOGE("Raw text: %s", text.c_str());
+#endif
+      std::ostringstream os;
+      os << "In bytes (hex):\n";
+      const auto p = reinterpret_cast<const uint8_t *>(text.c_str());
+      for (int32_t i = 0; i != text.size(); ++i) {
+        os << std::setw(2) << std::setfill('0') << std::hex
+           << static_cast<uint32_t>(p[i]) << " ";
+      }
+      os << "\n";
+
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
 #endif
     }
 
