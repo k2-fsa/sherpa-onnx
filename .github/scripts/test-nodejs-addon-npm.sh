@@ -85,12 +85,21 @@ fi
 
 echo "----------tts----------"
 
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
+tar xf kokoro-multi-lang-v1_0.tar.bz2
+rm kokoro-multi-lang-v1_0.tar.bz2
+
+node ./test_tts_non_streaming_kokoro_zh_en.js
+ls -lh *.wav
+rm -rf kokoro-multi-lang-v1_0
+
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
 tar xf kokoro-en-v0_19.tar.bz2
 rm kokoro-en-v0_19.tar.bz2
 
 node ./test_tts_non_streaming_kokoro_en.js
 ls -lh *.wav
+rm -rf kokoro-en-v0_19
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
 tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
