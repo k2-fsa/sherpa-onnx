@@ -41,6 +41,7 @@ class TtsModel:
     dict_dir: Optional[str] = None
     is_char: bool = False
     lang_iso_639_3: str = ""
+    lexicon: str = ""
 
 
 def convert_lang_to_iso_639_3(models: List[TtsModel]):
@@ -422,7 +423,21 @@ def get_kokoro_models() -> List[TtsModel]:
         m.data_dir = f"{m.model_dir}/espeak-ng-data"
         m.voices = "voices.bin"
 
-    return english_models
+    multi_lingual_models = [
+        TtsModel(
+            model_dir="kokoro-multi-lang-v1_0",
+            model_name="model.onnx",
+            lang="en",
+        )
+    ]
+    for m in multi_lingual_models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.dict_dir = f"{m.model_dir}/dict"
+        m.voices = "voices.bin"
+        m.lexicon = f"{m.model_dir}/lexicon-us-en.txt,{m.model_dir}/lexicon-zh.txt"
+        m.rule_fsts = f"{m.model_dir}/phone-zh.fst,{m.model_dir}/date-zh.fst,{m.model_dir}/number-zh.fst"
+
+    return english_models + multi_lingual_models
 
 
 def main():

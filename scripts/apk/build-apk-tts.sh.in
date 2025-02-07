@@ -96,10 +96,19 @@ sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./MainActivity.kt
   sed -i.bak s/"lexicon = null"/"lexicon = \"lexicon.txt\""/ ./MainActivity.kt
 {% endif %}
 
+{% if tts_model.lexicon %}
+  lexicon={{ tts_model.lexicon }}
+  sed -i.bak s%"lexicon = null"%"lexicon = \"$lexicon\""% ./MainActivity.kt
+{% endif %}
+
 git diff
 popd
 
 if [[ $model_dir == vits-melo-tts-zh_en ]]; then
+  lang=zh_en
+fi
+
+if [[ $model_dir == kokoro-multi-lang-v1_0 ]]; then
   lang=zh_en
 fi
 

@@ -97,10 +97,19 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
   sed -i.bak s/"lexicon = null"/"lexicon = \"lexicon.txt\""/ ./TtsEngine.kt
 {% endif %}
 
+{% if tts_model.lexicon %}
+  lexicon={{ tts_model.lexicon }}
+  sed -i.bak s%"lexicon = null"%"lexicon = \"$lexicon\""% ./TtsEngine.kt
+{% endif %}
+
 git diff
 popd
 
 if [[ $model_dir == vits-melo-tts-zh_en ]]; then
+  lang=zh_en
+fi
+
+if [[ $model_dir == kokoro-multi-lang-v1_0 ]]; then
   lang=zh_en
 fi
 
