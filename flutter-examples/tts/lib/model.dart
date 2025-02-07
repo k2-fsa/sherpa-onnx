@@ -92,6 +92,15 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
   // voices = 'voices.bin';
   // dataDir = 'kokoro-en-v0_19/espeak-ng-data';
 
+  // Example 9
+  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
+  // modelDir = 'kokoro-multi-lang-v1_0';
+  // modelName = 'model.onnx';
+  // voices = 'voices.bin';
+  // dataDir = 'kokoro-multi-lang-v1_0/espeak-ng-data';
+  // dictDir = 'kokoro-multi-lang-v1_0/dict';
+  // lexicon = 'kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt';
+
   // ============================================================
   // Please don't change the remaining part of this function
   // ============================================================
@@ -121,7 +130,14 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
     ruleFars = tmp.join(',');
   }
 
-  if (lexicon != '') {
+  if (lexicon.contains(',')) {
+    final all = lexicon.split(',');
+    var tmp = <String>[];
+    for (final f in all) {
+      tmp.add(p.join(directory.path, f));
+    }
+    lexicon = tmp.join(',');
+  } else if (lexicon != '') {
     lexicon = p.join(directory.path, modelDir, lexicon);
   }
 
@@ -148,6 +164,8 @@ Future<sherpa_onnx.OfflineTts> createOfflineTts() async {
       voices: voices,
       tokens: tokens,
       dataDir: dataDir,
+      dictDir: dictDir,
+      lexicon: lexicon,
     );
   } else {
     vits = sherpa_onnx.OfflineTtsVitsModelConfig(
