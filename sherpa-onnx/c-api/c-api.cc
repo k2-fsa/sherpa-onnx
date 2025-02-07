@@ -1120,6 +1120,10 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.kokoro.data_dir, "");
   tts_config.model.kokoro.length_scale =
       SHERPA_ONNX_OR(config->model.kokoro.length_scale, 1.0);
+  tts_config.model.kokoro.dict_dir =
+      SHERPA_ONNX_OR(config->model.kokoro.dict_dir, "");
+  tts_config.model.kokoro.lexicon =
+      SHERPA_ONNX_OR(config->model.kokoro.lexicon, "");
 
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
