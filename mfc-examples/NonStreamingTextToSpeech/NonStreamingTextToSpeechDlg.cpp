@@ -453,13 +453,26 @@ void CNonStreamingTextToSpeechDlg::Init() {
 
     error_message += "\r\nto download models.\r\n";
     error_message += "\r\nWe give several examples below\r\n";
-    error_message += "      1. Use a Kokoro TTS model\r\n";
-    error_message += "      2. Use a VITS Piper TTS model\r\n";
-    error_message += "      3. Use a VITS Chinese TTS model\r\n";
-    error_message += "      4. Use a Matcha TTS model\r\n";
+    error_message += "      1. Use a Kokoro TTS model (multi-lingual, e.g, English + Chinese)\r\n";
+    error_message += "      2. Use a Kokoro TTS model (English only)\r\n";
+    error_message += "      3. Use a VITS Piper TTS model\r\n";
+    error_message += "      4. Use a VITS Chinese TTS model\r\n";
+    error_message += "      5. Use a Matcha TTS model\r\n";
     error_message += "\r\n";
+
     error_message += 
-        "----------1. Use a Kokoro TTS model----------\r\n"
+        "----------1. Use a Kokoro TTS model (multi-lingual, eg., English + Chinese)----------\r\n"
+        "(a) Download the model from \r\n"
+        "     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2\r\n"
+        "(b) Uncompress it and you will get a directory kokoro-multi-lang-v1_0\r\n"
+        "(c) Switch to the directory kokoro-multi-lang-v1_0\r\n"
+        "(d) Copy the current exe to the directory kokoro-multi-lang-v1_0\r\n"
+        "(e).Done! You can now run the exe in the directory kokoro-multi-lang-v1_0\r\n";
+
+    error_message +=  "\r\n";
+
+    error_message += 
+        "----------2. Use a Kokoro TTS model (English only)----------\r\n"
         "(a) Download the model from \r\n"
         "     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2\r\n"
         "(b) Uncompress it and you will get a directory kokoro-en-v0_19\r\n"
@@ -470,7 +483,7 @@ void CNonStreamingTextToSpeechDlg::Init() {
     error_message +=  "\r\n";
 
     error_message += 
-        "----------2. Use a VITS Piper TTS model----------\r\n"
+        "----------3. Use a VITS Piper TTS model----------\r\n"
         "(a) Download the model from \r\n"
         "     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2\r\n"
         "(b) Uncompress it and you will get a directory vits-piper-en_US-amy-low\r\n"
@@ -482,7 +495,7 @@ void CNonStreamingTextToSpeechDlg::Init() {
     error_message +=  "\r\n";
 
     error_message += 
-        "----------3. Use a VITS Chinese TTS model----------\r\n"
+        "----------4. Use a VITS Chinese TTS model----------\r\n"
         "(a) Download the model from \r\n"
         "     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2\r\n"
         "(b) Uncompress it and you will get a directory sherpa-onnx-vits-zh-ll\r\n"
@@ -493,7 +506,7 @@ void CNonStreamingTextToSpeechDlg::Init() {
     error_message +=  "\r\n";
 
     error_message += 
-        "----------4. Use a Matcha TTS model----------\r\n"
+        "----------5. Use a Matcha TTS model----------\r\n"
         "(a) Download the model from \r\n"
         "     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2\r\n"
         "(b) Uncompress it and you will get a directory matcha-icefall-zh-baker\r\n"
@@ -523,6 +536,10 @@ void CNonStreamingTextToSpeechDlg::Init() {
     config.model.kokoro.voices = "./voices.bin";
     config.model.kokoro.tokens = "./tokens.txt";
     config.model.kokoro.data_dir = "./espeak-ng-data";
+    if (Exists("./dict/jieba.dict.utf8") && Exists("./lexicon-zh.txt")) {
+      config.model.kokoro.dict_dir = "./dict";
+      config.model.kokoro.lexicon = "./lexicon-us-en.txt,./lexicon-zh.txt";
+    }
   } else if (Exists("./hifigan.onnx")) {
     // it is a matcha tts model
     config.model.matcha.acoustic_model = "./model.onnx";
@@ -559,6 +576,10 @@ void CNonStreamingTextToSpeechDlg::Init() {
 
   if (Exists("./phone.fst") && Exists("./date.fst") && Exists("./number.fst")) {
     config.rule_fsts = "./phone.fst,./date.fst,number.fst";
+  }
+
+  if (Exists("./phone-zh.fst") && Exists("./date-zh.fst") && Exists("./number-zh.fst")) {
+    config.rule_fsts = "./phone-zh.fst,./date-zh.fst,number-zh.fst";
   }
 
   if (Exists("./rule.far")) {
