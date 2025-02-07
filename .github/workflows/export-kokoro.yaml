@@ -193,7 +193,7 @@ jobs:
             cp -v ../scripts/kokoro/v1.0/README.md ./README.md
             cp -v ../LICENSE ./
             cp -av ../dict ./
-            cp -v ../*.fst $d/
+            cp -v ../*.fst ./
 
             git lfs track "*.onnx"
             git add .
@@ -206,6 +206,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-multi-lang-v1_0 main || true
 
       - name: Release
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -213,4 +214,13 @@ jobs:
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
           tag: tts-models
