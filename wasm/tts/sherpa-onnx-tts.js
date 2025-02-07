@@ -21,7 +21,7 @@ function freeConfig(config, Module) {
 
 // The user should free the returned pointers
 function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
-  const modelLen = Module.lengthBytesUTF8(config.model) + 1;
+  const modelLen = Module.lengthBytesUTF8(config.model) || '' + 1;
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
   const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
