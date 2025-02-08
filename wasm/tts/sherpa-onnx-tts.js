@@ -21,7 +21,7 @@ function freeConfig(config, Module) {
 
 // The user should free the returned pointers
 function initSherpaOnnxOfflineTtsVitsModelConfig(config, Module) {
-  const modelLen = Module.lengthBytesUTF8(config.model  || '')+ 1;
+  const modelLen = Module.lengthBytesUTF8(config.model || '') + 1;
   const lexiconLen = Module.lengthBytesUTF8(config.lexicon || '') + 1;
   const tokensLen = Module.lengthBytesUTF8(config.tokens || '') + 1;
   const dataDirLen = Module.lengthBytesUTF8(config.dataDir || '') + 1;
@@ -282,7 +282,7 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
 function initSherpaOnnxOfflineTtsConfig(config, Module) {
   const modelConfig =
       initSherpaOnnxOfflineTtsModelConfig(config.offlineTtsModelConfig, Module);
-  const len = modelConfig.len + 3 * 4;
+  const len = modelConfig.len + 4 * 4;
   const ptr = Module._malloc(len);
 
   let offset = 0;
@@ -303,6 +303,10 @@ function initSherpaOnnxOfflineTtsConfig(config, Module) {
   offset += 4;
 
   Module.setValue(ptr + offset, buffer + ruleFstsLen, 'i8*');
+  offset += 4;
+
+  Module.setValue(ptr + offset, config.silenceScale || 0.2, 'float');
+  offset += 4;
 
   return {
     buffer: buffer, ptr: ptr, len: len, config: modelConfig,

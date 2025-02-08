@@ -22,7 +22,7 @@ static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
                       sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) + 3 * 4,
               "");
 static_assert(sizeof(SherpaOnnxOfflineTtsConfig) ==
-                  sizeof(SherpaOnnxOfflineTtsModelConfig) + 3 * 4,
+                  sizeof(SherpaOnnxOfflineTtsModelConfig) + 4 * 4,
               "");
 
 void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
@@ -68,6 +68,7 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "rule_fsts: %s\n", tts_config->rule_fsts);
   fprintf(stdout, "rule_fars: %s\n", tts_config->rule_fars);
   fprintf(stdout, "max num sentences: %d\n", tts_config->max_num_sentences);
+  fprintf(stdout, "silence scale: %.3f\n", tts_config->silence_scale);
 }
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {

@@ -146,6 +146,7 @@ static Napi::External<SherpaOnnxOfflineTts> CreateOfflineTtsWrapper(
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fsts, ruleFsts);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(max_num_sentences, maxNumSentences);
   SHERPA_ONNX_ASSIGN_ATTR_STR(rule_fars, ruleFars);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(silence_scale, silenceScale);
 
 #if __OHOS__
   std::unique_ptr<NativeResourceManager,

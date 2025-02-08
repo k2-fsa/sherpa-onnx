@@ -52,6 +52,7 @@ export class OfflineTtsConfig {
   public ruleFsts: string = '';
   public ruleFars: string = '';
   public maxNumSentences: number = 1;
+  public silenceScale: number = 0.2;
 }
 
 export class TtsOutput {

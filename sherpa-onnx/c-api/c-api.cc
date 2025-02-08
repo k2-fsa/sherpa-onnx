@@ -1135,6 +1135,7 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
   tts_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
   tts_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
   tts_config.max_num_sentences = SHERPA_ONNX_OR(config->max_num_sentences, 1);
+  tts_config.silence_scale = SHERPA_ONNX_OR(config->silence_scale, 0.2);
 
   if (tts_config.model.debug) {
 #if __OHOS__

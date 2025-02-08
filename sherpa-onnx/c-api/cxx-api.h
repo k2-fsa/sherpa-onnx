@@ -363,6 +363,7 @@ struct OfflineTtsConfig {
   std::string rule_fsts;
   std::string rule_fars;
   int32_t max_num_sentences = 1;
+  float silence_scale = 0.2;
 };
 
 struct GeneratedAudio {

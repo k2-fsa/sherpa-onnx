@@ -712,6 +712,7 @@ type OfflineTtsConfig struct {
 	RuleFsts        string
 	RuleFars        string
 	MaxNumSentences int
+	SilenceScale    float32
 }
 
 type GeneratedAudio struct {
@@ -744,6 +745,7 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	defer C.free(unsafe.Pointer(c.rule_fars))
 
 	c.max_num_sentences = C.int(config.MaxNumSentences)
+	c.silence_scale = C.float(config.SilenceScale)
 
 	// vits
 	c.model.vits.model = C.CString(config.Model.Vits.Model)

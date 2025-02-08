@@ -106,6 +106,7 @@ type
     RuleFsts: AnsiString;
     MaxNumSentences: Integer;
     RuleFars: AnsiString;
+    SilenceScale: Single;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsConfig);
@@ -777,6 +778,7 @@ type
     RuleFsts: PAnsiChar;
     MaxNumSentences: cint32;
     RuleFars: PAnsiChar;
+    SilenceScale: cfloat;
   end;
 
   PSherpaOnnxOfflineTtsConfig = ^SherpaOnnxOfflineTtsConfig;
@@ -1976,15 +1978,17 @@ begin
     'Model := %s, ' +
     'RuleFsts := %s, ' +
     'MaxNumSentences := %d, ' +
-    'RuleFars := %s' +
+    'RuleFars := %s, ' +
+    'SilenceScale := %f' +
     ')',
-    [Self.Model.ToString, Self.RuleFsts, Self.MaxNumSentences, Self.RuleFars
-    ]);
+    [Self.Model.ToString, Self.RuleFsts, Self.MaxNumSentences, Self.RuleFars,
+     Self.SilenceScale]);
 end;
 
 class operator TSherpaOnnxOfflineTtsConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsConfig);
 begin
   Dest.MaxNumSentences := 1;
+  Dest.SilenceScale := 0.2;
 end;
 
 constructor TSherpaOnnxOfflineTts.Create(Config: TSherpaOnnxOfflineTtsConfig);
@@ -2027,6 +2031,7 @@ begin
   C.RuleFsts := PAnsiChar(Config.RuleFsts);
   C.MaxNumSentences := Config.MaxNumSentences;
   C.RuleFars := PAnsiChar(Config.RuleFars);
+  C.SilenceScale := Config.SilenceScale;
 
   Self.Handle := SherpaOnnxCreateOfflineTts(@C);
 

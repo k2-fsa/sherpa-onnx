@@ -49,6 +49,7 @@ data class OfflineTtsConfig(
     var ruleFsts: String = "",
     var ruleFars: String = "",
     var maxNumSentences: Int = 1,
+    var silenceScale: Float = 0.2f,
 )
 
 class GeneratedAudio(

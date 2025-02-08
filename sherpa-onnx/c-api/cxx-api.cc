@@ -352,6 +352,7 @@ OfflineTts OfflineTts::Create(const OfflineTtsConfig &config) {
 
   c.rule_fsts = config.rule_fsts.c_str();
   c.max_num_sentences = config.max_num_sentences;
+  c.silence_scale = config.silence_scale;
   c.rule_fars = config.rule_fars.c_str();
 
   auto p = SherpaOnnxCreateOfflineTts(&c);

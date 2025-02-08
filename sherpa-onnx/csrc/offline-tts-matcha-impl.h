@@ -398,6 +398,12 @@ class OfflineTtsMatchaImpl : public OfflineTtsImpl {
     GeneratedAudio ans;
     ans.sample_rate = model_->GetMetaData().sample_rate;
     ans.samples = std::vector<float>(p, p + total);
+
+    float silence_scale = config_.silence_scale;
+    if (silence_scale != 1) {
+      ans = ans.ScaleSilence(silence_scale);
+    }
+
     return ans;
   }
 

@@ -187,6 +187,9 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(cls, "maxNumSentences", "I");
   ans.max_num_sentences = env->GetIntField(config, fid);
 
+  fid = env->GetFieldID(cls, "silenceScale", "F");
+  ans.silence_scale = env->GetFloatField(config, fid);
+
   return ans;
 }
 

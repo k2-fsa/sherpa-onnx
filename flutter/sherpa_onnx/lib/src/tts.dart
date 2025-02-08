@@ -114,17 +114,19 @@ class OfflineTtsConfig {
     this.ruleFsts = '',
     this.maxNumSenetences = 1,
     this.ruleFars = '',
+    this.silenceScale = 0.2,
   });
 
   @override
   String toString() {
-    return 'OfflineTtsConfig(model: $model, ruleFsts: $ruleFsts, maxNumSenetences: $maxNumSenetences, ruleFars: $ruleFars)';
+    return 'OfflineTtsConfig(model: $model, ruleFsts: $ruleFsts, maxNumSenetences: $maxNumSenetences, ruleFars: $ruleFars, silenceScale: $silenceScale)';
   }
 
   final OfflineTtsModelConfig model;
   final String ruleFsts;
   final int maxNumSenetences;
   final String ruleFars;
+  final double silenceScale;
 }
 
 class GeneratedAudio {
@@ -180,6 +182,7 @@ class OfflineTts {
     c.ref.ruleFsts = config.ruleFsts.toNativeUtf8();
     c.ref.maxNumSenetences = config.maxNumSenetences;
     c.ref.ruleFars = config.ruleFars.toNativeUtf8();
+    c.ref.silenceScale = config.silenceScale;
 
     final ptr = SherpaOnnxBindings.createOfflineTts?.call(c) ?? nullptr;
 
