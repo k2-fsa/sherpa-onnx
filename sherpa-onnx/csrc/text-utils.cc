@@ -6,7 +6,6 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 #include <algorithm>
-#include <iostream>
 #include <cassert>
 #include <cctype>
 #include <cstdint>
@@ -597,23 +596,23 @@ bool IsGB2312(const std::string &text) {
 #if defined(_WIN32)
 std::string Gb2312ToUtf8(const std::string &text) {
   // https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-multibytetowidechar
-// 936 is from https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
-// GB2312 -> 936
+  // 936 is from
+  // https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
+  // GB2312 -> 936
   int32_t num_wchars =
       MultiByteToWideChar(936, 0, text.c_str(), text.size(), nullptr, 0);
-SHERPA_ONNX_LOGE("num of wchars: %d", num_wchars);
+  SHERPA_ONNX_LOGE("num of wchars: %d", num_wchars);
   if (num_wchars == 0) {
     return {};
   }
 
   std::wstring wstr;
   wstr.resize(num_wchars);
-  MultiByteToWideChar(936, 0, text.c_str(),
-                                                    text.size(), wstr.data(), num_wchars);
+  MultiByteToWideChar(936, 0, text.c_str(), text.size(), wstr.data(),
+                      num_wchars);
   // https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-widechartomultibyte
   int32_t num_chars = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr,
                                           0, nullptr, nullptr);
-SHERPA_ONNX_LOGE("num of chars: %d", num_chars);
   if (num_chars == 0) {
     return {};
   }
@@ -621,7 +620,6 @@ SHERPA_ONNX_LOGE("num of chars: %d", num_chars);
   std::string ans(num_chars, 0);
   WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, ans.data(), num_chars,
                       nullptr, nullptr);
-std::cout << "ans: " << ans.size() << "--->" << ans << "\n";
 
   return ans;
 }
