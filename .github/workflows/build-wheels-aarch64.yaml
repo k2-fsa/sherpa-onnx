@@ -40,7 +40,7 @@ jobs:
           CIBW_BEFORE_ALL: |
             git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
             cd alsa-lib
-            ./gitcompile
+            ./gitcompile --disable-dependency-tracking
             cd ..
             echo "PWD"
             ls -lh /project/alsa-lib/src/.libs
