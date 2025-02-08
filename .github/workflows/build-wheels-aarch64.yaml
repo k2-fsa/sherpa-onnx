@@ -20,6 +20,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # see https://github.com/pypa/cibuildwheel/issues/2257
+        # we don't use qemu from now on
         os: [ubuntu-22.04-arm]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
         manylinux: [manylinux2014] #, manylinux_2_28]
@@ -27,36 +29,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - name: Set up QEMU
-      #   uses: docker/setup-qemu-action@v2
-      #   with:
-      #     platforms: all
-
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
       - name: Build wheels
         uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_BEFORE_ALL: |
-            find / -name "*alsa*" 2>/dev/null
+            git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+            cd alsa-lib
+            ./gitcompile
+            cd ..
+            echo "PWD"
+            ls -lh /project/alsa-lib/src/.libs
 
-            if false; then
-              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
-              cd alsa-lib
-              ./gitcompile --disable-dependency-tracking
-              cd ..
-              echo "PWD"
-              ls -lh /project/alsa-lib/src/.libs
-            fi
-
-            #CIBW_ENVIRONMENT: CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR:$LD_LIBRARY_PATH SHERPA_ONNX_MAKE_ARGS="VERBOSE=1" SHERPA_ONNX_ENABLE_ALSA=0
-          CIBW_ENVIRONMENT: LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$LD_LIBRARY_PATH SHERPA_ONNX_MAKE_ARGS="VERBOSE=1" SHERPA_ONNX_ENABLE_ALSA=0 SHERPA_ONNX_DISABLE_ALSA_BUILD=1
+          CIBW_ENVIRONMENT: CPLUS_INCLUDE_PATH=/project/alsa-lib/include:$CPLUS_INCLUDE_PATH SHERPA_ONNX_ALSA_LIB_DIR=/project/alsa-lib/src/.libs LD_LIBRARY_PATH=/project/build/bdist.linux-x86_64/wheel/sherpa_onnx/lib:$SHERPA_ONNX_ALSA_LIB_DIR SHERPA_ONNX_MAKE_ARGS="VERBOSE=1" SHERPA_ONNX_ENABLE_ALSA=1
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ARCHS_LINUX: aarch64
           # https://quay.io/repository/pypa/manylinux2014_aarch64?tab=tags
-          CIBW_MANYLINUX_AARCH64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_aarch64:2025.01.11-1
+          CIBW_MANYLINUX_AARCH64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_aarch64
           # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.
           # manylinux_2_24 is no longer supported
 

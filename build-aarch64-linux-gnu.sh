@@ -41,26 +41,24 @@ dir=build-aarch64-linux-gnu
 mkdir -p $dir
 cd $dir
 
-if [ -z $SHERPA_ONNX_DISABLE_ALSA_BUILD ]; then
-  if [ ! -f alsa-lib/src/.libs/libasound.so ]; then
-    echo "Start to cross-compile alsa-lib"
-    if [ ! -d alsa-lib ]; then
-      git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
-    fi
-    # If it shows:
-    #  ./gitcompile: line 79: libtoolize: command not found
-    # Please use:
-    #  sudo apt-get install libtool m4 automake
-    #
-    pushd alsa-lib
-    CC=aarch64-linux-gnu-gcc ./gitcompile --host=aarch64-linux-gnu
-    popd
-    echo "Finish cross-compiling alsa-lib"
+if [ ! -f alsa-lib/src/.libs/libasound.so ]; then
+  echo "Start to cross-compile alsa-lib"
+  if [ ! -d alsa-lib ]; then
+    git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
   fi
-
-  export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
-  export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+  # If it shows:
+  #  ./gitcompile: line 79: libtoolize: command not found
+  # Please use:
+  #  sudo apt-get install libtool m4 automake
+  #
+  pushd alsa-lib
+  CC=aarch64-linux-gnu-gcc ./gitcompile --host=aarch64-linux-gnu
+  popd
+  echo "Finish cross-compiling alsa-lib"
 fi
+
+export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
 
 if [[ x"$BUILD_SHARED_LIBS" == x"" ]]; then
   # By default, use static link
