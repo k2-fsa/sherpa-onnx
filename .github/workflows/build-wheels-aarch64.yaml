@@ -38,6 +38,8 @@ jobs:
         uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_BEFORE_ALL: |
+            find / -name "*alsa*" 2>/dev/null
+
             if false; then
               git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
               cd alsa-lib
