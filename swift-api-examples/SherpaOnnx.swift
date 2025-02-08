@@ -804,13 +804,15 @@ func sherpaOnnxOfflineTtsConfig(
   model: SherpaOnnxOfflineTtsModelConfig,
   ruleFsts: String = "",
   ruleFars: String = "",
-  maxNumSentences: Int = 1
+  maxNumSentences: Int = 1,
+  silenceScale: Float = 0.2
 ) -> SherpaOnnxOfflineTtsConfig {
   return SherpaOnnxOfflineTtsConfig(
     model: model,
     rule_fsts: toCPointer(ruleFsts),
     max_num_sentences: Int32(maxNumSentences),
-    rule_fars: toCPointer(ruleFars)
+    rule_fars: toCPointer(ruleFars),
+    silence_scale: silenceScale
   )
 }
 

@@ -180,6 +180,9 @@ final class SherpaOnnxOfflineTtsConfig extends Struct {
   external int maxNumSenetences;
 
   external Pointer<Utf8> ruleFars;
+
+  @Float()
+  external double silenceScale;
 }
 
 final class SherpaOnnxGeneratedAudio extends Struct {
