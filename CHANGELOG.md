@@ -1,3 +1,12 @@
+## 1.10.43
+
+* Add MFC example for Kokoro TTS 1.0 (#1815)
+* Update sherpa-onnx-tts.js VitsModelConfig.model can be none (#1817)
+* Fix passing gb2312 encoded strings to tts on Windows (#1819)
+* Support scaling the duration of a pause in TTS. (#1820)
+* Fix building wheels for linux aarch64. (#1821)
+* Fix CI for Linux aarch64. (#1822)
+
 ## 1.10.42
 
 * Fix publishing wheels (#1746)
