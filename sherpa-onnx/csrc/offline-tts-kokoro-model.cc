@@ -138,6 +138,8 @@ class OfflineTtsKokoroModel::Impl {
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.version, "version", 1);
     SHERPA_ONNX_READ_META_DATA(meta_data_.num_speakers, "n_speakers");
     SHERPA_ONNX_READ_META_DATA(meta_data_.has_espeak, "has_espeak");
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice",
+                                                "en-us");
 
     if (config_.debug) {
       std::vector<std::string> speaker_names;
