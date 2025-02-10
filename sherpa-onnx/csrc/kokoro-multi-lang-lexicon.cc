@@ -193,7 +193,9 @@ class KokoroMultiLangLexicon::Impl {
         auto ids = ConvertWordToIds(word);
         ans.insert(ans.end(), ids.begin(), ids.end());
       } else {
-        SHERPA_ONNX_LOGE("Skip OOV: '%s'", word.c_str());
+        if (debug_) {
+          SHERPA_ONNX_LOGE("Skip OOV: '%s'", word.c_str());
+        }
       }
     }
 
@@ -312,8 +314,10 @@ class KokoroMultiLangLexicon::Impl {
         this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
         this_sentence.push_back(space_id);
       } else {
-        SHERPA_ONNX_LOGE("Use espeak-ng to handle the OOV: '%s'", word.c_str());
-
+        if (debug_) {
+          SHERPA_ONNX_LOGE("Use espeak-ng to handle the OOV: '%s'", word.c_str());
+        }
+        
         piper::eSpeakPhonemeConfig config;
 
         config.voice = voice;
@@ -333,8 +337,10 @@ class KokoroMultiLangLexicon::Impl {
             if (token2id_.count(token)) {
               ids.push_back(token2id_.at(token));
             } else {
-              SHERPA_ONNX_LOGE("Skip OOV token '%s' from '%s'", token.c_str(),
-                               word.c_str());
+              if (debug_) {
+                SHERPA_ONNX_LOGE("Skip OOV token '%s' from '%s'", token.c_str(),
+                                 word.c_str());
+              }
             }
           }
         }
