@@ -3,7 +3,7 @@ name: export-peng-cheng-starling-to-onnx
 on:
   push:
     branches:
-      - export-peng-cheng-starling
+      - export-peng-cheng-starling-2
 
   workflow_dispatch:
 
@@ -90,7 +90,7 @@ jobs:
             git fetch
             git pull
 
-            cp -av ../$src ./
+            cp -av ../$src/* ./
 
             git lfs track "*.onnx"
             git add .
