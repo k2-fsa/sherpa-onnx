@@ -533,6 +533,13 @@ const SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStream(
   return stream;
 }
 
+const SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStreamWithHotwords(
+    const SherpaOnnxOfflineRecognizer *recognizer, const char *hotwords) {
+  SherpaOnnxOfflineStream *stream =
+      new SherpaOnnxOfflineStream(recognizer->impl->CreateStream(hotwords));
+  return stream;
+}
+
 void SherpaOnnxDestroyOfflineStream(const SherpaOnnxOfflineStream *stream) {
   delete stream;
 }
