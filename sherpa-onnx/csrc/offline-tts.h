@@ -32,7 +32,7 @@ struct OfflineTtsConfig {
   // If you set it to -1, then we process all sentences in a single batch.
   int32_t max_num_sentences = 1;
 
-  // A silence interval containing audio samples with value close to 0.
+  // A silence interval contains audio samples with value close to 0.
   //
   // the duration of the new interval is old_duration * silence_scale.
   float silence_scale = 0.2;
