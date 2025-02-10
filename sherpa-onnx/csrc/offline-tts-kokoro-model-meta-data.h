@@ -18,6 +18,8 @@ struct OfflineTtsKokoroModelMetaData {
   int32_t version = 1;
   int32_t has_espeak = 1;
   int32_t max_token_len = 0;
+
+  std::string voice;
 };
 
 }  // namespace sherpa_onnx

@@ -104,7 +104,8 @@ class KokoroMultiLangLexicon::Impl {
     // https://en.cppreference.com/w/cpp/regex
     // https://stackoverflow.com/questions/37989081/how-to-use-unicode-range-in-c-regex
     std::string expr =
-        "([;:,.?!'\"…\\(\\)“”])|([\\u4e00-\\u9fff]+)|([\\u0000-\\u007f]+)";
+        "([;:,.?!'\"…\\(\\)“”])|([\\u4e00-\\u9fff]+)|([äöüßÄÖÜ\\u0000-\\u007f]+"
+        ")";
 
     auto ws = ToWideString(text);
     std::wstring wexpr = ToWideString(expr);
@@ -127,7 +128,7 @@ class KokoroMultiLangLexicon::Impl {
         if (debug_) {
           SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
         }
-        ids_vec = ConvertEnglishToTokenIDs(ms);
+        ids_vec = ConvertEnglishToTokenIDs(ms, meta_data_.voice);
       } else {
         if (debug_) {
           SHERPA_ONNX_LOGE("Chinese: %s", ms.c_str());
@@ -257,7 +258,7 @@ class KokoroMultiLangLexicon::Impl {
   }
 
   std::vector<std::vector<int32_t>> ConvertEnglishToTokenIDs(
-      const std::string &text) const {
+      const std::string &text, const std::string &voice) const {
     std::vector<std::string> words = SplitUtf8(text);
     if (debug_) {
       std::ostringstream os;
@@ -315,7 +316,7 @@ class KokoroMultiLangLexicon::Impl {
 
         piper::eSpeakPhonemeConfig config;
 
-        config.voice = "en-us";
+        config.voice = voice;
 
         std::vector<std::vector<piper::Phoneme>> phonemes;
 

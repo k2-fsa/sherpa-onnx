@@ -221,7 +221,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
     }
 
     std::vector<TokenIDs> token_ids =
-        frontend_->ConvertTextToTokenIds(text, "en-us");
+        frontend_->ConvertTextToTokenIds(text, meta_data.voice);
 
     if (token_ids.empty() ||
         (token_ids.size() == 1 && token_ids[0].tokens.empty())) {
