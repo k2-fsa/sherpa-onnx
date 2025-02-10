@@ -301,6 +301,8 @@ class SHERPA_ONNX_API OfflineRecognizer
 
   OfflineStream CreateStream() const;
 
+  OfflineStream CreateStream(const std::string &hotwords) const;
+
   void Decode(const OfflineStream *s) const;
 
   void Decode(const OfflineStream *ss, int32_t n) const;

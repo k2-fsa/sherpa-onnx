@@ -266,8 +266,13 @@ void OfflineRecognizer::Destroy(const SherpaOnnxOfflineRecognizer *p) const {
 }
 
 OfflineStream OfflineRecognizer::CreateStream() const {
-  auto p = SherpaOnnxCreateOfflineStream(p_);
-  return OfflineStream{p};
+  auto s = SherpaOnnxCreateOfflineStream(p_);
+  return OfflineStream{s};
+}
+
+OfflineStream OfflineRecognizer::CreateStream(const std::string &hotwords) const {
+  auto s = SherpaOnnxCreateOfflineStreamWithHotwords(p_, hotwords.c_str());
+  return OfflineStream{s};
 }
 
 void OfflineRecognizer::Decode(const OfflineStream *s) const {

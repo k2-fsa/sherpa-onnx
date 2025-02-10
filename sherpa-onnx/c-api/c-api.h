@@ -484,6 +484,16 @@ SHERPA_ONNX_API void SherpaOnnxDestroyOfflineRecognizer(
 SHERPA_ONNX_API const SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStream(
     const SherpaOnnxOfflineRecognizer *recognizer);
 
+/// Create an offline stream for accepting wave samples with the specified hot
+/// words.
+///
+/// @param recognizer  A pointer returned by SherpaOnnxCreateOfflineRecognizer()
+/// @return Return a pointer to an OfflineStream. The user has to invoke
+///         SherpaOnnxDestroyOfflineStream() to free it to avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxOfflineStream *
+SherpaOnnxCreateOfflineStreamWithHotwords(
+    const SherpaOnnxOfflineRecognizer *recognizer, const char *hotwords);
+
 /// Destroy an offline stream.
 ///
 /// @param stream A pointer returned by SherpaOnnxCreateOfflineStream()
