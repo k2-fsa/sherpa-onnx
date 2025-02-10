@@ -397,18 +397,28 @@ def get_matcha_models() -> List[TtsModel]:
         m.dict_dir = m.model_dir + "/dict"
         m.vocoder = "hifigan_v2.onnx"
 
-    english_models = [
+    english_persian_models = [
         TtsModel(
             model_dir="matcha-icefall-en_US-ljspeech",
             acoustic_model_name="model-steps-3.onnx",
             lang="en",
-        )
+        ),
+        TtsModel(
+            model_dir="matcha-tts-fa_en-male",
+            acoustic_model_name="model.onnx",
+            lang="fa",
+        ),
+        TtsModel(
+            model_dir="matcha-tts-fa_en-female",
+            acoustic_model_name="model.onnx",
+            lang="fa",
+        ),
     ]
-    for m in english_models:
+    for m in english_persian_models:
         m.data_dir = f"{m.model_dir}/espeak-ng-data"
         m.vocoder = "hifigan_v2.onnx"
 
-    return chinese_models + english_models
+    return chinese_models + english_persian_models
 
 
 def get_kokoro_models() -> List[TtsModel]:
