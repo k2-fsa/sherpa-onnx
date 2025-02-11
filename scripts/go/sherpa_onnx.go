@@ -1637,14 +1637,13 @@ type AudioEvent struct {
 	Prob  float32
 }
 
-// Free the internal pointer inside the recognizer to avoid memory leak.
 func DeleteAudioTagging(tagging *AudioTagging) {
 	C.SherpaOnnxDestroyAudioTagging(tagging.impl)
 	tagging.impl = nil
 }
 
 // The user is responsible to invoke [DeleteAudioTagging]() to free
-// the returned spotter to avoid memory leak
+// the returned tagger to avoid memory leak
 func NewAudioTagging(config *AudioTaggingConfig) *AudioTagging {
 	c := C.struct_SherpaOnnxAudioTaggingConfig{}
 
