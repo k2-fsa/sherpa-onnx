@@ -3,7 +3,7 @@ name: export-peng-cheng-starling-to-onnx
 on:
   push:
     branches:
-      - export-peng-cheng-starling-2
+      - fix-ci-2
 
   workflow_dispatch:
 
@@ -59,6 +59,7 @@ jobs:
           mv -v $src/*.onnx $d
           cp -v $src/README.md $d
           cp -v $src/bpe.model $d
+          cp -v $src/tokens.txt $d
           cp -av $src/test_wavs $d
 
           ls -lh $d/
