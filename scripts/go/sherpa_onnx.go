@@ -1607,3 +1607,95 @@ func (spotter *KeywordSpotter) GetResult(s *OnlineStream) *KeywordSpotterResult 
 	result.Keyword = C.GoString(p.keyword)
 	return result
 }
+
+// Configuration for the audio tagging.
+type OfflineZipformerAudioTaggingModelConfig struct {
+	Model string
+}
+
+type AudioTaggingModelConfig struct {
+	Zipformer  OfflineZipformerAudioTaggingModelConfig
+	Ced        string
+	NumThreads int32
+	Debug      int32
+	Provider   string
+}
+
+type AudioTaggingConfig struct {
+	Model  AudioTaggingModelConfig
+	Labels string
+	TopK   int32
+}
+
+type AudioTagging struct {
+	impl *C.struct_SherpaOnnxAudioTagging
+}
+
+type AudioEvent struct {
+	Name  string
+	Index int
+	Prob  float32
+}
+
+func DeleteAudioTagging(tagging *AudioTagging) {
+	C.SherpaOnnxDestroyAudioTagging(tagging.impl)
+	tagging.impl = nil
+}
+
+// The user is responsible to invoke [DeleteAudioTagging]() to free
+// the returned tagger to avoid memory leak
+func NewAudioTagging(config *AudioTaggingConfig) *AudioTagging {
+	c := C.struct_SherpaOnnxAudioTaggingConfig{}
+
+	c.model.zipformer.model = C.CString(config.Model.Zipformer.Model)
+	defer C.free(unsafe.Pointer(c.model.zipformer.model))
+
+	c.model.ced = C.CString(config.Model.Ced)
+	defer C.free(unsafe.Pointer(c.model.ced))
+
+	c.model.num_threads = C.int(config.Model.NumThreads)
+
+	c.model.provider = C.CString(config.Model.Provider)
+	defer C.free(unsafe.Pointer(c.model.provider))
+
+	c.model.debug = C.int(config.Model.Debug)
+
+	c.labels = C.CString(config.Labels)
+	defer C.free(unsafe.Pointer(c.labels))
+
+	c.top_k = C.int(config.TopK)
+
+	tagging := &AudioTagging{}
+	tagging.impl = C.SherpaOnnxCreateAudioTagging(&c)
+
+	return tagging
+}
+
+// The user is responsible to invoke [DeleteOfflineStream]() to free
+// the returned stream to avoid memory leak
+func NewAudioTaggingStream(tagging *AudioTagging) *OfflineStream {
+	stream := &OfflineStream{}
+	stream.impl = C.SherpaOnnxAudioTaggingCreateOfflineStream(tagging.impl)
+	return stream
+}
+
+func (tagging *AudioTagging) Compute(s *OfflineStream, topK int32) []AudioEvent {
+	r := C.SherpaOnnxAudioTaggingCompute(tagging.impl, s.impl, C.int(topK))
+	defer C.SherpaOnnxAudioTaggingFreeResults(r)
+	result := make([]AudioEvent, 0)
+
+	p := (*[1 << 28]*C.struct_SherpaOnnxAudioEvent)(unsafe.Pointer(r))
+	i := 0
+	for {
+		if p[i] == nil {
+			break
+		}
+		result = append(result, AudioEvent{
+			Name:  C.GoString(p[i].name),
+			Index: int(p[i].index),
+			Prob:  float32(p[i].prob),
+		})
+		i += 1
+	}
+	return result
+}
