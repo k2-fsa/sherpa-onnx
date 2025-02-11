@@ -9,6 +9,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-transducer-decoder.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -40,8 +49,8 @@ class OfflineTransducerNeMoModel::Impl {
     }
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -61,7 +70,6 @@ class OfflineTransducerNeMoModel::Impl {
       InitJoiner(buf.data(), buf.size());
     }
   }
-#endif
 
   std::vector<Ort::Value> RunEncoder(Ort::Value features,
                                      Ort::Value features_length) {
@@ -123,7 +131,7 @@ class OfflineTransducerNeMoModel::Impl {
     return std::move(logit[0]);
   }
 
-  std::vector<Ort::Value> GetDecoderInitStates(int32_t batch_size) const {
+  std::vector<Ort::Value> GetDecoderInitStates(int32_t batch_size) {
     std::array<int64_t, 3> s0_shape{pred_rnn_layers_, batch_size, pred_hidden_};
     Ort::Value s0 = Ort::Value::CreateTensor<float>(allocator_, s0_shape.data(),
                                                     s0_shape.size());
@@ -149,9 +157,11 @@ class OfflineTransducerNeMoModel::Impl {
   int32_t SubsamplingFactor() const { return subsampling_factor_; }
   int32_t VocabSize() const { return vocab_size_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
+
+  bool IsGigaAM() const { return is_giga_am_; }
 
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
@@ -170,7 +180,11 @@ class OfflineTransducerNeMoModel::Impl {
       std::ostringstream os;
       os << "---encoder---\n";
       PrintModelMetadata(os, meta_data);
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -181,9 +195,11 @@ class OfflineTransducerNeMoModel::Impl {
     vocab_size_ += 1;
 
     SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
-    SHERPA_ONNX_READ_META_DATA_STR(normalize_type_, "normalize_type");
+    SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(normalize_type_,
+                                               "normalize_type");
     SHERPA_ONNX_READ_META_DATA(pred_rnn_layers_, "pred_rnn_layers");
     SHERPA_ONNX_READ_META_DATA(pred_hidden_, "pred_hidden");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(is_giga_am_, "is_giga_am", 0);
 
     if (normalize_type_ == "NA") {
       normalize_type_ = "";
@@ -245,17 +261,17 @@ class OfflineTransducerNeMoModel::Impl {
   std::string normalize_type_;
   int32_t pred_rnn_layers_ = -1;
   int32_t pred_hidden_ = -1;
+  int32_t is_giga_am_ = 0;
 };
 
 OfflineTransducerNeMoModel::OfflineTransducerNeMoModel(
     const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OfflineTransducerNeMoModel::OfflineTransducerNeMoModel(
-    AAssetManager *mgr, const OfflineModelConfig &config)
+    Manager *mgr, const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OfflineTransducerNeMoModel::~OfflineTransducerNeMoModel() = default;
 
@@ -297,5 +313,17 @@ OrtAllocator *OfflineTransducerNeMoModel::Allocator() const {
 std::string OfflineTransducerNeMoModel::FeatureNormalizationMethod() const {
   return impl_->FeatureNormalizationMethod();
 }
+
+bool OfflineTransducerNeMoModel::IsGigaAM() const { return impl_->IsGigaAM(); }
+
+#if __ANDROID_API__ >= 9
+template OfflineTransducerNeMoModel::OfflineTransducerNeMoModel(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineTransducerNeMoModel::OfflineTransducerNeMoModel(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

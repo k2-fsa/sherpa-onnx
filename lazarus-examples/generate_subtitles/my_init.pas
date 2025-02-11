@@ -159,6 +159,30 @@ begin
   Result := TSherpaOnnxOfflineRecognizer.Create(Config);
 end;
 
+function CreateOfflineRecognizerMoonshine(
+  Tokens: AnsiString;
+  Preprocessor: AnsiString;
+  Encoder: AnsiString;
+  UncachedDecoder: AnsiString;
+  CachedDecoder: AnsiString): TSherpaOnnxOfflineRecognizer;
+var
+  Config: TSherpaOnnxOfflineRecognizerConfig;
+begin
+  Initialize(Config);
+
+  Config.ModelConfig.Moonshine.Preprocessor := Preprocessor;
+  Config.ModelConfig.Moonshine.Encoder := Encoder;
+  Config.ModelConfig.Moonshine.UncachedDecoder := UncachedDecoder;
+  Config.ModelConfig.Moonshine.CachedDecoder := CachedDecoder;
+
+  Config.ModelConfig.Tokens := Tokens;
+  Config.ModelConfig.Provider := 'cpu';
+  Config.ModelConfig.NumThreads := 2;
+  Config.ModelConfig.Debug := False;
+
+  Result := TSherpaOnnxOfflineRecognizer.Create(Config);
+end;
+
 constructor TMyInitThread.Create(CreateSuspended : boolean; ModelDirectory: AnsiString);
 begin
   inherited Create(CreateSuspended);
@@ -193,6 +217,11 @@ var
   NeMoTransducerEncoder: AnsiString;
   NeMoTransducerDecoder: AnsiString;
   NeMoTransducerJoiner: AnsiString;
+
+  MoonshinePreprocessor: AnsiString;
+  MoonshineEncoder: AnsiString;
+  MoonshineUncachedDecoder: AnsiString;
+  MoonshineCachedDecoder: AnsiString;
 begin
     VadFilename := ModelDir + 'silero_vad.onnx';
     Tokens := ModelDir + 'tokens.txt';
@@ -292,6 +321,24 @@ begin
     NeMoTransducerDecoder := ModelDir + 'nemo-transducer-decoder.onnx';
     NeMoTransducerJoiner := ModelDir + 'nemo-transducer-joiner.onnx';
 
+    {
+      Please Visit
+      https://k2-fsa.github.io/sherpa/onnx/moonshine/models.html
+      to download a Moonshine model.
+
+      Note that you have to rename model files after downloading. The following
+      is an example.
+
+      mv preprocess.onnx moonshine-preprocessor.onnx
+      mv encode.int8.onnx moonshine-encoder.onnx
+      mv uncached_decode.int8.onnx moonshine-uncached-decoder.onnx
+      mv cached_decode.int8.onnx moonshine-cached-decoder.onnx
+    }
+    MoonshinePreprocessor := ModelDir + 'moonshine-preprocessor.onnx';
+    MoonshineEncoder := ModelDir + 'moonshine-encoder.onnx';
+    MoonshineUncachedDecoder := ModelDir + 'moonshine-uncached-decoder.onnx';
+    MoonshineCachedDecoder := ModelDir + 'moonshine-cached-decoder.onnx';
+
     if not FileExists(VadFilename) then
       begin
         Status := VadFilename + ' does not exist! Please download it from' +
@@ -343,6 +390,13 @@ begin
           Form1.OfflineRecognizer := CreateOfflineRecognizerTransducer(Tokens,
             NeMoTransducerEncoder, NeMoTransducerDecoder, NeMoTransducerJoiner, 'nemo_transducer');
           Msg := 'NeMo transducer';
+        end
+    else if FileExists(MoonshinePreprocessor) and FileExists(MoonshineEncoder) and FileExists(MoonshineUncachedDecoder) and FileExists(MoonshineCachedDecoder) then
+        begin
+          Form1.OfflineRecognizer := CreateOfflineRecognizerMoonshine(Tokens,
+            MoonshinePreprocessor, MoonshineEncoder, MoonshineUncachedDecoder,
+            MoonshineCachedDecoder);
+          Msg := 'Moonshine';
         end
     else
       begin

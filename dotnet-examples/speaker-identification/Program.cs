@@ -16,20 +16,18 @@
 // dotnet run
 
 using SherpaOnnx;
-using System.Collections.Generic;
-using System;
 
 class SpeakerIdentificationDemo
 {
-  public static float[] ComputeEmbedding(SpeakerEmbeddingExtractor extractor, String filename)
+  public static float[] ComputeEmbedding(SpeakerEmbeddingExtractor extractor, string filename)
   {
-    WaveReader reader = new WaveReader(filename);
+    var reader = new WaveReader(filename);
 
-    OnlineStream stream = extractor.CreateStream();
+    var stream = extractor.CreateStream();
     stream.AcceptWaveform(reader.SampleRate, reader.Samples);
     stream.InputFinished();
 
-    float[] embedding = extractor.Compute(stream);
+    var embedding = extractor.Compute(stream);
 
     return embedding;
   }
@@ -43,25 +41,25 @@ class SpeakerIdentificationDemo
 
     var manager = new SpeakerEmbeddingManager(extractor.Dim);
 
-    string[] spk1Files =
+    var spk1Files =
         new string[] {
           "./sr-data/enroll/fangjun-sr-1.wav",
           "./sr-data/enroll/fangjun-sr-2.wav",
           "./sr-data/enroll/fangjun-sr-3.wav",
         };
-    float[][] spk1Vec = new float[spk1Files.Length][];
+    var spk1Vec = new float[spk1Files.Length][];
 
     for (int i = 0; i < spk1Files.Length; ++i)
     {
       spk1Vec[i] = ComputeEmbedding(extractor, spk1Files[i]);
     }
 
-    string[] spk2Files =
+    var spk2Files =
         new string[] {
           "./sr-data/enroll/leijun-sr-1.wav", "./sr-data/enroll/leijun-sr-2.wav",
         };
 
-    float[][] spk2Vec = new float[spk2Files.Length][];
+    var spk2Vec = new float[spk2Files.Length][];
 
     for (int i = 0; i < spk2Files.Length; ++i)
     {
@@ -100,14 +98,14 @@ class SpeakerIdentificationDemo
 
     Console.WriteLine("---All speakers---");
 
-    string[] allSpeakers = manager.GetAllSpeakers();
+    var allSpeakers = manager.GetAllSpeakers();
     foreach (var s in allSpeakers)
     {
       Console.WriteLine(s);
     }
     Console.WriteLine("------------");
 
-    string[] testFiles =
+    var testFiles =
         new string[] {
           "./sr-data/test/fangjun-test-sr-1.wav",
           "./sr-data/test/leijun-test-sr-1.wav",
@@ -117,9 +115,9 @@ class SpeakerIdentificationDemo
     float threshold = 0.6f;
     foreach (var file in testFiles)
     {
-      float[] embedding = ComputeEmbedding(extractor, file);
+      var embedding = ComputeEmbedding(extractor, file);
 
-      String name = manager.Search(embedding, threshold);
+      var name = manager.Search(embedding, threshold);
       if (name == "")
       {
         name = "<Unknown>";

@@ -7,9 +7,13 @@
 #include <algorithm>
 #include <fstream>
 #include <functional>
+#include <memory>
 #include <numeric>
 #include <sstream>
 #include <string>
+#include <vector>
+
+#include "sherpa-onnx/csrc/macros.h"
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -21,6 +25,36 @@
 
 namespace sherpa_onnx {
 
+static std::string GetInputName(Ort::Session *sess, size_t index,
+                                OrtAllocator *allocator) {
+// Note(fangjun): We only tested 1.17.1 and 1.11.0
+// For other versions, we may need to change it
+#if ORT_API_VERSION >= 12
+  auto v = sess->GetInputNameAllocated(index, allocator);
+  return v.get();
+#else
+  auto v = sess->GetInputName(index, allocator);
+  std::string ans = v;
+  allocator->Free(allocator, v);
+  return ans;
+#endif
+}
+
+static std::string GetOutputName(Ort::Session *sess, size_t index,
+                                 OrtAllocator *allocator) {
+// Note(fangjun): We only tested 1.17.1 and 1.11.0
+// For other versions, we may need to change it
+#if ORT_API_VERSION >= 12
+  auto v = sess->GetOutputNameAllocated(index, allocator);
+  return v.get();
+#else
+  auto v = sess->GetOutputName(index, allocator);
+  std::string ans = v;
+  allocator->Free(allocator, v);
+  return ans;
+#endif
+}
+
 void GetInputNames(Ort::Session *sess, std::vector<std::string> *input_names,
                    std::vector<const char *> *input_names_ptr) {
   Ort::AllocatorWithDefaultOptions allocator;
@@ -28,8 +62,7 @@ void GetInputNames(Ort::Session *sess, std::vector<std::string> *input_names,
   input_names->resize(node_count);
   input_names_ptr->resize(node_count);
   for (size_t i = 0; i != node_count; ++i) {
-    auto tmp = sess->GetInputNameAllocated(i, allocator);
-    (*input_names)[i] = tmp.get();
+    (*input_names)[i] = GetInputName(sess, i, allocator);
     (*input_names_ptr)[i] = (*input_names)[i].c_str();
   }
 }
@@ -41,8 +74,7 @@ void GetOutputNames(Ort::Session *sess, std::vector<std::string> *output_names,
   output_names->resize(node_count);
   output_names_ptr->resize(node_count);
   for (size_t i = 0; i != node_count; ++i) {
-    auto tmp = sess->GetOutputNameAllocated(i, allocator);
-    (*output_names)[i] = tmp.get();
+    (*output_names)[i] = GetOutputName(sess, i, allocator);
     (*output_names_ptr)[i] = (*output_names)[i].c_str();
   }
 }
@@ -78,12 +110,24 @@ Ort::Value GetEncoderOutFrame(OrtAllocator *allocator, Ort::Value *encoder_out,
 
 void PrintModelMetadata(std::ostream &os, const Ort::ModelMetadata &meta_data) {
   Ort::AllocatorWithDefaultOptions allocator;
+#if ORT_API_VERSION >= 12
   std::vector<Ort::AllocatedStringPtr> v =
       meta_data.GetCustomMetadataMapKeysAllocated(allocator);
   for (const auto &key : v) {
     auto p = meta_data.LookupCustomMetadataMapAllocated(key.get(), allocator);
     os << key.get() << "=" << p.get() << "\n";
   }
+#else
+  int64_t num_keys = 0;
+  char **keys = meta_data.GetCustomMetadataMapKeys(allocator, num_keys);
+  for (int32_t i = 0; i < num_keys; ++i) {
+    auto v = LookupCustomModelMetaData(meta_data, keys[i], allocator);
+    os << keys[i] << "=" << v << "\n";
+    allocator.Free(keys[i]);
+  }
+
+  allocator.Free(keys);
+#endif
 }
 
 Ort::Value Clone(OrtAllocator *allocator, const Ort::Value *v) {
@@ -286,6 +330,38 @@ std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename) {
 }
 #endif
 
+#if __OHOS__
+std::vector<char> ReadFile(NativeResourceManager *mgr,
+                           const std::string &filename) {
+  std::unique_ptr<RawFile, decltype(&OH_ResourceManager_CloseRawFile)> fp(
+      OH_ResourceManager_OpenRawFile(mgr, filename.c_str()),
+      OH_ResourceManager_CloseRawFile);
+
+  if (!fp) {
+    std::ostringstream os;
+    os << "Read file '" << filename << "' failed.";
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    return {};
+  }
+
+  auto len = static_cast<int32_t>(OH_ResourceManager_GetRawFileSize(fp.get()));
+
+  std::vector<char> buffer(len);
+
+  int32_t n = OH_ResourceManager_ReadRawFile(fp.get(), buffer.data(), len);
+
+  if (n != len) {
+    std::ostringstream os;
+    os << "Read file '" << filename << "' failed. Number of bytes read: " << n
+       << ". Expected bytes to read: " << len;
+    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+    return {};
+  }
+
+  return buffer;
+}
+#endif
+
 Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,
                   const std::vector<int32_t> &hyps_num_split) {
   std::vector<int64_t> cur_encoder_out_shape =
@@ -359,6 +435,22 @@ std::vector<Ort::Value> Convert(std::vector<CopyableOrtValue> values) {
   }
 
   return ans;
+}
+
+std::string LookupCustomModelMetaData(const Ort::ModelMetadata &meta_data,
+                                      const char *key,
+                                      OrtAllocator *allocator) {
+// Note(fangjun): We only tested 1.17.1 and 1.11.0
+// For other versions, we may need to change it
+#if ORT_API_VERSION >= 12
+  auto v = meta_data.LookupCustomMetadataMapAllocated(key, allocator);
+  return v ? v.get() : "";
+#else
+  auto v = meta_data.LookupCustomMetadataMap(key, allocator);
+  std::string ans = v ? v : "";
+  allocator->Free(allocator, v);
+  return ans;
+#endif
 }
 
 }  // namespace sherpa_onnx

@@ -8,11 +8,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-ctc-model.h"
 #include "sherpa-onnx/csrc/online-model-config.h"
@@ -23,9 +18,8 @@ class OnlineNeMoCtcModel : public OnlineCtcModel {
  public:
   explicit OnlineNeMoCtcModel(const OnlineModelConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OnlineNeMoCtcModel(AAssetManager *mgr, const OnlineModelConfig &config);
-#endif
+  template <typename Manager>
+  OnlineNeMoCtcModel(Manager *mgr, const OnlineModelConfig &config);
 
   ~OnlineNeMoCtcModel() override;
 

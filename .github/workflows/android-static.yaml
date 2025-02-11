@@ -1,0 +1,296 @@
+# static means we link onnxruntime statically
+# but we still have libsherpa-onnx-jni.so
+name: android-static
+
+on:
+  push:
+    branches:
+      - master
+      - android-link-onnxruntime-statically
+    paths:
+      - '.github/workflows/android-static.yaml'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/jni/*'
+      - 'build-android*.sh'
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/android-static.yaml'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/jni/*'
+      - 'build-android*.sh'
+
+  workflow_dispatch:
+
+concurrency:
+  group: android-static-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-android-static-libs:
+    name: Android static libs
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-android-jni-static
+
+      - name: Display NDK HOME
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
+          ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: build android arm64-v8a
+        shell: bash
+        run: |
+          export BUILD_SHARED_LIBS=OFF
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-android-arm64-v8a.sh
+          mkdir -p jniLibs/arm64-v8a/
+          cp -v ./build-android-arm64-v8a-static/install/lib/*.so ./jniLibs/arm64-v8a/
+          rm -rf  ./build-android-arm64-v8a-static/
+
+      - name: build android armv7-eabi
+        shell: bash
+        run: |
+          export BUILD_SHARED_LIBS=OFF
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-android-armv7-eabi.sh
+          mkdir -p ./jniLibs/armeabi-v7a/
+          cp -v ./build-android-armv7-eabi-static/install/lib/*.so ./jniLibs/armeabi-v7a/
+          rm -rf ./build-android-armv7-eabi-static
+
+      - name: build android x86_64
+        shell: bash
+        run: |
+          export BUILD_SHARED_LIBS=OFF
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-android-x86-64.sh
+          mkdir -p ./jniLibs/x86_64
+          cp -v ./build-android-x86-64-static/install/lib/*.so ./jniLibs/x86_64
+          rm -rf ./build-android-x86-64-static
+
+      - name: build android x86
+        shell: bash
+        run: |
+          export BUILD_SHARED_LIBS=OFF
+
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+
+          export ANDROID_NDK=$ANDROID_NDK_LATEST_HOME
+          ./build-android-x86.sh
+          mkdir -p ./jniLibs/x86
+          cp -v ./build-android-x86/install/lib/*.so ./jniLibs/x86
+          rm -rf ./build-android-x86
+
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+
+          filename=sherpa-onnx-${SHERPA_ONNX_VERSION}-android-static-link-onnxruntime.tar.bz2
+
+          tar cjvf $filename ./jniLibs
+
+          ls -lh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-android-libs-static
+          path: ./jniLibs
+
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            du -h -d1 .
+            ls -lh
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+            cd huggingface
+
+            cp -v ../sherpa-onnx-*-android*.tar.bz2 ./
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-android.tar.bz2"
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
+      - name: Release android libs
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*-android*.tar.bz2
+
+  build-android-aar-static:
+    needs: [build-android-static-libs]
+    name: Android AAR
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # https://github.com/actions/setup-java
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin' # See 'Supported distributions' for available options
+          java-version: '21'
+
+      - name: Display NDK HOME
+        shell: bash
+        run: |
+          echo "ANDROID_NDK_LATEST_HOME: ${ANDROID_NDK_LATEST_HOME}"
+          ls -lh ${ANDROID_NDK_LATEST_HOME}
+
+      - name: Retrieve artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: sherpa-onnx-android-libs-static
+          path: /tmp/jniLibs
+
+      - name: Show jni libs
+        shell: bash
+        run: |
+          ls -lh /tmp/jniLibs
+
+          # drwxr-xr-x 2 runner docker 4.0K Dec 12 06:56 arm64-v8a
+          # drwxr-xr-x 2 runner docker 4.0K Dec 12 06:56 armeabi-v7a
+          # drwxr-xr-x 2 runner docker 4.0K Dec 12 06:56 x86
+          # drwxr-xr-x 2 runner docker 4.0K Dec 12 06:56 x86_64
+          #
+      - name: Copy libs
+        shell: bash
+        run: |
+          for arch in arm64-v8a armeabi-v7a x86 x86_64; do
+            cp -v /tmp/jniLibs/$arch/* android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/$arch/
+          done
+
+      - name: Check libs
+        shell: bash
+        run: |
+          ls -lh android/SherpaOnnxAar/sherpa_onnx/src/main/jniLibs/*
+
+      - name: Build aar
+        shell: bash
+        run: |
+          cd android/SherpaOnnxAar
+
+          ./gradlew :sherpa_onnx:assembleRelease
+
+      - name: Display aar
+        shell: bash
+        run: |
+          cd android/SherpaOnnxAar
+
+          ls -lh ./sherpa_onnx/build/outputs/aar/sherpa_onnx-release.aar
+          cp ./sherpa_onnx/build/outputs/aar/sherpa_onnx-release.aar ../../
+
+      - name: Rename aar
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+
+          mv sherpa_onnx-release.aar sherpa-onnx-static-link-onnxruntime-${SHERPA_ONNX_VERSION}.aar
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-android-aar-static
+          path: ./*.aar
+
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+            du -h -d1 .
+            ls -lh
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            dst=android/aar
+            mkdir -p $dst
+
+            cp -v ../*.aar $dst
+
+            git status
+            git lfs track "*.aar"
+
+            git add .
+
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}.aar"
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
+      - name: Release android aar
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./*.aar

@@ -53,6 +53,8 @@ class KeywordResult {
 }
 
 class KeywordSpotter {
+  KeywordSpotter.fromPtr({required this.ptr, required this.config});
+
   KeywordSpotter._({required this.ptr, required this.config});
 
   /// The user is responsible to call the OnlineRecognizer.free()
@@ -164,6 +166,10 @@ class KeywordSpotter {
 
   void decode(OnlineStream stream) {
     SherpaOnnxBindings.decodeKeywordStream?.call(ptr, stream.ptr);
+  }
+
+  void reset(OnlineStream stream) {
+    SherpaOnnxBindings.resetKeywordStream?.call(ptr, stream.ptr);
   }
 
   Pointer<SherpaOnnxKeywordSpotter> ptr;

@@ -21,7 +21,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-20.04]
-        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.7", "3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -34,7 +34,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          pip install -U pip wheel setuptools twine
+          pip install -U pip wheel setuptools twine==5.0.0
 
       - name: Build alsa-lib
         shell: bash
@@ -113,7 +113,7 @@ jobs:
 
             d=cuda/$SHERPA_ONNX_VERSION
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull

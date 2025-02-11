@@ -102,7 +102,7 @@ jobs:
 
             d=cpu/$SHERPA_ONNX_VERSION
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
@@ -129,6 +129,6 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install wheel twine setuptools
+          python3 -m pip install wheel twine==5.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl

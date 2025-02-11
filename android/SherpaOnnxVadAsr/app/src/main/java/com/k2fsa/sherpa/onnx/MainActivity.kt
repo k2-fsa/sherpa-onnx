@@ -19,6 +19,11 @@ import com.k2fsa.sherpa.onnx.Vad
 import com.k2fsa.sherpa.onnx.getFeatureConfig
 import com.k2fsa.sherpa.onnx.getOfflineModelConfig
 import com.k2fsa.sherpa.onnx.getVadModelConfig
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.concurrent.thread
 
 
@@ -166,6 +171,8 @@ class MainActivity : AppCompatActivity() {
 
         val bufferSize = 512 // in samples
         val buffer = ShortArray(bufferSize)
+        val coroutineScope = CoroutineScope(Dispatchers.IO)
+
 
         while (isRecording) {
             val ret = audioRecord?.read(buffer, 0, buffer.size)
@@ -175,11 +182,15 @@ class MainActivity : AppCompatActivity() {
                 vad.acceptWaveform(samples)
                 while(!vad.empty()) {
                     var segment = vad.front()
-                    val text = runSecondPass(segment.samples)
-
-                    if (text.isNotBlank()) {
-                        lastText = "${lastText}\n${idx}: ${text}"
-                        idx += 1
+                    coroutineScope.launch {
+                        val text = runSecondPass(segment.samples)
+                        if (text.isNotBlank()) {
+                            withContext(Dispatchers.Main) {
+                                lastText = "${lastText}\n${idx}: ${text}"
+                                idx += 1
+                                textView.text = lastText.lowercase()
+                            }
+                        }
                     }
 
                     vad.pop();
@@ -192,6 +203,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+
+        // Clean up the coroutine scope when done
+        coroutineScope.cancel()
     }
 
     private fun initOfflineRecognizer() {

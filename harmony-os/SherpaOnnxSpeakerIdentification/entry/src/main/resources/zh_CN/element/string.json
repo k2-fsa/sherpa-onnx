@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "新一代Kaldi: 本地说话人识别"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "新一代Kaldi: 本地说话人识别"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "说话人识别"
+    },
+    {
+      "name": "mic_reason",
+      "value": "使用新一代Kaldi, 访问麦克风进行本地说话人识别 (不需要联网)"
+    }
+  ]
+}

@@ -9,7 +9,6 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
       - '.github/workflows/aarch64-linux-gnu-shared.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -19,7 +18,6 @@ on:
       - master
     paths:
       - '.github/workflows/aarch64-linux-gnu-shared.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -34,139 +32,149 @@ concurrency:
 jobs:
   aarch64_linux_gnu_shared:
     runs-on: ${{ matrix.os }}
-    name: aarch64 shared lib test
+    name: aarch64 shared GPU ${{ matrix.gpu }} ${{ matrix.onnxruntime_version }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
+        include:
+          - os: ubuntu-22.04-arm
+            gpu: ON
+            onnxruntime_version: "1.11.0"
+          - os: ubuntu-22.04-arm
+            gpu: ON
+            onnxruntime_version: "1.16.0"
+          - os: ubuntu-22.04-arm
+            gpu: OFF
+            onnxruntime_version: ""
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: ccache
-        uses: hendrikmuhs/ccache-action@v1.2
+      - name: Build sherpa-onnx
+        if: matrix.gpu == 'ON'
+        shell: bash
+        run: |
+          onnxruntime_version=${{ matrix.onnxruntime_version }}
+
+          git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+          pushd alsa-lib
+          ./gitcompile
+          popd
+
+          export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+          export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+
+          mkdir build
+          cd build
+          cmake \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -DSHERPA_ONNX_ENABLE_GPU=ON \
+            -DSHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=$onnxruntime_version \
+            ..
+          make -j4 install
+
+          rm -rf install/lib/pkgconfig
+          rm -fv install/lib/cargs.h
+          rm -fv install/lib/libcargs.so
+
+      - name: Build sherpa-onnx
+        if: matrix.gpu == 'OFF'
+        uses: addnab/docker-run-action@v3
         with:
-          key: ${{ matrix.os }}-aarch64-shared
+            image: quay.io/pypa/manylinux2014_aarch64
+            options: |
+              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx
+            shell: bash
+            run: |
+              echo "config: ${{ matrix.config }}"
+              uname -a
+              which gcc
 
-      - name: cache-qemu
-        id: cache-qemu
-        uses: actions/cache@v4
-        with:
-          path: qemu-install
-          key: qemu-aarch64-install-20220908
+              gcc --version
+              g++ --version
 
-      - name: install-qemu-build-deps
-        if: steps.cache-qemu.outputs.cache-hit != 'true'
-        run: |
-          sudo apt-get update
-          sudo apt-get install autoconf automake autotools-dev ninja-build
+              echo "pwd"
 
-      - name: checkout-qemu
-        if: steps.cache-qemu.outputs.cache-hit != 'true'
-        uses: actions/checkout@v3
-        with:
-          repository: qemu/qemu
-          path: qemu
-          ref: f5643914a9e8f79c606a76e6a9d7ea82a3fc3e65
+              ls -lh
 
-      - name: qemu
-        if: steps.cache-qemu.outputs.cache-hit != 'true'
-        run: |
-          cd qemu
-          ./configure --prefix=$GITHUB_WORKSPACE/qemu-install --target-list=aarch64-linux-user --disable-system
-          make -j2
-          make install
+              cd /k2-fsa/sherpa-onnx/
 
-      - name: cache-toolchain
-        id: cache-toolchain
-        uses: actions/cache@v4
-        with:
-          path: toolchain
-          key: gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
+              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+              pushd alsa-lib
+              ./gitcompile
+              popd
 
-      - name: Download toolchain
-        if: steps.cache-toolchain.outputs.cache-hit != 'true'
+              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+
+              mkdir build
+              cd build
+
+              cmake \
+                -DBUILD_SHARED_LIBS=ON \
+                -DCMAKE_INSTALL_PREFIX=./install \
+                ..
+
+              make -j4 install
+
+              rm -rf install/lib/pkgconfig
+              rm -fv install/lib/cargs.h
+              rm -fv install/lib/libcargs.so
+
+      - name: Display system info
         shell: bash
         run: |
-          wget -qq https://huggingface.co/csukuangfj/sherpa-ncnn-toolchains/resolve/main/gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz
+          uname -a
+          gcc --version
+          g++ --version
 
-          mkdir $GITHUB_WORKSPACE/toolchain
-          tar xf ./gcc-linaro-7.5.0-2019.12-x86_64_aarch64-linux-gnu.tar.xz --strip-components 1 -C $GITHUB_WORKSPACE/toolchain
-
-      - name: Set environment variable
-        if: steps.cache-build-result.outputs.cache-hit != 'true'
+      - name: Display generated files
         shell: bash
         run: |
-          echo "$GITHUB_WORKSPACE/toolchain/bin"  >> "$GITHUB_PATH"
-          echo "$GITHUB_WORKSPACE/bin"  >> "$GITHUB_PATH"
-          ls -lh "$GITHUB_WORKSPACE/toolchain/bin"
+          cd build/install
 
-          echo "CC=aarch64-linux-gnu-gcc" >> "$GITHUB_ENV"
-          echo "CXX=aarch64-linux-gnu-g++" >> "$GITHUB_ENV"
+          ls -lh bin
 
-      - name: Display toolchain info
-        shell: bash
-        run: |
-          aarch64-linux-gnu-gcc --version
+          echo "---"
 
-      - name: Display qemu-aarch64 -h
-        shell: bash
-        run: |
-          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-linux-gnu/libc
-          qemu-aarch64 -h
+          ls -lh lib
 
-      - name: build aarch64-linux-gnu
-        shell: bash
-        run: |
-          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
-          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          file bin/sherpa-onnx
 
-          cmake --version
+          readelf -d bin/sherpa-onnx
 
-          export BUILD_SHARED_LIBS=ON
+          ldd bin/sherpa-onnx
 
-          ./build-aarch64-linux-gnu.sh
-
-          ls -lh build-aarch64-linux-gnu/bin
-          ls -lh build-aarch64-linux-gnu/lib
-
-          file build-aarch64-linux-gnu/bin/sherpa-onnx
-
-      - name: Test sherpa-onnx
-        shell: bash
-        run: |
-          export PATH=$GITHUB_WORKSPACE/toolchain/bin:$PATH
-          export PATH=$GITHUB_WORKSPACE/qemu-install/bin:$PATH
-          export QEMU_LD_PREFIX=$GITHUB_WORKSPACE/toolchain/aarch64-linux-gnu/libc
-
-          ls -lh ./build-aarch64-linux-gnu/bin
-
-          qemu-aarch64 ./build-aarch64-linux-gnu/bin/sherpa-onnx --help
-
-          readelf -d ./build-aarch64-linux-gnu/bin/sherpa-onnx
+          ./bin/sherpa-onnx --help
 
       - name: Copy files
         shell: bash
         run: |
-          aarch64-linux-gnu-strip --version
-
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
           dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-shared
+          if [[ ${{ matrix.gpu }} == OFF ]]; then
+            dst=${dst}-cpu
+          else
+            dst=${dst}-gpu-onnxruntime-${{ matrix.onnxruntime_version }}
+          fi
           mkdir $dst
 
-          cp -a build-aarch64-linux-gnu/install/bin $dst/
-          cp -a build-aarch64-linux-gnu/install/lib $dst/
+          cp -a build/install/bin $dst/
+          cp -a build/install/lib $dst/
 
-          ls -lh build-aarch64-linux-gnu/install/lib
-          ls -lh build-aarch64-linux-gnu/install/bin
+          ls -lh build/install/lib
+          ls -lh build/install/bin
 
           ls -lh $dst/bin/
           echo "strip"
-          aarch64-linux-gnu-strip $dst/bin/*
+          strip $dst/bin/*
+
+          echo "after strip"
+          ls -lh $dst/bin/
 
           tree $dst
 
@@ -174,8 +182,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-linux-aarch64-shared
-          path: sherpa-onnx-*linux-aarch64-shared.tar.bz2
+          name: sherpa-onnx-linux-aarch64-shared-gpu-${{ matrix.gpu }}-onnxruntime-${{ matrix.onnxruntime_version }}
+          path: sherpa-onnx-*linux-aarch64-shared*.tar.bz2
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -193,12 +201,12 @@ jobs:
 
             rm -rf huggingface
             export GIT_CLONE_PROTECTION_ACTIVE=false
-            GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
             mkdir -p aarch64
 
-            cp -v ../sherpa-onnx-*-shared.tar.bz2 ./aarch64
+            cp -v ../sherpa-onnx-*-shared*.tar.bz2 ./aarch64
 
             git status
             git lfs track "*.bz2"
@@ -210,9 +218,32 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
 
       - name: Release pre-compiled binaries and libs for aarch64 linux
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*linux-aarch64*.tar.bz2
+
+      - name: Release pre-compiled binaries and libs for aarch64 linux
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-aarch64*.tar.bz2
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.10.42
+
+      - name: Test offline Moonshine
+        if: matrix.build_type != 'Debug'
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/install/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          readelf -d build/bin/sherpa-onnx-offline
+
+          .github/scripts/test-offline-moonshine.sh

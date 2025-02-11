@@ -1,0 +1,21 @@
+name: Create checksum
+
+on:
+  schedule:
+    - cron: "0 1 * * *" # Runs at 1:00 AM UTC daily
+  workflow_dispatch:
+
+jobs:
+  checksum:
+    if: github.repository_owner == 'k2-fsa'
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        tag: [null, asr-models, tts-models, kws-models, speaker-recongition-models, audio-tagging-models, punctuation-models]
+    steps:
+      - name: Run checksum action
+        uses: thewh1teagle/checksum@v1
+        with:
+          tag: ${{ matrix.tag }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

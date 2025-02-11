@@ -15,7 +15,7 @@ if(NOT BUILD_SHARED_LIBS)
 endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-arm-1.17.1-patched.zip")
-set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-linux-arm-1.17.1-patched.zip")
+set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-arm-1.17.1-patched.zip")
 set(onnxruntime_HASH "SHA256=4ec00f7adc7341c068babea3d0f607349655e598222d4212115ae4f52619efdb")
 
 # If you don't have access to the Internet,

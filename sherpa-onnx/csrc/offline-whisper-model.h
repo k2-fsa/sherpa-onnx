@@ -11,11 +11,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-model-config.h"
 #include "sherpa-onnx/csrc/spoken-language-identification.h"
@@ -29,11 +24,12 @@ class OfflineWhisperModel {
   explicit OfflineWhisperModel(
       const SpokenLanguageIdentificationConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OfflineWhisperModel(AAssetManager *mgr, const OfflineModelConfig &config);
-  OfflineWhisperModel(AAssetManager *mgr,
+  template <typename Manager>
+  OfflineWhisperModel(Manager *mgr, const OfflineModelConfig &config);
+
+  template <typename Manager>
+  OfflineWhisperModel(Manager *mgr,
                       const SpokenLanguageIdentificationConfig &config);
-#endif
 
   ~OfflineWhisperModel();
 

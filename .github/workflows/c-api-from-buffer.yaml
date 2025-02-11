@@ -8,7 +8,6 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
       - '.github/workflows/c-api-from-buffer.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -19,7 +18,6 @@ on:
       - master
     paths:
       - '.github/workflows/c-api-from-buffer.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'

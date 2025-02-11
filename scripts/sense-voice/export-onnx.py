@@ -119,7 +119,7 @@ def display_params(params):
 
 
 def main():
-    model, params = SenseVoiceSmall.from_pretrained(model="iic/SenseVoiceSmall")
+    model, params = SenseVoiceSmall.from_pretrained(model="iic/SenseVoiceSmall", device="cpu")
     display_params(params)
 
     generate_tokens(params)

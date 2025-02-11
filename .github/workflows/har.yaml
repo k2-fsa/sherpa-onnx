@@ -1,0 +1,214 @@
+name: har
+
+on:
+  push:
+    branches:
+      - master
+      # - ohos-har
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: har-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  har:
+    name: Har
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: har-linux
+
+      - name: cache-toolchain
+        id: cache-toolchain-ohos
+        uses: actions/cache@v4
+        with:
+          path: command-line-tools
+          key: commandline-tools-linux-x64-5.0.5.200.zip
+
+      - name: Download toolchain
+        if: steps.cache-toolchain-ohos.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl -SL -O https://huggingface.co/csukuangfj/harmonyos-commandline-tools/resolve/main/commandline-tools-linux-x64-5.0.5.200.zip
+          unzip commandline-tools-linux-x64-5.0.5.200.zip
+          rm commandline-tools-linux-x64-5.0.5.200.zip
+
+      - name: Set environment variable
+        shell: bash
+        run: |
+          echo "$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/build-tools/cmake/bin"  >> "$GITHUB_PATH"
+          which cmake
+
+          cmake --version
+
+          ls -lh $GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/build/cmake/ohos.toolchain.cmake
+
+          echo "===="
+          cat $GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/build/cmake/ohos.toolchain.cmake
+          echo "===="
+
+          # echo "$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/llvm/bin"  >> "$GITHUB_PATH"
+
+          ls -lh $GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/llvm/bin/
+          echo "--"
+          ls -lh $GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native/llvm/bin/*unknown*
+
+          cat $GITHUB_PATH
+
+          # /home/runner/work/onnxruntime-libs/onnxruntime-libs/command-line-tools/sdk/default/openharmony/native/llvm/bin/aarch64-unknown-linux-ohos-clang -v || true
+          export PATH=$PWD/command-line-tools/sdk/default/openharmony/native/llvm/bin:$PATH
+          echo "path: $PATH"
+
+          which aarch64-unknown-linux-ohos-clang++ || true
+          which aarch64-unknown-linux-ohos-clang || true
+
+          aarch64-unknown-linux-ohos-clang++ --version || true
+          aarch64-unknown-linux-ohos-clang --version || true
+
+          which armv7-unknown-linux-ohos-clang++
+          which armv7-unknown-linux-ohos-clang
+
+          armv7-unknown-linux-ohos-clang++ --version
+          armv7-unknown-linux-ohos-clang --version
+
+          which x86_64-unknown-linux-ohos-clang++
+          which x86_64-unknown-linux-ohos-clang
+
+          x86_64-unknown-linux-ohos-clang++ --version
+          x86_64-unknown-linux-ohos-clang --version
+
+      - name: Install tree
+        shell: bash
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q tree
+
+      - name: Build libraries
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          export OHOS_SDK_NATIVE_DIR="$GITHUB_WORKSPACE/command-line-tools/sdk/default/openharmony/native"
+
+          ./build-ohos-arm64-v8a.sh
+          ./build-ohos-x86-64.sh
+
+      - name: Build Har
+        shell: bash
+        run: |
+          export PATH="$GITHUB_WORKSPACE/command-line-tools/bin:$PATH"
+
+          which hvigorw
+
+          pushd harmony-os/SherpaOnnxHar
+
+          cp -fv ../../LICENSE ./sherpa_onnx
+          cp -fv ../../CHANGELOG.md ./sherpa_onnx
+
+          hvigorw --mode module -p product=default -p module=sherpa_onnx@default assembleHar --analyze=normal --parallel --incremental --no-daemon
+          ls -lh ./sherpa_onnx/build/default/outputs/default/sherpa_onnx.har
+          cp -v ./sherpa_onnx/build/default/outputs/default/sherpa_onnx.har ../../
+
+          popd
+
+          ls -lh *.har
+
+      - name: View Har
+        shell: bash
+        run: |
+          file sherpa_onnx.har
+          tar xvf sherpa_onnx.har
+
+          cd package
+          ls -lh
+
+          ls -lh libs
+          echo "---libs/x86_64---"
+          ls -lh libs/x86_64
+
+          echo "---libs/arm64-v8a---"
+          ls -lh libs/arm64-v8a
+
+          echo "---src/main/ets/components---"
+          ls -lh src/main/ets/components/
+
+          echo "---src/main/cpp/types/libsherpa_onnx/---"
+          ls -lh src/main/cpp/types/libsherpa_onnx/
+
+          tree .
+
+      - name: Collect result
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+          echo "SHERPA_ONNX_VERSION=$SHERPA_ONNX_VERSION" >> "$GITHUB_ENV"
+
+          mv sherpa_onnx.har sherpa_onnx-$SHERPA_ONNX_VERSION.har
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-har
+          path: ./sherpa_onnx*.har
+
+      - name: Release jar
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./*.har
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.10.32
+
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-harmony-os huggingface
+            cd huggingface
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            d=har
+            mkdir -p $d
+            cp -v ../*.har $d/
+            git status
+            git lfs track "*.har"
+            git add .
+            git commit -m "add more hars"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-harmony-os main

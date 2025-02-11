@@ -16,11 +16,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
@@ -65,9 +60,9 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
     PostInit();
   }
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   explicit OnlineRecognizerTransducerNeMoImpl(
-      AAssetManager *mgr, const OnlineRecognizerConfig &config)
+      Manager *mgr, const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
         symbol_table_(mgr, config.model_config.tokens),
@@ -85,7 +80,6 @@ class OnlineRecognizerTransducerNeMoImpl : public OnlineRecognizerImpl {
 
     PostInit();
   }
-#endif
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);

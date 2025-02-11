@@ -9,11 +9,6 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/keyword-spotter.h"
 #include "sherpa-onnx/csrc/online-stream.h"
 
@@ -24,10 +19,9 @@ class KeywordSpotterImpl {
   static std::unique_ptr<KeywordSpotterImpl> Create(
       const KeywordSpotterConfig &config);
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   static std::unique_ptr<KeywordSpotterImpl> Create(
-      AAssetManager *mgr, const KeywordSpotterConfig &config);
-#endif
+      Manager *mgr, const KeywordSpotterConfig &config);
 
   virtual ~KeywordSpotterImpl() = default;
 
@@ -37,6 +31,8 @@ class KeywordSpotterImpl {
       const std::string &keywords) const = 0;
 
   virtual bool IsReady(OnlineStream *s) const = 0;
+
+  virtual void Reset(OnlineStream *s) const = 0;
 
   virtual void DecodeStreams(OnlineStream **ss, int32_t n) const = 0;
 

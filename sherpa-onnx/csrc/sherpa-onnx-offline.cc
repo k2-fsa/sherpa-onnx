@@ -43,7 +43,20 @@ See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-paraformer/in
     --decoding-method=greedy_search \
     /path/to/foo.wav [bar.wav foobar.wav ...]
 
-(3) Whisper models
+(3) Moonshine models
+
+See https://k2-fsa.github.io/sherpa/onnx/moonshine/index.html
+
+  ./bin/sherpa-onnx-offline \
+    --moonshine-preprocessor=/Users/fangjun/open-source/sherpa-onnx/scripts/moonshine/preprocess.onnx \
+    --moonshine-encoder=/Users/fangjun/open-source/sherpa-onnx/scripts/moonshine/encode.int8.onnx \
+    --moonshine-uncached-decoder=/Users/fangjun/open-source/sherpa-onnx/scripts/moonshine/uncached_decode.int8.onnx \
+    --moonshine-cached-decoder=/Users/fangjun/open-source/sherpa-onnx/scripts/moonshine/cached_decode.int8.onnx \
+    --tokens=/Users/fangjun/open-source/sherpa-onnx/scripts/moonshine/tokens.txt \
+    --num-threads=1 \
+    /path/to/foo.wav [bar.wav foobar.wav ...]
+
+(4) Whisper models
 
 See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html
 
@@ -54,7 +67,7 @@ See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html
     --num-threads=1 \
     /path/to/foo.wav [bar.wav foobar.wav ...]
 
-(4) NeMo CTC models
+(5) NeMo CTC models
 
 See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/index.html
 
@@ -68,7 +81,7 @@ See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/index.htm
     ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/1.wav \
     ./sherpa-onnx-nemo-ctc-en-conformer-medium/test_wavs/8k.wav
 
-(5) TDNN CTC model for the yesno recipe from icefall
+(6) TDNN CTC model for the yesno recipe from icefall
 
 See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-ctc/yesno/index.html
       //

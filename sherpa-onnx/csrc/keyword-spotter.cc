@@ -13,6 +13,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/keyword-spotter-impl.h"
 
 namespace sherpa_onnx {
@@ -136,11 +145,9 @@ std::string KeywordSpotterConfig::ToString() const {
 KeywordSpotter::KeywordSpotter(const KeywordSpotterConfig &config)
     : impl_(KeywordSpotterImpl::Create(config)) {}
 
-#if __ANDROID_API__ >= 9
-KeywordSpotter::KeywordSpotter(AAssetManager *mgr,
-                               const KeywordSpotterConfig &config)
+template <typename Manager>
+KeywordSpotter::KeywordSpotter(Manager *mgr, const KeywordSpotterConfig &config)
     : impl_(KeywordSpotterImpl::Create(mgr, config)) {}
-#endif
 
 KeywordSpotter::~KeywordSpotter() = default;
 
@@ -157,6 +164,8 @@ bool KeywordSpotter::IsReady(OnlineStream *s) const {
   return impl_->IsReady(s);
 }
 
+void KeywordSpotter::Reset(OnlineStream *s) const { impl_->Reset(s); }
+
 void KeywordSpotter::DecodeStreams(OnlineStream **ss, int32_t n) const {
   impl_->DecodeStreams(ss, n);
 }
@@ -164,5 +173,15 @@ void KeywordSpotter::DecodeStreams(OnlineStream **ss, int32_t n) const {
 KeywordResult KeywordSpotter::GetResult(OnlineStream *s) const {
   return impl_->GetResult(s);
 }
+
+#if __ANDROID_API__ >= 9
+template KeywordSpotter::KeywordSpotter(AAssetManager *mgr,
+                                        const KeywordSpotterConfig &config);
+#endif
+
+#if __OHOS__
+template KeywordSpotter::KeywordSpotter(NativeResourceManager *mgr,
+                                        const KeywordSpotterConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

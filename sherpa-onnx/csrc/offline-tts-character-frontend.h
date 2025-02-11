@@ -9,13 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
-#include "sherpa-onnx/csrc/offline-tts-vits-model-metadata.h"
+#include "sherpa-onnx/csrc/offline-tts-vits-model-meta-data.h"
 
 namespace sherpa_onnx {
 
@@ -24,11 +19,10 @@ class OfflineTtsCharacterFrontend : public OfflineTtsFrontend {
   OfflineTtsCharacterFrontend(const std::string &tokens,
                               const OfflineTtsVitsModelMetaData &meta_data);
 
-#if __ANDROID_API__ >= 9
-  OfflineTtsCharacterFrontend(AAssetManager *mgr, const std::string &tokens,
+  template <typename Manager>
+  OfflineTtsCharacterFrontend(Manager *mgr, const std::string &tokens,
                               const OfflineTtsVitsModelMetaData &meta_data);
 
-#endif
   /** Convert a string to token IDs.
    *
    * @param text The input text.

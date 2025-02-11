@@ -6,28 +6,41 @@
 
 #include <fstream>
 #include <regex>  // NOLINT
+#include <strstream>
+#include <unordered_set>
 #include <utility>
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
 
 #include "cppjieba/Jieba.hpp"
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/symbol-table.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
-// implemented in ./lexicon.cc
-std::unordered_map<std::string, int32_t> ReadTokens(std::istream &is);
-
-std::vector<int32_t> ConvertTokensToIds(
-    const std::unordered_map<std::string, int32_t> &token2id,
-    const std::vector<std::string> &tokens);
+static bool IsPunct(const std::string &s) {
+  static const std::unordered_set<std::string> puncts = {
+      ",",  ".",  "!",  "?", ":", "\"", "'", "，",
+      "。", "！", "？", "“", "”", "‘",  "’",
+  };
+  return puncts.count(s);
+}
 
 class JiebaLexicon::Impl {
  public:
   Impl(const std::string &lexicon, const std::string &tokens,
-       const std::string &dict_dir,
-       const OfflineTtsVitsModelMetaData &meta_data, bool debug)
-      : meta_data_(meta_data), debug_(debug) {
+       const std::string &dict_dir, bool debug)
+      : debug_(debug) {
     std::string dict = dict_dir + "/jieba.dict.utf8";
     std::string hmm = dict_dir + "/hmm_model.utf8";
     std::string user_dict = dict_dir + "/user.dict.utf8";
@@ -54,6 +67,39 @@ class JiebaLexicon::Impl {
     }
   }
 
+  template <typename Manager>
+  Impl(Manager *mgr, const std::string &lexicon, const std::string &tokens,
+       const std::string &dict_dir, bool debug)
+      : debug_(debug) {
+    std::string dict = dict_dir + "/jieba.dict.utf8";
+    std::string hmm = dict_dir + "/hmm_model.utf8";
+    std::string user_dict = dict_dir + "/user.dict.utf8";
+    std::string idf = dict_dir + "/idf.utf8";
+    std::string stop_word = dict_dir + "/stop_words.utf8";
+
+    AssertFileExists(dict);
+    AssertFileExists(hmm);
+    AssertFileExists(user_dict);
+    AssertFileExists(idf);
+    AssertFileExists(stop_word);
+
+    jieba_ =
+        std::make_unique<cppjieba::Jieba>(dict, hmm, user_dict, idf, stop_word);
+
+    {
+      auto buf = ReadFile(mgr, tokens);
+      std::istrstream is(buf.data(), buf.size());
+
+      InitTokens(is);
+    }
+
+    {
+      auto buf = ReadFile(mgr, lexicon);
+      std::istrstream is(buf.data(), buf.size());
+      InitLexicon(is);
+    }
+  }
+
   std::vector<TokenIDs> ConvertTextToTokenIds(const std::string &text) const {
     // see
     // https://github.com/Plachtaa/VITS-fast-fine-tuning/blob/main/text/mandarin.py#L244
@@ -74,8 +120,13 @@ class JiebaLexicon::Impl {
     jieba_->Cut(text, words, is_hmm);
 
     if (debug_) {
-      SHERPA_ONNX_LOGE("input text: %s", text.c_str());
-      SHERPA_ONNX_LOGE("after replacing punctuations: %s", s.c_str());
+#if __OHOS__
+      SHERPA_ONNX_LOGE("input text:\n%{public}s", text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations:\n%{public}s", s.c_str());
+#else
+      SHERPA_ONNX_LOGE("input text:\n%s", text.c_str());
+      SHERPA_ONNX_LOGE("after replacing punctuations:\n%s", s.c_str());
+#endif
 
       std::ostringstream os;
       std::string sep = "";
@@ -84,24 +135,71 @@ class JiebaLexicon::Impl {
         sep = "_";
       }
 
-      SHERPA_ONNX_LOGE("after jieba processing: %s", os.str().c_str());
+#if __OHOS__
+      SHERPA_ONNX_LOGE("after jieba processing:\n%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("after jieba processing:\n%s", os.str().c_str());
+#endif
+    }
+
+    // remove spaces after punctuations
+    std::vector<std::string> words2 = std::move(words);
+    words.reserve(words2.size());
+
+    for (int32_t i = 0; i < words2.size(); ++i) {
+      if (i == 0) {
+        words.push_back(std::move(words2[i]));
+      } else if (words2[i] == " ") {
+        if (words.back() == " " || IsPunct(words.back())) {
+          continue;
+        } else {
+          words.push_back(std::move(words2[i]));
+        }
+      } else if (IsPunct(words2[i])) {
+        if (words.back() == " " || IsPunct(words.back())) {
+          continue;
+        } else {
+          words.push_back(std::move(words2[i]));
+        }
+      } else {
+        words.push_back(std::move(words2[i]));
+      }
+    }
+
+    if (debug_) {
+      std::ostringstream os;
+      std::string sep = "";
+      for (const auto &w : words) {
+        os << sep << w;
+        sep = "_";
+      }
+
+#if __OHOS__
+      SHERPA_ONNX_LOGE("after removing spaces after punctuations:\n%{public}s",
+                       os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("after removing spaces after punctuations:\n%s",
+                       os.str().c_str());
+#endif
     }
 
     std::vector<TokenIDs> ans;
     std::vector<int64_t> this_sentence;
 
-    int32_t blank = token2id_.at(" ");
     for (const auto &w : words) {
       auto ids = ConvertWordToIds(w);
       if (ids.empty()) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE("Ignore OOV '%{public}s'", w.c_str());
+#else
         SHERPA_ONNX_LOGE("Ignore OOV '%s'", w.c_str());
+#endif
         continue;
       }
 
       this_sentence.insert(this_sentence.end(), ids.begin(), ids.end());
-      this_sentence.push_back(blank);
 
-      if (w == "。" || w == "！" || w == "？" || w == "，") {
+      if (IsPunct(w)) {
         ans.emplace_back(std::move(this_sentence));
         this_sentence = {};
       }
@@ -141,7 +239,9 @@ class JiebaLexicon::Impl {
     token2id_ = ReadTokens(is);
 
     std::vector<std::pair<std::string, std::string>> puncts = {
-        {",", "，"}, {".", "。"}, {"!", "！"}, {"?", "？"}};
+        {",", "，"}, {".", "。"}, {"!", "！"}, {"?", "？"}, {":", "："},
+        {"\"", "“"}, {"\"", "”"}, {"'", "‘"},  {"'", "’"},  {";", "；"},
+    };
 
     for (const auto &p : puncts) {
       if (token2id_.count(p.first) && !token2id_.count(p.second)) {
@@ -155,6 +255,10 @@ class JiebaLexicon::Impl {
 
     if (!token2id_.count("、") && token2id_.count("，")) {
       token2id_["、"] = token2id_["，"];
+    }
+
+    if (!token2id_.count(";") && token2id_.count(",")) {
+      token2id_[";"] = token2id_[","];
     }
   }
 
@@ -176,8 +280,15 @@ class JiebaLexicon::Impl {
       ToLowerCase(&word);
 
       if (word2ids_.count(word)) {
+#if __OHOS__
+        SHERPA_ONNX_LOGE(
+            "Duplicated word: %{public}s at line %{public}d:%{public}s. Ignore "
+            "it.",
+            word.c_str(), line_num, line.c_str());
+#else
         SHERPA_ONNX_LOGE("Duplicated word: %s at line %d:%s. Ignore it.",
                          word.c_str(), line_num, line.c_str());
+#endif
         continue;
       }
 
@@ -201,8 +312,6 @@ class JiebaLexicon::Impl {
   // tokens.txt is saved in token2id_
   std::unordered_map<std::string, int32_t> token2id_;
 
-  OfflineTtsVitsModelMetaData meta_data_;
-
   std::unique_ptr<cppjieba::Jieba> jieba_;
   bool debug_ = false;
 };
@@ -211,15 +320,32 @@ JiebaLexicon::~JiebaLexicon() = default;
 
 JiebaLexicon::JiebaLexicon(const std::string &lexicon,
                            const std::string &tokens,
-                           const std::string &dict_dir,
-                           const OfflineTtsVitsModelMetaData &meta_data,
-                           bool debug)
-    : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, meta_data,
-                                   debug)) {}
+                           const std::string &dict_dir, bool debug)
+    : impl_(std::make_unique<Impl>(lexicon, tokens, dict_dir, debug)) {}
+
+template <typename Manager>
+JiebaLexicon::JiebaLexicon(Manager *mgr, const std::string &lexicon,
+                           const std::string &tokens,
+                           const std::string &dict_dir, bool debug)
+    : impl_(std::make_unique<Impl>(mgr, lexicon, tokens, dict_dir, debug)) {}
 
 std::vector<TokenIDs> JiebaLexicon::ConvertTextToTokenIds(
     const std::string &text, const std::string & /*unused_voice = ""*/) const {
   return impl_->ConvertTextToTokenIds(text);
 }
+
+#if __ANDROID_API__ >= 9
+template JiebaLexicon::JiebaLexicon(AAssetManager *mgr,
+                                    const std::string &lexicon,
+                                    const std::string &tokens,
+                                    const std::string &dict_dir, bool debug);
+#endif
+
+#if __OHOS__
+template JiebaLexicon::JiebaLexicon(NativeResourceManager *mgr,
+                                    const std::string &lexicon,
+                                    const std::string &tokens,
+                                    const std::string &dict_dir, bool debug);
+#endif
 
 }  // namespace sherpa_onnx

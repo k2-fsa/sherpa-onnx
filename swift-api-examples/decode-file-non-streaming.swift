@@ -18,6 +18,7 @@ func run() {
   var modelType = "whisper"
   // modelType = "paraformer"
   // modelType = "sense_voice"
+  // modelType = "moonshine"
 
   if modelType == "whisper" {
     let encoder = "./sherpa-onnx-whisper-tiny.en/tiny.en-encoder.int8.onnx"
@@ -61,6 +62,24 @@ func run() {
       debug: 0,
       senseVoice: senseVoiceConfig
     )
+  } else if modelType == "moonshine" {
+    let preprocessor = "./sherpa-onnx-moonshine-tiny-en-int8/preprocess.onnx"
+    let encoder = "./sherpa-onnx-moonshine-tiny-en-int8/encode.int8.onnx"
+    let uncachedDecoder = "./sherpa-onnx-moonshine-tiny-en-int8/uncached_decode.int8.onnx"
+    let cachedDecoder = "./sherpa-onnx-moonshine-tiny-en-int8/cached_decode.int8.onnx"
+    let tokens = "./sherpa-onnx-moonshine-tiny-en-int8/tokens.txt"
+    let moonshine = sherpaOnnxOfflineMoonshineModelConfig(
+      preprocessor: preprocessor,
+      encoder: encoder,
+      uncachedDecoder: uncachedDecoder,
+      cachedDecoder: cachedDecoder
+    )
+
+    modelConfig = sherpaOnnxOfflineModelConfig(
+      tokens: tokens,
+      debug: 0,
+      moonshine: moonshine
+    )
   } else {
     print("Please specify a supported modelType \(modelType)")
     return
@@ -80,6 +99,8 @@ func run() {
   var filePath = "./sherpa-onnx-whisper-tiny.en/test_wavs/0.wav"
   if modelType == "sense_voice" {
     filePath = "./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/test_wavs/zh.wav"
+  } else if modelType == "moonshine" {
+    filePath = "./sherpa-onnx-moonshine-tiny-en-int8/test_wavs/0.wav"
   }
   let fileURL: NSURL = NSURL(fileURLWithPath: filePath)
   let audioFile = try! AVAudioFile(forReading: fileURL as URL)

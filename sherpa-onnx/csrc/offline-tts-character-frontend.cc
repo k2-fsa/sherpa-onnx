@@ -2,19 +2,23 @@
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
-#if __ANDROID_API__ >= 9
-#include <strstream>
-
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
 #include <algorithm>
 #include <cctype>
 #include <codecvt>
 #include <fstream>
 #include <locale>
 #include <sstream>
+#include <strstream>
 #include <utility>
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
 
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts-character-frontend.h"
@@ -82,17 +86,15 @@ OfflineTtsCharacterFrontend::OfflineTtsCharacterFrontend(
   token2id_ = ReadTokens(is);
 }
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OfflineTtsCharacterFrontend::OfflineTtsCharacterFrontend(
-    AAssetManager *mgr, const std::string &tokens,
+    Manager *mgr, const std::string &tokens,
     const OfflineTtsVitsModelMetaData &meta_data)
     : meta_data_(meta_data) {
   auto buf = ReadFile(mgr, tokens);
   std::istrstream is(buf.data(), buf.size());
   token2id_ = ReadTokens(is);
 }
-
-#endif
 
 std::vector<TokenIDs> OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
     const std::string &_text, const std::string & /*voice = ""*/) const {
@@ -188,5 +190,19 @@ std::vector<TokenIDs> OfflineTtsCharacterFrontend::ConvertTextToTokenIds(
 
   return ans;
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineTtsCharacterFrontend::OfflineTtsCharacterFrontend(
+    AAssetManager *mgr, const std::string &tokens,
+    const OfflineTtsVitsModelMetaData &meta_data);
+
+#endif
+
+#if __OHOS__
+template OfflineTtsCharacterFrontend::OfflineTtsCharacterFrontend(
+    NativeResourceManager *mgr, const std::string &tokens,
+    const OfflineTtsVitsModelMetaData &meta_data);
+
+#endif
 
 }  // namespace sherpa_onnx

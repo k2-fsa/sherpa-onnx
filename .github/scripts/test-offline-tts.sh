@@ -19,6 +19,110 @@ which $EXE
 mkdir ./tts
 
 log "------------------------------------------------------------"
+log "kokoro-en-v0_19"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+tar xf kokoro-en-v0_19.tar.bz2
+rm kokoro-en-v0_19.tar.bz2
+
+# mapping of sid to voice name
+# 0->af, 1->af_bella, 2->af_nicole, 3->af_sarah, 4->af_sky, 5->am_adam
+# 6->am_michael, 7->bf_emma, 8->bf_isabella, 9->bm_george, 10->bm_lewis
+
+for sid in $(seq 0 10); do
+  $EXE \
+    --debug=1 \
+    --kokoro-model=./kokoro-en-v0_19/model.onnx \
+    --kokoro-voices=./kokoro-en-v0_19/voices.bin \
+    --kokoro-tokens=./kokoro-en-v0_19/tokens.txt \
+    --kokoro-data-dir=./kokoro-en-v0_19/espeak-ng-data \
+    --num-threads=2 \
+    --sid=$sid \
+    --output-filename="./tts/kokoro-$sid.wav" \
+    "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be  a statesman, a businessman, an official, or a scholar."
+done
+rm -rf kokoro-en-v0_19
+
+log "------------------------------------------------------------"
+log "matcha-tts-fa_en-male"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-tts-fa_en-male.tar.bz2
+tar xvf matcha-tts-fa_en-male.tar.bz2
+rm matcha-tts-fa_en-male.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+$EXE \
+  --matcha-acoustic-model=./matcha-tts-fa_en-male/model.onnx \
+  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-tokens=./matcha-tts-fa_en-male/tokens.txt \
+  --matcha-data-dir=./matcha-tts-fa_en-male/espeak-ng-data \
+  --output-filename=./tts/test-matcha-fa-en-male.wav \
+  --num-threads=2 \
+  "How are you doing today?  این یک نمونه ی تست فارسی است. This is a test."
+
+rm -rf matcha-tts-fa_en-male
+rm hifigan_v2.onnx
+ls -lh tts/*.wav
+
+log "------------------------------------------------------------"
+log "matcha-icefall-en_US-ljspeech"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+$EXE \
+  --matcha-acoustic-model=./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
+  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-tokens=./matcha-icefall-en_US-ljspeech/tokens.txt \
+  --matcha-data-dir=./matcha-icefall-en_US-ljspeech/espeak-ng-data \
+  --num-threads=2 \
+  --output-filename=./tts/matcha-ljspeech-1.wav \
+  --debug=1 \
+ "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
+
+rm hifigan_v2.onnx
+rm -rf matcha-icefall-en_US-ljspeech
+ls -lh tts/*.wav
+
+log "------------------------------------------------------------"
+log "matcha-icefall-zh-baker"
+log "------------------------------------------------------------"
+curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+tar xvf matcha-icefall-zh-baker.tar.bz2
+rm matcha-icefall-zh-baker.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+$EXE \
+  --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
+  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
+  --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
+  --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
+  --num-threads=2 \
+  --debug=1 \
+  --output-filename=./tts/matcha-baker-zh-1.wav \
+  '小米的使命是，始终坚持做"感动人心、价格厚道"的好产品，让全球每个人都能享受科技带来的美好生活'
+
+$EXE \
+  --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
+  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
+  --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
+  --matcha-dict-dir=./matcha-icefall-zh-baker/dict \
+  --num-threads=2 \
+  --debug=1 \
+  --output-filename=./tts/matcha-baker-zh-2.wav \
+  "当夜幕降临，星光点点，伴随着微风拂面，我在静谧中感受着时光的流转，思念如涟漪荡漾，梦境如画卷展开，我与自然融为一体，沉静在这片宁静的美丽之中，感受着生命的奇迹与温柔。"
+
+rm hifigan_v2.onnx
+rm -rf matcha-icefall-zh-baker
+
+log "------------------------------------------------------------"
 log "vits-piper-en_US-amy-low"
 log "------------------------------------------------------------"
 curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2

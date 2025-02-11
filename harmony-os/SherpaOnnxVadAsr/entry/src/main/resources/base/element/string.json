@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "On-device VAD+ASR with Next-gen Kaldi"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "On-device VAD+ASR with Next-gen Kaldi"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "On-device speech recognition"
+    },
+    {
+      "name": "mic_reason",
+      "value": "access the microphone for on-device speech recognition with Next-gen Kaldi"
+    }
+  ]
+}

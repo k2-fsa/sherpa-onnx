@@ -3,6 +3,7 @@ function(download_hclust_cpp)
 
   # The latest commit as of 2024.09.29
   set(hclust_cpp_URL  "https://github.com/csukuangfj/hclust-cpp/archive/refs/tags/2024-09-29.tar.gz")
+  set(hclust_cpp_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/hclust-cpp-2024-09-29.tar.gz")
   set(hclust_cpp_HASH "SHA256=abab51448a3cb54272aae07522970306e0b2cc6479d59d7b19e7aee4d6cedd33")
 
   # If you don't have access to the Internet,
@@ -20,6 +21,7 @@ function(download_hclust_cpp)
       set(hclust_cpp_URL  "${f}")
       file(TO_CMAKE_PATH "${hclust_cpp_URL}" hclust_cpp_URL)
       message(STATUS "Found local downloaded hclust_cpp: ${hclust_cpp_URL}")
+      set(hclust_cpp_URL2)
       break()
     endif()
   endforeach()

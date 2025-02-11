@@ -17,8 +17,11 @@ namespace SherpaOnnx
         public String AddPunct(String text)
         {
             byte[] utf8Bytes = Encoding.UTF8.GetBytes(text);
+            byte[] utf8BytesWithNull = new byte[utf8Bytes.Length + 1]; // +1 for null terminator
+            Array.Copy(utf8Bytes, utf8BytesWithNull, utf8Bytes.Length);
+            utf8BytesWithNull[utf8Bytes.Length] = 0; // Null terminator
 
-            IntPtr p = SherpaOfflinePunctuationAddPunct(_handle.Handle, utf8Bytes);
+            IntPtr p = SherpaOfflinePunctuationAddPunct(_handle.Handle, utf8BytesWithNull);
 
             string s = "";
             int length = 0;

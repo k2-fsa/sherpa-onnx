@@ -33,6 +33,13 @@ data class OfflineWhisperModelConfig(
     var tailPaddings: Int = 1000, // Padding added at the end of the samples
 )
 
+data class OfflineMoonshineModelConfig(
+    var preprocessor: String = "",
+    var encoder: String = "",
+    var uncachedDecoder: String = "",
+    var cachedDecoder: String = "",
+)
+
 data class OfflineSenseVoiceModelConfig(
     var model: String = "",
     var language: String = "",
@@ -43,6 +50,7 @@ data class OfflineModelConfig(
     var transducer: OfflineTransducerModelConfig = OfflineTransducerModelConfig(),
     var paraformer: OfflineParaformerModelConfig = OfflineParaformerModelConfig(),
     var whisper: OfflineWhisperModelConfig = OfflineWhisperModelConfig(),
+    var moonshine: OfflineMoonshineModelConfig = OfflineMoonshineModelConfig(),
     var nemo: OfflineNemoEncDecCtcModelConfig = OfflineNemoEncDecCtcModelConfig(),
     var senseVoice: OfflineSenseVoiceModelConfig = OfflineSenseVoiceModelConfig(),
     var teleSpeech: String = "",
@@ -50,14 +58,14 @@ data class OfflineModelConfig(
     var debug: Boolean = false,
     var provider: String = "cpu",
     var modelType: String = "",
-    var tokens: String,
+    var tokens: String = "",
     var modelingUnit: String = "",
     var bpeVocab: String = "",
 )
 
 data class OfflineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
-    var modelConfig: OfflineModelConfig,
+    var modelConfig: OfflineModelConfig = OfflineModelConfig(),
     // var lmConfig: OfflineLMConfig(), // TODO(fangjun): enable it
     var decodingMethod: String = "greedy_search",
     var maxActivePaths: Int = 4,
@@ -389,6 +397,68 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                     encoder = "$modelDir/encoder.int8.onnx",
                     decoder = "$modelDir/decoder.onnx",
                     joiner = "$modelDir/joiner.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "transducer",
+            )
+        }
+
+        19 -> {
+            val modelDir = "sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24"
+            return OfflineModelConfig(
+                nemo = OfflineNemoEncDecCtcModelConfig(
+                    model = "$modelDir/model.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        20 -> {
+            val modelDir = "sherpa-onnx-nemo-transducer-giga-am-russian-2024-10-24"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.onnx",
+                    joiner = "$modelDir/joiner.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+                modelType = "nemo_transducer",
+            )
+        }
+
+        21 -> {
+            val modelDir = "sherpa-onnx-moonshine-tiny-en-int8"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    preprocessor = "$modelDir/preprocess.onnx",
+                    encoder = "$modelDir/encode.int8.onnx",
+                    uncachedDecoder = "$modelDir/uncached_decode.int8.onnx",
+                    cachedDecoder = "$modelDir/cached_decode.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        22 -> {
+            val modelDir = "sherpa-onnx-moonshine-base-en-int8"
+            return OfflineModelConfig(
+                moonshine = OfflineMoonshineModelConfig(
+                    preprocessor = "$modelDir/preprocess.onnx",
+                    encoder = "$modelDir/encode.int8.onnx",
+                    uncachedDecoder = "$modelDir/uncached_decode.int8.onnx",
+                    cachedDecoder = "$modelDir/cached_decode.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
+            )
+        }
+
+        23 -> {
+            val modelDir = "sherpa-onnx-zipformer-zh-en-2023-11-22"
+            return OfflineModelConfig(
+                transducer = OfflineTransducerModelConfig(
+                    encoder = "$modelDir/encoder-epoch-34-avg-19.int8.onnx",
+                    decoder = "$modelDir/decoder-epoch-34-avg-19.onnx",
+                    joiner = "$modelDir/joiner-epoch-34-avg-19.int8.onnx",
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "transducer",

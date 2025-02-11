@@ -24,6 +24,7 @@ namespace SherpaOnnx
             BpeVocab = "";
             TeleSpeechCtc = "";
             SenseVoice = new OfflineSenseVoiceModelConfig();
+            Moonshine = new OfflineMoonshineModelConfig();
         }
         public OfflineTransducerModelConfig Transducer;
         public OfflineParaformerModelConfig Paraformer;
@@ -54,5 +55,6 @@ namespace SherpaOnnx
         public string TeleSpeechCtc;
 
         public OfflineSenseVoiceModelConfig SenseVoice;
+        public OfflineMoonshineModelConfig Moonshine;
     }
 }

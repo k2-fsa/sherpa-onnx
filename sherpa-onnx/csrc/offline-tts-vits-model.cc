@@ -9,6 +9,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -26,8 +35,8 @@ class OfflineTtsVitsModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineTtsModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineTtsModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -35,7 +44,6 @@ class OfflineTtsVitsModel::Impl {
     auto buf = ReadFile(mgr, config.vits.model);
     Init(buf.data(), buf.size());
   }
-#endif
 
   Ort::Value Run(Ort::Value x, int64_t sid, float speed) {
     if (meta_data_.is_piper || meta_data_.is_coqui) {
@@ -46,8 +54,10 @@ class OfflineTtsVitsModel::Impl {
   }
 
   Ort::Value Run(Ort::Value x, Ort::Value tones, int64_t sid, float speed) {
-    // For MeloTTS, we hardcode sid to the one contained in the meta data
-    sid = meta_data_.speaker_id;
+    if (meta_data_.num_speakers == 1) {
+      // For MeloTTS, we hardcode sid to the one contained in the meta data
+      sid = meta_data_.speaker_id;
+    }
 
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
@@ -134,7 +144,11 @@ class OfflineTtsVitsModel::Impl {
         ++i;
       }
 
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -160,7 +174,7 @@ class OfflineTtsVitsModel::Impl {
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.bos_id, "bos_id", 0);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.eos_id, "eos_id", 0);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.use_eos_bos,
-                                            "use_eos_bos", 0);
+                                            "use_eos_bos", 1);
     SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(meta_data_.pad_id, "pad_id", 0);
 
     std::string comment;
@@ -334,11 +348,10 @@ class OfflineTtsVitsModel::Impl {
 OfflineTtsVitsModel::OfflineTtsVitsModel(const OfflineTtsModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
-OfflineTtsVitsModel::OfflineTtsVitsModel(AAssetManager *mgr,
+template <typename Manager>
+OfflineTtsVitsModel::OfflineTtsVitsModel(Manager *mgr,
                                          const OfflineTtsModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OfflineTtsVitsModel::~OfflineTtsVitsModel() = default;
 
@@ -349,12 +362,22 @@ Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, int64_t sid /*=0*/,
 
 Ort::Value OfflineTtsVitsModel::Run(Ort::Value x, Ort::Value tones,
                                     int64_t sid /*= 0*/,
-                                    float speed /*= 1.0*/) {
+                                    float speed /*= 1.0*/) const {
   return impl_->Run(std::move(x), std::move(tones), sid, speed);
 }
 
 const OfflineTtsVitsModelMetaData &OfflineTtsVitsModel::GetMetaData() const {
   return impl_->GetMetaData();
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineTtsVitsModel::OfflineTtsVitsModel(
+    AAssetManager *mgr, const OfflineTtsModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineTtsVitsModel::OfflineTtsVitsModel(
+    NativeResourceManager *mgr, const OfflineTtsModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

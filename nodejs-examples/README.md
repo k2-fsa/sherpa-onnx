@@ -42,9 +42,61 @@ node ./test-offline-speaker-diarization.js
 
 In the following, we demonstrate how to run text-to-speech.
 
-## ./test-offline-tts-en.js
+## ./test-offline-tts-kokoro-en.js
 
-[./test-offline-tts-en.js](./test-offline-tts-en.js) shows how to use
+[./test-offline-tts-kokoro-en.js](./test-offline-tts-kokoro-en.js) shows how to use
+[kokoro-en-v0_19](https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2)
+for text-to-speech.
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+tar xf kokoro-en-v0_19.tar.bz2
+rm kokoro-en-v0_19.tar.bz2
+
+node ./test-offline-tts-kokoro-en.js
+```
+
+## ./test-offline-tts-matcha-zh.js
+
+[./test-offline-tts-matcha-zh.js](./test-offline-tts-matcha-zh.js) shows how to use
+[matcha-icefall-zh-baker](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker)
+for text-to-speech.
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+tar xvf matcha-icefall-zh-baker.tar.bz2
+rm matcha-icefall-zh-baker.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+node ./test-offline-tts-matcha-zh.js
+```
+
+## ./test-offline-tts-matcha-en.js
+
+[./test-offline-tts-matcha-en.js](./test-offline-tts-matcha-en.js) shows how to use
+[matcha-icefall-en_US-ljspeech](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker)
+for text-to-speech.
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+tar xf matcha-icefall-en_US-ljspeech.tar.bz2
+rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+node ./test-offline-tts-matcha-en.js
+```
+
+## ./test-offline-tts-vits-en.js
+
+[./test-offline-tts-vits-en.js](./test-offline-tts-vits-en.js) shows how to use
 [vits-piper-en_US-amy-low.tar.bz2](https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2)
 for text-to-speech.
 
@@ -53,12 +105,12 @@ You can use the following command to run it:
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
 tar xvf vits-piper-en_US-amy-low.tar.bz2
-node ./test-offline-tts-en.js
+node ./test-offline-tts-vits-en.js
 ```
 
-## ./test-offline-tts-zh.js
+## ./test-offline-tts-vits-zh.js
 
-[./test-offline-tts-zh.js](./test-offline-tts-zh.js) shows how to use
+[./test-offline-tts-vits-zh.js](./test-offline-tts-vits-zh.js) shows how to use
 a VITS pretrained model
 [aishell3](https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#vits-model-aishell3)
 for text-to-speech.
@@ -68,7 +120,7 @@ You can use the following command to run it:
 ```bash
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
 tar xvf vits-icefall-zh-aishell3.tar.bz2
-node ./test-offline-tts-zh.js
+node ./test-offline-tts-vits-zh.js
 ```
 
 # Speech-to-text
@@ -133,7 +185,25 @@ tar xvf sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
 node ./test-offline-transducer.js
 ```
 
+## ./test-vad-with-non-streaming-asr-whisper.js
+
+[./test-vad-with-non-streaming-asr-whisper.js](./test-vad-with-non-streaming-asr-whisper.js)
+shows how to use VAD + whisper to decode a very long file.
+
+You can use the following command to run it:
+
+```bash
+wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+node ./test-vad-with-non-streaming-asr-whisper.js
+```
+
 ## ./test-offline-whisper.js
+
 [./test-offline-whisper.js](./test-offline-whisper.js) demonstrates
 how to decode a file with a Whisper model. In the code we use
 [sherpa-onnx-whisper-tiny.en](https://k2-fsa.github.io/sherpa/onnx/pretrained_models/whisper/tiny.en.html).
@@ -146,7 +216,40 @@ tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
 node ./test-offline-whisper.js
 ```
 
+## ./test-offline-moonshine.js
+
+[./test-offline-moonshine.js](./test-offline-moonshine.js) demonstrates
+how to decode a file with a Moonshine model. In the code we use
+[sherpa-onnx-moonshine-tiny-en-int8](https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2).
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+node ./test-offline-moonshine.js
+```
+
+## ./test-vad-with-non-streaming-asr-moonshine.js
+
+[./test-vad-with-non-streaming-asr-moonshine.js](./test-vad-with-non-streaming-asr-moonshine.js)
+shows how to use VAD + whisper to decode a very long file.
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+node ./test-vad-with-non-streaming-asr-moonshine.js
+```
+
 ## ./test-online-paraformer-microphone.js
+
 [./test-online-paraformer-microphone.js](./test-online-paraformer-microphone.js)
 demonstrates how to do real-time speech recognition from microphone
 with a streaming Paraformer model. In the code we use

@@ -19,7 +19,7 @@ static void PybindFeatureExtractorConfig(py::module *m) {
       .def_readwrite("feature_dim", &PyClass::feature_dim)
       .def_readwrite("low_freq", &PyClass::low_freq)
       .def_readwrite("high_freq", &PyClass::high_freq)
-      .def_readwrite("dither", &PyClass::high_freq)
+      .def_readwrite("dither", &PyClass::dither)
       .def("__str__", &PyClass::ToString);
 }
 

@@ -1,0 +1,116 @@
+name: export-nemo-giga-am-to-onnx
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: export-nemo-giga-am-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-nemo-am-giga-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export nemo GigaAM models to ONNX
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Run CTC
+        shell: bash
+        run: |
+          pushd scripts/nemo/GigaAM
+          ./run-ctc.sh
+          popd
+
+          d=sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24
+          mkdir $d
+          mkdir $d/test_wavs
+          rm scripts/nemo/GigaAM/model.onnx
+          mv -v scripts/nemo/GigaAM/*.int8.onnx $d/
+          cp -v scripts/nemo/GigaAM/*.md $d/
+          mv -v scripts/nemo/GigaAM/*.pdf $d/
+          mv -v scripts/nemo/GigaAM/tokens.txt $d/
+          mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
+          mv -v scripts/nemo/GigaAM/run-ctc.sh $d/
+          mv -v scripts/nemo/GigaAM/*-ctc.py $d/
+
+          ls -lh scripts/nemo/GigaAM/
+
+          ls -lh $d
+
+          tar cjvf ${d}.tar.bz2 $d
+
+      - name: Run Transducer
+        shell: bash
+        run: |
+          pushd scripts/nemo/GigaAM
+          ./run-rnnt.sh
+          popd
+
+          d=sherpa-onnx-nemo-transducer-giga-am-russian-2024-10-24
+          mkdir $d
+          mkdir $d/test_wavs
+
+          mv -v scripts/nemo/GigaAM/encoder.int8.onnx $d/
+          mv -v scripts/nemo/GigaAM/decoder.onnx $d/
+          mv -v scripts/nemo/GigaAM/joiner.onnx $d/
+
+          cp -v scripts/nemo/GigaAM/*.md $d/
+          mv -v scripts/nemo/GigaAM/*.pdf $d/
+          mv -v scripts/nemo/GigaAM/tokens.txt $d/
+          mv -v scripts/nemo/GigaAM/*.wav $d/test_wavs/
+          mv -v scripts/nemo/GigaAM/run-rnnt.sh $d/
+          mv -v scripts/nemo/GigaAM/*-rnnt.py $d/
+
+          ls -lh scripts/nemo/GigaAM/
+
+          ls -lh $d
+
+          tar cjvf ${d}.tar.bz2 $d
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Publish to huggingface (Transducer)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            d=sherpa-onnx-nemo-transducer-giga-am-russian-2024-10-24/
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+            mv -v $d/* ./huggingface
+            cd huggingface
+            git lfs track "*.onnx"
+            git lfs track "*.wav"
+            git status
+            git add .
+            git status
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main

@@ -4,6 +4,15 @@
 
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -23,8 +32,8 @@ class OfflineNemoEncDecCtcModel::Impl {
     Init(buf.data(), buf.size());
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OfflineModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OfflineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -32,7 +41,6 @@ class OfflineNemoEncDecCtcModel::Impl {
     auto buf = ReadFile(mgr, config_.nemo_ctc.model);
     Init(buf.data(), buf.size());
   }
-#endif
 
   std::vector<Ort::Value> Forward(Ort::Value features,
                                   Ort::Value features_length) {
@@ -68,9 +76,11 @@ class OfflineNemoEncDecCtcModel::Impl {
 
   int32_t SubsamplingFactor() const { return subsampling_factor_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
+
+  bool IsGigaAM() const { return is_giga_am_; }
 
  private:
   void Init(void *model_data, size_t model_data_length) {
@@ -86,13 +96,19 @@ class OfflineNemoEncDecCtcModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
       PrintModelMetadata(os, meta_data);
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
       SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
     SHERPA_ONNX_READ_META_DATA(vocab_size_, "vocab_size");
     SHERPA_ONNX_READ_META_DATA(subsampling_factor_, "subsampling_factor");
-    SHERPA_ONNX_READ_META_DATA_STR(normalize_type_, "normalize_type");
+    SHERPA_ONNX_READ_META_DATA_STR_ALLOW_EMPTY(normalize_type_,
+                                               "normalize_type");
+    SHERPA_ONNX_READ_META_DATA_WITH_DEFAULT(is_giga_am_, "is_giga_am", 0);
   }
 
  private:
@@ -112,17 +128,20 @@ class OfflineNemoEncDecCtcModel::Impl {
   int32_t vocab_size_ = 0;
   int32_t subsampling_factor_ = 0;
   std::string normalize_type_;
+
+  // it is 1 for models from
+  // https://github.com/salute-developers/GigaAM
+  int32_t is_giga_am_ = 0;
 };
 
 OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(
     const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(
-    AAssetManager *mgr, const OfflineModelConfig &config)
+    Manager *mgr, const OfflineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OfflineNemoEncDecCtcModel::~OfflineNemoEncDecCtcModel() = default;
 
@@ -145,5 +164,17 @@ OrtAllocator *OfflineNemoEncDecCtcModel::Allocator() const {
 std::string OfflineNemoEncDecCtcModel::FeatureNormalizationMethod() const {
   return impl_->FeatureNormalizationMethod();
 }
+
+bool OfflineNemoEncDecCtcModel::IsGigaAM() const { return impl_->IsGigaAM(); }
+
+#if __ANDROID_API__ >= 9
+template OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineNemoEncDecCtcModel::OfflineNemoEncDecCtcModel(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

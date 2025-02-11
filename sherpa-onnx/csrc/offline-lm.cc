@@ -8,6 +8,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/offline-rnn-lm.h"
 
 namespace sherpa_onnx {
@@ -16,12 +25,11 @@ std::unique_ptr<OfflineLM> OfflineLM::Create(const OfflineLMConfig &config) {
   return std::make_unique<OfflineRnnLM>(config);
 }
 
-#if __ANDROID_API__ >= 9
-std::unique_ptr<OfflineLM> OfflineLM::Create(AAssetManager *mgr,
+template <typename Manager>
+std::unique_ptr<OfflineLM> OfflineLM::Create(Manager *mgr,
                                              const OfflineLMConfig &config) {
   return std::make_unique<OfflineRnnLM>(mgr, config);
 }
-#endif
 
 void OfflineLM::ComputeLMScore(float scale, int32_t context_size,
                                std::vector<Hypotheses> *hyps) {
@@ -74,5 +82,15 @@ void OfflineLM::ComputeLMScore(float scale, int32_t context_size,
     }
   }
 }
+
+#if __ANDROID_API__ >= 9
+template std::unique_ptr<OfflineLM> OfflineLM::Create(
+    AAssetManager *mgr, const OfflineLMConfig &config);
+#endif
+
+#if __OHOS__
+template std::unique_ptr<OfflineLM> OfflineLM::Create(
+    NativeResourceManager *mgr, const OfflineLMConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

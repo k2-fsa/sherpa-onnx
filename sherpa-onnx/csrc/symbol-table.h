@@ -5,15 +5,22 @@
 #ifndef SHERPA_ONNX_CSRC_SYMBOL_TABLE_H_
 #define SHERPA_ONNX_CSRC_SYMBOL_TABLE_H_
 
+#include <istream>
 #include <string>
 #include <unordered_map>
-
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
+#include <vector>
 
 namespace sherpa_onnx {
+
+// The same token can be mapped to different integer IDs, so
+// we need an id2token argument here.
+std::unordered_map<std::string, int32_t> ReadTokens(
+    std::istream &is,
+    std::unordered_map<int32_t, std::string> *id2token = nullptr);
+
+std::vector<int32_t> ConvertTokensToIds(
+    const std::unordered_map<std::string, int32_t> &token2id,
+    const std::vector<std::string> &tokens);
 
 /// It manages mapping between symbols and integer IDs.
 class SymbolTable {
@@ -27,9 +34,8 @@ class SymbolTable {
   /// Fields are separated by space(s).
   explicit SymbolTable(const std::string &filename, bool is_file = true);
 
-#if __ANDROID_API__ >= 9
-  SymbolTable(AAssetManager *mgr, const std::string &filename);
-#endif
+  template <typename Manager>
+  SymbolTable(Manager *mgr, const std::string &filename);
 
   /// Return a string representation of this symbol table
   std::string ToString() const;
@@ -50,12 +56,17 @@ class SymbolTable {
 
   int32_t NumSymbols() const { return id2sym_.size(); }
 
+  std::string DecodeByteBpe(const std::string &text) const;
+
+  bool IsByteBpe() const { return is_bbpe_; }
+
  private:
   void Init(std::istream &is);
 
  private:
   std::unordered_map<std::string, int32_t> sym2id_;
   std::unordered_map<int32_t, std::string> id2sym_;
+  bool is_bbpe_ = false;
 };
 
 std::ostream &operator<<(std::ostream &os, const SymbolTable &symbol_table);

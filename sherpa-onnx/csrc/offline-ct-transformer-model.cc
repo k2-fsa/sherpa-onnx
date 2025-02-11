@@ -44,7 +44,7 @@ class OfflineCtTransformerModel::Impl {
     return std::move(ans[0]);
   }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   const OfflineCtTransformerModelMetaData &GetModelMetadata() const {
     return meta_data_;

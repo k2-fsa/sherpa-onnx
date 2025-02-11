@@ -23,8 +23,8 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        total: ["2"]
-        index: ["0", "1"]
+        total: ["4"]
+        index: ["0", "1", "2", "3"]
 
     steps:
       - uses: actions/checkout@v4
@@ -163,7 +163,7 @@ jobs:
             SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
             echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-apk huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-apk huggingface
             cd huggingface
             git fetch
             git pull

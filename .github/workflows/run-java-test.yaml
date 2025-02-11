@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/run-java-test.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'java-api-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -17,7 +16,6 @@ on:
       - master
     paths:
       - '.github/workflows/run-java-test.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'java-api-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -106,6 +104,31 @@ jobs:
 
             make -j4
             ls -lh lib
+
+      - name:  Run java test (Non-Streaming ASR)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+
+          ./run-non-streaming-decode-file-moonshine.sh
+          rm -rf sherpa-onnx-moonshine-*
+
+          ./run-non-streaming-decode-file-sense-voice.sh
+          rm -rf sherpa-onnx-sense-voice-*
+
+          ./run-inverse-text-normalization-paraformer.sh
+
+          ./run-non-streaming-decode-file-paraformer.sh
+          rm -rf sherpa-onnx-paraformer-zh-*
+
+          ./run-non-streaming-decode-file-transducer.sh
+          rm -rf sherpa-onnx-zipformer-*
+
+          ./run-non-streaming-decode-file-whisper.sh
+          rm -rf sherpa-onnx-whisper-*
+
+          ./run-non-streaming-decode-file-nemo.sh
+          rm -rf sherpa-onnx-nemo-*
 
       - name:  Run java test (speaker diarization)
         shell: bash
@@ -206,32 +229,23 @@ jobs:
           ./run-streaming-decode-file-transducer.sh
           rm -rf sherpa-onnx-streaming-*
 
-      - name:  Run java test (Non-Streaming ASR)
-        shell: bash
-        run: |
-          cd ./java-api-examples
-
-          ./run-non-streaming-decode-file-sense-voice.sh
-          rm -rf sherpa-onnx-sense-voice-*
-
-          ./run-inverse-text-normalization-paraformer.sh
-
-          ./run-non-streaming-decode-file-paraformer.sh
-          rm -rf sherpa-onnx-paraformer-zh-*
-
-          ./run-non-streaming-decode-file-transducer.sh
-          rm -rf sherpa-onnx-zipformer-*
-
-          ./run-non-streaming-decode-file-whisper.sh
-          rm -rf sherpa-onnx-whisper-*
-
-          ./run-non-streaming-decode-file-nemo.sh
-          rm -rf sherpa-onnx-nemo-*
-
       - name:  Run java test (Non-Streaming TTS)
         shell: bash
         run: |
           cd ./java-api-examples
+
+          ./run-non-streaming-tts-kokoro-zh-en.sh
+          ./run-non-streaming-tts-kokoro-en.sh
+          ./run-non-streaming-tts-matcha-zh.sh
+          ./run-non-streaming-tts-matcha-en.sh
+          ls -lh
+
+          rm -rf kokoro-multi-*
+          rm -rf kokoro-en-*
+
+          rm -rf matcha-icefall-*
+          rm hifigan_v2.onnx
+
           ./run-non-streaming-tts-piper-en.sh
           rm -rf vits-piper-*
 

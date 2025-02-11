@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/python/csrc/vad-model.h"
 
+#include <memory>
 #include <vector>
 
 #include "sherpa-onnx/csrc/vad-model.h"
@@ -13,8 +14,10 @@ namespace sherpa_onnx {
 void PybindVadModel(py::module *m) {
   using PyClass = VadModel;
   py::class_<PyClass>(*m, "VadModel")
-      .def_static("create", &PyClass::Create, py::arg("config"),
-                  py::call_guard<py::gil_scoped_release>())
+      .def_static("create",
+                  (std::unique_ptr<VadModel>(*)(const VadModelConfig &))(
+                      &PyClass::Create),
+                  py::arg("config"), py::call_guard<py::gil_scoped_release>())
       .def("reset", &PyClass::Reset, py::call_guard<py::gil_scoped_release>())
       .def(
           "is_speech",

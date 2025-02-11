@@ -11,7 +11,7 @@ if(BUILD_SHARED_LIBS)
 endif()
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-wasm-static_lib-simd-1.17.1.zip")
-set(onnxruntime_URL2 "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-wasm-static_lib-simd-1.17.1.zip")
+set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-wasm-static_lib-simd-1.17.1.zip")
 set(onnxruntime_HASH "SHA256=8f07778e4233cf5a61a9d0795d90c5497177fbe8a46b701fda2d8d4e2b11cef8")
 
 # If you don't have access to the Internet,

@@ -19,7 +19,8 @@ on:
       - '.github/scripts/test-offline-punctuation.sh'
       - '.github/scripts/test-online-punctuation.sh'
       - '.github/scripts/test-speaker-diarization.sh'
-      - 'CMakeLists.txt'
+      - '.github/scripts/test-c-api.sh'
+      - '.github/scripts/test-cxx-api.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -39,7 +40,8 @@ on:
       - '.github/scripts/test-offline-punctuation.sh'
       - '.github/scripts/test-online-punctuation.sh'
       - '.github/scripts/test-speaker-diarization.sh'
-      - 'CMakeLists.txt'
+      - '.github/scripts/test-c-api.sh'
+      - '.github/scripts/test-cxx-api.sh'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -116,6 +118,36 @@ jobs:
           file bin/sherpa-onnx
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
+
+      - name: Test offline TTS
+        if: matrix.with_tts == 'ON'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline-tts
+
+          .github/scripts/test-offline-tts.sh
+
+      - name: Test offline Moonshine
+        if: matrix.build_type != 'Debug'
+        shell: bash
+        run: |
+          export PATH=$PWD/build/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          .github/scripts/test-offline-moonshine.sh
+
+      - name: Test C++ API
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/bin:$PATH
+          export CXX_STREAMING_ZIPFORMER_EXE=streaming-zipformer-cxx-api
+          export CXX_WHISPER_EXE=whisper-cxx-api
+          export CXX_SENSE_VOICE_EXE=sense-voice-cxx-api
+
+          .github/scripts/test-cxx-api.sh
+          du -h -d1 .
 
       - name: Test offline speaker diarization
         shell: bash
@@ -201,15 +233,6 @@ jobs:
 
           .github/scripts/test-kws.sh
 
-      - name: Test offline TTS
-        if: matrix.with_tts == 'ON'
-        shell: bash
-        run: |
-          export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline-tts
-
-          .github/scripts/test-offline-tts.sh
-
       - name: Test online paraformer
         shell: bash
         run: |
@@ -226,8 +249,6 @@ jobs:
           export EXE=sherpa-onnx-offline
 
           .github/scripts/test-offline-whisper.sh
-
-
 
       - name: Test online transducer
         shell: bash
@@ -246,11 +267,12 @@ jobs:
           .github/scripts/test-online-transducer.sh
 
       - name: Copy files
+        if: matrix.build_type == 'Release'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          if [[ ${{ matrix.with_tts }} ]]; then
+          if [[ ${{ matrix.with_tts }} == ON ]]; then
             dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}
           else
             dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}-no-tts
@@ -267,7 +289,7 @@ jobs:
           tar cjvf ${dst}.tar.bz2 $dst
 
       - name: Release pre-compiled binaries and libs for macOS
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        if: matrix.build_type == 'Release' && (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

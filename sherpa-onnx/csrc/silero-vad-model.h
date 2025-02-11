@@ -6,11 +6,6 @@
 
 #include <memory>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/vad-model.h"
 
 namespace sherpa_onnx {
@@ -19,9 +14,8 @@ class SileroVadModel : public VadModel {
  public:
   explicit SileroVadModel(const VadModelConfig &config);
 
-#if __ANDROID_API__ >= 9
-  SileroVadModel(AAssetManager *mgr, const VadModelConfig &config);
-#endif
+  template <typename Manager>
+  SileroVadModel(Manager *mgr, const VadModelConfig &config);
 
   ~SileroVadModel() override;
 

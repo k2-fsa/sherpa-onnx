@@ -13,6 +13,10 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/cat.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -36,8 +40,8 @@ class OnlineNeMoCtcModel::Impl {
     }
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OnlineModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OnlineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -47,7 +51,6 @@ class OnlineNeMoCtcModel::Impl {
       Init(buf.data(), buf.size());
     }
   }
-#endif
 
   std::vector<Ort::Value> Forward(Ort::Value x,
                                   std::vector<Ort::Value> states) {
@@ -102,7 +105,7 @@ class OnlineNeMoCtcModel::Impl {
 
   int32_t ChunkShift() const { return chunk_shift_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   // Return a vector containing 3 tensors
   // - cache_last_channel
@@ -119,7 +122,7 @@ class OnlineNeMoCtcModel::Impl {
   }
 
   std::vector<Ort::Value> StackStates(
-      std::vector<std::vector<Ort::Value>> states) const {
+      std::vector<std::vector<Ort::Value>> states) {
     int32_t batch_size = static_cast<int32_t>(states.size());
     if (batch_size == 1) {
       return std::move(states[0]);
@@ -157,6 +160,8 @@ class OnlineNeMoCtcModel::Impl {
       std::vector<Ort::Value> states) const {
     assert(states.size() == 3);
 
+    auto allocator = const_cast<Impl *>(this)->allocator_;
+
     std::vector<std::vector<Ort::Value>> ans;
 
     auto shape = states[0].GetTensorTypeAndShapeInfo().GetShape();
@@ -171,9 +176,9 @@ class OnlineNeMoCtcModel::Impl {
     for (int32_t i = 0; i != 3; ++i) {
       std::vector<Ort::Value> v;
       if (i == 2) {
-        v = Unbind<int64_t>(allocator_, &states[i], 0);
+        v = Unbind<int64_t>(allocator, &states[i], 0);
       } else {
-        v = Unbind(allocator_, &states[i], 0);
+        v = Unbind(allocator, &states[i], 0);
       }
 
       assert(v.size() == batch_size);
@@ -200,7 +205,11 @@ class OnlineNeMoCtcModel::Impl {
     if (config_.debug) {
       std::ostringstream os;
       PrintModelMetadata(os, meta_data);
-      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -284,11 +293,10 @@ class OnlineNeMoCtcModel::Impl {
 OnlineNeMoCtcModel::OnlineNeMoCtcModel(const OnlineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
-OnlineNeMoCtcModel::OnlineNeMoCtcModel(AAssetManager *mgr,
+template <typename Manager>
+OnlineNeMoCtcModel::OnlineNeMoCtcModel(Manager *mgr,
                                        const OnlineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OnlineNeMoCtcModel::~OnlineNeMoCtcModel() = default;
 
@@ -320,5 +328,15 @@ std::vector<std::vector<Ort::Value>> OnlineNeMoCtcModel::UnStackStates(
     std::vector<Ort::Value> states) const {
   return impl_->UnStackStates(std::move(states));
 }
+
+#if __ANDROID_API__ >= 9
+template OnlineNeMoCtcModel::OnlineNeMoCtcModel(
+    AAssetManager *mgr, const OnlineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OnlineNeMoCtcModel::OnlineNeMoCtcModel(
+    NativeResourceManager *mgr, const OnlineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

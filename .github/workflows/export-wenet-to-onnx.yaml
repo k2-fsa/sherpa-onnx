@@ -49,7 +49,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-aishell huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-aishell huggingface
             cd huggingface
             git fetch
             git pull
@@ -98,7 +98,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-aishell2 huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-aishell2 huggingface
             cd huggingface
             git fetch
             git pull
@@ -147,7 +147,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-multi-cn huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-multi-cn huggingface
             cd huggingface
             git fetch
             git pull
@@ -196,7 +196,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-wenetspeech huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-zh-wenet-wenetspeech huggingface
             cd huggingface
             git fetch
             git pull
@@ -245,7 +245,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-en-wenet-librispeech huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-en-wenet-librispeech huggingface
             cd huggingface
             git fetch
             git pull
@@ -295,7 +295,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-en-wenet-gigaspeech huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-en-wenet-gigaspeech huggingface
             cd huggingface
             git fetch
             git pull

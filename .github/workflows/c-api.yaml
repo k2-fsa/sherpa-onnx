@@ -4,11 +4,8 @@ on:
   push:
     branches:
       - master
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
       - '.github/workflows/c-api.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -19,7 +16,6 @@ on:
       - master
     paths:
       - '.github/workflows/c-api.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'sherpa-onnx/c-api/*'
@@ -82,6 +78,201 @@ jobs:
           if [[ ${{ matrix.os }} == macos-latest ]]; then
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
+
+      - name: Test kws (zh)
+        shell: bash
+        run: |
+          gcc -o kws-c-api ./c-api-examples/kws-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+          tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+          rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./kws-c-api
+
+          rm ./kws-c-api
+          rm -rf sherpa-onnx-kws-*
+
+      - name: Test Kokoro TTS (zh+en)
+        shell: bash
+        run: |
+          gcc -o kokoro-tts-zh-en-c-api ./c-api-examples/kokoro-tts-zh-en-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
+          tar xf kokoro-multi-lang-v1_0.tar.bz2
+          rm kokoro-multi-lang-v1_0.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./kokoro-tts-zh-en-c-api
+
+          rm ./kokoro-tts-zh-en-c-api
+          rm -rf kokoro-zh-en-*
+
+      - name: Test Kokoro TTS (en)
+        shell: bash
+        run: |
+          gcc -o kokoro-tts-en-c-api ./c-api-examples/kokoro-tts-en-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+          tar xf kokoro-en-v0_19.tar.bz2
+          rm kokoro-en-v0_19.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./kokoro-tts-en-c-api
+
+          rm ./kokoro-tts-en-c-api
+          rm -rf kokoro-en-*
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kokoro-tts-${{ matrix.os }}
+          path: ./generated-kokoro-*.wav
+
+      - name: Test Matcha TTS (zh)
+        shell: bash
+        run: |
+          gcc -o matcha-tts-zh-c-api ./c-api-examples/matcha-tts-zh-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+          tar xvf matcha-icefall-zh-baker.tar.bz2
+          rm matcha-icefall-zh-baker.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./matcha-tts-zh-c-api
+
+          rm ./matcha-tts-zh-c-api
+          rm -rf matcha-icefall-*
+          rm hifigan_v2.onnx
+
+      - name: Test Matcha TTS (en)
+        shell: bash
+        run: |
+          gcc -o matcha-tts-en-c-api ./c-api-examples/matcha-tts-en-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+          tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+          rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./matcha-tts-en-c-api
+
+          rm ./matcha-tts-en-c-api
+          rm -rf matcha-icefall-*
+          rm hifigan_v2.onnx
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: matcha-tts-${{ matrix.os }}
+          path: ./generated-matcha-*.wav
+
+      - name: Test vad + Whisper tiny.en
+        shell: bash
+        run: |
+          gcc -o vad-whisper-c-api ./c-api-examples/vad-whisper-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          # Now download models
+          #
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+          tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+          rm sherpa-onnx-whisper-tiny.en.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./vad-whisper-c-api
+
+          rm -rf sherpa-onnx-*
+          rm -rf *.onnx
+          rm *.wav
+
+      - name: Test vad + Moonshine
+        shell: bash
+        run: |
+          gcc -o vad-moonshine-c-api ./c-api-examples/vad-moonshine-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          # Now download models
+          #
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./vad-moonshine-c-api
+
+          rm -rf sherpa-onnx-*
+          rm -rf *.onnx
+          rm *.wav
+
+      - name: Test Moonshine
+        shell: bash
+        run: |
+          gcc -o moonshine-c-api ./c-api-examples/moonshine-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+          rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./moonshine-c-api
+
+          rm -rf sherpa-onnx-*
 
       - name: Test ffmpeg
         if: matrix.os == 'macos-latest'

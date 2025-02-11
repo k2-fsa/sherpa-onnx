@@ -1,3 +1,4 @@
 !run-*.sh
 vad_with_whisper
 vad_with_sense_voice
+vad_with_moonshine

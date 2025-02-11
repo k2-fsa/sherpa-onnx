@@ -169,6 +169,8 @@ def main():
 
     print("Started! Please speak")
 
+    idx = 0
+
     sample_rate = 16000
     samples_per_read = int(0.1 * sample_rate)  # 0.1 second = 100 ms
     stream = keyword_spotter.create_stream()
@@ -179,9 +181,12 @@ def main():
             stream.accept_waveform(sample_rate, samples)
             while keyword_spotter.is_ready(stream):
                 keyword_spotter.decode_stream(stream)
-            result = keyword_spotter.get_result(stream)
-            if result:
-                print("\r{}".format(result), end="", flush=True)
+                result = keyword_spotter.get_result(stream)
+                if result:
+                    print(f"{idx}: {result }")
+                    idx += 1
+                    # Remember to reset stream right after detecting a keyword
+                    keyword_spotter.reset_stream(stream)
 
 
 if __name__ == "__main__":

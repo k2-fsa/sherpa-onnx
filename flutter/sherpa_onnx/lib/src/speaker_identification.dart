@@ -25,6 +25,8 @@ class SpeakerEmbeddingExtractorConfig {
 }
 
 class SpeakerEmbeddingExtractor {
+  SpeakerEmbeddingExtractor.fromPtr({required this.ptr, required this.dim});
+
   SpeakerEmbeddingExtractor._({required this.ptr, required this.dim});
 
   /// The user is responsible to call the SpeakerEmbeddingExtractor.free()
@@ -101,6 +103,8 @@ class SpeakerEmbeddingExtractor {
 }
 
 class SpeakerEmbeddingManager {
+  SpeakerEmbeddingManager.fromPtr({required this.ptr, required this.dim});
+
   SpeakerEmbeddingManager._({required this.ptr, required this.dim});
 
   // The user has to use SpeakerEmbeddingManager.free() to avoid memory leak

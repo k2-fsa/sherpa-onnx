@@ -1,4 +1,25 @@
 #!/usr/bin/env bash
+#
+# Usage of this file
+#
+# (1) Build CPU version of sherpa-onnx
+#    ./build-aarch64-linux-gnu.sh
+#
+# (2) Build GPU version of sherpa-onnx
+#
+#   (a) Make sure your board has NVIDIA GPU(s)
+#
+#   (b) For Jetson Nano B01 (using CUDA 10.2)
+#
+#       export SHERPA_ONNX_ENABLE_GPU=ON
+#       export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.11.0
+#       ./build-aarch64-linux-gnu.sh
+#
+#   (c) For Jetson Orin NX (using CUDA 11.4)
+#
+#       export SHERPA_ONNX_ENABLE_GPU=ON
+#       export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.16.0
+#       ./build-aarch64-linux-gnu.sh
 
 if command -v aarch64-none-linux-gnu-gcc  &> /dev/null; then
   ln -svf $(which aarch64-none-linux-gnu-gcc) ./aarch64-linux-gnu-gcc
@@ -44,6 +65,21 @@ if [[ x"$BUILD_SHARED_LIBS" == x"" ]]; then
   BUILD_SHARED_LIBS=OFF
 fi
 
+if [[ x"$SHERPA_ONNX_ENABLE_GPU" == x"" ]]; then
+  # By default, use CPU
+  SHERPA_ONNX_ENABLE_GPU=OFF
+fi
+
+if [[ x"$SHERPA_ONNX_ENABLE_GPU" == x"ON" ]]; then
+  # Build shared libs if building GPU is enabled.
+  BUILD_SHARED_LIBS=ON
+fi
+
+if [[ x"$SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION" == x"" ]]; then
+  # Used only when SHERPA_ONNX_ENABLE_GPU is ON
+  SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION="1.11.0"
+fi
+
 cmake \
   -DBUILD_PIPER_PHONMIZE_EXE=OFF \
   -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
@@ -51,6 +87,7 @@ cmake \
   -DBUILD_ESPEAK_NG_TESTS=OFF \
   -DCMAKE_INSTALL_PREFIX=./install \
   -DCMAKE_BUILD_TYPE=Release \
+  -DSHERPA_ONNX_ENABLE_GPU=$SHERPA_ONNX_ENABLE_GPU \
   -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
   -DSHERPA_ONNX_ENABLE_TESTS=OFF \
   -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
@@ -59,6 +96,7 @@ cmake \
   -DSHERPA_ONNX_ENABLE_JNI=OFF \
   -DSHERPA_ONNX_ENABLE_C_API=ON \
   -DSHERPA_ONNX_ENABLE_WEBSOCKET=ON \
+  -DSHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=$SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION \
   -DCMAKE_TOOLCHAIN_FILE=../toolchains/aarch64-linux-gnu.toolchain.cmake \
   ..
 

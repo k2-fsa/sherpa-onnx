@@ -8,11 +8,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/hypothesis.h"
 #include "sherpa-onnx/csrc/online-model-config.h"
@@ -30,10 +25,9 @@ class OnlineTransducerModel {
   static std::unique_ptr<OnlineTransducerModel> Create(
       const OnlineModelConfig &config);
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   static std::unique_ptr<OnlineTransducerModel> Create(
-      AAssetManager *mgr, const OnlineModelConfig &config);
-#endif
+      Manager *mgr, const OnlineModelConfig &config);
 
   /** Stack a list of individual states into a batch.
    *

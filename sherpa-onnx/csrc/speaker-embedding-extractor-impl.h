@@ -9,11 +9,6 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
 
 namespace sherpa_onnx {
@@ -25,10 +20,9 @@ class SpeakerEmbeddingExtractorImpl {
   static std::unique_ptr<SpeakerEmbeddingExtractorImpl> Create(
       const SpeakerEmbeddingExtractorConfig &config);
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   static std::unique_ptr<SpeakerEmbeddingExtractorImpl> Create(
-      AAssetManager *mgr, const SpeakerEmbeddingExtractorConfig &config);
-#endif
+      Manager *mgr, const SpeakerEmbeddingExtractorConfig &config);
 
   virtual int32_t Dim() const = 0;
 

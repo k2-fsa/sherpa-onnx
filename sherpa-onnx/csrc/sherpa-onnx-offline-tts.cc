@@ -72,6 +72,10 @@ or details.
     exit(EXIT_FAILURE);
   }
 
+  if (config.model.debug) {
+    fprintf(stderr, "%s\n", config.model.ToString().c_str());
+  }
+
   if (!config.Validate()) {
     fprintf(stderr, "Errors in config!\n");
     exit(EXIT_FAILURE);

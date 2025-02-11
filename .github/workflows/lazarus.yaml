@@ -7,7 +7,6 @@ on:
       - lazarus
     paths:
       - '.github/workflows/lazarus.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'lazarus-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -19,7 +18,6 @@ on:
       - master
     paths:
       - '.github/workflows/lazarus.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'lazarus-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -43,7 +41,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04, macos-latest, macos-13, windows-latest]
+        os: [ubuntu-22.04, macos-latest, macos-13, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -56,10 +54,10 @@ jobs:
           key: ${{ matrix.os }}
 
       # See https://github.com/gcarreno/setup-lazarus
-      - uses: gcarreno/setup-lazarus@v3
+      - uses: gcarreno/setup-lazarus@v3.3.1
         with:
           lazarus-version: "stable"
-          with-cache: true
+          with-cache: false
 
       - name: Lazarus info
         shell: bash
@@ -79,14 +77,14 @@ jobs:
           uname -a
 
       - name: Install patchelf for ubuntu
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash
         run: |
           sudo apt-get update -q
           sudo apt-get install -q -y patchelf
 
       - name: Show Patchelf version (ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash
         run: |
           patchelf --version
@@ -104,7 +102,7 @@ jobs:
           cd build
           os=${{ matrix.os }}
 
-          if [[ $os == 'windows-latest' || $os == 'ubuntu-20.04' ]]; then
+          if [[ $os == 'windows-latest' || $os == 'ubuntu-22.04' ]]; then
             BUILD_SHARED_LIBS=ON
           else
             BUILD_SHARED_LIBS=OFF
@@ -139,7 +137,7 @@ jobs:
             lazbuild --verbose --build-mode=Release --widgetset=cocoa ./generate_subtitles.lpi
           elif [[ $os == macos-latest ]]; then
             lazbuild --verbose --build-mode=Release --widgetset=cocoa --cpu=aarch64 ./generate_subtitles.lpi
-          elif [[ $os == 'ubuntu-20.04' ]]; then
+          elif [[ $os == 'ubuntu-22.04' ]]; then
             lazbuild --verbose --build-mode=Release-Linux ./generate_subtitles.lpi
           else
             lazbuild --verbose --build-mode=Release ./generate_subtitles.lpi
@@ -152,7 +150,7 @@ jobs:
           ls -lh
 
       - name: Collect generating subtitles (Ubuntu)
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -223,7 +221,7 @@ jobs:
           ls -lh /tmp/macos-*
 
       - uses: actions/upload-artifact@v4
-        if: matrix.os == 'ubuntu-20.04'
+        if: matrix.os == 'ubuntu-22.04'
         with:
           name: linux-x64
           path: /tmp/linux-x64
@@ -355,8 +353,9 @@ jobs:
             SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
             echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-bin huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-bin huggingface
             cd huggingface
+            git remote set-url origin https://csukuangfj:$HF_TOKEN@huggingface.co/sherpa-onnx-bin
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main

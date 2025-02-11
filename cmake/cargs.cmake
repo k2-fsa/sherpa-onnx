@@ -2,7 +2,7 @@ function(download_cargs)
   include(FetchContent)
 
   set(cargs_URL "https://github.com/likle/cargs/archive/refs/tags/v1.0.3.tar.gz")
-  set(cargs_URL2 "https://hub.nuaa.cf/likle/cargs/archive/refs/tags/v1.0.3.tar.gz")
+  set(cargs_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/cargs-1.0.3.tar.gz")
   set(cargs_HASH "SHA256=ddba25bd35e9c6c75bc706c126001b8ce8e084d40ef37050e6aa6963e836eb8b")
 
   # If you don't have access to the Internet,

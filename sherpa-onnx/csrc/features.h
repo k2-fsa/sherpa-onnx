@@ -57,6 +57,7 @@ struct FeatureExtractorConfig {
   float frame_length_ms = 25.0f;  // in milliseconds.
   bool is_librosa = false;
   bool remove_dc_offset = true;       // Subtract mean of wave before FFT.
+  float preemph_coeff = 0.97f;        // Preemphasis coefficient.
   std::string window_type = "povey";  // e.g. Hamming window
 
   // For models from NeMo

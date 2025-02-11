@@ -121,3 +121,15 @@ sherpa-onnx-online-punct-en-2024-08-06
 *.mp4
 *.mp3
 sherpa-onnx-pyannote-segmentation-3-0
+sherpa-onnx-moonshine-tiny-en-int8
+sherpa-onnx-moonshine-base-en-int8
+harmony-os/SherpaOnnxHar/sherpa_onnx/LICENSE
+harmony-os/SherpaOnnxHar/sherpa_onnx/CHANGELOG.md
+matcha-icefall-zh-baker
+matcha-icefall-en_US-ljspeech
+kokoro-en-v0_19
+*.pt
+lexicon.txt
+us_gold.json
+us_silver.json
+kokoro-multi-lang-v1_0

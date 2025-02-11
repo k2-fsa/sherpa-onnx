@@ -20,6 +20,10 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/cat.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
@@ -54,8 +58,8 @@ class OnlineTransducerNeMoModel::Impl {
     }
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const OnlineModelConfig &config)
+  template <typename Manager>
+  Impl(Manager *mgr, const OnlineModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),
@@ -75,7 +79,6 @@ class OnlineTransducerNeMoModel::Impl {
       InitJoiner(buf.data(), buf.size());
     }
   }
-#endif
 
   std::vector<Ort::Value> RunEncoder(Ort::Value features,
                                      std::vector<Ort::Value> states) {
@@ -197,7 +200,7 @@ class OnlineTransducerNeMoModel::Impl {
 
   int32_t VocabSize() const { return vocab_size_; }
 
-  OrtAllocator *Allocator() const { return allocator_; }
+  OrtAllocator *Allocator() { return allocator_; }
 
   std::string FeatureNormalizationMethod() const { return normalize_type_; }
 
@@ -224,6 +227,8 @@ class OnlineTransducerNeMoModel::Impl {
 
     std::vector<Ort::Value> ans;
 
+    auto allocator = const_cast<Impl *>(this)->allocator_;
+
     // stack cache_last_channel
     std::vector<const Ort::Value *> buf(batch_size);
 
@@ -239,9 +244,9 @@ class OnlineTransducerNeMoModel::Impl {
 
       Ort::Value c{nullptr};
       if (i == 2) {
-        c = Cat<int64_t>(allocator_, buf, 0);
+        c = Cat<int64_t>(allocator, buf, 0);
       } else {
-        c = Cat(allocator_, buf, 0);
+        c = Cat(allocator, buf, 0);
       }
 
       ans.push_back(std::move(c));
@@ -251,7 +256,7 @@ class OnlineTransducerNeMoModel::Impl {
   }
 
   std::vector<std::vector<Ort::Value>> UnStackStates(
-      std::vector<Ort::Value> states) const {
+      std::vector<Ort::Value> states) {
     assert(states.size() == 3);
 
     std::vector<std::vector<Ort::Value>> ans;
@@ -300,7 +305,11 @@ class OnlineTransducerNeMoModel::Impl {
       std::ostringstream os;
       os << "---encoder---\n";
       PrintModelMetadata(os, meta_data);
-      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
     }
 
     Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -458,11 +467,10 @@ OnlineTransducerNeMoModel::OnlineTransducerNeMoModel(
     const OnlineModelConfig &config)
     : impl_(std::make_unique<Impl>(config)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OnlineTransducerNeMoModel::OnlineTransducerNeMoModel(
-    AAssetManager *mgr, const OnlineModelConfig &config)
+    Manager *mgr, const OnlineModelConfig &config)
     : impl_(std::make_unique<Impl>(mgr, config)) {}
-#endif
 
 OnlineTransducerNeMoModel::~OnlineTransducerNeMoModel() = default;
 
@@ -525,5 +533,15 @@ std::vector<std::vector<Ort::Value>> OnlineTransducerNeMoModel::UnStackStates(
     std::vector<Ort::Value> states) const {
   return impl_->UnStackStates(std::move(states));
 }
+
+#if __ANDROID_API__ >= 9
+template OnlineTransducerNeMoModel::OnlineTransducerNeMoModel(
+    AAssetManager *mgr, const OnlineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OnlineTransducerNeMoModel::OnlineTransducerNeMoModel(
+    NativeResourceManager *mgr, const OnlineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

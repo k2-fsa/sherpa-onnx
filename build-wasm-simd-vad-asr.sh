@@ -21,6 +21,7 @@ if [ x"$EMSCRIPTEN" == x"" ]; then
     exit 1
   else
     EMSCRIPTEN=$(dirname $(realpath $(which emcc)))
+    emcc --version
   fi
 fi
 

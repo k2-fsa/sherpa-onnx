@@ -18,7 +18,10 @@ namespace SherpaOnnx
         public bool Add(string name, float[] v)
         {
             byte[] utf8Name = Encoding.UTF8.GetBytes(name);
-            return SherpaOnnxSpeakerEmbeddingManagerAdd(_handle.Handle, utf8Name, v) == 1;
+            byte[] utf8NameWithNull = new byte[utf8Name.Length + 1]; // +1 for null terminator
+            Array.Copy(utf8Name, utf8NameWithNull, utf8Name.Length);
+            utf8NameWithNull[utf8Name.Length] = 0; // Null terminator
+            return SherpaOnnxSpeakerEmbeddingManagerAdd(_handle.Handle, utf8NameWithNull, v) == 1;
         }
 
         public bool Add(string name, ICollection<float[]> v_list)
@@ -33,13 +36,19 @@ namespace SherpaOnnx
             }
 
             byte[] utf8Name = Encoding.UTF8.GetBytes(name);
-            return SherpaOnnxSpeakerEmbeddingManagerAddListFlattened(_handle.Handle, utf8Name, v, n) == 1;
+            byte[] utf8NameWithNull = new byte[utf8Name.Length + 1]; // +1 for null terminator
+            Array.Copy(utf8Name, utf8NameWithNull, utf8Name.Length);
+            utf8NameWithNull[utf8Name.Length] = 0; // Null terminator
+            return SherpaOnnxSpeakerEmbeddingManagerAddListFlattened(_handle.Handle, utf8NameWithNull, v, n) == 1;
         }
 
         public bool Remove(string name)
         {
             byte[] utf8Name = Encoding.UTF8.GetBytes(name);
-            return SherpaOnnxSpeakerEmbeddingManagerRemove(_handle.Handle, utf8Name) == 1;
+            byte[] utf8NameWithNull = new byte[utf8Name.Length + 1]; // +1 for null terminator
+            Array.Copy(utf8Name, utf8NameWithNull, utf8Name.Length);
+            utf8NameWithNull[utf8Name.Length] = 0; // Null terminator
+            return SherpaOnnxSpeakerEmbeddingManagerRemove(_handle.Handle, utf8NameWithNull) == 1;
         }
 
         public string Search(float[] v, float threshold)
@@ -77,13 +86,19 @@ namespace SherpaOnnx
         public bool Verify(string name, float[] v, float threshold)
         {
             byte[] utf8Name = Encoding.UTF8.GetBytes(name);
-            return SherpaOnnxSpeakerEmbeddingManagerVerify(_handle.Handle, utf8Name, v, threshold) == 1;
+            byte[] utf8NameWithNull = new byte[utf8Name.Length + 1]; // +1 for null terminator
+            Array.Copy(utf8Name, utf8NameWithNull, utf8Name.Length);
+            utf8NameWithNull[utf8Name.Length] = 0; // Null terminator
+            return SherpaOnnxSpeakerEmbeddingManagerVerify(_handle.Handle, utf8NameWithNull, v, threshold) == 1;
         }
 
         public bool Contains(string name)
         {
             byte[] utf8Name = Encoding.UTF8.GetBytes(name);
-            return SherpaOnnxSpeakerEmbeddingManagerContains(_handle.Handle, utf8Name) == 1;
+            byte[] utf8NameWithNull = new byte[utf8Name.Length + 1]; // +1 for null terminator
+            Array.Copy(utf8Name, utf8NameWithNull, utf8Name.Length);
+            utf8NameWithNull[utf8Name.Length] = 0; // Null terminator
+            return SherpaOnnxSpeakerEmbeddingManagerContains(_handle.Handle, utf8NameWithNull) == 1;
         }
 
         public string[] GetAllSpeakers()

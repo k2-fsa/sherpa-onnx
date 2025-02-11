@@ -4,9 +4,24 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_executable(decode-file-c-api decode-file-c-api.c)
 target_link_libraries(decode-file-c-api sherpa-onnx-c-api cargs)
 
+add_executable(kws-c-api kws-c-api.c)
+target_link_libraries(kws-c-api sherpa-onnx-c-api)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(offline-tts-c-api offline-tts-c-api.c)
   target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)
+
+  add_executable(matcha-tts-zh-c-api matcha-tts-zh-c-api.c)
+  target_link_libraries(matcha-tts-zh-c-api sherpa-onnx-c-api)
+
+  add_executable(matcha-tts-en-c-api matcha-tts-en-c-api.c)
+  target_link_libraries(matcha-tts-en-c-api sherpa-onnx-c-api)
+
+  add_executable(kokoro-tts-en-c-api kokoro-tts-en-c-api.c)
+  target_link_libraries(kokoro-tts-en-c-api sherpa-onnx-c-api)
+
+  add_executable(kokoro-tts-zh-en-c-api kokoro-tts-zh-en-c-api.c)
+  target_link_libraries(kokoro-tts-zh-en-c-api sherpa-onnx-c-api)
 endif()
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
@@ -35,6 +50,9 @@ target_link_libraries(whisper-c-api sherpa-onnx-c-api)
 add_executable(sense-voice-c-api sense-voice-c-api.c)
 target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
 
+add_executable(moonshine-c-api moonshine-c-api.c)
+target_link_libraries(moonshine-c-api sherpa-onnx-c-api)
+
 add_executable(zipformer-c-api zipformer-c-api.c)
 target_link_libraries(zipformer-c-api sherpa-onnx-c-api)
 
@@ -52,6 +70,12 @@ target_link_libraries(telespeech-c-api sherpa-onnx-c-api)
 
 add_executable(vad-sense-voice-c-api vad-sense-voice-c-api.c)
 target_link_libraries(vad-sense-voice-c-api sherpa-onnx-c-api)
+
+add_executable(vad-whisper-c-api vad-whisper-c-api.c)
+target_link_libraries(vad-whisper-c-api sherpa-onnx-c-api)
+
+add_executable(vad-moonshine-c-api vad-moonshine-c-api.c)
+target_link_libraries(vad-moonshine-c-api sherpa-onnx-c-api)
 
 add_executable(streaming-zipformer-buffered-tokens-hotwords-c-api
                streaming-zipformer-buffered-tokens-hotwords-c-api.c)

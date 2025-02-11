@@ -9,6 +9,15 @@
 #include <sstream>
 #include <string>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"
@@ -21,6 +30,7 @@ namespace {
 
 enum class ModelType : std::uint8_t {
   kEncDecCTCModelBPE,
+  kEncDecCTCModel,
   kEncDecHybridRNNTCTCBPEModel,
   kTdnn,
   kZipformerCtc,
@@ -47,13 +57,17 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
   if (debug) {
     std::ostringstream os;
     PrintModelMetadata(os, meta_data);
-    SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
   }
 
   Ort::AllocatorWithDefaultOptions allocator;
   auto model_type =
-      meta_data.LookupCustomMetadataMapAllocated("model_type", allocator);
-  if (!model_type) {
+      LookupCustomModelMetaData(meta_data, "model_type", allocator);
+  if (model_type.empty()) {
     SHERPA_ONNX_LOGE(
         "No model_type in the metadata!\n"
         "If you are using models from NeMo, please refer to\n"
@@ -73,20 +87,22 @@ static ModelType GetModelType(char *model_data, size_t model_data_length,
     return ModelType::kUnknown;
   }
 
-  if (model_type.get() == std::string("EncDecCTCModelBPE")) {
+  if (model_type == "EncDecCTCModelBPE") {
     return ModelType::kEncDecCTCModelBPE;
-  } else if (model_type.get() == std::string("EncDecHybridRNNTCTCBPEModel")) {
+  } else if (model_type == "EncDecCTCModel") {
+    return ModelType::kEncDecCTCModel;
+  } else if (model_type == "EncDecHybridRNNTCTCBPEModel") {
     return ModelType::kEncDecHybridRNNTCTCBPEModel;
-  } else if (model_type.get() == std::string("tdnn")) {
+  } else if (model_type == "tdnn") {
     return ModelType::kTdnn;
-  } else if (model_type.get() == std::string("zipformer2_ctc")) {
+  } else if (model_type == "zipformer2_ctc") {
     return ModelType::kZipformerCtc;
-  } else if (model_type.get() == std::string("wenet_ctc")) {
+  } else if (model_type == "wenet_ctc") {
     return ModelType::kWenetCtc;
-  } else if (model_type.get() == std::string("telespeech_ctc")) {
+  } else if (model_type == "telespeech_ctc") {
     return ModelType::kTeleSpeechCtc;
   } else {
-    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.get());
+    SHERPA_ONNX_LOGE("Unsupported model_type: %s", model_type.c_str());
     return ModelType::kUnknown;
   }
 }
@@ -120,23 +136,18 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
 
   switch (model_type) {
     case ModelType::kEncDecCTCModelBPE:
+    case ModelType::kEncDecCTCModel:
       return std::make_unique<OfflineNemoEncDecCtcModel>(config);
-      break;
     case ModelType::kEncDecHybridRNNTCTCBPEModel:
       return std::make_unique<OfflineNemoEncDecHybridRNNTCTCBPEModel>(config);
-      break;
     case ModelType::kTdnn:
       return std::make_unique<OfflineTdnnCtcModel>(config);
-      break;
     case ModelType::kZipformerCtc:
       return std::make_unique<OfflineZipformerCtcModel>(config);
-      break;
     case ModelType::kWenetCtc:
       return std::make_unique<OfflineWenetCtcModel>(config);
-      break;
     case ModelType::kTeleSpeechCtc:
       return std::make_unique<OfflineTeleSpeechCtcModel>(config);
-      break;
     case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in offline CTC!");
       return nullptr;
@@ -145,10 +156,9 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
   return nullptr;
 }
 
-#if __ANDROID_API__ >= 9
-
+template <typename Manager>
 std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
-    AAssetManager *mgr, const OfflineModelConfig &config) {
+    Manager *mgr, const OfflineModelConfig &config) {
   // TODO(fangjun): Refactor it. We don't need to use model_type here
   ModelType model_type = ModelType::kUnknown;
 
@@ -176,24 +186,19 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
 
   switch (model_type) {
     case ModelType::kEncDecCTCModelBPE:
+    case ModelType::kEncDecCTCModel:
       return std::make_unique<OfflineNemoEncDecCtcModel>(mgr, config);
-      break;
     case ModelType::kEncDecHybridRNNTCTCBPEModel:
       return std::make_unique<OfflineNemoEncDecHybridRNNTCTCBPEModel>(mgr,
                                                                       config);
-      break;
     case ModelType::kTdnn:
       return std::make_unique<OfflineTdnnCtcModel>(mgr, config);
-      break;
     case ModelType::kZipformerCtc:
       return std::make_unique<OfflineZipformerCtcModel>(mgr, config);
-      break;
     case ModelType::kWenetCtc:
       return std::make_unique<OfflineWenetCtcModel>(mgr, config);
-      break;
     case ModelType::kTeleSpeechCtc:
       return std::make_unique<OfflineTeleSpeechCtcModel>(mgr, config);
-      break;
     case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in offline CTC!");
       return nullptr;
@@ -201,6 +206,15 @@ std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
 
   return nullptr;
 }
+
+#if __ANDROID_API__ >= 9
+template std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
+    AAssetManager *mgr, const OfflineModelConfig &config);
+#endif
+
+#if __OHOS__
+template std::unique_ptr<OfflineCtcModel> OfflineCtcModel::Create(
+    NativeResourceManager *mgr, const OfflineModelConfig &config);
 #endif
 
 }  // namespace sherpa_onnx

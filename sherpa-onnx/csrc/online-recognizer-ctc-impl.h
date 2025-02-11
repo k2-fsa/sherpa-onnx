@@ -34,13 +34,14 @@ static OnlineRecognizerResult Convert(const OnlineCtcDecoderResult &src,
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
 
+  std::string text;
   for (auto i : src.tokens) {
     auto sym = sym_table[i];
 
-    r.text.append(sym);
+    text.append(sym);
 
     if (sym.size() == 1 && (sym[0] < 0x20 || sym[0] > 0x7e)) {
-      // for byte bpe models
+      // for bpe models with byte_fallback
       // (but don't rewrite printable characters 0x20..0x7e,
       //  which collide with standard BPE units)
       std::ostringstream os;
@@ -51,6 +52,12 @@ static OnlineRecognizerResult Convert(const OnlineCtcDecoderResult &src,
 
     r.tokens.push_back(std::move(sym));
   }
+
+  if (sym_table.IsByteBpe()) {
+    text = sym_table.DecodeByteBpe(text);
+  }
+
+  r.text = std::move(text);
 
   float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
   for (auto t : src.timestamps) {
@@ -88,8 +95,8 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
     InitDecoder();
   }
 
-#if __ANDROID_API__ >= 9
-  explicit OnlineRecognizerCtcImpl(AAssetManager *mgr,
+  template <typename Manager>
+  explicit OnlineRecognizerCtcImpl(Manager *mgr,
                                    const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
@@ -104,7 +111,6 @@ class OnlineRecognizerCtcImpl : public OnlineRecognizerImpl {
 
     InitDecoder();
   }
-#endif
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream = std::make_unique<OnlineStream>(config_.feat_config);

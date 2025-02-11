@@ -21,13 +21,13 @@ jobs:
       fail-fast: false
       matrix:
         os: [macos-13]
-        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312"]
+        python-version: ["cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.15.0
+        uses: pypa/cibuildwheel@v2.21.3
         env:
           CIBW_BUILD: "${{ matrix.python-version}}-* "
           CIBW_ENVIRONMENT: SHERPA_ONNX_CMAKE_ARGS="-DCMAKE_OSX_ARCHITECTURES='arm64'"
@@ -68,7 +68,7 @@ jobs:
 
             d=cpu/$SHERPA_ONNX_VERSION
 
-            git clone https://huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-wheels huggingface
             cd huggingface
             git fetch
             git pull
@@ -95,6 +95,6 @@ jobs:
           fi
 
           python3 -m pip install $opts --upgrade pip
-          python3 -m pip install $opts wheel twine setuptools
+          python3 -m pip install $opts wheel twine==5.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl

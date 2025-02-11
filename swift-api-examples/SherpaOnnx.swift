@@ -357,6 +357,20 @@ func sherpaOnnxOfflineWhisperModelConfig(
   )
 }
 
+func sherpaOnnxOfflineMoonshineModelConfig(
+  preprocessor: String = "",
+  encoder: String = "",
+  uncachedDecoder: String = "",
+  cachedDecoder: String = ""
+) -> SherpaOnnxOfflineMoonshineModelConfig {
+  return SherpaOnnxOfflineMoonshineModelConfig(
+    preprocessor: toCPointer(preprocessor),
+    encoder: toCPointer(encoder),
+    uncached_decoder: toCPointer(uncachedDecoder),
+    cached_decoder: toCPointer(cachedDecoder)
+  )
+}
+
 func sherpaOnnxOfflineTdnnModelConfig(
   model: String = ""
 ) -> SherpaOnnxOfflineTdnnModelConfig {
@@ -401,7 +415,8 @@ func sherpaOnnxOfflineModelConfig(
   modelingUnit: String = "cjkchar",
   bpeVocab: String = "",
   teleSpeechCtc: String = "",
-  senseVoice: SherpaOnnxOfflineSenseVoiceModelConfig = sherpaOnnxOfflineSenseVoiceModelConfig()
+  senseVoice: SherpaOnnxOfflineSenseVoiceModelConfig = sherpaOnnxOfflineSenseVoiceModelConfig(),
+  moonshine: SherpaOnnxOfflineMoonshineModelConfig = sherpaOnnxOfflineMoonshineModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -417,7 +432,8 @@ func sherpaOnnxOfflineModelConfig(
     modeling_unit: toCPointer(modelingUnit),
     bpe_vocab: toCPointer(bpeVocab),
     telespeech_ctc: toCPointer(teleSpeechCtc),
-    sense_voice: senseVoice
+    sense_voice: senseVoice,
+    moonshine: moonshine
   )
 }
 
@@ -703,9 +719,9 @@ class SherpaOnnxVoiceActivityDetectorWrapper {
 
 // offline tts
 func sherpaOnnxOfflineTtsVitsModelConfig(
-  model: String,
-  lexicon: String,
-  tokens: String,
+  model: String = "",
+  lexicon: String = "",
+  tokens: String = "",
   dataDir: String = "",
   noiseScale: Float = 0.667,
   noiseScaleW: Float = 0.8,
@@ -720,11 +736,56 @@ func sherpaOnnxOfflineTtsVitsModelConfig(
     noise_scale: noiseScale,
     noise_scale_w: noiseScaleW,
     length_scale: lengthScale,
-    dict_dir: toCPointer(dictDir))
+    dict_dir: toCPointer(dictDir)
+  )
+}
+
+func sherpaOnnxOfflineTtsMatchaModelConfig(
+  acousticModel: String = "",
+  vocoder: String = "",
+  lexicon: String = "",
+  tokens: String = "",
+  dataDir: String = "",
+  noiseScale: Float = 0.667,
+  lengthScale: Float = 1.0,
+  dictDir: String = ""
+) -> SherpaOnnxOfflineTtsMatchaModelConfig {
+  return SherpaOnnxOfflineTtsMatchaModelConfig(
+    acoustic_model: toCPointer(acousticModel),
+    vocoder: toCPointer(vocoder),
+    lexicon: toCPointer(lexicon),
+    tokens: toCPointer(tokens),
+    data_dir: toCPointer(dataDir),
+    noise_scale: noiseScale,
+    length_scale: lengthScale,
+    dict_dir: toCPointer(dictDir)
+  )
+}
+
+func sherpaOnnxOfflineTtsKokoroModelConfig(
+  model: String = "",
+  voices: String = "",
+  tokens: String = "",
+  dataDir: String = "",
+  lengthScale: Float = 1.0,
+  dictDir: String = "",
+  lexicon: String = ""
+) -> SherpaOnnxOfflineTtsKokoroModelConfig {
+  return SherpaOnnxOfflineTtsKokoroModelConfig(
+    model: toCPointer(model),
+    voices: toCPointer(voices),
+    tokens: toCPointer(tokens),
+    data_dir: toCPointer(dataDir),
+    length_scale: lengthScale,
+    dict_dir: toCPointer(dictDir),
+    lexicon: toCPointer(lexicon)
+  )
 }
 
 func sherpaOnnxOfflineTtsModelConfig(
-  vits: SherpaOnnxOfflineTtsVitsModelConfig,
+  vits: SherpaOnnxOfflineTtsVitsModelConfig = sherpaOnnxOfflineTtsVitsModelConfig(),
+  matcha: SherpaOnnxOfflineTtsMatchaModelConfig = sherpaOnnxOfflineTtsMatchaModelConfig(),
+  kokoro: SherpaOnnxOfflineTtsKokoroModelConfig = sherpaOnnxOfflineTtsKokoroModelConfig(),
   numThreads: Int = 1,
   debug: Int = 0,
   provider: String = "cpu"
@@ -733,7 +794,9 @@ func sherpaOnnxOfflineTtsModelConfig(
     vits: vits,
     num_threads: Int32(numThreads),
     debug: Int32(debug),
-    provider: toCPointer(provider)
+    provider: toCPointer(provider),
+    matcha: matcha,
+    kokoro: kokoro
   )
 }
 
@@ -741,13 +804,15 @@ func sherpaOnnxOfflineTtsConfig(
   model: SherpaOnnxOfflineTtsModelConfig,
   ruleFsts: String = "",
   ruleFars: String = "",
-  maxNumSentences: Int = 2
+  maxNumSentences: Int = 1,
+  silenceScale: Float = 0.2
 ) -> SherpaOnnxOfflineTtsConfig {
   return SherpaOnnxOfflineTtsConfig(
     model: model,
     rule_fsts: toCPointer(ruleFsts),
     max_num_sentences: Int32(maxNumSentences),
-    rule_fars: toCPointer(ruleFars)
+    rule_fars: toCPointer(ruleFars),
+    silence_scale: silenceScale
   )
 }
 
@@ -1017,6 +1082,10 @@ class SherpaOnnxKeywordSpotterWrapper {
     SherpaOnnxDecodeKeywordStream(spotter, stream)
   }
 
+  func reset() {
+    SherpaOnnxResetKeywordStream(spotter, stream)
+  }
+
   func getResult() -> SherpaOnnxKeywordResultWrapper {
     let result: UnsafePointer<SherpaOnnxKeywordResult>? = SherpaOnnxGetKeywordResult(
       spotter, stream)
@@ -1075,6 +1144,52 @@ class SherpaOnnxOfflinePunctuationWrapper {
     let cText = SherpaOfflinePunctuationAddPunct(ptr, toCPointer(text))
     let ans = String(cString: cText!)
     SherpaOfflinePunctuationFreeText(cText)
+    return ans
+  }
+}
+
+func sherpaOnnxOnlinePunctuationModelConfig(
+  cnnBiLstm: String,
+  bpeVocab: String,
+  numThreads: Int = 1,
+  debug: Int = 0,
+  provider: String = "cpu"
+) -> SherpaOnnxOnlinePunctuationModelConfig {
+  return SherpaOnnxOnlinePunctuationModelConfig(
+    cnn_bilstm: toCPointer(cnnBiLstm),
+    bpe_vocab: toCPointer(bpeVocab),
+    num_threads: Int32(numThreads),
+    debug: Int32(debug),
+    provider: toCPointer(provider))
+}
+
+func sherpaOnnxOnlinePunctuationConfig(
+  model: SherpaOnnxOnlinePunctuationModelConfig
+) -> SherpaOnnxOnlinePunctuationConfig {
+  return SherpaOnnxOnlinePunctuationConfig(model: model)
+}
+
+class SherpaOnnxOnlinePunctuationWrapper {
+  /// A pointer to the underlying counterpart in C
+  let ptr: OpaquePointer!
+
+  /// Constructor taking a model config
+  init(
+    config: UnsafePointer<SherpaOnnxOnlinePunctuationConfig>!
+  ) {
+    ptr = SherpaOnnxCreateOnlinePunctuation(config)
+  }
+
+  deinit {
+    if let ptr {
+      SherpaOnnxDestroyOnlinePunctuation(ptr)
+    }
+  }
+
+  func addPunct(text: String) -> String {
+    let cText = SherpaOnnxOnlinePunctuationAddPunct(ptr, toCPointer(text))
+    let ans = String(cString: cText!)
+    SherpaOnnxOnlinePunctuationFreeText(cText)
     return ans
   }
 }

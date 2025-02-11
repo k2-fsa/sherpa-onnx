@@ -124,6 +124,21 @@ std::vector<std::string> SplitUtf8(const std::string &text);
 std::string ToLowerCase(const std::string &s);
 void ToLowerCase(std::string *in_out);
 
+std::string RemoveInvalidUtf8Sequences(const std::string &text,
+                                       bool show_debug_msg = false);
+
+// Return true if text contains valid utf8 sequence.
+// Return false otherwise
+bool IsUtf8(const std::string &text);
+
+// Return true if text contains valid gb2312 encoded sequence
+// Return false otherwise
+bool IsGB2312(const std::string &text);
+
+#if defined(_WIN32)
+std::string Gb2312ToUtf8(const std::string &text);
+#endif
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_

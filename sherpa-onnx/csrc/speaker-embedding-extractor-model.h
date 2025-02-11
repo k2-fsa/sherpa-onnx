@@ -6,11 +6,6 @@
 
 #include <memory>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/speaker-embedding-extractor-model-meta-data.h"
 #include "sherpa-onnx/csrc/speaker-embedding-extractor.h"
@@ -22,10 +17,9 @@ class SpeakerEmbeddingExtractorModel {
   explicit SpeakerEmbeddingExtractorModel(
       const SpeakerEmbeddingExtractorConfig &config);
 
-#if __ANDROID_API__ >= 9
-  SpeakerEmbeddingExtractorModel(AAssetManager *mgr,
+  template <typename Manager>
+  SpeakerEmbeddingExtractorModel(Manager *mgr,
                                  const SpeakerEmbeddingExtractorConfig &config);
-#endif
 
   ~SpeakerEmbeddingExtractorModel();
 

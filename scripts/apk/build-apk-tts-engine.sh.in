@@ -37,6 +37,9 @@ mkdir -p apks
 pushd ./android/SherpaOnnxTtsEngine/app/src/main/assets/
 model_dir={{ tts_model.model_dir }}
 model_name={{ tts_model.model_name }}
+acoustic_model_name={{ tts_model.acoustic_model_name }}
+vocoder={{ tts_model.vocoder }}
+voices={{ tts_model.voices }}
 lang={{ tts_model.lang }}
 lang_iso_639_3={{ tts_model.lang_iso_639_3 }}
 
@@ -44,14 +47,33 @@ wget -qq https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/$mod
 tar xf $model_dir.tar.bz2
 rm $model_dir.tar.bz2
 
+{% if tts_model.vocoder %}
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/$vocoder
+{% endif %}
+
 popd
 # Now we are at the project root directory
 
 git checkout .
 pushd android/SherpaOnnxTtsEngine/app/src/main/java/com/k2fsa/sherpa/onnx/tts/engine
 sed -i.bak s/"modelDir = null"/"modelDir = \"$model_dir\""/ ./TtsEngine.kt
-sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./TtsEngine.kt
 sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
+
+{% if tts_model.model_name %}
+  sed -i.bak s/"modelName = null"/"modelName = \"$model_name\""/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.model_name %}
+  sed -i.bak s/"acousticModelName = null"/"acousticModelName = \"$acoustic_model_name\""/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.vocoder %}
+  sed -i.bak s/"vocoder = null"/"vocoder = \"$vocoder\""/ ./TtsEngine.kt
+{% endif %}
+
+{% if tts_model.voices %}
+  sed -i.bak s/"voices = null"/"voices = \"$voices\""/ ./TtsEngine.kt
+{% endif %}
 
 {% if tts_model.rule_fsts %}
   rule_fsts={{ tts_model.rule_fsts }}
@@ -75,10 +97,19 @@ sed -i.bak s/"lang = null"/"lang = \"$lang_iso_639_3\""/ ./TtsEngine.kt
   sed -i.bak s/"lexicon = null"/"lexicon = \"lexicon.txt\""/ ./TtsEngine.kt
 {% endif %}
 
+{% if tts_model.lexicon %}
+  lexicon={{ tts_model.lexicon }}
+  sed -i.bak s%"lexicon = null"%"lexicon = \"$lexicon\""% ./TtsEngine.kt
+{% endif %}
+
 git diff
 popd
 
 if [[ $model_dir == vits-melo-tts-zh_en ]]; then
+  lang=zh_en
+fi
+
+if [[ $model_dir == kokoro-multi-lang-v1_0 ]]; then
   lang=zh_en
 fi
 
@@ -109,6 +140,7 @@ for arch in arm64-v8a armeabi-v7a x86_64 x86; do
 done
 
 rm -rf ./android/SherpaOnnxTtsEngine/app/src/main/assets/$model_dir
+rm -fv ./android/SherpaOnnxTtsEngine/app/src/main/assets/*.onnx
 {% endfor %}
 
 git checkout .

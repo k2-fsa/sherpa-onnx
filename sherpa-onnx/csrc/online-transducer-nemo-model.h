@@ -11,11 +11,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-model-config.h"
 
@@ -28,10 +23,8 @@ class OnlineTransducerNeMoModel {
  public:
   explicit OnlineTransducerNeMoModel(const OnlineModelConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OnlineTransducerNeMoModel(AAssetManager *mgr,
-                            const OnlineModelConfig &config);
-#endif
+  template <typename Manager>
+  OnlineTransducerNeMoModel(Manager *mgr, const OnlineModelConfig &config);
 
   ~OnlineTransducerNeMoModel();
   // A list of 3 tensors:

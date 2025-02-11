@@ -41,6 +41,9 @@ while (kws.isReady(stream)) {
   const keyword = kws.getResult(stream).keyword;
   if (keyword != '') {
     detectedKeywords.push(keyword);
+
+    // remember to reset the stream right after detecting a keyword
+    kws.reset(stream);
   }
 }
 console.log(detectedKeywords);

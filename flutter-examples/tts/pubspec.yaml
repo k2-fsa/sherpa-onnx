@@ -5,7 +5,7 @@ description: >
 
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
-version: 1.10.28
+version: 1.10.43
 
 environment:
   sdk: ">=2.17.0 <4.0.0"
@@ -18,12 +18,18 @@ dependencies:
   cupertino_icons: ^1.0.6
   path_provider: ^2.1.3
   path: ^1.9.0
-  sherpa_onnx: ^1.10.28
+  sherpa_onnx: ^1.10.43
   # sherpa_onnx:
   #   path: ../../flutter/sherpa_onnx
   url_launcher: 6.2.6
   url_launcher_linux: 3.1.0
   audioplayers: ^5.0.0
+  media_kit: 
+  media_kit_libs_video: 
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/vits-melo-tts-zh_en/
+    - assets/vits-melo-tts-zh_en/dict/

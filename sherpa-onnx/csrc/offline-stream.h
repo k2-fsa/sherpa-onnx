@@ -34,7 +34,7 @@ struct OfflineRecognitionResult {
   // event target of the audio.
   std::string event;
 
-    /// timestamps.size() == tokens.size()
+  /// timestamps.size() == tokens.size()
   /// timestamps[i] records the time in seconds when tokens[i] is decoded.
   std::vector<float> timestamps;
 
@@ -49,6 +49,10 @@ struct WhisperTag {
 
 struct CEDTag {};
 
+// It uses a neural network model, a preprocessor, to convert
+// audio samples to features
+struct MoonshineTag {};
+
 class OfflineStream {
  public:
   explicit OfflineStream(const FeatureExtractorConfig &config = {},
@@ -56,6 +60,7 @@ class OfflineStream {
 
   explicit OfflineStream(WhisperTag tag);
   explicit OfflineStream(CEDTag tag);
+  explicit OfflineStream(MoonshineTag tag);
   ~OfflineStream();
 
   /**
@@ -72,7 +77,10 @@ class OfflineStream {
   void AcceptWaveform(int32_t sampling_rate, const float *waveform,
                       int32_t n) const;
 
-  /// Return feature dim of this extractor
+  /// Return feature dim of this extractor.
+  ///
+  /// Note: if it is Moonshine, then it returns the number of audio samples
+  /// currently received.
   int32_t FeatureDim() const;
 
   // Get all the feature frames of this stream in a 1-D array, which is

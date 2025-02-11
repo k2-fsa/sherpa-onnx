@@ -2,7 +2,7 @@ function(download_espeak_ng_for_piper)
   include(FetchContent)
 
   set(espeak_ng_URL  "https://github.com/csukuangfj/espeak-ng/archive/f6fed6c58b5e0998b8e68c6610125e2d07d595a7.zip")
-  set(espeak_ng_URL2 "https://hub.nuaa.cf/csukuangfj/espeak-ng/archive/f6fed6c58b5e0998b8e68c6610125e2d07d595a7.zip")
+  set(espeak_ng_URL2 "https://hf-mirror.com/csukuangfj/sherpa-onnx-cmake-deps/resolve/main/espeak-ng-f6fed6c58b5e0998b8e68c6610125e2d07d595a7.zip")
   set(espeak_ng_HASH "SHA256=70cbf4050e7a014aae19140b05e57249da4720f56128459fbe3a93beaf971ae6")
 
   set(BUILD_ESPEAK_NG_TESTS OFF CACHE BOOL "" FORCE)

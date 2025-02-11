@@ -7,6 +7,26 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-tts-vits.sh
+ls -lh
+rm -rf vits-piper-*
+
+./run-tts-kokoro-zh-en.sh
+ls -lh
+rm -rf kokoro-multi-*
+
+./run-tts-kokoro-en.sh
+ls -lh
+rm -rf kokoro-en-*
+
+./run-tts-matcha-zh.sh
+ls -lh
+rm -rf matcha-icefall-*
+
+./run-tts-matcha-en.sh
+ls -lh
+rm -rf matcha-icefall-*
+
 ./run-speaker-diarization.sh
 rm -rf *.onnx
 rm -rf sherpa-onnx-pyannote-segmentation-3-0
@@ -38,8 +58,9 @@ popd
 ls -lh /Users/fangjun/Desktop
 cat /Users/fangjun/Desktop/Obama.srt
 
-./run-tts.sh
-ls -lh
+rm -rf sherpa-onnx-whisper*
+rm -f *.onnx
+rm /Users/fangjun/Desktop/Obama.wav
 
 ./run-decode-file.sh
 rm decode-file
@@ -47,6 +68,5 @@ sed -i.bak  '20d' ./decode-file.swift
 ./run-decode-file.sh
 
 ./run-decode-file-non-streaming.sh
-
 
 ls -lh

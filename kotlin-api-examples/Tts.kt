@@ -1,1 +1,1 @@
-../android/SherpaOnnxTts/app/src/main/java/com/k2fsa/sherpa/onnx/Tts.kt
+../sherpa-onnx/kotlin-api/Tts.kt

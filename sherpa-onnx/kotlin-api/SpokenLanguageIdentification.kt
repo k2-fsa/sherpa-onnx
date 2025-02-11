@@ -3,13 +3,13 @@ package com.k2fsa.sherpa.onnx
 import android.content.res.AssetManager
 
 data class SpokenLanguageIdentificationWhisperConfig(
-    var encoder: String,
-    var decoder: String,
+    var encoder: String = "",
+    var decoder: String = "",
     var tailPaddings: Int = -1,
 )
 
 data class SpokenLanguageIdentificationConfig(
-    var whisper: SpokenLanguageIdentificationWhisperConfig,
+    var whisper: SpokenLanguageIdentificationWhisperConfig = SpokenLanguageIdentificationWhisperConfig(),
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",

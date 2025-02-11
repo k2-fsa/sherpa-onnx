@@ -246,6 +246,23 @@ def get_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-streaming-paraformer-bilingual-zh-en",
+            idx=5,
+            lang="zh_en",
+            short_name="paraformer",
+            cmd="""
+            pushd $model_name
+            rm -fv decoder.onnx
+            rm -fv encoder.onnx
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
 
     return models

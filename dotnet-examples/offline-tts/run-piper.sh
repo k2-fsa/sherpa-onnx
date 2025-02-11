@@ -10,8 +10,8 @@ fi
 
 dotnet run \
   --vits-model=./vits-piper-en_US-amy-low/en_US-amy-low.onnx \
-  --vits-tokens=./vits-piper-en_US-amy-low/tokens.txt \
-  --vits-data-dir=./vits-piper-en_US-amy-low/espeak-ng-data \
+  --tokens=./vits-piper-en_US-amy-low/tokens.txt \
+  --data-dir=./vits-piper-en_US-amy-low/espeak-ng-data \
   --debug=1 \
   --output-filename=./amy.wav \
   --text="This is a text to speech application in dotnet with Next Generation Kaldi"

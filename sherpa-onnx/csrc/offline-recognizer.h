@@ -9,11 +9,6 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/features.h"
 #include "sherpa-onnx/csrc/offline-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/csrc/offline-lm-config.h"
@@ -82,9 +77,8 @@ class OfflineRecognizer {
  public:
   ~OfflineRecognizer();
 
-#if __ANDROID_API__ >= 9
-  OfflineRecognizer(AAssetManager *mgr, const OfflineRecognizerConfig &config);
-#endif
+  template <typename Manager>
+  OfflineRecognizer(Manager *mgr, const OfflineRecognizerConfig &config);
 
   explicit OfflineRecognizer(const OfflineRecognizerConfig &config);
 
@@ -120,10 +114,10 @@ class OfflineRecognizer {
   void DecodeStreams(OfflineStream **ss, int32_t n) const;
 
   /** Onnxruntime Session objects are not affected by this method.
-  * The exact behavior can be defined by a specific recognizer impl.
-  * For instance, for the whisper recognizer, you can retrieve the language and task from
-  * the config and ignore any remaining fields in `config`.
-  */
+   * The exact behavior can be defined by a specific recognizer impl.
+   * For instance, for the whisper recognizer, you can retrieve the language and
+   * task from the config and ignore any remaining fields in `config`.
+   */
   void SetConfig(const OfflineRecognizerConfig &config);
 
   OfflineRecognizerConfig GetConfig() const;

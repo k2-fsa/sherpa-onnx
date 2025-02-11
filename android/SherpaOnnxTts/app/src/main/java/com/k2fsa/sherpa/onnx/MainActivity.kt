@@ -183,6 +183,9 @@ class MainActivity : AppCompatActivity() {
     private fun initTts() {
         var modelDir: String?
         var modelName: String?
+        var acousticModelName: String?
+        var vocoder: String?
+        var voices: String?
         var ruleFsts: String?
         var ruleFars: String?
         var lexicon: String?
@@ -193,8 +196,22 @@ class MainActivity : AppCompatActivity() {
         // The purpose of such a design is to make the CI test easier
         // Please see
         // https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/apk/generate-tts-apk-script.py
-        modelDir = null
+
+        // VITS -- begin
         modelName = null
+        // VITS -- end
+
+        // Matcha -- begin
+        acousticModelName = null
+        vocoder = null
+        // Matcha -- end
+
+        // For Kokoro -- begin
+        voices = null
+        // For Kokoro -- end
+
+
+        modelDir = null
         ruleFsts = null
         ruleFars = null
         lexicon = null
@@ -217,7 +234,6 @@ class MainActivity : AppCompatActivity() {
         // https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
         // modelDir = "vits-icefall-zh-aishell3"
         // modelName = "model.onnx"
-        // ruleFsts = "vits-icefall-zh-aishell3/phone.fst,vits-icefall-zh-aishell3/date.fst,vits-icefall-zh-aishell3/number.fst,vits-icefall-zh-aishell3/new_heteronym.fst"
         // ruleFars = "vits-icefall-zh-aishell3/rule.far"
         // lexicon = "lexicon.txt"
 
@@ -233,24 +249,67 @@ class MainActivity : AppCompatActivity() {
         // modelDir = "vits-coqui-de-css10"
         // modelName = "model.onnx"
 
+        // Example 6
+        // vits-melo-tts-zh_en
+        // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/vits.html#vits-melo-tts-zh-en-chinese-english-1-speaker
+        // modelDir = "vits-melo-tts-zh_en"
+        // modelName = "model.onnx"
+        // lexicon = "lexicon.txt"
+        // dictDir = "vits-melo-tts-zh_en/dict"
+
+        // Example 7
+        // matcha-icefall-zh-baker
+        // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker
+        // modelDir = "matcha-icefall-zh-baker"
+        // acousticModelName = "model-steps-3.onnx"
+        // vocoder = "hifigan_v2.onnx"
+        // lexicon = "lexicon.txt"
+        // dictDir = "matcha-icefall-zh-baker/dict"
+
+        // Example 8
+        // matcha-icefall-en_US-ljspeech
+        // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker
+        // modelDir = "matcha-icefall-en_US-ljspeech"
+        // acousticModelName = "model-steps-3.onnx"
+        // vocoder = "hifigan_v2.onnx"
+        // dataDir = "matcha-icefall-en_US-ljspeech/espeak-ng-data"
+
+        // Example 9
+        // kokoro-en-v0_19
+        // modelDir = "kokoro-en-v0_19"
+        // modelName = "model.onnx"
+        // voices = "voices.bin"
+        // dataDir = "kokoro-en-v0_19/espeak-ng-data"
+
+        // Example 10
+        // kokoro-multi-lang-v1_0
+        // modelDir = "kokoro-multi-lang-v1_0"
+        // modelName = "model.onnx"
+        // voices = "voices.bin"
+        // dataDir = "kokoro-multi-lang-v1_0/espeak-ng-data"
+        // dictDir = "kokoro-multi-lang-v1_0/dict"
+        // lexicon = "kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt"
+        // ruleFsts = "$modelDir/phone-zh.fst,$modelDir/date-zh.fst,$modelDir/number-zh.fst"
+
         if (dataDir != null) {
-            val newDir = copyDataDir(modelDir!!)
-            modelDir = newDir + "/" + modelDir
-            dataDir = newDir + "/" + dataDir
-            assets = null
+            val newDir = copyDataDir(dataDir!!)
+            dataDir = "$newDir/$dataDir"
         }
 
         if (dictDir != null) {
-            val newDir = copyDataDir(modelDir!!)
-            modelDir = newDir + "/" + modelDir
-            dictDir = modelDir + "/" + "dict"
-            ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
-            assets = null
+            val newDir = copyDataDir(dictDir!!)
+            dictDir = "$newDir/$dictDir"
+            if (ruleFsts == null) {
+                ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
+            }
         }
 
         val config = getOfflineTtsConfig(
             modelDir = modelDir!!,
-            modelName = modelName!!,
+            modelName = modelName ?: "",
+            acousticModelName = acousticModelName ?: "",
+            vocoder = vocoder ?: "",
+            voices = voices ?: "",
             lexicon = lexicon ?: "",
             dataDir = dataDir ?: "",
             dictDir = dictDir ?: "",

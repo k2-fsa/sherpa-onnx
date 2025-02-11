@@ -8,6 +8,15 @@
 #include <queue>
 #include <utility>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/vad-model.h"
 
@@ -22,15 +31,14 @@ class VoiceActivityDetector::Impl {
     Init();
   }
 
-#if __ANDROID_API__ >= 9
-  Impl(AAssetManager *mgr, const VadModelConfig &config,
+  template <typename Manager>
+  Impl(Manager *mgr, const VadModelConfig &config,
        float buffer_size_in_seconds = 60)
       : model_(VadModel::Create(mgr, config)),
         config_(config),
         buffer_(buffer_size_in_seconds * config.sample_rate) {
     Init();
   }
-#endif
 
   void AcceptWaveform(const float *samples, int32_t n) {
     if (buffer_.Size() > max_utterance_length_) {
@@ -177,12 +185,11 @@ VoiceActivityDetector::VoiceActivityDetector(
     const VadModelConfig &config, float buffer_size_in_seconds /*= 60*/)
     : impl_(std::make_unique<Impl>(config, buffer_size_in_seconds)) {}
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 VoiceActivityDetector::VoiceActivityDetector(
-    AAssetManager *mgr, const VadModelConfig &config,
+    Manager *mgr, const VadModelConfig &config,
     float buffer_size_in_seconds /*= 60*/)
     : impl_(std::make_unique<Impl>(mgr, config, buffer_size_in_seconds)) {}
-#endif
 
 VoiceActivityDetector::~VoiceActivityDetector() = default;
 
@@ -211,5 +218,17 @@ bool VoiceActivityDetector::IsSpeechDetected() const {
 const VadModelConfig &VoiceActivityDetector::GetConfig() const {
   return impl_->GetConfig();
 }
+
+#if __ANDROID_API__ >= 9
+template VoiceActivityDetector::VoiceActivityDetector(
+    AAssetManager *mgr, const VadModelConfig &config,
+    float buffer_size_in_seconds = 60);
+#endif
+
+#if __OHOS__
+template VoiceActivityDetector::VoiceActivityDetector(
+    NativeResourceManager *mgr, const VadModelConfig &config,
+    float buffer_size_in_seconds = 60);
+#endif
 
 }  // namespace sherpa_onnx

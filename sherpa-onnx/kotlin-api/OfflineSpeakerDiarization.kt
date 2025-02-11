@@ -3,11 +3,11 @@ package com.k2fsa.sherpa.onnx
 import android.content.res.AssetManager
 
 data class OfflineSpeakerSegmentationPyannoteModelConfig(
-    var model: String,
+    var model: String = "",
 )
 
 data class OfflineSpeakerSegmentationModelConfig(
-    var pyannote: OfflineSpeakerSegmentationPyannoteModelConfig,
+    var pyannote: OfflineSpeakerSegmentationPyannoteModelConfig = OfflineSpeakerSegmentationPyannoteModelConfig(),
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
@@ -19,9 +19,9 @@ data class FastClusteringConfig(
 )
 
 data class OfflineSpeakerDiarizationConfig(
-    var segmentation: OfflineSpeakerSegmentationModelConfig,
-    var embedding: SpeakerEmbeddingExtractorConfig,
-    var clustering: FastClusteringConfig,
+    var segmentation: OfflineSpeakerSegmentationModelConfig = OfflineSpeakerSegmentationModelConfig(),
+    var embedding: SpeakerEmbeddingExtractorConfig = SpeakerEmbeddingExtractorConfig(),
+    var clustering: FastClusteringConfig = FastClusteringConfig(),
     var minDurationOn: Float = 0.2f,
     var minDurationOff: Float = 0.5f,
 )

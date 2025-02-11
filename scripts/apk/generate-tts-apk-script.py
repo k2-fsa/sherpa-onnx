@@ -30,7 +30,10 @@ def get_args():
 @dataclass
 class TtsModel:
     model_dir: str
-    model_name: str = ""
+    model_name: str = ""  # for vits
+    acoustic_model_name: str = ""  # for matcha
+    vocoder: str = ""  # for matcha
+    voices: str = ""  # for kokoro
     lang: str = ""  # en, zh, fr, de, etc.
     rule_fsts: Optional[List[str]] = None
     rule_fars: Optional[List[str]] = None
@@ -38,6 +41,7 @@ class TtsModel:
     dict_dir: Optional[str] = None
     is_char: bool = False
     lang_iso_639_3: str = ""
+    lexicon: str = ""
 
 
 def convert_lang_to_iso_639_3(models: List[TtsModel]):
@@ -163,6 +167,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-es_MX-claude-high"),
         TtsModel(model_dir="vits-piper-fa_IR-amir-medium"),
         TtsModel(model_dir="vits-piper-fa_IR-gyro-medium"),
+        TtsModel(model_dir="vits-piper-fa_en-rezahedayatfar-ibrahimwalk-medium"),
         TtsModel(model_dir="vits-piper-fi_FI-harri-low"),
         TtsModel(model_dir="vits-piper-fi_FI-harri-medium"),
         #  TtsModel(model_dir="vits-piper-fr_FR-mls-medium"),
@@ -183,6 +188,7 @@ def get_piper_models() -> List[TtsModel]:
         TtsModel(model_dir="vits-piper-kk_KZ-iseke-x_low"),
         TtsModel(model_dir="vits-piper-kk_KZ-issai-high"),
         TtsModel(model_dir="vits-piper-kk_KZ-raya-x_low"),
+        TtsModel(model_dir="vits-piper-lv_LV-aivars-medium"),
         TtsModel(model_dir="vits-piper-lb_LU-marylux-medium"),
         TtsModel(model_dir="vits-piper-ne_NP-google-medium"),
         TtsModel(model_dir="vits-piper-ne_NP-google-x_low"),
@@ -376,6 +382,74 @@ def get_vits_models() -> List[TtsModel]:
     return all_models
 
 
+def get_matcha_models() -> List[TtsModel]:
+    chinese_models = [
+        TtsModel(
+            model_dir="matcha-icefall-zh-baker",
+            acoustic_model_name="model-steps-3.onnx",
+            lang="zh",
+        )
+    ]
+    rule_fsts = ["phone.fst", "date.fst", "number.fst"]
+    for m in chinese_models:
+        s = [f"{m.model_dir}/{r}" for r in rule_fsts]
+        m.rule_fsts = ",".join(s)
+        m.dict_dir = m.model_dir + "/dict"
+        m.vocoder = "hifigan_v2.onnx"
+
+    english_persian_models = [
+        TtsModel(
+            model_dir="matcha-icefall-en_US-ljspeech",
+            acoustic_model_name="model-steps-3.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="matcha-tts-fa_en-male",
+            acoustic_model_name="model.onnx",
+            lang="fa",
+        ),
+        TtsModel(
+            model_dir="matcha-tts-fa_en-female",
+            acoustic_model_name="model.onnx",
+            lang="fa",
+        ),
+    ]
+    for m in english_persian_models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.vocoder = "hifigan_v2.onnx"
+
+    return chinese_models + english_persian_models
+
+
+def get_kokoro_models() -> List[TtsModel]:
+    english_models = [
+        TtsModel(
+            model_dir="kokoro-en-v0_19",
+            model_name="model.onnx",
+            lang="en",
+        )
+    ]
+    for m in english_models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.voices = "voices.bin"
+
+    multi_lingual_models = [
+        TtsModel(
+            model_dir="kokoro-multi-lang-v1_0",
+            model_name="model.onnx",
+            lang="en",
+        )
+    ]
+    for m in multi_lingual_models:
+        m.data_dir = f"{m.model_dir}/espeak-ng-data"
+        m.dict_dir = f"{m.model_dir}/dict"
+        m.voices = "voices.bin"
+        m.lexicon = f"{m.model_dir}/lexicon-us-en.txt,{m.model_dir}/lexicon-zh.txt"
+        m.rule_fsts = f"{m.model_dir}/phone-zh.fst,{m.model_dir}/date-zh.fst,{m.model_dir}/number-zh.fst"
+
+    return english_models + multi_lingual_models
+
+
 def main():
     args = get_args()
     index = args.index
@@ -387,7 +461,11 @@ def main():
     all_model_list += get_piper_models()
     all_model_list += get_mimic3_models()
     all_model_list += get_coqui_models()
+    all_model_list += get_matcha_models()
+    all_model_list += get_kokoro_models()
+
     convert_lang_to_iso_639_3(all_model_list)
+    print(all_model_list)
 
     num_models = len(all_model_list)
 

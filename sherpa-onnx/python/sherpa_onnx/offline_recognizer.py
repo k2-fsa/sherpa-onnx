@@ -8,13 +8,14 @@ from _sherpa_onnx import (
     OfflineCtcFstDecoderConfig,
     OfflineLMConfig,
     OfflineModelConfig,
+    OfflineMoonshineModelConfig,
     OfflineNemoEncDecCtcModelConfig,
     OfflineParaformerModelConfig,
-    OfflineSenseVoiceModelConfig,
 )
 from _sherpa_onnx import OfflineRecognizer as _Recognizer
 from _sherpa_onnx import (
     OfflineRecognizerConfig,
+    OfflineSenseVoiceModelConfig,
     OfflineStream,
     OfflineTdnnModelConfig,
     OfflineTransducerModelConfig,
@@ -503,12 +504,12 @@ class OfflineRecognizer(object):
         e.g., tiny, tiny.en, base, base.en, etc.
 
         Args:
-          encoder_model:
+          encoder:
             Path to the encoder model, e.g., tiny-encoder.onnx,
             tiny-encoder.int8.onnx, tiny-encoder.ort, etc.
-          decoder_model:
-            Path to the encoder model, e.g., tiny-encoder.onnx,
-            tiny-encoder.int8.onnx, tiny-encoder.ort, etc.
+          decoder:
+            Path to the decoder model, e.g., tiny-decoder.onnx,
+            tiny-decoder.int8.onnx, tiny-decoder.ort, etc.
           tokens:
             Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
             columns::
@@ -562,6 +563,87 @@ class OfflineRecognizer(object):
         recognizer_config = OfflineRecognizerConfig(
             feat_config=feat_config,
             model_config=model_config,
+            decoding_method=decoding_method,
+            rule_fsts=rule_fsts,
+            rule_fars=rule_fars,
+        )
+        self.recognizer = _Recognizer(recognizer_config)
+        self.config = recognizer_config
+        return self
+
+    @classmethod
+    def from_moonshine(
+        cls,
+        preprocessor: str,
+        encoder: str,
+        uncached_decoder: str,
+        cached_decoder: str,
+        tokens: str,
+        num_threads: int = 1,
+        decoding_method: str = "greedy_search",
+        debug: bool = False,
+        provider: str = "cpu",
+        rule_fsts: str = "",
+        rule_fars: str = "",
+    ):
+        """
+        Please refer to
+        `<https://k2-fsa.github.io/sherpa/onnx/moonshine/index.html>`_
+        to download pre-trained models for different kinds of moonshine models,
+        e.g., tiny, base, etc.
+
+        Args:
+          preprocessor:
+            Path to the preprocessor model, e.g., preprocess.onnx
+          encoder:
+            Path to the encoder model, e.g., encode.int8.onnx
+          uncached_decoder:
+            Path to the uncached decoder model, e.g., uncached_decode.int8.onnx,
+          cached_decoder:
+            Path to the cached decoder model, e.g., cached_decode.int8.onnx,
+          tokens:
+            Path to ``tokens.txt``. Each line in ``tokens.txt`` contains two
+            columns::
+
+                symbol integer_id
+
+          num_threads:
+            Number of threads for neural network computation.
+          decoding_method:
+            Valid values: greedy_search.
+          debug:
+            True to show debug messages.
+          provider:
+            onnxruntime execution providers. Valid values are: cpu, cuda, coreml.
+          rule_fsts:
+            If not empty, it specifies fsts for inverse text normalization.
+            If there are multiple fsts, they are separated by a comma.
+          rule_fars:
+            If not empty, it specifies fst archives for inverse text normalization.
+            If there are multiple archives, they are separated by a comma.
+        """
+        self = cls.__new__(cls)
+        model_config = OfflineModelConfig(
+            moonshine=OfflineMoonshineModelConfig(
+                preprocessor=preprocessor,
+                encoder=encoder,
+                uncached_decoder=uncached_decoder,
+                cached_decoder=cached_decoder,
+            ),
+            tokens=tokens,
+            num_threads=num_threads,
+            debug=debug,
+            provider=provider,
+        )
+
+        unused_feat_config = FeatureExtractorConfig(
+            sampling_rate=16000,
+            feature_dim=80,
+        )
+
+        recognizer_config = OfflineRecognizerConfig(
+            model_config=model_config,
+            feat_config=unused_feat_config,
             decoding_method=decoding_method,
             rule_fsts=rule_fsts,
             rule_fars=rule_fars,

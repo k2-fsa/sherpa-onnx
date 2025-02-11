@@ -130,6 +130,36 @@ def get_2nd_models():
             popd
             """,
         ),
+        Model(
+            model_name="sherpa-onnx-moonshine-tiny-en-int8",
+            idx=21,
+            lang="en",
+            short_name="moonshine_tiny_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
+        Model(
+            model_name="sherpa-onnx-moonshine-base-en-int8",
+            idx=22,
+            lang="en",
+            short_name="moonshine_base_int8",
+            cmd="""
+            pushd $model_name
+
+            rm -rfv test_wavs
+
+            ls -lh
+
+            popd
+            """,
+        ),
     ]
     return models
 
@@ -299,6 +329,14 @@ def get_models():
         (
             "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
             "sherpa-onnx-whisper-tiny.en",
+        ),
+        (
+            "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+            "sherpa-onnx-moonshine-tiny-en-int8",
+        ),
+        (
+            "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",
+            "sherpa-onnx-moonshine-base-en-int8",
         ),
         (
             "sherpa-onnx-streaming-zipformer-en-20M-2023-02-17",

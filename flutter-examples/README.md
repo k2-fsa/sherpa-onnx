@@ -136,14 +136,16 @@ flutter create --platforms ios ./
 Connect your iPhone to the computer, and run `flutter devices`, which will print:
 
 ```bash
-Found 3 connected devices:
-  iPhone (mobile) • 00008030-001064212E85802E • ios            • iOS 16.3 20D47
-  macOS (desktop) • macos                     • darwin-x64     • macOS 13.1 22C65 darwin-x64
-  Chrome (web)    • chrome                    • web-javascript • Google Chrome 126.0.6478.127
+Found 4 connected devices:
+  iPhone 14 (mobile) • 634110C4-168D-408F-A938-D7FC62222579 • ios            • com.apple.CoreSimulator.SimRuntime.iOS-16-2 (simulator)
+  iPhone (mobile)    • 00008030-001064212E85802E            • ios            • iOS 16.3 20D47
+  macOS (desktop)    • macos                                • darwin-x64     • macOS 13.1 22C65 darwin-x64
+  Chrome (web)       • chrome                               • web-javascript • Google Chrome 126.0.6478.127
 
 No wireless devices were found.
 
 Run "flutter emulators" to list and start any available device emulators.
+(E.g., flutter emulators --launch ios)
 
 If you expected another device to be detected, please run "flutter doctor" to diagnose potential issues. You may also try increasing the time to wait
 for connected devices with the "--device-timeout" flag. Visit https://flutter.dev/setup/ for troubleshooting tips.

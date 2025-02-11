@@ -34,6 +34,11 @@ func main() {
 	flag.StringVar(&config.ModelConfig.Whisper.Task, "whisper-task", "transcribe", "transcribe or translate")
 	flag.IntVar(&config.ModelConfig.Whisper.TailPaddings, "whisper-tail-paddings", -1, "tail paddings for whisper")
 
+	flag.StringVar(&config.ModelConfig.Moonshine.Preprocessor, "moonshine-preprocessor", "", "Path to the moonshine preprocessor model")
+	flag.StringVar(&config.ModelConfig.Moonshine.Encoder, "moonshine-encoder", "", "Path to the moonshine encoder model")
+	flag.StringVar(&config.ModelConfig.Moonshine.UncachedDecoder, "moonshine-uncached-decoder", "", "Path to the moonshine uncached decoder model")
+	flag.StringVar(&config.ModelConfig.Moonshine.CachedDecoder, "moonshine-cached-decoder", "", "Path to the moonshine cached decoder model")
+
 	flag.StringVar(&config.ModelConfig.Tdnn.Model, "tdnn-model", "", "Path to the tdnn model")
 
 	flag.StringVar(&config.ModelConfig.SenseVoice.Model, "sense-voice-model", "", "Path to the SenseVoice model")
@@ -85,12 +90,8 @@ func main() {
 	log.Println("Emotion: " + result.Emotion)
 	log.Println("Lang: " + result.Lang)
 	log.Println("Event: " + result.Event)
-	for _, v := range result.Timestamps {
-		log.Printf("Timestamp: %+v\n", v)
-	}
-	for _, v := range result.Tokens {
-		log.Println("Token: " + v)
-	}
+	log.Printf("Timestamp: %v\n", result.Timestamps)
+	log.Printf("Tokens: %v\n", result.Tokens)
 	log.Printf("Wave duration: %v seconds", float32(len(samples))/float32(sampleRate))
 }
 

@@ -34,7 +34,6 @@ Step 4. Run it
 */
 
 using SherpaOnnx;
-using System;
 
 class OfflineSpeakerDiarizationDemo
 {
@@ -54,7 +53,7 @@ class OfflineSpeakerDiarizationDemo
     var sd = new OfflineSpeakerDiarization(config);
 
     var testWaveFile = "./0-four-speakers-zh.wav";
-    WaveReader waveReader = new WaveReader(testWaveFile);
+    var waveReader = new WaveReader(testWaveFile);
     if (sd.SampleRate != waveReader.SampleRate)
     {
       Console.WriteLine($"Expected sample rate: {sd.SampleRate}. Given: {waveReader.SampleRate}");
@@ -65,19 +64,19 @@ class OfflineSpeakerDiarizationDemo
 
      // var segments = sd.Process(waveReader.Samples); // this one is also ok
 
-    var MyProgressCallback = (int numProcessedChunks, int numTotalChunks, IntPtr arg) =>
+    var progressCallback = (int numProcessedChunks, int numTotalChunks, IntPtr arg) =>
     {
-      float progress = 100.0F * numProcessedChunks / numTotalChunks;
-      Console.WriteLine("Progress {0}%", String.Format("{0:0.00}", progress));
+      var progress = 100.0F * numProcessedChunks / numTotalChunks;
+      Console.WriteLine("Progress {0}%", string.Format("{0:0.00}", progress));
       return 0;
     };
 
-    var callback = new OfflineSpeakerDiarizationProgressCallback(MyProgressCallback);
+    var callback = new OfflineSpeakerDiarizationProgressCallback(progressCallback);
     var segments = sd.ProcessWithCallback(waveReader.Samples, callback, IntPtr.Zero);
 
     foreach (var s in segments)
     {
-      Console.WriteLine("{0} -- {1} speaker_{2}", String.Format("{0:0.00}", s.Start), String.Format("{0:0.00}", s.End), s.Speaker);
+      Console.WriteLine("{0} -- {1} speaker_{2}", string.Format("{0:0.00}", s.Start), string.Format("{0:0.00}", s.End), s.Speaker);
     }
   }
 }

@@ -131,6 +131,34 @@ final class SherpaOnnxOfflineTtsVitsModelConfig extends Struct {
   external Pointer<Utf8> dictDir;
 }
 
+final class SherpaOnnxOfflineTtsMatchaModelConfig extends Struct {
+  external Pointer<Utf8> acousticModel;
+  external Pointer<Utf8> vocoder;
+  external Pointer<Utf8> lexicon;
+  external Pointer<Utf8> tokens;
+  external Pointer<Utf8> dataDir;
+
+  @Float()
+  external double noiseScale;
+
+  @Float()
+  external double lengthScale;
+
+  external Pointer<Utf8> dictDir;
+}
+
+final class SherpaOnnxOfflineTtsKokoroModelConfig extends Struct {
+  external Pointer<Utf8> model;
+  external Pointer<Utf8> voices;
+  external Pointer<Utf8> tokens;
+  external Pointer<Utf8> dataDir;
+
+  @Float()
+  external double lengthScale;
+  external Pointer<Utf8> dictDir;
+  external Pointer<Utf8> lexicon;
+}
+
 final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external SherpaOnnxOfflineTtsVitsModelConfig vits;
   @Int32()
@@ -140,6 +168,8 @@ final class SherpaOnnxOfflineTtsModelConfig extends Struct {
   external int debug;
 
   external Pointer<Utf8> provider;
+  external SherpaOnnxOfflineTtsMatchaModelConfig matcha;
+  external SherpaOnnxOfflineTtsKokoroModelConfig kokoro;
 }
 
 final class SherpaOnnxOfflineTtsConfig extends Struct {
@@ -150,6 +180,9 @@ final class SherpaOnnxOfflineTtsConfig extends Struct {
   external int maxNumSenetences;
 
   external Pointer<Utf8> ruleFars;
+
+  @Float()
+  external double silenceScale;
 }
 
 final class SherpaOnnxGeneratedAudio extends Struct {
@@ -194,6 +227,13 @@ final class SherpaOnnxOfflineWhisperModelConfig extends Struct {
   external int tailPaddings;
 }
 
+final class SherpaOnnxOfflineMoonshineModelConfig extends Struct {
+  external Pointer<Utf8> preprocessor;
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> uncachedDecoder;
+  external Pointer<Utf8> cachedDecoder;
+}
+
 final class SherpaOnnxOfflineTdnnModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
@@ -236,6 +276,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
   external Pointer<Utf8> telespeechCtc;
 
   external SherpaOnnxOfflineSenseVoiceModelConfig senseVoice;
+  external SherpaOnnxOfflineMoonshineModelConfig moonshine;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
@@ -629,6 +670,12 @@ typedef DecodeKeywordStreamNative = Void Function(
     Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
 
 typedef DecodeKeywordStream = void Function(
+    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef ResetKeywordStreamNative = Void Function(
+    Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
+
+typedef ResetKeywordStream = void Function(
     Pointer<SherpaOnnxKeywordSpotter>, Pointer<SherpaOnnxOnlineStream>);
 
 typedef GetKeywordResultAsJsonNative = Pointer<Utf8> Function(
@@ -1121,6 +1168,7 @@ class SherpaOnnxBindings {
   static CreateKeywordStreamWithKeywords? createKeywordStreamWithKeywords;
   static IsKeywordStreamReady? isKeywordStreamReady;
   static DecodeKeywordStream? decodeKeywordStream;
+  static ResetKeywordStream? resetKeywordStream;
   static GetKeywordResultAsJson? getKeywordResultAsJson;
   static FreeKeywordResultJson? freeKeywordResultJson;
 
@@ -1421,6 +1469,11 @@ class SherpaOnnxBindings {
     decodeKeywordStream ??= dynamicLibrary
         .lookup<NativeFunction<DecodeKeywordStreamNative>>(
             'SherpaOnnxDecodeKeywordStream')
+        .asFunction();
+
+    resetKeywordStream ??= dynamicLibrary
+        .lookup<NativeFunction<ResetKeywordStreamNative>>(
+            'SherpaOnnxResetKeywordStream')
         .asFunction();
 
     getKeywordResultAsJson ??= dynamicLibrary

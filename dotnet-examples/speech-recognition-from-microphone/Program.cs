@@ -6,47 +6,43 @@
 // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/zipformer-transducer-models.html
 // to download streaming models
 
-using CommandLine.Text;
 using CommandLine;
+using CommandLine.Text;
 using PortAudioSharp;
-using System.Threading;
 using SherpaOnnx;
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System;
-
 
 class SpeechRecognitionFromMicrophone
 {
   class Options
   {
     [Option(Required = true, HelpText = "Path to tokens.txt")]
-    public string Tokens { get; set; }
+    public string? Tokens { get; set; }
 
     [Option(Required = false, Default = "cpu", HelpText = "Provider, e.g., cpu, coreml")]
-    public string Provider { get; set; }
+    public string? Provider { get; set; }
 
     [Option(Required = false, HelpText = "Path to transducer encoder.onnx")]
-    public string Encoder { get; set; }
+    public string? Encoder { get; set; }
 
     [Option(Required = false, HelpText = "Path to transducer decoder.onnx")]
-    public string Decoder { get; set; }
+    public string? Decoder { get; set; }
 
     [Option(Required = false, HelpText = "Path to transducer joiner.onnx")]
-    public string Joiner { get; set; }
+    public string? Joiner { get; set; }
 
     [Option("paraformer-encoder", Required = false, HelpText = "Path to paraformer encoder.onnx")]
-    public string ParaformerEncoder { get; set; }
+    public string? ParaformerEncoder { get; set; }
 
     [Option("paraformer-decoder", Required = false, HelpText = "Path to paraformer decoder.onnx")]
-    public string ParaformerDecoder { get; set; }
+    public string? ParaformerDecoder { get; set; }
 
     [Option("num-threads", Required = false, Default = 1, HelpText = "Number of threads for computation")]
     public int NumThreads { get; set; }
 
     [Option("decoding-method", Required = false, Default = "greedy_search",
             HelpText = "Valid decoding methods are: greedy_search, modified_beam_search")]
-    public string DecodingMethod { get; set; }
+    public string? DecodingMethod { get; set; }
 
     [Option(Required = false, Default = false, HelpText = "True to show model info during loading")]
     public bool Debug { get; set; }
@@ -126,7 +122,7 @@ to download pre-trained streaming models.
 
   private static void Run(Options options)
   {
-    OnlineRecognizerConfig config = new OnlineRecognizerConfig();
+    var config = new OnlineRecognizerConfig();
     config.FeatConfig.SampleRate = options.SampleRate;
 
     // All models from icefall using feature dim 80.
@@ -153,9 +149,9 @@ to download pre-trained streaming models.
     config.Rule2MinTrailingSilence = options.Rule2MinTrailingSilence;
     config.Rule3MinUtteranceLength = options.Rule3MinUtteranceLength;
 
-    OnlineRecognizer recognizer = new OnlineRecognizer(config);
+    var recognizer = new OnlineRecognizer(config);
 
-    OnlineStream s = recognizer.CreateStream();
+    var s = recognizer.CreateStream();
 
     Console.WriteLine(PortAudio.VersionInfo.versionText);
     PortAudio.Initialize();
@@ -176,12 +172,12 @@ to download pre-trained streaming models.
       Environment.Exit(1);
     }
 
-    DeviceInfo info = PortAudio.GetDeviceInfo(deviceIndex);
+    var info = PortAudio.GetDeviceInfo(deviceIndex);
 
     Console.WriteLine();
     Console.WriteLine($"Use default device {deviceIndex} ({info.name})");
 
-    StreamParameters param = new StreamParameters();
+    var param = new StreamParameters();
     param.device = deviceIndex;
     param.channelCount = 1;
     param.sampleFormat = SampleFormat.Float32;
@@ -189,14 +185,14 @@ to download pre-trained streaming models.
     param.hostApiSpecificStreamInfo = IntPtr.Zero;
 
     PortAudioSharp.Stream.Callback callback = (IntPtr input, IntPtr output,
-        UInt32 frameCount,
+        uint frameCount,
         ref StreamCallbackTimeInfo timeInfo,
         StreamCallbackFlags statusFlags,
         IntPtr userData
         ) =>
     {
-      float[] samples = new float[frameCount];
-      Marshal.Copy(input, samples, 0, (Int32)frameCount);
+      var samples = new float[frameCount];
+      Marshal.Copy(input, samples, 0, (int)frameCount);
 
       s.AcceptWaveform(options.SampleRate, samples);
 
@@ -215,7 +211,7 @@ to download pre-trained streaming models.
 
     stream.Start();
 
-    String lastText = "";
+    var lastText = string.Empty;
     int segmentIndex = 0;
 
     while (true)
@@ -245,9 +241,5 @@ to download pre-trained streaming models.
 
       Thread.Sleep(200); // ms
     }
-
-    PortAudio.Terminate();
-
-
   }
 }

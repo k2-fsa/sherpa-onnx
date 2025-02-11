@@ -95,7 +95,7 @@ int32_t main() {
   recognizer_config.decoding_method = "greedy_search";
   recognizer_config.model_config = online_model_config;
 
-  SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer *recognizer =
       SherpaOnnxCreateOnlineRecognizer(&recognizer_config);
 
   free((void *)tokens_buf);
@@ -107,7 +107,8 @@ int32_t main() {
     return -1;
   }
 
-  SherpaOnnxOnlineStream *stream = SherpaOnnxCreateOnlineStream(recognizer);
+  const SherpaOnnxOnlineStream *stream =
+      SherpaOnnxCreateOnlineStream(recognizer);
 
   const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);
   int32_t segment_id = 0;

@@ -20,6 +20,7 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   jobject model = env->GetObjectField(config, fid);
   jclass model_config_cls = env->GetObjectClass(model);
 
+  // vits
   fid = env->GetFieldID(model_config_cls, "vits",
                         "Lcom/k2fsa/sherpa/onnx/OfflineTtsVitsModelConfig;");
   jobject vits = env->GetObjectField(model, fid);
@@ -64,6 +65,99 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   fid = env->GetFieldID(vits_cls, "lengthScale", "F");
   ans.model.vits.length_scale = env->GetFloatField(vits, fid);
 
+  // matcha
+  fid = env->GetFieldID(model_config_cls, "matcha",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineTtsMatchaModelConfig;");
+  jobject matcha = env->GetObjectField(model, fid);
+  jclass matcha_cls = env->GetObjectClass(matcha);
+
+  fid = env->GetFieldID(matcha_cls, "acousticModel", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.acoustic_model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "vocoder", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.vocoder = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "lexicon", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.lexicon = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "tokens", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.tokens = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "dataDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.data_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "dictDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(matcha, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.matcha.dict_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(matcha_cls, "noiseScale", "F");
+  ans.model.matcha.noise_scale = env->GetFloatField(matcha, fid);
+
+  fid = env->GetFieldID(matcha_cls, "lengthScale", "F");
+  ans.model.matcha.length_scale = env->GetFloatField(matcha, fid);
+
+  // kokoro
+  fid = env->GetFieldID(model_config_cls, "kokoro",
+                        "Lcom/k2fsa/sherpa/onnx/OfflineTtsKokoroModelConfig;");
+  jobject kokoro = env->GetObjectField(model, fid);
+  jclass kokoro_cls = env->GetObjectClass(kokoro);
+
+  fid = env->GetFieldID(kokoro_cls, "model", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.model = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "voices", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.voices = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "tokens", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.tokens = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "lexicon", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.lexicon = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "dataDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.data_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "dictDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.dict_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "lengthScale", "F");
+  ans.model.kokoro.length_scale = env->GetFloatField(kokoro, fid);
+
   fid = env->GetFieldID(model_config_cls, "numThreads", "I");
   ans.model.num_threads = env->GetIntField(model, fid);
 
@@ -92,6 +186,9 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
 
   fid = env->GetFieldID(cls, "maxNumSentences", "I");
   ans.max_num_sentences = env->GetIntField(config, fid);
+
+  fid = env->GetFieldID(cls, "silenceScale", "F");
+  ans.silence_scale = env->GetFloatField(config, fid);
 
   return ans;
 }
@@ -159,7 +256,6 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(JNIEnv *env, jobject /*obj*/,
                                                    jlong ptr, jstring text,
                                                    jint sid, jfloat speed) {
   const char *p_text = env->GetStringUTFChars(text, nullptr);
-  SHERPA_ONNX_LOGE("string is: %s", p_text);
 
   auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
       p_text, sid, speed);
@@ -185,7 +281,6 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jint sid,
     jfloat speed, jobject callback) {
   const char *p_text = env->GetStringUTFChars(text, nullptr);
-  SHERPA_ONNX_LOGE("string is: %s", p_text);
 
   std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
       [env, callback](const float *samples, int32_t n,
@@ -224,8 +319,8 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
     return env->CallIntMethod(should_continue, int_value_mid);
   };
 
-  auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
-      p_text, sid, speed, callback_wrapper);
+  auto tts = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr);
+  auto audio = tts->Generate(p_text, sid, speed, callback_wrapper);
 
   jfloatArray samples_arr = env->NewFloatArray(audio.samples.size());
   env->SetFloatArrayRegion(samples_arr, 0, audio.samples.size(),

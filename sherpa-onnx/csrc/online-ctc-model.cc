@@ -9,6 +9,15 @@
 #include <sstream>
 #include <string>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-nemo-ctc-model.h"
 #include "sherpa-onnx/csrc/online-wenet-ctc-model.h"
@@ -31,10 +40,9 @@ std::unique_ptr<OnlineCtcModel> OnlineCtcModel::Create(
   }
 }
 
-#if __ANDROID_API__ >= 9
-
+template <typename Manager>
 std::unique_ptr<OnlineCtcModel> OnlineCtcModel::Create(
-    AAssetManager *mgr, const OnlineModelConfig &config) {
+    Manager *mgr, const OnlineModelConfig &config) {
   if (!config.wenet_ctc.model.empty()) {
     return std::make_unique<OnlineWenetCtcModel>(mgr, config);
   } else if (!config.zipformer2_ctc.model.empty()) {
@@ -46,6 +54,15 @@ std::unique_ptr<OnlineCtcModel> OnlineCtcModel::Create(
     exit(-1);
   }
 }
+
+#if __ANDROID_API__ >= 9
+template std::unique_ptr<OnlineCtcModel> OnlineCtcModel::Create(
+    AAssetManager *mgr, const OnlineModelConfig &config);
+#endif
+
+#if __OHOS__
+template std::unique_ptr<OnlineCtcModel> OnlineCtcModel::Create(
+    NativeResourceManager *mgr, const OnlineModelConfig &config);
 #endif
 
 }  // namespace sherpa_onnx

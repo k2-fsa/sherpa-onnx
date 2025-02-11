@@ -4,7 +4,7 @@ package com.k2fsa.sherpa.onnx
 import android.content.res.AssetManager
 
 data class SileroVadModelConfig(
-    var model: String,
+    var model: String = "",
     var threshold: Float = 0.5F,
     var minSilenceDuration: Float = 0.25F,
     var minSpeechDuration: Float = 0.25F,
@@ -13,7 +13,7 @@ data class SileroVadModelConfig(
 )
 
 data class VadModelConfig(
-    var sileroVadModelConfig: SileroVadModelConfig,
+    var sileroVadModelConfig: SileroVadModelConfig = SileroVadModelConfig(),
     var sampleRate: Int = 16000,
     var numThreads: Int = 1,
     var provider: String = "cpu",
@@ -112,5 +112,5 @@ fun getVadModelConfig(type: Int): VadModelConfig? {
             )
         }
     }
-    return null;
+    return null
 }

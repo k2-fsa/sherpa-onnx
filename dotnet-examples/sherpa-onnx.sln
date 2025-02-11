@@ -29,9 +29,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "keyword-spotting-from-files
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "keyword-spotting-from-microphone", "keyword-spotting-from-microphone\keyword-spotting-from-microphone.csproj", "{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TTS", "TTS\TTS.csproj", "{DACE4A18-4FC8-4437-92BF-5A90BA81286C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "offline-speaker-diarization", "offline-speaker-diarization\offline-speaker-diarization.csproj", "{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "offline-speaker-diarization", "offline-speaker-diarization\offline-speaker-diarization.csproj", "{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kokoro-tts", "kokoro-tts\kokoro-tts.csproj", "{9C0ABE6C-1F54-42B5-804E-C3FED6668F52}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kokoro-tts-play", "kokoro-tts-play\kokoro-tts-play.csproj", "{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -91,14 +93,18 @@ Global
 		{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEE0ED2B-C86F-4952-863C-EAD3219CB4EC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DACE4A18-4FC8-4437-92BF-5A90BA81286C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3A1FF28-A77D-429D-AEAC-2BA77CA682BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9C0ABE6C-1F54-42B5-804E-C3FED6668F52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9C0ABE6C-1F54-42B5-804E-C3FED6668F52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9C0ABE6C-1F54-42B5-804E-C3FED6668F52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9C0ABE6C-1F54-42B5-804E-C3FED6668F52}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,5 +1,5 @@
 { Copyright (c)  2024  Xiaomi Corporation }
-program piper;
+program piper_playback;
 {
 This file shows how to use the text to speech API of sherpa-onnx
 with Piper models.

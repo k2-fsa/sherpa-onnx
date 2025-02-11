@@ -16,6 +16,21 @@ echo "PATH: $PATH"
 which $EXE
 
 log "------------------------------------------------------------"
+log "Run NeMo GigaAM Russian models"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
+tar xvf sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
+rm sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24.tar.bz2
+
+$EXE \
+  --nemo-ctc-model=./sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24/model.int8.onnx \
+  --tokens=./sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24/tokens.txt \
+  --debug=1 \
+  ./sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24/test_wavs/example.wav
+
+rm -rf sherpa-onnx-nemo-ctc-giga-am-russian-2024-10-24
+
+log "------------------------------------------------------------"
 log "Run SenseVoice models"
 log "------------------------------------------------------------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2

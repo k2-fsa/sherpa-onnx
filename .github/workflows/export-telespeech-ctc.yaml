@@ -60,7 +60,7 @@ jobs:
 
           export GIT_CLONE_PROTECTION_ACTIVE=false
 
-          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-zh-2024-06-04 hf
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-zh-2024-06-04 hf
           cp -a $src/* hf/
           cd hf
           git lfs track "*.pdf"
@@ -84,7 +84,7 @@ jobs:
           export GIT_CLONE_PROTECTION_ACTIVE=false
 
           rm -rf hf
-          GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04 hf
+          GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-telespeech-ctc-int8-zh-2024-06-04 hf
           cp -a $src/* hf/
           cd hf
           git lfs track "*.pdf"

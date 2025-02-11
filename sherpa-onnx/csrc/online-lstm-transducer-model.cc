@@ -16,6 +16,10 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/cat.h"
 #include "sherpa-onnx/csrc/macros.h"
@@ -48,9 +52,9 @@ OnlineLstmTransducerModel::OnlineLstmTransducerModel(
   }
 }
 
-#if __ANDROID_API__ >= 9
+template <typename Manager>
 OnlineLstmTransducerModel::OnlineLstmTransducerModel(
-    AAssetManager *mgr, const OnlineModelConfig &config)
+    Manager *mgr, const OnlineModelConfig &config)
     : env_(ORT_LOGGING_LEVEL_ERROR),
       config_(config),
       sess_opts_(GetSessionOptions(config)),
@@ -70,7 +74,6 @@ OnlineLstmTransducerModel::OnlineLstmTransducerModel(
     InitJoiner(buf.data(), buf.size());
   }
 }
-#endif
 
 void OnlineLstmTransducerModel::InitEncoder(void *model_data,
                                             size_t model_data_length) {
@@ -89,7 +92,11 @@ void OnlineLstmTransducerModel::InitEncoder(void *model_data,
     std::ostringstream os;
     os << "---encoder---\n";
     PrintModelMetadata(os, meta_data);
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
     SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
   }
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
@@ -158,9 +165,10 @@ std::vector<Ort::Value> OnlineLstmTransducerModel::StackStates(
     h_buf[i] = &states[i][0];
     c_buf[i] = &states[i][1];
   }
+  auto allocator = const_cast<OnlineLstmTransducerModel *>(this)->allocator_;
 
-  Ort::Value h = Cat(allocator_, h_buf, 1);
-  Ort::Value c = Cat(allocator_, c_buf, 1);
+  Ort::Value h = Cat(allocator, h_buf, 1);
+  Ort::Value c = Cat(allocator, c_buf, 1);
 
   std::vector<Ort::Value> ans;
   ans.reserve(2);
@@ -177,8 +185,10 @@ std::vector<std::vector<Ort::Value>> OnlineLstmTransducerModel::UnStackStates(
 
   std::vector<std::vector<Ort::Value>> ans(batch_size);
 
-  std::vector<Ort::Value> h_vec = Unbind(allocator_, &states[0], 1);
-  std::vector<Ort::Value> c_vec = Unbind(allocator_, &states[1], 1);
+  auto allocator = const_cast<OnlineLstmTransducerModel *>(this)->allocator_;
+
+  std::vector<Ort::Value> h_vec = Unbind(allocator, &states[0], 1);
+  std::vector<Ort::Value> c_vec = Unbind(allocator, &states[1], 1);
 
   assert(h_vec.size() == batch_size);
   assert(c_vec.size() == batch_size);
@@ -257,5 +267,15 @@ Ort::Value OnlineLstmTransducerModel::RunJoiner(Ort::Value encoder_out,
 
   return std::move(logit[0]);
 }
+
+#if __ANDROID_API__ >= 9
+template OnlineLstmTransducerModel::OnlineLstmTransducerModel(
+    AAssetManager *mgr, const OnlineModelConfig &config);
+#endif
+
+#if __OHOS__
+template OnlineLstmTransducerModel::OnlineLstmTransducerModel(
+    NativeResourceManager *mgr, const OnlineModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx

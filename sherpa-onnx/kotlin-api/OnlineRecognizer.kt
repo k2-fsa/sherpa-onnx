@@ -38,7 +38,7 @@ data class OnlineModelConfig(
     var paraformer: OnlineParaformerModelConfig = OnlineParaformerModelConfig(),
     var zipformer2Ctc: OnlineZipformer2CtcModelConfig = OnlineZipformer2CtcModelConfig(),
     var neMoCtc: OnlineNeMoCtcModelConfig = OnlineNeMoCtcModelConfig(),
-    var tokens: String,
+    var tokens: String = "",
     var numThreads: Int = 1,
     var debug: Boolean = false,
     var provider: String = "cpu",
@@ -60,7 +60,7 @@ data class OnlineCtcFstDecoderConfig(
 
 data class OnlineRecognizerConfig(
     var featConfig: FeatureConfig = FeatureConfig(),
-    var modelConfig: OnlineModelConfig,
+    var modelConfig: OnlineModelConfig = OnlineModelConfig(),
     var lmConfig: OnlineLMConfig = OnlineLMConfig(),
     var ctcFstDecoderConfig: OnlineCtcFstDecoderConfig = OnlineCtcFstDecoderConfig(),
     var endpointConfig: EndpointConfig = EndpointConfig(),

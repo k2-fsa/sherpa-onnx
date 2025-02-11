@@ -116,7 +116,7 @@ int32_t main() {
   keywords_spotter_config.keywords_buf = keywords_buf;
   keywords_spotter_config.keywords_buf_size = keywords_buf_size;
 
-  SherpaOnnxKeywordSpotter *keywords_spotter =
+  const SherpaOnnxKeywordSpotter *keywords_spotter =
       SherpaOnnxCreateKeywordSpotter(&keywords_spotter_config);
 
   free((void *)tokens_buf);
@@ -130,7 +130,7 @@ int32_t main() {
     return -1;
   }
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       SherpaOnnxCreateKeywordStream(keywords_spotter);
 
   const SherpaOnnxDisplay *display = SherpaOnnxCreateDisplay(50);

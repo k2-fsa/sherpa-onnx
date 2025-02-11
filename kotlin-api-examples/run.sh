@@ -105,6 +105,28 @@ function testTts() {
     rm vits-piper-en_US-amy-low.tar.bz2
   fi
 
+  if [ ! -f ./matcha-icefall-zh-baker/model-steps-3.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+    tar xvf matcha-icefall-zh-baker.tar.bz2
+    rm matcha-icefall-zh-baker.tar.bz2
+  fi
+
+  if [ ! -f ./hifigan_v2.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+  fi
+
+  if [ ! -f ./kokoro-multi-lang-v1_0/model.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
+    tar xf kokoro-multi-lang-v1_0.tar.bz2
+    rm kokoro-multi-lang-v1_0.tar.bz2
+  fi
+
+  if [ ! -f ./kokoro-en-v0_19/model.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+    tar xf kokoro-en-v0_19.tar.bz2
+    rm kokoro-en-v0_19.tar.bz2
+  fi
+
   out_filename=test_tts.jar
   kotlinc-jvm -include-runtime -d $out_filename \
     test_tts.kt \
@@ -168,6 +190,12 @@ function testSpokenLanguageIdentification() {
 }
 
 function testOfflineAsr() {
+  if [ ! -f ./sherpa-onnx-moonshine-tiny-en-int8/tokens.txt ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+    tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+    rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+  fi
+
   if [ ! -f ./sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17/tokens.txt ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2
     tar xvf sherpa-onnx-sense-voice-zh-en-ja-ko-yue-2024-07-17.tar.bz2

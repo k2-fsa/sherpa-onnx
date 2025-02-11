@@ -60,9 +60,9 @@ public class OfflineTtsVitsModelConfig {
     }
 
     public static class Builder {
-        private String model;
+        private String model = "";
         private String lexicon = "";
-        private String tokens;
+        private String tokens = "";
         private String dataDir = "";
         private String dictDir = "";
         private float noiseScale = 0.667f;

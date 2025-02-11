@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "使用新一代Kaldi进行本地离线语音合成"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "使用新一代Kaldi进行本地离线语音合成"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "本地语音合成"
+    }
+  ]
+}

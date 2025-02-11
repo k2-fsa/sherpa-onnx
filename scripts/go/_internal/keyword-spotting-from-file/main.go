@@ -1,0 +1,1 @@
+../../../../go-api-examples/keyword-spotting-from-file/main.go

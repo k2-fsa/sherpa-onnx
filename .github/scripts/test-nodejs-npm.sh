@@ -9,6 +9,65 @@ git status
 ls -lh
 ls -lh node_modules
 
+# offline tts
+#
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
+tar xf kokoro-multi-lang-v1_0.tar.bz2
+rm kokoro-multi-lang-v1_0.tar.bz2
+
+node ./test-offline-tts-kokoro-zh-en.js
+ls -lh *.wav
+rm -rf kokoro-multi-lang-v1_0
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
+tar xf kokoro-en-v0_19.tar.bz2
+rm kokoro-en-v0_19.tar.bz2
+
+node ./test-offline-tts-kokoro-en.js
+rm -rf kokoro-en-v0_19
+
+ls -lh
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2
+tar xvf matcha-icefall-zh-baker.tar.bz2
+rm matcha-icefall-zh-baker.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+node ./test-offline-tts-matcha-zh.js
+
+rm -rf matcha-icefall-zh-baker
+rm hifigan_v2.onnx
+
+echo "---"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
+tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
+rm matcha-icefall-en_US-ljspeech.tar.bz2
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+node ./test-offline-tts-matcha-en.js
+
+rm -rf matcha-icefall-en_US-ljspeech
+rm hifigan_v2.onnx
+
+echo "---"
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
+tar xf vits-piper-en_US-amy-low.tar.bz2
+node ./test-offline-tts-vits-en.js
+rm -rf vits-piper-en_US-amy-low*
+
+echo "---"
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
+tar xvf vits-icefall-zh-aishell3.tar.bz2
+node ./test-offline-tts-vits-zh.js
+rm -rf vits-icefall-zh-aishell3*
+
+ls -lh *.wav
+
 echo '-----speaker diarization----------'
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
 tar xvf sherpa-onnx-pyannote-segmentation-3-0.tar.bz2
@@ -20,6 +79,23 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segm
 
 node ./test-offline-speaker-diarization.js
 rm -rfv *.wav *.onnx sherpa-onnx-pyannote-*
+
+echo '-----vad+moonshine----------'
+
+curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-whisper-tiny.en.tar.bz2
+tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
+rm sherpa-onnx-whisper-tiny.en.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/Obama.wav
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+node ./test-vad-with-non-streaming-asr-whisper.js
+rm Obama.wav
+rm silero_vad.onnx
+rm -rf sherpa-onnx-moonshine-*
 
 echo '-----vad+whisper----------'
 
@@ -90,6 +166,13 @@ rm sherpa-onnx-whisper-tiny.en.tar.bz2
 node ./test-offline-whisper.js
 rm -rf sherpa-onnx-whisper-tiny.en
 
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+rm sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
+
+node ./test-offline-moonshine.js
+rm -rf sherpa-onnx-moonshine-*
+
 # online asr
 curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
 tar xvf sherpa-onnx-streaming-paraformer-bilingual-zh-en.tar.bz2
@@ -123,15 +206,3 @@ tar xvf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 rm sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18.tar.bz2
 node ./test-online-zipformer2-ctc-hlg.js
 rm -rf sherpa-onnx-streaming-zipformer-ctc-small-2024-03-18
-
-# offline tts
-
-curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2
-tar xf vits-piper-en_US-amy-low.tar.bz2
-node ./test-offline-tts-en.js
-rm -rf vits-piper-en_US-amy-low*
-
-curl -LS -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-icefall-zh-aishell3.tar.bz2
-tar xvf vits-icefall-zh-aishell3.tar.bz2
-node ./test-offline-tts-zh.js
-rm -rf vits-icefall-zh-aishell3*

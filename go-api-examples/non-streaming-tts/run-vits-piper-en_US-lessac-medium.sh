@@ -4,7 +4,7 @@ set -ex
 
 if [ ! -d vits-piper-en_US-lessac-medium ]; then
   curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-lessac-medium.tar.bz2
-  tar xvf vits-piper-en_US-lessac-medium.tar.bz2
+  tar xf vits-piper-en_US-lessac-medium.tar.bz2
   rm vits-piper-en_US-lessac-medium.tar.bz2
 fi
 

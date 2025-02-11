@@ -64,7 +64,7 @@ jobs:
             d=speaker-embedding-models
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
-            git clone https://huggingface.co/csukuangfj/$d huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
             mv -v ./*.onnx ./huggingface
             cd huggingface
             git lfs track "*.onnx"

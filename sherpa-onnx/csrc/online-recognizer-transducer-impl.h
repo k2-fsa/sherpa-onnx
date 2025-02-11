@@ -14,11 +14,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-lm.h"
@@ -43,13 +38,14 @@ OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());
 
+  std::string text;
   for (auto i : src.tokens) {
     auto sym = sym_table[i];
 
-    r.text.append(sym);
+    text.append(sym);
 
     if (sym.size() == 1 && (sym[0] < 0x20 || sym[0] > 0x7e)) {
-      // for byte bpe models
+      // for bpe models with byte_fallback
       // (but don't rewrite printable characters 0x20..0x7e,
       //  which collide with standard BPE units)
       std::ostringstream os;
@@ -60,6 +56,12 @@ OnlineRecognizerResult Convert(const OnlineTransducerDecoderResult &src,
 
     r.tokens.push_back(std::move(sym));
   }
+
+  if (sym_table.IsByteBpe()) {
+    text = sym_table.DecodeByteBpe(text);
+  }
+
+  r.text = std::move(text);
 
   float frame_shift_s = frame_shift_ms / 1000. * subsampling_factor;
   for (auto t : src.timestamps) {
@@ -130,8 +132,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     }
   }
 
-#if __ANDROID_API__ >= 9
-  explicit OnlineRecognizerTransducerImpl(AAssetManager *mgr,
+  template <typename Manager>
+  explicit OnlineRecognizerTransducerImpl(Manager *mgr,
                                           const OnlineRecognizerConfig &config)
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
@@ -178,7 +180,6 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
       exit(-1);
     }
   }
-#endif
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream =
@@ -429,8 +430,8 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
         hotwords_, config_.hotwords_score, boost_scores_);
   }
 
-#if __ANDROID_API__ >= 9
-  void InitHotwords(AAssetManager *mgr) {
+  template <typename Manager>
+  void InitHotwords(Manager *mgr) {
     // each line in hotwords_file contains space-separated words
 
     auto buf = ReadFile(mgr, config_.hotwords_file);
@@ -452,7 +453,6 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     hotwords_graph_ = std::make_shared<ContextGraph>(
         hotwords_, config_.hotwords_score, boost_scores_);
   }
-#endif
 
   void InitHotwordsFromBufStr() {
     // each line in hotwords_file contains space-separated words

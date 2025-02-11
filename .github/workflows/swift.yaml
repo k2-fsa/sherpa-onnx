@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
       - './build-swift-macos.sh'
       - '.github/workflows/swift.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'swift-api-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -20,7 +21,6 @@ on:
     paths:
       - './build-swift-macos.sh'
       - '.github/workflows/swift.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'swift-api-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -64,6 +64,30 @@ jobs:
           cmake --version
 
           ./build-swift-macos.sh
+
+      - name: Copy files
+        if: matrix.os == 'macos-13' && (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-macos-xcframework-static
+          mkdir $dst
+
+          mv -v build-swift-macos/sherpa-onnx.xcframework $dst
+
+          brew install tree
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - name: Release pre-compiled binaries and libs for macOS
+        if: matrix.os == 'macos-13' && (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*macos-xcframework-static.tar.bz2
 
       - name: test
         shell: bash

@@ -8,14 +8,9 @@
 #include <memory>
 #include <string>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
-#include "sherpa-onnx/csrc/offline-tts-vits-model-metadata.h"
+#include "sherpa-onnx/csrc/offline-tts-vits-model-meta-data.h"
 
 namespace sherpa_onnx {
 
@@ -24,9 +19,9 @@ class OfflineTtsVitsModel {
   ~OfflineTtsVitsModel();
 
   explicit OfflineTtsVitsModel(const OfflineTtsModelConfig &config);
-#if __ANDROID_API__ >= 9
-  OfflineTtsVitsModel(AAssetManager *mgr, const OfflineTtsModelConfig &config);
-#endif
+
+  template <typename Manager>
+  OfflineTtsVitsModel(Manager *mgr, const OfflineTtsModelConfig &config);
 
   /** Run the model.
    *
@@ -42,7 +37,7 @@ class OfflineTtsVitsModel {
 
   // This is for MeloTTS
   Ort::Value Run(Ort::Value x, Ort::Value tones, int64_t sid = 0,
-                 float speed = 1.0);
+                 float speed = 1.0) const;
 
   const OfflineTtsVitsModelMetaData &GetMetaData() const;
 

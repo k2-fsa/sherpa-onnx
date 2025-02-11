@@ -1,0 +1,11 @@
+{
+  "module": {
+    "name": "sherpa_onnx",
+    "type": "har",
+    "deviceTypes": [
+      "default",
+      "tablet",
+      "2in1"
+    ]
+  }
+}

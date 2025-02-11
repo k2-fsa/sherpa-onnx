@@ -6,40 +6,37 @@
 // https://k2-fsa.github.io/sherpa/onnx/pretrained_models/online-transducer/zipformer-transducer-models.html
 // to download streaming models
 
-using CommandLine.Text;
 using CommandLine;
+using CommandLine.Text;
 using SherpaOnnx;
-using System.Collections.Generic;
-using System.Linq;
-using System;
 
 class OnlineDecodeFiles
 {
   class Options
   {
     [Option(Required = true, HelpText = "Path to tokens.txt")]
-    public string Tokens { get; set; } = "";
+    public string Tokens { get; set; } = string.Empty;
 
     [Option(Required = false, Default = "cpu", HelpText = "Provider, e.g., cpu, coreml")]
-    public string Provider { get; set; } = "";
+    public string Provider { get; set; } = string.Empty;
 
     [Option(Required = false, HelpText = "Path to transducer encoder.onnx")]
-    public string Encoder { get; set; } = "";
+    public string Encoder { get; set; } = string.Empty;
 
     [Option(Required = false, HelpText = "Path to transducer decoder.onnx")]
-    public string Decoder { get; set; } = "";
+    public string Decoder { get; set; } = string.Empty;
 
     [Option(Required = false, HelpText = "Path to transducer joiner.onnx")]
-    public string Joiner { get; set; } = "";
+    public string Joiner { get; set; } = string.Empty;
 
     [Option("paraformer-encoder", Required = false, HelpText = "Path to paraformer encoder.onnx")]
-    public string ParaformerEncoder { get; set; } = "";
+    public string ParaformerEncoder { get; set; } = string.Empty;
 
     [Option("paraformer-decoder", Required = false, HelpText = "Path to paraformer decoder.onnx")]
-    public string ParaformerDecoder { get; set; } = "";
+    public string ParaformerDecoder { get; set; } = string.Empty;
 
     [Option("zipformer2-ctc", Required = false, HelpText = "Path to zipformer2 CTC onnx model")]
-    public string Zipformer2Ctc { get; set; } = "";
+    public string Zipformer2Ctc { get; set; } = string.Empty;
 
     [Option("num-threads", Required = false, Default = 1, HelpText = "Number of threads for computation")]
     public int NumThreads { get; set; } = 1;
@@ -80,15 +77,14 @@ larger than this value. Used only when --enable-endpoint is true.")]
     public float Rule3MinUtteranceLength { get; set; } = 20.0F;
 
     [Option("hotwords-file", Required = false, Default = "", HelpText = "Path to hotwords.txt")]
-    public string HotwordsFile { get; set; } = "";
+    public string HotwordsFile { get; set; } = string.Empty;
 
     [Option("hotwords-score", Required = false, Default = 1.5F, HelpText = "hotwords score")]
     public float HotwordsScore { get; set; } = 1.5F;
 
     [Option("rule-fsts", Required = false, Default = "",
             HelpText = "If not empty, path to rule fst for inverse text normalization")]
-    public string RuleFsts { get; set; } = "";
-
+    public string RuleFsts { get; set; } = string.Empty;
 
     [Option("files", Required = true, HelpText = "Audio files for decoding")]
     public IEnumerable<string> Files { get; set; } = new string[] {};
@@ -162,7 +158,7 @@ to download pre-trained streaming models.
 
   private static void Run(Options options)
   {
-    OnlineRecognizerConfig config = new OnlineRecognizerConfig();
+    var config = new OnlineRecognizerConfig();
     config.FeatConfig.SampleRate = options.SampleRate;
 
     // All models from icefall using feature dim 80.
@@ -194,22 +190,22 @@ to download pre-trained streaming models.
     config.HotwordsScore = options.HotwordsScore;
     config.RuleFsts = options.RuleFsts;
 
-    OnlineRecognizer recognizer = new OnlineRecognizer(config);
+    var recognizer = new OnlineRecognizer(config);
 
-    string[] files = options.Files.ToArray();
+    var files = options.Files.ToArray();
 
     // We create a separate stream for each file
-    List<OnlineStream> streams = new List<OnlineStream>();
+    var streams = new List<OnlineStream>();
     streams.EnsureCapacity(files.Length);
 
     for (int i = 0; i != files.Length; ++i)
     {
-      OnlineStream s = recognizer.CreateStream();
+      var s = recognizer.CreateStream();
 
-      WaveReader waveReader = new WaveReader(files[i]);
+      var waveReader = new WaveReader(files[i]);
       s.AcceptWaveform(waveReader.SampleRate, waveReader.Samples);
 
-      float[] tailPadding = new float[(int)(waveReader.SampleRate * 0.3)];
+      var tailPadding = new float[(int)(waveReader.SampleRate * 0.3)];
       s.AcceptWaveform(waveReader.SampleRate, tailPadding);
       s.InputFinished();
 
@@ -230,7 +226,7 @@ to download pre-trained streaming models.
     // display results
     for (int i = 0; i != files.Length; ++i)
     {
-      OnlineRecognizerResult r = recognizer.GetResult(streams[i]);
+      var r = recognizer.GetResult(streams[i]);
       var text = r.Text;
       var tokens = r.Tokens;
       Console.WriteLine("--------------------");
@@ -238,7 +234,7 @@ to download pre-trained streaming models.
       Console.WriteLine("text: {0}", text);
       Console.WriteLine("tokens: [{0}]", string.Join(", ", tokens));
       Console.Write("timestamps: [");
-      r.Timestamps.ToList().ForEach(i => Console.Write(String.Format("{0:0.00}", i) + ", "));
+      r.Timestamps.ToList().ForEach(i => Console.Write(string.Format("{0:0.00}", i) + ", "));
       Console.WriteLine("]");
     }
     Console.WriteLine("--------------------");

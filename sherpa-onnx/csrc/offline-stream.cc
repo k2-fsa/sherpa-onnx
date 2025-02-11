@@ -133,6 +133,10 @@ class OfflineStream::Impl {
     fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
   }
 
+  explicit Impl(MoonshineTag /*tag*/) : is_moonshine_(true) {
+    config_.sampling_rate = 16000;
+  }
+
   void AcceptWaveform(int32_t sampling_rate, const float *waveform, int32_t n) {
     if (config_.normalize_samples) {
       AcceptWaveformImpl(sampling_rate, waveform, n);
@@ -164,7 +168,9 @@ class OfflineStream::Impl {
       std::vector<float> samples;
       resampler->Resample(waveform, n, true, &samples);
 
-      if (fbank_) {
+      if (is_moonshine_) {
+        samples_.insert(samples_.end(), samples.begin(), samples.end());
+      } else if (fbank_) {
         fbank_->AcceptWaveform(config_.sampling_rate, samples.data(),
                                samples.size());
         fbank_->InputFinished();
@@ -181,7 +187,9 @@ class OfflineStream::Impl {
       return;
     }  // if (sampling_rate != config_.sampling_rate)
 
-    if (fbank_) {
+    if (is_moonshine_) {
+      samples_.insert(samples_.end(), waveform, waveform + n);
+    } else if (fbank_) {
       fbank_->AcceptWaveform(sampling_rate, waveform, n);
       fbank_->InputFinished();
     } else if (mfcc_) {
@@ -194,10 +202,18 @@ class OfflineStream::Impl {
   }
 
   int32_t FeatureDim() const {
+    if (is_moonshine_) {
+      return samples_.size();
+    }
+
     return mfcc_ ? mfcc_opts_.num_ceps : opts_.mel_opts.num_bins;
   }
 
   std::vector<float> GetFrames() const {
+    if (is_moonshine_) {
+      return samples_;
+    }
+
     int32_t n = fbank_  ? fbank_->NumFramesReady()
                 : mfcc_ ? mfcc_->NumFramesReady()
                         : whisper_fbank_->NumFramesReady();
@@ -300,6 +316,10 @@ class OfflineStream::Impl {
   OfflineRecognitionResult r_;
   ContextGraphPtr context_graph_;
   bool is_ced_ = false;
+  bool is_moonshine_ = false;
+
+  // used only when is_moonshine_== true
+  std::vector<float> samples_;
 };
 
 OfflineStream::OfflineStream(const FeatureExtractorConfig &config /*= {}*/,
@@ -310,6 +330,9 @@ OfflineStream::OfflineStream(WhisperTag tag)
     : impl_(std::make_unique<Impl>(tag)) {}
 
 OfflineStream::OfflineStream(CEDTag tag) : impl_(std::make_unique<Impl>(tag)) {}
+
+OfflineStream::OfflineStream(MoonshineTag tag)
+    : impl_(std::make_unique<Impl>(tag)) {}
 
 OfflineStream::~OfflineStream() = default;
 

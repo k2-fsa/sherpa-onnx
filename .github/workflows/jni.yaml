@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/jni.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'kotlin-api-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -16,7 +15,6 @@ on:
       - master
     paths:
       - '.github/workflows/jni.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'kotlin-api-examples/**'
       - 'sherpa-onnx/csrc/*'
@@ -75,3 +73,8 @@ jobs:
 
           cd ./kotlin-api-examples
           ./run.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tts-files-${{ matrix.os }}
+          path: kotlin-api-examples/test-*.wav

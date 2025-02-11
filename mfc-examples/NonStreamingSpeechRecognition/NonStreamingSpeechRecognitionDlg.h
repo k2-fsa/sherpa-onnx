@@ -48,7 +48,7 @@ class CNonStreamingSpeechRecognitionDlg : public CDialogEx {
  private:
   Microphone mic_;
 
-  SherpaOnnxOfflineRecognizer *recognizer_ = nullptr;
+  const SherpaOnnxOfflineRecognizer *recognizer_ = nullptr;
   SherpaOnnxOfflineRecognizerConfig config_;
 
   PaStream *pa_stream_ = nullptr;

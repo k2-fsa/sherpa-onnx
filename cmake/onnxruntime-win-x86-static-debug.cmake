@@ -17,7 +17,7 @@ endif()
 
 
 set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-win-x86-static_lib-${CMAKE_BUILD_TYPE}-1.17.1.tar.bz2")
-set(onnxruntime_URL2  "https://hub.nuaa.cf/csukuangfj/onnxruntime-libs/releases/download/v1.17.1/onnxruntime-win-x86-static_lib-${CMAKE_BUILD_TYPE}-1.17.1.tar.bz2")
+set(onnxruntime_URL2  "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-win-x86-static_lib-${CMAKE_BUILD_TYPE}-1.17.1.tar.bz2")
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   set(onnxruntime_HASH "SHA256=b08b223fe09a5640472eec487ff42e4df6bf726e8aba9de40f443a1fabea3334")
 elseif(CMAKE_BUILD_TYPE STREQUAL RelWithDebInfo)

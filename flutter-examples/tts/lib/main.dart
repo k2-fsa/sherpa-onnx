@@ -1,8 +1,9 @@
 // Copyright (c)  2024  Xiaomi Corporation
 import 'package:flutter/material.dart';
 
-import './tts.dart';
 import './info.dart';
+import './tts.dart';
+import 'isolate_tts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -38,6 +39,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<Widget> _tabs = [
     TtsScreen(),
     InfoScreen(),
+    IsolateTtsView(),
   ];
   @override
   Widget build(BuildContext context) {
@@ -61,6 +63,10 @@ class _MyHomePageState extends State<MyHomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.info),
             label: 'Info',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.multiline_chart),
+            label: 'isolate',
           ),
         ],
       ),

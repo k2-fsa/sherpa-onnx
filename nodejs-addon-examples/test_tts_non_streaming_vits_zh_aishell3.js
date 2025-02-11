@@ -15,7 +15,7 @@ function createOfflineTts() {
       numThreads: 1,
       provider: 'cpu',
     },
-    maxNumStences: 1,
+    maxNumSentences: 1,
     ruleFsts:
         './vits-icefall-zh-aishell3/date.fst,./vits-icefall-zh-aishell3/phone.fst,./vits-icefall-zh-aishell3/number.fst,./vits-icefall-zh-aishell3/new_heteronym.fst',
     ruleFars: './vits-icefall-zh-aishell3/rule.far',

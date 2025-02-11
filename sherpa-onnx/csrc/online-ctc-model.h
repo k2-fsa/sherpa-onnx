@@ -8,11 +8,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-model-config.h"
 
@@ -25,10 +20,9 @@ class OnlineCtcModel {
   static std::unique_ptr<OnlineCtcModel> Create(
       const OnlineModelConfig &config);
 
-#if __ANDROID_API__ >= 9
+  template <typename Manager>
   static std::unique_ptr<OnlineCtcModel> Create(
-      AAssetManager *mgr, const OnlineModelConfig &config);
-#endif
+      Manager *mgr, const OnlineModelConfig &config);
 
   // Return a list of tensors containing the initial states
   virtual std::vector<Ort::Value> GetInitStates() const = 0;

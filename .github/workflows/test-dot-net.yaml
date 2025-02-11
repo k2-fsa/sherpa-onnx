@@ -6,7 +6,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-dot-net.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'dotnet-examples/**'
@@ -17,7 +16,6 @@ on:
       - master
     paths:
       - '.github/workflows/test-dot-net.yaml'
-      - 'CMakeLists.txt'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
       - 'dotnet-examples/**'
@@ -92,6 +90,50 @@ jobs:
         python-version: ["3.8"]
 
     steps:
+      - name: Check space
+        shell: bash
+        run: |
+          df -h
+
+      - name: Free space
+        shell: bash
+        run: |
+          df -h
+          rm -rf /opt/hostedtoolcache
+          df -h
+
+      - name: Free more space
+        shell: bash
+        run: |
+          # https://github.com/orgs/community/discussions/25678
+          cd /opt
+          find . -maxdepth 1 -mindepth 1 '!' -path ./containerd '!' -path ./actionarchivecache '!' -path ./runner '!' -path ./runner-cache -exec rm -rf '{}' ';'
+
+          sudo rm -rf /usr/share/dotnet
+          sudo rm -rf "/usr/local/share/boost"
+          sudo rm -rf "$AGENT_TOOLSDIRECTORY"
+
+      - name: Free Disk Space (Ubuntu)
+        uses: jlumbroso/free-disk-space@main
+        with:
+          # this might remove tools that are actually needed,
+          # if set to "true" but frees about 6 GB
+          tool-cache: false
+
+          # all of these default to true, but feel free to set to
+          # "false" if necessary for your workflow
+          android: true
+          dotnet: false
+          haskell: true
+          large-packages: true
+          docker-images: false
+          swap-storage: true
+
+      - name: Check space
+        shell: bash
+        run: |
+          df -h
+
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -115,8 +157,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: |
-            6.0.x
+          dotnet-version: 8.0.x
 
       - name: Check dotnet
         run: dotnet --info

@@ -1,0 +1,13 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "description": "Please describe the basic information.",
+  "main": "",
+  "author": "",
+  "license": "",
+  "dependencies": {
+    // please see https://ohpm.openharmony.cn/#/cn/detail/sherpa_onnx
+    "sherpa_onnx": "1.10.43",
+  }
+}
+

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 set -ex
 
+if [ x$BUILD_SHARED_LIBS == xOFF ]; then
+  echo "BUILD_SHARED_LIBS=OFF is ignored for Android x86."
+  echo "Always link with libonnxruntime.so"
+  sleep 2
+fi
+
 dir=$PWD/build-android-x86
 
 mkdir -p $dir
@@ -106,3 +112,20 @@ make -j4
 make install/strip
 cp -fv $onnxruntime_version/jni/x86/libonnxruntime.so install/lib
 rm -rf install/lib/pkgconfig
+
+if [ -f install/lib/libsherpa-onnx-c-api.so ]; then
+  cat >install/lib/README.md <<EOF
+# Introduction
+
+Note that if you use Android Studio, then you only need to
+copy libonnxruntime.so and libsherpa-onnx-jni.so
+to your jniLibs, and you don't need libsherpa-onnx-c-api.so or
+libsherpa-onnx-cxx-api.so.
+
+libsherpa-onnx-c-api.so and libsherpa-onnx-cxx-api.so are for users
+who don't use JNI. In that case, libsherpa-onnx-jni.so is not needed.
+
+In any case, libonnxruntime.is is always needed.
+EOF
+  ls -lh install/lib/README.md
+fi

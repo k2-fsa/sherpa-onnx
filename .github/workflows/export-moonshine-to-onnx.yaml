@@ -1,0 +1,106 @@
+name: export-moonshine-to-onnx
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: export-moonshine-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-moonshine-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export moonshine models to ONNX
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install -q onnx onnxruntime librosa tokenizers soundfile
+
+      - name: Run
+        shell: bash
+        run: |
+          pushd scripts/moonshine
+          ./run.sh
+          popd
+
+          mv -v scripts/moonshine/*.tar.bz2 .
+          mv -v scripts/moonshine/sherpa-onnx-* ./
+
+      - name: Release
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: asr-models
+
+      - name: Publish to huggingface (tiny)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            d=sherpa-onnx-moonshine-tiny-en-int8
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+            mv -v $d/* ./huggingface
+            cd huggingface
+            git lfs track "*.onnx"
+            git lfs track "*.wav"
+            git status
+            git add .
+            git status
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+            rm -rf huggingface
+
+      - name: Publish to huggingface (base)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            d=sherpa-onnx-moonshine-base-en-int8
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d huggingface
+            mv -v $d/* ./huggingface
+            cd huggingface
+            git lfs track "*.onnx"
+            git lfs track "*.wav"
+            git status
+            git add .
+            git status
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$d main
+            rm -rf huggingface

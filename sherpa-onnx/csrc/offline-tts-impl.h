@@ -7,11 +7,7 @@
 
 #include <memory>
 #include <string>
-
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
+#include <vector>
 
 #include "sherpa-onnx/csrc/offline-tts.h"
 
@@ -23,10 +19,9 @@ class OfflineTtsImpl {
 
   static std::unique_ptr<OfflineTtsImpl> Create(const OfflineTtsConfig &config);
 
-#if __ANDROID_API__ >= 9
-  static std::unique_ptr<OfflineTtsImpl> Create(AAssetManager *mgr,
+  template <typename Manager>
+  static std::unique_ptr<OfflineTtsImpl> Create(Manager *mgr,
                                                 const OfflineTtsConfig &config);
-#endif
 
   virtual GeneratedAudio Generate(
       const std::string &text, int64_t sid = 0, float speed = 1.0,
@@ -38,6 +33,9 @@ class OfflineTtsImpl {
   // Number of supported speakers.
   // If it supports only a single speaker, then it return 0 or 1.
   virtual int32_t NumSpeakers() const = 0;
+
+  std::vector<int64_t> AddBlank(const std::vector<int64_t> &x,
+                                int32_t blank_id = 0) const;
 };
 
 }  // namespace sherpa_onnx

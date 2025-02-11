@@ -10,11 +10,6 @@
 #include <string>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
 #include "sherpa-onnx/csrc/offline-tts-model-config.h"
 #include "sherpa-onnx/csrc/parse-options.h"
 
@@ -35,16 +30,22 @@ struct OfflineTtsConfig {
   // Maximum number of sentences that we process at a time.
   // This is to avoid OOM for very long input text.
   // If you set it to -1, then we process all sentences in a single batch.
-  int32_t max_num_sentences = 2;
+  int32_t max_num_sentences = 1;
+
+  // A silence interval contains audio samples with value close to 0.
+  //
+  // the duration of the new interval is old_duration * silence_scale.
+  float silence_scale = 0.2;
 
   OfflineTtsConfig() = default;
   OfflineTtsConfig(const OfflineTtsModelConfig &model,
                    const std::string &rule_fsts, const std::string &rule_fars,
-                   int32_t max_num_sentences)
+                   int32_t max_num_sentences, float silence_scale)
       : model(model),
         rule_fsts(rule_fsts),
         rule_fars(rule_fars),
-        max_num_sentences(max_num_sentences) {}
+        max_num_sentences(max_num_sentences),
+        silence_scale(silence_scale) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
@@ -55,6 +56,11 @@ struct OfflineTtsConfig {
 struct GeneratedAudio {
   std::vector<float> samples;
   int32_t sample_rate;
+
+  // Silence means pause here.
+  // If scale > 1, then it increases the duration of a pause
+  // If scale < 1, then it reduces the duration of a pause
+  GeneratedAudio ScaleSilence(float scale) const;
 };
 
 class OfflineTtsImpl;
@@ -69,9 +75,8 @@ class OfflineTts {
   ~OfflineTts();
   explicit OfflineTts(const OfflineTtsConfig &config);
 
-#if __ANDROID_API__ >= 9
-  OfflineTts(AAssetManager *mgr, const OfflineTtsConfig &config);
-#endif
+  template <typename Manager>
+  OfflineTts(Manager *mgr, const OfflineTtsConfig &config);
 
   // @param text A string containing words separated by spaces
   // @param sid Speaker ID. Used only for multi-speaker models, e.g., models

@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+#
+# Auto generated! Please DO NOT EDIT!
+
+# Please set the environment variable COMMANDLINE_TOOLS_DIR
+# before running this script
+
+# Inside the $COMMANDLINE_TOOL_DIR directory, you can find the following:
+#
+# command-line-tools fangjun$ ls
+# LICENSE.txt NOTICE.txt  bin         codelinter  hstack      hvigor      ohpm        sdk         tool
+
+set -ex
+
+log() {
+  # This function is from espnet
+  local fname=${BASH_SOURCE[1]##*/}
+  echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
+}
+
+SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+log "Building streaming VAD + ASR Hap for sherpa-onnx v${SHERPA_ONNX_VERSION}"
+
+export SHERPA_ONNX_ENABLE_TTS=OFF
+
+if [ ! -f $COMMANDLINE_TOOLS_DIR/bin/hvigorw ]; then
+  echo "Please first download Command Line Tools for HarmonyOS"
+  echo "See https://developer.huawei.com/consumer/cn/download/"
+  echo "or"
+  echo "https://hf-mirror.com/csukuangfj/harmonyos-commandline-tools/tree/main"
+  exit 1
+fi
+
+jar=$COMMANDLINE_TOOLS_DIR/sdk/default/openharmony/toolchains/lib/hap-sign-tool.jar
+
+export PATH=$COMMANDLINE_TOOLS_DIR/bin:$PATH
+
+mkdir -p haps
+
+{% for model in model_list %}
+pushd ./harmony-os/SherpaOnnxVadAsr/entry/src/main/resources/rawfile
+model_name={{ model.model_name }}
+type={{ model.idx }}
+lang={{ model.lang }}
+lang2={{ model.lang2 }}
+short_name={{ model.short_name }}
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${model_name}.tar.bz2
+tar xvf ${model_name}.tar.bz2
+
+{{ model.cmd }}
+
+rm -rf  *.tar.bz2
+ls -lh $model_name
+
+if [ ! -f ./silero_vad.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+fi
+
+popd
+# Now we are at the project root directory
+
+git checkout .
+pushd harmony-os/SherpaOnnxVadAsr/entry/src/main/ets/workers/
+sed -i.bak s/"const type = 2/const type = $type/" ./NonStreamingAsrWithVadWorker.ets
+
+{% if model.rule_fsts %}
+  rule_fsts={{ model.rule_fsts }}
+  sed -i.bak s%"ruleFsts = ''"%"ruleFsts = \"$rule_fsts\""% ./NonStreamingAsrWithVadWorker.ets
+{% endif %}
+
+git diff
+popd
+
+pushd harmony-os/SherpaOnnxVadAsr/entry/src/main/ets/pages
+sed -i.bak s/English/$lang2/ ./Index.ets
+popd
+
+pushd harmony-os/SherpaOnnxVadAsr
+
+git diff
+
+cd entry
+ohpm install
+cd ..
+
+hvigorw clean --no-daemon
+hvigorw assembleHap --mode module -p product=default -p buildMode=release --no-daemon
+
+ls -lh ./entry/build/default/outputs/default/entry-default-unsigned.hap
+
+in_file=$PWD/entry/build/default/outputs/default/entry-default-unsigned.hap
+out_file=$PWD/entry/build/default/outputs/default/entry-default-signed.hap
+
+java -jar $jar sign-app -keyAlias "$HAP_KEY_ALIAS" -signAlg "SHA256withECDSA" -mode "localSign" \
+  -appCertFile "/tmp/sherpa_onnx.cer" -profileFile "/tmp/sherpa_onnx_profileRelease.p7b" \
+  -inFile $in_file -keystoreFile "/tmp/sherpa_onnx_ohos_key.p12" \
+  -outFile $out_file -keyPwd "$HAP_KEY_PWD" -keystorePwd "$HAP_KEY_STORE_PWD" -signCode "1"
+
+ls -l $in_file $out_file
+ls -lh $in_file $out_file
+rm -rf ./entry/src/main/resources/rawfile/$model_name
+popd
+
+# Use unsigned hap
+mv $in_file ./haps/sherpa-onnx-${SHERPA_ONNX_VERSION}-vad_asr-$lang-$short_name.hap
+# mv $out_file ./haps/sherpa-onnx-${SHERPA_ONNX_VERSION}-vad_asr-$lang-$short_name.hap
+
+ls -lh haps
+
+{% endfor %}
+
+git checkout .
+
+ls -lh haps/

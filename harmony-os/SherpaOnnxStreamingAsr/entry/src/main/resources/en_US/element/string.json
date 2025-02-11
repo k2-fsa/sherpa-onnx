@@ -1,0 +1,20 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "On-device real-time speech recognition with Next-gen Kaldi"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "On-device real-time speech recognition with Next-gen Kaldi"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "Real-time ASR"
+    },
+    {
+      "name": "mic_reason",
+      "value": "access the microphone for on-device real-time speech recognition with Next-gen Kaldi"
+    }
+  ]
+}

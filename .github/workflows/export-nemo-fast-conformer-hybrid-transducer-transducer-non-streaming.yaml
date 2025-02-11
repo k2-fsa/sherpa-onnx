@@ -67,7 +67,7 @@ jobs:
               rm -rf huggingface
               export GIT_LFS_SKIP_SMUDGE=1
               export GIT_CLONE_PROTECTION_ACTIVE=false
-              git clone https://huggingface.co/csukuangfj/$m huggingface
+              git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/$m huggingface
               cp -av $m/* huggingface
               cd huggingface
               git lfs track "*.onnx"
