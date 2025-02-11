@@ -3,7 +3,7 @@ name: export-matcha-fa-en-to-onnx
 on:
   push:
     branches:
-      - export-matcha-tts-fa-en
+      - fix-ci
 
   workflow_dispatch:
 
@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  export-kokoro-to-onnx:
+  export-matcha-fa-en-to-onnx:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
     name: export matcha fa-en ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
@@ -49,8 +49,8 @@ jobs:
           rm espeak-ng-data.tar.bz2
 
           src=scripts/matcha-tts/fa-en
-          dst1=matcha-tts-fa_en-male
-          dst2=matcha-tts-fa_en-female
+          dst1=matcha-tts-fa_en-musa # male
+          dst2=matcha-tts-fa_en-khadijah # female
 
           mkdir $dst1 $dst2
 
@@ -72,7 +72,7 @@ jobs:
           ls -lh $dst1.tar.bz2
           ls -lh $dst2.tar.bz2
 
-      - name: Publish to huggingface male
+      - name: Publish to huggingface male (musa)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -88,7 +88,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-male huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-musa huggingface
             cd huggingface
             rm -rf ./*
             git fetch
@@ -97,7 +97,7 @@ jobs:
             git lfs track "cmn_dict"
             git lfs track "ru_dict"
 
-            cp -a ../matcha-tts-fa_en-male/* ./
+            cp -a ../matcha-tts-fa_en-musa/* ./
 
             git lfs track "*.onnx"
             git add .
@@ -107,9 +107,9 @@ jobs:
             git status
 
             git commit -m "add models"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-male main || true
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-musa main || true
 
-      - name: Publish to huggingface male
+      - name: Publish to huggingface female (khadijah)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -125,7 +125,7 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
-            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-female huggingface
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-khadijah huggingface
             cd huggingface
             rm -rf ./*
             git fetch
@@ -134,7 +134,7 @@ jobs:
             git lfs track "cmn_dict"
             git lfs track "ru_dict"
 
-            cp -a ../matcha-tts-fa_en-female/* ./
+            cp -a ../matcha-tts-fa_en-khadijah/* ./
 
             git lfs track "*.onnx"
             git add .
@@ -144,7 +144,7 @@ jobs:
             git status
 
             git commit -m "add models"
-            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-female main || true
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-khadijah main || true
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'

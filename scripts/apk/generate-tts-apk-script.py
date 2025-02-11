@@ -404,12 +404,12 @@ def get_matcha_models() -> List[TtsModel]:
             lang="en",
         ),
         TtsModel(
-            model_dir="matcha-tts-fa_en-male",
+            model_dir="matcha-tts-fa_en-musa",
             acoustic_model_name="model.onnx",
             lang="fa",
         ),
         TtsModel(
-            model_dir="matcha-tts-fa_en-female",
+            model_dir="matcha-tts-fa_en-khadijah",
             acoustic_model_name="model.onnx",
             lang="fa",
         ),
