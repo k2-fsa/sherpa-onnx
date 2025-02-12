@@ -8,6 +8,14 @@
 
 namespace sherpa_onnx {
 
+TEST(ToLowerCase, WideString) {
+  std::string text =
+      "Hallo! Übeltäter übergibt Ärzten öfters äußerst ätzende Öle 3€";
+  auto t = ToLowerCase(text);
+  std::cout << text << "\n";
+  std::cout << t << "\n";
+}
+
 TEST(RemoveInvalidUtf8Sequences, Case1) {
   std::vector<uint8_t> v = {
       0xe4, 0xbb, 0x8a,                                  // 今

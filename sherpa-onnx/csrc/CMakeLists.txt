@@ -549,6 +549,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     context-graph-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
+    regex-lang-test.cc
     slice-test.cc
     stack-test.cc
     text-utils-test.cc

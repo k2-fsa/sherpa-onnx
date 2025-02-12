@@ -124,6 +124,8 @@ std::vector<std::string> SplitUtf8(const std::string &text);
 std::string ToLowerCase(const std::string &s);
 void ToLowerCase(std::string *in_out);
 
+std::wstring ToLowerCase(const std::wstring &s);
+
 std::string RemoveInvalidUtf8Sequences(const std::string &text,
                                        bool show_debug_msg = false);
 
@@ -138,6 +140,10 @@ bool IsGB2312(const std::string &text);
 #if defined(_WIN32)
 std::string Gb2312ToUtf8(const std::string &text);
 #endif
+
+std::wstring ToWideString(const std::string &s);
+
+std::string ToString(const std::wstring &s);
 
 }  // namespace sherpa_onnx
 
