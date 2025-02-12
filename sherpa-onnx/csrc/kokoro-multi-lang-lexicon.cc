@@ -113,8 +113,8 @@ class KokoroMultiLangLexicon::Impl {
 
     std::string expr_chinese = "([\\u4e00-\\u9fff]+)";
 
-    std::string expr = expr_chinese + "|" + expr_english + "|" + expr_german +
-                       "|" + expr_french;
+    // std::string expr = expr_english + "|" + expr_german + "|" + expr_french;
+    std::string expr = expr_french;
 
     // std::string expr =
     //     "([;:,.?!'\"…\\(\\)“”])|([\\u4e00-\\u9fff]+)|([äöüßÄÖÜ\\u0000-\\u007f]+"
@@ -137,17 +137,8 @@ class KokoroMultiLangLexicon::Impl {
 
       std::vector<std::vector<int32_t>> ids_vec;
 
-      if (c < 0x80) {
-        if (debug_) {
-          SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
-        }
-        ids_vec = ConvertEnglishToTokenIDs(ms, meta_data_.voice);
-      } else {
-        if (debug_) {
-          SHERPA_ONNX_LOGE("Chinese: %s", ms.c_str());
-        }
-        ids_vec = ConvertChineseToTokenIDs(ms);
-      }
+      SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
+      ids_vec = ConvertEnglishToTokenIDs(ms, meta_data_.voice);
 
       for (const auto &ids : ids_vec) {
         if (ids.size() > 4) {
