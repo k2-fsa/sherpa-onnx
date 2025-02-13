@@ -13,7 +13,9 @@ class OnlinePunctuationModelConfig {
 
   @override
   String toString() {
-    return 'OnlinePunctuationModelConfig(cnnBiLstm: $cnnBiLstm, bpeVocab: $bpeVocab, numThreads: $numThreads, provider: $provider, debug: $debug)';
+    return 'OnlinePunctuationModelConfig(cnnBiLstm: $cnnBiLstm, '
+        'bpeVocab: $bpeVocab, numThreads: $numThreads, '
+        'provider: $provider, debug: $debug)';
   }
 
   final String cnnBiLstm;
@@ -38,24 +40,28 @@ class OnlinePunctuationConfig {
 
 class OnlinePunctuation {
   OnlinePunctuation.fromPtr({required this.ptr, required this.config});
+
   OnlinePunctuation._({required this.ptr, required this.config});
 
+  // The user has to invoke OnlinePunctuation.free() to avoid memory leak.
   factory OnlinePunctuation({required OnlinePunctuationConfig config}) {
     final c = calloc<SherpaOnnxOnlinePunctuationConfig>();
 
     final cnnBiLstmPtr = config.model.cnnBiLstm.toNativeUtf8();
     final bpeVocabPtr = config.model.bpeVocab.toNativeUtf8();
-
     c.ref.model.cnnBiLstm = cnnBiLstmPtr;
     c.ref.model.bpeVocab = bpeVocabPtr;
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
-    c.ref.model.provider = config.model.provider.toNativeUtf8();
+
+    final providerPtr = config.model.provider.toNativeUtf8();
+    c.ref.model.provider = providerPtr;
 
     final ptr = SherpaOnnxBindings.sherpaOnnxCreateOnlinePunctuation?.call(c) ??
         nullptr;
 
-    // Free allocated memory
+    // Free the allocated strings and struct memory
+    calloc.free(providerPtr);
     calloc.free(cnnBiLstmPtr);
     calloc.free(bpeVocabPtr);
     calloc.free(c);
@@ -70,15 +76,21 @@ class OnlinePunctuation {
 
   String addPunct(String text) {
     final textPtr = text.toNativeUtf8();
-    final p = SherpaOnnxBindings.sherpaOnlinePunctuationAddPunct
+
+    final p = SherpaOnnxBindings.sherpaOnnxOnlinePunctuationAddPunct
             ?.call(ptr, textPtr) ??
         nullptr;
+
     calloc.free(textPtr);
 
-    if (p == nullptr) return '';
+    if (p == nullptr) {
+      return '';
+    }
 
     final ans = p.toDartString();
-    SherpaOnnxBindings.sherpaOnlinePunctuationFreeText?.call(p);
+
+    SherpaOnnxBindings.sherpaOnnxOnlinePunctuationFreeText?.call(p);
+    
     return ans;
   }
 

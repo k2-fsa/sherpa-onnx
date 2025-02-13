@@ -634,14 +634,16 @@ typedef SherpaOnnxDestroyOnlinePunctuationNative = Void Function(
 typedef SherpaOnnxDestroyOnlinePunctuation = void Function(
     Pointer<SherpaOnnxOnlinePunctuation>);
 
-typedef SherpaOnlinePunctuationAddPunctNative = Pointer<Utf8> Function(
+typedef SherpaOnnxOnlinePunctuationAddPunctNative = Pointer<Utf8> Function(
     Pointer<SherpaOnnxOnlinePunctuation>, Pointer<Utf8>);
 
-typedef SherpaOnlinePunctuationAddPunct = SherpaOnlinePunctuationAddPunctNative;
+typedef SherpaOnnxOnlinePunctuationAddPunct
+    = SherpaOnnxOnlinePunctuationAddPunctNative;
 
-typedef SherpaOnlinePunctuationFreeTextNative = Void Function(Pointer<Utf8>);
+typedef SherpaOnnxOnlinePunctuationFreeTextNative = Void Function(
+    Pointer<Utf8>);
 
-typedef SherpaOnlinePunctuationFreeText = void Function(Pointer<Utf8>);
+typedef SherpaOnnxOnlinePunctuationFreeText = void Function(Pointer<Utf8>);
 
 typedef SherpaOnnxCreateAudioTaggingNative = Pointer<SherpaOnnxAudioTagging>
     Function(Pointer<SherpaOnnxAudioTaggingConfig>);
@@ -1195,8 +1197,10 @@ class SherpaOnnxBindings {
 
   static SherpaOnnxCreateOnlinePunctuation? sherpaOnnxCreateOnlinePunctuation;
   static SherpaOnnxDestroyOnlinePunctuation? sherpaOnnxDestroyOnlinePunctuation;
-  static SherpaOnlinePunctuationAddPunct? sherpaOnlinePunctuationAddPunct;
-  static SherpaOnlinePunctuationFreeText? sherpaOnlinePunctuationFreeText;
+  static SherpaOnnxOnlinePunctuationAddPunct?
+      sherpaOnnxOnlinePunctuationAddPunct;
+  static SherpaOnnxOnlinePunctuationFreeText?
+      sherpaOnnxOnlinePunctuationFreeText;
 
   static SherpaOnnxCreateAudioTagging? sherpaOnnxCreateAudioTagging;
   static SherpaOnnxDestroyAudioTagging? sherpaOnnxDestroyAudioTagging;
@@ -1467,14 +1471,14 @@ class SherpaOnnxBindings {
             'SherpaOnnxDestroyOnlinePunctuation')
         .asFunction();
 
-    sherpaOnlinePunctuationAddPunct ??= dynamicLibrary
-        .lookup<NativeFunction<SherpaOnlinePunctuationAddPunctNative>>(
-            'SherpaOnlinePunctuationAddPunct')
+    sherpaOnnxOnlinePunctuationAddPunct ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOnlinePunctuationAddPunctNative>>(
+            'SherpaOnnxOnlinePunctuationAddPunct')
         .asFunction();
 
-    sherpaOnlinePunctuationFreeText ??= dynamicLibrary
-        .lookup<NativeFunction<SherpaOnlinePunctuationFreeTextNative>>(
-            'SherpaOnlinePunctuationFreeText')
+    sherpaOnnxOnlinePunctuationFreeText ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOnlinePunctuationFreeTextNative>>(
+            'SherpaOnnxOnlinePunctuationFreeText')
         .asFunction();
 
     sherpaOnnxCreateAudioTagging ??= dynamicLibrary
