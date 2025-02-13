@@ -89,42 +89,19 @@ class KokoroMultiLangLexicon::Impl {
 
     // https://en.cppreference.com/w/cpp/regex
     // https://stackoverflow.com/questions/37989081/how-to-use-unicode-range-in-c-regex
-    std::string expr_french =
-        "([\\u0020-\\u005f\\u0061-"
-        "\\u007a\\u007c\\u00a0\\u00a7\\u00a9\\u00ab\\u00b2-"
-        "\\u00b3\\u00bb\\u00c0\\u00c2\\u00c6-\\u00cb\\u00ce-"
-        "\\u00cf\\u00d4\\u00d9\\u00db-\\u00dc\\u00e0\\u00e2\\u00e6-"
-        "\\u00eb\\u00ee-\\u00ef\\u00f4\\u00f9\\u00fb-\\u00fc\\u00ff\\u0152-"
-        "\\u0153\\u0178\\u02b3\\u02e2\\u1d48-\\u1d49\\u2010-\\u2011\\u2013-"
-        "\\u2014\\u2019\\u201c-\\u201d\\u2020-\\u2021\\u2026\\u202f-"
-        "\\u2030\\u20ac\\u2212]+)";
-
-    std::string expr_german =
-        "([\\u0020-\\u005f\\u0061-"
-        "\\u007d\\u00a0\\u00a7\\u00a9\\u00ab\\u00bb\\u00c4\\u00d6\\u00dc\\u00df"
-        "\\"
-        "u00e4\\u00f6\\u00fc\\u2010-\\u2011\\u2013-"
-        "\\u2014\\u2018\\u201a\\u201c\\u201e\\u2026\\u2030\\u20ac]+)";
-
-    std::string expr_english =
-        "([\\u0020-\\u005f\\u0061-\\u007a\\u007c\\u00a0\\u00a7\\u00a9\\u2010-"
-        "\\u2011\\u2013-\\u2014\\u2018-\\u2019\\u201c-\\u201d\\u2020-"
-        "\\u2021\\u2026\\u2030\\u2032-\\u2033\\u20ac]+)";
-
     std::string expr_chinese = "([\\u4e00-\\u9fff]+)";
+    std::string expr_not_chinese = "([^\\u4e00-\\u9fff]+)";
 
-    // std::string expr = expr_english + "|" + expr_german + "|" + expr_french;
-    std::string expr = expr_french;
-
-    // std::string expr =
-    //     "([;:,.?!'\"…\\(\\)“”])|([\\u4e00-\\u9fff]+)|([äöüßÄÖÜ\\u0000-\\u007f]+"
-    //     ")";
+    std::string expr_both = expr_chinese + "|" + expr_not_chinese;
 
     auto ws = ToWideString(text);
-    std::wstring wexpr = ToWideString(expr);
-    std::wregex we(wexpr);
+    std::wstring wexpr_both = ToWideString(expr_both);
+    std::wregex we_both(wexpr_both);
 
-    auto begin = std::wsregex_iterator(ws.begin(), ws.end(), we);
+    std::wstring wexpr_zh = ToWideString(expr_chinese);
+    std::wregex we_zh(wexpr_zh);
+
+    auto begin = std::wsregex_iterator(ws.begin(), ws.end(), we_both);
     auto end = std::wsregex_iterator();
 
     std::vector<TokenIDs> ans;
@@ -132,13 +109,23 @@ class KokoroMultiLangLexicon::Impl {
     for (std::wsregex_iterator i = begin; i != end; ++i) {
       std::wsmatch match = *i;
       std::wstring match_str = match.str();
+
       auto ms = ToString(match_str);
       uint8_t c = reinterpret_cast<const uint8_t *>(ms.data())[0];
 
       std::vector<std::vector<int32_t>> ids_vec;
+      if (std::regex_match(match_str, we_zh)) {
+        if (debug_) {
+          SHERPA_ONNX_LOGE("Chinese: %s", ms.c_str());
+        }
+        ids_vec = ConvertChineseToTokenIDs(ms);
+      } else {
+        if (debug_) {
+          SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
+        }
 
-      SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
-      ids_vec = ConvertEnglishToTokenIDs(ms, meta_data_.voice);
+        ids_vec = ConvertEnglishToTokenIDs(ms, meta_data_.voice);
+      }
 
       for (const auto &ids : ids_vec) {
         if (ids.size() > 4) {
