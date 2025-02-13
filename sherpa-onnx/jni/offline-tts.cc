@@ -220,16 +220,33 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset(
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
-  auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
-  SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  try {
+    auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
+    SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
-  if (!config.Validate()) {
-    SHERPA_ONNX_LOGE("Errors found in config!");
+    if (!config.Validate()) {
+      SHERPA_ONNX_LOGE("Errors found in config!");
+    }
+
+    auto tts = new sherpa_onnx::OfflineTts(config);
+
+    return (jlong)tts;
+
+  } catch (const std::exception& e) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+      env->ThrowNew(exClass, e.what());
+    }
+    return 0;  // Return 0 as JNI expects a return value
+
+  } catch (...) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+      env->ThrowNew(exClass, "Native exception: caught unknown exception");
+    }
+    return 0;  // Return 0 as JNI expects a return value
   }
 
-  auto tts = new sherpa_onnx::OfflineTts(config);
-
-  return (jlong)tts;
 }
 
 SHERPA_ONNX_EXTERN_C

@@ -113,6 +113,13 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_acceptWaveform(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jfloatArray samples) {
   try {
+    if (ptr == 0) {  // Check if the pointer is null
+      jclass exClass = env->FindClass("java/lang/NullPointerException");
+      if (exClass != nullptr) {
+        env->ThrowNew(exClass, "Vad_acceptWaveform: VoiceActivityDetector pointer is null.");
+      }
+      return;  // Exit early to prevent dereferencing
+    }
     auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
 
     jfloat *p = env->GetFloatArrayElements(samples, nullptr);
@@ -189,6 +196,13 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(JNIEnv *env,
                                                             jobject /*obj*/,
                                                             jlong ptr) {
   try {
+    if (ptr == 0) {  // Check if the pointer is null
+      jclass exClass = env->FindClass("java/lang/NullPointerException");
+      if (exClass != nullptr) {
+        env->ThrowNew(exClass, "Vad_reset: VoiceActivityDetector pointer is null.");
+      }
+      return;  // Exit early to prevent dereferencing
+    }
     auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
     model->Reset();
   } catch (const std::exception& e) {
