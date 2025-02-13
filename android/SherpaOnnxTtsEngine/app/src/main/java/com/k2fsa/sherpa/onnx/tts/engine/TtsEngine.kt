@@ -204,7 +204,6 @@ object TtsEngine {
 
         speed = PreferenceHelper(context).getSpeed()
         speakerId = PreferenceHelper(context).getSid()
-        cacheSize = PreferenceHelper(context).getCacheSizeInMB()
 
         tts = OfflineTts(assetManager = assets, config = config, cacheConfig = cacheConfig)
     }
