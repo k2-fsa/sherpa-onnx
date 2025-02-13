@@ -4,9 +4,7 @@
 
 #include "sherpa-onnx/csrc/kokoro-multi-lang-lexicon.h"
 
-#include <codecvt>
 #include <fstream>
-#include <locale>
 #include <regex>  // NOLINT
 #include <sstream>
 #include <strstream>
@@ -22,6 +20,8 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include <codecvt>
+
 #include "cppjieba/Jieba.hpp"
 #include "espeak-ng/speak_lib.h"
 #include "phoneme_ids.hpp"
@@ -36,20 +36,6 @@ namespace sherpa_onnx {
 void CallPhonemizeEspeak(const std::string &text,
                          piper::eSpeakPhonemeConfig &config,  // NOLINT
                          std::vector<std::vector<piper::Phoneme>> *phonemes);
-
-static std::wstring ToWideString(const std::string &s) {
-  // see
-  // https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-  return converter.from_bytes(s);
-}
-
-static std::string ToString(const std::wstring &s) {
-  // see
-  // https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
-  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-  return converter.to_bytes(s);
-}
 
 class KokoroMultiLangLexicon::Impl {
  public:
@@ -103,15 +89,19 @@ class KokoroMultiLangLexicon::Impl {
 
     // https://en.cppreference.com/w/cpp/regex
     // https://stackoverflow.com/questions/37989081/how-to-use-unicode-range-in-c-regex
-    std::string expr =
-        "([;:,.?!'\"…\\(\\)“”])|([\\u4e00-\\u9fff]+)|([äöüßÄÖÜ\\u0000-\\u007f]+"
-        ")";
+    std::string expr_chinese = "([\\u4e00-\\u9fff]+)";
+    std::string expr_not_chinese = "([^\\u4e00-\\u9fff]+)";
+
+    std::string expr_both = expr_chinese + "|" + expr_not_chinese;
 
     auto ws = ToWideString(text);
-    std::wstring wexpr = ToWideString(expr);
-    std::wregex we(wexpr);
+    std::wstring wexpr_both = ToWideString(expr_both);
+    std::wregex we_both(wexpr_both);
 
-    auto begin = std::wsregex_iterator(ws.begin(), ws.end(), we);
+    std::wstring wexpr_zh = ToWideString(expr_chinese);
+    std::wregex we_zh(wexpr_zh);
+
+    auto begin = std::wsregex_iterator(ws.begin(), ws.end(), we_both);
     auto end = std::wsregex_iterator();
 
     std::vector<TokenIDs> ans;
@@ -119,21 +109,22 @@ class KokoroMultiLangLexicon::Impl {
     for (std::wsregex_iterator i = begin; i != end; ++i) {
       std::wsmatch match = *i;
       std::wstring match_str = match.str();
+
       auto ms = ToString(match_str);
       uint8_t c = reinterpret_cast<const uint8_t *>(ms.data())[0];
 
       std::vector<std::vector<int32_t>> ids_vec;
-
-      if (c < 0x80) {
-        if (debug_) {
-          SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
-        }
-        ids_vec = ConvertEnglishToTokenIDs(ms, meta_data_.voice);
-      } else {
+      if (std::regex_match(match_str, we_zh)) {
         if (debug_) {
           SHERPA_ONNX_LOGE("Chinese: %s", ms.c_str());
         }
         ids_vec = ConvertChineseToTokenIDs(ms);
+      } else {
+        if (debug_) {
+          SHERPA_ONNX_LOGE("Non-Chinese: %s", ms.c_str());
+        }
+
+        ids_vec = ConvertEnglishToTokenIDs(ms, meta_data_.voice);
       }
 
       for (const auto &ids : ids_vec) {
@@ -315,9 +306,10 @@ class KokoroMultiLangLexicon::Impl {
         this_sentence.push_back(space_id);
       } else {
         if (debug_) {
-          SHERPA_ONNX_LOGE("Use espeak-ng to handle the OOV: '%s'", word.c_str());
+          SHERPA_ONNX_LOGE("Use espeak-ng to handle the OOV: '%s'",
+                           word.c_str());
         }
-        
+
         piper::eSpeakPhonemeConfig config;
 
         config.voice = voice;

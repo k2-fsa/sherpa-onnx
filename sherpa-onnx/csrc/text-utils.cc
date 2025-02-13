@@ -8,8 +8,11 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <codecvt>
 #include <cstdint>
+#include <cwctype>
 #include <limits>
+#include <locale>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -389,15 +392,72 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
 }
 
 std::string ToLowerCase(const std::string &s) {
-  std::string ans(s.size(), 0);
-  std::transform(s.begin(), s.end(), ans.begin(),
-                 [](unsigned char c) { return std::tolower(c); });
-  return ans;
+  return ToString(ToLowerCase(ToWideString(s)));
 }
 
 void ToLowerCase(std::string *in_out) {
   std::transform(in_out->begin(), in_out->end(), in_out->begin(),
                  [](unsigned char c) { return std::tolower(c); });
+}
+
+std::wstring ToLowerCase(const std::wstring &s) {
+  std::wstring ans(s.size(), 0);
+  std::transform(s.begin(), s.end(), ans.begin(), [](wchar_t c) -> wchar_t {
+    switch (c) {
+      // French
+      case L'À':
+        return L'à';
+      case L'Â':
+        return L'â';
+      case L'Æ':
+        return L'æ';
+      case L'Ç':
+        return L'ç';
+      case L'È':
+        return L'è';
+      case L'É':
+        return L'é';
+      case L'Ë':
+        return L'ë';
+      case L'Î':
+        return L'î';
+      case L'Ï':
+        return L'ï';
+      case L'Ô':
+        return L'ô';
+      case L'Ù':
+        return L'ù';
+      case L'Û':
+        return L'û';
+      case L'Ü':
+        return L'ü';
+
+      // others
+      case L'Á':
+        return L'á';
+      case L'Í':
+        return L'í';
+      case L'Ó':
+        return L'ó';
+      case L'Ú':
+        return L'ú';
+      case L'Ñ':
+        return L'ñ';
+      case L'Ì':
+        return L'ì';
+      case L'Ò':
+        return L'ò';
+      case L'Ä':
+        return L'ä';
+      case L'Ö':
+        return L'ö';
+        // TODO(fangjun): Add more
+
+      default:
+        return std::towlower(c);
+    }
+  });
+  return ans;
 }
 
 static inline bool InRange(uint8_t x, uint8_t low, uint8_t high) {
@@ -624,5 +684,19 @@ std::string Gb2312ToUtf8(const std::string &text) {
   return ans;
 }
 #endif
+
+std::wstring ToWideString(const std::string &s) {
+  // see
+  // https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+  return converter.from_bytes(s);
+}
+
+std::string ToString(const std::wstring &s) {
+  // see
+  // https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+  return converter.to_bytes(s);
+}
 
 }  // namespace sherpa_onnx
