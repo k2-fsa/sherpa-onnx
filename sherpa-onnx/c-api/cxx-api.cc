@@ -270,7 +270,8 @@ OfflineStream OfflineRecognizer::CreateStream() const {
   return OfflineStream{s};
 }
 
-OfflineStream OfflineRecognizer::CreateStream(const std::string &hotwords) const {
+OfflineStream OfflineRecognizer::CreateStream(
+    const std::string &hotwords) const {
   auto s = SherpaOnnxCreateOfflineStreamWithHotwords(p_, hotwords.c_str());
   return OfflineStream{s};
 }
