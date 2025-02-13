@@ -66,8 +66,6 @@ if [ ! -d $ANDROID_NDK ]; then
   exit 1
 fi
 
-android_abi="armeabi-v7a"
-
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 

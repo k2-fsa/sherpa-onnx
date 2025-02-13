@@ -66,8 +66,6 @@ if [ ! -d $ANDROID_NDK ]; then
   exit 1
 fi
 
-android_abi="arm64-v8a"
-
 echo "ANDROID_NDK: $ANDROID_NDK"
 sleep 1
 onnxruntime_version=1.17.1
