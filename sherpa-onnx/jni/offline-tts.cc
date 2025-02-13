@@ -231,14 +231,12 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile(
     auto tts = new sherpa_onnx::OfflineTts(config);
 
     return (jlong)tts;
-
   } catch (const std::exception& e) {
     jclass exClass = env->FindClass("java/lang/RuntimeException");
     if (exClass != nullptr) {
       env->ThrowNew(exClass, e.what());
     }
     return 0;  // Return 0 as JNI expects a return value
-
   } catch (...) {
     jclass exClass = env->FindClass("java/lang/RuntimeException");
     if (exClass != nullptr) {
@@ -246,7 +244,6 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile(
     }
     return 0;  // Return 0 as JNI expects a return value
   }
-
 }
 
 SHERPA_ONNX_EXTERN_C
