@@ -338,7 +338,8 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decode(
     if (ptr == 0) {  // Check if the pointer is null
       jclass exClass = env->FindClass("java/lang/NullPointerException");
       if (exClass != nullptr) {
-        env->ThrowNew(exClass, "OfflineRecognizer_decode: OfflineRecognizer pointer is null.");
+        env->ThrowNew(exClass, "OfflineRecognizer_decode: "
+                      "OfflineRecognizer pointer is null.");
       }
       return;  // Exit early to prevent dereferencing
     }
@@ -346,7 +347,8 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decode(
     if (streamPtr == 0) {  // Check if the pointer is null
       jclass exClass = env->FindClass("java/lang/NullPointerException");
       if (exClass != nullptr) {
-        env->ThrowNew(exClass, "OfflineRecognizer_decode: OfflineStream pointer is null.");
+        env->ThrowNew(exClass, "OfflineRecognizer_decode: "
+                      "OfflineStream pointer is null.");
       }
       return;  // Exit early to prevent dereferencing
     }
