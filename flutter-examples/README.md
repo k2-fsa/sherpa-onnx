@@ -2,6 +2,11 @@
 
 This directory contains flutter examples of `sherpa-onnx`.
 
+| Directory | Pre-built App |
+|-----------|---------------|
+|[./tts](./tts)|[URL](https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#text-to-speech-tts-speech-synthesis)|
+|[./streaming_asr](./streaming_asr)|[URL](https://k2-fsa.github.io/sherpa/onnx/flutter/pre-built-app.html#streaming-speech-recognition-stt-asr)|
+
 # Ways to create an example
 ```bash
 flutter create --platforms windows,macos streaming_asr

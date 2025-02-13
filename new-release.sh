@@ -18,4 +18,6 @@ find nodejs-addon-examples -name package.json -type f -exec sed -i.bak 's/1\.10\
 find harmony-os -name "README.md" -type f -exec sed -i.bak 's/1\.10\.42/1\.10\.43/g' {} \;
 find harmony-os -name oh-package.json5 -type f -exec sed -i.bak 's/1\.10\.42/1\.10\.43/g' {} \;
 
+find mfc-examples -name "README.md" -type f -exec sed -i.bak 's/1\.10\.42/1\.10\.43/g' {} \;
+
 find . -name "*.bak" -exec rm {} \;
