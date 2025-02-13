@@ -77,13 +77,9 @@ if [ $BUILD_SHARED_LIBS == ON ]; then
   if [ ! -f $onnxruntime_version/jni/x86_64/libonnxruntime.so ]; then
     mkdir -p $onnxruntime_version
     pushd $onnxruntime_version
-#  wget -c -q https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-android-${onnxruntime_version}.zip
-#  unzip onnxruntime-android-${onnxruntime_version}.zip
-#  rm onnxruntime-android-${onnxruntime_version}.zip
-    mkdir headers
-    cp /Users/iprovalov/github/onnxruntime/build_android_${android_abi}/RelWithDebInfo/android/headers/* headers/
-    mkdir -p jni/${android_abi}
-    cp /Users/iprovalov/github/onnxruntime/build_android_${android_abi}/RelWithDebInfo/java/android/${android_abi}/*.so jni/${android_abi}/
+    wget -c -q https://github.com/csukuangfj/onnxruntime-libs/releases/download/v${onnxruntime_version}/onnxruntime-android-${onnxruntime_version}.zip
+    unzip onnxruntime-android-${onnxruntime_version}.zip
+    rm onnxruntime-android-${onnxruntime_version}.zip
     popd
   fi
 
@@ -132,7 +128,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
     -DBUILD_PIPER_PHONMIZE_TESTS=OFF \
     -DBUILD_ESPEAK_NG_EXE=OFF \
     -DBUILD_ESPEAK_NG_TESTS=OFF \
-    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCMAKE_BUILD_TYPE=Release \
     -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
     -DSHERPA_ONNX_ENABLE_PYTHON=OFF \
     -DSHERPA_ONNX_ENABLE_TESTS=OFF \
@@ -151,7 +147,7 @@ cmake -DCMAKE_TOOLCHAIN_FILE="$ANDROID_NDK/build/cmake/android.toolchain.cmake" 
 
 # make VERBOSE=1 -j4
 make -j4
-make install
+make install/strip
 
 cp -fv $onnxruntime_version/jni/x86_64/libonnxruntime.so install/lib 2>/dev/null || true
 rm -rf install/share
