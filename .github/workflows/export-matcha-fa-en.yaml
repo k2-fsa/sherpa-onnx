@@ -1,0 +1,167 @@
+name: export-matcha-fa-en-to-onnx
+
+on:
+  push:
+    branches:
+      - fix-ci
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-matcha-fa-en-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-matcha-fa-en-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export matcha fa-en ${{ matrix.version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/matcha-tts/fa-en
+          ./run.sh
+
+      - name: Collect results ${{ matrix.version }}
+        shell: bash
+        run: |
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/espeak-ng-data.tar.bz2
+          tar xf espeak-ng-data.tar.bz2
+          rm espeak-ng-data.tar.bz2
+
+          src=scripts/matcha-tts/fa-en
+          dst1=matcha-tts-fa_en-musa # male
+          dst2=matcha-tts-fa_en-khadijah # female
+
+          mkdir $dst1 $dst2
+
+          cp -a espeak-ng-data $dst1/
+          cp -a espeak-ng-data $dst2/
+
+          cp -v $src/male/* $dst1
+          cp -v $src/female/* $dst2
+
+          cp -v $src/README.md $dst1/
+          cp -v $src/README.md $dst2/
+
+          ls -lh $dst1/
+          echo "---"
+          ls -lh $dst2/
+          tar cjfv $dst1.tar.bz2 $dst1
+          tar cjfv $dst2.tar.bz2 $dst2
+
+          ls -lh $dst1.tar.bz2
+          ls -lh $dst2.tar.bz2
+
+      - name: Publish to huggingface male (musa)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-musa huggingface
+            cd huggingface
+            rm -rf ./*
+            git fetch
+            git pull
+
+            git lfs track "cmn_dict"
+            git lfs track "ru_dict"
+
+            cp -a ../matcha-tts-fa_en-musa/* ./
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-musa main || true
+
+      - name: Publish to huggingface female (khadijah)
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-khadijah huggingface
+            cd huggingface
+            rm -rf ./*
+            git fetch
+            git pull
+
+            git lfs track "cmn_dict"
+            git lfs track "ru_dict"
+
+            cp -a ../matcha-tts-fa_en-khadijah/* ./
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/matcha-tts-fa_en-khadijah main || true
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
+          tag: tts-models

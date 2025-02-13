@@ -419,7 +419,7 @@ bool Exists(const std::string &filename) {
 void CNonStreamingTextToSpeechDlg::InitHint() {
     AppendLineToMultilineEditCtrl(my_hint_, "Speaker ID: Used only for multi-speaker models. Example value: 0");
     AppendLineToMultilineEditCtrl(my_hint_, "Speed: Larger -> Faster in speech speed. Example value: 1.0");
-    AppendLineToMultilineEditCtrl(my_hint_, "\r\n\r\nPlease input your text and click the button Generate");
+    AppendLineToMultilineEditCtrl(my_hint_, "\r\nPlease input your text and click the button Generate");
 
 }
 
@@ -430,7 +430,7 @@ void CNonStreamingTextToSpeechDlg::Init() {
     output_filename_.SetWindowText(Utf8ToUtf16("./generated.wav").c_str());
 
 	bool ok = true;
-    std::string error_message = "--------------------";
+  std::string error_message = "--------------------\r\n";
   if (!Exists("./model.onnx")) {
     error_message += "Cannot find ./model.onnx\r\n";
     ok = false;
@@ -447,17 +447,77 @@ void CNonStreamingTextToSpeechDlg::Init() {
     generate_btn_.EnableWindow(FALSE);
     error_message +=
         "\r\nPlease refer to\r\n"
-        "https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models";
+        "https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models"
+        "\r\nor\r\n"
+        "https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models";
+
     error_message += "\r\nto download models.\r\n";
-    error_message += "\r\nWe give an example below\r\n\r\n";
-    error_message +=
-        "1. Download vits-piper-en_US-amy-low.tar.bz2 from the following URL\r\n\r\n"
-        "https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2\r\n\r\n"
-        "2. Uncompress it and you will get a directory vits-piper-en_US-amy-low \r\n\r\n"
-        "3. Switch to the directory vits-piper-en_US-amy-low \r\n\r\n"
-        "4. Rename en_US-amy-low.onnx to model.onnx \r\n\r\n"
-        "5. Copy the current exe to the directory vits-piper-en_US-amy-low\r\n\r\n"
-        "6. Done! You can now run the exe in the directory vits-piper-en_US-amy-low\r\n\r\n";
+    error_message += "\r\nWe give several examples below\r\n";
+    error_message += "      1. Use a Kokoro TTS model (multi-lingual, e.g, English + Chinese)\r\n";
+    error_message += "      2. Use a Kokoro TTS model (English only)\r\n";
+    error_message += "      3. Use a VITS Piper TTS model\r\n";
+    error_message += "      4. Use a VITS Chinese TTS model\r\n";
+    error_message += "      5. Use a Matcha TTS model\r\n";
+    error_message += "\r\n";
+
+    error_message += 
+        "----------1. Use a Kokoro TTS model (multi-lingual, eg., English + Chinese)----------\r\n"
+        "(a) Download the model from \r\n"
+        "     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2\r\n"
+        "(b) Uncompress it and you will get a directory kokoro-multi-lang-v1_0\r\n"
+        "(c) Switch to the directory kokoro-multi-lang-v1_0\r\n"
+        "(d) Copy the current exe to the directory kokoro-multi-lang-v1_0\r\n"
+        "(e).Done! You can now run the exe in the directory kokoro-multi-lang-v1_0\r\n";
+
+    error_message +=  "\r\n";
+
+    error_message += 
+        "----------2. Use a Kokoro TTS model (English only)----------\r\n"
+        "(a) Download the model from \r\n"
+        "     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2\r\n"
+        "(b) Uncompress it and you will get a directory kokoro-en-v0_19\r\n"
+        "(c) Switch to the directory kokoro-en-v0_19\r\n"
+        "(d) Copy the current exe to the directory kokoro-en-v0_19\r\n"
+        "(e).Done! You can now run the exe in the directory kokoro-en-v0_19\r\n";
+
+    error_message +=  "\r\n";
+
+    error_message += 
+        "----------3. Use a VITS Piper TTS model----------\r\n"
+        "(a) Download the model from \r\n"
+        "     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-amy-low.tar.bz2\r\n"
+        "(b) Uncompress it and you will get a directory vits-piper-en_US-amy-low\r\n"
+        "(c) Switch to the directory vits-piper-en_US-amy-low \r\n"
+        "(d) Rename en_US-amy-low.onnx to model.onnx\r\n"
+        "(e) Copy the current exe to the directory vits-piper-en_US-amy-low\r\n"
+        "(f) Done! You can now run the exe in the directory vits-piper-en_US-amy-low\r\n";
+
+    error_message +=  "\r\n";
+
+    error_message += 
+        "----------4. Use a VITS Chinese TTS model----------\r\n"
+        "(a) Download the model from \r\n"
+        "     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/sherpa-onnx-vits-zh-ll.tar.bz2\r\n"
+        "(b) Uncompress it and you will get a directory sherpa-onnx-vits-zh-ll\r\n"
+        "(c) Switch to the directory sherpa-onnx-vits-zh-ll\r\n"
+        "(d) Copy the current exe to the directory sherpa-onnx-vits-zh-ll\r\n"
+        "(e) Done! You can now run the exe in the directory sherpa-onnx-vits-zh-ll\r\n";
+
+    error_message +=  "\r\n";
+
+    error_message += 
+        "----------5. Use a Matcha TTS model----------\r\n"
+        "(a) Download the model from \r\n"
+        "     https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-zh-baker.tar.bz2\r\n"
+        "(b) Uncompress it and you will get a directory matcha-icefall-zh-baker\r\n"
+        "(c) Switch to the directory matcha-icefall-zh-baker\r\n"
+        "(d) Rename model-steps-3.onnx to model.onnx\r\n"
+        "(e) Download a vocoder model from \r\n"
+        "      https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx\r\n"
+        "(f) Rename hifigan_v2.onnx to hifigan.onnx\r\n"
+        "(g) Remember to put hifigan.onnx in the directory matcha-icefall-zh-baker\r\n"
+        "(h) Copy the current exe to the directory matcha-icefall-zh-baker\r\n"
+        "(i) Done! You can now run the exe in the directory matcha-icefall-zh-baker\r\n";
 
     AppendLineToMultilineEditCtrl(my_hint_, error_message);
     return;
@@ -467,28 +527,64 @@ void CNonStreamingTextToSpeechDlg::Init() {
   SherpaOnnxOfflineTtsConfig config;
   memset(&config, 0, sizeof(config));
   config.model.debug = 0;
-  config.model.num_threads = 2;
+  config.model.num_threads = 4;
   config.model.provider = "cpu";
-  config.model.vits.model = "./model.onnx";
-  if (Exists("./espeak-ng-data/phontab")) {
-    config.model.vits.data_dir = "./espeak-ng-data";
-  } else if (Exists("./lexicon.txt")) {
-    config.model.vits.lexicon = "./lexicon.txt";
-  }
 
-  if (Exists("./dict/jieba.dict.utf8")) {
-    config.model.vits.dict_dir = "./dict";
+  if (Exists("./voices.bin")) {
+    // it is a kokoro tts model
+    config.model.kokoro.model = "./model.onnx";
+    config.model.kokoro.voices = "./voices.bin";
+    config.model.kokoro.tokens = "./tokens.txt";
+    config.model.kokoro.data_dir = "./espeak-ng-data";
+    if (Exists("./dict/jieba.dict.utf8") && Exists("./lexicon-zh.txt")) {
+      config.model.kokoro.dict_dir = "./dict";
+      config.model.kokoro.lexicon = "./lexicon-us-en.txt,./lexicon-zh.txt";
+    }
+  } else if (Exists("./hifigan.onnx")) {
+    // it is a matcha tts model
+    config.model.matcha.acoustic_model = "./model.onnx";
+    config.model.matcha.vocoder = "./hifigan.onnx";
+    config.model.matcha.tokens = "./tokens.txt";
+
+    if (Exists("./espeak-ng-data/phontab")) {
+      config.model.matcha.data_dir = "./espeak-ng-data";
+    }
+
+    if(Exists("./lexicon.txt")) {
+      config.model.matcha.lexicon = "./lexicon.txt";
+    }
+
+    if (Exists("./dict/jieba.dict.utf8")) {
+      config.model.matcha.dict_dir = "./dict";
+    }
+  } else {
+    // it is a vits tts model
+    config.model.vits.model = "./model.onnx";
+    config.model.vits.tokens = "./tokens.txt";
+    if (Exists("./espeak-ng-data/phontab")) {
+      config.model.vits.data_dir = "./espeak-ng-data";
+    } 
+
+    if (Exists("./lexicon.txt")) {
+      config.model.vits.lexicon = "./lexicon.txt";
+    }
+
+    if (Exists("./dict/jieba.dict.utf8")) {
+      config.model.vits.dict_dir = "./dict";
+    }
   }
 
   if (Exists("./phone.fst") && Exists("./date.fst") && Exists("./number.fst")) {
     config.rule_fsts = "./phone.fst,./date.fst,number.fst";
   }
 
+  if (Exists("./phone-zh.fst") && Exists("./date-zh.fst") && Exists("./number-zh.fst")) {
+    config.rule_fsts = "./phone-zh.fst,./date-zh.fst,number-zh.fst";
+  }
+
   if (Exists("./rule.far")) {
     config.rule_fars = "./rule.far";
   }
-
-  config.model.vits.tokens = "./tokens.txt";
 
   tts_ = SherpaOnnxCreateOfflineTts(&config);
 }

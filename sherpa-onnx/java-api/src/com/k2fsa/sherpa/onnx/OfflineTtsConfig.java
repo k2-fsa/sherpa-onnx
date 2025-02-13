@@ -7,12 +7,14 @@ public class OfflineTtsConfig {
     private final String ruleFsts;
     private final String ruleFars;
     private final int maxNumSentences;
+    private final float silenceScale;
 
     private OfflineTtsConfig(Builder builder) {
         this.model = builder.model;
         this.ruleFsts = builder.ruleFsts;
         this.ruleFars = builder.ruleFars;
         this.maxNumSentences = builder.maxNumSentences;
+        this.silenceScale = builder.silenceScale;
     }
 
     public static Builder builder() {
@@ -35,11 +37,16 @@ public class OfflineTtsConfig {
         return maxNumSentences;
     }
 
+    public float getSilenceScale() {
+        return silenceScale;
+    }
+
     public static class Builder {
         private OfflineTtsModelConfig model = OfflineTtsModelConfig.builder().build();
         private String ruleFsts = "";
         private String ruleFars = "";
         private int maxNumSentences = 1;
+        private float silenceScale = 0.2f;
 
         public OfflineTtsConfig build() {
             return new OfflineTtsConfig(this);
@@ -62,6 +69,11 @@ public class OfflineTtsConfig {
 
         public Builder setMaxNumSentences(int maxNumSentences) {
             this.maxNumSentences = maxNumSentences;
+            return this;
+        }
+
+        public Builder setSilenceScale(float silenceScale) {
+            this.silenceScale = silenceScale;
             return this;
         }
     }

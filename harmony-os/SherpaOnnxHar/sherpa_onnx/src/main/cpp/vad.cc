@@ -367,14 +367,8 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
   SherpaOnnxVoiceActivityDetector *vad =
       SherpaOnnxCreateVoiceActivityDetector(&c, buffer_size_in_seconds);
 #endif
-
-  if (c.silero_vad.model) {
-    delete[] c.silero_vad.model;
-  }
-
-  if (c.provider) {
-    delete[] c.provider;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.silero_vad.model);
+  SHERPA_ONNX_DELETE_C_STR(c.provider);
 
   return Napi::External<SherpaOnnxVoiceActivityDetector>::New(
       env, vad, [](Napi::Env env, SherpaOnnxVoiceActivityDetector *p) {

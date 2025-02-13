@@ -7,7 +7,6 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"

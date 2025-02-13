@@ -83,15 +83,32 @@ class OfflineTtsMatchaModel::Impl {
     Ort::Value sid_tensor =
         Ort::Value::CreateTensor(memory_info, &sid, 1, &scale_shape, 1);
 
+    std::array<float, 2> scales = {noise_scale, length_scale};
+    int64_t scales_shape = 2;
+
+    Ort::Value scales_tensor = Ort::Value::CreateTensor(
+        memory_info, scales.data(), scales.size(), &scales_shape, 1);
+
     std::vector<Ort::Value> inputs;
     inputs.reserve(5);
     inputs.push_back(std::move(x));
     inputs.push_back(std::move(x_length));
-    inputs.push_back(std::move(noise_scale_tensor));
-    inputs.push_back(std::move(length_scale_tensor));
+    if (input_names_[2] == "scales") {
+      // for models from
+      // https://github.com/shivammehta25/Matcha-TTS
+      inputs.push_back(std::move(scales_tensor));
+    } else {
+      // for models from icefall
+      inputs.push_back(std::move(noise_scale_tensor));
+      inputs.push_back(std::move(length_scale_tensor));
+    }
 
     if (input_names_.size() == 5 && input_names_.back() == "sid") {
+      // for models from icefall
       inputs.push_back(std::move(sid_tensor));
+
+      // Note that we have not supported multi-speaker tts models from
+      // https://github.com/shivammehta25/Matcha-TTS
     }
 
     auto out =
@@ -145,6 +162,8 @@ class OfflineTtsMatchaModel::Impl {
     SHERPA_ONNX_READ_META_DATA(meta_data_.has_espeak, "has_espeak");
     SHERPA_ONNX_READ_META_DATA(meta_data_.use_eos_bos, "use_eos_bos");
     SHERPA_ONNX_READ_META_DATA(meta_data_.pad_id, "pad_id");
+    SHERPA_ONNX_READ_META_DATA_STR_WITH_DEFAULT(meta_data_.voice, "voice",
+                                                "en-us");
   }
 
  private:

@@ -14,12 +14,13 @@ concurrency:
 jobs:
   export-kokoro-to-onnx:
     if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
-    name: export kokoro
+    name: export kokoro ${{ matrix.version }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
+        version: ["0.19", "1.0"]
         python-version: ["3.10"]
 
     steps:
@@ -33,7 +34,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          pip install -q "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 librosa soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html
+          pip install "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 librosa soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html misaki[en] misaki[zh] torch==2.6.0+cpu -f https://download.pytorch.org/whl/torch
 
       - name: Run
         shell: bash
@@ -42,9 +43,16 @@ jobs:
           tar xf espeak-ng-data.tar.bz2
           rm espeak-ng-data.tar.bz2
           cd scripts/kokoro
-          ./run.sh
+          v=${{ matrix.version }}
+          if [[ $v = "0.19" ]]; then
+            ./run.sh
+          elif [[ $v == "1.0" ]]; then
+            cd v1.0
+            ./run.sh
+          fi
 
-      - name: Collect results
+      - name: Collect results ${{ matrix.version }}
+        if: matrix.version == '0.19'
         shell: bash
         run: |
           src=scripts/kokoro
@@ -53,7 +61,7 @@ jobs:
           mkdir $d
           cp -a LICENSE $d/LICENSE
           cp -a espeak-ng-data $d/
-          cp -v $src/kokoro-v0_19_hf.onnx $d/model.onnx
+          cp -v $src/kokoro-v0_19.onnx $d/model.onnx
           cp -v $src/voices.bin $d/
           cp -v $src/tokens.txt $d/
           cp -v $src/README-new.md $d/README.md
@@ -61,9 +69,44 @@ jobs:
           tar cjfv $d.tar.bz2 $d
           rm -rf $d
 
-          ls -h $.tar.bz2
+          ls -lh $d.tar.bz2
 
-      - name: Publish to huggingface
+      - name: Collect results ${{ matrix.version }}
+        if: matrix.version == '1.0'
+        shell: bash
+        run: |
+          curl -SL -O https://github.com/csukuangfj/cppjieba/releases/download/sherpa-onnx-2024-04-19/dict.tar.bz2
+          tar xvf dict.tar.bz2
+          rm dict.tar.bz2
+
+          curl -SL -o date-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
+          curl -SL -o number-zh.fst  https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
+          curl -SL -o phone-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
+
+          src=scripts/kokoro/v1.0
+
+          d=kokoro-multi-lang-v1_0
+          mkdir $d
+          cp -a LICENSE $d/LICENSE
+          cp -a espeak-ng-data $d/
+          cp -v $src/kokoro.onnx $d/model.onnx
+          cp -v $src/voices.bin $d/
+          cp -v $src/tokens.txt $d/
+          cp -v $src/lexicon*.txt $d/
+          cp -v $src/README.md $d/README.md
+          cp -av dict $d/
+          cp -v ./*.fst $d/
+          ls -lh $d/
+          echo "---"
+          ls -lh $d/dict
+
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+
+          ls -lh $d.tar.bz2
+
+      - name: Publish to huggingface ${{ matrix.version }}
+        if: matrix.version == '0.19'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -92,9 +135,9 @@ jobs:
             cp -a ../espeak-ng-data ./
             mkdir -p test_wavs
 
-            cp -v ../scripts/kokoro/kokoro-v0_19_hf.onnx ./model.onnx
+            cp -v ../scripts/kokoro/kokoro-v0_19.onnx ./model.onnx
 
-            cp -v ../scripts/kokoro/kokoro-v0_19_hf-*.wav ./test_wavs/
+            cp -v ../scripts/kokoro/kokoro-v0_19-*.wav ./test_wavs/
 
             cp -v ../scripts/kokoro/tokens.txt .
             cp -v ../scripts/kokoro/voices.bin .
@@ -111,7 +154,59 @@ jobs:
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-en-v0_19 main || true
 
+      - name: Publish to huggingface ${{ matrix.version }}
+        if: matrix.version == '1.0'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-multi-lang-v1_0 huggingface
+            cd huggingface
+            rm -rf ./*
+            git fetch
+            git pull
+
+            git lfs track "cmn_dict"
+            git lfs track "ru_dict"
+            git lfs track "*.wav"
+            git lfs track "lexicon*.txt"
+
+            cp -a ../espeak-ng-data ./
+
+            cp -v ../scripts/kokoro/v1.0/kokoro.onnx ./model.onnx
+
+
+            cp -v ../scripts/kokoro/v1.0/tokens.txt .
+            cp -v ../scripts/kokoro/v1.0/voices.bin .
+            cp -v ../scripts/kokoro/v1.0/lexicon*.txt .
+            cp -v ../scripts/kokoro/v1.0/README.md ./README.md
+            cp -v ../LICENSE ./
+            cp -av ../dict ./
+            cp -v ../*.fst ./
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-multi-lang-v1_0 main || true
+
       - name: Release
+        if: github.repository_owner == 'csukuangfj'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -119,4 +214,13 @@ jobs:
           overwrite: true
           repo_name: k2-fsa/sherpa-onnx
           repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: tts-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.tar.bz2
+          overwrite: true
           tag: tts-models

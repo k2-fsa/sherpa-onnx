@@ -13,6 +13,7 @@ namespace SherpaOnnx
             RuleFsts = "";
             MaxNumSentences = 1;
             RuleFars = "";
+            SilenceScale = 0.2F;
         }
         public OfflineTtsModelConfig Model;
 
@@ -23,6 +24,7 @@ namespace SherpaOnnx
 
         [MarshalAs(UnmanagedType.LPStr)]
         public string RuleFars;
-    }
 
+        public float SilenceScale;
+    }
 }

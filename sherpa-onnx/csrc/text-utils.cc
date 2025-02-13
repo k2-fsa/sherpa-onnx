@@ -8,13 +8,20 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <codecvt>
 #include <cstdint>
+#include <cwctype>
 #include <limits>
+#include <locale>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
+#if defined(_WIN32)
+#include <Windows.h>
+#endif
 
 #include "sherpa-onnx/csrc/macros.h"
 
@@ -385,15 +392,72 @@ std::vector<std::string> SplitUtf8(const std::string &text) {
 }
 
 std::string ToLowerCase(const std::string &s) {
-  std::string ans(s.size(), 0);
-  std::transform(s.begin(), s.end(), ans.begin(),
-                 [](unsigned char c) { return std::tolower(c); });
-  return ans;
+  return ToString(ToLowerCase(ToWideString(s)));
 }
 
 void ToLowerCase(std::string *in_out) {
   std::transform(in_out->begin(), in_out->end(), in_out->begin(),
                  [](unsigned char c) { return std::tolower(c); });
+}
+
+std::wstring ToLowerCase(const std::wstring &s) {
+  std::wstring ans(s.size(), 0);
+  std::transform(s.begin(), s.end(), ans.begin(), [](wchar_t c) -> wchar_t {
+    switch (c) {
+      // French
+      case L'À':
+        return L'à';
+      case L'Â':
+        return L'â';
+      case L'Æ':
+        return L'æ';
+      case L'Ç':
+        return L'ç';
+      case L'È':
+        return L'è';
+      case L'É':
+        return L'é';
+      case L'Ë':
+        return L'ë';
+      case L'Î':
+        return L'î';
+      case L'Ï':
+        return L'ï';
+      case L'Ô':
+        return L'ô';
+      case L'Ù':
+        return L'ù';
+      case L'Û':
+        return L'û';
+      case L'Ü':
+        return L'ü';
+
+      // others
+      case L'Á':
+        return L'á';
+      case L'Í':
+        return L'í';
+      case L'Ó':
+        return L'ó';
+      case L'Ú':
+        return L'ú';
+      case L'Ñ':
+        return L'ñ';
+      case L'Ì':
+        return L'ì';
+      case L'Ò':
+        return L'ò';
+      case L'Ä':
+        return L'ä';
+      case L'Ö':
+        return L'ö';
+        // TODO(fangjun): Add more
+
+      default:
+        return std::towlower(c);
+    }
+  });
+  return ans;
 }
 
 static inline bool InRange(uint8_t x, uint8_t low, uint8_t high) {
@@ -500,6 +564,139 @@ std::string RemoveInvalidUtf8Sequences(const std::string &text,
   }
 
   return ans;
+}
+
+bool IsUtf8(const std::string &text) {
+  int32_t n = static_cast<int32_t>(text.size());
+  int32_t i = 0;
+  const uint8_t *p = reinterpret_cast<const uint8_t *>(text.data());
+  while (i < n) {
+    if (p[i] <= 0x7f) {
+      i += 1;
+      continue;
+    }
+
+    if (InRange(p[i], 0xc2, 0xdf) && i + 1 < n &&
+        InRange(p[i + 1], 0x80, 0xbf)) {
+      i += 2;
+      continue;
+    }
+
+    if (p[i] == 0xe0 && i + 2 < n && InRange(p[i + 1], 0xa0, 0xbf) &&
+        InRange(p[i + 2], 0x80, 0xbf)) {
+      i += 3;
+      continue;
+    }
+
+    if (InRange(p[i], 0xe1, 0xec) && i + 2 < n &&
+        InRange(p[i + 1], 0x80, 0xbf) && InRange(p[i + 2], 0x80, 0xbf)) {
+      i += 3;
+      continue;
+    }
+
+    if (p[i] == 0xed && i + 2 < n && InRange(p[i + 1], 0x80, 0x9f) &&
+        InRange(p[i + 2], 0x80, 0xbf)) {
+      i += 3;
+      continue;
+    }
+
+    if (InRange(p[i], 0xee, 0xef) && i + 2 < n &&
+        InRange(p[i + 1], 0x80, 0xbf) && InRange(p[i + 2], 0x80, 0xbf)) {
+      i += 3;
+      continue;
+    }
+
+    if (p[i] == 0xf0 && i + 3 < n && InRange(p[i + 1], 0x90, 0xbf) &&
+        InRange(p[i + 2], 0x80, 0xbf) && InRange(p[i + 3], 0x80, 0xbf)) {
+      i += 4;
+      continue;
+    }
+
+    if (InRange(p[i], 0xf1, 0xf3) && i + 3 < n &&
+        InRange(p[i + 1], 0x80, 0xbf) && InRange(p[i + 2], 0x80, 0xbf) &&
+        InRange(p[i + 3], 0x80, 0xbf)) {
+      i += 4;
+      continue;
+    }
+
+    if (p[i] == 0xf4 && i + 3 < n && InRange(p[i + 1], 0x80, 0x8f) &&
+        InRange(p[i + 2], 0x80, 0xbf) && InRange(p[i + 3], 0x80, 0xbf)) {
+      i += 4;
+      continue;
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+bool IsGB2312(const std::string &text) {
+  int32_t n = static_cast<int32_t>(text.size());
+  int32_t i = 0;
+  const uint8_t *p = reinterpret_cast<const uint8_t *>(text.data());
+  while (i < n) {
+    if (p[i] <= 0x7f) {
+      i += 1;
+      continue;
+    }
+
+    if (InRange(p[i], 0xa1, 0xf7) && i + 1 < n &&
+        InRange(p[i + 1], 0xa1, 0xfe)) {
+      i += 2;
+      continue;
+    }
+
+    return false;
+  }
+
+  return true;
+}
+
+#if defined(_WIN32)
+std::string Gb2312ToUtf8(const std::string &text) {
+  // https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-multibytetowidechar
+  // 936 is from
+  // https://learn.microsoft.com/en-us/windows/win32/intl/code-page-identifiers
+  // GB2312 -> 936
+  int32_t num_wchars =
+      MultiByteToWideChar(936, 0, text.c_str(), text.size(), nullptr, 0);
+  SHERPA_ONNX_LOGE("num of wchars: %d", num_wchars);
+  if (num_wchars == 0) {
+    return {};
+  }
+
+  std::wstring wstr;
+  wstr.resize(num_wchars);
+  MultiByteToWideChar(936, 0, text.c_str(), text.size(), wstr.data(),
+                      num_wchars);
+  // https://learn.microsoft.com/en-us/windows/win32/api/stringapiset/nf-stringapiset-widechartomultibyte
+  int32_t num_chars = WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, nullptr,
+                                          0, nullptr, nullptr);
+  if (num_chars == 0) {
+    return {};
+  }
+
+  std::string ans(num_chars, 0);
+  WideCharToMultiByte(CP_UTF8, 0, wstr.c_str(), -1, ans.data(), num_chars,
+                      nullptr, nullptr);
+
+  return ans;
+}
+#endif
+
+std::wstring ToWideString(const std::string &s) {
+  // see
+  // https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+  return converter.from_bytes(s);
+}
+
+std::string ToString(const std::wstring &s) {
+  // see
+  // https://stackoverflow.com/questions/2573834/c-convert-string-or-char-to-wstring-or-wchar-t
+  std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+  return converter.to_bytes(s);
 }
 
 }  // namespace sherpa_onnx

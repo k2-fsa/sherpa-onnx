@@ -15,14 +15,14 @@ extern "C" {
 
 static_assert(sizeof(SherpaOnnxOfflineTtsVitsModelConfig) == 8 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) == 8 * 4, "");
-static_assert(sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) == 5 * 4, "");
+static_assert(sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) == 7 * 4, "");
 static_assert(sizeof(SherpaOnnxOfflineTtsModelConfig) ==
                   sizeof(SherpaOnnxOfflineTtsVitsModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsMatchaModelConfig) +
                       sizeof(SherpaOnnxOfflineTtsKokoroModelConfig) + 3 * 4,
               "");
 static_assert(sizeof(SherpaOnnxOfflineTtsConfig) ==
-                  sizeof(SherpaOnnxOfflineTtsModelConfig) + 3 * 4,
+                  sizeof(SherpaOnnxOfflineTtsModelConfig) + 4 * 4,
               "");
 
 void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
@@ -56,6 +56,8 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "tokens: %s\n", kokoro->tokens);
   fprintf(stdout, "data_dir: %s\n", kokoro->data_dir);
   fprintf(stdout, "length scale: %.3f\n", kokoro->length_scale);
+  fprintf(stdout, "dict_dir: %s\n", kokoro->dict_dir);
+  fprintf(stdout, "lexicon: %s\n", kokoro->lexicon);
 
   fprintf(stdout, "----------tts model config----------\n");
   fprintf(stdout, "num threads: %d\n", tts_model_config->num_threads);
@@ -66,6 +68,7 @@ void MyPrint(SherpaOnnxOfflineTtsConfig *tts_config) {
   fprintf(stdout, "rule_fsts: %s\n", tts_config->rule_fsts);
   fprintf(stdout, "rule_fars: %s\n", tts_config->rule_fars);
   fprintf(stdout, "max num sentences: %d\n", tts_config->max_num_sentences);
+  fprintf(stdout, "silence scale: %.3f\n", tts_config->silence_scale);
 }
 
 void CopyHeap(const char *src, int32_t num_bytes, char *dst) {

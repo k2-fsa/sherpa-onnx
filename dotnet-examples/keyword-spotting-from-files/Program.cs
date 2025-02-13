@@ -53,6 +53,8 @@ class KeywordSpotterDemo
       var result = kws.GetResult(s);
       if (result.Keyword != string.Empty)
       {
+        // Remember to call Reset() right after detecting a keyword
+        kws.Reset(s);
         Console.WriteLine("Detected: {0}", result.Keyword);
       }
     }
@@ -70,6 +72,8 @@ class KeywordSpotterDemo
       var result = kws.GetResult(s);
       if (result.Keyword != string.Empty)
       {
+        // Remember to call Reset() right after detecting a keyword
+        kws.Reset(s);
         Console.WriteLine("Detected: {0}", result.Keyword);
       }
     }
@@ -89,6 +93,8 @@ class KeywordSpotterDemo
       var result = kws.GetResult(s);
       if (result.Keyword != string.Empty)
       {
+        // Remember to call Reset() right after detecting a keyword
+        kws.Reset(s);
         Console.WriteLine("Detected: {0}", result.Keyword);
       }
     }

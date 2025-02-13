@@ -3,7 +3,7 @@
 cd dotnet-examples/
 
 cd ./kokoro-tts
-./run-kokoro-en.sh
+./run-kokoro.sh
 ls -lh
 
 cd ../offline-tts

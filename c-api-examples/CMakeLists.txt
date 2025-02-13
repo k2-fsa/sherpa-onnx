@@ -4,6 +4,9 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_executable(decode-file-c-api decode-file-c-api.c)
 target_link_libraries(decode-file-c-api sherpa-onnx-c-api cargs)
 
+add_executable(kws-c-api kws-c-api.c)
+target_link_libraries(kws-c-api sherpa-onnx-c-api)
+
 if(SHERPA_ONNX_ENABLE_TTS)
   add_executable(offline-tts-c-api offline-tts-c-api.c)
   target_link_libraries(offline-tts-c-api sherpa-onnx-c-api cargs)
@@ -16,6 +19,9 @@ if(SHERPA_ONNX_ENABLE_TTS)
 
   add_executable(kokoro-tts-en-c-api kokoro-tts-en-c-api.c)
   target_link_libraries(kokoro-tts-en-c-api sherpa-onnx-c-api)
+
+  add_executable(kokoro-tts-zh-en-c-api kokoro-tts-zh-en-c-api.c)
+  target_link_libraries(kokoro-tts-zh-en-c-api sherpa-onnx-c-api)
 endif()
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)

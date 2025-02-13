@@ -20,17 +20,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-20.04]
+        # see https://github.com/pypa/cibuildwheel/issues/2257
+        # we don't use qemu from now on
+        os: [ubuntu-22.04-arm]
         python-version: ["cp37", "cp38", "cp39", "cp310", "cp311", "cp312", "cp313"]
         manylinux: [manylinux2014] #, manylinux_2_28]
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-        with:
-          platforms: all
 
       # see https://cibuildwheel.readthedocs.io/en/stable/changelog/
       # for a list of versions
@@ -50,6 +47,7 @@ jobs:
           CIBW_SKIP: "cp27-* cp35-* cp36-* *-win32 pp* *-musllinux* *-manylinux_i686"
           CIBW_BUILD_VERBOSITY: 3
           CIBW_ARCHS_LINUX: aarch64
+          # https://quay.io/repository/pypa/manylinux2014_aarch64?tab=tags
           CIBW_MANYLINUX_AARCH64_IMAGE: quay.io/pypa/${{ matrix.manylinux }}_aarch64
           # From onnxruntime >= 1.17.0, it drops support for CentOS 7.0 and it supports only manylinux_2_28.
           # manylinux_2_24 is no longer supported
@@ -123,6 +121,6 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install wheel twine setuptools
+          python3 -m pip install wheel twine==5.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl

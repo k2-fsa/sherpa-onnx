@@ -7,6 +7,7 @@ cd dart-api-examples
 pushd tts
 
 echo '----------matcha tts----------'
+./run-kokoro-zh-en.sh
 ./run-kokoro-en.sh
 ./run-matcha-zh.sh
 ./run-matcha-en.sh

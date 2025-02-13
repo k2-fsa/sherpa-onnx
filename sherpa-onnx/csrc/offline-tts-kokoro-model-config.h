@@ -16,7 +16,13 @@ struct OfflineTtsKokoroModelConfig {
   std::string voices;
   std::string tokens;
 
+  // Note: You can pass multiple files, separated by ",", to lexicon
+  // Example: lexicon = "./lexicon-gb-en.txt,./lexicon-zh.txt";
+  std::string lexicon;
+
   std::string data_dir;
+
+  std::string dict_dir;
 
   // speed = 1 / length_scale
   float length_scale = 1.0;
@@ -26,11 +32,15 @@ struct OfflineTtsKokoroModelConfig {
   OfflineTtsKokoroModelConfig(const std::string &model,
                               const std::string &voices,
                               const std::string &tokens,
-                              const std::string &data_dir, float length_scale)
+                              const std::string &lexicon,
+                              const std::string &data_dir,
+                              const std::string &dict_dir, float length_scale)
       : model(model),
         voices(voices),
         tokens(tokens),
+        lexicon(lexicon),
         data_dir(data_dir),
+        dict_dir(dict_dir),
         length_scale(length_scale) {}
 
   void Register(ParseOptions *po);

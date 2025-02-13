@@ -34,14 +34,20 @@ struct OfflineTtsConfig {
   // If you set it to -1, then we process all sentences in a single batch.
   int32_t max_num_sentences = 1;
 
+  // A silence interval contains audio samples with value close to 0.
+  //
+  // the duration of the new interval is old_duration * silence_scale.
+  float silence_scale = 0.2;
+
   OfflineTtsConfig() = default;
   OfflineTtsConfig(const OfflineTtsModelConfig &model,
                    const std::string &rule_fsts, const std::string &rule_fars,
-                   int32_t max_num_sentences)
+                   int32_t max_num_sentences, float silence_scale)
       : model(model),
         rule_fsts(rule_fsts),
         rule_fars(rule_fars),
-        max_num_sentences(max_num_sentences) {}
+        max_num_sentences(max_num_sentences),
+        silence_scale(silence_scale) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;
@@ -52,6 +58,11 @@ struct OfflineTtsConfig {
 struct GeneratedAudio {
   std::vector<float> samples;
   int32_t sample_rate;
+
+  // Silence means pause here.
+  // If scale > 1, then it increases the duration of a pause
+  // If scale < 1, then it reduces the duration of a pause
+  GeneratedAudio ScaleSilence(float scale) const;
 };
 
 class OfflineTtsImpl;

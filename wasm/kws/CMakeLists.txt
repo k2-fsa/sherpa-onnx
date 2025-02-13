@@ -17,6 +17,7 @@ set(exported_functions
   SherpaOnnxIsKeywordStreamReady
   SherpaOnnxOnlineStreamAcceptWaveform
   SherpaOnnxOnlineStreamInputFinished
+  SherpaOnnxResetKeywordStream
 )
 set(mangled_exported_functions)
 foreach(x IN LISTS exported_functions)

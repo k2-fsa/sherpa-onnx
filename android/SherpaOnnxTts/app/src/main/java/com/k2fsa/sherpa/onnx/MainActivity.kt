@@ -281,6 +281,16 @@ class MainActivity : AppCompatActivity() {
         // voices = "voices.bin"
         // dataDir = "kokoro-en-v0_19/espeak-ng-data"
 
+        // Example 10
+        // kokoro-multi-lang-v1_0
+        // modelDir = "kokoro-multi-lang-v1_0"
+        // modelName = "model.onnx"
+        // voices = "voices.bin"
+        // dataDir = "kokoro-multi-lang-v1_0/espeak-ng-data"
+        // dictDir = "kokoro-multi-lang-v1_0/dict"
+        // lexicon = "kokoro-multi-lang-v1_0/lexicon-us-en.txt,kokoro-multi-lang-v1_0/lexicon-zh.txt"
+        // ruleFsts = "$modelDir/phone-zh.fst,$modelDir/date-zh.fst,$modelDir/number-zh.fst"
+
         if (dataDir != null) {
             val newDir = copyDataDir(dataDir!!)
             dataDir = "$newDir/$dataDir"
@@ -289,7 +299,9 @@ class MainActivity : AppCompatActivity() {
         if (dictDir != null) {
             val newDir = copyDataDir(dictDir!!)
             dictDir = "$newDir/$dictDir"
-            ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
+            if (ruleFsts == null) {
+                ruleFsts = "$modelDir/phone.fst,$modelDir/date.fst,$modelDir/number.fst"
+            }
         }
 
         val config = getOfflineTtsConfig(

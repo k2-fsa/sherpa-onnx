@@ -301,6 +301,8 @@ class SHERPA_ONNX_API OfflineRecognizer
 
   OfflineStream CreateStream() const;
 
+  OfflineStream CreateStream(const std::string &hotwords) const;
+
   void Decode(const OfflineStream *s) const;
 
   void Decode(const OfflineStream *ss, int32_t n) const;
@@ -343,6 +345,8 @@ struct OfflineTtsKokoroModelConfig {
   std::string voices;
   std::string tokens;
   std::string data_dir;
+  std::string dict_dir;
+  std::string lexicon;
 
   float length_scale = 1.0;  // < 1, faster in speed; > 1, slower in speed
 };
@@ -361,6 +365,7 @@ struct OfflineTtsConfig {
   std::string rule_fsts;
   std::string rule_fars;
   int32_t max_num_sentences = 1;
+  float silence_scale = 0.2;
 };
 
 struct GeneratedAudio {
@@ -404,6 +409,53 @@ class SHERPA_ONNX_API OfflineTts
 
  private:
   explicit OfflineTts(const SherpaOnnxOfflineTts *p);
+};
+
+// ============================================================
+// For Keyword Spotter
+// ============================================================
+
+struct KeywordResult {
+  std::string keyword;
+  std::vector<std::string> tokens;
+  std::vector<float> timestamps;
+  float start_time;
+  std::string json;
+};
+
+struct KeywordSpotterConfig {
+  FeatureConfig feat_config;
+  OnlineModelConfig model_config;
+  int32_t max_active_paths = 4;
+  int32_t num_trailing_blanks = 1;
+  float keywords_score = 1.0f;
+  float keywords_threshold = 0.25f;
+  std::string keywords_file;
+};
+
+class SHERPA_ONNX_API KeywordSpotter
+    : public MoveOnly<KeywordSpotter, SherpaOnnxKeywordSpotter> {
+ public:
+  static KeywordSpotter Create(const KeywordSpotterConfig &config);
+
+  void Destroy(const SherpaOnnxKeywordSpotter *p) const;
+
+  OnlineStream CreateStream() const;
+
+  OnlineStream CreateStream(const std::string &keywords) const;
+
+  bool IsReady(const OnlineStream *s) const;
+
+  void Decode(const OnlineStream *s) const;
+
+  void Decode(const OnlineStream *ss, int32_t n) const;
+
+  void Reset(const OnlineStream *s) const;
+
+  KeywordResult GetResult(const OnlineStream *s) const;
+
+ private:
+  explicit KeywordSpotter(const SherpaOnnxKeywordSpotter *p);
 };
 
 }  // namespace sherpa_onnx::cxx

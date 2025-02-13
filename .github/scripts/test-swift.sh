@@ -11,6 +11,10 @@ ls -lh
 ls -lh
 rm -rf vits-piper-*
 
+./run-tts-kokoro-zh-en.sh
+ls -lh
+rm -rf kokoro-multi-*
+
 ./run-tts-kokoro-en.sh
 ls -lh
 rm -rf kokoro-en-*

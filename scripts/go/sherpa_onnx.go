@@ -687,6 +687,8 @@ type OfflineTtsKokoroModelConfig struct {
 	Voices      string  // Path to the voices.bin for kokoro
 	Tokens      string  // Path to tokens.txt
 	DataDir     string  // Path to espeak-ng-data directory
+	DictDir     string  // Path to dict directory
+	Lexicon     string  // Path to lexicon files
 	LengthScale float32 // Please use 1.0 in general. Smaller -> Faster speech speed. Larger -> Slower speech speed
 }
 
@@ -710,6 +712,7 @@ type OfflineTtsConfig struct {
 	RuleFsts        string
 	RuleFars        string
 	MaxNumSentences int
+	SilenceScale    float32
 }
 
 type GeneratedAudio struct {
@@ -742,6 +745,7 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	defer C.free(unsafe.Pointer(c.rule_fars))
 
 	c.max_num_sentences = C.int(config.MaxNumSentences)
+	c.silence_scale = C.float(config.SilenceScale)
 
 	// vits
 	c.model.vits.model = C.CString(config.Model.Vits.Model)
@@ -797,6 +801,12 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 
 	c.model.kokoro.data_dir = C.CString(config.Model.Kokoro.DataDir)
 	defer C.free(unsafe.Pointer(c.model.kokoro.data_dir))
+
+	c.model.kokoro.dict_dir = C.CString(config.Model.Kokoro.DictDir)
+	defer C.free(unsafe.Pointer(c.model.kokoro.dict_dir))
+
+	c.model.kokoro.lexicon = C.CString(config.Model.Kokoro.Lexicon)
+	defer C.free(unsafe.Pointer(c.model.kokoro.lexicon))
 
 	c.model.kokoro.length_scale = C.float(config.Model.Kokoro.LengthScale)
 
@@ -1584,11 +1594,108 @@ func (spotter *KeywordSpotter) Decode(s *OnlineStream) {
 	C.SherpaOnnxDecodeKeywordStream(spotter.impl, s.impl)
 }
 
+// You MUST call it right after detecting a keyword
+func (spotter *KeywordSpotter) Reset(s *OnlineStream) {
+	C.SherpaOnnxResetKeywordStream(spotter.impl, s.impl)
+}
+
 // Get the current result of stream since the last invoke of Reset()
 func (spotter *KeywordSpotter) GetResult(s *OnlineStream) *KeywordSpotterResult {
 	p := C.SherpaOnnxGetKeywordResult(spotter.impl, s.impl)
 	defer C.SherpaOnnxDestroyKeywordResult(p)
 	result := &KeywordSpotterResult{}
 	result.Keyword = C.GoString(p.keyword)
+	return result
+}
+
+// Configuration for the audio tagging.
+type OfflineZipformerAudioTaggingModelConfig struct {
+	Model string
+}
+
+type AudioTaggingModelConfig struct {
+	Zipformer  OfflineZipformerAudioTaggingModelConfig
+	Ced        string
+	NumThreads int32
+	Debug      int32
+	Provider   string
+}
+
+type AudioTaggingConfig struct {
+	Model  AudioTaggingModelConfig
+	Labels string
+	TopK   int32
+}
+
+type AudioTagging struct {
+	impl *C.struct_SherpaOnnxAudioTagging
+}
+
+type AudioEvent struct {
+	Name  string
+	Index int
+	Prob  float32
+}
+
+func DeleteAudioTagging(tagging *AudioTagging) {
+	C.SherpaOnnxDestroyAudioTagging(tagging.impl)
+	tagging.impl = nil
+}
+
+// The user is responsible to invoke [DeleteAudioTagging]() to free
+// the returned tagger to avoid memory leak
+func NewAudioTagging(config *AudioTaggingConfig) *AudioTagging {
+	c := C.struct_SherpaOnnxAudioTaggingConfig{}
+
+	c.model.zipformer.model = C.CString(config.Model.Zipformer.Model)
+	defer C.free(unsafe.Pointer(c.model.zipformer.model))
+
+	c.model.ced = C.CString(config.Model.Ced)
+	defer C.free(unsafe.Pointer(c.model.ced))
+
+	c.model.num_threads = C.int(config.Model.NumThreads)
+
+	c.model.provider = C.CString(config.Model.Provider)
+	defer C.free(unsafe.Pointer(c.model.provider))
+
+	c.model.debug = C.int(config.Model.Debug)
+
+	c.labels = C.CString(config.Labels)
+	defer C.free(unsafe.Pointer(c.labels))
+
+	c.top_k = C.int(config.TopK)
+
+	tagging := &AudioTagging{}
+	tagging.impl = C.SherpaOnnxCreateAudioTagging(&c)
+
+	return tagging
+}
+
+// The user is responsible to invoke [DeleteOfflineStream]() to free
+// the returned stream to avoid memory leak
+func NewAudioTaggingStream(tagging *AudioTagging) *OfflineStream {
+	stream := &OfflineStream{}
+	stream.impl = C.SherpaOnnxAudioTaggingCreateOfflineStream(tagging.impl)
+	return stream
+}
+
+func (tagging *AudioTagging) Compute(s *OfflineStream, topK int32) []AudioEvent {
+	r := C.SherpaOnnxAudioTaggingCompute(tagging.impl, s.impl, C.int(topK))
+	defer C.SherpaOnnxAudioTaggingFreeResults(r)
+	result := make([]AudioEvent, 0)
+
+	p := (*[1 << 28]*C.struct_SherpaOnnxAudioEvent)(unsafe.Pointer(r))
+	i := 0
+	for {
+		if p[i] == nil {
+			break
+		}
+		result = append(result, AudioEvent{
+			Name:  C.GoString(p[i].name),
+			Index: int(p[i].index),
+			Prob:  float32(p[i].prob),
+		})
+		i += 1
+	}
 	return result
 }

@@ -110,6 +110,6 @@ jobs:
           fi
 
           python3 -m pip install $opts --upgrade pip
-          python3 -m pip install $opts wheel twine setuptools
+          python3 -m pip install $opts wheel twine==5.0.0 setuptools
 
           twine upload ./wheelhouse/*.whl

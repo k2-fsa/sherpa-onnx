@@ -150,13 +150,15 @@ for a list of pre-trained models to download.
   while (!stop) {
     while (spotter.IsReady(s.get())) {
       spotter.DecodeStream(s.get());
-    }
 
-    const auto r = spotter.GetResult(s.get());
-    if (!r.keyword.empty()) {
-      display.Print(keyword_index, r.AsJsonString());
-      fflush(stderr);
-      keyword_index++;
+      const auto r = spotter.GetResult(s.get());
+      if (!r.keyword.empty()) {
+        display.Print(keyword_index, r.AsJsonString());
+        fflush(stderr);
+        keyword_index++;
+
+        spotter.Reset(s.get());
+      }
     }
 
     Pa_Sleep(20);  // sleep for 20ms

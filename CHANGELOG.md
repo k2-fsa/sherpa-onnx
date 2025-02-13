@@ -1,3 +1,70 @@
+## 1.10.44
+
+* Export MatchaTTS fa-en model to sherpa-onnx (#1832)
+* Add C++ support for MatchaTTS models not from icefall. (#1834)
+* OfflineRecognizer supports create stream with hotwords (#1833)
+* Add PengChengStarling models to sherpa-onnx (#1835)
+* Support specifying voice in espeak-ng for kokoro tts models. (#1836)
+* Fix: made print sherpa_onnx_loge when it is in debug mode (#1838)
+* Add Go API for audio tagging (#1840)
+* Fix CI (#1841)
+* Update readme to contain links for pre-built Apps (#1853)
+* Modify the model used (#1855)
+* Flutter OnlinePunctuation (#1854)
+* Fix spliting text by languages for kokoro tts. (#1849)
+
+
+
+
+
+## 1.10.43
+
+* Add MFC example for Kokoro TTS 1.0 (#1815)
+* Update sherpa-onnx-tts.js VitsModelConfig.model can be none (#1817)
+* Fix passing gb2312 encoded strings to tts on Windows (#1819)
+* Support scaling the duration of a pause in TTS. (#1820)
+* Fix building wheels for linux aarch64. (#1821)
+* Fix CI for Linux aarch64. (#1822)
+
+## 1.10.42
+
+* Fix publishing wheels (#1746)
+* Update README to include https://github.com/xinhecuican/QSmartAssistant (#1755)
+* Add Kokoro TTS to MFC examples (#1760)
+* Refactor node-addon C++ code. (#1768)
+* Add keyword spotter C API for HarmonyOS (#1769)
+* Add ArkTS API for Keyword spotting. (#1775)
+* Add Flutter example for Kokoro TTS (#1776)
+* Initialize the audio session for iOS ASR example (#1786)
+* Fix: Prepend 0 to tokenization to prevent word skipping for Kokoro. (#1787)
+* Export Kokoro 1.0 to sherpa-onnx (#1788)
+* Add C++ and Python API for Kokoro 1.0 multilingual TTS model (#1795)
+* Add Java and Koltin API for Kokoro TTS 1.0 (#1798)
+* Add Android demo for Kokoro TTS 1.0 (#1799)
+* Add C API for Kokoro TTS 1.0 (#1801)
+* Add CXX API for Kokoro TTS 1.0 (#1802)
+* Add Swift API for Kokoro TTS 1.0 (#1803)
+* Add Go API for Kokoro TTS 1.0 (#1804)
+* Add C# API for Kokoro TTS 1.0 (#1805)
+* Add Dart API for Kokoro TTS 1.0 (#1806)
+* Add Pascal API for Kokoro TTS 1.0 (#1807)
+* Add JavaScript API (node-addon) for Kokoro TTS 1.0 (#1808)
+* Add JavaScript API (WebAssembly) for Kokoro TTS 1.0 (#1809)
+* Add Flutter example for Kokoro TTS 1.0 (#1810)
+* Add iOS demo for Kokoro TTS 1.0 (#1812)
+* Add HarmonyOS demo for Kokoro TTS 1.0 (#1813)
+
+## 1.10.41
+
+* Fix UI for Android TTS Engine. (#1735)
+* Add iOS TTS example for MatchaTTS (#1736)
+* Add iOS example for Kokoro TTS (#1737)
+* Fix dither binding in Pybind11 to ensure independence from high_freq in FeatureExtractorConfig (#1739)
+* Fix keyword spotting. (#1689)
+* Update readme to include https://github.com/hfyydd/sherpa-onnx-server (#1741)
+* Reduce vad-moonshine-c-api example code. (#1742)
+* Support Kokoro TTS for HarmonyOS. (#1743)
+
 ## 1.10.40
 
 * Fix building wheels (#1703)

@@ -69,6 +69,14 @@ def main():
             for k in keys:
                 f.write(voices[k].tobytes())
 
+    speaker2id_str = ""
+    id2speaker_str = ""
+    sep = ""
+    for i, s in enumerate(keys):
+        speaker2id_str += f"{sep}{s}->{i}"
+        id2speaker_str += f"{sep}{i}->{s}"
+        sep = ","
+
     meta_data = {
         "model_type": "kokoro",
         "language": "English",
@@ -78,6 +86,8 @@ def main():
         "voice": "en-us",
         "style_dim": ",".join(map(str, voices[keys[0]].shape)),
         "n_speakers": len(keys),
+        "speaker2id": speaker2id_str,
+        "id2speaker": id2speaker_str,
         "speaker_names": ",".join(keys),
         "model_url": "https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files",
         "see_also": "https://huggingface.co/spaces/hexgrad/Kokoro-TTS",

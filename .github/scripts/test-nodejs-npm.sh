@@ -10,12 +10,21 @@ ls -lh
 ls -lh node_modules
 
 # offline tts
+#
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
+tar xf kokoro-multi-lang-v1_0.tar.bz2
+rm kokoro-multi-lang-v1_0.tar.bz2
+
+node ./test-offline-tts-kokoro-zh-en.js
+ls -lh *.wav
+rm -rf kokoro-multi-lang-v1_0
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-en-v0_19.tar.bz2
 tar xf kokoro-en-v0_19.tar.bz2
 rm kokoro-en-v0_19.tar.bz2
 
 node ./test-offline-tts-kokoro-en.js
+rm -rf kokoro-en-v0_19
 
 ls -lh
 

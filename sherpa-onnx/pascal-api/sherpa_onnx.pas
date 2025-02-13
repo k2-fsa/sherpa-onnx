@@ -82,6 +82,8 @@ type
     Tokens: AnsiString;
     DataDir: AnsiString;
     LengthScale: Single;
+    DictDir: AnsiString;
+    Lexicon: AnsiString;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKokoroModelConfig);
@@ -104,6 +106,7 @@ type
     RuleFsts: AnsiString;
     MaxNumSentences: Integer;
     RuleFars: AnsiString;
+    SilenceScale: Single;
 
     function ToString: AnsiString;
     class operator Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsConfig);
@@ -757,6 +760,8 @@ type
     Tokens: PAnsiChar;
     DataDir: PAnsiChar;
     LengthScale: cfloat;
+    DictDir: PAnsiChar;
+    Lexicon: PAnsiChar;
   end;
 
   SherpaOnnxOfflineTtsModelConfig = record
@@ -773,6 +778,7 @@ type
     RuleFsts: PAnsiChar;
     MaxNumSentences: cint32;
     RuleFars: PAnsiChar;
+    SilenceScale: cfloat;
   end;
 
   PSherpaOnnxOfflineTtsConfig = ^SherpaOnnxOfflineTtsConfig;
@@ -1931,9 +1937,12 @@ begin
     'Voices := %s, ' +
     'Tokens := %s, ' +
     'DataDir := %s, ' +
-    'LengthScale := %.2f' +
+    'LengthScale := %.2f, ' +
+    'DictDir := %s, ' +
+    'Lexicon := %s' +
     ')',
-    [Self.Model, Self.Voices, Self.Tokens, Self.DataDir, Self.LengthScale]);
+    [Self.Model, Self.Voices, Self.Tokens, Self.DataDir, Self.LengthScale,
+     Self.DictDir, Self.Lexicon]);
 end;
 
 class operator TSherpaOnnxOfflineTtsKokoroModelConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsKokoroModelConfig);
@@ -1969,15 +1978,17 @@ begin
     'Model := %s, ' +
     'RuleFsts := %s, ' +
     'MaxNumSentences := %d, ' +
-    'RuleFars := %s' +
+    'RuleFars := %s, ' +
+    'SilenceScale := %f' +
     ')',
-    [Self.Model.ToString, Self.RuleFsts, Self.MaxNumSentences, Self.RuleFars
-    ]);
+    [Self.Model.ToString, Self.RuleFsts, Self.MaxNumSentences, Self.RuleFars,
+     Self.SilenceScale]);
 end;
 
 class operator TSherpaOnnxOfflineTtsConfig.Initialize({$IFDEF FPC}var{$ELSE}out{$ENDIF} Dest: TSherpaOnnxOfflineTtsConfig);
 begin
   Dest.MaxNumSentences := 1;
+  Dest.SilenceScale := 0.2;
 end;
 
 constructor TSherpaOnnxOfflineTts.Create(Config: TSherpaOnnxOfflineTtsConfig);
@@ -2010,6 +2021,8 @@ begin
   C.Model.Kokoro.Tokens := PAnsiChar(Config.Model.Kokoro.Tokens);
   C.Model.Kokoro.DataDir := PAnsiChar(Config.Model.Kokoro.DataDir);
   C.Model.Kokoro.LengthScale := Config.Model.Kokoro.LengthScale;
+  C.Model.Kokoro.DictDir := PAnsiChar(Config.Model.Kokoro.DictDir);
+  C.Model.Kokoro.Lexicon := PAnsiChar(Config.Model.Kokoro.Lexicon);
 
   C.Model.NumThreads := Config.Model.NumThreads;
   C.Model.Provider := PAnsiChar(Config.Model.Provider);
@@ -2018,6 +2031,7 @@ begin
   C.RuleFsts := PAnsiChar(Config.RuleFsts);
   C.MaxNumSentences := Config.MaxNumSentences;
   C.RuleFars := PAnsiChar(Config.RuleFars);
+  C.SilenceScale := Config.SilenceScale;
 
   Self.Handle := SherpaOnnxCreateOfflineTts(@C);
 

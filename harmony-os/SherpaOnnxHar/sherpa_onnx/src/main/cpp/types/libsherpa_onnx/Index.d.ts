@@ -68,3 +68,10 @@ export const getOfflineSpeakerDiarizationSampleRate: (handle: object) => number;
 export const offlineSpeakerDiarizationProcess: (handle: object, input: object) => object;
 export const offlineSpeakerDiarizationProcessAsync: (handle: object, input: object, callback: object) => object;
 export const offlineSpeakerDiarizationSetConfig: (handle: object, config: object) => void;
+
+export const createKeywordSpotter: (config: object, mgr?: object) => object;
+export const createKeywordStream: (handle: object, keywords?: string) => object;
+export const isKeywordStreamReady: (handle: object, stream: object) => boolean;
+export const decodeKeywordStream: (handle: object, stream: object) => void;
+export const resetKeywordStream: (handle: object, stream: object) => void;
+export const getKeywordResultAsJson: (handle: object, stream: object) => string;

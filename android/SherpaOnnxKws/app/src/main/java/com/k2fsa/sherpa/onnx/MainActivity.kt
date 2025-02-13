@@ -151,24 +151,27 @@ class MainActivity : AppCompatActivity() {
                 stream.acceptWaveform(samples, sampleRate = sampleRateInHz)
                 while (kws.isReady(stream)) {
                     kws.decode(stream)
-                }
 
-                val text = kws.getResult(stream).keyword
+                    val text = kws.getResult(stream).keyword
 
-                var textToDisplay = lastText
+                    var textToDisplay = lastText
 
-                if (text.isNotBlank()) {
-                    if (lastText.isBlank()) {
-                        textToDisplay = "$idx: $text"
-                    } else {
-                        textToDisplay = "$idx: $text\n$lastText"
+                    if (text.isNotBlank()) {
+                        // Remember to reset the stream right after detecting a keyword
+
+                        kws.reset(stream)
+                        if (lastText.isBlank()) {
+                            textToDisplay = "$idx: $text"
+                        } else {
+                            textToDisplay = "$idx: $text\n$lastText"
+                        }
+                        lastText = "$idx: $text\n$lastText"
+                        idx += 1
                     }
-                    lastText = "$idx: $text\n$lastText"
-                    idx += 1
-                }
 
-                runOnUiThread {
-                    textView.text = textToDisplay
+                    runOnUiThread {
+                        textView.text = textToDisplay
+                    }
                 }
             }
         }

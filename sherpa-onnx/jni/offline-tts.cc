@@ -137,10 +137,22 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
   ans.model.kokoro.tokens = p;
   env->ReleaseStringUTFChars(s, p);
 
+  fid = env->GetFieldID(kokoro_cls, "lexicon", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.lexicon = p;
+  env->ReleaseStringUTFChars(s, p);
+
   fid = env->GetFieldID(kokoro_cls, "dataDir", "Ljava/lang/String;");
   s = (jstring)env->GetObjectField(kokoro, fid);
   p = env->GetStringUTFChars(s, nullptr);
   ans.model.kokoro.data_dir = p;
+  env->ReleaseStringUTFChars(s, p);
+
+  fid = env->GetFieldID(kokoro_cls, "dictDir", "Ljava/lang/String;");
+  s = (jstring)env->GetObjectField(kokoro, fid);
+  p = env->GetStringUTFChars(s, nullptr);
+  ans.model.kokoro.dict_dir = p;
   env->ReleaseStringUTFChars(s, p);
 
   fid = env->GetFieldID(kokoro_cls, "lengthScale", "F");
@@ -174,6 +186,9 @@ static OfflineTtsConfig GetOfflineTtsConfig(JNIEnv *env, jobject config) {
 
   fid = env->GetFieldID(cls, "maxNumSentences", "I");
   ans.max_num_sentences = env->GetIntField(config, fid);
+
+  fid = env->GetFieldID(cls, "silenceScale", "F");
+  ans.silence_scale = env->GetFloatField(config, fid);
 
   return ans;
 }
@@ -319,7 +334,6 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateImpl(JNIEnv *env, jobject /*obj*/,
                                                    jlong ptr, jstring text,
                                                    jint sid, jfloat speed) {
   const char *p_text = env->GetStringUTFChars(text, nullptr);
-  SHERPA_ONNX_LOGE("string is: %s", p_text);
 
   auto audio = reinterpret_cast<sherpa_onnx::OfflineTts *>(ptr)->Generate(
       p_text, sid, speed);
@@ -345,7 +359,6 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jstring text, jint sid,
     jfloat speed, jobject callback) {
   const char *p_text = env->GetStringUTFChars(text, nullptr);
-  SHERPA_ONNX_LOGE("string is: %s", p_text);
 
   std::function<int32_t(const float *, int32_t, float)> callback_wrapper =
       [env, callback](const float *samples, int32_t n,

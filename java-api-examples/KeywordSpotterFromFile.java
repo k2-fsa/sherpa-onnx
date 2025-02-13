@@ -56,6 +56,8 @@ public class KyewordSpotterFromFile {
 
       String keyword = kws.getResult(stream).getKeyword();
       if (!keyword.isEmpty()) {
+        // Remember to reset the stream right after detecting a keyword
+        kws.reset(stream);
         System.out.printf("Detected keyword: %s\n", keyword);
       }
     }

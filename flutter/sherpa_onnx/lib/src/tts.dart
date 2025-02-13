@@ -67,11 +67,13 @@ class OfflineTtsKokoroModelConfig {
     this.tokens = '',
     this.dataDir = '',
     this.lengthScale = 1.0,
+    this.dictDir = '',
+    this.lexicon = '',
   });
 
   @override
   String toString() {
-    return 'OfflineTtsKokoroModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale)';
+    return 'OfflineTtsKokoroModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale, dictDir: $dictDir, lexicon: $lexicon)';
   }
 
   final String model;
@@ -79,6 +81,8 @@ class OfflineTtsKokoroModelConfig {
   final String tokens;
   final String dataDir;
   final double lengthScale;
+  final String dictDir;
+  final String lexicon;
 }
 
 class OfflineTtsModelConfig {
@@ -110,17 +114,19 @@ class OfflineTtsConfig {
     this.ruleFsts = '',
     this.maxNumSenetences = 1,
     this.ruleFars = '',
+    this.silenceScale = 0.2,
   });
 
   @override
   String toString() {
-    return 'OfflineTtsConfig(model: $model, ruleFsts: $ruleFsts, maxNumSenetences: $maxNumSenetences, ruleFars: $ruleFars)';
+    return 'OfflineTtsConfig(model: $model, ruleFsts: $ruleFsts, maxNumSenetences: $maxNumSenetences, ruleFars: $ruleFars, silenceScale: $silenceScale)';
   }
 
   final OfflineTtsModelConfig model;
   final String ruleFsts;
   final int maxNumSenetences;
   final String ruleFars;
+  final double silenceScale;
 }
 
 class GeneratedAudio {
@@ -166,6 +172,8 @@ class OfflineTts {
     c.ref.model.kokoro.tokens = config.model.kokoro.tokens.toNativeUtf8();
     c.ref.model.kokoro.dataDir = config.model.kokoro.dataDir.toNativeUtf8();
     c.ref.model.kokoro.lengthScale = config.model.kokoro.lengthScale;
+    c.ref.model.kokoro.dictDir = config.model.kokoro.dictDir.toNativeUtf8();
+    c.ref.model.kokoro.lexicon = config.model.kokoro.lexicon.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
     c.ref.model.debug = config.model.debug ? 1 : 0;
@@ -174,6 +182,7 @@ class OfflineTts {
     c.ref.ruleFsts = config.ruleFsts.toNativeUtf8();
     c.ref.maxNumSenetences = config.maxNumSenetences;
     c.ref.ruleFars = config.ruleFars.toNativeUtf8();
+    c.ref.silenceScale = config.silenceScale;
 
     final ptr = SherpaOnnxBindings.createOfflineTts?.call(c) ?? nullptr;
 
@@ -181,6 +190,8 @@ class OfflineTts {
     calloc.free(c.ref.ruleFsts);
     calloc.free(c.ref.model.provider);
 
+    calloc.free(c.ref.model.kokoro.lexicon);
+    calloc.free(c.ref.model.kokoro.dictDir);
     calloc.free(c.ref.model.kokoro.dataDir);
     calloc.free(c.ref.model.kokoro.tokens);
     calloc.free(c.ref.model.kokoro.voices);

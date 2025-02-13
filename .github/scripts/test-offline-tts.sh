@@ -44,6 +44,28 @@ done
 rm -rf kokoro-en-v0_19
 
 log "------------------------------------------------------------"
+log "matcha-tts-fa_en-male"
+log "------------------------------------------------------------"
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-tts-fa_en-male.tar.bz2
+tar xvf matcha-tts-fa_en-male.tar.bz2
+rm matcha-tts-fa_en-male.tar.bz2
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+
+$EXE \
+  --matcha-acoustic-model=./matcha-tts-fa_en-male/model.onnx \
+  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-tokens=./matcha-tts-fa_en-male/tokens.txt \
+  --matcha-data-dir=./matcha-tts-fa_en-male/espeak-ng-data \
+  --output-filename=./tts/test-matcha-fa-en-male.wav \
+  --num-threads=2 \
+  "How are you doing today?  این یک نمونه ی تست فارسی است. This is a test."
+
+rm -rf matcha-tts-fa_en-male
+rm hifigan_v2.onnx
+ls -lh tts/*.wav
+
+log "------------------------------------------------------------"
 log "matcha-icefall-en_US-ljspeech"
 log "------------------------------------------------------------"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-icefall-en_US-ljspeech.tar.bz2
@@ -64,6 +86,7 @@ $EXE \
 
 rm hifigan_v2.onnx
 rm -rf matcha-icefall-en_US-ljspeech
+ls -lh tts/*.wav
 
 log "------------------------------------------------------------"
 log "matcha-icefall-zh-baker"

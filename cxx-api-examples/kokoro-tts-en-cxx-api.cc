@@ -3,7 +3,7 @@
 // Copyright (c)  2025  Xiaomi Corporation
 
 // This file shows how to use sherpa-onnx CXX API
-// for Chinese TTS with Kokoro.
+// for English TTS with Kokoro.
 //
 // clang-format off
 /*

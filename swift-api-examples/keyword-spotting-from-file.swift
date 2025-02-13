@@ -70,6 +70,9 @@ func run() {
     spotter.decode()
     let keyword = spotter.getResult().keyword
     if keyword != "" {
+      // Remember to call reset() right after detecting a keyword
+      spotter.reset()
+
       print("Detected: \(keyword)")
     }
   }

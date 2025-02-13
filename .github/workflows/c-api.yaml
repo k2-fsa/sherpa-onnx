@@ -79,6 +79,48 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
 
+      - name: Test kws (zh)
+        shell: bash
+        run: |
+          gcc -o kws-c-api ./c-api-examples/kws-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/kws-models/sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+          tar xvf sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+          rm sherpa-onnx-kws-zipformer-wenetspeech-3.3M-2024-01-01-mobile.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./kws-c-api
+
+          rm ./kws-c-api
+          rm -rf sherpa-onnx-kws-*
+
+      - name: Test Kokoro TTS (zh+en)
+        shell: bash
+        run: |
+          gcc -o kokoro-tts-zh-en-c-api ./c-api-examples/kokoro-tts-zh-en-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2
+          tar xf kokoro-multi-lang-v1_0.tar.bz2
+          rm kokoro-multi-lang-v1_0.tar.bz2
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./kokoro-tts-zh-en-c-api
+
+          rm ./kokoro-tts-zh-en-c-api
+          rm -rf kokoro-zh-en-*
+
       - name: Test Kokoro TTS (en)
         shell: bash
         run: |

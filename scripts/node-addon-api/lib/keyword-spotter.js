@@ -20,6 +20,10 @@ class KeywordSpotter {
     addon.decodeKeywordStream(this.handle, stream.handle);
   }
 
+  reset(stream) {
+    addon.resetKeywordStream(this.handle, stream.handle);
+  }
+
   getResult(stream) {
     const jsonStr = addon.getKeywordResultAsJson(this.handle, stream.handle);
 

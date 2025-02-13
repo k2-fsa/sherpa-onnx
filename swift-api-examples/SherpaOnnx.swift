@@ -767,14 +767,18 @@ func sherpaOnnxOfflineTtsKokoroModelConfig(
   voices: String = "",
   tokens: String = "",
   dataDir: String = "",
-  lengthScale: Float = 1.0
+  lengthScale: Float = 1.0,
+  dictDir: String = "",
+  lexicon: String = ""
 ) -> SherpaOnnxOfflineTtsKokoroModelConfig {
   return SherpaOnnxOfflineTtsKokoroModelConfig(
     model: toCPointer(model),
     voices: toCPointer(voices),
     tokens: toCPointer(tokens),
     data_dir: toCPointer(dataDir),
-    length_scale: lengthScale
+    length_scale: lengthScale,
+    dict_dir: toCPointer(dictDir),
+    lexicon: toCPointer(lexicon)
   )
 }
 
@@ -800,13 +804,15 @@ func sherpaOnnxOfflineTtsConfig(
   model: SherpaOnnxOfflineTtsModelConfig,
   ruleFsts: String = "",
   ruleFars: String = "",
-  maxNumSentences: Int = 1
+  maxNumSentences: Int = 1,
+  silenceScale: Float = 0.2
 ) -> SherpaOnnxOfflineTtsConfig {
   return SherpaOnnxOfflineTtsConfig(
     model: model,
     rule_fsts: toCPointer(ruleFsts),
     max_num_sentences: Int32(maxNumSentences),
-    rule_fars: toCPointer(ruleFars)
+    rule_fars: toCPointer(ruleFars),
+    silence_scale: silenceScale
   )
 }
 
@@ -1074,6 +1080,10 @@ class SherpaOnnxKeywordSpotterWrapper {
 
   func decode() {
     SherpaOnnxDecodeKeywordStream(spotter, stream)
+  }
+
+  func reset() {
+    SherpaOnnxResetKeywordStream(spotter, stream)
   }
 
   func getResult() -> SherpaOnnxKeywordResultWrapper {

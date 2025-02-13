@@ -63,13 +63,8 @@ CreateOfflinePunctuationWrapper(const Napi::CallbackInfo &info) {
   const SherpaOnnxOfflinePunctuation *punct =
       SherpaOnnxCreateOfflinePunctuation(&c);
 
-  if (c.model.ct_transformer) {
-    delete[] c.model.ct_transformer;
-  }
-
-  if (c.model.provider) {
-    delete[] c.model.provider;
-  }
+  SHERPA_ONNX_DELETE_C_STR(c.model.ct_transformer);
+  SHERPA_ONNX_DELETE_C_STR(c.model.provider);
 
   if (!punct) {
     Napi::TypeError::New(env, "Please check your config!")

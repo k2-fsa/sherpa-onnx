@@ -27,6 +27,10 @@ public class KeywordSpotter {
         decode(ptr, s.getPtr());
     }
 
+    public void reset(OnlineStream s) {
+        reset(ptr, s.getPtr());
+    }
+
     public boolean isReady(OnlineStream s) {
         return isReady(ptr, s.getPtr());
     }
@@ -59,6 +63,8 @@ public class KeywordSpotter {
     private native long createStream(long ptr, String keywords);
 
     private native void decode(long ptr, long streamPtr);
+
+    private native void reset(long ptr, long streamPtr);
 
     private native boolean isReady(long ptr, long streamPtr);
 

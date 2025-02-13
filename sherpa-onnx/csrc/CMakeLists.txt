@@ -153,6 +153,7 @@ if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
     hifigan-vocoder.cc
     jieba-lexicon.cc
+    kokoro-multi-lang-lexicon.cc
     lexicon.cc
     melo-tts-lexicon.cc
     offline-tts-cache-mechanism-config.cc
@@ -550,6 +551,7 @@ if(SHERPA_ONNX_ENABLE_TESTS)
     context-graph-test.cc
     packed-sequence-test.cc
     pad-sequence-test.cc
+    regex-lang-test.cc
     slice-test.cc
     stack-test.cc
     text-utils-test.cc

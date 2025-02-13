@@ -128,3 +128,8 @@ harmony-os/SherpaOnnxHar/sherpa_onnx/CHANGELOG.md
 matcha-icefall-zh-baker
 matcha-icefall-en_US-ljspeech
 kokoro-en-v0_19
+*.pt
+lexicon.txt
+us_gold.json
+us_silver.json
+kokoro-multi-lang-v1_0

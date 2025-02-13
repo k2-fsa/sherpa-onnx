@@ -2,7 +2,7 @@ import worker, { ThreadWorkerGlobalScope, MessageEvents, ErrorEvent } from '@oho
 
 import { fileIo as fs } from '@kit.CoreFileKit';
 
-import {OfflineTtsConfig, OfflineTts, listRawfileDir, TtsInput, TtsOutput} from 'sherpa_onnx';
+import { OfflineTtsConfig, OfflineTts, listRawfileDir, TtsInput, TtsOutput } from 'sherpa_onnx';
 import { buffer } from '@kit.ArkTS';
 
 const workerPort: ThreadWorkerGlobalScope = worker.workerPort;
@@ -42,18 +42,22 @@ function copyRawFileDirToSandbox(context: Context, srcDir: string) {
   }
 }
 
-function copyRawFileToSandbox(context: Context, src: string, dst: string) {
-  // see https://blog.csdn.net/weixin_44640245/article/details/142634846
-  // https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/rawfile-guidelines-V5
+function copyRawFileToSandbox(context: Context, src: string,
+  dst: string) {
+  /* see
+   https://blog.csdn.net/weixin_44640245/article/details/142634846
+   https://developer.huawei.com/consumer/cn/doc/harmonyos-guides-V5/rawfile-guidelines-V5
+   */
   let uint8Array: Uint8Array = context.resourceManager.getRawFileContentSync(src);
 
   // https://developer.huawei.com/consumer/cn/doc/harmonyos-references-V5/js-apis-file-fs-V5#fsmkdir
   let sandboxPath: string = context.getApplicationContext().filesDir;
-  let filepath = sandboxPath + '/'  + dst;
+  let filepath = sandboxPath + '/' + dst;
 
   if (fs.accessSync(filepath)) {
-    // if the destination exists and has the expected file size,
-    // then we skip copying it
+    /* if the destination exists and has the expected file size
+       then we skip copying it
+     */
     let stat = fs.statSync(filepath);
     if (stat.size == uint8Array.length) {
       return;
@@ -66,11 +70,12 @@ function copyRawFileToSandbox(context: Context, src: string, dst: string) {
 }
 
 function initTts(context: Context): OfflineTts {
-  // Such a design is to make it easier to build flutter APPs with
-  // github actions for a variety of tts models
-  //
-  // See https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/flutter/generate-tts.py
-  // for details
+  /* Such a design is to make it easier to build flutter APPs with
+     github actions for a variety of tts models
+
+     See https://github.com/k2-fsa/sherpa-onnx/blob/master/scripts/flutter/generate-tts.py
+     for details
+   */
 
   let modelDir = '';
 
@@ -83,13 +88,19 @@ function initTts(context: Context): OfflineTts {
   let vocoder = '';
   // for Matcha end
 
+  // for Kokoro begin
+  let voices = '';
+  // for Kokoro end
+
   let ruleFsts = '';
   let ruleFars = '';
   let lexicon = '';
   let dataDir = '';
   let dictDir = '';
-  // You can select an example below and change it according to match your
-  // selected tts model
+  /*
+    You can select an example below and change it according to match your
+    selected tts model
+   */
 
   // ============================================================
   // Your change starts here
@@ -146,20 +157,37 @@ function initTts(context: Context): OfflineTts {
   // Example 8
   // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
   // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker
-  // modelDir = 'matcha-icefall-zh-baker'
-  // acousticModelName = 'model-steps-3.onnx'
-  // vocoder = 'hifigan_v2.onnx'
-  // lexicon = 'lexicon.txt'
+  // modelDir = 'matcha-icefall-zh-baker';
+  // acousticModelName = 'model-steps-3.onnx';
+  // vocoder = 'hifigan_v2.onnx';
+  // lexicon = 'lexicon.txt';
   // dictDir = 'dict';
   // ruleFsts = `date.fst,phone.fst,number.fst`;
 
   // Example 9
   // https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
   // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker
-  // modelDir = 'matcha-icefall-en_US-ljspeech'
-  // acousticModelName = 'model-steps-3.onnx'
-  // vocoder = 'hifigan_v2.onnx'
+  // modelDir = 'matcha-icefall-en_US-ljspeech';
+  // acousticModelName = 'model-steps-3.onnx';
+  // vocoder = 'hifigan_v2.onnx';
   // dataDir = 'espeak-ng-data';
+
+  // Example 10
+  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html#kokoro-en-v0-19-english-11-speakers
+  // modelDir = 'kokoro-en-v0_19';
+  // modelName = 'model.onnx';
+  // voices = 'voices.bin'
+  // dataDir = 'espeak-ng-data';
+
+  // Example 11
+  // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/kokoro.html
+  // modelDir = 'kokoro-multi-lang-v1_0';
+  // modelName = 'model.onnx';
+  // voices = 'voices.bin'
+  // dataDir = 'espeak-ng-data';
+  // dictDir = 'dict';
+  // lexicon = 'lexicon-us-en.txt,lexicon-zh.txt';
+  // ruleFsts = `date-zh.fst,phone-zh.fst,number-zh.fst`;
 
   // ============================================================
   // Please don't change the remaining part of this function
@@ -185,6 +213,10 @@ function initTts(context: Context): OfflineTts {
     acousticModelName = modelDir + '/' + acousticModelName;
   }
 
+  if (voices != '') {
+    voices = modelDir + '/' + voices;
+  }
+
   if (ruleFsts != '') {
     let fsts = ruleFsts.split(',')
     let tmp: string[] = [];
@@ -203,37 +235,65 @@ function initTts(context: Context): OfflineTts {
     ruleFars = tmp.join(',');
   }
 
-  if (lexicon != '') {
+  if (lexicon.includes(",")) {
+    let v = lexicon.split(',')
+    let tmp: string[] = [];
+    for (const f of v) {
+      tmp.push(modelDir + '/' + f);
+    }
+    lexicon = tmp.join(',');
+  } else if (lexicon != '') {
     lexicon = modelDir + '/' + lexicon;
   }
 
   if (dataDir != '') {
     copyRawFileDirToSandbox(context, modelDir + '/' + dataDir)
     let sandboxPath: string = context.getApplicationContext().filesDir;
-    dataDir = sandboxPath + '/' + modelDir + '/'  + dataDir;
+    dataDir = sandboxPath + '/' + modelDir + '/' + dataDir;
   }
 
   if (dictDir != '') {
     copyRawFileDirToSandbox(context, modelDir + '/' + dictDir)
     let sandboxPath: string = context.getApplicationContext().filesDir;
-    dictDir = sandboxPath + '/' + modelDir + '/'  + dictDir;
+    dictDir = sandboxPath + '/' + modelDir + '/' + dictDir;
   }
 
   const tokens = modelDir + '/tokens.txt';
 
   const config: OfflineTtsConfig = new OfflineTtsConfig();
-  config.model.vits.model = modelName;
-  config.model.vits.lexicon = lexicon;
-  config.model.vits.tokens = tokens;
-  config.model.vits.dataDir = dataDir;
-  config.model.vits.dictDir = dictDir;
+  if (voices != '') {
+    config.model.vits.model = '';
+  } else {
+    config.model.vits.model = modelName;
+  }
 
-  config.model.matcha.acousticModel = acousticModelName;
-  config.model.matcha.vocoder = vocoder;
-  config.model.matcha.lexicon = lexicon;
-  config.model.matcha.tokens = tokens;
-  config.model.matcha.dataDir = dataDir;
-  config.model.matcha.dictDir = dictDir;
+  if (voices == '') {
+    config.model.vits.lexicon = lexicon;
+    config.model.vits.tokens = tokens;
+    config.model.vits.dataDir = dataDir;
+    config.model.vits.dictDir = dictDir;
+
+    config.model.matcha.acousticModel = acousticModelName;
+    config.model.matcha.vocoder = vocoder;
+    config.model.matcha.lexicon = lexicon;
+    config.model.matcha.tokens = tokens;
+    config.model.matcha.dataDir = dataDir;
+    config.model.matcha.dictDir = dictDir;
+  }
+
+  if (voices != '') {
+    config.model.kokoro.model = modelName;
+  } else {
+    config.model.kokoro.model = '';
+  }
+
+  if (voices != '') {
+    config.model.kokoro.voices = voices;
+    config.model.kokoro.tokens = tokens;
+    config.model.kokoro.dataDir = dataDir;
+    config.model.kokoro.dictDir = dictDir;
+    config.model.kokoro.lexicon = lexicon;
+  }
 
   config.model.numThreads = 2;
   config.model.debug = true;
@@ -250,14 +310,12 @@ interface TtsCallbackData {
 
 function callback(data: TtsCallbackData): number {
   workerPort.postMessage({
-    'msgType': 'tts-generate-partial',
-    samples: Float32Array.from(data.samples),
-    progress: data.progress,
+    'msgType': 'tts-generate-partial', samples: Float32Array.from(data.samples), progress: data.progress,
   });
 
   // 0 means to stop generating in C++
   // 1 means to continue generating in C++
-  return cancelled? 0 : 1;
+  return cancelled ? 0 : 1;
 }
 
 /**
@@ -272,9 +330,11 @@ workerPort.onmessage = (e: MessageEvents) => {
   if (msgType == 'init-tts' && !tts) {
     const context = e.data['context'] as Context;
     tts = initTts(context);
-    workerPort.postMessage({ 'msgType': 'init-tts-done',
+    workerPort.postMessage({
+      'msgType': 'init-tts-done',
       sampleRate: tts.sampleRate,
       numSpeakers: tts.numSpeakers,
+      numThreads: tts.config.model.numThreads,
     });
   }
 
@@ -297,16 +357,14 @@ workerPort.onmessage = (e: MessageEvents) => {
         console.log(`sampleRate: ${ttsOutput.sampleRate}`);
 
         workerPort.postMessage({
-          'msgType': 'tts-generate-done',
-          samples: Float32Array.from(ttsOutput.samples),
+          'msgType': 'tts-generate-done', samples: Float32Array.from(ttsOutput.samples),
         });
 
       });
     } else {
       const ttsOutput: TtsOutput = tts.generate(input);
       workerPort.postMessage({
-        'msgType': 'tts-generate-done',
-        samples: Float32Array.from(ttsOutput.samples),
+        'msgType': 'tts-generate-done', samples: Float32Array.from(ttsOutput.samples),
       });
     }
 

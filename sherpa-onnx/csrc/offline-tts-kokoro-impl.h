@@ -4,6 +4,8 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_TTS_KOKORO_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_TTS_KOKORO_IMPL_H_
 
+#include <iomanip>
+#include <ios>
 #include <memory>
 #include <string>
 #include <strstream>
@@ -13,6 +15,7 @@
 #include "fst/extensions/far/far.h"
 #include "kaldifst/csrc/kaldi-fst-io.h"
 #include "kaldifst/csrc/text-normalizer.h"
+#include "sherpa-onnx/csrc/kokoro-multi-lang-lexicon.h"
 #include "sherpa-onnx/csrc/lexicon.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-tts-frontend.h"
@@ -188,6 +191,20 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
 #else
       SHERPA_ONNX_LOGE("Raw text: %s", text.c_str());
 #endif
+      std::ostringstream os;
+      os << "In bytes (hex):\n";
+      const auto p = reinterpret_cast<const uint8_t *>(text.c_str());
+      for (int32_t i = 0; i != text.size(); ++i) {
+        os << std::setw(2) << std::setfill('0') << std::hex
+           << static_cast<uint32_t>(p[i]) << " ";
+      }
+      os << "\n";
+
+#if __OHOS__
+      SHERPA_ONNX_LOGE("%{public}s", os.str().c_str());
+#else
+      SHERPA_ONNX_LOGE("%s", os.str().c_str());
+#endif
     }
 
     if (!tn_list_.empty()) {
@@ -204,7 +221,7 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
     }
 
     std::vector<TokenIDs> token_ids =
-        frontend_->ConvertTextToTokenIds(text, "en-us");
+        frontend_->ConvertTextToTokenIds(text, meta_data.voice);
 
     if (token_ids.empty() ||
         (token_ids.size() == 1 && token_ids[0].tokens.empty())) {
@@ -314,6 +331,27 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
   template <typename Manager>
   void InitFrontend(Manager *mgr) {
     const auto &meta_data = model_->GetMetaData();
+
+    if (meta_data.version >= 2) {
+      // this is a multi-lingual model, we require that you pass lexicon
+      // and dict_dir
+      if (config_.model.kokoro.lexicon.empty() ||
+          config_.model.kokoro.dict_dir.empty()) {
+        SHERPA_ONNX_LOGE("Current model version: '%d'", meta_data.version);
+        SHERPA_ONNX_LOGE(
+            "You are using a multi-lingual Kokoro model (e.g., Kokoro >= "
+            "v1.0). please pass --kokoro-lexicon and --kokoro-dict-dir");
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      frontend_ = std::make_unique<KokoroMultiLangLexicon>(
+          mgr, config_.model.kokoro.tokens, config_.model.kokoro.lexicon,
+          config_.model.kokoro.dict_dir, config_.model.kokoro.data_dir,
+          meta_data, config_.model.debug);
+
+      return;
+    }
+
     frontend_ = std::make_unique<PiperPhonemizeLexicon>(
         mgr, config_.model.kokoro.tokens, config_.model.kokoro.data_dir,
         meta_data);
@@ -321,7 +359,27 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
 
   void InitFrontend() {
     const auto &meta_data = model_->GetMetaData();
+    if (meta_data.version >= 2) {
+      // this is a multi-lingual model, we require that you pass lexicon
+      // and dict_dir
+      if (config_.model.kokoro.lexicon.empty() ||
+          config_.model.kokoro.dict_dir.empty()) {
+        SHERPA_ONNX_LOGE("Current model version: '%d'", meta_data.version);
+        SHERPA_ONNX_LOGE(
+            "You are using a multi-lingual Kokoro model (e.g., Kokoro >= "
+            "v1.0). please pass --kokoro-lexicon and --kokoro-dict-dir");
+        SHERPA_ONNX_EXIT(-1);
+      }
 
+      frontend_ = std::make_unique<KokoroMultiLangLexicon>(
+          config_.model.kokoro.tokens, config_.model.kokoro.lexicon,
+          config_.model.kokoro.dict_dir, config_.model.kokoro.data_dir,
+          meta_data, config_.model.debug);
+
+      return;
+    }
+
+    // this is for kokoro v0.19, which supports only English
     frontend_ = std::make_unique<PiperPhonemizeLexicon>(
         config_.model.kokoro.tokens, config_.model.kokoro.data_dir, meta_data);
   }
@@ -362,6 +420,12 @@ class OfflineTtsKokoroImpl : public OfflineTtsImpl {
     GeneratedAudio ans;
     ans.sample_rate = model_->GetMetaData().sample_rate;
     ans.samples = std::vector<float>(p, p + total);
+
+    float silence_scale = config_.silence_scale;
+    if (silence_scale != 1) {
+      ans = ans.ScaleSilence(silence_scale);
+    }
+
     return ans;
   }
 

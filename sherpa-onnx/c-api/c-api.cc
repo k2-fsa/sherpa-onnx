@@ -533,6 +533,13 @@ const SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStream(
   return stream;
 }
 
+const SherpaOnnxOfflineStream *SherpaOnnxCreateOfflineStreamWithHotwords(
+    const SherpaOnnxOfflineRecognizer *recognizer, const char *hotwords) {
+  SherpaOnnxOfflineStream *stream =
+      new SherpaOnnxOfflineStream(recognizer->impl->CreateStream(hotwords));
+  return stream;
+}
+
 void SherpaOnnxDestroyOfflineStream(const SherpaOnnxOfflineStream *stream) {
   delete stream;
 }
@@ -678,7 +685,7 @@ struct SherpaOnnxKeywordSpotter {
   std::unique_ptr<sherpa_onnx::KeywordSpotter> impl;
 };
 
-SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
+static sherpa_onnx::KeywordSpotterConfig GetKeywordSpotterConfig(
     const SherpaOnnxKeywordSpotterConfig *config) {
   sherpa_onnx::KeywordSpotterConfig spotter_config;
 
@@ -739,10 +746,20 @@ SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
         std::string(config->keywords_buf, config->keywords_buf_size);
   }
 
-  if (config->model_config.debug) {
+  if (spotter_config.model_config.debug) {
+#if OHOS
+    SHERPA_ONNX_LOGE("%{public}s\n", spotter_config.ToString().c_str());
+#else
     SHERPA_ONNX_LOGE("%s\n", spotter_config.ToString().c_str());
+#endif
   }
 
+  return spotter_config;
+}
+
+const SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
+    const SherpaOnnxKeywordSpotterConfig *config) {
+  auto spotter_config = GetKeywordSpotterConfig(config);
   if (!spotter_config.Validate()) {
     SHERPA_ONNX_LOGE("Errors in config!");
     return nullptr;
@@ -755,37 +772,42 @@ SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotter(
   return spotter;
 }
 
-void SherpaOnnxDestroyKeywordSpotter(SherpaOnnxKeywordSpotter *spotter) {
+void SherpaOnnxDestroyKeywordSpotter(const SherpaOnnxKeywordSpotter *spotter) {
   delete spotter;
 }
 
-SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStream(
+const SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStream(
     const SherpaOnnxKeywordSpotter *spotter) {
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(spotter->impl->CreateStream());
   return stream;
 }
 
-SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStreamWithKeywords(
+const SherpaOnnxOnlineStream *SherpaOnnxCreateKeywordStreamWithKeywords(
     const SherpaOnnxKeywordSpotter *spotter, const char *keywords) {
   SherpaOnnxOnlineStream *stream =
       new SherpaOnnxOnlineStream(spotter->impl->CreateStream(keywords));
   return stream;
 }
 
-int32_t SherpaOnnxIsKeywordStreamReady(SherpaOnnxKeywordSpotter *spotter,
-                                       SherpaOnnxOnlineStream *stream) {
+int32_t SherpaOnnxIsKeywordStreamReady(const SherpaOnnxKeywordSpotter *spotter,
+                                       const SherpaOnnxOnlineStream *stream) {
   return spotter->impl->IsReady(stream->impl.get());
 }
 
-void SherpaOnnxDecodeKeywordStream(SherpaOnnxKeywordSpotter *spotter,
-                                   SherpaOnnxOnlineStream *stream) {
-  return spotter->impl->DecodeStream(stream->impl.get());
+void SherpaOnnxDecodeKeywordStream(const SherpaOnnxKeywordSpotter *spotter,
+                                   const SherpaOnnxOnlineStream *stream) {
+  spotter->impl->DecodeStream(stream->impl.get());
 }
 
-void SherpaOnnxDecodeMultipleKeywordStreams(SherpaOnnxKeywordSpotter *spotter,
-                                            SherpaOnnxOnlineStream **streams,
-                                            int32_t n) {
+void SherpaOnnxResetKeywordStream(const SherpaOnnxKeywordSpotter *spotter,
+                                  const SherpaOnnxOnlineStream *stream) {
+  spotter->impl->Reset(stream->impl.get());
+}
+
+void SherpaOnnxDecodeMultipleKeywordStreams(
+    const SherpaOnnxKeywordSpotter *spotter,
+    const SherpaOnnxOnlineStream **streams, int32_t n) {
   std::vector<sherpa_onnx::OnlineStream *> ss(n);
   for (int32_t i = 0; i != n; ++i) {
     ss[i] = streams[i]->impl.get();
@@ -794,7 +816,8 @@ void SherpaOnnxDecodeMultipleKeywordStreams(SherpaOnnxKeywordSpotter *spotter,
 }
 
 const SherpaOnnxKeywordResult *SherpaOnnxGetKeywordResult(
-    SherpaOnnxKeywordSpotter *spotter, SherpaOnnxOnlineStream *stream) {
+    const SherpaOnnxKeywordSpotter *spotter,
+    const SherpaOnnxOnlineStream *stream) {
   const sherpa_onnx::KeywordResult &result =
       spotter->impl->GetResult(stream->impl.get());
   const auto &keyword = result.keyword;
@@ -869,8 +892,9 @@ void SherpaOnnxDestroyKeywordResult(const SherpaOnnxKeywordResult *r) {
   }
 }
 
-const char *SherpaOnnxGetKeywordResultAsJson(SherpaOnnxKeywordSpotter *spotter,
-                                             SherpaOnnxOnlineStream *stream) {
+const char *SherpaOnnxGetKeywordResultAsJson(
+    const SherpaOnnxKeywordSpotter *spotter,
+    const SherpaOnnxOnlineStream *stream) {
   const sherpa_onnx::KeywordResult &result =
       spotter->impl->GetResult(stream->impl.get());
 
@@ -1103,6 +1127,10 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
       SHERPA_ONNX_OR(config->model.kokoro.data_dir, "");
   tts_config.model.kokoro.length_scale =
       SHERPA_ONNX_OR(config->model.kokoro.length_scale, 1.0);
+  tts_config.model.kokoro.dict_dir =
+      SHERPA_ONNX_OR(config->model.kokoro.dict_dir, "");
+  tts_config.model.kokoro.lexicon =
+      SHERPA_ONNX_OR(config->model.kokoro.lexicon, "");
 
   tts_config.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
   tts_config.model.debug = config->model.debug;
@@ -1114,6 +1142,7 @@ static sherpa_onnx::OfflineTtsConfig GetOfflineTtsConfig(
   tts_config.rule_fsts = SHERPA_ONNX_OR(config->rule_fsts, "");
   tts_config.rule_fars = SHERPA_ONNX_OR(config->rule_fars, "");
   tts_config.max_num_sentences = SHERPA_ONNX_OR(config->max_num_sentences, 1);
+  tts_config.silence_scale = SHERPA_ONNX_OR(config->silence_scale, 0.2);
 
   if (tts_config.model.debug) {
 #if __OHOS__
@@ -2263,6 +2292,22 @@ SherpaOnnxCreateSpeakerEmbeddingExtractorOHOS(
   p->impl = std::make_unique<sherpa_onnx::SpeakerEmbeddingExtractor>(mgr, c);
 
   return p;
+}
+
+const SherpaOnnxKeywordSpotter *SherpaOnnxCreateKeywordSpotterOHOS(
+    const SherpaOnnxKeywordSpotterConfig *config, NativeResourceManager *mgr) {
+  if (!mgr) {
+    return SherpaOnnxCreateKeywordSpotter(config);
+  }
+
+  auto spotter_config = GetKeywordSpotterConfig(config);
+
+  SherpaOnnxKeywordSpotter *spotter = new SherpaOnnxKeywordSpotter;
+
+  spotter->impl =
+      std::make_unique<sherpa_onnx::KeywordSpotter>(mgr, spotter_config);
+
+  return spotter;
 }
 
 #if SHERPA_ONNX_ENABLE_TTS == 1

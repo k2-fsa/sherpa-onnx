@@ -19,6 +19,9 @@ struct TokenIDs {
   /*implicit*/ TokenIDs(std::vector<int64_t> tokens)  // NOLINT
       : tokens{std::move(tokens)} {}
 
+  /*implicit*/ TokenIDs(const std::vector<int32_t> &tokens)  // NOLINT
+      : tokens{tokens.begin(), tokens.end()} {}
+
   TokenIDs(std::vector<int64_t> tokens,  // NOLINT
            std::vector<int64_t> tones)   // NOLINT
       : tokens{std::move(tokens)}, tones{std::move(tones)} {}
@@ -50,6 +53,9 @@ class OfflineTtsFrontend {
   virtual std::vector<TokenIDs> ConvertTextToTokenIds(
       const std::string &text, const std::string &voice = "") const = 0;
 };
+
+// implementation is in ./piper-phonemize-lexicon.cc
+void InitEspeak(const std::string &data_dir);
 
 }  // namespace sherpa_onnx
 

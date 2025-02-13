@@ -26,6 +26,8 @@ jobs:
         include:
           - os: ubuntu-latest
             arch: amd64
+          - os: ubuntu-22.04-arm
+            arch: arm64
           - os: macos-13
             arch: amd64
           - os: macos-14
@@ -207,6 +209,11 @@ jobs:
           go mod tidy
           cat go.mod
           go build
+          ls -lh
+
+          echo "Test kokoro zh+en"
+          ./run-kokoro-zh-en.sh
+          rm -rf kokoro-multi-*
           ls -lh
 
           echo "Test kokoro en"
@@ -454,6 +461,19 @@ jobs:
           echo "Test Tdnn yesno"
           ./run-tdnn-yesno.sh
           rm -rf sherpa-onnx-tdnn-yesno
+
+      - name: Test audio tagging (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        shell: bash
+        run: |
+          cd go-api-examples/audio-tagging
+          ls -lh
+          go mod tidy
+          cat go.mod
+          go build
+          ls -lh
+
+          ./run.sh
 
       - name: Test streaming decoding files (Linux/macOS)
         if: matrix.os != 'windows-latest'

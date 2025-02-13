@@ -73,6 +73,8 @@ void main(List<String> arguments) async {
       spotter.decode(stream);
       final result = spotter.getResult(stream);
       if (result.keyword != '') {
+        // Remember to reset the stream right after detecting a keyword
+        spotter.reset(stream);
         print('Detected: ${result.keyword}');
       }
     }

@@ -98,6 +98,9 @@ class TestKeywordSpotter(unittest.TestCase):
                     if r:
                         print(f"{r} is detected.")
                         results[i] += f"{r}/"
+
+                        keyword_spotter.reset_stream(s)
+
                 if len(ready_list) == 0:
                     break
                 keyword_spotter.decode_streams(ready_list)
@@ -158,6 +161,9 @@ class TestKeywordSpotter(unittest.TestCase):
                     if r:
                         print(f"{r} is detected.")
                         results[i] += f"{r}/"
+
+                        keyword_spotter.reset_stream(s)
+
                 if len(ready_list) == 0:
                     break
                 keyword_spotter.decode_streams(ready_list)

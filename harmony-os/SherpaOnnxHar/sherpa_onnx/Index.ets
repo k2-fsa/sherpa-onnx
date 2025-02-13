@@ -31,7 +31,8 @@ export { OnlineStream,
   OnlineRecognizer,
 } from './src/main/ets/components/StreamingAsr';
 
-export { OfflineTtsMatchaModelConfig,
+export { OfflineTtsKokoroModelConfig,
+  OfflineTtsMatchaModelConfig,
   OfflineTtsVitsModelConfig,
   OfflineTtsModelConfig,
   OfflineTtsConfig,
@@ -52,3 +53,8 @@ export { OfflineSpeakerSegmentationPyannoteModelConfig,
   OfflineSpeakerDiarization,
   FastClusteringConfig,
 } from './src/main/ets/components/NonStreamingSpeakerDiarization';
+
+export { KeywordSpotterConfig,
+  KeywordSpotterResult,
+  KeywordSpotter,
+} from './src/main/ets/components/KeywordSpotting';
