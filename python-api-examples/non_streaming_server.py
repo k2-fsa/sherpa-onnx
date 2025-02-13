@@ -23,16 +23,17 @@ Usage examples:
 (1) Use a non-streaming transducer model
 
 cd /path/to/sherpa-onnx
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
-tar xvf sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
-rm sherpa-onnx-streaming-zipformer-en-2023-06-26.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
+tar xvf sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
+rm sherpa-onnx-zipformer-en-2023-06-26.tar.bz2
 
 python3 ./python-api-examples/non_streaming_server.py \
   --encoder ./sherpa-onnx-zipformer-en-2023-06-26/encoder-epoch-99-avg-1.onnx \
   --decoder ./sherpa-onnx-zipformer-en-2023-06-26/decoder-epoch-99-avg-1.onnx \
   --joiner ./sherpa-onnx-zipformer-en-2023-06-26/joiner-epoch-99-avg-1.onnx \
-  --tokens ./sherpa-onnx-zipformer-en-2023-06-26/tokens.txt
-
+  --tokens ./sherpa-onnx-zipformer-en-2023-06-26/tokens.txt \
+  --port 6006
+  
 (2) Use a non-streaming paraformer
 
 cd /path/to/sherpa-onnx
