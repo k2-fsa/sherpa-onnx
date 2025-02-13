@@ -1,3 +1,22 @@
+## 1.10.44
+
+* Export MatchaTTS fa-en model to sherpa-onnx (#1832)
+* Add C++ support for MatchaTTS models not from icefall. (#1834)
+* OfflineRecognizer supports create stream with hotwords (#1833)
+* Add PengChengStarling models to sherpa-onnx (#1835)
+* Support specifying voice in espeak-ng for kokoro tts models. (#1836)
+* Fix: made print sherpa_onnx_loge when it is in debug mode (#1838)
+* Add Go API for audio tagging (#1840)
+* Fix CI (#1841)
+* Update readme to contain links for pre-built Apps (#1853)
+* Modify the model used (#1855)
+* Flutter OnlinePunctuation (#1854)
+* Fix spliting text by languages for kokoro tts. (#1849)
+
+
+
+
+
 ## 1.10.43
 
 * Add MFC example for Kokoro TTS 1.0 (#1815)
