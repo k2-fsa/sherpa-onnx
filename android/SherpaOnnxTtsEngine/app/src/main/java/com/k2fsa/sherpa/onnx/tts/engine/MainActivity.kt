@@ -215,6 +215,8 @@ class MainActivity : ComponentActivity() {
                                                         TtsEngine.tts!!.config.model.numThreads,
                                                         elapsed,
                                                         audioDuration,
+                                                        elapsed,
+                                                        audioDuration,
                                                         elapsed / audioDuration
                                                     )
                                                     samplesChannel.close()
