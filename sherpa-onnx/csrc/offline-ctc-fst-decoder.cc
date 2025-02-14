@@ -83,7 +83,8 @@ OfflineCtcFstDecoder::OfflineCtcFstDecoder(
     : config_(config), fst_(ReadGraph(config_.graph)) {}
 
 std::vector<OfflineCtcDecoderResult> OfflineCtcFstDecoder::Decode(
-    Ort::Value log_probs, Ort::Value log_probs_length) {
+    Ort::Value log_probs, Ort::Value log_probs_length,
+    OfflineStream **ss /*= nullptr*/, int32_t n /*= 0*/) {
   std::vector<int64_t> shape = log_probs.GetTensorTypeAndShapeInfo().GetShape();
 
   assert(static_cast<int32_t>(shape.size()) == 3);
