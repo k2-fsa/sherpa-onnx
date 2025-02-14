@@ -239,9 +239,12 @@ func NewOnlineRecognizer(config *OnlineRecognizerConfig) *OnlineRecognizer {
 	defer C.free(unsafe.Pointer(c.ctc_fst_decoder_config.graph))
 	c.ctc_fst_decoder_config.max_active = C.int(config.CtcFstDecoderConfig.MaxActive)
 
+	impl := C.SherpaOnnxCreateOnlineRecognizer(&c)
+	if impl == nil {
+		return nil
+	}
 	recognizer := &OnlineRecognizer{}
-	recognizer.impl = C.SherpaOnnxCreateOnlineRecognizer(&c)
-
+	recognizer.impl = impl
 	return recognizer
 }
 
@@ -580,8 +583,12 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 	c.rule_fars = C.CString(config.RuleFars)
 	defer C.free(unsafe.Pointer(c.rule_fars))
 
+	impl := C.SherpaOnnxCreateOfflineRecognizer(&c)
+	if impl == nil {
+		return nil
+	}
 	recognizer := &OfflineRecognizer{}
-	recognizer.impl = C.SherpaOnnxCreateOfflineRecognizer(&c)
+	recognizer.impl = impl
 
 	return recognizer
 }
@@ -816,9 +823,12 @@ func NewOfflineTts(config *OfflineTtsConfig) *OfflineTts {
 	c.model.provider = C.CString(config.Model.Provider)
 	defer C.free(unsafe.Pointer(c.model.provider))
 
+	impl := C.SherpaOnnxCreateOfflineTts(&c)
+	if impl == nil {
+		return nil
+	}
 	tts := &OfflineTts{}
-	tts.impl = C.SherpaOnnxCreateOfflineTts(&c)
-
+	tts.impl = impl
 	return tts
 }
 
@@ -951,9 +961,12 @@ func NewVoiceActivityDetector(config *VadModelConfig, bufferSizeInSeconds float3
 
 	c.debug = C.int(config.Debug)
 
+	impl := C.SherpaOnnxCreateVoiceActivityDetector(&c, C.float(bufferSizeInSeconds))
+	if impl == nil {
+		return nil
+	}
 	vad := &VoiceActivityDetector{}
-	vad.impl = C.SherpaOnnxCreateVoiceActivityDetector(&c, C.float(bufferSizeInSeconds))
-
+	vad.impl = impl
 	return vad
 }
 
@@ -1107,9 +1120,12 @@ func NewSpeakerEmbeddingExtractor(config *SpeakerEmbeddingExtractorConfig) *Spea
 	c.provider = C.CString(config.Provider)
 	defer C.free(unsafe.Pointer(c.provider))
 
+	impl := C.SherpaOnnxCreateSpeakerEmbeddingExtractor(&c)
+	if impl == nil {
+		return nil
+	}
 	ex := &SpeakerEmbeddingExtractor{}
-	ex.impl = C.SherpaOnnxCreateSpeakerEmbeddingExtractor(&c)
-
+	ex.impl = impl
 	return ex
 }
 
@@ -1159,8 +1175,12 @@ type SpeakerEmbeddingManager struct {
 // The user has to invoke [DeleteSpeakerEmbeddingManager]() to free the returned
 // value to avoid memory leak
 func NewSpeakerEmbeddingManager(dim int) *SpeakerEmbeddingManager {
+	impl := C.SherpaOnnxCreateSpeakerEmbeddingManager(C.int(dim))
+	if impl == nil {
+		return nil
+	}
 	m := &SpeakerEmbeddingManager{}
-	m.impl = C.SherpaOnnxCreateSpeakerEmbeddingManager(C.int(dim))
+	m.impl = impl
 	return m
 }
 
@@ -1435,9 +1455,12 @@ func NewOfflinePunctuation(config *OfflinePunctuationConfig) *OfflinePunctuation
 	cfg.model.provider = C.CString(config.Model.Provider)
 	defer C.free(unsafe.Pointer(cfg.model.provider))
 
+	impl := C.SherpaOnnxCreateOfflinePunctuation(&cfg)
+	if impl == nil {
+		return nil
+	}
 	punc := &OfflinePunctuation{}
-	punc.impl = C.SherpaOnnxCreateOfflinePunctuation(&cfg)
-
+	punc.impl = impl
 	return punc
 }
 
@@ -1544,9 +1567,12 @@ func NewKeywordSpotter(config *KeywordSpotterConfig) *KeywordSpotter {
 
 	c.keywords_buf_size = C.int(config.KeywordsBufSize)
 
+	impl := C.SherpaOnnxCreateKeywordSpotter(&c)
+	if impl == nil {
+		return nil
+	}
 	spotter := &KeywordSpotter{}
-	spotter.impl = C.SherpaOnnxCreateKeywordSpotter(&c)
-
+	spotter.impl = impl
 	return spotter
 }
 
@@ -1665,9 +1691,12 @@ func NewAudioTagging(config *AudioTaggingConfig) *AudioTagging {
 
 	c.top_k = C.int(config.TopK)
 
+	impl := C.SherpaOnnxCreateAudioTagging(&c)
+	if impl == nil {
+		return nil
+	}
 	tagging := &AudioTagging{}
-	tagging.impl = C.SherpaOnnxCreateAudioTagging(&c)
-
+	tagging.impl = impl
 	return tagging
 }
 
