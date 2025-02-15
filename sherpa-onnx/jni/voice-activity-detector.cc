@@ -113,7 +113,8 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_acceptWaveform(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jfloatArray samples) {
   SafeJNI(env, "Vad_acceptWaveform", [&] {
-    if (!ValidatePointer(env, ptr, "Vad_acceptWaveform", "VoiceActivityDetector pointer is null.")) {
+    if (!ValidatePointer(env, ptr, "Vad_acceptWaveform",
+                         "VoiceActivityDetector pointer is null.")) {
       return;
     }
 
@@ -181,7 +182,8 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(
     JNIEnv *env, jobject /*obj*/, jlong ptr) {
   SafeJNI(env, "Vad_reset", [&] {
-    if (!ValidatePointer(env, ptr, "Vad_reset", "VoiceActivityDetector pointer is null.")) {
+    if (!ValidatePointer(env, ptr, "Vad_reset",
+                         "VoiceActivityDetector pointer is null.")) {
       return;
     }
 

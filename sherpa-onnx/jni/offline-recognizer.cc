@@ -335,8 +335,10 @@ SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decode(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jlong streamPtr) {
   SafeJNI(env, "OfflineRecognizer_decode", [&] {
-    if (!ValidatePointer(env, ptr, "OfflineRecognizer_decode", "OfflineRecognizer pointer is null.") ||
-        !ValidatePointer(env, streamPtr, "OfflineRecognizer_decode", "OfflineStream pointer is null.")) {
+    if (!ValidatePointer(env, ptr, "OfflineRecognizer_decode",
+                         "OfflineRecognizer pointer is null.") ||
+        !ValidatePointer(env, streamPtr, "OfflineRecognizer_decode",
+                         "OfflineStream pointer is null.")) {
       return;
     }
 
