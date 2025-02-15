@@ -35,11 +35,66 @@
 // If you use ndk, you can find "jni.h" inside
 // android-ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
 #include "jni.h"  // NOLINT
+#include <string>
 
 #define SHERPA_ONNX_EXTERN_C extern "C" SHERPA_ONNX_API
 
 // defined in jni.cc
 jobject NewInteger(JNIEnv *env, int32_t value);
 jobject NewFloat(JNIEnv *env, float value);
+
+// Template function for non-void return types
+template <typename Func, typename ReturnType>
+ReturnType SafeJNI(JNIEnv *env, const char *functionName, Func func, ReturnType defaultValue) {
+  try {
+    return func();
+  } catch (const std::exception &e) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+      std::string errorMessage = std::string(functionName) + ": " + e.what();
+      env->ThrowNew(exClass, errorMessage.c_str());
+    }
+  } catch (...) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+      std::string errorMessage = std::string(functionName) + ": Native exception: caught unknown exception";
+      env->ThrowNew(exClass, errorMessage.c_str());
+    }
+  }
+  return defaultValue;
+}
+
+// Specialization for void return type
+template <typename Func>
+void SafeJNI(JNIEnv *env, const char *functionName, Func func) {
+  try {
+    func();
+  } catch (const std::exception &e) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+      std::string errorMessage = std::string(functionName) + ": " + e.what();
+      env->ThrowNew(exClass, errorMessage.c_str());
+    }
+  } catch (...) {
+    jclass exClass = env->FindClass("java/lang/RuntimeException");
+    if (exClass != nullptr) {
+      std::string errorMessage = std::string(functionName) + ": Native exception: caught unknown exception";
+      env->ThrowNew(exClass, errorMessage.c_str());
+    }
+  }
+}
+
+// Helper function to validate JNI pointers
+inline bool ValidatePointer(JNIEnv *env, jlong ptr, const char *functionName, const char *message) {
+  if (ptr == 0) {
+    jclass exClass = env->FindClass("java/lang/NullPointerException");
+    if (exClass != nullptr) {
+      std::string errorMessage = std::string(functionName) + ": " + message;
+      env->ThrowNew(exClass, errorMessage.c_str());
+    }
+    return false;
+  }
+  return true;
+}
 
 #endif  // SHERPA_ONNX_JNI_COMMON_H_

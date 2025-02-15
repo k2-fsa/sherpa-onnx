@@ -112,34 +112,19 @@ JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_delete(JNIEnv * /*env*/,
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_acceptWaveform(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jfloatArray samples) {
-  try {
-    if (ptr == 0) {  // Check if the pointer is null
-      jclass exClass = env->FindClass("java/lang/NullPointerException");
-      if (exClass != nullptr) {
-        env->ThrowNew(exClass, "Vad_acceptWaveform: "
-                      "VoiceActivityDetector pointer is null.");
-      }
-      return;  // Exit early to prevent dereferencing
+  SafeJNI(env, "Vad_acceptWaveform", [&] {
+    if (!ValidatePointer(env, ptr, "Vad_acceptWaveform", "VoiceActivityDetector pointer is null.")) {
+      return;
     }
-    auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
 
+    auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
     jfloat *p = env->GetFloatArrayElements(samples, nullptr);
     jsize n = env->GetArrayLength(samples);
 
     model->AcceptWaveform(p, n);
 
     env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
-  } catch (const std::exception& e) {
-    jclass exClass = env->FindClass("java/lang/RuntimeException");
-    if (exClass != nullptr) {
-      env->ThrowNew(exClass, e.what());
-    }
-  } catch (...) {
-    jclass exClass = env->FindClass("java/lang/RuntimeException");
-    if (exClass != nullptr) {
-      env->ThrowNew(exClass, "Native exception: caught unknown exception");
-    }
-  }
+  });
 }
 
 SHERPA_ONNX_EXTERN_C
@@ -193,31 +178,16 @@ JNIEXPORT bool JNICALL Java_com_k2fsa_sherpa_onnx_Vad_isSpeechDetected(
 }
 
 SHERPA_ONNX_EXTERN_C
-JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(JNIEnv *env,
-                                                            jobject /*obj*/,
-                                                            jlong ptr) {
-  try {
-    if (ptr == 0) {  // Check if the pointer is null
-      jclass exClass = env->FindClass("java/lang/NullPointerException");
-      if (exClass != nullptr) {
-        env->ThrowNew(exClass, "Vad_reset: "
-                      "VoiceActivityDetector pointer is null.");
-      }
-      return;  // Exit early to prevent dereferencing
+JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_Vad_reset(
+    JNIEnv *env, jobject /*obj*/, jlong ptr) {
+  SafeJNI(env, "Vad_reset", [&] {
+    if (!ValidatePointer(env, ptr, "Vad_reset", "VoiceActivityDetector pointer is null.")) {
+      return;
     }
+
     auto model = reinterpret_cast<sherpa_onnx::VoiceActivityDetector *>(ptr);
     model->Reset();
-  } catch (const std::exception& e) {
-    jclass exClass = env->FindClass("java/lang/RuntimeException");
-    if (exClass != nullptr) {
-      env->ThrowNew(exClass, e.what());
-    }
-  } catch (...) {
-    jclass exClass = env->FindClass("java/lang/RuntimeException");
-    if (exClass != nullptr) {
-      env->ThrowNew(exClass, "Native exception: caught unknown exception");
-    }
-  }
+  });
 }
 
 SHERPA_ONNX_EXTERN_C

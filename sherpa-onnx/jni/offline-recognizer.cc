@@ -334,39 +334,16 @@ Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_createStream(JNIEnv * /*env*/,
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL Java_com_k2fsa_sherpa_onnx_OfflineRecognizer_decode(
     JNIEnv *env, jobject /*obj*/, jlong ptr, jlong streamPtr) {
-  try {
-    if (ptr == 0) {  // Check if the pointer is null
-      jclass exClass = env->FindClass("java/lang/NullPointerException");
-      if (exClass != nullptr) {
-        env->ThrowNew(exClass, "OfflineRecognizer_decode: "
-                      "OfflineRecognizer pointer is null.");
-      }
-      return;  // Exit early to prevent dereferencing
-    }
-
-    if (streamPtr == 0) {  // Check if the pointer is null
-      jclass exClass = env->FindClass("java/lang/NullPointerException");
-      if (exClass != nullptr) {
-        env->ThrowNew(exClass, "OfflineRecognizer_decode: "
-                      "OfflineStream pointer is null.");
-      }
-      return;  // Exit early to prevent dereferencing
+  SafeJNI(env, "OfflineRecognizer_decode", [&] {
+    if (!ValidatePointer(env, ptr, "OfflineRecognizer_decode", "OfflineRecognizer pointer is null.") ||
+        !ValidatePointer(env, streamPtr, "OfflineRecognizer_decode", "OfflineStream pointer is null.")) {
+      return;
     }
 
     auto recognizer = reinterpret_cast<sherpa_onnx::OfflineRecognizer *>(ptr);
     auto stream = reinterpret_cast<sherpa_onnx::OfflineStream *>(streamPtr);
     recognizer->DecodeStream(stream);
-  } catch (const std::exception& e) {
-    jclass exClass = env->FindClass("java/lang/RuntimeException");
-    if (exClass != nullptr) {
-      env->ThrowNew(exClass, e.what());
-    }
-  } catch (...) {
-    jclass exClass = env->FindClass("java/lang/RuntimeException");
-    if (exClass != nullptr) {
-      env->ThrowNew(exClass, "Native exception: caught unknown exception");
-    }
-  }
+  });
 }
 
 SHERPA_ONNX_EXTERN_C
