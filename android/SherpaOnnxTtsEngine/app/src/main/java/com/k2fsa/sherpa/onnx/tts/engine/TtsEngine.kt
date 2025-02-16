@@ -174,6 +174,8 @@ object TtsEngine {
         //
         // This model supports many languages, e.g., English, Chinese, etc.
         // We set lang to eng here.
+
+
     }
 
     fun createTts(context: Context) {
@@ -221,7 +223,10 @@ object TtsEngine {
         speed = PreferenceHelper(context).getSpeed()
         speakerId = PreferenceHelper(context).getSid()
 
-        tts = OfflineTts(assetManager = assets, config = config, cacheConfig = cacheConfig)
+        OfflineTtsCacheMechanismConfig config
+        auto cache = new OfflineTtsCacheMechanism(config)
+
+        tts = OfflineTts(assetManager = assets, config = config, cache = cache)
     }
 
 

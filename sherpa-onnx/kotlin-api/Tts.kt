@@ -74,15 +74,15 @@ class GeneratedAudio(
 class OfflineTts(
     assetManager: AssetManager? = null,
     var config: OfflineTtsConfig,
-    var cacheConfig: OfflineTtsCacheMechanismConfig,
+    var cache: OfflineTtsCacheMechanism,
 ) {
     private var ptr: Long
 
     init {
         ptr = if (assetManager != null) {
-            newFromAsset(assetManager, config, cacheConfig)
+            newFromAsset(assetManager, config, cache)
         } else {
-            newFromFile(config, cacheConfig)
+            newFromFile(config, cache)
         }
     }
 

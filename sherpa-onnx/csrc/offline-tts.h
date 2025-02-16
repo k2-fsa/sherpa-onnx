@@ -75,16 +75,12 @@ using GeneratedAudioCallback = std::function<int32_t(
 class OfflineTts {
  public:
   ~OfflineTts();
-  explicit OfflineTts(const OfflineTtsConfig &config);
   explicit OfflineTts(const OfflineTtsConfig &config,
-                        const OfflineTtsCacheMechanismConfig &cache_config);
-
-  template <typename Manager>
-  OfflineTts(Manager *mgr, const OfflineTtsConfig &config);
+                        OfflineTtsCacheMechanism *cache = nullptr);
 
   template <typename Manager>
   OfflineTts(Manager *mgr, const OfflineTtsConfig &config,
-                        const OfflineTtsCacheMechanismConfig &cache_config);
+                        OfflineTtsCacheMechanism *cache = nullptr);
 
   // @param text A string containing words separated by spaces
   // @param sid Speaker ID. Used only for multi-speaker models, e.g., models
@@ -109,8 +105,6 @@ class OfflineTts {
   // Number of supported speakers.
   // If it supports only a single speaker, then it return 0 or 1.
   int32_t NumSpeakers() const;
-
-  std::unique_ptr<OfflineTtsCacheMechanism> cache_mechanism_; // not owned here
 
  private:
   std::unique_ptr<OfflineTtsImpl> impl_;

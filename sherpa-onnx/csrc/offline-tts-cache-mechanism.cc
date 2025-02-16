@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <iostream>
 #include <limits>
+#include <thread>
 #include <cstddef>  // for std::size_t
 
 #include "sherpa-onnx/csrc/file-utils.h"
@@ -74,8 +75,6 @@ void OfflineTtsCacheMechanism::AddWavFile(
   bool file_exists = std::filesystem::exists(file_path);
 
   if (!file_exists) {  // If the file does not exist, add it to the cache
-    // Ensure the cache does not exceed its size limit
-    EnsureCacheLimit();
 
     // Write the audio samples to a WAV file
     bool success = WriteWave(file_path,
@@ -86,6 +85,10 @@ void OfflineTtsCacheMechanism::AddWavFile(
       if (file.is_open()) {
         used_cache_size_bytes_ += file.tellg();
       }
+
+      // Ensure the cache does not exceed its size limit, non-blocking
+      EnsureCacheLimit();
+
     } else {
       SHERPA_ONNX_LOGE("Failed to write wav file: %s", file_path.c_str());
     }
@@ -290,15 +293,21 @@ void OfflineTtsCacheMechanism::UpdateCacheVector() {
 }
 
 void OfflineTtsCacheMechanism::EnsureCacheLimit() {
+  std::lock_guard<std::recursive_mutex> lock(mutex_);  // Lock the mutex for the entire function
+
   if (used_cache_size_bytes_ > cache_size_bytes_) {
-    auto target_cache_size
-      = std::max(static_cast<int> (cache_size_bytes_*0.95), 0);
-    while (used_cache_size_bytes_> 0
-      && used_cache_size_bytes_ > target_cache_size) {
+    // Launch a new thread to handle cache cleanup in a non-blocking way
+    std::thread([this]() {
+      std::lock_guard<std::recursive_mutex> lock(mutex_);  // Lock the mutex for the cleanup process
+
+      auto target_cache_size = std::max(static_cast<int>(cache_size_bytes_ * 0.95), 0);
+      while (used_cache_size_bytes_ > 0
+             && used_cache_size_bytes_ > target_cache_size) {
         // Cache is full, remove the least repeated file
         std::size_t least_repeated_file = GetLeastRepeatedFile();
         RemoveWavFile(least_repeated_file);
-    }
+      }
+    }).detach();  // Detach the thread to run independently
   }
 }
 
