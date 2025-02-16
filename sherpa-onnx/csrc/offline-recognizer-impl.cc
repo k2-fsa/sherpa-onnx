@@ -24,6 +24,7 @@
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-recognizer-ctc-impl.h"
+#include "sherpa-onnx/csrc/offline-recognizer-fire-red-asr-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-moonshine-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-paraformer-impl.h"
 #include "sherpa-onnx/csrc/offline-recognizer-sense-voice-impl.h"
@@ -54,6 +55,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (!config.model_config.whisper.encoder.empty()) {
     return std::make_unique<OfflineRecognizerWhisperImpl>(config);
+  }
+
+  if (!config.model_config.fire_red_asr.encoder.empty()) {
+    return std::make_unique<OfflineRecognizerFireRedAsrImpl>(config);
   }
 
   if (!config.model_config.moonshine.preprocessor.empty()) {
@@ -235,6 +240,10 @@ std::unique_ptr<OfflineRecognizerImpl> OfflineRecognizerImpl::Create(
 
   if (!config.model_config.whisper.encoder.empty()) {
     return std::make_unique<OfflineRecognizerWhisperImpl>(mgr, config);
+  }
+
+  if (!config.model_config.fire_red_asr.encoder.empty()) {
+    return std::make_unique<OfflineRecognizerFireRedAsrImpl>(mgr, config);
   }
 
   if (!config.model_config.moonshine.preprocessor.empty()) {
