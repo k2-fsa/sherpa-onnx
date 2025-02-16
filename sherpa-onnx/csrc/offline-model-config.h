@@ -6,6 +6,7 @@
 
 #include <string>
 
+#include "sherpa-onnx/csrc/offline-fire-red-asr-model-config.h"
 #include "sherpa-onnx/csrc/offline-moonshine-model-config.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model-config.h"
 #include "sherpa-onnx/csrc/offline-paraformer-model-config.h"
@@ -23,6 +24,7 @@ struct OfflineModelConfig {
   OfflineParaformerModelConfig paraformer;
   OfflineNemoEncDecCtcModelConfig nemo_ctc;
   OfflineWhisperModelConfig whisper;
+  OfflineFireRedAsrModelConfig fire_red_asr;
   OfflineTdnnModelConfig tdnn;
   OfflineZipformerCtcModelConfig zipformer_ctc;
   OfflineWenetCtcModelConfig wenet_ctc;
@@ -54,6 +56,7 @@ struct OfflineModelConfig {
                      const OfflineParaformerModelConfig &paraformer,
                      const OfflineNemoEncDecCtcModelConfig &nemo_ctc,
                      const OfflineWhisperModelConfig &whisper,
+                     const OfflineFireRedAsrModelConfig &fire_red_asr,
                      const OfflineTdnnModelConfig &tdnn,
                      const OfflineZipformerCtcModelConfig &zipformer_ctc,
                      const OfflineWenetCtcModelConfig &wenet_ctc,
@@ -68,6 +71,7 @@ struct OfflineModelConfig {
         paraformer(paraformer),
         nemo_ctc(nemo_ctc),
         whisper(whisper),
+        fire_red_asr(fire_red_asr),
         tdnn(tdnn),
         zipformer_ctc(zipformer_ctc),
         wenet_ctc(wenet_ctc),

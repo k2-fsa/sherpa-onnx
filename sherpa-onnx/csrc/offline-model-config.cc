@@ -15,6 +15,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   paraformer.Register(po);
   nemo_ctc.Register(po);
   whisper.Register(po);
+  fire_red_asr.Register(po);
   tdnn.Register(po);
   zipformer_ctc.Register(po);
   wenet_ctc.Register(po);
@@ -38,7 +39,7 @@ void OfflineModelConfig::Register(ParseOptions *po) {
   po->Register("model-type", &model_type,
                "Specify it to reduce model initialization time. "
                "Valid values are: transducer, paraformer, nemo_ctc, whisper, "
-               "tdnn, zipformer2_ctc, telespeech_ctc."
+               "tdnn, zipformer2_ctc, telespeech_ctc, fire_red_asr."
                "All other values lead to loading the model twice.");
   po->Register("modeling-unit", &modeling_unit,
                "The modeling unit of the model, commonly used units are bpe, "
@@ -84,6 +85,10 @@ bool OfflineModelConfig::Validate() const {
     return whisper.Validate();
   }
 
+  if (!fire_red_asr.encoder.empty()) {
+    return fire_red_asr.Validate();
+  }
+
   if (!tdnn.model.empty()) {
     return tdnn.Validate();
   }
@@ -125,6 +130,7 @@ std::string OfflineModelConfig::ToString() const {
   os << "paraformer=" << paraformer.ToString() << ", ";
   os << "nemo_ctc=" << nemo_ctc.ToString() << ", ";
   os << "whisper=" << whisper.ToString() << ", ";
+  os << "fire_red_asr=" << fire_red_asr.ToString() << ", ";
   os << "tdnn=" << tdnn.ToString() << ", ";
   os << "zipformer_ctc=" << zipformer_ctc.ToString() << ", ";
   os << "wenet_ctc=" << wenet_ctc.ToString() << ", ";
