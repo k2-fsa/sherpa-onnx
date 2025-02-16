@@ -626,7 +626,6 @@ class OfflineRecognizer(object):
             num_threads=num_threads,
             debug=debug,
             provider=provider,
-            model_type="fire_red_asr",
         )
 
         feat_config = FeatureExtractorConfig(
