@@ -12,6 +12,9 @@ target_link_libraries(streaming-zipformer-rtf-cxx-api sherpa-onnx-cxx-api)
 add_executable(whisper-cxx-api ./whisper-cxx-api.cc)
 target_link_libraries(whisper-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(fire-red-asr-cxx-api ./fire-red-asr-cxx-api.cc)
+target_link_libraries(fire-red-asr-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(moonshine-cxx-api ./moonshine-cxx-api.cc)
 target_link_libraries(moonshine-cxx-api sherpa-onnx-cxx-api)
 
