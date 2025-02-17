@@ -68,6 +68,20 @@ class OfflineWhisperModelConfig {
   final int tailPaddings;
 }
 
+class OfflineFireRedAsrModelConfig {
+  const OfflineFireRedAsrModelConfig(
+      {this.encoder = '',
+      this.decoder = ''});
+
+  @override
+  String toString() {
+    return 'OfflineFireRedAsrModelConfig(encoder: $encoder, decoder: $decoder)';
+  }
+
+  final String encoder;
+  final String decoder;
+}
+
 class OfflineMoonshineModelConfig {
   const OfflineMoonshineModelConfig(
       {this.preprocessor = '',
@@ -135,6 +149,7 @@ class OfflineModelConfig {
     this.tdnn = const OfflineTdnnModelConfig(),
     this.senseVoice = const OfflineSenseVoiceModelConfig(),
     this.moonshine = const OfflineMoonshineModelConfig(),
+    this.fireRedAsr = const OfflineFireRedAsrModelConfig(),
     required this.tokens,
     this.numThreads = 1,
     this.debug = true,
@@ -147,7 +162,7 @@ class OfflineModelConfig {
 
   @override
   String toString() {
-    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
+    return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
 
   final OfflineTransducerModelConfig transducer;
@@ -157,6 +172,7 @@ class OfflineModelConfig {
   final OfflineTdnnModelConfig tdnn;
   final OfflineSenseVoiceModelConfig senseVoice;
   final OfflineMoonshineModelConfig moonshine;
+  final OfflineFireRedAsrModelConfig fireRedAsr;
 
   final String tokens;
   final int numThreads;
@@ -288,6 +304,10 @@ class OfflineRecognizer {
     c.ref.model.moonshine.cachedDecoder =
         config.model.moonshine.cachedDecoder.toNativeUtf8();
 
+    // FireRedAsr
+    c.ref.model.fireRedAsr.encoder = config.model.fireRedAsr.encoder.toNativeUtf8();
+    c.ref.model.fireRedAsr.decoder = config.model.fireRedAsr.decoder.toNativeUtf8();
+
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 
     c.ref.model.numThreads = config.model.numThreads;
@@ -325,6 +345,8 @@ class OfflineRecognizer {
     calloc.free(c.ref.model.modelType);
     calloc.free(c.ref.model.provider);
     calloc.free(c.ref.model.tokens);
+    calloc.free(c.ref.model.fireRedAsr.decoder);
+    calloc.free(c.ref.model.fireRedAsr.encoder);
     calloc.free(c.ref.model.moonshine.cachedDecoder);
     calloc.free(c.ref.model.moonshine.uncachedDecoder);
     calloc.free(c.ref.model.moonshine.encoder);

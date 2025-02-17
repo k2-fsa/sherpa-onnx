@@ -92,6 +92,10 @@ popd
 
 pushd non-streaming-asr
 
+echo '----------FireRedAsr----------'
+./run-fire-red-asr.sh
+rm -rf sherpa-onnx-fire-red-asr-*
+
 echo '----------SenseVoice----------'
 ./run-sense-voice.sh
 rm -rf sherpa-onnx-*
