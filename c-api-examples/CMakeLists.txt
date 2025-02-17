@@ -47,6 +47,9 @@ target_link_libraries(add-punctuation-c-api sherpa-onnx-c-api)
 add_executable(whisper-c-api whisper-c-api.c)
 target_link_libraries(whisper-c-api sherpa-onnx-c-api)
 
+add_executable(fire-red-asr-c-api fire-red-asr-c-api.c)
+target_link_libraries(fire-red-asr-c-api sherpa-onnx-c-api)
+
 add_executable(sense-voice-c-api sense-voice-c-api.c)
 target_link_libraries(sense-voice-c-api sherpa-onnx-c-api)
 
