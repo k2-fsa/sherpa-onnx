@@ -7,6 +7,10 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+
+./run-fire-red-asr.sh
+rm -rf sherpa-onnx-fire-red-asr-*
+
 ./run-tts-vits.sh
 ls -lh
 rm -rf vits-piper-*
