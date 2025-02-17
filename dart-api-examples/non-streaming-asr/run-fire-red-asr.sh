@@ -9,9 +9,11 @@ if [ ! -f ./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/encoder.int8.onnx ];
   ls -lh sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16
 fi
 
-dotnet run \
-  --num-threads=2 \
-  --fire-red-asr-encoder=./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/encoder.int8.onnx \
-  --fire-red-asr-decoder=./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/decoder.int8.onnx \
-  --tokens=./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/tokens.txt \
-  --files ./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/test_wavs/0.wav
+dart pub get
+
+dart run \
+  ./bin/fire-red-asr.dart \
+  --encoder ./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/encoder.int8.onnx \
+  --decoder ./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/decoder.int8.onnx \
+  --tokens ./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/tokens.txt \
+  --input-wav ./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/test_wavs/0.wav
