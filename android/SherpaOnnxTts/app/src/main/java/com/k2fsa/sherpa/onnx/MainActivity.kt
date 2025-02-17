@@ -319,10 +319,12 @@ class MainActivity : AppCompatActivity() {
 
         val cacheConfig = getOfflineTtsCacheMechanismConfig(
             dataDir = dataDir ?: "",
-            cacheSize = 20*1024*1024,  // Fixed to 20 MBs
+            cacheSize = 20*1024*1024,  // Default is 20 MBs
         )!!
 
-        tts = OfflineTts(assetManager = assets, config = config, cacheConfig = cacheConfig)
+        val cache = new OfflineTtsCacheMechanism(cacheConfig)
+
+        tts = OfflineTts(assetManager = assets, config = config, cache = cache)
     }
 
 

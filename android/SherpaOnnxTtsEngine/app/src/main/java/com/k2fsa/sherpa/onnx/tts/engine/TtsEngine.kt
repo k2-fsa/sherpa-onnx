@@ -223,8 +223,7 @@ object TtsEngine {
         speed = PreferenceHelper(context).getSpeed()
         speakerId = PreferenceHelper(context).getSid()
 
-        OfflineTtsCacheMechanismConfig config
-        auto cache = new OfflineTtsCacheMechanism(config)
+        val cache = new OfflineTtsCacheMechanism(cacheConfig)
 
         tts = OfflineTts(assetManager = assets, config = config, cache = cache)
     }
