@@ -357,6 +357,16 @@ func sherpaOnnxOfflineWhisperModelConfig(
   )
 }
 
+func sherpaOnnxOfflineFireRedAsrModelConfig(
+  encoder: String = "",
+  decoder: String = ""
+) -> SherpaOnnxOfflineFireRedAsrModelConfig {
+  return SherpaOnnxOfflineFireRedAsrModelConfig(
+    encoder: toCPointer(encoder),
+    decoder: toCPointer(decoder)
+  )
+}
+
 func sherpaOnnxOfflineMoonshineModelConfig(
   preprocessor: String = "",
   encoder: String = "",
@@ -416,7 +426,8 @@ func sherpaOnnxOfflineModelConfig(
   bpeVocab: String = "",
   teleSpeechCtc: String = "",
   senseVoice: SherpaOnnxOfflineSenseVoiceModelConfig = sherpaOnnxOfflineSenseVoiceModelConfig(),
-  moonshine: SherpaOnnxOfflineMoonshineModelConfig = sherpaOnnxOfflineMoonshineModelConfig()
+  moonshine: SherpaOnnxOfflineMoonshineModelConfig = sherpaOnnxOfflineMoonshineModelConfig(),
+  fireRedAsr: SherpaOnnxOfflineFireRedAsrModelConfig = sherpaOnnxOfflineFireRedAsrModelConfig()
 ) -> SherpaOnnxOfflineModelConfig {
   return SherpaOnnxOfflineModelConfig(
     transducer: transducer,
@@ -433,7 +444,8 @@ func sherpaOnnxOfflineModelConfig(
     bpe_vocab: toCPointer(bpeVocab),
     telespeech_ctc: toCPointer(teleSpeechCtc),
     sense_voice: senseVoice,
-    moonshine: moonshine
+    moonshine: moonshine,
+    fire_red_asr: fireRedAsr
   )
 }
 
