@@ -160,6 +160,10 @@ jobs:
           go build
           ls -lh
 
+          echo "Test FireRedAsr"
+          ./run-fire-red-asr.sh
+          rm -rf sherpa-onnx-fire-red-asr-*
+
           echo "Test Moonshine"
           ./run-moonshine.sh
           rm -rf sherpa-onnx-*
