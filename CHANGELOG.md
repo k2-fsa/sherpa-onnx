@@ -1,3 +1,21 @@
+## 1.10.45
+
+* [update] fixed bug: create golang instance succeed while the c struct create failed (#1860)
+* fixed typo in RTF calculations (#1861)
+* Export FireRedASR to sherpa-onnx. (#1865)
+* Add C++ and Python API for FireRedASR AED models (#1867)
+* Add Kotlin and Java API for FireRedAsr AED model (#1870)
+* Add C API for FireRedAsr AED model. (#1871)
+* Add CXX API for FireRedAsr (#1872)
+* Add JavaScript API (node-addon) for FireRedAsr (#1873)
+* Add JavaScript API (WebAssembly) for FireRedAsr model. (#1874)
+* Add C# API for FireRedAsr Model (#1875)
+* Add C# API for FireRedAsr Model (#1875)
+* Add Swift API for FireRedAsr AED Model (#1876)
+* Add Dart API for FireRedAsr AED Model (#1877)
+* Add Go API for FireRedAsr AED Model (#1879)
+* Add Pascal API for FireRedAsr AED Model (#1880)
+
 ## 1.10.44
 
 * Export MatchaTTS fa-en model to sherpa-onnx (#1832)
@@ -12,10 +30,6 @@
 * Modify the model used (#1855)
 * Flutter OnlinePunctuation (#1854)
 * Fix spliting text by languages for kokoro tts. (#1849)
-
-
-
-
 
 ## 1.10.43
 
