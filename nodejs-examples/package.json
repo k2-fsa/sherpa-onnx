@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "naudiodon2": "^2.4.0",
-    "sherpa-onnx": "*",
+    "sherpa-onnx": "^1.10.44",
     "wav": "^1.0.2"
   }
 }

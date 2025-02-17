@@ -14,6 +14,7 @@ find dart-api-examples -name *.yaml -type f -exec sed -i.bak 's/1\.10\.43/1\.10\
 find flutter-examples -name *.yaml -type f -exec sed -i.bak 's/1\.10\.43/1\.10\.44/g' {} \;
 find flutter -name *.podspec -type f -exec sed -i.bak 's/1\.10\.43/1\.10\.44/g' {} \;
 find nodejs-addon-examples -name package.json -type f -exec sed -i.bak 's/1\.10\.43/1\.10\.44/g' {} \;
+find nodejs-examples -name package.json -type f -exec sed -i.bak 's/1\.10\.43/1\.10\.44/g' {} \;
 
 find harmony-os -name "README.md" -type f -exec sed -i.bak 's/1\.10\.43/1\.10\.44/g' {} \;
 find harmony-os -name oh-package.json5 -type f -exec sed -i.bak 's/1\.10\.43/1\.10\.44/g' {} \;

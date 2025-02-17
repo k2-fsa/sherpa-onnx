@@ -216,6 +216,21 @@ tar xvf sherpa-onnx-whisper-tiny.en.tar.bz2
 node ./test-offline-whisper.js
 ```
 
+## ./test-offline-fire-red-asr.js
+
+[./test-offline-fire-red-asr.js](./test-offline-fire-red-asr.js) demonstrates
+how to decode a file with a FireRedAsr AED model.
+
+You can use the following command to run it:
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+tar xvf sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+rm sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+
+node ./test-offline-fire-red-asr.js
+```
+
 ## ./test-offline-moonshine.js
 
 [./test-offline-moonshine.js](./test-offline-moonshine.js) demonstrates
