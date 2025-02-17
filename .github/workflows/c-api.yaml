@@ -35,7 +35,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, ubuntu-22.04-arm]
 
     steps:
       - uses: actions/checkout@v4
@@ -69,7 +69,7 @@ jobs:
           ls -lh install/lib
           ls -lh install/include
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./install/lib/libsherpa-onnx-c-api.so
             echo "---"
             readelf -d ./install/lib/libsherpa-onnx-c-api.so
@@ -78,6 +78,38 @@ jobs:
           if [[ ${{ matrix.os }} == macos-latest ]]; then
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
           fi
+
+      - name: Test FireRedAsr
+        shell: bash
+        run: |
+          gcc -o fire-red-asr-c-api ./c-api-examples/fire-red-asr-c-api.c \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh fire-red-asr-c-api
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./fire-red-asr-c-api
+            echo "----"
+            readelf -d ./fire-red-asr-c-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+          tar xvf sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+          rm sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+
+          ls -lh sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16
+          echo "---"
+          ls -lh sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/test_wavs
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          ./fire-red-asr-c-api
+
+          rm -rf sherpa-onnx-fire-red-asr-*
 
       - name: Test kws (zh)
         shell: bash
@@ -301,7 +333,7 @@ jobs:
 
           ls -lh vad-sense-voice-c-api
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./vad-sense-voice-c-api
             echo "----"
             readelf -d ./vad-sense-voice-c-api
@@ -340,7 +372,7 @@ jobs:
 
           ls -lh sense-voice-c-api
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./sense-voice-c-api
             echo "----"
             readelf -d ./sense-voice-c-api
@@ -373,7 +405,7 @@ jobs:
 
           ls -lh whisper-c-api
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./whisper-c-api
             echo "----"
             readelf -d ./whisper-c-api
@@ -405,7 +437,7 @@ jobs:
 
           ls -lh zipformer-c-api
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./zipformer-c-api
             echo "----"
             readelf -d ./zipformer-c-api
@@ -437,7 +469,7 @@ jobs:
 
           ls -lh streaming-zipformer-c-api
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./streaming-zipformer-c-api
             echo "----"
             readelf -d ./streaming-zipformer-c-api
@@ -469,7 +501,7 @@ jobs:
 
           ls -lh paraformer-c-api
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./paraformer-c-api
             echo "----"
             readelf -d ./paraformer-c-api
@@ -501,7 +533,7 @@ jobs:
 
           ls -lh streaming-paraformer-c-api
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./streaming-paraformer-c-api
             echo "----"
             readelf -d ./streaming-paraformer-c-api
