@@ -80,6 +80,23 @@ static SherpaOnnxOfflineWhisperModelConfig GetOfflineWhisperModelConfig(
   return c;
 }
 
+static SherpaOnnxOfflineFireRedAsrModelConfig GetOfflineFireRedAsrModelConfig(
+    Napi::Object obj) {
+  SherpaOnnxOfflineFireRedAsrModelConfig c;
+  memset(&c, 0, sizeof(c));
+
+  if (!obj.Has("fireRedAsr") || !obj.Get("fireRedAsr").IsObject()) {
+    return c;
+  }
+
+  Napi::Object o = obj.Get("fireRedAsr").As<Napi::Object>();
+
+  SHERPA_ONNX_ASSIGN_ATTR_STR(encoder, encoder);
+  SHERPA_ONNX_ASSIGN_ATTR_STR(decoder, decoder);
+
+  return c;
+}
+
 static SherpaOnnxOfflineMoonshineModelConfig GetOfflineMoonshineModelConfig(
     Napi::Object obj) {
   SherpaOnnxOfflineMoonshineModelConfig c;
@@ -150,6 +167,7 @@ static SherpaOnnxOfflineModelConfig GetOfflineModelConfig(Napi::Object obj) {
   c.tdnn = GetOfflineTdnnModelConfig(o);
   c.sense_voice = GetOfflineSenseVoiceModelConfig(o);
   c.moonshine = GetOfflineMoonshineModelConfig(o);
+  c.fire_red_asr = GetOfflineFireRedAsrModelConfig(o);
 
   SHERPA_ONNX_ASSIGN_ATTR_STR(tokens, tokens);
   SHERPA_ONNX_ASSIGN_ATTR_INT32(num_threads, numThreads);
@@ -270,6 +288,9 @@ CreateOfflineRecognizerWrapper(const Napi::CallbackInfo &info) {
   SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.encoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.uncached_decoder);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.moonshine.cached_decoder);
+
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr.encoder);
+  SHERPA_ONNX_DELETE_C_STR(c.model_config.fire_red_asr.decoder);
 
   SHERPA_ONNX_DELETE_C_STR(c.model_config.tokens);
   SHERPA_ONNX_DELETE_C_STR(c.model_config.provider);

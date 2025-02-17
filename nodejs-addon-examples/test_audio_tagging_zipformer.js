@@ -57,8 +57,8 @@ for (let filename of testWaves) {
   for (let e of events) {
     console.log(`${e.prob.toFixed(3)}\t\t\t${e.name}`);
   }
-  console.log('Wave duration', duration.toFixed(3), 'secodns')
-  console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
+  console.log('Wave duration', duration.toFixed(3), 'seconds')
+  console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
   console.log(
       `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
       real_time_factor.toFixed(3))
