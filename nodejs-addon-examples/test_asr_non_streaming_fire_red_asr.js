@@ -1,4 +1,4 @@
-// Copyright (c)  2024  Xiaomi Corporation
+// Copyright (c)  2025  Xiaomi Corporation
 const sherpa_onnx = require('sherpa-onnx-node');
 
 // Please download test files from
@@ -9,10 +9,13 @@ const config = {
     'featureDim': 80,
   },
   'modelConfig': {
-    'paraformer': {
-      'model': './sherpa-onnx-paraformer-zh-2023-09-14/model.int8.onnx',
+    'fireRedAsr': {
+      'encoder':
+          './sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/encoder.int8.onnx',
+      'decoder':
+          './sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/decoder.int8.onnx',
     },
-    'tokens': './sherpa-onnx-paraformer-zh-2023-09-14/tokens.txt',
+    'tokens': './sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/tokens.txt',
     'numThreads': 2,
     'provider': 'cpu',
     'debug': 1,
@@ -20,7 +23,7 @@ const config = {
 };
 
 const waveFilename =
-    './sherpa-onnx-paraformer-zh-2023-09-14/test_wavs/5-henan.wav';
+    './sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/test_wavs/0.wav';
 
 const recognizer = new sherpa_onnx.OfflineRecognizer(config);
 console.log('Started')

@@ -110,6 +110,7 @@ The following tables list the examples in this folder.
 |File| Description|
 |---|---|
 |[./test_asr_non_streaming_transducer.js](./test_asr_non_streaming_transducer.js)|Non-streaming speech recognition from a file with a Zipformer transducer model|
+|[./test_asr_non_streaming_fire_red_asr.js](./test_asr_non_streaming_fire_red_asr.js)| Non-streaming speech recognition from a file using [FireRedAsr](https://github.com/FireRedTeam/FireRedASR)|
 |[./test_asr_non_streaming_whisper.js](./test_asr_non_streaming_whisper.js)| Non-streaming speech recognition from a file using [Whisper](https://github.com/openai/whisper)|
 |[./test_vad_with_non_streaming_asr_whisper.js](./test_vad_with_non_streaming_asr_whisper.js)| Non-streaming speech recognition from a file using [Whisper](https://github.com/openai/whisper) + [Silero VAD](https://github.com/snakers4/silero-vad)|
 |[./test_asr_non_streaming_moonshine.js](./test_asr_non_streaming_moonshine.js)|Non-streaming speech recognition from a file using [Moonshine](https://github.com/usefulsensors/moonshine)|
@@ -251,6 +252,15 @@ node ./test_asr_non_streaming_transducer.js
 # To run VAD + non-streaming ASR with transudcer using a microphone
 npm install naudiodon2
 node ./test_vad_asr_non_streaming_transducer_microphone.js
+```
+
+### Non-streaming speech recognition with FireRedAsr
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+tar xvf sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+rm sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+
+node ./test_asr_non_streaming_fire_red_asr.js
 ```
 
 ### Non-streaming speech recognition with Whisper
