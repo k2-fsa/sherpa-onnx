@@ -124,6 +124,9 @@ jobs:
           ./run-non-streaming-decode-file-transducer.sh
           rm -rf sherpa-onnx-zipformer-*
 
+          ./run-non-streaming-decode-file-fire-red-asr.sh
+          rm -rf sherpa-onnx-fire-red-*
+
           ./run-non-streaming-decode-file-whisper.sh
           rm -rf sherpa-onnx-whisper-*
 

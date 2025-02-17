@@ -190,6 +190,13 @@ function testSpokenLanguageIdentification() {
 }
 
 function testOfflineAsr() {
+  if [ ! -f ./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/encoder.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+    tar xvf sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+    rm sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+    ls -lh sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16
+  fi
+
   if [ ! -f ./sherpa-onnx-moonshine-tiny-en-int8/tokens.txt ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
     tar xvf sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
