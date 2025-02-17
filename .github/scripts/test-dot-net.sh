@@ -34,6 +34,10 @@ rm -fv *.wav
 rm -rfv sherpa-onnx-pyannote-*
 
 cd ../offline-decode-files
+
+./run-fire-red-asr.sh
+rm -rf sherpa-onnx-fire-red-asr-*
+
 ./run-moonshine.sh
 rm -rf sherpa-onnx-*
 
