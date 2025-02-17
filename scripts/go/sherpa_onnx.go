@@ -385,6 +385,11 @@ type OfflineWhisperModelConfig struct {
 	TailPaddings int
 }
 
+type OfflineFireRedAsrModelConfig struct {
+	Encoder string
+	Decoder string
+}
+
 type OfflineMoonshineModelConfig struct {
 	Preprocessor    string
 	Encoder         string
@@ -416,6 +421,7 @@ type OfflineModelConfig struct {
 	Tdnn       OfflineTdnnModelConfig
 	SenseVoice OfflineSenseVoiceModelConfig
 	Moonshine  OfflineMoonshineModelConfig
+	FireRedAsr OfflineFireRedAsrModelConfig
 	Tokens     string // Path to tokens.txt
 
 	// Number of threads to use for neural network computation
@@ -537,6 +543,12 @@ func NewOfflineRecognizer(config *OfflineRecognizerConfig) *OfflineRecognizer {
 
 	c.model_config.moonshine.cached_decoder = C.CString(config.ModelConfig.Moonshine.CachedDecoder)
 	defer C.free(unsafe.Pointer(c.model_config.moonshine.cached_decoder))
+
+	c.model_config.fire_red_asr.encoder = C.CString(config.ModelConfig.FireRedAsr.Encoder)
+	defer C.free(unsafe.Pointer(c.model_config.fire_red_asr.encoder))
+
+	c.model_config.fire_red_asr.decoder = C.CString(config.ModelConfig.FireRedAsr.Decoder)
+	defer C.free(unsafe.Pointer(c.model_config.fire_red_asr.decoder))
 
 	c.model_config.tokens = C.CString(config.ModelConfig.Tokens)
 	defer C.free(unsafe.Pointer(c.model_config.tokens))
