@@ -34,6 +34,14 @@ class OfflineDecodeFiles
     [Option("model-type", Required = false, Default = "", HelpText = "model type")]
     public string ModelType { get; set; } = string.Empty;
 
+    [Option("fire-red-asr-encoder", Required = false, Default = "", HelpText = "Path to FireRedAsr encoder.int8.onnx. Used only for FireRedAsr models")]
+    public string FireRedAsrEncoder { get; set; } = string.Empty;
+
+
+    [Option("fire-red-asr-decoder", Required = false, Default = "", HelpText = "Path to FireRedAsr decoder.int8.onnx. Used only for FireRedAsr models")]
+    public string FireRedAsrDecoder { get; set; } = string.Empty;
+
+
     [Option("whisper-encoder", Required = false, Default = "", HelpText = "Path to whisper encoder.onnx. Used only for whisper models")]
     public string WhisperEncoder { get; set; } = string.Empty;
 
@@ -251,6 +259,11 @@ to download pre-trained Tdnn models.
       config.ModelConfig.Moonshine.Encoder = options.MoonshineEncoder;
       config.ModelConfig.Moonshine.UncachedDecoder = options.MoonshineUncachedDecoder;
       config.ModelConfig.Moonshine.CachedDecoder = options.MoonshineCachedDecoder;
+    }
+    else if (!string.IsNullOrEmpty(options.FireRedAsrEncoder))
+    {
+      config.ModelConfig.FireRedAsr.Encoder = options.FireRedAsrEncoder;
+      config.ModelConfig.FireRedAsr.Decoder = options.FireRedAsrDecoder;
     }
     else
     {

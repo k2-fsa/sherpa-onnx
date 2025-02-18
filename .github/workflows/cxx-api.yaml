@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, ubuntu-22.04-arm]
 
     steps:
       - uses: actions/checkout@v4
@@ -68,7 +68,7 @@ jobs:
           ls -lh install/lib
           ls -lh install/include
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./install/lib/libsherpa-onnx-c-api.so
             ldd ./install/lib/libsherpa-onnx-cxx-api.so
             echo "---"
@@ -80,6 +80,39 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-c-api.dylib
             otool -L ./install/lib/libsherpa-onnx-cxx-api.dylib
           fi
+
+      - name: Test FireRedAsr
+        shell: bash
+        run: |
+          g++ -std=c++17 -o fire-red-asr-cxx-api ./cxx-api-examples/fire-red-asr-cxx-api.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh fire-red-asr-cxx-api
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./fire-red-asr-cxx-api
+            echo "----"
+            readelf -d ./fire-red-asr-cxx-api
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+          tar xvf sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+          rm sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16.tar.bz2
+
+          ls -lh sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16
+          echo "---"
+          ls -lh sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/test_wavs
+
+          ./fire-red-asr-cxx-api
+
+          rm -rf sherpa-onnx-fire-red-asr-*
 
       - name: Test KWS (zh)
         shell: bash
@@ -241,7 +274,7 @@ jobs:
 
           ls -lh whisper-cxx-api
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./whisper-cxx-api
             echo "----"
             readelf -d ./whisper-cxx-api
@@ -275,7 +308,7 @@ jobs:
 
           ls -lh sense-voice-cxx-api
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./sense-voice-cxx-api
             echo "----"
             readelf -d ./sense-voice-cxx-api
@@ -309,7 +342,7 @@ jobs:
 
           ls -lh streaming-zipformer-cxx-api
 
-          if [[ ${{ matrix.os }} == ubuntu-latest ]]; then
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
             ldd ./streaming-zipformer-cxx-api
             echo "----"
             readelf -d ./streaming-zipformer-cxx-api

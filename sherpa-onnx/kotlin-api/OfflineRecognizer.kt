@@ -33,6 +33,11 @@ data class OfflineWhisperModelConfig(
     var tailPaddings: Int = 1000, // Padding added at the end of the samples
 )
 
+data class OfflineFireRedAsrModelConfig(
+    var encoder: String = "",
+    var decoder: String = "",
+)
+
 data class OfflineMoonshineModelConfig(
     var preprocessor: String = "",
     var encoder: String = "",
@@ -50,6 +55,7 @@ data class OfflineModelConfig(
     var transducer: OfflineTransducerModelConfig = OfflineTransducerModelConfig(),
     var paraformer: OfflineParaformerModelConfig = OfflineParaformerModelConfig(),
     var whisper: OfflineWhisperModelConfig = OfflineWhisperModelConfig(),
+    var fireRedAsr: OfflineFireRedAsrModelConfig = OfflineFireRedAsrModelConfig(),
     var moonshine: OfflineMoonshineModelConfig = OfflineMoonshineModelConfig(),
     var nemo: OfflineNemoEncDecCtcModelConfig = OfflineNemoEncDecCtcModelConfig(),
     var senseVoice: OfflineSenseVoiceModelConfig = OfflineSenseVoiceModelConfig(),
@@ -462,6 +468,17 @@ fun getOfflineModelConfig(type: Int): OfflineModelConfig? {
                 ),
                 tokens = "$modelDir/tokens.txt",
                 modelType = "transducer",
+            )
+        }
+
+        24 -> {
+            val modelDir = "sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16"
+            return OfflineModelConfig(
+                fireRedAsr = OfflineFireRedAsrModelConfig(
+                    encoder = "$modelDir/encoder.int8.onnx",
+                    decoder = "$modelDir/decoder.int8.onnx",
+                ),
+                tokens = "$modelDir/tokens.txt",
             )
         }
     }

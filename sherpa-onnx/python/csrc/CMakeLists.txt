@@ -9,6 +9,7 @@ set(srcs
   features.cc
   keyword-spotter.cc
   offline-ctc-fst-decoder-config.cc
+  offline-fire-red-asr-model-config.cc
   offline-lm-config.cc
   offline-model-config.cc
   offline-moonshine-model-config.cc

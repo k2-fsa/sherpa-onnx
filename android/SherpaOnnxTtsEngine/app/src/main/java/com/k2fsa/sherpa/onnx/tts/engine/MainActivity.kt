@@ -213,8 +213,8 @@ class MainActivity : ComponentActivity() {
                                                     val RTF = String.format(
                                                         "Number of threads: %d\nElapsed: %.3f s\nAudio duration: %.3f s\nRTF: %.3f/%.3f = %.3f",
                                                         TtsEngine.tts!!.config.model.numThreads,
-                                                        audioDuration,
                                                         elapsed,
+                                                        audioDuration,
                                                         elapsed,
                                                         audioDuration,
                                                         elapsed / audioDuration

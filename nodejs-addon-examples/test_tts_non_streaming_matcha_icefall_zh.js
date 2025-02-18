@@ -37,8 +37,8 @@ let stop = Date.now();
 const elapsed_seconds = (stop - start) / 1000;
 const duration = audio.samples.length / audio.sampleRate;
 const real_time_factor = elapsed_seconds / duration;
-console.log('Wave duration', duration.toFixed(3), 'secodns')
-console.log('Elapsed', elapsed_seconds.toFixed(3), 'secodns')
+console.log('Wave duration', duration.toFixed(3), 'seconds')
+console.log('Elapsed', elapsed_seconds.toFixed(3), 'seconds')
 console.log(
     `RTF = ${elapsed_seconds.toFixed(3)}/${duration.toFixed(3)} =`,
     real_time_factor.toFixed(3))

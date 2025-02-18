@@ -241,6 +241,11 @@ OfflineRecognizer OfflineRecognizer::Create(
   c.model_config.moonshine.cached_decoder =
       config.model_config.moonshine.cached_decoder.c_str();
 
+  c.model_config.fire_red_asr.encoder =
+      config.model_config.fire_red_asr.encoder.c_str();
+  c.model_config.fire_red_asr.decoder =
+      config.model_config.fire_red_asr.decoder.c_str();
+
   c.lm_config.model = config.lm_config.model.c_str();
   c.lm_config.scale = config.lm_config.scale;
 
@@ -270,7 +275,8 @@ OfflineStream OfflineRecognizer::CreateStream() const {
   return OfflineStream{s};
 }
 
-OfflineStream OfflineRecognizer::CreateStream(const std::string &hotwords) const {
+OfflineStream OfflineRecognizer::CreateStream(
+    const std::string &hotwords) const {
   auto s = SherpaOnnxCreateOfflineStreamWithHotwords(p_, hotwords.c_str());
   return OfflineStream{s};
 }

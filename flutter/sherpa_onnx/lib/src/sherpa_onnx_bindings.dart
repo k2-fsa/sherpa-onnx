@@ -78,6 +78,20 @@ final class SherpaOnnxOfflinePunctuationConfig extends Struct {
   external SherpaOnnxOfflinePunctuationModelConfig model;
 }
 
+final class SherpaOnnxOnlinePunctuationModelConfig extends Struct {
+  external Pointer<Utf8> cnnBiLstm;
+  external Pointer<Utf8> bpeVocab;
+  @Int32()
+  external int numThreads;
+  @Int32()
+  external int debug;
+  external Pointer<Utf8> provider;
+}
+
+final class SherpaOnnxOnlinePunctuationConfig extends Struct {
+  external SherpaOnnxOnlinePunctuationModelConfig model;
+}
+
 final class SherpaOnnxOfflineZipformerAudioTaggingModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
@@ -234,6 +248,11 @@ final class SherpaOnnxOfflineMoonshineModelConfig extends Struct {
   external Pointer<Utf8> cachedDecoder;
 }
 
+final class SherpaOnnxOfflineFireRedAsrModelConfig extends Struct {
+  external Pointer<Utf8> encoder;
+  external Pointer<Utf8> decoder;
+}
+
 final class SherpaOnnxOfflineTdnnModelConfig extends Struct {
   external Pointer<Utf8> model;
 }
@@ -277,6 +296,7 @@ final class SherpaOnnxOfflineModelConfig extends Struct {
 
   external SherpaOnnxOfflineSenseVoiceModelConfig senseVoice;
   external SherpaOnnxOfflineMoonshineModelConfig moonshine;
+  external SherpaOnnxOfflineFireRedAsrModelConfig fireRedAsr;
 }
 
 final class SherpaOnnxOfflineRecognizerConfig extends Struct {
@@ -469,6 +489,8 @@ final class SherpaOnnxKeywordSpotterConfig extends Struct {
 
 final class SherpaOnnxOfflinePunctuation extends Opaque {}
 
+final class SherpaOnnxOnlinePunctuation extends Opaque {}
+
 final class SherpaOnnxAudioTagging extends Opaque {}
 
 final class SherpaOnnxKeywordSpotter extends Opaque {}
@@ -511,6 +533,10 @@ typedef SherpaOnnxDestroyOfflineSpeakerDiarization = void Function(
 typedef SherpaOnnxCreateOfflinePunctuationNative
     = Pointer<SherpaOnnxOfflinePunctuation> Function(
         Pointer<SherpaOnnxOfflinePunctuationConfig>);
+
+typedef SherpaOnnxCreateOnlinePunctuationNative
+    = Pointer<SherpaOnnxOnlinePunctuation> Function(
+        Pointer<SherpaOnnxOnlinePunctuationConfig>);
 
 typedef SherpaOnnxOfflineSpeakerDiarizationGetSampleRateNative = Int32 Function(
     Pointer<SherpaOnnxOfflineSpeakerDiarization>);
@@ -604,6 +630,26 @@ typedef SherpaOfflinePunctuationAddPunct
 typedef SherpaOfflinePunctuationFreeTextNative = Void Function(Pointer<Utf8>);
 
 typedef SherpaOfflinePunctuationFreeText = void Function(Pointer<Utf8>);
+
+typedef SherpaOnnxCreateOnlinePunctuation
+    = SherpaOnnxCreateOnlinePunctuationNative;
+
+typedef SherpaOnnxDestroyOnlinePunctuationNative = Void Function(
+    Pointer<SherpaOnnxOnlinePunctuation>);
+
+typedef SherpaOnnxDestroyOnlinePunctuation = void Function(
+    Pointer<SherpaOnnxOnlinePunctuation>);
+
+typedef SherpaOnnxOnlinePunctuationAddPunctNative = Pointer<Utf8> Function(
+    Pointer<SherpaOnnxOnlinePunctuation>, Pointer<Utf8>);
+
+typedef SherpaOnnxOnlinePunctuationAddPunct
+    = SherpaOnnxOnlinePunctuationAddPunctNative;
+
+typedef SherpaOnnxOnlinePunctuationFreeTextNative = Void Function(
+    Pointer<Utf8>);
+
+typedef SherpaOnnxOnlinePunctuationFreeText = void Function(Pointer<Utf8>);
 
 typedef SherpaOnnxCreateAudioTaggingNative = Pointer<SherpaOnnxAudioTagging>
     Function(Pointer<SherpaOnnxAudioTaggingConfig>);
@@ -1155,6 +1201,13 @@ class SherpaOnnxBindings {
   static SherpaOfflinePunctuationAddPunct? sherpaOfflinePunctuationAddPunct;
   static SherpaOfflinePunctuationFreeText? sherpaOfflinePunctuationFreeText;
 
+  static SherpaOnnxCreateOnlinePunctuation? sherpaOnnxCreateOnlinePunctuation;
+  static SherpaOnnxDestroyOnlinePunctuation? sherpaOnnxDestroyOnlinePunctuation;
+  static SherpaOnnxOnlinePunctuationAddPunct?
+      sherpaOnnxOnlinePunctuationAddPunct;
+  static SherpaOnnxOnlinePunctuationFreeText?
+      sherpaOnnxOnlinePunctuationFreeText;
+
   static SherpaOnnxCreateAudioTagging? sherpaOnnxCreateAudioTagging;
   static SherpaOnnxDestroyAudioTagging? sherpaOnnxDestroyAudioTagging;
   static SherpaOnnxAudioTaggingCreateOfflineStream?
@@ -1412,6 +1465,26 @@ class SherpaOnnxBindings {
     sherpaOfflinePunctuationFreeText ??= dynamicLibrary
         .lookup<NativeFunction<SherpaOfflinePunctuationFreeTextNative>>(
             'SherpaOfflinePunctuationFreeText')
+        .asFunction();
+
+    sherpaOnnxCreateOnlinePunctuation ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCreateOnlinePunctuationNative>>(
+            'SherpaOnnxCreateOnlinePunctuation')
+        .asFunction();
+
+    sherpaOnnxDestroyOnlinePunctuation ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyOnlinePunctuationNative>>(
+            'SherpaOnnxDestroyOnlinePunctuation')
+        .asFunction();
+
+    sherpaOnnxOnlinePunctuationAddPunct ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOnlinePunctuationAddPunctNative>>(
+            'SherpaOnnxOnlinePunctuationAddPunct')
+        .asFunction();
+
+    sherpaOnnxOnlinePunctuationFreeText ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOnlinePunctuationFreeTextNative>>(
+            'SherpaOnnxOnlinePunctuationFreeText')
         .asFunction();
 
     sherpaOnnxCreateAudioTagging ??= dynamicLibrary
