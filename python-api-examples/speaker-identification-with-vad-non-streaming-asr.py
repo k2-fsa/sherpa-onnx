@@ -189,7 +189,7 @@ def register_non_streaming_asr_model_args(parser):
         "--sense-voice",
         default="",
         type=str,
-        help="Path to whisper encoder model",
+        help="Path to sense voice model",
     )
 
 
