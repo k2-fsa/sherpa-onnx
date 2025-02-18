@@ -185,6 +185,13 @@ def register_non_streaming_asr_model_args(parser):
         help="Feature dimension. Must match the one expected by the model",
     )
 
+    parser.add_argument(
+        "--sense-voice",
+        default="",
+        type=str,
+        help="Path to sense voice model",
+    )
+
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -316,6 +323,15 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             language=args.whisper_language,
             task=args.whisper_task,
             tail_paddings=args.whisper_tail_paddings,
+        )
+    elif args.sense_voice:
+        assert_file_exists(args.sense_voice)
+        recognizer = sherpa_onnx.OfflineRecognizer.from_sense_voice(
+            model=args.sense_voice,
+            tokens=args.tokens,
+            num_threads=args.num_threads,
+            use_itn=True,
+            debug=args.debug,
         )
     else:
         raise ValueError("Please specify at least one model")
