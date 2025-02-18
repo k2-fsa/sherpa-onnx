@@ -13,10 +13,26 @@ class SpeakerEmbeddingExtractorConfig {
       this.debug = true,
       this.provider = 'cpu'});
 
+  factory SpeakerEmbeddingExtractorConfig.fromJson(Map<String, dynamic> json) {
+    return SpeakerEmbeddingExtractorConfig(
+      model: json['model'] as String,
+      numThreads: json['numThreads'] as int? ?? 1,
+      debug: json['debug'] as bool? ?? true,
+      provider: json['provider'] as String? ?? 'cpu',
+    );
+  }
+
   @override
   String toString() {
     return 'SpeakerEmbeddingExtractorConfig(model: $model, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+        'numThreads': numThreads,
+        'debug': debug,
+        'provider': provider,
+      };
 
   final String model;
   final int numThreads;

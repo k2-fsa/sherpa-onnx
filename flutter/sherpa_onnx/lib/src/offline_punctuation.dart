@@ -11,10 +11,26 @@ class OfflinePunctuationModelConfig {
       this.provider = 'cpu',
       this.debug = true});
 
+  factory OfflinePunctuationModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflinePunctuationModelConfig(
+      ctTransformer: json['ctTransformer'] as String,
+      numThreads: json['numThreads'] as int? ?? 1,
+      provider: json['provider'] as String? ?? 'cpu',
+      debug: json['debug'] as bool? ?? true,
+    );
+  }
+
   @override
   String toString() {
     return 'OfflinePunctuationModelConfig(ctTransformer: $ctTransformer, numThreads: $numThreads, provider: $provider, debug: $debug)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'ctTransformer': ctTransformer,
+        'numThreads': numThreads,
+        'provider': provider,
+        'debug': debug,
+      };
 
   final String ctTransformer;
   final int numThreads;
@@ -27,10 +43,21 @@ class OfflinePunctuationConfig {
     required this.model,
   });
 
+  factory OfflinePunctuationConfig.fromJson(Map<String, dynamic> json) {
+    return OfflinePunctuationConfig(
+      model: OfflinePunctuationModelConfig.fromJson(
+          json['model'] as Map<String, dynamic>),
+    );
+  }
+
   @override
   String toString() {
     return 'OfflinePunctuationConfig(model: $model)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model.toJson(),
+      };
 
   final OfflinePunctuationModelConfig model;
 }

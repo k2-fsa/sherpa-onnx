@@ -16,10 +16,24 @@ class OfflineTransducerModelConfig {
     this.joiner = '',
   });
 
+  factory OfflineTransducerModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTransducerModelConfig(
+      encoder: json['encoder'] as String? ?? '',
+      decoder: json['decoder'] as String? ?? '',
+      joiner: json['joiner'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineTransducerModelConfig(encoder: $encoder, decoder: $decoder, joiner: $joiner)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'encoder': encoder,
+        'decoder': decoder,
+        'joiner': joiner,
+      };
 
   final String encoder;
   final String decoder;
@@ -29,10 +43,20 @@ class OfflineTransducerModelConfig {
 class OfflineParaformerModelConfig {
   const OfflineParaformerModelConfig({this.model = ''});
 
+  factory OfflineParaformerModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineParaformerModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineParaformerModelConfig(model: $model)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
 
   final String model;
 }
@@ -40,10 +64,20 @@ class OfflineParaformerModelConfig {
 class OfflineNemoEncDecCtcModelConfig {
   const OfflineNemoEncDecCtcModelConfig({this.model = ''});
 
+  factory OfflineNemoEncDecCtcModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineNemoEncDecCtcModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineNemoEncDecCtcModelConfig(model: $model)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
 
   final String model;
 }
@@ -56,10 +90,28 @@ class OfflineWhisperModelConfig {
       this.task = '',
       this.tailPaddings = -1});
 
+  factory OfflineWhisperModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineWhisperModelConfig(
+      encoder: json['encoder'] as String? ?? '',
+      decoder: json['decoder'] as String? ?? '',
+      language: json['language'] as String? ?? '',
+      task: json['task'] as String? ?? '',
+      tailPaddings: json['tailPaddings'] as int? ?? -1,
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineWhisperModelConfig(encoder: $encoder, decoder: $decoder, language: $language, task: $task, tailPaddings: $tailPaddings)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'encoder': encoder,
+        'decoder': decoder,
+        'language': language,
+        'task': task,
+        'tailPaddings': tailPaddings,
+      };
 
   final String encoder;
   final String decoder;
@@ -69,14 +121,24 @@ class OfflineWhisperModelConfig {
 }
 
 class OfflineFireRedAsrModelConfig {
-  const OfflineFireRedAsrModelConfig(
-      {this.encoder = '',
-      this.decoder = ''});
+  const OfflineFireRedAsrModelConfig({this.encoder = '', this.decoder = ''});
+
+  factory OfflineFireRedAsrModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineFireRedAsrModelConfig(
+      encoder: json['encoder'] as String? ?? '',
+      decoder: json['decoder'] as String? ?? '',
+    );
+  }
 
   @override
   String toString() {
     return 'OfflineFireRedAsrModelConfig(encoder: $encoder, decoder: $decoder)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'encoder': encoder,
+        'decoder': decoder,
+      };
 
   final String encoder;
   final String decoder;
@@ -89,10 +151,26 @@ class OfflineMoonshineModelConfig {
       this.uncachedDecoder = '',
       this.cachedDecoder = ''});
 
+  factory OfflineMoonshineModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineMoonshineModelConfig(
+      preprocessor: json['preprocessor'] as String? ?? '',
+      encoder: json['encoder'] as String? ?? '',
+      uncachedDecoder: json['uncachedDecoder'] as String? ?? '',
+      cachedDecoder: json['cachedDecoder'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineMoonshineModelConfig(preprocessor: $preprocessor, encoder: $encoder, uncachedDecoder: $uncachedDecoder, cachedDecoder: $cachedDecoder)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'preprocessor': preprocessor,
+        'encoder': encoder,
+        'uncachedDecoder': uncachedDecoder,
+        'cachedDecoder': cachedDecoder,
+      };
 
   final String preprocessor;
   final String encoder;
@@ -103,10 +181,20 @@ class OfflineMoonshineModelConfig {
 class OfflineTdnnModelConfig {
   const OfflineTdnnModelConfig({this.model = ''});
 
+  factory OfflineTdnnModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTdnnModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineTdnnModelConfig(model: $model)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
 
   final String model;
 }
@@ -118,10 +206,25 @@ class OfflineSenseVoiceModelConfig {
     this.useInverseTextNormalization = false,
   });
 
+  factory OfflineSenseVoiceModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineSenseVoiceModelConfig(
+      model: json['model'] as String? ?? '',
+      language: json['language'] as String? ?? '',
+      useInverseTextNormalization:
+          json['useInverseTextNormalization'] as bool? ?? false,
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineSenseVoiceModelConfig(model: $model, language: $language, useInverseTextNormalization: $useInverseTextNormalization)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+        'language': language,
+        'useInverseTextNormalization': useInverseTextNormalization,
+      };
 
   final String model;
   final String language;
@@ -131,10 +234,22 @@ class OfflineSenseVoiceModelConfig {
 class OfflineLMConfig {
   const OfflineLMConfig({this.model = '', this.scale = 1.0});
 
+  factory OfflineLMConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineLMConfig(
+      model: json['model'] as String? ?? '',
+      scale: (json['scale'] as num?)?.toDouble() ?? 1.0,
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineLMConfig(model: $model, scale: $scale)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+        'scale': scale,
+      };
 
   final String model;
   final double scale;
@@ -160,10 +275,74 @@ class OfflineModelConfig {
     this.telespeechCtc = '',
   });
 
+  factory OfflineModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineModelConfig(
+      transducer: json['transducer'] != null
+          ? OfflineTransducerModelConfig.fromJson(
+              json['transducer'] as Map<String, dynamic>)
+          : const OfflineTransducerModelConfig(),
+      paraformer: json['paraformer'] != null
+          ? OfflineParaformerModelConfig.fromJson(
+              json['paraformer'] as Map<String, dynamic>)
+          : const OfflineParaformerModelConfig(),
+      nemoCtc: json['nemoCtc'] != null
+          ? OfflineNemoEncDecCtcModelConfig.fromJson(
+              json['nemoCtc'] as Map<String, dynamic>)
+          : const OfflineNemoEncDecCtcModelConfig(),
+      whisper: json['whisper'] != null
+          ? OfflineWhisperModelConfig.fromJson(
+              json['whisper'] as Map<String, dynamic>)
+          : const OfflineWhisperModelConfig(),
+      tdnn: json['tdnn'] != null
+          ? OfflineTdnnModelConfig.fromJson(
+              json['tdnn'] as Map<String, dynamic>)
+          : const OfflineTdnnModelConfig(),
+      senseVoice: json['senseVoice'] != null
+          ? OfflineSenseVoiceModelConfig.fromJson(
+              json['senseVoice'] as Map<String, dynamic>)
+          : const OfflineSenseVoiceModelConfig(),
+      moonshine: json['moonshine'] != null
+          ? OfflineMoonshineModelConfig.fromJson(
+              json['moonshine'] as Map<String, dynamic>)
+          : const OfflineMoonshineModelConfig(),
+      fireRedAsr: json['fireRedAsr'] != null
+          ? OfflineFireRedAsrModelConfig.fromJson(
+              json['fireRedAsr'] as Map<String, dynamic>)
+          : const OfflineFireRedAsrModelConfig(),
+      tokens: json['tokens'] as String,
+      numThreads: json['numThreads'] as int? ?? 1,
+      debug: json['debug'] as bool? ?? true,
+      provider: json['provider'] as String? ?? 'cpu',
+      modelType: json['modelType'] as String? ?? '',
+      modelingUnit: json['modelingUnit'] as String? ?? '',
+      bpeVocab: json['bpeVocab'] as String? ?? '',
+      telespeechCtc: json['telespeechCtc'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineModelConfig(transducer: $transducer, paraformer: $paraformer, nemoCtc: $nemoCtc, whisper: $whisper, tdnn: $tdnn, senseVoice: $senseVoice, moonshine: $moonshine, fireRedAsr: $fireRedAsr, tokens: $tokens, numThreads: $numThreads, debug: $debug, provider: $provider, modelType: $modelType, modelingUnit: $modelingUnit, bpeVocab: $bpeVocab, telespeechCtc: $telespeechCtc)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'transducer': transducer.toJson(),
+        'paraformer': paraformer.toJson(),
+        'nemoCtc': nemoCtc.toJson(),
+        'whisper': whisper.toJson(),
+        'tdnn': tdnn.toJson(),
+        'senseVoice': senseVoice.toJson(),
+        'moonshine': moonshine.toJson(),
+        'fireRedAsr': fireRedAsr.toJson(),
+        'tokens': tokens,
+        'numThreads': numThreads,
+        'debug': debug,
+        'provider': provider,
+        'modelType': modelType,
+        'modelingUnit': modelingUnit,
+        'bpeVocab': bpeVocab,
+        'telespeechCtc': telespeechCtc,
+      };
 
   final OfflineTransducerModelConfig transducer;
   final OfflineParaformerModelConfig paraformer;
@@ -198,10 +377,42 @@ class OfflineRecognizerConfig {
     this.blankPenalty = 0.0,
   });
 
+  factory OfflineRecognizerConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineRecognizerConfig(
+      feat: json['feat'] != null
+          ? FeatureConfig.fromJson(json['feat'] as Map<String, dynamic>)
+          : const FeatureConfig(),
+      model: OfflineModelConfig.fromJson(json['model'] as Map<String, dynamic>),
+      lm: json['lm'] != null
+          ? OfflineLMConfig.fromJson(json['lm'] as Map<String, dynamic>)
+          : const OfflineLMConfig(),
+      decodingMethod: json['decodingMethod'] as String? ?? 'greedy_search',
+      maxActivePaths: json['maxActivePaths'] as int? ?? 4,
+      hotwordsFile: json['hotwordsFile'] as String? ?? '',
+      hotwordsScore: (json['hotwordsScore'] as num?)?.toDouble() ?? 1.5,
+      ruleFsts: json['ruleFsts'] as String? ?? '',
+      ruleFars: json['ruleFars'] as String? ?? '',
+      blankPenalty: (json['blankPenalty'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineRecognizerConfig(feat: $feat, model: $model, lm: $lm, decodingMethod: $decodingMethod, maxActivePaths: $maxActivePaths, hotwordsFile: $hotwordsFile, hotwordsScore: $hotwordsScore, ruleFsts: $ruleFsts, ruleFars: $ruleFars, blankPenalty: $blankPenalty)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'feat': feat.toJson(),
+        'model': model.toJson(),
+        'lm': lm.toJson(),
+        'decodingMethod': decodingMethod,
+        'maxActivePaths': maxActivePaths,
+        'hotwordsFile': hotwordsFile,
+        'hotwordsScore': hotwordsScore,
+        'ruleFsts': ruleFsts,
+        'ruleFars': ruleFars,
+        'blankPenalty': blankPenalty,
+      };
 
   final FeatureConfig feat;
   final OfflineModelConfig model;
@@ -229,10 +440,33 @@ class OfflineRecognizerResult {
       required this.emotion,
       required this.event});
 
+  factory OfflineRecognizerResult.fromJson(Map<String, dynamic> json) {
+    return OfflineRecognizerResult(
+      text: json['text'] as String? ?? '',
+      tokens: (json['tokens'] as List?)?.map((e) => e as String).toList() ?? [],
+      timestamps: (json['timestamps'] as List?)
+              ?.map((e) => (e as num).toDouble())
+              .toList() ??
+          [],
+      lang: json['lang'] as String? ?? '',
+      emotion: json['emotion'] as String? ?? '',
+      event: json['event'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineRecognizerResult(text: $text, tokens: $tokens, timestamps: $timestamps, lang: $lang, emotion: $emotion, event: $event)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'text': text,
+        'tokens': tokens,
+        'timestamps': timestamps,
+        'lang': lang,
+        'emotion': emotion,
+        'event': event,
+      };
 
   final String text;
   final List<String> tokens;
@@ -305,8 +539,10 @@ class OfflineRecognizer {
         config.model.moonshine.cachedDecoder.toNativeUtf8();
 
     // FireRedAsr
-    c.ref.model.fireRedAsr.encoder = config.model.fireRedAsr.encoder.toNativeUtf8();
-    c.ref.model.fireRedAsr.decoder = config.model.fireRedAsr.decoder.toNativeUtf8();
+    c.ref.model.fireRedAsr.encoder =
+        config.model.fireRedAsr.encoder.toNativeUtf8();
+    c.ref.model.fireRedAsr.decoder =
+        config.model.fireRedAsr.decoder.toNativeUtf8();
 
     c.ref.model.tokens = config.model.tokens.toNativeUtf8();
 

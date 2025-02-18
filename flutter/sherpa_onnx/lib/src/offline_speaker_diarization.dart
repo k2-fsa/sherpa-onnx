@@ -14,10 +14,24 @@ class OfflineSpeakerDiarizationSegment {
     required this.speaker,
   });
 
+  factory OfflineSpeakerDiarizationSegment.fromJson(Map<String, dynamic> json) {
+    return OfflineSpeakerDiarizationSegment(
+      start: (json['start'] as num).toDouble(),
+      end: (json['end'] as num).toDouble(),
+      speaker: json['speaker'] as int,
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineSpeakerDiarizationSegment(start: $start, end: $end, speaker: $speaker)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'start': start,
+        'end': end,
+        'speaker': speaker,
+      };
 
   final double start;
   final double end;
@@ -29,10 +43,21 @@ class OfflineSpeakerSegmentationPyannoteModelConfig {
     this.model = '',
   });
 
+  factory OfflineSpeakerSegmentationPyannoteModelConfig.fromJson(
+      Map<String, dynamic> json) {
+    return OfflineSpeakerSegmentationPyannoteModelConfig(
+      model: json['model'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineSpeakerSegmentationPyannoteModelConfig(model: $model)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+      };
 
   final String model;
 }
@@ -45,10 +70,30 @@ class OfflineSpeakerSegmentationModelConfig {
     this.provider = 'cpu',
   });
 
+  factory OfflineSpeakerSegmentationModelConfig.fromJson(
+      Map<String, dynamic> json) {
+    return OfflineSpeakerSegmentationModelConfig(
+      pyannote: json['pyannote'] != null
+          ? OfflineSpeakerSegmentationPyannoteModelConfig.fromJson(
+              json['pyannote'] as Map<String, dynamic>)
+          : const OfflineSpeakerSegmentationPyannoteModelConfig(),
+      numThreads: json['numThreads'] as int? ?? 1,
+      debug: json['debug'] as bool? ?? true,
+      provider: json['provider'] as String? ?? 'cpu',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineSpeakerSegmentationModelConfig(pyannote: $pyannote, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'pyannote': pyannote.toJson(),
+        'numThreads': numThreads,
+        'debug': debug,
+        'provider': provider,
+      };
 
   final OfflineSpeakerSegmentationPyannoteModelConfig pyannote;
 
@@ -63,10 +108,22 @@ class FastClusteringConfig {
     this.threshold = 0.5,
   });
 
+  factory FastClusteringConfig.fromJson(Map<String, dynamic> json) {
+    return FastClusteringConfig(
+      numClusters: json['numClusters'] as int? ?? -1,
+      threshold: (json['threshold'] as num?)?.toDouble() ?? 0.5,
+    );
+  }
+
   @override
   String toString() {
     return 'FastClusteringConfig(numClusters: $numClusters, threshold: $threshold)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'numClusters': numClusters,
+        'threshold': threshold,
+      };
 
   final int numClusters;
   final double threshold;
@@ -81,10 +138,37 @@ class OfflineSpeakerDiarizationConfig {
     this.minDurationOff = 0.5,
   });
 
+  factory OfflineSpeakerDiarizationConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineSpeakerDiarizationConfig(
+      segmentation: json['segmentation'] != null
+          ? OfflineSpeakerSegmentationModelConfig.fromJson(
+              json['segmentation'] as Map<String, dynamic>)
+          : const OfflineSpeakerSegmentationModelConfig(),
+      embedding: json['embedding'] != null
+          ? SpeakerEmbeddingExtractorConfig.fromJson(
+              json['embedding'] as Map<String, dynamic>)
+          : const SpeakerEmbeddingExtractorConfig(model: ''),
+      clustering: json['clustering'] != null
+          ? FastClusteringConfig.fromJson(
+              json['clustering'] as Map<String, dynamic>)
+          : const FastClusteringConfig(),
+      minDurationOn: (json['minDurationOn'] as num?)?.toDouble() ?? 0.2,
+      minDurationOff: (json['minDurationOff'] as num?)?.toDouble() ?? 0.5,
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineSpeakerDiarizationConfig(segmentation: $segmentation, embedding: $embedding, clustering: $clustering, minDurationOn: $minDurationOn, minDurationOff: $minDurationOff)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'segmentation': segmentation.toJson(),
+        'embedding': embedding.toJson(),
+        'clustering': clustering.toJson(),
+        'minDurationOn': minDurationOn,
+        'minDurationOff': minDurationOff,
+      };
 
   final OfflineSpeakerSegmentationModelConfig segmentation;
   final SpeakerEmbeddingExtractorConfig embedding;
