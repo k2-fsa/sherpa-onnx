@@ -52,6 +52,11 @@ data class OfflineTtsConfig(
     var silenceScale: Float = 0.2f,
 )
 
+data class OfflineTtsCacheMechanismConfig(
+    var cacheDir: String = "",
+    var cacheSize: Int = -1,  // Unlimited
+)
+
 class GeneratedAudio(
     val samples: FloatArray,
     val sampleRate: Int,
@@ -69,14 +74,15 @@ class GeneratedAudio(
 class OfflineTts(
     assetManager: AssetManager? = null,
     var config: OfflineTtsConfig,
+    var cache: OfflineTtsCacheMechanism,
 ) {
     private var ptr: Long
 
     init {
         ptr = if (assetManager != null) {
-            newFromAsset(assetManager, config)
+            newFromAsset(assetManager, config, cache)
         } else {
-            newFromFile(config)
+            newFromFile(config, cache)
         }
     }
 
@@ -118,9 +124,9 @@ class OfflineTts(
     fun allocate(assetManager: AssetManager? = null) {
         if (ptr == 0L) {
             ptr = if (assetManager != null) {
-                newFromAsset(assetManager, config)
+                newFromAsset(assetManager, config, cacheConfig)
             } else {
-                newFromFile(config)
+                newFromFile(config, cacheConfig)
             }
         }
     }
@@ -144,15 +150,33 @@ class OfflineTts(
     private external fun newFromAsset(
         assetManager: AssetManager,
         config: OfflineTtsConfig,
+        cacheConfig: OfflineTtsCacheMechanismConfig,
     ): Long
 
     private external fun newFromFile(
         config: OfflineTtsConfig,
+        cacheConfig: OfflineTtsCacheMechanismConfig,
     ): Long
 
     private external fun delete(ptr: Long)
     private external fun getSampleRate(ptr: Long): Int
     private external fun getNumSpeakers(ptr: Long): Int
+
+    fun getTtsMechanismCacheSize(): Int {
+        return (getCacheSizeImpl(ptr)).toInt()
+    }
+    private external fun getCacheSizeImpl(ptr: Long): Int
+
+    fun setCacheSize(cacheSize: Int) {
+        setCacheSizeImpl(ptr, cacheSize)
+    }
+    private external fun setCacheSizeImpl(ptr: Long, cacheSize: Int)
+
+    fun getTotalUsedCacheSize(): Int {
+        return (getTotalUsedCacheSizeImpl(ptr)).toInt()
+    }
+
+    private external fun getTotalUsedCacheSizeImpl(ptr: Long): Int
 
     // The returned array has two entries:
     //  - the first entry is an 1-D float array containing audio samples.
@@ -172,6 +196,12 @@ class OfflineTts(
         speed: Float = 1.0f,
         callback: (samples: FloatArray) -> Int
     ): Array<Any>
+
+    fun clearCache() {
+        clearCacheImpl(ptr)
+    }
+
+    private external fun clearCacheImpl(ptr: Long)
 
     companion object {
         init {
@@ -279,5 +309,16 @@ fun getOfflineTtsConfig(
         ),
         ruleFsts = ruleFsts,
         ruleFars = ruleFars,
+    )
+}
+
+fun getOfflineTtsCacheMechanismConfig(
+    dataDir: String,
+    cacheSize: Int
+): OfflineTtsCacheMechanismConfig {
+
+    return OfflineTtsCacheMechanismConfig(
+        cacheDir = "$dataDir/../cache",
+        cacheSize = cacheSize,
     )
 }

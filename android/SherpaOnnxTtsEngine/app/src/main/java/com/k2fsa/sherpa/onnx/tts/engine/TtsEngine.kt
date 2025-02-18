@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import com.k2fsa.sherpa.onnx.OfflineTts
 import com.k2fsa.sherpa.onnx.getOfflineTtsConfig
+import com.k2fsa.sherpa.onnx.getOfflineTtsCacheMechanismConfig
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -25,12 +26,19 @@ object TtsEngine {
 
 
     val speedState: MutableState<Float> = mutableFloatStateOf(1.0F)
+    val cacheSizeState: MutableState<Int> = mutableIntStateOf(0)
     val speakerIdState: MutableState<Int> = mutableIntStateOf(0)
 
     var speed: Float
         get() = speedState.value
         set(value) {
             speedState.value = value
+        }
+
+    var cacheSize: Int
+        get() = cacheSizeState.value
+        set(value) {
+            cacheSizeState.value = value
         }
 
     var speakerId: Int
@@ -166,6 +174,8 @@ object TtsEngine {
         //
         // This model supports many languages, e.g., English, Chinese, etc.
         // We set lang to eng here.
+
+
     }
 
     fun createTts(context: Context) {
@@ -204,10 +214,18 @@ object TtsEngine {
             ruleFars = ruleFars ?: ""
         )
 
+        cacheSize = PreferenceHelper(context).getTtsMechanismCacheSize()
+        val cacheConfig = getOfflineTtsCacheMechanismConfig(
+            dataDir = dataDir ?: "",
+            cacheSize = cacheSize,
+        )
+
         speed = PreferenceHelper(context).getSpeed()
         speakerId = PreferenceHelper(context).getSid()
 
-        tts = OfflineTts(assetManager = assets, config = config)
+        val cache = new OfflineTtsCacheMechanism(cacheConfig)
+
+        tts = OfflineTts(assetManager = assets, config = config, cache = cache)
     }
 
 

@@ -17,15 +17,22 @@ class OfflineTtsImpl {
  public:
   virtual ~OfflineTtsImpl() = default;
 
-  static std::unique_ptr<OfflineTtsImpl> Create(const OfflineTtsConfig &config);
+  static std::unique_ptr<OfflineTtsImpl> Create(
+      const OfflineTtsConfig &config,
+      OfflineTtsCacheMechanism* cache = nullptr);
 
   template <typename Manager>
   static std::unique_ptr<OfflineTtsImpl> Create(Manager *mgr,
-                                                const OfflineTtsConfig &config);
+      const OfflineTtsConfig &config,
+      OfflineTtsCacheMechanism* cache = nullptr);
 
   virtual GeneratedAudio Generate(
       const std::string &text, int64_t sid = 0, float speed = 1.0,
       GeneratedAudioCallback callback = nullptr) const = 0;
+
+  GeneratedAudio GenerateWitchCache(
+      const std::string &text, int64_t sid = 0, float speed = 1.0,
+      GeneratedAudioCallback callback = nullptr) const;
 
   // Return the sample rate of the generated audio
   virtual int32_t SampleRate() const = 0;
@@ -36,6 +43,8 @@ class OfflineTtsImpl {
 
   std::vector<int64_t> AddBlank(const std::vector<int64_t> &x,
                                 int32_t blank_id = 0) const;
+ private:
+  static OfflineTtsCacheMechanism *cache_; // not owned here
 };
 
 }  // namespace sherpa_onnx

@@ -19,6 +19,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-tts-cache-mechanism.h"
 #include "sherpa-onnx/csrc/offline-tts-impl.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
@@ -161,39 +162,43 @@ std::string OfflineTtsConfig::ToString() const {
   return os.str();
 }
 
-OfflineTts::OfflineTts(const OfflineTtsConfig &config)
-    : impl_(OfflineTtsImpl::Create(config)) {}
+OfflineTts::OfflineTts(const OfflineTtsConfig &config,
+                        OfflineTtsCacheMechanism *cache)
+    : impl_(OfflineTtsImpl::Create(config, cache)) {}
 
 template <typename Manager>
-OfflineTts::OfflineTts(Manager *mgr, const OfflineTtsConfig &config)
-    : impl_(OfflineTtsImpl::Create(mgr, config)) {}
+OfflineTts::OfflineTts(Manager *mgr, const OfflineTtsConfig &config,
+                        OfflineTtsCacheMechanism *cache)
+    : impl_(OfflineTtsImpl::Create(mgr, config, cache)) {}
 
 OfflineTts::~OfflineTts() = default;
 
 GeneratedAudio OfflineTts::Generate(
     const std::string &text, int64_t sid /*=0*/, float speed /*= 1.0*/,
     GeneratedAudioCallback callback /*= nullptr*/) const {
-#if !defined(_WIN32)
-  return impl_->Generate(text, sid, speed, std::move(callback));
-#else
+
+  // Generate the audio if not cached
+  #if !defined(_WIN32)
+  return impl_->GenerateWitchCache(text, sid, speed, std::move(callback));
+  #else
   if (IsUtf8(text)) {
-    return impl_->Generate(text, sid, speed, std::move(callback));
+    return impl_->GenerateWitchCache(text, sid, speed, std::move(callback));
   } else if (IsGB2312(text)) {
     auto utf8_text = Gb2312ToUtf8(text);
     static bool printed = false;
     if (!printed) {
       SHERPA_ONNX_LOGE(
-          "Detected GB2312 encoded string! Converting it to UTF8.");
-      printed = true;
-    }
-    return impl_->Generate(utf8_text, sid, speed, std::move(callback));
-  } else {
-    SHERPA_ONNX_LOGE(
+        "Detected GB2312 encoded string! Converting it to UTF8.");
+        printed = true;
+      }
+      return impl_->GenerateWitchCache(utf8_text, sid, speed, std::move(callback));
+    } else {
+      SHERPA_ONNX_LOGE(
         "Non UTF8 encoded string is received. You would not get expected "
         "results!");
-    return impl_->Generate(text, sid, speed, std::move(callback));
-  }
-#endif
+        return impl_->GenerateWitchCache(text, sid, speed, std::move(callback));
+      }
+  #endif
 }
 
 int32_t OfflineTts::SampleRate() const { return impl_->SampleRate(); }
@@ -202,12 +207,14 @@ int32_t OfflineTts::NumSpeakers() const { return impl_->NumSpeakers(); }
 
 #if __ANDROID_API__ >= 9
 template OfflineTts::OfflineTts(AAssetManager *mgr,
-                                const OfflineTtsConfig &config);
+                        const OfflineTtsConfig &config,
+                        OfflineTtsCacheMechanism *cache = nullptr);
 #endif
 
 #if __OHOS__
 template OfflineTts::OfflineTts(NativeResourceManager *mgr,
-                                const OfflineTtsConfig &config);
+                        const OfflineTtsConfig &config,
+                        OfflineTtsCacheMechanism *cache = nullptr);
 #endif
 
 }  // namespace sherpa_onnx
