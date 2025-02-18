@@ -114,11 +114,6 @@ if [ ! -f ./lexicon-zh.txt ]; then
   ./generate_lexicon.py
 fi
 
-grep '还钱' ./lexicon-zh.txt
-sed -i.bak 's/还钱 x a i/还钱 x w a/' ./lexicon-zh.txt
-rm -v ./lexicon-zh.txt.bak
-grep '还钱' ./lexicon-zh.txt
-
 if [ ! -f ./voices.bin ]; then
   ./generate_voices_bin.py
 fi
