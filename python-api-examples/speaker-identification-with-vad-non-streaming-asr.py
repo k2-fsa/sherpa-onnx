@@ -185,6 +185,13 @@ def register_non_streaming_asr_model_args(parser):
         help="Feature dimension. Must match the one expected by the model",
     )
 
+    parser.add_argument(
+        "--sense-voice",
+        default="",
+        type=str,
+        help="Path to whisper encoder model",
+    )
+
 
 def get_args():
     parser = argparse.ArgumentParser(
@@ -318,14 +325,6 @@ def create_recognizer(args) -> sherpa_onnx.OfflineRecognizer:
             tail_paddings=args.whisper_tail_paddings,
         )
     elif args.sense_voice:
-        assert len(args.wenet_ctc) == 0, args.wenet_ctc
-        assert len(args.whisper_encoder) == 0, args.whisper_encoder
-        assert len(args.whisper_decoder) == 0, args.whisper_decoder
-        assert len(args.moonshine_preprocessor) == 0, args.moonshine_preprocessor
-        assert len(args.moonshine_encoder) == 0, args.moonshine_encoder
-        assert len(args.moonshine_uncached_decoder) == 0, args.moonshine_uncached_decoder
-        assert len(args.moonshine_cached_decoder) == 0, args.moonshine_cached_decoder
-
         assert_file_exists(args.sense_voice)
         recognizer = sherpa_onnx.OfflineRecognizer.from_sense_voice(
             model=args.sense_voice,
