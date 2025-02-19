@@ -68,6 +68,7 @@ set(sources
   online-ctc-fst-decoder.cc
   online-ctc-greedy-search-decoder.cc
   online-ctc-model.cc
+  online-ebranchformer-transducer-model.cc
   online-lm-config.cc
   online-lm.cc
   online-lstm-transducer-model.cc
