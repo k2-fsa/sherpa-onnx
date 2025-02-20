@@ -48,7 +48,9 @@ std::string FeatureExtractorConfig::ToString() const {
   os << "feature_dim=" << feature_dim << ", ";
   os << "low_freq=" << low_freq << ", ";
   os << "high_freq=" << high_freq << ", ";
-  os << "dither=" << dither << ")";
+  os << "dither=" << dither << ", ";
+  os << "normalize_samples=" << normalize_samples << ", ";
+  os << "snip_edges=" << snip_edges << ")";
 
   return os.str();
 }
@@ -203,7 +205,7 @@ class FeatureExtractor::Impl {
 
     opts_.mel_opts.is_librosa = config_.is_librosa;
 
-    fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
+    fbank_ = std::make_unique<knf::OnlineFbank>(opts_);  // using Kaldi fbank!
   }
   void InitMfcc() {
     mfcc_opts_.frame_opts.dither = config_.dither;
