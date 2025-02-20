@@ -124,6 +124,9 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
         std::get<5>(decoder_out).GetTensorMutableData<int64_t>();
 
     *p_offset += 1;
+    if (*p_offset >= n_text_ctx - 1) {
+      break;
+    }
 
     const auto &logits = std::get<0>(decoder_out);
     const float *p_logits = logits.GetTensorData<float>();
