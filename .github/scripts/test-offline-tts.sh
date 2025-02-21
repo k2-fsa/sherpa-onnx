@@ -44,24 +44,24 @@ done
 rm -rf kokoro-en-v0_19
 
 log "------------------------------------------------------------"
-log "matcha-tts-fa_en-male"
+log "matcha-tts-fa_en-musa"
 log "------------------------------------------------------------"
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-tts-fa_en-male.tar.bz2
-tar xvf matcha-tts-fa_en-male.tar.bz2
-rm matcha-tts-fa_en-male.tar.bz2
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-tts-fa_en-musa.tar.bz2
+tar xvf matcha-tts-fa_en-musa.tar.bz2
+rm matcha-tts-fa_en-musa.tar.bz2
 
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
 
 $EXE \
-  --matcha-acoustic-model=./matcha-tts-fa_en-male/model.onnx \
+  --matcha-acoustic-model=./matcha-tts-fa_en-musa/model.onnx \
   --matcha-vocoder=./hifigan_v2.onnx \
-  --matcha-tokens=./matcha-tts-fa_en-male/tokens.txt \
-  --matcha-data-dir=./matcha-tts-fa_en-male/espeak-ng-data \
-  --output-filename=./tts/test-matcha-fa-en-male.wav \
+  --matcha-tokens=./matcha-tts-fa_en-musa/tokens.txt \
+  --matcha-data-dir=./matcha-tts-fa_en-musa/espeak-ng-data \
+  --output-filename=./tts/test-matcha-fa-en-musa.wav \
   --num-threads=2 \
   "How are you doing today?  این یک نمونه ی تست فارسی است. This is a test."
 
-rm -rf matcha-tts-fa_en-male
+rm -rf matcha-tts-fa_en-musa
 rm hifigan_v2.onnx
 ls -lh tts/*.wav
 
