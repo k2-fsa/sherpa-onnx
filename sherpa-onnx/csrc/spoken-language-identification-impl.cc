@@ -10,6 +10,7 @@
 #include "android/asset_manager_jni.h"
 #endif
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/spoken-language-identification-whisper-impl.h"

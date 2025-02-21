@@ -18,6 +18,7 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-nemo-enc-dec-ctc-model.h"
 #include "sherpa-onnx/csrc/offline-tdnn-ctc-model.h"

@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
 #include "sherpa-onnx/csrc/text-utils.h"

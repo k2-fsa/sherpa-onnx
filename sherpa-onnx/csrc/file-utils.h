@@ -7,6 +7,16 @@
 
 #include <fstream>
 #include <string>
+#include <vector>
+
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
 
 namespace sherpa_onnx {
 
@@ -22,6 +32,17 @@ bool FileExists(const std::string &filename);
  * @param filename The file to check.
  */
 void AssertFileExists(const std::string &filename);
+
+std::vector<char> ReadFile(const std::string &filename);
+
+#if __ANDROID_API__ >= 9
+std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename);
+#endif
+
+#if __OHOS__
+std::vector<char> ReadFile(NativeResourceManager *mgr,
+                           const std::string &filename);
+#endif
 
 }  // namespace sherpa_onnx
 
