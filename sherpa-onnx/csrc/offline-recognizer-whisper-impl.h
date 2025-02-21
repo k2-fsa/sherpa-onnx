@@ -24,7 +24,6 @@
 namespace sherpa_onnx {
 
 class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
-
  private:
   OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
                                    const SymbolTable &sym_table) const {

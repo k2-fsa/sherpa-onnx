@@ -64,25 +64,25 @@ TEST(RemoveInvalidUtf8Sequences, ValidUtf8StringPassesUnchanged) {
 
 TEST(RemoveInvalidUtf8Sequences, SingleInvalidByteReplaced) {
   std::string input = "Invalid \xFF UTF-8";
-  std::string expected = "Invalid  UTF-8"; // 0xFF replaced with '?'
+  std::string expected = "Invalid  UTF-8";
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
 TEST(RemoveInvalidUtf8Sequences, TruncatedUtf8SequenceReplaced) {
-  std::string input = "Broken \xE2\x82"; // Incomplete UTF-8 sequence
-  std::string expected = "Broken "; // Truncated sequence replaced
+  std::string input = "Broken \xE2\x82";  // Incomplete UTF-8 sequence
+  std::string expected = "Broken ";
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
 TEST(RemoveInvalidUtf8Sequences, MultipleInvalidBytes) {
-  std::string input = "Test \xC0\xC0\xF8\xA0"; // Multiple invalid sequences
-  std::string expected = "Test "; // Replaced with '?'
+  std::string input = "Test \xC0\xC0\xF8\xA0";  // Multiple invalid sequences
+  std::string expected = "Test ";
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
 TEST(RemoveInvalidUtf8Sequences, BreakingCase_SpaceFollowedByInvalidByte) {
-  std::string input = "\x20\xC4"; // Space followed by an invalid byte
-  std::string expected = " "; // 0xC4 replaced with '?'
+  std::string input = "\x20\xC4";  // Space followed by an invalid byte
+  std::string expected = " ";  // 0xC4 removed
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
@@ -93,13 +93,13 @@ TEST(RemoveInvalidUtf8Sequences, ValidUtf8WithEdgeCaseCharacters) {
 
 TEST(RemoveInvalidUtf8Sequences, MixedValidAndInvalidBytes) {
   std::string input = "Mix \xE2\x82\xAC \xF0\x9F\x98\x81 \xFF";
-  std::string expected = "Mix € 😁 "; // Valid characters remain, invalid bytes replaced
+  std::string expected = "Mix € 😁 ";  // Invalid bytes removed
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
 TEST(RemoveInvalidUtf8Sequences, SpaceFollowedByInvalidByte) {
-  std::string input = "\x20\xC4"; // Space (0x20) followed by an invalid byte (0xC4)
-  std::string expected = " "; // Space remains, 0xC4 is replaced with '?'
+  std::string input = "\x20\xC4";  // Space (0x20) followed by invalid (0xC4)
+  std::string expected = " ";  // Space remains, 0xC4 is removed
   EXPECT_EQ(RemoveInvalidUtf8Sequences(input), expected);
 }
 
@@ -125,7 +125,7 @@ TEST(RemoveInvalidUtf8Sequences, DebugSpaceFollowedByInvalidByte) {
   }
   std::cout << std::endl;
 
-  EXPECT_EQ(output, " ");  // Expect `0xc4` to be removed, leaving only the space
+  EXPECT_EQ(output, " ");  // Expect `0xc4` to be removed, leaving only space
 }
 
 }  // namespace sherpa_onnx
