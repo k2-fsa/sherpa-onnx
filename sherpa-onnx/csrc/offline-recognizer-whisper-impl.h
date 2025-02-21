@@ -24,31 +24,6 @@
 namespace sherpa_onnx {
 
 class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
- private:
-  OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
-                                   const SymbolTable &sym_table) const {
-    OfflineRecognitionResult r;
-    r.tokens.reserve(src.tokens.size());
-
-    std::string text;
-    for (auto i : src.tokens) {
-      if (!sym_table.Contains(i)) {
-        continue;
-      }
-
-      std::string s = sym_table[i];
-      s = ApplyInverseTextNormalization(s);
-
-      text += s;
-      r.tokens.push_back(s);
-    }
-
-    r.text = text;
-    r.lang = src.lang;
-
-    return r;
-  }
-
  public:
   explicit OfflineRecognizerWhisperImpl(const OfflineRecognizerConfig &config)
       : OfflineRecognizerImpl(config),
@@ -169,6 +144,31 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
           ex.what(), num_frames, tail_padding_frames);
       return;
     }
+  }
+
+ private:
+  OfflineRecognitionResult Convert(const OfflineWhisperDecoderResult &src,
+                                   const SymbolTable &sym_table) const {
+    OfflineRecognitionResult r;
+    r.tokens.reserve(src.tokens.size());
+
+    std::string text;
+    for (auto i : src.tokens) {
+      if (!sym_table.Contains(i)) {
+        continue;
+      }
+
+      std::string s = sym_table[i];
+      s = ApplyInverseTextNormalization(s);
+
+      text += s;
+      r.tokens.push_back(s);
+    }
+
+    r.text = text;
+    r.lang = src.lang;
+
+    return r;
   }
 
  private:
