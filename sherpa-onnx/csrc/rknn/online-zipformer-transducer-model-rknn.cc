@@ -12,6 +12,8 @@
 #include <utility>
 #include <vector>
 
+#include "sherpa-onnx/csrc/rknn/macros.h"
+
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -24,12 +26,43 @@
 
 namespace sherpa_onnx {
 
+static std::string ToString(const rknn_tensor_attr &attr) {
+  std::ostringstream os;
+  os << "{";
+  os << attr.index;
+  os << ", name: " << attr.name;
+  os << ", shape: (";
+  std::string sep;
+  for (int32_t i = 0; i < static_cast<int32_t>(attr.n_dims); ++i) {
+    os << sep << attr.dims[i];
+    sep = ",";
+  }
+  os << ")";
+  os << ", n_elems: " << attr.n_elems;
+  os << ", size: " << attr.size;
+  os << ", fmt: " << get_format_string(attr.fmt);
+  os << ", type: " << get_type_string(attr.type);
+  os << ", pass_through: " << (attr.pass_through ? "true" : "false");
+  os << "}";
+  return os.str();
+}
+
 class OnlineZipformerTransducerModelRknn::Impl {
  public:
   explicit Impl(const OnlineModelConfig &config) : config_(config) {
     {
       auto buf = ReadFile(config.transducer.encoder);
       InitEncoder(buf.data(), buf.size());
+    }
+
+    {
+      auto buf = ReadFile(config.transducer.decoder);
+      InitDecoder(buf.data(), buf.size());
+    }
+
+    {
+      auto buf = ReadFile(config.transducer.joiner);
+      InitJoiner(buf.data(), buf.size());
     }
   }
 
@@ -63,22 +96,218 @@ class OnlineZipformerTransducerModelRknn::Impl {
   void InitEncoder(void *model_data, size_t model_data_length) {
     auto ret =
         rknn_init(&encoder_ctx_, model_data, model_data_length, 0, nullptr);
-    if (ret != RKNN_SUCC) {
-      SHERPA_ONNX_LOGE("Failed to init encoder '%s' with return code %d",
-                       config_.transducer.encoder.c_str(), ret);
-      SHERPA_ONNX_EXIT(0);
-    }
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to init encoder '%s'",
+                           config_.transducer.encoder.c_str());
+
     if (config_.debug) {
       rknn_sdk_version v;
       ret = rknn_query(encoder_ctx_, RKNN_QUERY_SDK_VERSION, &v, sizeof(v));
+      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get rknn sdk version");
+
       SHERPA_ONNX_LOGE("sdk api version: %s, driver version: %s", v.api_version,
                        v.drv_version);
+    }
+
+    rknn_input_output_num io_num;
+    ret = rknn_query(encoder_ctx_, RKNN_QUERY_IN_OUT_NUM, &io_num,
+                     sizeof(io_num));
+    SHERPA_ONNX_RKNN_CHECK(ret,
+                           "Failed to get I/O information for the encoder");
+
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("encoder: %d inputs, %d outputs",
+                       static_cast<int32_t>(io_num.n_input),
+                       static_cast<int32_t>(io_num.n_output));
+    }
+
+    encoder_input_attrs_.resize(io_num.n_input);
+    encoder_output_attrs_.resize(io_num.n_output);
+
+    int32_t i = 0;
+    for (auto &attr : encoder_input_attrs_) {
+      memset(&attr, 0, sizeof(attr));
+      attr.index = i;
+      ret =
+          rknn_query(encoder_ctx_, RKNN_QUERY_INPUT_ATTR, &attr, sizeof(attr));
+      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get attr for encoder input %d", i);
+      i += 1;
+    }
+
+    if (config_.debug) {
+      std::ostringstream os;
+      std::string sep;
+      for (auto &attr : encoder_input_attrs_) {
+        os << sep << ToString(attr);
+        sep = "\n";
+      }
+      SHERPA_ONNX_LOGE("\n----------Encoder inputs info----------\n%s",
+                       os.str().c_str());
+    }
+
+    i = 0;
+    for (auto &attr : encoder_output_attrs_) {
+      memset(&attr, 0, sizeof(attr));
+      attr.index = i;
+      ret =
+          rknn_query(encoder_ctx_, RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
+      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get attr for encoder output %d",
+                             i);
+      i += 1;
+    }
+
+    if (config_.debug) {
+      std::ostringstream os;
+      std::string sep;
+      for (auto &attr : encoder_output_attrs_) {
+        os << sep << ToString(attr);
+        sep = "\n";
+      }
+      SHERPA_ONNX_LOGE("\n----------Encoder outputs info----------\n%s",
+                       os.str().c_str());
+    }
+  }
+
+  void InitDecoder(void *model_data, size_t model_data_length) {
+    auto ret =
+        rknn_init(&decoder_ctx_, model_data, model_data_length, 0, nullptr);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to init decoder '%s'",
+                           config_.transducer.decoder.c_str());
+
+    rknn_input_output_num io_num;
+    ret = rknn_query(decoder_ctx_, RKNN_QUERY_IN_OUT_NUM, &io_num,
+                     sizeof(io_num));
+    SHERPA_ONNX_RKNN_CHECK(ret,
+                           "Failed to get I/O information for the decoder");
+
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("decoder: %d inputs, %d outputs",
+                       static_cast<int32_t>(io_num.n_input),
+                       static_cast<int32_t>(io_num.n_output));
+    }
+
+    decoder_input_attrs_.resize(io_num.n_input);
+    decoder_output_attrs_.resize(io_num.n_output);
+
+    int32_t i = 0;
+    for (auto &attr : decoder_input_attrs_) {
+      memset(&attr, 0, sizeof(attr));
+      attr.index = i;
+      ret =
+          rknn_query(decoder_ctx_, RKNN_QUERY_INPUT_ATTR, &attr, sizeof(attr));
+      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get attr for decoder input %d", i);
+      i += 1;
+    }
+
+    if (config_.debug) {
+      std::ostringstream os;
+      std::string sep;
+      for (auto &attr : decoder_input_attrs_) {
+        os << sep << ToString(attr);
+        sep = "\n";
+      }
+      SHERPA_ONNX_LOGE("\n----------Decoder inputs info----------\n%s",
+                       os.str().c_str());
+    }
+
+    i = 0;
+    for (auto &attr : decoder_output_attrs_) {
+      memset(&attr, 0, sizeof(attr));
+      attr.index = i;
+      ret =
+          rknn_query(decoder_ctx_, RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
+      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get attr for decoder output %d",
+                             i);
+      i += 1;
+    }
+
+    if (config_.debug) {
+      std::ostringstream os;
+      std::string sep;
+      for (auto &attr : decoder_output_attrs_) {
+        os << sep << ToString(attr);
+        sep = "\n";
+      }
+      SHERPA_ONNX_LOGE("\n----------Decoder outputs info----------\n%s",
+                       os.str().c_str());
+    }
+  }
+
+  void InitJoiner(void *model_data, size_t model_data_length) {
+    auto ret =
+        rknn_init(&joiner_ctx_, model_data, model_data_length, 0, nullptr);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to init joiner '%s'",
+                           config_.transducer.joiner.c_str());
+
+    rknn_input_output_num io_num;
+    ret =
+        rknn_query(joiner_ctx_, RKNN_QUERY_IN_OUT_NUM, &io_num, sizeof(io_num));
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get I/O information for the joiner");
+
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("joiner: %d inputs, %d outputs",
+                       static_cast<int32_t>(io_num.n_input),
+                       static_cast<int32_t>(io_num.n_output));
+    }
+
+    joiner_input_attrs_.resize(io_num.n_input);
+    joiner_output_attrs_.resize(io_num.n_output);
+
+    int32_t i = 0;
+    for (auto &attr : joiner_input_attrs_) {
+      memset(&attr, 0, sizeof(attr));
+      attr.index = i;
+      ret = rknn_query(joiner_ctx_, RKNN_QUERY_INPUT_ATTR, &attr, sizeof(attr));
+      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get attr for joiner input %d", i);
+      i += 1;
+    }
+
+    if (config_.debug) {
+      std::ostringstream os;
+      std::string sep;
+      for (auto &attr : joiner_input_attrs_) {
+        os << sep << ToString(attr);
+        sep = "\n";
+      }
+      SHERPA_ONNX_LOGE("\n----------Joiner inputs info----------\n%s",
+                       os.str().c_str());
+    }
+
+    i = 0;
+    for (auto &attr : joiner_output_attrs_) {
+      memset(&attr, 0, sizeof(attr));
+      attr.index = i;
+      ret =
+          rknn_query(joiner_ctx_, RKNN_QUERY_OUTPUT_ATTR, &attr, sizeof(attr));
+      SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get attr for joiner output %d", i);
+      i += 1;
+    }
+
+    if (config_.debug) {
+      std::ostringstream os;
+      std::string sep;
+      for (auto &attr : joiner_output_attrs_) {
+        os << sep << ToString(attr);
+        sep = "\n";
+      }
+      SHERPA_ONNX_LOGE("\n----------Joiner outputs info----------\n%s",
+                       os.str().c_str());
     }
   }
 
  private:
   OnlineModelConfig config_;
   rknn_context encoder_ctx_ = 0;
+  rknn_context decoder_ctx_ = 0;
+  rknn_context joiner_ctx_ = 0;
+
+  std::vector<rknn_tensor_attr> encoder_input_attrs_;
+  std::vector<rknn_tensor_attr> encoder_output_attrs_;
+
+  std::vector<rknn_tensor_attr> decoder_input_attrs_;
+  std::vector<rknn_tensor_attr> decoder_output_attrs_;
+
+  std::vector<rknn_tensor_attr> joiner_input_attrs_;
+  std::vector<rknn_tensor_attr> joiner_output_attrs_;
 };
 
 OnlineZipformerTransducerModelRknn::~OnlineZipformerTransducerModelRknn() =
