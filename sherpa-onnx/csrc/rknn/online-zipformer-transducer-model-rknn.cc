@@ -9,10 +9,9 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include "sherpa-onnx/csrc/rknn/macros.h"
 
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
@@ -22,7 +21,10 @@
 #if __OHOS__
 #include "rawfile/raw_file_manager.h"
 #endif
+
 #include "sherpa-onnx/csrc/file-utils.h"
+#include "sherpa-onnx/csrc/rknn/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -45,6 +47,26 @@ static std::string ToString(const rknn_tensor_attr &attr) {
   os << ", pass_through: " << (attr.pass_through ? "true" : "false");
   os << "}";
   return os.str();
+}
+
+static std::unordered_map<std::string, std::string> Parse(
+    const rknn_custom_string &custom_string) {
+  std::unordered_map<std::string, std::string> ans;
+  std::vector<std::string> fields;
+  SplitStringToVector(custom_string.string, ";", false, &fields);
+
+  std::vector<std::string> tmp;
+  for (const auto &f : fields) {
+    SplitStringToVector(f, "=", false, &tmp);
+    if (tmp.size() != 2) {
+      SHERPA_ONNX_LOGE("Invalid custom string %s for %s", custom_string.string,
+                       f.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
+    ans[tmp[0]] = tmp[1];
+  }
+
+  return ans;
 }
 
 class OnlineZipformerTransducerModelRknn::Impl {
@@ -164,6 +186,19 @@ class OnlineZipformerTransducerModelRknn::Impl {
       }
       SHERPA_ONNX_LOGE("\n----------Encoder outputs info----------\n%s",
                        os.str().c_str());
+    }
+
+    rknn_custom_string custom_string;
+    ret = rknn_query(encoder_ctx_, RKNN_QUERY_CUSTOM_STRING, &custom_string,
+                     sizeof(custom_string));
+    SHERPA_ONNX_RKNN_CHECK(
+        ret, "Failed to read custom string from the encoder model");
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("customs string: %s", custom_string.string);
+    }
+    auto meta = Parse(custom_string);
+    for (const auto &p : meta) {
+      SHERPA_ONNX_LOGE("%s: %s", p.first.c_str(), p.second.c_str());
     }
   }
 
