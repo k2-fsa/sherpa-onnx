@@ -197,8 +197,75 @@ class OnlineZipformerTransducerModelRknn::Impl {
       SHERPA_ONNX_LOGE("customs string: %s", custom_string.string);
     }
     auto meta = Parse(custom_string);
+
     for (const auto &p : meta) {
       SHERPA_ONNX_LOGE("%s: %s", p.first.c_str(), p.second.c_str());
+    }
+
+    if (meta.count("encoder_dims")) {
+      SplitStringToIntegers(meta.at("encoder_dims"), ",", false,
+                            &encoder_dims_);
+    }
+
+    if (meta.count("attention_dims")) {
+      SplitStringToIntegers(meta.at("attention_dims"), ",", false,
+                            &attention_dims_);
+    }
+
+    if (meta.count("num_encoder_layers")) {
+      SplitStringToIntegers(meta.at("num_encoder_layers"), ",", false,
+                            &num_encoder_layers_);
+    }
+
+    if (meta.count("cnn_module_kernels")) {
+      SplitStringToIntegers(meta.at("cnn_module_kernels"), ",", false,
+                            &cnn_module_kernels_);
+    }
+
+    if (meta.count("left_context_len")) {
+      SplitStringToIntegers(meta.at("left_context_len"), ",", false,
+                            &left_context_len_);
+    }
+
+    if (meta.count("T")) {
+      T_ = atoi(meta.at("T").c_str());
+    }
+
+    if (meta.count("decode_chunk_len")) {
+      decode_chunk_len_ = atoi(meta.at("decode_chunk_len").c_str());
+    }
+
+    if (meta.count("context_size")) {
+      context_size_ = atoi(meta.at("context_size").c_str());
+    }
+
+    if (config_.debug) {
+      auto print = [](const std::vector<int32_t> &v, const char *name) {
+        std::ostringstream os;
+        os << name << ": ";
+        for (auto i : v) {
+          os << i << " ";
+        }
+#if __OHOS__
+        SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
+#else
+        SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
+#endif
+      };
+      print(encoder_dims_, "encoder_dims");
+      print(attention_dims_, "attention_dims");
+      print(num_encoder_layers_, "num_encoder_layers");
+      print(cnn_module_kernels_, "cnn_module_kernels");
+      print(left_context_len_, "left_context_len");
+#if __OHOS__
+      SHERPA_ONNX_LOGE("T: %{public}d", T_);
+      SHERPA_ONNX_LOGE("decode_chunk_len_: %{public}d", decode_chunk_len_);
+      SHERPA_ONNX_LOGE("context_size: %{public}d", context_size_);
+#else
+      SHERPA_ONNX_LOGE("T: %d", T_);
+      SHERPA_ONNX_LOGE("decode_chunk_len_: %d", decode_chunk_len_);
+      SHERPA_ONNX_LOGE("context_size: %d", context_size_);
+#endif
     }
   }
 
@@ -327,6 +394,11 @@ class OnlineZipformerTransducerModelRknn::Impl {
       SHERPA_ONNX_LOGE("\n----------Joiner outputs info----------\n%s",
                        os.str().c_str());
     }
+
+    vocab_size_ = joiner_output_attrs_[0].dims[1];
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("vocab_size: %d", vocab_size_);
+    }
   }
 
  private:
@@ -343,6 +415,18 @@ class OnlineZipformerTransducerModelRknn::Impl {
 
   std::vector<rknn_tensor_attr> joiner_input_attrs_;
   std::vector<rknn_tensor_attr> joiner_output_attrs_;
+
+  std::vector<int32_t> encoder_dims_;
+  std::vector<int32_t> attention_dims_;
+  std::vector<int32_t> num_encoder_layers_;
+  std::vector<int32_t> cnn_module_kernels_;
+  std::vector<int32_t> left_context_len_;
+
+  int32_t T_ = 0;
+  int32_t decode_chunk_len_ = 0;
+
+  int32_t context_size_ = 2;
+  int32_t vocab_size_ = 0;
 };
 
 OnlineZipformerTransducerModelRknn::~OnlineZipformerTransducerModelRknn() =
