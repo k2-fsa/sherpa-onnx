@@ -28,14 +28,13 @@ class OnlineZipformerTransducerModelRknn {
   std::vector<std::vector<uint8_t>> GetEncoderInitStates() const;
 
   std::pair<std::vector<float>, std::vector<std::vector<uint8_t>>> RunEncoder(
-      const std::vector<float> &features,
+      std::vector<float> features,
       std::vector<std::vector<uint8_t>> states) const;
 
-  std::vector<float> RunDecoder(
-      const std::vector<int64_t> &decoder_input) const;
+  std::vector<float> RunDecoder(std::vector<int64_t> decoder_input) const;
 
-  std::vector<float> RunJoiner(const std::vector<float> &encoder_out,
-                               const std::vector<float> &decoder_out) const;
+  std::vector<float> RunJoiner(const float *encoder_out,
+                               const float *decoder_out) const;
 
   int32_t ContextSize() const;
 
@@ -44,6 +43,8 @@ class OnlineZipformerTransducerModelRknn {
   int32_t ChunkShift() const;
 
   int32_t VocabSize() const;
+
+  rknn_tensor_attr GetEncoderOutAttr() const;
 
  private:
   class Impl;

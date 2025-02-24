@@ -17,17 +17,24 @@ class OnlineStreamRknn::Impl {
     return states_;
   }
 
+  void SetZipformerResult(OnlineTransducerDecoderResultRknn r) {
+    result_ = std::move(r);
+  }
+
+  OnlineTransducerDecoderResultRknn &GetZipformerResult() { return result_; }
+
  private:
   rknn_context encoder_ctx_;
   rknn_context decoder_ctx_;
   rknn_context joiner_ctx_;
   std::vector<std::vector<uint8_t>> states_;
+  OnlineTransducerDecoderResultRknn result_;
 };
 
 OnlineStreamRknn::OnlineStreamRknn(
     const FeatureExtractorConfig &config /*= {}*/,
     ContextGraphPtr context_graph /*= nullptr*/)
-    : OnlineStream(config, context_graph) {}
+    : OnlineStream(config, context_graph), impl_(std::make_unique<Impl>()) {}
 
 OnlineStreamRknn::~OnlineStreamRknn() = default;
 
@@ -39,6 +46,16 @@ void OnlineStreamRknn::SetZipformerEncoderStates(
 std::vector<std::vector<uint8_t>> &OnlineStreamRknn::GetZipformerEncoderStates()
     const {
   return impl_->GetZipformerEncoderStates();
+}
+
+void OnlineStreamRknn::SetZipformerResult(
+    OnlineTransducerDecoderResultRknn r) const {
+  impl_->SetZipformerResult(std::move(r));
+}
+
+OnlineTransducerDecoderResultRknn &OnlineStreamRknn::GetZipformerResult()
+    const {
+  return impl_->GetZipformerResult();
 }
 
 }  // namespace sherpa_onnx

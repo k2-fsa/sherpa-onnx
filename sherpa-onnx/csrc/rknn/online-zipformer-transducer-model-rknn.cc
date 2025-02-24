@@ -28,6 +28,23 @@
 
 namespace sherpa_onnx {
 
+// chw -> hwc
+static void Transpose(const float *src, int32_t n, int32_t channel,
+                      int32_t height, int32_t width, float *dst) {
+  // dst[h, w, c] = src[c, h, w]
+  for (int32_t i = 0; i < n; ++i) {
+    for (int32_t h = 0; h < height; ++h) {
+      for (int32_t w = 0; w < width; ++w) {
+        for (int32_t c = 0; c < channel; ++c) {
+          dst[i * height * width * channel + h * width * channel + w * channel +
+              c] = src[i * height * width * channel + c * height * width +
+                       h * width + w];
+        }
+      }
+    }
+  }
+}
+
 static std::string ToString(const rknn_tensor_attr &attr) {
   std::ostringstream os;
   os << "{";
@@ -88,31 +105,198 @@ class OnlineZipformerTransducerModelRknn::Impl {
     }
   }
 
-  std::vector<std::vector<uint8_t>> GetEncoderInitStates() const { return {}; }
+  std::vector<std::vector<uint8_t>> GetEncoderInitStates() const {
+    // encoder_input_attrs_[0] is for the feature
+    // encoder_input_attrs_[1:] is for states
+    // so we use -1 here
+    std::vector<std::vector<uint8_t>> states(encoder_input_attrs_.size() - 1);
+
+    int32_t i = -1;
+    for (auto &attr : encoder_input_attrs_) {
+      i += 1;
+      if (i == 0) {
+        continue;
+      }
+
+      if (attr.type == RKNN_TENSOR_FLOAT16) {
+        states[i - 1].resize(attr.n_elems * sizeof(float));
+      } else if (attr.type == RKNN_TENSOR_INT64) {
+        states[i - 1].resize(attr.n_elems * sizeof(int64_t));
+      } else {
+        SHERPA_ONNX_LOGE("Unsupported tensor type: %d, %s", attr.type,
+                         get_type_string(attr.type));
+        SHERPA_ONNX_EXIT(-1);
+      }
+    }
+
+    return states;
+  }
 
   std::pair<std::vector<float>, std::vector<std::vector<uint8_t>>> RunEncoder(
-      const std::vector<float> &features,
+      std::vector<float> features,
       std::vector<std::vector<uint8_t>> states) const {
-    return {};
+    std::vector<rknn_input> inputs(encoder_input_attrs_.size());
+
+    for (int32_t i = 0; i < static_cast<int32_t>(inputs.size()); ++i) {
+      auto &input = inputs[i];
+      auto &attr = encoder_input_attrs_[i];
+      input.index = attr.index;
+
+      if (attr.type == RKNN_TENSOR_FLOAT16) {
+        input.type = RKNN_TENSOR_FLOAT32;
+      } else if (attr.type == RKNN_TENSOR_INT64) {
+        input.type = RKNN_TENSOR_INT64;
+      } else {
+        SHERPA_ONNX_LOGE("Unsupported tensor type %d, %s", attr.type,
+                         get_type_string(attr.type));
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      input.fmt = attr.fmt;
+      if (i == 0) {
+        input.buf = reinterpret_cast<void *>(features.data());
+        input.size = features.size() * sizeof(float);
+      } else {
+        input.buf = reinterpret_cast<void *>(states[i - 1].data());
+        input.size = states[i - 1].size();
+      }
+    }
+
+    std::vector<float> encoder_out(encoder_output_attrs_[0].n_elems);
+
+    // TODO(fangjun): Reuse the memory from input argument `states`
+    auto next_states = GetEncoderInitStates();
+
+    std::vector<rknn_output> outputs(encoder_output_attrs_.size());
+    for (int32_t i = 0; i < outputs.size(); ++i) {
+      auto &output = outputs[i];
+      auto &attr = encoder_output_attrs_[i];
+      output.index = attr.index;
+      output.is_prealloc = 1;
+
+      if (attr.type == RKNN_TENSOR_FLOAT16) {
+        output.want_float = 1;
+      } else if (attr.type == RKNN_TENSOR_INT64) {
+        output.want_float = 0;
+      } else {
+        SHERPA_ONNX_LOGE("Unsupported tensor type %d, %s", attr.type,
+                         get_type_string(attr.type));
+        SHERPA_ONNX_EXIT(-1);
+      }
+
+      if (i == 0) {
+        output.size = encoder_out.size() * sizeof(float);
+        output.buf = reinterpret_cast<void *>(encoder_out.data());
+      } else {
+        output.size = next_states[i - 1].size();
+        output.buf = reinterpret_cast<void *>(next_states[i - 1].data());
+      }
+    }
+
+    auto ret = rknn_inputs_set(encoder_ctx_, inputs.size(), inputs.data());
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set encoder inputs");
+
+    ret = rknn_run(encoder_ctx_, nullptr);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to run encoder");
+
+    ret =
+        rknn_outputs_get(encoder_ctx_, outputs.size(), outputs.data(), nullptr);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get encoder output");
+
+    for (int32_t i = 0; i < next_states.size(); ++i) {
+      break;
+      const auto &attr = encoder_input_attrs_[i + 1];
+      if (attr.n_dims == 4) {
+        std::vector<uint8_t> dst(next_states[i].size());
+        int32_t n = attr.dims[0];
+        int32_t h = attr.dims[1];
+        int32_t w = attr.dims[2];
+        int32_t c = attr.dims[3];
+        Transpose(reinterpret_cast<const float *>(next_states[i].data()), n, c,
+                  h, w, reinterpret_cast<float *>(dst.data()));
+        next_states[i] = std::move(dst);
+      }
+    }
+
+    return {std::move(encoder_out), std::move(next_states)};
   }
 
-  std::vector<float> RunDecoder(
-      const std::vector<int64_t> &decoder_input) const {
-    return {};
+  std::vector<float> RunDecoder(std::vector<int64_t> decoder_input) const {
+    auto &attr = decoder_input_attrs_[0];
+    rknn_input input;
+
+    input.index = 0;
+    input.type = RKNN_TENSOR_INT64;
+    input.fmt = attr.fmt;
+    input.buf = decoder_input.data();
+    input.size = decoder_input.size() * sizeof(int64_t);
+
+    std::vector<float> decoder_out(decoder_output_attrs_[0].n_elems);
+    rknn_output output;
+    output.index = decoder_output_attrs_[0].index;
+    output.is_prealloc = 1;
+    output.want_float = 1;
+    output.size = decoder_out.size() * sizeof(float);
+    output.buf = decoder_out.data();
+
+    auto ret = rknn_inputs_set(decoder_ctx_, 1, &input);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set decoder inputs");
+
+    ret = rknn_run(decoder_ctx_, nullptr);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to run decoder");
+
+    ret = rknn_outputs_get(decoder_ctx_, 1, &output, nullptr);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get decoder output");
+
+    return decoder_out;
   }
 
-  std::vector<float> RunJoiner(const std::vector<float> &encoder_out,
-                               const std::vector<float> &decoder_out) const {
-    return {};
+  std::vector<float> RunJoiner(const float *encoder_out,
+                               const float *decoder_out) const {
+    std::vector<rknn_input> inputs(2);
+    inputs[0].index = 0;
+    inputs[0].type = RKNN_TENSOR_FLOAT32;
+    inputs[0].fmt = joiner_input_attrs_[0].fmt;
+    inputs[0].buf = const_cast<float *>(encoder_out);
+    inputs[0].size = joiner_input_attrs_[0].n_elems * sizeof(float);
+
+    inputs[1].index = 1;
+    inputs[1].type = RKNN_TENSOR_FLOAT32;
+    inputs[1].fmt = joiner_input_attrs_[1].fmt;
+    inputs[1].buf = const_cast<float *>(decoder_out);
+    inputs[1].size = joiner_input_attrs_[1].n_elems * sizeof(float);
+
+    std::vector<float> joiner_out(joiner_output_attrs_[0].n_elems);
+    rknn_output output;
+    output.index = joiner_output_attrs_[0].index;
+    output.is_prealloc = 1;
+    output.want_float = 1;
+    output.size = joiner_out.size() * sizeof(float);
+    output.buf = joiner_out.data();
+
+    auto ret = rknn_inputs_set(joiner_ctx_, inputs.size(), inputs.data());
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to set joiner inputs");
+
+    ret = rknn_run(joiner_ctx_, nullptr);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to run joiner");
+
+    ret = rknn_outputs_get(joiner_ctx_, 1, &output, nullptr);
+    SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get joiner output");
+
+    return joiner_out;
   }
 
-  int32_t ContextSize() const { return 0; }
+  int32_t ContextSize() const { return context_size_; }
 
-  int32_t ChunkSize() const { return 0; }
+  int32_t ChunkSize() const { return T_; }
 
-  int32_t ChunkShift() const { return 0; }
+  int32_t ChunkShift() const { return decode_chunk_len_; }
 
-  int32_t VocabSize() const { return 0; }
+  int32_t VocabSize() const { return vocab_size_; }
+
+  rknn_tensor_attr GetEncoderOutAttr() const {
+    return encoder_output_attrs_[0];
+  }
 
  private:
   void InitEncoder(void *model_data, size_t model_data_length) {
@@ -281,6 +465,18 @@ class OnlineZipformerTransducerModelRknn::Impl {
     SHERPA_ONNX_RKNN_CHECK(ret,
                            "Failed to get I/O information for the decoder");
 
+    if (io_num.n_input != 1) {
+      SHERPA_ONNX_LOGE("Expect only 1 decoder input. Given %d",
+                       static_cast<int32_t>(io_num.n_input));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
+    if (io_num.n_output != 1) {
+      SHERPA_ONNX_LOGE("Expect only 1 decoder output. Given %d",
+                       static_cast<int32_t>(io_num.n_output));
+      SHERPA_ONNX_EXIT(-1);
+    }
+
     if (config_.debug) {
       SHERPA_ONNX_LOGE("decoder: %d inputs, %d outputs",
                        static_cast<int32_t>(io_num.n_input),
@@ -309,6 +505,13 @@ class OnlineZipformerTransducerModelRknn::Impl {
       }
       SHERPA_ONNX_LOGE("\n----------Decoder inputs info----------\n%s",
                        os.str().c_str());
+    }
+
+    if (decoder_input_attrs_[0].type != RKNN_TENSOR_INT64) {
+      SHERPA_ONNX_LOGE("Expect int64 for decoder input. Given: %d, %s",
+                       decoder_input_attrs_[0].type,
+                       get_type_string(decoder_input_attrs_[0].type));
+      SHERPA_ONNX_EXIT(-1);
     }
 
     i = 0;
@@ -449,19 +652,18 @@ OnlineZipformerTransducerModelRknn::GetEncoderInitStates() const {
 
 std::pair<std::vector<float>, std::vector<std::vector<uint8_t>>>
 OnlineZipformerTransducerModelRknn::RunEncoder(
-    const std::vector<float> &features,
+    std::vector<float> features,
     std::vector<std::vector<uint8_t>> states) const {
-  return impl_->RunEncoder(features, std::move(states));
+  return impl_->RunEncoder(std::move(features), std::move(states));
 }
 
 std::vector<float> OnlineZipformerTransducerModelRknn::RunDecoder(
-    const std::vector<int64_t> &decoder_input) const {
-  return impl_->RunDecoder(decoder_input);
+    std::vector<int64_t> decoder_input) const {
+  return impl_->RunDecoder(std::move(decoder_input));
 }
 
 std::vector<float> OnlineZipformerTransducerModelRknn::RunJoiner(
-    const std::vector<float> &encoder_out,
-    const std::vector<float> &decoder_out) const {
+    const float *encoder_out, const float *decoder_out) const {
   return impl_->RunJoiner(encoder_out, decoder_out);
 }
 
@@ -470,7 +672,7 @@ int32_t OnlineZipformerTransducerModelRknn::ContextSize() const {
 }
 
 int32_t OnlineZipformerTransducerModelRknn::ChunkSize() const {
-  return impl_->ContextSize();
+  return impl_->ChunkSize();
 }
 
 int32_t OnlineZipformerTransducerModelRknn::ChunkShift() const {
@@ -479,6 +681,10 @@ int32_t OnlineZipformerTransducerModelRknn::ChunkShift() const {
 
 int32_t OnlineZipformerTransducerModelRknn::VocabSize() const {
   return impl_->VocabSize();
+}
+
+rknn_tensor_attr OnlineZipformerTransducerModelRknn::GetEncoderOutAttr() const {
+  return impl_->GetEncoderOutAttr();
 }
 
 #if __ANDROID_API__ >= 9

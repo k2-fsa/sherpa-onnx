@@ -7,6 +7,7 @@
 
 #include "rknn_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-stream.h"
+#include "sherpa-onnx/csrc/rknn/online-transducer-greedy-search-decoder-rknn.h"
 
 namespace sherpa_onnx {
 
@@ -21,6 +22,8 @@ class OnlineStreamRknn : public OnlineStream {
       std::vector<std::vector<uint8_t>> states) const;
 
   std::vector<std::vector<uint8_t>> &GetZipformerEncoderStates() const;
+  void SetZipformerResult(OnlineTransducerDecoderResultRknn r) const;
+  OnlineTransducerDecoderResultRknn &GetZipformerResult() const;
 
  private:
   class Impl;
