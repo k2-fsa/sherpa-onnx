@@ -44,11 +44,17 @@ void OnlineTransducerGreedySearchDecoderRknn::Decode(
   int32_t vocab_size = model_->VocabSize();
   int32_t context_size = model_->ContextSize();
 
-  std::vector<int64_t> decoder_input{
-      r.tokens.begin() + (r.tokens.size() - context_size), r.tokens.end()};
+  std::vector<int64_t> decoder_input;
+  std::vector<float> decoder_out;
 
-  // TODO(fangjun): Cache decoder out
-  auto decoder_out = model_->RunDecoder(std::move(decoder_input));
+  if (r.previous_decoder_out.empty()) {
+    decoder_input = {r.tokens.begin() + (r.tokens.size() - context_size),
+                     r.tokens.end()};
+    decoder_out = model_->RunDecoder(std::move(decoder_input));
+
+  } else {
+    decoder_out = std::move(r.previous_decoder_out);
+  }
 
   const float *p_encoder_out = encoder_out.data();
   for (int32_t t = 0; t != num_frames; ++t) {
@@ -82,6 +88,7 @@ void OnlineTransducerGreedySearchDecoderRknn::Decode(
   }
 
   r.frame_offset += num_frames;
+  r.previous_decoder_out = std::move(decoder_out);
 }
 
 }  // namespace sherpa_onnx

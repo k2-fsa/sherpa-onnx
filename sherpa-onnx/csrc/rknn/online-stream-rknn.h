@@ -22,7 +22,9 @@ class OnlineStreamRknn : public OnlineStream {
       std::vector<std::vector<uint8_t>> states) const;
 
   std::vector<std::vector<uint8_t>> &GetZipformerEncoderStates() const;
+
   void SetZipformerResult(OnlineTransducerDecoderResultRknn r) const;
+
   OnlineTransducerDecoderResultRknn &GetZipformerResult() const;
 
  private:

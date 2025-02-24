@@ -23,6 +23,8 @@ struct OnlineTransducerDecoderResultRknn {
 
   /// timestamps[i] contains the output frame index where tokens[i] is decoded.
   std::vector<int32_t> timestamps;
+
+  std::vector<float> previous_decoder_out;
 };
 
 class OnlineTransducerGreedySearchDecoderRknn {

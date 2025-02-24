@@ -1,12 +1,10 @@
 // sherpa-onnx/csrc/rknn/online-zipformer-transducer-model-rknn.h
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2025  Xiaomi Corporation
 #ifndef SHERPA_ONNX_CSRC_RKNN_ONLINE_ZIPFORMER_TRANSDUCER_MODEL_RKNN_H_
 #define SHERPA_ONNX_CSRC_RKNN_ONLINE_ZIPFORMER_TRANSDUCER_MODEL_RKNN_H_
 
 #include <memory>
-#include <string>
-#include <utility>
 #include <vector>
 
 #include "rknn_api.h"  // NOLINT
@@ -15,6 +13,8 @@
 
 namespace sherpa_onnx {
 
+// this is for zipformer v1, i.e., the folder
+// pruned_transducer_statelss7_streaming from icefall
 class OnlineZipformerTransducerModelRknn {
  public:
   ~OnlineZipformerTransducerModelRknn();

@@ -24,9 +24,6 @@ class OnlineStreamRknn::Impl {
   OnlineTransducerDecoderResultRknn &GetZipformerResult() { return result_; }
 
  private:
-  rknn_context encoder_ctx_;
-  rknn_context decoder_ctx_;
-  rknn_context joiner_ctx_;
   std::vector<std::vector<uint8_t>> states_;
   OnlineTransducerDecoderResultRknn result_;
 };

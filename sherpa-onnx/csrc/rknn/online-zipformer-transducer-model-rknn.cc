@@ -1,11 +1,9 @@
-// sherpa-onnx/csrc/online-zipformer-transducer-model.cc
+// sherpa-onnx/csrc/rknn/online-zipformer-transducer-model-rknn.cc
 //
 // Copyright (c)  2023  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/rknn/online-zipformer-transducer-model-rknn.h"
 
-#include <algorithm>
-#include <cassert>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -31,11 +29,11 @@ namespace sherpa_onnx {
 // chw -> hwc
 static void Transpose(const float *src, int32_t n, int32_t channel,
                       int32_t height, int32_t width, float *dst) {
-  // dst[h, w, c] = src[c, h, w]
   for (int32_t i = 0; i < n; ++i) {
     for (int32_t h = 0; h < height; ++h) {
       for (int32_t w = 0; w < width; ++w) {
         for (int32_t c = 0; c < channel; ++c) {
+          // dst[h, w, c] = src[c, h, w]
           dst[i * height * width * channel + h * width * channel + w * channel +
               c] = src[i * height * width * channel + c * height * width +
                        h * width + w];
@@ -80,7 +78,7 @@ static std::unordered_map<std::string, std::string> Parse(
                        f.c_str());
       SHERPA_ONNX_EXIT(-1);
     }
-    ans[tmp[0]] = tmp[1];
+    ans[std::move(tmp[0])] = std::move(tmp[1]);
   }
 
   return ans;
@@ -88,6 +86,23 @@ static std::unordered_map<std::string, std::string> Parse(
 
 class OnlineZipformerTransducerModelRknn::Impl {
  public:
+  ~Impl() {
+    auto ret = rknn_destroy(encoder_ctx_);
+    if (ret != RKNN_SUCC) {
+      SHERPA_ONNX_LOGE("Failed to destroy the encoder context");
+    }
+
+    ret = rknn_destroy(decoder_ctx_);
+    if (ret != RKNN_SUCC) {
+      SHERPA_ONNX_LOGE("Failed to destroy the decoder context");
+    }
+
+    ret = rknn_destroy(joiner_ctx_);
+    if (ret != RKNN_SUCC) {
+      SHERPA_ONNX_LOGE("Failed to destroy the joiner context");
+    }
+  }
+
   explicit Impl(const OnlineModelConfig &config) : config_(config) {
     {
       auto buf = ReadFile(config.transducer.encoder);
@@ -105,6 +120,8 @@ class OnlineZipformerTransducerModelRknn::Impl {
     }
   }
 
+  // TODO(fangjun): Support Android
+
   std::vector<std::vector<uint8_t>> GetEncoderInitStates() const {
     // encoder_input_attrs_[0] is for the feature
     // encoder_input_attrs_[1:] is for states
@@ -115,6 +132,7 @@ class OnlineZipformerTransducerModelRknn::Impl {
     for (auto &attr : encoder_input_attrs_) {
       i += 1;
       if (i == 0) {
+        // skip processing the attr for features.
         continue;
       }
 
@@ -164,8 +182,9 @@ class OnlineZipformerTransducerModelRknn::Impl {
 
     std::vector<float> encoder_out(encoder_output_attrs_[0].n_elems);
 
-    // TODO(fangjun): Reuse the memory from input argument `states`
-    auto next_states = GetEncoderInitStates();
+    // Note(fangjun): We can reuse the memory from input argument `states`
+    // auto next_states = GetEncoderInitStates();
+    auto &next_states = states;
 
     std::vector<rknn_output> outputs(encoder_output_attrs_.size());
     for (int32_t i = 0; i < outputs.size(); ++i) {
