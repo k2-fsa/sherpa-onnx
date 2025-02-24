@@ -91,9 +91,8 @@ cmake \
   -DCMAKE_TOOLCHAIN_FILE=../toolchains/aarch64-linux-gnu.toolchain.cmake \
   ..
 
-# make VERBOSE=1 -j4
-make VERBOSE=1 -j15 sherpa-onnx sherpa-onnx-alsa
-# make install/strip
+make VERBOSE=1 -j4
+make install/strip
 
 # Enable it if only needed
 # cp -v $SHERPA_ONNX_ALSA_LIB_DIR/libasound.so* ./install/lib/
