@@ -6,9 +6,7 @@
 #define SHERPA_ONNX_CSRC_RKNN_ONLINE_RECOGNIZER_TRANSDUCER_RKNN_IMPL_H_
 
 #include <algorithm>
-#include <ios>
 #include <memory>
-#include <regex>  // NOLINT
 #include <sstream>
 #include <string>
 #include <utility>
@@ -78,9 +76,6 @@ class OnlineRecognizerTransducerRknnImpl : public OnlineRecognizerImpl {
         endpoint_(config_.endpoint_config),
         model_(std::make_unique<OnlineZipformerTransducerModelRknn>(
             config.model_config)) {
-    decoder_ = std::make_unique<OnlineTransducerGreedySearchDecoderRknn>(
-        model_.get(), unk_id_);
-
     if (!config.model_config.tokens_buf.empty()) {
       sym_ = SymbolTable(config.model_config.tokens_buf, false);
     } else {
@@ -91,6 +86,9 @@ class OnlineRecognizerTransducerRknnImpl : public OnlineRecognizerImpl {
     if (sym_.Contains("<unk>")) {
       unk_id_ = sym_["<unk>"];
     }
+
+    decoder_ = std::make_unique<OnlineTransducerGreedySearchDecoderRknn>(
+        model_.get(), unk_id_);
   }
 
   template <typename Manager>
@@ -99,13 +97,15 @@ class OnlineRecognizerTransducerRknnImpl : public OnlineRecognizerImpl {
       : OnlineRecognizerImpl(mgr, config),
         config_(config),
         endpoint_(config_.endpoint_config),
-        model_(std::make_unique<OnlineZipformerTransducerModelRknn>(mgr,
-                                                                    config)) {}
+        model_(
+            std::make_unique<OnlineZipformerTransducerModelRknn>(mgr, config)) {
+    // TODO(fangjun): Support Android
+  }
 
   std::unique_ptr<OnlineStream> CreateStream() const override {
     auto stream = std::make_unique<OnlineStreamRknn>(config_.feat_config);
     auto r = decoder_->GetEmptyResult();
-    stream->SetZipformerResult(r);
+    stream->SetZipformerResult(std::move(r));
     stream->SetZipformerEncoderStates(model_->GetEncoderInitStates());
     return stream;
   }
@@ -142,9 +142,58 @@ class OnlineRecognizerTransducerRknnImpl : public OnlineRecognizerImpl {
     return r;
   }
 
-  bool IsEndpoint(OnlineStream *s) const override { return false; }
+  bool IsEndpoint(OnlineStream *s) const override {
+    if (!config_.enable_endpoint) {
+      return false;
+    }
 
-  void Reset(OnlineStream *s) const override {}
+    int32_t num_processed_frames = s->GetNumProcessedFrames();
+
+    // frame shift is 10 milliseconds
+    float frame_shift_in_seconds = 0.01;
+
+    // subsampling factor is 4
+    int32_t trailing_silence_frames = reinterpret_cast<OnlineStreamRknn *>(s)
+                                          ->GetZipformerResult()
+                                          .num_trailing_blanks *
+                                      4;
+
+    return endpoint_.IsEndpoint(num_processed_frames, trailing_silence_frames,
+                                frame_shift_in_seconds);
+  }
+
+  void Reset(OnlineStream *s) const override {
+    int32_t context_size = model_->ContextSize();
+
+    {
+      // segment is incremented only when the last
+      // result is not empty, contains non-blanks and longer than context_size)
+      const auto &r =
+          reinterpret_cast<OnlineStreamRknn *>(s)->GetZipformerResult();
+      if (!r.tokens.empty() && r.tokens.back() != 0 &&
+          r.tokens.size() > context_size) {
+        s->GetCurrentSegment() += 1;
+      }
+    }
+
+    // reset encoder states
+    // reinterpret_cast<OnlineStreamRknn*>(s)->SetZipformerEncoderStates(model_->GetEncoderInitStates());
+    auto r = decoder_->GetEmptyResult();
+    auto last_result =
+        reinterpret_cast<OnlineStreamRknn *>(s)->GetZipformerResult();
+
+    // if last result is not empty, then
+    // preserve last tokens as the context for next result
+    if (static_cast<int32_t>(last_result.tokens.size()) > context_size) {
+      r.tokens = {last_result.tokens.end() - context_size,
+                  last_result.tokens.end()};
+    }
+    reinterpret_cast<OnlineStreamRknn *>(s)->SetZipformerResult(std::move(r));
+
+    // Note: We only update counters. The underlying audio samples
+    // are not discarded.
+    s->Reset();
+  }
 
  private:
   void DecodeStream(OnlineStreamRknn *s) const {

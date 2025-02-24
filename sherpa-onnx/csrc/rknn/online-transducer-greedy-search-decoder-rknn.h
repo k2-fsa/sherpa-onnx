@@ -31,11 +31,8 @@ class OnlineTransducerGreedySearchDecoderRknn {
  public:
   explicit OnlineTransducerGreedySearchDecoderRknn(
       OnlineZipformerTransducerModelRknn *model, int32_t unk_id = 2,
-      float blank_penalty = 0.0, float temperature_scale = 1.0)
-      : model_(model),
-        unk_id_(unk_id),
-        blank_penalty_(blank_penalty),
-        temperature_scale_(temperature_scale) {}
+      float blank_penalty = 0.0)
+      : model_(model), unk_id_(unk_id), blank_penalty_(blank_penalty) {}
 
   OnlineTransducerDecoderResultRknn GetEmptyResult() const;
 
@@ -48,7 +45,6 @@ class OnlineTransducerGreedySearchDecoderRknn {
   OnlineZipformerTransducerModelRknn *model_;  // Not owned
   int32_t unk_id_;
   float blank_penalty_;
-  float temperature_scale_;
 };
 
 }  // namespace sherpa_onnx
