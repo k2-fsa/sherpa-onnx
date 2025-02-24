@@ -46,7 +46,8 @@ option(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE "True to use pre-i
 option(SHERPA_ONNX_ENABLE_SANITIZER "Whether to enable ubsan and asan" OFF)
 option(SHERPA_ONNX_BUILD_C_API_EXAMPLES "Whether to enable C API examples" ON)
 
-set(SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION "1.11.0" CACHE STRING "Used only for Linux ARM64 GPU. If you use Jetson nano b01, then please set it to 1.11.0. If you use Jetson Orin NX, then set it to 1.16.0")
+set(SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION "1.11.0" CACHE STRING "Used only for Linux ARM64 GPU. If you use Jetson nano b01, then please set it to 1.11.0. If you use Jetson Orin NX, then set it to 1.16.0.If you use NVIDIA Jetson Orin Nano Engineering Reference Developer Kit
+Super - Jetpack 6.2 [L4T 36.4.3], then set it to 1.18.1")
 
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
