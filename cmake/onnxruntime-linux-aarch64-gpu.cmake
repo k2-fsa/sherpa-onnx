@@ -27,6 +27,11 @@ to cmake (You need to make sure CUDA 10.2 is available on your board).
 If you use Jetson Orin NX, then please pass
    -DSHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.16.0
 to cmake (You need to make sure CUDA 11.4 is available on your board).
+
+If you use NVIDIA Jetson Orin Nano Engineering Reference Developer Kit
+Super - Jetpack 6.2 [L4T 36.4.3], then please pass
+   -DSHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.18.1
+to cmake (You need to make sure CUDA 12.6 is available on your board).
 ")
 
 set(v ${SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION})
@@ -36,8 +41,14 @@ set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/
 
 if(v STREQUAL "1.11.0")
   set(onnxruntime_HASH "SHA256=36eded935551e23aead09d4173bdf0bd1e7b01fdec15d77f97d6e34029aa60d7")
-else()
+elseif(v STREQUAL "1.16.0")
   set(onnxruntime_HASH "SHA256=4c09d5acf2c2682b4eab1dc2f1ad98fc1fde5f5f1960063e337983ba59379a4b")
+elseif(v STREQUAL "1.18.1")
+  set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.1/onnxruntime-linux-aarch64-gpu-cuda12-1.18.1.tar.bz2")
+  set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-gpu-cuda12-1.18.1.tar.bz2")
+  set(onnxruntime_HASH "SHA256=1e91064ec13a6fabb6b670da8a2da4f369c1dbd50a5be77a879b2473e7afc0a6")
+else()
+  message(FATAL_ERROR "Unuspported onnxruntime version ${v} for Linux aarch64")
 endif()
 
 # If you don't have access to the Internet,
