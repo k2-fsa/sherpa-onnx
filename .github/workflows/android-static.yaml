@@ -140,6 +140,7 @@ jobs:
           timeout_seconds: 200
           shell: bash
           command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
             du -h -d1 .
@@ -150,8 +151,10 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
+            dst=$SHERPA_ONNX_VERSION
+            mkdir -p $dst
 
-            cp -v ../sherpa-onnx-*-android*.tar.bz2 ./
+            cp -v ../sherpa-onnx-*-android*.tar.bz2 $dst/
 
             git status
             git lfs track "*.bz2"
@@ -263,6 +266,7 @@ jobs:
           timeout_seconds: 200
           shell: bash
           command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
             du -h -d1 .
@@ -273,7 +277,7 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
-            dst=android/aar
+            dst=android/aar/$SHERPA_ONNX_VERSION
             mkdir -p $dst
 
             cp -v ../*.aar $dst

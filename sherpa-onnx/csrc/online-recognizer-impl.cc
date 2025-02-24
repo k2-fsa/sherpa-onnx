@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/online-recognizer-impl.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2023-2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 
@@ -26,10 +26,31 @@
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
+#if SHERPA_ONNX_ENABLE_RKNN
+#include "sherpa-onnx/csrc/rknn/online-recognizer-transducer-rknn-impl.h"
+#endif
+
 namespace sherpa_onnx {
 
 std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
     const OnlineRecognizerConfig &config) {
+  if (config.model_config.provider_config.provider == "rknn") {
+#if SHERPA_ONNX_ENABLE_RKNN
+    // Currently, only zipformer v1 is suported for rknn
+    if (config.model_config.transducer.encoder.empty()) {
+      SHERPA_ONNX_LOGE(
+          "Only Zipformer transducers are currently supported by rknn. "
+          "Fallback to CPU");
+    } else {
+      return std::make_unique<OnlineRecognizerTransducerRknnImpl>(config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
+        "want to use rknn. Fallback to CPU");
+#endif
+  }
+
   if (!config.model_config.transducer.encoder.empty()) {
     Ort::Env env(ORT_LOGGING_LEVEL_ERROR);
 

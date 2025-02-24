@@ -23,7 +23,8 @@ class OnlineStream {
  public:
   explicit OnlineStream(const FeatureExtractorConfig &config = {},
                         ContextGraphPtr context_graph = nullptr);
-  ~OnlineStream();
+
+  virtual ~OnlineStream();
 
   /**
      @param sampling_rate The sampling_rate of the input waveform. If it does

@@ -74,7 +74,7 @@ if [[ x"$BUILD_SHARED_LIBS" == x"" ]]; then
 fi
 
 if [[ x"$SHERPA_ONNX_ENABLE_GPU" == x"" ]]; then
-  # By default, use CPU
+  # By default, don't use CPU
   SHERPA_ONNX_ENABLE_GPU=OFF
 fi
 

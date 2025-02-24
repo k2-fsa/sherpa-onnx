@@ -45,6 +45,7 @@ option(SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY "True to link libstdc++ statically.
 option(SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE "True to use pre-installed onnxruntime if available" ON)
 option(SHERPA_ONNX_ENABLE_SANITIZER "Whether to enable ubsan and asan" OFF)
 option(SHERPA_ONNX_BUILD_C_API_EXAMPLES "Whether to enable C API examples" ON)
+option(SHERPA_ONNX_ENABLE_RKNN "Whether to build for RKNN NPU " OFF)
 
 set(SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION "1.11.0" CACHE STRING "Used only for Linux ARM64 GPU. If you use Jetson nano b01, then please set it to 1.11.0. If you use Jetson Orin NX, then set it to 1.16.0.If you use NVIDIA Jetson Orin Nano Engineering Reference Developer Kit
 Super - Jetpack 6.2 [L4T 36.4.3], then set it to 1.18.1")
@@ -155,6 +156,7 @@ message(STATUS "SHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY ${SHERPA_ONNX_LINK_LIBSTDC
 message(STATUS "SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE ${SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE}")
 message(STATUS "SHERPA_ONNX_ENABLE_SANITIZER: ${SHERPA_ONNX_ENABLE_SANITIZER}")
 message(STATUS "SHERPA_ONNX_BUILD_C_API_EXAMPLES: ${SHERPA_ONNX_BUILD_C_API_EXAMPLES}")
+message(STATUS "SHERPA_ONNX_ENABLE_RKNN: ${SHERPA_ONNX_ENABLE_RKNN}")
 
 if(BUILD_SHARED_LIBS OR SHERPA_ONNX_ENABLE_JNI)
   set(CMAKE_CXX_VISIBILITY_PRESET hidden)
@@ -199,7 +201,7 @@ if(SHERPA_ONNX_ENABLE_DIRECTML)
   message(STATUS "DirectML is enabled")
   add_definitions(-DSHERPA_ONNX_ENABLE_DIRECTML=1)
 else()
-  message(WARNING "DirectML is disabled")
+  message(STATUS "DirectML is disabled")
   add_definitions(-DSHERPA_ONNX_ENABLE_DIRECTML=0)
 endif()
 
@@ -266,6 +268,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 message(STATUS "C++ Standard version: ${CMAKE_CXX_STANDARD}")
 
 include(CheckIncludeFileCXX)
+
+if(SHERPA_ONNX_ENABLE_RKNN)
+  add_definitions(-DSHERPA_ONNX_ENABLE_RKNN=1)
+endif()
 
 if(UNIX AND NOT APPLE AND NOT SHERPA_ONNX_ENABLE_WASM AND NOT CMAKE_SYSTEM_NAME STREQUAL Android AND NOT CMAKE_SYSTEM_NAME STREQUAL OHOS)
   check_include_file_cxx(alsa/asoundlib.h SHERPA_ONNX_HAS_ALSA)

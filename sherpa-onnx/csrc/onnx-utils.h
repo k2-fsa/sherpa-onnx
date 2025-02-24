@@ -17,15 +17,6 @@
 #include <utility>
 #include <vector>
 
-#if __ANDROID_API__ >= 9
-#include "android/asset_manager.h"
-#include "android/asset_manager_jni.h"
-#endif
-
-#if __OHOS__
-#include "rawfile/raw_file_manager.h"
-#endif
-
 #include "onnxruntime_cxx_api.h"  // NOLINT
 
 namespace sherpa_onnx {
@@ -100,17 +91,6 @@ void Fill(Ort::Value *tensor, T value) {
   auto p = tensor->GetTensorMutableData<T>();
   std::fill(p, p + n, value);
 }
-
-std::vector<char> ReadFile(const std::string &filename);
-
-#if __ANDROID_API__ >= 9
-std::vector<char> ReadFile(AAssetManager *mgr, const std::string &filename);
-#endif
-
-#if __OHOS__
-std::vector<char> ReadFile(NativeResourceManager *mgr,
-                           const std::string &filename);
-#endif
 
 // TODO(fangjun): Document it
 Ort::Value Repeat(OrtAllocator *allocator, Ort::Value *cur_encoder_out,

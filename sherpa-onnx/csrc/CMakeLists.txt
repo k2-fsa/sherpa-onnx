@@ -151,6 +151,14 @@ list(APPEND sources
   online-punctuation-model-config.cc
   online-punctuation.cc
 )
+if(SHERPA_ONNX_ENABLE_RKNN)
+  list(APPEND sources
+    ./rknn/online-stream-rknn.cc
+    ./rknn/online-transducer-greedy-search-decoder-rknn.cc
+    ./rknn/online-zipformer-transducer-model-rknn.cc
+  )
+
+endif()
 
 if(SHERPA_ONNX_ENABLE_TTS)
   list(APPEND sources
@@ -228,6 +236,14 @@ if(SHERPA_ONNX_ENABLE_GPU)
   target_link_libraries(sherpa-onnx-core
     onnxruntime_providers_shared
   )
+endif()
+
+if(SHERPA_ONNX_ENABLE_RKNN)
+  if(DEFINED ENV{SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR})
+    target_link_libraries(sherpa-onnx-core -L$ENV{SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR} -lrknnrt)
+  else()
+    target_link_libraries(sherpa-onnx-core rknnrt)
+  endif()
 endif()
 
 if(BUILD_SHARED_LIBS AND NOT DEFINED onnxruntime_lib_files)

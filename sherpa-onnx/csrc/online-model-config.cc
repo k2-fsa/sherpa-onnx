@@ -51,9 +51,20 @@ void OnlineModelConfig::Register(ParseOptions *po) {
 }
 
 bool OnlineModelConfig::Validate() const {
-  if (num_threads < 1) {
-    SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d", num_threads);
-    return false;
+  // For RK NPU, we reinterpret num_threads:
+  //
+  // For RK3588 only
+  // num_threads == 1 -> Select a core randomly
+  // num_threads == 0 -> Use NPU core 0
+  // num_threads == -1 -> Use NPU core 1
+  // num_threads == -2 -> Use NPU core 2
+  // num_threads == -3 -> Use NPU core 0 and core 1
+  // num_threads == -4 -> Use NPU core 0, core 1, and core 2
+  if (provider_config.provider != "rknn") {
+    if (num_threads < 1) {
+      SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d", num_threads);
+      return false;
+    }
   }
 
   if (!tokens_buf.empty() && FileExists(tokens)) {
