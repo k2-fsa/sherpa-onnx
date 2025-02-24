@@ -204,9 +204,11 @@ class OnlineZipformerTransducerModelRknn::Impl {
     SHERPA_ONNX_RKNN_CHECK(ret, "Failed to get encoder output");
 
     for (int32_t i = 0; i < next_states.size(); ++i) {
-      break;
       const auto &attr = encoder_input_attrs_[i + 1];
       if (attr.n_dims == 4) {
+        // TODO(fangjun): The transpose is copied from
+        // https://github.com/airockchip/rknn_model_zoo/blob/main/examples/zipformer/cpp/process.cc#L22
+        // I don't understand why we need to do that.
         std::vector<uint8_t> dst(next_states[i].size());
         int32_t n = attr.dims[0];
         int32_t h = attr.dims[1];
