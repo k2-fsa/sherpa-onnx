@@ -118,6 +118,66 @@ class OnlineZipformerTransducerModelRknn::Impl {
       auto buf = ReadFile(config.transducer.joiner);
       InitJoiner(buf.data(), buf.size());
     }
+
+    // Now select which core to run for RK3588
+    int32_t ret_encoder = RKNN_SUCC;
+    int32_t ret_decoder = RKNN_SUCC;
+    int32_t ret_joiner = RKNN_SUCC;
+    switch (config_.num_threads) {
+      case 1:
+        ret_encoder = rknn_set_core_mask(encoder_ctx_, RKNN_NPU_CORE_AUTO);
+        ret_decoder = rknn_set_core_mask(decoder_ctx_, RKNN_NPU_CORE_AUTO);
+        ret_joiner = rknn_set_core_mask(joiner_ctx_, RKNN_NPU_CORE_AUTO);
+        break;
+      case 0:
+        ret_encoder = rknn_set_core_mask(encoder_ctx_, RKNN_NPU_CORE_0);
+        ret_decoder = rknn_set_core_mask(decoder_ctx_, RKNN_NPU_CORE_0);
+        ret_joiner = rknn_set_core_mask(joiner_ctx_, RKNN_NPU_CORE_0);
+        break;
+      case -1:
+        ret_encoder = rknn_set_core_mask(encoder_ctx_, RKNN_NPU_CORE_1);
+        ret_decoder = rknn_set_core_mask(decoder_ctx_, RKNN_NPU_CORE_1);
+        ret_joiner = rknn_set_core_mask(joiner_ctx_, RKNN_NPU_CORE_1);
+        break;
+      case -2:
+        ret_encoder = rknn_set_core_mask(encoder_ctx_, RKNN_NPU_CORE_2);
+        ret_decoder = rknn_set_core_mask(decoder_ctx_, RKNN_NPU_CORE_2);
+        ret_joiner = rknn_set_core_mask(joiner_ctx_, RKNN_NPU_CORE_2);
+        break;
+      case -3:
+        ret_encoder = rknn_set_core_mask(encoder_ctx_, RKNN_NPU_CORE_0_1);
+        ret_decoder = rknn_set_core_mask(decoder_ctx_, RKNN_NPU_CORE_0_1);
+        ret_joiner = rknn_set_core_mask(joiner_ctx_, RKNN_NPU_CORE_0_1);
+        break;
+      case -4:
+        ret_encoder = rknn_set_core_mask(encoder_ctx_, RKNN_NPU_CORE_0_1_2);
+        ret_decoder = rknn_set_core_mask(decoder_ctx_, RKNN_NPU_CORE_0_1_2);
+        ret_joiner = rknn_set_core_mask(joiner_ctx_, RKNN_NPU_CORE_0_1_2);
+        break;
+      default:
+        SHERPA_ONNX_LOGE(
+            "Valid num_threads for rk npu is 1 (auto), 0 (core 0), -1 (core "
+            "1), -2 (core 2), -3 (core 0_1), -4 (core 0_1_2). Given: %d",
+            config_.num_threads);
+        break;
+    }
+    if (ret_encoder != RKNN_SUCC) {
+      SHERPA_ONNX_LOGE(
+          "Failed to select npu core to run encoder (You can ignore it if you "
+          "are not using RK3588.");
+    }
+
+    if (ret_decoder != RKNN_SUCC) {
+      SHERPA_ONNX_LOGE(
+          "Failed to select npu core to run decoder (You can ignore it if you "
+          "are not using RK3588.");
+    }
+
+    if (ret_decoder != RKNN_SUCC) {
+      SHERPA_ONNX_LOGE(
+          "Failed to select npu core to run joiner (You can ignore it if you "
+          "are not using RK3588.");
+    }
   }
 
   // TODO(fangjun): Support Android

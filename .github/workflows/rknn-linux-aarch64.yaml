@@ -1,25 +1,27 @@
-# Modified from https://github.com/Tencent/ncnn/blob/master/.github/workflows/linux-arm-cpu-gcc.yml
-name: aarch64-linux-gnu-shared
+name: rknn-linux-aarch64
 
 on:
   push:
     branches:
       - master
+      - rknn-c-api-2
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
     paths:
-      - '.github/workflows/aarch64-linux-gnu-shared.yaml'
+      - '.github/workflows/rknn-linux-aarch64.yaml'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/csrc/rknn/*'
       - 'sherpa-onnx/c-api/*'
       - 'toolchains/aarch64-linux-gnu.toolchain.cmake'
   pull_request:
     branches:
       - master
     paths:
-      - '.github/workflows/aarch64-linux-gnu-shared.yaml'
+      - '.github/workflows/rknn-linux-aarch64.yaml'
       - 'cmake/**'
       - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/csrc/rknn/*'
       - 'sherpa-onnx/c-api/*'
       - 'toolchains/aarch64-linux-gnu.toolchain.cmake'
 
@@ -30,99 +32,79 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  aarch64_linux_gnu_shared:
+  rknn_linux_aarch64:
     runs-on: ${{ matrix.os }}
-    name: aarch64 shared GPU ${{ matrix.gpu }} ${{ matrix.onnxruntime_version }}
+    name: rknn shared ${{ matrix.shared }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-22.04-arm
-            gpu: ON
-            onnxruntime_version: "1.11.0"
+            shared: ON
           - os: ubuntu-22.04-arm
-            gpu: ON
-            onnxruntime_version: "1.16.0"
-          - os: ubuntu-22.04-arm
-            gpu: OFF
-            onnxruntime_version: ""
+            shared: OFF
 
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Build sherpa-onnx
-        if: matrix.gpu == 'ON'
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.shared }}-rknn-linux-aarch64
+
+      - name: Download rknn-toolkit2
         shell: bash
         run: |
-          onnxruntime_version=${{ matrix.onnxruntime_version }}
+          git clone --depth 1 https://github.com/airockchip/rknn-toolkit2
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          echo "config: ${{ matrix.config }}"
+          uname -a
+          which gcc
+
+          gcc --version
+          g++ --version
+
+          echo "pwd"
+
+          ls -lh
 
           git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
           pushd alsa-lib
           ./gitcompile
           popd
 
+          export SHERPA_ONNX_RKNN_TOOLKIT2_PATH=$PWD/rknn-toolkit2
+          export SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/aarch64
+          export CPLUS_INCLUDE_PATH=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/include:$CPLUS_INCLUDE_PATH
           export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
           export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
 
           mkdir build
           cd build
+
+          BUILD_SHARED_LIBS=${{ matrix.shared }}
+
           cmake \
             -DBUILD_SHARED_LIBS=ON \
             -DCMAKE_INSTALL_PREFIX=./install \
-            -DSHERPA_ONNX_ENABLE_GPU=ON \
-            -DSHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=$onnxruntime_version \
+            -DSHERPA_ONNX_ENABLE_RKNN=ON \
+            -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
             ..
+
           make -j4 install
 
           rm -rf install/lib/pkgconfig
           rm -fv install/lib/cargs.h
           rm -fv install/lib/libcargs.so
-
-      - name: Build sherpa-onnx
-        if: matrix.gpu == 'OFF'
-        uses: addnab/docker-run-action@v3
-        with:
-            image: quay.io/pypa/manylinux2014_aarch64
-            options: |
-              --volume ${{ github.workspace }}/:/k2-fsa/sherpa-onnx
-            shell: bash
-            run: |
-              echo "config: ${{ matrix.config }}"
-              uname -a
-              which gcc
-
-              gcc --version
-              g++ --version
-
-              echo "pwd"
-
-              ls -lh
-
-              cd /k2-fsa/sherpa-onnx/
-
-              git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
-              pushd alsa-lib
-              ./gitcompile
-              popd
-
-              export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
-              export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
-
-              mkdir build
-              cd build
-
-              cmake \
-                -DBUILD_SHARED_LIBS=ON \
-                -DCMAKE_INSTALL_PREFIX=./install \
-                ..
-
-              make -j4 install
-
-              rm -rf install/lib/pkgconfig
-              rm -fv install/lib/cargs.h
-              rm -fv install/lib/libcargs.so
 
       - name: Display system info
         shell: bash
@@ -134,6 +116,9 @@ jobs:
       - name: Display generated files
         shell: bash
         run: |
+          export SHERPA_ONNX_RKNN_TOOLKIT2_PATH=$PWD/rknn-toolkit2
+          export LD_LIBRARY_PATH=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/aarch64:$LD_LIBRARY_PATH
+
           cd build/install
 
           ls -lh bin
@@ -155,16 +140,20 @@ jobs:
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-shared
-          if [[ ${{ matrix.gpu }} == OFF ]]; then
-            dst=${dst}-cpu
+          if [[ ${{ matrix.shared }} == ON ]]; then
+            suffix=shared
           else
-            dst=${dst}-gpu-onnxruntime-${{ matrix.onnxruntime_version }}
+            suffix=static
           fi
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-rknn-linux-aarch64-$suffix
           mkdir $dst
 
           cp -a build/install/bin $dst/
-          cp -a build/install/lib $dst/
+
+          if [[ ${{ matrix.shared }} == ON ]]; then
+            cp -v build/install/lib/lib*.so $dst/
+          fi
 
           ls -lh build/install/lib
           ls -lh build/install/bin
@@ -182,8 +171,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: sherpa-onnx-linux-aarch64-shared-gpu-${{ matrix.gpu }}-onnxruntime-${{ matrix.onnxruntime_version }}
-          path: sherpa-onnx-*linux-aarch64-shared*.tar.bz2
+          name: sherpa-onnx-linux-linux-aarch64-shared-${{ matrix.shared }}
+          path: sherpa-onnx-*linux-aarch64*.tar.bz2
 
       # https://huggingface.co/docs/hub/spaces-github-actions
       - name: Publish to huggingface
@@ -197,6 +186,7 @@ jobs:
           shell: bash
           command: |
             SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
@@ -205,21 +195,21 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
-            dst=aarch64/$SHERPA_ONNX_VERSION
+            dst=rknn-linux-aarch64/$SHERPA_ONNX_VERSION
             mkdir -p $dst
 
-            cp -v ../sherpa-onnx-*-shared*.tar.bz2 $dst/
+            cp -v ../sherpa-onnx-*rknn*-*.tar.bz2 $dst
 
             git status
             git lfs track "*.bz2"
 
             git add .
 
-            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-aarch64-shared.tar.bz2"
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-rknn-linux-aarch64.tar.bz2"
 
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
 
-      - name: Release pre-compiled binaries and libs for aarch64 linux
+      - name: Release pre-compiled binaries and libs for rknn linux aarch64
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
@@ -227,16 +217,16 @@ jobs:
           overwrite: true
           file: sherpa-onnx-*linux-aarch64*.tar.bz2
 
-      - name: Release pre-compiled binaries and libs for aarch64 linux
-        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+      - name: Release pre-compiled binaries and libs for rknn linux aarch64
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
           overwrite: true
           file: sherpa-onnx-*linux-aarch64*.tar.bz2
-          # repo_name: k2-fsa/sherpa-onnx
-          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.10.42
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.10.45
 
       - name: Test offline Moonshine
         if: matrix.build_type != 'Debug'

@@ -4,7 +4,9 @@
 
 #include "sherpa-onnx/csrc/rknn/online-stream-rknn.h"
 
+#include <utility>
 #include <vector>
+
 namespace sherpa_onnx {
 
 class OnlineStreamRknn::Impl {

@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/file-utils.h"
 
 #include <fstream>
+#include <memory>
 #include <string>
 
 #include "sherpa-onnx/csrc/macros.h"

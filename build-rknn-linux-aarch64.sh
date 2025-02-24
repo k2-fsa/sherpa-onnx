@@ -41,21 +41,8 @@ if ! command -v aarch64-linux-gnu-gcc  &> /dev/null; then
   exit 1
 fi
 
-if [ -z $SHERPA_ONNX_RKNN_TARGET_PLATFORM ]; then
-  SHERPA_ONNX_RKNN_TARGET_PLATFORM=rk3588
-fi
 
-if [[ $SHERPA_ONNX_RKNN_TARGET_PLATFORM != rk3562 &&
-     $SHERPA_ONNX_RKNN_TARGET_PLATFORM != rk3566 &&
-     $SHERPA_ONNX_RKNN_TARGET_PLATFORM != rk3568 &&
-     $SHERPA_ONNX_RKNN_TARGET_PLATFORM != rk3576 &&
-     $SHERPA_ONNX_RKNN_TARGET_PLATFORM != rk3588
-   ]]; then
-   echo "Only support rk3562, rk3566, rk3576, rk3588. Given: $SHERPA_ONNX_RKNN_TARGET_PLATFORM"
-   exit 1
-fi
-
-dir=$PWD/build-rknn-linux-aarch64-$SHERPA_ONNX_RKNN_TARGET_PLATFORM
+dir=$PWD/build-rknn-linux-aarch64
 mkdir -p $dir
 
 cd $dir
@@ -105,8 +92,11 @@ cmake \
   ..
 
 # make VERBOSE=1 -j4
-make VERBOSE=1 -j15 sherpa-onnx
+make VERBOSE=1 -j15 sherpa-onnx sherpa-onnx-alsa
 # make install/strip
 
 # Enable it if only needed
 # cp -v $SHERPA_ONNX_ALSA_LIB_DIR/libasound.so* ./install/lib/
+
+# See also
+# https://github.com/airockchip/rknn-toolkit2/blob/master/rknpu2/examples/rknn_api_demo/build-linux.sh

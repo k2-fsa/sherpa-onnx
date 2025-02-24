@@ -4,6 +4,7 @@
 #ifndef SHERPA_ONNX_CSRC_RKNN_ONLINE_STREAM_RKNN_H_
 #define SHERPA_ONNX_CSRC_RKNN_ONLINE_STREAM_RKNN_H_
 #include <memory>
+#include <vector>
 
 #include "rknn_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-stream.h"

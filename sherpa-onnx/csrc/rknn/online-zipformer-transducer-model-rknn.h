@@ -5,6 +5,7 @@
 #define SHERPA_ONNX_CSRC_RKNN_ONLINE_ZIPFORMER_TRANSDUCER_MODEL_RKNN_H_
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "rknn_api.h"  // NOLINT
