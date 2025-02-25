@@ -8,9 +8,22 @@ import './sherpa_onnx_bindings.dart';
 class OfflineZipformerAudioTaggingModelConfig {
   const OfflineZipformerAudioTaggingModelConfig({this.model = ''});
 
+  factory OfflineZipformerAudioTaggingModelConfig.fromJson(
+      Map<String, dynamic> map) {
+    return OfflineZipformerAudioTaggingModelConfig(
+      model: map['model'] ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineZipformerAudioTaggingModelConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'model': model,
+    };
   }
 
   final String model;
@@ -24,9 +37,30 @@ class AudioTaggingModelConfig {
       this.provider = 'cpu',
       this.debug = true});
 
+  factory AudioTaggingModelConfig.fromJson(Map<String, dynamic> map) {
+    return AudioTaggingModelConfig(
+      zipformer:
+          OfflineZipformerAudioTaggingModelConfig.fromJson(map['zipformer']),
+      ced: map['ced'] ?? '',
+      numThreads: map['numThreads'] ?? 1,
+      provider: map['provider'] ?? 'cpu',
+      debug: map['debug'] ?? true,
+    );
+  }
+
   @override
   String toString() {
     return 'AudioTaggingModelConfig(zipformer: $zipformer, ced: $ced, numThreads: $numThreads, provider: $provider, debug: $debug)';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'zipformer': zipformer.toJson(),
+      'ced': ced,
+      'numThreads': numThreads,
+      'provider': provider,
+      'debug': debug,
+    };
   }
 
   final OfflineZipformerAudioTaggingModelConfig zipformer;
@@ -39,9 +73,23 @@ class AudioTaggingModelConfig {
 class AudioTaggingConfig {
   AudioTaggingConfig({required this.model, this.labels = ''});
 
+  factory AudioTaggingConfig.fromJson(Map<String, dynamic> map) {
+    return AudioTaggingConfig(
+      model: AudioTaggingModelConfig.fromJson(map['model']),
+      labels: map['labels'] ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'AudioTaggingConfig(model: $model, labels: $labels)';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'model': model.toJson(),
+      'labels': labels,
+    };
   }
 
   final AudioTaggingModelConfig model;
@@ -51,9 +99,25 @@ class AudioTaggingConfig {
 class AudioEvent {
   AudioEvent({required this.name, required this.index, required this.prob});
 
+  factory AudioEvent.fromJson(Map<String, dynamic> map) {
+    return AudioEvent(
+      name: map['name'],
+      index: map['index'],
+      prob: map['prob'],
+    );
+  }
+
   @override
   String toString() {
     return 'AudioEvent(name: $name, index: $index, prob: $prob)';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'name': name,
+      'index': index,
+      'prob': prob,
+    };
   }
 
   final String name;

@@ -23,10 +23,39 @@ class KeywordSpotterConfig {
     this.keywordsBufSize = 0,
   });
 
+  factory KeywordSpotterConfig.fromJson(Map<String, dynamic> json) {
+    return KeywordSpotterConfig(
+      feat: json['feat'] != null
+          ? FeatureConfig.fromJson(json['feat'] as Map<String, dynamic>)
+          : const FeatureConfig(),
+      model: OnlineModelConfig.fromJson(json['model'] as Map<String, dynamic>),
+      maxActivePaths: json['maxActivePaths'] as int? ?? 4,
+      numTrailingBlanks: json['numTrailingBlanks'] as int? ?? 1,
+      keywordsScore: (json['keywordsScore'] as num?)?.toDouble() ?? 1.0,
+      keywordsThreshold:
+          (json['keywordsThreshold'] as num?)?.toDouble() ?? 0.25,
+      keywordsFile: json['keywordsFile'] as String? ?? '',
+      keywordsBuf: json['keywordsBuf'] as String? ?? '',
+      keywordsBufSize: json['keywordsBufSize'] as int? ?? 0,
+    );
+  }
+
   @override
   String toString() {
     return 'KeywordSpotterConfig(feat: $feat, model: $model, maxActivePaths: $maxActivePaths, numTrailingBlanks: $numTrailingBlanks, keywordsScore: $keywordsScore, keywordsThreshold: $keywordsThreshold, keywordsFile: $keywordsFile, keywordsBuf: $keywordsBuf, keywordsBufSize: $keywordsBufSize)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'feat': feat.toJson(),
+        'model': model.toJson(),
+        'maxActivePaths': maxActivePaths,
+        'numTrailingBlanks': numTrailingBlanks,
+        'keywordsScore': keywordsScore,
+        'keywordsThreshold': keywordsThreshold,
+        'keywordsFile': keywordsFile,
+        'keywordsBuf': keywordsBuf,
+        'keywordsBufSize': keywordsBufSize,
+      };
 
   final FeatureConfig feat;
   final OnlineModelConfig model;
@@ -44,10 +73,20 @@ class KeywordSpotterConfig {
 class KeywordResult {
   KeywordResult({required this.keyword});
 
+  factory KeywordResult.fromJson(Map<String, dynamic> json) {
+    return KeywordResult(
+      keyword: json['keyword'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'KeywordResult(keyword: $keyword)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'keyword': keyword,
+      };
 
   final String keyword;
 }
