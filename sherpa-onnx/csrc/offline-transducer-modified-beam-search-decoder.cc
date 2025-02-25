@@ -138,7 +138,9 @@ OfflineTransducerModifiedBeamSearchDecoder::Decode(
           new_hyp.timestamps.push_back(t);
           if (context_graphs[i] != nullptr) {
             auto context_res =
-                context_graphs[i]->ForwardOneStep(context_state, new_token, strict_hotword_mode_);
+                context_graphs[i]->ForwardOneStep(context_state,
+                  new_token,
+                  false /* non-strict mode */);
             context_score = std::get<0>(context_res);
             new_hyp.context_state = std::get<1>(context_res);
           }

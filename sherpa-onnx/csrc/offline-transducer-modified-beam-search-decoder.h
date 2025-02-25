@@ -20,15 +20,13 @@ class OfflineTransducerModifiedBeamSearchDecoder
                                              OfflineLM *lm,
                                              int32_t max_active_paths,
                                              float lm_scale, int32_t unk_id,
-                                             float blank_penalty,
-                                             bool strict_hotword_mode = false)
+                                             float blank_penalty)
       : model_(model),
         lm_(lm),
         max_active_paths_(max_active_paths),
         lm_scale_(lm_scale),
         unk_id_(unk_id),
-        blank_penalty_(blank_penalty),
-        strict_hotword_mode_(strict_hotword_mode) {}
+        blank_penalty_(blank_penalty) {}
 
   std::vector<OfflineTransducerDecoderResult> Decode(
       Ort::Value encoder_out, Ort::Value encoder_out_length,
@@ -42,7 +40,6 @@ class OfflineTransducerModifiedBeamSearchDecoder
   float lm_scale_;  // used only when lm_ is not nullptr
   int32_t unk_id_;
   float blank_penalty_;
-  bool strict_hotword_mode_ = false;
 };
 
 }  // namespace sherpa_onnx
