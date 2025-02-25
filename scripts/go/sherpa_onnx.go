@@ -1483,7 +1483,7 @@ func DeleteOfflinePunc(punc *OfflinePunctuation) {
 
 func (punc *OfflinePunctuation) AddPunct(text string) string {
 	p := C.SherpaOfflinePunctuationAddPunct(punc.impl, C.CString(text))
-	defer C.free(unsafe.Pointer(p))
+	defer C.SherpaOfflinePunctuationFreeText(p)
 
 	text_with_punct := C.GoString(p)
 
