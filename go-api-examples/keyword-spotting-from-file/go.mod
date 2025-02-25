@@ -1,4 +1,4 @@
 module keyword-spotting-from-file
 
-go 1.12
+go 1.17
 

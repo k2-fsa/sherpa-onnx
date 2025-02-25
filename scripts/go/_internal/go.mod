@@ -1,3 +1,3 @@
 module sherpa_onnx
 
-go 1.12
+go 1.17
