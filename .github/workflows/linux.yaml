@@ -142,10 +142,65 @@ jobs:
           ls -lh build/bin/sherpa-onnx
           readelf -d build/bin/sherpa-onnx
 
+          rm -fv build/install/include/cargs.h
+          rm -fv build/install/lib/cargs.h
+          rm -fv build/install/lib/libcargs.so
+          rm -rfv build/install/lib/pkgconfig
+
       - uses: actions/upload-artifact@v4
         with:
           name: release-${{ matrix.build_type }}-with-shared-lib-${{ matrix.shared_lib }}-with-tts-${{ matrix.with_tts }}
           path: install/*
+
+      - name: Copy files
+        shell: bash
+        if: matrix.build_type == 'Release'
+        run: |
+          du -h -d1 .
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          if [[ ${{ matrix.shared_lib }} == 'ON' ]]; then
+            suffix=shared
+          else
+            suffix=static
+          fi
+
+          if [[ ${{ matrix.with_tts }} == ON ]]; then
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-$suffix
+          else
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-$suffix-no-tts
+          fi
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+          if [[ ${{ matrix.shared_lib }} == ON ]]; then
+            cp -av build/install/lib $dst/
+          fi
+          cp -a build/install/include $dst/
+
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+          du -h -d1 .
+
+      - name: Release pre-compiled binaries and libs for linux x64
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*.tar.bz2
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.10.45
+
+      - name: Release pre-compiled binaries and libs for linux x64
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*.tar.bz2
 
       - name: Test offline TTS
         if: matrix.with_tts == 'ON'
@@ -324,8 +379,6 @@ jobs:
           .github/scripts/test-offline-whisper.sh
           du -h -d1 .
 
-
-
       - name: Test online paraformer
         shell: bash
         run: |
@@ -335,42 +388,3 @@ jobs:
 
           .github/scripts/test-online-paraformer.sh
           du -h -d1 .
-
-      - name: Copy files
-        shell: bash
-        if: matrix.build_type == 'Release'
-        run: |
-          du -h -d1 .
-          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
-
-          if [[ ${{ matrix.shared_lib }} == 'ON' ]]; then
-            suffix=shared
-          else
-            suffix=static
-          fi
-
-          if [[ ${{ matrix.with_tts }} ]]; then
-            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-$suffix
-          else
-            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-linux-x64-$suffix-no-tts
-          fi
-          mkdir $dst
-
-          cp -a build/install/bin $dst/
-          cp -a build/install/lib $dst/
-          cp -a build/install/include $dst/
-
-          tree $dst
-
-          tar cjvf ${dst}.tar.bz2 $dst
-          du -h -d1 .
-
-      - name: Release pre-compiled binaries and libs for linux x64
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.build_type == 'Release'
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          overwrite: true
-          file: sherpa-onnx-*.tar.bz2
-
-
