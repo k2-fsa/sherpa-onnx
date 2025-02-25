@@ -659,7 +659,7 @@ func (s *OfflineStream) GetResult() *OfflineRecognizerResult {
 	result.Emotion = C.GoString(p.emotion)
 	result.Event = C.GoString(p.event)
 	result.Tokens = make([]string, n)
-	tokens := (*[1 << 28]*C.char)(unsafe.Pointer(p.tokens_arr))[:n:n]
+	tokens := (*[1 << 10]*C.char)(unsafe.Pointer(p.tokens_arr))[:n:n]
 	for i := 0; i < n; i++ {
 		result.Tokens[i] = C.GoString(tokens[i])
 	}
@@ -667,7 +667,7 @@ func (s *OfflineStream) GetResult() *OfflineRecognizerResult {
 		return result
 	}
 	result.Timestamps = make([]float32, n)
-	timestamps := (*[1 << 28]C.float)(unsafe.Pointer(p.timestamps))[:n:n]
+	timestamps := (*[1 << 10]C.float)(unsafe.Pointer(p.timestamps))[:n:n]
 	for i := 0; i < n; i++ {
 		result.Timestamps[i] = float32(timestamps[i])
 	}
@@ -858,7 +858,7 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 
 	// see https://stackoverflow.com/questions/48756732/what-does-1-30c-yourtype-do-exactly-in-cgo
 	// :n:n means 0:n:n, means low:high:capacity
-	samples := (*[1 << 28]C.float)(unsafe.Pointer(audio.samples))[:n:n]
+	samples := (*[1 << 10]C.float)(unsafe.Pointer(audio.samples))[:n:n]
 	// copy(ans.Samples, samples)
 	for i := 0; i < n; i++ {
 		ans.Samples[i] = float32(samples[i])
@@ -921,7 +921,7 @@ func (buffer *CircularBuffer) Get(start int, n int) []float32 {
 
 	result := make([]float32, n)
 
-	p := (*[1 << 28]C.float)(unsafe.Pointer(samples))[:n:n]
+	p := (*[1 << 10]C.float)(unsafe.Pointer(samples))[:n:n]
 	for i := 0; i < n; i++ {
 		result[i] = float32(p[i])
 	}
@@ -1017,7 +1017,7 @@ func (vad *VoiceActivityDetector) Front() *SpeechSegment {
 	n := int(f.n)
 	ans.Samples = make([]float32, n)
 
-	samples := (*[1 << 28]C.float)(unsafe.Pointer(f.samples))[:n:n]
+	samples := (*[1 << 10]C.float)(unsafe.Pointer(f.samples))[:n:n]
 
 	for i := 0; i < n; i++ {
 		ans.Samples[i] = float32(samples[i])
@@ -1171,7 +1171,7 @@ func (ex *SpeakerEmbeddingExtractor) Compute(stream *OnlineStream) []float32 {
 
 	// see https://stackoverflow.com/questions/48756732/what-does-1-30c-yourtype-do-exactly-in-cgo
 	// :n:n means 0:n:n, means low:high:capacity
-	c := (*[1 << 28]C.float)(unsafe.Pointer(embedding))[:n:n]
+	c := (*[1 << 10]C.float)(unsafe.Pointer(embedding))[:n:n]
 
 	for i := 0; i < n; i++ {
 		ans[i] = float32(c[i])
@@ -1273,7 +1273,7 @@ func (m *SpeakerEmbeddingManager) AllSpeakers() []string {
 	}
 
 	// https://stackoverflow.com/questions/62012070/convert-array-of-strings-from-cgo-in-go
-	p := (*[1 << 28]*C.char)(unsafe.Pointer(all_speakers))[:n:n]
+	p := (*[1 << 10]*C.char)(unsafe.Pointer(all_speakers))[:n:n]
 
 	ans := make([]string, n)
 
@@ -1307,7 +1307,7 @@ func ReadWave(filename string) *Wave {
 
 	ans := &Wave{}
 	ans.SampleRate = int(w.sample_rate)
-	samples := (*[1 << 28]C.float)(unsafe.Pointer(w.samples))[:n:n]
+	samples := (*[1 << 10]C.float)(unsafe.Pointer(w.samples))[:n:n]
 
 	ans.Samples = make([]float32, n)
 
@@ -1428,7 +1428,7 @@ func (sd *OfflineSpeakerDiarization) Process(samples []float32) []OfflineSpeaker
 
 	ans := make([]OfflineSpeakerDiarizationSegment, n)
 
-	p := (*[1 << 28]C.struct_SherpaOnnxOfflineSpeakerDiarizationSegment)(unsafe.Pointer(s))[:n:n]
+	p := (*[1 << 10]C.struct_SherpaOnnxOfflineSpeakerDiarizationSegment)(unsafe.Pointer(s))[:n:n]
 
 	for i := 0; i < n; i++ {
 		ans[i].Start = float32(p[i].start)
@@ -1725,7 +1725,7 @@ func (tagging *AudioTagging) Compute(s *OfflineStream, topK int32) []AudioEvent 
 	defer C.SherpaOnnxAudioTaggingFreeResults(r)
 	result := make([]AudioEvent, 0)
 
-	p := (*[1 << 28]*C.struct_SherpaOnnxAudioEvent)(unsafe.Pointer(r))
+	p := (*[1 << 10]*C.struct_SherpaOnnxAudioEvent)(unsafe.Pointer(r))
 	i := 0
 	for {
 		if p[i] == nil {
