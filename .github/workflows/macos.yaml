@@ -112,12 +112,53 @@ jobs:
 
           file ./bin/sherpa-onnx
 
+          rm -fv ./install/include/cargs.h
+          rm -fv ./install/lib/cargs.h
+          rm -fv ./install/lib/libcargs.dylib
+          rm -fv ./install/lib/libcargs.a
+          rm -rfv ./install/lib/pkgconfig
+
       - name: Display dependencies of sherpa-onnx for macos
         shell: bash
         run: |
           file bin/sherpa-onnx
           otool -L build/bin/sherpa-onnx
           otool -l build/bin/sherpa-onnx
+
+      - name: Copy files
+        if: matrix.build_type == 'Release'
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          if [[ ${{ matrix.with_tts }} == ON ]]; then
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}
+          else
+            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}-no-tts
+          fi
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+          if [[ ${{ matrix.lib_type }} == shared ]]; then
+            mkdir $dst/lib
+            cp -a build/install/lib/*.dylib* $dst/lib/
+          else
+            cp -a build/install/lib $dst/
+          fi
+          cp -a build/install/include $dst/
+
+          brew install tree
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - name: Release pre-compiled binaries and libs for macOS
+        if: matrix.build_type == 'Release' && (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*osx-universal2*.tar.bz2
 
       - name: Test offline TTS
         if: matrix.with_tts == 'ON'
@@ -266,32 +307,4 @@ jobs:
 
           .github/scripts/test-online-transducer.sh
 
-      - name: Copy files
-        if: matrix.build_type == 'Release'
-        shell: bash
-        run: |
-          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
 
-          if [[ ${{ matrix.with_tts }} == ON ]]; then
-            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}
-          else
-            dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-osx-universal2-${{ matrix.lib_type }}-no-tts
-          fi
-          mkdir $dst
-
-          cp -a build/install/bin $dst/
-          cp -a build/install/lib $dst/
-          cp -a build/install/include $dst/
-
-          brew install tree
-          tree $dst
-
-          tar cjvf ${dst}.tar.bz2 $dst
-
-      - name: Release pre-compiled binaries and libs for macOS
-        if: matrix.build_type == 'Release' && (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
-        uses: svenstaro/upload-release-action@v2
-        with:
-          file_glob: true
-          overwrite: true
-          file: sherpa-onnx-*osx-universal2*.tar.bz2
