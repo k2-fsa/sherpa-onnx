@@ -214,7 +214,8 @@ class SileroVadModel::Impl {
         Ort::Value::CreateTensor<float>(allocator_, shape.data(), shape.size());
 
     Fill<float>(&s, 0);
-    states_.clear();
+    // Ensure previous tensors are fully deallocated before reusing `states_`
+    std::vector<Ort::Value>().swap(states_);
     states_.push_back(std::move(s));
   }
 
@@ -233,7 +234,8 @@ class SileroVadModel::Impl {
     Fill<float>(&h, 0);
     Fill<float>(&c, 0);
 
-    states_.clear();
+    // Ensure previous tensors are fully deallocated before reusing `states_`
+    std::vector<Ort::Value>().swap(states_);
 
     states_.reserve(2);
     states_.push_back(std::move(h));
