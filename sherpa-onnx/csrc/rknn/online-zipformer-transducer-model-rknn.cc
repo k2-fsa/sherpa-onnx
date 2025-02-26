@@ -463,8 +463,10 @@ class OnlineZipformerTransducerModelRknn::Impl {
     }
     auto meta = Parse(custom_string);
 
-    for (const auto &p : meta) {
-      SHERPA_ONNX_LOGE("%s: %s", p.first.c_str(), p.second.c_str());
+    if (config_.debug) {
+      for (const auto &p : meta) {
+        SHERPA_ONNX_LOGE("%s: %s", p.first.c_str(), p.second.c_str());
+      }
     }
 
     if (meta.count("encoder_dims")) {

@@ -7,6 +7,7 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
 
@@ -63,6 +64,29 @@ bool OnlineModelConfig::Validate() const {
   if (provider_config.provider != "rknn") {
     if (num_threads < 1) {
       SHERPA_ONNX_LOGE("num_threads should be > 0. Given %d", num_threads);
+      return false;
+    }
+    if (!transducer.encoder.empty() && (EndsWith(transducer.encoder, ".rknn") ||
+                                        EndsWith(transducer.decoder, ".rknn") ||
+                                        EndsWith(transducer.joiner, ".rknn"))) {
+      SHERPA_ONNX_LOGE(
+          "--provider is %s, which is not rknn, but you pass rknn model "
+          "filenames. encoder: '%s', decoder: '%s', joiner: '%s'",
+          provider_config.provider.c_str(), transducer.encoder.c_str(),
+          transducer.decoder.c_str(), transducer.joiner.c_str());
+      return false;
+    }
+  }
+
+  if (provider_config.provider == "rknn") {
+    if (!transducer.encoder.empty() && (EndsWith(transducer.encoder, ".onnx") ||
+                                        EndsWith(transducer.decoder, ".onnx") ||
+                                        EndsWith(transducer.joiner, ".onnx"))) {
+      SHERPA_ONNX_LOGE(
+          "--provider is rknn, but you pass onnx model "
+          "filenames. encoder: '%s', decoder: '%s', joiner: %'s'",
+          transducer.encoder.c_str(), transducer.decoder.c_str(),
+          transducer.joiner.c_str());
       return false;
     }
   }

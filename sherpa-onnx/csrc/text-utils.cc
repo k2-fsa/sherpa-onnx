@@ -699,4 +699,12 @@ std::string ToString(const std::wstring &s) {
   return converter.to_bytes(s);
 }
 
+bool EndsWith(const std::string &haystack, const std::string &needle) {
+  if (needle.size() > haystack.size()) {
+    return false;
+  }
+
+  return std::equal(needle.rbegin(), needle.rend(), haystack.rbegin());
+}
+
 }  // namespace sherpa_onnx

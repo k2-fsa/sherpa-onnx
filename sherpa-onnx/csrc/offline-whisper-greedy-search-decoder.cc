@@ -99,7 +99,7 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   int32_t n_text_ctx = model_->TextCtx();
 
   std::vector<int32_t> predicted_tokens;
-  for (int32_t i = 0; i < n_text_ctx; ++i) {
+  for (int32_t i = 0; i < n_text_ctx / 2; ++i) {
     if (max_token_id == model_->EOT()) {
       break;
     }
