@@ -220,17 +220,20 @@ JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromAsset(
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT jlong JNICALL Java_com_k2fsa_sherpa_onnx_OfflineTts_newFromFile(
     JNIEnv *env, jobject /*obj*/, jobject _config) {
-  return SafeJNI(env, "OfflineTts_newFromFile", [&] -> jlong {
-    auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
-    SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
+  return SafeJNI(
+      env, "OfflineTts_newFromFile",
+      [&]() -> jlong {
+        auto config = sherpa_onnx::GetOfflineTtsConfig(env, _config);
+        SHERPA_ONNX_LOGE("config:\n%s", config.ToString().c_str());
 
-    if (!config.Validate()) {
-      SHERPA_ONNX_LOGE("Errors found in config!");
-    }
+        if (!config.Validate()) {
+          SHERPA_ONNX_LOGE("Errors found in config!");
+        }
 
-    auto tts = new sherpa_onnx::OfflineTts(config);
-    return reinterpret_cast<jlong>(tts);
-  }, 0L);
+        auto tts = new sherpa_onnx::OfflineTts(config);
+        return reinterpret_cast<jlong>(tts);
+      },
+      0L);
 }
 
 SHERPA_ONNX_EXTERN_C
