@@ -84,7 +84,7 @@ bool OnlineModelConfig::Validate() const {
                                         EndsWith(transducer.joiner, ".onnx"))) {
       SHERPA_ONNX_LOGE(
           "--provider is rknn, but you pass onnx model "
-          "filenames. encoder: '%s', decoder: '%s', joiner: %'s'",
+          "filenames. encoder: '%s', decoder: '%s', joiner: '%s'",
           transducer.encoder.c_str(), transducer.decoder.c_str(),
           transducer.joiner.c_str());
       return false;
