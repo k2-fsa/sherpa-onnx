@@ -174,7 +174,8 @@ jobs:
 
           cp -a build/install/bin $dst/
           if [[ ${{ matrix.shared_lib }} == ON ]]; then
-            cp -av build/install/lib $dst/
+            mkdir $dst/lib
+            cp -av build/install/lib/*.so* $dst/lib/
           fi
           cp -a build/install/include $dst/
 
