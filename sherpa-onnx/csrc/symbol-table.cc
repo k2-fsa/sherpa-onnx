@@ -25,8 +25,8 @@
 
 #include "sherpa-onnx/csrc/base64-decode.h"
 #include "sherpa-onnx/csrc/bbpe.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/lexicon.h"
-#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {

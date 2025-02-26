@@ -27,8 +27,8 @@
 #include "espeak-ng/speak_lib.h"
 #include "phoneme_ids.hpp"
 #include "phonemize.hpp"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/onnx-utils.h"
 
 namespace sherpa_onnx {
 

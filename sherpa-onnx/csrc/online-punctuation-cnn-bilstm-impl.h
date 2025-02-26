@@ -20,13 +20,13 @@
 
 #include <chrono>  // NOLINT
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/online-cnn-bilstm-model-meta-data.h"
 #include "sherpa-onnx/csrc/online-cnn-bilstm-model.h"
 #include "sherpa-onnx/csrc/online-punctuation-impl.h"
 #include "sherpa-onnx/csrc/online-punctuation.h"
-#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 #include "ssentencepiece/csrc/ssentencepiece.h"
 

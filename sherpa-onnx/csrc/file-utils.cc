@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <memory>
+#include <sstream>
 #include <string>
 
 #include "sherpa-onnx/csrc/macros.h"
