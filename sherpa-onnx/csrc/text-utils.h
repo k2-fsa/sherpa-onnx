@@ -145,6 +145,8 @@ std::wstring ToWideString(const std::string &s);
 
 std::string ToString(const std::wstring &s);
 
+bool EndsWith(const std::string &haystack, const std::string &needle);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_TEXT_UTILS_H_

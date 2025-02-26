@@ -158,8 +158,11 @@ for a list of pre-trained models to download.
     const float rtf = s.elapsed_seconds / s.duration;
 
     os << po.GetArg(i) << "\n";
-    os << std::setprecision(2) << "Elapsed seconds: " << s.elapsed_seconds
-       << ", Real time factor (RTF): " << rtf << "\n";
+    os << "Number of threads: " << config.model_config.num_threads << ", "
+       << std::setprecision(2) << "Elapsed seconds: " << s.elapsed_seconds
+       << ", Audio duration (s): " << s.duration
+       << ", Real time factor (RTF) = " << s.elapsed_seconds << "/"
+       << s.duration << " = " << rtf << "\n";
     const auto r = recognizer.GetResult(s.online_stream.get());
     os << r.text << "\n";
     os << r.AsJsonString() << "\n\n";

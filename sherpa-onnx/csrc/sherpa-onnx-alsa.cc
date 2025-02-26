@@ -90,6 +90,8 @@ as the device_name.
     exit(-1);
   }
 
+  fprintf(stderr, "Started! Please speak\n");
+
   int32_t chunk = 0.1 * alsa.GetActualSampleRate();
 
   std::string last_text;
