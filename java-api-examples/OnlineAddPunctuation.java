@@ -2,7 +2,7 @@
 
 // This file shows how to use a punctuation model to add punctuations to text.
 //
-// The model supports both English and Chinese.
+// The model supports ONLY English.
 import com.k2fsa.sherpa.onnx.*;
 
 public class OnlineAddPunctuation {
