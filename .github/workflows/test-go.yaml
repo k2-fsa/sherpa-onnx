@@ -47,7 +47,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '>=1.12'
+          go-version: '>=1.17'
 
       - name: Display go version
         shell: bash
