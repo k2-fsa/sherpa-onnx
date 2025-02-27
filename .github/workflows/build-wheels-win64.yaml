@@ -94,6 +94,10 @@ jobs:
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install wheel twine==5.0.0 setuptools
+          if [[ ${{ matrix.python-version == "3.7" ]]; then
+            python3 -m pip install wheel twine setuptools
+          else
+            python3 -m pip install wheel twine==5.0.0 setuptools
+          fi
 
           twine upload ./wheelhouse/*.whl
