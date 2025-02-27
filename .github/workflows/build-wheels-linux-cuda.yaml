@@ -34,7 +34,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          if [[ ${{ matrix.python-version == "3.7" ]]; then
+          if [[ ${{ matrix.python-version }} == "3.7" ]]; then
             pip install -U pip wheel setuptools twine
           else
             pip install -U pip wheel setuptools twine==5.0.0
