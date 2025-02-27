@@ -302,17 +302,36 @@ function testInverseTextNormalizationOnlineAsr() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
-function testPunctuation() {
+function testOfflinePunctuation() {
   if [ ! -f ./sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/model.onnx ]; then
     curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
     tar xvf sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
     rm sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12.tar.bz2
   fi
 
-  out_filename=test_punctuation.jar
+  out_filename=test_offline_punctuation.jar
   kotlinc-jvm -include-runtime -d $out_filename \
-    ./test_punctuation.kt \
+    ./test_offline_punctuation.kt \
     ./OfflinePunctuation.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+}
+
+function testOnlinePunctuation() {
+  if [ ! -f ./sherpa-onnx-online-punct-en-2024-08-06/model.int8.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/punctuation-models/sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+    tar xvf sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+    rm sherpa-onnx-online-punct-en-2024-08-06.tar.bz2
+  fi
+
+  out_filename=test_online_punctuation.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    ./test_online_punctuation.kt \
+    ./OnlinePunctuation.kt \
     faked-asset-manager.kt \
     faked-log.kt
 
@@ -359,6 +378,7 @@ testTts
 testAudioTagging
 testSpokenLanguageIdentification
 testOfflineAsr
-testPunctuation
+testOfflinePunctuation
+testOnlinePunctuation
 testInverseTextNormalizationOfflineAsr
 testInverseTextNormalizationOnlineAsr
