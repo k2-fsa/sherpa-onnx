@@ -53,6 +53,10 @@ java_files += OfflinePunctuationModelConfig.java
 java_files += OfflinePunctuationConfig.java
 java_files += OfflinePunctuation.java
 
+java_files += OnlinePunctuationModelConfig.java
+java_files += OnlinePunctuationConfig.java
+java_files += OnlinePunctuation.java
+
 java_files += OfflineZipformerAudioTaggingModelConfig.java
 java_files += AudioTaggingModelConfig.java
 java_files += AudioTaggingConfig.java

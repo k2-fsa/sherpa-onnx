@@ -105,6 +105,22 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run java test (Online add punctuations)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-online-add-punctuation-zh-en.sh
+          # Delete model files to save space
+          rm -rf sherpa-onnx-punct-*
+
+      - name:  Run java test (Offline add punctuations)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-offline-add-punctuation-zh-en.sh
+          # Delete model files to save space
+          rm -rf sherpa-onnx-punct-*
+
       - name:  Run java test (Non-Streaming ASR)
         shell: bash
         run: |
@@ -196,13 +212,6 @@ jobs:
           ./run-audio-tagging-ced-from-file.sh
           rm -rf sherpa-onnx-ced-*
 
-      - name:  Run java test (add punctuations)
-        shell: bash
-        run: |
-          cd ./java-api-examples
-          ./run-add-punctuation-zh-en.sh
-          # Delete model files to save space
-          rm -rf sherpa-onnx-punct-*
 
       - name:  Run java test (Spoken language identification)
         shell: bash
