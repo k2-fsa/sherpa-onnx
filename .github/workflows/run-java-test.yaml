@@ -111,7 +111,7 @@ jobs:
           cd ./java-api-examples
           ./run-online-add-punctuation-zh-en.sh
           # Delete model files to save space
-          rm -rf sherpa-onnx-punct-*
+          rm -rf sherpa-onnx-online-*
 
       - name:  Run java test (Offline add punctuations)
         shell: bash
