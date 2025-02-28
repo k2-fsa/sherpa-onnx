@@ -128,15 +128,19 @@ class KokoroMultiLangLexicon::Impl {
       }
 
       for (const auto &ids : ids_vec) {
-        if (ids.size() > 4) {
+        if (ids.size() > 10 + 2) {
           ans.emplace_back(ids);
         } else {
           if (ans.empty()) {
             ans.emplace_back(ids);
           } else {
-            ans.back().tokens.back() = ids[1];
-            ans.back().tokens.insert(ans.back().tokens.end(), ids.begin() + 2,
-                                     ids.end());
+            if (ans.back().tokens.size() + ids.size() < 50) {
+              ans.back().tokens.back() = ids[1];
+              ans.back().tokens.insert(ans.back().tokens.end(), ids.begin() + 2,
+                                       ids.end());
+            } else {
+              ans.emplace_back(ids);
+            }
           }
         }
       }

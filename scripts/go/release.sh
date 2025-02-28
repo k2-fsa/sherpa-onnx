@@ -17,6 +17,7 @@ echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
 function linux() {
   echo "Process linux"
   git clone git@github.com:k2-fsa/sherpa-onnx-go-linux.git
+
   rm -v ./sherpa-onnx-go-linux/*.go
 
   cp -v ./sherpa_onnx.go ./sherpa-onnx-go-linux/

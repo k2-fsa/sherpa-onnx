@@ -1,0 +1,1 @@
+../v1.0/generate_lexicon_en.py

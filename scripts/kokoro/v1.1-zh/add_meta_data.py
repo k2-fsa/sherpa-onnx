@@ -10,7 +10,7 @@ from generate_voices_bin import speaker2id
 
 def main():
     model = onnx.load("./kokoro.onnx")
-    style = torch.load("./voices/af_alloy.pt", weights_only=True, map_location="cpu")
+    style = torch.load("./voices/zf_001.pt", weights_only=True, map_location="cpu")
 
     id2speaker_str = ""
     speaker2id_str = ""
@@ -32,11 +32,9 @@ def main():
         "id2speaker": id2speaker_str,
         "speaker2id": speaker2id_str,
         "speaker_names": ",".join(map(str, speaker2id.keys())),
-        "model_url": "https://github.com/thewh1teagle/kokoro-onnx/releases/tag/model-files",
-        "see_also": "https://huggingface.co/spaces/hexgrad/Kokoro-TTS",
-        "see_also_2": "https://huggingface.co/hexgrad/Kokoro-82M",
+        "model_url": "https://huggingface.co/hexgrad/Kokoro-82M-v1.1-zh",
         "maintainer": "k2-fsa",
-        "comment": "This is Kokoro v1.0, a multilingual TTS model, supporting English, Chinese, French, Japanese etc.",
+        "comment": "This is Kokoro v1.1-zh, a multilingual TTS model, supporting English, Chinese.",
     }
 
     print(model.metadata_props)

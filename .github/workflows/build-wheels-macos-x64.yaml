@@ -110,6 +110,10 @@ jobs:
           fi
 
           python3 -m pip install $opts --upgrade pip
-          python3 -m pip install $opts wheel twine==5.0.0 setuptools
+          if [[ ${{ matrix.python-version }} == "cp37" ]]; then
+            python3 -m pip install $opts wheel twine setuptools
+          else
+            python3 -m pip install $opts wheel twine==5.0.0 setuptools
+          fi
 
           twine upload ./wheelhouse/*.whl

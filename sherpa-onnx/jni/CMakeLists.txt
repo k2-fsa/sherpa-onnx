@@ -17,6 +17,7 @@ set(sources
   offline-punctuation.cc
   offline-recognizer.cc
   offline-stream.cc
+  online-punctuation.cc
   online-recognizer.cc
   online-stream.cc
   speaker-embedding-extractor.cc
