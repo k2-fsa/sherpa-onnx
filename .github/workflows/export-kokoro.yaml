@@ -3,7 +3,7 @@ name: export-kokoro-to-onnx
 on:
   push:
     branches:
-      - export-kokoro
+      - export-kokoro-2
 
   workflow_dispatch:
 
