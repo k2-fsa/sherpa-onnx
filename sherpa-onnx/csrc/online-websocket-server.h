@@ -5,8 +5,7 @@
 #ifndef SHERPA_ONNX_ONLINE_WEBSOCKET_SERVER_H
 #define SHERPA_ONNX_ONLINE_WEBSOCKET_SERVER_H
 
-#include <asio.hpp>
-#include <thread>
+#include "asio.hpp"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-websocket-server-impl.h"
 #include "sherpa-onnx/csrc/parse-options.h"
