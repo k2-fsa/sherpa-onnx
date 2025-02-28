@@ -84,8 +84,8 @@ def load_lexicon(filename: str) -> Dict[str, List[str]]:
 class OnnxModel:
     def __init__(self, model_filename: str, tokens: str, lexicon: str, voices_bin: str):
         session_opts = ort.SessionOptions()
-        session_opts.inter_op_num_threads = 1
-        session_opts.intra_op_num_threads = 1
+        session_opts.inter_op_num_threads = 3
+        session_opts.intra_op_num_threads = 3
 
         self.session_opts = session_opts
         self.model = ort.InferenceSession(
@@ -176,14 +176,14 @@ def main():
     m = OnnxModel(
         model_filename="./kokoro.onnx",
         tokens="./tokens.txt",
-        lexicon="./lexicon-gb-en.txt,./lexicon-zh.txt",
+        lexicon="./lexicon-us-en.txt,./lexicon-zh.txt",
         voices_bin="./voices.bin",
     )
     text = "来听一听, 这个是什么口音? How are you doing? Are you ok? Thank you! 你觉得中英文说得如何呢?"
 
     text = text.lower()
 
-    voice = "bf_alice"
+    voice = "zf_001"
     start = time.time()
     audio = m(text, voice=voice)
     end = time.time()
@@ -192,7 +192,7 @@ def main():
     audio_duration = len(audio) / m.sample_rate
     real_time_factor = elapsed_seconds / audio_duration
 
-    filename = f"kokoro_v1.0_{voice}_zh_en.wav"
+    filename = f"kokoro_v1.1_{voice}_zh_en.wav"
     sf.write(
         filename,
         audio,
