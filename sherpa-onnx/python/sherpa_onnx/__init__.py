@@ -46,4 +46,5 @@ from _sherpa_onnx import (
 from .keyword_spotter import KeywordSpotter
 from .offline_recognizer import OfflineRecognizer
 from .online_recognizer import OnlineRecognizer
+from .online_websocket_server import OnlineWebSocketServer
 from .utils import text2token
