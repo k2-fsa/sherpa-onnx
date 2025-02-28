@@ -23,6 +23,7 @@
 #include "sherpa-onnx/python/csrc/online-punctuation.h"
 #include "sherpa-onnx/python/csrc/online-recognizer.h"
 #include "sherpa-onnx/python/csrc/online-stream.h"
+#include "sherpa-onnx/python/csrc/online-websocket-server-app.h"
 #include "sherpa-onnx/python/csrc/speaker-embedding-extractor.h"
 #include "sherpa-onnx/python/csrc/speaker-embedding-manager.h"
 #include "sherpa-onnx/python/csrc/spoken-language-identification.h"
@@ -56,6 +57,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
   PybindOnlineModelConfig(&m);
   PybindOnlineLMConfig(&m);
   PybindOnlineStream(&m);
+  PybindOnlineWebsocketServerWrapperApp(&m);
   PybindEndpoint(&m);
   PybindOnlineRecognizer(&m);
   PybindKeywordSpotter(&m);

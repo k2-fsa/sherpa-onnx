@@ -35,6 +35,7 @@ set(srcs
   online-transducer-model-config.cc
   online-wenet-ctc-model-config.cc
   online-zipformer2-ctc-model-config.cc
+  online-websocket-server-app.cc
   provider-config.cc
   sherpa-onnx.cc
   silero-vad-model-config.cc
