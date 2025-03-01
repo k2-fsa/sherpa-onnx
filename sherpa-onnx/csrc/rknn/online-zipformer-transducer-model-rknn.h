@@ -14,8 +14,11 @@
 
 namespace sherpa_onnx {
 
-// this is for zipformer v1, i.e., the folder
-// pruned_transducer_statelss7_streaming from icefall
+// this is for zipformer v1 and v2, i.e., the folder
+// pruned_transducer_statelss7_streaming
+// and
+// zipformer
+// from icefall
 class OnlineZipformerTransducerModelRknn {
  public:
   ~OnlineZipformerTransducerModelRknn();
