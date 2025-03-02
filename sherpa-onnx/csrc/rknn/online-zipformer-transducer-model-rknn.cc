@@ -1,6 +1,6 @@
 // sherpa-onnx/csrc/rknn/online-zipformer-transducer-model-rknn.cc
 //
-// Copyright (c)  2023  Xiaomi Corporation
+// Copyright (c)  2025  Xiaomi Corporation
 
 #include "sherpa-onnx/csrc/rknn/online-zipformer-transducer-model-rknn.h"
 
@@ -22,67 +22,10 @@
 
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/rknn/macros.h"
+#include "sherpa-onnx/csrc/rknn/utils.h"
 #include "sherpa-onnx/csrc/text-utils.h"
 
 namespace sherpa_onnx {
-
-// chw -> hwc
-static void Transpose(const float *src, int32_t n, int32_t channel,
-                      int32_t height, int32_t width, float *dst) {
-  for (int32_t i = 0; i < n; ++i) {
-    for (int32_t h = 0; h < height; ++h) {
-      for (int32_t w = 0; w < width; ++w) {
-        for (int32_t c = 0; c < channel; ++c) {
-          // dst[h, w, c] = src[c, h, w]
-          dst[i * height * width * channel + h * width * channel + w * channel +
-              c] = src[i * height * width * channel + c * height * width +
-                       h * width + w];
-        }
-      }
-    }
-  }
-}
-
-static std::string ToString(const rknn_tensor_attr &attr) {
-  std::ostringstream os;
-  os << "{";
-  os << attr.index;
-  os << ", name: " << attr.name;
-  os << ", shape: (";
-  std::string sep;
-  for (int32_t i = 0; i < static_cast<int32_t>(attr.n_dims); ++i) {
-    os << sep << attr.dims[i];
-    sep = ",";
-  }
-  os << ")";
-  os << ", n_elems: " << attr.n_elems;
-  os << ", size: " << attr.size;
-  os << ", fmt: " << get_format_string(attr.fmt);
-  os << ", type: " << get_type_string(attr.type);
-  os << ", pass_through: " << (attr.pass_through ? "true" : "false");
-  os << "}";
-  return os.str();
-}
-
-static std::unordered_map<std::string, std::string> Parse(
-    const rknn_custom_string &custom_string) {
-  std::unordered_map<std::string, std::string> ans;
-  std::vector<std::string> fields;
-  SplitStringToVector(custom_string.string, ";", false, &fields);
-
-  std::vector<std::string> tmp;
-  for (const auto &f : fields) {
-    SplitStringToVector(f, "=", false, &tmp);
-    if (tmp.size() != 2) {
-      SHERPA_ONNX_LOGE("Invalid custom string %s for %s", custom_string.string,
-                       f.c_str());
-      SHERPA_ONNX_EXIT(-1);
-    }
-    ans[std::move(tmp[0])] = std::move(tmp[1]);
-  }
-
-  return ans;
-}
 
 class OnlineZipformerTransducerModelRknn::Impl {
  public:
@@ -285,7 +228,7 @@ class OnlineZipformerTransducerModelRknn::Impl {
     for (int32_t i = 0; i < next_states.size(); ++i) {
       const auto &attr = encoder_input_attrs_[i + 1];
       if (attr.n_dims == 4) {
-        // TODO(fangjun): The transpose is copied from
+        // TODO(fangjun): The ConvertNCHWtoNHWC is copied from
         // https://github.com/airockchip/rknn_model_zoo/blob/main/examples/zipformer/cpp/process.cc#L22
         // I don't understand why we need to do that.
         std::vector<uint8_t> dst(next_states[i].size());
@@ -293,8 +236,9 @@ class OnlineZipformerTransducerModelRknn::Impl {
         int32_t h = attr.dims[1];
         int32_t w = attr.dims[2];
         int32_t c = attr.dims[3];
-        Transpose(reinterpret_cast<const float *>(next_states[i].data()), n, c,
-                  h, w, reinterpret_cast<float *>(dst.data()));
+        ConvertNCHWtoNHWC(
+            reinterpret_cast<const float *>(next_states[i].data()), n, c, h, w,
+            reinterpret_cast<float *>(dst.data()));
         next_states[i] = std::move(dst);
       }
     }
@@ -527,11 +471,9 @@ class OnlineZipformerTransducerModelRknn::Impl {
 #if __OHOS__
       SHERPA_ONNX_LOGE("T: %{public}d", T_);
       SHERPA_ONNX_LOGE("decode_chunk_len_: %{public}d", decode_chunk_len_);
-      SHERPA_ONNX_LOGE("context_size: %{public}d", context_size_);
 #else
       SHERPA_ONNX_LOGE("T: %d", T_);
       SHERPA_ONNX_LOGE("decode_chunk_len_: %d", decode_chunk_len_);
-      SHERPA_ONNX_LOGE("context_size: %d", context_size_);
 #endif
     }
   }
@@ -595,6 +537,11 @@ class OnlineZipformerTransducerModelRknn::Impl {
                        decoder_input_attrs_[0].type,
                        get_type_string(decoder_input_attrs_[0].type));
       SHERPA_ONNX_EXIT(-1);
+    }
+
+    context_size_ = decoder_input_attrs_[0].dims[1];
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("context_size: %d", context_size_);
     }
 
     i = 0;

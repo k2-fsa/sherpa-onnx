@@ -76,6 +76,15 @@ bool OnlineModelConfig::Validate() const {
           transducer.decoder.c_str(), transducer.joiner.c_str());
       return false;
     }
+
+    if (!zipformer2_ctc.model.empty() &&
+        EndsWith(zipformer2_ctc.model, ".rknn")) {
+      SHERPA_ONNX_LOGE(
+          "--provider is %s, which is not rknn, but you pass rknn model "
+          "filename for zipformer2_ctc: '%s'",
+          provider_config.provider.c_str(), zipformer2_ctc.model.c_str());
+      return false;
+    }
   }
 
   if (provider_config.provider == "rknn") {
@@ -87,6 +96,15 @@ bool OnlineModelConfig::Validate() const {
           "filenames. encoder: '%s', decoder: '%s', joiner: '%s'",
           transducer.encoder.c_str(), transducer.decoder.c_str(),
           transducer.joiner.c_str());
+      return false;
+    }
+
+    if (!zipformer2_ctc.model.empty() &&
+        EndsWith(zipformer2_ctc.model, ".onnx")) {
+      SHERPA_ONNX_LOGE(
+          "--provider rknn, but you pass onnx model filename for "
+          "zipformer2_ctc: '%s'",
+          zipformer2_ctc.model.c_str());
       return false;
     }
   }

@@ -27,6 +27,7 @@
 #include "sherpa-onnx/csrc/text-utils.h"
 
 #if SHERPA_ONNX_ENABLE_RKNN
+#include "sherpa-onnx/csrc/rknn/online-recognizer-ctc-rknn-impl.h"
 #include "sherpa-onnx/csrc/rknn/online-recognizer-transducer-rknn-impl.h"
 #endif
 
@@ -37,12 +38,15 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
   if (config.model_config.provider_config.provider == "rknn") {
 #if SHERPA_ONNX_ENABLE_RKNN
     // Currently, only zipformer v1 is suported for rknn
-    if (config.model_config.transducer.encoder.empty()) {
+    if (config.model_config.transducer.encoder.empty() &&
+        config.model_config.zipformer2_ctc.model.empty()) {
       SHERPA_ONNX_LOGE(
-          "Only Zipformer transducers are currently supported by rknn. "
-          "Fallback to CPU");
-    } else {
+          "Only Zipformer transducers and CTC models are currently supported "
+          "by rknn. Fallback to CPU");
+    } else if (!config.model_config.transducer.encoder.empty()) {
       return std::make_unique<OnlineRecognizerTransducerRknnImpl>(config);
+    } else if (!config.model_config.zipformer2_ctc.model.empty()) {
+      return std::make_unique<OnlineRecognizerCtcRknnImpl>(config);
     }
 #else
     SHERPA_ONNX_LOGE(
