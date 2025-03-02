@@ -83,6 +83,7 @@ for a list of pre-trained models to download.
   po.Read(argc, argv);
   if (po.NumArgs() < 1) {
     po.PrintUsage();
+    fprintf(stderr, "Error! Please provide at lease 1 wav file\n");
     exit(EXIT_FAILURE);
   }
 

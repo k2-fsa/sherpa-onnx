@@ -19,8 +19,8 @@ class OnlineCtcFstDecoder : public OnlineCtcDecoder {
   OnlineCtcFstDecoder(const OnlineCtcFstDecoderConfig &config,
                       int32_t blank_id);
 
-  void Decode(Ort::Value log_probs,
-              std::vector<OnlineCtcDecoderResult> *results,
+  void Decode(const float *log_probs, int32_t batch_size, int32_t num_frames,
+              int32_t vocab_size, std::vector<OnlineCtcDecoderResult> *results,
               OnlineStream **ss = nullptr, int32_t n = 0) override;
 
   std::unique_ptr<kaldi_decoder::FasterDecoder> CreateFasterDecoder()

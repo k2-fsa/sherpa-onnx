@@ -471,11 +471,9 @@ class OnlineZipformerTransducerModelRknn::Impl {
 #if __OHOS__
       SHERPA_ONNX_LOGE("T: %{public}d", T_);
       SHERPA_ONNX_LOGE("decode_chunk_len_: %{public}d", decode_chunk_len_);
-      SHERPA_ONNX_LOGE("context_size: %{public}d", context_size_);
 #else
       SHERPA_ONNX_LOGE("T: %d", T_);
       SHERPA_ONNX_LOGE("decode_chunk_len_: %d", decode_chunk_len_);
-      SHERPA_ONNX_LOGE("context_size: %d", context_size_);
 #endif
     }
   }
@@ -539,6 +537,11 @@ class OnlineZipformerTransducerModelRknn::Impl {
                        decoder_input_attrs_[0].type,
                        get_type_string(decoder_input_attrs_[0].type));
       SHERPA_ONNX_EXIT(-1);
+    }
+
+    context_size_ = decoder_input_attrs_[0].dims[1];
+    if (config_.debug) {
+      SHERPA_ONNX_LOGE("context_size: %d", context_size_);
     }
 
     i = 0;

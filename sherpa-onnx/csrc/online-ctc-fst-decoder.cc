@@ -91,30 +91,23 @@ static void DecodeOne(const float *log_probs, int32_t num_rows,
   processed_frames += num_rows;
 }
 
-void OnlineCtcFstDecoder::Decode(Ort::Value log_probs,
+void OnlineCtcFstDecoder::Decode(const float *log_probs, int32_t batch_size,
+                                 int32_t num_frames, int32_t vocab_size,
                                  std::vector<OnlineCtcDecoderResult> *results,
                                  OnlineStream **ss, int32_t n) {
-  std::vector<int64_t> log_probs_shape =
-      log_probs.GetTensorTypeAndShapeInfo().GetShape();
-
-  if (log_probs_shape[0] != results->size()) {
+  if (batch_size != results->size()) {
     SHERPA_ONNX_LOGE("Size mismatch! log_probs.size(0) %d, results.size(0): %d",
-                     static_cast<int32_t>(log_probs_shape[0]),
-                     static_cast<int32_t>(results->size()));
+                     batch_size, static_cast<int32_t>(results->size()));
     exit(-1);
   }
 
-  if (log_probs_shape[0] != n) {
-    SHERPA_ONNX_LOGE("Size mismatch! log_probs.size(0) %d, n: %d",
-                     static_cast<int32_t>(log_probs_shape[0]), n);
+  if (batch_size != n) {
+    SHERPA_ONNX_LOGE("Size mismatch! log_probs.size(0) %d, n: %d", batch_size,
+                     n);
     exit(-1);
   }
 
-  int32_t batch_size = static_cast<int32_t>(log_probs_shape[0]);
-  int32_t num_frames = static_cast<int32_t>(log_probs_shape[1]);
-  int32_t vocab_size = static_cast<int32_t>(log_probs_shape[2]);
-
-  const float *p = log_probs.GetTensorData<float>();
+  const float *p = log_probs;
 
   for (int32_t i = 0; i != batch_size; ++i) {
     DecodeOne(p + i * num_frames * vocab_size, num_frames, vocab_size,

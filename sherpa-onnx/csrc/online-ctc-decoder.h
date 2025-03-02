@@ -43,12 +43,14 @@ class OnlineCtcDecoder {
 
   /** Run streaming CTC decoding given the output from the encoder model.
    *
-   * @param log_probs A 3-D tensor of shape (N, T, vocab_size) containing
-   *                  lob_probs.
+   * @param log_probs A 3-D tensor of shape
+   *                  (batch_size, num_frames, vocab_size) containing
+   *                  lob_probs in row major.
    *
    * @param  results Input & Output parameters..
    */
-  virtual void Decode(Ort::Value log_probs,
+  virtual void Decode(const float *log_probs, int32_t batch_size,
+                      int32_t num_frames, int32_t vocab_size,
                       std::vector<OnlineCtcDecoderResult> *results,
                       OnlineStream **ss = nullptr, int32_t n = 0) = 0;
 

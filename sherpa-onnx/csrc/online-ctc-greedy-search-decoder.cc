@@ -13,23 +13,16 @@
 namespace sherpa_onnx {
 
 void OnlineCtcGreedySearchDecoder::Decode(
-    Ort::Value log_probs, std::vector<OnlineCtcDecoderResult> *results,
+    const float *log_probs, int32_t batch_size, int32_t num_frames,
+    int32_t vocab_size, std::vector<OnlineCtcDecoderResult> *results,
     OnlineStream ** /*ss=nullptr*/, int32_t /*n = 0*/) {
-  std::vector<int64_t> log_probs_shape =
-      log_probs.GetTensorTypeAndShapeInfo().GetShape();
-
-  if (log_probs_shape[0] != results->size()) {
+  if (batch_size != results->size()) {
     SHERPA_ONNX_LOGE("Size mismatch! log_probs.size(0) %d, results.size(0): %d",
-                     static_cast<int32_t>(log_probs_shape[0]),
-                     static_cast<int32_t>(results->size()));
+                     batch_size, static_cast<int32_t>(results->size()));
     exit(-1);
   }
 
-  int32_t batch_size = static_cast<int32_t>(log_probs_shape[0]);
-  int32_t num_frames = static_cast<int32_t>(log_probs_shape[1]);
-  int32_t vocab_size = static_cast<int32_t>(log_probs_shape[2]);
-
-  const float *p = log_probs.GetTensorData<float>();
+  const float *p = log_probs;
 
   for (int32_t b = 0; b != batch_size; ++b) {
     auto &r = (*results)[b];
