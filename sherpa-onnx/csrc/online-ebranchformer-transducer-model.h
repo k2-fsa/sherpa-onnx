@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/online-zipformer2-transducer-model.h
+// sherpa-onnx/csrc/online-ebranchformer-transducer-model.h
 //
 // Copyright (c)  2023  Xiaomi Corporation
 //                2025  Brno University of Technology (author: Karel Vesely)
@@ -89,16 +89,6 @@ class OnlineEbranchformerTransducerModel : public OnlineTransducerModel {
   std::vector<const char *> joiner_output_names_ptr_;
 
   OnlineModelConfig config_;
-
-  /*
-  std::vector<int32_t> encoder_dims_;
-  std::vector<int32_t> query_head_dims_;
-  std::vector<int32_t> value_head_dims_;
-  std::vector<int32_t> num_heads_;
-  std::vector<int32_t> num_encoder_layers_;
-  std::vector<int32_t> cnn_module_kernels_;
-  std::vector<int32_t> left_context_len_;
-  */
 
   int32_t decode_chunk_len_ = 0;
   int32_t T_ = 0;

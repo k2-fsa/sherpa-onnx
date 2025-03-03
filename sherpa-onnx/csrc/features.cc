@@ -205,7 +205,7 @@ class FeatureExtractor::Impl {
 
     opts_.mel_opts.is_librosa = config_.is_librosa;
 
-    fbank_ = std::make_unique<knf::OnlineFbank>(opts_);  // using Kaldi fbank!
+    fbank_ = std::make_unique<knf::OnlineFbank>(opts_);
   }
   void InitMfcc() {
     mfcc_opts_.frame_opts.dither = config_.dither;

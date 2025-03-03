@@ -26,6 +26,7 @@
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/cat.h"
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-transducer-decoder.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
@@ -111,16 +112,6 @@ void OnlineEbranchformerTransducerModel::InitEncoder(void *model_data,
 
   Ort::AllocatorWithDefaultOptions allocator;  // used in the macro below
 
-  /*
-  SHERPA_ONNX_READ_META_DATA_VEC(encoder_dims_, "encoder_dims");
-  SHERPA_ONNX_READ_META_DATA_VEC(query_head_dims_, "query_head_dims");
-  SHERPA_ONNX_READ_META_DATA_VEC(value_head_dims_, "value_head_dims");
-  SHERPA_ONNX_READ_META_DATA_VEC(num_heads_, "num_heads");
-  SHERPA_ONNX_READ_META_DATA_VEC(num_encoder_layers_, "num_encoder_layers");
-  SHERPA_ONNX_READ_META_DATA_VEC(cnn_module_kernels_, "cnn_module_kernels");
-  SHERPA_ONNX_READ_META_DATA_VEC(left_context_len_, "left_context_len");
-  */
-
   SHERPA_ONNX_READ_META_DATA(decode_chunk_len_, "decode_chunk_len");
   SHERPA_ONNX_READ_META_DATA(T_, "T");
 
@@ -134,28 +125,6 @@ void OnlineEbranchformerTransducerModel::InitEncoder(void *model_data,
   SHERPA_ONNX_READ_META_DATA(head_dim_, "head_dim");
 
   if (config_.debug) {
-    /*
-    auto print = [](const std::vector<int32_t> &v, const char *name) {
-      std::ostringstream os;
-      os << name << ": ";
-      for (auto i : v) {
-        os << i << " ";
-      }
-#if __OHOS__
-      SHERPA_ONNX_LOGE("%{public}s\n", os.str().c_str());
-#else
-      SHERPA_ONNX_LOGE("%s\n", os.str().c_str());
-#endif
-    };
-    print(encoder_dims_, "encoder_dims");
-    print(query_head_dims_, "query_head_dims");
-    print(value_head_dims_, "value_head_dims");
-    print(num_heads_, "num_heads");
-    print(num_encoder_layers_, "num_encoder_layers");
-    print(cnn_module_kernels_, "cnn_module_kernels");
-    print(left_context_len_, "left_context_len");
-    */
-
 #if __OHOS__
     SHERPA_ONNX_LOGE("T: %{public}d", T_);
     SHERPA_ONNX_LOGE("decode_chunk_len_: %{public}d", decode_chunk_len_);
@@ -354,13 +323,6 @@ std::vector<Ort::Value>
 OnlineEbranchformerTransducerModel::GetEncoderInitStates() {
   std::vector<Ort::Value> ans;
 
-  /*
-  int32_t n = static_cast<int32_t>(encoder_dims_.size());
-  int32_t m = std::accumulate(num_encoder_layers_.begin(),
-                              num_encoder_layers_.end(), 0);
-  ans.reserve(m * 6 + 2);
-  */
-
   ans.reserve(num_hidden_layers_ * 4 + 1);
 
   int32_t left_context_conv = csgu_kernel_size_ - 1;
@@ -403,86 +365,13 @@ OnlineEbranchformerTransducerModel::GetEncoderInitStates() {
     }
   }  // num_hidden_layers_
 
-  /*
-  for (int32_t i = 0; i != n; ++i) {
-    int32_t num_layers = num_encoder_layers_[i];
-    int32_t key_dim = query_head_dims_[i] * num_heads_[i];
-    int32_t value_dim = value_head_dims_[i] * num_heads_[i];
-    int32_t nonlin_attn_head_dim = 3 * encoder_dims_[i] / 4;
-
-    for (int32_t j = 0; j != num_layers; ++j) {
-      {
-        std::array<int64_t, 3> s{ left_context_len_[i], 1, key_dim};
-        auto v =
-            Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
-        Fill(&v, 0);
-        ans.push_back(std::move(v));
-      }
-
-      {
-        std::array<int64_t, 4> s{1, 1, left_context_len_[i],
-                                 nonlin_attn_head_dim};
-        auto v =
-            Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
-        Fill(&v, 0);
-        ans.push_back(std::move(v));
-      }
-
-      {
-        std::array<int64_t, 3> s{left_context_len_[i], 1, value_dim};
-        auto v =
-            Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
-        Fill(&v, 0);
-        ans.push_back(std::move(v));
-      }
-
-      {
-        std::array<int64_t, 3> s{left_context_len_[i], 1, value_dim};
-        auto v =
-            Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
-        Fill(&v, 0);
-        ans.push_back(std::move(v));
-      }
-
-      {
-        std::array<int64_t, 3> s{1, encoder_dims_[i],
-                                 cnn_module_kernels_[i] / 2};
-        auto v =
-            Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
-        Fill(&v, 0);
-        ans.push_back(std::move(v));
-      }
-
-      {
-        std::array<int64_t, 3> s{1, encoder_dims_[i],
-                                 cnn_module_kernels_[i] / 2};
-        auto v =
-            Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
-        Fill(&v, 0);
-        ans.push_back(std::move(v));
-      }
-    }
-  }
-  */
-
-  /* CONV-NEXT
-  {
-    SHERPA_ONNX_CHECK_NE(feature_dim_, 0);
-    int32_t embed_dim = (((feature_dim_ - 1) / 2) - 1) / 2;
-    std::array<int64_t, 4> s{1, 128, 3, embed_dim};
-
-    auto v = Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
-    Fill(&v, 0);
-    ans.push_back(std::move(v));
-  }
-  */
-
   { // processed_lens
     std::array<int64_t, 1> s{1};
     auto v = Ort::Value::CreateTensor<int64_t>(allocator_, s.data(), s.size());
     Fill<int64_t>(&v, 0);
     ans.push_back(std::move(v));
   }
+
   return ans;
 }
 
