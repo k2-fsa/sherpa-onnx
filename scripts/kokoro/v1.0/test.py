@@ -10,8 +10,6 @@ import jieba
 import numpy as np
 import onnxruntime as ort
 import soundfile as sf
-import torch
-from misaki import zh
 
 try:
     from piper_phonemize import phonemize_espeak
@@ -114,7 +112,6 @@ class OnnxModel:
     def __call__(self, text: str, voice: str):
         punctuations = ';:,.!?-…()"“”'
         text = text.lower()
-        g2p = zh.ZHG2P()
 
         tokens = ""
 

@@ -3,7 +3,7 @@ name: export-kokoro-to-onnx
 on:
   push:
     branches:
-      - export-kokoro
+      - export-kokoro-2
 
   workflow_dispatch:
 
@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        version: ["0.19", "1.0"]
+        version: ["0.19", "1.0", "1.1-zh"]
         python-version: ["3.10"]
 
     steps:
@@ -34,7 +34,7 @@ jobs:
       - name: Install Python dependencies
         shell: bash
         run: |
-          pip install "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 librosa soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html misaki[en] misaki[zh] torch==2.6.0+cpu -f https://download.pytorch.org/whl/torch
+          pip install kokoro "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 librosa soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html misaki[en] misaki[zh] torch==2.6.0+cpu -f https://download.pytorch.org/whl/torch
 
       - name: Run
         shell: bash
@@ -49,9 +49,15 @@ jobs:
           elif [[ $v == "1.0" ]]; then
             cd v1.0
             ./run.sh
+          elif [[ $v == "1.1-zh" ]]; then
+            cd v1.1-zh
+            ./run.sh
+          else
+            echo "Unknown version $v"
+            exit 1
           fi
 
-      - name: Collect results ${{ matrix.version }}
+      - name: Collect results 0.19
         if: matrix.version == '0.19'
         shell: bash
         run: |
@@ -71,7 +77,7 @@ jobs:
 
           ls -lh $d.tar.bz2
 
-      - name: Collect results ${{ matrix.version }}
+      - name: Collect results 1.0
         if: matrix.version == '1.0'
         shell: bash
         run: |
@@ -87,7 +93,7 @@ jobs:
 
           d=kokoro-multi-lang-v1_0
           mkdir $d
-          cp -a LICENSE $d/LICENSE
+          cp -v LICENSE $d/LICENSE
           cp -a espeak-ng-data $d/
           cp -v $src/kokoro.onnx $d/model.onnx
           cp -v $src/voices.bin $d/
@@ -105,7 +111,63 @@ jobs:
 
           ls -lh $d.tar.bz2
 
-      - name: Publish to huggingface ${{ matrix.version }}
+      - name: Collect results 1.1-zh
+        if: matrix.version == '1.1-zh'
+        shell: bash
+        run: |
+          curl -SL -O https://github.com/csukuangfj/cppjieba/releases/download/sherpa-onnx-2024-04-19/dict.tar.bz2
+          tar xvf dict.tar.bz2
+          rm dict.tar.bz2
+
+          curl -SL -o date-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/date.fst
+          curl -SL -o number-zh.fst  https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/number.fst
+          curl -SL -o phone-zh.fst https://huggingface.co/csukuangfj/icefall-tts-aishell3-vits-low-2024-04-06/resolve/main/data/phone.fst
+
+          src=scripts/kokoro/v1.1-zh
+
+          d=kokoro-multi-lang-v1_1
+          mkdir $d
+          cp -v LICENSE $d/LICENSE
+          cp -a espeak-ng-data $d/
+          cp -v $src/kokoro.onnx $d/model.onnx
+          cp -v $src/voices.bin $d/
+          cp -v $src/tokens.txt $d/
+          cp -v $src/lexicon*.txt $d/
+          cp -v $src/README.md $d/README.md
+          cp -av dict $d/
+          cp -v ./*.fst $d/
+          ls -lh $d/
+          echo "---"
+          ls -lh $d/dict
+
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+          ls -lh $d.tar.bz2
+
+          d=kokoro-int8-multi-lang-v1_1
+          mkdir $d
+          cp -v LICENSE $d/LICENSE
+          cp -a espeak-ng-data $d/
+          cp -v $src/kokoro.int8.onnx $d/model.int8.onnx
+          cp -v $src/voices.bin $d/
+          cp -v $src/tokens.txt $d/
+          cp -v $src/lexicon*.txt $d/
+          cp -v $src/README.md $d/README.md
+          cp -av dict $d/
+          cp -v ./*.fst $d/
+          ls -lh $d/
+          echo "---"
+          ls -lh $d/dict
+
+          tar cjfv $d.tar.bz2 $d
+          rm -rf $d
+          ls -lh $d.tar.bz2
+
+          echo "---"
+          ls -lh *.tar.bz2
+
+
+      - name: Publish to huggingface 0.19
         if: matrix.version == '0.19'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -154,7 +216,7 @@ jobs:
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-en-v0_19 main || true
 
-      - name: Publish to huggingface ${{ matrix.version }}
+      - name: Publish to huggingface 1.0
         if: matrix.version == '1.0'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -204,6 +266,108 @@ jobs:
 
             git commit -m "add models"
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-multi-lang-v1_0 main || true
+
+      - name: Publish to huggingface 1.1-zh
+        if: matrix.version == '1.1-zh'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-multi-lang-v1_1 huggingface
+            cd huggingface
+            rm -rf ./*
+            git fetch
+            git pull
+
+            git lfs track "cmn_dict"
+            git lfs track "ru_dict"
+            git lfs track "*.wav"
+            git lfs track "lexicon*.txt"
+
+            cp -a ../espeak-ng-data ./
+
+            cp -v ../scripts/kokoro/v1.1-zh/kokoro.onnx ./model.onnx
+
+
+            cp -v ../scripts/kokoro/v1.1-zh/tokens.txt .
+            cp -v ../scripts/kokoro/v1.1-zh/voices.bin .
+            cp -v ../scripts/kokoro/v1.1-zh/lexicon*.txt .
+            cp -v ../scripts/kokoro/v1.1-zh/README.md ./README.md
+            cp -v ../LICENSE ./
+            cp -av ../dict ./
+            cp -v ../*.fst ./
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-multi-lang-v1_1 main || true
+
+      - name: Publish to huggingface 1.1-zh-int8
+        if: matrix.version == '1.1-zh'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-int8-multi-lang-v1_1 huggingface
+            cd huggingface
+            rm -rf ./*
+            git fetch
+            git pull
+
+            git lfs track "cmn_dict"
+            git lfs track "ru_dict"
+            git lfs track "*.wav"
+            git lfs track "lexicon*.txt"
+
+            cp -a ../espeak-ng-data ./
+
+            cp -v ../scripts/kokoro/v1.1-zh/kokoro.int8.onnx ./model.int8.onnx
+
+
+            cp -v ../scripts/kokoro/v1.1-zh/tokens.txt .
+            cp -v ../scripts/kokoro/v1.1-zh/voices.bin .
+            cp -v ../scripts/kokoro/v1.1-zh/lexicon*.txt .
+            cp -v ../scripts/kokoro/v1.1-zh/README.md ./README.md
+            cp -v ../LICENSE ./
+            cp -av ../dict ./
+            cp -v ../*.fst ./
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/kokoro-int8-multi-lang-v1_1 main || true
 
       - name: Release
         if: github.repository_owner == 'csukuangfj'

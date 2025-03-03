@@ -26,6 +26,7 @@
 # Please install a version >=0.1.96
 
 import argparse
+import codecs
 from typing import Dict
 
 try:
@@ -56,11 +57,11 @@ def main():
 
     sp = spm.SentencePieceProcessor()
     sp.Load(model_file)
-    vocabs = [sp.IdToPiece(id) for id in range(sp.GetPieceSize())]
-    with open(vocab_file, "w") as vfile:
+    vocabs = [sp.id_to_piece(id) for id in range(sp.get_piece_size())]
+    with codecs.open(vocab_file, "w", "utf-8") as vfile:
         for v in vocabs:
-            id = sp.PieceToId(v)
-            vfile.write(f"{v}\t{sp.GetScore(id)}\n")
+            id = sp.piece_to_id(v)
+            vfile.write(f"{v}\t{sp.get_score(id)}\n")
     print(f"Vocabulary file is written to {vocab_file}")
 
 

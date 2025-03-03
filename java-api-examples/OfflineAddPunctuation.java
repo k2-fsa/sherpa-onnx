@@ -5,7 +5,7 @@
 // The model supports both English and Chinese.
 import com.k2fsa.sherpa.onnx.*;
 
-public class AddPunctuation {
+public class OfflineAddPunctuation {
   public static void main(String[] args) {
     // please download the model from
     // https://github.com/k2-fsa/sherpa-onnx/releases/tag/punctuation-models

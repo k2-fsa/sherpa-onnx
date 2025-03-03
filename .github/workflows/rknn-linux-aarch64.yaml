@@ -1,0 +1,242 @@
+name: rknn-linux-aarch64
+
+on:
+  push:
+    branches:
+      - master
+      - rknn-c-api-2
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+    paths:
+      - '.github/workflows/rknn-linux-aarch64.yaml'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/csrc/rknn/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'toolchains/aarch64-linux-gnu.toolchain.cmake'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - '.github/workflows/rknn-linux-aarch64.yaml'
+      - 'cmake/**'
+      - 'sherpa-onnx/csrc/*'
+      - 'sherpa-onnx/csrc/rknn/*'
+      - 'sherpa-onnx/c-api/*'
+      - 'toolchains/aarch64-linux-gnu.toolchain.cmake'
+
+  workflow_dispatch:
+
+concurrency:
+  group: aarch64-linux-gnu-shared-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rknn_linux_aarch64:
+    runs-on: ${{ matrix.os }}
+    name: rknn shared ${{ matrix.shared }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04-arm
+            shared: ON
+          - os: ubuntu-22.04-arm
+            shared: OFF
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.shared }}-rknn-linux-aarch64
+
+      - name: Download rknn-toolkit2
+        shell: bash
+        run: |
+          git clone --depth 1 https://github.com/airockchip/rknn-toolkit2
+
+      - name: Build sherpa-onnx
+        shell: bash
+        run: |
+          export CMAKE_CXX_COMPILER_LAUNCHER=ccache
+          export PATH="/usr/lib/ccache:/usr/local/opt/ccache/libexec:$PATH"
+          cmake --version
+
+          echo "config: ${{ matrix.config }}"
+          uname -a
+          which gcc
+
+          gcc --version
+          g++ --version
+
+          echo "pwd"
+
+          ls -lh
+
+          git clone --depth 1 --branch v1.2.12 https://github.com/alsa-project/alsa-lib
+          pushd alsa-lib
+          ./gitcompile
+          popd
+
+          export SHERPA_ONNX_RKNN_TOOLKIT2_PATH=$PWD/rknn-toolkit2
+          export SHERPA_ONNX_RKNN_TOOLKIT2_LIB_DIR=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/aarch64
+          export CPLUS_INCLUDE_PATH=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/include:$CPLUS_INCLUDE_PATH
+          export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
+          export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
+
+          mkdir build
+          cd build
+
+          BUILD_SHARED_LIBS=${{ matrix.shared }}
+
+          cmake \
+            -DBUILD_SHARED_LIBS=ON \
+            -DCMAKE_INSTALL_PREFIX=./install \
+            -DSHERPA_ONNX_ENABLE_RKNN=ON \
+            -DBUILD_SHARED_LIBS=$BUILD_SHARED_LIBS \
+            ..
+
+          make -j4 install
+
+          rm -rf install/lib/pkgconfig
+          rm -fv install/lib/cargs.h
+          rm -fv install/lib/libcargs.so
+
+      - name: Display system info
+        shell: bash
+        run: |
+          uname -a
+          gcc --version
+          g++ --version
+
+      - name: Display generated files
+        shell: bash
+        run: |
+          export SHERPA_ONNX_RKNN_TOOLKIT2_PATH=$PWD/rknn-toolkit2
+          export LD_LIBRARY_PATH=$SHERPA_ONNX_RKNN_TOOLKIT2_PATH/rknpu2/runtime/Linux/librknn_api/aarch64:$LD_LIBRARY_PATH
+
+          cd build/install
+
+          ls -lh bin
+
+          echo "---"
+
+          ls -lh lib
+
+          file bin/sherpa-onnx
+
+          readelf -d bin/sherpa-onnx
+
+          ldd bin/sherpa-onnx
+
+          ./bin/sherpa-onnx --help
+
+      - name: Copy files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          if [[ ${{ matrix.shared }} == ON ]]; then
+            suffix=shared
+          else
+            suffix=static
+          fi
+
+          dst=sherpa-onnx-${SHERPA_ONNX_VERSION}-rknn-linux-aarch64-$suffix
+          mkdir $dst
+
+          cp -a build/install/bin $dst/
+
+          if [[ ${{ matrix.shared }} == ON ]]; then
+            mkdir -p $dst/lib
+            cp -v build/install/lib/lib*.so $dst/lib/
+          fi
+
+          ls -lh build/install/lib
+          ls -lh build/install/bin
+
+          ls -lh $dst/bin/
+          echo "strip"
+          strip $dst/bin/*
+
+          echo "after strip"
+          ls -lh $dst/bin/
+
+          tree $dst
+
+          tar cjvf ${dst}.tar.bz2 $dst
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sherpa-onnx-linux-linux-aarch64-shared-${{ matrix.shared }}
+          path: sherpa-onnx-*linux-aarch64*.tar.bz2
+
+      # https://huggingface.co/docs/hub/spaces-github-actions
+      - name: Publish to huggingface
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+            GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
+
+            cd huggingface
+            dst=rknn-linux-aarch64/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
+
+            cp -v ../sherpa-onnx-*rknn*-*.tar.bz2 $dst
+
+            git status
+            git lfs track "*.bz2"
+
+            git add .
+
+            git commit -m "upload sherpa-onnx-${SHERPA_ONNX_VERSION}-rknn-linux-aarch64.tar.bz2"
+
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
+
+      - name: Release pre-compiled binaries and libs for rknn linux aarch64
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-aarch64*.tar.bz2
+
+      - name: Release pre-compiled binaries and libs for rknn linux aarch64
+        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: sherpa-onnx-*linux-aarch64*.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.10.45
+
+      - name: Test offline Moonshine
+        if: matrix.build_type != 'Debug'
+        shell: bash
+        run: |
+          du -h -d1 .
+          export PATH=$PWD/build/install/bin:$PATH
+          export EXE=sherpa-onnx-offline
+
+          readelf -d build/bin/sherpa-onnx-offline
+
+          .github/scripts/test-offline-moonshine.sh

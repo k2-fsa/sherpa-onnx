@@ -11,11 +11,31 @@ class OnlinePunctuationModelConfig {
       this.provider = 'cpu',
       this.debug = true});
 
+  factory OnlinePunctuationModelConfig.fromJson(Map<String, dynamic> json) {
+    return OnlinePunctuationModelConfig(
+      cnnBiLstm: json['cnnBiLstm'],
+      bpeVocab: json['bpeVocab'],
+      numThreads: json['numThreads'],
+      provider: json['provider'],
+      debug: json['debug'],
+    );
+  }
+
   @override
   String toString() {
     return 'OnlinePunctuationModelConfig(cnnBiLstm: $cnnBiLstm, '
         'bpeVocab: $bpeVocab, numThreads: $numThreads, '
         'provider: $provider, debug: $debug)';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'cnnBiLstm': cnnBiLstm,
+      'bpeVocab': bpeVocab,
+      'numThreads': numThreads,
+      'provider': provider,
+      'debug': debug,
+    };
   }
 
   final String cnnBiLstm;
@@ -30,9 +50,21 @@ class OnlinePunctuationConfig {
     required this.model,
   });
 
+  factory OnlinePunctuationConfig.fromJson(Map<String, dynamic> json) {
+    return OnlinePunctuationConfig(
+      model: OnlinePunctuationModelConfig.fromJson(json['model']),
+    );
+  }
+
   @override
   String toString() {
     return 'OnlinePunctuationConfig(model: $model)';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'model': model.toJson(),
+    };
   }
 
   final OnlinePunctuationModelConfig model;
@@ -90,7 +122,7 @@ class OnlinePunctuation {
     final ans = p.toDartString();
 
     SherpaOnnxBindings.sherpaOnnxOnlinePunctuationFreeText?.call(p);
-    
+
     return ans;
   }
 

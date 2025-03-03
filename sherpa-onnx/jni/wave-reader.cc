@@ -5,8 +5,8 @@
 
 #include <fstream>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
-#include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/jni/common.h"
 
 static jobjectArray ReadWaveImpl(JNIEnv *env, std::istream &is,

@@ -111,7 +111,11 @@ if [ ! -f ./tokens.txt ]; then
 fi
 
 if [ ! -f ./lexicon-zh.txt ]; then
-  ./generate_lexicon.py
+  ./generate_lexicon_zh.py
+fi
+
+if [[ ! -f ./lexicon-us-en.txt || ! -f ./lexicon-gb-en.txt ]]; then
+  ./generate_lexicon_en.py
 fi
 
 if [ ! -f ./voices.bin ]; then

@@ -1,3 +1,3 @@
 module vad-asr-whisper
 
-go 1.12
+go 1.17

@@ -438,7 +438,17 @@ def get_kokoro_models() -> List[TtsModel]:
             model_dir="kokoro-multi-lang-v1_0",
             model_name="model.onnx",
             lang="en",
-        )
+        ),
+        TtsModel(
+            model_dir="kokoro-multi-lang-v1_1",
+            model_name="model.onnx",
+            lang="en",
+        ),
+        TtsModel(
+            model_dir="kokoro-int8-multi-lang-v1_1",
+            model_name="model.int8.onnx",
+            lang="en",
+        ),
     ]
     for m in multi_lingual_models:
         m.data_dir = f"{m.model_dir}/espeak-ng-data"

@@ -44,6 +44,9 @@ jobs:
             gpu: ON
             onnxruntime_version: "1.16.0"
           - os: ubuntu-22.04-arm
+            gpu: ON
+            onnxruntime_version: "1.18.1"
+          - os: ubuntu-22.04-arm
             gpu: OFF
             onnxruntime_version: ""
 
@@ -196,6 +199,7 @@ jobs:
           timeout_seconds: 200
           shell: bash
           command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
@@ -204,9 +208,10 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
-            mkdir -p aarch64
+            dst=aarch64/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
 
-            cp -v ../sherpa-onnx-*-shared*.tar.bz2 ./aarch64
+            cp -v ../sherpa-onnx-*-shared*.tar.bz2 $dst/
 
             git status
             git lfs track "*.bz2"

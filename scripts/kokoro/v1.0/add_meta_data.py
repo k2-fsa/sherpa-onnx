@@ -2,11 +2,6 @@
 # Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
 
 
-import argparse
-import json
-from pathlib import Path
-
-import numpy as np
 import onnx
 import torch
 

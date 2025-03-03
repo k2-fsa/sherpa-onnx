@@ -83,6 +83,7 @@ jobs:
           timeout_seconds: 200
           shell: bash
           command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
@@ -95,9 +96,10 @@ jobs:
             cd huggingface
             git fetch
             git pull
-            mkdir -p windows-for-dotnet
+            dst=windows-for-dotnet/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
 
-            cp -v ../sherpa-onnx-*.tar.bz2 ./windows-for-dotnet
+            cp -v ../sherpa-onnx-*.tar.bz2 $dst/
 
             git status
             git lfs track "*.bz2"

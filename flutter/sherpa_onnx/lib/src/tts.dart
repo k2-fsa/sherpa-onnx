@@ -18,10 +18,34 @@ class OfflineTtsVitsModelConfig {
     this.dictDir = '',
   });
 
+  factory OfflineTtsVitsModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsVitsModelConfig(
+      model: json['model'] as String? ?? '',
+      lexicon: json['lexicon'] as String? ?? '',
+      tokens: json['tokens'] as String? ?? '',
+      dataDir: json['dataDir'] as String? ?? '',
+      noiseScale: (json['noiseScale'] as num?)?.toDouble() ?? 0.667,
+      noiseScaleW: (json['noiseScaleW'] as num?)?.toDouble() ?? 0.8,
+      lengthScale: (json['lengthScale'] as num?)?.toDouble() ?? 1.0,
+      dictDir: json['dictDir'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineTtsVitsModelConfig(model: $model, lexicon: $lexicon, tokens: $tokens, dataDir: $dataDir, noiseScale: $noiseScale, noiseScaleW: $noiseScaleW, lengthScale: $lengthScale, dictDir: $dictDir)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+        'lexicon': lexicon,
+        'tokens': tokens,
+        'dataDir': dataDir,
+        'noiseScale': noiseScale,
+        'noiseScaleW': noiseScaleW,
+        'lengthScale': lengthScale,
+        'dictDir': dictDir,
+      };
 
   final String model;
   final String lexicon;
@@ -45,10 +69,34 @@ class OfflineTtsMatchaModelConfig {
     this.dictDir = '',
   });
 
+  factory OfflineTtsMatchaModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsMatchaModelConfig(
+      acousticModel: json['acousticModel'] as String? ?? '',
+      vocoder: json['vocoder'] as String? ?? '',
+      lexicon: json['lexicon'] as String? ?? '',
+      tokens: json['tokens'] as String? ?? '',
+      dataDir: json['dataDir'] as String? ?? '',
+      noiseScale: (json['noiseScale'] as num?)?.toDouble() ?? 0.667,
+      lengthScale: (json['lengthScale'] as num?)?.toDouble() ?? 1.0,
+      dictDir: json['dictDir'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineTtsMatchaModelConfig(acousticModel: $acousticModel, vocoder: $vocoder, lexicon: $lexicon, tokens: $tokens, dataDir: $dataDir, noiseScale: $noiseScale, lengthScale: $lengthScale, dictDir: $dictDir)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'acousticModel': acousticModel,
+        'vocoder': vocoder,
+        'lexicon': lexicon,
+        'tokens': tokens,
+        'dataDir': dataDir,
+        'noiseScale': noiseScale,
+        'lengthScale': lengthScale,
+        'dictDir': dictDir,
+      };
 
   final String acousticModel;
   final String vocoder;
@@ -71,10 +119,32 @@ class OfflineTtsKokoroModelConfig {
     this.lexicon = '',
   });
 
+  factory OfflineTtsKokoroModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsKokoroModelConfig(
+      model: json['model'] as String? ?? '',
+      voices: json['voices'] as String? ?? '',
+      tokens: json['tokens'] as String? ?? '',
+      dataDir: json['dataDir'] as String? ?? '',
+      lengthScale: (json['lengthScale'] as num?)?.toDouble() ?? 1.0,
+      dictDir: json['dictDir'] as String? ?? '',
+      lexicon: json['lexicon'] as String? ?? '',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineTtsKokoroModelConfig(model: $model, voices: $voices, tokens: $tokens, dataDir: $dataDir, lengthScale: $lengthScale, dictDir: $dictDir, lexicon: $lexicon)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model,
+        'voices': voices,
+        'tokens': tokens,
+        'dataDir': dataDir,
+        'lengthScale': lengthScale,
+        'dictDir': dictDir,
+        'lexicon': lexicon,
+      };
 
   final String model;
   final String voices;
@@ -95,10 +165,33 @@ class OfflineTtsModelConfig {
     this.provider = 'cpu',
   });
 
+  factory OfflineTtsModelConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsModelConfig(
+      vits: OfflineTtsVitsModelConfig.fromJson(
+          json['vits'] as Map<String, dynamic>? ?? const {}),
+      matcha: OfflineTtsMatchaModelConfig.fromJson(
+          json['matcha'] as Map<String, dynamic>? ?? const {}),
+      kokoro: OfflineTtsKokoroModelConfig.fromJson(
+          json['kokoro'] as Map<String, dynamic>? ?? const {}),
+      numThreads: json['numThreads'] as int? ?? 1,
+      debug: json['debug'] as bool? ?? true,
+      provider: json['provider'] as String? ?? 'cpu',
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineTtsModelConfig(vits: $vits, matcha: $matcha, kokoro: $kokoro, numThreads: $numThreads, debug: $debug, provider: $provider)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'vits': vits.toJson(),
+        'matcha': matcha.toJson(),
+        'kokoro': kokoro.toJson(),
+        'numThreads': numThreads,
+        'debug': debug,
+        'provider': provider,
+      };
 
   final OfflineTtsVitsModelConfig vits;
   final OfflineTtsMatchaModelConfig matcha;
@@ -117,10 +210,29 @@ class OfflineTtsConfig {
     this.silenceScale = 0.2,
   });
 
+  factory OfflineTtsConfig.fromJson(Map<String, dynamic> json) {
+    return OfflineTtsConfig(
+      model:
+          OfflineTtsModelConfig.fromJson(json['model'] as Map<String, dynamic>),
+      ruleFsts: json['ruleFsts'] as String? ?? '',
+      maxNumSenetences: json['maxNumSenetences'] as int? ?? 1,
+      ruleFars: json['ruleFars'] as String? ?? '',
+      silenceScale: (json['silenceScale'] as num?)?.toDouble() ?? 0.2,
+    );
+  }
+
   @override
   String toString() {
     return 'OfflineTtsConfig(model: $model, ruleFsts: $ruleFsts, maxNumSenetences: $maxNumSenetences, ruleFars: $ruleFars, silenceScale: $silenceScale)';
   }
+
+  Map<String, dynamic> toJson() => {
+        'model': model.toJson(),
+        'ruleFsts': ruleFsts,
+        'maxNumSenetences': maxNumSenetences,
+        'ruleFars': ruleFars,
+        'silenceScale': silenceScale,
+      };
 
   final OfflineTtsModelConfig model;
   final String ruleFsts;

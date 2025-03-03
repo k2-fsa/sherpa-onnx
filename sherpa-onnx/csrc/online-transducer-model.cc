@@ -18,6 +18,7 @@
 #include <sstream>
 #include <string>
 
+#include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/online-conformer-transducer-model.h"
 #include "sherpa-onnx/csrc/online-ebranchformer-transducer-model.h"

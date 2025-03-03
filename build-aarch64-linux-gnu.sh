@@ -20,6 +20,14 @@
 #       export SHERPA_ONNX_ENABLE_GPU=ON
 #       export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.16.0
 #       ./build-aarch64-linux-gnu.sh
+#
+#   (d) For NVIDIA Jetson Orin Nano Engineering Reference Developer Kit Super
+#       Jetpack 6.2 [L4T 36.4.3] (CUDA 12.6)
+#
+#       export SHERPA_ONNX_ENABLE_GPU=ON
+#       export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.18.1
+#       ./build-aarch64-linux-gnu.sh
+
 
 if command -v aarch64-none-linux-gnu-gcc  &> /dev/null; then
   ln -svf $(which aarch64-none-linux-gnu-gcc) ./aarch64-linux-gnu-gcc
@@ -66,7 +74,7 @@ if [[ x"$BUILD_SHARED_LIBS" == x"" ]]; then
 fi
 
 if [[ x"$SHERPA_ONNX_ENABLE_GPU" == x"" ]]; then
-  # By default, use CPU
+  # By default, don't use CPU
   SHERPA_ONNX_ENABLE_GPU=OFF
 fi
 

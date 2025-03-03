@@ -197,6 +197,7 @@ jobs:
           timeout_seconds: 200
           shell: bash
           command: |
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
             git config --global user.email "csukuangfj@gmail.com"
             git config --global user.name "Fangjun Kuang"
 
@@ -205,10 +206,11 @@ jobs:
             GIT_LFS_SKIP_SMUDGE=1 git clone https://huggingface.co/csukuangfj/sherpa-onnx-libs huggingface
 
             cd huggingface
-            mkdir -p jni
+            dst=jni/$SHERPA_ONNX_VERSION
+            mkdir -p $dst
 
-            cp -v ../sherpa-onnx-*.tar.bz2 ./jni
-            cp -v ../*.jar ./jni
+            cp -v ../sherpa-onnx-*.tar.bz2 $dst/
+            cp -v ../*.jar $dst/
 
             git status
             git lfs track "*.bz2"

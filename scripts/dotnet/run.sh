@@ -150,7 +150,7 @@ if [ ! -f $src_dir/windows-x86/sherpa-onnx-c-api.dll ]; then
   if [ -f $windows_x86_wheel ]; then
     cp -v $windows_x86_wheel .
   else
-    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-libs/resolve/main/windows-for-dotnet/$windows_x86_wheel_filename
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-libs/resolve/main/windows-for-dotnet/$SHERPA_ONNX_VERSION/$windows_x86_wheel_filename
   fi
   tar xvf $windows_x86_wheel_filename
   cp -v sherpa-onnx-${SHERPA_ONNX_VERSION}-win-x86/*dll ../
@@ -169,7 +169,7 @@ if [ ! -f $src_dir/windows-arm64/sherpa-onnx-c-api.dll ]; then
   if [ -f $windows_arm64_wheel ]; then
     cp -v $windows_arm64_wheel .
   else
-    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-libs/resolve/main/windows-for-dotnet/$windows_arm64_wheel_filename
+    curl -OL https://$HF_MIRROR/csukuangfj/sherpa-onnx-libs/resolve/main/windows-for-dotnet/$SHERPA_ONNX_VERSION/$windows_arm64_wheel_filename
   fi
   tar xvf $windows_arm64_wheel_filename
   cp -v sherpa-onnx-${SHERPA_ONNX_VERSION}-win-arm64/*dll ../
