@@ -119,5 +119,17 @@ std::vector<int32_t> TopkIndex(const T *vec, int32_t size, int32_t topk) {
   return {vec_index.begin(), vec_index.begin() + k_num};
 }
 
+template <class T>
+std::vector<int32_t> TopkIndex(const std::vector<std::vector<T>> &vec,
+                               int32_t topk) {
+  std::vector<T> flatten;
+  flatten.reserve(vec.size() * vec[0].size());
+  for (const auto &v : vec) {
+    flatten.insert(flatten.end(), v.begin(), v.end());
+  }
+
+  return TopkIndex(flatten.data(), flatten.size(), topk);
+}
+
 }  // namespace sherpa_onnx
 #endif  // SHERPA_ONNX_CSRC_MATH_H_

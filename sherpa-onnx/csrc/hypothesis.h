@@ -142,7 +142,6 @@ class Hypotheses {
 
   void Clear() { hyps_dict_.clear(); }
 
- private:
   // Return a list of hyps contained in this object.
   std::vector<Hypothesis> Vec() const {
     std::vector<Hypothesis> ans;

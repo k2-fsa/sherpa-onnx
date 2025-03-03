@@ -8,7 +8,7 @@
 
 #include "rknn_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/online-stream.h"
-#include "sherpa-onnx/csrc/rknn/online-transducer-greedy-search-decoder-rknn.h"
+#include "sherpa-onnx/csrc/rknn/online-transducer-decoder-rknn.h"
 
 namespace sherpa_onnx {
 

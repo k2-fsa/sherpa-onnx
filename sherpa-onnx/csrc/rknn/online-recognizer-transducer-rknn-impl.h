@@ -16,7 +16,9 @@
 #include "sherpa-onnx/csrc/online-recognizer-impl.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/rknn/online-stream-rknn.h"
+#include "sherpa-onnx/csrc/rknn/online-transducer-decoder-rknn.h"
 #include "sherpa-onnx/csrc/rknn/online-transducer-greedy-search-decoder-rknn.h"
+#include "sherpa-onnx/csrc/rknn/online-transducer-modified-beam-search-decoder-rknn.h"
 #include "sherpa-onnx/csrc/rknn/online-zipformer-transducer-model-rknn.h"
 #include "sherpa-onnx/csrc/symbol-table.h"
 
@@ -87,8 +89,20 @@ class OnlineRecognizerTransducerRknnImpl : public OnlineRecognizerImpl {
       unk_id_ = sym_["<unk>"];
     }
 
-    decoder_ = std::make_unique<OnlineTransducerGreedySearchDecoderRknn>(
-        model_.get(), unk_id_);
+    if (config.decoding_method == "greedy_search") {
+      decoder_ = std::make_unique<OnlineTransducerGreedySearchDecoderRknn>(
+          model_.get(), unk_id_);
+    } else if (config.decoding_method == "modified_beam_search") {
+      decoder_ =
+          std::make_unique<OnlineTransducerModifiedBeamSearchDecoderRknn>(
+              model_.get(), config.max_active_paths, unk_id_);
+    } else {
+      SHERPA_ONNX_LOGE(
+          "Invalid decoding method: '%s'. Support only greedy_search and "
+          "modified_beam_search.",
+          config.decoding_method.c_str());
+      SHERPA_ONNX_EXIT(-1);
+    }
   }
 
   template <typename Manager>
@@ -223,7 +237,7 @@ class OnlineRecognizerTransducerRknnImpl : public OnlineRecognizerImpl {
   Endpoint endpoint_;
   int32_t unk_id_ = -1;
   std::unique_ptr<OnlineZipformerTransducerModelRknn> model_;
-  std::unique_ptr<OnlineTransducerGreedySearchDecoderRknn> decoder_;
+  std::unique_ptr<OnlineTransducerDecoderRknn> decoder_;
 };
 
 }  // namespace sherpa_onnx

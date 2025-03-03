@@ -6,6 +6,7 @@
 
 #include <sstream>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "sherpa-onnx/csrc/macros.h"

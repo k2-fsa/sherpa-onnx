@@ -155,6 +155,7 @@ if(SHERPA_ONNX_ENABLE_RKNN)
   list(APPEND sources
     ./rknn/online-stream-rknn.cc
     ./rknn/online-transducer-greedy-search-decoder-rknn.cc
+    ./rknn/online-transducer-modified-beam-search-decoder-rknn.cc
     ./rknn/online-zipformer-ctc-model-rknn.cc
     ./rknn/online-zipformer-transducer-model-rknn.cc
     ./rknn/utils.cc
