@@ -1,0 +1,36 @@
+name: visionOS
+
+on:
+  push:
+    branches:
+      - vision-os
+
+  workflow_dispatch:
+
+concurrency:
+  group: vision-os-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  visionOS:
+    runs-on: ${{ matrix.os }}
+    name: vision-os
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: vision-os
+
+      - name: Configure CMake
+        shell: bash
+        run: |
+          ./build-vision-os.sh
