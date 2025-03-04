@@ -19,7 +19,8 @@ void OfflineWhisperGreedySearchDecoder::SetConfig(
 
 std::vector<OfflineWhisperDecoderResult>
 OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
-                                          Ort::Value cross_v) {
+                                          Ort::Value cross_v,
+                                          int32_t num_feature_frames) {
   auto memory_info =
       Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -99,7 +100,12 @@ OfflineWhisperGreedySearchDecoder::Decode(Ort::Value cross_k,
   int32_t n_text_ctx = model_->TextCtx();
 
   std::vector<int32_t> predicted_tokens;
-  for (int32_t i = 0; i < n_text_ctx / 2; ++i) {
+
+  // assume at most 6 tokens per second
+  int32_t num_possible_tokens = num_feature_frames / 100 * 6;
+  num_possible_tokens = std::min<int32_t>(num_possible_tokens, n_text_ctx / 2);
+
+  for (int32_t i = 0; i < num_possible_tokens; ++i) {
     if (max_token_id == model_->EOT()) {
       break;
     }
