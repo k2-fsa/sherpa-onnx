@@ -6,7 +6,6 @@
 
 #include <string>
 
-#include "asio.hpp"
 #include "sherpa-onnx/csrc/online-websocket-server.h"
 #include "sherpa-onnx/csrc/macros.h"
 
