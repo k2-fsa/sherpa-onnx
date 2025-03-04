@@ -310,6 +310,16 @@ and [TTS](https://github.com/xinhecuican/QSmartAssistant/blob/master/doc/%E5%AE%
 are used.
 
 
+### [Flutter-EasySpeechRecognition](https://github.com/Jason-chen-coder/Flutter-EasySpeechRecognition)
+
+It extends [./flutter-examples/streaming_asr](./flutter-examples/streaming_asr) by
+downloading models inside the app to reduce the size of the app.
+
+### [sherpa-onnx-unity](https://github.com/xue-fei/sherpa-onnx-unity)
+
+sherpa-onnx in Unity. See also [#1695](https://github.com/k2-fsa/sherpa-onnx/issues/1695),
+[#1892](https://github.com/k2-fsa/sherpa-onnx/issues/1892), and [#1859](https://github.com/k2-fsa/sherpa-onnx/issues/1859)
+
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
 [Raspberry Pi]: https://www.raspberrypi.com/

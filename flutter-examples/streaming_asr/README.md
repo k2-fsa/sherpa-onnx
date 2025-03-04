@@ -14,6 +14,8 @@ support streaming recording on Linux.
 If you can find a recording package
 that works on Linux, please let us know and we will update this app to support Linux.
 
+See also <https://github.com/Jason-chen-coder/Flutter-EasySpeechRecognition>
+
 ## Getting Started
 
 Remember to use the following steps to download a model. Otherwise, you would
