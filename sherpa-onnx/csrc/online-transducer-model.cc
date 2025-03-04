@@ -179,6 +179,8 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
     const auto &model_type = config.model_type;
     if (model_type == "conformer") {
       return std::make_unique<OnlineConformerTransducerModel>(mgr, config);
+    } else if (model_type == "ebranchformer") {
+      return std::make_unique<OnlineEbranchformerTransducerModel>(mgr, config);
     } else if (model_type == "lstm") {
       return std::make_unique<OnlineLstmTransducerModel>(mgr, config);
     } else if (model_type == "zipformer") {
@@ -198,6 +200,8 @@ std::unique_ptr<OnlineTransducerModel> OnlineTransducerModel::Create(
   switch (model_type) {
     case ModelType::kConformer:
       return std::make_unique<OnlineConformerTransducerModel>(mgr, config);
+    case ModelType::kEbranchformer:
+      return std::make_unique<OnlineEbranchformerTransducerModel>(mgr, config);
     case ModelType::kLstm:
       return std::make_unique<OnlineLstmTransducerModel>(mgr, config);
     case ModelType::kZipformer:

@@ -53,7 +53,7 @@ void PybindOnlineStream(py::module *m) {
       .def("input_finished", &PyClass::InputFinished,
            py::call_guard<py::gil_scoped_release>())
       .def("get_frames", &PyClass::GetFrames,
-           py::arg("frame_index"), py::arg("n"),
+           py::arg("frame_index"), py::arg("n"), kGetFramesUsage,
            py::call_guard<py::gil_scoped_release>());
 }
 
