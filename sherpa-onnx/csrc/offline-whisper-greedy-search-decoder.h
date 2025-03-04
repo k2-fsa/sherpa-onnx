@@ -18,8 +18,9 @@ class OfflineWhisperGreedySearchDecoder : public OfflineWhisperDecoder {
                                     OfflineWhisperModel *model)
       : config_(config), model_(model) {}
 
-  std::vector<OfflineWhisperDecoderResult> Decode(Ort::Value cross_k,
-                                                  Ort::Value cross_v) override;
+  std::vector<OfflineWhisperDecoderResult> Decode(
+      Ort::Value cross_k, Ort::Value cross_v,
+      int32_t num_feature_frames) override;
 
   void SetConfig(const OfflineWhisperModelConfig &config) override;
 

@@ -131,7 +131,7 @@ class OfflineRecognizerWhisperImpl : public OfflineRecognizerImpl {
       auto cross_kv = model_->ForwardEncoder(std::move(mel));
 
       auto results = decoder_->Decode(std::move(cross_kv.first),
-                                      std::move(cross_kv.second));
+                                      std::move(cross_kv.second), num_frames);
 
       auto r = Convert(results[0], symbol_table_);
       s->SetResult(r);
