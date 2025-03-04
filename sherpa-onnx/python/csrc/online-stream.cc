@@ -22,6 +22,23 @@ Args:
     to the range [-1, 1].
 )";
 
+
+constexpr const char *kGetFramesUsage = R"(
+Get n frames starting from the given frame index.
+(hint: intended for debugging, for comparing FBANK features across pipelines)
+
+Args:
+  frame_index:
+    The starting frame index
+  n:
+    Number of frames to get.
+Return:
+  Return a 2-D tensor of shape (n, feature_dim).
+  which is flattened into a 1-D vector (flattened in row major).
+  Unflatten in python with:
+    `features = np.reshape(arr, (n, feature_dim))`
+)";
+
 void PybindOnlineStream(py::module *m) {
   using PyClass = OnlineStream;
   py::class_<PyClass>(*m, "OnlineStream")
@@ -34,6 +51,9 @@ void PybindOnlineStream(py::module *m) {
           py::arg("sample_rate"), py::arg("waveform"), kAcceptWaveformUsage,
           py::call_guard<py::gil_scoped_release>())
       .def("input_finished", &PyClass::InputFinished,
+           py::call_guard<py::gil_scoped_release>())
+      .def("get_frames", &PyClass::GetFrames,
+           py::arg("frame_index"), py::arg("n"), kGetFramesUsage,
            py::call_guard<py::gil_scoped_release>());
 }
 
