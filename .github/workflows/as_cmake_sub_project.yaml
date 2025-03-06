@@ -1,0 +1,66 @@
+name: as_cmake_sub_project
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+  workflow_dispatch:
+
+concurrency:
+  group: as-cmake-sub-project-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  as_cmake_sub_project:
+    name: ${{ matrix.os }} shared ${{ matrix.shared_lib }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        shared_lib: [ON, OFF]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ matrix.os }}-${{ matrix.shared_lib }}-cmake-sub-project
+
+      - name: Display PWD
+        shell: bash
+        run: |
+          echo "pwd: $PWD"
+          ls -lh
+          du -h -d1 .
+
+      - name: Build
+        shell: bash
+        run: |
+          mv .github/scripts/as-cmake-sub-project ..
+          cd ../as-cmake-sub-project
+          ln -s $PWD/../sherpa-onnx .
+          mkdir build
+          cd build
+          cmake -DBUILD_SHARED_LIBS=${{ matrix.shared_lib }} ..
+          make -j2 main
+
+      - name: Test
+        shell: bash
+        run: |
+          cd ../as-cmake-sub-project
+
+          cd build
+          ls -lh lib
+          echo "----"
+          ls -lh bin
+
+          readelf -d ./bin/main
+          ./bin/main
