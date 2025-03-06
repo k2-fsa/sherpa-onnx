@@ -4,6 +4,7 @@
 
 #include "sherpa-onnx/csrc/wave-writer.h"
 
+#include <cstring>
 #include <fstream>
 #include <string>
 #include <vector>
