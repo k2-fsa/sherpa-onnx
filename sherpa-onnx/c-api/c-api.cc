@@ -1337,6 +1337,16 @@ int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
   return sherpa_onnx::WriteWave(filename, sample_rate, samples, n);
 }
 
+int64_t SherpaOnnxWaveFileSize(int32_t n_samples) {
+  return sherpa_onnx::WaveFileSize(n_samples);
+}
+
+SHERPA_ONNX_API void SherpaOnnxWriteWaveToBuffer(const float *samples,
+                                                 int32_t n, int32_t sample_rate,
+                                                 char *buffer) {
+  sherpa_onnx::WriteWave(buffer, sample_rate, samples, n);
+}
+
 const SherpaOnnxWave *SherpaOnnxReadWave(const char *filename) {
   int32_t sample_rate = -1;
   bool is_ok = false;

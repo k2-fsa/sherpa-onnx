@@ -35,8 +35,12 @@ struct WaveHeader {
 
 }  // namespace
 
-bool WriteWave(const std::string &filename, int32_t sampling_rate,
-               const float *samples, int32_t n) {
+int64_t WaveFileSize(int32_t n_samples) {
+  return sizeof(WaveHeader) + n_samples * sizeof(int16_t);
+}
+
+void WriteWave(char *buffer, int32_t sampling_rate, const float *samples,
+               int32_t n) {
   WaveHeader header{};
   header.chunk_id = 0x46464952;      // FFIR
   header.format = 0x45564157;        // EVAW
@@ -61,21 +65,28 @@ bool WriteWave(const std::string &filename, int32_t sampling_rate,
     samples_int16[i] = samples[i] * 32676;
   }
 
+  memcpy(buffer, &header, sizeof(WaveHeader));
+  memcpy(buffer + sizeof(WaveHeader), samples_int16.data(),
+         n * sizeof(int16_t));
+}
+
+bool WriteWave(const std::string &filename, int32_t sampling_rate,
+               const float *samples, int32_t n) {
+  std::string buffer;
+  buffer.resize(WaveFileSize(n));
+  WriteWave(buffer.data(), sampling_rate, samples, n);
   std::ofstream os(filename, std::ios::binary);
   if (!os) {
     SHERPA_ONNX_LOGE("Failed to create %s", filename.c_str());
     return false;
   }
-
-  os.write(reinterpret_cast<const char *>(&header), sizeof(header));
-  os.write(reinterpret_cast<const char *>(samples_int16.data()),
-           samples_int16.size() * sizeof(int16_t));
-
+  os << buffer;
   if (!os) {
     SHERPA_ONNX_LOGE("Write %s failed", filename.c_str());
+    os.close();
     return false;
   }
-
+  os.close();
   return true;
 }
 
