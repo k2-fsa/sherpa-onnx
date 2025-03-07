@@ -20,6 +20,22 @@ Speech recognition using VAD + non-streaming models with sherpa-onnx.
 
 Usage:
 
+Note you can download silero_vad.onnx using
+
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+(0) FireRedAsr
+
+See https://k2-fsa.github.io/sherpa/onnx/FireRedAsr/pretrained.html
+
+  ./bin/sherpa-onnx-vad-with-offline-asr \
+    --tokens=./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/tokens.txt \
+    --fire-red-asr-encoder=./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/encoder.int8.onnx \
+    --fire-red-asr-decoder=./sherpa-onnx-fire-red-asr-large-zh_en-2025-02-16/decoder.int8.onnx \
+    --num-threads=1 \
+    --silero-vad-model=/path/to/silero_vad.onnx \
+    /path/to/foo.wav
+
 (1) Transducer from icefall
 
 See https://k2-fsa.github.io/sherpa/onnx/pretrained_models/offline-transducer/index.html
