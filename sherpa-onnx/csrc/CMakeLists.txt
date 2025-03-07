@@ -452,6 +452,10 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-vad-with-offline-asr
+    sherpa-onnx-vad-with-offline-asr.cc
+  )
+
   add_executable(sherpa-onnx-vad-microphone-offline-asr
     sherpa-onnx-vad-microphone-offline-asr.cc
     microphone.cc
@@ -475,6 +479,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-microphone-offline-audio-tagging
     sherpa-onnx-vad-microphone
     sherpa-onnx-vad-microphone-offline-asr
+    sherpa-onnx-vad-with-offline-asr
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND exes
