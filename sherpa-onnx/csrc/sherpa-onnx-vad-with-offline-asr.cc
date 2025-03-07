@@ -167,6 +167,7 @@ for a list of pre-trained models to download.
     fprintf(stderr, "Resampling done\n");
   }
 
+  fprintf(stderr, "Started!\n");
   int32_t window_size = vad_config.silero_vad.window_size;
   int32_t i = 0;
   while (i + window_size < samples.size()) {
