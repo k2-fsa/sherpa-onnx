@@ -85,9 +85,8 @@ OnlineEbranchformerTransducerModel::OnlineEbranchformerTransducerModel(
   }
 }
 
-
 void OnlineEbranchformerTransducerModel::InitEncoder(void *model_data,
-                                                  size_t model_data_length) {
+                                                     size_t model_data_length) {
   encoder_sess_ = std::make_unique<Ort::Session>(
       env_, model_data, model_data_length, encoder_sess_opts_);
 
@@ -153,9 +152,8 @@ void OnlineEbranchformerTransducerModel::InitEncoder(void *model_data,
   }
 }
 
-
 void OnlineEbranchformerTransducerModel::InitDecoder(void *model_data,
-                                                  size_t model_data_length) {
+                                                     size_t model_data_length) {
   decoder_sess_ = std::make_unique<Ort::Session>(
       env_, model_data, model_data_length, decoder_sess_opts_);
 
@@ -180,7 +178,7 @@ void OnlineEbranchformerTransducerModel::InitDecoder(void *model_data,
 }
 
 void OnlineEbranchformerTransducerModel::InitJoiner(void *model_data,
-                                                 size_t model_data_length) {
+                                                    size_t model_data_length) {
   joiner_sess_ = std::make_unique<Ort::Session>(
       env_, model_data, model_data_length, joiner_sess_opts_);
 
@@ -200,7 +198,6 @@ void OnlineEbranchformerTransducerModel::InitJoiner(void *model_data,
   }
 }
 
-
 std::vector<Ort::Value> OnlineEbranchformerTransducerModel::StackStates(
     const std::vector<std::vector<Ort::Value>> &states) const {
   int32_t batch_size = static_cast<int32_t>(states.size());
@@ -215,28 +212,28 @@ std::vector<Ort::Value> OnlineEbranchformerTransducerModel::StackStates(
   ans.reserve(num_states);
 
   for (int32_t i = 0; i != num_hidden_layers_; ++i) {
-    { // cached_key
+    {  // cached_key
       for (int32_t n = 0; n != batch_size; ++n) {
         buf[n] = &states[n][4 * i];
       }
       auto v = Cat(allocator, buf, /* axis */ 0);
       ans.push_back(std::move(v));
     }
-    { // cached_value
+    {  // cached_value
       for (int32_t n = 0; n != batch_size; ++n) {
         buf[n] = &states[n][4 * i + 1];
       }
       auto v = Cat(allocator, buf, 0);
       ans.push_back(std::move(v));
     }
-    { // cached_conv
+    {  // cached_conv
       for (int32_t n = 0; n != batch_size; ++n) {
         buf[n] = &states[n][4 * i + 2];
       }
       auto v = Cat(allocator, buf, 0);
       ans.push_back(std::move(v));
     }
-    { // cached_conv_fusion
+    {  // cached_conv_fusion
       for (int32_t n = 0; n != batch_size; ++n) {
         buf[n] = &states[n][4 * i + 3];
       }
@@ -245,7 +242,7 @@ std::vector<Ort::Value> OnlineEbranchformerTransducerModel::StackStates(
     }
   }
 
-  { // processed_lens
+  {  // processed_lens
     for (int32_t n = 0; n != batch_size; ++n) {
       buf[n] = &states[n][num_states - 1];
     }
@@ -256,11 +253,9 @@ std::vector<Ort::Value> OnlineEbranchformerTransducerModel::StackStates(
   return ans;
 }
 
-
 std::vector<std::vector<Ort::Value>>
 OnlineEbranchformerTransducerModel::UnStackStates(
     const std::vector<Ort::Value> &states) const {
-
   assert(static_cast<int32_t>(states.size()) == num_hidden_layers_ * 4 + 1);
 
   int32_t batch_size = states[0].GetTensorTypeAndShapeInfo().GetShape()[0];
@@ -272,7 +267,7 @@ OnlineEbranchformerTransducerModel::UnStackStates(
   ans.resize(batch_size);
 
   for (int32_t i = 0; i != num_hidden_layers_; ++i) {
-    { // cached_key
+    {  // cached_key
       auto v = Unbind(allocator, &states[i * 4], /* axis */ 0);
       assert(static_cast<int32_t>(v.size()) == batch_size);
 
@@ -280,7 +275,7 @@ OnlineEbranchformerTransducerModel::UnStackStates(
         ans[n].push_back(std::move(v[n]));
       }
     }
-    { // cached_value
+    {  // cached_value
       auto v = Unbind(allocator, &states[i * 4 + 1], 0);
       assert(static_cast<int32_t>(v.size()) == batch_size);
 
@@ -288,7 +283,7 @@ OnlineEbranchformerTransducerModel::UnStackStates(
         ans[n].push_back(std::move(v[n]));
       }
     }
-    { // cached_conv
+    {  // cached_conv
       auto v = Unbind(allocator, &states[i * 4 + 2], 0);
       assert(static_cast<int32_t>(v.size()) == batch_size);
 
@@ -296,7 +291,7 @@ OnlineEbranchformerTransducerModel::UnStackStates(
         ans[n].push_back(std::move(v[n]));
       }
     }
-    { // cached_conv_fusion
+    {  // cached_conv_fusion
       auto v = Unbind(allocator, &states[i * 4 + 3], 0);
       assert(static_cast<int32_t>(v.size()) == batch_size);
 
@@ -306,7 +301,7 @@ OnlineEbranchformerTransducerModel::UnStackStates(
     }
   }
 
-  { // processed_lens
+  {  // processed_lens
     auto v = Unbind<int64_t>(allocator, &states.back(), 0);
     assert(static_cast<int32_t>(v.size()) == batch_size);
 
@@ -317,7 +312,6 @@ OnlineEbranchformerTransducerModel::UnStackStates(
 
   return ans;
 }
-
 
 std::vector<Ort::Value>
 OnlineEbranchformerTransducerModel::GetEncoderInitStates() {
@@ -332,40 +326,37 @@ OnlineEbranchformerTransducerModel::GetEncoderInitStates() {
   int32_t channels_conv_fusion = 2 * hidden_size_;
 
   for (int32_t i = 0; i != num_hidden_layers_; ++i) {
-    { // cached_key_{i}
+    {  // cached_key_{i}
       std::array<int64_t, 4> s{1, num_heads_, left_context_len_, head_dim_};
-      auto v =
-          Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
+      auto v = Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
       Fill(&v, 0);
       ans.push_back(std::move(v));
     }
 
-    { // cahced_value_{i}
+    {  // cahced_value_{i}
       std::array<int64_t, 4> s{1, num_heads_, left_context_len_, head_dim_};
-      auto v =
-          Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
+      auto v = Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
       Fill(&v, 0);
       ans.push_back(std::move(v));
     }
 
-    { // cached_conv_{i}
+    {  // cached_conv_{i}
       std::array<int64_t, 3> s{1, channels_conv, left_context_conv};
-      auto v =
-          Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
+      auto v = Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
       Fill(&v, 0);
       ans.push_back(std::move(v));
     }
 
-    { // cached_conv_fusion_{i}
-      std::array<int64_t, 3> s{1, channels_conv_fusion, left_context_conv_fusion};
-      auto v =
-          Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
+    {  // cached_conv_fusion_{i}
+      std::array<int64_t, 3> s{1, channels_conv_fusion,
+                               left_context_conv_fusion};
+      auto v = Ort::Value::CreateTensor<float>(allocator_, s.data(), s.size());
       Fill(&v, 0);
       ans.push_back(std::move(v));
     }
   }  // num_hidden_layers_
 
-  { // processed_lens
+  {  // processed_lens
     std::array<int64_t, 1> s{1};
     auto v = Ort::Value::CreateTensor<int64_t>(allocator_, s.data(), s.size());
     Fill<int64_t>(&v, 0);
@@ -375,11 +366,10 @@ OnlineEbranchformerTransducerModel::GetEncoderInitStates() {
   return ans;
 }
 
-
 std::pair<Ort::Value, std::vector<Ort::Value>>
-OnlineEbranchformerTransducerModel::RunEncoder(Ort::Value features,
-                                            std::vector<Ort::Value> states,
-                                            Ort::Value /* processed_frames */) {
+OnlineEbranchformerTransducerModel::RunEncoder(
+    Ort::Value features, std::vector<Ort::Value> states,
+    Ort::Value /* processed_frames */) {
   std::vector<Ort::Value> encoder_inputs;
   encoder_inputs.reserve(1 + states.size());
 
@@ -402,7 +392,6 @@ OnlineEbranchformerTransducerModel::RunEncoder(Ort::Value features,
   return {std::move(encoder_out[0]), std::move(next_states)};
 }
 
-
 Ort::Value OnlineEbranchformerTransducerModel::RunDecoder(
     Ort::Value decoder_input) {
   auto decoder_out = decoder_sess_->Run(
@@ -411,9 +400,8 @@ Ort::Value OnlineEbranchformerTransducerModel::RunDecoder(
   return std::move(decoder_out[0]);
 }
 
-
-Ort::Value OnlineEbranchformerTransducerModel::RunJoiner(Ort::Value encoder_out,
-                                                      Ort::Value decoder_out) {
+Ort::Value OnlineEbranchformerTransducerModel::RunJoiner(
+    Ort::Value encoder_out, Ort::Value decoder_out) {
   std::array<Ort::Value, 2> joiner_input = {std::move(encoder_out),
                                             std::move(decoder_out)};
   auto logit =
@@ -423,7 +411,6 @@ Ort::Value OnlineEbranchformerTransducerModel::RunJoiner(Ort::Value encoder_out,
 
   return std::move(logit[0]);
 }
-
 
 #if __ANDROID_API__ >= 9
 template OnlineEbranchformerTransducerModel::OnlineEbranchformerTransducerModel(

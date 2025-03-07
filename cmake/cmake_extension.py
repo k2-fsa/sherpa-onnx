@@ -64,6 +64,7 @@ def get_binaries():
         "sherpa-onnx-online-websocket-server",
         "sherpa-onnx-vad-microphone",
         "sherpa-onnx-vad-microphone-offline-asr",
+        "sherpa-onnx-vad-with-offline-asr",
     ]
 
     if enable_alsa():
