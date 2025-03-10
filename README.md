@@ -12,9 +12,9 @@
 |--------------------------------|---------------|--------------------------|
 |                 ✔️              |          ✔️    |                ✔️         |
 
-| Keyword spotting | Add punctuation |
-|------------------|-----------------|
-|     ✔️            |       ✔️         |
+| Keyword spotting | Add punctuation | Speech enhancement |
+|------------------|-----------------|--------------------|
+|     ✔️            |       ✔️         |      ✔️             |
 
 ### Supported platforms
 
@@ -198,6 +198,7 @@ We also have spaces built using WebAssembly. They are listed below:
 | Spoken language identification (Language ID)| See multi-lingual [Whisper][Whisper] ASR models from  [Speech recognition][asr-models]|
 | Punctuation                                 | [Address][punct-models]                                                               |
 | Speaker segmentation                        | [Address][speaker-segmentation-models]                                                |
+| Speech enhancement                          | [Address][speech-enhancement-models]                                                  |
 
 </details>
 
@@ -442,3 +443,4 @@ sherpa-onnx in Unity. See also [#1695](https://github.com/k2-fsa/sherpa-onnx/iss
 [Moonshine tiny]: https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-moonshine-tiny-en-int8.tar.bz2
 [NVIDIA Jetson Orin NX]: https://developer.download.nvidia.com/assets/embedded/secure/jetson/orin_nx/docs/Jetson_Orin_NX_DS-10712-001_v0.5.pdf?RCPGu9Q6OVAOv7a7vgtwc9-BLScXRIWq6cSLuditMALECJ_dOj27DgnqAPGVnT2VpiNpQan9SyFy-9zRykR58CokzbXwjSA7Gj819e91AXPrWkGZR3oS1VLxiDEpJa_Y0lr7UT-N4GnXtb8NlUkP4GkCkkF_FQivGPrAucCUywL481GH_WpP_p7ziHU1Wg==&t=eyJscyI6ImdzZW8iLCJsc2QiOiJodHRwczovL3d3dy5nb29nbGUuY29tLmhrLyJ9
 [NVIDIA Jetson Nano B01]: https://www.seeedstudio.com/blog/2020/01/16/new-revision-of-jetson-nano-dev-kit-now-supports-new-jetson-nano-module/
+[speech-enhancement-models]: https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models

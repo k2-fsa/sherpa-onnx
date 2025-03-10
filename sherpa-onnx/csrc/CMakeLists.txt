@@ -186,6 +186,14 @@ if(SHERPA_ONNX_ENABLE_TTS)
   )
 endif()
 
+list(APPEND sources
+  offline-speech-denoiser-gtcrn-model-config.cc
+  offline-speech-denoiser-gtcrn-model.cc
+  offline-speech-denoiser-impl.cc
+  offline-speech-denoiser-model-config.cc
+  offline-speech-denoiser.cc
+)
+
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   list(APPEND sources
     fast-clustering-config.cc
@@ -301,6 +309,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
   add_executable(sherpa-onnx-offline-punctuation sherpa-onnx-offline-punctuation.cc)
   add_executable(sherpa-onnx-online-punctuation sherpa-onnx-online-punctuation.cc)
+  add_executable(sherpa-onnx-offline-denoiser sherpa-onnx-offline-denoiser.cc)
 
   if(SHERPA_ONNX_ENABLE_TTS)
     add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
@@ -318,6 +327,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-offline-language-identification
     sherpa-onnx-offline-parallel
     sherpa-onnx-offline-punctuation
+    sherpa-onnx-offline-denoiser
     sherpa-onnx-online-punctuation
   )
   if(SHERPA_ONNX_ENABLE_TTS)
