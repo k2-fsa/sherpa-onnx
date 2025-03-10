@@ -12,6 +12,7 @@ namespace sherpa_onnx {
 
 struct OfflineSpeechDenoiserGtcrnModelConfig {
   std::string model;
+  OfflineSpeechDenoiserGtcrnModelConfig() = default;
 
   void Register(ParseOptions *po);
   bool Validate() const;
