@@ -186,6 +186,12 @@ if(SHERPA_ONNX_ENABLE_TTS)
   )
 endif()
 
+list(APPEND sources
+  offline-speech-denoiser-impl.cc
+  offline-speech-denoiser-model-config.cc
+  offline-speech-denoiser.cc
+)
+
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   list(APPEND sources
     fast-clustering-config.cc
