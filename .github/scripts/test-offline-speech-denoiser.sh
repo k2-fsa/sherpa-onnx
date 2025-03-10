@@ -28,3 +28,5 @@ $EXE \
   --speech-denoiser-gtcrn-model=./gtcrn_simple.onnx \
   --input-wav=./speech_with_noise.wav \
   --output-wav=./enhanced_speech_16k.wav
+
+rm ./gtcrn_simple.onnx

@@ -167,7 +167,7 @@ jobs:
         run: |
           du -h -d1 .
           export PATH=$PWD/build/bin:$PATH
-          export EXE=sherpa-onnx-offline-speech-denoiser
+          export EXE=sherpa-onnx-offline-denoiser
 
           .github/scripts/test-offline-speech-denoiser.sh
 
