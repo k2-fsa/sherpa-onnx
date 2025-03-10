@@ -1049,6 +1049,18 @@ SHERPA_ONNX_API int32_t SherpaOnnxWriteWave(const float *samples, int32_t n,
                                             int32_t sample_rate,
                                             const char *filename);
 
+// the amount of bytes needed to store a wave file which contains a
+// single channel and has 16-bit samples.
+SHERPA_ONNX_API int64_t SherpaOnnxWaveFileSize(int32_t n_samples);
+
+// Similar to SherpaOnnxWriteWave , it writes wave to allocated  buffer;
+//
+// in some case (http tts api return wave binary file, server do not need to
+// write wave to fs)
+SHERPA_ONNX_API void SherpaOnnxWriteWaveToBuffer(const float *samples,
+                                                 int32_t n, int32_t sample_rate,
+                                                 char *buffer);
+
 SHERPA_ONNX_API typedef struct SherpaOnnxWave {
   // samples normalized to the range [-1, 1]
   const float *samples;
