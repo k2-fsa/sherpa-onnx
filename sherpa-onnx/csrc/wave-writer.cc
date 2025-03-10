@@ -84,10 +84,8 @@ bool WriteWave(const std::string &filename, int32_t sampling_rate,
   os << buffer;
   if (!os) {
     SHERPA_ONNX_LOGE("Write %s failed", filename.c_str());
-    os.close();
     return false;
   }
-  os.close();
   return true;
 }
 
