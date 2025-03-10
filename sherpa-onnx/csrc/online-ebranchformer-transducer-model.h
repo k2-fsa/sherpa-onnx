@@ -22,7 +22,7 @@ class OnlineEbranchformerTransducerModel : public OnlineTransducerModel {
 
   template <typename Manager>
   OnlineEbranchformerTransducerModel(Manager *mgr,
-                                  const OnlineModelConfig &config);
+                                     const OnlineModelConfig &config);
 
   std::vector<Ort::Value> StackStates(
       const std::vector<std::vector<Ort::Value>> &states) const override;

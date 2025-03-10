@@ -131,10 +131,10 @@ for a list of pre-trained models to download.
   std::vector<sherpa_onnx::OfflineStream *> ss_pointers;
   float duration = 0;
   for (int32_t i = 1; i <= po.NumArgs(); ++i) {
-    const std::string wav_filename = po.GetArg(i);
+    std::string wav_filename = po.GetArg(i);
     int32_t sampling_rate = -1;
     bool is_ok = false;
-    const std::vector<float> samples =
+    std::vector<float> samples =
         sherpa_onnx::ReadWave(wav_filename, &sampling_rate, &is_ok);
     if (!is_ok) {
       fprintf(stderr, "Failed to read '%s'\n", wav_filename.c_str());
