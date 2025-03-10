@@ -18,6 +18,9 @@ set(srcs
   offline-punctuation.cc
   offline-recognizer.cc
   offline-sense-voice-model-config.cc
+  offline-speech-denoiser-gtcrn-model-config.cc
+  offline-speech-denoiser-model-config.cc
+  offline-speech-denoiser.cc
   offline-stream.cc
   offline-tdnn-model-config.cc
   offline-transducer-model-config.cc

@@ -8,6 +8,13 @@ log() {
   echo -e "$(date '+%Y-%m-%d %H:%M:%S') (${fname}:${BASH_LINENO[0]}:${FUNCNAME[1]}) $*"
 }
 
+log "test offline speech enhancement (GTCRN)"
+
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/speech_with_noise.wav
+python3 ./python-api-examples/offline-speech-enhancement-gtcrn.py
+ls -lh *.wav
+
 log "test offline zipformer (byte-level bpe, Chinese+English)"
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-zipformer-zh-en-2023-11-22.tar.bz2
 tar xvf sherpa-onnx-zipformer-zh-en-2023-11-22.tar.bz2
