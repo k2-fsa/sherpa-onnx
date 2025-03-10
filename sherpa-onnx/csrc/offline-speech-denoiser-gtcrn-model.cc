@@ -4,6 +4,8 @@
 
 #include "sherpa-onnx/csrc/offline-speech-denoiser-gtcrn-model.h"
 
+#include <memory>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -16,7 +18,7 @@ namespace sherpa_onnx {
 
 class OfflineSpeechDenoiserGtcrnModel::Impl {
  public:
-  Impl(const OfflineSpeechDenoiserModelConfig &config)
+  explicit Impl(const OfflineSpeechDenoiserModelConfig &config)
       : config_(config),
         env_(ORT_LOGGING_LEVEL_ERROR),
         sess_opts_(GetSessionOptions(config)),

@@ -5,7 +5,10 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOISER_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOISER_IMPL_H_
 
+#include <memory>
+
 #include "sherpa-onnx/csrc/offline-speech-denoiser.h"
+
 namespace sherpa_onnx {
 
 class OfflineSpeechDenoiserImpl {

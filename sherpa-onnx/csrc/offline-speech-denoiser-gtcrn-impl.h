@@ -5,6 +5,11 @@
 #ifndef SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOISER_GTCRN_IMPL_H_
 #define SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOISER_GTCRN_IMPL_H_
 
+#include <algorithm>
+#include <memory>
+#include <utility>
+#include <vector>
+
 #include "kaldi-native-fbank/csrc/feature-window.h"
 #include "kaldi-native-fbank/csrc/istft.h"
 #include "kaldi-native-fbank/csrc/stft.h"
@@ -17,7 +22,8 @@ namespace sherpa_onnx {
 
 class OfflineSpeechDenoiserGtcrnImpl : public OfflineSpeechDenoiserImpl {
  public:
-  OfflineSpeechDenoiserGtcrnImpl(const OfflineSpeechDenoiserConfig &config)
+  explicit OfflineSpeechDenoiserGtcrnImpl(
+      const OfflineSpeechDenoiserConfig &config)
       : model_(config.model) {}
 
   template <typename Manager>

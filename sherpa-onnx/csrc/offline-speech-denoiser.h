@@ -1,8 +1,8 @@
 // sherpa-onnx/csrc/offline-speech-denoiser.h
 //
 // Copyright (c)  2025  Xiaomi Corporation
-#ifndef SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOIRSER_H_
-#define SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOIRSER_H_
+#ifndef SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOISER_H_
+#define SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOISER_H_
 
 #include <memory>
 #include <string>
@@ -58,4 +58,4 @@ class OfflineSpeechDenoiser {
 
 }  // namespace sherpa_onnx
 
-#endif  // SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOIRSER_H_
+#endif  // SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOISER_H_
