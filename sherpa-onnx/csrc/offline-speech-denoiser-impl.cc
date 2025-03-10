@@ -14,16 +14,27 @@
 #include "rawfile/raw_file_manager.h"
 #endif
 
+#include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/offline-speech-denoiser-gtcrn-impl.h"
+
 namespace sherpa_onnx {
 
 std::unique_ptr<OfflineSpeechDenoiserImpl> OfflineSpeechDenoiserImpl::Create(
     const OfflineSpeechDenoiserConfig &config) {
+  if (!config.model.gtcrn.model.empty()) {
+    return std::make_unique<OfflineSpeechDenoiserGtcrnImpl>(config);
+  }
+  SHERPA_ONNX_LOGE("Please provide a speech denoising model.");
   return nullptr;
 }
 
 template <typename Manager>
 std::unique_ptr<OfflineSpeechDenoiserImpl> OfflineSpeechDenoiserImpl::Create(
     Manager *mgr, const OfflineSpeechDenoiserConfig &config) {
+  if (!config.model.gtcrn.model.empty()) {
+    return std::make_unique<OfflineSpeechDenoiserGtcrnImpl>(mgr, config);
+  }
+  SHERPA_ONNX_LOGE("Please provide a speech denoising model.");
   return nullptr;
 }
 

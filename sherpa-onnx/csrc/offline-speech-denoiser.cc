@@ -26,7 +26,7 @@ bool OfflineSpeechDenoiserConfig::Validate() const { return model.Validate(); }
 std::string OfflineSpeechDenoiserConfig::ToString() const {
   std::ostringstream os;
 
-  os << "OfflineSpeechDenoiserModelConfig(";
+  os << "OfflineSpeechDenoiserConfig(";
   os << "model=" << model.ToString() << ")";
   return os.str();
 }

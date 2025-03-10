@@ -1,4 +1,4 @@
-// sherpa-onnx/csrc/offline-tts-kokoro-model-metadata.h
+// sherpa-onnx/csrc/offline-tts-kokoro-model-meta-data.h
 //
 // Copyright (c)  2025  Xiaomi Corporation
 

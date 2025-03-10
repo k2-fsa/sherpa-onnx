@@ -8,10 +8,33 @@
 
 namespace sherpa_onnx {
 
-void OfflineSpeechDenoiserModelConfig::Register(ParseOptions *po) {}
+void OfflineSpeechDenoiserModelConfig::Register(ParseOptions *po) {
+  gtcrn.Register(po);
 
-bool OfflineSpeechDenoiserModelConfig::Validate() const { return true; }
+  po->Register("num-threads", &num_threads,
+               "Number of threads to run the neural network");
 
-std::string OfflineSpeechDenoiserModelConfig::ToString() const { return {}; }
+  po->Register("debug", &debug,
+               "true to print model information while loading it.");
+
+  po->Register("provider", &provider,
+               "Specify a provider to use: cpu, cuda, coreml");
+}
+
+bool OfflineSpeechDenoiserModelConfig::Validate() const {
+  return gtcrn.Validate();
+}
+
+std::string OfflineSpeechDenoiserModelConfig::ToString() const {
+  std::ostringstream os;
+
+  os << "OfflineSpeechDenoiserModelConfig(";
+  os << "gtcrn=" << gtcrn.ToString() << ", ";
+  os << "num_threads=" << num_threads << ", ";
+  os << "debug=" << (debug ? "True" : "False") << ", ";
+  os << "provider=\"" << provider << "\")";
+
+  return os.str();
+}
 
 }  // namespace sherpa_onnx

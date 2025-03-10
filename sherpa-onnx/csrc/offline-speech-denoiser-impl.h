@@ -19,12 +19,10 @@ class OfflineSpeechDenoiserImpl {
   static std::unique_ptr<OfflineSpeechDenoiserImpl> Create(
       Manager *mgr, const OfflineSpeechDenoiserConfig &config);
 
-  DenoisedAudio Run(const float *samples, int32_t n,
-                    int32_t sample_rate) const {
-    return {};
-  }
+  virtual DenoisedAudio Run(const float *samples, int32_t n,
+                            int32_t sample_rate) const = 0;
 
-  int32_t GetSampleRate() const { return 0; }
+  virtual int32_t GetSampleRate() const = 0;
 };
 
 }  // namespace sherpa_onnx
