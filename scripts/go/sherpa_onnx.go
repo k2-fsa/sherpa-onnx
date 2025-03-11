@@ -959,7 +959,6 @@ func (tts *OfflineTts) Generate(text string, sid int, speed float32) *GeneratedA
 	// see https://stackoverflow.com/questions/48756732/what-does-1-30c-yourtype-do-exactly-in-cgo
 	// :n:n means 0:n:n, means low:high:capacity
 	samples := unsafe.Slice(audio.samples, n)
-	// copy(ans.Samples, samples)
 	for i := 0; i < n; i++ {
 		ans.Samples[i] = float32(samples[i])
 	}
@@ -1856,7 +1855,7 @@ type OfflineSpeechDenoiserConfig struct {
 	Model OfflineSpeechDenoiserModelConfig
 }
 
-type SpeechDenoiser struct {
+type OfflineSpeechDenoiser struct {
 	impl *C.struct_SherpaOnnxOfflineSpeechDenoiser
 }
 
@@ -1873,7 +1872,7 @@ func DeleteOfflineSpeechDenoiser(sd *OfflineSpeechDenoiser) {
 	sd.impl = nil
 }
 
-// The user is responsible to invoke [DeleteOfflineTts]() to free
+// The user is responsible to invoke [DeleteOfflineSpeechDenoiser]() to free
 // the returned tts to avoid memory leak
 func NewOfflineSpeechDenoiser(config *OfflineSpeechDenoiserConfig) *OfflineSpeechDenoiser {
 	c := C.struct_SherpaOnnxOfflineSpeechDenoiserConfig{}
@@ -1896,19 +1895,18 @@ func NewOfflineSpeechDenoiser(config *OfflineSpeechDenoiserConfig) *OfflineSpeec
 	return sd
 }
 
-func (sd *OfflineSpeechDenoiser) Run(samples []float32, sampleRate int) {
+func (sd *OfflineSpeechDenoiser) Run(samples []float32, sampleRate int) *DenoisedAudio {
 	audio := C.SherpaOnnxOfflineSpeechDenoiserRun(sd.impl, (*C.float)(&samples[0]), C.int(len(samples)), C.int(sampleRate))
 	defer C.SherpaOnnxDestroyDenoisedAudio(audio)
 
-	ans := &DenoiseddAudio{}
+	ans := &DenoisedAudio{}
 	ans.SampleRate = int(audio.sample_rate)
 	n := int(audio.n)
 	ans.Samples = make([]float32, n)
 
-	samples := unsafe.Slice(audio.samples, n)
-	// copy(ans.Samples, samples)
+	denoisedSamples := unsafe.Slice(audio.samples, n)
 	for i := 0; i < n; i++ {
-		ans.Samples[i] = float32(samples[i])
+		ans.Samples[i] = float32(denoisedSamples[i])
 	}
 
 	return ans

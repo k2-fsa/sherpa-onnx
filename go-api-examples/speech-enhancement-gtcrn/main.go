@@ -11,11 +11,11 @@ func main() {
 	config := sherpa.OfflineSpeechDenoiserConfig{}
 
 	// Please download the models from
-	// https://github.com/k2-fsa/sherpa-onnx/releases/tag/kws-models
+	// https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models
 
 	config.Model.Gtcrn.Model = "./gtcrn_simple.onnx"
-	config.ModelConfig.NumThreads = 1
-	config.ModelConfig.Debug = 1
+	config.Model.NumThreads = 1
+	config.Model.Debug = 1
 
 	sd := sherpa.NewOfflineSpeechDenoiser(&config)
 	defer sherpa.DeleteOfflineSpeechDenoiser(sd)
@@ -32,11 +32,12 @@ func main() {
 	audio := sd.Run(wave.Samples, wave.SampleRate)
 	log.Println("Done!")
 
+	filename := "./enhanced-16k.wav"
 	ok := audio.Save(filename)
 	if !ok {
 		log.Fatalf("Failed to write", filename)
 	} else {
-		log.Info("Saved to ", filename)
+		log.Println("Saved to ", filename)
 	}
 
 }
