@@ -513,4 +513,49 @@ void KeywordSpotter::Reset(const OnlineStream *s) const {
   SherpaOnnxResetKeywordStream(p_, s->Get());
 }
 
+// ============================================================
+// For Offline Speech Enhancement
+// ============================================================
+
+OfflineSpeechDenoiser OfflineSpeechDenoiser::Create(
+    const OfflineSpeechDenoiserConfig &config) {
+  struct SherpaOnnxOfflineSpeechDenoiserConfig c;
+  memset(&c, 0, sizeof(c));
+
+  c.model.gtcrn.model = config.model.gtcrn.model.c_str();
+
+  c.model.num_threads = config.model.num_threads;
+  c.model.provider = config.model.provider.c_str();
+  c.model.debug = config.model.debug;
+
+  auto p = SherpaOnnxCreateOfflineSpeechDenoiser(&c);
+
+  return OfflineSpeechDenoiser(p);
+}
+
+void OfflineSpeechDenoiser::Destroy(
+    const SherpaOnnxOfflineSpeechDenoiser *p) const {
+  SherpaOnnxDestroyOfflineSpeechDenoiser(p);
+}
+
+OfflineSpeechDenoiser::OfflineSpeechDenoiser(
+    const SherpaOnnxOfflineSpeechDenoiser *p)
+    : MoveOnly<OfflineSpeechDenoiser, SherpaOnnxOfflineSpeechDenoiser>(p) {}
+
+DenoisedAudio OfflineSpeechDenoiser::Run(const float *samples, int32_t n,
+                                         int32_t sample_rate) const {
+  auto audio = SherpaOnnxOfflineSpeechDenoiserRun(p_, samples, n, sample_rate);
+
+  DenoisedAudio ans;
+  ans.samples = {audio->samples, audio->samples + audio->n};
+  ans.sample_rate = audio->sample_rate;
+  SherpaOnnxDestroyDenoisedAudio(audio);
+
+  return ans;
+}
+
+int32_t OfflineSpeechDenoiser::GetSampleRate() const {
+  return SherpaOnnxOfflineSpeechDenoiserGetSampleRate(p_);
+}
+
 }  // namespace sherpa_onnx::cxx

@@ -108,6 +108,8 @@ jobs:
           cp -v inp_16k.wav denoised-wavs
           cp -v enhanced_16k.wav denoised-wavs
 
+          rm $name
+
       - uses: actions/upload-artifact@v4
         with:
           name: denoised-wavs-${{ matrix.os }}

@@ -14,7 +14,9 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-
 wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
 */
 // clang-format on
+#include <chrono>  // NOLINT
 #include <iostream>
+#include <string>
 
 #include "sherpa-onnx/c-api/cxx-api.h"
 
