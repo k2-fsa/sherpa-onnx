@@ -35,6 +35,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kokoro-tts", "kokoro-tts\ko
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "kokoro-tts-play", "kokoro-tts-play\kokoro-tts-play.csproj", "{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "speech-enhancement-gtcrn", "speech-enhancement-gtcrn\speech-enhancement-gtcrn.csproj", "{DF2569C6-6011-4716-9538-F9E9069E00EB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -105,6 +107,10 @@ Global
 		{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EC0BCEAB-1B4E-4129-82CE-9880426AFA0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF2569C6-6011-4716-9538-F9E9069E00EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF2569C6-6011-4716-9538-F9E9069E00EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF2569C6-6011-4716-9538-F9E9069E00EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF2569C6-6011-4716-9538-F9E9069E00EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
