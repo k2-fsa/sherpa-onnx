@@ -1639,10 +1639,71 @@ SherpaOnnxOfflineSpeakerDiarizationProcessWithCallbackNoArg(
 SHERPA_ONNX_API void SherpaOnnxOfflineSpeakerDiarizationDestroyResult(
     const SherpaOnnxOfflineSpeakerDiarizationResult *r);
 
+// =========================================================================
+// For offline speech enhancement
+// =========================================================================
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig {
+  const char *model;
+} SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeechDenoiserModelConfig {
+  SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig gtcrn;
+  int32_t num_threads;
+  int32_t debug;  // true to print debug information of the model
+  const char *provider;
+} SherpaOnnxOfflineSpeechDenoiserModelConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeechDenoiserConfig {
+  SherpaOnnxOfflineSpeechDenoiserModelConfig model;
+} SherpaOnnxOfflineSpeechDenoiserConfig;
+
+SHERPA_ONNX_API typedef struct SherpaOnnxOfflineSpeechDenoiser
+    SherpaOnnxOfflineSpeechDenoiser;
+
+// The users has to invoke SherpaOnnxDestroyOfflineSpeechDenoiser()
+// to free the returned pointer to avoid memory leak
+SHERPA_ONNX_API const SherpaOnnxOfflineSpeechDenoiser *
+SherpaOnnxCreateOfflineSpeechDenoiser(
+    const SherpaOnnxOfflineSpeechDenoiserConfig *config);
+
+// Free the pointer returned by SherpaOnnxCreateOfflineSpeechDenoiser()
+SHERPA_ONNX_API void SherpaOnnxDestroyOfflineSpeechDenoiser(
+    const SherpaOnnxOfflineSpeechDenoiser *sd);
+
+SHERPA_ONNX_API int32_t SherpaOnnxOfflineSpeechDenoiserGetSampleRate(
+    const SherpaOnnxOfflineSpeechDenoiser *sd);
+
+SHERPA_ONNX_API typedef struct SherpaOnnxDenoisedAudio {
+  const float *samples;  // in the range [-1, 1]
+  int32_t n;             // number of samples
+  int32_t sample_rate;
+} SherpaOnnxDenoisedAudio;
+
+// Run speech denosing on input samples
+// @param samples  A 1-D array containing the input audio samples. Each sample
+//           should be in the range [-1, 1].
+// @param n  Number of samples
+// @param sample_rate Sample rate of the input samples
+//
+// The user MUST use SherpaOnnxDestroyDenoisedAudio() to free the returned
+// pointer to avoid memory leak.
+SHERPA_ONNX_API const SherpaOnnxDenoisedAudio *
+SherpaOnnxOfflineSpeechDenoiserRun(const SherpaOnnxOfflineSpeechDenoiser *sd,
+                                   const float *samples, int32_t n,
+                                   int32_t sample_rate);
+
+SHERPA_ONNX_API void SherpaOnnxDestroyDenoisedAudio(
+    const SherpaOnnxDenoisedAudio *p);
+
 #ifdef __OHOS__
 
 // It is for HarmonyOS
 typedef struct NativeResourceManager NativeResourceManager;
+
+SHERPA_ONNX_API const SherpaOnnxOfflineSpeechDenoiser *
+SherpaOnnxCreateOfflineSpeechDenoiserOHOS(
+    const SherpaOnnxOfflineSpeechDenoiserConfig *config,
+    NativeResourceManager *mgr);
 
 /// @param config  Config for the recognizer.
 /// @return Return a pointer to the recognizer. The user has to invoke
