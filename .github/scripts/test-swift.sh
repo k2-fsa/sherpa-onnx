@@ -7,6 +7,8 @@ echo "pwd: $PWD"
 cd swift-api-examples
 ls -lh
 
+./run-speech-enhancement-gtcrn.sh
+ls -lh *.wav
 
 ./run-fire-red-asr.sh
 rm -rf sherpa-onnx-fire-red-asr-*
