@@ -2,7 +2,11 @@
 
 cd dotnet-examples/
 
-cd ./kokoro-tts
+cd ./speech-enhancement-gtcrn
+./run.sh
+ls -lh
+
+cd ../kokoro-tts
 ./run-kokoro.sh
 ls -lh
 
