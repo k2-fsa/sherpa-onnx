@@ -1,5 +1,6 @@
 /// Copyright (c)  2025  Xiaomi Corporation (authors: Fangjun Kuang)
 
+using System;
 using System.Runtime.InteropServices;
 
 namespace SherpaOnnx

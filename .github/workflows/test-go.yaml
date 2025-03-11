@@ -132,6 +132,15 @@ jobs:
           name: ${{ matrix.os }}-libs
           path: to-upload/
 
+      - name: Test speech enhancement (GTCRN)
+        shell: bash
+        run: |
+          cd scripts/go/_internal/speech-enhancement-gtcrn/
+
+          ./run.sh
+
+          ls -lh
+
       - name: Test audio tagging
         shell: bash
         run: |
