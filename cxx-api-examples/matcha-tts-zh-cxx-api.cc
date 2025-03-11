@@ -1,4 +1,4 @@
-// cxx-api-examples/matcha-tts-zh-cxx-api.c
+// cxx-api-examples/matcha-tts-zh-cxx-api.cc
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
