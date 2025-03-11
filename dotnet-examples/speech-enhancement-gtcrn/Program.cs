@@ -1,4 +1,4 @@
-﻿// Copyright (c)  2024  Xiaomi Corporation
+﻿// Copyright (c)  2025  Xiaomi Corporation
 //
 // This file shows how to use speech enhancement API with GTCRN models.
 //

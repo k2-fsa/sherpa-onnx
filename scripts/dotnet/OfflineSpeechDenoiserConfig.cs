@@ -9,7 +9,7 @@ namespace SherpaOnnx
     {
         public OfflineSpeechDenoiserConfig()
         {
-            Model = new OfflineSpeechDenoiserConfig();
+            Model = new OfflineSpeechDenoiserModelConfig();
         }
         public OfflineSpeechDenoiserModelConfig Model;
     }

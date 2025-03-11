@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 namespace SherpaOnnx
 {
-    public struct OfflineSpeechDenoiser: IDisposable
+    public class OfflineSpeechDenoiser: IDisposable
     {
         public OfflineSpeechDenoiser(OfflineSpeechDenoiserConfig config)
         {
