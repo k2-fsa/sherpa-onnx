@@ -24,6 +24,7 @@
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/offline-punctuation.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
+#include "sherpa-onnx/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/csrc/online-punctuation.h"
 #include "sherpa-onnx/csrc/online-recognizer.h"
 #include "sherpa-onnx/csrc/resample.h"
@@ -1967,6 +1968,77 @@ int32_t SherpaOnnxFileExists(const char *filename) {
   return sherpa_onnx::FileExists(filename);
 }
 
+struct SherpaOnnxOfflineSpeechDenoiser {
+  std::unique_ptr<sherpa_onnx::OfflineSpeechDenoiser> impl;
+};
+
+static sherpa_onnx::OfflineSpeechDenoiserConfig GetOfflineSpeechDenoiserConfig(
+    const SherpaOnnxOfflineSpeechDenoiserConfig *config) {
+  sherpa_onnx::OfflineSpeechDenoiserConfig c;
+  c.model.gtcrn.model = SHERPA_ONNX_OR(config->model.gtcrn.model, "");
+  c.model.num_threads = SHERPA_ONNX_OR(config->model.num_threads, 1);
+  c.model.debug = config->model.debug;
+  c.model.provider = SHERPA_ONNX_OR(config->model.provider, "cpu");
+
+  if (c.model.debug) {
+#if __OHOS__
+    SHERPA_ONNX_LOGE("%{public}s\n", c.ToString().c_str());
+#else
+    SHERPA_ONNX_LOGE("%s\n", c.ToString().c_str());
+#endif
+  }
+
+  return c;
+}
+
+const SherpaOnnxOfflineSpeechDenoiser *SherpaOnnxCreateOfflineSpeechDenoiser(
+    const SherpaOnnxOfflineSpeechDenoiserConfig *config) {
+  auto sd_config = GetOfflineSpeechDenoiserConfig(config);
+
+  if (!sd_config.Validate()) {
+    SHERPA_ONNX_LOGE("Errors in config");
+    return nullptr;
+  }
+
+  SherpaOnnxOfflineSpeechDenoiser *sd = new SherpaOnnxOfflineSpeechDenoiser;
+
+  sd->impl = std::make_unique<sherpa_onnx::OfflineSpeechDenoiser>(sd_config);
+
+  return sd;
+}
+
+void SherpaOnnxDestroyOfflineSpeechDenoiser(
+    const SherpaOnnxOfflineSpeechDenoiser *sd) {
+  delete sd;
+}
+
+int32_t SherpaOnnxOfflineSpeechDenoiserGetSampleRate(
+    const SherpaOnnxOfflineSpeechDenoiser *sd) {
+  return sd->impl->GetSampleRate();
+}
+
+const SherpaOnnxDenoisedAudio *SherpaOnnxOfflineSpeechDenoiserRun(
+    const SherpaOnnxOfflineSpeechDenoiser *sd, const float *samples, int32_t n,
+    int32_t sample_rate) {
+  auto audio = sd->impl->Run(samples, n, sample_rate);
+
+  auto ans = new SherpaOnnxDenoisedAudio;
+
+  float *denoised_samples = new float[audio.samples.size()];
+  std::copy(audio.samples.begin(), audio.samples.end(), denoised_samples);
+
+  ans->samples = denoised_samples;
+  ans->n = audio.samples.size();
+  ans->sample_rate = audio.sample_rate;
+
+  return ans;
+}
+
+void SherpaOnnxDestroyDenoisedAudio(const SherpaOnnxDenoisedAudio *p) {
+  delete[] p->samples;
+  delete p;
+}
+
 #if SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION == 1
 
 struct SherpaOnnxOfflineSpeakerDiarization {
@@ -2243,6 +2315,19 @@ void SherpaOnnxOfflineSpeakerDiarizationDestroyResult(
 #endif
 
 #ifdef __OHOS__
+
+const SherpaOnnxOfflineSpeechDenoiser *
+SherpaOnnxCreateOfflineSpeechDenoiserOHOS(
+    const SherpaOnnxOfflineSpeechDenoiserConfig *config,
+    NativeResourceManager *mgr) {
+  auto sd_config = GetOfflineSpeechDenoiserConfia(config);
+
+  SherpaOnnxOfflineSpeechDenoiser *sd = new SherpaOnnxOfflineSpeechDenoiser;
+
+  sd->impl = std::make_unique<sherpa_onnx::OfflineSpeechDenoiser>(sd_config);
+
+  return sd;
+}
 
 const SherpaOnnxOnlineRecognizer *SherpaOnnxCreateOnlineRecognizerOHOS(
     const SherpaOnnxOnlineRecognizerConfig *config,

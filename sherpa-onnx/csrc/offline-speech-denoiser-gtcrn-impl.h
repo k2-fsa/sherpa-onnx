@@ -33,7 +33,6 @@ class OfflineSpeechDenoiserGtcrnImpl : public OfflineSpeechDenoiserImpl {
 
   DenoisedAudio Run(const float *samples, int32_t n,
                     int32_t sample_rate) const override {
-    SHERPA_ONNX_LOGE("n: %d, sample_rate: %d", n, sample_rate);
     const auto &meta = model_.GetMetaData();
 
     std::vector<float> tmp;
