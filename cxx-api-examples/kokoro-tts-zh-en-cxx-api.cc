@@ -1,4 +1,4 @@
-// cxx-api-examples/kokoro-tts-zh-en-cxx-api.c
+// cxx-api-examples/kokoro-tts-zh-en-cxx-api.cc
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
