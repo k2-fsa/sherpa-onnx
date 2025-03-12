@@ -31,6 +31,7 @@ echo "EMSCRIPTEN: $EMSCRIPTEN"
 if [ ! -f $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ]; then
   echo "Cannot find $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake"
   echo "Please make sure you have installed emsdk correctly"
+  echo "Hint: emsdk 3.1.53 is known to work. Other versions may not work"
   exit 1
 fi
 
