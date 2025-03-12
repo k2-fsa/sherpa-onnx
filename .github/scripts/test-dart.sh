@@ -4,6 +4,12 @@ set -ex
 
 cd dart-api-examples
 
+pushd speech-enhancement-gtcrn
+echo "speech enhancement with gtcrn models"
+./run.sh
+ls -lh
+popd
+
 pushd tts
 
 echo '----------matcha tts----------'
