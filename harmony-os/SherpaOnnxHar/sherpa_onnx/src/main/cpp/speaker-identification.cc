@@ -108,7 +108,7 @@ static Napi::Number SpeakerEmbeddingExtractorDimWrapper(
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingExtractor *extractor =
+  const SherpaOnnxSpeakerEmbeddingExtractor *extractor =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingExtractor>>().Data();
 
   int32_t dim = SherpaOnnxSpeakerEmbeddingExtractorDim(extractor);
@@ -137,7 +137,7 @@ SpeakerEmbeddingExtractorCreateStreamWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingExtractor *extractor =
+  const SherpaOnnxSpeakerEmbeddingExtractor *extractor =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingExtractor>>().Data();
 
   const SherpaOnnxOnlineStream *stream =
@@ -177,10 +177,10 @@ static Napi::Boolean SpeakerEmbeddingExtractorIsReadyWrapper(
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingExtractor *extractor =
+  const SherpaOnnxSpeakerEmbeddingExtractor *extractor =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingExtractor>>().Data();
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   int32_t is_ready =
@@ -226,10 +226,10 @@ static Napi::Float32Array SpeakerEmbeddingExtractorComputeEmbeddingWrapper(
     }
   }
 
-  SherpaOnnxSpeakerEmbeddingExtractor *extractor =
+  const SherpaOnnxSpeakerEmbeddingExtractor *extractor =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingExtractor>>().Data();
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   const float *v =
@@ -329,7 +329,7 @@ static Napi::Boolean SpeakerEmbeddingManagerAddWrapper(
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingManager *manager =
+  const SherpaOnnxSpeakerEmbeddingManager *manager =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingManager>>().Data();
 
   Napi::Object obj = info[1].As<Napi::Object>();
@@ -399,7 +399,7 @@ static Napi::Boolean SpeakerEmbeddingManagerAddListFlattenedWrapper(
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingManager *manager =
+  const SherpaOnnxSpeakerEmbeddingManager *manager =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingManager>>().Data();
 
   Napi::Object obj = info[1].As<Napi::Object>();
@@ -486,7 +486,7 @@ static Napi::Boolean SpeakerEmbeddingManagerRemoveWrapper(
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingManager *manager =
+  const SherpaOnnxSpeakerEmbeddingManager *manager =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingManager>>().Data();
 
   Napi::String js_name = info[1].As<Napi::String>();
@@ -525,7 +525,7 @@ static Napi::String SpeakerEmbeddingManagerSearchWrapper(
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingManager *manager =
+  const SherpaOnnxSpeakerEmbeddingManager *manager =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingManager>>().Data();
 
   Napi::Object obj = info[1].As<Napi::Object>();
@@ -603,7 +603,7 @@ static Napi::Boolean SpeakerEmbeddingManagerVerifyWrapper(
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingManager *manager =
+  const SherpaOnnxSpeakerEmbeddingManager *manager =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingManager>>().Data();
 
   Napi::Object obj = info[1].As<Napi::Object>();
@@ -691,7 +691,7 @@ static Napi::Boolean SpeakerEmbeddingManagerContainsWrapper(
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingManager *manager =
+  const SherpaOnnxSpeakerEmbeddingManager *manager =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingManager>>().Data();
 
   Napi::String js_name = info[1].As<Napi::String>();
@@ -724,7 +724,7 @@ static Napi::Number SpeakerEmbeddingManagerNumSpeakersWrapper(
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingManager *manager =
+  const SherpaOnnxSpeakerEmbeddingManager *manager =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingManager>>().Data();
 
   int32_t num_speakers = SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(manager);
@@ -753,7 +753,7 @@ static Napi::Array SpeakerEmbeddingManagerGetAllSpeakersWrapper(
     return {};
   }
 
-  SherpaOnnxSpeakerEmbeddingManager *manager =
+  const SherpaOnnxSpeakerEmbeddingManager *manager =
       info[0].As<Napi::External<SherpaOnnxSpeakerEmbeddingManager>>().Data();
 
   int32_t num_speakers = SherpaOnnxSpeakerEmbeddingManagerNumSpeakers(manager);

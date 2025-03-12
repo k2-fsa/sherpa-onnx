@@ -27,6 +27,8 @@ void InitKeywordSpotting(Napi::Env env, Napi::Object exports);
 
 void InitNonStreamingSpeakerDiarization(Napi::Env env, Napi::Object exports);
 
+void InitNonStreamingSpeechDenoiser(Napi::Env env, Napi::Object exports);
+
 #if __OHOS__
 void InitUtils(Napi::Env env, Napi::Object exports);
 #endif
@@ -44,6 +46,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   InitPunctuation(env, exports);
   InitKeywordSpotting(env, exports);
   InitNonStreamingSpeakerDiarization(env, exports);
+  InitNonStreamingSpeechDenoiser(env, exports);
 
 #if __OHOS__
   InitUtils(env, exports);

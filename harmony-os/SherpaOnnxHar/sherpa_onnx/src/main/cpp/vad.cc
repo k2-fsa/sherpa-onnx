@@ -28,11 +28,12 @@ static Napi::External<SherpaOnnxCircularBuffer> CreateCircularBufferWrapper(
     return {};
   }
 
-  SherpaOnnxCircularBuffer *buf =
+  const SherpaOnnxCircularBuffer *buf =
       SherpaOnnxCreateCircularBuffer(info[0].As<Napi::Number>().Int32Value());
 
   return Napi::External<SherpaOnnxCircularBuffer>::New(
-      env, buf, [](Napi::Env env, SherpaOnnxCircularBuffer *p) {
+      env, const_cast<SherpaOnnxCircularBuffer *>(buf),
+      [](Napi::Env env, SherpaOnnxCircularBuffer *p) {
         SherpaOnnxDestroyCircularBuffer(p);
       });
 }
@@ -56,7 +57,7 @@ static void CircularBufferPushWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxCircularBuffer *buf =
+  const SherpaOnnxCircularBuffer *buf =
       info[0].As<Napi::External<SherpaOnnxCircularBuffer>>().Data();
 
   if (!info[1].IsTypedArray()) {
@@ -101,7 +102,7 @@ static Napi::Float32Array CircularBufferGetWrapper(
     return {};
   }
 
-  SherpaOnnxCircularBuffer *buf =
+  const SherpaOnnxCircularBuffer *buf =
       info[0].As<Napi::External<SherpaOnnxCircularBuffer>>().Data();
 
   if (!info[1].IsNumber()) {
@@ -179,7 +180,7 @@ static void CircularBufferPopWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxCircularBuffer *buf =
+  const SherpaOnnxCircularBuffer *buf =
       info[0].As<Napi::External<SherpaOnnxCircularBuffer>>().Data();
 
   if (!info[1].IsNumber()) {
@@ -213,7 +214,7 @@ static Napi::Number CircularBufferSizeWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
-  SherpaOnnxCircularBuffer *buf =
+  const SherpaOnnxCircularBuffer *buf =
       info[0].As<Napi::External<SherpaOnnxCircularBuffer>>().Data();
 
   int32_t size = SherpaOnnxCircularBufferSize(buf);
@@ -240,7 +241,7 @@ static Napi::Number CircularBufferHeadWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
-  SherpaOnnxCircularBuffer *buf =
+  const SherpaOnnxCircularBuffer *buf =
       info[0].As<Napi::External<SherpaOnnxCircularBuffer>>().Data();
 
   int32_t size = SherpaOnnxCircularBufferHead(buf);
@@ -267,7 +268,7 @@ static void CircularBufferResetWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxCircularBuffer *buf =
+  const SherpaOnnxCircularBuffer *buf =
       info[0].As<Napi::External<SherpaOnnxCircularBuffer>>().Data();
 
   SherpaOnnxCircularBufferReset(buf);
@@ -360,18 +361,19 @@ CreateVoiceActivityDetectorWrapper(const Napi::CallbackInfo &info) {
       mgr(OH_ResourceManager_InitNativeResourceManager(env, info[2]),
           &OH_ResourceManager_ReleaseNativeResourceManager);
 
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       SherpaOnnxCreateVoiceActivityDetectorOHOS(&c, buffer_size_in_seconds,
                                                 mgr.get());
 #else
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       SherpaOnnxCreateVoiceActivityDetector(&c, buffer_size_in_seconds);
 #endif
   SHERPA_ONNX_DELETE_C_STR(c.silero_vad.model);
   SHERPA_ONNX_DELETE_C_STR(c.provider);
 
   return Napi::External<SherpaOnnxVoiceActivityDetector>::New(
-      env, vad, [](Napi::Env env, SherpaOnnxVoiceActivityDetector *p) {
+      env, const_cast<SherpaOnnxVoiceActivityDetector *>(vad),
+      [](Napi::Env env, SherpaOnnxVoiceActivityDetector *p) {
         SherpaOnnxDestroyVoiceActivityDetector(p);
       });
 }
@@ -396,7 +398,7 @@ static void VoiceActivityDetectorAcceptWaveformWrapper(
     return;
   }
 
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       info[0].As<Napi::External<SherpaOnnxVoiceActivityDetector>>().Data();
 
   if (!info[1].IsTypedArray()) {
@@ -440,7 +442,7 @@ static Napi::Boolean VoiceActivityDetectorEmptyWrapper(
     return {};
   }
 
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       info[0].As<Napi::External<SherpaOnnxVoiceActivityDetector>>().Data();
 
   int32_t is_empty = SherpaOnnxVoiceActivityDetectorEmpty(vad);
@@ -468,7 +470,7 @@ static Napi::Boolean VoiceActivityDetectorDetectedWrapper(
     return {};
   }
 
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       info[0].As<Napi::External<SherpaOnnxVoiceActivityDetector>>().Data();
 
   int32_t is_detected = SherpaOnnxVoiceActivityDetectorDetected(vad);
@@ -495,7 +497,7 @@ static void VoiceActivityDetectorPopWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       info[0].As<Napi::External<SherpaOnnxVoiceActivityDetector>>().Data();
 
   SherpaOnnxVoiceActivityDetectorPop(vad);
@@ -520,7 +522,7 @@ static void VoiceActivityDetectorClearWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       info[0].As<Napi::External<SherpaOnnxVoiceActivityDetector>>().Data();
 
   SherpaOnnxVoiceActivityDetectorClear(vad);
@@ -556,7 +558,7 @@ static Napi::Object VoiceActivityDetectorFrontWrapper(
     }
   }
 
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       info[0].As<Napi::External<SherpaOnnxVoiceActivityDetector>>().Data();
 
   const SherpaOnnxSpeechSegment *segment =
@@ -618,7 +620,7 @@ static void VoiceActivityDetectorResetWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       info[0].As<Napi::External<SherpaOnnxVoiceActivityDetector>>().Data();
 
   SherpaOnnxVoiceActivityDetectorReset(vad);
@@ -643,7 +645,7 @@ static void VoiceActivityDetectorFlushWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxVoiceActivityDetector *vad =
+  const SherpaOnnxVoiceActivityDetector *vad =
       info[0].As<Napi::External<SherpaOnnxVoiceActivityDetector>>().Data();
 
   SherpaOnnxVoiceActivityDetectorFlush(vad);
