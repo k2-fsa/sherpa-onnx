@@ -108,7 +108,7 @@ static Napi::String OfflinePunctuationAddPunctWraper(
     return {};
   }
 
-  SherpaOnnxOfflinePunctuation *punct =
+  const SherpaOnnxOfflinePunctuation *punct =
       info[0].As<Napi::External<SherpaOnnxOfflinePunctuation>>().Data();
   Napi::String js_text = info[1].As<Napi::String>();
   std::string text = js_text.Utf8Value();

@@ -922,22 +922,23 @@ struct SherpaOnnxCircularBuffer {
   std::unique_ptr<sherpa_onnx::CircularBuffer> impl;
 };
 
-SherpaOnnxCircularBuffer *SherpaOnnxCreateCircularBuffer(int32_t capacity) {
+const SherpaOnnxCircularBuffer *SherpaOnnxCreateCircularBuffer(
+    int32_t capacity) {
   SherpaOnnxCircularBuffer *buffer = new SherpaOnnxCircularBuffer;
   buffer->impl = std::make_unique<sherpa_onnx::CircularBuffer>(capacity);
   return buffer;
 }
 
-void SherpaOnnxDestroyCircularBuffer(SherpaOnnxCircularBuffer *buffer) {
+void SherpaOnnxDestroyCircularBuffer(const SherpaOnnxCircularBuffer *buffer) {
   delete buffer;
 }
 
-void SherpaOnnxCircularBufferPush(SherpaOnnxCircularBuffer *buffer,
+void SherpaOnnxCircularBufferPush(const SherpaOnnxCircularBuffer *buffer,
                                   const float *p, int32_t n) {
   buffer->impl->Push(p, n);
 }
 
-const float *SherpaOnnxCircularBufferGet(SherpaOnnxCircularBuffer *buffer,
+const float *SherpaOnnxCircularBufferGet(const SherpaOnnxCircularBuffer *buffer,
                                          int32_t start_index, int32_t n) {
   std::vector<float> v = buffer->impl->Get(start_index, n);
 
@@ -948,19 +949,20 @@ const float *SherpaOnnxCircularBufferGet(SherpaOnnxCircularBuffer *buffer,
 
 void SherpaOnnxCircularBufferFree(const float *p) { delete[] p; }
 
-void SherpaOnnxCircularBufferPop(SherpaOnnxCircularBuffer *buffer, int32_t n) {
+void SherpaOnnxCircularBufferPop(const SherpaOnnxCircularBuffer *buffer,
+                                 int32_t n) {
   buffer->impl->Pop(n);
 }
 
-int32_t SherpaOnnxCircularBufferSize(SherpaOnnxCircularBuffer *buffer) {
+int32_t SherpaOnnxCircularBufferSize(const SherpaOnnxCircularBuffer *buffer) {
   return buffer->impl->Size();
 }
 
-int32_t SherpaOnnxCircularBufferHead(SherpaOnnxCircularBuffer *buffer) {
+int32_t SherpaOnnxCircularBufferHead(const SherpaOnnxCircularBuffer *buffer) {
   return buffer->impl->Head();
 }
 
-void SherpaOnnxCircularBufferReset(SherpaOnnxCircularBuffer *buffer) {
+void SherpaOnnxCircularBufferReset(const SherpaOnnxCircularBuffer *buffer) {
   buffer->impl->Reset();
 }
 
@@ -1008,7 +1010,7 @@ sherpa_onnx::VadModelConfig GetVadModelConfig(
   return vad_config;
 }
 
-SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
+const SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
     const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds) {
   auto vad_config = GetVadModelConfig(config);
 
@@ -1025,35 +1027,37 @@ SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetector(
 }
 
 void SherpaOnnxDestroyVoiceActivityDetector(
-    SherpaOnnxVoiceActivityDetector *p) {
+    const SherpaOnnxVoiceActivityDetector *p) {
   delete p;
 }
 
 void SherpaOnnxVoiceActivityDetectorAcceptWaveform(
-    SherpaOnnxVoiceActivityDetector *p, const float *samples, int32_t n) {
+    const SherpaOnnxVoiceActivityDetector *p, const float *samples, int32_t n) {
   p->impl->AcceptWaveform(samples, n);
 }
 
 int32_t SherpaOnnxVoiceActivityDetectorEmpty(
-    SherpaOnnxVoiceActivityDetector *p) {
+    const SherpaOnnxVoiceActivityDetector *p) {
   return p->impl->Empty();
 }
 
 int32_t SherpaOnnxVoiceActivityDetectorDetected(
-    SherpaOnnxVoiceActivityDetector *p) {
+    const SherpaOnnxVoiceActivityDetector *p) {
   return p->impl->IsSpeechDetected();
 }
 
-void SherpaOnnxVoiceActivityDetectorPop(SherpaOnnxVoiceActivityDetector *p) {
+void SherpaOnnxVoiceActivityDetectorPop(
+    const SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Pop();
 }
 
-void SherpaOnnxVoiceActivityDetectorClear(SherpaOnnxVoiceActivityDetector *p) {
+void SherpaOnnxVoiceActivityDetectorClear(
+    const SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Clear();
 }
 
 const SherpaOnnxSpeechSegment *SherpaOnnxVoiceActivityDetectorFront(
-    SherpaOnnxVoiceActivityDetector *p) {
+    const SherpaOnnxVoiceActivityDetector *p) {
   const sherpa_onnx::SpeechSegment &segment = p->impl->Front();
 
   SherpaOnnxSpeechSegment *ans = new SherpaOnnxSpeechSegment;
@@ -1072,11 +1076,13 @@ void SherpaOnnxDestroySpeechSegment(const SherpaOnnxSpeechSegment *p) {
   }
 }
 
-void SherpaOnnxVoiceActivityDetectorReset(SherpaOnnxVoiceActivityDetector *p) {
+void SherpaOnnxVoiceActivityDetectorReset(
+    const SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Reset();
 }
 
-void SherpaOnnxVoiceActivityDetectorFlush(SherpaOnnxVoiceActivityDetector *p) {
+void SherpaOnnxVoiceActivityDetectorFlush(
+    const SherpaOnnxVoiceActivityDetector *p) {
   p->impl->Flush();
 }
 
@@ -1915,7 +1921,7 @@ struct SherpaOnnxLinearResampler {
   std::unique_ptr<sherpa_onnx::LinearResample> impl;
 };
 
-SherpaOnnxLinearResampler *SherpaOnnxCreateLinearResampler(
+const SherpaOnnxLinearResampler *SherpaOnnxCreateLinearResampler(
     int32_t samp_rate_in_hz, int32_t samp_rate_out_hz, float filter_cutoff_hz,
     int32_t num_zeros) {
   SherpaOnnxLinearResampler *p = new SherpaOnnxLinearResampler;
@@ -1925,12 +1931,12 @@ SherpaOnnxLinearResampler *SherpaOnnxCreateLinearResampler(
   return p;
 }
 
-void SherpaOnnxDestroyLinearResampler(SherpaOnnxLinearResampler *p) {
+void SherpaOnnxDestroyLinearResampler(const SherpaOnnxLinearResampler *p) {
   delete p;
 }
 
 const SherpaOnnxResampleOut *SherpaOnnxLinearResamplerResample(
-    SherpaOnnxLinearResampler *p, const float *input, int32_t input_dim,
+    const SherpaOnnxLinearResampler *p, const float *input, int32_t input_dim,
     int32_t flush) {
   std::vector<float> o;
   p->impl->Resample(input, input_dim, flush, &o);
@@ -2320,7 +2326,7 @@ const SherpaOnnxOfflineSpeechDenoiser *
 SherpaOnnxCreateOfflineSpeechDenoiserOHOS(
     const SherpaOnnxOfflineSpeechDenoiserConfig *config,
     NativeResourceManager *mgr) {
-  auto sd_config = GetOfflineSpeechDenoiserConfia(config);
+  auto sd_config = GetOfflineSpeechDenoiserConfig(config);
 
   SherpaOnnxOfflineSpeechDenoiser *sd = new SherpaOnnxOfflineSpeechDenoiser;
 
@@ -2361,7 +2367,8 @@ const SherpaOnnxOfflineRecognizer *SherpaOnnxCreateOfflineRecognizerOHOS(
   return recognizer;
 }
 
-SherpaOnnxVoiceActivityDetector *SherpaOnnxCreateVoiceActivityDetectorOHOS(
+const SherpaOnnxVoiceActivityDetector *
+SherpaOnnxCreateVoiceActivityDetectorOHOS(
     const SherpaOnnxVadModelConfig *config, float buffer_size_in_seconds,
     NativeResourceManager *mgr) {
   if (mgr == nullptr) {

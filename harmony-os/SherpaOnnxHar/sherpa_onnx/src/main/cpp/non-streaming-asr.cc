@@ -341,7 +341,7 @@ static Napi::External<SherpaOnnxOfflineStream> CreateOfflineStreamWrapper(
     return {};
   }
 
-  SherpaOnnxOfflineRecognizer *recognizer =
+  const SherpaOnnxOfflineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOfflineRecognizer>>().Data();
 
   const SherpaOnnxOfflineStream *stream =
@@ -373,7 +373,7 @@ static void AcceptWaveformOfflineWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxOfflineStream *stream =
+  const SherpaOnnxOfflineStream *stream =
       info[0].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
 
   if (!info[1].IsObject()) {
@@ -454,10 +454,10 @@ static void DecodeOfflineStreamWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxOfflineRecognizer *recognizer =
+  const SherpaOnnxOfflineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOfflineRecognizer>>().Data();
 
-  SherpaOnnxOfflineStream *stream =
+  const SherpaOnnxOfflineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
 
   SherpaOnnxDecodeOfflineStream(recognizer, stream);
@@ -482,7 +482,7 @@ static Napi::String GetOfflineStreamResultAsJsonWrapper(
     return {};
   }
 
-  SherpaOnnxOfflineStream *stream =
+  const SherpaOnnxOfflineStream *stream =
       info[0].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
 
   const char *json = SherpaOnnxGetOfflineStreamResultAsJson(stream);

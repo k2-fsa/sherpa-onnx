@@ -278,7 +278,7 @@ static Napi::External<SherpaOnnxOnlineStream> CreateOnlineStreamWrapper(
     return {};
   }
 
-  SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
 
   const SherpaOnnxOnlineStream *stream =
@@ -310,7 +310,7 @@ static void AcceptWaveformWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[0].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   if (!info[1].IsObject()) {
@@ -390,10 +390,10 @@ static Napi::Boolean IsOnlineStreamReadyWrapper(
     return {};
   }
 
-  SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   int32_t is_ready = SherpaOnnxIsOnlineStreamReady(recognizer, stream);
@@ -427,10 +427,10 @@ static void DecodeOnlineStreamWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   SherpaOnnxDecodeOnlineStream(recognizer, stream);
@@ -463,10 +463,10 @@ static Napi::String GetOnlineStreamResultAsJsonWrapper(
     return {};
   }
 
-  SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   const char *json = SherpaOnnxGetOnlineStreamResultAsJson(recognizer, stream);
@@ -496,7 +496,7 @@ static void InputFinishedWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[0].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   SherpaOnnxOnlineStreamInputFinished(stream);
@@ -528,10 +528,10 @@ static void ResetOnlineStreamWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   SherpaOnnxOnlineStreamReset(recognizer, stream);
@@ -563,10 +563,10 @@ static Napi::Boolean IsEndpointWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
-  SherpaOnnxOnlineRecognizer *recognizer =
+  const SherpaOnnxOnlineRecognizer *recognizer =
       info[0].As<Napi::External<SherpaOnnxOnlineRecognizer>>().Data();
 
-  SherpaOnnxOnlineStream *stream =
+  const SherpaOnnxOnlineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOnlineStream>>().Data();
 
   int32_t is_endpoint = SherpaOnnxOnlineStreamIsEndpoint(recognizer, stream);
@@ -636,7 +636,7 @@ static void PrintWrapper(const Napi::CallbackInfo &info) {
     return;
   }
 
-  SherpaOnnxDisplay *display =
+  const SherpaOnnxDisplay *display =
       info[0].As<Napi::External<SherpaOnnxDisplay>>().Data();
 
   int32_t idx = info[1].As<Napi::Number>().Int32Value();
