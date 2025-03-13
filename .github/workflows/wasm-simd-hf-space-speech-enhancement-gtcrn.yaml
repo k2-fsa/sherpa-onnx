@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - wasm
+      - wasm-gtcrn
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
@@ -39,6 +40,13 @@ jobs:
           emcc -v
           echo "--------------------"
           emcc --check
+
+      - name: Download model
+        shell: bash
+        run: |
+          cd wasm/speech-enhancement/assets
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+          mv gtcrn_simple.onnx gtcrn.onnx
 
       - name: build
         shell: bash

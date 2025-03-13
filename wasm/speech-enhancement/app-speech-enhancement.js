@@ -78,6 +78,11 @@ fileInput.addEventListener('change', function(event) {
 
     const uint8Array = new Uint8Array(arrayBuffer);
     const wave = readWaveFromBinaryData(uint8Array);
+    if (wave == null) {
+      alert(
+          `${file.name} is not a valid .wav file. Please select a *.wav file`);
+      return;
+    }
 
 
     var url = URL.createObjectURL(file);

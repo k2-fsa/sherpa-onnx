@@ -41,8 +41,8 @@ https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Wasm
 
         <!-- Drag and Drop / File Upload -->
         <div id="dropzone" style="border: 2px dashed #ced4da; border-radius: 8px; padding: 2rem; text-align: center; color: #6c757d; cursor: pointer; background-color: #f8f9fa; transition: background-color 0.3s, border-color 0.3s; position: relative;">
-          <input type="file" id="fileInput" accept="audio/*" style="position: absolute; top: 0; left: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;" />
-          <p style="margin: 0;">Drop Audio Here<br>- or -<br>Click to Upload</p>
+          <input type="file" id="fileInput" accept=".wav" style="position: absolute; top: 0; left: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer;" />
+          <p style="margin: 0;">Drop Audio Here (*.wav)<br>- or -<br>Click to Upload</p>
         </div>
         <audio id="inAudioPlayback" controls style="display: none; margin-top: 1rem; width: 100%;"></audio>
       </div>
@@ -64,6 +64,10 @@ https://huggingface.co/spaces/Banafo/Kroko-Streaming-ASR-Wasm
     <ul>
       <li>Everything is <strong>open-sourced.</strong> <a href="https://github.com/k2-fsa/sherpa-onnx">code</a></li>
       <li>The model is from <a href="https://github.com/Xiaobin-Rong/gtcrn">GTCRN</a></li>
+      <li>Please upload .wav files</li>
+        <ul>
+          <li>You can download noisy test wave files from <a href="https://htmlpreview.github.io/?https://github.com/Xiaobin-Rong/gtcrn_demo/blob/main/index.html">https://htmlpreview.github.io/?https://github.com/Xiaobin-Rong/gtcrn_demo/blob/main/index.html</a></li>
+        </ul>
       <li>If you have any issues, please either <a href="https://github.com/k2-fsa/sherpa-onnx/issues">file a ticket</a> or contact us via</li>
         <ul>
           <li><a href="https://k2-fsa.github.io/sherpa/social-groups.html#wechat">WeChat group</a></li>
