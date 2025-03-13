@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Copyright (c)  2024  Xiaomi Corporation
+# Copyright (c)  2025  Xiaomi Corporation
 #
-# This script is to build sherpa-onnx for WebAssembly (VAD)
+# This script is to build sherpa-onnx for WebAssembly (Speech Enhancement)
 
 set -ex
 
@@ -33,8 +33,8 @@ if [ ! -f $EMSCRIPTEN/cmake/Modules/Platform/Emscripten.cmake ]; then
   exit 1
 fi
 
-mkdir -p build-wasm-simd-vad
-pushd build-wasm-simd-vad
+mkdir -p build-wasm-simd-speech-enhancement
+pushd build-wasm-simd-speech-enhancement
 
 export SHERPA_ONNX_IS_USING_BUILD_WASM_SH=ON
 
@@ -49,16 +49,15 @@ cmake \
   -DBUILD_SHARED_LIBS=OFF \
   -DSHERPA_ONNX_ENABLE_PORTAUDIO=OFF \
   -DSHERPA_ONNX_ENABLE_JNI=OFF \
-  -DSHERPA_ONNX_ENABLE_TTS=OFF \
   -DSHERPA_ONNX_ENABLE_C_API=ON \
   -DSHERPA_ONNX_ENABLE_WEBSOCKET=OFF \
   -DSHERPA_ONNX_ENABLE_GPU=OFF \
   -DSHERPA_ONNX_ENABLE_WASM=ON \
-  -DSHERPA_ONNX_ENABLE_WASM_VAD=ON \
+  -DSHERPA_ONNX_ENABLE_WASM_SPEECH_ENHANCEMENT=ON \
   -DSHERPA_ONNX_ENABLE_BINARY=OFF \
   -DSHERPA_ONNX_LINK_LIBSTDCPP_STATICALLY=OFF \
   ..
 make -j2
 make install
 
-ls -lh install/bin/wasm/vad
+ls -lh install/bin/wasm/speech-enhancement

@@ -84,6 +84,7 @@ set(exported_functions
   #
   SherpaOnnxFileExists
   SherpaOnnxReadWave
+  SherpaOnnxReadWaveFromBinaryData
   SherpaOnnxFreeWave
   SherpaOnnxWriteWave
 )
