@@ -1,0 +1,161 @@
+name: wasm-simd-hf-space-speech-enhancement-gtcrn
+
+on:
+  push:
+    branches:
+      - wasm
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
+
+  workflow_dispatch:
+
+concurrency:
+  group: wasm-simd-hf-space-speech-enhancement-gtcrn-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  wasm-simd-hf-space-speech-enhancement-gtcrn:
+    name: wasm gtcrn
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install emsdk
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 3.1.53
+          actions-cache-folder: 'emsdk-cache'
+
+      - name: View emsdk version
+        shell: bash
+        run: |
+          emcc -v
+          echo "--------------------"
+          emcc --check
+
+      - name: build
+        shell: bash
+        run: |
+          ./build-wasm-simd-speech-enhancement.sh
+
+      - name: collect files
+        shell: bash
+        run: |
+          SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+          d=sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-speech-enhancement-gtcrn
+          mv build-wasm-simd-speech-enhancement/install/bin/wasm/speech-enhancement $d
+          ls -lh $d
+          tar cjfv $d.tar.bz2 $d
+
+          echo "---"
+
+          ls -lh *.tar.bz2
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wasm-speech-enhancement-gtcrn
+          path: ./*.tar.bz2
+
+      - name: Release
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./*.tar.bz2
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: v1.10.46
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          overwrite: true
+          file: ./*.tar.bz2
+
+      - name: Publish to ModelScope
+        # if: false
+        env:
+          MS_TOKEN: ${{ secrets.MODEL_SCOPE_GIT_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf ms
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone http://www.modelscope.cn/studios/csukuangfj/wasm-speech-enhancement-gtcrn.git ms
+
+            cd ms
+            rm -fv *.js
+            rm -fv *.data
+
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-*/* .
+
+            git status
+            git lfs track "*.data"
+            git lfs track "*.wasm"
+            ls -lh
+
+            git add .
+            git commit -m "update model"
+            git push http://oauth2:${MS_TOKEN}@www.modelscope.cn/studios/csukuangfj/wasm-speech-enhancement-gtcrn.git
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v2
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://huggingface.co/spaces/k2-fsa/wasm-speech-enhancement-gtcrn huggingface
+            cd huggingface
+            rm -fv *.js
+            rm -fv *.data
+            git fetch
+            git pull
+            git merge -m "merge remote" --ff origin main
+
+            cp -v ../sherpa-onnx-wasm-simd-${SHERPA_ONNX_VERSION}-*/* .
+
+            git status
+            git lfs track "*.data"
+            git lfs track "*.wasm"
+            ls -lh
+
+            git add .
+            git commit -m "update model"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/spaces/k2-fsa/wasm-speech-enhancement-gtcrn main

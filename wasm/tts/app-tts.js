@@ -1,5 +1,4 @@
 const generateBtn = document.getElementById('generateBtn');
-const hint = document.getElementById('hint');
 const speakerIdLabel = document.getElementById('speakerIdLabel');
 const speakerIdInput = document.getElementById('speakerId');
 const speedInput = document.getElementById('speed');
@@ -11,13 +10,41 @@ speedValue.innerHTML = speedInput.value;
 
 let index = 0;
 
-
 let tts = null;
 
 let audioCtx = null;
 
-
 Module = {};
+
+// https://emscripten.org/docs/api_reference/module.html#Module.locateFile
+Module.locateFile = function(path, scriptDirectory = '') {
+  console.log(`path: ${path}, scriptDirectory: ${scriptDirectory}`);
+  return scriptDirectory + path;
+};
+
+// https://emscripten.org/docs/api_reference/module.html#Module.locateFile
+Module.setStatus = function(status) {
+  console.log(`status ${status}`);
+  const statusElement = document.getElementById('status');
+  if (status == "Running...") {
+    status = 'Model downloaded. Initializing text to speech model...'
+  }
+  statusElement.textContent = status;
+  if (status === '') {
+    statusElement.style.display = 'none';
+    // statusElement.parentNode.removeChild(statusElement);
+
+    document.querySelectorAll('.tab-content').forEach((tabContentElement) => {
+      tabContentElement.classList.remove('loading');
+    });
+  } else {
+    statusElement.style.display = 'block';
+    document.querySelectorAll('.tab-content').forEach((tabContentElement) => {
+      tabContentElement.classList.add('loading');
+    });
+  }
+};
+
 Module.onRuntimeInitialized = function() {
   console.log('Model files downloaded!');
 
@@ -27,17 +54,10 @@ Module.onRuntimeInitialized = function() {
     speakerIdLabel.innerHTML = `Speaker ID (0 - ${tts.numSpeakers - 1}):`;
   }
 
-  hint.innerText =
-      'Initialized! Please enter text and click the Generate button.';
-
-
-
   generateBtn.disabled = false;
 };
 
-speedInput.oninput = function() {
-  speedValue.innerHTML = this.value;
-};
+speedInput.oninput = function() { speedValue.innerHTML = this.value; };
 
 generateBtn.onclick = function() {
   let speakerId = speakerIdInput.value;
@@ -69,12 +89,12 @@ generateBtn.onclick = function() {
   console.log('text', text);
 
   let audio =
-      tts.generate({text: text, sid: speakerId, speed: speedInput.value});
+      tts.generate({text : text, sid : speakerId, speed : speedInput.value});
 
   console.log(audio.samples.length, audio.sampleRate);
 
   if (!audioCtx) {
-    audioCtx = new AudioContext({sampleRate: tts.sampleRate});
+    audioCtx = new AudioContext({sampleRate : tts.sampleRate});
   }
 
   const buffer = audioCtx.createBuffer(1, audio.samples.length, tts.sampleRate);
@@ -155,22 +175,22 @@ function toWav(floatSamples, sampleRate) {
 
   // http://soundfile.sapp.org/doc/WaveFormat/
   //                   F F I R
-  view.setUint32(0, 0x46464952, true);               // chunkID
-  view.setUint32(4, 36 + samples.length * 2, true);  // chunkSize
+  view.setUint32(0, 0x46464952, true);              // chunkID
+  view.setUint32(4, 36 + samples.length * 2, true); // chunkSize
   //                   E V A W
-  view.setUint32(8, 0x45564157, true);  // format
-                                        //
+  view.setUint32(8, 0x45564157, true); // format
+                                       //
   //                      t m f
-  view.setUint32(12, 0x20746d66, true);          // subchunk1ID
-  view.setUint32(16, 16, true);                  // subchunk1Size, 16 for PCM
-  view.setUint32(20, 1, true);                   // audioFormat, 1 for PCM
-  view.setUint16(22, 1, true);                   // numChannels: 1 channel
-  view.setUint32(24, sampleRate, true);          // sampleRate
-  view.setUint32(28, sampleRate * 2, true);      // byteRate
-  view.setUint16(32, 2, true);                   // blockAlign
-  view.setUint16(34, 16, true);                  // bitsPerSample
-  view.setUint32(36, 0x61746164, true);          // Subchunk2ID
-  view.setUint32(40, samples.length * 2, true);  // subchunk2Size
+  view.setUint32(12, 0x20746d66, true);         // subchunk1ID
+  view.setUint32(16, 16, true);                 // subchunk1Size, 16 for PCM
+  view.setUint32(20, 1, true);                  // audioFormat, 1 for PCM
+  view.setUint16(22, 1, true);                  // numChannels: 1 channel
+  view.setUint32(24, sampleRate, true);         // sampleRate
+  view.setUint32(28, sampleRate * 2, true);     // byteRate
+  view.setUint16(32, 2, true);                  // blockAlign
+  view.setUint16(34, 16, true);                 // bitsPerSample
+  view.setUint32(36, 0x61746164, true);         // Subchunk2ID
+  view.setUint32(40, samples.length * 2, true); // subchunk2Size
 
   let offset = 44;
   for (let i = 0; i < samples.length; ++i) {
@@ -178,5 +198,5 @@ function toWav(floatSamples, sampleRate) {
     offset += 2;
   }
 
-  return new Blob([view], {type: 'audio/wav'});
+  return new Blob([ view ], {type : 'audio/wav'});
 }
