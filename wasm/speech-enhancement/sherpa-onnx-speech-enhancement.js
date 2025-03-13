@@ -99,7 +99,7 @@ class OfflineSpeechDenoiser {
   constructor(configObj, Module) {
     console.log(configObj)
     const config = initSherpaOnnxOfflineSpeechDenoiserConfig(configObj, Module)
-    Module._MyPrint(config.ptr);
+    // Module._MyPrint(config.ptr);
     const handle = Module._SherpaOnnxCreateOfflineSpeechDenoiser(config.ptr);
 
     freeConfig(config, Module);
@@ -123,7 +123,8 @@ class OfflineSpeechDenoiser {
     const pointer =
         this.Module._malloc(samples.length * samples.BYTES_PER_ELEMENT);
     this.Module.HEAPF32.set(samples, pointer / samples.BYTES_PER_ELEMENT);
-    const h = this.Module._(this.handle, pointer, samples.length, sampleRate);
+    const h = this.Module._SherpaOnnxOfflineSpeechDenoiserRun(
+        this.handle, pointer, samples.length, sampleRate);
     this.Module._free(pointer);
 
     const numSamples = this.Module.HEAP32[h / 4 + 1];
@@ -160,7 +161,7 @@ function createOfflineSpeechDenoiser(Module, myConfig) {
   let config = {
     model: {
       gtcrn: {model: './gtcrn.onnx'},
-      debug: 1,
+      debug: 0,
     },
   };
 

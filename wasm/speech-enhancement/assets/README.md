@@ -1,5 +1,14 @@
 # Introduction
 
+## Huggingface space
+
+You can visit https://huggingface.co/spaces/k2-fsa/wasm-speech-enhancement-gtcrn
+to try it in your browser without building or installing anything.
+
+You can also visit
+https://modelscope.cn/studios/csukuangfj/wasm-speech-enhancement-gtcrn
+
+## Usage
 
 Please refer to
 https://github.com/k2-fsa/sherpa-onnx/releases/tag/speech-enhancement-models

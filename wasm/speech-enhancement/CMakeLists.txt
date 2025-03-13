@@ -14,6 +14,9 @@ set(exported_functions
   SherpaOnnxOfflineSpeechDenoiserRun
   SherpaOnnxDestroyDenoisedAudio
   SherpaOnnxWriteWave
+  SherpaOnnxReadWave
+  SherpaOnnxReadWaveFromBinaryData
+  SherpaOnnxFreeWave
 )
 set(mangled_exported_functions)
 foreach(x IN LISTS exported_functions)
@@ -49,6 +52,7 @@ install(
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-speech-enhancement>/sherpa-onnx-wasm-main-speech-enhancement.js"
     "index.html"
     "sherpa-onnx-speech-enhancement.js"
+    "../nodejs/sherpa-onnx-wave.js"
     "app-speech-enhancement.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-speech-enhancement>/sherpa-onnx-wasm-main-speech-enhancement.wasm"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-main-speech-enhancement>/sherpa-onnx-wasm-main-speech-enhancement.data"
