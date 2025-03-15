@@ -31,7 +31,7 @@ In the following, we demonstrate how to run speech enhancement.
 ```bash
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
-./test-offline-speech-enhancement-gtcrn.js
+node ./test-offline-speech-enhancement-gtcrn.js
 ```
 
 # Speaker diarization

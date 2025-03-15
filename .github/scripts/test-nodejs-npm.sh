@@ -12,7 +12,7 @@ ls -lh node_modules
 # speech enhancement
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
-./test-offline-speech-enhancement-gtcrn.js
+node ./test-offline-speech-enhancement-gtcrn.js
 ls -lh *.wav
 rm gtcrn_simple.onnx
 rm inp_16k.wav

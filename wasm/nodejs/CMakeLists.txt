@@ -49,6 +49,7 @@ set(exported_functions
   SherpaOnnxDestroyKeywordSpotter
   SherpaOnnxGetKeywordResult
   SherpaOnnxIsKeywordStreamReady
+  SherpaOnnxResetKeywordStream
   # VAD
   SherpaOnnxCreateCircularBuffer
   SherpaOnnxDestroyCircularBuffer
