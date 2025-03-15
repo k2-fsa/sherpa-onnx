@@ -49,6 +49,7 @@ set(exported_functions
   SherpaOnnxDestroyKeywordSpotter
   SherpaOnnxGetKeywordResult
   SherpaOnnxIsKeywordStreamReady
+  SherpaOnnxResetKeywordStream
   # VAD
   SherpaOnnxCreateCircularBuffer
   SherpaOnnxDestroyCircularBuffer
@@ -87,6 +88,12 @@ set(exported_functions
   SherpaOnnxReadWaveFromBinaryData
   SherpaOnnxFreeWave
   SherpaOnnxWriteWave
+  # speech enhancement
+  SherpaOnnxCreateOfflineSpeechDenoiser
+  SherpaOnnxDestroyDenoisedAudio
+  SherpaOnnxDestroyOfflineSpeechDenoiser
+  SherpaOnnxOfflineSpeechDenoiserGetSampleRate
+  SherpaOnnxOfflineSpeechDenoiserRun
 )
 
 
@@ -122,6 +129,7 @@ install(
   ${CMAKE_SOURCE_DIR}/wasm/kws/sherpa-onnx-kws.js
   ${CMAKE_SOURCE_DIR}/wasm/vad/sherpa-onnx-vad.js
   ${CMAKE_SOURCE_DIR}/wasm/speaker-diarization/sherpa-onnx-speaker-diarization.js
+  ${CMAKE_SOURCE_DIR}/wasm/speech-enhancement/sherpa-onnx-speech-enhancement.js
   ${CMAKE_SOURCE_DIR}/wasm/nodejs/sherpa-onnx-wave.js
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-nodejs>/sherpa-onnx-wasm-nodejs.js"
     "$<TARGET_FILE_DIR:sherpa-onnx-wasm-nodejs>/sherpa-onnx-wasm-nodejs.wasm"

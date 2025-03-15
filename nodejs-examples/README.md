@@ -24,6 +24,16 @@ In the following, we describe how to use [sherpa-onnx](https://github.com/k2-fsa
 for text-to-speech and speech-to-text.
 
 
+# Speech enhancement
+
+In the following, we demonstrate how to run speech enhancement.
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+node ./test-offline-speech-enhancement-gtcrn.js
+```
+
 # Speaker diarization
 
 In the following, we demonstrate how to run speaker diarization.

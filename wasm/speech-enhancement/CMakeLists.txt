@@ -9,14 +9,14 @@ endif()
 set(exported_functions
   MyPrint
   SherpaOnnxCreateOfflineSpeechDenoiser
+  SherpaOnnxDestroyDenoisedAudio
   SherpaOnnxDestroyOfflineSpeechDenoiser
+  SherpaOnnxFreeWave
   SherpaOnnxOfflineSpeechDenoiserGetSampleRate
   SherpaOnnxOfflineSpeechDenoiserRun
-  SherpaOnnxDestroyDenoisedAudio
-  SherpaOnnxWriteWave
   SherpaOnnxReadWave
   SherpaOnnxReadWaveFromBinaryData
-  SherpaOnnxFreeWave
+  SherpaOnnxWriteWave
 )
 set(mangled_exported_functions)
 foreach(x IN LISTS exported_functions)

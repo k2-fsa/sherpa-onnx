@@ -1,7 +1,7 @@
 {
   "name": "sherpa-onnx",
   "version": "SHERPA_ONNX_VERSION",
-  "description": "Speech-to-text and text-to-speech using Next-gen Kaldi without internet connection",
+  "description": "Speech-to-text, text-to-speech, speaker diarization, and speech enhancement using Next-gen Kaldi without internet connection",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -34,7 +34,9 @@
     "speech",
     "recognition",
     "WebAssembly",
-    "wasm"
+    "wasm",
+    "speech enhancement",
+    "denoising"
   ],
   "author": "The next-gen Kaldi team",
   "license": "Apache-2.0",
