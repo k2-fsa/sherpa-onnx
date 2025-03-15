@@ -9,6 +9,16 @@ git status
 ls -lh
 ls -lh node_modules
 
+# speech enhancement
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+./test-offline-speech-enhancement-gtcrn.js
+ls -lh *.wav
+rm gtcrn_simple.onnx
+rm inp_16k.wav
+rm enhanced-16k.wav
+
+
 # offline tts
 #
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/kokoro-multi-lang-v1_0.tar.bz2

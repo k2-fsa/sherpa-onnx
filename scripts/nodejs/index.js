@@ -9,6 +9,10 @@ const sherpa_onnx_wave = require('./sherpa-onnx-wave.js');
 const sherpa_onnx_vad = require('./sherpa-onnx-vad.js');
 const sherpa_onnx_speaker_diarization =
     require('./sherpa-onnx-speaker-diarization.js');
+const sherpa_onnx_speech_enhancement =
+    require('./sherpa-onnx-speech-enhancement.js');
+
+
 
 function createOnlineRecognizer(config) {
   return sherpa_onnx_asr.createOnlineRecognizer(wasmModule, config);
@@ -47,6 +51,15 @@ function writeWave(filename, data) {
   sherpa_onnx_wave.writeWave(filename, data, wasmModule);
 }
 
+function readWaveFromBinaryData(uint8Array) {
+  return sherpa_onnx_wave.readWaveFromBinaryData(uint8Array, wasmModule);
+}
+
+function createOfflineSpeechDenoiser(config) {
+  return sherpa_onnx_speech_enhancement.createOfflineSpeechDenoiser(
+      wasmModule, config);
+}
+
 // Note: online means streaming and offline means non-streaming here.
 // Both of them don't require internet connection.
 module.exports = {
@@ -55,8 +68,10 @@ module.exports = {
   createOfflineTts,
   createKws,
   readWave,
+  readWaveFromBinaryData,
   writeWave,
   createCircularBuffer,
   createVad,
   createOfflineSpeakerDiarization,
+  createOfflineSpeechDenoiser,
 };

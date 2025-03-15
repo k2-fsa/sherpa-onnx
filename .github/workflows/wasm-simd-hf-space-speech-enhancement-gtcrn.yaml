@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - wasm
-      - wasm-gtcrn
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+*'
 
@@ -79,9 +78,9 @@ jobs:
           file_glob: true
           overwrite: true
           file: ./*.tar.bz2
-          repo_name: k2-fsa/sherpa-onnx
-          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          tag: v1.10.46
+          # repo_name: k2-fsa/sherpa-onnx
+          # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          # tag: v1.10.46
 
       - name: Release
         if: github.repository_owner == 'k2-fsa' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
