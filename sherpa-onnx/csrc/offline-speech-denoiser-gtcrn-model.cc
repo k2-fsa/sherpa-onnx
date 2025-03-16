@@ -9,6 +9,15 @@
 #include <utility>
 #include <vector>
 
+#if __ANDROID_API__ >= 9
+#include "android/asset_manager.h"
+#include "android/asset_manager_jni.h"
+#endif
+
+#if __OHOS__
+#include "rawfile/raw_file_manager.h"
+#endif
+
 #include "sherpa-onnx/csrc/file-utils.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 #include "sherpa-onnx/csrc/session.h"
@@ -192,5 +201,15 @@ const OfflineSpeechDenoiserGtcrnModelMetaData &
 OfflineSpeechDenoiserGtcrnModel::GetMetaData() const {
   return impl_->GetMetaData();
 }
+
+#if __ANDROID_API__ >= 9
+template OfflineSpeechDenoiserGtcrnModel::OfflineSpeechDenoiserGtcrnModel(
+    AAssetManager *mgr, const OfflineSpeechDenoiserModelConfig &config);
+#endif
+
+#if __OHOS__
+template OfflineSpeechDenoiserGtcrnModel::OfflineSpeechDenoiserGtcrnModel(
+    NativeResourceManager *mgr, const OfflineSpeechDenoiserModelConfig &config);
+#endif
 
 }  // namespace sherpa_onnx
