@@ -5,6 +5,7 @@
 #include "sherpa-onnx/csrc/offline-tts.h"
 
 #include "sherpa-onnx/csrc/macros.h"
+#include "sherpa-onnx/csrc/wave-writer.h"
 #include "sherpa-onnx/jni/common.h"
 
 namespace sherpa_onnx {
@@ -339,4 +340,21 @@ Java_com_k2fsa_sherpa_onnx_OfflineTts_generateWithCallbackImpl(
   env->ReleaseStringUTFChars(text, p_text);
 
   return obj_arr;
+}
+
+SHERPA_ONNX_EXTERN_C
+JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_GeneratedAudio_saveImpl(
+    JNIEnv *env, jobject /*obj*/, jstring filename, jfloatArray samples,
+    jint sample_rate) {
+  const char *p_filename = env->GetStringUTFChars(filename, nullptr);
+
+  jfloat *p = env->GetFloatArrayElements(samples, nullptr);
+  jsize n = env->GetArrayLength(samples);
+
+  bool ok = sherpa_onnx::WriteWave(p_filename, sample_rate, p, n);
+
+  env->ReleaseStringUTFChars(filename, p_filename);
+  env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
+
+  return ok;
 }
