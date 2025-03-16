@@ -371,6 +371,31 @@ function testOfflineSpeakerDiarization() {
   java -Djava.library.path=../build/lib -jar $out_filename
 }
 
+function testOfflineSpeechDenoiser() {
+  if [ ! -f ./gtcrn_simple.onnx ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+  fi
+
+  if [ ! -f ./inp_16k.wav ]; then
+    curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+  fi
+
+  out_filename=test_offline_speech_denoiser.jar
+  kotlinc-jvm -include-runtime -d $out_filename \
+    test_offline_speech_denoiser.kt \
+    OfflineSpeechDenoiser.kt \
+    WaveReader.kt \
+    faked-asset-manager.kt \
+    faked-log.kt
+
+  ls -lh $out_filename
+
+  java -Djava.library.path=../build/lib -jar $out_filename
+
+  ls -lh *.wav
+}
+
+testOfflineSpeechDenoiser
 testOfflineSpeakerDiarization
 testSpeakerEmbeddingExtractor
 testOnlineAsr

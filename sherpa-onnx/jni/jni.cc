@@ -25,23 +25,6 @@ jobject NewFloat(JNIEnv *env, float value) {
   return env->NewObject(cls, constructor, value);
 }
 
-SHERPA_ONNX_EXTERN_C
-JNIEXPORT jboolean JNICALL Java_com_k2fsa_sherpa_onnx_GeneratedAudio_saveImpl(
-    JNIEnv *env, jobject /*obj*/, jstring filename, jfloatArray samples,
-    jint sample_rate) {
-  const char *p_filename = env->GetStringUTFChars(filename, nullptr);
-
-  jfloat *p = env->GetFloatArrayElements(samples, nullptr);
-  jsize n = env->GetArrayLength(samples);
-
-  bool ok = sherpa_onnx::WriteWave(p_filename, sample_rate, p, n);
-
-  env->ReleaseStringUTFChars(filename, p_filename);
-  env->ReleaseFloatArrayElements(samples, p, JNI_ABORT);
-
-  return ok;
-}
-
 #if 0
 SHERPA_ONNX_EXTERN_C
 JNIEXPORT void JNICALL
