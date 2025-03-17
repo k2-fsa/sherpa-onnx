@@ -10,7 +10,7 @@ public class NonStreamingTtsMatchaZh {
     // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker
     // to download model files
     String acousticModel = "./matcha-icefall-zh-baker/model-steps-3.onnx";
-    String vocoder = "./hifigan_v2.onnx";
+    String vocoder = "./vocos-22khz-univ.onnx";
     String tokens = "./matcha-icefall-zh-baker/tokens.txt";
     String lexicon = "./matcha-icefall-zh-baker/lexicon.txt";
     String dictDir = "./matcha-icefall-zh-baker/dict";

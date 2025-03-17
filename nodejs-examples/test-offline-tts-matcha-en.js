@@ -5,7 +5,7 @@ const sherpa_onnx = require('sherpa-onnx');
 function createOfflineTts() {
   let offlineTtsMatchaModelConfig = {
     acousticModel: './matcha-icefall-en_US-ljspeech/model-steps-3.onnx',
-    vocoder: './hifigan_v2.onnx',
+    vocoder: './vocos-22khz-univ.onnx',
     lexicon: './matcha-icefall-en_US-ljspeech/lexicon.txt',
     tokens: './matcha-icefall-en_US-ljspeech/tokens.txt',
     dataDir: './matcha-icefall-en_US-ljspeech/espeak-ng-data',

@@ -9,7 +9,7 @@ function createOfflineTts() {
     model: {
       matcha: {
         acousticModel: './matcha-icefall-zh-baker/model-steps-3.onnx',
-        vocoder: './hifigan_v2.onnx',
+        vocoder: './vocos-22khz-univ.onnx',
         lexicon: './matcha-icefall-zh-baker/lexicon.txt',
         tokens: './matcha-icefall-zh-baker/tokens.txt',
         dictDir: './matcha-icefall-zh-baker/dict',

@@ -17,6 +17,7 @@
 #include "sherpa-onnx/csrc/hifigan-vocoder.h"
 #include "sherpa-onnx/csrc/macros.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
+#include "sherpa-onnx/csrc/vocos-vocoder.h"
 
 namespace sherpa_onnx {
 
@@ -81,7 +82,7 @@ std::unique_ptr<Vocoder> Vocoder::Create(const OfflineTtsModelConfig &config) {
       return std::make_unique<HifiganVocoder>(
           config.num_threads, config.provider, config.matcha.vocoder);
     case ModelType::kVocoos:
-      return nullptr;
+      return std::make_unique<VocosVocoder>(config);
     case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in vocoder!");
       return nullptr;
@@ -99,7 +100,7 @@ std::unique_ptr<Vocoder> Vocoder::Create(Manager *mgr,
       return std::make_unique<HifiganVocoder>(
           config.num_threads, config.provider, config.matcha.vocoder);
     case ModelType::kVocoos:
-      return nullptr;
+      return std::make_unique<VocosVocoder>(config);
     case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in vocoder!");
       return nullptr;

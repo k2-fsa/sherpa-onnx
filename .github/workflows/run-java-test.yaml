@@ -265,7 +265,7 @@ jobs:
           rm -rf kokoro-en-*
 
           rm -rf matcha-icefall-*
-          rm hifigan_v2.onnx
+          rm vocos-22khz-univ.onnx
 
           ./run-non-streaming-tts-piper-en.sh
           rm -rf vits-piper-*

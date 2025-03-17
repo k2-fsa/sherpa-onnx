@@ -42,12 +42,13 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/m
 tar xvf matcha-icefall-zh-baker.tar.bz2
 rm matcha-icefall-zh-baker.tar.bz2
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 node ./test-offline-tts-matcha-zh.js
 
 rm -rf matcha-icefall-zh-baker
-rm hifigan_v2.onnx
+rm vocos-22khz-univ.onnx
+
 
 echo "---"
 
@@ -55,12 +56,12 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/m
 tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
 rm matcha-icefall-en_US-ljspeech.tar.bz2
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 node ./test-offline-tts-matcha-en.js
 
 rm -rf matcha-icefall-en_US-ljspeech
-rm hifigan_v2.onnx
+rm vocos-22khz-univ.onnx
 
 echo "---"
 

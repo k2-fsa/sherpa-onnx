@@ -14,14 +14,14 @@ if [ ! -f ./matcha-icefall-en_US-ljspeech/model-steps-3.onnx ]; then
   rm matcha-icefall-en_US-ljspeech.tar.bz2
 fi
 
-if [ ! -f ./hifigan_v2.onnx ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+if [ ! -f ./vocos-22khz-univ.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 fi
 
 dart run \
   ./bin/matcha-en.dart \
   --acoustic-model ./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
-  --vocoder ./hifigan_v2.onnx \
+  --vocoder ./vocos-22khz-univ.onnx \
   --tokens ./matcha-icefall-en_US-ljspeech/tokens.txt \
   --data-dir ./matcha-icefall-en_US-ljspeech/espeak-ng-data \
   --sid 0 \

@@ -115,7 +115,7 @@ var
   Config: TSherpaOnnxOfflineTtsConfig;
 begin
   Config.Model.Matcha.AcousticModel := './matcha-icefall-en_US-ljspeech/model-steps-3.onnx';
-  Config.Model.Matcha.Vocoder := './hifigan_v2.onnx';
+  Config.Model.Matcha.Vocoder := './vocos-22khz-univ.onnx';
   Config.Model.Matcha.Tokens := './matcha-icefall-en_US-ljspeech/tokens.txt';
   Config.Model.Matcha.DataDir := './matcha-icefall-en_US-ljspeech/espeak-ng-data';
   Config.Model.NumThreads := 1;
