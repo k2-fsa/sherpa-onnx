@@ -19,7 +19,7 @@ class VocosVocoder : public Vocoder {
  public:
   ~VocosVocoder() override;
 
-  VocosVocoder(const OfflineTtsModelConfig &config);
+  explicit VocosVocoder(const OfflineTtsModelConfig &config);
 
   template <typename Manager>
   VocosVocoder(Manager *mgr, const OfflineTtsModelConfig &config);
