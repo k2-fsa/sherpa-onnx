@@ -395,7 +395,7 @@ def get_matcha_models() -> List[TtsModel]:
         s = [f"{m.model_dir}/{r}" for r in rule_fsts]
         m.rule_fsts = ",".join(s)
         m.dict_dir = m.model_dir + "/dict"
-        m.vocoder = "hifigan_v2.onnx"
+        m.vocoder = "vocos-22khz-univ.onnx"
 
     english_persian_models = [
         TtsModel(
@@ -416,7 +416,7 @@ def get_matcha_models() -> List[TtsModel]:
     ]
     for m in english_persian_models:
         m.data_dir = f"{m.model_dir}/espeak-ng-data"
-        m.vocoder = "hifigan_v2.onnx"
+        m.vocoder = "vocos-22khz-univ.onnx"
 
     return chinese_models + english_persian_models
 

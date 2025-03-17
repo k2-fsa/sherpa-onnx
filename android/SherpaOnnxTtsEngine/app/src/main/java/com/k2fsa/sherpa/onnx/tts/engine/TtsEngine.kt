@@ -131,7 +131,7 @@ object TtsEngine {
         // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker
         // modelDir = "matcha-icefall-zh-baker"
         // acousticModelName = "model-steps-3.onnx"
-        // vocoder = "hifigan_v2.onnx"
+        // vocoder = "vocos-22khz-univ.onnx"
         // lexicon = "lexicon.txt"
         // dictDir = "matcha-icefall-zh-baker/dict"
         // lang = "zho"
@@ -141,7 +141,7 @@ object TtsEngine {
         // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker
         // modelDir = "matcha-icefall-en_US-ljspeech"
         // acousticModelName = "model-steps-3.onnx"
-        // vocoder = "hifigan_v2.onnx"
+        // vocoder = "vocos-22khz-univ.onnx"
         // dataDir = "matcha-icefall-en_US-ljspeech/espeak-ng-data"
         // lang = "eng"
 

@@ -183,6 +183,8 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-vits-model.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
+    vocoder.cc
+    vocos-vocoder.cc
   )
 endif()
 

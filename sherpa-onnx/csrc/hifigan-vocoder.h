@@ -7,14 +7,16 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
+#include "sherpa-onnx/csrc/vocoder.h"
 
 namespace sherpa_onnx {
 
-class HifiganVocoder {
+class HifiganVocoder : public Vocoder {
  public:
-  ~HifiganVocoder();
+  ~HifiganVocoder() override;
 
   HifiganVocoder(int32_t num_threads, const std::string &provider,
                  const std::string &model);
@@ -26,7 +28,7 @@ class HifiganVocoder {
   /** @param mel A float32 tensor of shape (batch_size, feat_dim, num_frames).
    *  @return Return a float32 tensor of shape (batch_size, num_samples).
    */
-  Ort::Value Run(Ort::Value mel) const;
+  std::vector<float> Run(Ort::Value mel) const override;
 
  private:
   class Impl;

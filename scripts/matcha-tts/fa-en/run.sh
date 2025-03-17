@@ -20,8 +20,8 @@ if [ ! -f male/tokens.txt ]; then
   curl -SL --output male/tokens.txt https://huggingface.co/mah92/Musa-FA_EN-Matcha-TTS-Model/resolve/main/tokens_sherpa_with_fa.txt
 fi
 
-if [ ! -f hifigan_v2.onnx ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+if [ ! -f vocos-22khz-univ.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 fi
 
 if [ ! -f .add-meta-data.done ]; then
@@ -31,14 +31,14 @@ fi
 
 python3 ./test.py \
   --am ./female/model.onnx \
-  --vocoder ./hifigan_v2.onnx \
+  --vocoder ./vocos-22khz-univ.onnx \
   --tokens ./female/tokens.txt \
   --text "This is a test. این یک نمونه ی تست فارسی است." \
   --out-wav "./female-en-fa.wav"
 
 python3 ./test.py \
   --am ./male/model.onnx \
-  --vocoder ./hifigan_v2.onnx \
+  --vocoder ./vocos-22khz-univ.onnx \
   --tokens ./male/tokens.txt \
   --text "This is a test. این یک نمونه ی تست فارسی است." \
   --out-wav "./male-en-fa.wav"

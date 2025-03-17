@@ -237,7 +237,7 @@ jobs:
           tar xvf matcha-icefall-zh-baker.tar.bz2
           rm matcha-icefall-zh-baker.tar.bz2
 
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
@@ -245,7 +245,7 @@ jobs:
           ./matcha-tts-zh-cxx-api
 
           rm -rf matcha-icefall-*
-          rm hifigan_v2.onnx
+          rm vocos-22khz-univ.onnx
           rm matcha-tts-zh-cxx-api
 
       - name: Test Matcha TTS (en)
@@ -262,7 +262,7 @@ jobs:
           tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
           rm matcha-icefall-en_US-ljspeech.tar.bz2
 
-          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
           export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
           export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
@@ -271,7 +271,7 @@ jobs:
 
           rm matcha-tts-en-cxx-api
           rm -rf matcha-icefall-*
-          rm hifigan_v2.onnx
+          rm vocos-22khz-univ.onnx
 
       - uses: actions/upload-artifact@v4
         with:

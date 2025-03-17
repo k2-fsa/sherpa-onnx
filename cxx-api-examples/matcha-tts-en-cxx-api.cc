@@ -13,7 +13,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-i
 tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
 rm matcha-icefall-en_US-ljspeech.tar.bz2
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 ./matcha-tts-en-cxx-api
 
@@ -39,7 +39,7 @@ int32_t main(int32_t argc, char *argv[]) {
   config.model.matcha.acoustic_model =
       "./matcha-icefall-en_US-ljspeech/model-steps-3.onnx";
 
-  config.model.matcha.vocoder = "./hifigan_v2.onnx";
+  config.model.matcha.vocoder = "./vocos-22khz-univ.onnx";
 
   config.model.matcha.tokens = "./matcha-icefall-en_US-ljspeech/tokens.txt";
 
