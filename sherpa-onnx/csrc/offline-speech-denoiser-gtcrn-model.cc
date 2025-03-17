@@ -54,7 +54,7 @@ class OfflineSpeechDenoiserGtcrnModel::Impl {
     return meta_;
   }
 
-  States GetInitStates() const {
+  States GetInitStates() {
     Ort::Value conv_cache = Ort::Value::CreateTensor<float>(
         allocator_, meta_.conv_cache_shape.data(),
         meta_.conv_cache_shape.size());
