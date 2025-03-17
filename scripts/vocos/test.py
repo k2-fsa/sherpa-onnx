@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+# Copyright    2025  Xiaomi Corp.        (authors: Fangjun Kuang)
+
+import datetime as dt
 
 import kaldi_native_fbank as knf
 import numpy as np
 import onnxruntime as ort
 import soundfile as sf
-import torch
 
 try:
     from piper_phonemize import phonemize_espeak
@@ -31,6 +33,7 @@ class OnnxVocosModel:
             providers=["CPUExecutionProvider"],
         )
 
+        print("----------vocos----------")
         for i in self.model.get_inputs():
             print(i)
 
@@ -38,8 +41,19 @@ class OnnxVocosModel:
 
         for i in self.model.get_outputs():
             print(i)
+        print()
 
-    def __call__(self, x: torch.tensor):
+    def __call__(self, x: np.ndarray):
+        """
+        Args:
+          x: (N, feat_dim, num_frames)
+        Returns:
+          mag: (N, n_fft/2+1, num_frames)
+          x: (N, n_fft/2+1, num_frames)
+          y: (N, n_fft/2+1, num_frames)
+
+        The complex spectrum is mag * (x + j*y)
+        """
         assert x.ndim == 3, x.shape
         assert x.shape[0] == 1, x.shape
 
@@ -50,10 +64,9 @@ class OnnxVocosModel:
                 self.model.get_outputs()[2].name,
             ],
             {
-                self.model.get_inputs()[0].name: x.numpy(),
+                self.model.get_inputs()[0].name: x,
             },
         )
-        # audio: (batch_size, num_samples)
 
         return mag, x, y
 
@@ -74,6 +87,7 @@ class OnnxHifiGANModel:
             providers=["CPUExecutionProvider"],
         )
 
+        print("----------hifigan----------")
         for i in self.model.get_inputs():
             print(i)
 
@@ -81,20 +95,27 @@ class OnnxHifiGANModel:
 
         for i in self.model.get_outputs():
             print(i)
+        print()
 
-    def __call__(self, x: torch.tensor):
+    def __call__(self, x: np.ndarray):
+        """
+        Args:
+          x: (N, feat_dim, num_frames)
+        Returns:
+          audio: (N, num_samples)
+        """
         assert x.ndim == 3, x.shape
         assert x.shape[0] == 1, x.shape
 
         audio = self.model.run(
             [self.model.get_outputs()[0].name],
             {
-                self.model.get_inputs()[0].name: x.numpy(),
+                self.model.get_inputs()[0].name: x,
             },
         )[0]
         # audio: (batch_size, num_samples)
 
-        return torch.from_numpy(audio)
+        return audio
 
 
 def load_tokens(filename):
@@ -120,7 +141,7 @@ class OnnxModel:
         self.token2id = load_tokens(tokens)
         session_opts = ort.SessionOptions()
         session_opts.inter_op_num_threads = 1
-        session_opts.intra_op_num_threads = 2
+        session_opts.intra_op_num_threads = 1
 
         self.session_opts = session_opts
         self.model = ort.InferenceSession(
@@ -133,6 +154,7 @@ class OnnxModel:
         metadata = self.model.get_modelmeta().custom_metadata_map
         self.sample_rate = int(metadata["sample_rate"])
 
+        print("----------matcha----------")
         for i in self.model.get_inputs():
             print(i)
 
@@ -140,30 +162,32 @@ class OnnxModel:
 
         for i in self.model.get_outputs():
             print(i)
+        print()
 
-    def __call__(self, x: torch.tensor):
+    def __call__(self, x: np.ndim):
+        """
+        Args:
+        """
         assert x.ndim == 2, x.shape
         assert x.shape[0] == 1, x.shape
 
-        x_lengths = torch.tensor([x.shape[1]], dtype=torch.int64)
-        print("x_lengths", x_lengths)
-        print("x", x.shape)
+        x_lengths = np.array([x.shape[1]], dtype=np.int64)
 
-        noise_scale = torch.tensor([1.0], dtype=torch.float32)
-        length_scale = torch.tensor([1.0], dtype=torch.float32)
+        noise_scale = np.array([1.0], dtype=np.float32)
+        length_scale = np.array([1.0], dtype=np.float32)
 
         mel = self.model.run(
             [self.model.get_outputs()[0].name],
             {
-                self.model.get_inputs()[0].name: x.numpy(),
-                self.model.get_inputs()[1].name: x_lengths.numpy(),
-                self.model.get_inputs()[2].name: noise_scale.numpy(),
-                self.model.get_inputs()[3].name: length_scale.numpy(),
+                self.model.get_inputs()[0].name: x,
+                self.model.get_inputs()[1].name: x_lengths,
+                self.model.get_inputs()[2].name: noise_scale,
+                self.model.get_inputs()[3].name: length_scale,
             },
         )[0]
         # mel: (batch_size, feat_dim, num_frames)
 
-        return torch.from_numpy(mel)
+        return mel
 
 
 def main():
@@ -174,7 +198,7 @@ def main():
     vocoder = OnnxHifiGANModel("./hifigan_v2.onnx")
     vocos = OnnxVocosModel("./mel_spec_22khz_univ.onnx")
 
-    text = "how are you doing"
+    text = "Today as always, men fall into two groups: slaves and free men. Whoever does not have two-thirds of his day for himself, is a slave, whatever he may be: a statesman, a businessman, an official, or a scholar."
     tokens_list = phonemize_espeak(text, "en-us")
     print(tokens_list)
     tokens = []
@@ -188,21 +212,20 @@ def main():
             continue
         token_ids.append(am.token2id[t])
 
-    print(tokens)
-    print(token_ids)
-
     token_ids2 = [am.token2id["_"]] * (len(token_ids) * 2 + 1)
     token_ids2[1::2] = token_ids
     token_ids = token_ids2
-    x = torch.tensor(token_ids, dtype=torch.int64).unsqueeze(0)
+    x = np.array([token_ids], dtype=np.int64)
+
+    mel_start_t = dt.datetime.now()
     mel = am(x)
+    mel_end_t = dt.datetime.now()
+
     print("mel", mel.shape)
     # mel:(1, 80, 78)
 
+    vocos_start_t = dt.datetime.now()
     mag, x, y = vocos(mel)
-    print(mag.shape)
-    print(x.shape)
-    print(y.shape)
     stft_result = knf.StftResult(
         real=(mag * x)[0].transpose().reshape(-1).tolist(),
         imag=(mag * y)[0].transpose().reshape(-1).tolist(),
@@ -218,18 +241,49 @@ def main():
         normalized=False,
     )
     istft = knf.IStft(config)
-    audio = istft(stft_result)
-    audio = np.array(audio)
-    #  audio = audio / 2
-    print(np.max(audio), np.min(audio))
-    sf.write("vocos.wav", np.array(audio, dtype=np.float32), am.sample_rate, "PCM_16")
+    audio_vocos = istft(stft_result)
+    vocos_end_t = dt.datetime.now()
 
-    audio = vocoder(mel).squeeze().numpy()
-    print("audio", audio.shape)
-    print(np.max(audio), np.min(audio))
+    audio_vocos = np.array(audio_vocos)
+    #  audio = audio / 2
+    print("vocos max/min", np.max(audio_vocos), np.min(audio_vocos))
+
+    sf.write("vocos.wav", audio_vocos, am.sample_rate, "PCM_16")
+
+    hifigan_start_t = dt.datetime.now()
+    audio_hifigan = vocoder(mel)
+    hifigan_end_t = dt.datetime.now()
+    audio_hifigan = audio_hifigan.squeeze()
+
+    print("hifigan max/min", np.max(audio_hifigan), np.min(audio_hifigan))
 
     sample_rate = am.sample_rate
-    sf.write("hifigan-v2.wav", audio, sample_rate, "PCM_16")
+    sf.write("hifigan-v2.wav", audio_hifigan, sample_rate, "PCM_16")
+
+    am_t = (mel_end_t - mel_start_t).total_seconds()
+    vocos_t = (vocos_end_t - vocos_start_t).total_seconds()
+    hifigan_t = (hifigan_end_t - hifigan_start_t).total_seconds()
+
+    mean_audio_duration = (
+        (audio_vocos.shape[-1] + audio_hifigan.shape[-1]) / 2 / sample_rate
+    )
+    rtf_am = am_t / mean_audio_duration
+
+    rtf_vocos = vocos_t * sample_rate / audio_vocos.shape[-1]
+    rtf_hifigan = hifigan_t * sample_rate / audio_hifigan.shape[-1]
+
+    print(
+        "Audio duration for vocos {:.3f} s".format(audio_vocos.shape[-1] / sample_rate)
+    )
+    print(
+        "Audio duration for hifigan {:.3f} s".format(
+            audio_hifigan.shape[-1] / sample_rate
+        )
+    )
+    print("Mean audio duration: {:.3f} s".format(mean_audio_duration))
+    print("RTF for acoustic model {:.3f}".format(rtf_am))
+    print("RTF for vocos {:.3f}".format(rtf_vocos))
+    print("RTF for hifigan {:.3f}".format(rtf_hifigan))
 
 
 if __name__ == "__main__":
