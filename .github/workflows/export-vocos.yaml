@@ -1,0 +1,111 @@
+name: export-vocos-to-onnx
+
+on:
+  push:
+    branches:
+      - export-vocos
+
+  workflow_dispatch:
+
+concurrency:
+  group: export-vocos-to-onnx-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  export-vocos-to-onnx:
+    if: github.repository_owner == 'k2-fsa' || github.repository_owner == 'csukuangfj'
+    name: export vocos ${{ matrix.version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        python-version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Python dependencies
+        shell: bash
+        run: |
+          pip install "numpy<=1.26.4" onnx==1.16.0 onnxruntime==1.17.1 soundfile piper_phonemize -f https://k2-fsa.github.io/icefall/piper_phonemize.html kaldi_native_fbank
+
+      - name: Run
+        shell: bash
+        run: |
+          cd scripts/vocos
+          ./run.sh
+          ls -lh
+
+      - name: Collect results
+        shell: bash
+        run: |
+          cp -v scripts/vocos/vocos-22khz-univ.onnx .
+          cp -v scripts/vocos/*.wav .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: generated-waves
+          path: ./*.wav
+
+      - name: Publish to huggingface
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        uses: nick-fields/retry@v3
+        with:
+          max_attempts: 20
+          timeout_seconds: 200
+          shell: bash
+          command: |
+            git config --global user.email "csukuangfj@gmail.com"
+            git config --global user.name "Fangjun Kuang"
+
+            rm -rf huggingface
+            export GIT_LFS_SKIP_SMUDGE=1
+            export GIT_CLONE_PROTECTION_ACTIVE=false
+
+            git clone https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models huggingface
+            cd huggingface
+            git fetch
+            git pull
+
+            d=vocoder-models
+            mkdir -p $d
+
+            cp -a ../vocos-22khz-univ.onnx $d/
+
+            git lfs track "*.onnx"
+            git add .
+
+            ls -lh
+
+            git status
+
+            git commit -m "add models"
+            git push https://csukuangfj:$HF_TOKEN@huggingface.co/k2-fsa/sherpa-onnx-models main || true
+
+      - name: Release
+        if: github.repository_owner == 'csukuangfj'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.onnx
+          overwrite: true
+          repo_name: k2-fsa/sherpa-onnx
+          repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
+          tag: vocoder-models
+
+      - name: Release
+        if: github.repository_owner == 'k2-fsa'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          file_glob: true
+          file: ./*.onnx
+          overwrite: true
+          tag: vocoder-models
+
