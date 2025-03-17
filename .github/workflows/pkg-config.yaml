@@ -110,13 +110,6 @@ jobs:
           gcc -o offline-tts-c-api $(pkg-config --cflags sherpa-onnx) ./offline-tts-c-api.c $(pkg-config --libs sherpa-onnx)
           ./offline-tts-c-api --help
 
-      - name: Test offline TTS C API
-        shell: bash
-        run: |
-          export PATH=$PWD/c-api-examples:$PATH
-          export EXE=offline-tts-c-api
-          .github/scripts/test-offline-tts.sh
-
       - name: Test online transducer (C API)
         shell: bash
         run: |

@@ -160,6 +160,9 @@ jobs:
             export GIT_LFS_SKIP_SMUDGE=1
             export GIT_CLONE_PROTECTION_ACTIVE=false
 
+            SHERPA_ONNX_VERSION=$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
+            echo "SHERPA_ONNX_VERSION $SHERPA_ONNX_VERSION"
+
             git clone https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-apk huggingface
             cd huggingface
             git fetch
@@ -167,7 +170,10 @@ jobs:
             git merge -m "merge remote" --ff origin main
 
             mkdir -p audio-tagging
-            cp -v ../apks/*.apk ./audio-tagging/
+            d=audio-tagging/$SHERPA_ONNX_VERSION
+            mkdir -p $d
+            cp -v ../apks/*.apk ./$d
+
             git status
             git lfs track "*.apk"
             git add .
