@@ -1,3 +1,8 @@
+## 1.11.1
+
+* Export vocos to sherpa-onnx (#2012)
+* Add C++ runtime for vocos (#2014)
+
 ## 1.11.0
 
 * Fix building wheels for Python 3.7 (#1933)
