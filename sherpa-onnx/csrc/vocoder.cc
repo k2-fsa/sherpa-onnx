@@ -87,6 +87,8 @@ std::unique_ptr<Vocoder> Vocoder::Create(const OfflineTtsModelConfig &config) {
       SHERPA_ONNX_LOGE("Unknown model type in vocoder!");
       return nullptr;
   }
+
+  return nullptr;
 }
 
 template <typename Manager>
