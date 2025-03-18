@@ -9,7 +9,6 @@
 #include <algorithm>
 #include <mutex>  // NOLINT
 
-#include "portaudio.h"  // NOLINT
 #include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/circular-buffer.h"
 #include "sherpa-onnx/csrc/offline-recognizer.h"
