@@ -71,10 +71,11 @@ def get_binaries():
         binaries += [
             "sherpa-onnx-alsa",
             "sherpa-onnx-alsa-offline",
+            "sherpa-onnx-alsa-offline-audio-tagging",
             "sherpa-onnx-alsa-offline-speaker-identification",
             "sherpa-onnx-offline-tts-play-alsa",
             "sherpa-onnx-vad-alsa",
-            "sherpa-onnx-alsa-offline-audio-tagging",
+            "sherpa-onnx-vad-alsa-offline-asr",
         ]
 
     if is_windows():
