@@ -115,11 +115,20 @@ to download models for offline ASR.
 
   PaDeviceIndex num_devices = Pa_GetDeviceCount();
   fprintf(stderr, "Num devices: %d\n", num_devices);
+  if (num_devices == 0) {
+    fprintf(stderr,
+            "  If you are using Linux, please try "
+            "./build/bin/sherpa-onnx-vad-alsa-offline-asr\n");
+    exit(-1);
+  }
 
   int32_t device_index = Pa_GetDefaultInputDevice();
 
   if (device_index == paNoDevice) {
     fprintf(stderr, "No default input device found\n");
+    fprintf(stderr,
+            "  If you are using Linux, please try "
+            "./build/bin/sherpa-onnx-vad-alsa-offline-asr\n");
     exit(EXIT_FAILURE);
   }
 
