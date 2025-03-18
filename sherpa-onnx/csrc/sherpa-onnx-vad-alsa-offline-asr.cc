@@ -112,6 +112,12 @@ as the device_name.
     return -1;
   }
 
+  fprintf(stderr, "Creating recognizer ...\n");
+  sherpa_onnx::OfflineRecognizer recognizer(asr_config);
+  fprintf(stderr, "Recognizer created!\n");
+
+  auto vad = std::make_unique<sherpa_onnx::VoiceActivityDetector>(vad_config);
+
   std::string device_name = po.GetArg(1);
   sherpa_onnx::Alsa alsa(device_name.c_str());
   fprintf(stderr, "Use recording device: %s\n", device_name.c_str());
@@ -125,12 +131,6 @@ as the device_name.
   }
 
   int32_t chunk = 0.1 * alsa.GetActualSampleRate();
-
-  fprintf(stderr, "Creating recognizer ...\n");
-  sherpa_onnx::OfflineRecognizer recognizer(asr_config);
-  fprintf(stderr, "Recognizer created!\n");
-
-  auto vad = std::make_unique<sherpa_onnx::VoiceActivityDetector>(vad_config);
 
   fprintf(stderr, "Started. Please speak\n");
 
