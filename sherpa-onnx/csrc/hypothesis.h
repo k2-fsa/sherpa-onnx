@@ -12,9 +12,11 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <memory>
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/context-graph.h"
+#include "sherpa-onnx/csrc/lodr-fst.h"
 #include "sherpa-onnx/csrc/math.h"
 #include "sherpa-onnx/csrc/onnx-utils.h"
 
@@ -61,6 +63,9 @@ struct Hypothesis {
   // the nn lm states
   std::vector<CopyableOrtValue> nn_lm_states;
 
+  // the LODR states
+  std::shared_ptr<LODRStateCost> lodr_state;
+
   const ContextState *context_state;
 
   // TODO(fangjun): Make it configurable
@@ -72,7 +77,8 @@ struct Hypothesis {
   Hypothesis() = default;
   Hypothesis(const std::vector<int64_t> &ys, double log_prob,
              const ContextState *context_state = nullptr)
-      : ys(ys), log_prob(log_prob), context_state(context_state) {}
+      : ys(ys), log_prob(log_prob), context_state(context_state),
+        lodr_state(nullptr) {}
 
   double TotalLogProb() const { return log_prob + lm_log_prob; }
 

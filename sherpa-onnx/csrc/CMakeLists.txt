@@ -23,6 +23,7 @@ set(sources
   hypothesis.cc
   keyword-spotter-impl.cc
   keyword-spotter.cc
+  lodr-fst.cc
   offline-ctc-fst-decoder-config.cc
   offline-ctc-fst-decoder.cc
   offline-ctc-greedy-search-decoder.cc
