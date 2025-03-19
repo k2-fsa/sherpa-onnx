@@ -126,6 +126,7 @@ class VoiceActivityDetector::Impl {
 
     model_->Reset();
     buffer_.Reset();
+    last_.clear();
 
     start_ = -1;
   }
