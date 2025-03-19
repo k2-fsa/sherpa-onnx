@@ -310,16 +310,34 @@ It uses QT. Both [ASR](https://github.com/xinhecuican/QSmartAssistant/blob/maste
 and [TTS](https://github.com/xinhecuican/QSmartAssistant/blob/master/doc/%E5%AE%89%E8%A3%85.md#tts)
 are used.
 
-
 ### [Flutter-EasySpeechRecognition](https://github.com/Jason-chen-coder/Flutter-EasySpeechRecognition)
 
 It extends [./flutter-examples/streaming_asr](./flutter-examples/streaming_asr) by
 downloading models inside the app to reduce the size of the app.
 
+Note: [[Team B] Sherpa AI backend](https://github.com/umgc/spring2025/pull/82) also uses
+sherpa-onnx in a Flutter APP.
+
 ### [sherpa-onnx-unity](https://github.com/xue-fei/sherpa-onnx-unity)
 
 sherpa-onnx in Unity. See also [#1695](https://github.com/k2-fsa/sherpa-onnx/issues/1695),
 [#1892](https://github.com/k2-fsa/sherpa-onnx/issues/1892), and [#1859](https://github.com/k2-fsa/sherpa-onnx/issues/1859)
+
+### [xiaozhi-esp32-server](https://github.com/xinnan-tech/xiaozhi-esp32-server)
+
+本项目为xiaozhi-esp32提供后端服务，帮助您快速搭建ESP32设备控制服务器
+Backend service for xiaozhi-esp32, helps you quickly build an ESP32 device control server.
+
+See also
+
+  - [ASR新增轻量级sherpa-onnx-asr](https://github.com/xinnan-tech/xiaozhi-esp32-server/issues/315)
+  - [feat: ASR增加sherpa-onnx模型](https://github.com/xinnan-tech/xiaozhi-esp32-server/pull/379)
+
+### [KaithemAutomation](https://github.com/EternityForest/KaithemAutomation)
+
+Pure Python, GUI-focused home automation/consumer grade SCADA.
+
+It uses TTS from sherpa-onnx. See also [✨ Speak command that uses the new globally configured TTS model.](https://github.com/EternityForest/KaithemAutomation/commit/8e64d2b138725e426532f7d66bb69dd0b4f53693)
 
 [sherpa-rs]: https://github.com/thewh1teagle/sherpa-rs
 [silero-vad]: https://github.com/snakers4/silero-vad
