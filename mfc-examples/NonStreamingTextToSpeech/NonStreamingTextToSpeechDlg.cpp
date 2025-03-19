@@ -513,9 +513,9 @@ void CNonStreamingTextToSpeechDlg::Init() {
         "(c) Switch to the directory matcha-icefall-zh-baker\r\n"
         "(d) Rename model-steps-3.onnx to model.onnx\r\n"
         "(e) Download a vocoder model from \r\n"
-        "      https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx\r\n"
-        "(f) Rename hifigan_v2.onnx to hifigan.onnx\r\n"
-        "(g) Remember to put hifigan.onnx in the directory matcha-icefall-zh-baker\r\n"
+        "      https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx\r\n"
+        "(f) Rename vocos-22khz-univ.onnx to vocos.onnx\r\n"
+        "(g) Remember to put vocos.onnx in the directory matcha-icefall-zh-baker\r\n"
         "(h) Copy the current exe to the directory matcha-icefall-zh-baker\r\n"
         "(i) Done! You can now run the exe in the directory matcha-icefall-zh-baker\r\n";
 
@@ -540,10 +540,16 @@ void CNonStreamingTextToSpeechDlg::Init() {
       config.model.kokoro.dict_dir = "./dict";
       config.model.kokoro.lexicon = "./lexicon-us-en.txt,./lexicon-zh.txt";
     }
-  } else if (Exists("./hifigan.onnx")) {
+  } else if (Exists("./hifigan.onnx") || Exists("./vocos.onnx")) {
     // it is a matcha tts model
     config.model.matcha.acoustic_model = "./model.onnx";
-    config.model.matcha.vocoder = "./hifigan.onnx";
+
+    if (Exists("./hifigan.onnx")) {
+      config.model.matcha.vocoder = "./hifigan.onnx";
+    } else if (Exists("./vocos.onnx")) {
+      config.model.matcha.vocoder = "./vocos.onnx";
+    }
+
     config.model.matcha.tokens = "./tokens.txt";
 
     if (Exists("./espeak-ng-data/phontab")) {

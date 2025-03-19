@@ -5,7 +5,6 @@
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const clearBtn = document.getElementById('clearBtn');
-const hint = document.getElementById('hint');
 const soundClips = document.getElementById('sound-clips');
 
 let textArea = document.getElementById('results');
@@ -16,7 +15,7 @@ let resultList = [];
 clearBtn.onclick = function() {
   resultList = [];
   textArea.value = getDisplayResult();
-  textArea.scrollTop = textArea.scrollHeight;  // auto scroll
+  textArea.scrollTop = textArea.scrollHeight; // auto scroll
 };
 
 function getDisplayResult() {
@@ -41,19 +40,17 @@ function getDisplayResult() {
   return ans;
 }
 
-
-
 Module = {};
 
 let audioCtx;
 let mediaStream;
 
 let expectedSampleRate = 16000;
-let recordSampleRate;  // the sampleRate of the microphone
-let recorder = null;   // the microphone
-let leftchannel = [];  // TODO: Use a single channel
+let recordSampleRate; // the sampleRate of the microphone
+let recorder = null;  // the microphone
+let leftchannel = []; // TODO: Use a single channel
 
-let recordingLength = 0;  // number of samples so far
+let recordingLength = 0; // number of samples so far
 
 let vad = null;
 let buffer = null;
@@ -76,47 +73,47 @@ function createOfflineRecognizerSenseVoice() {}
 
 function initOfflineRecognizer() {
   let config = {
-    modelConfig: {
-      debug: 1,
-      tokens: './tokens.txt',
+    modelConfig : {
+      debug : 1,
+      tokens : './tokens.txt',
     },
   };
   if (fileExists('sense-voice.onnx') == 1) {
     config.modelConfig.senseVoice = {
-      model: './sense-voice.onnx',
-      useInverseTextNormalization: 1,
+      model : './sense-voice.onnx',
+      useInverseTextNormalization : 1,
     };
   } else if (fileExists('whisper-encoder.onnx')) {
     config.modelConfig.whisper = {
-      encoder: './whisper-encoder.onnx',
-      decoder: './whisper-decoder.onnx',
+      encoder : './whisper-encoder.onnx',
+      decoder : './whisper-decoder.onnx',
     };
   } else if (fileExists('transducer-encoder.onnx')) {
     config.modelConfig.transducer = {
-      encoder: './transducer-encoder.onnx',
-      decoder: './transducer-decoder.onnx',
-      joiner: './transducer-joiner.onnx',
+      encoder : './transducer-encoder.onnx',
+      decoder : './transducer-decoder.onnx',
+      joiner : './transducer-joiner.onnx',
     };
     config.modelConfig.modelType = 'transducer';
   } else if (fileExists('nemo-transducer-encoder.onnx')) {
     config.modelConfig.transducer = {
-      encoder: './nemo-transducer-encoder.onnx',
-      decoder: './nemo-transducer-decoder.onnx',
-      joiner: './nemo-transducer-joiner.onnx',
+      encoder : './nemo-transducer-encoder.onnx',
+      decoder : './nemo-transducer-decoder.onnx',
+      joiner : './nemo-transducer-joiner.onnx',
     };
     config.modelConfig.modelType = 'nemo_transducer';
   } else if (fileExists('paraformer.onnx')) {
     config.modelConfig.paraformer = {
-      model: './paraformer.onnx',
+      model : './paraformer.onnx',
     };
   } else if (fileExists('telespeech.onnx')) {
     config.modelConfig.telespeechCtc = './telespeech.onnx';
   } else if (fileExists('moonshine-preprocessor.onnx')) {
     config.modelConfig.moonshine = {
-      preprocessor: './moonshine-preprocessor.onnx',
-      encoder: './moonshine-encoder.onnx',
-      uncachedDecoder: './moonshine-uncached-decoder.onnx',
-      cachedDecoder: './moonshine-cached-decoder.onnx'
+      preprocessor : './moonshine-preprocessor.onnx',
+      encoder : './moonshine-encoder.onnx',
+      uncachedDecoder : './moonshine-uncached-decoder.onnx',
+      cachedDecoder : './moonshine-cached-decoder.onnx'
     };
   } else {
     console.log('Please specify a model.');
@@ -126,9 +123,37 @@ function initOfflineRecognizer() {
   recognizer = new OfflineRecognizer(config, Module);
 }
 
+// https://emscripten.org/docs/api_reference/module.html#Module.locateFile
+Module.locateFile = function(path, scriptDirectory = '') {
+  console.log(`path: ${path}, scriptDirectory: ${scriptDirectory}`);
+  return scriptDirectory + path;
+};
+
+// https://emscripten.org/docs/api_reference/module.html#Module.locateFile
+Module.setStatus = function(status) {
+  console.log(`status ${status}`);
+  const statusElement = document.getElementById('status');
+  if (status == "Running...") {
+    status = 'Model downloaded. Initializing recongizer...'
+  }
+  statusElement.textContent = status;
+  if (status === '') {
+    statusElement.style.display = 'none';
+    // statusElement.parentNode.removeChild(statusElement);
+
+    document.querySelectorAll('.tab-content').forEach((tabContentElement) => {
+      tabContentElement.classList.remove('loading');
+    });
+  } else {
+    statusElement.style.display = 'block';
+    document.querySelectorAll('.tab-content').forEach((tabContentElement) => {
+      tabContentElement.classList.add('loading');
+    });
+  }
+};
+
 Module.onRuntimeInitialized = function() {
   console.log('inited!');
-  hint.innerText = 'Model loaded! Please click start';
 
   startBtn.disabled = false;
 
@@ -141,17 +166,15 @@ Module.onRuntimeInitialized = function() {
   initOfflineRecognizer();
 };
 
-
-
 if (navigator.mediaDevices.getUserMedia) {
   console.log('getUserMedia supported.');
 
   // see https://w3c.github.io/mediacapture-main/#dom-mediadevices-getusermedia
-  const constraints = {audio: true};
+  const constraints = {audio : true};
 
   let onSuccess = function(stream) {
     if (!audioCtx) {
-      audioCtx = new AudioContext({sampleRate: expectedSampleRate});
+      audioCtx = new AudioContext({sampleRate : expectedSampleRate});
     }
     console.log(audioCtx);
     recordSampleRate = audioCtx.sampleRate;
@@ -219,7 +242,6 @@ if (navigator.mediaDevices.getUserMedia) {
 
           resultList.push(durationStr);
 
-
           // now save the segment to a wav file
           let buf = new Int16Array(segment.samples.length);
           for (var i = 0; i < segment.samples.length; ++i) {
@@ -277,7 +299,7 @@ if (navigator.mediaDevices.getUserMedia) {
       }
 
       textArea.value = getDisplayResult();
-      textArea.scrollTop = textArea.scrollHeight;  // auto scroll
+      textArea.scrollTop = textArea.scrollHeight; // auto scroll
     };
 
     startBtn.onclick = function() {
@@ -308,16 +330,14 @@ if (navigator.mediaDevices.getUserMedia) {
     };
   };
 
-  let onError = function(err) {
-    console.log('The following error occured: ' + err);
-  };
+  let onError = function(
+      err) { console.log('The following error occured: ' + err); };
 
   navigator.mediaDevices.getUserMedia(constraints).then(onSuccess, onError);
 } else {
   console.log('getUserMedia not supported on your browser!');
   alert('getUserMedia not supported on your browser!');
 }
-
 
 // this function is copied/modified from
 // https://gist.github.com/meziantou/edb7217fddfbb70e899e
@@ -344,22 +364,22 @@ function toWav(samples) {
 
   // http://soundfile.sapp.org/doc/WaveFormat/
   //                   F F I R
-  view.setUint32(0, 0x46464952, true);               // chunkID
-  view.setUint32(4, 36 + samples.length * 2, true);  // chunkSize
+  view.setUint32(0, 0x46464952, true);              // chunkID
+  view.setUint32(4, 36 + samples.length * 2, true); // chunkSize
   //                   E V A W
-  view.setUint32(8, 0x45564157, true);  // format
-                                        //
+  view.setUint32(8, 0x45564157, true); // format
+                                       //
   //                      t m f
-  view.setUint32(12, 0x20746d66, true);          // subchunk1ID
-  view.setUint32(16, 16, true);                  // subchunk1Size, 16 for PCM
-  view.setUint32(20, 1, true);                   // audioFormat, 1 for PCM
-  view.setUint16(22, 1, true);                   // numChannels: 1 channel
-  view.setUint32(24, expectedSampleRate, true);  // sampleRate
-  view.setUint32(28, expectedSampleRate * 2, true);  // byteRate
-  view.setUint16(32, 2, true);                       // blockAlign
-  view.setUint16(34, 16, true);                      // bitsPerSample
-  view.setUint32(36, 0x61746164, true);              // Subchunk2ID
-  view.setUint32(40, samples.length * 2, true);      // subchunk2Size
+  view.setUint32(12, 0x20746d66, true);             // subchunk1ID
+  view.setUint32(16, 16, true);                     // subchunk1Size, 16 for PCM
+  view.setUint32(20, 1, true);                      // audioFormat, 1 for PCM
+  view.setUint16(22, 1, true);                      // numChannels: 1 channel
+  view.setUint32(24, expectedSampleRate, true);     // sampleRate
+  view.setUint32(28, expectedSampleRate * 2, true); // byteRate
+  view.setUint16(32, 2, true);                      // blockAlign
+  view.setUint16(34, 16, true);                     // bitsPerSample
+  view.setUint32(36, 0x61746164, true);             // Subchunk2ID
+  view.setUint32(40, samples.length * 2, true);     // subchunk2Size
 
   let offset = 44;
   for (let i = 0; i < samples.length; ++i) {
@@ -367,7 +387,7 @@ function toWav(samples) {
     offset += 2;
   }
 
-  return new Blob([view], {type: 'audio/wav'});
+  return new Blob([ view ], {type : 'audio/wav'});
 }
 
 // this function is copied from

@@ -6,7 +6,7 @@ class MyClass {
 
 func run() {
   let acousticModel = "./matcha-icefall-zh-baker/model-steps-3.onnx"
-  let vocoder = "./hifigan_v2.onnx"
+  let vocoder = "./vocos-22khz-univ.onnx"
   let lexicon = "./matcha-icefall-zh-baker/lexicon.txt"
   let tokens = "./matcha-icefall-zh-baker/tokens.txt"
   let dictDir = "./matcha-icefall-zh-baker/dict"

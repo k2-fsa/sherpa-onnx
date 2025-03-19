@@ -20,7 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest]
-        java-version: ['8', '11', '16', '17', '21']
+        java-version: ['8', '11', '16', '17', '18', '19', '20', '21', '22', '23']
 
     steps:
       - uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
           du -h -d1 .
 
       - name: Build jar ${{ matrix.java-version }}
-        if: matrix.java-version == '21'
+        if: matrix.java-version == '23'
         shell: bash
         run: |
           SHERPA_ONNX_VERSION=v$(grep "SHERPA_ONNX_VERSION" ./CMakeLists.txt  | cut -d " " -f 2  | cut -d '"' -f 2)
@@ -76,10 +76,10 @@ jobs:
           file: ./*.jar
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.10.23
+          # tag: v1.11.1
 
       - name: Build sherpa-onnx
-        if: matrix.java-version == '21'
+        if: matrix.java-version == '23'
         uses: addnab/docker-run-action@v3
         with:
             image: quay.io/pypa/manylinux2014_x86_64
@@ -136,6 +136,7 @@ jobs:
               rm -rf ./install/include/cargs.h
               rm -rf ./install/lib/libcargs.so
               rm -rf ./install/lib/libsherpa-onnx-c-api.so
+              rm -rf ./install/lib/libsherpa-onnx-cxx-api.so
 
               echo "----"
               ls -lh install/lib
@@ -144,7 +145,7 @@ jobs:
               ls -lh install/bin
 
       - name: Display dependencies of sherpa-onnx for linux
-        if: matrix.java-version == '21'
+        if: matrix.java-version == '23'
         shell: bash
         run: |
           du -h -d1 .
@@ -163,13 +164,13 @@ jobs:
           readelf -d build/bin/sherpa-onnx
 
       - uses: actions/upload-artifact@v4
-        if: matrix.java-version == '21'
+        if: matrix.java-version == '23'
         with:
           name: release-jni-linux-${{ matrix.java-version }}
           path: build/install/*
 
       - name: Copy files
-        if: matrix.java-version == '21'
+        if: matrix.java-version == '23'
         shell: bash
         run: |
           du -h -d1 .
@@ -188,7 +189,7 @@ jobs:
           du -h -d1 .
 
       - name: Publish to huggingface
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && matrix.java-version == '21'
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && matrix.java-version == '23'
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         uses: nick-fields/retry@v3
@@ -222,7 +223,7 @@ jobs:
             git push https://csukuangfj:$HF_TOKEN@huggingface.co/csukuangfj/sherpa-onnx-libs main
 
       - name: Release pre-compiled binaries and libs for linux x64
-        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.java-version == '21'
+        if: (github.repository_owner == 'csukuangfj' || github.repository_owner == 'k2-fsa') && github.event_name == 'push' && contains(github.ref, 'refs/tags/') && matrix.java-version == '23'
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true

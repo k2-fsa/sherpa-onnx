@@ -13,14 +13,14 @@ if [ ! -f ./matcha-icefall-zh-baker/model-steps-3.onnx ]; then
   rm matcha-icefall-zh-baker.tar.bz2
 fi
 
-if [ ! -f ./hifigan_v2.onnx ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+if [ ! -f ./vocos-22khz-univ.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 fi
 
 dart run \
   ./bin/matcha-zh.dart \
   --acoustic-model ./matcha-icefall-zh-baker/model-steps-3.onnx \
-  --vocoder ./hifigan_v2.onnx \
+  --vocoder ./vocos-22khz-univ.onnx \
   --lexicon ./matcha-icefall-zh-baker/lexicon.txt \
   --tokens ./matcha-icefall-zh-baker/tokens.txt \
   --dict-dir ./matcha-icefall-zh-baker/dict \
@@ -33,7 +33,7 @@ dart run \
 dart run \
   ./bin/matcha-zh.dart \
   --acoustic-model ./matcha-icefall-zh-baker/model-steps-3.onnx \
-  --vocoder ./hifigan_v2.onnx \
+  --vocoder ./vocos-22khz-univ.onnx \
   --lexicon ./matcha-icefall-zh-baker/lexicon.txt \
   --tokens ./matcha-icefall-zh-baker/tokens.txt \
   --dict-dir ./matcha-icefall-zh-baker/dict \

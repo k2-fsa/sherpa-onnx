@@ -184,6 +184,8 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-vits-model.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
+    vocoder.cc
+    vocos-vocoder.cc
   )
 endif()
 
@@ -379,6 +381,7 @@ if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-alsa-offline-speaker-identification sherpa-onnx-alsa-offline-speaker-identification.cc alsa.cc)
   add_executable(sherpa-onnx-keyword-spotter-alsa sherpa-onnx-keyword-spotter-alsa.cc alsa.cc)
   add_executable(sherpa-onnx-vad-alsa sherpa-onnx-vad-alsa.cc alsa.cc)
+  add_executable(sherpa-onnx-vad-alsa-offline-asr sherpa-onnx-vad-alsa-offline-asr.cc alsa.cc)
 
 
   if(SHERPA_ONNX_ENABLE_TTS)
@@ -391,6 +394,7 @@ if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-alsa-offline-speaker-identification
     sherpa-onnx-keyword-spotter-alsa
     sherpa-onnx-vad-alsa
+    sherpa-onnx-vad-alsa-offline-asr
     sherpa-onnx-alsa-offline-audio-tagging
   )
 

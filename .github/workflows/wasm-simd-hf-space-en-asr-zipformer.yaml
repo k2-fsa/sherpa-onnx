@@ -144,8 +144,7 @@ jobs:
 
             git clone https://huggingface.co/spaces/k2-fsa/web-assembly-asr-sherpa-onnx-en huggingface
             cd huggingface
-            rm -fv *.js
-            rm -fv *.data
+            rm -rf ./*
             git fetch
             git pull
             git merge -m "merge remote" --ff origin main

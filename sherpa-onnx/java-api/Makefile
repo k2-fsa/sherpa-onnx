@@ -84,6 +84,11 @@ java_files += OfflineSpeakerDiarizationSegment.java
 java_files += OfflineSpeakerDiarizationCallback.java
 java_files += OfflineSpeakerDiarization.java
 
+java_files += OfflineSpeechDenoiserGtcrnModelConfig.java
+java_files += OfflineSpeechDenoiserModelConfig.java
+java_files += OfflineSpeechDenoiserConfig.java
+java_files += DenoisedAudio.java
+java_files += OfflineSpeechDenoiser.java
 
 class_files := $(java_files:%.java=%.class)
 

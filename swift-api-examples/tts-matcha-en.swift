@@ -6,7 +6,7 @@ class MyClass {
 
 func run() {
   let acousticModel = "./matcha-icefall-en_US-ljspeech/model-steps-3.onnx"
-  let vocoder = "./hifigan_v2.onnx"
+  let vocoder = "./vocos-22khz-univ.onnx"
   let tokens = "./matcha-icefall-en_US-ljspeech/tokens.txt"
   let dataDir = "./matcha-icefall-en_US-ljspeech/espeak-ng-data"
   let matcha = sherpaOnnxOfflineTtsMatchaModelConfig(

@@ -24,6 +24,16 @@ In the following, we describe how to use [sherpa-onnx](https://github.com/k2-fsa
 for text-to-speech and speech-to-text.
 
 
+# Speech enhancement
+
+In the following, we demonstrate how to run speech enhancement.
+
+```bash
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+node ./test-offline-speech-enhancement-gtcrn.js
+```
+
 # Speaker diarization
 
 In the following, we demonstrate how to run speaker diarization.
@@ -73,7 +83,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-i
 tar xvf matcha-icefall-zh-baker.tar.bz2
 rm matcha-icefall-zh-baker.tar.bz2
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 node ./test-offline-tts-matcha-zh.js
 ```
@@ -91,7 +101,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-i
 tar xf matcha-icefall-en_US-ljspeech.tar.bz2
 rm matcha-icefall-en_US-ljspeech.tar.bz2
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 node ./test-offline-tts-matcha-en.js
 ```

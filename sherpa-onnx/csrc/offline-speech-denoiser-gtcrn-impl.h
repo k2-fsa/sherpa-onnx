@@ -6,6 +6,7 @@
 #define SHERPA_ONNX_CSRC_OFFLINE_SPEECH_DENOISER_GTCRN_IMPL_H_
 
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <utility>
 #include <vector>

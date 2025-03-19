@@ -58,7 +58,7 @@ fun testMatcha() {
     model=OfflineTtsModelConfig(
       matcha=OfflineTtsMatchaModelConfig(
         acousticModel="./matcha-icefall-zh-baker/model-steps-3.onnx",
-        vocoder="./hifigan_v2.onnx",
+        vocoder="./vocos-22khz-univ.onnx",
         tokens="./matcha-icefall-zh-baker/tokens.txt",
         lexicon="./matcha-icefall-zh-baker/lexicon.txt",
         dictDir="./matcha-icefall-zh-baker/dict",

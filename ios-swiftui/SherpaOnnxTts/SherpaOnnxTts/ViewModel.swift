@@ -131,7 +131,7 @@ func getTtsFor_matcha_icefall_zh_baker() -> SherpaOnnxOfflineTtsWrapper {
   // please see https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-zh-baker-chinese-1-female-speaker
 
   let acousticModel = getResource("model-steps-3", "onnx")
-  let vocoder = getResource("hifigan_v2", "onnx")
+  let vocoder = getResource("vocos-22khz-univ", "onnx")
 
   let tokens = getResource("tokens", "txt")
   let lexicon = getResource("lexicon", "txt")

@@ -1,24 +1,63 @@
+## 1.11.1
+
+* Export vocos to sherpa-onnx (#2012)
+* Add C++ runtime for vocos (#2014)
+
+## 1.11.0
+
+* Fix building wheels for Python 3.7 (#1933)
+* Add Kotlin and Java API for online punctuation models (#1936)
+* Add Kokoro v1.1-zh (#1942)
+* Support RKNN for Zipformer CTC models. (#1948)
+* Add transducer modified_beam_search for RKNN. (#1949)
+* Update README to include projects that is using sherpa-onnx (#1956)
+* Limit number of tokens per second for whisper. (#1958)
+* Ebranchformer (#1951)
+* Test using sherpa-onnx as a cmake subproject (#1961)
+* Add C++ demo for VAD+non-streaming ASR (#1964)
+* Export gtcrn models to sherpa-onnx (#1975)
+* c-api add wave write to buffer. (#1962)
+* add SherpaOnnxOfflineRecognizerSetConfig binding for go, and optimize the new/free for C.struct_SherpaOnnxOfflineRecognizerConfig ptr (#1976)
+* Add C++ runtime for speech enhancement GTCRN models (#1977)
+* Add Python API for speech enhancement GTCRN models (#1978)
+* Add C API for speech enhancement GTCRN models (#1984)
+* Add CXX API for speech enhancement GTCRN models (#1986)
+* Add Swift API for speech enhancement GTCRN models (#1989)
+* Add C# API for speech enhancement GTCRN models (#1990)
+* Add Go API for speech enhancement GTCRN models (#1991)
+* Add Pascal API for speech enhancement GTCRN models (#1992)
+* Add Dart API for speech enhancement GTCRN models (#1993)
+* Add JavaScript (node-addon) API for speech enhancement GTCRN models (#1996)
+* Add WebAssembly (WASM) for speech enhancement GTCRN models (#2002)
+* Add JavaScript API (wasm) for speech enhancement GTCRN models (#2007)
+* Add Kotlin API for speech enhancement GTCRN models (#2008)
+* Add Java API for speech enhancement GTCRN models (#2009)
+
+
+
+
+
 ## 1.10.46
 
-# Fix kokoro lexicon. (#1886)
-# speaker-identification-with-vad-non-streaming-asr.py Lack of support for sense_voice. (#1884)
-# Fix generating Chinese lexicon for Kokoro TTS 1.0 (#1888)
-# Reduce vad-whisper-c-api example code. (#1891)
-# JNI Exception Handling (#1452)
-# Fix #1901: UnicodeEncodeError running export_bpe_vocab.py (#1902)
-# Fix publishing pre-built windows libraries (#1905)
-# Fixing Whisper Model Token Normalization (#1904)
-# feat: add mic example for better compatibility (#1909)
-# Add onnxruntime 1.18.1 for Linux aarch64 GPU (#1914)
-# Add C++ API for streaming zipformer ASR on RK NPU (#1908)
-# change [1<<28] to [1<<10], to fix build issues on GOARCH=386 that [1<<28] too large (#1916)
-# Flutter Config toJson/fromJson (#1893)
-# Fix publishing linux pre-built artifacts (#1919)
-# go.mod set to use go 1.17, and use unsafe.Slice to optimize the code (#1920)
-# fix: AddPunct panic for Go(#1921)
-# Fix publishing macos pre-built artifacts (#1922)
-# Minor fixes for rknn (#1925)
-# Build wheels for rknn linux aarch64 (#1928)
+* Fix kokoro lexicon. (#1886)
+* speaker-identification-with-vad-non-streaming-asr.py Lack of support for sense_voice. (#1884)
+* Fix generating Chinese lexicon for Kokoro TTS 1.0 (#1888)
+* Reduce vad-whisper-c-api example code. (#1891)
+* JNI Exception Handling (#1452)
+* Fix #1901: UnicodeEncodeError running export_bpe_vocab.py (#1902)
+* Fix publishing pre-built windows libraries (#1905)
+* Fixing Whisper Model Token Normalization (#1904)
+* feat: add mic example for better compatibility (#1909)
+* Add onnxruntime 1.18.1 for Linux aarch64 GPU (#1914)
+* Add C++ API for streaming zipformer ASR on RK NPU (#1908)
+* change [1<<28] to [1<<10], to fix build issues on GOARCH=386 that [1<<28] too large (#1916)
+* Flutter Config toJson/fromJson (#1893)
+* Fix publishing linux pre-built artifacts (#1919)
+* go.mod set to use go 1.17, and use unsafe.Slice to optimize the code (#1920)
+* fix: AddPunct panic for Go(#1921)
+* Fix publishing macos pre-built artifacts (#1922)
+* Minor fixes for rknn (#1925)
+* Build wheels for rknn linux aarch64 (#1928)
 
 ## 1.10.45
 

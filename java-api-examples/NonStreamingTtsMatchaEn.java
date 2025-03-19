@@ -10,7 +10,7 @@ public class NonStreamingTtsMatchaEn {
     // https://k2-fsa.github.io/sherpa/onnx/tts/pretrained_models/matcha.html#matcha-icefall-en-us-ljspeech-american-english-1-female-speaker
     // to download model files
     String acousticModel = "./matcha-icefall-en_US-ljspeech/model-steps-3.onnx";
-    String vocoder = "./hifigan_v2.onnx";
+    String vocoder = "./vocos-22khz-univ.onnx";
     String tokens = "./matcha-icefall-en_US-ljspeech/tokens.txt";
     String dataDir = "./matcha-icefall-en_US-ljspeech/espeak-ng-data";
     String text =

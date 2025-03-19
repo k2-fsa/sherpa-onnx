@@ -105,6 +105,15 @@ jobs:
             make -j4
             ls -lh lib
 
+      - name:  Run speech enhancement (GTCRN)
+        shell: bash
+        run: |
+          cd ./java-api-examples
+          ./run-non-streaming-speech-enhancement-gtcrn.sh
+          ls -lh *.wav
+
+          rm -fv gtcrn_simple.onnx *.wav
+
       - name:  Run java test (Online add punctuations)
         shell: bash
         run: |
@@ -256,7 +265,7 @@ jobs:
           rm -rf kokoro-en-*
 
           rm -rf matcha-icefall-*
-          rm hifigan_v2.onnx
+          rm vocos-22khz-univ.onnx
 
           ./run-non-streaming-tts-piper-en.sh
           rm -rf vits-piper-*
