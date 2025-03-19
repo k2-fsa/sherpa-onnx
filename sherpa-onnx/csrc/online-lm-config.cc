@@ -22,7 +22,7 @@ void OnlineLMConfig::Register(ParseOptions *po) {
                "Boolean whether to use shallow fusion or rescore.");
   po->Register("lodr-fst", &lodr_fst, "Path to LODR FST model.");
   po->Register("lodr-scale", &lodr_scale, "LODR scale.");
-  po->Register("lodr-backoff-id", &lodr_scale,
+  po->Register("lodr-backoff-id", &lodr_backoff_id,
                "ID of the backoff symbol in the LODR FST.");
 }
 
