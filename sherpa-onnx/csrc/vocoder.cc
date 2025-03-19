@@ -100,9 +100,9 @@ std::unique_ptr<Vocoder> Vocoder::Create(Manager *mgr,
   switch (model_type) {
     case ModelType::kHifigan:
       return std::make_unique<HifiganVocoder>(
-          config.num_threads, config.provider, config.matcha.vocoder);
+          mgr, config.num_threads, config.provider, config.matcha.vocoder);
     case ModelType::kVocoos:
-      return std::make_unique<VocosVocoder>(config);
+      return std::make_unique<VocosVocoder>(mgr, config);
     case ModelType::kUnknown:
       SHERPA_ONNX_LOGE("Unknown model type in vocoder!");
       return nullptr;
