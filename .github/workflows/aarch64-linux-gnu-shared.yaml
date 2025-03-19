@@ -45,6 +45,9 @@ jobs:
             onnxruntime_version: "1.16.0"
           - os: ubuntu-22.04-arm
             gpu: ON
+            onnxruntime_version: "1.18.0"
+          - os: ubuntu-22.04-arm
+            gpu: ON
             onnxruntime_version: "1.18.1"
           - os: ubuntu-22.04-arm
             gpu: OFF
@@ -231,7 +234,7 @@ jobs:
           file: sherpa-onnx-*linux-aarch64*.tar.bz2
 
       - name: Release pre-compiled binaries and libs for aarch64 linux
-        if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+        # if: github.repository_owner == 'csukuangfj' && github.event_name == 'push' && contains(github.ref, 'refs/tags/')
         uses: svenstaro/upload-release-action@v2
         with:
           file_glob: true
@@ -239,7 +242,7 @@ jobs:
           file: sherpa-onnx-*linux-aarch64*.tar.bz2
           # repo_name: k2-fsa/sherpa-onnx
           # repo_token: ${{ secrets.UPLOAD_GH_SHERPA_ONNX_TOKEN }}
-          # tag: v1.10.42
+          # tag: v1.11.1
 
       - name: Test offline Moonshine
         if: matrix.build_type != 'Debug'
