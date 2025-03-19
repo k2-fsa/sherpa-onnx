@@ -27,6 +27,12 @@
 #       export SHERPA_ONNX_ENABLE_GPU=ON
 #       export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.18.1
 #       ./build-aarch64-linux-gnu.sh
+#
+#   (e) For  NVIDIA Jetson Orin NX (16GB ram) with CUDA 12.2, cudnn8
+#
+#       export SHERPA_ONNX_ENABLE_GPU=ON
+#       export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.18.0
+#       ./build-aarch64-linux-gnu.sh
 
 
 if command -v aarch64-none-linux-gnu-gcc  &> /dev/null; then
