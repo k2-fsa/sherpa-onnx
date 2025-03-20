@@ -30,6 +30,7 @@ cd $HOME/open-source
 git clone https://github.com/k2-fsa/sherpa-onnx
 cd sherpa-onnx
 mkdir build
+cd build
 
 cmake -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX=./install ..
 cmake --build . --config Release --target install
