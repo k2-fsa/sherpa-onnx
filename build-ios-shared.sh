@@ -242,7 +242,7 @@ for d in ios-arm64_x86_64-simulator ios-arm64; do
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.11.1</string>
+	<string>1.11.2</string>
 	<key>CFBundleSupportedPlatforms</key>
 	<array>
 		<string>iPhoneOS</string>
