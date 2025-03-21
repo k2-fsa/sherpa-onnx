@@ -178,7 +178,7 @@ class OnlineRnnLM::Impl {
 
     ComputeInitStates();
 
-    if (config_.lodr_fst != "") {
+    if (!config_.lodr_fst.empty()) {
       lodr_fst_ = std::make_unique<LODRFST>(LODRFST(config_.lodr_fst));
     }
   }

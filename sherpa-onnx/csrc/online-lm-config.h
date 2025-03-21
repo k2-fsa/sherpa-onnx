@@ -28,14 +28,15 @@ struct OnlineLMConfig {
 
   OnlineLMConfig(const std::string &model, float scale, int32_t lm_num_threads,
                  const std::string &lm_provider, bool shallow_fusion,
-                 const std::string &lodr_fst, float lodr_scale)
+                 const std::string &lodr_fst, float lodr_scale, int lodr_backoff_id)
       : model(model),
         scale(scale),
         lm_num_threads(lm_num_threads),
         lm_provider(lm_provider),
         shallow_fusion(shallow_fusion),
         lodr_fst(lodr_fst),
-        lodr_scale(lodr_scale) {}
+        lodr_scale(lodr_scale),
+        lodr_backoff_id(lodr_backoff_id) {}
 
   void Register(ParseOptions *po);
   bool Validate() const;

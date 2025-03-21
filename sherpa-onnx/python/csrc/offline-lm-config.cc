@@ -15,11 +15,14 @@ void PybindOfflineLMConfig(py::module *m) {
   py::class_<PyClass>(*m, "OfflineLMConfig")
       .def(py::init<const std::string &, float, int32_t, const std::string &>(),
            py::arg("model"), py::arg("scale") = 0.5f,
-           py::arg("lm_num_threads") = 1, py::arg("lm_provider") = "cpu")
+           py::arg("lm_num_threads") = 1, py::arg("lm_provider") = "cpu",
+           py::arg("lodr_fst") = "", py::arg("lodr_scale") = 0.0f),
       .def_readwrite("model", &PyClass::model)
       .def_readwrite("scale", &PyClass::scale)
       .def_readwrite("lm_provider", &PyClass::lm_provider)
       .def_readwrite("lm_num_threads", &PyClass::lm_num_threads)
+      .def_readwrite("lodr_fst", &PyClass::lodr_fst)
+      .def_readwrite("lodr_scale", &PyClass::lodr_scale)
       .def("__str__", &PyClass::ToString);
 }
 
