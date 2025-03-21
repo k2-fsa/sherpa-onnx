@@ -10,12 +10,18 @@
 
 #include "onnxruntime_cxx_api.h"  // NOLINT
 #include "sherpa-onnx/csrc/hypothesis.h"
+#include "sherpa-onnx/csrc/lodr-fst.h"
 #include "sherpa-onnx/csrc/offline-lm-config.h"
 
 namespace sherpa_onnx {
 
 class OfflineLM {
  public:
+  explicit OfflineLM(const OfflineLMConfig &config) : config_(config) {
+    if (config_.lodr_fst != "") {
+      lodr_fst_ = std::make_unique<LODRFST>(LODRFST(config_.lodr_fst));
+    }
+  }
   virtual ~OfflineLM() = default;
 
   static std::unique_ptr<OfflineLM> Create(const OfflineLMConfig &config);
@@ -43,6 +49,11 @@ class OfflineLM {
   // @param hyps It is changed in-place.
   void ComputeLMScore(float scale, int32_t context_size,
                       std::vector<Hypotheses> *hyps);
+
+ private:
+  std::unique_ptr<LODRFST> lodr_fst_;
+  float lodr_scale_ = 0.01;
+  OfflineLMConfig config_;
 };
 
 }  // namespace sherpa_onnx
