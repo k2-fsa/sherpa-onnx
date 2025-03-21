@@ -2,7 +2,7 @@
   "dependencies": {
     "mic": "^2.1.2",
     "naudiodon2": "^2.4.0",
-    "sherpa-onnx": "^1.11.1",
+    "sherpa-onnx": "^1.11.2",
     "wav": "^1.0.2"
   }
 }
