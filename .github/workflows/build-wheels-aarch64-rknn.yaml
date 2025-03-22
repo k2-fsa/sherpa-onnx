@@ -74,6 +74,9 @@ jobs:
           export CPLUS_INCLUDE_PATH=$PWD/alsa-lib/include:$CPLUS_INCLUDE_PATH
           export SHERPA_ONNX_ALSA_LIB_DIR=$PWD/alsa-lib/src/.libs
 
+          ls -lh $PWD/alsa-lib/include
+          ls -lh $PWD/alsa-lib/src/.libs
+
           export SHERPA_ONNX_CMAKE_ARGS="-DSHERPA_ONNX_ENABLE_RKNN=ON -DSHERPA_ONNX_ENABLE_ALSA=1"
           python3 setup.py bdist_wheel
 
