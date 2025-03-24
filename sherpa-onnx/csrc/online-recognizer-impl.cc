@@ -42,7 +42,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
         config.model_config.zipformer2_ctc.model.empty()) {
       SHERPA_ONNX_LOGE(
           "Only Zipformer transducers and CTC models are currently supported "
-          "by rknn. Fallback to CPU");
+          "by rknn. Fallback to CPU. Make sure you pass an onnx model");
     } else if (!config.model_config.transducer.encoder.empty()) {
       return std::make_unique<OnlineRecognizerTransducerRknnImpl>(config);
     } else if (!config.model_config.zipformer2_ctc.model.empty()) {
@@ -51,7 +51,7 @@ std::unique_ptr<OnlineRecognizerImpl> OnlineRecognizerImpl::Create(
 #else
     SHERPA_ONNX_LOGE(
         "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
-        "want to use rknn. Fallback to CPU");
+        "want to use rknn. Fallback to CPU. Make sure you pass an onnx model.");
 #endif
   }
 

@@ -6,6 +6,10 @@
 
 #include "sherpa-onnx/csrc/keyword-spotter-transducer-impl.h"
 
+#if SHERPA_ONNX_ENABLE_RKNN
+#include "sherpa-onnx/csrc/keyword-spotter-transducer-rknn-impl.h"
+#endif
+
 #if __ANDROID_API__ >= 9
 #include "android/asset_manager.h"
 #include "android/asset_manager_jni.h"
@@ -19,17 +23,41 @@ namespace sherpa_onnx {
 
 std::unique_ptr<KeywordSpotterImpl> KeywordSpotterImpl::Create(
     const KeywordSpotterConfig &config) {
+  if (config.model_config.provider_config.provider == "rknn") {
+#if SHERPA_ONNX_ENABLE_RKNN
+    if (!config.model_config.transducer.encoder.empty()) {
+      return std::make_unique<KeywordSpotterTransducerRknnImpl>(config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
+        "want to use rknn. Fallback to CPU. Make sure you pass an onnx model.");
+#endif
+  }
+
   if (!config.model_config.transducer.encoder.empty()) {
     return std::make_unique<KeywordSpotterTransducerImpl>(config);
   }
 
   SHERPA_ONNX_LOGE("Please specify a model");
-  exit(-1);
+  SHERPA_ONNX_EXIT(-1);
 }
 
 template <typename Manager>
 std::unique_ptr<KeywordSpotterImpl> KeywordSpotterImpl::Create(
     Manager *mgr, const KeywordSpotterConfig &config) {
+  if (config.model_config.provider_config.provider == "rknn") {
+#if SHERPA_ONNX_ENABLE_RKNN
+    if (!config.model_config.transducer.encoder.empty()) {
+      return std::make_unique<KeywordSpotterTransducerRknnImpl>(mgr, config);
+    }
+#else
+    SHERPA_ONNX_LOGE(
+        "Please rebuild sherpa-onnx with -DSHERPA_ONNX_ENABLE_RKNN=ON if you "
+        "want to use rknn. Fallback to CPU. Make sure you pass an onnx model.");
+#endif
+  }
+
   if (!config.model_config.transducer.encoder.empty()) {
     return std::make_unique<KeywordSpotterTransducerImpl>(mgr, config);
   }
