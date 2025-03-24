@@ -13,7 +13,8 @@ namespace sherpa_onnx {
 void PybindOfflineLMConfig(py::module *m) {
   using PyClass = OfflineLMConfig;
   py::class_<PyClass>(*m, "OfflineLMConfig")
-      .def(py::init<const std::string &, float, int32_t, const std::string &>(),
+      .def(py::init<const std::string &, float, int32_t, const std::string &,
+           const std::string &, float>(),
            py::arg("model"), py::arg("scale") = 0.5f,
            py::arg("lm_num_threads") = 1, py::arg("lm_provider") = "cpu",
            py::arg("lodr_fst") = "", py::arg("lodr_scale") = 0.0f),
