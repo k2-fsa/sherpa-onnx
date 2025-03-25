@@ -24,10 +24,9 @@
 
 namespace sherpa_onnx {
 
-static KeywordResult Convert(const TransducerKeywordResult &src,
-                             const SymbolTable &sym_table, float frame_shift_ms,
-                             int32_t subsampling_factor,
-                             int32_t frames_since_start) {
+KeywordResult Convert(const TransducerKeywordResult &src,
+                      const SymbolTable &sym_table, float frame_shift_ms,
+                      int32_t subsampling_factor, int32_t frames_since_start) {
   KeywordResult r;
   r.tokens.reserve(src.tokens.size());
   r.timestamps.reserve(src.tokens.size());

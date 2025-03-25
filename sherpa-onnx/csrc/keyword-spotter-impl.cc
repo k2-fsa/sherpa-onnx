@@ -7,7 +7,7 @@
 #include "sherpa-onnx/csrc/keyword-spotter-transducer-impl.h"
 
 #if SHERPA_ONNX_ENABLE_RKNN
-#include "sherpa-onnx/csrc/keyword-spotter-transducer-rknn-impl.h"
+#include "sherpa-onnx/csrc/rknn/keyword-spotter-transducer-rknn-impl.h"
 #endif
 
 #if __ANDROID_API__ >= 9
