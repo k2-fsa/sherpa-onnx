@@ -63,7 +63,7 @@ void WriteWave(char *buffer, int32_t sampling_rate, const float *samples,
 
   std::vector<int16_t> samples_int16(n);
   for (int32_t i = 0; i != n; ++i) {
-    samples_int16[i] = samples[i] * 32676;
+    samples_int16[i] = samples[i] * 32767;
   }
 
   memcpy(buffer, &header, sizeof(WaveHeader));
