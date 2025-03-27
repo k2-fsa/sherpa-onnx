@@ -387,11 +387,11 @@ class OnlineRecognizerTransducerImpl : public OnlineRecognizerImpl {
     // if last result is not empty, then
     // truncate all last hyps and save as the context for next result
     if (static_cast<int32_t>(last_result.tokens.size()) > context_size) {
-      auto hyps = last_result.hyps.Vec();
-      for (auto &h : hyps) {
-        std::vector<int64_t> context(h.ys.end() - context_size,
-                                     h.ys.end());
-        r.hyps.Add({context, h.log_prob});
+      for (const auto &it : last_result.hyps) {
+        auto h = it.second;
+        r.hyps.Add({std::vector<int64_t>(h.ys.end() - context_size,
+                                         h.ys.end()),
+                    h.log_prob});
       }
 
       r.tokens = std::vector<int64_t> (last_result.tokens.end() - context_size,
