@@ -312,7 +312,7 @@ static std::vector<std::string> MergeCharactersIntoWords(
   while (i < n) {
     const auto &w = words[i];
     if (w.size() >= 3 || (w.size() == 2 && !IsSpecial(w)) ||
-        (w.size() == 1 && (IsPunct(w[0]) || std::isspace(w[0])))) {
+        (w.size() == 1 && (IsPunct(w[0]) || std::isspace(uint8_t(w[0]))))) {
       if (prev != -1) {
         std::string t;
         for (; prev < i; ++prev) {
@@ -322,7 +322,7 @@ static std::vector<std::string> MergeCharactersIntoWords(
         ans.push_back(std::move(t));
       }
 
-      if (!std::isspace(w[0])) {
+      if (!std::isspace(uint8_t(w[0]))) {
         ans.push_back(w);
       }
       ++i;
