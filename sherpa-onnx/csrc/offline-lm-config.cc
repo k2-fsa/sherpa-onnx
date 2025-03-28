@@ -18,6 +18,8 @@ void OfflineLMConfig::Register(ParseOptions *po) {
                "Number of threads to run the neural network of LM model");
   po->Register("lm-provider", &lm_provider,
                "Specify a provider to LM model use: cpu, cuda, coreml");
+  po->Register("lodr-fst", &lodr_fst, "Path to LODR FST model.");
+  po->Register("lodr-scale", &lodr_scale, "LODR scale.");
 }
 
 bool OfflineLMConfig::Validate() const {
@@ -34,7 +36,9 @@ std::string OfflineLMConfig::ToString() const {
 
   os << "OfflineLMConfig(";
   os << "model=\"" << model << "\", ";
-  os << "scale=" << scale << ")";
+  os << "scale=" << scale << ", ";
+  os << "lodr_scale=" << lodr_scale << ", ";
+  os << "lodr_fst=\"" << lodr_fst << "\")";
 
   return os.str();
 }
