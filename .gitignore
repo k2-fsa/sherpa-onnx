@@ -138,3 +138,5 @@ cmake-build-debug
 README-DEV.txt
 *.rknn
 *.jit
+##clion
+.idea

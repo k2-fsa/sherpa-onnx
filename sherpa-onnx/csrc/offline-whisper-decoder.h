@@ -33,7 +33,8 @@ class OfflineWhisperDecoder {
    * @return Return a vector of size `N` containing the decoded results.
    */
   virtual std::vector<OfflineWhisperDecoderResult> Decode(
-      Ort::Value n_layer_cross_k, Ort::Value n_layer_cross_v) = 0;
+      Ort::Value n_layer_cross_k, Ort::Value n_layer_cross_v,
+      int32_t num_feature_frames) = 0;
 
   virtual void SetConfig(const OfflineWhisperModelConfig &config) = 0;
 };

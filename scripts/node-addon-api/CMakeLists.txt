@@ -20,6 +20,7 @@ set(srcs
   src/keyword-spotting.cc
   src/non-streaming-asr.cc
   src/non-streaming-speaker-diarization.cc
+  src/non-streaming-speech-denoiser.cc
   src/non-streaming-tts.cc
   src/punctuation.cc
   src/sherpa-onnx-node-addon-api.cc

@@ -12,8 +12,8 @@ if [ ! -f ./matcha-icefall-en_US-ljspeech/model-steps-3.onnx ]; then
   rm matcha-icefall-en_US-ljspeech.tar.bz2
 fi
 
-if [ ! -f ./hifigan_v2.onnx ]; then
-  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+if [ ! -f ./vocos-22khz-univ.onnx ]; then
+  curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 fi
 
 go mod tidy
@@ -21,7 +21,7 @@ go build
 
 ./non-streaming-tts \
   --matcha-acoustic-model=./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
-  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-vocoder=./vocos-22khz-univ.onnx \
   --matcha-tokens=./matcha-icefall-en_US-ljspeech/tokens.txt \
   --matcha-data-dir=./matcha-icefall-en_US-ljspeech/espeak-ng-data \
   --debug=1 \

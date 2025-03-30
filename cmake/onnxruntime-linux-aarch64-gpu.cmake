@@ -43,6 +43,10 @@ if(v STREQUAL "1.11.0")
   set(onnxruntime_HASH "SHA256=36eded935551e23aead09d4173bdf0bd1e7b01fdec15d77f97d6e34029aa60d7")
 elseif(v STREQUAL "1.16.0")
   set(onnxruntime_HASH "SHA256=4c09d5acf2c2682b4eab1dc2f1ad98fc1fde5f5f1960063e337983ba59379a4b")
+elseif(v STREQUAL "1.18.0")
+  set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.0/onnxruntime-linux-aarch64-gpu-cuda12.2-cudnn8.9.4-trt8.6.2-1.18.0.tar.bz2")
+  set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-gpu-cuda12.2-cudnn8.9.4-trt8.6.2-1.18.0.tar.bz2")
+  set(onnxruntime_HASH "SHA256=da437a69be982fc28ca7d60d0c5ccce2f48d027fa888cc76458cdc05410f4e2d")
 elseif(v STREQUAL "1.18.1")
   set(onnxruntime_URL  "https://github.com/csukuangfj/onnxruntime-libs/releases/download/v1.18.1/onnxruntime-linux-aarch64-gpu-cuda12-1.18.1.tar.bz2")
   set(onnxruntime_URL2 "https://hf-mirror.com/csukuangfj/onnxruntime-libs/resolve/main/onnxruntime-linux-aarch64-gpu-cuda12-1.18.1.tar.bz2")
@@ -60,6 +64,18 @@ set(possible_file_locations
   ${CMAKE_BINARY_DIR}/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2
   /tmp/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2
   /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-gpu-${v}.tar.bz2
+  #
+  $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-gpu-cuda12.2-cudnn8.9.4-trt8.6.2-${v}.tar.bz2
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-aarch64-gpu-cuda12.2-cudnn8.9.4-trt8.6.2-${v}.tar.bz2
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-aarch64-gpu-cuda12.2-cudnn8.9.4-trt8.6.2-${v}.tar.bz2
+  /tmp/onnxruntime-linux-aarch64-gpu-cuda12.2-cudnn8.9.4-trt8.6.2-${v}.tar.bz2
+  /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-gpu-cuda12.2-cudnn8.9.4-trt8.6.2-${v}.tar.bz2
+  #
+  $ENV{HOME}/Downloads/onnxruntime-linux-aarch64-gpu-cuda12-${v}.tar.bz2
+  ${CMAKE_SOURCE_DIR}/onnxruntime-linux-aarch64-gpu-cuda12-${v}.tar.bz2
+  ${CMAKE_BINARY_DIR}/onnxruntime-linux-aarch64-gpu-cuda12-${v}.tar.bz2
+  /tmp/onnxruntime-linux-aarch64-gpu-cuda12-${v}.tar.bz2
+  /star-fj/fangjun/download/github/onnxruntime-linux-aarch64-gpu-cuda12-${v}.tar.bz2
 )
 
 foreach(f IN LISTS possible_file_locations)

@@ -99,11 +99,21 @@ jobs:
             cp -v ./install/lib/sherpa-onnx-c-api.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
             cp -v ./install/lib/onnxruntime.dll ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
             ls -lh ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/
-            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
-            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-hlg-decoding/
-            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/add-punctuation
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/audio-tagging
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/keyword-spotting-from-file/
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-decode-files/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-speaker-diarization/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/non-streaming-tts/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speaker-identification/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/speech-enhancement-gtcrn
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-decode-files/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/streaming-hlg-decoding/
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-asr-paraformer
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-asr-whisper
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-speaker-identification
+            cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll ../scripts/go/_internal/vad-spoken-language-identification
 
             cp -v ../scripts/go/_internal/lib/x86_64-pc-windows-gnu/*.dll $upload_dir
           else
@@ -131,6 +141,15 @@ jobs:
         with:
           name: ${{ matrix.os }}-libs
           path: to-upload/
+
+      - name: Test speech enhancement (GTCRN)
+        shell: bash
+        run: |
+          cd scripts/go/_internal/speech-enhancement-gtcrn/
+
+          ./run.sh
+
+          ls -lh
 
       - name: Test audio tagging
         shell: bash

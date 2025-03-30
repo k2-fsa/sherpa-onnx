@@ -2,6 +2,36 @@
 import 'dart:ffi';
 import 'package:ffi/ffi.dart';
 
+final class SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig extends Struct {
+  external Pointer<Utf8> model;
+}
+
+final class SherpaOnnxOfflineSpeechDenoiserModelConfig extends Struct {
+  external SherpaOnnxOfflineSpeechDenoiserGtcrnModelConfig gtcrn;
+
+  @Int32()
+  external int numThreads;
+
+  @Int32()
+  external int debug;
+
+  external Pointer<Utf8> provider;
+}
+
+final class SherpaOnnxOfflineSpeechDenoiserConfig extends Struct {
+  external SherpaOnnxOfflineSpeechDenoiserModelConfig model;
+}
+
+final class SherpaOnnxDenoisedAudio extends Struct {
+  external Pointer<Float> samples;
+
+  @Int32()
+  external int n;
+
+  @Int32()
+  external int sampleRate;
+}
+
 final class SherpaOnnxSpeakerEmbeddingExtractorConfig extends Struct {
   external Pointer<Utf8> model;
 
@@ -516,6 +546,41 @@ final class SherpaOnnxSpeakerEmbeddingManager extends Opaque {}
 final class SherpaOnnxOfflineSpeakerDiarization extends Opaque {}
 
 final class SherpaOnnxOfflineSpeakerDiarizationResult extends Opaque {}
+
+final class SherpaOnnxOfflineSpeechDenoiser extends Opaque {}
+
+typedef SherpaOnnxCreateOfflineSpeechDenoiserNative
+    = Pointer<SherpaOnnxOfflineSpeechDenoiser> Function(
+        Pointer<SherpaOnnxOfflineSpeechDenoiserConfig>);
+
+typedef SherpaOnnxCreateOfflineSpeechDenoiser
+    = SherpaOnnxCreateOfflineSpeechDenoiserNative;
+
+typedef SherpaOnnxDestroyOfflineSpeechDenoiserNative = Void Function(
+    Pointer<SherpaOnnxOfflineSpeechDenoiser>);
+
+typedef SherpaOnnxDestroyOfflineSpeechDenoiser = void Function(
+    Pointer<SherpaOnnxOfflineSpeechDenoiser>);
+
+typedef SherpaOnnxOfflineSpeechDenoiserGetSampleRateNative = Int32 Function(
+    Pointer<SherpaOnnxOfflineSpeechDenoiser>);
+
+typedef SherpaOnnxOfflineSpeechDenoiserGetSampleRate = int Function(
+    Pointer<SherpaOnnxOfflineSpeechDenoiser>);
+
+typedef SherpaOnnxOfflineSpeechDenoiserRunNative
+    = Pointer<SherpaOnnxDenoisedAudio> Function(
+        Pointer<SherpaOnnxOfflineSpeechDenoiser>, Pointer<Float>, Int32, Int32);
+
+typedef SherpaOnnxOfflineSpeechDenoiserRun
+    = Pointer<SherpaOnnxDenoisedAudio> Function(
+        Pointer<SherpaOnnxOfflineSpeechDenoiser>, Pointer<Float>, int, int);
+
+typedef SherpaOnnxDestroyDenoisedAudioNative = Void Function(
+    Pointer<SherpaOnnxDenoisedAudio>);
+
+typedef SherpaOnnxDestroyDenoisedAudio = void Function(
+    Pointer<SherpaOnnxDenoisedAudio>);
 
 typedef SherpaOnnxCreateOfflineSpeakerDiarizationNative
     = Pointer<SherpaOnnxOfflineSpeakerDiarization> Function(
@@ -1172,6 +1237,17 @@ typedef SherpaOnnxFreeWaveNative = Void Function(Pointer<SherpaOnnxWave>);
 typedef SherpaOnnxFreeWave = void Function(Pointer<SherpaOnnxWave>);
 
 class SherpaOnnxBindings {
+  static SherpaOnnxCreateOfflineSpeechDenoiser?
+      sherpaOnnxCreateOfflineSpeechDenoiser;
+
+  static SherpaOnnxDestroyOfflineSpeechDenoiser?
+      sherpaOnnxDestroyOfflineSpeechDenoiser;
+
+  static SherpaOnnxOfflineSpeechDenoiserGetSampleRate?
+      sherpaOnnxOfflineSpeechDenoiserGetSampleRate;
+  static SherpaOnnxOfflineSpeechDenoiserRun? sherpaOnnxOfflineSpeechDenoiserRun;
+  static SherpaOnnxDestroyDenoisedAudio? sherpaOnnxDestroyDenoisedAudio;
+
   static SherpaOnnxCreateOfflineSpeakerDiarization?
       sherpaOnnxCreateOfflineSpeakerDiarization;
   static SherpaOnnxDestroyOfflineSpeakerDiarization?
@@ -1370,6 +1446,33 @@ class SherpaOnnxBindings {
   static SherpaOnnxFreeWave? freeWave;
 
   static void init(DynamicLibrary dynamicLibrary) {
+    sherpaOnnxCreateOfflineSpeechDenoiser ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxCreateOfflineSpeechDenoiserNative>>(
+            'SherpaOnnxCreateOfflineSpeechDenoiser')
+        .asFunction();
+
+    sherpaOnnxDestroyOfflineSpeechDenoiser ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyOfflineSpeechDenoiserNative>>(
+            'SherpaOnnxDestroyOfflineSpeechDenoiser')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeechDenoiserGetSampleRate ??= dynamicLibrary
+        .lookup<
+                NativeFunction<
+                    SherpaOnnxOfflineSpeechDenoiserGetSampleRateNative>>(
+            'SherpaOnnxOfflineSpeechDenoiserGetSampleRate')
+        .asFunction();
+
+    sherpaOnnxOfflineSpeechDenoiserRun ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxOfflineSpeechDenoiserRunNative>>(
+            'SherpaOnnxOfflineSpeechDenoiserRun')
+        .asFunction();
+
+    sherpaOnnxDestroyDenoisedAudio ??= dynamicLibrary
+        .lookup<NativeFunction<SherpaOnnxDestroyDenoisedAudioNative>>(
+            'SherpaOnnxDestroyDenoisedAudio')
+        .asFunction();
+
     sherpaOnnxCreateOfflineSpeakerDiarization ??= dynamicLibrary
         .lookup<
                 NativeFunction<

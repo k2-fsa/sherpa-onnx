@@ -43,6 +43,12 @@ export LD_LIBRARY_PATH=$PWD/node_modules/.pnpm/sherpa-onnx-node@<REPLACE-THIS-WI
 
 The following tables list the examples in this folder.
 
+## Speech enhancement/denoising
+
+|File| Description|
+|---|---|
+|[./test_offline_speech_enhancement_gtcrn.js](./test_offline_speech_enhancement_gtcrn.js)| It demonstrates how to use sherpa-onnx JavaScript API for speech enhancement.|
+
 ## Speaker diarization
 
 |File| Description|
@@ -157,6 +163,15 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-reco
 curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/speaker-segmentation-models/0-four-speakers-zh.wav
 
 node ./test_offline_speaker_diarization.js
+```
+
+### Speech enhancement/denoising
+
+```bash
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/gtcrn_simple.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/speech-enhancement-models/inp_16k.wav
+
+node ./test_offline_speech_enhancement_gtcrn.js
 ```
 
 ### Voice Activity detection (VAD)
@@ -385,7 +400,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-i
 tar xf matcha-icefall-en_US-ljspeech.tar.bz2
 rm matcha-icefall-en_US-ljspeech.tar.bz2
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 node ./test_tts_non_streaming_matcha_icefall_en.js
 ```
@@ -396,7 +411,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-i
 tar xvf matcha-icefall-zh-baker.tar.bz2
 rm matcha-icefall-zh-baker.tar.bz2
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 node ./test_tts_non_streaming_matcha_icefall_zh.js
 ```

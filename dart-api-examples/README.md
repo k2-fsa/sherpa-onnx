@@ -19,6 +19,7 @@ https://pub.dev/packages/sherpa_onnx
 | [./tts](./tts)| Example for text to speech|
 | [./vad-with-non-streaming-asr](./vad-with-non-streaming-asr)| Example for voice activity detection with non-streaming speech recognition. You can use it to generate subtitles.|
 | [./vad](./vad)| Example for voice activity detection|
+| [./speech-enhancement-gtcrn](./speech-enhancement-gtcrn)| Example for speech enhancement/denoising|
 
 ## How to create an example in this folder
 

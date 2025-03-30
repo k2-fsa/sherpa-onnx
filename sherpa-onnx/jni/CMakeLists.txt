@@ -16,6 +16,7 @@ set(sources
   keyword-spotter.cc
   offline-punctuation.cc
   offline-recognizer.cc
+  offline-speech-denoiser.cc
   offline-stream.cc
   online-punctuation.cc
   online-recognizer.cc

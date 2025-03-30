@@ -9,23 +9,29 @@
 #
 #   (a) Make sure your board has NVIDIA GPU(s)
 #
-#   (b) For Jetson Nano B01 (using CUDA 10.2)
+#   (b) For Jetson Nano B01 (using CUDA 10.2, cudnn8)
 #
 #       export SHERPA_ONNX_ENABLE_GPU=ON
 #       export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.11.0
 #       ./build-aarch64-linux-gnu.sh
 #
-#   (c) For Jetson Orin NX (using CUDA 11.4)
+#   (c) For Jetson Orin NX (using CUDA 11.4, cudnn8)
 #
 #       export SHERPA_ONNX_ENABLE_GPU=ON
 #       export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.16.0
 #       ./build-aarch64-linux-gnu.sh
 #
 #   (d) For NVIDIA Jetson Orin Nano Engineering Reference Developer Kit Super
-#       Jetpack 6.2 [L4T 36.4.3] (CUDA 12.6)
+#       Jetpack 6.2 [L4T 36.4.3] (CUDA 12.6, cudnn9)
 #
 #       export SHERPA_ONNX_ENABLE_GPU=ON
 #       export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.18.1
+#       ./build-aarch64-linux-gnu.sh
+#
+#   (e) For  NVIDIA Jetson Orin NX (16GB ram) with CUDA 12.2, cudnn8
+#
+#       export SHERPA_ONNX_ENABLE_GPU=ON
+#       export SHERPA_ONNX_LINUX_ARM64_GPU_ONNXRUNTIME_VERSION=1.18.0
 #       ./build-aarch64-linux-gnu.sh
 
 

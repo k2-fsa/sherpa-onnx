@@ -44,6 +44,7 @@ add_library(sherpa_onnx SHARED
   keyword-spotting.cc
   non-streaming-asr.cc
   non-streaming-speaker-diarization.cc
+  non-streaming-speech-denoiser.cc
   non-streaming-tts.cc
   punctuation.cc
   sherpa-onnx-node-addon-api.cc

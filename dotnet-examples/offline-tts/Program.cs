@@ -85,11 +85,11 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-i
 tar xvf matcha-icefall-zh-baker.tar.bz2
 rm matcha-icefall-zh-baker.tar.bz2
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 dotnet run \
   --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
-  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-vocoder=./vocos-22khz-univ.onnx \
   --lexicon=./matcha-icefall-zh-baker/lexicon.txt \
   --tokens=./matcha-icefall-zh-baker/tokens.txt \
   --dict-dir=./matcha-icefall-zh-baker/dict \
@@ -104,11 +104,11 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-i
 tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
 rm matcha-icefall-en_US-ljspeech.tar.bz2
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 dotnet run \
   --matcha-acoustic-model=./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
-  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-vocoder=./vocos-22khz-univ.onnx \
   --tokens=./matcha-icefall-zh-baker/tokens.txt \
   --data-dir=./matcha-icefall-en_US-ljspeech/espeak-ng-data \
   --debug=1 \

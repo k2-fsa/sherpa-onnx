@@ -68,6 +68,7 @@ set(sources
   online-ctc-fst-decoder.cc
   online-ctc-greedy-search-decoder.cc
   online-ctc-model.cc
+  online-ebranchformer-transducer-model.cc
   online-lm-config.cc
   online-lm.cc
   online-lstm-transducer-model.cc
@@ -182,8 +183,18 @@ if(SHERPA_ONNX_ENABLE_TTS)
     offline-tts-vits-model.cc
     offline-tts.cc
     piper-phonemize-lexicon.cc
+    vocoder.cc
+    vocos-vocoder.cc
   )
 endif()
+
+list(APPEND sources
+  offline-speech-denoiser-gtcrn-model-config.cc
+  offline-speech-denoiser-gtcrn-model.cc
+  offline-speech-denoiser-impl.cc
+  offline-speech-denoiser-model-config.cc
+  offline-speech-denoiser.cc
+)
 
 if(SHERPA_ONNX_ENABLE_SPEAKER_DIARIZATION)
   list(APPEND sources
@@ -249,7 +260,7 @@ if(SHERPA_ONNX_ENABLE_RKNN)
   endif()
 endif()
 
-if(BUILD_SHARED_LIBS AND NOT DEFINED onnxruntime_lib_files)
+if((BUILD_SHARED_LIBS OR SHERPA_ONNX_USE_PRE_INSTALLED_ONNXRUNTIME_IF_AVAILABLE) AND NOT DEFINED onnxruntime_lib_files)
   target_link_libraries(sherpa-onnx-core onnxruntime)
 else()
   target_link_libraries(sherpa-onnx-core ${onnxruntime_lib_files})
@@ -300,6 +311,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-offline-parallel sherpa-onnx-offline-parallel.cc)
   add_executable(sherpa-onnx-offline-punctuation sherpa-onnx-offline-punctuation.cc)
   add_executable(sherpa-onnx-online-punctuation sherpa-onnx-online-punctuation.cc)
+  add_executable(sherpa-onnx-offline-denoiser sherpa-onnx-offline-denoiser.cc)
 
   if(SHERPA_ONNX_ENABLE_TTS)
     add_executable(sherpa-onnx-offline-tts sherpa-onnx-offline-tts.cc)
@@ -317,6 +329,7 @@ if(SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-offline-language-identification
     sherpa-onnx-offline-parallel
     sherpa-onnx-offline-punctuation
+    sherpa-onnx-offline-denoiser
     sherpa-onnx-online-punctuation
   )
   if(SHERPA_ONNX_ENABLE_TTS)
@@ -367,6 +380,7 @@ if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
   add_executable(sherpa-onnx-alsa-offline-speaker-identification sherpa-onnx-alsa-offline-speaker-identification.cc alsa.cc)
   add_executable(sherpa-onnx-keyword-spotter-alsa sherpa-onnx-keyword-spotter-alsa.cc alsa.cc)
   add_executable(sherpa-onnx-vad-alsa sherpa-onnx-vad-alsa.cc alsa.cc)
+  add_executable(sherpa-onnx-vad-alsa-offline-asr sherpa-onnx-vad-alsa-offline-asr.cc alsa.cc)
 
 
   if(SHERPA_ONNX_ENABLE_TTS)
@@ -379,6 +393,7 @@ if(SHERPA_ONNX_HAS_ALSA AND SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-alsa-offline-speaker-identification
     sherpa-onnx-keyword-spotter-alsa
     sherpa-onnx-vad-alsa
+    sherpa-onnx-vad-alsa-offline-asr
     sherpa-onnx-alsa-offline-audio-tagging
   )
 
@@ -451,6 +466,10 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     microphone.cc
   )
 
+  add_executable(sherpa-onnx-vad-with-offline-asr
+    sherpa-onnx-vad-with-offline-asr.cc
+  )
+
   add_executable(sherpa-onnx-vad-microphone-offline-asr
     sherpa-onnx-vad-microphone-offline-asr.cc
     microphone.cc
@@ -474,6 +493,7 @@ if(SHERPA_ONNX_ENABLE_PORTAUDIO AND SHERPA_ONNX_ENABLE_BINARY)
     sherpa-onnx-microphone-offline-audio-tagging
     sherpa-onnx-vad-microphone
     sherpa-onnx-vad-microphone-offline-asr
+    sherpa-onnx-vad-with-offline-asr
   )
   if(SHERPA_ONNX_ENABLE_TTS)
     list(APPEND exes

@@ -22,6 +22,11 @@ namespace sherpa_onnx {
 bool WriteWave(const std::string &filename, int32_t sampling_rate,
                const float *samples, int32_t n);
 
+void WriteWave(char *buffer, int32_t sampling_rate, const float *samples,
+               int32_t n);
+
+int64_t WaveFileSize(int32_t n_samples);
+
 }  // namespace sherpa_onnx
 
 #endif  // SHERPA_ONNX_CSRC_WAVE_WRITER_H_

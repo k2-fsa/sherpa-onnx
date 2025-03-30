@@ -8,6 +8,7 @@ export 'src/keyword_spotter.dart';
 export 'src/offline_punctuation.dart';
 export 'src/offline_recognizer.dart';
 export 'src/offline_speaker_diarization.dart';
+export 'src/offline_speech_denoiser.dart';
 export 'src/offline_stream.dart';
 export 'src/online_punctuation.dart';
 export 'src/online_recognizer.dart';

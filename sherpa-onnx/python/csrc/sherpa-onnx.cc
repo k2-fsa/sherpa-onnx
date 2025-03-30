@@ -16,6 +16,7 @@
 #include "sherpa-onnx/python/csrc/offline-model-config.h"
 #include "sherpa-onnx/python/csrc/offline-punctuation.h"
 #include "sherpa-onnx/python/csrc/offline-recognizer.h"
+#include "sherpa-onnx/python/csrc/offline-speech-denoiser.h"
 #include "sherpa-onnx/python/csrc/offline-stream.h"
 #include "sherpa-onnx/python/csrc/online-ctc-fst-decoder-config.h"
 #include "sherpa-onnx/python/csrc/online-lm-config.h"
@@ -87,6 +88,7 @@ PYBIND11_MODULE(_sherpa_onnx, m) {
 #endif
 
   PybindAlsa(&m);
+  PybindOfflineSpeechDenoiser(&m);
 }
 
 }  // namespace sherpa_onnx

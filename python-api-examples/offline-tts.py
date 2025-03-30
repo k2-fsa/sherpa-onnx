@@ -60,11 +60,11 @@ curl -O -SL https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/m
 tar xvf matcha-icefall-zh-baker.tar.bz2
 rm matcha-icefall-zh-baker.tar.bz2
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 python3 ./python-api-examples/offline-tts.py \
  --matcha-acoustic-model=./matcha-icefall-zh-baker/model-steps-3.onnx \
- --matcha-vocoder=./hifigan_v2.onnx \
+ --matcha-vocoder=./vocos-22khz-univ.onnx \
  --matcha-lexicon=./matcha-icefall-zh-baker/lexicon.txt \
  --matcha-tokens=./matcha-icefall-zh-baker/tokens.txt \
  --tts-rule-fsts=./matcha-icefall-zh-baker/phone.fst,./matcha-icefall-zh-baker/date.fst,./matcha-icefall-zh-baker/number.fst \
@@ -78,11 +78,11 @@ curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/m
 tar xvf matcha-icefall-en_US-ljspeech.tar.bz2
 rm matcha-icefall-en_US-ljspeech.tar.bz2
 
-curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 python3 ./python-api-examples/offline-tts.py \
   --matcha-acoustic-model=./matcha-icefall-en_US-ljspeech/model-steps-3.onnx \
-  --matcha-vocoder=./hifigan_v2.onnx \
+  --matcha-vocoder=./vocos-22khz-univ.onnx \
   --matcha-tokens=./matcha-icefall-en_US-ljspeech/tokens.txt \
   --matcha-data-dir=./matcha-icefall-en_US-ljspeech/espeak-ng-data \
   --output-filename=./test-matcha-ljspeech-en.wav \

@@ -464,6 +464,42 @@ class SHERPA_ONNX_API KeywordSpotter
   explicit KeywordSpotter(const SherpaOnnxKeywordSpotter *p);
 };
 
+struct OfflineSpeechDenoiserGtcrnModelConfig {
+  std::string model;
+};
+
+struct OfflineSpeechDenoiserModelConfig {
+  OfflineSpeechDenoiserGtcrnModelConfig gtcrn;
+  int32_t num_threads = 1;
+  int32_t debug = false;
+  std::string provider = "cpu";
+};
+
+struct OfflineSpeechDenoiserConfig {
+  OfflineSpeechDenoiserModelConfig model;
+};
+
+struct DenoisedAudio {
+  std::vector<float> samples;  // in the range [-1, 1]
+  int32_t sample_rate;
+};
+
+class SHERPA_ONNX_API OfflineSpeechDenoiser
+    : public MoveOnly<OfflineSpeechDenoiser, SherpaOnnxOfflineSpeechDenoiser> {
+ public:
+  static OfflineSpeechDenoiser Create(
+      const OfflineSpeechDenoiserConfig &config);
+
+  void Destroy(const SherpaOnnxOfflineSpeechDenoiser *p) const;
+
+  DenoisedAudio Run(const float *samples, int32_t n, int32_t sample_rate) const;
+
+  int32_t GetSampleRate() const;
+
+ private:
+  explicit OfflineSpeechDenoiser(const SherpaOnnxOfflineSpeechDenoiser *p);
+};
+
 }  // namespace sherpa_onnx::cxx
 
 #endif  // SHERPA_ONNX_C_API_CXX_API_H_

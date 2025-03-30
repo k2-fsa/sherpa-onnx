@@ -5,7 +5,7 @@ https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models
 to download a model.
 
 The following is an example:
-```
+```bash
 cd sherpa-onnx/wasm/tts/assets
 
 wget -q https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/vits-piper-en_US-libritts_r-medium.tar.bz2

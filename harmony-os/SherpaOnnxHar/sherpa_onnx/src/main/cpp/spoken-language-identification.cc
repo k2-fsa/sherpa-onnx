@@ -106,16 +106,17 @@ SpokenLanguageIdentificationCreateOfflineStreamWrapper(
     return {};
   }
 
-  SherpaOnnxSpokenLanguageIdentification *slid =
+  const SherpaOnnxSpokenLanguageIdentification *slid =
       info[0]
           .As<Napi::External<SherpaOnnxSpokenLanguageIdentification>>()
           .Data();
 
-  SherpaOnnxOfflineStream *stream =
+  const SherpaOnnxOfflineStream *stream =
       SherpaOnnxSpokenLanguageIdentificationCreateOfflineStream(slid);
 
   return Napi::External<SherpaOnnxOfflineStream>::New(
-      env, stream, [](Napi::Env env, SherpaOnnxOfflineStream *stream) {
+      env, const_cast<SherpaOnnxOfflineStream *>(stream),
+      [](Napi::Env env, SherpaOnnxOfflineStream *stream) {
         SherpaOnnxDestroyOfflineStream(stream);
       });
 }
@@ -147,12 +148,12 @@ static Napi::String SpokenLanguageIdentificationComputeWrapper(
     return {};
   }
 
-  SherpaOnnxSpokenLanguageIdentification *slid =
+  const SherpaOnnxSpokenLanguageIdentification *slid =
       info[0]
           .As<Napi::External<SherpaOnnxSpokenLanguageIdentification>>()
           .Data();
 
-  SherpaOnnxOfflineStream *stream =
+  const SherpaOnnxOfflineStream *stream =
       info[1].As<Napi::External<SherpaOnnxOfflineStream>>().Data();
 
   const SherpaOnnxSpokenLanguageIdentificationResult *r =

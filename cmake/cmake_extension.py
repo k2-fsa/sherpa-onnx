@@ -64,16 +64,18 @@ def get_binaries():
         "sherpa-onnx-online-websocket-server",
         "sherpa-onnx-vad-microphone",
         "sherpa-onnx-vad-microphone-offline-asr",
+        "sherpa-onnx-vad-with-offline-asr",
     ]
 
     if enable_alsa():
         binaries += [
             "sherpa-onnx-alsa",
             "sherpa-onnx-alsa-offline",
+            "sherpa-onnx-alsa-offline-audio-tagging",
             "sherpa-onnx-alsa-offline-speaker-identification",
             "sherpa-onnx-offline-tts-play-alsa",
             "sherpa-onnx-vad-alsa",
-            "sherpa-onnx-alsa-offline-audio-tagging",
+            "sherpa-onnx-vad-alsa-offline-asr",
         ]
 
     if is_windows():

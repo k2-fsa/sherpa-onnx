@@ -48,7 +48,9 @@ std::string FeatureExtractorConfig::ToString() const {
   os << "feature_dim=" << feature_dim << ", ";
   os << "low_freq=" << low_freq << ", ";
   os << "high_freq=" << high_freq << ", ";
-  os << "dither=" << dither << ")";
+  os << "dither=" << dither << ", ";
+  os << "normalize_samples=" << (normalize_samples ? "True" : "False") << ", ";
+  os << "snip_edges=" << (snip_edges ? "True" : "False") << ")";
 
   return os.str();
 }

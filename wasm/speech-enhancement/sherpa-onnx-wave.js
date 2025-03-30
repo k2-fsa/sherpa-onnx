@@ -1,0 +1,1 @@
+../nodejs/sherpa-onnx-wave.js

@@ -263,7 +263,7 @@ function initSherpaOnnxOfflineTtsModelConfig(config, Module) {
 
   const providerLen = Module.lengthBytesUTF8(config.provider || 'cpu') + 1;
   const buffer = Module._malloc(providerLen);
-  Module.stringToUTF8(config.provider, buffer, providerLen);
+  Module.stringToUTF8(config.provider || 'cpu', buffer, providerLen);
   Module.setValue(ptr + offset, buffer, 'i8*');
   offset += 4;
 

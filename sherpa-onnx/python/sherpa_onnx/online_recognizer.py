@@ -50,6 +50,8 @@ class OnlineRecognizer(object):
         low_freq: float = 20.0,
         high_freq: float = -400.0,
         dither: float = 0.0,
+        normalize_samples: bool = True,
+        snip_edges: bool = False,
         enable_endpoint_detection: bool = False,
         rule1_min_trailing_silence: float = 2.4,
         rule2_min_trailing_silence: float = 1.2,
@@ -118,6 +120,15 @@ class OnlineRecognizer(object):
             By default the audio samples are in range [-1,+1],
             so dithering constant 0.00003 is a good value,
             equivalent to the default 1.0 from kaldi
+          normalize_samples:
+            True for +/- 1.0 range of audio samples (default, zipformer feats),
+            False for +/- 32k samples (ebranchformer features).
+          snip_edges:
+            handling of end of audio signal in kaldi feature extraction.
+            If true, end effects will be handled by outputting only frames that
+            completely fit in the file, and the number of frames depends on the
+            frame-length.  If false, the number of frames depends only on the
+            frame-shift, and we reflect the data at the ends.
           enable_endpoint_detection:
             True to enable endpoint detection. False to disable endpoint
             detection.
@@ -248,6 +259,8 @@ class OnlineRecognizer(object):
 
         feat_config = FeatureExtractorConfig(
             sampling_rate=sample_rate,
+            normalize_samples=normalize_samples,
+            snip_edges=snip_edges,
             feature_dim=feature_dim,
             low_freq=low_freq,
             high_freq=high_freq,

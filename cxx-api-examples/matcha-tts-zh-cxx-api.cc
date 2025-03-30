@@ -1,4 +1,4 @@
-// cxx-api-examples/matcha-tts-zh-cxx-api.c
+// cxx-api-examples/matcha-tts-zh-cxx-api.cc
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
@@ -13,7 +13,7 @@ wget https://github.com/k2-fsa/sherpa-onnx/releases/download/tts-models/matcha-i
 tar xvf matcha-icefall-zh-baker.tar.bz2
 rm matcha-icefall-zh-baker.tar.bz2
 
-wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/hifigan_v2.onnx
+wget https://github.com/k2-fsa/sherpa-onnx/releases/download/vocoder-models/vocos-22khz-univ.onnx
 
 ./matcha-tts-zh-cxx-api
 
@@ -37,7 +37,7 @@ int32_t main(int32_t argc, char *argv[]) {
   OfflineTtsConfig config;
   config.model.matcha.acoustic_model =
       "./matcha-icefall-zh-baker/model-steps-3.onnx";
-  config.model.matcha.vocoder = "./hifigan_v2.onnx";
+  config.model.matcha.vocoder = "./vocos-22khz-univ.onnx";
   config.model.matcha.lexicon = "./matcha-icefall-zh-baker/lexicon.txt";
   config.model.matcha.tokens = "./matcha-icefall-zh-baker/tokens.txt";
   config.model.matcha.dict_dir = "./matcha-icefall-zh-baker/dict";

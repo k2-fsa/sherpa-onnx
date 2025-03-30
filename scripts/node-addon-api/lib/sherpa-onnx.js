@@ -9,6 +9,7 @@ const at = require('./audio-tagg.js');
 const punct = require('./punctuation.js');
 const kws = require('./keyword-spotter.js');
 const sd = require('./non-streaming-speaker-diarization.js');
+const speech_denoiser = require('./non-streaming-speech-denoiser.js');
 
 module.exports = {
   OnlineRecognizer: streaming_asr.OnlineRecognizer,
@@ -26,4 +27,5 @@ module.exports = {
   Punctuation: punct.Punctuation,
   KeywordSpotter: kws.KeywordSpotter,
   OfflineSpeakerDiarization: sd.OfflineSpeakerDiarization,
+  OfflineSpeechDenoiser: speech_denoiser.OfflineSpeechDenoiser,
 }

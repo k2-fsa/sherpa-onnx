@@ -3,6 +3,9 @@ include_directories(${CMAKE_SOURCE_DIR})
 add_executable(streaming-zipformer-cxx-api ./streaming-zipformer-cxx-api.cc)
 target_link_libraries(streaming-zipformer-cxx-api sherpa-onnx-cxx-api)
 
+add_executable(speech-enhancement-gtcrn-cxx-api ./speech-enhancement-gtcrn-cxx-api.cc)
+target_link_libraries(speech-enhancement-gtcrn-cxx-api sherpa-onnx-cxx-api)
+
 add_executable(kws-cxx-api ./kws-cxx-api.cc)
 target_link_libraries(kws-cxx-api sherpa-onnx-cxx-api)
 

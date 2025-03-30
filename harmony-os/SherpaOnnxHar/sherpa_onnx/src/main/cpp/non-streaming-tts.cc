@@ -217,7 +217,7 @@ static Napi::Number OfflineTtsSampleRateWrapper(
     return {};
   }
 
-  SherpaOnnxOfflineTts *tts =
+  const SherpaOnnxOfflineTts *tts =
       info[0].As<Napi::External<SherpaOnnxOfflineTts>>().Data();
 
   int32_t sample_rate = SherpaOnnxOfflineTtsSampleRate(tts);
@@ -245,7 +245,7 @@ static Napi::Number OfflineTtsNumSpeakersWrapper(
     return {};
   }
 
-  SherpaOnnxOfflineTts *tts =
+  const SherpaOnnxOfflineTts *tts =
       info[0].As<Napi::External<SherpaOnnxOfflineTts>>().Data();
 
   int32_t num_speakers = SherpaOnnxOfflineTtsNumSpeakers(tts);
@@ -273,7 +273,7 @@ static Napi::Object OfflineTtsGenerateWrapper(const Napi::CallbackInfo &info) {
     return {};
   }
 
-  SherpaOnnxOfflineTts *tts =
+  const SherpaOnnxOfflineTts *tts =
       info[0].As<Napi::External<SherpaOnnxOfflineTts>>().Data();
 
   if (!info[1].IsObject()) {
@@ -418,9 +418,9 @@ using TSFN = Napi::TypedThreadSafeFunction<Napi::Reference<Napi::Value>,
 
 class TtsGenerateWorker : public Napi::AsyncWorker {
  public:
-  TtsGenerateWorker(const Napi::Env &env, TSFN tsfn, SherpaOnnxOfflineTts *tts,
-                    const std::string &text, float speed, int32_t sid,
-                    bool use_external_buffer)
+  TtsGenerateWorker(const Napi::Env &env, TSFN tsfn,
+                    const SherpaOnnxOfflineTts *tts, const std::string &text,
+                    float speed, int32_t sid, bool use_external_buffer)
       : tsfn_(tsfn),
         Napi::AsyncWorker{env, "TtsGenerateWorker"},
         deferred_(env),
@@ -506,7 +506,7 @@ class TtsGenerateWorker : public Napi::AsyncWorker {
  private:
   TSFN tsfn_;
   Napi::Promise::Deferred deferred_;
-  SherpaOnnxOfflineTts *tts_;
+  const SherpaOnnxOfflineTts *tts_;
   std::string text_;
   float speed_;
   int32_t sid_;
@@ -537,7 +537,7 @@ static Napi::Object OfflineTtsGenerateAsyncWrapper(
     return {};
   }
 
-  SherpaOnnxOfflineTts *tts =
+  const SherpaOnnxOfflineTts *tts =
       info[0].As<Napi::External<SherpaOnnxOfflineTts>>().Data();
 
   if (!info[1].IsObject()) {

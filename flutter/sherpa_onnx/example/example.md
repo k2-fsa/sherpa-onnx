@@ -9,6 +9,8 @@
 
 ## Pure dart-examples
 
+Hint: All of the following functions can be used in Flutter, even if some of them are only provided in pure dart api examples.
+
 | Functions | URL | Supported Platforms|
 |---|---|---|
 |Speaker diarization| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/speaker-diarization)| macOS, Windows, Linux|
@@ -20,3 +22,5 @@
 |Speaker identification and verification| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/speaker-identification)| macOS, Windows, Linux|
 |Audio tagging| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/audio-tagging)| macOS, Windows, Linux|
 |Keyword spotter| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/keyword-spotter)| macOS, Windows, Linux|
+|Add punctuations| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/add-punctuations)| macOS, Windows, Linux|
+|Speech enhancement/denoising| [Address](https://github.com/k2-fsa/sherpa-onnx/tree/master/dart-api-examples/speech-enhancement-gtcrn)| macOS, Windows, Linux|

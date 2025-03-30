@@ -21,7 +21,7 @@ var
   Config: TSherpaOnnxOfflineTtsConfig;
 begin
   Config.Model.Matcha.AcousticModel := './matcha-icefall-zh-baker/model-steps-3.onnx';
-  Config.Model.Matcha.Vocoder := './hifigan_v2.onnx';
+  Config.Model.Matcha.Vocoder := './vocos-22khz-univ.onnx';
   Config.Model.Matcha.Lexicon := './matcha-icefall-zh-baker/lexicon.txt';
   Config.Model.Matcha.Tokens := './matcha-icefall-zh-baker/tokens.txt';
   Config.Model.Matcha.DictDir := './matcha-icefall-zh-baker/dict';
