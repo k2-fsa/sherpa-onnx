@@ -216,6 +216,16 @@ endif()
 # Always static build
 add_library(sherpa-onnx-core STATIC ${sources})
 
+
+if(WIN32 AND SHERPA_ONNX_LINK_D3D)
+    target_link_libraries(sherpa-onnx-core dxguid.lib d3d12.lib dxgi.lib dxcore.lib)
+endif()
+
+
+if(TARGET directml)
+    target_link_libraries(sherpa-onnx-core directml)
+endif()
+
 set_target_properties(
     sherpa-onnx-core
   PROPERTIES
