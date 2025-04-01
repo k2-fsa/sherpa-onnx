@@ -81,6 +81,45 @@ jobs:
             otool -L ./install/lib/libsherpa-onnx-cxx-api.dylib
           fi
 
+      - name: Test VAD
+        shell: bash
+        run: |
+          name=vad-cxx-api
+          g++ -std=c++17 -o $name ./cxx-api-examples/$name.cc \
+            -I ./build/install/include \
+            -L ./build/install/lib/ \
+            -l sherpa-onnx-cxx-api \
+            -l sherpa-onnx-c-api \
+            -l onnxruntime
+
+          ls -lh $name
+
+          export LD_LIBRARY_PATH=$PWD/build/install/lib:$LD_LIBRARY_PATH
+          export DYLD_LIBRARY_PATH=$PWD/build/install/lib:$DYLD_LIBRARY_PATH
+
+          if [[ ${{ matrix.os }} == ubuntu-latest || ${{ matrix.os }} == ubuntu-22.04-arm ]]; then
+            ldd ./$name
+            echo "----"
+            readelf -d ./$name
+          fi
+
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/lei-jun-test.wav
+          curl -SL -O https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx
+
+          ./$name
+
+          mkdir vad-test
+          cp -v lei-jun-test*.wav vad-test
+
+          ls -lh vad-test
+
+          rm $name
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: vad-test-wavs-cxx-${{ matrix.os }}
+          path: ./vad-test/*.wav
+
       - name: Test Speech Enhancement (GTCRN)
         shell: bash
         run: |
