@@ -2,14 +2,12 @@
 //
 // Copyright (c)  2025  Xiaomi Corporation
 
-#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <algorithm>
 #include <iomanip>
 
-#include "sherpa-onnx/csrc/alsa.h"
 #include "sherpa-onnx/csrc/voice-activity-detector.h"
 #include "sherpa-onnx/csrc/wave-reader.h"
 #include "sherpa-onnx/csrc/wave-writer.h"
