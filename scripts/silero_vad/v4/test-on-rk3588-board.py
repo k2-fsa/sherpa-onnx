@@ -17,11 +17,12 @@ except:
     print("is known to work")
     raise
 
-import soundfile as sf
 import time
-from typing import Tuple
-import numpy as np
 from pathlib import Path
+from typing import Tuple
+
+import numpy as np
+import soundfile as sf
 
 
 def load_audio(filename: str) -> Tuple[np.ndarray, int]:
@@ -96,11 +97,7 @@ def test(model):
     for i in range(num_windows):
         print(i, num_windows)
         this_samples = samples[i * window_size : (i + 1) * window_size]
-        # print("at input", k, np.sum(this_samples), np.mean(this_samples))
-        # print("h", np.sum(h), np.mean(h))
-        # print("c", np.sum(c), np.mean(c))
         prob, h, c = model(this_samples[None], h, c)
-        # print("at output", k, prob, np.sum(h), np.mean(h), np.sum(c), np.mean(c))
         out.append(prob > threshold)
 
     min_speech_duration = 0.25 * sample_rate / window_size

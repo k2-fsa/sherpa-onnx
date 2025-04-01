@@ -379,29 +379,7 @@ class SileroVadModel::Impl {
     return prob;
   }
 
-  void ComputeStatsSum() {
-    float sum_h = 0;
-    float sum_c = 0;
-    for (int32_t i = 0; i < 128; ++i) {
-      sum_h += states_[0].GetTensorData<float>()[i];
-      sum_c += states_[1].GetTensorData<float>()[i];
-    }
-
-    SHERPA_ONNX_LOGE("h_sum: %.3f,  mean: %.3f", sum_h, sum_h / 128);
-    SHERPA_ONNX_LOGE("c_sum: %.3f,  mean: %.3f", sum_c, sum_c / 128);
-  }
-
   float RunV4(const float *samples, int32_t n) {
-    // SHERPA_ONNX_LOGE("at input");
-    // {
-    //   float sum = 0;
-    //   for (int32_t i = 0; i < n; ++i) {
-    //     sum += samples[i];
-    //   }
-    //   SHERPA_ONNX_LOGE("sum samples: %.3f, %.3f", sum, sum / n);
-    // }
-    //
-    // ComputeStatsSum();
     auto memory_info =
         Ort::MemoryInfo::CreateCpu(OrtDeviceAllocator, OrtMemTypeDefault);
 
@@ -425,9 +403,6 @@ class SileroVadModel::Impl {
 
     states_[0] = std::move(out[1]);
     states_[1] = std::move(out[2]);
-
-    // SHERPA_ONNX_LOGE("at output");
-    // ComputeStatsSum();
 
     float prob = out[0].GetTensorData<float>()[0];
     return prob;

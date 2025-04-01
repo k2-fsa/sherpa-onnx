@@ -785,7 +785,7 @@ SHERPA_ONNX_API typedef struct SherpaOnnxSileroVadModelConfig {
   // in seconds
   float min_speech_duration;
 
-  int window_size;
+  int32_t window_size;
 
   // If a speech segment is longer than this value, then we increase
   // the threshold to 0.9. After finishing detecting the segment,

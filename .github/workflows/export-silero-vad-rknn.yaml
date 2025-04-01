@@ -1,9 +1,6 @@
 name: export-silero-vad-to-rknn
 
 on:
-  push:
-    branches:
-      - rknn-vad
   workflow_dispatch:
 
 concurrency:

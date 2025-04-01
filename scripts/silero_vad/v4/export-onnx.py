@@ -32,7 +32,7 @@ class MyModule(torch.nn.Module):
         m = self.m._model.adaptive_normalization
         _0 = simple_pad
 
-        # Note(fangjun): rknn use fp16 by default, whose max value is 65504
+        # Note(fangjun): rknn uses fp16 by default, whose max value is 65504
         # so we need to re-write the computation for spect0
         #  spect0 = torch.log1p(torch.mul(spect, 1048576))
         spect0 = torch.log1p(spect) + 13.86294
